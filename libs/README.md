@@ -35,11 +35,12 @@ EASI, SFARI, and DEEP use one blue stream style by default, with optional
 **StreamCat coverage** in Layers. Each requires a resolved source COMID for the
 current selected point before starting new analysis. A failed lookup retains
 the point and offers Retry; it cannot fall through as an absent COMID. The
-shared `anchor.hydrolocation_snap` routine makes at most three routing requests:
-one hydrolocation GET (30 seconds), then up to two flowtrace POSTs (60 seconds
-each) after transient failures, with 1.5- and 3-second delays. Valid empty or
-malformed responses stop immediately. Current flowtrace `nhdFlowline` responses
-use the supplied COMID and `intersection_point`; legacy Point responses remain
+shared `anchor.hydrolocation_snap` routine makes at most four routing requests:
+one hydrolocation GET (30 seconds), then up to three flowtrace POSTs (60 seconds
+each) after transient failures, with delays of 5, 10, and 15 seconds before the
+successive retries. Progress is emitted before each delay.
+Valid empty or malformed responses stop immediately. Current flowtrace
+`nhdFlowline` responses use the supplied COMID and `intersection_point`; legacy Point responses remain
 supported. Endpoint/attempt/status/timing diagnostics go to logs. Optional
 source-highlight geometry has no effect on readiness. Existing saved results
 remain readable when an imported assessment needs its source resolved.

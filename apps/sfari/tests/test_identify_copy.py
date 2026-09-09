@@ -15,6 +15,18 @@ SRC = Path(app.__file__).read_text(encoding="utf-8")
 CSS = (Path(app.__file__).parent / "www" / "styles.css").read_text(encoding="utf-8")
 
 
+def test_lookup_spinner_is_small_inline_and_stationary_with_reduced_motion():
+    import re
+    rule = re.search(r"\.easi-spinner\.easi-lookup-spinner\s*\{([^}]+)", CSS).group(1)
+    assert "width: 12px" in rule and "height: 12px" in rule
+    assert "display: inline-block" in rule and "margin-right: 6px" in rule
+    assert "animation: easi-spin .8s linear infinite" in CSS
+    assert "border-top-color: var(--easi-accent)" in CSS
+    reduced = re.search(r"@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{([^}]+)", CSS).group(1)
+    assert ".easi-lookup-spinner" in reduced and "animation: none" in reduced
+    assert "5, 10, and 15 seconds" in SRC and "up to three" in SRC
+
+
 def test_every_click_snaps_to_the_nhd_and_pins_at_once():
     # every click snaps to the HR line and the pin lands at once; the StreamCat
     # reach (the V2 line under the click, else the nearest StreamCat reach
@@ -84,7 +96,7 @@ def test_numbers_are_formatted():
 
 
 def test_styles_carry_the_tighter_divider_and_the_new_version():
-    assert 'href="styles.css?v=24"' in SRC
+    assert 'href="styles.css?v=25"' in SRC
     assert ".easi-pane-body hr { margin: 8px 0; }" in CSS
     assert ".easi-ac-credit" not in CSS
 

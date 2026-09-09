@@ -55,7 +55,10 @@ reach, watershed, and calculation policy unchanged.
 
 Each app resolves a StreamCat source reach before allowing new analysis. The
 selected point remains visible while the status above Delineate shows lookup
-progress. Temporary routing failures retry twice automatically; if unresolved,
+progress with a small spinning circle while work is active, including retry
+pauses. The circle stays stationary for reduced-motion preferences. Temporary
+routing failures retry up to three times, after pauses of 5, 10, and 15 seconds;
+if unresolved,
 **Retry StreamCat lookup** retries the same snapped point. A no-match result or
 invalid service response also blocks analysis with an explanation. A resolved
 source means a valid COMID; individual metrics are retrieved later and can still

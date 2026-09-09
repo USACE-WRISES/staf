@@ -11,6 +11,7 @@ worksheet and Report modal are added in Phase 2.
 """
 from __future__ import annotations
 
+import copy
 import json
 import os
 import tempfile
@@ -349,10 +350,10 @@ if _staf_links_overrides:  # desktop shell rewrites cross-app links; absent on w
 # --------------------------------------------------------------------------- #
 # Evidence provenance: which engine or service produced a value
 # --------------------------------------------------------------------------- #
-_EV_BADGE = {"engine": ("HR reach watershed", "sfari-ev-tag engine"),
+_EV_BADGE = {"engine": ("Desktop", "sfari-ev-tag engine"),
              "streamcat": ("StreamCat", "sfari-ev-tag streamcat"),
-             "pull": ("desktop", "sfari-ev-tag")}
-_PENDING_BADGE = ("HR reach watershed pending", "sfari-ev-tag pending")
+             "pull": ("Desktop", "sfari-ev-tag")}
+_PENDING_BADGE = ("Desktop pending", "sfari-ev-tag pending")
 
 
 def _ev_badge(edata):
@@ -516,11 +517,12 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=24"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=25"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
+                    ui.tags.script(src="report-ready.js?v=2", defer=""),
                     ui.tags.script(src="field-review.js?v=6", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
@@ -617,6 +619,9 @@ def server(input, output, session):
     _lookup_progress = {}                 # worker-only progress; polled on the reactive thread
     _lookup_request = {}                  # the current point's retry arguments
     _delin_generation = {"generation": None}
+    _report_serial = {"value": 0}
+    _report_request = reactive.value(None)
+    _report_state = reactive.value({"busy": False, "requestId": 0, "opened": False})
 
     def _source_ready(d=None):
         state = source_lookup()
@@ -1238,6 +1243,7 @@ def server(input, output, session):
                               "anchor": anchor, "hr_hit": pt, "lat": res["lat"],
                               "lon": res["lon"], "reach_ft": res["reach_ft"],
                               "engine": state})
+        _cancel_report()
         ui.modal_show(ui.modal(
             ui.markdown(
                 "The STAF site engine could not compute the HR reach watershed for this "
@@ -1287,6 +1293,7 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.back_to_basin)
     def _go_basin():
+        _cancel_report()
         current_step.set(STEP_BASIN)
 
     @reactive.effect
@@ -1295,6 +1302,8 @@ def server(input, output, session):
         target = (input.step_nav() or {}).get("key")
         if target not in dict(STEP_LABELS):
             return
+        if target != STEP_REPORT:
+            _cancel_report()
         has_delin = delin() is not None
         if target == STEP_IDENTIFY:
             current_step.set(STEP_IDENTIFY)
@@ -1303,9 +1312,10 @@ def server(input, output, session):
                 ui.notification_show("Score at least one function before viewing the report.",
                                      type="message", duration=4)
                 return
-            current_step.set(target)
             if target == STEP_REPORT:
-                ui.modal_show(_report_modal())
+                _request_report()
+            else:
+                current_step.set(target)
         else:
             ui.notification_show("Finish the earlier steps first.", type="message", duration=2)
 
@@ -1335,6 +1345,7 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.nav_new)
     def _new_assessment():
+        _cancel_report()
         has_state = delin() is not None or bool(metric_scores()) or bool(function_scores())
         if not has_state:
             _do_reset()
@@ -1356,6 +1367,7 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.nav_about)
     def _about():
+        _cancel_report()
         ui.modal_show(ui.modal(
             ui.markdown(
                 "**SFARI**, the Stream Functional Assessment Rapid Index.\n\n"
@@ -1379,6 +1391,7 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.nav_help)
     def _help():
+        _cancel_report()
         ui.modal_show(ui.modal(
             ui.markdown(
                 "1. **Identify**: zoom in and click any stream, or type coordinates, or "
@@ -1387,18 +1400,22 @@ def server(input, output, session):
                 "blue, other streams in cyan, and the selected source reach and downstream "
                 "connector. It changes only the display. Every click "
                 "snaps to the high-resolution NHD. The app finds the StreamCat source "
-                "before enabling Delineate, with up to two automatic retries. If the lookup "
+                "before enabling Delineate, with up to three automatic retries after waits "
+                "of 5, 10, and 15 seconds. If the lookup "
                 "cannot finish, use **Retry StreamCat lookup**. Set the reach length and click "
                 "**Delineate**. The STAF site engine computes the HR reach watershed and "
                 "the assessment reach, usually in under a minute.\n"
                 "2. **Basin**: review the watershed and reach.\n"
                 "3. **Assessment**: for each function, review the pulled evidence, "
                 "Likert-score each metric, and assign the 0–15 function score. "
-                "Each value carries a badge: HR reach watershed (STAF site engine), StreamCat "
-                "(by COMID, naming the reach it describes) or desktop (direct services). "
+                "Each value carries a Desktop or StreamCat badge; its information tooltip "
+                "names the source, including the STAF site engine and HR reach watershed. "
+                "StreamCat evidence also names the reach it describes. "
                 "Some values carry a suggested rating. Every "
                 "score stays yours to set.\n"
-                "4. **Report**: review the screening report and export. A dagger marks "
+                "4. **Report**: the assessment stays visible while the report map is prepared. "
+                "The completed report opens in a popup; closing it returns to the same screen. "
+                "Review the screening report and export. A dagger marks "
                 "downstream desktop evidence, with a short explanation below each affected "
                 "metrics table. The assessor's Likert scores are not marked.\n\n"
                 "Address search uses OpenStreetMap data (Photon and Nominatim)."),
@@ -1469,7 +1486,7 @@ def server(input, output, session):
         messages = {
             "snapping": "Finding the selected stream…",
             "finding": "Finding the nearest StreamCat reach…",
-            "retrying": f"Retrying StreamCat lookup ({max(1, state.get('attempt', 2) - 1)} of 2)…",
+            "retrying": f"Retrying StreamCat lookup ({max(1, min(3, int(state.get('attempt') or 2) - 1))} of 3)…",
             "ready": "StreamCat source ready.",
             "failed": "Could not reach the StreamCat routing service. Retry the lookup to continue.",
             "no_match": "No StreamCat reach was found downstream. Retry the lookup or choose another stream.",
@@ -1486,7 +1503,9 @@ def server(input, output, session):
         retry = (ui.input_action_button(retry_id, "Retry StreamCat lookup",
                                         class_="btn-outline-secondary btn-sm")
                  if status in ("failed", "no_match") and snapped_point() is not None else None)
-        return ui.div(ui.p(messages.get(status, ""), class_="easi-snap-note"), retry,
+        spinner = (ui.span(class_="easi-spinner easi-lookup-spinner", **{"aria-hidden": "true"})
+                   if status in ("snapping", "finding", "retrying") else None)
+        return ui.div(ui.p(spinner, messages.get(status, ""), class_="easi-snap-note"), retry,
                       {"role": "status", "aria-live": "polite", "aria-atomic": "true"})
 
     @render.ui
@@ -1677,12 +1696,14 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.nav_move)
     def _nav_move():
+        _cancel_report()
         d = int((input.nav_move() or {}).get("d", 0) or 0)
         current_fn.set(max(0, min(len(FN_IDS) - 1, current_fn() + d)))
 
     @reactive.effect
     @reactive.event(input.nav_jump)
     def _nav_jump():
+        _cancel_report()
         i = (input.nav_jump() or {}).get("i")
         if i is not None:
             current_fn.set(max(0, min(len(FN_IDS) - 1, int(i))))
@@ -1892,14 +1913,14 @@ def server(input, output, session):
                             link, (_info(_ev_tip(edata)) if has_tip else None),
                             class_="sfari-evidence")
             elif ds and pulling:
-                ev = ui.div(ui.span("desktop", class_="sfari-ev-tag"),
+                ev = ui.div(ui.span("Desktop pending", class_="sfari-ev-tag pending"),
                             ui.span("Pulling desktop evidence…", class_="sfari-ev-val muted"),
                             class_="sfari-evidence pending")
             elif ds:
                 url = ds.get("url")
                 link = (ui.tags.a("↗", {"href": url, "target": "_blank", "rel": "noopener",
                                         "title": "Open resource"}) if url else None)
-                ev = ui.div(ui.span("desktop", class_="sfari-ev-tag"),
+                ev = ui.div(ui.span("Desktop", class_="sfari-ev-tag"),
                             ui.span(ds.get("label", ""), class_="sfari-ev-val muted"), link,
                             class_="sfari-evidence")
             else:
@@ -2116,16 +2137,102 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.open_report_evt)
     def _open_report():
+        _request_report()
+
+    def _report_identity():
+        d = delin() or {}
+        geometry = json.dumps([d.get("watershed_geojson"), d.get("reach_geojson")],
+                              sort_keys=True, separators=(",", ":"))
+        return _map_pick["generation"], current_step(), geometry
+
+    def _finish_report(*, opened=False):
+        request = _report_request()
+        if request is not None:
+            _report_request.set(None)
+            _report_state.set({"busy": False, "requestId": request["id"], "opened": opened})
+
+    def _cancel_report():
+        with reactive.isolate():
+            if _report_request() is not None:
+                report_map_task.cancel()
+                _finish_report()
+
+    def _request_report():
         if delin() is None:
             return
         if not _any_scored():
             ui.notification_show("Score at least one function before viewing the report.",
                                  type="message", duration=4)
             return
-        current_step.set(STEP_REPORT)
-        ui.modal_show(_report_modal())
+        identity = _report_identity()
+        pending = _report_request()
+        if pending is not None and pending["identity"] == identity:
+            return
+        _cancel_report()
+        _report_serial["value"] += 1
+        request_id = _report_serial["value"]
+        d = delin()
+        watershed = copy.deepcopy(d.get("watershed_geojson"))
+        reach = copy.deepcopy(d.get("reach_geojson"))
+        _report_request.set({"id": request_id, "identity": identity})
+        _report_state.set({"busy": True, "requestId": request_id, "opened": False})
+        report_map_task(request_id, watershed, reach)
 
-    def _report_modal():
+    @reactive.effect
+    async def _publish_report_state():
+        await session.send_custom_message("staf-report-state", _report_state())
+
+    @reactive.effect
+    def _cancel_obsolete_report():
+        request = _report_request()
+        if request is None:
+            return
+        source_lookup()  # lookup retries and replacement picks advance the site generation
+        if delin() is None or request["identity"] != _report_identity():
+            with reactive.isolate():
+                _cancel_report()
+
+    @reactive.extended_task
+    async def report_map_task(request_id, watershed, reach):
+        try:
+            minimap = await anyio.to_thread.run_sync(
+                lambda: reportmap.svg(
+                    delineation.display_simplify(watershed, max_vertices=700), reach),
+                abandon_on_cancel=True)
+            return request_id, minimap, None
+        except Exception:
+            return request_id, "", "Could not prepare the report. Please try again."
+
+    @reactive.effect
+    def _report_map_done():
+        try:
+            request_id, minimap, error = report_map_task.result()
+        except Exception:
+            return
+        # Keep all report/score reads isolated: editing evidence must never reopen a modal.
+        with reactive.isolate():
+            request = _report_request()
+            if request is None or request["id"] != request_id:
+                return
+            if request["identity"] != _report_identity() or delin() is None:
+                _finish_report()
+                return
+            try:
+                if error:
+                    ui.notification_show(error, type="error", duration=5)
+                elif _any_scored():
+                    ui.modal_show(_report_modal(minimap_html=minimap))
+                    _finish_report(opened=True)
+                    return
+                else:
+                    ui.notification_show("Score at least one function before viewing the report.",
+                                         type="message", duration=4)
+            except Exception:
+                ui.notification_show("Could not prepare the report. Please try again.",
+                                     type="error", duration=5)
+            _finish_report()
+
+    def _report_modal(*, minimap_html):
         d = delin() or {}
         dl = d.get("delineation") or {}
         sc = scored()
@@ -2155,9 +2262,7 @@ def server(input, output, session):
         # The watershed over a USGS topo basemap; the simplify the old inline
         # builder did is now the caller's, which keeps reportmap identical in
         # the three apps.
-        minimap = reportmap.svg(
-            delineation.display_simplify(d.get("watershed_geojson"), max_vertices=700),
-            d.get("reach_geojson"))
+        minimap = minimap_html
         header = ui.div(
             ui.div(
                 ui.div(
@@ -2297,6 +2402,7 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.desktop_metrics_evt)
     def _open_desktop_metrics():
+        _cancel_report()
         ui.modal_show(_desktop_metrics_modal())
 
     def _desktop_metrics_modal():
@@ -2449,7 +2555,10 @@ def server(input, output, session):
                 text = "The desktop evidence pull failed. " + text
                 retry = ui.input_action_button("ff_retry", "Retry pull",
                                                class_="btn btn-sm btn-outline-secondary")
-        return ui.div(ui.span(text, {"aria-live": "polite"}), retry, class_="ff-status")
+        spinner = (ui.span(class_="easi-spinner easi-lookup-spinner", **{"aria-hidden": "true"})
+                   if finding else None)
+        return ui.div(ui.span(spinner, text, {"role": "status", "aria-live": "polite"}),
+                      retry, class_="ff-status")
 
     @output(suspend_when_hidden=False)
     @render.ui
@@ -2502,6 +2611,7 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.xs_open_evt)
     def _xs_open():
+        _cancel_report()
         d = delin() or {}
         dl = d.get("delineation") or {}
         da = dl.get("drainage_area_sqkm")

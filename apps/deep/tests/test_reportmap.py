@@ -11,10 +11,19 @@ outage both look like.
 from __future__ import annotations
 
 import io
+from types import SimpleNamespace
 
 import pytest
 
 from deep import reportmap
+
+
+@pytest.fixture(autouse=True)
+def clean_fetch_cache_and_skip_retry_wait(monkeypatch):
+    reportmap._fetch.cache_clear()
+    monkeypatch.setattr(reportmap.time, "sleep", lambda _: None)
+    yield
+    reportmap._fetch.cache_clear()
 
 WS = {"type": "FeatureCollection", "features": [{"geometry": {
     "type": "Polygon", "coordinates": [[[-72.25, 43.68], [-72.22, 43.685],
@@ -99,6 +108,11 @@ def test_a_refused_service_still_draws_the_outline(no_basemap):
     assert "<image" not in s and "base64" not in s
     assert s.count("<path") == 2
     assert reportmap.WATERSHED_FILL in s
+    assert s.startswith('<div class="reportmap-fallback"')
+    assert 'viewBox="0 0 290 180"' in s
+    assert s.index("</svg>") < s.index(reportmap.UNAVAILABLE_NOTE)
+    assert s.count(reportmap.UNAVAILABLE_NOTE) == 1
+    assert s[s.index("<svg"):s.index("</svg>") + 6] == reportmap.svg(WS, RC, basemap=False)
 
 
 def test_no_geometry_returns_the_empty_string(basemap):
@@ -112,7 +126,9 @@ def test_the_basemap_can_be_switched_off_without_a_call(monkeypatch):
         raise AssertionError("basemap=False must not fetch")
 
     monkeypatch.setattr(reportmap, "topo_png", _boom)
-    assert "<image" not in reportmap.svg(WS, RC, basemap=False)
+    result = reportmap.svg(WS, RC, basemap=False)
+    assert "<image" not in result and result.startswith("<svg")
+    assert reportmap.UNAVAILABLE_NOTE not in result
 
 
 # --------------------------------------------------------------------------- #
@@ -166,6 +182,111 @@ def test_the_fetch_is_memoised_so_the_pdf_reuses_the_modal_s_image(monkeypatch):
     reportmap._fetch.cache_clear()
 
 
+@pytest.mark.parametrize("status", [408, 429, 500, 503, 599])
+def test_transient_status_retries_once_and_then_caches_success(monkeypatch, status):
+    png = _png()
+    answers = iter([SimpleNamespace(status_code=status, content=b"temporarily unavailable"),
+                    SimpleNamespace(status_code=200, content=png)])
+    calls, waits = [], []
+    def get(*args, **kwargs):
+        calls.append(kwargs)
+        return next(answers)
+    monkeypatch.setattr(reportmap.requests, "get", get)
+    monkeypatch.setattr(reportmap.time, "sleep", waits.append)
+    bbox = (1, 2, 1001, 622)
+    assert reportmap.topo_png(bbox) == png
+    assert reportmap.topo_png(bbox) == png
+    assert len(calls) == 2 and waits == [1.0]
+    assert [call["timeout"] for call in calls] == [12.0, 12.0]
+
+
+@pytest.mark.parametrize("exception_type", [reportmap.requests.exceptions.Timeout,
+                                             reportmap.requests.exceptions.ConnectionError])
+def test_transient_transport_error_recovers_on_second_attempt(monkeypatch, exception_type):
+    png = _png()
+    answers = iter([exception_type("temporary transport failure"),
+                    SimpleNamespace(status_code=200, content=png)])
+    def get(*args, **kwargs):
+        result = next(answers)
+        if isinstance(result, Exception):
+            raise result
+        return result
+    monkeypatch.setattr(reportmap.requests, "get", get)
+    assert reportmap.topo_png((1, 2, 1001, 622)) == png
+
+
+def test_failed_fetch_is_not_cached_and_later_open_can_recover(monkeypatch):
+    png = _png()
+    answers = iter([SimpleNamespace(status_code=503, content=b"busy"),
+                    SimpleNamespace(status_code=503, content=b"busy"),
+                    SimpleNamespace(status_code=200, content=png)])
+    calls = []
+    def get(*args, **kwargs):
+        calls.append(1)
+        return next(answers)
+    monkeypatch.setattr(reportmap.requests, "get", get)
+    bbox = (1, 2, 1001, 622)
+    assert reportmap.topo_png(bbox) is None
+    assert len(calls) == 2 and reportmap._fetch.cache_info().currsize == 0
+    assert reportmap.topo_png(bbox) == png
+    assert reportmap.topo_png(bbox) == png
+    assert len(calls) == 3
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 404])
+def test_non_transient_status_does_not_retry(monkeypatch, status):
+    calls = []
+    monkeypatch.setattr(reportmap.requests, "get", lambda *a, **k: calls.append(1) or
+                        SimpleNamespace(status_code=status, content=b"refused"))
+    assert reportmap.topo_png((1, 2, 1001, 622)) is None
+    assert calls == [1]
+    assert reportmap._fetch.cache_info().currsize == 0
+
+
+@pytest.mark.parametrize("kind", ["json_error", "magic_only", "truncated_png"])
+def test_success_cache_requires_a_fully_decoded_png(monkeypatch, kind):
+    png = _png()
+    content = {"json_error": b'{"error":{"code":500}}', "magic_only": b"\x89PNGinvalid",
+               "truncated_png": png[:-20]}[kind]
+    monkeypatch.setattr(reportmap.requests, "get", lambda *a, **k:
+                        SimpleNamespace(status_code=200, content=content))
+    assert reportmap.topo_png((1, 2, 1001, 622)) is None
+    assert reportmap._fetch.cache_info().currsize == 0
+
+
+def test_failure_logging_has_endpoint_status_elapsed_and_bounded_error(monkeypatch, caplog):
+    def fail(*args, **kwargs):
+        raise ValueError("malformed response " + "x" * 600 + "\nsecond line")
+    monkeypatch.setattr(reportmap.requests, "get", fail)
+    assert reportmap.topo_png((1, 2, 1001, 622)) is None
+    record = caplog.records[-1]
+    message = record.getMessage()
+    assert reportmap.EXPORT_URL in message and "status=transport" in message
+    assert "elapsed=" in message and "attempt=1/2" in message
+    assert len(message.split("error=", 1)[1]) <= 200
+    assert "\n" not in message
+
+
+def test_success_cache_is_bounded(monkeypatch):
+    png = _png()
+    monkeypatch.setattr(reportmap.requests, "get", lambda *a, **k:
+                        SimpleNamespace(status_code=200, content=png))
+    for index in range(34):
+        assert reportmap.topo_png((index, 0, index + 1000, 620)) == png
+    assert reportmap._fetch.cache_info().currsize == 32
+
+
+def test_popup_and_pdf_share_the_same_validated_image(monkeypatch):
+    png, calls = _png(), []
+    monkeypatch.setattr(reportmap.requests, "get", lambda *a, **k: calls.append(k) or
+                        SimpleNamespace(status_code=200, content=png))
+    result = reportmap.svg(WS, RC)
+    assert result.startswith("<svg") and reportmap.UNAVAILABLE_NOTE not in result
+    flowable = reportmap.pdf_flowable(WS, RC, 360, 360 * 180 / 290)
+    assert _build(flowable).startswith(b"%PDF")
+    assert len(calls) == 1
+
+
 # --------------------------------------------------------------------------- #
 # the PDF
 # --------------------------------------------------------------------------- #
@@ -188,3 +309,40 @@ def test_the_pdf_map_draws_with_and_without_a_basemap(basemap, monkeypatch):
 
 def test_the_pdf_map_is_absent_without_geometry(basemap):
     assert reportmap.pdf_flowable(None, None, 360, 223) is None
+
+
+def test_pdf_fallback_reserves_caption_space_without_stretching_map(no_basemap):
+    class Canvas:
+        def __init__(self):
+            self.paths, self.rectangles, self.notes = [], [], []
+
+        def beginPath(self):
+            points = []
+            self.paths.append(points)
+            return SimpleNamespace(moveTo=lambda x, y: points.append((x, y)),
+                                   lineTo=lambda x, y: points.append((x, y)), close=lambda: None)
+
+        def rect(self, *args, **kwargs):
+            self.rectangles.append(args)
+
+        def drawString(self, *args):
+            self.notes.append(args)
+
+        def __getattr__(self, name):
+            return lambda *args, **kwargs: None
+
+    plain = reportmap.pdf_flowable(WS, RC, 360, 223, basemap=False)
+    fallback = reportmap.pdf_flowable(WS, RC, 360, 223)
+    assert plain.height == 223 and fallback.height == 235
+    plain.canv, fallback.canv = Canvas(), Canvas()
+    plain.draw()
+    fallback.draw()
+    assert plain.canv.notes == []
+    assert fallback.canv.notes == [(0, 2, reportmap.UNAVAILABLE_NOTE)]
+    assert plain.canv.rectangles == [(0, 0, 360, 223)]
+    assert fallback.canv.rectangles == [(0, 12, 360, 223)]
+    for original, shifted in zip(plain.canv.paths, fallback.canv.paths):
+        assert len(original) == len(shifted)
+        for (x0, y0), (x1, y1) in zip(original, shifted):
+            assert x1 == pytest.approx(x0)
+            assert y1 == pytest.approx(y0 + 12)

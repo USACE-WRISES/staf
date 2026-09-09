@@ -82,9 +82,21 @@ def test_the_cue_is_not_printed_twice():
 
 
 def test_styles_carry_the_tighter_divider_and_the_new_version():
-    assert 'href="styles.css?v=50"' in SRC
+    assert 'href="styles.css?v=51"' in SRC
     assert ".easi-pane-body hr { margin: 8px 0; }" in CSS
     assert ".easi-ac-credit" not in CSS
+
+
+def test_lookup_spinner_is_small_inline_and_stationary_with_reduced_motion():
+    import re
+    rule = re.search(r"\.easi-spinner\.easi-lookup-spinner\s*\{([^}]+)", CSS).group(1)
+    assert "width: 12px" in rule and "height: 12px" in rule
+    assert "display: inline-block" in rule and "margin-right: 6px" in rule
+    assert "animation: easi-spin .8s linear infinite" in CSS
+    assert "border-top-color: var(--easi-accent)" in CSS
+    reduced = re.search(r"@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{([^}]+)", CSS).group(1)
+    assert ".easi-lookup-spinner" in reduced and "animation: none" in reduced
+    assert "5, 10, and 15 seconds" in SRC and "up to three" in SRC
 
 
 def test_modules_used_at_effect_level_are_imported_at_module_level():

@@ -33,12 +33,15 @@ stepper: **Identify → Basin → Assessment → Report**.
    streams** in cyan and shows the source-reach highlight and downstream
    connector. The choice lasts for the current page session and only changes
    the display. The assessment point, reach, and watershed remain distinct.
-   Engine names stay on the basin card, per-metric sources, and exports.
+   Detailed engine information stays in per-metric sources and exports.
    **Clicking snaps to the nearest stream line** (or tells you if you missed).
    The point stays visible while its StreamCat source resolves. Delineate and
-   screening require that source; temporary routing failures retry twice,
+   screening require that source; temporary routing failures retry up to three
+   times, after pauses of 5, 10, and 15 seconds,
    followed by **Retry StreamCat lookup** if still unresolved. The persistent
    status above Delineate distinguishes lookup, retries, no match, and failure.
+   A small circle spins beside active lookup messages, including retry pauses;
+   it stays stationary when reduced motion is preferred.
    Within 150 ft of an NHDPlus V2 reach, the StreamCat lookup engine answers
    the watershed metrics in seconds. On other streams,
    the STAF site engine calculates the HR reach watershed of the clicked stream
@@ -52,9 +55,8 @@ stepper: **Identify → Basin → Assessment → Report**.
    the map.
 2. **Basin** — Delineate the contributing **watershed** and an **upstream reach**
    (default ~1,000 ft, adjustable) with staged progress feedback. Shows COMID,
-   HUC12, drainage area, watershed area, and reach length. On a stream outside
-   direct StreamCat coverage the card names the watershed engine, the HR reach watershed area and the
-   reaches walked, and says where reach-keyed evidence comes from.
+   drainage area and reach length, and identifies the StreamCat reach supplying
+   evidence. Routine engine names and versions stay out of the Basin card.
 3. **Assessment** — All 20 metrics compute automatically, then a worksheet walks
    the functions by discipline. Each card shows the metric, its scoring method
    (inputs, breakpoints, and the resulting rating), and the evidence source, with
@@ -175,6 +177,18 @@ Shiny for Python (Core) · `shinywidgets` + `ipyleaflet` (map) · HyRiver
 (`pynhd` / `py3dep` / `pygeohydro`) · `geopandas` / `shapely` / `pyogrio` /
 `pyproj` / `rasterio` / `rioxarray` / `xarray` · `numpy` / `pandas` ·
 `matplotlib` (Agg) + `reportlab` (PDF) · `requests`.
+
+## Report preparation
+
+Report popups keep the current workspace visible while the mini map is prepared
+in the background. A small **Preparing report…** status marks the wait; closing
+the popup returns focus to its opener. USGS basemap requests allow two attempts
+with a 12-second timeout and a one-second retry pause. Only valid PNGs are cached
+(up to 32 images), so reopening after a failed request can recover. If the
+background remains unavailable, the report retains the watershed/reach outline
+and a small **Map background unavailable** note. The PDF uses the same image
+fetching and cache. Posit Publisher includes the required modules; the background
+is fetched at runtime, rather than bundled as a deployment asset.
 
 ## Run locally
 

@@ -94,11 +94,12 @@ def _flowtrace_snap(lat: float, lon: float, *, timeout: float = 60.0) -> dict:
 
 def _hydrolocation_snap(lat: float, lon: float, *,
                         progress: Optional[Callable[[dict[str, Any]], None]] = None) -> dict:
-    """The app's vendored shared client: at most three raindrop requests.
+    """The app's vendored shared client: at most four raindrop requests.
 
     Returns validated COMID/snap coordinates, a clean empty result, or an
     error. The optional worker-safe callback receives finding/1 followed by
-    retrying/2 and retrying/3 only when a transient failure warrants retry.
+    retrying/2, retrying/3, and retrying/4 only when a transient failure warrants
+    retry, before the corresponding 5-, 10-, or 15-second pause.
     """
     from ._vendor.site_engine.anchor import hydrolocation_snap
 

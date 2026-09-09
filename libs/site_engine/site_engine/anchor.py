@@ -51,7 +51,7 @@ NLDI_HYDROLOCATION_URL = "https://api.water.usgs.gov/nldi/linked-data/hydrolocat
 # lookup is never a fallback here (its answer can differ from the raindrop's).
 NLDI_FLOWTRACE_URL = ("https://api.water.usgs.gov/nldi/pygeoapi/processes/"
                       "nldi-flowtrace/execution")
-_ROUTING_RETRY_PAUSES_S = (1.5, 3.0)
+_ROUTING_RETRY_PAUSES_S = (5.0, 10.0, 15.0)
 _ROUTING_ERROR_LIMIT = 400
 _LOG = logging.getLogger(__name__)
 ProgressCallback = Callable[[dict[str, Any]], None]
@@ -243,14 +243,17 @@ def hydrolocation_snap(lat: float, lon: float, *,
     Returns ``{"comid", "snap_lat", "snap_lon"}``,
     ``{}`` for a clean no-stream answer, or ``{"error": ...}`` when the
     service failed. One 30-second hydrolocation GET is followed, only for a
-    transient failure, by at most two 60-second flowtrace POSTs, with 1.5/3
-    second pauses. Both routes run the same raindrop algorithm. Parser and
-    nontransient HTTP errors stop immediately. ``progress`` receives a plain
-    dict before each attempt: finding/1, then retrying/2 and retrying/3.
+    transient failure, by at most three 60-second flowtrace POSTs, with
+    pauses of 5, 10, and 15 seconds before the successive retries.
+    Both routes run the same raindrop
+    algorithm. Parser and nontransient HTTP errors stop immediately.
+    ``progress`` receives a plain dict before each attempt: finding/1, then
+    retrying/2, retrying/3, and retrying/4. Retry progress is emitted before
+    its pause so the caller can show that the lookup is still running.
     """
     params = {"coords": f"POINT({lon:.6f} {lat:.6f})"}
     errors: list[str] = []
-    for attempt in range(1, 4):
+    for attempt in range(1, len(_ROUTING_RETRY_PAUSES_S) + 2):
         if progress is not None:
             try:
                 progress({"status": "finding" if attempt == 1 else "retrying", "attempt": attempt})

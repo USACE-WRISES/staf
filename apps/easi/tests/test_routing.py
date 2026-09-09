@@ -305,13 +305,15 @@ def test_route_forwards_worker_progress_without_changing_the_anchor(monkeypatch)
         workers.append(get_ident())
         progress({"status": "finding", "attempt": 1})
         progress({"status": "retrying", "attempt": 2})
+        progress({"status": "retrying", "attempt": 4})
         return dict(_SNAP_OK)
 
     monkeypatch.setattr(routing, "_hydrolocation_snap", snap)
     assert routing.route_from_hr(40.0, -83.0, _HR_SNAP, progress=events.append) == expected
     assert origins == [_HR_SNAP[:2]] and workers[0] != caller
     assert events == [{"status": "finding", "attempt": 1},
-                      {"status": "retrying", "attempt": 2}]
+                      {"status": "retrying", "attempt": 2},
+                      {"status": "retrying", "attempt": 4}]
 
 
 def test_an_attrs_outage_is_retryable_under_legacy_and_recorded_under_auto(monkeypatch):

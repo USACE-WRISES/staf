@@ -14,6 +14,7 @@ is curve-based (``deep.curves``) rather than Likert judgment.
 """
 from __future__ import annotations
 
+import copy
 import html
 import math
 import json
@@ -697,12 +698,13 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=18"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=19"),
                     ui.tags.link(rel="stylesheet", href="deep.css?v=8"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
+                    ui.tags.script(src="report-ready.js?v=2", defer=""),
                     ui.tags.script(src="measure.js?v=4", defer=""),
                     ui.tags.script(src="coverage.js?v=3", defer="")),
     ui.busy_indicators.use(pulse=False),
@@ -946,6 +948,9 @@ def server(input, output, session_):  # noqa: C901
     _lookup_request: dict = {}      # retry the selected point without moving it
     _delin_generation = reactive.value(None)
     _engine_generation = {"value": None}
+    _report_serial = {"value": 0}
+    _report_request = reactive.value(None)
+    _report_state = reactive.value({"busy": False, "requestId": 0, "opened": False})
 
     def _set_lookup(status, *, attempt=0, detail=""):
         value = {"status": status, "generation": _map_pick["generation"],
@@ -1570,6 +1575,7 @@ def server(input, output, session_):  # noqa: C901
         _no_watershed.update({"anchor": anchor, "hr_hit": pt, "lat": res.get("lat"),
                               "lon": res.get("lon"), "reach_ft": res.get("reach_ft"),
                               "engine": state, "generation": _map_pick["generation"]})
+        _cancel_report()
         ui.modal_show(ui.modal(
             ui.markdown(
                 "The STAF site engine could not compute the HR reach watershed for this "
@@ -1648,14 +1654,17 @@ def server(input, output, session_):  # noqa: C901
         target = (input.step_nav() or {}).get("key")
         if target not in dict(STEP_LABELS):
             return
+        if target != STEP_REPORT:
+            _cancel_report()
         # _has reads delin() and loaded_assessment(); isolate them or this effect takes
         # them as dependencies and re-runs on every delineation.
         with reactive.isolate():
             allowed = _has(target)
         if allowed:
-            current_step.set(target)
             if target == STEP_REPORT:
-                ui.modal_show(_report_modal())
+                _request_report()
+            else:
+                current_step.set(target)
         else:
             ui.notification_show("Finish the earlier steps first.", type="message", duration=2)
 
@@ -1690,6 +1699,7 @@ def server(input, output, session_):  # noqa: C901
     @reactive.effect
     @reactive.event(input.nav_new)
     def _new_assessment():
+        _cancel_report()
         has_state = delin() is not None or bool(measured_values()) or loaded_assessment() is not None
         if not has_state:
             _do_reset(); return
@@ -1710,6 +1720,7 @@ def server(input, output, session_):  # noqa: C901
     @reactive.effect
     @reactive.event(input.nav_about)
     def _about():
+        _cancel_report()
         ui.modal_show(ui.modal(
             ui.markdown(
                 "**DEEP**, Detailed Evaluation of Ecosystem Processes.\n\n"
@@ -1736,6 +1747,7 @@ def server(input, output, session_):  # noqa: C901
     @reactive.effect
     @reactive.event(input.nav_help)
     def _help():
+        _cancel_report()
         ui.modal_show(ui.modal(
             ui.markdown(
                 "1. **Identify**: zoom in and click any stream, or type coordinates, or "
@@ -1745,7 +1757,8 @@ def server(input, output, session_):  # noqa: C901
                 "connector. It changes only the display. Assessment coverage remains "
                 "available in its separate panel. Every click "
                 "snaps to the high-resolution NHD. Wait for the StreamCat lookup to finish "
-                "before clicking **Delineate**. If the lookup fails, the point stays on the map; "
+                "before clicking **Delineate**. Temporary failures are retried up to three "
+                "times after waits of 5, 10, and 15 seconds. If the lookup fails, the point stays on the map; "
                 "use **Retry StreamCat lookup** or choose another stream. Set the reach length. "
                 "The STAF site engine computes the HR reach watershed and "
                 "the assessment reach, usually in under a minute and up to about five "
@@ -1763,7 +1776,9 @@ def server(input, output, session_):  # noqa: C901
                 "lookup engine otherwise. A value computed "
                 "from a different predictor source than the one the curves were fitted on is "
                 "shown as reference evidence and is not scored.\n"
-                "4. **Report**: review and export the detailed assessment.\n\n"
+                "4. **Report**: the assessment stays visible while the report map is prepared. "
+                "The completed report opens in a popup; closing it returns to the same screen. "
+                "Review and export the detailed assessment.\n\n"
                 "Address search uses OpenStreetMap data (Photon and Nominatim)."),
             title="How to use DEEP", easy_close=True, footer=ui.modal_button("Close")))
 
@@ -1822,7 +1837,7 @@ def server(input, output, session_):  # noqa: C901
         text = {
             "snapping": "Finding the stream…",
             "finding": "Finding the nearest StreamCat reach…",
-            "retrying": f"Retrying StreamCat lookup ({max(1, int(state.get('attempt') or 2) - 1)} of 2)…",
+            "retrying": f"Retrying StreamCat lookup ({max(1, min(3, int(state.get('attempt') or 2) - 1))} of 3)…",
             "failed": "Could not reach the StreamCat routing service. Retry the lookup to continue.",
             "no_match": "No StreamCat reach was found downstream. Retry the lookup or choose another stream.",
         }.get(status, "")
@@ -1832,8 +1847,10 @@ def server(input, output, session_):  # noqa: C901
             text = "The StreamCat routing service returned an invalid response. Retry the lookup to continue."
         if status in ("failed", "no_match") and not can_retry:
             text = "No stream point is available. Choose a stream on the map to continue."
+        spinner = (ui.span(class_="easi-spinner easi-lookup-spinner", **{"aria-hidden": "true"})
+                   if status in ("snapping", "finding", "retrying") else None)
         return ui.div(
-            ui.p(text, class_="easi-snap-note"),
+            ui.p(spinner, text, class_="easi-snap-note"),
             ui.input_action_button(retry_id, "Retry StreamCat lookup",
                                    class_="btn-outline-secondary btn-sm") if can_retry else None,
             {"role": "status", "aria-live": "polite"},
@@ -2050,6 +2067,7 @@ def server(input, output, session_):  # noqa: C901
     @reactive.effect
     @reactive.event(input.change_assessment)
     def _change_assessment():
+        _cancel_report()
         covering = _covering_here()
         # The pick handlers index into this positionally, so snapshot exactly the list
         # the modal is about to render.
@@ -2177,6 +2195,7 @@ def server(input, output, session_):  # noqa: C901
     @reactive.effect
     @reactive.event(input.nav_move)
     def _nav_move():
+        _cancel_report()
         d = int((input.nav_move() or {}).get("d", 0) or 0)
         n = len(_fns())
         if n:
@@ -2185,6 +2204,7 @@ def server(input, output, session_):  # noqa: C901
     @reactive.effect
     @reactive.event(input.nav_jump)
     def _nav_jump():
+        _cancel_report()
         i = (input.nav_jump() or {}).get("i")
         n = len(_fns())
         if i is not None and n:
@@ -2508,12 +2528,95 @@ def server(input, output, session_):  # noqa: C901
     @reactive.effect
     @reactive.event(input.open_report_evt)
     def _open_report():
+        _request_report()
+
+    def _report_identity():
+        d = delin() or {}
+        geometry = json.dumps([d.get("watershed_geojson"), d.get("reach_geojson")],
+                              sort_keys=True, separators=(",", ":"))
+        return _map_pick["generation"], current_step(), geometry, id(loaded_assessment())
+
+    def _finish_report(*, opened=False):
+        request = _report_request()
+        if request is not None:
+            _report_request.set(None)
+            _report_state.set({"busy": False, "requestId": request["id"], "opened": opened})
+
+    def _cancel_report():
+        with reactive.isolate():
+            if _report_request() is not None:
+                report_map_task.cancel()
+                _finish_report()
+
+    def _request_report():
         if not _current_delineation() or loaded_assessment() is None:
             return
-        current_step.set(STEP_REPORT)
-        ui.modal_show(_report_modal())
+        identity = _report_identity()
+        pending = _report_request()
+        if pending is not None and pending["identity"] == identity:
+            return
+        _cancel_report()
+        _report_serial["value"] += 1
+        request_id = _report_serial["value"]
+        d = delin()
+        watershed = copy.deepcopy(d.get("watershed_geojson"))
+        reach = copy.deepcopy(d.get("reach_geojson"))
+        _report_request.set({"id": request_id, "identity": identity})
+        _report_state.set({"busy": True, "requestId": request_id, "opened": False})
+        report_map_task(request_id, watershed, reach)
 
-    def _report_modal():
+    @reactive.effect
+    async def _publish_report_state():
+        await session_.send_custom_message("staf-report-state", _report_state())
+
+    @reactive.effect
+    def _cancel_obsolete_report():
+        request = _report_request()
+        if request is None:
+            return
+        source_lookup()  # lookup retries and replacement picks advance the site generation
+        if not _current_delineation() or request["identity"] != _report_identity():
+            with reactive.isolate():
+                _cancel_report()
+
+    @reactive.extended_task
+    async def report_map_task(request_id, watershed, reach):
+        try:
+            minimap = await anyio.to_thread.run_sync(
+                lambda: reportmap.svg(
+                    delineation.display_simplify(watershed, max_vertices=700), reach),
+                abandon_on_cancel=True)
+            return request_id, minimap, None
+        except Exception:
+            return request_id, "", "Could not prepare the report. Please try again."
+
+    @reactive.effect
+    def _report_map_done():
+        try:
+            request_id, minimap, error = report_map_task.result()
+        except Exception:
+            return
+        # Keep all report/score reads isolated: editing evidence must never reopen a modal.
+        with reactive.isolate():
+            request = _report_request()
+            if request is None or request["id"] != request_id:
+                return
+            if request["identity"] != _report_identity() or not _current_delineation():
+                _finish_report()
+                return
+            try:
+                if error:
+                    ui.notification_show(error, type="error", duration=5)
+                else:
+                    ui.modal_show(_report_modal(minimap_html=minimap))
+                    _finish_report(opened=True)
+                    return
+            except Exception:
+                ui.notification_show("Could not prepare the report. Please try again.",
+                                     type="error", duration=5)
+            _finish_report()
+
+    def _report_modal(*, minimap_html):
         d = delin() or {}
         dl = d.get("delineation") or {}
         la = loaded_assessment()
@@ -2523,9 +2626,7 @@ def server(input, output, session_):  # noqa: C901
         # The watershed over a USGS topo basemap; the simplify the old inline
         # builder did is now the caller's, which keeps reportmap identical in
         # the three apps.
-        minimap = reportmap.svg(
-            delineation.display_simplify(d.get("watershed_geojson"), max_vertices=700),
-            d.get("reach_geojson"))
+        minimap = minimap_html
         header = ui.div(
             ui.div(
                 ui.h3(la.assessment_name if la else "Detailed assessment", style="margin:0;"),

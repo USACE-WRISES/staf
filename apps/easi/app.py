@@ -10,6 +10,7 @@ are overrideable; export PDF / CSV / GeoJSON.
 from __future__ import annotations
 
 import html
+import copy
 import json
 import os
 import tempfile
@@ -414,12 +415,13 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=50"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=51"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="report-controls.js", defer=""),
                     ui.tags.script(src="report-edit.js", defer=""),
+                    ui.tags.script(src="report-ready.js?v=2", defer=""),
                     ui.tags.script(src="worksheet.js?v=8", defer=""),
                     ui.tags.script(src="coord-entry.js", defer="")),
     # Disable Shiny/bslib's page-level "pulse" loading bar at the top of the screen —
@@ -1172,7 +1174,7 @@ def _borrowed_metric_note(row):
                   style="margin-top:.25rem;")
 
 
-def _header_with_map(d, rep, geo):
+def _header_with_map(d, rep, geo, minimap_html=None):
     """The summary header and the basin table beside the watershed map, which is
     SFARI's report layout.
 
@@ -1184,8 +1186,8 @@ def _header_with_map(d, rep, geo):
     the table exactly as the report had them before.
     """
     basin = _basin_block(d, rep)
-    minimap = ""
-    if geo:
+    minimap = minimap_html or ""
+    if minimap_html is None and geo:
         minimap = reportmap.svg(
             delineation.display_simplify(geo.get("watershed"), max_vertices=700),
             geo.get("reach"))
@@ -1197,7 +1199,7 @@ def _header_with_map(d, rep, geo):
         style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;")
 
 
-def _report_body(d, rep, notes, downloads, anchor=None, geo=None):
+def _report_body(d, rep, notes, downloads, anchor=None, geo=None, minimap_html=None):
     """Read-only report body shared by the single-site and batch modals (STAF layout).
     Ratings and notes are edited only in the Assessment worksheet, so this view never posts
     anything: the dense metric table (display toggles reveal detail client-side), the static
@@ -1205,7 +1207,7 @@ def _report_body(d, rep, notes, downloads, anchor=None, geo=None):
     The display-toggle classes live on the stable ``#easi-report`` wrapper."""
     return ui.div(
         _anchor_banner(anchor, d),
-        _header_with_map(d, rep, geo),      # header + basin table, map beside them
+        _header_with_map(d, rep, geo, minimap_html),
         _xs_readonly_block(rep),
         ui.div("Metrics", class_="easi-section-title"),
         _metric_toolbar(),
@@ -1220,14 +1222,14 @@ def _report_body(d, rep, notes, downloads, anchor=None, geo=None):
     )                                             # reconciles with any saved preference)
 
 
-def _report_modal(res, notes):
+def _report_modal(res, notes, minimap_html=None):
     """Single-site report popup, built from an ``export_result()`` snapshot (current overrides,
     swapped sources, and edited cross-section already folded in), so it is fully static."""
     d, rep = res["delineation"], res.get("report") or {}
     return ui.modal(
         _report_body(d, rep, notes, _dl_buttons(), anchor=res.get("siteAnchor"),
                      geo={"watershed": res.get("watershed_geojson"),
-                          "reach": res.get("reach_geojson")}),
+                          "reach": res.get("reach_geojson")}, minimap_html=minimap_html),
         # ✕ lives in the modal header so it stays put when the body scrolls; the muted
         # hint beside it cues that closing returns to the editable Assessment worksheet.
         title=ui.TagList("EASI Report",
@@ -1237,7 +1239,7 @@ def _report_modal(res, notes):
     )
 
 
-def _batch_report_modal(site_id, base):
+def _batch_report_modal(site_id, base, minimap_html=None):
     """Read-only per-site report popup for batch results — the same body as the single-site
     report. ``base`` is the site's ``metadata["_artifacts"]`` ``{"delineation","report"}`` dict."""
     d, rep = base.get("delineation") or {}, base.get("report") or {}
@@ -1250,7 +1252,7 @@ def _batch_report_modal(site_id, base):
     return ui.modal(
         _report_body(d, rep, {}, downloads, anchor=base.get("siteAnchor"),
                      geo={"watershed": base.get("watershed_geojson"),
-                          "reach": base.get("reach_geojson")}),
+                          "reach": base.get("reach_geojson")}, minimap_html=minimap_html),
         title=ui.TagList(f"EASI Report: {site_id}",
                          ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
         size="xl", easy_close=True, footer=None,
@@ -2177,7 +2179,6 @@ def server(input, output, session):
         # _show_report_modal reads export_result() (base_result/scored/notes calcs), and
         # without isolate this effect would gain those as dependencies and re-run — wiping
         # overrides/notes and re-opening the modal — on every later edit.
-        current_step.set(STEP_REPORT)
         with reactive.isolate():
             _show_report_modal()
 
@@ -2185,6 +2186,7 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.back_to_basin)
     def _go_basin():
+        _cancel_report()
         current_step.set(STEP_BASIN)
 
     @reactive.effect
@@ -2195,6 +2197,8 @@ def server(input, output, session):
         target = input.step_nav()
         if target not in dict(STEP_LABELS):
             return
+        if target != STEP_REPORT:
+            _cancel_report()
         with reactive.isolate():
             has_delin = delin() is not None
             has_report = base_result() is not None
@@ -2205,7 +2209,6 @@ def server(input, output, session):
         elif target == STEP_ASSESS and (has_report or _analysis_ready()):
             current_step.set(STEP_ASSESS)         # _autostart_assess runs it if not yet done
         elif target == STEP_REPORT and has_report:
-            current_step.set(STEP_REPORT)
             _show_report_modal()                  # opening Report shows the read-only popup
         else:
             ui.notification_show("Finish the earlier steps first.", type="message", duration=2)
@@ -2248,6 +2251,7 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.nav_help)
     def _help():
+        _cancel_report()
         ui.modal_show(ui.modal(
             ui.markdown(
                 "**EASI** automates the EASI Screening-tier assessment (from STAF) "
@@ -2268,7 +2272,8 @@ def server(input, output, session):
                 "a dagger explained below the report table; detailed sources retain "
                 "the reach, routed distance, and drainage-area ratio.\n"
                 "2. Wait for the StreamCat source-reach note. EASI retries temporary "
-                "routing failures twice automatically; if lookup remains unresolved, "
+                "routing failures up to three times, waiting 5, 10, and 15 seconds "
+                "before those retries. If lookup remains unresolved, "
                 "use **Retry StreamCat lookup** or choose another stream. The selected "
                 "point stays visible and analysis remains disabled until its source is "
                 "resolved. Adjust the reach length if needed, then click "
@@ -2297,6 +2302,7 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.nav_move)
     def _nav_move():
+        _cancel_report()
         ev = input.nav_move() or {}
         try:
             d = int(ev.get("d", 0))
@@ -2309,6 +2315,7 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.nav_jump)
     def _nav_jump():
+        _cancel_report()
         ev = input.nav_jump() or {}
         try:
             i = int(ev.get("i"))
@@ -2316,20 +2323,127 @@ def server(input, output, session):
             return
         current_fn.set(max(0, min(len(_FUNCTIONS) - 1, i)))
 
-    def _show_report_modal():
-        res = export_result()
-        if not res:
-            ui.notification_show("Run a screening first.", type="message", duration=3)
+    # Report preparation does not change the workspace or read reactive state
+    # from a worker. Only the remote mini-map request runs off the session loop.
+    _report_request = reactive.value(None)
+    _report_ui = reactive.value({"busy": False, "requestId": 0})
+    _report_counter = {"value": 0}
+
+    @reactive.effect
+    async def _report_busy_message():
+        await session.send_custom_message("staf-report-state", _report_ui())
+
+    def _report_context_matches(request):
+        if (request["generation"] != _map_pick["generation"]
+                or request["mode"] != app_mode()
+                or request["step"] != current_step()
+                or request["function"] != current_fn()):
+            return False
+        if request["mode"] == "batch":
+            obj = batch_result()
+            if obj is not request["batch"]:
+                return False
+            try:
+                base = (obj.sites[request["index"]].metadata or {}).get("_artifacts")
+            except (AttributeError, IndexError):
+                return False
+        else:
+            base = base_result()
+        return (base is request["base"] and base is not None
+                and base.get("watershed_geojson") == request["geometry"]["watershed"]
+                and base.get("reach_geojson") == request["geometry"]["reach"])
+
+    def _cancel_report():
+        pending = _report_request()
+        if pending is None:
+            return
+        _report_request.set(None)
+        report_map_task.cancel()
+        _report_ui.set({"busy": False, "requestId": pending["id"], "opened": False})
+
+    @reactive.effect
+    def _cancel_stale_report():
+        pending = _report_request()
+        if pending is not None and not _report_context_matches(pending):
+            _cancel_report()
+
+    @reactive.extended_task
+    async def report_map_task(request_id, geometry):
+        def prepare():
+            try:
+                minimap = reportmap.svg(
+                    delineation.display_simplify(geometry["watershed"], max_vertices=700),
+                    geometry["reach"])
+                return request_id, minimap, None
+            except Exception:  # UI recovery for malformed saved geometry or rendering errors
+                return request_id, "", "The report could not be prepared. Please try again."
+        return await anyio.to_thread.run_sync(prepare, abandon_on_cancel=True)
+
+    def _begin_report(base, *, batch=None, index=None):
+        if _report_request() is not None:
+            return
+        _report_counter["value"] += 1
+        geometry = copy.deepcopy({"watershed": base.get("watershed_geojson"),
+                                  "reach": base.get("reach_geojson")})
+        request = {"id": _report_counter["value"], "generation": _map_pick["generation"],
+                   "mode": app_mode(), "step": current_step(), "function": current_fn(),
+                   "base": base, "batch": batch, "index": index, "geometry": geometry}
+        _report_request.set(request)
+        _report_ui.set({"busy": True, "requestId": request["id"]})
+        report_map_task(request["id"], geometry)
+
+    @reactive.effect
+    def _report_map_done():
+        if report_map_task.status() in ("initial", "running"):
             return
         with reactive.isolate():
-            notes = dict(_notes())
-        _xs_unit_prev.set("ft")
-        ui.modal_show(_report_modal(res, notes))
+            pending = _report_request()
+            if pending is None:
+                return
+            try:
+                request_id, minimap, error = report_map_task.result()
+            except Exception:
+                _cancel_report()
+                return
+            if request_id != pending["id"]:
+                return
+            if not _report_context_matches(pending):
+                _cancel_report()
+                return
+            opened = False
+            try:
+                if error:
+                    ui.notification_show(error, type="warning", duration=6)
+                    return
+                if pending["mode"] == "batch":
+                    site = batch_result().sites[pending["index"]]
+                    base = (site.metadata or {})["_artifacts"]
+                    modal = _batch_report_modal(site.site_id, base, minimap_html=minimap)
+                    batch_modal_site.set({"site_id": site.site_id, "base": base})
+                else:
+                    res = export_result()  # include edits made while the map was loading
+                    if not res:
+                        return
+                    modal = _report_modal(res, dict(_notes()), minimap_html=minimap)
+                ui.modal_show(modal)
+                opened = True
+            except Exception:
+                ui.notification_show("The report could not be prepared. Please try again.",
+                                     type="warning", duration=6)
+            finally:
+                _report_request.set(None)
+                _report_ui.set({"busy": False, "requestId": request_id, "opened": opened})
+
+    def _show_report_modal():
+        base = base_result()
+        if not base:
+            ui.notification_show("Run a screening first.", type="message", duration=3)
+            return
+        _begin_report(base)
 
     @reactive.effect
     @reactive.event(input.open_report_evt)
     def _open_report():
-        current_step.set(STEP_REPORT)
         _show_report_modal()
 
     # ---- in-table overrides + notes (posted by www/report-edit.js) ----
@@ -2673,7 +2787,7 @@ def server(input, output, session):
         messages = {
             "snapping": "Finding the selected stream…",
             "finding": "Finding the nearest StreamCat reach…",
-            "retrying": f"Retrying StreamCat lookup ({max(1, lookup.get('attempt', 2) - 1)} of 2)…",
+            "retrying": f"Retrying StreamCat lookup ({max(1, min(3, int(lookup.get('attempt') or 2) - 1))} of 3)…",
             "no_match": "No StreamCat reach was found downstream. Retry the lookup or choose another stream.",
             "failed": "Could not reach the StreamCat routing service. Retry the lookup to continue.",
         }
@@ -2687,7 +2801,9 @@ def server(input, output, session):
             retry = (ui.input_action_button("retry_streamcat", "Retry StreamCat lookup",
                                            class_="btn-outline-secondary btn-sm")
                      if status in ("failed", "no_match") and _hr_route else None)
-            return ui.div(ui.p(message, class_="easi-snap-note"), retry,
+            spinner = (ui.span(class_="easi-spinner easi-lookup-spinner", **{"aria-hidden": "true"})
+                       if status in ("snapping", "finding", "retrying") else None)
+            return ui.div(ui.p(spinner, message, class_="easi-snap-note"), retry,
                           role="status", **{"aria-live": "polite"})
         err = anchor_error()
         if err:
@@ -3609,8 +3725,7 @@ def server(input, output, session):
             ui.notification_show("No report is available for this site.",
                                  type="warning", duration=3)
             return
-        batch_modal_site.set({"site_id": site.site_id, "base": base})
-        ui.modal_show(_batch_report_modal(site.site_id, base))
+        _begin_report(base, batch=obj, index=int(idx))
 
     def _modal_site_file(ext):
         with reactive.isolate():

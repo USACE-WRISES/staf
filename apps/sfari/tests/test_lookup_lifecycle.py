@@ -203,6 +203,50 @@ def test_success_is_announced_by_the_source_note_without_a_second_ready_line():
     assert "StreamCat source ready" not in html
 
 
+@pytest.mark.parametrize("surface", ["streamcat_lookup_status", "streamcat_lookup_status_ws"])
+@pytest.mark.parametrize("status,attempt,retry", [
+    ("snapping", 1, None), ("finding", 1, None),
+    ("retrying", 2, 1), ("retrying", 3, 2), ("retrying", 4, 3),
+    ("idle", 0, None), ("ready", 1, None), ("failed", 4, None), ("no_match", 1, None),
+])
+def test_lookup_activity_on_identify_and_imported_worksheet_surfaces(surface, status, attempt, retry):
+    ns = scope("_streamcat_lookup_status_ui", surface, ui=ui,
+               source_lookup=Value({"status": status, "generation": 7, "attempt": attempt,
+                                    "wait_seconds": retry * 5 if retry else 0}))
+    rendered = ns[surface]()
+    if status in ("idle", "ready"):
+        assert rendered is None
+        return
+    html = str(rendered)
+    pending = status in ("snapping", "finding", "retrying")
+    assert ("easi-spinner easi-lookup-spinner" in html) is pending
+    assert 'role="status"' in html and 'aria-live="polite"' in html
+    retry_id = "retry_streamcat_ws" if surface.endswith("_ws") else "retry_streamcat"
+    assert (f'id="{retry_id}"' in html) == (status in ("failed", "no_match"))
+    if pending:
+        assert 'aria-hidden="true"' in html
+        text = "Retrying StreamCat lookup" if retry else "Finding"
+        assert html.index("easi-lookup-spinner") < html.index(text)
+    if retry:
+        assert f"Retrying StreamCat lookup ({retry} of 3)" in html
+
+
+@pytest.mark.parametrize("status", ["snapping", "finding", "retrying", "ready", "failed"])
+def test_field_forms_lookup_wait_has_the_same_accessible_activity_indicator(status):
+    ns = scope("ff_status", ui=ui, source_lookup=Value({"status": status}),
+               evidence=Value({}), pull_task=SimpleNamespace(status=lambda: "initial"),
+               engine_task=SimpleNamespace(status=lambda: "initial"),
+               _pull_prog={"generation": 7}, _engine_prog={"generation": 7},
+               config=SimpleNamespace(desktop_metrics=lambda: []), METRICS_BY_ID={},
+               _ff_rows=lambda *args: ([], {}))
+    html = str(ns["ff_status"]())
+    pending = status in ("snapping", "finding", "retrying")
+    assert ("easi-lookup-spinner" in html) is pending
+    assert 'role="status"' in html and 'aria-live="polite"' in html
+    if pending:
+        assert 'aria-hidden="true"' in html and "finding the StreamCat source" in html
+
+
 @pytest.mark.parametrize("worker_status,attempt,expected_writes", [("finding", 1, 0), ("retrying", 2, 1)])
 def test_progress_poll_settles_in_a_real_reactive_flush(worker_status, attempt, expected_writes):
     from shiny import reactive
@@ -362,6 +406,7 @@ def test_continue_readiness_updates_do_not_trigger_navigation_or_reset_the_click
 
 def test_saved_results_remain_viewable_via_stepper_while_source_is_unresolved():
     ns = scope("_stepper_nav", source_lookup=Value({"status": "failed", "generation": 7}),
+               _cancel_report=lambda: None,
                current_step=Value("basin"), delin=Value({"saved": True}),
                input=SimpleNamespace(step_nav=lambda: {"key": "review"}),
                STEP_IDENTIFY="identify", STEP_BASIN="basin", STEP_REVIEW="review", STEP_REPORT="report",
