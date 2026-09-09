@@ -30,7 +30,12 @@ stepper: **Identify → Basin → Assessment → Report**.
    high-resolution NHD, colored by the engine that answers a click there:
    **dark blue** stretches are scored by the StreamCat lookup engine (a click
    within 150 ft of an NHDPlus V2 reach) and **cyan** stretches by the STAF
-   site engine. A legend under the layers button names the colors. **Clicking
+   site engine. A legend under the layers button names the colors by what they
+   mean for the data ("All data from this reach", "All data, some from
+   downstream") rather than by engine, and so do the layer-control entries: the
+   assessor never picks an engine. The engine names stay on the basin card, the
+   per-row source labels and the exports, where the question is provenance.
+   **Clicking
    snaps to the nearest stream line** (or tells you if you missed) and
    highlights the scored StreamCat reach. On a dark blue stretch the StreamCat
    lookup engine answers the watershed metrics in seconds. On a cyan stretch

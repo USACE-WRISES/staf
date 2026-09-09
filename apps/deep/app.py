@@ -60,10 +60,12 @@ HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 3, "opacity": 0.9}
 SCORED_REACH_STYLE = {"color": "#1f6feb", "weight": 11, "opacity": 0.3}
 # Dashed connector from a clicked HR-only stream to its nearest StreamCat reach.
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
-# LayersControl labels; the legend uses the same engine names.
-LAYER_COVERED = "Streams: StreamCat lookup engine"
-LAYER_UNCOVERED = "Streams: STAF site engine"
-LAYER_SCORED = "StreamCat reach"
+# LayersControl labels; they say what the legend says, since the control sits
+# one click from it and naming the engines in one place but not the other would
+# leave the term visible with nowhere left to define it.
+LAYER_COVERED = "Streams: all data from the reach"
+LAYER_UNCOVERED = "Streams: some data from downstream"
+LAYER_SCORED = "Selected reach"
 
 USGS_TOPO_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
 USGS_IMAGERY_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
@@ -531,9 +533,19 @@ def _engine_line_ui(es: dict, running: bool, prog: dict):
 
 def _legend_ui(step, zoomed, mode, reach, routed):
     """The map legend card (docked under the layers button by legend-dock.js):
-    which color means which engine, the state of the stream fetch, and the
-    StreamCat reach once it is known. Pure, so its states are tested offline.
-    None outside the Identify and Basin steps. Every string is a plain sentence."""
+    what each color means for the data, the state of the stream fetch, and the
+    reach the values come from once it is known. Pure, so its states are tested
+    offline. None outside the Identify and Basin steps. Every string is a plain
+    sentence.
+
+    The rows name consequences, not engines (2026-09-08). Which engine answers
+    is not a choice the assessor makes, and the site engine computes the HR
+    reach watershed on both colors, so naming the engines here was both unusable
+    and misleading. What differs is where the values come from: on a covered
+    reach every value describes the clicked reach, and on any other stream the
+    values a curve was fitted on come from the nearest reach downstream. The
+    engine names stay on the source row, the basis badge and the exports, where
+    provenance is the question."""
     if step not in (STEP_IDENTIFY, STEP_BASIN):
         return None
 
@@ -549,27 +561,25 @@ def _legend_ui(step, zoomed, mode, reach, routed):
                       class_="easi-legend-row")
 
     rows = [ui.div("Streams", class_="easi-legend-title"),
-            row(FLOWLINE_STYLE["color"], "StreamCat lookup engine",
-                "COMID-keyed values from this reach"),
-            row(HR_FLOWLINE_STYLE["color"], "STAF site engine",
-                "the HR reach watershed, every stream")]
+            row(FLOWLINE_STYLE["color"], "All data from this reach"),
+            row(HR_FLOWLINE_STYLE["color"], "All data, some from downstream")]
     note = None
     if not zoomed:
         note = "Zoom in to see streams"
     elif mode == "v2-only":
         note = "Fine streams unavailable here. Zoom in."
     elif mode == "hr-only":
-        note = "No StreamCat reach in view."
+        note = "No streams with all data in view."
     elif mode == "empty":
         note = "No streams in view."
     if note:
         rows.append(ui.div(note, class_="easi-legend-note"))
     if reach:
         name = reach.get("name") or "unnamed stream"
-        comid = reach.get("comid")
-        what = "Nearest StreamCat reach" if routed else "StreamCat reach"
-        label = f"{what}: {name}" + (f" (COMID {comid})" if comid is not None else "")
-        rows.append(row(SCORED_REACH_STYLE["color"], label, glow=True))
+        # Routed: the highlighted reach is the one downstream that supplies the
+        # borrowed values. Not routed: it is the clicked reach itself.
+        what = "Downstream reach" if routed else "This reach"
+        rows.append(row(SCORED_REACH_STYLE["color"], f"{what}: {name}", glow=True))
     if step == STEP_BASIN:
         rows.append(row(WATERSHED_STYLE["fillColor"], "Watershed", fill=True))
         rows.append(row(REACH_STYLE["color"], "Assessment reach"))
@@ -1163,7 +1173,7 @@ def server(input, output, session_):  # noqa: C901
             seg = comid_anchor.route_segment(anchor)
             if seg:
                 _add_layer("route", GeoJSON(data=seg, style=ROUTE_STYLE,
-                                            name="Nearest StreamCat reach"))
+                                            name="Downstream reach"))
             if _layers.get("marker") is not None:
                 _add_layer("marker", _layers["marker"])      # the point stays on top
 
@@ -1612,9 +1622,7 @@ def server(input, output, session_):  # noqa: C901
         if not pt:
             return ui.p("No point yet.", class_="easi-snap-note")
         lines = [
-            ui.p(f"✓ Snapped to a stream ({pt[2]:.0f} ft away).", class_="easi-snap-note ok"),
-            ui.p("The STAF site engine calculates the HR reach watershed, usually in under "
-                 "a minute.", class_="easi-snap-note")]
+            ui.p(f"✓ Snapped to a stream ({pt[2]:.0f} ft away).", class_="easi-snap-note ok")]
         reach_line = comid_anchor.snap_line(site_anchor())
         if reach_line:
             lines.append(ui.p(reach_line, class_="easi-snap-note"))
@@ -2463,7 +2471,7 @@ def server(input, output, session_):  # noqa: C901
                 seg = comid_anchor.route_segment(anchor)
                 if seg:
                     _add_layer("route", GeoJSON(data=seg, style=ROUTE_STYLE,
-                                                name="Nearest StreamCat reach"))
+                                                name="Downstream reach"))
                     if _layers.get("marker") is not None:
                         _add_layer("marker", _layers["marker"])
                 cid = comid_anchor.comid(anchor)

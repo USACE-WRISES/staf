@@ -2,11 +2,11 @@
 
 Uncovered (NHDPlus HR) streams drew as 1.2 px pale blue, nearly invisible on
 the topo basemap and easy to confuse with the covered lines. Now the HR
-geometry draws once, split by the click rule: dark blue where the StreamCat
-lookup engine scores the reach, cyan where the STAF site engine answers, both
-at the same weight; the scored reach glows under the pin after a click; the
-grey dashed route line is the only dashed one. The miss copy names the colors
-and the engines.
+geometry draws once, split by the click rule: dark blue where every value
+describes the clicked reach, cyan where some come from the reach downstream,
+both at the same weight; the selected reach glows under the pin after a click;
+the grey dashed route line is the only dashed one. Since 2026-09-08 the labels
+say what the colors mean for the data rather than naming the engines.
 """
 from __future__ import annotations
 
@@ -44,10 +44,13 @@ def test_the_scored_reach_is_a_glow_under_the_covered_line():
     assert app.SCORED_REACH_STYLE["opacity"] <= 0.5
 
 
-def test_layer_labels_name_the_engines():
-    assert "StreamCat lookup engine" in app.LAYER_COVERED
-    assert "STAF site engine" in app.LAYER_UNCOVERED
-    assert app.LAYER_SCORED == "Scored reach"
+def test_layer_labels_say_what_the_legend_says():
+    """The control sits one click from the legend, so it uses the same words
+    (2026-09-08); naming the engines in one and not the other would leave the
+    term visible with nowhere left to define it."""
+    assert app.LAYER_COVERED == "Streams: all data from the reach"
+    assert app.LAYER_UNCOVERED == "Streams: some data from downstream"
+    assert app.LAYER_SCORED == "Selected reach"
 
 
 def test_the_miss_copy_is_one_short_instruction():

@@ -67,7 +67,10 @@ def test_the_pane_copy_is_short():
     assert "Zoom in until stream lines appear" not in SRC
     assert "Type to search" not in SRC and "easi-ac-credit" not in SRC
     assert "No point yet." in SRC and "No point yet. Enter" not in SRC
-    assert '"StreamCat lookup engine.", class_="easi-snap-note ok"' in SRC
+    # the covered-click snap line stopped naming the engine (2026-09-08), the
+    # same trim SFARI and DEEP took: it says the click landed and nothing more
+    assert 'ft away).",\n                    class_="easi-snap-note ok"' in SRC
+    assert "Scored by the " not in SRC
     assert "Click “Delineate" not in SRC
     assert "Address search uses OpenStreetMap data (Photon and Nominatim)." in SRC
 
