@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import logging
 import math
+import re
 import time
 from typing import Any, Callable, Optional
 
@@ -53,6 +54,13 @@ NLDI_FLOWTRACE_URL = ("https://api.water.usgs.gov/nldi/pygeoapi/processes/"
                       "nldi-flowtrace/execution")
 _ROUTING_RETRY_PAUSES_S = (5.0, 10.0, 15.0)
 _ROUTING_ERROR_LIMIT = 400
+# USGS flowtrace can wrap an upstream read timeout in InvalidParameterValue
+# (HTTP 400). Only this captured execution error is a transient exception to
+# the normal rule that parameter errors stop immediately.
+_USGS_READ_TIMEOUT = re.compile(
+    r"Error executing process: HTTPSConnectionPool\(host='api\.water\.usgs\.gov', "
+    r"port=443\): Read timed out\. \(read timeout=[0-9]+(?:\.[0-9]+)?\)"
+)
 _LOG = logging.getLogger(__name__)
 ProgressCallback = Callable[[dict[str, Any]], None]
 # NHDPlus V2 attributes from the USGS fabric API (OGC API Features), the
@@ -186,13 +194,27 @@ def _http_error(response) -> str:
     return f"HTTP {response.status_code}" + (f": {detail}" if detail else "")
 
 
+def _usgs_execution_timed_out(response) -> bool:
+    """Recognize the captured USGS error, never a generic parameter error."""
+    try:
+        data = response.json()
+    except Exception:  # noqa: BLE001 - an error body need not be JSON
+        return False
+    if not isinstance(data, dict) or data.get("code") != "InvalidParameterValue":
+        return False
+    description = data.get("description")
+    return (isinstance(description, str)
+            and _USGS_READ_TIMEOUT.fullmatch(description.strip()) is not None)
+
+
 def _request_snap(endpoint: str, attempt: int, url: str, *, params: dict,
                   timeout: float, parser: Callable, body: Optional[dict] = None
                   ) -> tuple[dict, bool]:
-    """One HTTP request plus validation; only transient transport errors retry."""
+    """One HTTP request plus validation; only transient failures retry."""
     started = time.monotonic()
     status: Any = "network-error"
     retryable = False
+    retry_reason = "none"
     try:
         if body is None:
             response = requests.get(url, params=params, timeout=timeout, allow_redirects=False)
@@ -202,6 +224,12 @@ def _request_snap(endpoint: str, attempt: int, url: str, *, params: dict,
         status = response.status_code
         if status != 200:
             retryable = status in (408, 429) or 500 <= status <= 599
+            if retryable:
+                retry_reason = "http-status"
+            elif (status == 400 and endpoint == "flowtrace" and url == NLDI_FLOWTRACE_URL
+                  and _usgs_execution_timed_out(response)):
+                retryable = True
+                retry_reason = "usgs-read-timeout"
             result = {"error": f"{endpoint}: {_http_error(response)}"}
         else:
             try:
@@ -212,13 +240,16 @@ def _request_snap(endpoint: str, attempt: int, url: str, *, params: dict,
                 result = parser(data)
     except (requests.Timeout, requests.ConnectionError) as exc:
         retryable = True
+        retry_reason = "transport"
         result = {"error": f"{endpoint}: {_bounded_error(type(exc).__name__ + ': ' + str(exc))}"}
     except Exception as exc:  # noqa: BLE001 - never raise from the routing client
         result = {"error": f"{endpoint}: {_bounded_error(type(exc).__name__ + ': ' + str(exc))}"}
     elapsed = time.monotonic() - started
     _LOG.log(logging.WARNING if result.get("error") else logging.INFO,
-             "NLDI routing endpoint=%s attempt=%s status=%s elapsed=%.3fs error=%s",
-             endpoint, attempt, status, elapsed, _bounded_error(result.get("error", "")))
+             "NLDI routing endpoint=%s attempt=%s status=%s elapsed=%.3fs "
+             "retryable=%s retry_reason=%s error=%s",
+             endpoint, attempt, status, elapsed, retryable, retry_reason,
+             _bounded_error(result.get("error", "")))
     return result, retryable
 
 
