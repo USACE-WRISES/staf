@@ -18,7 +18,7 @@ the anchor payload. Never raises.
 """
 from __future__ import annotations
 
-from typing import Optional
+from typing import Callable, Optional
 
 from .datasources import flowlines
 
@@ -28,10 +28,12 @@ ENGINE_NAME = "StreamCat lookup engine"
 STREAMCAT_URL = "https://www.epa.gov/national-aquatic-resource-surveys/streamcat-dataset"
 
 
-def _classify(lat: float, lon: float, *, v2_hit, hr_hit, snap_tol_ft: float) -> dict:
+def _classify(lat: float, lon: float, *, v2_hit, hr_hit, snap_tol_ft: float,
+              progress: Optional[Callable[[dict], None]] = None) -> dict:
     from deep._vendor.site_engine import anchor
+    extra = {"progress": progress} if progress is not None else {}
     return anchor.classify_click(lat, lon, v2_hit=v2_hit, hr_hit=hr_hit,
-                                 snap_tol_ft=snap_tol_ft)
+                                 snap_tol_ft=snap_tol_ft, **extra)
 
 
 def _feature_by_id(fc: Optional[dict], prop: str, value) -> Optional[dict]:
@@ -52,7 +54,8 @@ def _feature_by_id(fc: Optional[dict], prop: str, value) -> Optional[dict]:
 
 
 def resolve(lat: float, lon: float, hr_hit, *, v2_fc: Optional[dict] = None,
-            snap_tol_ft: float = SNAP_TOL_FT) -> dict:
+            snap_tol_ft: float = SNAP_TOL_FT,
+            progress: Optional[Callable[[dict], None]] = None) -> dict:
     """``{"anchor": payload}`` or ``{"error": code, "detail"}``.
 
     ``hr_hit`` is the HR snap ``(snap_lat, snap_lon, dist_ft, nhdplusid)`` the
@@ -68,14 +71,19 @@ def resolve(lat: float, lon: float, hr_hit, *, v2_fc: Optional[dict] = None,
             fc = flowlines.flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d)
         v2_hit = (flowlines.nearest_point_on_lines(fc, lat, lon, id_prop="comid")
                   if fc else None)
+        extra = {"progress": progress} if progress is not None else {}
         res = _classify(lat, lon, v2_hit=v2_hit,
                         hr_hit=tuple(hr_hit) if hr_hit else None,
-                        snap_tol_ft=snap_tol_ft)
+                        snap_tol_ft=snap_tol_ft, **extra)
     except Exception as exc:  # noqa: BLE001 - resilience by design
         return {"error": "snap_service_error", "detail": str(exc)}
     if not isinstance(res, dict):
-        return {"error": "no_stream_found"}
+        return {"error": "snap_service_error", "detail": "unexpected response shape"}
+    if res.get("error"):
+        return res
     payload = res.get("anchor")
+    if comid(payload) is None:
+        return {"error": "snap_service_error", "detail": "unexpected response shape"}
     if payload and payload.get("anchorKind") == "v2Direct" and v2_hit:
         # the bbox features carry gnis_name; the engine's v2Direct payload does not
         feat = _feature_by_id(fc, "comid", v2_hit[3])
@@ -131,10 +139,13 @@ def _fill_covered_reach(scored: dict) -> None:
 # --------------------------------------------------------------------------- #
 def comid(anchor: Optional[dict]) -> Optional[int]:
     """The COMID that keys the StreamCat values, whatever the drainage-area ratio."""
-    c = ((anchor or {}).get("scoredReach") or {}).get("comid")
+    if not isinstance(anchor, dict) or not isinstance(anchor.get("scoredReach"), dict):
+        return None
+    c = anchor["scoredReach"].get("comid")
     try:
-        return None if c is None else int(c)
-    except (TypeError, ValueError):
+        value = int(c)
+        return value if not isinstance(c, bool) and value > 0 and float(c) == value else None
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
@@ -146,9 +157,10 @@ def synthetic(comid_value) -> Optional[dict]:
     """A minimal covered-reach anchor for a session that carries a COMID but no
     classification (saved before 2026-09-07)."""
     try:
+        value = comid({"scoredReach": {"comid": comid_value}})
         return {"anchorKind": "v2Direct", "anchorSchemaVersion": 1,
-                "scoredReach": {"network": "nhdplus-v2", "comid": int(comid_value)},
-                "notes": []} if comid_value is not None else None
+                "scoredReach": {"network": "nhdplus-v2", "comid": value},
+                "notes": []} if value is not None else None
     except (TypeError, ValueError):
         return None
 

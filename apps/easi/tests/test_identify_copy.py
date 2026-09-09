@@ -41,13 +41,12 @@ def test_engine_progress_text_reads_as_steps():
 
 
 def test_the_pin_lands_before_the_routing_on_every_hr_branch():
-    # the viewport hit, the click-box hit, and the typed-coordinate hit
-    assert SRC.count("_place_pin(hr_hit[0], hr_hit[1])") == 3
-    for branch in SRC.split("_place_pin(hr_hit[0], hr_hit[1])")[1:]:
-        assert branch.lstrip().startswith("stage.set(_LOCATING_TEXT)")
-    assert "def _place_pin(" in SRC
-    # a failed routing takes its pin back
-    assert SRC.count('_remove_layer("marker")') >= 3
+    assert SRC.count('_start_route(res["lat"], res["lon"], tuple(hr_hit))') == 2
+    assert "_start_route(lat, lon, tuple(hr_hit))" in SRC
+    start = SRC.split("def _start_route(", 1)[1].split("@reactive.effect", 1)[0]
+    assert start.index("_place_pin(") < start.index("route_task(")
+    failure = SRC.split("def _route_done():", 1)[1].split('anchor = res["anchor"]', 1)[0]
+    assert '_remove_layer("marker")' not in failure
 
 
 def test_a_new_pick_invalidates_the_last_point():
@@ -59,7 +58,7 @@ def test_a_new_pick_invalidates_the_last_point():
     assert SRC.count(block) == 2
     miss = SRC.split("def _apply_click_snap():", 1)[1]
     miss = miss.split("ui.notification_show(_MISS_TEXT", 1)[0]
-    assert miss.rstrip().endswith("see above")
+    assert '_remove_layer("marker")' in miss
 
 
 def test_the_pane_copy_is_short():
@@ -69,7 +68,7 @@ def test_the_pane_copy_is_short():
     assert "No point yet." in SRC and "No point yet. Enter" not in SRC
     # the covered-click snap line stopped naming the engine (2026-09-08), the
     # same trim SFARI and DEEP took: it says the click landed and nothing more
-    assert 'ft away).",\n                    class_="easi-snap-note ok"' in SRC
+    assert "StreamCat source reach resolved." in SRC
     assert "Scored by the " not in SRC
     assert "Click “Delineate" not in SRC
     assert "Address search uses OpenStreetMap data (Photon and Nominatim)." in SRC
@@ -77,11 +76,13 @@ def test_the_pane_copy_is_short():
 
 def test_the_cue_is_not_printed_twice():
     body = SRC.split("def snap_status():", 1)[1].split("@render.ui", 1)[0]
-    assert "return None" in body.split("if cue in", 1)[1].split("\n", 2)[1]
+    assert "Finding the nearest StreamCat reach" in body
+    busy = SRC.split("def busy_text():", 1)[1].split("@render.ui", 1)[0]
+    assert "route_task" not in busy and "click_snap_task" not in busy
 
 
 def test_styles_carry_the_tighter_divider_and_the_new_version():
-    assert 'href="styles.css?v=47"' in SRC
+    assert 'href="styles.css?v=50"' in SRC
     assert ".easi-pane-body hr { margin: 8px 0; }" in CSS
     assert ".easi-ac-credit" not in CSS
 

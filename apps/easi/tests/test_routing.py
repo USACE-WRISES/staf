@@ -292,6 +292,28 @@ def test_the_two_lookups_overlap_and_the_payload_is_unchanged(monkeypatch):
     assert res == routing.route_from_hr(40.0, -83.0, _HR_SNAP)
 
 
+def test_route_forwards_worker_progress_without_changing_the_anchor(monkeypatch):
+    from threading import get_ident
+
+    _stub(monkeypatch, snap=_SNAP_OK, attrs=_ATTRS_OK)
+    expected = routing.route_from_hr(40.0, -83.0, _HR_SNAP)
+    events, origins, workers = [], [], []
+    caller = get_ident()
+
+    def snap(lat, lon, *, progress):
+        origins.append((lat, lon))
+        workers.append(get_ident())
+        progress({"status": "finding", "attempt": 1})
+        progress({"status": "retrying", "attempt": 2})
+        return dict(_SNAP_OK)
+
+    monkeypatch.setattr(routing, "_hydrolocation_snap", snap)
+    assert routing.route_from_hr(40.0, -83.0, _HR_SNAP, progress=events.append) == expected
+    assert origins == [_HR_SNAP[:2]] and workers[0] != caller
+    assert events == [{"status": "finding", "attempt": 1},
+                      {"status": "retrying", "attempt": 2}]
+
+
 def test_an_attrs_outage_is_retryable_under_legacy_and_recorded_under_auto(monkeypatch):
     # the fabric service did not answer, so there is no drainage area to compare:
     # that is a service failure to retry, not the permanent refusal a reach with

@@ -199,7 +199,8 @@ def test_the_footnote_and_the_marker_appear_together():
     plain = dict(base, metricId="m-plain", name="Stream Temperature")
     foot = str(app._borrowed_footnote([borrowed, plain], anchor))
     assert app.BORROWED_MARK in foot
-    assert "Comes from the nearest StreamCat reach, 1,688 ft downstream." in foot
+    assert "Marked desktop evidence comes from the nearest StreamCat reach downstream." in foot
+    assert "1,688" not in foot
     assert "Low flow" not in foot                            # the marker names the rows
     tbl = str(app._metric_table([borrowed, plain], {}))
     assert f"<sup title=" in tbl and app.BORROWED_MARK in tbl
@@ -207,6 +208,28 @@ def test_the_footnote_and_the_marker_appear_together():
     # nothing marked means nothing to explain
     assert app._borrowed_footnote([plain], anchor) is None
     assert app.BORROWED_MARK not in str(app._metric_table([plain], {}))
+
+
+def test_borrowed_note_is_below_the_table_and_absent_for_overrides():
+    from easi import notices
+
+    anchor = _routed_anchor()
+    row = {**_rows()[0], "anchorNote": notices.borrowed_note(anchor)}
+    rep = {"metricRows": [row], "outcomes": _outcomes(), "functionScores": {},
+           "subIndices": {"physical": None, "chemical": None, "biological": None},
+           "ecosystemConditionIndex": None}
+    d = {"watershed_source": "site-engine"}
+    html = str(app._report_body(d, rep, {}, "", anchor))
+    assert html.index("easi-tbl") < html.index(notices.BORROWED_NOTE) < html.index("Summary plots")
+    assert html.count(notices.BORROWED_NOTE) == 1
+    card = str(app._borrowed_metric_note(row))
+    assert "Desktop evidence comes from the nearest StreamCat reach downstream." in card
+    assert "Mink Brook" in card and "32 times this stream" in card
+
+    override = {**row, "status": "override", "valueText": "user-provided: Good"}
+    assert app._borrowed_metric_note(override) is None
+    assert app._borrowed_footnote([override], anchor) is None
+    assert app.BORROWED_MARK not in str(app._metric_table([override], {}))
 
 
 def test_the_header_carries_the_watershed_map_when_geometry_is_passed(monkeypatch):

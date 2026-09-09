@@ -15,6 +15,7 @@ is curve-based (``deep.curves``) rather than Likert judgment.
 from __future__ import annotations
 
 import html
+import math
 import json
 import os
 import tempfile
@@ -38,7 +39,7 @@ from deep.metrics import computed as _computed  # noqa: E402
 from deep.pipeline import DEFAULT_REACH_FT  # noqa: E402
 
 try:
-    from ipyleaflet import (CircleMarker, GeoJSON, LayersControl, Map, Marker,  # noqa: F401
+    from ipyleaflet import (CircleMarker, GeoJSON, LayerGroup, LayersControl, Map, Marker,  # noqa: F401
                         ScaleControl, TileLayer)
     from ipywidgets import Layout
     from shinywidgets import output_widget, reactive_read, render_widget
@@ -49,24 +50,69 @@ except Exception:  # pragma: no cover
 WATERSHED_STYLE = {"color": "#caa700", "weight": 1, "fillColor": "#fdf24a", "fillOpacity": 0.40}
 REACH_STYLE = {"color": "#d6453d", "weight": 4}
 FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
-# Two stream colors, EASI's rule (ported from SFARI 2026-09-07): the NHDPlus HR
-# geometry is drawn once and split by the click rule. Dark blue where a click
-# lands within SNAP_TOL_FT of an NHDPlus V2 reach (the StreamCat lookup engine
-# answers by that COMID), cyan elsewhere (the STAF site engine alone answers
-# there, and the COMID-keyed values come from the nearest StreamCat reach
-# downstream, labeled). The split is deep/network_display.py; every click
-# still snaps to the high-resolution line.
+# All streams use blue by default. The optional StreamCat coverage view uses
+# the existing network_display split; presentation never changes the click rule.
 HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 3, "opacity": 0.9}
 # Translucent glow under the NHDPlus V2 reach whose COMID keys the StreamCat values.
 SCORED_REACH_STYLE = {"color": "#1f6feb", "weight": 11, "opacity": 0.3}
 # Dashed connector from a clicked HR-only stream to its nearest StreamCat reach.
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
-# LayersControl labels; they say what the legend says, since the control sits
-# one click from it and naming the engines in one place but not the other would
-# leave the term visible with nowhere left to define it.
-LAYER_COVERED = "Streams: all data from the reach"
-LAYER_UNCOVERED = "Streams: some data from downstream"
-LAYER_SCORED = "Selected reach"
+LAYER_STREAMS = "Streams"
+LAYER_COVERAGE = "StreamCat coverage"
+LAYER_SCORED = "StreamCat source reach"
+
+# Below the assessment vectors (Leaflet's overlay pane is 400), above basemaps.
+# Separate panes keep a stream refresh from covering the selected reach or pin.
+STREAM_PANES = {
+    "staf-source-glow": {"zIndex": 385, "pointerEvents": "none"},
+    "staf-streams": {"zIndex": 390},
+    "staf-source-route": {"zIndex": 395, "pointerEvents": "none"},
+}
+
+
+class _StreamMapLayers:
+    """Persistent map presentation, independent of fetching and assessment state."""
+
+    def __init__(self):
+        self.coverage = False
+        self.flow = GeoJSON(data=self.empty(), style=FLOWLINE_STYLE, pane="staf-streams")
+        self.hrflow = GeoJSON(data=self.empty(), style=FLOWLINE_STYLE, pane="staf-streams")
+        self.sources = LayerGroup()
+        self.group = LayerGroup(layers=(self.hrflow, self.flow, self.sources),
+                                name=LAYER_STREAMS)
+        self._source_layers = {}
+
+    @staticmethod
+    def empty():
+        return {"type": "FeatureCollection", "features": []}
+
+    def set_data(self, covered, uncovered):
+        self.hrflow.data = uncovered
+        self.flow.data = covered
+
+    def clear_streams(self):
+        # Keep the group's identity and its native LayersControl checkbox state.
+        self.set_data(self.empty(), self.empty())
+
+    def set_coverage(self, enabled):
+        self.coverage = bool(enabled)
+        self.hrflow.style = HR_FLOWLINE_STYLE if self.coverage else FLOWLINE_STYLE
+        self._sync_sources()
+
+    def set_source(self, key, layer):
+        layer.pane = "staf-source-glow" if key == "scored" else "staf-source-route"
+        self._source_layers[key] = layer
+        self._sync_sources()
+
+    def remove_source(self, key):
+        self._source_layers.pop(key, None)
+        self._sync_sources()
+
+    def _sync_sources(self):
+        # Hidden source geometry stays cached and can be shown without another fetch.
+        self.sources.layers = tuple(self._source_layers[key] for key in ("scored", "route")
+                                    if key in self._source_layers) if self.coverage else ()
+
 
 USGS_TOPO_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
 USGS_IMAGERY_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
@@ -105,8 +151,7 @@ def _point_marker(lat: float, lon: float):
 
 
 def _watershed_engine_text(d_all: dict, es: dict, running: bool) -> str:
-    """The Basin pane's engine row: which engine delineated the watershed (the
-    per-value badges say what each value describes)."""
+    """Describe the engine that delineated a stored watershed."""
     es = es or {}
     d_all = d_all or {}
     rec = d_all.get("siteEngine") or es.get("record") or {}
@@ -524,7 +569,7 @@ def _engine_line_ui(es: dict, running: bool, prog: dict):
     if running or st == "running":
         return ui.div(_engine_progress_text(prog), class_="deep-engine-line")
     if st == "ok":
-        return None      # the Watershed engine row says it (2026-09-04)
+        return None      # routine success needs no status message
     if st in ("failed", "refused", "unavailable"):
         return ui.div(f"STAF site engine {st}: {es.get('reason') or 'no detail'}. StreamCat "
                       "values stand in where the reach has them, labeled. Delineate again "
@@ -532,55 +577,51 @@ def _engine_line_ui(es: dict, running: bool, prog: dict):
     return None
 
 
-def _legend_ui(step, zoomed, mode, reach, routed):
-    """The map legend card (docked under the layers button by legend-dock.js):
-    what each color means for the data, the state of the stream fetch, and the
-    reach the values come from once it is known. Pure, so its states are tested
-    offline. None outside the Identify and Basin steps. Every string is a plain
-    sentence.
-
-    The rows name consequences, not engines (2026-09-08). Which engine answers
-    is not a choice the assessor makes, and the site engine computes the HR
-    reach watershed on both colors, so naming the engines here was both unusable
-    and misleading. What differs is where the values come from: on a covered
-    reach every value describes the clicked reach, and on any other stream the
-    values a curve was fitted on come from the nearest reach downstream. The
-    engine names stay on the source row, the basis badge and the exports, where
-    provenance is the question."""
+def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
+               streams_visible=True, source_visible=False, route_visible=False):
+    """A compact map key; source details appear only with the optional coverage view."""
     if step not in (STEP_IDENTIFY, STEP_BASIN):
         return None
 
-    def row(color, label, sub=None, glow=False, fill=False):
+    def row(color, label, sub=None, glow=False, fill=False, dashed=False):
         cls = "easi-legend-sw"
         if glow:
             cls += " easi-legend-sw-glow"
         if fill:
             cls += " easi-legend-sw-fill"
-        return ui.div(ui.span(class_=cls, style=f"background:{color};"),
+        if dashed:
+            cls += " easi-legend-sw-dashed"
+        return ui.div(ui.span(class_=cls, style=f"--swatch-color:{color};"),
                       ui.div(ui.div(label, class_="easi-legend-label"),
                              ui.div(sub, class_="easi-legend-sub") if sub else None),
                       class_="easi-legend-row")
 
-    rows = [ui.div("Streams", class_="easi-legend-title"),
-            row(FLOWLINE_STYLE["color"], "All data from this reach"),
-            row(HR_FLOWLINE_STYLE["color"], "All data, some from downstream")]
+    rows = [ui.div("Map legend", class_="easi-legend-title")]
+    if streams_visible:
+        if coverage:
+            rows.extend([row(FLOWLINE_STYLE["color"], "StreamCat reaches"),
+                         row(HR_FLOWLINE_STYLE["color"], "Other streams")])
+        else:
+            rows.append(row(FLOWLINE_STYLE["color"], "Streams"))
     note = None
-    if not zoomed:
+    if not streams_visible:
+        note = "Streams are hidden"
+    elif not zoomed:
         note = "Zoom in to see streams"
     elif mode == "v2-only":
         note = "Fine streams unavailable here. Zoom in."
-    elif mode == "hr-only":
-        note = "No streams with all data in view."
+    elif mode == "hr-only" and coverage:
+        note = "StreamCat coverage unavailable here."
     elif mode == "empty":
         note = "No streams in view."
     if note:
         rows.append(ui.div(note, class_="easi-legend-note"))
-    if reach:
+    if coverage and streams_visible and source_visible and reach:
         name = reach.get("name") or "unnamed stream"
-        # Routed: the highlighted reach is the one downstream that supplies the
-        # borrowed values. Not routed: it is the clicked reach itself.
-        what = "Downstream reach" if routed else "This reach"
+        what = "Downstream source" if routed else "StreamCat source"
         rows.append(row(SCORED_REACH_STYLE["color"], f"{what}: {name}", glow=True))
+    if coverage and streams_visible and route_visible:
+        rows.append(row(ROUTE_STYLE["color"], "Connection to source", dashed=True))
     if step == STEP_BASIN:
         rows.append(row(WATERSHED_STYLE["fillColor"], "Watershed", fill=True))
         rows.append(row(REACH_STYLE["color"], "Assessment reach"))
@@ -656,10 +697,10 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=15"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=18"),
                     ui.tags.link(rel="stylesheet", href="deep.css?v=8"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
-                    ui.tags.script(src="legend-dock.js?v=1", defer=""),
+                    ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
                     ui.tags.script(src="measure.js?v=4", defer=""),
@@ -762,6 +803,42 @@ def _parse_assessment_ref(raw_ref):
     return (ref or None), None
 
 
+def _valid_lookup_point(point):
+    """A real saved/snapped coordinate pair, never empty or non-finite input."""
+    try:
+        lat, lon = float(point[0]), float(point[1])
+        return math.isfinite(lat) and math.isfinite(lon) and -90 <= lat <= 90 and -180 <= lon <= 180
+    except (TypeError, ValueError, IndexError, KeyError):
+        return False
+
+
+def _saved_lookup_point(d):
+    """Restore the assessment point, keeping an HR site separate from its source reach."""
+    dd = d.get("delineation") if isinstance(d.get("delineation"), dict) else {}
+    ci = d.get("ctx_inputs") if isinstance(d.get("ctx_inputs"), dict) else {}
+    top_anchor = d.get("siteAnchor") if isinstance(d.get("siteAnchor"), dict) else {}
+    context_anchor = ci.get("siteAnchor") if isinstance(ci.get("siteAnchor"), dict) else {}
+    anchor = next((a for a in (top_anchor, context_anchor) if comid_anchor.comid(a) is not None),
+                  top_anchor or context_anchor)
+    clicked = anchor.get("clickedStream") if isinstance(anchor.get("clickedStream"), dict) else {}
+    scored = anchor.get("scoredReach") if isinstance(anchor.get("scoredReach"), dict) else {}
+    choices = [(dd.get("snapped_lat"), dd.get("snapped_lon")),
+               (clicked.get("snapLat"), clicked.get("snapLon")),
+               (ci.get("lat"), ci.get("lon"))]
+    if not comid_anchor.is_routed(anchor):
+        choices.append((scored.get("snapLat"), scored.get("snapLon")))
+    for point in choices:
+        if _valid_lookup_point(point):
+            return (float(point[0]), float(point[1]), 0.0,
+                    dd.get("nhdplus_id") or clicked.get("nhdplusId"))
+    return None
+
+
+def _lookup_is_ready(state, point, anchor, generation):
+    return (state.get("status") == "ready" and state.get("generation") == generation
+            and _valid_lookup_point(point) and comid_anchor.comid(anchor) is not None)
+
+
 def server(input, output, session_):  # noqa: C901
     current_step = reactive.value(STEP_IDENTIFY)
     snapped_point = reactive.value(None)
@@ -860,23 +937,85 @@ def server(input, output, session_):  # noqa: C901
 
     _layers: dict = {"flow": None, "hrflow": None, "route": None, "scored": None,
                      "marker": None, "ws": None, "reach": None}
+    coverage_enabled = reactive.value(False)
+    streams_visible = reactive.value(True)
+    source_geometry = reactive.value((False, False))  # glow, connector available
+    _map_pick = {"generation": 0}  # reject asynchronous results from superseded picks
+    source_lookup = reactive.value({"status": "idle", "generation": 0, "attempt": 0, "detail": ""})
+    _lookup_progress: dict = {}     # worker-owned plain progress, keyed by launch generation
+    _lookup_request: dict = {}      # retry the selected point without moving it
+    _delin_generation = reactive.value(None)
+    _engine_generation = {"value": None}
+
+    def _set_lookup(status, *, attempt=0, detail=""):
+        value = {"status": status, "generation": _map_pick["generation"],
+                 "attempt": attempt, "detail": detail}
+        with reactive.isolate():
+            if source_lookup() != value:
+                source_lookup.set(value)
+
+    def _source_ready(d=None):
+        generation = _map_pick["generation"]
+        anchor = site_anchor()
+        if not _lookup_is_ready(source_lookup(), snapped_point(), anchor, generation):
+            return False
+        if d is not None:
+            return (_delin_generation() == generation
+                    and comid_anchor.comid(d.get("siteAnchor")) == comid_anchor.comid(anchor))
+        return True
+
+    def _current_delineation():
+        source_lookup()  # generation changes must also invalidate downstream navigation
+        return delin() is not None and _delin_generation() == _map_pick["generation"]
+
+    def _engine_running():
+        source_lookup()  # a new pick invalidates renderers while the old worker drains
+        return (_engine_generation["value"] == _map_pick["generation"]
+                and engine_task.status() == "running")
 
     def _remove_layer(key):
         lyr = _layers.get(key)
         if lyr is not None:
-            try:
-                _MAP.remove(lyr)
-            except Exception:  # noqa: BLE001
-                pass
+            if key in ("scored", "route"):
+                _stream_layers.remove_source(key)
+            else:
+                try:
+                    _MAP.remove(lyr)
+                except Exception:  # noqa: BLE001
+                    pass
             _layers[key] = None
+            if key in ("scored", "route"):
+                source_geometry.set((_layers["scored"] is not None,
+                                     _layers["route"] is not None))
 
     def _add_layer(key, layer):
         _remove_layer(key)
-        _MAP.add(layer)
+        if key in ("scored", "route"):
+            _stream_layers.set_source(key, layer)
+        else:
+            _MAP.add(layer)
         _layers[key] = layer
+        if key in ("scored", "route"):
+            source_geometry.set((_layers["scored"] is not None,
+                                 _layers["route"] is not None))
 
     # ---- persistent map (built once; mutated in place) ----
     if _HAS_MAP:
+        _stream_layers = _StreamMapLayers()
+        _layers.update(flow=_stream_layers.flow, hrflow=_stream_layers.hrflow)
+
+        @reactive.effect
+        @reactive.event(input.streamcat_coverage)
+        def _coverage_view():
+            enabled = input.streamcat_coverage() is True
+            coverage_enabled.set(enabled)
+            _stream_layers.set_coverage(enabled)
+
+        @reactive.effect
+        @reactive.event(input.streams_visible)
+        def _streams_visibility():
+            streams_visible.set(input.streams_visible() is not False)
+
         clicked = reactive.value(None)
 
         def _on_map_interaction(**kwargs):
@@ -897,6 +1036,8 @@ def server(input, output, session_):  # noqa: C901
                              opacity=0.85, attribution=USGS_ATTR, max_native_zoom=16, max_zoom=19))
             # top-right; coverage.js docks the coverage panel into this same control
             # stack (just below this button), so the two auto-space and never overlap.
+            mp.panes = STREAM_PANES
+            mp.add(_stream_layers.group)
             mp.add(LayersControl(position="topright"))
             mp.add(ScaleControl(position="bottomright", metric=True, imperial=True))
             mp.on_interaction(_on_map_interaction)
@@ -907,21 +1048,6 @@ def server(input, output, session_):  # noqa: C901
         @render_widget
         def map():  # noqa: A001
             return _MAP
-
-        _EMPTY_FC = {"type": "FeatureCollection", "features": []}
-
-        def _set_layer_data(key, fc, style, name):
-            """Update a stream layer in place, creating it only the first time.
-
-            The widget re-renders on a data change without tearing the layer
-            down, so the map does not flash and the draw order is kept.
-            Returns True when the layer was created (2026-09-02)."""
-            lyr = _layers.get(key)
-            if lyr is not None:
-                lyr.data = fc
-                return False
-            _add_layer(key, GeoJSON(data=fc, style=style, name=name))
-            return True
 
         @reactive.calc
         def _view():
@@ -951,8 +1077,8 @@ def server(input, output, session_):  # noqa: C901
             if bbox is None:
                 with reactive.isolate():
                     fetched_bbox.set(None)
-                    _remove_layer("flow"); flow_geojson.set(None)
-                    _remove_layer("hrflow"); hr_geojson.set(None)
+                    _stream_layers.clear_streams()
+                    flow_geojson.set(None); hr_geojson.set(None)
                     streams_mode.set(None)
                 return
             elapsed = time.monotonic() - changed
@@ -986,17 +1112,7 @@ def server(input, output, session_):  # noqa: C901
                     return                          # torn down or a stale box
                 flow_geojson.set(res.get("v2"))     # raw networks: the click rule's input
                 hr_geojson.set(res.get("hr"))
-                # Cyan first, then dark blue on top; after the first fetch both
-                # update in place (no flash, draw order kept).
-                _set_layer_data("hrflow", res["uncovered"], HR_FLOWLINE_STYLE, LAYER_UNCOVERED)
-                created = _set_layer_data("flow", res["covered"], FLOWLINE_STYLE, LAYER_COVERED)
-                if created:
-                    # Freshly created stream layers land above the pick chrome
-                    # (a zoom out tears the streams down, a zoom in recreates
-                    # them), so the chrome goes back on top.
-                    for key in ("scored", "route", "marker"):
-                        if _layers.get(key) is not None:
-                            _add_layer(key, _layers[key])
+                _stream_layers.set_data(res["covered"], res["uncovered"])
                 if streams_mode() != res.get("mode"):
                     streams_mode.set(res.get("mode"))
 
@@ -1005,7 +1121,9 @@ def server(input, output, session_):  # noqa: C901
         def _handle_click():
             if current_step() != STEP_IDENTIFY:
                 return
+            _map_pick["generation"] += 1
             lat, lon = clicked()
+            _begin_pick()
             # The viewport's stream vectors, when loaded, settle the click
             # without a fetch; otherwise the engine's HR client snaps it.
             fc = hr_geojson()
@@ -1014,7 +1132,7 @@ def server(input, output, session_):  # noqa: C901
             if hit and hit[2] <= SNAP_TOL_FT:
                 _apply_snap(hit, click=(lat, lon))
             else:
-                click_snap_task(lat, lon)
+                click_snap_task(lat, lon, _map_pick["generation"])
 
         def _place_pin(slat: float, slon: float):
             """The pin and the coordinate inputs on the snapped point, at once.
@@ -1035,6 +1153,33 @@ def server(input, output, session_):  # noqa: C901
             site_anchor.set(None)
             evidence_reach.set(None)
 
+        def _begin_pick():
+            _clear_anchor_state()
+            snapped_point.set(None)
+            delin.set(None)
+            _delin_generation.set(None)
+            measured_values.set({})
+            computed_for.set(None)
+            current_fn.set(0)
+            for key in ("marker", "ws", "reach"):
+                _remove_layer(key)
+            _lookup_request.clear()
+            _lookup_progress.clear()
+            _no_watershed.clear()
+            engine_state.set({"status": "idle"})
+            stage.set("")
+            _set_lookup("snapping")
+
+        def _start_lookup(lat, lon, hit):
+            generation = _map_pick["generation"]
+            _clear_anchor_state()
+            _lookup_request.update(lat=lat, lon=lon, hit=tuple(hit), generation=generation)
+            _lookup_progress[generation] = {"status": "finding", "attempt": 1}
+            _set_lookup("finding", attempt=1)
+            with reactive.isolate():
+                v2_fc = flow_geojson()
+            anchor_task(lat, lon, tuple(hit), v2_fc, generation)
+
         def _apply_snap(hit, *, click=None):
             """Pin the HR snap point, then find the StreamCat reach for it in
             the background (comid_anchor): the V2 line under the click, or the
@@ -1044,16 +1189,17 @@ def server(input, output, session_):  # noqa: C901
             _place_pin(slat, slon)
             snapped_point.set((slat, slon, dist, nhdplusid))
             lat, lon = click if click and click[0] is not None else (slat, slon)
-            with reactive.isolate():
-                v2_fc = flow_geojson()
-            anchor_task(lat, lon, tuple(hit), v2_fc)
-            stage.set(_FINDING_REACH_TEXT)          # the busy row until the reach lands
+            _start_lookup(lat, lon, hit)
 
         def _apply_snap_result(res, *, from_coords=False):
             hit = res.get("hit")
             if hit and hit[2] <= SNAP_TOL_FT:
                 _apply_snap(hit, click=(res.get("lat"), res.get("lon")))
                 return
+            _remove_layer("marker")
+            snapped_point.set(None)
+            _set_lookup("failed" if res.get("error") else "no_match",
+                        detail=res.get("detail") or "No stream was found at this point.")
             if from_coords:
                 _remove_layer("marker")
                 snapped_point.set(None)
@@ -1064,44 +1210,86 @@ def server(input, output, session_):  # noqa: C901
                 ui.notification_show(_MISS_TEXT, type="warning", duration=6)
 
         @reactive.extended_task
-        async def click_snap_task(lat: float, lon: float) -> dict:
-            return await anyio.to_thread.run_sync(
-                lambda: hr_site.snap_point(lat, lon))
+        async def click_snap_task(lat: float, lon: float, generation: int) -> tuple[int, dict]:
+            try:
+                return generation, await anyio.to_thread.run_sync(
+                    lambda: hr_site.snap_point(lat, lon))
+            except Exception as exc:
+                return generation, {"error": "snap_service_error", "detail": str(exc)}
 
         @reactive.effect
         def _apply_click_snap():
             try:
-                res = click_snap_task.result()
+                generation, res = click_snap_task.result()
             except Exception:
+                return
+            if generation != _map_pick["generation"]:
                 return
             _apply_snap_result(res)
 
         @reactive.extended_task
-        async def coord_snap_task(lat: float, lon: float) -> dict:
-            return await anyio.to_thread.run_sync(
-                lambda: hr_site.snap_point(lat, lon))
+        async def coord_snap_task(lat: float, lon: float, generation: int) -> tuple[int, dict]:
+            try:
+                return generation, await anyio.to_thread.run_sync(
+                    lambda: hr_site.snap_point(lat, lon))
+            except Exception as exc:
+                return generation, {"error": "snap_service_error", "detail": str(exc)}
 
         @reactive.effect
         def _apply_coord_snap():
             try:
-                res = coord_snap_task.result()
+                generation, res = coord_snap_task.result()
             except Exception:
+                return
+            if generation != _map_pick["generation"]:
                 return
             _apply_snap_result(res, from_coords=True)
 
         # ---- the StreamCat reach for the point (comid_anchor), in the background ----
         @reactive.extended_task
-        async def anchor_task(lat: float, lon: float, hr_hit: tuple, v2_fc) -> dict:
+        async def anchor_task(lat: float, lon: float, hr_hit: tuple, v2_fc,
+                              generation: int) -> tuple[int, dict]:
             def run():
-                res = comid_anchor.resolve(lat, lon, hr_hit, v2_fc=v2_fc)
-                cid = comid_anchor.comid(res.get("anchor"))
-                if cid is not None:
-                    feat = (network_display.feature_by_id(v2_fc, "comid", cid)
-                            or network_display.v2_reach_feature(int(cid)))
-                    if feat:
-                        res["scoredFeature"] = feat
-                return res
-            return await anyio.to_thread.run_sync(run)
+                def progress(event):
+                    _lookup_progress[generation] = dict(event)
+                try:
+                    return comid_anchor.resolve(lat, lon, hr_hit, v2_fc=v2_fc, progress=progress)
+                except Exception as exc:
+                    return {"error": "snap_service_error", "detail": str(exc)}
+            return generation, await anyio.to_thread.run_sync(run)
+
+        @reactive.effect
+        def _lookup_poll():
+            state = source_lookup()
+            if state.get("status") not in ("finding", "retrying"):
+                return
+            event = _lookup_progress.get(_map_pick["generation"], {})
+            if event.get("status") in ("finding", "retrying"):
+                _set_lookup(event["status"], attempt=event.get("attempt", 1))
+            reactive.invalidate_later(0.25)
+
+        def _retry_lookup():
+            if source_lookup().get("status") not in ("failed", "no_match"):
+                return
+            request = dict(_lookup_request)
+            if (request.get("generation") != _map_pick["generation"]
+                    or not _valid_lookup_point(snapped_point())):
+                return
+            _map_pick["generation"] += 1
+            if _delin_generation() == request["generation"]:
+                _delin_generation.set(_map_pick["generation"])
+            _no_watershed.clear()
+            _start_lookup(request["lat"], request["lon"], request["hit"])
+
+        @reactive.effect
+        @reactive.event(input.retry_streamcat)
+        def _retry_streamcat():
+            _retry_lookup()
+
+        @reactive.effect
+        @reactive.event(input.retry_streamcat_ws)
+        def _retry_streamcat_ws():
+            _retry_lookup()
 
         def _draw_anchor(res: dict):
             """The StreamCat reach on the map: a glow under the V2 reach and, on
@@ -1129,30 +1317,47 @@ def server(input, output, session_):  # noqa: C901
 
         @reactive.effect
         def _anchor_done():
-            # A reach that cannot be resolved (the NLDI trace down, no covered
-            # reach nearby) is no error: the pin stays, the pane says none
-            # found, and Delineate still runs the engine (2026-09-07).
             try:
-                res = anchor_task.result()
+                generation, res = anchor_task.result()
             except Exception:
                 return
+            if generation != _map_pick["generation"]:
+                return
             with reactive.isolate():
+                anchor = res.get("anchor")
+                cid = comid_anchor.comid(anchor)
+                if not _valid_lookup_point(snapped_point()) or cid is None:
+                    _clear_anchor_state()
+                    _set_lookup("no_match" if res.get("error") in
+                                (None, "no_stream_found", "no_streamcat_reach") else "failed",
+                                detail=res.get("detail") or res.get("message") or "")
+                    return
                 _draw_anchor(res)
-                if stage() == _FINDING_REACH_TEXT:   # a running engine owns the row
-                    stage.set("")
+                _set_lookup("ready")
+                d = delin()
+                if d and _delin_generation() == generation:
+                    delin.set(_with_anchor(d, generation))
+                # Source geometry is optional and never delays the ready state.
+                feat = network_display.feature_by_id(flow_geojson(), "comid", cid)
+                if feat:
+                    _draw_anchor({"anchor": anchor, "scoredFeature": feat})
+                else:
+                    scored_task(cid, generation)
 
         @reactive.extended_task
-        async def scored_task(comid: int) -> dict:
+        async def scored_task(comid: int, generation: int) -> tuple[int, dict]:
             # The StreamCat reach's geometry for a restored session's glow.
-            return await anyio.to_thread.run_sync(
+            return generation, await anyio.to_thread.run_sync(
                 lambda: {"comid": int(comid),
                          "feature": network_display.v2_reach_feature(int(comid))})
 
         @reactive.effect
         def _scored_done():
             try:
-                res = scored_task.result()
+                generation, res = scored_task.result()
             except Exception:
+                return
+            if generation != _map_pick["generation"]:
                 return
             with reactive.isolate():
                 a = site_anchor()
@@ -1177,8 +1382,10 @@ def server(input, output, session_):  # noqa: C901
                 ui.notification_show("Coordinates must be within the continental United States.",
                                      type="warning", duration=5)
                 return
+            _map_pick["generation"] += 1
+            _begin_pick()
             _MAP.center = (lat, lon); _MAP.zoom = 15
-            coord_snap_task(lat, lon)
+            coord_snap_task(lat, lon, _map_pick["generation"])
 
     # ---- address geocode ----
     @reactive.effect
@@ -1208,20 +1415,28 @@ def server(input, output, session_):  # noqa: C901
 
     @reactive.effect
     def _toggle_delineate():
-        ui.update_action_button("delineate", disabled=(snapped_point() is None))
+        ui.update_action_button("delineate", disabled=not _source_ready() or _engine_running())
 
     # ---- the STAF site engine: the HR reach watershed and the reach, every site ----
     @reactive.extended_task
-    async def engine_task(lat: float, lon: float, reach_ft: float) -> dict:
+    async def engine_task(lat: float, lon: float, reach_ft: float, generation: int) -> dict:
         def _cb(event):
+            if generation != _map_pick["generation"]:
+                return
             for k in ("stage", "reaches", "hops", "family"):
                 if k in event:
                     _engine_prog[k] = event[k]
-        rec = await anyio.to_thread.run_sync(
-            lambda: engine_prefill.run_engine(lat, lon, reach_length_ft=reach_ft, progress=_cb))
-        return {"record": rec, "lat": lat, "lon": lon, "reach_ft": reach_ft}
+        try:
+            rec = await anyio.to_thread.run_sync(
+                lambda: engine_prefill.run_engine(lat, lon, reach_length_ft=reach_ft, progress=_cb))
+        except Exception as exc:
+            rec = {"status": "failed", "reason": str(exc)}
+        return {"record": rec, "lat": lat, "lon": lon, "reach_ft": reach_ft,
+                "generation": generation}
 
     def _launch_engine(lat, lon, reach_ft):
+        if not _source_ready() or _engine_running():
+            return
         if not engine_prefill.site_engine_available():
             engine_state.set({"status": "unavailable",
                               "reason": "the STAF site engine is not available in this deployment"})
@@ -1232,11 +1447,12 @@ def server(input, output, session_):  # noqa: C901
             _engine_prog[k] = None
         engine_state.set({"status": "running"})
         stage.set(_engine_progress_text({}))
-        engine_task(lat, lon, reach_ft)
+        _engine_generation["value"] = _map_pick["generation"]
+        engine_task(lat, lon, reach_ft, _map_pick["generation"])
 
     @reactive.effect
     def _engine_poll():
-        if engine_task.status() != "running":
+        if not _engine_running():
             ui.notification_remove("engine")      # never a stale progress toast
             return
         reactive.invalidate_later(1.0)
@@ -1269,37 +1485,37 @@ def server(input, output, session_):  # noqa: C901
     @reactive.effect
     @reactive.event(input.delineate)
     def _start_delineate():
-        pt = snapped_point()
-        try:
-            lat = pt[0] if pt else float(input.lat())
-            lon = pt[1] if pt else float(input.lon())
-        except Exception:
-            ui.notification_show("Set a point first.", type="warning", duration=3)
+        if not _source_ready():
+            ui.notification_show("Finish the StreamCat lookup before delineating.",
+                                 type="warning", duration=4)
             return
+        pt = snapped_point()
+        lat, lon = pt[0], pt[1]
         # Every site: the STAF site engine computes the HR reach watershed and
         # the assessment reach (2026-09-07) at the typed length. There is no
         # basin to look up.
         _launch_engine(lat, lon, float(input.reach_ft() or DEFAULT_REACH_FT))
 
-    def _with_anchor(d):
-        """The delineation with the StreamCat reach attached. The reach resolves
-        in the background right after the snap; the engine can finish first,
-        so the desktop compute reads the reach again when the Assessment opens."""
+    def _with_anchor(d, generation=None):
+        """Attach a source only to the current site's result; canonicalize its COMID."""
         with reactive.isolate():
             a = site_anchor()
-        if not d or not a or d.get("siteAnchor") == a:
+            ready = _source_ready()
+            result_generation = _delin_generation() if generation is None else generation
+        if not d or not ready or result_generation != _map_pick["generation"]:
+            return d
+        cid = comid_anchor.comid(a)
+        if (d.get("siteAnchor") == a and (d.get("ctx_inputs") or {}).get("comid") == cid
+                and (d.get("delineation") or {}).get("comid") == cid):
             return d
         out = dict(d)
         out["siteAnchor"] = a
         ci = dict(out.get("ctx_inputs") or {})
         ci["siteAnchor"] = a
-        cid = comid_anchor.comid(a)
-        if ci.get("comid") is None:
-            ci["comid"] = cid
+        ci["comid"] = cid
         out["ctx_inputs"] = ci
         dl = dict(out.get("delineation") or {})
-        if dl.get("comid") is None:
-            dl["comid"] = cid
+        dl["comid"] = cid
         out["delineation"] = dl
         return out
 
@@ -1308,16 +1524,14 @@ def server(input, output, session_):  # noqa: C901
         st = engine_task.status()
         if st in ("initial", "running"):
             return
-        ui.notification_remove("engine")
-        stage.set("")
         try:
             res = engine_task.result()
-        except Exception as exc:  # noqa: BLE001
-            with reactive.isolate():
-                pt = snapped_point() or (None, None)
-                reach_ft = float(input.reach_ft() or DEFAULT_REACH_FT)
-            res = {"record": {"status": "failed", "reason": str(exc)},
-                   "lat": pt[0], "lon": pt[1], "reach_ft": reach_ft}
+        except Exception:  # task converts failures to a generation-tagged result
+            return
+        if res.get("generation") != _map_pick["generation"] or not _source_ready():
+            return
+        ui.notification_remove("engine")
+        stage.set("")
         rec = res.get("record") or {}
         status = rec.get("status") or "failed"
         state = {"status": status, "reason": rec.get("reason"),
@@ -1327,10 +1541,11 @@ def server(input, output, session_):  # noqa: C901
             _offer_no_watershed(state, res)
             return
         out = _with_anchor(pipeline.delineate_from_engine(rec, res["lat"], res["lon"],
-                                                          res["reach_ft"]))
+                                                          res["reach_ft"]), res["generation"])
         if not _draw_delineation(out):
             return
         delin.set(out)
+        _delin_generation.set(res["generation"])
         current_step.set(STEP_BASIN)
 
     def _offer_no_watershed(state: dict, res: dict):
@@ -1338,6 +1553,8 @@ def server(input, output, session_):  # noqa: C901
         continue without a watershed polygon: watershed values then come from
         the StreamCat lookup engine, labeled with the reach they describe.
         Without one the site stays on Identify so Delineate can retry."""
+        if res.get("generation") != _map_pick["generation"] or not _source_ready():
+            return
         reason = state.get("reason") or state.get("status") or "no detail"
         with reactive.isolate():
             anchor = site_anchor()
@@ -1352,7 +1569,7 @@ def server(input, output, session_):  # noqa: C901
         _no_watershed.clear()
         _no_watershed.update({"anchor": anchor, "hr_hit": pt, "lat": res.get("lat"),
                               "lon": res.get("lon"), "reach_ft": res.get("reach_ft"),
-                              "engine": state})
+                              "engine": state, "generation": _map_pick["generation"]})
         ui.modal_show(ui.modal(
             ui.markdown(
                 "The STAF site engine could not compute the HR reach watershed for this "
@@ -1376,21 +1593,36 @@ def server(input, output, session_):  # noqa: C901
             return
         o = dict(_no_watershed)
         _no_watershed.clear()
+        if (o.get("generation") != _map_pick["generation"] or not _source_ready()
+                or comid_anchor.comid(o.get("anchor")) != comid_anchor.comid(site_anchor())):
+            return
         out = pipeline.delineate_without_watershed(o["anchor"], o["lat"], o["lon"],
                                                    o["hr_hit"], o["reach_ft"], o["engine"])
         if not _draw_delineation(out):
             return
         delin.set(out)
+        _delin_generation.set(o["generation"])
         current_step.set(STEP_BASIN)
 
     # ---- step navigation ----
     @reactive.effect
+    def _toggle_continue():
+        if current_step() == STEP_BASIN:
+            ui.update_action_button(
+                "to_measure", disabled=not _current_delineation() or not _source_ready(delin()))
+
+    @reactive.effect
     @reactive.event(input.to_measure)
     def _go_measure():
+        if not _current_delineation():
+            ui.notification_show("Delineate the current point before continuing.",
+                                 type="warning", duration=4)
+            return
+        if not _source_ready(delin()):
+            ui.notification_show("Complete the StreamCat lookup before continuing.",
+                                 type="warning", duration=4)
+            return
         if loaded_assessment() is None:
-            # The button stays enabled rather than rendering disabled: re-rendering it to
-            # flip the attribute resets its click count, which reactive.event reads as a
-            # click.
             ui.notification_show(
                 "No assessment covers this point, so there is nothing to score."
                 if not _covering_here() else "Choose an assessment first.",
@@ -1402,7 +1634,7 @@ def server(input, output, session_):  # noqa: C901
     def _has(step_target):
         if step_target == STEP_IDENTIFY:
             return True
-        if delin() is None:
+        if not _current_delineation():
             return False
         if step_target in (STEP_MEASURE, STEP_REPORT) and loaded_assessment() is None:
             return False
@@ -1428,10 +1660,14 @@ def server(input, output, session_):  # noqa: C901
             ui.notification_show("Finish the earlier steps first.", type="message", duration=2)
 
     def _do_reset():
+        _map_pick["generation"] += 1
         for k in ("ws", "reach", "marker", "route", "scored"):
             _remove_layer(k)
         site_anchor.set(None); evidence_reach.set(None); _no_watershed.clear()
         snapped_point.set(None); delin.set(None); stage.set("")
+        _lookup_request.clear(); _lookup_progress.clear()
+        _delin_generation.set(None)
+        _set_lookup("idle")
         engine_state.set({"status": "idle"})
         loaded_assessment.set(None); measured_values.set({}); current_fn.set(0)
         # Basin adopts only when nothing is chosen, so a stale ref here would stop the
@@ -1503,10 +1739,15 @@ def server(input, output, session_):  # noqa: C901
         ui.modal_show(ui.modal(
             ui.markdown(
                 "1. **Identify**: zoom in and click any stream, or type coordinates, or "
-                "search a place. Dark blue lines are the NHDPlus V2 reaches the StreamCat "
-                "lookup engine covers; cyan lines are every other NHD stream. Every click "
-                "snaps to the high-resolution NHD. Set the reach length and click "
-                "**Delineate**. The STAF site engine computes the HR reach watershed and "
+                "search a place. Streams use one solid blue style. **StreamCat coverage** "
+                "in the Layers menu starts off; enabling it shows StreamCat reaches in "
+                "blue, other streams in cyan, and the selected source reach and downstream "
+                "connector. It changes only the display. Assessment coverage remains "
+                "available in its separate panel. Every click "
+                "snaps to the high-resolution NHD. Wait for the StreamCat lookup to finish "
+                "before clicking **Delineate**. If the lookup fails, the point stays on the map; "
+                "use **Retry StreamCat lookup** or choose another stream. Set the reach length. "
+                "The STAF site engine computes the HR reach watershed and "
                 "the assessment reach, usually in under a minute and up to about five "
                 "minutes on a large basin.\n"
                 "2. **Basin**: review the watershed and reach. The published assessment "
@@ -1532,7 +1773,7 @@ def server(input, output, session_):  # noqa: C901
         step = current_step()
         if step == STEP_IDENTIFY:
             with reactive.isolate():
-                picked = snapped_point() is not None
+                picked = _source_ready()
             body = ui.TagList(
                 ui.div("Zoom in and click a stream, search a place, or enter coordinates.",
                        class_="easi-instr"),
@@ -1546,17 +1787,24 @@ def server(input, output, session_):  # noqa: C901
                 ui.input_numeric("reach_ft", "Assessment reach (ft)", value=int(DEFAULT_REACH_FT),
                                  min=100, max=5280, step=100),
                 ui.output_ui("snap_status"),
+                ui.output_ui("streamcat_lookup_status"),
                 ui.div(ui.input_action_button("delineate", "Delineate Basin and Reach",
                                               class_="btn-primary", disabled=not picked),
                        class_="easi-pane-actions"),
                 ui.output_text("busy_text"),
             )
         elif step == STEP_BASIN:
+            # Seed new controls without rebuilding them when lookup readiness changes;
+            # the updater preserves the action button's existing click count.
+            with reactive.isolate():
+                can_continue = _current_delineation() and _source_ready(delin())
             body = ui.TagList(
                 ui.output_ui("basin_card"),
                 ui.output_ui("assess_pane"),
+                ui.output_ui("streamcat_lookup_status"),
                 ui.div(ui.input_action_button("clear_basin", "Clear", class_="btn-outline-secondary"),
-                       ui.input_action_button("to_measure", "Continue", class_="btn-primary"),
+                       ui.input_action_button("to_measure", "Continue", class_="btn-primary",
+                                              disabled=not can_continue),
                        class_="easi-pane-actions"))
         else:  # assess / measure / report -> full-width worksheet replaces the left pane
             return None
@@ -1565,6 +1813,39 @@ def server(input, output, session_):  # noqa: C901
             ui.div(f"DEEP · {head_label}", class_="easi-pane-head"),
             ui.div(_stepper(step), body, class_="easi-pane-body"),
         )
+
+    def _streamcat_lookup_ui(retry_id):
+        state = source_lookup()
+        status = state.get("status")
+        if status in ("idle", "ready"):
+            return None
+        text = {
+            "snapping": "Finding the stream…",
+            "finding": "Finding the nearest StreamCat reach…",
+            "retrying": f"Retrying StreamCat lookup ({max(1, int(state.get('attempt') or 2) - 1)} of 2)…",
+            "failed": "Could not reach the StreamCat routing service. Retry the lookup to continue.",
+            "no_match": "No StreamCat reach was found downstream. Retry the lookup or choose another stream.",
+        }.get(status, "")
+        can_retry = status in ("failed", "no_match") and _valid_lookup_point(snapped_point())
+        if status == "failed" and any(hint in str(state.get("detail") or "").lower()
+                                      for hint in ("unexpected response shape", "invalid json response")):
+            text = "The StreamCat routing service returned an invalid response. Retry the lookup to continue."
+        if status in ("failed", "no_match") and not can_retry:
+            text = "No stream point is available. Choose a stream on the map to continue."
+        return ui.div(
+            ui.p(text, class_="easi-snap-note"),
+            ui.input_action_button(retry_id, "Retry StreamCat lookup",
+                                   class_="btn-outline-secondary btn-sm") if can_retry else None,
+            {"role": "status", "aria-live": "polite"},
+        )
+
+    @render.ui
+    def streamcat_lookup_status():
+        return _streamcat_lookup_ui("retry_streamcat")
+
+    @render.ui
+    def streamcat_lookup_status_ws():
+        return _streamcat_lookup_ui("retry_streamcat_ws")
 
     @render.ui
     def snap_status():
@@ -1576,7 +1857,7 @@ def server(input, output, session_):  # noqa: C901
         reach_line = comid_anchor.snap_line(site_anchor())
         if reach_line:
             lines.append(ui.p(reach_line, class_="easi-snap-note"))
-        return ui.TagList(*lines)
+        return ui.div(*lines, {"role": "status", "aria-live": "polite"})
 
     @render.ui
     def basin_card():
@@ -1587,16 +1868,17 @@ def server(input, output, session_):  # noqa: C901
 
         def row(label, val):
             return ui.div(ui.span(label), ui.tags.b(str(val)), class_="b-row")
-        # The EASI pane's rows (2026-09-04): the engine, the drainage area once,
-        # the reach length, the ids that matter. The rest stays in the report.
-        rows = [row("Watershed engine", _watershed_engine_text(
-                    d_all, engine_state(), engine_task.status() == "running")),
-                row("Drainage area", _fmt_km2(d.get("drainage_area_sqkm"))),
+        # Keep the basin summary focused on its area, reach length, and identifiers.
+        rows = [row("Drainage area", _fmt_km2(d.get("drainage_area_sqkm"))),
                 row("Reach length", _fmt_ft(d.get("reach_length_ft")))]
         if d.get("nhdplus_id") is not None:
             rows.append(row("NHDPlusID", d.get("nhdplus_id")))
-        rows.append(row("StreamCat reach", comid_anchor.reach_text(
-            d_all.get("siteAnchor") or site_anchor() or comid_anchor.synthetic(d.get("comid")))))
+        source = d_all.get("siteAnchor") or site_anchor() or comid_anchor.synthetic(d.get("comid"))
+        source_text = (comid_anchor.reach_text(source) if comid_anchor.comid(source) is not None else
+                       {"finding": "Looking up…", "snapping": "Looking up…", "retrying": "Retrying lookup…",
+                        "failed": "Lookup failed", "no_match": "No downstream match"}.get(
+                            source_lookup().get("status"), "Not resolved"))
+        rows.append(row("StreamCat reach", source_text))
         return ui.div(
             ui.h5(d.get("gnis_name") or "(unnamed reach)"),
             *rows,
@@ -1606,7 +1888,7 @@ def server(input, output, session_):  # noqa: C901
 
     @render.ui
     def engine_line():
-        running = engine_task.status() == "running"
+        running = _engine_running()
         if running:
             reactive.invalidate_later(1.0)
         return _engine_line_ui(engine_state(), running, _engine_prog)
@@ -1615,7 +1897,7 @@ def server(input, output, session_):  # noqa: C901
     def engine_line_ws():
         if current_step() not in (STEP_MEASURE, STEP_REPORT):
             return None
-        running = engine_task.status() == "running"
+        running = _engine_running()
         if running:
             reactive.invalidate_later(1.0)
         return _engine_line_ui(engine_state(), running, _engine_prog)
@@ -1623,8 +1905,7 @@ def server(input, output, session_):  # noqa: C901
     @render.text
     def busy_text():
         s = stage()
-        running = (engine_task.status() == "running"
-                   or (_HAS_MAP and anchor_task.status() == "running"))
+        running = _engine_running()
         return s if (s and running) else ""
 
     @render.ui
@@ -1668,8 +1949,11 @@ def server(input, output, session_):  # noqa: C901
         # itself, so a pan does not re-render it.
         if not _HAS_MAP:
             return None
+        glow, route = source_geometry()
         return _legend_ui(current_step(), zoomed_in(), streams_mode(), evidence_reach(),
-                          comid_anchor.is_routed(site_anchor()))
+                          comid_anchor.is_routed(site_anchor()), coverage=coverage_enabled(),
+                          streams_visible=streams_visible(), source_visible=glow,
+                          route_visible=route)
 
     # ======================================================================= #
     # Assessment resolution (Basin step)
@@ -1698,7 +1982,7 @@ def server(input, output, session_):  # noqa: C901
     @reactive.effect
     def _resolve_assessment():
         """Adopt an assessment as soon as there is a basin for it to apply to."""
-        if delin() is None:
+        if not _current_delineation():
             return
         covering = _covering_here()
         with reactive.isolate():
@@ -1916,27 +2200,25 @@ def server(input, output, session_):  # noqa: C901
     # ---- desktop auto-compute (Phase 3): prefill the computable metrics ----
     @reactive.extended_task
     async def compute_task(ctx_inputs: dict, metric_ids: list,
-                           assessment=None, engine_record=None) -> dict:
-        return await pipeline.compute_metrics_only(ctx_inputs, metric_ids,
-                                                   assessment=assessment,
-                                                   engine_record=engine_record)
+                           assessment=None, engine_record=None, *, generation: int,
+                           request_key) -> tuple:
+        try:
+            result = await pipeline.compute_metrics_only(ctx_inputs, metric_ids,
+                                                        assessment=assessment,
+                                                        engine_record=engine_record)
+        except Exception:
+            result = None
+        return generation, request_key, result
 
     @reactive.effect
     def _maybe_compute():
         if current_step() != STEP_MEASURE:
             return
         la = loaded_assessment(); d = delin()
-        if la is None or d is None:
+        if la is None or d is None or not _source_ready(d):
             return
         ci = d.get("ctx_inputs")
         if not ci:
-            return
-        # The StreamCat reach resolves in the background right after the snap
-        # and the engine nearly always finishes later; when it has not, wait
-        # for it, then attach it so the pull runs with the COMID (the compute
-        # key carries the COMID, so a later attach recomputes).
-        if _HAS_MAP and anchor_task.status() == "running":
-            reactive.invalidate_later(0.5)
             return
         d2 = _with_anchor(d)
         if d2 is not d:
@@ -1955,7 +2237,8 @@ def server(input, output, session_):  # noqa: C901
         # The loaded assessment rides along so the site-engine adapters can be
         # gated on its predictorSource (the train/serve pairing rule); the engine
         # record the app already computed rides along so it never runs twice.
-        compute_task(ci, ids, la, es.get("record") if es.get("status") == "ok" else None)
+        compute_task(ci, ids, la, es.get("record") if es.get("status") == "ok" else None,
+                     generation=_map_pick["generation"], request_key=key)
         ui.notification_show("Computing desktop metrics (STAF site engine / StreamCat lookup / 3DEP)…",
                              id="deep_compute", type="message", duration=None)
 
@@ -1963,11 +2246,19 @@ def server(input, output, session_):  # noqa: C901
     def _compute_done():
         if compute_task.status() in ("initial", "running"):
             return
-        ui.notification_remove("deep_compute")
         try:
-            res = compute_task.result()
+            generation, request_key, res = compute_task.result()
         except Exception:
             return
+        if generation != _map_pick["generation"]:
+            return
+        with reactive.isolate():
+            d = delin()
+            la = loaded_assessment()
+            if (not d or la is None or not _source_ready(d)
+                    or _auto_measure_key(la, d) != request_key):
+                return
+        ui.notification_remove("deep_compute")
         if not res:
             return
         with reactive.isolate():
@@ -1996,6 +2287,7 @@ def server(input, output, session_):  # noqa: C901
                                    class_="sfari-btn sfari-nav-desktop",
                                    title="Print-ready field packet listing every metric to measure"),
                 ui.output_ui("engine_line_ws"),
+                ui.output_ui("streamcat_lookup_status_ws"),
                 ui.output_ui("fn_nav"),
                 class_="sfari-nav"),
             ui.div(ui.output_ui("fn_panel"), class_="sfari-fnpanel"),
@@ -2216,7 +2508,7 @@ def server(input, output, session_):  # noqa: C901
     @reactive.effect
     @reactive.event(input.open_report_evt)
     def _open_report():
-        if delin() is None or loaded_assessment() is None:
+        if not _current_delineation() or loaded_assessment() is None:
             return
         current_step.set(STEP_REPORT)
         ui.modal_show(_report_modal())
@@ -2388,18 +2680,42 @@ def server(input, output, session_):  # noqa: C901
         except Exception as exc:  # noqa: BLE001
             ui.notification_show(f"Could not load assessment: {exc}", type="error", duration=6)
             return
+        _map_pick["generation"] += 1
         d = st.get("delineation") or {}
+        if not isinstance(d, dict):
+            d = {}
+        for key in ("delineation", "ctx_inputs"):
+            if key in d and not isinstance(d[key], dict):
+                d = {**d, key: {}}
         delin.set(d)
+        _delin_generation.set(_map_pick["generation"])
+        _lookup_request.clear(); _lookup_progress.clear(); _no_watershed.clear()
+        stage.set("")
         measured_values.set(st.get("measured_values") or {})
         computed_for.set(None)  # restored site/version must recompute desktop metrics
         se = d.get("siteEngine") if isinstance(d, dict) else None
         engine_state.set({"status": "ok", "record": se, "reason": None}
                          if se and se.get("status", "ok") == "ok"
                          else dict(se) if se else {"status": "idle"})
-        anchor = d.get("siteAnchor") if isinstance(d, dict) else None
+        point = _saved_lookup_point(d)
+        snapped_point.set(point)
+        anchor = d.get("siteAnchor")
+        if comid_anchor.comid(anchor) is None:
+            anchor = (d.get("ctx_inputs") or {}).get("siteAnchor")
+        if comid_anchor.comid(anchor) is None:
+            anchor = (comid_anchor.synthetic((d.get("delineation") or {}).get("comid"))
+                      or comid_anchor.synthetic((d.get("ctx_inputs") or {}).get("comid")))
+        if not _valid_lookup_point(point):
+            anchor = None
         site_anchor.set(anchor)
         evidence_reach.set(comid_anchor.legend_reach(anchor))
+        _set_lookup("ready" if comid_anchor.comid(anchor) is not None else
+                    "finding" if point else "failed")
+        if _source_ready():
+            d = _with_anchor(d, _map_pick["generation"])
+            delin.set(d)
         raw = st.get("assessment") or {}
+        loaded_assessment.set(None); selected_ref.set(None)
         if raw:
             try:
                 loaded_assessment.set(assessments.LoadedAssessment.from_dict(raw))
@@ -2409,7 +2725,7 @@ def server(input, output, session_):  # noqa: C901
                 # Without this the next delineation would see no chosen ref, adopt
                 # whatever covers the point, and wipe the values just restored.
                 selected_ref.set(_session_ref(st, raw))
-        if _HAS_MAP and d:
+        if _HAS_MAP:
             for k in ("ws", "reach", "marker", "route", "scored"):
                 _remove_layer(k)
             try:
@@ -2419,9 +2735,8 @@ def server(input, output, session_):  # noqa: C901
                 if d.get("reach_geojson"):
                     _add_layer("reach", GeoJSON(data=d["reach_geojson"], style=REACH_STYLE,
                                                 name="Assessment reach"))
-                dd = d.get("delineation") or {}
-                if dd.get("snapped_lat") is not None:
-                    _add_layer("marker", _point_marker(dd["snapped_lat"], dd["snapped_lon"]))
+                if point:
+                    _place_pin(point[0], point[1])
                     b = delineation.geojson_bounds(d.get("watershed_geojson"), d.get("reach_geojson"))
                     if b:
                         _MAP.fit_bounds(b)
@@ -2435,9 +2750,20 @@ def server(input, output, session_):  # noqa: C901
                         _add_layer("marker", _layers["marker"])
                 cid = comid_anchor.comid(anchor)
                 if cid is not None:
-                    scored_task(cid)
+                    scored_task(cid, _map_pick["generation"])
             except Exception:  # noqa: BLE001
                 pass
+            if point and comid_anchor.comid(anchor) is None:
+                if isinstance(point[3], int) and not isinstance(point[3], bool) and point[3] > 0:
+                    _start_lookup(point[0], point[1], point)
+                else:
+                    # Older sessions saved coordinates without the HR reach ID.
+                    # Re-snap before routing; repeatedly passing an ID-less HR hit
+                    # to the classifier would otherwise make Retry a dead end.
+                    _set_lookup("snapping")
+                    coord_snap_task(point[0], point[1], _map_pick["generation"])
+        elif point and comid_anchor.comid(anchor) is None:
+            _set_lookup("failed", detail="The stream map is unavailable in this deployment.")
         current_fn.set(0)
         current_step.set(STEP_MEASURE if loaded_assessment() is not None else STEP_BASIN)
         ui.notification_show("Assessment loaded. Resuming.", type="message", duration=4)

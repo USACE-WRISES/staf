@@ -139,4 +139,33 @@ def test_resolve_never_raises(monkeypatch):
     res = ca.resolve(40.3, -83.0, HR_HIT)
     assert res == {"error": "snap_service_error", "detail": "NLDI down"}
     monkeypatch.setattr(ca, "_classify", lambda *a, **k: None)
-    assert ca.resolve(40.3, -83.0, HR_HIT) == {"error": "no_stream_found"}
+    assert ca.resolve(40.3, -83.0, HR_HIT) == {
+        "error": "snap_service_error", "detail": "unexpected response shape"}
+
+
+def test_malformed_classification_is_not_an_explicit_no_match(monkeypatch):
+    for payload in ({}, {"anchor": None}, {"anchor": {"scoredReach": {"comid": 0}}}):
+        monkeypatch.setattr(ca, "_classify", lambda *a, **k: payload)
+        assert ca.resolve(40.31, -83.055, HR_HIT, v2_fc=FC) == {
+            "error": "snap_service_error", "detail": "unexpected response shape"}
+    monkeypatch.setattr(ca, "_classify", lambda *a, **k: {"error": "no_stream_found"})
+    assert ca.resolve(40.31, -83.055, HR_HIT, v2_fc=FC) == {"error": "no_stream_found"}
+
+
+def test_resolve_forwards_progress_and_preserves_the_terminal_result(monkeypatch):
+    events = []
+    def classify(*args, progress, **kwargs):
+        progress({"status": "finding", "attempt": 1})
+        progress({"status": "retrying", "attempt": 2})
+        return {"error": "snap_service_error", "detail": "routing unavailable"}
+    monkeypatch.setattr(ca, "_classify", classify)
+    result = ca.resolve(40.31, -83.055, HR_HIT, v2_fc=FC, progress=events.append)
+    assert events == [{"status": "finding", "attempt": 1}, {"status": "retrying", "attempt": 2}]
+    assert result == {"error": "snap_service_error", "detail": "routing unavailable"}
+
+
+def test_invalid_comids_cannot_be_normalized_as_saved_sources():
+    for value in (None, True, 0, -3, 1.5, "not-a-comid", float("nan"), float("inf")):
+        assert ca.comid({"scoredReach": {"comid": value}}) is None
+        assert ca.synthetic(value) is None
+    assert ca.comid(ca.synthetic("9327042")) == 9327042

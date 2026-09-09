@@ -362,6 +362,14 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 }
 .easi-header .staf-topnav-link:hover { color: #fff; }
 
+@media (max-width: 600px) {
+  .easi-header { padding: 0 10px; }
+  .easi-header .easi-brand small { display: none; }
+  .easi-header .staf-topnav { margin-left: 10px; padding-left: 10px; }
+  .easi-header .easi-nav { gap: 4px 8px; flex-wrap: wrap; align-items: center; }
+  .easi-header .easi-nav a { font-size: 12px; white-space: nowrap; }
+}
+
 /* map fills everything below the header */
 .easi-map-wrap { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; z-index: 0; }
 .easi-map-wrap > div, .easi-map-wrap .shiny-html-output,
@@ -879,7 +887,15 @@ summary.sfari-rep-sum { font-family: var(--font-head); font-weight: 600;
     border-top: 1px solid var(--card-border); }
   .sfari-nav .easi-pane-head, .sfari-nav-steps,
   .sfari-nav > .shiny-html-output { flex: 1 1 100%; }         /* header + stepper span the strip */
-  .easi-leftpane { width: auto; left: 8px; right: 8px; max-width: calc(100vw - 16px); }
+  /* Keep the map controls exposed above the scrollable Identify/Basin pane. */
+  .easi-shell { --map-pane-height: min(40vh, 360px); }
+  .easi-leftpane {
+    top: auto; bottom: 8px; left: 8px; right: 8px; width: auto;
+    max-width: calc(100vw - 16px); max-height: var(--map-pane-height);
+  }
+  .easi-map-wrap { bottom: calc(var(--map-pane-height) + 16px); }
+  .easi-readout { bottom: calc(var(--map-pane-height) + 28px); }
+  .easi-flow-loading { bottom: calc(var(--map-pane-height) + 30px); }
   .easi-header .easi-nav { gap: 10px 12px; flex-wrap: wrap; }
 }
 
@@ -949,7 +965,13 @@ summary.sfari-rep-sum { font-family: var(--font-head); font-weight: 600;
 .easi-legend-title { font-weight: 700; font-size: 11px; color: var(--easi-accent);
   text-transform: uppercase; letter-spacing: .03em; }
 .easi-legend-row { display: flex; align-items: center; gap: 7px; line-height: 1.25; }
-.easi-legend-sw { width: 18px; height: 3px; border-radius: 2px; flex: none; }
+.easi-legend-sw { width: 18px; height: 3px; border-radius: 2px; flex: none;
+  background: var(--swatch-color); }
+.easi-legend-sw-dashed { height: 2px; border-radius: 0;
+  background: repeating-linear-gradient(to right, var(--swatch-color) 0 6px, transparent 6px 10px); }
+.staf-coverage-control { margin-top: 5px; padding-top: 5px; border-top: 1px solid #ddd; }
+.staf-coverage-toggle { margin: 0 4px 0 0; vertical-align: middle; }
+.staf-coverage-toggle:focus-visible { outline: 2px solid #1f6feb; outline-offset: 2px; }
 .easi-legend-sw-glow { height: 9px; opacity: .3; }
 .easi-legend-sw-fill { width: 12px; height: 12px; border-radius: 2px; opacity: .6;
   border: 1px solid #caa700; }

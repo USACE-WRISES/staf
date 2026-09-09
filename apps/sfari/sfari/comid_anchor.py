@@ -28,10 +28,11 @@ ENGINE_NAME = "StreamCat lookup engine"
 STREAMCAT_URL = "https://www.epa.gov/national-aquatic-resource-surveys/streamcat-dataset"
 
 
-def _classify(lat: float, lon: float, *, v2_hit, hr_hit, snap_tol_ft: float) -> dict:
+def _classify(lat: float, lon: float, *, v2_hit, hr_hit, snap_tol_ft: float,
+              progress=None) -> dict:
     from sfari._vendor.site_engine import anchor
     return anchor.classify_click(lat, lon, v2_hit=v2_hit, hr_hit=hr_hit,
-                                 snap_tol_ft=snap_tol_ft)
+                                 snap_tol_ft=snap_tol_ft, **({"progress": progress} if progress else {}))
 
 
 def _feature_by_id(fc: Optional[dict], prop: str, value) -> Optional[dict]:
@@ -52,7 +53,7 @@ def _feature_by_id(fc: Optional[dict], prop: str, value) -> Optional[dict]:
 
 
 def resolve(lat: float, lon: float, hr_hit, *, v2_fc: Optional[dict] = None,
-            snap_tol_ft: float = SNAP_TOL_FT) -> dict:
+            snap_tol_ft: float = SNAP_TOL_FT, progress=None) -> dict:
     """``{"anchor": payload}`` or ``{"error": code, "detail"}``.
 
     ``hr_hit`` is the HR snap ``(snap_lat, snap_lon, dist_ft, nhdplusid)`` the
@@ -70,11 +71,13 @@ def resolve(lat: float, lon: float, hr_hit, *, v2_fc: Optional[dict] = None,
                   if fc else None)
         res = _classify(lat, lon, v2_hit=v2_hit,
                         hr_hit=tuple(hr_hit) if hr_hit else None,
-                        snap_tol_ft=snap_tol_ft)
+                        snap_tol_ft=snap_tol_ft, **({"progress": progress} if progress else {}))
     except Exception as exc:  # noqa: BLE001 - resilience by design
         return {"error": "snap_service_error", "detail": str(exc)}
-    if not isinstance(res, dict):
-        return {"error": "no_stream_found"}
+    if (not isinstance(res, dict)
+            or (not res.get("error") and comid(res.get("anchor")) is None)):
+        return {"error": "snap_service_error",
+                "detail": "Unexpected response shape from the StreamCat routing service"}
     payload = res.get("anchor")
     if payload and payload.get("anchorKind") == "v2Direct" and v2_hit:
         # the bbox features carry gnis_name; the engine's v2Direct payload does not
@@ -131,10 +134,13 @@ def _fill_covered_reach(scored: dict) -> None:
 # --------------------------------------------------------------------------- #
 def comid(anchor: Optional[dict]) -> Optional[int]:
     """The COMID that keys the StreamCat values, whatever the drainage-area ratio."""
-    c = ((anchor or {}).get("scoredReach") or {}).get("comid")
+    if not isinstance(anchor, dict) or not isinstance(anchor.get("scoredReach"), dict):
+        return None
+    c = anchor["scoredReach"].get("comid")
     try:
-        return None if c is None else int(c)
-    except (TypeError, ValueError):
+        value = None if c is None or isinstance(c, bool) else int(c)
+        return value if value is not None and value > 0 and (c == value or str(c).strip() == str(value)) else None
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
@@ -145,12 +151,46 @@ def is_routed(anchor: Optional[dict]) -> bool:
 def synthetic(comid_value) -> Optional[dict]:
     """A minimal covered-reach anchor for a session that carries a COMID but no
     classification (saved before 2026-09-07)."""
-    try:
-        return {"anchorKind": "v2Direct", "anchorSchemaVersion": 1,
-                "scoredReach": {"network": "nhdplus-v2", "comid": int(comid_value)},
-                "notes": []} if comid_value is not None else None
-    except (TypeError, ValueError):
-        return None
+    value = comid({"scoredReach": {"comid": comid_value}})
+    return {"anchorKind": "v2Direct", "anchorSchemaVersion": 1,
+            "scoredReach": {"network": "nhdplus-v2", "comid": value},
+            "notes": []} if value is not None else None
+
+
+def saved_anchor(d: Optional[dict]) -> Optional[dict]:
+    """Restore a source from this saved site only, including legacy COMID sessions."""
+    d = d if isinstance(d, dict) else {}
+    ci = d.get("ctx_inputs") if isinstance(d.get("ctx_inputs"), dict) else {}
+    dl = d.get("delineation") if isinstance(d.get("delineation"), dict) else {}
+    for candidate in (d.get("siteAnchor"), ci.get("siteAnchor")):
+        if comid(candidate) is not None:
+            return candidate
+    for value in (ci.get("comid"), dl.get("comid")):
+        anchor = synthetic(value)
+        if anchor:
+            return anchor
+    return None
+
+
+def saved_point(d: Optional[dict]) -> Optional[tuple]:
+    """Restore the assessment point, never the downstream source's snapped point."""
+    d = d if isinstance(d, dict) else {}
+    dl = d.get("delineation") if isinstance(d.get("delineation"), dict) else {}
+    ci = d.get("ctx_inputs") if isinstance(d.get("ctx_inputs"), dict) else {}
+    clicked = ((saved_anchor(d) or {}).get("clickedStream") or {})
+    clicked = clicked if isinstance(clicked, dict) else {}
+    # A partial higher-priority pair must not supply half of a different point.
+    for lat, lon, nhdplusid in (
+            (dl.get("snapped_lat"), dl.get("snapped_lon"), dl.get("nhdplus_id")),
+            (ci.get("lat"), ci.get("lon"), ci.get("nhdplus_id")),
+            (clicked.get("snapLat"), clicked.get("snapLon"), clicked.get("nhdplusId"))):
+        try:
+            lat, lon = float(lat), float(lon)
+            if 24 <= lat <= 50 and -125 <= lon <= -66:
+                return lat, lon, 0.0, nhdplusid
+        except (TypeError, ValueError):
+            continue
+    return None
 
 
 def fmt_ratio(value) -> Optional[str]:

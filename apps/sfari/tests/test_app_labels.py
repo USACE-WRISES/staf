@@ -36,6 +36,25 @@ def test_tooltip_names_the_reach_and_the_fallback():
         {"anchor_label": "nearest StreamCat reach, COMID 1"}))
 
 
+def test_report_marks_desktop_evidence_with_a_short_local_footnote():
+    from sfari import report
+
+    edata = {"status": "ok", "origin": "streamcat", "value_text": "0.90 km/km2",
+             "anchor_label": "nearest StreamCat reach Big Run (COMID 1), 1,240 ft downstream"}
+    value = str(app._report_evidence_value(edata))
+    assert value.index("0.90 km/km2") < value.index("<sup")
+    assert report.BORROWED_MARK in value and "Big Run" in value
+    note = str(app._borrowed_report_footnote([edata]))
+    assert report.BORROWED_NOTE in note
+    assert "1,240" not in note and "Big Run" not in note and "COMID" not in note
+    for changed in ({"origin": "engine"}, {"status": "unavailable"}, {"status": "pending"},
+                    {"anchor_label": ""}, {"value_text": ""}, {"origin": "field"}):
+        plain = {**edata, **changed}
+        assert report.BORROWED_MARK not in str(app._report_evidence_value(plain))
+        assert app._borrowed_report_footnote([plain]) is None
+    assert "field only" in str(app._report_evidence_value(None, "field only"))
+
+
 def test_engine_progress_text():
     # five plain steps, the reach count while the trace and the union run, the
     # metric family with its position; never "hops" (2026-09-07)
@@ -80,7 +99,7 @@ def test_copy_has_no_em_dash_and_names_both_engines():
     # head content renders as a dependency, not in str(app_ui): read the source
     from pathlib import Path
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert 'styles.css?v=21' in src and 'styles.css?v=20' not in src
+    assert 'styles.css?v=24' in src and 'styles.css?v=23' not in src
 
 
 def test_map_styles_exist():

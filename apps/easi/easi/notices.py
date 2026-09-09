@@ -11,12 +11,13 @@ is withheld any more.
 Since 2026-09-08 the note is split by where it is read. ``routed_notice`` says
 where the watershed metrics come from, which the report modal shows only when
 the watershed could not be calculated (its Basin characteristics block names
-the engine otherwise) and the PDF always shows, having no such block.
+the engine otherwise). The PDF keeps routine provenance with its ending source
+details, while degradations remain visible near the beginning.
 ``marker_note`` is the footnote beside the metric table, and the rows it
 describes carry a marker of their own rather than being listed by name. The
 per-metric provenance (the reach, the routed distance, the drainage-area
 ratio) rides each of those rows as ``anchorNote`` (``borrowed_note``), the CSV,
-the PDF rows, and the report table's "Scored at" column.
+the PDF source details, and the report table's "Scored at" column.
 """
 from __future__ import annotations
 
@@ -29,7 +30,17 @@ TITLE = "Note"
 #: Ties a borrowed metric row to the footnote beside the table. Lives here so
 #: the report modal and the PDF mark the same rows with the same character.
 BORROWED_MARK = "†"
+BORROWED_NOTE = "Marked desktop evidence comes from the nearest StreamCat reach downstream."
 OUTSIDE = "This stream is outside the StreamCat network"
+
+
+def is_borrowed(row: Optional[dict]) -> bool:
+    """Whether the displayed result uses downstream evidence, rather than an override."""
+    row = row or {}
+    return bool(row.get("anchorNote")
+                and row.get("status") in ("ok", "observed", "computed")
+                and row.get("rating") in ("Good", "Fair", "Poor")
+                and row.get("valueText"))
 
 
 def _limit(value: Any) -> str:
@@ -98,9 +109,7 @@ def marker_note(anchor: Optional[dict]) -> str:
     anchor = anchor or {}
     if anchor.get("anchorKind") != "hrSurrogate":
         return ""
-    dist = _ft((anchor.get("routing") or {}).get("routedDistanceFt"))
-    where = f"{dist} downstream" if dist else "downstream"
-    return f"Comes from the nearest StreamCat reach, {where}."
+    return BORROWED_NOTE
 
 
 def borrowed_note(anchor: Optional[dict]) -> str:

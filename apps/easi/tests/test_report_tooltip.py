@@ -122,3 +122,6 @@ def test_tooltip_shows_the_borrowing_note_ahead_of_the_adapter_note():
     # a covered row has no anchorNote and shows the adapter note alone
     plain = _tip_html(_row(hydraulics.LOW_FLOW_ID, note="Landscape-integrity fallback."))
     assert "Scored from" not in plain and "Landscape-integrity fallback." in plain
+    overridden = _tip_html({**row, "status": "override", "source": "user override",
+                           "valueText": "user-provided: Good"})
+    assert "Scored from" not in overridden and "user override" in overridden

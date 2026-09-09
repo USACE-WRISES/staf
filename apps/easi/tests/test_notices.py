@@ -5,7 +5,7 @@ COMID-keyed row."""
 from __future__ import annotations
 
 from easi import basin
-from easi.notices import borrowed_note, marker_note, routed_notice
+from easi.notices import borrowed_note, is_borrowed, marker_note, routed_notice
 
 
 def _anchor(*, ratio=32.02, routed_ft=1687.6, reach_name="Mink Brook", comid=9327042):
@@ -49,14 +49,26 @@ def test_site_engine_note_is_one_short_sentence_whatever_the_ratio():
 def test_marker_note_says_where_the_marked_rows_come_from():
     """It names no metric: the borrowed set is not fixed, since nutrients and
     regulatory impairment join it whenever their StreamCat fallback fires."""
-    assert marker_note(_anchor()) == ("Comes from the nearest StreamCat reach, "
-                                      "1,688 ft downstream.")
-    assert marker_note(_anchor(routed_ft=None)) == ("Comes from the nearest StreamCat "
-                                                    "reach, downstream.")
+    assert marker_note(_anchor()) == (
+        "Marked desktop evidence comes from the nearest StreamCat reach downstream.")
+    assert marker_note(_anchor(routed_ft=None)) == marker_note(_anchor())
     assert marker_note(_anchor(ratio=None)) == marker_note(_anchor())   # no ratio in it
     for text in (marker_note(_anchor()), marker_note(_anchor(routed_ft=None))):
         assert "\u2014" not in text and ";" not in text and len(text) < 170
         assert "Low flow" not in text and "substrate" not in text
+        assert "ft" not in text and "Mink Brook" not in text and "COMID" not in text
+
+
+def test_borrowed_marker_tracks_the_displayed_generated_evidence():
+    row = {"anchorNote": borrowed_note(_anchor()), "valueText": "0.5",
+           "status": "ok", "rating": "Fair"}
+    assert is_borrowed(row)
+    assert is_borrowed({**row, "status": "observed"})
+    for status in ("override", "excluded", "pending", "unavailable", "error"):
+        assert not is_borrowed({**row, "status": status})
+    for key in ("anchorNote", "valueText", "rating"):
+        assert not is_borrowed({**row, key: None})
+    assert not is_borrowed(None)
 
 
 def test_marker_note_is_empty_off_a_routed_site():

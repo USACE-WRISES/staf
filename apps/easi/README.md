@@ -27,21 +27,23 @@ stepper: **Identify → Basin → Assessment → Report**.
 
 1. **Identify** — Pan/zoom a USGS National Map basemap (Topo or Imagery) with an
    NHD hydrography overlay. At zoom ≥ 14 the map draws one stream network, the
-   high-resolution NHD, colored by the engine that answers a click there:
-   **dark blue** stretches are scored by the StreamCat lookup engine (a click
-   within 150 ft of an NHDPlus V2 reach) and **cyan** stretches by the STAF
-   site engine. A legend under the layers button names the colors by what they
-   mean for the data ("All data from this reach", "All data, some from
-   downstream") rather than by engine, and so do the layer-control entries: the
-   assessor never picks an engine. The engine names stay on the basin card, the
-   per-row source labels and the exports, where the question is provenance.
-   **Clicking
-   snaps to the nearest stream line** (or tells you if you missed) and
-   highlights the scored StreamCat reach. On a dark blue stretch the StreamCat
-   lookup engine answers the watershed metrics in seconds. On a cyan stretch
+   high-resolution NHD, in one solid blue style. The Layers menu contains
+   **Streams** and an optional **StreamCat coverage** checkbox, initially off.
+   Enabling coverage distinguishes **StreamCat reaches** in blue from **Other
+   streams** in cyan and shows the source-reach highlight and downstream
+   connector. The choice lasts for the current page session and only changes
+   the display. The assessment point, reach, and watershed remain distinct.
+   Engine names stay on the basin card, per-metric sources, and exports.
+   **Clicking snaps to the nearest stream line** (or tells you if you missed).
+   The point stays visible while its StreamCat source resolves. Delineate and
+   screening require that source; temporary routing failures retry twice,
+   followed by **Retry StreamCat lookup** if still unresolved. The persistent
+   status above Delineate distinguishes lookup, retries, no match, and failure.
+   Within 150 ft of an NHDPlus V2 reach, the StreamCat lookup engine answers
+   the watershed metrics in seconds. On other streams,
    the STAF site engine calculates the HR reach watershed of the clicked stream
    (usually well under a minute, up to about five minutes on a large basin,
-   with a progress line); the three reach-keyed metrics (low flow, substrate,
+   with a progress line); reach-keyed metrics (including low flow, substrate,
    biological integrity) come from the nearest StreamCat reach downstream,
    and each says so with the routed distance and the drainage-area ratio,
    whatever that ratio is. The policy is fixed by the framework: nothing
@@ -50,8 +52,8 @@ stepper: **Identify → Basin → Assessment → Report**.
    the map.
 2. **Basin** — Delineate the contributing **watershed** and an **upstream reach**
    (default ~1,000 ft, adjustable) with staged progress feedback. Shows COMID,
-   HUC12, drainage area, watershed area, and reach length. On a stream drawn
-   cyan the card names the watershed engine, the HR reach watershed area and the
+   HUC12, drainage area, watershed area, and reach length. On a stream outside
+   direct StreamCat coverage the card names the watershed engine, the HR reach watershed area and the
    reaches walked, and says where reach-keyed evidence comes from.
 3. **Assessment** — All 20 metrics compute automatically, then a worksheet walks
    the functions by discipline. Each card shows the metric, its scoring method
@@ -59,7 +61,9 @@ stepper: **Identify → Basin → Assessment → Report**.
    inline overrides, notes, and the editable cross-section.
 4. **Report** — A popup with the **outcome rollup** (ECI + sub-indices + cards),
    a **basin-characteristics** section, an **editable cross-section**, and the
-   **metric table** with inline overrides and per-metric notes. Export to
+   **metric table** with inline overrides and per-metric notes. A dagger marks
+   downstream desktop evidence, explained in a small note below the table;
+   detailed provenance stays with the source information. Export to
    **PDF / CSV / GeoJSON**.
 
 A **Batch** mode runs up to 10 sites from a pasted list and packages the reports

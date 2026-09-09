@@ -37,21 +37,18 @@ def test_delineate_passes_the_typed_reach_length_to_the_engine():
 
 
 def test_the_assessment_waits_for_the_streamcat_reach_before_the_pull():
-    # DEEP's _maybe_compute (2026-09-07): the pull runs once the background
-    # anchor has landed, never before, and the busy cues say so meanwhile
-    assert app._FINDING_REACH_TEXT == "Finding the StreamCat reach…"
+    # A stopped task can mean failure: readiness, not task completion, gates work.
     enter = SRC.split("def _enter_review():", 1)[1].split("def _maybe_pull():", 1)[0]
     assert "pull_task(" not in enter
     body = SRC.split("def _maybe_pull():", 1)[1].split("def _pull_poll():", 1)[0]
-    assert 'anchor_task.status() == "running"' in body and "reactive.invalidate_later(0.5)" in body
-    assert 'pull_task(d2["ctx_inputs"], _pull_prog, es)' in body
+    assert 'if not _source_ready(d):' in body
+    assert '_launch_pull(d2, es)' in body
     assert 'pull_task.status() == "running"' in body            # never queue a second pull
     busy = SRC.split("def busy_text():", 1)[1].split("@render", 1)[0]
-    assert "anchor_task.status()" in busy
+    assert "anchor_task.status()" not in busy  # source status has its own persistent output
     snap = SRC.split("def _apply_snap(hit, *, click=None):", 1)[1].split("def _apply_snap_result", 1)[0]
-    assert "stage.set(_FINDING_REACH_TEXT)" in snap
-    for fn in ("def fn_panel():", "def _ff_pulling() -> bool:"):
-        assert 'anchor_task.status() == "running"' in SRC.split(fn, 1)[1][:600], fn
+    assert "_begin_lookup()" in snap
+    assert 'ui.output_ui("streamcat_lookup_status")' in SRC
     assert "upgrade_pending" not in SRC                            # legacy field, never read
 
 
@@ -87,7 +84,7 @@ def test_numbers_are_formatted():
 
 
 def test_styles_carry_the_tighter_divider_and_the_new_version():
-    assert 'href="styles.css?v=21"' in SRC
+    assert 'href="styles.css?v=24"' in SRC
     assert ".easi-pane-body hr { margin: 8px 0; }" in CSS
     assert ".easi-ac-credit" not in CSS
 
@@ -119,7 +116,9 @@ def test_basin_pane_matches_easi_plus_the_nhdplusid():
     for gone in ('"Stream order"', '"Watershed basis"', '"Covered reach"',
                  "none within the substitution limit"):
         assert gone not in card, gone
-    for kept in ('row("Watershed engine"', 'row("Drainage area"', 'row("Reach length"',
+    assert 'row("Watershed engine"' not in card
+    assert 'ui.output_ui("engine_line")' in card  # retain progress and failure messages
+    for kept in ('row("Drainage area"', 'row("Reach length"',
                  'row("NHDPlusID"', 'row("StreamCat reach"'):
         assert kept in card, kept
     assert app._watershed_engine_text({"watershedBasis": "site-engine",
@@ -134,6 +133,6 @@ def test_basin_pane_matches_easi_plus_the_nhdplusid():
         == "StreamCat lookup engine (nearest StreamCat reach basin)"
     # the NHDPlusID row only when known; a legacy session's bare COMID still names the reach
     assert 'if d.get("nhdplus_id") is not None' in card
-    assert 'comid_anchor.synthetic(d.get("comid"))' in card
+    assert 'comid_anchor.saved_anchor(d_all)' in card
     # the engine summary line is silent once the engine answered
     assert app._engine_line_ui({"status": "ok", "record": {"engineVersion": "0.2.2"}}, False, {}) is None

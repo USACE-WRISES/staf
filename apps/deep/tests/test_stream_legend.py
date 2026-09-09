@@ -1,13 +1,7 @@
-"""The map legend: docked under the layers button, always visible on the
-Identify and Basin steps, saying what each color means for the data, the state
-of the stream fetch, and which reach the values come from. Pure builder, no
-session.
-
-Since 2026-09-08 the legend names consequences rather than engines, so the
-tests here guard the absence of the engine vocabulary as much as the presence
-of the new copy."""
+"""Default stream presentation, optional coverage, and source-layer lifecycle."""
 from __future__ import annotations
 
+import copy
 from pathlib import Path
 
 import pytest
@@ -15,55 +9,62 @@ import pytest
 app = pytest.importorskip("app")
 
 
-def _html(step="identify", zoomed=True, mode="segmented", reach=None, routed=False):
-    return str(app._legend_ui(step, zoomed, mode, reach, routed) or "")
+def _html(step="identify", zoomed=True, mode="segmented", reach=None, routed=False, **kwargs):
+    return str(app._legend_ui(step, zoomed, mode, reach, routed, **kwargs) or "")
 
 
-def test_the_rows_say_what_each_color_means_for_the_data():
-    html = _html()
-    assert "All data from this reach" in html
-    assert "All data, some from downstream" in html
+def test_default_legend_has_one_stream_style_and_no_source_details():
+    html = _html(reach={"comid": 1, "name": "Mink Brook"}, routed=True,
+                 source_visible=True, route_visible=True)
+    assert "Map legend" in html and ">Streams<" in html
+    assert app.FLOWLINE_STYLE["color"] in html
+    assert app.HR_FLOWLINE_STYLE["color"] not in html
+    assert "StreamCat" not in html and "Mink Brook" not in html
+    assert "Connection to source" not in html
+
+
+def test_coverage_legend_describes_the_network_without_promising_complete_data():
+    html = _html(coverage=True)
+    assert "StreamCat reaches" in html and "Other streams" in html
     assert app.FLOWLINE_STYLE["color"] in html and app.HR_FLOWLINE_STYLE["color"] in html
-    assert app.FLOWLINE_STYLE["color"] != app.HR_FLOWLINE_STYLE["color"]
-    assert "easi-legend-title" in html and "Zoom in" not in html
+    assert "all data" not in html.lower()
+    for jargon in ("STAF site engine", "COMID", "HR reach watershed"):
+        assert jargon not in html
 
 
-def test_no_engine_vocabulary_reaches_the_legend_or_the_layer_control():
-    """The point of the change: an assessor never picks an engine, so the map
-    must not ask them to learn the names. Provenance labels elsewhere still
-    carry them, which is why this asserts only on the legend and the control."""
-    everywhere = "".join([
-        _html(), _html(zoomed=False, mode=None), _html(mode="v2-only"),
-        _html(mode="hr-only"), _html(mode="empty"),
-        _html(step="basin", reach={"comid": 9327042, "name": "Mink Brook"}),
-        _html(reach={"comid": 9327042, "name": None}, routed=True),
-        app.LAYER_COVERED, app.LAYER_UNCOVERED, app.LAYER_SCORED,
-    ])
-    for jargon in ("StreamCat", "STAF site engine", "COMID", "HR reach watershed"):
-        assert jargon not in everywhere, jargon
+def test_source_rows_require_both_the_optional_view_and_available_geometry():
+    reach = {"comid": 9327042, "name": "Mink Brook"}
+    assert "Mink Brook" not in _html(reach=reach, coverage=True)
+    html = _html(reach=reach, coverage=True, source_visible=True)
+    assert "StreamCat source: Mink Brook" in html
+    assert "easi-legend-sw-glow" in html
+    html = _html(reach={"comid": 9327042, "name": None}, routed=True,
+                 coverage=True, source_visible=True, route_visible=True)
+    assert "Downstream source: unnamed stream" in html and "9327042" not in html
+    assert "Connection to source" in html and "easi-legend-sw-dashed" in html
+    route_only = _html(coverage=True, routed=True, route_visible=True)
+    assert "Connection to source" in route_only and "easi-legend-sw-glow" not in route_only
 
 
-def test_notes_follow_the_zoom_and_the_fetch_mode():
+def test_native_streams_visibility_hides_all_stream_and_source_legend_rows():
+    html = _html(step="basin", streams_visible=False, coverage=True,
+                 reach={"name": "Mink Brook"}, source_visible=True, route_visible=True)
+    assert "Streams are hidden" in html
+    assert "StreamCat reaches" not in html and "Other streams" not in html
+    assert "Mink Brook" not in html and "Connection to source" not in html
+    assert "Watershed" in html and "Assessment reach" in html
+
+
+def test_notes_follow_zoom_and_fetch_state():
     assert "Zoom in to see streams" in _html(zoomed=False, mode=None)
     assert "Fine streams unavailable here. Zoom in." in _html(mode="v2-only")
-    assert "No streams with all data in view." in _html(mode="hr-only")
+    assert "easi-legend-note" not in _html(mode="hr-only")
+    assert "StreamCat coverage unavailable here." in _html(mode="hr-only", coverage=True)
     assert "No streams in view." in _html(mode="empty")
-    assert "easi-legend-note" not in _html(mode=None)          # loading: no note
+    assert "easi-legend-note" not in _html(mode=None)
 
 
-def test_reach_rows_name_where_the_values_come_from():
-    """Two states. On a covered reach the highlight is the clicked reach; on any
-    other stream it is the reach downstream the borrowed values come from."""
-    html = _html(reach={"comid": 9327042, "name": "Mink Brook"})
-    assert "This reach: Mink Brook" in html
-    assert "easi-legend-sw-glow" in html and app.SCORED_REACH_STYLE["color"] in html
-    html = _html(reach={"comid": 9327042, "name": None}, routed=True)
-    assert "Downstream reach: unnamed stream" in html
-    assert "9327042" not in html                     # the COMID stays off the map
-    assert "This reach:" not in _html() and "Downstream reach:" not in _html()
-
-
-def test_basin_step_adds_the_watershed_and_reach_rows():
+def test_basin_keeps_the_actual_assessment_reach_and_watershed():
     html = _html(step="basin")
     assert "Watershed" in html and "Assessment reach" in html
     assert app.WATERSHED_STYLE["fillColor"] in html and app.REACH_STYLE["color"] in html
@@ -72,27 +73,113 @@ def test_basin_step_adds_the_watershed_and_reach_rows():
 
 
 def test_hidden_outside_the_map_steps():
-    assert app._legend_ui("measure", True, "segmented", None, False) is None
-    assert app._legend_ui("report", True, "segmented", None, False) is None
+    for step in ("assess", "review", "measure", "report"):
+        assert app._legend_ui(step, True, "segmented", None, False) is None
 
 
-def test_copy_is_plain():
-    import re
-    for html in (_html(), _html(zoomed=False, mode=None), _html(mode="v2-only"),
-                 _html(step="basin", reach={"comid": 1, "name": "x"}, routed=True)):
-        text = re.sub(r"<[^>]+>", " ", html)        # the visible strings, not the markup
-        assert "—" not in text and ";" not in text
-
-
-def test_dock_script_layers_and_cache_bust_are_wired():
+def test_dock_bridge_and_assets_are_wired():
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert "legend-dock.js" in src and "styles.css?v=15" in src
+    assert "legend-dock.js?v=3" in src
     assert 'id="easi-legend-panel"' in src.replace("'", '"')
-    assert app.LAYER_COVERED == "Streams: all data from the reach"
-    assert app.LAYER_UNCOVERED == "Streams: some data from downstream"
-    assert app.LAYER_SCORED == "Selected reach"
+    assert app.LAYER_STREAMS == "Streams"
+    assert app.LAYER_COVERAGE == "StreamCat coverage"
     js = (Path(app.__file__).parent / "www" / "legend-dock.js").read_text(encoding="utf-8")
-    assert "leaflet-control-layers" in js and "disableClickPropagation" in js
-    assert "easi-legend-panel" in js
+    assert "MutationObserver" in js and "disableClickPropagation" in js
+    assert '"streamcat_coverage"' in js and '"streams_visible"' in js
+    assert "insertAdjacentElement" in js and "shiny:connected" in js
     css = (Path(app.__file__).parent / "www" / "styles.css").read_text(encoding="utf-8")
-    assert ".easi-legend-panel.leaflet-control" in css and "#stream_legend.recalculating" in css
+    assert ".easi-legend-panel.leaflet-control" in css
+    assert ".staf-coverage-toggle:focus-visible" in css
+    assert ".easi-legend-sw-dashed" in css
+
+
+@pytest.fixture
+def streams(monkeypatch):
+    # Use real ipyleaflet traits; only the Shiny session registration is disabled.
+    from ipywidgets import Widget
+    monkeypatch.setattr(Widget, "_widget_construction_callback", None)
+    return app._StreamMapLayers()
+
+
+def _fc(comid=1):
+    return {"type": "FeatureCollection", "features": [{
+        "type": "Feature", "properties": {"comid": comid},
+        "geometry": {"type": "LineString", "coordinates": [[-83.05, 40.3], [-83.04, 40.3]]},
+    }]}
+
+
+def test_stream_group_starts_with_uniform_blue_and_no_source_children(streams):
+    assert streams.group.name == "Streams"
+    assert streams.group.layers == (streams.hrflow, streams.flow, streams.sources)
+    assert streams.flow.style == streams.hrflow.style == app.FLOWLINE_STYLE
+    assert streams.coverage is False and streams.sources.layers == ()
+
+
+def test_toggling_coverage_keeps_geometry_and_reuses_cached_source_widgets(streams):
+    covered, uncovered = _fc(1), _fc(2)
+    original = copy.deepcopy((covered, uncovered))
+    streams.set_data(covered, uncovered)
+    glow = app.GeoJSON(data=_fc(3), style=app.SCORED_REACH_STYLE)
+    route = app.GeoJSON(data=_fc(4), style=app.ROUTE_STYLE)
+    streams.set_source("scored", glow)
+    streams.set_source("route", route)
+    assert streams.sources.layers == ()
+    children = streams.group.layers
+    for _ in range(3):
+        streams.set_coverage(True)
+        assert streams.hrflow.style == app.HR_FLOWLINE_STYLE
+        assert streams.sources.layers == (glow, route)
+        streams.set_coverage(False)
+        assert streams.hrflow.style == streams.flow.style == app.FLOWLINE_STYLE
+        assert streams.sources.layers == ()
+    assert streams.group.layers == children
+    assert (covered, uncovered) == original
+    assert streams.flow.data["features"][0]["geometry"] == covered["features"][0]["geometry"]
+    assert streams.hrflow.data["features"][0]["geometry"] == uncovered["features"][0]["geometry"]
+
+
+def test_zoom_out_and_new_fetch_keep_group_identity_and_coverage_choice(streams):
+    group, flow, hrflow, sources = streams.group, streams.flow, streams.hrflow, streams.sources
+    streams.set_coverage(True)
+    streams.set_data(_fc(1), _fc(2))
+    streams.clear_streams()
+    assert streams.flow.data["features"] == streams.hrflow.data["features"] == []
+    streams.set_data(_fc(5), _fc(6))
+    assert (streams.group, streams.flow, streams.hrflow, streams.sources) == (group, flow, hrflow, sources)
+    assert streams.coverage is True and streams.hrflow.style == app.HR_FLOWLINE_STYLE
+
+
+def test_new_pick_or_import_replaces_sources_without_resetting_preference(streams):
+    old_glow = app.GeoJSON(data=_fc(1))
+    old_route = app.GeoJSON(data=_fc(2))
+    streams.set_coverage(True)
+    streams.set_source("scored", old_glow)
+    streams.set_source("route", old_route)
+    streams.remove_source("route")
+    streams.remove_source("scored")
+    assert streams.sources.layers == () and streams.coverage is True
+    replacement = app.GeoJSON(data=_fc(3))
+    streams.set_source("scored", replacement)
+    assert streams.sources.layers == (replacement,)
+    streams.set_coverage(False)
+    later = app.GeoJSON(data=_fc(4))
+    streams.set_source("scored", later)  # async geometry arrives while coverage is off
+    assert streams.sources.layers == ()
+    streams.set_coverage(True)
+    assert streams.sources.layers == (later,)
+
+
+def test_source_overlays_are_nested_and_below_the_assessment_vectors(streams):
+    mp = app.Map(panes=app.STREAM_PANES)
+    mp.add(streams.group)
+    glow = app.GeoJSON(data=_fc(1))
+    route = app.GeoJSON(data=_fc(2))
+    streams.set_source("scored", glow)
+    streams.set_source("route", route)
+    streams.set_coverage(True)
+    assert streams.sources not in mp.layers and glow not in mp.layers and route not in mp.layers
+    assert glow.pane == "staf-source-glow" and route.pane == "staf-source-route"
+    assert streams.flow.pane == streams.hrflow.pane == "staf-streams"
+    assert all(pane["zIndex"] < 400 for pane in app.STREAM_PANES.values())
+    assert app.STREAM_PANES[glow.pane]["pointerEvents"] == "none"
+    assert app.STREAM_PANES[route.pane]["pointerEvents"] == "none"
