@@ -27,7 +27,7 @@ from shiny import App, reactive, render, ui  # noqa: E402
 from easi import (assessment, basin, batch_ui, notices, xsplotly, bieger, config, delineation,  # noqa: E402
                   geomorph, method_plot, methods as easi_methods, pipeline, report,
                   routing, scoring)
-from easi import network_display, viewport  # noqa: E402
+from easi import network_display, reportmap, viewport  # noqa: E402
 from easi.batch import api as batch_api  # noqa: E402
 from easi.batch import contracts as batch_contracts  # noqa: E402
 from easi.batch import exports as batch_exports  # noqa: E402
@@ -371,7 +371,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=46"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=47"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=1", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -1119,7 +1119,32 @@ def _borrowed_footnote(rows, anchor):
                   style="margin-top:0;margin-bottom:.4rem;")
 
 
-def _report_body(d, rep, notes, downloads, anchor=None):
+def _header_with_map(d, rep, geo):
+    """The summary header and the basin table beside the watershed map, which is
+    SFARI's report layout.
+
+    The basin table belongs *inside* the left column rather than below the row:
+    the map is 180px tall, so a column holding only the two-line header leaves a
+    gap beside it and pushes the table onto its own full-width row.
+
+    ``geo`` carries the two geometries; with no map this returns the header and
+    the table exactly as the report had them before.
+    """
+    basin = _basin_block(d, rep)
+    minimap = ""
+    if geo:
+        minimap = reportmap.svg(
+            delineation.display_simplify(geo.get("watershed"), max_vertices=700),
+            geo.get("reach"))
+    if not minimap:
+        return ui.TagList(_summary_header(d), basin)
+    return ui.div(
+        ui.div(_summary_header(d), basin, style="flex:1 1 380px;min-width:0;"),
+        ui.HTML(minimap),
+        style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;")
+
+
+def _report_body(d, rep, notes, downloads, anchor=None, geo=None):
     """Read-only report body shared by the single-site and batch modals (STAF layout).
     Ratings and notes are edited only in the Assessment worksheet, so this view never posts
     anything: the dense metric table (display toggles reveal detail client-side), the static
@@ -1127,8 +1152,7 @@ def _report_body(d, rep, notes, downloads, anchor=None):
     The display-toggle classes live on the stable ``#easi-report`` wrapper."""
     return ui.div(
         _anchor_banner(anchor, d),
-        _summary_header(d),
-        _basin_block(d, rep),
+        _header_with_map(d, rep, geo),      # header + basin table, map beside them
         _xs_readonly_block(rep),
         ui.div("Metrics", class_="easi-section-title"),
         _metric_toolbar(),
@@ -1148,7 +1172,9 @@ def _report_modal(res, notes):
     swapped sources, and edited cross-section already folded in), so it is fully static."""
     d, rep = res["delineation"], res.get("report") or {}
     return ui.modal(
-        _report_body(d, rep, notes, _dl_buttons(), anchor=res.get("siteAnchor")),
+        _report_body(d, rep, notes, _dl_buttons(), anchor=res.get("siteAnchor"),
+                     geo={"watershed": res.get("watershed_geojson"),
+                          "reach": res.get("reach_geojson")}),
         # ✕ lives in the modal header so it stays put when the body scrolls; the muted
         # hint beside it cues that closing returns to the editable Assessment worksheet.
         title=ui.TagList("EASI Report",
@@ -1169,7 +1195,9 @@ def _batch_report_modal(site_id, base):
         ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
         class_="easi-modal-footer")
     return ui.modal(
-        _report_body(d, rep, {}, downloads, anchor=base.get("siteAnchor")),
+        _report_body(d, rep, {}, downloads, anchor=base.get("siteAnchor"),
+                     geo={"watershed": base.get("watershed_geojson"),
+                          "reach": base.get("reach_geojson")}),
         title=ui.TagList(f"EASI Report: {site_id}",
                          ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
         size="xl", easy_close=True, footer=None,

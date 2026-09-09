@@ -236,6 +236,9 @@ h1, h2, h3, h4, h5, h6, .card-header { font-family: var(--font-head); }
   flex: 1; min-height: 200px;              /* fill the column height (safety floor) */
 }
 .easi-xsection img { max-width: 100%; height: auto; }
+/* report watershed map (reportmap.svg); the class name is shared with SFARI
+   and DEEP, which emit the same markup from the same module. */
+.sfari-minimap { border: 1px solid var(--card-border); border-radius: 6px; background: #fbfcfe; }
 .easi-xsection-cap { font-size: 11px; color: #667; margin: 4px 0 0; }
 
 .easi-xs-panel {

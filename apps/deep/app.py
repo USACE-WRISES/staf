@@ -31,6 +31,7 @@ from deep import (assessments, config, curves, delineation, measure,  # noqa: E4
                   pipeline, report, scoring, session)
 from deep import viewport  # noqa: E402
 from deep import comid_anchor, engine_prefill, hr_site, network_display  # noqa: E402
+from deep import reportmap  # noqa: E402
 from deep.datasources import flowlines  # noqa: E402
 from deep.datasources.geocode import geocode_address  # noqa: E402
 from deep.metrics import computed as _computed  # noqa: E402
@@ -604,57 +605,6 @@ def _source_line(m, rc):
     if rc.get("origin") == "desktop" and rsrc and rsrc not in parts:
         parts.append(rsrc)
     return " · ".join(parts)
-
-
-def _geo_svg(watershed_gj, reach_gj, w=290, h=180):
-    import math
-
-    def rings(gj):
-        out = []
-        for ft in (gj or {}).get("features", []):
-            g = ft.get("geometry") or {}
-            t, c = g.get("type"), g.get("coordinates")
-            if not c:
-                continue
-            if t == "Polygon":
-                out += [("poly", r) for r in c]
-            elif t == "MultiPolygon":
-                out += [("poly", r) for poly in c for r in poly]
-            elif t == "LineString":
-                out.append(("line", c))
-            elif t == "MultiLineString":
-                out += [("line", ln) for ln in c]
-        return out
-
-    ws = rings(delineation.display_simplify(watershed_gj, max_vertices=700)) if watershed_gj else []
-    rc = rings(reach_gj) if reach_gj else []
-    pts = [p for _t, ring in ws + rc for p in ring]
-    if not pts:
-        return ""
-    xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
-    minx, maxx, miny, maxy = min(xs), max(xs), min(ys), max(ys)
-    kx = math.cos(math.radians((miny + maxy) / 2)) or 1.0
-    dx = (maxx - minx) * kx or 1e-6
-    dy = (maxy - miny) or 1e-6
-    pad = 8
-    scale = min((w - 2 * pad) / dx, (h - 2 * pad) / dy)
-
-    def sx(lon):
-        return pad + (lon - minx) * kx * scale
-
-    def sy(lat):
-        return h - pad - (lat - miny) * scale
-
-    parts = [f'<svg viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" '
-             f'class="sfari-minimap" style="width:{w}px;max-width:100%;">']
-    for _t, ring in ws:
-        d = "M" + " L".join(f"{sx(p[0]):.1f},{sy(p[1]):.1f}" for p in ring) + " Z"
-        parts.append(f'<path d="{d}" fill="#fdf24a" fill-opacity="0.35" stroke="#caa700" stroke-width="1"/>')
-    for _t, ring in rc:
-        d = "M" + " L".join(f"{sx(p[0]):.1f},{sy(p[1]):.1f}" for p in ring)
-        parts.append(f'<path d="{d}" fill="none" stroke="#d6453d" stroke-width="2.4"/>')
-    parts.append("</svg>")
-    return "".join(parts)
 
 
 def _stepper(active):
@@ -2278,7 +2228,12 @@ def server(input, output, session_):  # noqa: C901
         sc, _fr = scored()
         slat = dl.get("snapped_lat"); slon = dl.get("snapped_lon")
         coord = (f"{slat:.5f}, {slon:.5f}" if slat is not None and slon is not None else "—")
-        minimap = _geo_svg(d.get("watershed_geojson"), d.get("reach_geojson"))
+        # The watershed over a USGS topo basemap; the simplify the old inline
+        # builder did is now the caller's, which keeps reportmap identical in
+        # the three apps.
+        minimap = reportmap.svg(
+            delineation.display_simplify(d.get("watershed_geojson"), max_vertices=700),
+            d.get("reach_geojson"))
         header = ui.div(
             ui.div(
                 ui.h3(la.assessment_name if la else "Detailed assessment", style="margin:0;"),
@@ -2291,9 +2246,13 @@ def server(input, output, session_):  # noqa: C901
                 ui.div(f"Watershed basis: {report.watershed_basis_label(d)}  ·  Predictor source: "
                        f"{assessments.predictor_source_of(la) if la else 'streamcat'}",
                        style="font-size:12px;color:#667;margin-top:1px;"),
-                style="flex:1;"),
+                style="flex:1 1 380px;min-width:0;"),
             (ui.HTML(minimap) if minimap else None),
-            style="display:flex;gap:16px;align-items:flex-start;margin-bottom:12px;")
+            # SFARI's spacing, and the same wrap: a plain flex:1 lets the text
+            # column squeeze the 290px map on a narrow window instead of letting
+            # it drop below, and min-width:0 is what allows the text to shrink.
+            style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;"
+                  "margin-bottom:12px;")
 
         subs = sc["subIndices"]; eci = sc["ecosystemConditionIndex"]
         # The index is computed over the functions this assessment covers, which is
