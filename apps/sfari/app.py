@@ -28,7 +28,7 @@ from shiny import App, reactive, render, ui  # noqa: E402
 
 from sfari import bieger, config, delineation, pipeline, report, scoring, session as session_io, xscalc  # noqa: E402
 from sfari import viewport  # noqa: E402
-from sfari import comid_anchor, engine_prefill, hr_site, network_display  # noqa: E402
+from sfari import calculator, comid_anchor, engine_prefill, hr_site, network_display  # noqa: E402
 from sfari.datasources import flowlines  # noqa: E402
 from sfari.datasources.geocode import geocode_address  # noqa: E402
 from sfari.pipeline import DEFAULT_REACH_FT  # noqa: E402
@@ -1543,7 +1543,10 @@ def server(input, output, session):
     @reactive.calc
     def scored():
         fs = function_scores()
-        scores = {fid: v["score"] for fid, v in fs.items() if v.get("score") is not None}
+        # Every function reaches the rollup, unscored ones included: a blank score
+        # counts as zero, which is what the SFARI calculator does (2026-09-08).
+        # Filtering here would silently restore the old exclude-unscored rule.
+        scores = {fid: v.get("score") for fid, v in fs.items()}
         return scoring.score_assessment(scores)
 
     def _fn_suggest_value(fid):
@@ -1830,8 +1833,11 @@ def server(input, output, session):
         outs = sc["outcomes"]
 
         def _sub_bar(label, key):
-            # an outcome no scored function contributes to stays dashed, not "0.00"
-            if outs[key]["max"] <= 0:
+            # Before the first score there is nothing to report, so the bar stays
+            # dashed rather than claiming 0.00. It used to key on a zero
+            # denominator, which no longer happens now that every function is in
+            # it; n_scored is the same signal the ECI headline below uses.
+            if n_scored == 0:
                 return _bar(label, 0.0, "#e7ebf1", fmt="–")
             return _bar(label, subs[key], scoring.index_band_color(subs[key]))
 
@@ -2012,17 +2018,18 @@ def server(input, output, session):
             *disc_blocks,
             ui.div("Summary", class_="easi-section-title"),
             ui.div(left, right, class_="easi-summary-plots"),
-            ui.div("Desktop evidence supports scoring; the assessor assigns the Likert and 0–15 "
-                   "function scores. Likert thresholds are national defaults. Calibrate regionally.",
-                   class_="easi-disclaimer"),
             id="sfari-report")
         return ui.modal(
-            body, title="SFARI Screening Report", easy_close=True, size="xl",
+            body, title="SFARI Report", easy_close=True, size="xl",
             footer=ui.div(ui.download_button("dl_pdf", "PDF", class_="btn-sm"),
                           ui.download_button("dl_csv", "CSV", class_="btn-sm"),
                           ui.download_button("dl_geojson", "GeoJSON", class_="btn-sm"),
+                          ui.download_button("dl_calc_filled", "Excel Workbook",
+                                             class_="btn-sm"),
+                          ui.download_button("dl_calc_blank", "Excel Workbook (blank)",
+                                             class_="btn-sm"),
                           ui.modal_button("Close"),
-                          style="display:flex;gap:8px;align-items:center;"))
+                          style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"))
 
     # ---- the Field Forms dialog (2026-09-07) ----
     # One modal, size xl. The shell is static: the site line, the tab strip with
@@ -2391,6 +2398,14 @@ def server(input, output, session):
     @render.download(filename="sfari-report.pdf")
     def dl_pdf():
         yield report.build_pdf(delin() or {}, metric_scores(), function_scores(), evidence(), scored())
+
+    @render.download(filename=lambda: calculator.calculator_filename(delin() or {}))
+    def dl_calc_filled():
+        yield calculator.build_calculator(delin() or {}, metric_scores(), function_scores())
+
+    @render.download(filename=calculator.blank_filename())
+    def dl_calc_blank():
+        yield calculator.blank_bytes()
 
     @render.download(filename=report.field_forms_filename())
     def dl_field_forms():

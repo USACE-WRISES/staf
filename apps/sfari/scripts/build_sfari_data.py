@@ -3,7 +3,7 @@
 Emits into ``sfari/data/``:
   * ``sfari-outcome-mapping.json`` — 20 functions -> {physical,chemical,biological} D/i/-
   * ``sfari-functions.json``       — 20 functions (category, order, name, definition, statement)
-  * ``sfari-metrics.json``         — ~82 metrics (functionId, name, scale, likertCriteria[], desktop binding)
+  * ``sfari-metrics.json``         — 80 metrics (functionId, name, scale, likertCriteria[], desktop binding)
 
 This is a one-time DEV build step (not run at request time). Use the EASI venv
 python, which already has python-docx 1.2.0::
@@ -72,10 +72,24 @@ WATERSHED_SLUGS = {
     "wetland-coverage", "transport-capacity", "fine-sediment-balance",
 }
 
+# --- Metrics the app deliberately does not carry (2026-09-08, owner decision). ---
+# The SFARI calculator (the Excel worksheet an assessment is handed over in, draft
+# 2026-06-29 pending Eco-PCX certification) allots exactly four metric rows per
+# function. These two are the only fifth-metrics in the document, and they are the
+# weakest-attested entries in it: neither has a description paragraph in SFARI_Clean.docx,
+# and neither has a row on the paper field form. Rather than alter a worksheet that is
+# out for external review, the app scores the 80 metrics the worksheet can carry.
+# Removing them here rather than from the JSON keeps the data generated; the source
+# document is unchanged and still describes 82.
+EXCLUDED_METRICS = frozenset({
+    "high-flow-dynamics-high-flow-velocity-shear-observed",
+    "water-soil-quality-bank-and-floodplain-soil-condition",
+})
+
 # A few metric tables name a metric slightly differently than its body "Metric N of M:"
 # description heading, so the statement won't slug-match. Map table-slug -> heading-slug.
-# (Two 5th-metrics — high-flow-velocity-shear-observed, bank-and-floodplain-soil-condition —
-# have NO description paragraph in the doc at all and correctly fall back to the metric name.)
+# (The two EXCLUDED_METRICS above have NO description paragraph in the doc at all, which
+# is part of why they are excluded; they never reach this table.)
 METRIC_STATEMENT_ALIASES = {
     "in-channel-ponding-beaver": "in-channel-ponding-and-beaver-activity",
     "flow-permanence-statistics": "flow-statistics",
@@ -87,11 +101,9 @@ METRIC_STATEMENT_ALIASES = {
 # --- Short "reference-good" agreement statements from the paper SFARI Field
 # Worksheet v1.0 (data/FieldForm/SFARI_Field_Form_v1.0.pdf), keyed by metricId. These are what
 # the assessor agrees/disagrees with in the field; the app shows them next to each
-# metric (the longer metricStatement stays in the "how to score" tooltip). Two
-# 5th-metrics have no row on the paper form and fall back to metricStatement:
-# high-flow-dynamics-high-flow-velocity-shear-observed and
-# water-soil-quality-bank-and-floodplain-soil-condition. Transcribed verbatim,
-# including en dashes in numeric ranges.
+# metric (the longer metricStatement stays in the "how to score" tooltip). Every
+# metric the app carries has a row on the paper form: the two that did not are the
+# EXCLUDED_METRICS above. Transcribed verbatim, including en dashes in numeric ranges.
 FIELD_STATEMENTS = {
     "catchment-hydrology-impervious-surface-area": "Coverage is minimal, preserving near-natural infiltration/runoff timing, consistent with reference levels.",
     "catchment-hydrology-road-density": "Road density is low enough to avoid significant runoff or sediment inputs, consistent with minimal watershed impact.",
@@ -306,6 +318,8 @@ def build_metrics(doc):
         for m in parse_metric_table(doc.tables[tidx], function_id):
             mslug = slug(m["name"])
             metric_id = f"{function_id}-{mslug}"
+            if metric_id in EXCLUDED_METRICS:
+                continue
             likert_criteria = []
             for r in m["rows"]:
                 likert_criteria.append({

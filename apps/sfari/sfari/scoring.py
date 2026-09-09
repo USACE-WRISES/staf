@@ -83,20 +83,32 @@ def rollup(
 ) -> RollupResult:
     """Roll user function scores up to outcome sub-indices and the Ecosystem index.
 
-    ``function_scores``: functionId -> score (0-15). Omit a function (e.g. NA) to
-    exclude it from the relevant averages and denominators.
+    ``function_scores``: functionId -> score (0-15).
+
+    **An unscored function counts as zero** (2026-09-08, owner decision). The
+    denominator is every function the mapping describes, whether or not it has
+    been scored, so a function left blank pulls the index down exactly as a
+    function scored 0 would. This is the SFARI calculator's own arithmetic:
+    its ``AK`` denominator column spans all 20 functions unconditionally, and a
+    blank ``H`` cell reads as 0 in the numerator. Before this, the two disagreed
+    on any partial assessment (1 of 20 scored at 11 gave 0.73 here and 0.03 in
+    the worksheet); they now agree cell for cell, because the Direct/indirect
+    weights are already identical.
+
+    A complete assessment is unaffected: every function is in the numerator and
+    the denominator either way.
     """
     mapping = mapping if mapping is not None else config.outcome_mapping()
     weights = weights if weights is not None else config.WEIGHTS
 
     outcomes = {key: OutcomeResult() for key in config.OUTCOMES}
 
-    for fid, score in function_scores.items():
-        if score is None:
-            continue
-        codes = mapping.get(fid)
-        if codes is None:
-            continue
+    # The mapping, not the input dict, is the universe: a function absent from
+    # function_scores has to reach the denominator, which iterating the input
+    # cannot do.
+    for fid, codes in mapping.items():
+        raw = function_scores.get(fid)
+        score = 0 if raw is None else raw
         for key in config.OUTCOMES:
             code = codes.get(key, "-")
             weight = weights.get(code, 0.0)

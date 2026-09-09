@@ -8,7 +8,13 @@
 # pure-Python wheel and never ships to the deployed app. Poppler (pdftoppm) stays a
 # manual-only QA tool for rendering the field-forms packet to a visual contact sheet;
 # it is intentionally NOT a Python dependency.
+#
+# openpyxl READS the Excel calculator in tests/test_calculator.py. The app never
+# imports it: it cannot round-trip that workbook without destroying 38 of its 64
+# parts, which is why sfari/calculator.py writes the sheet XML directly. Test-only,
+# so it never reaches the deployed app.
 
 -r requirements.txt
 
 pypdf==6.14.2
+openpyxl==3.1.5
