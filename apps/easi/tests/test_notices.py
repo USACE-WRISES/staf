@@ -5,7 +5,7 @@ COMID-keyed row."""
 from __future__ import annotations
 
 from easi import basin
-from easi.notices import borrowed_note, routed_notice
+from easi.notices import borrowed_note, marker_note, routed_notice
 
 
 def _anchor(*, ratio=32.02, routed_ft=1687.6, reach_name="Mink Brook", comid=9327042):
@@ -33,29 +33,42 @@ def _plain(w):
     return w["lines"]
 
 
-def test_site_engine_note_is_two_short_sentences_whatever_the_ratio():
+def test_site_engine_note_is_one_short_sentence_whatever_the_ratio():
+    """Since 2026-09-08 the note says only where the watershed metrics come
+    from. Which rows are borrowed is a marker on those rows (marker_note)."""
     lines = _plain(routed_notice(_anchor(), _delin()))
     assert lines == [
         "This stream is outside the StreamCat network. Watershed metrics use the HR reach "
-        "watershed (1.00 km\u00b2) from the STAF site engine.",
-        "Low flow, substrate, and biological integrity come from the nearest StreamCat "
-        "reach, 1,688 ft downstream."]
+        "watershed (1.00 km\u00b2) from the STAF site engine."]
     # the ratio never reaches the banner, past the bound, within it, or unknown
     assert lines == _plain(routed_notice(_anchor(ratio=2.7), _delin()))
     assert lines == _plain(routed_notice(_anchor(ratio=None), _delin()))
+    assert not any("Low flow" in line for line in lines)
 
 
-def test_unknown_distance_still_says_downstream():
-    lines = _plain(routed_notice(_anchor(routed_ft=None), _delin()))
-    assert lines[1].endswith("come from the nearest StreamCat reach downstream.")
+def test_marker_note_says_where_the_marked_rows_come_from():
+    """It names no metric: the borrowed set is not fixed, since nutrients and
+    regulatory impairment join it whenever their StreamCat fallback fires."""
+    assert marker_note(_anchor()) == ("Comes from the nearest StreamCat reach, "
+                                      "1,688 ft downstream.")
+    assert marker_note(_anchor(routed_ft=None)) == ("Comes from the nearest StreamCat "
+                                                    "reach, downstream.")
+    assert marker_note(_anchor(ratio=None)) == marker_note(_anchor())   # no ratio in it
+    for text in (marker_note(_anchor()), marker_note(_anchor(routed_ft=None))):
+        assert "\u2014" not in text and ";" not in text and len(text) < 170
+        assert "Low flow" not in text and "substrate" not in text
+
+
+def test_marker_note_is_empty_off_a_routed_site():
+    assert marker_note({"anchorKind": "v2Direct"}) == ""
+    assert marker_note(None) == "" and marker_note({}) == ""
 
 
 def test_not_calculated_and_legacy_variants():
     lines = routed_notice(_anchor(), _delin("not-calculated", reason="walk budget exceeded"))["lines"]
-    assert lines[0] == ("This stream is outside the StreamCat network, and the STAF site "
-                        "engine could not calculate its watershed (walk budget exceeded). "
-                        "Watershed metrics are unavailable.")
-    assert lines[1].startswith("Low flow, substrate, and biological integrity come from")
+    assert lines == [("This stream is outside the StreamCat network, and the STAF site "
+                      "engine could not calculate its watershed (walk budget exceeded). "
+                      "Watershed metrics are unavailable.")]
     legacy = routed_notice(_anchor(ratio=2.7),
                            {"watershed_source": "v2-basin", "gnis_name": "Mink Brook"})
     assert legacy["title"] == "Note"

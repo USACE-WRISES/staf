@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from easi import report, routing
 
 
@@ -174,3 +176,34 @@ def test_surrogate_banner_in_pdf():
     res["siteAnchor"] = _hr_anchor()
     b = report.build_pdf(res)
     assert b[:4] == b"%PDF" and len(b) > 1000
+
+
+def test_pdf_keeps_the_watershed_sentence_and_marks_the_borrowed_rows():
+    """The PDF renders no basin label/value block (_summary_pairs is the CSV's),
+    so the watershed sentence stays at its top even though the report modal
+    drops it. Which rows are borrowed is a marker, footnoted under the table."""
+    pypdf = pytest.importorskip("pypdf")
+    import io as _io
+
+    from easi import notices
+
+    res = _result()
+    res["siteAnchor"] = _hr_anchor()
+    rows = res["report"]["metricRows"]
+    rows[0]["anchorNote"] = ("Scored from the nearest StreamCat reach, "
+                             "1,240 ft downstream.")
+    text = "\n".join(p.extract_text() or ""
+                     for p in pypdf.PdfReader(_io.BytesIO(report.build_pdf(res))).pages)
+
+    assert "EASI Report" in text and "EASI Screening Report" not in text
+    assert "outside the StreamCat network" in text          # the sentence the modal drops
+    assert "Low flow, substrate, and biological integrity" not in text
+    assert notices.BORROWED_MARK in text                    # the mark renders in the font
+    assert "Comes from the nearest StreamCat reach" in text
+
+    # nothing borrowed, nothing to explain
+    for r in rows:
+        r.pop("anchorNote", None)
+    plain = "\n".join(p.extract_text() or ""
+                      for p in pypdf.PdfReader(_io.BytesIO(report.build_pdf(res))).pages)
+    assert "Comes from the nearest StreamCat reach" not in plain
