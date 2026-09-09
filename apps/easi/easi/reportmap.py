@@ -23,11 +23,16 @@ deliberately matplotlib-free so Connect never triggers its font-cache build.
 from __future__ import annotations
 
 import base64
+import io
+import logging
 import math
+import time
 from functools import lru_cache
 from typing import Optional
 
 import requests
+
+_LOG = logging.getLogger(__name__)
 
 #: USGS's own service, the same basemap the interactive map shows.
 EXPORT_URL = ("https://basemap.nationalmap.gov/arcgis/rest/services/"
@@ -46,6 +51,10 @@ PAD = 0.08
 #: draw and come back blank. Widening the frame costs a little context and
 #: keeps the basemap.
 MIN_EXTENT_M = 1200.0
+FETCH_TIMEOUT = 12.0
+FETCH_ATTEMPTS = 2
+RETRY_PAUSE = 1.0
+UNAVAILABLE_NOTE = "Map background unavailable"
 
 _R = 6378137.0          # WGS84 semi-major axis, the Web Mercator sphere
 
@@ -106,30 +115,68 @@ def frame(watershed_gj, reach_gj, w: int, h: int):
     return bbox, project
 
 
+class _BasemapUnavailable(Exception):
+    """A failed request is deliberately not a cached result."""
+
+
+def _validated_png(content: bytes) -> bytes:
+    """Accept a complete, decodable PNG, including its pixel data."""
+    from PIL import Image
+
+    if not content.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise ValueError("Response is not a PNG image")
+    with Image.open(io.BytesIO(content)) as image:
+        if image.format != "PNG":
+            raise ValueError("Response is not a PNG image")
+        image.verify()
+    with Image.open(io.BytesIO(content)) as image:
+        image.load()
+    return content
+
+
 @lru_cache(maxsize=32)
-def _fetch(bbox: tuple, size: tuple, timeout: float) -> Optional[bytes]:
+def _fetch(bbox: tuple, size: tuple, timeout: float) -> bytes:
+    """Cache successful images only; exceptions never enter the LRU cache."""
     params = {"bbox": ",".join(f"{v:.2f}" for v in bbox), "bboxSR": "3857",
               "imageSR": "3857", "size": f"{size[0]},{size[1]}",
               "format": "png", "transparent": "false", "f": "image"}
-    try:
-        r = requests.get(EXPORT_URL, params=params, timeout=timeout)
-        if r.status_code != 200:
-            return None
-        if not (r.content or b"").startswith(b"\x89PNG"):    # an error page, not a map
-            return None
-        return r.content
-    except Exception:  # noqa: BLE001 - resilience by design
-        return None
+    for attempt in range(1, FETCH_ATTEMPTS + 1):
+        started = time.monotonic()
+        status = None
+        retryable = False
+        try:
+            response = requests.get(EXPORT_URL, params=params, timeout=timeout)
+            status = response.status_code
+            if status == 200:
+                return _validated_png(response.content or b"")
+            retryable = status in (408, 429) or 500 <= status <= 599
+            error = f"HTTP {status}"
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
+            retryable = True
+            error = f"{type(exc).__name__}: {exc}"
+        except Exception as exc:  # noqa: BLE001 - outline fallback remains available
+            error = f"{type(exc).__name__}: {exc}"
+        _LOG.warning("Report basemap unavailable endpoint=%s status=%s elapsed=%.2fs attempt=%d/%d error=%s",
+                     EXPORT_URL, status if status is not None else "transport",
+                     time.monotonic() - started, attempt, FETCH_ATTEMPTS,
+                     " ".join(error.split())[:200])
+        if not retryable or attempt == FETCH_ATTEMPTS:
+            break
+        time.sleep(RETRY_PAUSE)
+    raise _BasemapUnavailable
 
 
-def topo_png(bbox, size=(580, 360), timeout: float = 8.0) -> Optional[bytes]:
+def topo_png(bbox, size=(580, 360), timeout: float = FETCH_TIMEOUT) -> Optional[bytes]:
     """The basemap for a Mercator bbox, or None if the service did not answer.
 
-    Memoised on the rounded box, so opening the report twice, or exporting the
-    PDF after looking at it, costs one request.
+    Successful images are memoised on the rounded box, so the PDF can reuse the
+    modal's image. A failed request can be tried again when the report reopens.
     """
     key = tuple(round(float(v), 1) for v in bbox)
-    return _fetch(key, (int(size[0]), int(size[1])), float(timeout))
+    try:
+        return _fetch(key, (int(size[0]), int(size[1])), float(timeout))
+    except _BasemapUnavailable:
+        return None
 
 
 def _paths(watershed_gj, reach_gj, project) -> list:
@@ -145,8 +192,11 @@ def _paths(watershed_gj, reach_gj, project) -> list:
 
 
 def svg(watershed_gj, reach_gj, w: int = 290, h: int = 180, *,
-        basemap: bool = True, timeout: float = 8.0) -> str:
+        basemap: bool = True, timeout: float = FETCH_TIMEOUT) -> str:
     """The report thumbnail as inline SVG, or ``""`` when there is no geometry.
+
+    A failed requested basemap wraps the unchanged SVG frame and a short caption
+    together so the caption stays below the map in the report's flex layout.
 
     The empty string is the contract the call sites branch on
     (``ui.HTML(minimap) if minimap else None``), so a site with no watershed
@@ -165,11 +215,16 @@ def svg(watershed_gj, reach_gj, w: int = 290, h: int = 180, *,
                      f'preserveAspectRatio="none" href="{href}"/>')
     parts += _paths(watershed_gj, reach_gj, project)
     parts.append("</svg>")
-    return "".join(parts)
+    result = "".join(parts)
+    if basemap and not png:
+        return (f'<div class="reportmap-fallback" style="width:{w}px;max-width:100%;">'
+                + result + f'<p style="margin:4px 0 0;color:#667085;font-size:11px;">'
+                f'{UNAVAILABLE_NOTE}</p></div>')
+    return result
 
 
 def pdf_flowable(watershed_gj, reach_gj, width, height, *,
-                 basemap: bool = True, timeout: float = 8.0):
+                 basemap: bool = True, timeout: float = FETCH_TIMEOUT):
     """The same map as a reportlab flowable, or None when there is no geometry.
 
     reportlab's ``shapes.Image`` wants a real file path and refuses an in-memory
@@ -184,6 +239,7 @@ def pdf_flowable(watershed_gj, reach_gj, width, height, *,
         return None
     bbox, _ = fr
     png = topo_png(bbox, (580, 360), timeout) if basemap else None
+    caption_height = 12 if basemap and not png else 0
     ws = rings(watershed_gj)
     rc = rings(reach_gj)
 
@@ -191,20 +247,19 @@ def pdf_flowable(watershed_gj, reach_gj, width, height, *,
         def __init__(self):
             super().__init__()
             self.width, self.height = width, height
+            self.height += caption_height
 
         def draw(self):
-            import io
-
             c = self.canv
             if png:
-                c.drawImage(ImageReader(io.BytesIO(png)), 0, 0,
-                            width=self.width, height=self.height, mask=None)
+                c.drawImage(ImageReader(io.BytesIO(png)), 0, caption_height,
+                            width=width, height=height, mask=None)
             x0, y0, x1, y1 = bbox
 
             def at(lon, lat):
                 x, y = mercator(lon, lat)
-                return ((x - x0) / (x1 - x0) * self.width,
-                        (y - y0) / (y1 - y0) * self.height)   # PDF y grows up
+                return ((x - x0) / (x1 - x0) * width,
+                        caption_height + (y - y0) / (y1 - y0) * height)   # PDF y grows up
 
             def stroke(ring, close):
                 if len(ring) < 2:
@@ -228,6 +283,10 @@ def pdf_flowable(watershed_gj, reach_gj, width, height, *,
             if not png:                       # no basemap: frame the empty card
                 c.setLineWidth(0.5)
                 c.setStrokeColor("#c9d2de")
-                c.rect(0, 0, self.width, self.height, stroke=1, fill=0)
+                c.rect(0, caption_height, width, height, stroke=1, fill=0)
+            if caption_height:
+                c.setFont("Helvetica", 7.5)
+                c.setFillColor("#667085")
+                c.drawString(0, 2, UNAVAILABLE_NOTE)
 
     return _Map()

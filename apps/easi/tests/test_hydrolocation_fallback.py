@@ -39,13 +39,13 @@ def test_hydrolocation_wrapper_forwards_progress_and_exact_result(monkeypatch):
 
     def shared_client(lat, lon, *, progress=None):
         seen.append((lat, lon))
-        progress({"status": "retrying", "attempt": 2})
+        progress({"status": "retrying", "attempt": 4})
         return SNAP
 
     monkeypatch.setattr(anchor, "hydrolocation_snap", shared_client)
     assert routing._hydrolocation_snap(43.68576, -72.23658, progress=progress.append) == SNAP
     assert seen == [(43.68576, -72.23658)]
-    assert progress == [{"status": "retrying", "attempt": 2}]
+    assert progress == [{"status": "retrying", "attempt": 4}]
 
 
 def test_hydrolocation_wrapper_preserves_empty_and_error(monkeypatch):

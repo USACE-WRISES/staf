@@ -147,8 +147,9 @@ def test_lookup_poller_settles_when_worker_progress_has_not_changed():
 
 
 @pytest.mark.parametrize("status,detail,expected", [
+    ("snapping", "", "Finding the selected stream"),
     ("finding", "", "Finding the nearest StreamCat reach"),
-    ("retrying", "", "Retrying StreamCat lookup (1 of 2)"),
+    ("retrying", "", "Retrying StreamCat lookup (1 of 3)"),
     ("failed", "HTTP 502: private diagnostics", "Could not reach the StreamCat routing service"),
     ("failed", "flowtrace: unexpected response shape", "returned an invalid response"),
     ("no_match", "", "No StreamCat reach was found downstream"),
@@ -164,3 +165,35 @@ def test_persistent_accessible_status_and_manual_retry(status, detail, expected)
     assert 'role="status"' in html and 'aria-live="polite"' in html
     assert ('id="retry_streamcat"' in html) == (status in ("failed", "no_match"))
     assert "private diagnostics" not in html and "unexpected response shape" not in html
+    pending = status in ("snapping", "finding", "retrying")
+    assert ("easi-spinner easi-lookup-spinner" in html) is pending
+    if pending:
+        assert 'aria-hidden="true"' in html
+        assert html.index("easi-lookup-spinner") < html.index(expected)
+
+
+@pytest.mark.parametrize("attempt,wait_seconds,retry", [(2, 5, 1), (3, 10, 2), (4, 15, 3)])
+def test_retry_wait_keeps_inline_activity_and_names_each_of_three_retries(attempt, wait_seconds, retry):
+    from shiny import ui
+    render = _function("easi", "snap_status", {
+        "source_lookup": lambda: {"status": "retrying", "attempt": attempt, "wait_seconds": wait_seconds},
+        "_hr_route": {"hit": POINT}, "ui": ui,
+    })
+    html = str(render())
+    assert f"Retrying StreamCat lookup ({retry} of 3)" in html
+    assert "easi-lookup-spinner" in html and 'aria-hidden="true"' in html
+    assert 'id="retry_streamcat"' not in html
+
+
+@pytest.mark.parametrize("status,point", [("idle", None), ("ready", POINT)])
+def test_settled_source_status_has_no_lookup_spinner(status, point):
+    from shiny import ui
+    render = _function("easi", "snap_status", {
+        "source_lookup": lambda: {"status": status}, "ui": ui,
+        "anchor_error": lambda: None, "pending_anchor": lambda: None,
+        "snapped_point": lambda: point, "scored_reach": lambda: {"name": "Mink Brook"},
+    })
+    html = str(render())
+    assert "easi-lookup-spinner" not in html
+    if status == "ready":
+        assert "StreamCat source reach resolved" in html

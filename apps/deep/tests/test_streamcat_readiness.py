@@ -55,7 +55,7 @@ def state_scope():
                                    notification_remove=lambda *a: None, modal_remove=lambda: None),
              "notices_seen": notices, "removed": removed, "launches": launches}
     for name in ("_set_lookup", "_source_ready", "_current_delineation", "_with_anchor", "_clear_anchor_state",
-                 "_retry_lookup", "_streamcat_lookup_ui"):
+                 "_retry_lookup", "_streamcat_lookup_ui", "_request_report"):
         function(name, scope)
     return scope
 
@@ -404,6 +404,35 @@ def test_lookup_failure_has_retry_and_clear_sanitized_status(detail):
     assert "returned an invalid response" in markup and "Retry StreamCat lookup" in markup
     assert 'aria-live="polite"' in markup and 'role="status"' in markup
     assert "private details" not in markup
+
+
+@pytest.mark.parametrize("surface", ["streamcat_lookup_status", "streamcat_lookup_status_ws"])
+@pytest.mark.parametrize("status,attempt,retry", [
+    ("snapping", 1, None), ("finding", 1, None),
+    ("retrying", 2, 1), ("retrying", 3, 2), ("retrying", 4, 3),
+    ("idle", 0, None), ("ready", 1, None), ("failed", 4, None), ("no_match", 1, None),
+])
+def test_lookup_activity_on_identify_and_imported_worksheet_surfaces(surface, status, attempt, retry):
+    scope = state_scope()
+    scope["ui"] = app.ui
+    scope["source_lookup"].set({"status": status, "generation": 7, "attempt": attempt,
+                               "wait_seconds": retry * 5 if retry else 0})
+    rendered = function(surface, scope)()
+    if status in ("idle", "ready"):
+        assert rendered is None
+        return
+    html = str(rendered)
+    pending = status in ("snapping", "finding", "retrying")
+    assert ("easi-spinner easi-lookup-spinner" in html) is pending
+    assert 'role="status"' in html and 'aria-live="polite"' in html
+    retry_id = "retry_streamcat_ws" if surface.endswith("_ws") else "retry_streamcat"
+    assert (f'id="{retry_id}"' in html) == (status in ("failed", "no_match"))
+    if pending:
+        assert 'aria-hidden="true"' in html
+        text = "Retrying StreamCat lookup" if retry else "Finding"
+        assert html.index("easi-lookup-spinner") < html.index(text)
+    if retry:
+        assert f"Retrying StreamCat lookup ({retry} of 3)" in html
 
 
 def test_navigation_can_overlap_old_worksheet_and_new_basin_without_duplicate_ids():

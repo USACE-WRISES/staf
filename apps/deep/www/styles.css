@@ -549,6 +549,12 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   border-radius: 50%; animation: easi-spin .8s linear infinite; flex: none;
 }
 @keyframes easi-spin { to { transform: rotate(360deg); } }
+.easi-spinner.easi-lookup-spinner {
+  display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .easi-lookup-spinner { animation: none; }
+}
 
 /* row of pane action buttons */
 /* wrap, because .btn below cannot shrink past its nowrap label: without this an

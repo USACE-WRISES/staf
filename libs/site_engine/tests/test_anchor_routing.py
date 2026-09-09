@@ -92,14 +92,22 @@ def test_invalid_intersection_is_not_replaced_with_line_endpoint(coords, modern)
     assert "error" in anchor.parse_flowtrace(fc(feature))
 
 
-def test_three_request_budget_and_progress(monkeypatch, caplog):
+def test_fourth_request_recovers_with_progress_before_each_pause(monkeypatch, caplog):
     calls, pauses = transport(monkeypatch, [Response(502), requests.Timeout("slow"),
+                                          Response(429),
                                           Response(data=fc(FLOWLINE, PATH))])
     progress = []
+    progress_at_pause = []
+
+    def pause(seconds):
+        pauses.append(seconds)
+        progress_at_pause.append((len(calls), dict(progress[-1])))
+
+    monkeypatch.setattr(anchor.time, "sleep", pause)
     with caplog.at_level(logging.INFO, logger=anchor.__name__):
         assert anchor.hydrolocation_snap(43.68583, -72.23669, progress=progress.append) == SNAP
-    assert [c[0] for c in calls] == ["GET", "POST", "POST"]
-    assert [c[2]["timeout"] for c in calls] == [30.0, 60.0, 60.0]
+    assert [c[0] for c in calls] == ["GET", "POST", "POST", "POST"]
+    assert [c[2]["timeout"] for c in calls] == [30.0, 60.0, 60.0, 60.0]
     assert all(c[2]["allow_redirects"] is False for c in calls)
     assert calls[0][1] == anchor.NLDI_HYDROLOCATION_URL
     assert calls[0][2]["params"] == {"coords": "POINT(-72.236690 43.685830)"}
@@ -109,11 +117,15 @@ def test_three_request_budget_and_progress(monkeypatch, caplog):
             {"id": "lat", "value": "43.685830", "type": "text/plain"},
             {"id": "lon", "value": "-72.236690", "type": "text/plain"},
             {"id": "direction", "value": "none", "type": "text/plain"}]}
-    assert pauses == [1.5, 3.0]
+    assert pauses == [5.0, 10.0, 15.0]
     assert progress == [{"status": "finding", "attempt": 1},
                         {"status": "retrying", "attempt": 2},
-                        {"status": "retrying", "attempt": 3}]
-    assert len(caplog.records) == 3
+                        {"status": "retrying", "attempt": 3},
+                        {"status": "retrying", "attempt": 4}]
+    assert progress_at_pause == [(1, {"status": "retrying", "attempt": 2}),
+                                 (2, {"status": "retrying", "attempt": 3}),
+                                 (3, {"status": "retrying", "attempt": 4})]
+    assert len(caplog.records) == 4
     for n, record in enumerate(caplog.records, 1):
         assert f"attempt={n}" in record.message
         assert all(key in record.message for key in ("endpoint=", "status=", "elapsed=", "error="))
@@ -124,7 +136,7 @@ def test_three_request_budget_and_progress(monkeypatch, caplog):
 def test_transient_errors_recover_on_flowtrace(monkeypatch, first):
     calls, pauses = transport(monkeypatch, [first, Response(data=fc(FLOWLINE))])
     assert anchor.hydrolocation_snap(40, -83) == SNAP
-    assert len(calls) == 2 and pauses == [1.5]
+    assert len(calls) == 2 and pauses == [5.0]
 
 
 @pytest.mark.parametrize("reply", [Response(400), Response(404), Response(301),
@@ -144,24 +156,32 @@ def test_success_and_clean_empty_stop_without_fallback(monkeypatch, data):
 
 
 @pytest.mark.parametrize("reply", [Response(400), Response(data={}), Response(data=fc())])
-def test_second_attempt_terminal_or_empty_result_stops(monkeypatch, reply):
-    calls, pauses = transport(monkeypatch, [Response(502), reply])
+@pytest.mark.parametrize("attempt", [2, 3])
+def test_retry_terminal_or_empty_result_stops(monkeypatch, reply, attempt):
+    calls, pauses = transport(monkeypatch, [Response(502)] * (attempt - 1) + [reply])
     result = anchor.hydrolocation_snap(40, -83)
     if reply.data == fc():
         assert result == {}
     else:
         assert "error" in result
-    assert len(calls) == 2 and pauses == [1.5]
+    assert len(calls) == attempt and pauses == [5.0, 10.0][:attempt - 1]
+
+
+def test_third_request_success_skips_final_retry(monkeypatch):
+    calls, pauses = transport(monkeypatch, [Response(502), Response(503),
+                                          Response(data=fc(FLOWLINE))])
+    assert anchor.hydrolocation_snap(40, -83) == SNAP
+    assert len(calls) == 3 and pauses == [5.0, 10.0]
 
 
 def test_all_transient_failures_are_bounded_and_logged(monkeypatch, caplog):
-    calls, pauses = transport(monkeypatch, [Response(502, {"detail": "upstream\n" + "x" * 2000})] * 3)
+    calls, pauses = transport(monkeypatch, [Response(502, {"detail": "upstream\n" + "x" * 2000})] * 4)
     result = anchor.hydrolocation_snap(40, -83)
-    assert len(calls) == 3 and pauses == [1.5, 3.0]
+    assert len(calls) == 4 and pauses == [5.0, 10.0, 15.0]
     assert result["error"].count("hydrolocation:") == 1
-    assert result["error"].count("flowtrace:") == 2
-    assert "\n" not in result["error"] and len(result["error"]) < 1400
-    assert len(caplog.records) == 3
+    assert result["error"].count("flowtrace:") == 3
+    assert "\n" not in result["error"] and len(result["error"]) < 1900
+    assert len(caplog.records) == 4
     assert all(len(record.message) < 550 for record in caplog.records)
 
 

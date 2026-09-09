@@ -65,7 +65,7 @@ def test_copy_and_cache_bust():
     assert app._MISS_TEXT == ("No stream line within 150 ft of the click. "
                               "Zoom in and click a line.")
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert "deep.css?v=8" in src and "styles.css?v=18" in src
+    assert "deep.css?v=8" in src and "styles.css?v=19" in src
     # Source readiness has its own persistent row instead of sharing engine progress.
     assert '"Finding the nearest StreamCat reach…"' in src
     assert 'ui.output_ui("streamcat_lookup_status")' in src

@@ -72,7 +72,7 @@ def test_the_stylesheet_pins_the_header_and_the_layout():
     for state in (".ff-dl .btn-primary {", ".ff-dl .btn-primary:hover,"):
         assert state in CSS, state
     assert "ff-dl-secondary" not in CSS and "ff-dl-secondary" not in SRC
-    assert 'href="styles.css?v=24"' in SRC
+    assert 'href="styles.css?v=25"' in SRC
 
 
 def test_the_worksheet_button_names_the_dialog():

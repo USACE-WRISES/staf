@@ -12,12 +12,14 @@ app = importlib.import_module("app")
 
 
 def test_badges_follow_the_origin():
-    assert app._ev_badge({"origin": "engine", "status": "ok"}) == ("HR reach watershed", "sfari-ev-tag engine")
+    assert app._ev_badge({"origin": "engine", "status": "ok"}) == ("Desktop", "sfari-ev-tag engine")
     assert app._ev_badge({"origin": "streamcat", "status": "ok"}) == ("StreamCat", "sfari-ev-tag streamcat")
-    assert app._ev_badge({"origin": "pull", "status": "ok"}) == ("desktop", "sfari-ev-tag")
-    assert app._ev_badge({"status": "ok"}) == ("desktop", "sfari-ev-tag")     # legacy entry
+    assert app._ev_badge({"origin": "pull", "status": "ok"}) == ("Desktop", "sfari-ev-tag")
+    assert app._ev_badge({"status": "ok"}) == ("Desktop", "sfari-ev-tag")     # legacy entry
     assert app._ev_badge({"origin": "engine", "status": "pending"}) == app._PENDING_BADGE
     assert app._ev_badge(None) == ("field", "sfari-ev-tag field")
+    assert app._PENDING_BADGE == ("Desktop pending", "sfari-ev-tag pending")
+    assert "STAF site engine" in app._ev_tip({"source": "STAF site engine (HR reach watershed)"})
 
 
 def test_tooltip_names_the_reach_and_the_fallback():
@@ -99,7 +101,7 @@ def test_copy_has_no_em_dash_and_names_both_engines():
     # head content renders as a dependency, not in str(app_ui): read the source
     from pathlib import Path
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert 'styles.css?v=24' in src and 'styles.css?v=23' not in src
+    assert 'styles.css?v=25' in src and 'styles.css?v=24' not in src
 
 
 def test_map_styles_exist():

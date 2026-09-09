@@ -12,6 +12,18 @@ screening report.
 SFARI is a near-clone of the **EASI** app (`../easi`) — same look, feel,
 mapping, and report — with scoring authority moved from the system to the user.
 
+## Report preparation
+
+Report popups keep the current workspace visible while the mini map is prepared
+in the background. A small **Preparing report…** status marks the wait; closing
+the popup returns focus to its opener. USGS basemap requests allow two attempts
+with a 12-second timeout and a one-second retry pause. Only valid PNGs are cached
+(up to 32 images), so reopening after a failed request can recover. If the
+background remains unavailable, the report retains the watershed/reach outline
+and a small **Map background unavailable** note. The PDF uses the same image
+fetching and cache. Posit Publisher includes the required modules; the background
+is fetched at runtime, rather than bundled as a deployment asset.
+
 ## Method structure
 
 - **5 functional categories × 4 functions = 20 functions**; **4 metrics each = 80 metrics**.
@@ -57,6 +69,8 @@ bug, so the same fix has to reach whoever re-issues the draft.
 
 Evidence is pulled per metric from national services and shown with a source
 label, a provenance badge, and a suggested Likert; the assessor always scores.
+Site-engine values use the plain **Desktop** badge (**Desktop pending** while
+calculating); tooltips retain the engine name, version, and watershed details.
 One watershed engine answers the watershed metrics (the definitions live in
 `libs/README.md` and on the STAF site's Computation Engines page):
 
@@ -112,8 +126,10 @@ beneath the relevant metrics table; assessor-assigned scores are not marked.
 Every click, and every typed point, snaps to the HR
 line (`sfari/hr_site.py`, a thin adapter over the vendored engine), the point
 lands at once, and Delineate stays disabled until its StreamCat source resolves.
-The persistent status above Delineate shows lookup, automatic retries (up to
-two), and the source or failure. **Retry StreamCat lookup** starts a fresh
+The persistent status above Delineate shows lookup, up to three automatic retries
+after pauses of 5, 10, and 15 seconds, and the source or failure. A small circle
+spins beside active lookup messages, including retry pauses; it stays stationary
+when reduced motion is preferred. **Retry StreamCat lookup** starts a fresh
 bounded cycle at the same snapped point. New analysis and evidence pulls require
 the current source. Imported results remain readable; missing source information
 is resolved before new analysis. Once ready, Delineate runs the STAF site engine for the HR reach

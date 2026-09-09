@@ -169,8 +169,10 @@ adversarial review):**
   (`deep/hr_site.py`), the point lands at once, the StreamCat reach resolves
   in the background (`deep/comid_anchor.py`, the vendored engine's shared
   click rule), and Delineate stays disabled until the source resolves. A
-  persistent status above it shows lookup, automatic retries (up to two),
-  and the source or failure. **Retry StreamCat lookup** starts a fresh bounded
+  persistent status above it shows lookup, up to three automatic retries after
+  pauses of 5, 10, and 15 seconds, and the source or failure. A small circle spins
+  beside active lookup messages, including retry pauses; it stays stationary
+  when reduced motion is preferred. **Retry StreamCat lookup** starts a fresh bounded
   cycle at the same snapped point. New analysis and metric computation require
   the current source. Imported results stay readable; a missing source is
   resolved before new analysis. Once ready, Delineate runs the STAF site
@@ -192,6 +194,18 @@ adversarial review):**
 - Sessions carry `siteAnchor`, `siteEngine` (geometry stripped), and
   `watershedBasis` inside the delineation block; the schema version is
   unchanged.
+
+## Report preparation
+
+Report popups keep the current workspace visible while the mini map is prepared
+in the background. A small **Preparing report…** status marks the wait; closing
+the popup returns focus to its opener. USGS basemap requests allow two attempts
+with a 12-second timeout and a one-second retry pause. Only valid PNGs are cached
+(up to 32 images), so reopening after a failed request can recover. If the
+background remains unavailable, the report retains the watershed/reach outline
+and a small **Map background unavailable** note. The PDF uses the same image
+fetching and cache. Posit Publisher includes the required modules; the background
+is fetched at runtime, rather than bundled as a deployment asset.
 
 ## Run the app (dev)
 
