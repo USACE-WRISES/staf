@@ -99,23 +99,27 @@ and nothing sets or reads it now.
 
 ### Any NHD stream
 
-The map draws the high-resolution NHD once and colors each stretch by the
-engine that answers a click there (`sfari/network_display.py`, EASI's split):
-dark blue within 150 ft of an NHDPlus V2 reach, where the StreamCat lookup
-engine answers by that COMID, cyan everywhere else. A legend under the layers
-button names the colors by what they mean for the data ("All data from this
-reach", "All data, some from downstream") rather than by engine, and so do the
-layer-control entries: the assessor never picks an engine, and since the site
-engine now runs on both colors, naming them there was misleading as well as
-unusable. The engine names stay on the evidence badges, the basin card and the
-exports, where the question is provenance. Every click, and every typed point, snaps to the HR
+The map draws the high-resolution NHD once in one solid blue style. The Layers
+menu has **Streams** and an optional **StreamCat coverage** checkbox, initially
+off. Enabling it distinguishes **StreamCat reaches** in blue from **Other
+streams** in cyan (`sfari/network_display.py`, EASI's split within 150 ft of
+an NHDPlus V2 reach). It also reveals the source-reach highlight and downstream
+connector. The choice lasts for the current page session and only changes the
+display. The assessment point, reach, and watershed remain distinct. Engine
+names stay on the evidence badges, basin card, and exports. Downstream desktop
+evidence carries a dagger in the main report and assessment PDF, explained
+beneath the relevant metrics table; assessor-assigned scores are not marked.
+Every click, and every typed point, snaps to the HR
 line (`sfari/hr_site.py`, a thin adapter over the vendored engine), the point
-lands at once, the StreamCat reach resolves in the background (a glow under
-the V2 reach, and on a cyan stream a dashed route to the nearest covered
-reach downstream), and Delineate runs the STAF site engine for the HR reach
+lands at once, and Delineate stays disabled until its StreamCat source resolves.
+The persistent status above Delineate shows lookup, automatic retries (up to
+two), and the source or failure. **Retry StreamCat lookup** starts a fresh
+bounded cycle at the same snapped point. New analysis and evidence pulls require
+the current source. Imported results remain readable; missing source information
+is resolved before new analysis. Once ready, Delineate runs the STAF site engine for the HR reach
 watershed and the assessment reach at the length the assessor typed (usually under a minute, up to about five minutes on
 a large basin, refused past the interactive reach budget). If the engine
-fails, the assessor can continue with the StreamCat lookup engine
+fails and a valid source already exists, the assessor can continue with the StreamCat lookup engine
 (`pipeline.delineate_without_watershed`): no watershed is drawn, the basis is
 the StreamCat reach's NHDPlus V2 basin, and every watershed value says so.
 Sessions carry `siteAnchor`, `siteEngine` (geometry stripped) and

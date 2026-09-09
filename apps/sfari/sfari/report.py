@@ -14,6 +14,15 @@ import json
 from . import config, delineation, reportmap, scoring
 
 _CAT = config.CATEGORY_ORDER
+BORROWED_MARK = "†"
+BORROWED_NOTE = "Marked desktop evidence comes from the nearest StreamCat reach downstream."
+
+
+def is_borrowed(evidence: dict | None) -> bool:
+    """The displayed desktop evidence describes another reach, independent of its Likert."""
+    evidence = evidence or {}
+    return bool(evidence.get("status") == "ok" and evidence.get("origin") == "streamcat"
+                and evidence.get("anchor_label") and evidence.get("value_text"))
 
 # Render-time normalization of the few non-ASCII glyphs that appear in stored
 # evidence text (km², Δ, τ, →, en/em dashes, degree, micro) to print-safe ASCII.
@@ -153,6 +162,7 @@ def build_pdf(delin, metric_scores, function_scores, evidence, sc) -> bytes:
     doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=0.6 * inch, bottomMargin=0.6 * inch,
                             leftMargin=0.6 * inch, rightMargin=0.6 * inch, title="SFARI Screening Report")
     styles = getSampleStyleSheet()
+    styles["Heading3"].keepWithNext = True
     small = ParagraphStyle("small", parent=styles["BodyText"], fontSize=7, leading=8.4)
     story = []
     dl = (delin or {}).get("delineation", {})
@@ -226,17 +236,26 @@ def build_pdf(delin, metric_scores, function_scores, evidence, sc) -> bytes:
     story += [sit, Spacer(1, 10), Paragraph("Metric evidence & Likert scores", styles["Heading3"])]
 
     mdata = [["Function", "Metric", "Likert", "Pulled evidence"]]
+    has_borrowed = False
     for cat, f, m in _ordered_metrics():
         mid = m["metricId"]
         rc = metric_scores.get(mid) or {}
         ev = evidence.get(mid) or {}
         lk = config.LIKERT_SHORT.get(rc.get("likert"), "") if rc.get("likert") else ""
+        borrowed = is_borrowed(ev)
+        has_borrowed = has_borrowed or borrowed
+        mark = f"<super>{BORROWED_MARK}</super>" if borrowed else ""
         mdata.append([Paragraph(f["name"], small), Paragraph(m["name"], small), lk,
-                      Paragraph(ev.get("value_text") or "", small)])
+                      Paragraph((ev.get("value_text") or "") + mark, small)])
     mt = Table(mdata, colWidths=[1.5 * inch, 2.0 * inch, 0.55 * inch, 2.65 * inch], repeatRows=1)
     mt.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 7), ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e5e8ee")),
                             ("BACKGROUND", (0, 0), (-1, 0), head_bg), ("VALIGN", (0, 0), (-1, -1), "TOP")]))
-    story += [mt, Spacer(1, 8),
+    story.append(mt)
+    if has_borrowed:
+        note_style = ParagraphStyle("SourceNote", parent=styles["BodyText"],
+                                    fontSize=8, leading=10, textColor=colors.HexColor("#556070"))
+        story += [Spacer(1, 4), Paragraph(f"{BORROWED_MARK} {BORROWED_NOTE}", note_style)]
+    story += [Spacer(1, 8),
               Paragraph("Desktop evidence supports scoring; the assessor assigns the Likert and "
                         "0-15 function scores. Likert thresholds are national defaults. Calibrate "
                         "regionally.", styles["Italic"])]

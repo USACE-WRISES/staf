@@ -382,7 +382,7 @@ def _xs_reach_sentence(xs: Optional[dict]) -> str:
 def build_pdf(result: dict) -> bytes:
     from reportlab.lib import colors as rc
     from reportlab.lib.pagesizes import letter
-    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import inch
     from reportlab.platypus import (Image, Paragraph, SimpleDocTemplate, Spacer,
                                     Table, TableStyle)
@@ -398,13 +398,10 @@ def build_pdf(result: dict) -> bytes:
     story.append(Paragraph(meta, styles["Normal"]))
     story.append(Spacer(1, 8))
     anchor = result.get("siteAnchor") or {}
-    # Where the watershed metrics come from stays at the top here, unlike the
-    # report modal, which drops it because its Basin characteristics block
-    # already carries a "Watershed engine" row. The PDF renders no such block
-    # (_summary_pairs is the CSV's), so this is its only statement of it. Which
-    # rows are borrowed is a marker on those rows, footnoted under the table.
+    # Routine provenance belongs with the ending source details. Degradations
+    # still need to be visible before a reader interprets the scores.
     w = notices.routed_notice(anchor, d)
-    if w:
+    if w and d.get("watershed_source") != "site-engine":
         story.append(Paragraph("<b>Note.</b> " + " ".join(w["lines"]), styles["Normal"]))
         story.append(Spacer(1, 6))
     if rep.get("provisionalCoverage"):
@@ -515,7 +512,7 @@ def build_pdf(result: dict) -> bytes:
     data = [head]
     rating_bg = []
     for i, r in enumerate(metric_rows, start=1):
-        mark = notices.BORROWED_MARK if r.get("anchorNote") else ""
+        mark = notices.BORROWED_MARK if notices.is_borrowed(r) else ""
         row = [
             Paragraph(r["functionName"], styles["BodyText"]),
             Paragraph(r["name"] + mark, styles["BodyText"]),
@@ -544,9 +541,22 @@ def build_pdf(result: dict) -> bytes:
     tbl.setStyle(TableStyle(style))
     story.append(tbl)
     marker_text = notices.marker_note(anchor)
-    if marker_text and any(r.get("anchorNote") for r in metric_rows):
+    has_borrowed = any(notices.is_borrowed(r) for r in metric_rows)
+    source_style = ParagraphStyle("SourceNote", parent=styles["BodyText"],
+                                  fontSize=8, leading=10, textColor=rc.HexColor("#556070"))
+    if marker_text and has_borrowed:
         story.append(Spacer(1, 4))
-        story.append(Paragraph(f"{notices.BORROWED_MARK} {marker_text}", styles["Italic"]))
+        story.append(Paragraph(f"{notices.BORROWED_MARK} {marker_text}", source_style))
+    source_details = []
+    if w and d.get("watershed_source") == "site-engine":
+        source_details.extend(w["lines"])
+    if has_borrowed:
+        source_details.append(notices.borrowed_note(anchor))
+    if source_details:
+        from xml.sax.saxutils import escape
+        story.append(Spacer(1, 8))
+        story.append(Paragraph("<b>Source details.</b> " + escape(" ".join(source_details)),
+                               source_style))
     story.append(Spacer(1, 8))
     story.append(Paragraph(
         "Generated from national datasets. A desktop screening estimate with "

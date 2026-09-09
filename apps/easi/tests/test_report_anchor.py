@@ -178,10 +178,8 @@ def test_surrogate_banner_in_pdf():
     assert b[:4] == b"%PDF" and len(b) > 1000
 
 
-def test_pdf_keeps_the_watershed_sentence_and_marks_the_borrowed_rows():
-    """The PDF renders no basin label/value block (_summary_pairs is the CSV's),
-    so the watershed sentence stays at its top even though the report modal
-    drops it. Which rows are borrowed is a marker, footnoted under the table."""
+def test_pdf_keeps_source_details_at_the_end_and_marks_the_borrowed_rows(monkeypatch):
+    """The table's short note stays separate from the full ending source details."""
     pypdf = pytest.importorskip("pypdf")
     import io as _io
 
@@ -189,6 +187,9 @@ def test_pdf_keeps_the_watershed_sentence_and_marks_the_borrowed_rows():
 
     res = _result()
     res["siteAnchor"] = _hr_anchor()
+    res["delineation"].update(watershed_source="site-engine",
+                             watershed_engine={"areaSqkm": 1.0, "status": "ok"})
+    monkeypatch.setattr(report.reportmap, "pdf_flowable", lambda *args, **kwargs: None)
     rows = res["report"]["metricRows"]
     rows[0]["anchorNote"] = ("Scored from the nearest StreamCat reach, "
                              "1,240 ft downstream.")
@@ -196,14 +197,38 @@ def test_pdf_keeps_the_watershed_sentence_and_marks_the_borrowed_rows():
                      for p in pypdf.PdfReader(_io.BytesIO(report.build_pdf(res))).pages)
 
     assert "EASI Report" in text and "EASI Screening Report" not in text
-    assert "outside the StreamCat network" in text          # the sentence the modal drops
+    assert "outside the StreamCat network" in text
     assert "Low flow, substrate, and biological integrity" not in text
     assert notices.BORROWED_MARK in text                    # the mark renders in the font
-    assert "Comes from the nearest StreamCat reach" in text
+    assert notices.BORROWED_NOTE in text
+    assert text.index("38% impervious") < text.index(notices.BORROWED_NOTE) < text.index("Source details.")
+    assert text.index("Source details.") < text.index("outside the StreamCat network")
+    assert "Rush Run (COMID 5215053)" in text and "291 ft downstream" in text
+    assert "which drains 5.5 times this stream" in " ".join(text.split())
+
+    # The displayed override is not downstream evidence even though its base metadata survives.
+    rows[0].update(status="override", valueText="user-provided: Good")
+    overridden = "\n".join(p.extract_text() or ""
+                          for p in pypdf.PdfReader(_io.BytesIO(report.build_pdf(res))).pages)
+    assert notices.BORROWED_NOTE not in overridden
 
     # nothing borrowed, nothing to explain
     for r in rows:
         r.pop("anchorNote", None)
     plain = "\n".join(p.extract_text() or ""
                       for p in pypdf.PdfReader(_io.BytesIO(report.build_pdf(res))).pages)
-    assert "Comes from the nearest StreamCat reach" not in plain
+    assert notices.BORROWED_NOTE not in plain
+
+
+def test_pdf_keeps_watershed_failures_ahead_of_the_metric_table(monkeypatch):
+    pypdf = pytest.importorskip("pypdf")
+    import io
+
+    res = _result()
+    res["siteAnchor"] = _hr_anchor()
+    res["delineation"].update(watershed_source="not-calculated",
+                             watershed_engine={"reason": "walk budget exceeded"})
+    monkeypatch.setattr(report.reportmap, "pdf_flowable", lambda *args, **kwargs: None)
+    text = "\n".join(p.extract_text() or ""
+                     for p in pypdf.PdfReader(io.BytesIO(report.build_pdf(res))).pages)
+    assert text.index("Watershed metrics are unavailable") < text.index("38% impervious")

@@ -3,6 +3,7 @@ classification through the vendored engine's click rule, the labels that ride
 every StreamCat value, and the map helpers. Offline: the engine is stubbed."""
 from __future__ import annotations
 
+import pytest
 from sfari import comid_anchor as ca
 
 V2 = {"anchorKind": "v2Direct", "anchorSchemaVersion": 1,
@@ -139,4 +140,57 @@ def test_resolve_never_raises(monkeypatch):
     res = ca.resolve(40.3, -83.0, HR_HIT)
     assert res == {"error": "snap_service_error", "detail": "NLDI down"}
     monkeypatch.setattr(ca, "_classify", lambda *a, **k: None)
+    malformed = ca.resolve(40.3, -83.0, HR_HIT)
+    assert malformed["error"] == "snap_service_error"
+    assert "Unexpected response shape" in malformed["detail"]
+    monkeypatch.setattr(ca, "_classify", lambda *a, **k: {"error": "no_stream_found"})
     assert ca.resolve(40.3, -83.0, HR_HIT) == {"error": "no_stream_found"}
+
+
+def test_resolve_propagates_retry_progress_without_changing_result(monkeypatch):
+    events = []
+    def classify(*args, progress, **kwargs):
+        progress({"status": "finding", "attempt": 1})
+        progress({"status": "retrying", "attempt": 2})
+        return {"error": "snap_service_error", "detail": "upstream timeout"}
+    monkeypatch.setattr(ca, "_classify", classify)
+    assert ca.resolve(40.31, -83.055, HR_HIT, v2_fc=FC, progress=events.append) == {
+        "error": "snap_service_error", "detail": "upstream timeout"}
+    assert events == [{"status": "finding", "attempt": 1}, {"status": "retrying", "attempt": 2}]
+
+
+@pytest.mark.parametrize("response", [None, [], {}, {"anchor": None},
+                                       {"anchor": {"scoredReach": {"comid": "invalid"}}}])
+def test_malformed_classification_is_a_service_failure_not_a_no_match(monkeypatch, response):
+    monkeypatch.setattr(ca, "_classify", lambda *a, **k: response)
+    result = ca.resolve(40.31, -83.055, HR_HIT, v2_fc=FC)
+    assert result["error"] == "snap_service_error"
+    assert "Unexpected response shape" in result["detail"]
+
+
+def test_saved_source_uses_only_valid_comids_from_the_imported_site():
+    assert ca.saved_anchor({"ctx_inputs": {"comid": "9327042"}}) == ca.synthetic(9327042)
+    assert ca.saved_anchor({"delineation": {"comid": 9327042}}) == ca.synthetic(9327042)
+    assert ca.saved_anchor({"siteAnchor": ROUTED, "ctx_inputs": {"comid": 1}}) == ROUTED
+    for value in (None, "bad", 0, -1, True, 7.5):
+        assert ca.saved_anchor({"ctx_inputs": {"comid": value}}) is None
+
+
+def test_saved_point_is_the_assessment_point_and_not_the_downstream_source():
+    d = {"siteAnchor": ROUTED, "delineation": {"snapped_lat": 40, "snapped_lon": -83,
+                                                "nhdplus_id": 99}}
+    assert ca.saved_point(d) == (40, -83, 0, 99)
+    assert ca.saved_point({"siteAnchor": ROUTED})[:2] == (43.6858, -72.2367)
+    assert ca.saved_point({"ctx_inputs": {"lat": 0, "lon": 0}}) is None
+
+
+def test_saved_point_uses_complete_pairs_and_skips_malformed_nested_values():
+    # Never pair latitude from an incomplete delineation with another point's longitude.
+    d = {"delineation": {"snapped_lat": 40},
+         "ctx_inputs": {"lat": 43.68583, "lon": -72.23669, "comid": 9327042}}
+    assert ca.saved_point(d) == (43.68583, -72.23669, 0, None)
+    d["delineation"] = {"snapped_lat": 0, "snapped_lon": 0}
+    assert ca.saved_point(d)[:2] == (43.68583, -72.23669)
+    assert ca.saved_point({"delineation": [], "ctx_inputs": "bad"}) is None
+    assert ca.saved_anchor({"delineation": [], "ctx_inputs": "bad"}) is None
+    assert ca.saved_point({"siteAnchor": {**ROUTED, "clickedStream": []}}) is None

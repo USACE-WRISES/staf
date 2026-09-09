@@ -47,22 +47,40 @@ produces carries its source, vintage and the engine version.
 No app asks the user to pick a method. Each applies one fixed policy, and
 every value says which engine produced it.
 
+EASI, SFARI, and DEEP display one solid blue stream network by default. In the
+Layers menu, **StreamCat coverage** is initially off. Enabling it distinguishes
+StreamCat reaches from other streams and reveals the selected data-source reach
+and its downstream connector. This display setting leaves the assessment point,
+reach, watershed, and calculation policy unchanged.
+
+Each app resolves a StreamCat source reach before allowing new analysis. The
+selected point remains visible while the status above Delineate shows lookup
+progress. Temporary routing failures retry twice automatically; if unresolved,
+**Retry StreamCat lookup** retries the same snapped point. A no-match result or
+invalid service response also blocks analysis with an explanation. A resolved
+source means a valid COMID; individual metrics are retrieved later and can still
+be unavailable. Imported results remain readable while missing source information
+is resolved. Coverage toggles do not trigger lookup or affect readiness.
+
 | Tier | App | Policy |
 |---|---|---|
-| Screening | EASI | The map draws one stream network, colored by the engine that answers a click there: dark blue where the StreamCat lookup engine scores the reach in seconds, cyan where the STAF site engine calculates the HR reach watershed. After a click the scored reach is highlighted. On cyan streams the three reach-keyed metrics (low flow, substrate, biological integrity) come from the nearest StreamCat reach downstream, and each says so with the routed distance and the drainage-area ratio. If the engine cannot compute the watershed, the watershed metrics are unavailable with guidance, never a stand-in. |
-| Rapid | SFARI | The map draws both networks, dark blue for the NHDPlus V2 reaches the StreamCat lookup engine covers and cyan for every other NHD stream, and every click snaps to the high-resolution NHD. The site engine computes the HR reach watershed and every watershed value at every site. The StreamCat lookup engine supplies, by COMID, the EPA modeled indices that exist only per V2 reach (flow permanence, dewatered segments, barriers, nutrients) and stands in, labeled, for a watershed value the engine could not compute. On a stream outside V2 the COMID is the nearest StreamCat reach downstream, named with the routed distance and the drainage-area ratio. Direct services (gages, water quality, wetlands, dams) answer the rest. The assessor keeps every score. |
-| Detailed | DEEP | The map draws both networks as SFARI does, dark blue for the NHDPlus V2 reaches the StreamCat lookup engine covers and cyan for every other NHD stream, and every click snaps to the high-resolution NHD. The site engine computes the HR reach watershed at every site. Auto-pulled values follow the assessment metric by metric: a curve whose own `predictorSource` records engine predictors takes the site-engine value (every landscape metric, base-flow index and road-stream crossings included since engine 0.3.0), and every other curve takes the lookup-engine value by COMID that it was fitted on, so a mixed bundle scores both. On a stream outside V2 the COMID is the nearest StreamCat reach downstream, named with the routed distance and the drainage-area ratio. A value from the other engine is shown as reference and not scored. |
+| Screening | EASI | Within 150 ft of an NHDPlus V2 reach, the StreamCat lookup engine supplies watershed metrics in seconds. Elsewhere the STAF site engine calculates the HR reach watershed. Reach-keyed metrics, including low flow, substrate, and biological integrity, can use the nearest StreamCat reach downstream; their source details include the routed distance and drainage-area ratio. If the engine cannot compute the watershed, the watershed metrics are unavailable with guidance, never a stand-in. |
+| Rapid | SFARI | Every click snaps to the high-resolution NHD. The site engine computes the HR reach watershed and every watershed value at every site. The StreamCat lookup engine supplies, by COMID, the EPA modeled indices that exist only per V2 reach (flow permanence, dewatered segments, barriers, nutrients) and stands in, labeled, for a watershed value the engine could not compute. On a stream outside V2 the COMID is the nearest StreamCat reach downstream, named with the routed distance and the drainage-area ratio. Direct services (gages, water quality, wetlands, dams) answer the rest. The assessor keeps every score. |
+| Detailed | DEEP | Every click snaps to the high-resolution NHD. The site engine computes the HR reach watershed at every site. Auto-pulled values follow the assessment metric by metric: a curve whose own `predictorSource` records engine predictors takes the site-engine value (every landscape metric, base-flow index and road-stream crossings included since engine 0.3.0), and every other curve takes the lookup-engine value by COMID that it was fitted on, so a mixed bundle scores both. On a stream outside V2 the COMID is the nearest StreamCat reach downstream, named with the routed distance and the drainage-area ratio. A value from the other engine is shown as reference and not scored. |
 | Detailed (builder) | StreamCurves | The predictor source is the one choice in the program: the StreamCat lookup engine by default, or the site engine, recorded in every build's provenance. An engine-sourced build also recomputes the scored landscape metrics with an engine analog (impervious, crop, wetland, road density, dam density, base-flow index, road-stream crossings) over the HR reach watershed at every training site, and stamps those curves as engine-fitted. Surface water storage is one combined wetland metric, woody plus herbaceous, the same sum EASI scores. The reference screen always runs on the lookup engine, keyed on each NRSA site's own archive COMID, so pool membership is decided on the reach the crew sampled, and the candidate panel is wadeable-only. |
 
 ## Reading the labels
 
-- EASI reports name the engine on every watershed row and, on a stream drawn
-  cyan, add a banner: the assessed stream, the watershed engine and its
-  area, and the reach that supplied the reach-keyed evidence. The CSV and
-  GeoJSON exports carry an Engine column on those sites.
+- EASI reports name the engine on watershed rows and mark downstream desktop
+  evidence with a dagger, explained below the metrics table. Detailed source
+  information retains the source reach, distance, and drainage-area ratio;
+  routine provenance does not add a report-top banner. CSV and GeoJSON exports
+  retain engine and reach provenance.
 - SFARI evidence rows carry a badge: HR reach watershed (site engine),
   StreamCat (by COMID, naming the reach it describes) or desktop (other
-  services). The desktop metrics PDF and the report CSV carry the same labels.
+  services). The main report and assessment PDF mark affected desktop evidence
+  with a dagger and a short explanation below the metrics table. The desktop
+  metrics PDF and report CSV retain their detailed source descriptions.
 - DEEP shows the source and basis of each auto-pulled value beside its input,
   and an advisory when a value is shown as reference only.
 - StreamCurves records the predictor source in the run manifest, the published

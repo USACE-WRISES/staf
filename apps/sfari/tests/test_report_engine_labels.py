@@ -71,3 +71,38 @@ def test_csv_header_carries_the_watershed_area_only_when_there_is_one():
     assert "HR reach watershed area" not in report.build_csv(V2_DELIN, {}, {}, {}, sc)
     with_area = {**HR_DELIN, "delineation": {**HR_DELIN["delineation"], "watershed_area_sqkm": 4.21}}
     assert "HR reach watershed area (km2),4.21" in report.build_csv(with_area, {}, {}, {}, sc)
+
+
+def test_main_pdf_marks_evidence_not_the_assessors_likert(monkeypatch):
+    import io
+    import pytest
+    import reportlab.platypus
+
+    pypdf = pytest.importorskip("pypdf")
+    evidence = {"catchment-hydrology-road-density": {
+        "status": "ok", "origin": "streamcat", "value_text": "0.90 km/km2",
+        "anchor_label": "nearest StreamCat reach Big Run (COMID 1), 1,240 ft downstream"}}
+    scores = {"catchment-hydrology-road-density": {"likert": "Neutral", "note": "Assessor judgment"}}
+    captured = []
+    real_table = reportlab.platypus.Table
+
+    def table(data, *args, **kwargs):
+        if data[0] == ["Function", "Metric", "Likert", "Pulled evidence"]:
+            captured.append(data)
+        return real_table(data, *args, **kwargs)
+
+    monkeypatch.setattr(reportlab.platypus, "Table", table)
+    monkeypatch.setattr(report.reportmap, "pdf_flowable", lambda *args, **kwargs: None)
+    data = report.build_pdf(HR_DELIN, scores, {}, evidence, scoring.score_assessment({}))
+    text = "\n".join(p.extract_text() or "" for p in pypdf.PdfReader(io.BytesIO(data)).pages)
+    assert report.BORROWED_NOTE in text
+    assert text.index("0.90 km/km2") < text.index(report.BORROWED_NOTE)
+    row = next(row for row in captured[0][1:] if "0.90" in row[3].getPlainText())
+    assert row[2] == "N"
+    assert row[3].getPlainText().endswith(report.BORROWED_MARK)
+    assert text.count(report.BORROWED_MARK) == 2
+
+    evidence["catchment-hydrology-road-density"]["anchor_label"] = ""
+    plain = report.build_pdf(HR_DELIN, scores, {}, evidence, scoring.score_assessment({}))
+    text = "\n".join(p.extract_text() or "" for p in pypdf.PdfReader(io.BytesIO(plain)).pages)
+    assert report.BORROWED_MARK not in text and report.BORROWED_NOTE not in text

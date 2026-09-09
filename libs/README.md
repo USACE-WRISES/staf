@@ -31,11 +31,24 @@ this vocabulary.
 The policy is fixed by the framework. The only user choice in the program is
 the StreamCurves predictor source for assessment builders.
 
+EASI, SFARI, and DEEP use one blue stream style by default, with optional
+**StreamCat coverage** in Layers. Each requires a resolved source COMID for the
+current selected point before starting new analysis. A failed lookup retains
+the point and offers Retry; it cannot fall through as an absent COMID. The
+shared `anchor.hydrolocation_snap` routine makes at most three routing requests:
+one hydrolocation GET (30 seconds), then up to two flowtrace POSTs (60 seconds
+each) after transient failures, with 1.5- and 3-second delays. Valid empty or
+malformed responses stop immediately. Current flowtrace `nhdFlowline` responses
+use the supplied COMID and `intersection_point`; legacy Point responses remain
+supported. Endpoint/attempt/status/timing diagnostics go to logs. Optional
+source-highlight geometry has no effect on readiness. Existing saved results
+remain readable when an imported assessment needs its source resolved.
+
 | App | Watershed metrics | User choice | Where the engine shows |
 |---|---|---|---|
 | EASI | StreamCat lookup engine on covered NHDPlus V2 reaches. STAF site engine on any other NHD stream (batch policy `auto`, the default). The three COMID-keyed metrics on such a stream ride the nearest StreamCat reach whatever the drainage-area ratio, each labeled with the reach, the routed distance, and the ratio. `streamcat-legacy` reproduces the pre-2026-09 surrogate routing with its refusal past the 10x bound. Engine failure or refusal makes the watershed metrics unavailable with guidance, never a proxy. | None | Layer names, the snap card, the progress line, the basin card, the banner, per-row source labels, the Engine column of the exports |
 | SFARI | STAF site engine for the HR reach watershed and every watershed value at every site. StreamCat lookup engine by COMID for the EPA modeled indices that exist only per NHDPlus V2 reach (flow permanence, dewatered segments, barriers, nutrients) and, labeled, for a watershed value the engine could not compute. On a stream outside V2 the COMID is the nearest StreamCat reach downstream, and every such value names it with the routed distance and the drainage-area ratio. Direct services answer the rest. The assessor scores; the evidence is labeled. | None | Evidence badges, tooltips, the map legend, the desktop metrics PDF, the report CSV |
-| DEEP | The map draws both networks as SFARI does, dark blue for the NHDPlus V2 reaches the StreamCat lookup engine covers and cyan for every other NHD stream, and every click snaps to the high-resolution NHD. The STAF site engine computes the HR reach watershed at every site; auto-pulled values come from it for each metric whose own curve carries the engine `predictorSource` stamp, and from the StreamCat lookup engine by COMID for every other curve, the source it was fitted on (the train/serve pairing rule, read per metric). On a stream outside V2 the COMID is the nearest StreamCat reach downstream, and every such value names it with the routed distance and the drainage-area ratio, never withheld. | None, follows the bundle | The source row, the basis badge, the scoring advisory, the map legend, the exports, the field packet |
+| DEEP | Every click snaps to the high-resolution NHD. The STAF site engine computes the HR reach watershed at every site; auto-pulled values come from it for each metric whose own curve carries the engine `predictorSource` stamp, and from the StreamCat lookup engine by COMID for every other curve, the source it was fitted on (the train/serve pairing rule, read per metric). On a stream outside V2 the COMID is the nearest StreamCat reach downstream, and every such value names it with the routed distance and the drainage-area ratio, never withheld. | None, follows the bundle | The source row, the basis badge, the scoring advisory, the map legend, the exports, the field packet |
 | StreamCurves | Predictor source: StreamCat lookup engine (default) or STAF site engine, selected in the region builder or with `--predictor-source`. An engine-sourced build also recomputes the scored landscape metrics with an engine analog (impervious, crop, wetland (woody plus herbaceous, one column since 2026-09-07; the two classes stay pickable and are re-sourced when a run selects them), road density, dam density, base-flow index from the USGS grid, road-stream crossings on the NHDPlus HR network) at every retained site and stamps those curves per metric. The reference screen runs on the lookup engine, keyed on each NRSA site's archive COMID (the reach the crew sampled) and falling back to the `streamcat-legacy` routing for a candidate without one; the pin and the COMID mode join the inputs digest under absence semantics. | Predictor source only | Manifest `inputs.predictor_source` (with `resourced_metrics`), bundle `predictorSource` (bundle-level, and per metric on the re-sourced curves), the science support report |
 
 The score-level equivalence study (`libs/site_engine/scripts/score_equivalence_study.py`)

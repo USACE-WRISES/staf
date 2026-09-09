@@ -65,9 +65,9 @@ def test_copy_and_cache_bust():
     assert app._MISS_TEXT == ("No stream line within 150 ft of the click. "
                               "Zoom in and click a line.")
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert "deep.css?v=8" in src and "styles.css?v=15" in src
-    # the busy row while the StreamCat reach resolves (SFARI shares the text)
-    assert app._FINDING_REACH_TEXT == "Finding the StreamCat reach…"
-    assert "stage.set(_FINDING_REACH_TEXT)" in src
+    assert "deep.css?v=8" in src and "styles.css?v=18" in src
+    # Source readiness has its own persistent row instead of sharing engine progress.
+    assert '"Finding the nearest StreamCat reach…"' in src
+    assert 'ui.output_ui("streamcat_lookup_status")' in src
     css = (Path(app.__file__).parent / "www" / "deep.css").read_text(encoding="utf-8")
     assert ".deep-basis-tag.engine" in css and ".deep-engine-line" in css

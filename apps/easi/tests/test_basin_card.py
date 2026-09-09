@@ -5,7 +5,7 @@ a "Reach-keyed evidence: unavailable past the substitution limit" row said
 nothing a reader could use, and the site-engine variant added an engine walk
 count, the polygon area beside the drainage area, and the decline rule's
 ratio. The pane now formats its numbers through the basin helpers and keeps
-the engine row, the drainage area once, the reach length, and the covered
+the drainage area once, the reach length, and the covered
 reach's COMID only when that reach supplies evidence. The snap card's
 tooltip, the metric tooltips, and the report carry the rest. The card is a
 Shiny render, so this reads the source.
@@ -40,7 +40,8 @@ def test_card_is_lean_on_routed_sites():
                  '"Reaches walked"', '"HR reach watershed area"', '"Drainage area ratio"',
                  "Nearest covered reach COMID"):
         assert gone not in card, gone
-    assert 'row("Watershed engine"' in card
+    assert 'row("Watershed engine"' not in card
+    assert 'row("Watershed",' in card  # unavailable-watershed warnings remain
     # the covered reach's COMID always: it supplies the three reach metrics
     assert "declined" not in card
     assert 'comid_row = row("Evidence reach COMID", d.get("comid"))' in card

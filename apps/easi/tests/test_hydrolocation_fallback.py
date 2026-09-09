@@ -1,85 +1,54 @@
-"""The hydrolocation snap: one retry, then the flowtrace process on a separate
-route, never the catchment lookup. Fully offline."""
-from __future__ import annotations
-
-import sys
-import types
-
+"""EASI uses its vendored shared raindrop client, preserving its wrappers."""
 from easi import routing
-
-POINT = {"type": "Feature", "properties": {"comid": 5214461, "reachcode": "05060001000869",
-                                           "measure": 12.5},
-         "geometry": {"type": "Point", "coordinates": [-83.0563, 40.3101]}}
-LINE = {"type": "Feature", "properties": {"comid": 5214461},
-        "geometry": {"type": "LineString", "coordinates": [[-83.06, 40.31], [-83.05, 40.311]]}}
+from easi._vendor.site_engine import anchor
 
 
-def _nldi(monkeypatch, *, fail_times: int):
-    calls = {"n": 0}
-
-    class _NLDI:
-        def comid_byloc(self, coords):
-            calls["n"] += 1
-            if calls["n"] <= fail_times:
-                raise RuntimeError("502 Bad Gateway")
-            import pandas as pd
-            return pd.DataFrame({"comid": [5214461]})
-    monkeypatch.setitem(sys.modules, "pynhd", types.SimpleNamespace(NLDI=_NLDI))
-    monkeypatch.setattr(routing.time, "sleep", lambda s: None)
-    return calls
+SNAP = {"comid": 5214461, "snap_lon": -83.0563, "snap_lat": 40.3101}
 
 
-def test_parse_flowtrace_shapes():
-    out = routing._parse_flowtrace({"type": "FeatureCollection", "features": [LINE, POINT]})
-    assert out == {"comid": 5214461, "snap_lon": -83.0563, "snap_lat": 40.3101}
+def test_parser_delegates_to_the_vendored_engine(monkeypatch):
+    data = {"type": "FeatureCollection", "features": []}
+    seen = []
+    monkeypatch.setattr(anchor, "parse_flowtrace", lambda reply: seen.append(reply) or SNAP)
+    assert routing._parse_flowtrace(data) == SNAP
+    assert seen == [data]
+
+
+def test_current_flowtrace_intersection_and_malformed_response():
+    data = {"type": "FeatureCollection", "features": [{
+        "type": "Feature", "id": "nhdFlowline",
+        "properties": {"comid": 5214461, "intersection_point": [-83.0563, 40.3101]},
+        "geometry": {"type": "LineString", "coordinates": [[-83.06, 40.31], [-83.05, 40.32]]}}]}
+    assert routing._parse_flowtrace(data) == SNAP
+    assert "error" in routing._parse_flowtrace(None)
+    assert "error" in routing._parse_flowtrace({"features": []})
     assert routing._parse_flowtrace({"type": "FeatureCollection", "features": []}) == {}
-    assert routing._parse_flowtrace(None) == {}
-    assert "error" in routing._parse_flowtrace({"features": [LINE]})
 
 
-def test_retry_then_success_never_calls_flowtrace(monkeypatch):
-    calls = _nldi(monkeypatch, fail_times=1)
-    monkeypatch.setattr(routing, "_flowtrace_snap",
-                        lambda lat, lon, **k: (_ for _ in ()).throw(AssertionError("no fallback")))
-    out = routing._hydrolocation_snap(40.31, -83.05)
-    assert out["comid"] == 5214461 and calls["n"] == 2
+def test_flowtrace_wrapper_preserves_coordinates_and_timeout(monkeypatch):
+    seen = []
+    monkeypatch.setattr(anchor, "flowtrace_snap",
+                        lambda lat, lon, **k: seen.append((lat, lon, k)) or SNAP)
+    assert routing._flowtrace_snap(43.68583, -72.23669, timeout=12) == SNAP
+    assert seen == [(43.68583, -72.23669, {"timeout": 12})]
+    assert routing.FLOWTRACE_URL == anchor.NLDI_FLOWTRACE_URL
 
 
-def test_flowtrace_answers_when_hydrolocation_stays_down(monkeypatch):
-    calls = _nldi(monkeypatch, fail_times=5)
-    monkeypatch.setattr(routing, "_flowtrace_snap",
-                        lambda lat, lon, **k: {"comid": 5214461, "snap_lat": 40.3101,
-                                               "snap_lon": -83.0563})
-    out = routing._hydrolocation_snap(40.31, -83.05)
-    assert out["comid"] == 5214461 and calls["n"] == 2
+def test_hydrolocation_wrapper_forwards_progress_and_exact_result(monkeypatch):
+    progress, seen = [], []
+
+    def shared_client(lat, lon, *, progress=None):
+        seen.append((lat, lon))
+        progress({"status": "retrying", "attempt": 2})
+        return SNAP
+
+    monkeypatch.setattr(anchor, "hydrolocation_snap", shared_client)
+    assert routing._hydrolocation_snap(43.68576, -72.23658, progress=progress.append) == SNAP
+    assert seen == [(43.68576, -72.23658)]
+    assert progress == [{"status": "retrying", "attempt": 2}]
 
 
-def test_every_attempt_is_named_when_all_fail(monkeypatch):
-    _nldi(monkeypatch, fail_times=5)
-    monkeypatch.setattr(routing, "_flowtrace_snap",
-                        lambda lat, lon, **k: {"error": "flowtrace: HTTP 400"})
-    out = routing._hydrolocation_snap(40.31, -83.05)
-    assert out["error"].count("hydrolocation: 502 Bad Gateway") == 2
-    assert out["error"].endswith("flowtrace: HTTP 400")
-
-
-def test_flowtrace_request_shape(monkeypatch):
-    seen = {}
-
-    class _Resp:
-        status_code = 200
-
-        def json(self):
-            return {"type": "FeatureCollection", "features": [POINT]}
-
-    def fake_post(url, params=None, json=None, timeout=None):
-        seen.update(url=url, params=params, body=json)
-        return _Resp()
-    import requests
-    monkeypatch.setattr(requests, "post", fake_post)
-    out = routing._flowtrace_snap(40.31125, -83.05615)
-    assert out["comid"] == 5214461
-    assert seen["url"] == routing.FLOWTRACE_URL and seen["params"] == {"f": "json"}
-    ids = {i["id"]: i["value"] for i in seen["body"]["inputs"]}
-    assert ids == {"lat": "40.311250", "lon": "-83.056150", "direction": "none"}
-    assert all(i["type"] == "text/plain" for i in seen["body"]["inputs"])
+def test_hydrolocation_wrapper_preserves_empty_and_error(monkeypatch):
+    for result in ({}, {"error": "flowtrace: HTTP 503"}):
+        monkeypatch.setattr(anchor, "hydrolocation_snap", lambda lat, lon: result)
+        assert routing._hydrolocation_snap(40, -83) == result

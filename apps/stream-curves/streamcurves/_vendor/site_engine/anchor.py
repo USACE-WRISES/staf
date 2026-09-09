@@ -27,8 +27,10 @@ paths get the same answer. Never raises.
 """
 from __future__ import annotations
 
+import logging
+import math
 import time
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import requests
 
@@ -49,7 +51,10 @@ NLDI_HYDROLOCATION_URL = "https://api.water.usgs.gov/nldi/linked-data/hydrolocat
 # lookup is never a fallback here (its answer can differ from the raindrop's).
 NLDI_FLOWTRACE_URL = ("https://api.water.usgs.gov/nldi/pygeoapi/processes/"
                       "nldi-flowtrace/execution")
-_HYDROLOCATION_RETRY_S = 1.5
+_ROUTING_RETRY_PAUSES_S = (1.5, 3.0)
+_ROUTING_ERROR_LIMIT = 400
+_LOG = logging.getLogger(__name__)
+ProgressCallback = Callable[[dict[str, Any]], None]
 # NHDPlus V2 attributes from the USGS fabric API (OGC API Features), the
 # successor of the WaterData WFS EASI's delineation also reads.
 V2_ITEMS_URL = ("https://api.water.usgs.gov/fabric/pygeoapi/collections/"
@@ -87,98 +92,186 @@ def _int(value: Any) -> Optional[int]:
         return None
 
 
-def _post_json(url: str, params: dict, body: dict, timeout: float
-               ) -> tuple[Optional[dict], Optional[str]]:
-    """``(payload, None)`` on a 200 JSON answer to a POST, else ``(None, reason)``."""
+def _features(data) -> Optional[list]:
+    """Only an explicit empty FeatureCollection means no stream was found."""
+    if not isinstance(data, dict) or data.get("type") != "FeatureCollection":
+        return None
+    features = data.get("features")
+    if not isinstance(features, list):
+        return None
+    if any(not isinstance(f, dict) or f.get("type") != "Feature"
+           or not isinstance(f.get("properties"), dict)
+           or not isinstance(f.get("geometry"), dict) for f in features):
+        return None
+    return features
+
+
+def _snap_values(raw_comid, coords) -> Optional[dict]:
+    """Validate the network identifier and its actual intersection point."""
+    if isinstance(raw_comid, bool) or not isinstance(coords, (list, tuple)) or len(coords) < 2:
+        return None
     try:
-        r = requests.post(url, params=params, json=body, timeout=timeout)
-        if r.status_code != 200:
-            return None, f"HTTP {r.status_code}"
-        data = r.json()
-        return (data, None) if isinstance(data, dict) else (None, "not a JSON object")
-    except Exception as exc:  # noqa: BLE001 - resilience by design
-        return None, str(exc)
+        comid = float(raw_comid)
+        lon, lat = float(coords[0]), float(coords[1])
+        if (not math.isfinite(comid) or not comid.is_integer() or comid <= 0
+                or any(isinstance(c, bool) for c in coords[:2])
+                or not math.isfinite(lon) or not -180 <= lon <= 180
+                or not math.isfinite(lat) or not -90 <= lat <= 90):
+            return None
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return {"comid": int(comid), "snap_lon": lon, "snap_lat": lat}
 
 
 def parse_flowtrace(data) -> dict:
-    """The ``hydrolocation_snap`` shape from a flowtrace answer: the Point
-    feature that carries a COMID is the intersection with the network. No
-    features is a clean no-stream answer; features without such a point are
-    an unexpected shape, reported as an error rather than read as a stream."""
-    feats = (data or {}).get("features") if isinstance(data, dict) else None
+    """Read the current nhdFlowline intersection or a legacy COMID Point.
+
+    The traced path and the flowline's endpoints are not the snap location.
+    Missing/malformed data is an error, distinct from an empty collection.
+    """
+    feats = _features(data)
+    error = {"error": "flowtrace: unexpected response shape"}
+    if feats is None:
+        return error
     if not feats:
         return {}
+    # The current USGS response explicitly names the intersected flowline.
+    # Prefer it even if a legacy Point also happens to be present.
     for f in feats:
-        props = f.get("properties") or {}
-        geom = f.get("geometry") or {}
+        if f.get("id") == "nhdFlowline":
+            props = f["properties"]
+            if f["geometry"].get("type") not in ("LineString", "MultiLineString"):
+                return error
+            return _snap_values(props.get("comid"), props.get("intersection_point")) or error
+    for f in feats:
+        props, geom = f["properties"], f["geometry"]
         raw = props.get("comid", props.get("identifier"))
         if geom.get("type") != "Point" or raw is None:
             continue
-        comid = _int(raw)
-        if comid is None:
-            continue
-        out: dict[str, Any] = {"comid": comid}
-        coords = geom.get("coordinates") or []
-        if len(coords) >= 2:
+        return _snap_values(raw, geom.get("coordinates")) or error
+    return error
+
+
+def _parse_hydrolocation(data) -> dict:
+    feats = _features(data)
+    error = {"error": "hydrolocation: unexpected response shape"}
+    if feats is None:
+        return error
+    if not feats:
+        return {}
+    for f in feats:
+        props, geom = f["properties"], f["geometry"]
+        if props.get("source") == "indexed":
+            if geom.get("type") != "Point":
+                return error
+            return _snap_values(props.get("comid", props.get("identifier")),
+                                geom.get("coordinates")) or error
+    return error
+
+
+def _bounded_error(value) -> str:
+    return " ".join(str(value).split())[:_ROUTING_ERROR_LIMIT]
+
+
+def _http_error(response) -> str:
+    detail = ""
+    try:
+        data = response.json()
+        if isinstance(data, dict):
+            detail = next((data[k] for k in ("detail", "description", "message", "error")
+                           if data.get(k)), "")
+    except Exception:  # noqa: BLE001 - an error body need not be JSON
+        pass
+    detail = _bounded_error(detail or getattr(response, "text", ""))
+    return f"HTTP {response.status_code}" + (f": {detail}" if detail else "")
+
+
+def _request_snap(endpoint: str, attempt: int, url: str, *, params: dict,
+                  timeout: float, parser: Callable, body: Optional[dict] = None
+                  ) -> tuple[dict, bool]:
+    """One HTTP request plus validation; only transient transport errors retry."""
+    started = time.monotonic()
+    status: Any = "network-error"
+    retryable = False
+    try:
+        if body is None:
+            response = requests.get(url, params=params, timeout=timeout, allow_redirects=False)
+        else:
+            response = requests.post(url, params=params, json=body, timeout=timeout,
+                                     allow_redirects=False)
+        status = response.status_code
+        if status != 200:
+            retryable = status in (408, 429) or 500 <= status <= 599
+            result = {"error": f"{endpoint}: {_http_error(response)}"}
+        else:
             try:
-                out["snap_lon"], out["snap_lat"] = float(coords[0]), float(coords[1])
-            except (TypeError, ValueError):
-                pass
-        return out
-    return {"error": "flowtrace: unexpected response shape"}
+                data = response.json()
+            except Exception:  # noqa: BLE001 - invalid JSON is a terminal protocol error
+                result = {"error": f"{endpoint}: invalid JSON response"}
+            else:
+                result = parser(data)
+    except (requests.Timeout, requests.ConnectionError) as exc:
+        retryable = True
+        result = {"error": f"{endpoint}: {_bounded_error(type(exc).__name__ + ': ' + str(exc))}"}
+    except Exception as exc:  # noqa: BLE001 - never raise from the routing client
+        result = {"error": f"{endpoint}: {_bounded_error(type(exc).__name__ + ': ' + str(exc))}"}
+    elapsed = time.monotonic() - started
+    _LOG.log(logging.WARNING if result.get("error") else logging.INFO,
+             "NLDI routing endpoint=%s attempt=%s status=%s elapsed=%.3fs error=%s",
+             endpoint, attempt, status, elapsed, _bounded_error(result.get("error", "")))
+    return result, retryable
+
+
+def _flowtrace_body(lat: float, lon: float) -> dict:
+    return {"inputs": [{"id": "lat", "value": f"{lat:.6f}", "type": "text/plain"},
+                       {"id": "lon", "value": f"{lon:.6f}", "type": "text/plain"},
+                       {"id": "direction", "value": "none", "type": "text/plain"}]}
 
 
 def flowtrace_snap(lat: float, lon: float, *, timeout: float = 60.0) -> dict:
     """One flowtrace execution for a point; the ``hydrolocation_snap`` shape."""
-    body = {"inputs": [{"id": "lat", "value": f"{lat:.6f}", "type": "text/plain"},
-                       {"id": "lon", "value": f"{lon:.6f}", "type": "text/plain"},
-                       {"id": "direction", "value": "none", "type": "text/plain"}]}
-    data, err = _post_json(NLDI_FLOWTRACE_URL, {"f": "json"}, body, timeout)
-    if err:
-        return {"error": f"flowtrace: {err}"}
-    return parse_flowtrace(data)
+    result, _ = _request_snap("flowtrace", 1, NLDI_FLOWTRACE_URL, params={"f": "json"},
+                             body=_flowtrace_body(lat, lon), timeout=timeout,
+                             parser=parse_flowtrace)
+    return result
 
 
-def hydrolocation_snap(lat: float, lon: float) -> dict:
+def hydrolocation_snap(lat: float, lon: float, *,
+                       progress: Optional[ProgressCallback] = None) -> dict:
     """NLDI hydrolocation raindrop for one point.
 
-    Returns ``{"comid", "snap_lat", "snap_lon"}`` (snap coords may be absent),
+    Returns ``{"comid", "snap_lat", "snap_lon"}``,
     ``{}`` for a clean no-stream answer, or ``{"error": ...}`` when the
-    service failed. Keeps only ``source == "indexed"`` features, as pynhd's
-    ``comid_byloc`` does. The hydrolocation route gets one retry after a
-    short pause, then the flowtrace process answers; the error names every
-    attempt.
+    service failed. One 30-second hydrolocation GET is followed, only for a
+    transient failure, by at most two 60-second flowtrace POSTs, with 1.5/3
+    second pauses. Both routes run the same raindrop algorithm. Parser and
+    nontransient HTTP errors stop immediately. ``progress`` receives a plain
+    dict before each attempt: finding/1, then retrying/2 and retrying/3.
     """
     params = {"coords": f"POINT({lon:.6f} {lat:.6f})"}
-    data, err = _get_json(NLDI_HYDROLOCATION_URL, params, timeout=30.0, retries=1)
-    if err:
-        time.sleep(_HYDROLOCATION_RETRY_S)
-        data, err2 = _get_json(NLDI_HYDROLOCATION_URL, params, timeout=30.0, retries=0)
-        if err2:
-            fallback = flowtrace_snap(lat, lon)
-            if "error" not in fallback:
-                return fallback
-            return {"error": f"hydrolocation: {err}; hydrolocation: {err2}; "
-                             f"{fallback['error']}"}
-    feats = [f for f in (data or {}).get("features") or []
-             if (f.get("properties") or {}).get("source") == "indexed"]
-    if not feats:
-        return {}
-    props = feats[0].get("properties") or {}
-    comid = _int(props.get("comid"))
-    if comid is None:
-        comid = _int(props.get("identifier"))
-    if comid is None:
-        return {}
-    out: dict[str, Any] = {"comid": comid}
-    geom = feats[0].get("geometry") or {}
-    coords = geom.get("coordinates") if geom.get("type") == "Point" else None
-    if coords and len(coords) >= 2:
-        try:
-            out["snap_lon"], out["snap_lat"] = float(coords[0]), float(coords[1])
-        except (TypeError, ValueError):
-            pass
-    return out
+    errors: list[str] = []
+    for attempt in range(1, 4):
+        if progress is not None:
+            try:
+                progress({"status": "finding" if attempt == 1 else "retrying", "attempt": attempt})
+            except Exception:  # noqa: BLE001 - UI telemetry cannot change routing
+                _LOG.warning("NLDI routing progress callback failed", exc_info=True)
+        if attempt > 1:
+            time.sleep(_ROUTING_RETRY_PAUSES_S[attempt - 2])
+        if attempt == 1:
+            result, retryable = _request_snap(
+                "hydrolocation", attempt, NLDI_HYDROLOCATION_URL,
+                params=params, timeout=30.0, parser=_parse_hydrolocation)
+        else:
+            result, retryable = _request_snap(
+                "flowtrace", attempt, NLDI_FLOWTRACE_URL, params={"f": "json"},
+                body=_flowtrace_body(lat, lon), timeout=60.0, parser=parse_flowtrace)
+        if "error" not in result:
+            return result
+        errors.append(result["error"])
+        if not retryable:
+            break
+    return {"error": "; ".join(errors)}
 
 
 def v2_flowline_attrs(comid: int) -> dict:
@@ -281,7 +374,8 @@ def v2_anchor(comid: int, clicked_lat: float, clicked_lon: float,
 
 def route_from_hr(clicked_lat: float, clicked_lon: float,
                   hr_hit: tuple[float, float, float, Optional[int]], *,
-                  da_ratio_max: float = DA_RATIO_MAX) -> dict:
+                  da_ratio_max: float = DA_RATIO_MAX,
+                  progress: Optional[ProgressCallback] = None) -> dict:
     """Anchor an HR-only stream click on the covered network.
 
     ``hr_hit`` is ``(snap_lat, snap_lon, dist_ft, nhdplusid)`` from
@@ -308,7 +402,7 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
             "vpuid": rec.get("vpuid"),
         })
 
-    snap = hydrolocation_snap(hr_lat, hr_lon)
+    snap = hydrolocation_snap(hr_lat, hr_lon, **({"progress": progress} if progress else {}))
     if snap.get("error"):
         return {"error": "snap_service_error", "detail": snap["error"]}
     comid = snap.get("comid")
@@ -407,7 +501,8 @@ def classify_click(lat: float, lon: float, *,
                    v2_hit: Optional[tuple] = None,
                    hr_hit: Optional[tuple] = None,
                    snap_tol_ft: float = HR_SNAP_TOL_FT,
-                   da_ratio_max: float = DA_RATIO_MAX) -> dict:
+                   da_ratio_max: float = DA_RATIO_MAX,
+                   progress: Optional[ProgressCallback] = None) -> dict:
     """Anchor a map click the app already snapped against its drawn layers.
 
     ``v2_hit``/``hr_hit`` are ``(snap_lat, snap_lon, dist_ft, id)`` tuples
@@ -419,5 +514,6 @@ def classify_click(lat: float, lon: float, *,
         return {"anchor": v2_anchor(v2_hit[3], lat, lon, v2_hit[0], v2_hit[1],
                                     round(float(v2_hit[2]), 1))}
     if hr_hit is not None and hr_hit[3] is not None and hr_hit[2] <= snap_tol_ft:
-        return route_from_hr(lat, lon, hr_hit, da_ratio_max=da_ratio_max)
+        return route_from_hr(lat, lon, hr_hit, da_ratio_max=da_ratio_max,
+                             **({"progress": progress} if progress else {}))
     return {"error": "no_stream_found"}

@@ -1,13 +1,4 @@
-"""The stream network on the map (2026-09-02, one network since 2026-09-03).
-
-Uncovered (NHDPlus HR) streams drew as 1.2 px pale blue, nearly invisible on
-the topo basemap and easy to confuse with the covered lines. Now the HR
-geometry draws once, split by the click rule: dark blue where every value
-describes the clicked reach, cyan where some come from the reach downstream,
-both at the same weight; the selected reach glows under the pin after a click;
-the grey dashed route line is the only dashed one. Since 2026-09-08 the labels
-say what the colors mean for the data rather than naming the engines.
-"""
+"""Readable stream styles; the second color and source overlays are opt-in."""
 from __future__ import annotations
 
 import pytest
@@ -15,7 +6,7 @@ import pytest
 app = pytest.importorskip("app")
 
 
-def test_the_two_colors_are_legible_and_distinct():
+def test_optional_coverage_colors_are_legible_and_distinct():
     assert app.HR_FLOWLINE_STYLE["color"] != app.FLOWLINE_STYLE["color"]
     assert app.FLOWLINE_STYLE["weight"] >= 3
     # the same weight: at 2 px the cyan lines were still hard to click
@@ -45,12 +36,9 @@ def test_the_scored_reach_is_a_glow_under_the_covered_line():
 
 
 def test_layer_labels_say_what_the_legend_says():
-    """The control sits one click from the legend, so it uses the same words
-    (2026-09-08); naming the engines in one and not the other would leave the
-    term visible with nowhere left to define it."""
-    assert app.LAYER_COVERED == "Streams: all data from the reach"
-    assert app.LAYER_UNCOVERED == "Streams: some data from downstream"
-    assert app.LAYER_SCORED == "Selected reach"
+    assert app.LAYER_STREAMS == "Streams"
+    assert app.LAYER_COVERAGE == "StreamCat coverage"
+    assert app.LAYER_SCORED == "StreamCat source reach"
 
 
 def test_the_miss_copy_is_one_short_instruction():

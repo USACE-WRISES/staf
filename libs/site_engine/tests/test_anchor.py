@@ -159,6 +159,24 @@ def test_no_position_fallback_in_anchoring():
     assert "feature_byloc" not in src
 
 
+def test_click_forwards_progress_from_the_hr_snap_without_changing_payload(monkeypatch):
+    _stub(monkeypatch, snap=_SNAP_OK, attrs=_ATTRS_OK)
+    expected = anchor.classify_click(40.0, -83.0, hr_hit=_HR_HIT)
+    events, origins = [], []
+
+    def snap(lat, lon, *, progress):
+        origins.append((lat, lon))
+        progress({"status": "finding", "attempt": 1})
+        progress({"status": "retrying", "attempt": 2})
+        return dict(_SNAP_OK)
+
+    monkeypatch.setattr(anchor, "hydrolocation_snap", snap)
+    assert anchor.classify_click(40.0, -83.0, hr_hit=_HR_HIT, progress=events.append) == expected
+    assert origins == [_HR_HIT[:2]]
+    assert events == [{"status": "finding", "attempt": 1},
+                      {"status": "retrying", "attempt": 2}]
+
+
 @pytest.mark.skipif(not _EASI.is_dir(), reason="EASI source not present")
 def test_payload_parity_with_easi_routing(monkeypatch):
     sys.path.insert(0, str(_EASI))
