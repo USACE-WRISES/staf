@@ -127,8 +127,7 @@ def probe_point(label: str, lat: float, lon: float, timeout: float) -> dict:
         "spatialRel": "esriSpatialRelIntersects",
         "where": "innetwork=1",
         "outFields": "nhdplusid", "returnGeometry": "true",
-        "outSR": "4326", "maxAllowableOffset": "0.0001",
-        "geometryPrecision": "5", "f": "geojson"}, timeout)
+        "outSR": "4326", "f": "geojson"}, timeout)
     out["display"] = {
         "seconds": round(secs, 2), "error": err,
         "n_features": len((disp or {}).get("features") or []),

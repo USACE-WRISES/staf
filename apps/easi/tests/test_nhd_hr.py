@@ -2,6 +2,8 @@
 bbox guards/cache, attrs shape parity, and the HR nearest-line snap."""
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from easi.datasources import nhd_hr
 
 
@@ -73,6 +75,62 @@ def test_bbox_fetch_parses_and_strips_props(monkeypatch):
     fc = nhd_hr.hr_flowlines_in_bbox(-83.03, 40.08, -83.00, 40.11)
     assert fc and len(fc["features"]) == 1                 # id-less + geom-less dropped
     assert fc["features"][0]["properties"] == {"nhdplusid": 24000800021917}
+
+
+def test_bbox_request_preserves_a_stream_bend_for_display_and_snapping(monkeypatch):
+    # A shallow bend disappears with the former 0.0001-degree generalization.
+    # A nearby stream then becomes closer to a click on that original bend.
+    target_id, nearby_id = 24000800021917, 24000800021918
+    curved = [
+        [-83.0011371, 40.0000137],
+        [-83.0006371, 40.0000537],
+        [-83.0001371, 40.0000937],
+        [-82.9996371, 40.0000537],
+        [-82.9991371, 40.0000137],
+    ]
+    nearby = [[curved[0][0], 40.0000637], [curved[-1][0], 40.0000637]]
+    requests_seen = []
+
+    def service_payload(params):
+        from shapely.geometry import LineString
+
+        features = []
+        for nid, coords in ((nearby_id, nearby), (target_id, curved)):
+            if "maxAllowableOffset" in params:
+                coords = LineString(coords).simplify(float(params["maxAllowableOffset"])).coords
+            precision = params.get("geometryPrecision")
+            xy = [[round(x, int(precision)), round(y, int(precision))]
+                  if precision is not None else [x, y] for x, y in coords]
+            feature = _feat(nhdplusid=float(nid))
+            feature["geometry"]["coordinates"] = xy
+            features.append(feature)
+        return {"type": "FeatureCollection", "features": features}
+
+    def get(url, *, params, timeout):
+        assert url == nhd_hr.HR_QUERY_URL
+        requests_seen.append(dict(params))
+        return SimpleNamespace(status_code=200, json=lambda: service_payload(params))
+
+    monkeypatch.setattr(nhd_hr.requests, "get", get)
+    nhd_hr._fetch_bbox.cache_clear()
+    try:
+        fc = nhd_hr.hr_flowlines_in_bbox(-83.002, 39.999, -82.998, 40.001)
+        assert len(requests_seen) == 1
+        target = next(f for f in fc["features"] if f["properties"]["nhdplusid"] == target_id)
+        assert target["geometry"]["coordinates"] == curved  # all vertices and seven decimals
+        assert target["properties"] == {"nhdplusid": target_id}
+        lon, lat = curved[2]
+        hit = nhd_hr.nearest_point_on_hr_lines(fc, lat, lon)
+        assert hit is not None and hit[3] == target_id and hit[2] < 0.01
+        assert abs(hit[0] - lat) < 1e-8 and abs(hit[1] - lon) < 1e-8
+
+        # Confirm this fixture catches the practical regression, not just keys:
+        # requesting the old reductions loses the bend and selects the neighbor.
+        reduced = service_payload({"maxAllowableOffset": "0.0001", "geometryPrecision": "5"})
+        old_hit = nhd_hr.nearest_point_on_hr_lines(reduced, lat, lon)
+        assert old_hit is not None and old_hit[3] == nearby_id and old_hit[2] > 1
+    finally:
+        nhd_hr._fetch_bbox.cache_clear()
 
 
 def test_bbox_exceeded_returns_none(monkeypatch):

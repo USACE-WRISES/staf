@@ -92,14 +92,15 @@ def _round_bbox(west, south, east, north, ndigits=3):
 @functools.lru_cache(maxsize=64)
 def _fetch_bbox(west: float, south: float, east: float, north: float) -> Optional[dict]:
     """Cached HR flowline pull for a (rounded) bbox -> id-only GeoJSON."""
+    # Preserve stream bends and coordinate precision for display and snapping,
+    # matching the shared HR client used by SFARI and DEEP.
     data = _request({
         "geometry": f"{west},{south},{east},{north}",
         "geometryType": "esriGeometryEnvelope", "inSR": "4326",
         "spatialRel": "esriSpatialRelIntersects",
         "where": "innetwork=1",
         "outFields": _ID_FIELD, "returnGeometry": "true",
-        "outSR": "4326", "maxAllowableOffset": "0.0001",
-        "geometryPrecision": "5", "f": "geojson"}, timeout=20.0)
+        "outSR": "4326", "f": "geojson"}, timeout=20.0)
     if data is None or _exceeded(data):
         # A truncated layer would silently hide streams; better to draw nothing
         # (the HR raster overlay still shows the network) than a partial lie.
