@@ -793,7 +793,9 @@ def _metric_table(rows, notes=None, *, outcomes=None, eci=None):
         note = notes.get(mid) or r.get("userNote") or ""
         body.append(ui.tags.tr(
             ui.tags.td(r["functionName"]),
-            ui.tags.td(r["name"]),
+            ui.tags.td(r["name"],
+                       ui.tags.sup(BORROWED_MARK, {"title": r.get("anchorNote") or ""})
+                       if _is_borrowed(r) else None),
             ui.tags.td(r["valueText"]),
             rating_cell,
             _fnscore_cell(r, meta),
@@ -1069,9 +1071,18 @@ NOTE_BOX_STYLE = "background:#eef3f8;border:1px solid #c6d4e3;border-radius:6px;
 
 
 def _anchor_banner(anchor, d):
-    """The routed-site note (easi.notices), None on the covered network. The
-    per-source metric lists that used to follow it live in the metric table's
-    "Scored at" column (advanced columns) since 2026-09-04."""
+    """The routed-site note (easi.notices), None on the covered network.
+
+    Since 2026-09-08 the routine case shows nothing here. Where the watershed
+    metrics come from is already a row of the Basin characteristics block
+    ("Watershed engine", easi.basin) and which rows are borrowed is now a
+    marker on the rows themselves, so a box above the report repeated both. It
+    still renders for the two states the basin block cannot convey: the engine
+    could not calculate the watershed, or the legacy policy where the whole
+    result describes another stream. Both are degradations, not provenance.
+    """
+    if (d or {}).get("watershed_source") == "site-engine":
+        return None
     w = notices.routed_notice(anchor, d)
     if not w:
         return None
@@ -1079,6 +1090,33 @@ def _anchor_banner(anchor, d):
         ui.div(ui.tags.b(w["title"])),
         *[ui.div(line, style="margin-top:.25rem;") for line in w["lines"]],
         style=NOTE_BOX_STYLE + "padding:.5rem .7rem;margin:0 0 .6rem;font-size:13px;")
+
+
+#: Ties the footnote above the metric table to the rows it describes (the same
+#: mark the PDF uses, so it is defined once in easi.notices). A row is marked
+#: when it carries an anchorNote, which assessment._annotate_anchors stamps
+#: exactly when the site is routed, the row is anchored to the reach downstream,
+#: and the row actually scored. Reading the row rather than a list of metric ids
+#: is what keeps the two in step: the borrowed set is not fixed, since nutrients
+#: and regulatory impairment join it whenever their StreamCat fallback fires.
+BORROWED_MARK = notices.BORROWED_MARK
+
+
+def _is_borrowed(row) -> bool:
+    return bool((row or {}).get("anchorNote"))
+
+
+def _borrowed_footnote(rows, anchor):
+    """The one line above the metric table saying what the marker means, or
+    None when no row is marked (every covered site, and a routed site whose
+    borrowed rows all came back unavailable)."""
+    if not any(_is_borrowed(r) for r in rows or []):
+        return None
+    text = notices.marker_note(anchor)
+    if not text:
+        return None
+    return ui.div(f"{BORROWED_MARK} {text}", class_="easi-disclaimer",
+                  style="margin-top:0;margin-bottom:.4rem;")
 
 
 def _report_body(d, rep, notes, downloads, anchor=None):
@@ -1094,6 +1132,7 @@ def _report_body(d, rep, notes, downloads, anchor=None):
         _xs_readonly_block(rep),
         ui.div("Metrics", class_="easi-section-title"),
         _metric_toolbar(),
+        _borrowed_footnote(rep.get("metricRows") or [], anchor),
         _metric_table(rep.get("metricRows") or [], notes,
                       outcomes=rep.get("outcomes"),
                       eci=rep.get("ecosystemConditionIndex")),
@@ -1112,7 +1151,7 @@ def _report_modal(res, notes):
         _report_body(d, rep, notes, _dl_buttons(), anchor=res.get("siteAnchor")),
         # ✕ lives in the modal header so it stays put when the body scrolls; the muted
         # hint beside it cues that closing returns to the editable Assessment worksheet.
-        title=ui.TagList("EASI Screening Report",
+        title=ui.TagList("EASI Report",
                          ui.span("Close to review the Assessment", class_="easi-modal-hint"),
                          ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
         size="xl", easy_close=True, footer=None,
@@ -1131,7 +1170,7 @@ def _batch_report_modal(site_id, base):
         class_="easi-modal-footer")
     return ui.modal(
         _report_body(d, rep, {}, downloads, anchor=base.get("siteAnchor")),
-        title=ui.TagList(f"EASI Screening Report: {site_id}",
+        title=ui.TagList(f"EASI Report: {site_id}",
                          ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
         size="xl", easy_close=True, footer=None,
     )

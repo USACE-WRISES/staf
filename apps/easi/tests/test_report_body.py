@@ -157,21 +157,53 @@ def test_xs_reach_table_lists_every_section_and_labels_the_cap():
     assert app._xs_reach_table_ui(cands[:1], 0, 0, reach) is None
 
 
-def test_anchor_banner_is_the_short_note():
-    anchor = {"anchorKind": "hrSurrogate", "clickedStream": {"gnisName": None},
-              "scoredReach": {"gnisName": "Mink Brook", "comid": 9327042},
-              "routing": {"routedDistanceFt": 1687.6, "daRatio": 32.02, "daRatioLimit": 10.0,
-                          "declined": False},
-              "metricAnchors": {"m1": {"anchor": "watershed", "label": "HR reach watershed",
-                                       "name": "Stream Temperature"}}}
+def _routed_anchor():
+    return {"anchorKind": "hrSurrogate", "clickedStream": {"gnisName": None},
+            "scoredReach": {"gnisName": "Mink Brook", "comid": 9327042},
+            "routing": {"routedDistanceFt": 1687.6, "daRatio": 32.02, "daRatioLimit": 10.0,
+                        "declined": False},
+            "metricAnchors": {"m1": {"anchor": "watershed", "label": "HR reach watershed",
+                                     "name": "Stream Temperature"}}}
+
+
+def test_the_routine_routed_site_shows_no_banner():
+    """2026-09-08: where the watershed metrics come from is already a row of the
+    Basin characteristics block, and which rows are borrowed is now a marker on
+    the rows, so the box above the report repeated both."""
     d = {"watershed_source": "site-engine",
          "watershed_engine": {"engineVersion": "0.2.2", "areaSqkm": 1.0005}}
-    html = str(app._anchor_banner(anchor, d))
+    assert app._anchor_banner(_routed_anchor(), d) is None
+    assert app._anchor_banner({"anchorKind": "v2Direct"}, d) is None
+
+
+def test_the_banner_survives_for_a_watershed_the_engine_could_not_calculate():
+    """The one state the basin block cannot convey: the metrics are missing."""
+    d = {"watershed_source": "not-calculated",
+         "watershed_engine": {"reason": "walk budget exceeded"}}
+    html = str(app._anchor_banner(_routed_anchor(), d))
     assert "<b>Note</b>" in html and "\u26a0" not in html and "Warning" not in html
-    assert ("Low flow, substrate, and biological integrity come from the nearest "
-            "StreamCat reach, 1,688 ft downstream.") in html
-    assert "32 times" not in html and "limit" not in html   # the ratio stays off the banner
+    assert "could not calculate its watershed" in html
+    assert "32 times" not in html                            # the ratio stays off the banner
     assert app.NOTE_BOX_STYLE.split(";")[0] in html          # neutral box, not amber
     assert "#fff7e0" not in html
-    assert "Stream Temperature" not in html and "v0.2.2" not in html
-    assert app._anchor_banner({"anchorKind": "v2Direct"}, d) is None
+    assert "Stream Temperature" not in html
+
+
+def test_the_footnote_and_the_marker_appear_together():
+    """The marker on a row and the line explaining it come from the same test,
+    so a marked row can never be left unexplained."""
+    anchor = _routed_anchor()
+    base = dict(_rows()[0])
+    borrowed = dict(base, metricId="m-borrowed", name="Low-flow Wetted Connectivity",
+                    anchorNote="Scored from the nearest StreamCat reach, 1,688 ft downstream.")
+    plain = dict(base, metricId="m-plain", name="Stream Temperature")
+    foot = str(app._borrowed_footnote([borrowed, plain], anchor))
+    assert app.BORROWED_MARK in foot
+    assert "Comes from the nearest StreamCat reach, 1,688 ft downstream." in foot
+    assert "Low flow" not in foot                            # the marker names the rows
+    tbl = str(app._metric_table([borrowed, plain], {}))
+    assert f"<sup title=" in tbl and app.BORROWED_MARK in tbl
+    assert tbl.count(app.BORROWED_MARK) == 1                 # only the borrowed row
+    # nothing marked means nothing to explain
+    assert app._borrowed_footnote([plain], anchor) is None
+    assert app.BORROWED_MARK not in str(app._metric_table([plain], {}))

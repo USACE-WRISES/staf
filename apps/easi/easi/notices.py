@@ -6,12 +6,17 @@ A click outside the StreamCat network used to produce three different
 paragraphs (modal, ribbon, PDF) with engine version numbers, a ratio, a limit,
 and five lines listing every metric by source, and until 2026-09-06 it warned
 that three metrics could not be scored past the drainage-area bound. Nothing
-is withheld any more, so this module says the two things a reader needs, as a
-note: where the watershed metrics come from, and which three metrics come from
-the nearest StreamCat reach. The per-metric provenance (the reach, the routed
-distance, the drainage-area ratio) rides each of those rows as ``anchorNote``
-(``borrowed_note``), the CSV, the PDF rows, and the report table's "Scored at"
-column.
+is withheld any more.
+
+Since 2026-09-08 the note is split by where it is read. ``routed_notice`` says
+where the watershed metrics come from, which the report modal shows only when
+the watershed could not be calculated (its Basin characteristics block names
+the engine otherwise) and the PDF always shows, having no such block.
+``marker_note`` is the footnote beside the metric table, and the rows it
+describes carry a marker of their own rather than being listed by name. The
+per-metric provenance (the reach, the routed distance, the drainage-area
+ratio) rides each of those rows as ``anchorNote`` (``borrowed_note``), the CSV,
+the PDF rows, and the report table's "Scored at" column.
 """
 from __future__ import annotations
 
@@ -20,7 +25,10 @@ from typing import Any, Optional
 from . import basin
 
 TITLE = "Note"
-REACH_METRICS = "Low flow, substrate, and biological integrity"
+
+#: Ties a borrowed metric row to the footnote beside the table. Lives here so
+#: the report modal and the PDF mark the same rows with the same character.
+BORROWED_MARK = "†"
 OUTSIDE = "This stream is outside the StreamCat network"
 
 
@@ -71,10 +79,28 @@ def routed_notice(anchor: Optional[dict], delineation: Optional[dict]) -> Option
                 "lines": [f"{OUTSIDE}. Results describe {reach}, {dist_txt}, not the "
                           f"clicked stream{tail}."]}
 
-    second = (f"{REACH_METRICS} come from the nearest StreamCat reach, {dist_txt}."
-              if dist else
-              f"{REACH_METRICS} come from the nearest StreamCat reach downstream.")
-    return {"title": TITLE, "lines": [first, second]}
+    return {"title": TITLE, "lines": [first]}
+
+
+def marker_note(anchor: Optional[dict]) -> str:
+    """The footnote for the marked rows: where the borrowed values come from.
+
+    This used to be the note's second sentence and it named three metrics, but
+    the borrowed set is not those three. Two more rows re-anchor to the reach
+    downstream whenever their StreamCat fallback fires (nutrients and
+    regulatory impairment, in ``assessment._annotate_anchors``), which happens
+    exactly when ATTAINS or WQP has nothing at the clicked point, a situation
+    correlated with being off-network in the first place. So the sentence named
+    three while the table's own "Scored at" column could show five. The rows
+    now carry a marker and this says what the marker means, which cannot go
+    stale. Empty on the covered network.
+    """
+    anchor = anchor or {}
+    if anchor.get("anchorKind") != "hrSurrogate":
+        return ""
+    dist = _ft((anchor.get("routing") or {}).get("routedDistanceFt"))
+    where = f"{dist} downstream" if dist else "downstream"
+    return f"Comes from the nearest StreamCat reach, {where}."
 
 
 def borrowed_note(anchor: Optional[dict]) -> str:

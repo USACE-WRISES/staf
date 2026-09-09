@@ -49,7 +49,7 @@ def _result():
 def test_build_csv():
     b = report.build_csv(_result())
     assert isinstance(b, bytes)
-    assert b"EASI Screening Report" in b and b"Impervious Surface Cover" in b
+    assert b"EASI Report" in b and b"Impervious Surface Cover" in b
     assert b"Ecosystem Condition Index" in b
 
 

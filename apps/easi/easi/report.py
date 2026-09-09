@@ -122,7 +122,7 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
 def build_csv(result: dict) -> bytes:
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(["EASI Screening Report"])
+    w.writerow(["EASI Report"])
     for k, v in _summary_pairs(result):
         w.writerow([k, v])
     w.writerow([])
@@ -390,7 +390,7 @@ def build_pdf(result: dict) -> bytes:
     d, rep = result["delineation"], result["report"]
     styles = getSampleStyleSheet()
     story = []
-    story.append(Paragraph(f"EASI Screening Report: {d.get('gnis_name','')}",
+    story.append(Paragraph(f"EASI Report: {d.get('gnis_name','')}",
                            styles["Title"]))
     lat, lon = d.get("snapped_lat"), d.get("snapped_lon")
     pt = f"{lat:.4f}, {lon:.4f}" if lat is not None and lon is not None else "—"
@@ -398,6 +398,11 @@ def build_pdf(result: dict) -> bytes:
     story.append(Paragraph(meta, styles["Normal"]))
     story.append(Spacer(1, 8))
     anchor = result.get("siteAnchor") or {}
+    # Where the watershed metrics come from stays at the top here, unlike the
+    # report modal, which drops it because its Basin characteristics block
+    # already carries a "Watershed engine" row. The PDF renders no such block
+    # (_summary_pairs is the CSV's), so this is its only statement of it. Which
+    # rows are borrowed is a marker on those rows, footnoted under the table.
     w = notices.routed_notice(anchor, d)
     if w:
         story.append(Paragraph("<b>Note.</b> " + " ".join(w["lines"]), styles["Normal"]))
@@ -499,9 +504,10 @@ def build_pdf(result: dict) -> bytes:
     data = [head]
     rating_bg = []
     for i, r in enumerate(metric_rows, start=1):
+        mark = notices.BORROWED_MARK if r.get("anchorNote") else ""
         row = [
             Paragraph(r["functionName"], styles["BodyText"]),
-            Paragraph(r["name"], styles["BodyText"]),
+            Paragraph(r["name"] + mark, styles["BodyText"]),
             Paragraph(r["valueText"], styles["BodyText"]),
             r["rating"] or "—",
             "" if r["index"] is None else f'{r["index"]:.2f}',
@@ -526,6 +532,10 @@ def build_pdf(result: dict) -> bytes:
         style.append(("BACKGROUND", (3, row_i), (3, row_i), color))
     tbl.setStyle(TableStyle(style))
     story.append(tbl)
+    marker_text = notices.marker_note(anchor)
+    if marker_text and any(r.get("anchorNote") for r in metric_rows):
+        story.append(Spacer(1, 4))
+        story.append(Paragraph(f"{notices.BORROWED_MARK} {marker_text}", styles["Italic"]))
     story.append(Spacer(1, 8))
     story.append(Paragraph(
         "Generated from national datasets. A desktop screening estimate with "
