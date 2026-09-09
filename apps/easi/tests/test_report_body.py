@@ -207,3 +207,28 @@ def test_the_footnote_and_the_marker_appear_together():
     # nothing marked means nothing to explain
     assert app._borrowed_footnote([plain], anchor) is None
     assert app.BORROWED_MARK not in str(app._metric_table([plain], {}))
+
+
+def test_the_header_carries_the_watershed_map_when_geometry_is_passed(monkeypatch):
+    """EASI's report had no map; the geometry was in the result but never handed
+    to the body. This pins the plumbing and the no-geometry fallback."""
+    from easi import reportmap
+
+    monkeypatch.setattr(reportmap, "topo_png", lambda *a, **k: None)   # no network
+    ws = {"type": "FeatureCollection", "features": [{"geometry": {
+        "type": "Polygon", "coordinates": [[[-83.0, 40.0], [-82.99, 40.0],
+                                            [-82.99, 40.01], [-83.0, 40.0]]]}}]}
+    d = {"gnis_name": "Test Creek", "snapped_lat": 40.0, "snapped_lon": -83.0,
+         "reach_length_ft": 1000}
+
+    rep = {"basin": {"rows": [["Drainage area", "1.02 km2"]]}}
+    with_map = str(app._header_with_map(d, rep, {"watershed": ws, "reach": None}))
+    assert "sfari-minimap" in with_map and "<path" in with_map
+    assert "Test Creek" in with_map
+    # the basin table shares the row with the map instead of dropping below it
+    assert "Basin characteristics" in with_map
+    assert with_map.index("Basin characteristics") < with_map.index("sfari-minimap")
+
+    for empty in (None, {}, {"watershed": None, "reach": None}):
+        plain = str(app._header_with_map(d, rep, empty))
+        assert "sfari-minimap" not in plain and "Test Creek" in plain

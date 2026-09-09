@@ -13,7 +13,7 @@ import csv
 import io
 import json
 
-from . import config, geomorph, notices
+from . import config, delineation, geomorph, notices, reportmap
 from .scoring import function_score_band_color, index_band_color, index_band_label
 
 RATING_COLOR = {"Good": "#c8d9f2", "Fair": "#f5e7a6", "Poor": "#f5b5b5"}
@@ -460,6 +460,17 @@ def build_pdf(result: dict) -> bytes:
         "Bars colored by condition band. Blue: Functioning · yellow: "
         "Functioning-at-Risk · red: Non-Functioning.", styles["Italic"]))
     story.append(Spacer(1, 8))
+
+    # The watershed over a USGS topo basemap, the same map the report modal shows.
+    # None when there is no geometry, and the basemap alone drops out when the
+    # service does not answer, so neither case blocks the PDF.
+    _map = reportmap.pdf_flowable(
+        delineation.display_simplify(result.get("watershed_geojson"), max_vertices=700),
+        result.get("reach_geojson"), 5.0 * inch, 5.0 * inch * 180 / 290)
+    if _map is not None:
+        story.append(Paragraph("Watershed", styles["Heading4"]))
+        story.append(_map)
+        story.append(Spacer(1, 8))
 
     xs = rep.get("crossSection") or {}
     if xs.get("png_b64"):

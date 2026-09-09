@@ -11,7 +11,7 @@ import csv
 import io
 import json
 
-from . import config, scoring
+from . import config, delineation, reportmap, scoring
 
 _CAT = config.CATEGORY_ORDER
 
@@ -183,7 +183,17 @@ def build_pdf(delin, metric_scores, function_scores, evidence, sc) -> bytes:
     t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
     t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 9), ("GRID", (0, 0), (-1, -1), 0.3, grid),
                            ("BACKGROUND", (0, 0), (0, -1), head_bg)]))
-    story += [t, Spacer(1, 10), Paragraph("Function scores (0-15)", styles["Heading3"])]
+    story.append(t)
+    story.append(Spacer(1, 10))
+    # The watershed over a USGS topo basemap, the same map the report modal shows.
+    # None when there is no geometry, and the basemap alone drops out when the
+    # service does not answer, so neither case blocks the PDF.
+    _map = reportmap.pdf_flowable(
+        delineation.display_simplify(delin.get("watershed_geojson"), max_vertices=700),
+        delin.get("reach_geojson"), 5.0 * inch, 5.0 * inch * 180 / 290)
+    if _map is not None:
+        story += [Paragraph("Watershed", styles["Heading3"]), _map, Spacer(1, 10)]
+    story.append(Paragraph("Function scores (0-15)", styles["Heading3"]))
 
     data = [["Category", "Function", "Score", "Condition"]]
     bg = []

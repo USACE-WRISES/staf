@@ -29,6 +29,7 @@ from shiny import App, reactive, render, ui  # noqa: E402
 from sfari import bieger, config, delineation, pipeline, report, scoring, session as session_io, xscalc  # noqa: E402
 from sfari import viewport  # noqa: E402
 from sfari import calculator, comid_anchor, engine_prefill, hr_site, network_display  # noqa: E402
+from sfari import reportmap  # noqa: E402
 from sfari.datasources import flowlines  # noqa: E402
 from sfari.datasources.geocode import geocode_address  # noqa: E402
 from sfari.pipeline import DEFAULT_REACH_FT  # noqa: E402
@@ -240,61 +241,6 @@ def _interp_series(xs, zs, x):
     return zs[-1]
 
 
-def _geo_svg(watershed_gj, reach_gj, w=290, h=180):
-    """Small SVG thumbnail of the watershed outline + assessment reach (report header)."""
-    import math
-
-    def rings(gj):
-        out = []
-        for ft in (gj or {}).get("features", []):
-            g = ft.get("geometry") or {}
-            t, c = g.get("type"), g.get("coordinates")
-            if not c:
-                continue
-            if t == "Polygon":
-                out += [("poly", r) for r in c]
-            elif t == "MultiPolygon":
-                out += [("poly", r) for poly in c for r in poly]
-            elif t == "LineString":
-                out.append(("line", c))
-            elif t == "MultiLineString":
-                out += [("line", ln) for ln in c]
-        return out
-
-    ws = rings(delineation.display_simplify(watershed_gj, max_vertices=700)) if watershed_gj else []
-    rc = rings(reach_gj) if reach_gj else []
-    pts = [p for _t, ring in ws + rc for p in ring]
-    if not pts:
-        return ""
-    xs = [p[0] for p in pts]; ys = [p[1] for p in pts]
-    minx, maxx, miny, maxy = min(xs), max(xs), min(ys), max(ys)
-    kx = math.cos(math.radians((miny + maxy) / 2)) or 1.0
-    dx = (maxx - minx) * kx or 1e-6
-    dy = (maxy - miny) or 1e-6
-    pad = 8
-    scale = min((w - 2 * pad) / dx, (h - 2 * pad) / dy)
-
-    def sx(lon):
-        return pad + (lon - minx) * kx * scale
-
-    def sy(lat):
-        return h - pad - (lat - miny) * scale
-
-    parts = [f'<svg viewBox="0 0 {w} {h}" xmlns="http://www.w3.org/2000/svg" '
-             f'class="sfari-minimap" style="width:{w}px;max-width:100%;">']
-    for _t, ring in ws:
-        d = "M" + " L".join(f"{sx(p[0]):.1f},{sy(p[1]):.1f}" for p in ring) + " Z"
-        parts.append(f'<path d="{d}" fill="#fdf24a" fill-opacity="0.35" stroke="#caa700" stroke-width="1"/>')
-    for _t, ring in rc:
-        d = "M" + " L".join(f"{sx(p[0]):.1f},{sy(p[1]):.1f}" for p in ring)
-        parts.append(f'<path d="{d}" fill="none" stroke="#d6453d" stroke-width="2.4"/>')
-    parts.append("</svg>")
-    return "".join(parts)
-
-
-# --------------------------------------------------------------------------- #
-# UI helpers
-# --------------------------------------------------------------------------- #
 def _info(text: str = None, *, html_tip: str = None):
     """A small circled-'i'; the custom tooltip (www/tooltip.js) shows the tip."""
     attrs = {"onclick": "event.preventDefault();event.stopPropagation();"}
@@ -1913,7 +1859,12 @@ def server(input, output, session):
 
         # Basin table sits in the header's left column so it fills the space
         # beside the minimap instead of leaving a gap below the fact chips.
-        minimap = _geo_svg(d.get("watershed_geojson"), d.get("reach_geojson"))
+        # The watershed over a USGS topo basemap; the simplify the old inline
+        # builder did is now the caller's, which keeps reportmap identical in
+        # the three apps.
+        minimap = reportmap.svg(
+            delineation.display_simplify(d.get("watershed_geojson"), max_vertices=700),
+            d.get("reach_geojson"))
         header = ui.div(
             ui.div(
                 ui.div(
