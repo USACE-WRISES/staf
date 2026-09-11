@@ -48,6 +48,10 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
         ("Reach length (ft)", d.get("reach_length_ft", "")),
         ("Snapped lat", d.get("snapped_lat", "")),
         ("Snapped lon", d.get("snapped_lon", "")),
+        *([("Precomputed national dataset",
+            f"vintage {(rep.get('precomputed') or {}).get('vintage') or 'staging'}, "
+            f"tier {(rep.get('precomputed') or {}).get('tier') or 1}")]
+          if rep.get("precomputed") else []),
         ("Ecosystem Condition Index", shown(rep.get("ecosystemConditionIndex"))),
         ("Physical sub-index", shown(sub.get("physical"))),
         ("Chemical sub-index", shown(sub.get("chemical"))),

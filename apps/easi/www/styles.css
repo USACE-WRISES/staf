@@ -367,11 +367,39 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .easi-header {
   position: absolute; top: 0; left: 0; right: 0; height: 50px; z-index: 1200;
   background: var(--easi-accent-dark); color: #fff;
-  display: flex; align-items: center; padding: 0 16px;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 16px;
 }
+.easi-header-left { display: flex; align-items: center; min-width: 0; }
 .easi-header .easi-brand { font-family: var(--font-head); font-weight: 700; font-size: 1.05rem; }
 .easi-header .easi-brand small { font-weight: 400; opacity: .8; font-size: .8rem; margin-left: 8px; }
-.easi-header .easi-nav { margin-left: auto; display: flex; gap: 18px; }
+.easi-header .easi-nav { justify-self: end; display: flex; gap: 18px; }
+/* the Nationwide screening switch, centered in the bar: Shiny wraps every
+   input in a 300 px box with a bottom margin, which is what pushed the switch
+   left and up; the box is collapsed so the grid centers the real content.
+   Off is an outlined track with a white knob, on a near-white track with a
+   navy knob: monochrome, so the state reads without adding a color */
+.easi-mode-toggle { display: flex; align-items: center; gap: 7px; justify-self: center; }
+.easi-mode-toggle .shiny-input-container { width: auto; margin: 0; }
+.easi-mode-toggle #viewer_info { display: inline-flex; align-items: center; }
+.easi-mode-toggle .form-check { margin: 0; min-height: 0; padding-left: 0; display: flex; align-items: center; gap: 7px; }
+.easi-mode-toggle .form-check-input { float: none; margin: 0; width: 30px; height: 16px; cursor: pointer;
+  background-color: transparent; border: 1.5px solid rgba(255, 255, 255, .55);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e"); transition: background-color .15s ease, border-color .15s ease; }
+.easi-mode-toggle .form-check-input:focus { box-shadow: 0 0 0 3px rgba(255, 255, 255, .2);
+  border-color: rgba(255, 255, 255, .8); background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e"); }
+.easi-mode-toggle .form-check-input:checked { background-color: #eef2fa; border-color: rgba(255, 255, 255, .9);
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23243a61'/%3e%3c/svg%3e"); }
+.easi-mode-toggle .form-check-input:checked:focus { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23243a61'/%3e%3c/svg%3e"); }
+.easi-mode-toggle .form-check-label { color: rgba(255, 255, 255, .82); font-size: 12.5px; font-weight: 400;
+  cursor: pointer; white-space: nowrap; transition: color .15s ease; }
+.easi-mode-toggle .form-check-input:checked + .form-check-label { color: #fff; }
+.easi-mode-toggle .easi-info { width: 14px; height: 14px; margin: 0; vertical-align: 0; background: transparent;
+  border-color: rgba(255, 255, 255, .55); color: rgba(255, 255, 255, .85); font-size: 9.5px; }
+.easi-mode-toggle .easi-info:hover { background: #fff; color: var(--easi-accent-dark); border-color: #fff; }
+.easi-viewer-about { font-size: 12px; line-height: 1.4; }
+.easi-viewer-about b { display: block; margin-bottom: 4px; }
+.easi-viewer-about p { margin: 0 0 6px; }
+.easi-viewer-about-data { color: #55607a; }
 .easi-header .easi-nav a { color: #cdd8ec; text-decoration: none; font-size: 13px; cursor: pointer; }
 .easi-header .easi-nav a:hover { color: #fff; }
 
@@ -393,6 +421,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   .easi-header .staf-topnav { margin-left: 10px; padding-left: 10px; }
   .easi-header .easi-nav { gap: 4px 8px; flex-wrap: wrap; align-items: center; }
   .easi-header .easi-nav a { font-size: 12px; white-space: nowrap; }
+  .easi-mode-toggle .form-check-label { font-size: 12px; }
 }
 
 /* map fills everything below the header */
@@ -915,3 +944,32 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   .sfari-rollup { width: 100%; order: 3; max-height: 240px; border-left: none;
     border-top: 1px solid var(--card-border); }
 }
+
+/* ---- Nationwide screening (precomputed national dataset) ---- */
+.easi-viewer { position: absolute; top: 50px; left: 0; right: 0; bottom: 0;
+  z-index: 1150; background: #f7f9fc; display: flex; flex-direction: column; }
+.easi-viewer-summary { font-size: 11px; color: #667085; }
+.easi-viewer-legend-foot { margin-top: 6px; padding-top: 6px; border-top: 1px solid #e2e8f2;
+  display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.easi-viewer-legend-foot a { font-size: 11px; color: var(--easi-accent); cursor: pointer; text-decoration: none; }
+.easi-viewer-legend-foot a:hover { text-decoration: underline; }
+.easi-viewer-body { position: relative; flex: 1; min-height: 0; }
+#easi-viewer-map { position: absolute; inset: 0; }
+.easi-viewer-legend { position: absolute; left: 12px; bottom: 26px; z-index: 5;
+  background: rgba(255, 255, 255, .94); border: 1px solid var(--card-border);
+  border-radius: 8px; padding: 8px 10px; font-size: 12px; color: #33415c;
+  max-width: 260px; box-shadow: 0 1px 4px rgba(0, 0, 0, .08); }
+.easi-viewer-legend-title { font-weight: 600; margin-bottom: 4px; }
+.easi-viewer-legend-row { display: flex; align-items: center; gap: 7px; margin: 2px 0; }
+.easi-viewer-sw { display: inline-block; width: 18px; height: 4px; border-radius: 2px; }
+.easi-viewer-legend-note { font-size: 11px; color: #667085; margin-top: 6px; }
+.easi-viewer-status { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  z-index: 6; background: rgba(255, 255, 255, .96); border: 1px solid var(--card-border);
+  border-radius: 999px; padding: 5px 14px; font-size: 12.5px; color: #33415c;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .08); }
+.easi-viewer-popup { font-size: 12px; line-height: 1.35; color: #33415c; }
+.easi-minimap-pending { width: 290px; height: 180px; flex: 0 0 auto; display: flex; align-items: center;
+  justify-content: center; border: 1px dashed #c5ccd8; border-radius: 6px; background: #f6f8fa;
+  color: #6b7690; font-size: 12px; }
+.easi-viewer-note { color: #9a6a00; }
+.maplibregl-popup-content { padding: 8px 10px; border-radius: 6px; }

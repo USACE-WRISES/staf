@@ -33,6 +33,8 @@ from easi.batch import api as batch_api  # noqa: E402
 from easi.batch import contracts as batch_contracts  # noqa: E402
 from easi.batch import exports as batch_exports  # noqa: E402
 from easi.datasources import flowlines, nhd_hr  # noqa: E402
+from easi.national import client as national_client  # noqa: E402
+from easi.national import tiles as national_tiles  # noqa: E402
 from easi.metrics import geomorphology, hydraulics  # noqa: E402  (cross-section metric ids)
 from easi.datasources.geocode import geocode_address  # noqa: E402
 from easi.pipeline import DEFAULT_REACH_FT  # noqa: E402
@@ -415,7 +417,10 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=51"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=57"),
+                    ui.tags.link(rel="stylesheet", href="vendor/maplibre-gl.css"),
+                    ui.tags.script(src="vendor/maplibre-gl.js", defer=""),
+                    ui.tags.script(src="viewer.js?v=5", defer=""),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -429,9 +434,15 @@ app_ui = ui.page_fillable(
     ui.busy_indicators.use(pulse=False),
     ui.div(
         ui.div(
-            ui.span("EASI", ui.tags.small("Ecosystem Assessment Screening Index"),
-                    class_="easi-brand"),
-            staf_topnav(),
+            ui.div(ui.span("EASI", ui.tags.small("Ecosystem Assessment Screening Index"),
+                           class_="easi-brand"),
+                   staf_topnav(),
+                   class_="easi-header-left"),
+            # the precomputed national screening is a switch in the middle of
+            # the bar; the circled i beside it says what the map is and is not
+            ui.div(ui.input_switch("viewer_on", "Nationwide screening", value=False),
+                   ui.output_ui("viewer_info", inline=True),
+                   class_="easi-mode-toggle"),
             ui.div(
                 ui.input_action_link("nav_new", "New analysis"),
                 ui.input_action_link("nav_batch", "Batch"),
@@ -453,6 +464,7 @@ app_ui = ui.page_fillable(
         ui.div(ui.output_ui("leftpane"), class_="easi-leftpane"),
         ui.output_ui("worksheet"),
         ui.output_ui("batch_workspace"),
+        ui.output_ui("viewer_workspace"),
         # Stream legend: legend-dock.js moves this wrapper into the map's
         # top-right control stack under the layers button. The card look lives
         # on the rendered content, so an empty output shows nothing.
@@ -951,10 +963,23 @@ def _summary_header(d):
     )
 
 
+def _precomputed_text(pre: dict) -> str:
+    """One line naming the national dataset a recalled report came from."""
+    parts = [f"national dataset {pre.get('vintage') or 'staging'}"]
+    if pre.get("tier"):
+        parts.append(f"tier {pre['tier']}")
+    if pre.get("method_current") is False:
+        parts.append("rescored with the current methods")
+    return ", ".join(parts)
+
+
 def _basin_block(d, rep):
     # Identity (COMID, HUC12) moved out of the header chips into this table; the data
     # exports already carry these fields, so they're prepended here at the view layer only.
     ident = [["COMID", d.get("comid")], ["HUC12", d.get("huc12") or "—"]]
+    pre = (rep or {}).get("precomputed") or {}
+    if pre:
+        ident.append(["Precomputed", _precomputed_text(pre)])
     rows = ident + list((rep or {}).get("basin", {}).get("rows") or [])
     if not rows:
         return None
@@ -1172,6 +1197,15 @@ def _borrowed_metric_note(row):
     return ui.div("Desktop evidence comes from the nearest StreamCat reach downstream.",
                   _info(row["anchorNote"]), class_="easi-disclaimer",
                   style="margin-top:.25rem;")
+
+
+#: what the nationwide screening is, and is not, said once under its header
+VIEWER_INTRO = ('Precomputed EASI screening of every NHDPlus V2 reach, run automatically and not reviewed. Use it to screen sites quickly when supporting an assessment. A full EASI assessment should be run on the reach itself, with every metric reviewed and revised in detail.')
+
+#: the viewer's report opens before its basin thumbnail exists; this stands
+#: in for the thumbnail until the live geometry replaces it in place
+MINIMAP_PENDING_HTML = ('<div id="easi-viewer-minimap-pending" class="easi-minimap-pending">'
+                        '<span>Basin outline loading\u2026</span></div>')
 
 
 def _header_with_map(d, rep, geo, minimap_html=None):
@@ -2237,6 +2271,9 @@ def server(input, output, session):
     @reactive.event(input.nav_new)
     def _new_analysis():
         _reset()
+        if app_mode() == "viewer":
+            app_mode.set("single")
+            ui.update_switch("viewer_on", value=False)
 
     @reactive.effect
     @reactive.event(input.clear_basin)
@@ -2287,6 +2324,13 @@ def server(input, output, session):
                 "CSV, or GeoJSON.\n\n"
                 f"**Batch** runs up to {BATCH_UI_MAX_SITES} sites at once and "
                 "packages the reports as a ZIP.\n\n"
+                "Turn on **Nationwide screening** in the header to see the precomputed, "
+                "unreviewed screening of every NHDPlus V2 reach published so far, for fast "
+                "site screening in support of an assessment; turn it off to return to the "
+                "single-site workflow. The circled i beside the switch describes the "
+                "dataset. Click a colored reach to open its report; gray reaches are not "
+                "screened yet. A full EASI assessment should be run on the reach itself, "
+                "with every metric reviewed in detail.\n\n"
                 "Switch basemaps and stream visibility with the layers control "
                 "at the top right. Turn on **StreamCat coverage** there to inspect "
                 "stream coverage and the source reach for the selected site.\n\n"
@@ -2347,6 +2391,8 @@ def server(input, output, session):
                 base = (obj.sites[request["index"]].metadata or {}).get("_artifacts")
             except (AttributeError, IndexError):
                 return False
+        elif request["mode"] == "viewer":
+            base = viewer_base()
         else:
             base = base_result()
         return (base is request["base"] and base is not None
@@ -2370,6 +2416,8 @@ def server(input, output, session):
     @reactive.extended_task
     async def report_map_task(request_id, geometry):
         def prepare():
+            if geometry.get("pending") and not geometry.get("watershed") and not geometry.get("reach"):
+                return request_id, MINIMAP_PENDING_HTML, None   # the viewer fills it in later
             try:
                 minimap = reportmap.svg(
                     delineation.display_simplify(geometry["watershed"], max_vertices=700),
@@ -2384,7 +2432,8 @@ def server(input, output, session):
             return
         _report_counter["value"] += 1
         geometry = copy.deepcopy({"watershed": base.get("watershed_geojson"),
-                                  "reach": base.get("reach_geojson")})
+                                  "reach": base.get("reach_geojson"),
+                                  "pending": bool(base.get("geometry_pending"))})
         request = {"id": _report_counter["value"], "generation": _map_pick["generation"],
                    "mode": app_mode(), "step": current_step(), "function": current_fn(),
                    "base": base, "batch": batch, "index": index, "geometry": geometry}
@@ -2420,6 +2469,14 @@ def server(input, output, session):
                     base = (site.metadata or {})["_artifacts"]
                     modal = _batch_report_modal(site.site_id, base, minimap_html=minimap)
                     batch_modal_site.set({"site_id": site.site_id, "base": base})
+                elif pending["mode"] == "viewer":
+                    # a precomputed reach: the same read-only popup the batch
+                    # results use, labeled by the reach
+                    base = pending["base"]
+                    d = base.get("delineation") or {}
+                    label = f"{d.get('gnis_name') or '(unnamed reach)'} (COMID {d.get('comid')})"
+                    modal = _batch_report_modal(label, base, minimap_html=minimap)
+                    batch_modal_site.set({"site_id": label, "base": base})
                 else:
                     res = export_result()  # include edits made while the map was loading
                     if not res:
@@ -2719,9 +2776,10 @@ def server(input, output, session):
     # ---- left pane (state machine) ----
     @render.ui
     def leftpane():
-        # Batch mode is a full-screen takeover: drop the single-site card entirely
-        # (mirror of batch_workspace, which returns None outside batch mode).
-        if app_mode() == "batch":
+        # Batch mode and the Nationwide viewer are full-screen takeovers: drop the
+        # single-site card entirely (mirror of batch_workspace / viewer_workspace,
+        # which return None outside their mode).
+        if app_mode() != "single":
             return None
         step = current_step()
         if step in (STEP_ASSESS, STEP_REPORT):
@@ -2877,7 +2935,7 @@ def server(input, output, session):
     def stream_legend():
         # Reads the zoom flag, the fetch mode, and the pick, never the view
         # itself, so a pan does not re-render it.
-        if not _HAS_MAP or app_mode() == "batch":
+        if not _HAS_MAP or app_mode() != "single":
             return None
         glow, route = source_geometry()
         return _legend_ui(current_step(), zoomed_in(), streams_mode(), scored_reach(),
@@ -2995,7 +3053,7 @@ def server(input, output, session):
 
     @render.ui
     def worksheet():
-        if app_mode() == "batch":
+        if app_mode() != "single":
             return None
         step = current_step()
         if step not in (STEP_ASSESS, STEP_REPORT):
@@ -3040,7 +3098,7 @@ def server(input, output, session):
         # Skeleton: depends only on current_fn + compute-state, so the Plotly cross-section
         # widget mounts once per XS-card visit; the live rating/score are nested slots that
         # re-render on scored(). Notes + source select are seeded under isolate (no re-render).
-        if app_mode() == "batch" or current_step() not in (STEP_ASSESS, STEP_REPORT):
+        if app_mode() != "single" or current_step() not in (STEP_ASSESS, STEP_REPORT):
             return None
         if base_result() is None:
             st = assess_task.status()
@@ -3486,6 +3544,7 @@ def server(input, output, session):
     @reactive.event(input.nav_batch)
     def _enter_batch():
         app_mode.set("batch")
+        ui.update_switch("viewer_on", value=False)      # batch replaces the screening map
 
     @reactive.effect
     @reactive.event(input.batch_exit)
@@ -3796,6 +3855,294 @@ def server(input, output, session):
         obj = batch_result()
         if obj is not None:
             yield batch_exports.build_batch_zip(obj, include_pdf=False)
+
+    # ---- Nationwide screening: the precomputed national dataset -------------
+    # A view-only takeover (like batch) with a MapLibre map (www/viewer.js) that
+    # reads the per-region PMTiles archives through a session route on this
+    # server (the release host answers Range requests but sends no CORS header,
+    # so the browser cannot read the archives directly). A click on a reach
+    # opens the same read-only report popup the batch results use, rebuilt from
+    # the reach's stored evidence by ``easi.national.client.open_precomputed``.
+    viewer_base = reactive.value(None)        # the base of the last opened reach
+    viewer_summary = reactive.value(None)     # dataset summary for the header line
+    _viewer_records: dict = {}                # comid -> base (session cache)
+    _viewer_gen = {"value": 0}
+
+    async def _national_tiles_handler(request):
+        from starlette.responses import JSONResponse, Response
+        q = request.query_params
+        ds = national_client.default_dataset()
+        meta = q.get("meta")
+        if meta == "coverage":
+            data = await anyio.to_thread.run_sync(ds.coverage)
+            return JSONResponse(data or {"type": "FeatureCollection", "features": []},
+                                headers={"Cache-Control": "no-cache"})
+        if meta == "summary":
+            return JSONResponse(await anyio.to_thread.run_sync(ds.summary),
+                                headers={"Cache-Control": "no-cache"})
+        vpu = (q.get("vpu") or "").strip().upper()
+        try:
+            z, x, y = int(q["z"]), int(q["x"]), int(q["y"])
+        except (KeyError, ValueError):
+            return Response(status_code=400)
+        if not vpu.isalnum() or len(vpu) > 3:
+            return Response(status_code=400)
+        store = national_tiles.default_store()
+        data, encoding, media = await anyio.to_thread.run_sync(store.tile, vpu, z, x, y)
+        if not data:
+            return Response(status_code=204, headers={"Cache-Control": "public, max-age=600"})
+        headers = {"Cache-Control": "public, max-age=3600"}
+        if encoding:
+            headers["Content-Encoding"] = encoding
+        return Response(content=data, media_type=media, headers=headers)
+
+    tiles_route = session.dynamic_route("national-tiles", _national_tiles_handler)
+
+    @reactive.effect
+    @reactive.event(input.viewer_on)
+    def _toggle_viewer():
+        if input.viewer_on():
+            if app_mode() != "viewer":
+                _cancel_report()
+                app_mode.set("viewer")
+        elif app_mode() == "viewer":
+            _cancel_report()
+            app_mode.set("single")
+
+    @reactive.extended_task
+    async def viewer_config_task(generation: int):
+        ds = national_client.default_dataset()
+        try:
+            summary = await anyio.to_thread.run_sync(lambda: ds.summary_refreshed())
+        except Exception as exc:  # noqa: BLE001
+            summary = {"available": False, "error": str(exc)[:200]}
+        return generation, summary
+
+    @reactive.effect
+    def _viewer_config_request():
+        # entering the viewer (or Refresh) re-reads the manifest so newly
+        # published regions appear without a redeploy
+        mode = app_mode()
+        try:
+            input.viewer_refresh()
+        except Exception:  # noqa: BLE001 - the link exists only in viewer mode
+            pass
+        if mode != "viewer":
+            return
+        with reactive.isolate():
+            _viewer_gen["value"] += 1
+            viewer_config_task(_viewer_gen["value"])
+
+    @reactive.effect
+    async def _viewer_config_done():
+        if viewer_config_task.status() in ("initial", "running"):
+            return
+        with reactive.isolate():
+            try:
+                generation, summary = viewer_config_task.result()
+            except Exception:  # noqa: BLE001
+                return
+            if generation != _viewer_gen["value"] or app_mode() != "viewer":
+                return
+            viewer_summary.set(summary)
+            config = {"routeBase": tiles_route, "vpus": summary.get("vpus") or [],
+                      "minzoom": 4, "maxzoom": 12, "vintage": summary.get("vintage"),
+                      "center": [-96, 38.5], "zoom": 4}
+        await session.send_custom_message("easi-viewer-init", config)
+
+    @reactive.effect
+    async def _viewer_busy_message():
+        # the viewer's status pill follows the report request state on its own
+        # message name (report-ready.js owns staf-report-state)
+        state = _report_ui()
+        if app_mode() == "viewer":
+            await session.send_custom_message("easi-viewer-status", state)
+
+    @reactive.effect
+    async def _viewer_teardown():
+        if app_mode() == "viewer":
+            return
+        with reactive.isolate():
+            if viewer_summary() is None:
+                return
+            viewer_summary.set(None)
+        await session.send_custom_message("easi-viewer-teardown", {})
+
+    @reactive.extended_task
+    async def open_precomputed_task(comid: int, generation: int):
+        # phase one: the record scores at once, no network; the geometry follows
+        try:
+            base = await national_client.open_precomputed_async(comid, cross_section=True,
+                                                                geometry=False)
+        except Exception as exc:  # noqa: BLE001
+            base = {"status": "error",
+                    "message": f"The precomputed assessment could not be opened: {exc}"}
+        return comid, generation, base
+
+    @reactive.extended_task
+    async def viewer_geometry_task(comid: int, generation: int):
+        # phase two: the NLDI basin and reach for the thumbnail, drawn off the loop
+        try:
+            geo = await national_client.precomputed_geometry_async(comid)
+        except Exception as exc:  # noqa: BLE001
+            geo = {"status": "error", "message": str(exc)}
+        minimap = ""
+        if geo.get("status") == "ok":
+            def prepare():
+                try:
+                    return reportmap.svg(
+                        delineation.display_simplify(geo.get("watershed_geojson"), max_vertices=700),
+                        geo.get("reach_geojson"))
+                except Exception:  # noqa: BLE001 - a thumbnail is optional
+                    return ""
+            minimap = await anyio.to_thread.run_sync(prepare)
+        return comid, generation, geo, minimap
+
+    @reactive.effect
+    def _viewer_geometry_done():
+        if viewer_geometry_task.status() in ("initial", "running"):
+            return
+        with reactive.isolate():
+            try:
+                comid, generation, geo, minimap = viewer_geometry_task.result()
+            except Exception:  # noqa: BLE001
+                return
+            base = _viewer_records.get(comid)
+            if base is None:
+                return
+            base["geometry_pending"] = False
+            if geo.get("status") == "ok":
+                base["watershed_geojson"] = geo.get("watershed_geojson")
+                base["reach_geojson"] = geo.get("reach_geojson")
+                base["siteAnchor"] = geo.get("siteAnchor")
+                d = base.setdefault("delineation", {})
+                for key, value in (geo.get("delineation") or {}).items():
+                    if value is not None and d.get(key) is None:
+                        d[key] = value
+            if generation != _viewer_gen["value"] or app_mode() != "viewer":
+                return
+            # the modal is open on this reach: swap the placeholder for the thumbnail
+            if minimap:
+                ui.insert_ui(ui.HTML(minimap), selector="#easi-viewer-minimap-pending",
+                             where="beforeBegin")
+            ui.remove_ui("#easi-viewer-minimap-pending")
+
+    def _open_viewer_report(base):
+        viewer_base.set(base)
+        _begin_report(base)
+
+    @reactive.effect
+    @reactive.event(input.viewer_pick)
+    def _viewer_pick():
+        ev = input.viewer_pick() or {}
+        comid = ev.get("comid")
+        if app_mode() != "viewer" or not comid:
+            return
+        comid = int(comid)
+        cached = _viewer_records.get(comid)
+        if cached is not None:
+            _open_viewer_report(cached)
+            return
+        if open_precomputed_task.status() == "running":
+            ui.notification_show("Still preparing the previous report.", duration=3)
+            return
+        _viewer_gen["value"] += 1
+        open_precomputed_task(comid, _viewer_gen["value"])
+
+    @reactive.effect
+    def _open_precomputed_done():
+        if open_precomputed_task.status() in ("initial", "running"):
+            return
+        with reactive.isolate():
+            try:
+                comid, generation, base = open_precomputed_task.result()
+            except Exception:  # noqa: BLE001
+                return
+            if generation != _viewer_gen["value"] or app_mode() != "viewer":
+                return
+            if base.get("status") != "ok":
+                ui.notification_show(base.get("message") or
+                                     "This reach has no precomputed assessment yet.",
+                                     type="warning", duration=6)
+                _report_ui.set({"busy": False, "requestId": _report_counter["value"],
+                                "opened": False})
+                return
+            _viewer_records[comid] = base
+            _open_viewer_report(base)
+            if base.get("geometry_pending"):
+                viewer_geometry_task(comid, generation)
+
+    def _viewer_summary_text(s) -> str:
+        if s is None:
+            return "Reading the national dataset…"
+        if not s.get("available"):
+            return "The national dataset is not reachable right now."
+        return (f"{s.get('units_published', 0)} of {s.get('units_total', 222)} HUC4 units published, "
+                f"{s.get('reaches_scored', 0):,} reaches, vintage {s.get('vintage')}"
+                + (f", tier {s.get('tier')}" if s.get("tier") else "")
+                + (f", updated {str(s.get('updated'))[:10]}" if s.get("updated") else ""))
+
+    @render.ui
+    def viewer_summary_line():
+        return ui.span(_viewer_summary_text(viewer_summary()), class_="easi-viewer-summary")
+
+    @render.ui
+    def viewer_info():
+        # the header card: what the screening map is and is not, then the
+        # dataset's state; it sits outside the workspace so it may read the
+        # summary without re-rendering the map's container
+        s = viewer_summary() if app_mode() == "viewer" else None
+        card = ("<div class='easi-viewer-about'><b>Nationwide screening</b>"
+                f"<p>{html.escape(VIEWER_INTRO)}</p>"
+                + (f"<p class='easi-viewer-about-data'>{html.escape(_viewer_summary_text(s))}</p>"
+                   if app_mode() == "viewer" else "")
+                + "</div>")
+        return _info(html_tip=card)
+
+    def _viewer_tier_note(summary) -> str:
+        """The legend's tier sentence: Tier 1 everywhere, Tier 2 everywhere, or mixed."""
+        s = summary or {}
+        published = int(s.get("units_published") or 0)
+        tier2 = int(s.get("units_tier2") or 0)
+        if published and tier2 == published:
+            return ("Tier 2: the four cross-section metrics are computed from USGS 3DEP "
+                    "elevation, 1 m lidar where available.")
+        if tier2:
+            return (f"Tier 2 in {tier2} of {published} published units (cross-section metrics "
+                    "from USGS 3DEP elevation); Tier 1 elsewhere, physical sub-index provisional.")
+        return ("Tier 1: the four cross-section metrics are not computed, so the "
+                "physical sub-index is provisional.")
+
+    @render.ui
+    def viewer_tier_note():
+        # its own output: the workspace render must not read the summary, or
+        # the whole workspace (and the map's container) re-renders when the
+        # summary arrives and MapLibre is left drawing into a detached div
+        return ui.span(_viewer_tier_note(viewer_summary()))
+
+    @render.ui
+    def viewer_workspace():
+        if app_mode() != "viewer":
+            return None
+        legend = ui.div(
+            ui.div("Condition band", class_="easi-viewer-legend-title"),
+            *[ui.div(ui.span(class_="easi-viewer-sw", style=f"background:{color}"), label,
+                     class_="easi-viewer-legend-row")
+              for label, color in (("Functioning", "#5b8fd6"), ("Functioning-at-Risk", "#d9b93a"),
+                                   ("Non-Functioning", "#d6453d"), ("Not yet screened", "#a9b1bd"))],
+            ui.div("Coverage: blue complete, yellow partial", class_="easi-viewer-legend-note"),
+            ui.div(ui.output_ui("viewer_tier_note", inline=True), class_="easi-viewer-legend-note"),
+            ui.div(ui.output_ui("viewer_summary_line", inline=True),
+                   ui.input_action_link("viewer_refresh", "Refresh"),
+                   class_="easi-viewer-legend-foot"),
+            class_="easi-viewer-legend")
+        return ui.div(
+            ui.div(ui.div(id="easi-viewer-map"),
+                   legend,
+                   ui.div(id="easi-viewer-status", class_="easi-viewer-status",
+                          role="status", hidden=True, **{"aria-live": "polite"}),
+                   class_="easi-viewer-body"),
+            class_="easi-viewer")
 
 
 # Shiny for Python serves a static dir only when configured (no implicit www/).
