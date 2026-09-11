@@ -1,0 +1,15 @@
+# EASI National Builder. Run from the repo's shared .venv (apps/easi's pins plus
+# these); listed here for a standalone environment.
+shiny==1.6.3
+shinywidgets==0.8.1
+ipyleaflet==0.20.0
+pyarrow==24.0.0
+pynhd==0.19.4
+geopandas==1.1.3
+pyogrio==0.12.1
+shapely==2.1.2
+pyproj==3.7.2
+numpy==2.4.6
+pandas==3.0.3
+requests==2.34.2
+pmtiles==3.7.0
