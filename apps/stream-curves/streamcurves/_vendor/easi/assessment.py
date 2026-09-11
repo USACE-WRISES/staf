@@ -269,6 +269,61 @@ def recompute_watershed_rows(report: dict, ctx: AnalysisContext, *,
     return result
 
 
+def assess_preloaded(ctx: AnalysisContext, *,
+                     metric_ids: Optional[list[str]] = None,
+                     overrides: Optional[dict[str, str]] = None,
+                     cross_section: bool = True) -> dict:
+    """Score ``ctx`` from evidence already on it, with no network at all.
+
+    The synchronous twin of ``assess`` for the national precomputed dataset:
+    the caller has put on ``ctx.extras`` what the prefetch would have fetched
+    (``streamcat``, ``nrsa``, ``reach_geomorph``, ``watershed``, ``siteAnchor``;
+    see ``easi.national.records.apply_evidence``) and, through
+    ``easi.national.providers``, the four point-service answers. The adapters,
+    ``_build_row``, ``_annotate_anchors`` and ``_finalize`` are the same code
+    ``assess`` runs, so the rows are identical to a live run's. About 1.5 ms per
+    site; ``cross_section=False`` skips the PNG render for bulk scoring.
+    """
+    overrides = {k: v for k, v in (overrides or {}).items() if v in VALID}
+    selected = set(metric_ids) if metric_ids is not None else set(registry.REGISTRY)
+    ctx.extras.setdefault("source_choices", {})
+    ctx.extras.setdefault("prefetch_variants", False)
+    ctx.extras.setdefault("streamcat", {})
+    ctx.extras.setdefault("landcover", {})
+    ctx.extras.setdefault("nrsa", None)
+    ctx.extras.setdefault("reach_geomorph", {})
+    if "watershed" not in ctx.extras:
+        ctx.extras["watershed"] = watershed.build(ctx, ctx.extras.get("streamcat"))
+
+    by_id: dict[str, MetricResult] = {}
+    for mid, fn in registry.REGISTRY.items():
+        if mid not in selected:
+            continue
+        try:
+            by_id[mid] = fn(ctx)
+        except Exception as exc:  # noqa: BLE001 - mirror assess()
+            conf = config.METRIC_REGISTRY.get(mid, {}).get("confidence", "L")
+            by_id[mid] = unavailable(mid, f"adapter error: {exc}", conf)
+
+    meta_by_id = config.metrics_by_id()
+    reg = config.METRIC_REGISTRY
+    rows: list[dict] = [
+        _build_row(mid, meta, reg.get(mid, {}), by_id.get(mid),
+                   selected=selected, overrides=overrides)
+        for mid, meta in meta_by_id.items()
+    ]
+    _annotate_anchors(rows, ctx.extras.get("siteAnchor"),
+                      watershed_layer=ctx.extras.get("watershed"))
+    result = _finalize(rows, len(meta_by_id), overrides)
+    if cross_section:
+        xs = _build_cross_section(ctx.extras.get("reach_geomorph") or {},
+                                  ctx.slope, ctx.fcode)
+        if xs:
+            result["crossSection"] = xs
+    result["basin"] = basin.basin_characteristics(ctx)
+    return result
+
+
 # Labels for the per-metric anchoring on covered (not routed) runs: neutral.
 _COVERED_LABELS = {
     "clickedReach": "assessed reach",

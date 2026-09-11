@@ -42,6 +42,9 @@ desktop/launcher/                  Launcher page (vanilla HTML/CSS/JS, ships in 
 desktop/payload/                   env.lock + pbs.lock + prune.txt — inputs that define the env payload
 desktop/scripts/                   Payload build scripts (PowerShell/Python) — MUST stay pure ASCII
 libs/                              Shared packages, vendored per app (libs/site_engine = the STAF site engine)
+tools/easi-national/               EASI National Builder: local Shiny panel + worker that precomputes the
+                                   national dataset in HUC8 chunks and publishes it (never deployed; imports
+                                   apps/easi directly; data root D:\Data\easi-national)
 scripts/                           TS build scripts (compileMetricLibraryFromCsv, buildMetricIndex, tests)
 src/lib/metricLibrary/             TS types, Zod schemas, data loaders
 notes/                             Internal dev notes — never published (outside docs/)
@@ -70,6 +73,7 @@ dotnet run --project desktop\src\Staf.Desktop    # or launch the built StafDeskt
 - **Site**: pushed to `main` → GitHub Pages rebuilds from `docs/` automatically. Nothing to deploy manually.
 - **Apps**: one repo, four separate deployments. Deploy with Posit Publisher (VS Code/Positron) — open `apps/<app>` as its own window first; Publisher's config discovery from the monorepo root is slow and unreliable. The tracked `.posit/publish/<name>.toml` is the config; the **untracked** `.posit/publish/deployments/*.toml` records tie redeploys to the existing Connect Cloud content item and keep the public URLs stable. Always confirm Publisher targets the existing deployment, never a new one. Note: the `*.share.connect.posit.cloud` URLs return 403 to curl/scripts (bot gate) — verify in a real browser.
 - **Desktop**: two tag streams on this repo's GitHub Releases — `v*` = shell installers (normal releases, built by `.github/workflows/desktop-shell.yml`), `desktop-payload-*` = payload components (**always prereleases**, built by `desktop-payload.yml`; the rolling `desktop-current` prerelease carries `latest-desktop.json` that installed shells poll). Full runbook: `desktop/RELEASING.md`.
+- **National dataset**: a third tag stream, the rolling `easi-national-current` prerelease (**always a prerelease**), published by `tools/easi-national` with `gh release upload --clobber`, `manifest.json` last. EASI's Nationwide screening map reads it through `easi/national` (server-side fetch + a session tile route; the asset host sends no CORS header, so the browser never reads the release directly). `EASI_NATIONAL_BASE` points a local EASI at another https base or a directory such as the builder's `staging/`.
 
 ## Coding Conventions
 
@@ -94,3 +98,4 @@ dotnet run --project desktop\src\Staf.Desktop    # or launch the built StafDeskt
 11. **After publishing an assessment library version, re-bake DEEP and commit both** — StreamCurves' Publish writes `apps/library/` and runs `apps/deep/scripts/bake_library_into_deep.py` (folding the latest into `apps/deep/data/deep-assessments.json`). Commit `apps/library/**` **and** `apps/deep/data/**`, then redeploy DEEP, so the cloud DEEP ships the new latest (it can't read `apps/library/` at runtime). Publishing is local/desktop only
 12. **Re-vendor after any engine or EASI source change, never hand-edit `_vendor/`** — `libs/site_engine` is copied into each app by that app's `scripts/vendor_site_engine.py` (order: libs, then easi, then sfari and deep, then stream-curves' site engine, then stream-curves' `vendor_easi_engine.py`, which carries EASI's nested engine copy); every app has a drift-gate test that goes red until the copy matches
 13. **Engine vocabulary: display names change, tokens never do** — user-visible text says "StreamCat lookup engine" and "STAF site engine" (from the vendored `naming` module); the tokens `streamcat` / `site-engine` / `streamcat-legacy` ride digests, bundles, manifests, the CLI, and YAML and are immutable
+14. **The national dataset scores from stored evidence, never from live calls** — `assessment.assess_preloaded` + `easi.national.providers` run the unchanged adapters over a record; never add a per-site network call to that path, keep `easi-national-current` a prerelease, and fetch every source per chunk in the builder (the fabric API refuses more than ~160 COMIDs per `IN` filter)

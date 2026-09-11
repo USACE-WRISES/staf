@@ -37,3 +37,8 @@ plotly==6.8.0             # interactive cross-section plot (zoom/pan) via shinyw
 
 # --- HTTP (keyless national data services) ---
 requests==2.34.2
+
+# --- National precomputed dataset (easi.national): parquet evidence files and
+#     the per-region PMTiles archives the Nationwide viewer is served from ---
+pyarrow==24.0.0
+pmtiles==3.7.0

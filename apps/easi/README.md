@@ -71,6 +71,16 @@ stepper: **Identify → Basin → Assessment → Report**.
 A **Batch** mode runs up to 10 sites from a pasted list and packages the reports
 as a ZIP (the engine itself accepts up to 150 sites for programmatic use).
 
+The **Nationwide screening** switch in the header opens a view-only map over
+the precomputed national dataset (`tools/easi-national` builds it chunk by chunk and publishes
+it to the rolling `easi-national-current` GitHub prerelease): every NHDPlus V2
+reach screened automatically and not reviewed, for fast site screening in
+support of an assessment. Reaches draw by condition
+band, a coverage layer shows which HUC4 units are published, and a click
+rebuilds the reach's full report from its stored evidence with the app's own
+adapters (`easi.national`). Set `EASI_NATIONAL_BASE` to read another base, such
+as the builder's local `staging/` folder.
+
 ## How it scores (STAF rollup)
 
 Each metric is rated **Good / Fair / Poor**, mapped to an index (0–1) and a
