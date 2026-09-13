@@ -380,8 +380,14 @@ def run_wqp_monthly(root: DataRoot, progress: Progress, control: Control, *, wor
                 try:
                     result = future.result()
                 except (PauseRequested, CancelRequested):
+                    # a month whose file already landed this round stays done;
+                    # the rest go back to pending for the next pass
                     for other in futures.values():
-                        record(root, other, status="pending")
+                        path = month_path(root, other)
+                        if path.exists():
+                            record(root, other, status="done", rows=_count_rows(path))
+                        else:
+                            record(root, other, status="pending")
                     raise
                 results[month] = result
                 record(root, month, status=result["status"] if result["status"] == "done" else "pending",

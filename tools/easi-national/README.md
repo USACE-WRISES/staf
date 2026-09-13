@@ -37,7 +37,7 @@ the places where more helps.
 | Variable | Default | What it controls |
 |---|---|---|
 | `EASI_NATIONAL_WQP_CONCURRENCY` | 8 | Water Quality Portal requests in flight (station lists per cell, then results by station-id batches sized to the portal's answer time) |
-| `EASI_NATIONAL_WQP_METHOD` | stations | `cells` restores the older bounding-box pull (slow: the portal trickles rows for a dense cell for an hour) |
+| `EASI_NATIONAL_WQP_METHOD` | auto | `auto` reads the chunk's nutrient results from the national ten-year parquet (`wqp_monthly`, no portal request) when it exists and pulls by station otherwise; `stations` forces the station pull, `cells` the older bounding-box pull (slow: the portal trickles rows for a dense cell for an hour) |
 | `EASI_NATIONAL_FABRIC_CONCURRENCY` | 3 | flowline geometry batches in flight (only without the seamless geodatabase) |
 | `EASI_NATIONAL_STREAMCAT_CONCURRENCY` | 3 | StreamCat region pulls in flight while the national cache builds |
 | `EASI_NATIONAL_HUC8_WORKERS` | cores minus one, at most 6 | processes for the per-HUC8 derive, joins and score steps |
@@ -79,7 +79,18 @@ the places where more helps.
   stream still running at the one-hour cap is retried whole in a later pass,
   never split). When every month is in, the CSVs are combined into
   `national/wqp/wqp_results.parquet` (every column as text, duplicates on the
-  result identifier dropped) and removed.
+  result identifier dropped) and removed. From then on the chunk `wqp` stage
+  (`stages/wqp_local.py`) takes its results from that file: the rows inside
+  the chunk's buffered box and the app's ten-year window, renamed from the
+  WQX3 columns to the legacy result columns and run through the same
+  `normalize_rows` as the portal path, so the joins see identical
+  station-result files and no state run touches the portal.
+  The `states` step (after the geodatabase conversions) assigns every
+  flowline to the Census state polygon containing its midpoint (the nearest
+  polygon for the few coastal midpoints the 1:500,000 coastline leaves
+  outside every state) and writes `national/comid_state.parquet`; the
+  dashboard statistics group by it, so a reach belongs to one state even
+  where a HUC8 crosses a border.
 - Per HUC8: derive (anchor point, sinuosity, HUC12, regions, bankfull, NRSA),
   the two cross-section stages (below), joins (the four point services
   reproduced from the bulk pulls), score (`easi.assessment.assess_preloaded`,
@@ -89,7 +100,14 @@ the places where more helps.
   never repeat work. **Cancel** stops between requests.
 - Tiles per region: FlatGeobuf + tippecanoe in Docker (`docker/tippecanoe`)
   -> PMTiles. Staging assembles the publish set (per-HUC4 evidence, per-region
-  scores and tiles, the COMID index, HUC4 coverage, `manifest.json`).
+  scores and tiles, the COMID index, HUC4 coverage, `stats.json`,
+  `manifest.json`). `stats.json` (`builder/stages/stats.py`, about 5 KB per
+  state) carries what the app's condition dashboard draws: for everything
+  published and for each state, quantiles, a histogram and the band counts of
+  the ECI and the three sub-indices, and for each function the rating
+  counts, a 16-bin score histogram and the source-tier counts, plus each
+  state's coverage (reaches screened over the state's reaches). It is skipped
+  with a note until the national `states` step has run.
   Publish uploads changed assets with `gh release upload --clobber`, manifest
   last, then verifies the manifest download.
 

@@ -65,13 +65,22 @@ def run_streamcat(root: DataRoot, chunk: Chunk, states: UnitStates, progress: Pr
             for state in (chunk.states if not cached else []):
                 requests_plan.append((f"state-{state}-g{gi}",
                                       {"name": ",".join(group), "aoi": aoi, "state": state}))
-        # 2. COMID batches for every COMID (the state pull answers most of them;
-        #    batches whose COMIDs are all covered are skipped at run time)
+        # 2. COMID batches. With the national cache only the COMIDs it lacks
+        #    (a few per cent, batched together: 1,600 requests became about a
+        #    hundred on California, and the API rate-limits a long run of
+        #    them); without it every COMID, the state pull answering most and
+        #    batches whose COMIDs are all covered skipped at run time.
         size = config.STREAMCAT_COMID_CHUNK
-        batches = [wanted[i:i + size] for i in range(0, len(wanted), size)]
+        if cached:
+            missing = [c for c in wanted if c not in cached]
+            batches = [missing[i:i + size] for i in range(0, len(missing), size)]
+            prefix = "missing"
+        else:
+            batches = [wanted[i:i + size] for i in range(0, len(wanted), size)]
+            prefix = "comid"
         for gi, group in enumerate(groups):
             for bi, batch in enumerate(batches):
-                requests_plan.append((f"comid-b{bi}-g{gi}",
+                requests_plan.append((f"{prefix}-b{bi}-g{gi}",
                                       {"name": ",".join(group), "aoi": aoi,
                                        "comid": ",".join(str(c) for c in batch)}))
         total = len(requests_plan)
@@ -91,7 +100,7 @@ def run_streamcat(root: DataRoot, chunk: Chunk, states: UnitStates, progress: Pr
                 progress.tick(done=done)
                 continue
             gi = int(key.rsplit("-g", 1)[1])
-            if key.startswith("comid-"):
+            if key.startswith(("comid-", "missing-")):
                 batch = [int(c) for c in payload["comid"].split(",")]
                 if all(c in covered.get(gi, set()) for c in batch):
                     ledger.add(key, skipped=True)

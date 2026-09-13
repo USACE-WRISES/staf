@@ -34,6 +34,8 @@ NATIONAL_STEPS = (
      "NHDPlus V2 seamless geodatabase"),
     ("attains", "ATTAINS assessment units (geodatabase)", lambda r: [r.national / "attains.parquet"],
      "ATTAINS national geodatabase"),
+    ("states", "COMID to state (flowline midpoints in the Census state polygons)",
+     lambda r: [r.national / "comid_state.parquet"], "Census cartographic boundaries 2024, 1:500,000"),
     ("dem1m_index", "3DEP 1 m tile catalog", lambda r: [r.dem1m_catalog], "S3 bucket listings"),
     ("dem19_index", "3DEP 1/9 arc-second quad catalog", lambda r: [r.dem19_catalog], "S3 bucket listing"),
     ("wqp_monthly", "WQP nutrient results, national by month (WQX3)",

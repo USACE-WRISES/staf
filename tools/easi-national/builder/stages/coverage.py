@@ -86,6 +86,11 @@ def run_staging(root: DataRoot, states: UnitStates, progress: Progress) -> dict:
         tmp.replace(staging / name)
         keep.add(name)
         scores_block[vpu] = {**_asset(staging / name), "n_scored": int(table.num_rows)}
+    extra_assets: dict[str, dict] = {}
+    stats_path = _stats_asset(root, [h for hs in per_vpu.values() for h in hs], progress)
+    if stats_path is not None:
+        keep.add(stats_path.name)
+        extra_assets[stats_path.name] = _asset(stats_path)
     tiles_block: dict[str, dict] = {}
     if root.tiles.exists():
         for folder in sorted(root.tiles.iterdir()):
@@ -121,7 +126,7 @@ def run_staging(root: DataRoot, states: UnitStates, progress: Progress) -> dict:
         "units_total": UNITS_TOTAL, "units": units, "scores": scores_block,
         "tiles": tiles_block,
         "assets": {"comid_huc4.parquet": _asset(staging / "comid_huc4.parquet"),
-                   "coverage.geojson": _asset(staging / "coverage.geojson")},
+                   "coverage.geojson": _asset(staging / "coverage.geojson"), **extra_assets},
         "reaches_scored": sum(u["n_scored"] for u in units.values()),
     }
     atomic_write_text(staging / "manifest.json", json.dumps(manifest, indent=1, sort_keys=True))
@@ -133,6 +138,21 @@ def run_staging(root: DataRoot, states: UnitStates, progress: Progress) -> dict:
                  f"{len(tiles_block)} tile archives")
     states.set("staging", "stage", "done", note=f"{len(units)} units")
     return manifest
+
+
+def _stats_asset(root: DataRoot, huc8s: list[str], progress: Progress):
+    """``staging/stats.json`` (the dashboard's distributions by state), or
+    None with a note when the COMID to state table is not built yet."""
+    from easi.national import method_version
+    from . import stats
+    try:
+        data = stats.build_stats(root, huc8s, progress, vintage=VINTAGE, method_version=method_version())
+    except stats.NoStateTable as exc:
+        progress.say(f"stats.json skipped: {exc}")
+        return None
+    path = stats.write_stats(root.staging, data)
+    progress.say(f"stats.json: {data['reaches']:,} reaches in {len(data['states'])} states")
+    return path
 
 
 def unit_cross_sections(root: DataRoot, huc8s: list[str], evidence) -> dict:

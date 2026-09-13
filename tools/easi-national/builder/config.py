@@ -54,7 +54,9 @@ WQP_TIMEOUT_S = 1500.0          # cells are pre-sized by station count; a slower
 WQP_CONCURRENCY = int(os.environ.get("EASI_NATIONAL_WQP_CONCURRENCY") or 8)   # requests in flight at once (paced per host)
 #: stations = station lists per cell, then results by station-id batches (the fast
 #: shape); cells = the older bounding-box pull
-WQP_METHOD = (os.environ.get("EASI_NATIONAL_WQP_METHOD") or "stations").strip().lower()
+#: "auto" reads the national ten-year parquet when it exists and pulls by
+#: station otherwise; "stations" or "cells" force the portal pulls
+WQP_METHOD = (os.environ.get("EASI_NATIONAL_WQP_METHOD") or "auto").strip().lower()
 #: First calendar month of the national monthly WQP pull (ten years back).
 WQP_MONTHLY_START = (os.environ.get("EASI_NATIONAL_WQP_MONTHLY_START") or "2016-09").strip()
 #: Months downloaded at once in the national monthly WQP pull.

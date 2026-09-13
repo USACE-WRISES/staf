@@ -181,3 +181,19 @@ def test_no_combine_keeps_the_csvs_and_a_pause_leaves_pending_months(tmp_path):
                            session_factory=lambda: session, sleep=pausing_sleep)
     entry = wn.read_ledger(root)["months"]["2016-10"]
     assert entry["status"] == "pending" and entry["attempts"] == 1
+
+
+def test_a_pause_keeps_the_months_that_finished_in_the_round(tmp_path):
+    root = DataRoot(tmp_path / "data").ensure()
+    session = FakeSession({"09-01-2016..09-30-2016": (200, GOOD_A), "*": OVERLOADED})
+    control = state.Control(root)
+
+    def pausing_sleep(s):
+        control.request("pause")
+    with pytest.raises(state.PauseRequested):
+        wn.run_wqp_monthly(root, state.Progress(root, quiet=True), control, workers=1,
+                           wanted=["2016-09", "2016-10"], session_factory=lambda: session, sleep=pausing_sleep)
+    months = wn.read_ledger(root)["months"]
+    assert months["2016-09"]["status"] == "done" and months["2016-09"]["rows"] == 2
+    assert months["2016-10"]["status"] == "pending"
+    assert wn.summary(root, ["2016-09", "2016-10"])["done"] == 1
