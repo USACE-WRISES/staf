@@ -34,6 +34,7 @@ from easi.batch import contracts as batch_contracts  # noqa: E402
 from easi.batch import exports as batch_exports  # noqa: E402
 from easi.datasources import flowlines, nhd_hr  # noqa: E402
 from easi.national import client as national_client  # noqa: E402
+from easi.national import dashboard as national_dashboard  # noqa: E402
 from easi.national import tiles as national_tiles  # noqa: E402
 from easi.metrics import geomorphology, hydraulics  # noqa: E402  (cross-section metric ids)
 from easi.datasources.geocode import geocode_address  # noqa: E402
@@ -417,7 +418,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=57"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=58"),
                     ui.tags.link(rel="stylesheet", href="vendor/maplibre-gl.css"),
                     ui.tags.script(src="vendor/maplibre-gl.js", defer=""),
                     ui.tags.script(src="viewer.js?v=5", defer=""),
@@ -3865,6 +3866,7 @@ def server(input, output, session):
     # the reach's stored evidence by ``easi.national.client.open_precomputed``.
     viewer_base = reactive.value(None)        # the base of the last opened reach
     viewer_summary = reactive.value(None)     # dataset summary for the header line
+    viewer_stats = reactive.value(None)       # the dashboard's statistics asset (stats.json)
     _viewer_records: dict = {}                # comid -> base (session cache)
     _viewer_gen = {"value": 0}
 
@@ -3912,11 +3914,19 @@ def server(input, output, session):
     @reactive.extended_task
     async def viewer_config_task(generation: int):
         ds = national_client.default_dataset()
+
+        def load():
+            summary = ds.summary_refreshed()
+            try:
+                stats = ds.stats()      # the dashboard's asset; older publishes have none
+            except Exception:  # noqa: BLE001
+                stats = None
+            return summary, stats
         try:
-            summary = await anyio.to_thread.run_sync(lambda: ds.summary_refreshed())
+            summary, stats = await anyio.to_thread.run_sync(load)
         except Exception as exc:  # noqa: BLE001
-            summary = {"available": False, "error": str(exc)[:200]}
-        return generation, summary
+            summary, stats = {"available": False, "error": str(exc)[:200]}, None
+        return generation, summary, stats
 
     @reactive.effect
     def _viewer_config_request():
@@ -3939,12 +3949,13 @@ def server(input, output, session):
             return
         with reactive.isolate():
             try:
-                generation, summary = viewer_config_task.result()
+                generation, summary, stats = viewer_config_task.result()
             except Exception:  # noqa: BLE001
                 return
             if generation != _viewer_gen["value"] or app_mode() != "viewer":
                 return
             viewer_summary.set(summary)
+            viewer_stats.set(stats)
             config = {"routeBase": tiles_route, "vpus": summary.get("vpus") or [],
                       "minzoom": 4, "maxzoom": 12, "vintage": summary.get("vintage"),
                       "center": [-96, 38.5], "zoom": 4}
@@ -3966,6 +3977,7 @@ def server(input, output, session):
             if viewer_summary() is None:
                 return
             viewer_summary.set(None)
+            viewer_stats.set(None)
         await session.send_custom_message("easi-viewer-teardown", {})
 
     @reactive.extended_task
@@ -4136,13 +4148,103 @@ def server(input, output, session):
                    ui.input_action_link("viewer_refresh", "Refresh"),
                    class_="easi-viewer-legend-foot"),
             class_="easi-viewer-legend")
+        # the Map | Dashboard control is static markup here; its value is read
+        # only by viewer_dashboard, so flipping it never touches the map's div
+        head = ui.div(
+            ui.div(ui.input_radio_buttons("viewer_view", None, {"map": "Map", "dashboard": "Dashboard"},
+                                          selected="map", inline=True),
+                   class_="easi-seg"),
+            class_="easi-viewer-head")
         return ui.div(
+            head,
             ui.div(ui.div(id="easi-viewer-map"),
                    legend,
                    ui.div(id="easi-viewer-status", class_="easi-viewer-status",
                           role="status", hidden=True, **{"aria-live": "polite"}),
+                   ui.output_ui("viewer_dashboard"),
                    class_="easi-viewer-body"),
             class_="easi-viewer")
+
+    def _dash_current(name: str, default: str) -> str:
+        """The dashboard control's current value without a dependency (the
+        overlay re-renders its controls seeded with them), or ``default``
+        before the control exists."""
+        with reactive.isolate():
+            try:
+                value = getattr(input, name)()
+            except Exception:  # noqa: BLE001 - not rendered yet
+                return default
+        return value if value else default
+
+    @render.ui
+    def viewer_dashboard():
+        # the condition dashboard: an overlay over the map (the map stays
+        # mounted underneath, so switching back is instant), with the controls
+        # in a toolbar and the cards in their own output below
+        if app_mode() != "viewer" or input.viewer_view() != "dashboard":
+            return None
+        stats = viewer_stats()
+        if stats is None:
+            return ui.div(ui.div(national_dashboard.unavailable(viewer_summary()), class_="easi-dash-inner"),
+                          class_="easi-dash")
+        scopes = national_dashboard.scope_choices(stats)
+        scope0 = _dash_current("dash_scope", national_dashboard.NATIONAL)
+        if scope0 not in scopes:
+            scope0 = national_dashboard.NATIONAL
+        panel0 = _dash_current("dash_panel", "scope")
+        measure0 = _dash_current("dash_measure", "eci")
+        mode0 = _dash_current("dash_fn_mode", "shares")
+        toolbar = ui.div(
+            ui.div(ui.input_radio_buttons("dash_panel", None, {"scope": "By state", "compare": "Compare states"},
+                                          selected=panel0, inline=True), class_="easi-seg"),
+            ui.panel_conditional(
+                "input.dash_panel == 'scope'",
+                ui.input_select("dash_scope", "Scope", scopes, selected=scope0, width="330px"),
+                ui.div(ui.input_radio_buttons("dash_fn_mode", None,
+                                              {"shares": "Rating shares", "boxes": "Score box plots"},
+                                              selected=mode0, inline=True), class_="easi-seg"),
+                class_="easi-dash-toolbar-group"),
+            ui.panel_conditional(
+                "input.dash_panel == 'compare'",
+                ui.input_select("dash_measure", "Measure", national_dashboard.measure_choices(stats),
+                                selected=measure0, width="330px"),
+                class_="easi-dash-toolbar-group"),
+            ui.div(class_="easi-dash-spacer"),
+            ui.download_button("dash_export", "Download CSV", class_="btn-outline-secondary btn-sm"),
+            class_="easi-dash-toolbar")
+        return ui.div(
+            ui.div(ui.div("Condition dashboard", class_="easi-dash-title"),
+                   toolbar,
+                   ui.output_ui("viewer_dashboard_body"),
+                   national_dashboard.footer_note(stats),
+                   class_="easi-dash-inner"),
+            class_="easi-dash")
+
+    @render.ui
+    def viewer_dashboard_body():
+        if app_mode() != "viewer" or input.viewer_view() != "dashboard":
+            return None
+        stats = viewer_stats()
+        if stats is None:
+            return None
+        panel = input.dash_panel()
+        if panel == "compare":
+            return ui.div(national_dashboard.summary_strip(stats, national_dashboard.NATIONAL),
+                          national_dashboard.compare_card(stats, input.dash_measure()))
+        scope = input.dash_scope()
+        if scope not in (stats.get("groups") or {}):
+            scope = national_dashboard.NATIONAL
+        mode = input.dash_fn_mode()
+        return ui.div(national_dashboard.summary_strip(stats, scope),
+                      ui.div(national_dashboard.indices_card(stats, scope),
+                             national_dashboard.functions_card(stats, scope, mode),
+                             class_="easi-dash-grid"),
+                      national_dashboard.sensitivity_card(stats, scope))
+
+    @render.download(filename="easi_screening_statistics.csv")
+    def dash_export():
+        stats = viewer_stats()
+        yield national_dashboard.export_csv(stats) if stats else "scope,scope_name,kind,measure,statistic,value\n"
 
 
 # Shiny for Python serves a static dir only when configured (no implicit www/).

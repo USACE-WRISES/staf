@@ -81,6 +81,18 @@ rebuilds the reach's full report from its stored evidence with the app's own
 adapters (`easi.national`). Set `EASI_NATIONAL_BASE` to read another base, such
 as the builder's local `staging/` folder.
 
+The screening pane's **Dashboard** view (`easi/national/dashboard.py`) draws the
+dataset's statistics asset (`stats.json`, built by the builder's staging step)
+as a condition dashboard: box-and-whisker plots of the ECI and the three
+sub-indices over the shaded condition bands, the rating shares of the 20
+functions by category (or, on a toggle, box plots of their three-valued
+scores), a function sensitivity table (spread of the ratings, share not rated,
+share from a screening proxy, the range across states) and a state comparison
+for any measure, with a scope select over the states screened so far and a
+CSV export. A reach belongs to the state containing the midpoint of its
+flowline; states with under half their reaches screened are drawn muted.
+Everything is precomputed, so the view needs no per-reach reads.
+
 ## How it scores (STAF rollup)
 
 Each metric is rated **Good / Fair / Poor**, mapped to an index (0–1) and a

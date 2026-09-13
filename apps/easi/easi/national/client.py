@@ -35,6 +35,7 @@ ENV_BASE = "EASI_NATIONAL_BASE"
 MANIFEST = "manifest.json"
 INDEX = "comid_huc4.parquet"
 COVERAGE = "coverage.geojson"
+STATS = "stats.json"
 
 _RESOLVE_TTL_S = 40 * 60.0
 _TABLE_CACHE = 8
@@ -81,6 +82,7 @@ class Dataset:
         self._manifest_at = 0.0
         self._tables: "OrderedDict[str, Any]" = OrderedDict()
         self._index = None
+        self._stats: Optional[tuple[Optional[str], dict]] = None
         self._resolved: dict[str, tuple[str, float]] = {}
 
     # ------------------------------------------------------------------ urls
@@ -316,6 +318,27 @@ class Dataset:
         except (OSError, ValueError):
             return None
 
+    def stats(self) -> Optional[dict]:
+        """The dashboard's statistics asset (distributions by state), or None
+        when the manifest lists none or it cannot be read. Cached per sha."""
+        sha = self.asset_sha(STATS)
+        if sha is None and self.local is None:
+            return None
+        with self._lock:
+            hit = self._stats
+            if hit is not None and hit[0] == sha:
+                return hit[1]
+        path = self.asset_path(STATS)
+        if path is None:
+            return None
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return None
+        with self._lock:
+            self._stats = (sha, data)
+        return data
+
     def summary(self) -> dict:
         """What the viewer header says: units, reaches, vintage, freshness."""
         manifest = self.manifest() or {}
@@ -348,6 +371,7 @@ class Dataset:
             self._manifest_at = 0.0
             self._tables.clear()
             self._index = None
+            self._stats = None
             self._resolved.clear()
 
 
