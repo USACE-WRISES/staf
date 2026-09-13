@@ -32,8 +32,10 @@ _HUC8_GROUPS = (("derive",), ("xs_sample",), ("xs_derive",), ("joins", "score"))
 
 def _chunk_stage_fn(name: str) -> Callable:
     from .stages import wqp as wqp_stage
-    from .stages import wqp_stations
-    wqp_fn = wqp_stage.run_wqp if config.WQP_METHOD == "cells" else wqp_stations.run_wqp
+    from .stages import wqp_local, wqp_stations
+    # the national ten-year parquet when it is on disk (no portal request at
+    # all); "stations" and "cells" force the two portal pulls
+    wqp_fn = {"cells": wqp_stage.run_wqp, "stations": wqp_stations.run_wqp}.get(config.WQP_METHOD, wqp_local.run_wqp)
     return {"streamcat": streamcat.run_streamcat, "geometry": geometry.run_geometry,
             "huc12": huc12.run_huc12, "wqp": wqp_fn,
             "attains": attains.run_attains, "nas": nas.run_nas}[name]

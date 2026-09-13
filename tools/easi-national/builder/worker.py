@@ -151,7 +151,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="EASI national builder worker")
     ap.add_argument("--root", default=None, help="data root (default EASI_NATIONAL_ROOT)")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("national")
+    n = sub.add_parser("national")
+    n.add_argument("--steps", nargs="*", default=None, help="only these national steps (default: all)")
     c = sub.add_parser("chunk")
     c.add_argument("--kind", required=True, choices=("huc8", "huc4", "state", "vpu"))
     c.add_argument("--value", required=True)
@@ -175,7 +176,9 @@ def main(argv=None) -> int:
     if args.cmd == "queue":
         return drain_queue(root)
     job = {"job": args.cmd}
-    if args.cmd == "chunk":
+    if args.cmd == "national":
+        job.update(steps=args.steps)
+    elif args.cmd == "chunk":
         job.update(kind=args.kind, value=args.value, stages=args.stages, huc8s=args.huc8s,
                    force=args.force, keep_dem_windows=args.keep_dem_windows)
     elif args.cmd == "tiles":

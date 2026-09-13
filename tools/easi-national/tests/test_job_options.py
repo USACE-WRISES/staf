@@ -50,6 +50,7 @@ def test_run_national_honours_the_step_filter(tmp_path, monkeypatch):
     monkeypatch.setattr(national, "_dem_catalog", lambda *a, **k: calls.append("dem1m"))
     monkeypatch.setattr(national, "_dem_catalog19", lambda *a, **k: calls.append("dem19"))
     monkeypatch.setattr(national, "_wqp_monthly", lambda *a, **k: calls.append("wqp_monthly"))
+    monkeypatch.setattr(national, "_comid_states", lambda *a, **k: calls.append("states"))
     monkeypatch.setattr(national, "_gdb_steps", lambda *a, **k: ())
     monkeypatch.setattr(national, "_inputs_for", lambda stage, root_: "x")
     states = state.UnitStates(root)
@@ -61,3 +62,4 @@ def test_run_national_honours_the_step_filter(tmp_path, monkeypatch):
     calls.clear()
     national.run_national(root, states, progress, state.Control(root))
     assert calls[:4] == ["fetch_vaa", "fetch_enhd", "build_slim", "build_index"] and "fetch_nid" not in calls
+    assert calls[-1] == "states"                    # after the geodatabase conversions it reads

@@ -64,7 +64,16 @@ def _inputs_for(stage: str, root: DataRoot) -> str:
         return digest(stage, "s3-listings", 2)
     if stage == "dem19_index":
         return digest(stage, "s3-listings", 1)
+    if stage == "states":
+        from . import states
+        return digest(stage, states.CENSUS_VINTAGE, 1)
     return _stage_inputs(stage)
+
+
+def _comid_states(root: DataRoot, progress: Progress):
+    """Every flowline's state from its midpoint (the dashboard's state filter)."""
+    from . import states
+    return states.run_states(root, progress)
 
 
 def _dem_catalog(root: DataRoot, progress: Progress, control: Control):
@@ -283,7 +292,10 @@ def run_national(root: DataRoot, states: UnitStates, progress: Progress,
         ("dem1m_index", lambda: _dem_catalog(root, progress, control)),
         ("dem19_index", lambda: _dem_catalog19(root, progress, control)),
         ("wqp_monthly", lambda: _wqp_monthly(root, progress, control)),
-    ) + _gdb_steps(root, progress)
+    ) + _gdb_steps(root, progress) + (
+        # after the geodatabase conversions: reads flowlines.parquet
+        ("states", lambda: _comid_states(root, progress)),
+    )
     wanted = {str(s) for s in steps} if steps else None
     for stage, fn in all_steps:
         if wanted is not None and stage not in wanted:
