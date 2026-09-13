@@ -82,6 +82,35 @@ def test_local_dataset_reads_records_scores_and_summary(tmp_path):
     assert ds.coverage()["type"] == "FeatureCollection"
 
 
+def test_stats_asset_reads_locally_and_only_when_listed_remotely(tmp_path, monkeypatch):
+    src = tmp_path / "ds"
+    manifest = _write_dataset(src)
+    ds = client.Dataset(base=str(src))
+    assert ds.stats() is None                                   # not in the directory
+    (src / client.STATS).write_text(json.dumps({"schema_version": 1, "groups": {"US": {"n": 2}}}),
+                                    encoding="utf-8")
+    assert ds.stats()["groups"]["US"]["n"] == 2                  # a directory serves it even unlisted
+    # remote: nothing is fetched unless the manifest lists the asset
+    base = "https://example.test/releases/download/easi-national-current/"
+    fetched = []
+
+    def get(url, stream=False, timeout=None, headers=None):
+        name = url.rsplit("/", 1)[1].split("?")[0]
+        fetched.append(name)
+        return _FakeResponse(200, (src / name).read_bytes())
+
+    monkeypatch.setattr(client.requests, "head", lambda *a, **k: _FakeResponse(200))
+    monkeypatch.setattr(client.requests, "get", get)
+    remote = client.Dataset(base=base, cache_dir=tmp_path / "cache", manifest_ttl_s=0)
+    assert remote.stats() is None and fetched == [client.MANIFEST]
+    manifest["assets"][client.STATS] = {"asset": client.STATS, "sha256": _sha(src / client.STATS)}
+    (src / client.MANIFEST).write_text(json.dumps(manifest), encoding="utf-8")
+    remote.clear()
+    assert remote.stats()["groups"]["US"]["n"] == 2
+    assert remote.stats() is remote.stats()                     # cached per sha, no second download
+    assert fetched.count(client.STATS) == 1
+
+
 def test_env_override_picks_a_local_directory(tmp_path, monkeypatch):
     _write_dataset(tmp_path / "ds")
     monkeypatch.setenv(client.ENV_BASE, str(tmp_path / "ds"))

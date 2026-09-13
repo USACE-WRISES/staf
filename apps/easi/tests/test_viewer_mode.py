@@ -112,6 +112,23 @@ def test_viewer_workspace_render_never_reads_the_summary():
     assert 'class_="easi-viewer-legend-foot"' in body
 
 
+def test_the_dashboard_is_an_overlay_the_map_never_re_renders_for():
+    """Map | Dashboard is static markup in the workspace; only the overlay's
+    own output reads it, so flipping it leaves the map's container alone."""
+    start = SRC.index("def viewer_workspace():")
+    body = SRC[start:SRC.index("class_=\"easi-viewer\")", start)]
+    assert 'ui.input_radio_buttons("viewer_view", None, {"map": "Map", "dashboard": "Dashboard"}' in body
+    assert 'class_="easi-viewer-head"' in body and 'ui.output_ui("viewer_dashboard")' in body
+    assert "input.viewer_view()" not in body and "viewer_stats()" not in body
+    dash = SRC[SRC.index("def viewer_dashboard():"):SRC.index("def viewer_dashboard_body():")]
+    assert 'input.viewer_view() != "dashboard"' in dash and "national_dashboard.scope_choices(stats)" in dash
+    assert "input.dash_panel == 'scope'" in dash and "input.dash_panel == 'compare'" in dash
+    assert 'ui.download_button("dash_export"' in dash and "_dash_current(" in dash
+    assert "viewer_stats.set(stats)" in SRC and "viewer_stats.set(None)" in SRC
+    config_task = SRC[SRC.index("async def viewer_config_task"):SRC.index("def _viewer_config_request")]
+    assert "ds.stats()" in config_task
+
+
 def test_viewer_reports_open_in_two_phases():
     """The record scores at once (no network) and the modal opens with a
     placeholder thumbnail; the live basin and reach follow in a second task
