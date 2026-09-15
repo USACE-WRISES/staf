@@ -11,6 +11,8 @@ D:\\Data\\easi-national\\
   staging\\            the asset set of the next publish
   state\\              units.json, progress.json, control.json, queue.json,
                       rates.json, publish_log.jsonl, ledgers\\
+  analysis\\           the sensitivity analysis (builder.analysis): strata, caches,
+                      values, panels, curves, runs, report
 """
 from __future__ import annotations
 
@@ -56,6 +58,13 @@ class DataRoot:
     @property
     def ledgers(self) -> Path:
         return self.state / "ledgers"
+
+    @property
+    def analysis(self) -> Path:
+        return self.root / "analysis"
+
+    def analysis_file(self, *parts: str) -> Path:
+        return self.analysis.joinpath(*parts)
 
     # national one-offs
     @property

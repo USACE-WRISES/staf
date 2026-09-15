@@ -66,7 +66,12 @@ def _wqp_index(root: DataRoot, chunk: Chunk, param: str):
     path = root.chunk_raw(chunk.id, f"wqp_{param}")
     if not path.exists():
         return None
-    rows = pq.read_table(path).to_pylist()
+    return wqp_index_from_rows(pq.read_table(path).to_pylist())
+
+
+def wqp_index_from_rows(rows: list[dict]):
+    """The station index ``wqp_summary`` reads, from normalized result rows
+    (``station, value, reason, date, lat, lon``)."""
     stations: dict[str, dict] = {}
     for r in rows:
         s = stations.setdefault(r["station"], {"rows": [], "lat": None, "lon": None})
@@ -127,13 +132,17 @@ def wqp_summary(index, param: str, lat: float, lon: float, x: float, y: float,
 
 # --------------------------------------------------------------- ATTAINS
 def _attains_index(root: DataRoot, chunk: Chunk):
-    import numpy as np
     import pyarrow.parquet as pq
     path = root.chunk_raw(chunk.id, "attains")
     if not path.exists():
         return None
-    table = pq.read_table(path)
-    rows = table.to_pylist()
+    return attains_index_from_rows(pq.read_table(path).to_pylist())
+
+
+def attains_index_from_rows(rows: list[dict]):
+    """The bounds index ``attains_lookup`` reads, from rows in the ATTAINS
+    chunk schema (``geometry`` as ESRI JSON text plus ``minx..maxy``)."""
+    import numpy as np
     return {"rows": rows,
             "minx": np.array([r["minx"] for r in rows]), "miny": np.array([r["miny"] for r in rows]),
             "maxx": np.array([r["maxx"] for r in rows]), "maxy": np.array([r["maxy"] for r in rows]),

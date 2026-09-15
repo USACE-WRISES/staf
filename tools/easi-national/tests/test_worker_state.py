@@ -39,3 +39,34 @@ def test_pid_alive_knows_this_process_and_a_dead_one():
     assert state.pid_alive(os.getpid())
     assert not state.pid_alive(2 ** 22 + 12345)
     assert not state.pid_alive(None)
+
+
+def test_state_run_jobs_are_tagged_so_shared_jobs_survive_the_queue(tmp_path, monkeypatch):
+    from builder import worker
+    from builder.units import Chunk
+    root = DataRoot(tmp_path / "data").ensure()
+
+    def fake_chunk(root_, kind, value):
+        vpus = {"MT": ["10U"], "WY": ["10L", "10U"]}[value.upper()]
+        return Chunk(id=f"state-{value.upper()}", kind="state", label=value, huc8s=[], vpus=vpus)
+
+    monkeypatch.setattr(worker, "_chunk_for", fake_chunk)
+    # the trap the tag exists for: identical untagged items are dropped
+    state.Queue(root).append([{"job": "stage"}, {"job": "publish"}, {"job": "stage"}])
+    assert [i["job"] for i in state.Queue(root).read()] == ["stage", "publish"]
+    state.Queue(root).clear()
+
+    worker.queue_state_run(root, "mt")
+    worker.queue_state_run(root, "WY")
+    items = state.Queue(root).read()
+    assert [i["job"] for i in items] == ["chunk", "tiles", "stage", "publish",
+                                         "chunk", "tiles", "tiles", "stage", "publish"]
+    assert [i["for"] for i in items] == ["MT"] * 4 + ["WY"] * 5
+    assert sum(1 for i in items if i["job"] == "tiles" and i["vpu"] == "10U") == 2
+    assert items[0] == {"job": "chunk", "kind": "state", "value": "MT", "for": "MT"}
+    assert worker.job_label(items[0]) == "Chunk state MT"
+    assert worker.job_label(items[1]) == "Tiles 10U (for MT)"
+    assert worker.job_label(items[3]) == "Publish (for MT)"
+    # queueing a state twice adds nothing
+    worker.queue_state_run(root, "MT")
+    assert len(state.Queue(root).read()) == 9

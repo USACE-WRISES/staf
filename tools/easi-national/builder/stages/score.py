@@ -94,17 +94,7 @@ def run_score(root: DataRoot, chunk: Chunk, huc8: str, states: UnitStates,
             j = joins.get(comid) or {}
             xrow = xsections.get(comid)
             geomorph = geomorph_for(xrow)
-            record = {
-                **{k: d.get(k) for k in records.IDENTITY_FIELDS},
-                "streamcat": sc_rows.get(comid) or {},
-                "nrsa": _load(d.get("nrsa")), "bankfull": _load(d.get("bankfull")),
-                "attains_exact": _load(j.get("attains_exact")) or {},
-                "attains_nearby": _load(j.get("attains_nearby")) or {},
-                "wqp_tn": _load(j.get("wqp_tn")), "wqp_tp": _load(j.get("wqp_tp")),
-                "nid_dams": _load(j.get("nid_dams")), "nas_taxa": _load(j.get("nas_taxa")),
-                "nas_scope": j.get("nas_scope"), "geomorph": geomorph,
-                "schema_version": SCHEMA_VERSION,
-            }
+            record = record_for(d, j, geomorph, sc_rows.get(comid) or {})
             report = client.score_record(record, cross_section=False)
             evidence_rows.append(records.to_row(record))
             score_rows.append({"comid": comid, "huc4": d["huc4"], "huc8": huc8, "vpu": d.get("vpu"),
@@ -128,6 +118,25 @@ def run_score(root: DataRoot, chunk: Chunk, huc8: str, states: UnitStates,
         progress.say(f"{huc8} scores.parquet: {len(score_rows):,} reaches, bands {bands}")
 
     common.run_stage(states, huc8, STAGE, inputs, work, progress, force=force)
+
+
+def record_for(d: dict, j: dict, geomorph, sc_row: dict) -> dict:
+    """The evidence record of one reach (the app's ``records`` contract) from
+    its derived row, its joins row, its published geomorph block (see
+    ``geomorph_for``) and its StreamCat row. Shared with the analysis
+    package, which re-scores the same records."""
+    from easi.national import SCHEMA_VERSION, records
+    return {
+        **{k: d.get(k) for k in records.IDENTITY_FIELDS},
+        "streamcat": sc_row or {},
+        "nrsa": _load(d.get("nrsa")), "bankfull": _load(d.get("bankfull")),
+        "attains_exact": _load(j.get("attains_exact")) or {},
+        "attains_nearby": _load(j.get("attains_nearby")) or {},
+        "wqp_tn": _load(j.get("wqp_tn")), "wqp_tp": _load(j.get("wqp_tp")),
+        "nid_dams": _load(j.get("nid_dams")), "nas_taxa": _load(j.get("nas_taxa")),
+        "nas_scope": j.get("nas_scope"), "geomorph": geomorph,
+        "schema_version": SCHEMA_VERSION,
+    }
 
 
 def geomorph_for(xrow) -> object:

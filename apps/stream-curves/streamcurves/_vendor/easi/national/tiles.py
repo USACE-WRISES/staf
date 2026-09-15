@@ -10,14 +10,23 @@ sha256, so a rebuilt archive never serves stale offsets.
 """
 from __future__ import annotations
 
+import logging
 import threading
+import time
 from collections import OrderedDict
 from typing import Callable, Optional
 
 from .client import Dataset, tiles_asset
 
+_LOG = logging.getLogger(__name__)
 _MAX_CACHED_RANGE = 4 << 20        # never cache a single range above 4 MB
 _DEFAULT_ENTRIES = 2048
+_SLOW_TILE_S = 1.0                 # a lookup slower than this is logged as a warning (the app configures
+                                   # no INFO handler, so a warning is what reaches the server log)
+
+
+class TileReadError(RuntimeError):
+    """A tile the archive should hold could not be read (a failed range fetch)."""
 
 # pmtiles.tile.Compression values -> the HTTP Content-Encoding a browser accepts
 _ENCODINGS = {1: None, 2: "gzip", 3: "br", 4: "zstd"}
@@ -114,10 +123,16 @@ class TileStore:
         src = self.source(vpu)
         if src is None:
             return None, None, "application/octet-stream"
+        started = time.perf_counter()
         try:
             data = src.get(z, x, y)
-        except Exception:  # noqa: BLE001 - a failed range read is an empty tile
-            return None, None, src.media_type
+        except Exception as exc:  # noqa: BLE001 - the route answers 502; the map asks again on the next view
+            _LOG.warning("tile %s/%d/%d/%d failed after %.0f ms: %s", vpu, z, x, y,
+                         1000 * (time.perf_counter() - started), exc)
+            raise TileReadError(f"{vpu}/{z}/{x}/{y}: {exc}") from exc
+        elapsed = time.perf_counter() - started
+        _LOG.log(logging.WARNING if elapsed >= _SLOW_TILE_S else logging.DEBUG,
+                 "tile %s/%d/%d/%d: %d bytes in %.0f ms", vpu, z, x, y, len(data) if data else 0, 1000 * elapsed)
         return data, src.encoding, src.media_type
 
     def clear(self) -> None:

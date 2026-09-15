@@ -78,6 +78,12 @@ DEM_CATALOG_WORKERS = int(os.environ.get("EASI_NATIONAL_DEM_CATALOG_WORKERS") or
 #: The 21 StreamCat base names the adapters read (registry.STREAMCAT_NAMES is
 #: the source of truth; imported lazily to avoid the easi import at config time).
 STREAMCAT_AOIS = ("ws", "cat", "wsrp100")
+#: The area-of-interest token for StreamCat metrics that have no watershed or
+#: catchment scale (the predicted benthic condition prg_bmmi0809, the NRSA
+#: sample frame, the NARS region): the API answers them only under ``other``.
+STREAMCAT_OTHER_AOI = (os.environ.get("EASI_NATIONAL_STREAMCAT_OTHER_AOI") or "other").strip()
+#: Processes for the analysis package's per-HUC8 harvest (builder.analysis).
+ANALYSIS_WORKERS = int(os.environ.get("EASI_NATIONAL_ANALYSIS_WORKERS") or 0) or HUC8_WORKERS
 
 
 def data_root() -> Path:

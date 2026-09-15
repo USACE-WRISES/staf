@@ -17,9 +17,22 @@
   var BASEMAP = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}";
 
   var state = { map: null, config: null, popup: null, busy: null, styleReady: false,
-                lineLayers: [], hover: null };
+                lineLayers: [], hover: null,
+                loading: { pending: false, showTimer: null, longTimer: null, safetyTimer: null,
+                           noteTimer: null, failed: 0 } };
   var HIT_PX = 8;          // half-width of the box a click or hover searches for a reach
   var GLOW_MIN_ZOOM = 7;   // below this the lines are hairlines and a glow means nothing
+  // the tile-loading cue: shown once a screening source has been fetching for
+  // SHOW_DELAY_MS (a cached tile never flashes it), reworded after LONG_MS so a
+  // slow fetch never reads as stuck, hidden on the map's idle event or, whatever
+  // the map reports, after SAFETY_MS
+  var SHOW_DELAY_MS = 300;
+  var LONG_MS = 6000;
+  var SAFETY_MS = 60000;
+  var NOTE_MS = 6000;
+  var LOADING_TEXT = "Loading screening tiles…";
+  var LONG_TEXT = "Still loading screening tiles…";
+  var FAILED_TEXT = "Some screening tiles did not load, use Refresh to retry.";
 
   function absolute(url) {
     try { return new URL(url, window.location.href).href; } catch (e) { return url; }
@@ -254,6 +267,85 @@
     if (text && ttl) state.busy = setTimeout(function () { el.hidden = true; }, ttl);
   }
 
+  function loadingElement() {
+    return document.getElementById("easi-viewer-loading");
+  }
+
+  function setLoadingCue(text) {
+    var el = loadingElement();
+    if (!el) return;
+    // the text lives in its own span so the spinner element (and its
+    // animation) survives every wording change
+    var span = el.querySelector ? el.querySelector(".easi-viewer-loading-text") : null;
+    if (span) span.textContent = text; else el.textContent = text;
+    el.hidden = false;
+  }
+
+  function clearLoadingTimers() {
+    var l = state.loading;
+    ["showTimer", "longTimer", "safetyTimer"].forEach(function (name) {
+      if (l[name]) { clearTimeout(l[name]); l[name] = null; }
+    });
+  }
+
+  function hideLoadingCue() {
+    clearLoadingTimers();
+    state.loading.pending = false;
+    var el = loadingElement();
+    if (el) el.hidden = true;
+  }
+
+  function screeningSource(e) {
+    // the coverage polygons and every region's reaches are "easi-" sources;
+    // the basemap is not ours to report on
+    var id = e && (e.sourceId || (e.source && e.source.id));
+    return typeof id === "string" && id.indexOf("easi-") === 0;
+  }
+
+  function onSourceLoading(e) {
+    if (!screeningSource(e)) return;
+    var l = state.loading;
+    l.pending = true;
+    if (!l.safetyTimer) l.safetyTimer = setTimeout(function () { l.safetyTimer = null; hideLoadingCue(); }, SAFETY_MS);
+    if (l.showTimer || !loadingElement()) return;
+    l.showTimer = setTimeout(function () {
+      l.showTimer = null;
+      if (!l.pending) return;
+      setLoadingCue(LOADING_TEXT);
+      l.longTimer = setTimeout(function () {
+        l.longTimer = null;
+        if (l.pending) setLoadingCue(LONG_TEXT);
+      }, LONG_MS - SHOW_DELAY_MS);
+    }, SHOW_DELAY_MS);
+  }
+
+  function onIdle() {
+    // idle: every requested tile has arrived or failed and the frame is drawn
+    var l = state.loading;
+    var failed = l.failed;
+    hideLoadingCue();
+    if (!failed) return;
+    l.failed = 0;
+    setLoadingCue(FAILED_TEXT);
+    if (l.noteTimer) clearTimeout(l.noteTimer);
+    l.noteTimer = setTimeout(function () {
+      l.noteTimer = null;
+      if (!l.pending) hideLoadingCue();
+    }, NOTE_MS);
+  }
+
+  function onMapError(e) {
+    // a tile the route answered with an error (a failed range read is 502;
+    // an empty tile is 204 and never reaches here); the note waits for idle.
+    // Listening for "error" silences MapLibre's own console report of every
+    // other error, so those are logged here instead
+    if (!e || !e.tile || !screeningSource(e)) {
+      if (e && e.error && window.console && window.console.error) window.console.error(e.error);
+      return;
+    }
+    state.loading.failed += 1;
+  }
+
   function init(config) {
     var container = document.getElementById("easi-viewer-map");
     if (!container || !window.maplibregl) return;
@@ -279,6 +371,11 @@
       state.map.on("mousemove", onMove);
       state.map.on("mouseout", onLeave);
       state.map.on("click", onMapClick);
+      // the loading cue: a screening source starts fetching, idle means every
+      // requested tile has arrived (or failed) and the frame is drawn
+      state.map.on("sourcedataloading", onSourceLoading);
+      state.map.on("idle", onIdle);
+      state.map.on("error", onMapError);
       // style.load fires once the style is parsed, before every basemap tile has
       // arrived; the sources can be added from then on (load would wait for tiles)
       state.styleReady = false;
@@ -306,6 +403,9 @@
     void message;
     if (state.popup) { state.popup.remove(); state.popup = null; }
     if (state.map) { try { state.map.remove(); } catch (e) { /* already gone */ } }
+    hideLoadingCue();
+    if (state.loading.noteTimer) { clearTimeout(state.loading.noteTimer); state.loading.noteTimer = null; }
+    state.loading.failed = 0;
     state.map = null;
     state.config = null;
     state.styleReady = false;
@@ -333,5 +433,6 @@
   }
 
   window.EASIViewer = { init: init, teardown: teardown, describe: describe, tileUrl: tileUrl, state: state,
-                        nearestReach: nearestReach, HIT_PX: HIT_PX };
+                        nearestReach: nearestReach, HIT_PX: HIT_PX,
+                        SHOW_DELAY_MS: SHOW_DELAY_MS, NOTE_MS: NOTE_MS };
 })();

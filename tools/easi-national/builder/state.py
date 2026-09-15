@@ -382,6 +382,13 @@ STAGE_LABELS = {
     "joins": "point-service joins", "score": "score", "tiles": "tiles", "stage": "staging",
     "publish": "publish", "vaa": "NHDPlus attributes", "index": "COMID index",
     "nid": "dam inventory", "huc4": "HUC4 polygons",
+    # the sensitivity analysis (builder.analysis)
+    "strata": "analysis: strata table", "candidates": "analysis: candidate StreamCat pull",
+    "erom": "analysis: EROM flows", "attains": "analysis: ATTAINS unit attributes",
+    "landscape": "analysis: landscape table", "values": "analysis: values table",
+    "nrsa": "analysis: NRSA frame", "panels": "analysis: reference panels",
+    "curves": "analysis: reference curves", "runs": "analysis: scoring runs",
+    "stats": "analysis: statistics", "report": "analysis: report",
 }
 
 

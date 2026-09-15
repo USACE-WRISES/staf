@@ -4,7 +4,9 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
+import logging
 
+import pytest
 from pmtiles.tile import Compression, TileType, zxy_to_tileid
 from pmtiles.writer import Writer
 
@@ -81,3 +83,32 @@ def test_a_rebuilt_archive_replaces_the_source(tmp_path):
     after = store.source("02")
     assert after is not before
     assert gzip.decompress(store.tile("02", 0, 0, 0)[0]) == b"tile-000-v2"
+
+
+def test_a_failed_range_read_raises_and_logs(tmp_path, monkeypatch, caplog):
+    ds, _ = _dataset(tmp_path)
+    store = tiles.TileStore(ds)
+    src = store.source("02")
+
+    def failing(offset, length):
+        raise OSError("connection reset")
+
+    monkeypatch.setattr(src, "_raw", failing)
+    src._cache.clear()                                   # the next lookup has to read the archive again
+    with caplog.at_level(logging.WARNING, logger="easi.national.tiles"):
+        with pytest.raises(tiles.TileReadError):
+            store.tile("02", 0, 0, 0)
+    assert any(r.getMessage().startswith("tile 02/0/0/0 failed") for r in caplog.records)
+
+
+def test_a_slow_tile_is_logged_as_a_warning(tmp_path, monkeypatch, caplog):
+    ds, _ = _dataset(tmp_path)
+    store = tiles.TileStore(ds)
+    with caplog.at_level(logging.DEBUG, logger="easi.national.tiles"):
+        store.tile("02", 0, 0, 0)                        # a fast lookup stays at DEBUG
+        monkeypatch.setattr(tiles, "_SLOW_TILE_S", 0.0)
+        store.tile("02", 1, 0, 0)
+    fast = [r for r in caplog.records if r.getMessage().startswith("tile 02/0/0/0:")]
+    slow = [r for r in caplog.records if r.getMessage().startswith("tile 02/1/0/0:")]
+    assert fast and fast[-1].levelno == logging.DEBUG
+    assert slow and slow[-1].levelno == logging.WARNING and "bytes in" in slow[-1].getMessage()

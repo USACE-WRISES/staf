@@ -196,3 +196,42 @@ The worker buttons (Start, Pause, Resume, Stop now) are the same controls on
 every tab: the tabs only append jobs to the queue.
 
 Test: `python -m pytest` from this folder.
+
+## The sensitivity analysis (builder.analysis)
+
+The stress test of the EASI scoring over the national dataset (see
+`notes/EASI_Rework/` for the brief, the decisions and the protocol). It
+reads the evidence the builder wrote and never touches the scoring code:
+`method_version()` stays as it is and the published scores are the baseline
+every scheme is measured against.
+
+```
+python -m builder.analysis --steps strata candidates erom attains       # national caches (once)
+python -m builder.analysis --steps landscape values nrsa                # the tables
+python -m builder.analysis --steps panels curves runs stats report      # the stress test
+python -m builder.worker analysis --steps ...                           # the same as a queue job
+```
+
+Every step writes under `<data root>/analysis/`, records a done marker in
+`state/units.json` (unit `analysis`) with an inputs digest, and is skipped
+while that digest matches (`--force` reruns). The command-line entry keeps
+its own heartbeat (`state/analysis_progress.json`) so it can run beside a
+queue worker.
+
+| step | writes | what |
+|---|---|---|
+| `strata` | `strata.parquet`, `l3_to_l2_l1.csv`, `strata_parity.json` | every flowline's Level III / II / I, NARS-9 and physiographic keys, HUC12, state, anchor, flowline sinuosity and the slope, drainage-area and FCODE classes; the crosswalk from the NRSA site files |
+| `candidates` | `streamcat_candidates.parquet` | about 60 StreamCat names the candidate metrics read, pulled by region with a per-name area of interest (`prg_bmmi0809`, `nrsa_frame`, `nars_region` only under `other`), after a probe of every name and scale |
+| `erom` | `erom.parquet` | the EROM flow estimates per reach from the seamless geodatabase and the low-flow, variability and alteration ratios |
+| `attains` | `attains_au_attributes.parquet` | every ATTAINS assessment unit with its per-use statuses, cause columns and the two aquatic-life-use ratings |
+| `landscape` | `landscape.parquet` | every reach: strata, cached StreamCat columns, candidates, EROM and the derived screen and curve quantities (checked against the values table) |
+| `values` | `values.parquet`, `parity_A.json` | every scored reach re-scored with the app's evaluator; the flattened scoring trace (every input value, per-input rating, context), cross-section extras, evidence facts; scheme A parity is asserted |
+| `nrsa` | `nrsa/nrsa_targets.parquet`, `nrsa_desktop.parquet`, `nrsa_frame.parquet`, `screen_check.csv` | the NRSA condition classes and field indicators per station visit, the desktop metrics per station (stored evidence inside the scored extent, synthetic records from the caches outside it), and the reference-screen check against EPA's 2013-14 designations |
+| `panels` | `panels/reference_panels.parquet`, `panel_members.parquet` | least-disturbed panels per level and stratum: the strict desktop screen, one reach per HUC12, floors of 100 and 30, the relaxed tier below them |
+| `curves` | `curves/curve_registry.parquet`, `curve_points.parquet`, `curves_<level>.json` | the reference curves per quantity, level and stratum (StreamCurves' engine), their 0.69 / 0.39 crossings, the usability rules and the fallback chain |
+| `runs` | `schemes/<run>.parquet`, `candidates_<run>.parquet`, `scheme_comparison.csv`, `pinned_cells.csv`, `sanity_gradients.csv` | the runs S0, SN, S9, S2, S3 with the continuous, banded and mix views, the candidate substitutions, and the comparison tables |
+| `stats` | `stats/*.csv`, `validation/*.csv`, `stability/*.csv` | distributions and flags, variance shares, the level tables (T-L1, T-L2), the paradigm tables (T-P1 to T-P3), border excess, the NRSA agreement and the panel bootstraps |
+| `report` | `report/index.html`, `scorecards/`, `maps/`, `routes.csv`, `decision_sheet.md` | the report the owner decides from |
+
+Tests: `tests/test_analysis_*.py` (synthetic fixtures; the values and NRSA
+tests run the real evaluator over hand-built records).

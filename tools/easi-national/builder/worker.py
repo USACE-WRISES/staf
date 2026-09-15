@@ -82,10 +82,39 @@ def hard_stop(root: DataRoot) -> dict:
 def job_label(job: dict) -> str:
     kind = job.get("job")
     if kind == "chunk":
-        return f"Chunk {job.get('kind', '')} {job.get('value', '')}".strip()
-    if kind == "tiles":
-        return f"Tiles {job.get('vpu', '')}".strip()
-    return {"national": "National pulls", "stage": "Staging", "publish": "Publish"}.get(kind, str(kind))
+        label = f"Chunk {job.get('kind', '')} {job.get('value', '')}".strip()
+    elif kind == "tiles":
+        label = f"Tiles {job.get('vpu', '')}".strip()
+    else:
+        label = {"national": "National pulls", "stage": "Staging", "publish": "Publish",
+                 "analysis": "Analysis"}.get(kind, str(kind))
+    if job.get("for") and kind != "chunk":
+        label = f"{label} (for {job['for']})"
+    return label
+
+
+def state_run_jobs(root: DataRoot, abbr: str) -> list[dict]:
+    """The full run of one state as queue items, in order: the chunk (every
+    stage), the tiles of every VPU the chunk touches, staging, publish.
+
+    Every item carries ``"for": <state>``. ``Queue.append`` drops an item that
+    is identical to one already queued, so without the tag a second state's
+    ``stage``/``publish`` pair, or its ``tiles`` job for a VPU it shares with
+    an earlier state (MT and WY both touch 10U), would vanish silently. The
+    tag makes each state's jobs distinct; ``run_job`` ignores it."""
+    abbr = abbr.upper()
+    chunk = _chunk_for(root, "state", abbr)
+    tag = {"for": abbr}
+    return ([{"job": "chunk", "kind": "state", "value": abbr, **tag}]
+            + [{"job": "tiles", "vpu": vpu, **tag} for vpu in chunk.vpus]
+            + [{"job": "stage", **tag}, {"job": "publish", **tag}])
+
+
+def queue_state_run(root: DataRoot, abbr: str) -> list[dict]:
+    """Append one state's full run to the queue (see ``state_run_jobs``)."""
+    items = state_run_jobs(root, abbr)
+    Queue(root).append(items)
+    return items
 
 
 def run_job(root: DataRoot, job: dict, states: UnitStates, progress: Progress,
@@ -110,6 +139,10 @@ def run_job(root: DataRoot, job: dict, states: UnitStates, progress: Progress,
     elif kind == "publish":
         from . import publish
         publish.run_publish(root, progress, dry_run=bool(job.get("dry_run")))
+    elif kind == "analysis":
+        from .analysis import runner
+        runner.run_analysis(root, states, progress, control, steps=job.get("steps") or None,
+                            force=bool(job.get("force")), options=job.get("options") or {})
     else:
         raise ValueError(f"unknown job {kind!r}")
     Rates(root).record(f"job:{kind}", 1, time.monotonic() - started)
@@ -168,6 +201,14 @@ def main(argv=None) -> int:
     p = sub.add_parser("publish")
     p.add_argument("--dry-run", action="store_true")
     sub.add_parser("queue")
+    a = sub.add_parser("analysis", help="the sensitivity analysis steps (builder.analysis)")
+    a.add_argument("--steps", nargs="*", default=None, help="only these analysis steps (default: all)")
+    a.add_argument("--force", action="store_true")
+    a.add_argument("--workers", type=int, default=None)
+    a.add_argument("--levels", nargs="*", default=None)
+    a.add_argument("--screen", default=None)
+    a.add_argument("--phase", default=None)
+    a.add_argument("--reuse", nargs="*", default=None, choices=["distributions", "validation", "stability"])
     args = ap.parse_args(argv)
 
     from pathlib import Path
@@ -185,6 +226,10 @@ def main(argv=None) -> int:
         job.update(vpu=args.vpu, force=args.force)
     elif args.cmd == "publish":
         job.update(dry_run=args.dry_run)
+    elif args.cmd == "analysis":
+        options = {k: v for k, v in (("workers", args.workers), ("levels", args.levels),
+                                     ("screen", args.screen), ("phase", args.phase), ("reuse", args.reuse)) if v is not None}
+        job.update(steps=args.steps, force=args.force, options=options)
     states, progress, control = UnitStates(root), Progress(root), Control(root)
     control.clear()
     try:

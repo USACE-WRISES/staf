@@ -51,17 +51,25 @@ function harness() {
   const handlers = new Map();
   const inputs = [];
   const status = { textContent: "", hidden: true };
+  const loadingText = { textContent: "Loading screening tiles…" };
+  const loading = {
+    hidden: true, textContent: "",
+    querySelector(selector) { return selector === ".easi-viewer-loading-text" ? loadingText : null; },
+  };
   const mapDiv = { id: "easi-viewer-map" };
   const document = {
     getElementById(id) {
       if (id === "easi-viewer-map") return mapDiv;
       if (id === "easi-viewer-status") return status;
+      if (id === "easi-viewer-loading") return loading;
       return null;
     },
     addEventListener() {},
   };
   const maplibregl = fakeMaplibre();
+  const logged = [];
   const window = {
+    console: { error(message) { logged.push(message); }, warn() {}, log() {} },
     location: { href: "https://example.test/app/" },
     Shiny: {
       addCustomMessageHandler(name, fn) { handlers.set(name, fn); },
@@ -75,7 +83,19 @@ function harness() {
   const context = vm.createContext({ window, document, URL, setTimeout, clearTimeout, Date, Number, String, Math, Infinity, encodeURIComponent, console });
   const src = fs.readFileSync(path.join(__dirname, "..", "www", "viewer.js"), "utf8");
   vm.runInContext(src, context);
-  return { handlers, inputs, status, maplibregl, window, mapDiv };
+  return { handlers, inputs, status, loading, loadingText, logged, maplibregl, window, mapDiv };
+}
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function loadedViewer(vpus) {
+  const h = harness();
+  h.handlers.get("easi-viewer-init")({ routeBase: "session/abc/dynamic_route/national-tiles?nonce=1",
+                                       vpus: vpus || ["02"], minzoom: 4, maxzoom: 12 });
+  const map = h.maplibregl.maps[0];
+  map.loaded = true;
+  map.fire("style.load");
+  return { h, map };
 }
 
 // objects built inside the script's VM have another realm's prototypes, so
@@ -214,4 +234,39 @@ test("hover text carries the ECI and the three sub-indices; teardown removes the
   assert.equal(map.removed, true);
   assert.equal(h.window.EASIViewer.state.map, null);
   same(h.window.EASIViewer.state.lineLayers, []);
+});
+
+test("a screening source that keeps loading shows the cue after a short delay and idle hides it", async () => {
+  const { h, map } = loadedViewer();
+  const delay = h.window.EASIViewer.SHOW_DELAY_MS + 80;
+  assert.ok(map.handlers["sourcedataloading"] && map.handlers["idle"] && map.handlers["error"], "cue handlers registered");
+  map.fire("sourcedataloading", { dataType: "source", sourceId: "basemap", tile: {} });
+  await wait(delay);
+  assert.equal(h.loading.hidden, true, "the basemap never shows the cue");
+  map.fire("sourcedataloading", { dataType: "source", sourceId: "easi-02", tile: {} });
+  assert.equal(h.loading.hidden, true, "nothing before the delay");
+  await wait(delay);
+  assert.equal(h.loading.hidden, false);
+  assert.equal(h.loadingText.textContent, "Loading screening tiles…");
+  map.fire("idle");
+  assert.equal(h.loading.hidden, true, "idle hides the cue");
+  // a tile that arrives before the delay (browser cache) never flashes the cue
+  map.fire("sourcedataloading", { dataType: "source", sourceId: "easi-coverage" });
+  map.fire("idle");
+  await wait(delay);
+  assert.equal(h.loading.hidden, true);
+});
+
+test("a failed screening tile leaves a note once the map is idle; teardown clears it", async () => {
+  const { h, map } = loadedViewer();
+  map.fire("sourcedataloading", { dataType: "source", sourceId: "easi-02", tile: {} });
+  map.fire("error", { error: new Error("502"), sourceId: "easi-02", tile: {} });
+  map.fire("error", { error: new Error("style"), sourceId: "basemap" });        // not a tile of ours
+  assert.equal(h.logged.length, 1, "other errors still reach the console");
+  map.fire("idle");
+  assert.equal(h.loading.hidden, false);
+  assert.equal(h.loadingText.textContent, "Some screening tiles did not load, use Refresh to retry.");
+  h.handlers.get("easi-viewer-teardown")({});
+  assert.equal(h.loading.hidden, true);
+  assert.equal(h.window.EASIViewer.state.loading.failed, 0);
 });
