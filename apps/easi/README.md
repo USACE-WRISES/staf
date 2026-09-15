@@ -114,6 +114,7 @@ matched-reach comparisons, frozen regional scoring fits, diagnostic fits,
 and the local analysis report. The main **Nationwide screening** map and
 **Dashboard** read local staging, with reach reports, state comparisons and
 statistics CSV export.
+
 The saved baseline for the September 2026 rebuild uses the earlier 13/8/3
 scores. It differs from the current `legacy` switch, which retains the previous
 criteria with the current 14/8/2 scores. Baseline comparisons therefore include
@@ -125,9 +126,11 @@ scoring fits. It reads regenerated fits from
 and fitted knots are shown where available. A diagnostic refresh cannot
 replace the frozen scoring artifact through this page. Pending or stale
 outputs retain their method and build labels.
+
 Diagnostic fits, field validation and the report remain marked pending until
 the analysis values method matches the app and the output file is newer than
 those values metadata. A partially finished analysis refresh stays visible.
+
 The final verified label also requires `analysis/local-review/completion.json`
 to match the app method, criteria, exact staging build and frozen artifact hash,
 with passed analysis, comparison and landscape checks. Until then checks remain
