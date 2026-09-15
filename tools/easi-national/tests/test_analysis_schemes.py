@@ -103,6 +103,88 @@ def test_function_rules_read_the_catalog_edges():
     assert rules["community_dynamics"]["integer"] and rules["water_soil_quality"]["operator"] == "categorical_lookup"
 
 
+def _composite_table(function, inputs):
+    return pa.Table.from_pydict({
+        "comid": [1, 2, 3, 4], "l3_code": ["45"] * 4, "l2": ["8.3"] * 4,
+        "l1": ["8"] * 4, "nars9": ["SAP"] * 4, "slope_class": ["lt_0.5"] * 4,
+        f"rating_{function}": ["Poor", "Good", None, "Fair"],
+        **{f"v__{function}__{key}": values for key, values in inputs.items()},
+    })
+
+
+@pytest.mark.parametrize("function,inputs", [
+    ("light_thermal_regime", {"woodyRiparian": [10., 80., 40., np.nan], "impervious": [0., 30., 0., 5.]}),
+    ("channel_evolution", {"er": [1., 4., 2., np.nan], "bhr": [1., 2., 1.4, 1.1]}),
+])
+@pytest.mark.parametrize("operator", ["worst_index", "best_index"])
+@pytest.mark.parametrize("level", [None, "l2"])
+@pytest.mark.filterwarnings("ignore:Mean of empty slice:RuntimeWarning")
+def test_partial_guidance_composite_keeps_class_anchors(function, inputs, operator, level, monkeypatch):
+    monkeypatch.setenv("EASI_CRITERIA_SET", "regional")
+    rule = {**schemes.function_rules()[function], "operator": operator}
+    table = _composite_table(function, inputs)
+    run = schemes.Run("S0" if level is None else "S2", level, table,
+                      schemes.frame_for(table), {function: rule}, [])
+    run.score()
+    # The available pressure line conflicts with the stored composite class.
+    # Missing curve definitions must not silently make it the entire metric.
+    np.testing.assert_allclose(run.index[function], [0.195, 0.85, np.nan, 0.545], equal_nan=True)
+    assert run.classes[function].tolist() == ["Poor", "Good", None, "Fair"]
+    assert run.mode[function].tolist() == ["s0"] * 4
+    # The intentionally unrated row has no finite outcome for the rollup mean.
+    expected = schemes.rollup_frame({function: np.array([3., 13., np.nan, 8.])})
+    for view in ("banded", "mix", "continuous"):
+        actual = run.view(view)
+        for key in expected:
+            np.testing.assert_allclose(actual[key], expected[key], equal_nan=True)
+
+
+@pytest.mark.parametrize("criteria,function,inputs,expected", [
+    ("regional", "catchment_hydrology", {"impervious": [0., 40., 10., 0.],
+                                         "agriculture": [75., 0., 0., np.nan]}, [0., 0., np.nan, 0.545]),
+    ("regional", "hyporheic_connectivity", {"slope": [0., 0.01, 0.003, np.nan],
+                                           "sinuosity": [1.5, 1., 1.2, 1.5]}, [1., 1., np.nan, 0.545]),
+    ("legacy", "light_thermal_regime", {"woodyRiparian": [0., 80., 80., np.nan],
+                                       "impervious": [0., 40., 0., 0.]}, [0., 0., np.nan, 0.545]),
+    ("legacy", "channel_evolution", {"bhr": [1., 1.7, 1., np.nan],
+                                     "er": [0., 3., 3., 3.]}, [0., 0., np.nan, 0.545]),
+])
+@pytest.mark.filterwarnings("ignore:Mean of empty slice:RuntimeWarning")
+def test_complete_guidance_composites_preserve_lines_and_legacy(criteria, function, inputs, expected, monkeypatch):
+    monkeypatch.setenv("EASI_CRITERIA_SET", criteria)
+    table = _composite_table(function, inputs)
+    run = schemes.Run("S0", None, table, schemes.frame_for(table),
+                      {function: schemes.function_rules()[function]}, [])
+    run.score()
+    np.testing.assert_allclose(run.index[function], expected, atol=1e-12, equal_nan=True)
+    assert run.mode[function].tolist() == ["line", "line", "s0", "s0"]
+    assert run.classes[function].tolist() == ["Poor", "Good", None, "Fair"]
+    for view in ("banded", "mix"):
+        expected_rollup = schemes.rollup_frame({function: np.array([3., 13., np.nan, 8.])})
+        for key, values in run.view(view).items():
+            np.testing.assert_allclose(values, expected_rollup[key], equal_nan=True)
+
+
+@pytest.mark.parametrize("function,inputs,curves,expected", [
+    ("light_thermal_regime", {"woodyRiparian": [10., 80., 40., np.nan], "impervious": [0., 30., 0., 5.]},
+     [("woody_wsrp100", [[0., 0.], [100., 1.]], "")], [0.1, 0.26, np.nan, 0.545]),
+    ("channel_evolution", {"er": [1., 4., 2., np.nan], "bhr": [1., 2., 1.4, np.nan]},
+     [("er_median", [[0., 0.], [5., 1.]], "lt_0.5"),
+      ("bhr_median", [[0., 1.], [4., 0.]], "lt_0.5")], [0.2, 0.5, np.nan, 0.545]),
+])
+def test_diagnostic_curves_still_override_composite_anchors(function, inputs, curves, expected, monkeypatch):
+    monkeypatch.setenv("EASI_CRITERIA_SET", "regional")
+    table = _composite_table(function, inputs)
+    registry = [{"quantity": quantity, "level": "national", "stratum": "national:national",
+                 "split": split, "usable": True, "points": points} for quantity, points, split in curves]
+    run = schemes.Run("S2", "l2", table, schemes.frame_for(table),
+                      {function: schemes.function_rules()[function]}, registry)
+    run.score()
+    np.testing.assert_allclose(run.index[function], expected, atol=1e-12, equal_nan=True)
+    assert run.mode[function].tolist() == ["curve", "curve", "s0", "s0"]
+    assert run.classes[function].tolist() == ["Poor", "Poor" if function == "light_thermal_regime" else "Fair", None, "Fair"]
+
+
 def _values_table(n=300):
     rules = schemes.function_rules()
     frame = {"comid": np.arange(1, n + 1, dtype="int64"), "state": RNG.choice(["VA", "KS"], size=n),

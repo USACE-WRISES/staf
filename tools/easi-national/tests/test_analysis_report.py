@@ -39,6 +39,13 @@ def test_report_writes_index_routes_scorecards_and_the_sheet(tmp_path):
     assert (routes.loc[routes["function"] == "catchment_hydrology", "route"] == "keep (guidance bands)").all()
     sheet = (report.report_dir(root) / "decision_sheet.md").read_text(encoding="utf-8")
     assert "Recommended level" in sheet and "Recommended paradigm" in sheet and "habitat_provision" in sheet
+    for output in (text, sheet):
+        assert "S0 represents the loaded values method, not the saved historical baseline" in output
+        assert "incomplete guidance composites retain class anchors" in output
+        assert "S0 function AUC and rank correlations use those diagnostic indices; class agreement uses the retained classes" in output
+        assert "SN, S9, S2 and S3 are diagnostic refits" in output
+        assert "incumbent_* refers to the displayed diagnostic run, while s0_auc_poor refers to S0" in output
+        assert "do not change the accepted criteria" in output
     cards = list((report.report_dir(root) / "scorecards").glob("*.html"))
     assert len(cards) == 20
     maps = list((report.report_dir(root) / "maps").glob("*.png"))
