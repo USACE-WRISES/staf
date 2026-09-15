@@ -11,7 +11,7 @@ reference class ``rt_nrsa`` (R, In, Im).
 the desktop metrics scored by the app's own evaluator. Stations inside the
 scored extent take their stored evidence record (the only rows with
 cross-section metrics); the others get a synthetic record from the national
-caches through the builder's own lookups (StreamCat cache, ATTAINS
+caches through the builder's own lookups (raw EROM, StreamCat cache, ATTAINS
 geodatabase rows, the ten-year WQP parquet, NID, NAS), so the values come
 from one code path. Raw StreamCat columns and the derived landscape
 quantities ride along so the desktop screen can be evaluated per station.
@@ -35,7 +35,7 @@ import numpy as np
 from .. import REPO_ROOT, config
 from ..paths import DataRoot
 from ..state import Control, Progress, digest
-from ..stages import common, joins, local_gdb, nas_national, streamcat_national, wqp_local
+from ..stages import common, joins, local_gdb, nas_national, score, streamcat_national, wqp_local
 from ..units import load_huc4_vpu
 from . import ANALYSIS_VERSION, screens, stats
 from .strata import NRSA_RAW, strata_path
@@ -317,15 +317,19 @@ class _AttainsCells:
 
 
 def synthetic_record(comid: int, identity: dict, strata_row: dict, streamcat: dict, *,
-                     attains: tuple[dict, dict], wqp_tn, wqp_tp, nid_dams, nas_taxa) -> dict:
+                     attains: tuple[dict, dict], wqp_tn, wqp_tp, nid_dams, nas_taxa, erom=None) -> dict:
     """An evidence record for a reach outside the scored extent, from the
     national caches (no NRSA evidence, no cross-sections, bankfull computed)."""
     from easi.national import SCHEMA_VERSION
+    from easi.datasources.fabric import erom_from_properties
     exact, nearby = attains
     return {
         **identity,
         "huc12": strata_row.get("huc12"), "sinuosity": strata_row.get("sinuosity_flowline"),
         "lat": strata_row.get("lat"), "lon": strata_row.get("lon"),
+        "l3_code": strata_row.get("l3"), "nars9": strata_row.get("nars9"),
+        "physio_division": strata_row.get("physio"),
+        "erom": erom_from_properties(erom),
         "streamcat": streamcat or {}, "nrsa": None, "bankfull": None,
         "attains_exact": exact or {}, "attains_nearby": nearby or {},
         "wqp_tn": wqp_tn, "wqp_tp": wqp_tp, "nid_dams": nid_dams,
@@ -378,6 +382,7 @@ def build_desktop(root: DataRoot, progress: Progress, control: Control) -> Path:
     identity = _identity_from_vaa(root, outside) if outside else {}
     strata_rows = _strata_rows(root, outside) if outside else {}
     streamcat = streamcat_national.cached_rows(root, outside) if outside else {}
+    erom = score.erom_rows(root, outside)
     wqp = _WqpNational(root, progress) if outside else None
     attains = _AttainsCells(root)
     nid_index = joins._nid_index(root)
@@ -404,6 +409,7 @@ def build_desktop(root: DataRoot, progress: Progress, control: Control) -> Path:
             (x, y), = joins._project([lat], [lon])
             record = synthetic_record(
                 comid, ident, strata_row, streamcat.get(comid) or {},
+                erom=erom.get(comid),
                 attains=attains.lookup(lat, lon),
                 wqp_tn=wqp.summary("tn", lat, lon, x, y) if wqp else None,
                 wqp_tp=wqp.summary("tp", lat, lon, x, y) if wqp else None,
@@ -510,9 +516,11 @@ def screen_check(root: DataRoot, progress: Progress) -> Path:
 
 
 def inputs(root: DataRoot, options: Optional[dict] = None) -> str:
-    stamps = [(p.name, p.stat().st_size, int(p.stat().st_mtime)) if p.exists() else None
-              for p in (values_path(root), strata_path(root), NRSA_DIR / "stations.parquet", NRSA_DIR / "values.parquet")]
-    return digest("nrsa", ANALYSIS_VERSION, stamps, sorted(CLASS_TARGETS), 1)
+    from easi.national import method_version
+    stamps = [(p.name, p.stat().st_size, p.stat().st_mtime_ns) if p.exists() else None
+              for p in (values_path(root), strata_path(root), NRSA_DIR / "stations.parquet", NRSA_DIR / "values.parquet",
+                        streamcat_national.cache_path(root))]
+    return digest("nrsa", ANALYSIS_VERSION, stamps, score.erom_stamp(root), method_version(), sorted(CLASS_TARGETS), 2)
 
 
 def desktop_fresh(root: DataRoot) -> bool:

@@ -52,6 +52,32 @@ LEVEL_ORDER = ("national", "nars9", "l2", "l3")
 LEVEL_LABEL = {"national": "National", "nars9": "NARS-9", "l2": "Level II", "l1": "Level I", "l3": "Level III"}
 
 
+def quantity_of() -> dict:
+    """The current input descriptors, selected at call time like scoring."""
+    from easi.config import criteria_set
+    quantities = dict(QUANTITY_OF)
+    if criteria_set() == "regional":
+        quantities.update({"low_flow_baseflow_dynamics": "flow_variability_cv",
+                           "bed_composition_bedform_dynamics": "bed_agriculture",
+                           "population_support": "biological_model_probability"})
+    return quantities
+
+
+def input_distribution_html(function: str, rows: list[dict]) -> str:
+    primary = quantity_of().get(function, "")
+    quantities = [primary]
+    note = ""
+    if primary == "biological_model_probability":
+        quantities.append("biological_integrity_fallback")
+        note = ("<p class='note'>Published model probability and the landscape integrity fallback "
+                "are separate source routes. Each distribution includes only its route; share_missing "
+                "also counts reaches on another route. Neither quantity is a measured MMI.</p>")
+    return (f"<h2>Distribution of the incumbent input ({html.escape(primary)}), national and per state</h2>"
+            + note + table_html([r for r in rows if r["level"] in ("national", "state") and r["quantity"] in quantities],
+                                ["quantity", "level", "stratum", "n", "share_missing", "p05", "p25", "p50", "p75", "p95",
+                                 "iqr", "robust_cv", "share_zero", "share_cap", "c1_constant", "c2_censored", "c3_zero_inflated"]))
+
+
 def report_dir(root: DataRoot) -> Path:
     return root.analysis / "report"
 
@@ -224,7 +250,7 @@ def route_rows(root: DataRoot, validation_rows: list[dict], diag_rows: list[dict
     diag_national = {r["quantity"]: r for r in diag_rows if r["level"] == "national"}
     rows = []
     for fk in functions:
-        diag = diag_national.get(QUANTITY_OF.get(fk, ""), {})
+        diag = diag_national.get(quantity_of().get(fk, ""), {})
         flags = [name for name, key in (("constant", "c1_constant"), ("censored", "c2_censored"), ("zero-inflated", "c3_zero_inflated"))
                  if str(diag.get(key, "")).lower() == "true"]
         states = [r for r in pinned_rows if r["run"] == "S0" and r["function"] == fk]
@@ -363,7 +389,7 @@ def inputs(root: DataRoot, options: Optional[dict] = None) -> str:
     stamps = [(p.name, p.stat().st_size, int(p.stat().st_mtime)) if p.exists() else None
               for p in (schemes_dir(root) / "scheme_comparison.csv", stats_dir(root) / "level_T_L1.csv",
                         validation_path(root), stability_path(root))]
-    return digest("report", ANALYSIS_VERSION, stamps, (options or {}).get("phase"), 1)
+    return digest("report", ANALYSIS_VERSION, stamps, (options or {}).get("phase"), quantity_of(), 2)
 
 
 def run(root: DataRoot, progress: Progress, control: Control, options: Optional[dict] = None) -> Path:
@@ -425,10 +451,7 @@ def run(root: DataRoot, progress: Progress, control: Control, options: Optional[
                 "<h2>Route</h2>", table_html([route]),
                 "<h2>Class shares by state and run</h2>",
                 table_html([r for r in pinned if r["function"] == fk], ["run", "state", "n", "share_poor", "share_fair", "share_good", "top_class", "pinned", "index_sd", "curve_share"]),
-                f"<h2>Distribution of the incumbent input ({html.escape(QUANTITY_OF.get(fk, ''))}), national and per state</h2>",
-                table_html([r for r in diag if r["level"] in ("national", "state") and r["quantity"] == QUANTITY_OF.get(fk, "")],
-                           ["level", "stratum", "n", "p05", "p25", "p50", "p75", "p95", "iqr", "robust_cv", "share_zero", "share_cap",
-                            "c1_constant", "c2_censored", "c3_zero_inflated"]),
+                input_distribution_html(fk, diag),
                 "<h2>NRSA agreement (national rows, every run)</h2>",
                 table_html([r for r in validation_rows if r["region"] == "US" and (r["subject"] == fk or r["subject"].startswith(f"cand__{fk}__"))],
                            ["run", "subject", "target", "n", "n_poor", "n_good", "auc_poor", "auc_poor_lo", "auc_poor_hi", "auc_good", "rho", "rho_lo", "rho_hi", "kappa", "verdict"]),

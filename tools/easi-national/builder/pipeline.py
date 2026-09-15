@@ -156,9 +156,9 @@ def run_chunk(root: DataRoot, chunk: Chunk, states: UnitStates, progress: Progre
             _chunk_stage_fn(name)(root, chunk, states, progress, control, force=force)
             continue
         group = next(g for g in _HUC8_GROUPS if name in g)
-        if name != group[0]:
-            continue                                  # ran with its group's first stage
         group_stages = tuple(s for s in group if s in wanted)
+        if name != group_stages[0]:
+            continue                                  # ran with its first selected stage
         _run_huc8_stages(root, chunk, targets, group_stages, states, progress, control,
                          force=force, workers=workers, keep_dem_windows=keep_dem_windows)
     states.reload()

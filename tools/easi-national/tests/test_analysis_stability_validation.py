@@ -84,6 +84,39 @@ def test_agreement_statistics_and_the_verdict():
     assert none["rho"] is None and "auc_poor" not in none
 
 
+def test_agreement_excludes_missing_and_unknown_target_labels():
+    known_index = np.array([0.1, 0.7, 0.5, 0.8, 0.2, 0.9, np.nan])
+    known_target = np.array(["Poor", "Fair", "Fair", "Good", "Poor", np.str_("Good"), "Good"], dtype=object)
+    known = validation.agreement(known_index, schemes.class_of_index(known_index), known_target, [], boot=50)
+    invalid_labels = [None, np.nan, pd.NA, "Unknown", "", 1, "poor", pd.NaT]
+    index = np.concatenate([known_index, np.linspace(0.0, 1.0, len(invalid_labels))])
+    desktop = schemes.class_of_index(index)
+    continuous = [(np.arange(len(index), dtype=float), 1)]
+    target = np.concatenate([known_target, np.array(invalid_labels, dtype=object)])
+    explicit_none = np.concatenate([known_target, np.full(len(invalid_labels), None, dtype=object)])
+
+    out = validation.agreement(index, desktop, target, continuous, boot=50)
+    assert out == validation.agreement(index, desktop, explicit_none, continuous, boot=50)
+    assert out["n"] == 14 and out["n_class"] == 6
+    assert (out["n_poor"], out["n_fair"], out["n_good"]) == (2, 2, 2)
+    for key in ("auc_poor", "auc_good", "kappa", "auc_poor_lo", "auc_poor_hi"):
+        assert out[key] == known[key]
+    # Field-indicator agreement still uses every finite pair, regardless of class availability.
+    continuous_only = validation.agreement(index, desktop, None, continuous, boot=50)
+    for key in ("rho", "rho_targets", "rho_lo", "rho_hi"):
+        assert out[key] == continuous_only[key]
+
+
+def test_agreement_with_only_invalid_target_labels_has_no_class_statistics():
+    target = np.array([None, np.nan, pd.NA, "Unknown", "", 1, "poor", pd.NaT], dtype=object)
+    index = np.linspace(0.0, 1.0, len(target))
+    out = validation.agreement(index, schemes.class_of_index(index), target, [], boot=50)
+    assert out["n"] == 8 and out["n_class"] == 0
+    assert (out["n_poor"], out["n_fair"], out["n_good"]) == (0, 0, 0)
+    assert out["auc_poor"] is None and out["auc_good"] is None and out["kappa"] is None
+    assert "auc_poor_lo" not in out and out["rho"] is None
+
+
 def test_validation_scores_the_stations_under_every_run(tmp_path):
     from test_analysis_schemes import _values_table
     root = DataRoot(tmp_path / "data").ensure()
