@@ -4,9 +4,9 @@
   "generatedFrom": "data/source/screening-metrics.tsv",
   "count": 20,
   "ratingIndexDefault": {
-    "Good": 0.9,
-    "Fair": 0.55,
-    "Poor": 0.1
+    "Good": 0.85,
+    "Fair": 0.545,
+    "Poor": 0.195
   },
   "metrics": [
     {
@@ -40,9 +40,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "NLCD Impervious Surface (MRLC) (if used); MN SQT 2020; NLCD Impervious Surface (MRLC) (if used); MI SQT 2019; NC SQT 2019; NLCD Impervious Surface (MRLC) (if used); SC SQT 2021; NLCD Impervious Surface (MRLC) (if used); TN SQT",
       "source": "Minnesota SQT; Michigan SQT; North Carolina SQT; South Carolina SQT; Tennessee SQT",
@@ -79,9 +79,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "MN SQT 2020; WI SQT 2022; SC SQT 2021; NLCD Land Cover and/or USFWS National Wetlands Inventory (NWI).",
       "source": "ERDC",
@@ -118,9 +118,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "MI SQT 2019; NC SQT 2019; SC SQT 2021; Field count; DOT drainage or as-built plans (where available); road drainage GIS layers.",
       "source": "Michigan SQT; North Carolina SQT; South Carolina SQT; ERDC",
@@ -157,9 +157,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "USGS NWIS / modeled baseline (if used); Alaska SQT; USGS NWIS / modeled baseline (if used); CO SQT 2019; USGS NWIS / modeled baseline (if used); WI SQT 2022; USGS NWIS / modeled baseline (if used); WY SQT 2019; USGS NWIS / modeled baseline (if used); MN SQT 2020; USGS NWIS (current); USGS StreamStats (natural baseline where available).",
       "source": "Alaska SQT; Colorado SQT; Wisconsin SQT; Wyoming SQT; Minnesota SQT; ERDC",
@@ -196,9 +196,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "Field observation and photos; NAIP imagery; NHDPlus HR flowline codes; USGS NWIS zero-flow days (where available).; Field verification; NAIP dry-season imagery; optional HEC-RAS 2D at low flow; LiDAR longitudinal profile (where available).; Field photos; NAIP dry-season imagery; LiDAR with estimated low-flow water surface (where available).",
       "source": "ERDC",
@@ -235,9 +235,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "NRCS TR-55 (1986); USGS StreamStats; USGS PeakFQ (where available); state SQT manuals.",
       "source": "ERDC",
@@ -274,9 +274,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "NAIP imagery and historical aerials/topos; National Levee Database (NLD) and FEMA floodplain layers (where available).; NRCS National Engineering Handbook (2007); Rosgen (2006); USGS 3DEP LiDAR/DEM cross sections.; HEC-RAS 2D with USGS 3DEP DEM; bankfull flow estimate; FEMA floodplain layers (where available).",
       "source": "ERDC",
@@ -313,9 +313,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "High-resolution imagery and LiDAR hillshade (where available); longitudinal profile in GIS; field confirmation.; Field observation; mapped springs/seeps; thermal IR imagery (where available).",
       "source": "ERDC",
@@ -352,9 +352,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "Barbour et al. (1999); SVAP v2 (2018).; USGS 3DEP LiDAR hillshade; repeat LiDAR for DEM of Difference (where available); NAIP or Google Earth time series.; USGS 3DEP LiDAR cross sections and elevation profiles; NAIP or orthophotos for benches and bars.; NAIP or Google Earth historical imagery; RivWidthCloud or RivMAP (where available).",
       "source": "ERDC",
@@ -391,9 +391,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "NAIP or orthophotos; local infrastructure layers (where available).; Field tape/RTK survey; GIS digitization of raw bank segments from imagery.",
       "source": "ERDC",
@@ -430,9 +430,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "NLCD/SSURGO/DEM (if used); Alaska SQT; NLCD/SSURGO/DEM (if used); CO SQT 2019; WY SQT 2019; NLCD/SSURGO/DEM (if used); MI SQT 2019; NC SQT 2019; NLCD/SSURGO/DEM (if used); MN SQT 2020; NLCD/SSURGO/DEM (if used); SC SQT 2021",
       "source": "Alaska SQT; Colorado SQT; Wyoming SQT; Michigan SQT; North Carolina SQT; Minnesota SQT; South Carolina SQT",
@@ -469,9 +469,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "TN SQT; Field pebble count; USGS or state surficial geology; high-resolution imagery for bar texture classes (where available).; Field embeddedness estimate; EPA Water Quality Portal (turbidity/TSS); assessment listings for sediment (where available).; Field pick test or visual checks; document as data gap where field access is limited.; Barbour et al. (1999); SVAP v2 (2018).",
       "source": "Tennessee SQT; ERDC",
@@ -508,9 +508,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "USGS NWIS and/or EPA Water Quality Portal water temperature data (where available); NorWeST modeled stream temperature products (where available).",
       "source": "ERDC",
@@ -547,9 +547,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "Field observation; wood and habitat assessments; planform complexity from imagery as supporting context.; State biomonitoring portals and/or EPA Water Quality Portal biological results (where available).",
       "source": "ERDC",
@@ -586,9 +586,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "EPA Water Quality Portal (TN/TP); USGS SPARROW nutrient maps (where available).",
       "source": "ERDC",
@@ -625,9 +625,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "EPA ATTAINS/state integrated report (if used); Alaska SQT; EPA ATTAINS/state integrated report (if used); CO SQT 2019; EPA ATTAINS/state integrated report (if used); NC SQT 2019; EPA ATTAINS/state integrated report (if used); MI SQT 2019; EPA ATTAINS/state integrated report (if used); MN SQT 2020; EPA ATTAINS/state integrated report (if used); SC SQT 2021; EPA ATTAINS/state integrated report (if used); TN SQT; WI SQT 2022; EPA ATTAINS/state integrated report (if used); WY SQT 2019",
       "source": "Alaska SQT; Colorado SQT; North Carolina SQT; Michigan SQT; Minnesota SQT; South Carolina SQT; Tennessee SQT; Wisconsin SQT; Wyoming SQT",
@@ -664,9 +664,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "EPA Rapid Bioassessment Protocols (RBP); NAIP imagery; USGS 3DEP LiDAR (where available).; USGS NAWQA pebble-count method; habitat mapping; supporting context from imagery and slope.; Field mapping; NAIP imagery; canopy and bank metrics where available.",
       "source": "ERDC",
@@ -703,9 +703,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "State Natural Heritage Program records; Herp Atlas or similar; BISON and/or iNaturalist as supporting context.; State biomonitoring protocols; USGS BioData and/or EPA Water Quality Portal biological results (where available).; CO SQT 2019; MI SQT 2019; MN SQT 2020; NC SQT 2019; WI SQT 2022; WY SQT 2019; state biomonitoring databases.",
       "source": "ERDC",
@@ -742,9 +742,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "USGS Nonindigenous Aquatic Species (NAS); EDDMapS; state invasive species lists.",
       "source": "ERDC",
@@ -781,9 +781,9 @@
         ]
       },
       "indexMidpoints": {
-        "Good": 0.9,
-        "Fair": 0.55,
-        "Poor": 0.1
+        "Good": 0.85,
+        "Fair": 0.545,
+        "Poor": 0.195
       },
       "references": "Barrier inventory (if used); WI SQT 2022; Barrier inventory (if used); TN SQT; Barrier inventory (if used); Alaska SQT; Barrier inventory (if used); CO SQT 2019; Barrier inventory (if used); WY SQT 2019; National Inventory of Dams (if used); MI SQT 2019; National Inventory of Dams (if used); SC SQT 2021; Barrier inventory (if used); MN SQT 2020; National Inventory of Dams (if used); NC SQT 2019",
       "source": "Wisconsin SQT; Tennessee SQT; Alaska SQT; Colorado SQT; Wyoming SQT; Michigan SQT; South Carolina SQT; Minnesota SQT; North Carolina SQT",

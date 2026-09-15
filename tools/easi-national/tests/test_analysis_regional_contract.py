@@ -64,7 +64,7 @@ def test_low_flow_curve_applies_only_to_erom_and_bed_sed_curve_is_retired(monkey
     run.score()
     assert run.mode[low].tolist() == ["curve", "s0", "s0"]
     assert run.classes[low].tolist() == ["Good", "Poor", "Poor"]
-    assert run.index[low].tolist() == pytest.approx([0.8, 0.1, 0.1])
+    assert run.index[low].tolist() == pytest.approx([0.8, 0.195, 0.195])
     assert set(run.mode[bed]) <= {"s0", "line"}
     assert run.classes[bed].tolist() == ["Fair"] * 3
 

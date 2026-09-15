@@ -61,8 +61,8 @@ def test_resolves_region_then_national_and_records_depth(curve_catalog):
 
 
 @pytest.mark.parametrize("value,rating,index", [
-    (38.999, "Poor", .10), (39, "Fair", .55), (68.999, "Fair", .55),
-    (69, "Good", .90), (1000, "Good", .90), (-100, "Poor", .10),
+    (38.999, "Poor", .195), (39, "Fair", .545), (68.999, "Fair", .545),
+    (69, "Good", .85), (1000, "Good", .85), (-100, "Poor", .195),
 ])
 def test_higher_curve_crossings_and_rating_anchors(curve_catalog, value, rating, index):
     result = sm.evaluate(MID, {"woodyRiparian": value}, context={"strata": STRATA})
@@ -96,14 +96,14 @@ def test_worst_input_and_partial_curve_keep_anchor_combined_value(curve_catalog)
     _, _, _, thermal = curve_catalog
     complete = sm.evaluate(THERMAL, {"woodyRiparian": 80, "impervious": 30},
                            context={"strata": STRATA})
-    assert (complete.rating, complete.combined_value) == ("Poor", .10)
+    assert (complete.rating, complete.combined_value) == ("Poor", .195)
     assert complete.trace["governingInput"] == "impervious"
     assert complete.trace["curves"]["woodyRiparian"]["stratum"] == "8.3"
     thermal["formula"]["allowPartial"] = True
     partial = sm.evaluate(THERMAL, {"woodyRiparian": 50, "impervious": None},
                          context={"strata": STRATA})
     assert partial.rating == "Fair" and partial.trace["completeness"] == "partial"
-    assert partial.combined_value == .55
+    assert partial.combined_value == .545
 
 
 def test_partial_disallowed_and_best_input(curve_catalog):
@@ -114,7 +114,7 @@ def test_partial_disallowed_and_best_input(curve_catalog):
     thermal["operator"] = "best_index"
     best = sm.evaluate(THERMAL, {"woodyRiparian": 80, "impervious": 30},
                        context={"strata": STRATA})
-    assert (best.rating, best.combined_value) == ("Good", .90)
+    assert (best.rating, best.combined_value) == ("Good", .85)
 
 
 def test_sum_capped_curve_preserves_physical_combined_value(curve_catalog):

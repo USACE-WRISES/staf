@@ -137,11 +137,11 @@ def test_mink_brook_complete_coverage_acceptance_rollup():
         for item in report["coverage"]["outcomes"].values()
     )
     assert report["subIndices"] == {
-        "physical": 0.58,  # 108.4 / 187.5
-        "chemical": 0.78,  # 63.0 / 81.0
-        "biological": 0.85,  # 71.2 / 84.0
+        "physical": 0.57,  # 107.0 / 187.5
+        "chemical": 0.74,  # 59.7 / 81.0
+        "biological": 0.80,  # 66.8 / 84.0
     }
-    assert report["ecosystemConditionIndex"] == 0.73  # Mean of the unrounded sub-indices.
+    assert report["ecosystemConditionIndex"] == 0.70  # Mean of the unrounded sub-indices.
 
 
 def test_observed_bank_evidence_replaces_and_preserves_proxy():

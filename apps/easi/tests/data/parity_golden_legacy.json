@@ -1,174 +1,174 @@
 {
   "computedCount": 20,
-  "ecosystemConditionIndex": 0.82,
+  "ecosystemConditionIndex": 0.77,
   "functionScores": {
     "bed-composition-bedform-dynamics": 8,
-    "carbon-processing": 14,
-    "catchment-hydrology": 14,
-    "channel-evolution": 14,
-    "channel-floodplain-dynamics": 14,
-    "community-dynamics": 14,
-    "floodplain-connectivity": 14,
+    "carbon-processing": 13,
+    "catchment-hydrology": 13,
+    "channel-evolution": 13,
+    "channel-floodplain-dynamics": 13,
+    "community-dynamics": 13,
+    "floodplain-connectivity": 13,
     "habitat-provision": 8,
-    "high-flow-dynamics": 14,
-    "hyporheic-connectivity": 14,
+    "high-flow-dynamics": 13,
+    "hyporheic-connectivity": 13,
     "light-thermal-regime": 8,
-    "low-flow-baseflow-dynamics": 14,
-    "nutrient-cycling": 14,
-    "population-support": 14,
+    "low-flow-baseflow-dynamics": 13,
+    "nutrient-cycling": 13,
+    "population-support": 13,
     "reach-inflow": 8,
     "sediment-continuity": 8,
-    "streamflow-regime": 14,
+    "streamflow-regime": 13,
     "surface-water-storage": 8,
-    "water-soil-quality": 14,
-    "watershed-connectivity": 14
+    "water-soil-quality": 13,
+    "watershed-connectivity": 13
   },
   "metrics": [
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "catchment-hydrology-impervious-surface-cover",
       "rating": "Good",
       "status": "ok"
     },
     {
       "functionScore": 8,
-      "index": 0.55,
+      "index": 0.545,
       "metricId": "surface-water-storage-percent-wetlands-in-watershed",
       "rating": "Fair",
       "status": "ok"
     },
     {
       "functionScore": 8,
-      "index": 0.55,
+      "index": 0.545,
       "metricId": "reach-inflow-concentrated-runoff-stormwater-inputs",
       "rating": "Fair",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "streamflow-regime-flow-alteration-regulation-water-use",
       "rating": "Good",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity",
       "rating": "Good",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
       "rating": "Good",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "floodplain-connectivity-floodplain-access-entrenchment",
       "rating": "Good",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "hyporheic-connectivity-hyporheic-exchange-indicators",
       "rating": "Good",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "channel-evolution-channel-evolution-stage-and-trends",
       "rating": "Good",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition",
       "rating": "Good",
       "status": "ok"
     },
     {
       "functionScore": 8,
-      "index": 0.55,
+      "index": 0.545,
       "metricId": "sediment-continuity-sediment-supply-potential-watershed-banks",
       "rating": "Fair",
       "status": "ok"
     },
     {
       "functionScore": 8,
-      "index": 0.55,
+      "index": 0.545,
       "metricId": "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation",
       "rating": "Fair",
       "status": "ok"
     },
     {
       "functionScore": 8,
-      "index": 0.55,
+      "index": 0.545,
       "metricId": "light-and-thermal-regime-stream-temperature",
       "rating": "Fair",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "carbon-processing-detrital-processing-cpom-retention-shredders",
       "rating": "Good",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "nutrient-cycling-nitrogen-and-phosphorus-concentrations",
       "rating": "Good",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl",
       "rating": "Good",
       "status": "ok"
     },
     {
       "functionScore": 8,
-      "index": 0.55,
+      "index": 0.545,
       "metricId": "habitat-provision-in-stream-habitat-complexity-and-cover",
       "rating": "Fair",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "population-support-biological-integrity-ibi-community-condition",
       "rating": "Good",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "community-dynamics-invasive-non-native-species-presence",
       "rating": "Good",
       "status": "ok"
     },
     {
-      "functionScore": 14,
-      "index": 0.9,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity",
       "rating": "Good",
       "status": "ok"
     }
   ],
   "subIndices": {
-    "biological": 0.83,
-    "chemical": 0.83,
-    "physical": 0.81
+    "biological": 0.78,
+    "chemical": 0.78,
+    "physical": 0.76
   },
   "totalCount": 20
 }

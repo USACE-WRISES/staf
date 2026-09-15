@@ -183,12 +183,12 @@ def _stub_engine_pipeline(monkeypatch, *, ratio: float = 5.48):
             {"metricId": "catchment-hydrology-impervious-surface-cover",
              "name": "Impervious", "discipline": "Hydrology",
              "functionId": "catchment-hydrology", "functionName": "Catchment hydrology",
-             "rating": "Good", "index": 0.90, "functionScore": 14, "status": "ok",
+             "rating": "Good", "index": 0.85, "functionScore": 13, "status": "ok",
              "engine": "site-engine", "anchorLabel": "HR reach watershed (STAF site engine)"},
             {"metricId": "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity",
              "name": "Low Flow", "discipline": "Hydraulics",
              "functionId": "low-flow", "functionName": "Low flow",
-             "rating": "Fair", "index": 0.55, "functionScore": 8, "status": "ok",
+             "rating": "Fair", "index": 0.545, "functionScore": 8, "status": "ok",
              "note": "Landscape-integrity fallback.", "engine": "streamcat",
              "anchorLabel": "nearest covered reach (COMID 5215053, 291 ft downstream)"}]
         return {"status": "ok", "report": rep, "huc12": "x"}

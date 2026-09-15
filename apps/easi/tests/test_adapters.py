@@ -748,7 +748,7 @@ def test_rescore_keeps_agriculture_criteria_through_override():
         "functionId": "catchment-hydrology", "functionName": "Catchment hydrology",
         "rating": "Poor", "generatedRating": "Poor", "criteria": ">50%",
         "criteriaBands": {"Good": "<25%", "Fair": "25%-50%", "Poor": ">50%"},
-        "index": 0.10, "functionScore": 2, "valueText": "61.0% agricultural land (watershed)",
+        "index": 0.195, "functionScore": 3, "valueText": "61.0% agricultural land (watershed)",
         "source": "EPA StreamCat crop+hay (watershed)", "status": "ok", "overrideable": True,
     }], "totalCount": 20}
     row = assessment.rescore(base_report, {mid: "Fair"})["metricRows"][0]

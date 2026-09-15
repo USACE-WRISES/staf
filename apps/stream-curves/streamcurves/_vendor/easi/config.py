@@ -34,10 +34,9 @@ def _resolve_data_dir() -> Path:
 DATA_DIR = _resolve_data_dir()
 
 # --- STAF scoring constants ---
-# EASI rating anchors within the STAF condition bands. Good and Poor sit near
-# the ends of their bands; Fair stays near the At-Risk middle. Rounded scores
-# are 14 / 8 / 2, matching the Strongly Agree / Neutral / Strongly Disagree anchors.
-RATING_INDEX: dict[str, float] = {"Good": 0.90, "Fair": 0.55, "Poor": 0.10}
+# STAF screening-band midpoints, shared with SFARI. Multiplying by 15 and
+# rounding gives function scores of 13 / 8 / 3 for Good / Fair / Poor.
+RATING_INDEX: dict[str, float] = {"Good": 0.85, "Fair": 0.545, "Poor": 0.195}
 RATINGS = ("Good", "Fair", "Poor")
 
 # CWA outcome contribution weights: Direct, indirect, none

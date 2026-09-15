@@ -42,8 +42,8 @@ def test_site_and_batch_result_roundtrip():
     site = C.SiteResult(
         site_id="A", state="succeeded",
         delineation=C.DelineationSummary(comid=7, drainage_area_sqkm=12.3),
-        metrics=[C.MetricRecord(metric_id="m1", final_rating="Good", index=0.90,
-                                function_score=14, status="ok", availability="available")],
+        metrics=[C.MetricRecord(metric_id="m1", final_rating="Good", index=0.85,
+                                function_score=13, status="ok", availability="available")],
         raw_eci=0.734, eci=0.73, raw_sub_indices={"physical": 0.7},
         sub_indices={"physical": 0.7},
         completeness=C.Completeness(total=20, computed=19, unavailable=1),
