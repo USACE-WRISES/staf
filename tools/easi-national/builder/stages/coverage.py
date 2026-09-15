@@ -44,6 +44,7 @@ def run_staging(root: DataRoot, states: UnitStates, progress: Progress) -> dict:
     """Rebuild ``staging/`` and return the manifest."""
     import pyarrow as pa
     import pyarrow.parquet as pq
+    from easi import config as easi_config
     from easi.national import SCHEMA_VERSION, method_version
     staging = root.staging
     staging.mkdir(parents=True, exist_ok=True)
@@ -118,7 +119,8 @@ def run_staging(root: DataRoot, states: UnitStates, progress: Progress) -> dict:
         "schema_version": SCHEMA_VERSION, "dataset": "easi-national", "vintage": VINTAGE,
         "tier": min((u.get("tier") or config.BASE_TIER) for u in units.values()) if units else config.BASE_TIER,
         "tiers": tiers, "reach_length_ft": config.REACH_LENGTH_FT,
-        "method_version": method_version(), "xs_method_version": xs_derive.xs_method_version(),
+        "method_version": method_version(), "criteria_set": easi_config.criteria_set(),
+        "xs_method_version": xs_derive.xs_method_version(),
         "dem": {"source": "USGS 3DEP", "resolutions_m": [1, 3, 10],
                 "rule": "1 m where a 3DEP lidar project covers at least half the reach buffer, "
                         "else the 1/9 arc-second (3 m) quads where they exist, else the 10 m seamless"},

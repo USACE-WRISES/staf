@@ -116,7 +116,7 @@ def main() -> int:
         "package_data_manifest": _hash_package_data_manifest(SRC_PKG, _SKIP_DIRS),
     }
     (DEST / "VENDOR_INFO.json").write_text(
-        json.dumps(info, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+        json.dumps(info, indent=1, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     # Make the vendor tree a package (kept out of the drift manifest).
     (DEST.parent / "__init__.py").touch()
     n = len(info["manifest"])

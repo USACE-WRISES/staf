@@ -43,6 +43,10 @@ def test_national_pull_merges_regions_and_groups_and_resumes(tmp_path, monkeypat
     # a finished request (ledger entry + part on disk) is not asked again
     ledger = state.Ledger(root, "streamcat-national")
     parts = scn._parts_dir(root)
+    plan = [(f"{region}-{suffix}", {"name": ",".join(group), "aoi": aoi, "region": region})
+            for region in ["Region02", "Region03N"]
+            for group, aoi, suffix in sc._plan_groups(NAMES, None)]
+    sc._prepare_plan(parts, ledger, plan)
     pre = sc._normalize(fake_post({"name": ",".join(NAMES[:5]), "aoi": "ws,cat,wsrp100", "region": "Region02"}))
     scn.common.write_parquet(scn.table_of(pre), parts / "Region02-g0.parquet")
     ledger.add("Region02-g0")

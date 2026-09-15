@@ -115,7 +115,7 @@ def test_aquatic_life_rating_strict_and_cause_screen():
         rate({}, mode="loose")
 
 
-def test_erom_and_attains_steps_use_the_geodatabase_readers(tmp_path, monkeypatch):
+def test_erom_uses_national_cache_and_attains_uses_geodatabase(tmp_path, monkeypatch):
     root = DataRoot(tmp_path / "data").ensure()
     root.analysis.mkdir()
     progress, control = state.Progress(root, quiet=True), state.Control(root)
@@ -133,12 +133,15 @@ def test_erom_and_attains_steps_use_the_geodatabase_readers(tmp_path, monkeypatc
     def read_dataframe(path, layer=None, columns=None, read_geometry=True, **kwargs):
         assert read_geometry is False and str(path) == str(fake_gdb)
         if layer == "NHDFlowline_Network":
-            assert list(columns) == list(local_gdb.EROM_COLUMNS)
-            return _erom_frame()
+            assert list(columns) == list(local_gdb.EROM_EVIDENCE_COLUMNS)
+            return _erom_frame()[list(columns)]
         assert layer == local_gdb.ATTAINS_ATTRIBUTES_LAYER
         return attributes
 
     monkeypatch.setattr(pyogrio, "read_dataframe", read_dataframe)
+    local_gdb.convert_erom(root, progress)
+    # Keep the analysis-only QA/QC quantities from the completed evidence.
+    candidates.erom_metrics(_erom_frame()).to_parquet(candidates.erom_path(root), index=False)
     erom = pq.read_table(candidates.run_erom(root, progress, control)).to_pandas()
     assert erom["comid"].tolist() == [1, 2, 3] and "q_alteration" in erom.columns
     att = pq.read_table(candidates.run_attains(root, progress, control))       # pyarrow keeps None as None

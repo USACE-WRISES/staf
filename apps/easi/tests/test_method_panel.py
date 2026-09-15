@@ -9,6 +9,8 @@ See ``easi/methods.py`` / ``easi/method_plot.py``.
 """
 from __future__ import annotations
 
+import pytest
+
 import app
 from easi import methods, screening_methods as sm
 from easi.metrics.geomorphology import SEDIMENT_ID
@@ -59,6 +61,7 @@ def test_criteria_rows_carry_the_catalog_breakpoint_and_colour_swatch():
     assert "easi-method-crit-title" not in m                   # section owns the title
 
 
+@pytest.mark.usefixtures("legacy_criteria")
 def test_single_indicator_criteria_show_the_field_profile_beside_the_breakpoint():
     """Where the catalog defines one, field wording accompanies — never replaces — the
     automated breakpoint."""

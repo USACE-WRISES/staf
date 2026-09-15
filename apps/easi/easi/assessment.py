@@ -12,7 +12,7 @@ from typing import Optional
 
 import anyio
 
-from . import basin, bieger, config, notices, scoring, screening_methods, watershed
+from . import basin, bieger, config, geo, notices, scoring, screening_methods, watershed
 from .datasources import nlcd, nrsa, streamcat, threedep, wbd
 from .metrics import registry
 from .metrics.base import AnalysisContext, MetricResult, unavailable
@@ -53,6 +53,7 @@ async def assess(ctx: AnalysisContext, *,
     selected = set(metric_ids) if metric_ids is not None else set(registry.REGISTRY)
     ctx.extras["source_choices"] = dict(sources or {})
     ctx.extras["prefetch_variants"] = bool(prefetch)
+    ctx.extras["strata"] = geo.strata_at(ctx.lat, ctx.lon, slope=ctx.slope)
     if progress is not None:
         progress["done"] = 0
         progress["total"] = sum(1 for m in registry.REGISTRY if m in selected)
@@ -67,8 +68,8 @@ async def assess(ctx: AnalysisContext, *,
     # the STAF site engine answered (or failed to answer) never pulls it. The
     # COMID-keyed pulls (StreamCat, NRSA) always run: on a routed site they
     # describe the nearest covered reach, labeled per row (2026-09-06).
-    sc, lc, huc12, geom, nrsa_record = await asyncio.gather(
-        _to_thread(streamcat.metrics_by_comid, ctx.comid, registry.STREAMCAT_NAMES),
+    sc, lc, huc12, geom, nrsa_record, other_sc = await asyncio.gather(
+        _to_thread(streamcat.metrics_by_comid, ctx.comid, registry.streamcat_names()),
         (_to_thread(nlcd.watershed_landcover, ctx.watershed_geojson)
          if watershed.wants_nlcd_fallback(ctx) else _empty()),
         _to_thread(wbd.huc12_at_point, ctx.lat, ctx.lon),
@@ -77,7 +78,12 @@ async def assess(ctx: AnalysisContext, *,
             bankfull=(bf["width_m"], bf["depth_m"]), bankfull_area_m2=bf["area_m2"],
             division=bf["division_name"])),
         _to_thread(nrsa.evidence_for_reach, ctx.comid, ctx.lat, ctx.lon),
+        (_to_thread(lambda: streamcat.metrics_by_comid(
+            ctx.comid, registry.STREAMCAT_OTHER_NAMES, aoi="other"))
+         if config.criteria_set() == "regional" else _empty()),
     )
+    sc = {str(key).lower(): value for row in (sc, other_sc)
+          for key, value in (row or {}).items()}
     ctx.extras["streamcat"] = sc
     ctx.extras["landcover"] = lc
     # The watershed evidence layer: which engine answers the eight watershed
@@ -107,7 +113,7 @@ async def assess(ctx: AnalysisContext, *,
         try:
             return await _to_thread(fn, ctx)
         except Exception as exc:  # noqa: BLE001
-            conf = config.METRIC_REGISTRY.get(mid, {}).get("confidence", "L")
+            conf = config.metric_registry().get(mid, {}).get("confidence", "L")
             return unavailable(mid, f"adapter error: {exc}", conf)
         finally:
             if progress is not None:  # advance the live "X/N" counter
@@ -125,7 +131,7 @@ async def assess(ctx: AnalysisContext, *,
 
     # --- build rows for all 20 metrics + collect ratings ---
     meta_by_id = config.metrics_by_id()
-    reg = config.METRIC_REGISTRY
+    reg = config.metric_registry()
     rows: list[dict] = [
         _build_row(mid, meta, reg.get(mid, {}), by_id.get(mid),
                    selected=selected, overrides=overrides)
@@ -138,6 +144,7 @@ async def assess(ctx: AnalysisContext, *,
     if cross_section:
         result["crossSection"] = cross_section
     result["basin"] = basin.basin_characteristics(ctx)
+    result["strata"] = dict(ctx.extras["strata"])
     return result
 
 
@@ -238,9 +245,9 @@ def recompute_watershed_rows(report: dict, ctx: AnalysisContext, *,
     engine, not the StreamCat lookup engine, supplies the watershed inputs).
     Synchronous: adapters run inline.
     """
-    ids = set(metric_ids or WATERSHED_METRIC_IDS)
+    ids = set(metric_ids or registry.watershed_metric_ids())
     meta_by_id = config.metrics_by_id()
-    reg = config.METRIC_REGISTRY
+    reg = config.metric_registry()
     by_row = {r["metricId"]: r for r in report.get("metricRows", [])}
     overrides_applied = set(report.get("overridesApplied") or [])
     rows: list[dict] = []
@@ -263,7 +270,7 @@ def recompute_watershed_rows(report: dict, ctx: AnalysisContext, *,
                       watershed_layer=ctx.extras.get("watershed"))
     result = _finalize(rows, report.get("totalCount", len(meta_by_id)),
                        overrides_applied)
-    for key in ("crossSection", "basin"):
+    for key in ("crossSection", "basin", "strata"):
         if report.get(key):
             result[key] = report[key]
     return result
@@ -292,6 +299,8 @@ def assess_preloaded(ctx: AnalysisContext, *,
     ctx.extras.setdefault("landcover", {})
     ctx.extras.setdefault("nrsa", None)
     ctx.extras.setdefault("reach_geomorph", {})
+    if "strata" not in ctx.extras:
+        ctx.extras["strata"] = geo.strata_at(ctx.lat, ctx.lon, slope=ctx.slope)
     if "watershed" not in ctx.extras:
         ctx.extras["watershed"] = watershed.build(ctx, ctx.extras.get("streamcat"))
 
@@ -302,11 +311,11 @@ def assess_preloaded(ctx: AnalysisContext, *,
         try:
             by_id[mid] = fn(ctx)
         except Exception as exc:  # noqa: BLE001 - mirror assess()
-            conf = config.METRIC_REGISTRY.get(mid, {}).get("confidence", "L")
+            conf = config.metric_registry().get(mid, {}).get("confidence", "L")
             by_id[mid] = unavailable(mid, f"adapter error: {exc}", conf)
 
     meta_by_id = config.metrics_by_id()
-    reg = config.METRIC_REGISTRY
+    reg = config.metric_registry()
     rows: list[dict] = [
         _build_row(mid, meta, reg.get(mid, {}), by_id.get(mid),
                    selected=selected, overrides=overrides)
@@ -321,6 +330,7 @@ def assess_preloaded(ctx: AnalysisContext, *,
         if xs:
             result["crossSection"] = xs
     result["basin"] = basin.basin_characteristics(ctx)
+    result["strata"] = dict(ctx.extras["strata"])
     return result
 
 
@@ -384,7 +394,7 @@ def _annotate_anchors(rows: list[dict], site_anchor: Optional[dict], *,
         comid_note = ""
     table: dict[str, dict] = {}
     for r in rows:
-        a = registry.METRIC_ANCHOR.get(r["metricId"], "watershed")
+        a = registry.metric_anchor(r["metricId"])
         if (r.get("usedFallback")
                 and (r.get("evidenceFamily") in registry.STREAMCAT_FALLBACK_FAMILIES)):
             a = "surrogateComid"         # a StreamCat integrity component: COMID-keyed
@@ -542,7 +552,8 @@ def cross_section_from_stages(block: dict, bankfull_stage: float,
 
 def rate_metrics_from_stages(block: dict, bankfull_stage: float,
                              floodplain_stage: float, *,
-                             reason: str = "edited") -> dict[str, dict]:
+                             reason: str = "edited",
+                             strata: Optional[dict] = None) -> dict[str, dict]:
     """Recompute the cross-section-derived metric ratings from user-chosen stages.
 
     ``reason`` names the section in the value texts: ``"edited"`` (the user's
@@ -569,7 +580,7 @@ def rate_metrics_from_stages(block: dict, bankfull_stage: float,
     er = d.get("entrenchment_ratio")
     er_ev = screening_methods.evaluate(
         hydraulics.ENTRENCHMENT_ID, {"er": er},
-        input_meta={"er": {"source": where}}, confidence="M")
+        input_meta={"er": {"source": where}}, confidence="M", context={"strata": strata or {}})
     if er_ev.rating:
         out[hydraulics.ENTRENCHMENT_ID] = {
             "rating": er_ev.rating,
@@ -579,7 +590,7 @@ def rate_metrics_from_stages(block: dict, bankfull_stage: float,
     bhr = d.get("bank_height_ratio")
     bhr_ev = screening_methods.evaluate(
         hydraulics.FLOODPLAIN_ENGAGEMENT_ID, {"bhr": bhr},
-        input_meta={"bhr": {"source": where}}, confidence="M")
+        input_meta={"bhr": {"source": where}}, confidence="M", context={"strata": strata or {}})
     if bhr_ev.rating:
         out[hydraulics.FLOODPLAIN_ENGAGEMENT_ID] = {
             "rating": bhr_ev.rating,
@@ -589,7 +600,7 @@ def rate_metrics_from_stages(block: dict, bankfull_stage: float,
         geomorphology.BANK_EROSION_ID, {"bhr": bhr},
         input_meta={"bhr": {"source": where}},
         confidence="L", source_tier="screening-proxy",
-        evidence_family="incision_geometry", used_fallback=True)
+        evidence_family="incision_geometry", used_fallback=True, context={"strata": strata or {}})
     if bank_ev.rating:
         out[geomorphology.BANK_EROSION_ID] = {
             "rating": bank_ev.rating,
@@ -612,7 +623,7 @@ def rate_metrics_from_stages(block: dict, bankfull_stage: float,
         variant_key="channelized-fcode" if channelized else None,
         source_tier="screening-proxy",
         evidence_family="channelization_class" if channelized else "incision_geometry",
-        used_fallback=True)
+        used_fallback=True, context={"strata": strata or {}})
     if channel_ev.rating:
         out[geomorphology.CHANNEL_EVOL_ID] = {
             "rating": channel_ev.rating,
@@ -737,7 +748,7 @@ def apply_observed_evidence(report: dict, evidence: Optional[dict[str, dict]]) -
     result = _finalize(
         rows, report.get("totalCount", len(meta)),
         set(report.get("overridesApplied") or []) - set(applied))
-    for key in ("crossSection", "basin"):
+    for key in ("crossSection", "basin", "strata"):
         if report.get(key):
             result[key] = report[key]
     result["observedEvidenceApplied"] = sorted(applied)
@@ -975,4 +986,6 @@ def rescore(base_report: dict, overrides: Optional[dict[str, str]]) -> dict:
         result["crossSection"] = base_report["crossSection"]
     if base_report.get("basin"):
         result["basin"] = base_report["basin"]
+    if "strata" in base_report:
+        result["strata"] = base_report["strata"]
     return result

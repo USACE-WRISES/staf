@@ -69,6 +69,11 @@ LANDSCAPE_PARITY = (
     ("v__habitat_provision__woodyRiparian", "woody_wsrp100", 0.3, None),
     ("v__light_thermal_regime__woodyRiparian", "woody_wsrp100", 0.3, None),
     ("c__carbon_processing", "natural_wsrp100", 0.3, None),
+    ("c__low_flow_baseflow_dynamics", "erom__q_cv_monthly", 0.000001,
+     ("method_low_flow_baseflow_dynamics", "erom-flow-variability")),
+    ("c__bed_composition_bedform_dynamics", "agriculture_ws", 0.01,
+     ("method_bed_composition_bedform_dynamics", "watershed-agriculture-share")),
+    # Keep legacy-only comparisons while the legacy criteria remain available.
     ("c__low_flow_baseflow_dynamics", "hyd_min", 0.0,
      ("method_low_flow_baseflow_dynamics", "streamcat-hyd-integrity")),
     ("c__bed_composition_bedform_dynamics", "sed_min", 0.0,
@@ -294,6 +299,7 @@ def harvest_huc8(root_path: str, huc8: str, chunk_id: str) -> str:
     from ..stages import score as score_stage
     root = DataRoot(Path(root_path))
     derived = pq.read_table(root.huc8_file(huc8, "derived")).to_pylist()
+    erom = score_stage.erom_rows(root, (row["comid"] for row in derived))
     joins = {int(r["comid"]): r for r in pq.read_table(root.huc8_file(huc8, "joins")).to_pylist()}
     comids = pa.array([int(d["comid"]) for d in derived], pa.int64())
     sc_table = pq.read_table(root.chunk_raw(chunk_id, "streamcat"))
@@ -314,7 +320,7 @@ def harvest_huc8(root_path: str, huc8: str, chunk_id: str) -> str:
         j = joins.get(comid) or {}
         xrow = xsections.get(comid)
         geomorph = score_stage.geomorph_for(xrow)
-        record = score_stage.record_for(d, j, geomorph, sc_rows.get(comid) or {})
+        record = score_stage.record_for(d, j, geomorph, sc_rows.get(comid) or {}, erom.get(comid))
         report = client.score_record(record, cross_section=False)
         row = {key: d.get(key) for key in IDENTITY}
         row["tier"] = config.XS_TIER if geomorph is not None else config.BASE_TIER
@@ -334,10 +340,13 @@ def harvest_huc8(root_path: str, huc8: str, chunk_id: str) -> str:
 
 
 def part_key(root: DataRoot, huc8: str) -> str:
-    """The ledger key of a HUC8's part: the HUC8 plus its scores file's size and mtime."""
+    """The HUC8 part depends on its scores, current method and raw EROM cache."""
     path = root.huc8_file(huc8, "scores")
     stat = path.stat() if path.exists() else None
-    return f"{huc8}@{stat.st_size if stat else 0}:{int(stat.st_mtime) if stat else 0}"
+    from easi.national import method_version
+    from ..stages.score import erom_stamp
+    return f"{huc8}@" + digest(stat.st_size if stat else 0, stat.st_mtime_ns if stat else 0,
+                              method_version(), erom_stamp(root))
 
 
 def inputs_values(root: DataRoot, options: Optional[dict] = None) -> str:

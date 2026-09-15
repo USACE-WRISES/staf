@@ -71,7 +71,7 @@ def test_attrs_from_feature_maps_and_guards():
     out = fabric.attrs_from_feature(_feat())
     assert out == {"gnis_name": "Sugar Run", "drainage_area_sqkm": 15.4935,
                    "huc8": "05060001", "slope": 0.01784203, "fcode": 46006,
-                   "stream_order": 1}
+                   "stream_order": 1, "erom": None}
     odd = fabric.attrs_from_feature(_feat(gnis_name="  ", slope=-9998, streamorde=None,
                                           reachcode=None, totdasqkm="12.5"))
     assert odd["gnis_name"] is None and odd["slope"] is None

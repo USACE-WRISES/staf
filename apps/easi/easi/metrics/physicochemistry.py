@@ -123,6 +123,7 @@ def detrital_cpom(ctx: AnalysisContext) -> MetricResult:
     })
     ev = screening_methods.evaluate(
         CPOM_ID, values,
+        context={"strata": ctx.extras.get("strata") or {}},
         input_meta={key: {"source": watershed.input_source(ctx, f"cpom.{key}")}
                     for key in values},
         confidence="M")
@@ -151,7 +152,12 @@ def nutrients(ctx: AnalysisContext) -> MetricResult:
         tp_future = executor.submit(wqp.sample_summary, "tp", ctx.lat, ctx.lon)
         tn_summary, tp_summary = tn_future.result(), tp_future.result()
 
-    region = geo.nars9_at(ctx.lat, ctx.lon)
+    if "strata" in ctx.extras and "nars9" in ctx.extras["strata"]:
+        code = ctx.extras["strata"]["nars9"]
+        region = {"code": code, "name": geo.nars9_name(code)} if code else None
+    else:
+        # Direct adapter callers without assessment context retain the old lookup.
+        region = geo.nars9_at(ctx.lat, ctx.lon)
     region_code = (region or {}).get("code")
     tn = (tn_summary or {}).get("value")
     tp = (tp_summary or {}).get("value")
@@ -223,6 +229,7 @@ def stream_temperature(ctx: AnalysisContext) -> MetricResult:
     ev = screening_methods.evaluate(
         TEMPERATURE_ID,
         {"woodyRiparian": woody, "impervious": impervious},
+        context={"strata": ctx.extras.get("strata") or {}},
         input_meta={
             "woodyRiparian": {
                 "source": watershed.input_source(ctx, "temperature.woodyRiparian"),

@@ -22,7 +22,8 @@ from ..batch import diagnostics
 _PRIMARY = "https://api.epa.gov/StreamCat/streams/metrics"
 _MIRROR = "https://java.epa.gov/StreamCAT/metrics"
 _AOI_SUFFIX = {"watershed": "ws", "catchment": "cat",
-               "riparian_watershed": "wsrp100", "riparian_catchment": "catrp100"}
+               "riparian_watershed": "wsrp100", "riparian_catchment": "catrp100",
+               "other": ""}
 
 
 def _request(url: str, params: dict, timeout: float, retries: int = 2) -> dict | None:
@@ -46,7 +47,11 @@ def _request(url: str, params: dict, timeout: float, retries: int = 2) -> dict |
 @lru_cache(maxsize=256)
 def _fetch(comid: int, names: tuple[str, ...], aoi: str, timeout: float) -> tuple:
     """Cached low-level fetch -> tuple of (col, value) pairs (hashable)."""
-    params = {"name": ",".join(names), "areaOfInterest": aoi, "comid": str(comid)}
+    # EPA's model request requires aoi=other. areaOfInterest=other returns
+    # only COMID with HTTP 200. Preserve the existing standard-AOI requests,
+    # whose shared response supplies watershed, catchment, and riparian data.
+    aoi_parameter = "aoi" if aoi == "other" else "areaOfInterest"
+    params = {"name": ",".join(names), aoi_parameter: aoi, "comid": str(comid)}
     data = _request(_PRIMARY, params, timeout)
     if data is None:
         data = _request(_MIRROR, params, timeout)

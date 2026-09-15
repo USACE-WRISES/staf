@@ -95,6 +95,8 @@ def test_staging_writes_the_asset_and_skips_it_without_the_state_table(tmp_path)
     root.huc4_vpu.write_text(json.dumps({"0208": "02"}), encoding="utf-8")
     progress = state.Progress(root, quiet=True)
     manifest = coverage.run_staging(root, state.UnitStates(root), progress)
+    from easi import config as easi_config
+    assert manifest["criteria_set"] == easi_config.criteria_set()
     entry = manifest["assets"]["stats.json"]
     assert entry["asset"] == "stats.json" and entry["bytes"] > 100 and len(entry["sha256"]) == 64
     data = json.loads((root.staging / "stats.json").read_text(encoding="utf-8"))

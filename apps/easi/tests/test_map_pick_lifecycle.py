@@ -169,7 +169,8 @@ def test_easi_new_analysis_works_before_the_basin_clear_input_exists():
         events = SimpleNamespace(nav_new=reactive.value(ActionButtonValue(0)),
                                  clear_basin=reactive.value())
         resets = []
-        scope = {"reactive": reactive, "input": events, "_reset": lambda: resets.append("reset")}
+        scope = {"reactive": reactive, "input": events, "_reset": lambda: resets.append("reset"),
+                 "app_mode": reactive.value("single")}
         exec(compile(ast.Module(body=functions, type_ignores=[]), "easi/app.py", "exec"), scope)
         try:
             await reactive.flush()

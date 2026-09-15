@@ -1,7 +1,7 @@
 """Geomorphology-discipline EASI metric adapters."""
 from __future__ import annotations
 
-from .. import geomorph, screening_methods, watershed
+from .. import config, geomorph, screening_methods, watershed
 from . import base
 from .base import AnalysisContext, MetricResult, unavailable
 
@@ -14,13 +14,14 @@ CHANNEL_EVOL_ID = "channel-evolution-channel-evolution-stage-and-trends"
 CHANNELIZED_FCODES = {33600, 33601, 33603}
 
 
-def rate_channel_evolution(bhr, er=None, fcode=None):
+def rate_channel_evolution(bhr, er=None, fcode=None, *, strata=None):
     """Pure channel-adjustment proxy helper used by tests and geometry edits."""
     variant = "channelized-fcode" if fcode in CHANNELIZED_FCODES else None
     values = {"fcode": fcode} if variant else {"bhr": bhr, "er": er,
                                                  "fcodeContext": fcode}
     return screening_methods.evaluate(
         CHANNEL_EVOL_ID, values, variant_key=variant,
+        context={"strata": strata or {}},
         evidence_family="incision_geometry", used_fallback=True).rating
 
 
@@ -50,6 +51,7 @@ def channel_evolution(ctx: AnalysisContext) -> MetricResult:
     bhr_stats = (geom.get("reach") or {}).get("bank_height_ratio") or {}
     ev = screening_methods.evaluate(
         CHANNEL_EVOL_ID, {"bhr": bhr, "er": er, "fcodeContext": ctx.fcode},
+        context={"strata": ctx.extras.get("strata") or {}},
         input_meta={
             "bhr": {"source": source},
             "er": {"source": source},
@@ -130,6 +132,30 @@ def sediment_supply(ctx: AnalysisContext) -> MetricResult:
 
 
 def substrate(ctx: AnalysisContext) -> MetricResult:
+    if config.criteria_set() == "legacy":
+        return _substrate_legacy(ctx)
+    return _substrate_regional(ctx)
+
+
+def _substrate_regional(ctx: AnalysisContext) -> MetricResult:
+    agriculture = base.ag_pct(ctx)
+    ev = screening_methods.evaluate(
+        SUBSTRATE_ID, {"agriculture": agriculture},
+        input_meta={"agriculture": {"source": watershed.input_source(ctx, "substrate.agriculture")}},
+        confidence="L", source_tier="screening-proxy", evidence_family="watershed_landcover",
+        used_fallback=False)
+    if ev.rating is None:
+        return unavailable(SUBSTRATE_ID, watershed.guidance(ctx, "watershed crop and hay cover are required"),
+                           "L", scoring=ev.trace)
+    return MetricResult(
+        SUBSTRATE_ID, value=agriculture, value_text=f"watershed agriculture {agriculture:.1f}%",
+        rating=ev.rating, confidence="L", source=watershed.result_source(ctx, "substrate"),
+        note=("Unvalidated pressure proxy for bed condition. Disclosed correlated pair with Catchment "
+              "hydrology: both use watershed agriculture and the same 30/50 percent bands. "
+              "This does not measure bed composition, embeddedness or large wood."), scoring=ev.trace)
+
+
+def _substrate_legacy(ctx: AnalysisContext) -> MetricResult:
     """Observed NRSA embeddedness, then the StreamCat SED fallback."""
     nrsa = base.nrsa_evidence(ctx)
     embeddedness = (nrsa or {}).get("embeddednessPct")

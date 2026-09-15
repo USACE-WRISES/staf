@@ -1,7 +1,9 @@
 """Hydraulics-discipline EASI metric adapters."""
 from __future__ import annotations
 
-from .. import geomorph, screening_methods
+import math
+
+from .. import config, geomorph, screening_methods
 from . import base
 from .base import AnalysisContext, MetricResult, unavailable
 
@@ -63,9 +65,10 @@ def floodplain_engagement(ctx: AnalysisContext) -> MetricResult:
         scoring=ev.trace)
 
 
-def rate_entrenchment(er):
+def rate_entrenchment(er, *, strata=None):
     """Direct entrenchment-ratio rating."""
-    return screening_methods.evaluate(ENTRENCHMENT_ID, {"er": er}).rating
+    return screening_methods.evaluate(ENTRENCHMENT_ID, {"er": er},
+                                      context={"strata": strata or {}}).rating
 
 
 def floodplain_access(ctx: AnalysisContext) -> MetricResult:
@@ -79,6 +82,7 @@ def floodplain_access(ctx: AnalysisContext) -> MetricResult:
     source = base.xs_source(geom)
     ev = screening_methods.evaluate(
         ENTRENCHMENT_ID, {"er": er},
+        context={"strata": ctx.extras.get("strata") or {}},
         input_meta={"er": {"source": source}},
         confidence=confidence)
     if ev.rating is None:
@@ -104,7 +108,60 @@ def floodplain_access(ctx: AnalysisContext) -> MetricResult:
         note=note, scoring=ev.trace)
 
 
+def monthly_flow_cv(erom):
+    """Population CV of all twelve finite EROM monthly flows, rounded to six places."""
+    if not isinstance(erom, dict):
+        return None
+    try:
+        raw = [erom.get(f"qe_{month:02d}") for month in range(1, 13)]
+        if any(value is None or isinstance(value, bool) for value in raw):
+            return None
+        monthly = [float(value) for value in raw]
+        if not all(math.isfinite(value) for value in monthly):
+            return None
+        mean = math.fsum(monthly) / 12
+        if not math.isfinite(mean) or mean <= 0:
+            return None
+        variance = math.fsum((value - mean) ** 2 for value in monthly) / 12
+        cv = math.sqrt(variance) / mean
+        return round(cv, 6) if math.isfinite(cv) else None
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
 def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
+    # Revisit: remove the legacy catalog, adapter branches and NRSA tier together
+    # once the regional criteria are accepted.
+    if config.criteria_set() == "legacy":
+        return _low_flow_connectivity_legacy(ctx)
+    return _low_flow_connectivity_regional(ctx)
+
+
+def _low_flow_connectivity_regional(ctx: AnalysisContext) -> MetricResult:
+    erom = ctx.extras.get("erom") or {}
+    cv = monthly_flow_cv(erom)
+    source = "NHDPlus V2 EROM modeled monthly flows"
+    ev = screening_methods.evaluate(
+        LOW_FLOW_ID, {"flowCv": cv, "meanAnnualFlow": erom.get("qe_ma"),
+                      "fcodeContext": ctx.fcode},
+        context={"strata": ctx.extras.get("strata") or {}},
+        input_meta={"flowCv": {"source": source},
+                    "meanAnnualFlow": {"source": "NHDPlus V2 EROM QE_MA"},
+                    "fcodeContext": {"source": "NHDPlus FCODE"}},
+        confidence="L", source_tier="published-model", evidence_family="erom_flow",
+        used_fallback=False)
+    if ev.rating is None:
+        return unavailable(LOW_FLOW_ID, "twelve finite EROM monthly flows with a positive mean are required",
+                           "L", scoring=ev.trace)
+    return MetricResult(
+        LOW_FLOW_ID, value=cv, value_text=f"EROM monthly flow variability (CV) {cv:.3f}",
+        rating=ev.rating, confidence="L", source=source,
+        note=("Unvalidated low-flow proxy (field agreement 0.18). Monthly climatological variability "
+              "does not measure daily low flow or wetted connectivity. Interpret natural intermittency "
+              "against the regional reference expectations."), scoring=ev.trace)
+
+
+def _low_flow_connectivity_legacy(ctx: AnalysisContext) -> MetricResult:
     """Observed NRSA wetted channel, then the StreamCat HYD fallback."""
     fcode = ctx.fcode
     descriptions = {

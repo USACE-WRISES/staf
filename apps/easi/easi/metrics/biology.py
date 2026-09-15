@@ -1,7 +1,9 @@
 """Biology-discipline EASI metric adapters."""
 from __future__ import annotations
 
-from .. import screening_methods, watershed
+import math
+
+from .. import config, screening_methods, watershed
 from ..datasources import nas, nid_barriers
 from . import base
 from .base import AnalysisContext, MetricResult, unavailable
@@ -76,13 +78,14 @@ def barriers(ctx: AnalysisContext) -> MetricResult:
 def habitat_complexity(ctx: AnalysisContext) -> MetricResult:
     """Woody riparian corridor screen of habitat support.
 
-    Corridor woody cover alone is rated (RBP-derived 50/70 bands). Sinuosity
-    rides along as a context-only input in the scoring trace."""
+    Corridor woody cover uses the active criteria. Sinuosity is a
+    context-only input in the scoring trace."""
     woody = base.riparian_woody_pct(ctx)
     sinuosity = ctx.sinuosity
     ev = screening_methods.evaluate(
         HABITAT_ID,
         {"woodyRiparian": woody, "sinuosity": sinuosity},
+        context={"strata": ctx.extras.get("strata") or {}},
         input_meta={
             "woodyRiparian": {"source": watershed.input_source(ctx, "habitat.woodyRiparian")},
             "sinuosity": {"source": "selected reach geometry"},
@@ -100,13 +103,16 @@ def habitat_complexity(ctx: AnalysisContext) -> MetricResult:
         value_text=f"woody riparian cover {value:.1f}%{sin_txt}",
         rating=ev.rating, confidence="L",
         source=watershed.result_source(ctx, "habitat"),
-        note=("Corridor-cover proxy for habitat support, not a field habitat "
-              "inventory. Grass-dominated natural channels can provide "
-              "habitat this proxy does not credit."),
+        note=(("Corridor-cover proxy for habitat support. Level II reference expectations "
+               "can credit naturally open prairie and desert channels; this is not a field habitat inventory.")
+              if config.criteria_set() == "regional" else
+              ("Corridor-cover proxy for habitat support, not a field habitat "
+               "inventory. Grass-dominated natural channels can provide "
+               "habitat this proxy does not credit.")),
         scoring=ev.trace)
 
 
-def biological_integrity(ctx: AnalysisContext) -> MetricResult:
+def _biological_integrity_legacy(ctx: AnalysisContext) -> MetricResult:
     """Measured NRSA class, predicted BMMI, then published ICI/IWI products."""
     nrsa = base.nrsa_evidence(ctx)
     benthic = (nrsa or {}).get("benthicClass")
@@ -187,6 +193,61 @@ def biological_integrity(ctx: AnalysisContext) -> MetricResult:
         return unavailable(
             BIOINTEGRITY_ID,
             "measured condition, prG_BMMI, or all twelve ICI/IWI components "
+            "are required",
+            "L", scoring=ev.trace)
+    product_values = ev.trace.get("context", {}).get("products") or {}
+    return MetricResult(
+        BIOINTEGRITY_ID, value=float(ev.combined_value),
+        value_text=(f"landscape integrity fallback {float(ev.combined_value):.3f} "
+                    f"(ICI {float(product_values.get('ICI')):.3f}, "
+                    f"IWI {float(product_values.get('IWI')):.3f})"),
+        rating=ev.rating, confidence="L",
+        source="EPA StreamCat published ICI/IWI component products",
+        note=("Predicted landscape condition, not a measured IBI. Multiplication reuses "
+              "landscape evidence scored elsewhere; 0.40/0.70 are EASI integration tiers."),
+        scoring=ev.trace)
+
+
+def biological_integrity(ctx: AnalysisContext) -> MetricResult:
+    if config.criteria_set() == "legacy":
+        return _biological_integrity_legacy(ctx)
+    return _biological_integrity_regional(ctx)
+
+
+def _biological_integrity_regional(ctx: AnalysisContext) -> MetricResult:
+    raw = base.sc(ctx).get("prg_bmmi0809")
+    try:
+        prg = float(raw) if raw is not None and not isinstance(raw, bool) else None
+        if prg is not None and (not math.isfinite(prg) or not 0 <= prg <= 1):
+            prg = None
+    except (TypeError, ValueError):
+        prg = None
+    if prg is not None:
+        source = "EPA StreamCat prg_bmmi0809 (areaOfInterest other)"
+        ev = screening_methods.evaluate(
+            BIOINTEGRITY_ID, {"prGBmmi": prg},
+            input_meta={"prGBmmi": {"source": source}}, confidence="M/L",
+            source_tier="published-model", evidence_family="streamcat_biological_model",
+            used_fallback=False)
+        return MetricResult(
+            BIOINTEGRITY_ID, value=prg,
+            value_text=f"predicted Good-BMMI probability {prg:.2f}", rating=ev.rating,
+            confidence="M/L", source=source,
+            note=("Published benthic-condition model probability. The 0.25/0.50 classes are EASI "
+                  "integration tiers; this is not a measured MMI or multi-community IBI."), scoring=ev.trace)
+
+    products = base.integrity_products(ctx)
+    values = products or {}
+    ev = screening_methods.evaluate(
+        BIOINTEGRITY_ID, values,
+        input_meta={key: {"source": f"EPA StreamCat {key}"} for key in values},
+        confidence="L", variant_key="streamcat-integrity-products",
+        source_tier="published-model", evidence_family="iwi_landscape",
+        used_fallback=True)
+    if ev.rating is None:
+        return unavailable(
+            BIOINTEGRITY_ID,
+            "prg_bmmi0809 or all twelve ICI/IWI components "
             "are required",
             "L", scoring=ev.trace)
     product_values = ev.trace.get("context", {}).get("products") or {}

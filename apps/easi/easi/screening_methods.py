@@ -8,7 +8,9 @@ operator set; it never evaluates arbitrary expressions.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import functools
 import math
+from collections.abc import Mapping
 from typing import Any, Optional
 
 from . import config
@@ -49,6 +51,164 @@ def catalog() -> dict:
     return config.screening_methods()
 
 
+@functools.lru_cache(maxsize=1)
+def curve_sets() -> dict[str, dict]:
+    """Load the packaged reference curves, shared by live and stored-evidence paths."""
+    return config._load("reference-curves.json").get("sets") or {}
+
+
+def interp_curve(points: Any, x: float) -> Optional[float]:
+    """Pure-Python interpolation matching StreamCurves for JSON point lists.
+
+    Stable sort, endpoint clamping, coincident-x segments, missing coordinates,
+    and [0, 1] clamping follow ``streamcurves.curves.interp_curve`` exactly.
+    """
+    if points is None:
+        return None
+    if isinstance(points, Mapping):
+        xs = points.get("metric_value", points.get("x"))
+        ys = points.get("index_score", points.get("y"))
+        if xs is None or ys is None:
+            return None
+        pairs = zip(xs, ys)
+    else:
+        pairs = ((p.get("x", p.get("metric_value")),
+                  p.get("y", p.get("index_score"))) if isinstance(p, Mapping)
+                 else (p[0], p[1]) for p in points)
+    pts = []
+    for px, py in pairs:
+        if px is None or py is None:
+            continue
+        fx, fy = float(px), float(py)
+        if math.isnan(fx) or math.isnan(fy):
+            continue
+        pts.append((fx, fy))
+    pts.sort(key=lambda p: p[0])
+    if not pts:
+        return None
+
+    def clamp(y):
+        return 0.0 if y < 0.0 else 1.0 if y > 1.0 else y
+
+    x = float(x)
+    if len(pts) == 1 or x <= pts[0][0]:
+        return clamp(pts[0][1])
+    if x >= pts[-1][0]:
+        return clamp(pts[-1][1])
+    for a, b in zip(pts, pts[1:]):
+        if a[0] <= x <= b[0]:
+            span = b[0] - a[0]
+            if span <= 0:
+                return clamp(b[1])
+            t = (x - a[0]) / span
+            return clamp(a[1] + t * (b[1] - a[1]))
+    return clamp(pts[-1][1])
+
+
+def resolve_curve(spec: dict, strata: dict | None = None) -> tuple[str, dict, int]:
+    """Resolve the requested stratum or an explicit fallback, with its depth."""
+    if spec.get("mode") != "banded":
+        raise ValueError("reference curves support only banded mode")
+    set_id = spec.get("set")
+    definition = curve_sets().get(set_id)
+    if definition is None:
+        raise ValueError(f"unknown reference curve set {set_id!r}")
+    stratifier = spec.get("stratifier")
+    if stratifier != definition.get("stratifier"):
+        raise ValueError(f"{set_id}: curve stratifier does not match the set")
+    curves = definition.get("curves") or {}
+    if "national" not in curves:
+        raise ValueError(f"{set_id}: a national reference curve is required")
+    primary = "national" if stratifier == "national" else (strata or {}).get(stratifier)
+    candidates = [primary, *(spec.get("fallback") or [])]
+    for depth, key in enumerate(candidates):
+        if key is not None and str(key) in curves:
+            return str(key), curves[str(key)], depth
+    raise ValueError(f"{set_id}: no reference curve resolves for {primary!r}")
+
+
+def _strata(context: dict | None) -> dict:
+    return (context or {}).get("strata") or {}
+
+
+def _curve_trace(spec: dict, strata: dict | None) -> dict:
+    key, curve, depth = resolve_curve(spec, strata)
+    return {"set": spec["set"], "stratum": key, "fallbackDepth": depth,
+            "n": curve.get("n", curve.get("nMembers")),
+            "x69": curve["x69"], "x39": curve["x39"]}
+
+
+def score_quantity(value: Any, rule: dict, strata: dict | None = None
+                   ) -> tuple[Optional[str], Optional[float], Optional[dict]]:
+    """Rate one physical quantity and return its rating anchor and curve trace.
+
+    Stored crossings are for display. Curve ratings always use interpolation
+    against the 0.39 and 0.69 index edges before applying EASI's rating anchors.
+    """
+    number = _number(value)
+    if number is None:
+        return None, None, None
+    trace = None
+    if rule.get("curve"):
+        spec = rule["curve"]
+        _, curve, _ = resolve_curve(spec, strata)
+        interpolated = interp_curve(curve["points"], number)
+        if interpolated is None:
+            return None, None, None
+        rating = "Good" if interpolated >= 0.69 else "Fair" if interpolated >= 0.39 else "Poor"
+        trace = _curve_trace(spec, strata)
+    else:
+        rating = rating_for_value(number, rule.get("bands") or [])
+    index = (catalog().get("ratingIndex") or config.RATING_INDEX).get(rating)
+    return rating, index, trace
+
+
+def curve_bands(spec: dict, strata: dict | None = None) -> list[dict]:
+    """Synthetic physical-value bands for display, never used for curve scoring."""
+    _, curve, _ = resolve_curve(spec, strata)
+    x39, x69 = float(curve["x39"]), float(curve["x69"])
+    if curve_sets()[spec["set"]]["higherIsBetter"]:
+        values = [("Poor", None, x39, False, False, f"<{_fmt(x39)}"),
+                  ("Fair", x39, x69, True, False, f"≥{_fmt(x39)} to <{_fmt(x69)}"),
+                  ("Good", x69, None, True, False, f"≥{_fmt(x69)}")]
+    else:
+        values = [("Good", None, x69, False, True, f"≤{_fmt(x69)}"),
+                  ("Fair", x69, x39, False, True, f">{_fmt(x69)} to ≤{_fmt(x39)}"),
+                  ("Poor", x39, None, False, False, f">{_fmt(x39)}")]
+    return [{"rating": rating, "min": lo, "max": hi, "minInclusive": lo_inc,
+             "maxInclusive": hi_inc, "label": label}
+            for rating, lo, hi, lo_inc, hi_inc, label in values]
+
+
+def curve_reference(spec: dict, strata: dict | None = None) -> str:
+    """Reference-panel description attached to displayed criteria."""
+    key, curve, depth = resolve_curve(spec, strata)
+    n = curve.get("n", curve.get("nMembers", 0))
+    if key == "national" or depth:
+        location = "national curve"
+    elif spec["stratifier"] == "l2":
+        name = (strata or {}).get("l2_name")
+        location = f"Level II region {key}" + (f", {name}" if name else "")
+    else:
+        location = f"slope class {key}"
+    return f"{location}, {int(n):,} reference reaches; crossings are approximate"
+
+
+def rule_for_input(method: dict, inp: dict, context: dict | None = None) -> dict:
+    if inp.get("regionalBands"):
+        key = (method.get("formula") or {}).get("regionalContextKey", "region")
+        return {"bands": regional_bands(inp, (context or {}).get(key))}
+    if inp.get("curve") or inp.get("bands"):
+        return inp
+    return method
+
+
+def rule_for_method(method: dict) -> dict:
+    if method.get("curve") or method.get("bands"):
+        return method
+    return next((i for i in method.get("inputs", []) if not i.get("contextOnly")), method)
+
+
 def methods_by_metric() -> dict[str, dict]:
     return {m["metricId"]: m for m in catalog().get("methods", [])}
 
@@ -70,6 +230,12 @@ def _resolved_method(parent: dict, variant_key: str | None = None) -> dict:
         raise KeyError(
             f"method {parent.get('metricId')!r} has no variant {variant_key!r}")
     merged = {**parent, **variant}
+    # A variant replaces the parent's scoring rule rather than inheriting the
+    # other rule kind alongside it. Input lists are already replaced wholesale.
+    if "curve" in variant:
+        merged.pop("bands", None)
+    elif "bands" in variant:
+        merged.pop("curve", None)
     merged["metricId"] = parent["metricId"]
     merged["title"] = parent["title"]
     merged["catalogMethodKey"] = parent["methodKey"]
@@ -101,6 +267,13 @@ def _fmt(value: float) -> str:
 
 
 def equation_for(method: dict) -> str:
+    equation = _base_equation_for(method)
+    if method.get("curve") or any(i.get("curve") for i in method.get("inputs", [])):
+        equation += "; curve index is banded at 0.39 and 0.69"
+    return equation
+
+
+def _base_equation_for(method: dict) -> str:
     """Generate the human-readable equation from typed formula parameters."""
     operator = method["operator"]
     inputs = {i["key"]: i for i in method.get("inputs", [])}
@@ -185,10 +358,10 @@ def regional_bands(input_def: dict, region: str | None) -> list[dict]:
 
 
 def bands_for_input(method: dict, input_def: dict, context: dict | None = None) -> list[dict]:
-    if input_def.get("regionalBands"):
-        key = (method.get("formula") or {}).get("regionalContextKey", "region")
-        return regional_bands(input_def, (context or {}).get(key))
-    return input_def.get("bands") or method.get("bands") or []
+    rule = rule_for_input(method, input_def, context)
+    if rule.get("curve"):
+        return curve_bands(rule["curve"], _strata(context))
+    return rule.get("bands") or []
 
 
 def rating_for_value(value: float, bands: list[dict]) -> Optional[str]:
@@ -205,6 +378,12 @@ def rating_for_value(value: float, bands: list[dict]) -> Optional[str]:
 
 def criteria_for(method: dict, context: dict | None = None) -> dict:
     """Serializable automated and field criteria for the tooltip/viewer."""
+    def labels(bands, rule):
+        reference = (curve_reference(rule["curve"], _strata(context))
+                     if rule.get("curve") else "")
+        suffix = f" ({reference})" if reference else ""
+        return {b["rating"]: b["label"] + suffix for b in bands}
+
     auto: list[dict] = []
     if method["operator"] in {"worst_index", "best_index"}:
         for inp in method.get("inputs", []):
@@ -214,9 +393,14 @@ def criteria_for(method: dict, context: dict | None = None) -> dict:
                     "input": inp["key"],
                     "label": inp["label"],
                     "units": inp.get("units", ""),
-                    "bands": {b["rating"]: b["label"] for b in bands},
+                    "bands": labels(bands, rule_for_input(method, inp, context)),
+                    **({"reference": curve_reference(inp["curve"], _strata(context))}
+                       if inp.get("curve") else {}),
                 })
-    elif method.get("bands"):
+    elif rule_for_method(method).get("bands") or rule_for_method(method).get("curve"):
+        rule = rule_for_method(method)
+        bands = (curve_bands(rule["curve"], _strata(context))
+                 if rule.get("curve") else rule["bands"])
         auto.append({
             "input": next((i["key"] for i in method.get("inputs", [])
                            if not i.get("contextOnly")), "value"),
@@ -227,7 +411,9 @@ def criteria_for(method: dict, context: dict | None = None) -> dict:
             "units": ((method.get("formula") or {}).get("units")
                       or next((i.get("units", "") for i in method.get("inputs", [])
                                if not i.get("contextOnly")), "")),
-            "bands": {b["rating"]: b["label"] for b in method["bands"]},
+            "bands": labels(bands, rule),
+            **({"reference": curve_reference(rule["curve"], _strata(context))}
+               if rule.get("curve") else {}),
         })
     elif method["operator"] == "categorical_lookup":
         grouped: dict[str, list[str]] = {}
@@ -311,6 +497,12 @@ def _finish(method: dict, values: dict, input_meta: dict | None, confidence: str
         "warnings": list(warnings or []),
         "context": dict(context or {}),
     }
+    curves = {key: _curve_trace(rule["curve"], _strata(context))
+              for key, rule in [("method", method), *[
+                  (inp["key"], inp) for inp in method.get("inputs", [])]]
+              if rule.get("curve")}
+    if curves:
+        trace["curves"] = curves
     return Evaluation(rating=rating, index=index, combined_value=combined, trace=trace)
 
 
@@ -362,13 +554,10 @@ def evaluate(metric_id: str, values: dict[str, Any], *, context: dict | None = N
         input_ratings: dict[str, str] = {}
         for inp in required:
             value = _number(values.get(inp["key"]))
-            bands = bands_for_input(method, inp, context)
-            if value is None or not bands:
-                continue
-            rating = rating_for_value(value, bands)
+            rating, idx, _ = score_quantity(
+                value, rule_for_input(method, inp, context), _strata(context))
             if rating:
-                idx = float((catalog().get("ratingIndex") or config.RATING_INDEX)[rating])
-                rated.append((idx, inp["key"], rating))
+                rated.append((float(idx), inp["key"], rating))
                 input_ratings[inp["key"]] = rating
         if not rated or (len(rated) < len(required) and not allow_partial):
             return _finish(method, values, input_meta, confidence, rating=None,
@@ -456,7 +645,7 @@ def evaluate(metric_id: str, values: dict[str, Any], *, context: dict | None = N
         # either side of an exact documented breakpoint (for example, 0.30).
         # Twelve decimal places is far finer than any source input or slider.
         combined = round(float(combined), 12)
-    rating = rating_for_value(combined, method.get("bands") or [])
+    rating, _, _ = score_quantity(combined, rule_for_method(method), _strata(context))
     if method.get("formula", {}).get("geometryWarningBelow") is not None:
         threshold = float(method["formula"]["geometryWarningBelow"])
         if combined < threshold:
@@ -489,6 +678,67 @@ def validate_catalog() -> list[str]:
         problems.append("methodKey values must be unique")
 
     citation_ids = set((data.get("citations") or {}).keys())
+
+    def validate_curve(mid: str, label: str, rule: dict) -> None:
+        if "curve" not in rule:
+            return
+        if "bands" in rule or "regionalBands" in rule:
+            problems.append(f"{mid}: {label} must use bands xor curve")
+        spec = rule.get("curve")
+        if not isinstance(spec, dict):
+            problems.append(f"{mid}: {label} curve must be an object")
+            return
+        if spec.get("mode") != "banded":
+            problems.append(f"{mid}: {label} curve mode must be banded")
+        fallback = spec.get("fallback")
+        if not isinstance(fallback, list) or "national" not in fallback:
+            problems.append(f"{mid}: {label} curve requires a national fallback")
+        try:
+            sets = curve_sets()
+        except (OSError, ValueError) as exc:
+            problems.append(f"{mid}: {label} reference curves unavailable: {exc}")
+            return
+        definition = sets.get(spec.get("set"))
+        if not isinstance(definition, dict):
+            problems.append(f"{mid}: {label} unknown reference curve set {spec.get('set')!r}")
+            return
+        if spec.get("stratifier") != definition.get("stratifier"):
+            problems.append(f"{mid}: {label} curve stratifier does not match the set")
+        if not isinstance(definition.get("higherIsBetter"), bool):
+            problems.append(f"{mid}: {label} curve direction must be boolean")
+        curves = definition.get("curves") or {}
+        if "national" not in curves:
+            problems.append(f"{mid}: {label} curve set requires a national curve")
+        if isinstance(fallback, list):
+            for key in fallback:
+                if not isinstance(key, str) or key not in curves:
+                    problems.append(f"{mid}: {label} unknown curve fallback {key!r}")
+        for key, curve in curves.items():
+            if not isinstance(curve, dict):
+                problems.append(f"{mid}: {label} curve {key} must be an object")
+                continue
+            points = curve.get("points")
+            if (not isinstance(points, list) or not points
+                    or any(not isinstance(point, (list, tuple)) or len(point) != 2
+                           or any(_number(v) is None for v in point) for point in points)):
+                problems.append(f"{mid}: {label} curve {key} has invalid points")
+            if any(_number(curve.get(edge)) is None for edge in ("x39", "x69")):
+                problems.append(f"{mid}: {label} curve {key} has invalid crossings")
+
+    def validate_rules(mid: str, method: dict) -> None:
+        validate_curve(mid, "method", method)
+        for inp in method.get("inputs", []):
+            validate_curve(mid, inp.get("key", "input"), inp)
+        if method.get("operator") in {"worst_index", "best_index"}:
+            for inp in method.get("inputs", []):
+                if inp.get("required") and not inp.get("contextOnly"):
+                    rule = rule_for_input(method, inp)
+                    if not any(rule.get(k) for k in ("bands", "curve", "regionalBands")):
+                        if not inp.get("regionalBands"):
+                            problems.append(f"{mid}: {inp['key']} requires bands or curve")
+        elif method.get("operator") not in {"categorical_lookup", "unscored"}:
+            if not any(rule_for_method(method).get(k) for k in ("bands", "curve")):
+                problems.append(f"{mid}: method requires bands or curve")
 
     def validate_bands(mid: str, label: str, bands: list[dict],
                        *, integer: bool = False) -> None:
@@ -526,6 +776,7 @@ def validate_catalog() -> list[str]:
 
     for method in methods:
         mid = method.get("metricId", "<missing>")
+        validate_rules(mid, method)
         if method.get("operator") not in VALID_OPERATORS:
             problems.append(f"{mid}: invalid operator {method.get('operator')!r}")
         if method.get("status") not in VALID_STATUSES:
@@ -584,6 +835,7 @@ def validate_catalog() -> list[str]:
         for variant in method.get("variants", []):
             resolved = _resolved_method(method, variant.get("methodKey"))
             label = f"{mid}/{variant.get('methodKey', '<missing>')}"
+            validate_rules(label, resolved)
             if resolved.get("operator") not in VALID_OPERATORS:
                 problems.append(f"{label}: invalid operator {resolved.get('operator')!r}")
             if resolved.get("status") not in VALID_STATUSES:

@@ -63,10 +63,29 @@ def _band(eci: Optional[float]) -> Optional[str]:
     return scoring.index_band_label(eci)
 
 
+def erom_stamp(root: DataRoot):
+    """An existing raw evidence cache invalidates dependent score/harvest work."""
+    if not root.erom.exists():
+        return None
+    stat = root.erom.stat()
+    return stat.st_size, stat.st_mtime_ns
+
+
+def erom_rows(root: DataRoot, comids) -> dict[int, dict]:
+    """Read a HUC8's raw EROM rows once; missing cache means unknown evidence."""
+    wanted = sorted({int(comid) for comid in comids})
+    if not root.erom.exists() or not wanted:
+        return {}
+    import pyarrow.parquet as pq
+    table = pq.read_table(root.erom, filters=[("comid", "in", wanted)])
+    return {int(row["comid"]): row for row in table.to_pylist()}
+
+
 def run_score(root: DataRoot, chunk: Chunk, huc8: str, states: UnitStates,
               progress: Progress, control: Control, *, force: bool = False) -> None:
     from easi.national import method_version
-    inputs = digest(STAGE, huc8, chunk.id, method_version(), xs_derive.xsections_stamp(root, huc8), 2)
+    inputs = digest(STAGE, huc8, chunk.id, method_version(),
+                    xs_derive.xsections_stamp(root, huc8), erom_stamp(root), 3)
 
     def work():
         import pyarrow as pa
@@ -74,6 +93,7 @@ def run_score(root: DataRoot, chunk: Chunk, huc8: str, states: UnitStates,
         from easi import config as easi_config
         from easi.national import SCHEMA_VERSION, client, records
         derived = pq.read_table(root.huc8_file(huc8, "derived")).to_pylist()
+        erom = erom_rows(root, (row["comid"] for row in derived))
         joins = {int(r["comid"]): r for r in pq.read_table(root.huc8_file(huc8, "joins")).to_pylist()}
         streamcat_table = pq.read_table(root.chunk_raw(chunk.id, "streamcat"))
         sc_rows = {int(r["comid"]): {k: v for k, v in r.items() if k != "comid" and v is not None}
@@ -94,7 +114,7 @@ def run_score(root: DataRoot, chunk: Chunk, huc8: str, states: UnitStates,
             j = joins.get(comid) or {}
             xrow = xsections.get(comid)
             geomorph = geomorph_for(xrow)
-            record = record_for(d, j, geomorph, sc_rows.get(comid) or {})
+            record = record_for(d, j, geomorph, sc_rows.get(comid) or {}, erom.get(comid))
             report = client.score_record(record, cross_section=False)
             evidence_rows.append(records.to_row(record))
             score_rows.append({"comid": comid, "huc4": d["huc4"], "huc8": huc8, "vpu": d.get("vpu"),
@@ -120,15 +140,17 @@ def run_score(root: DataRoot, chunk: Chunk, huc8: str, states: UnitStates,
     common.run_stage(states, huc8, STAGE, inputs, work, progress, force=force)
 
 
-def record_for(d: dict, j: dict, geomorph, sc_row: dict) -> dict:
+def record_for(d: dict, j: dict, geomorph, sc_row: dict, erom_row: Optional[dict] = None) -> dict:
     """The evidence record of one reach (the app's ``records`` contract) from
     its derived row, its joins row, its published geomorph block (see
     ``geomorph_for``) and its StreamCat row. Shared with the analysis
     package, which re-scores the same records."""
     from easi.national import SCHEMA_VERSION, records
+    from easi.datasources.fabric import erom_from_properties
     return {
-        **{k: d.get(k) for k in records.IDENTITY_FIELDS},
-        "streamcat": sc_row or {},
+        **{k: d.get(k) for k in records.IDENTITY_FIELDS
+           if k not in ("l3_code", "nars9") or k in d},
+        "streamcat": sc_row or {}, "erom": erom_from_properties(erom_row),
         "nrsa": _load(d.get("nrsa")), "bankfull": _load(d.get("bankfull")),
         "attains_exact": _load(j.get("attains_exact")) or {},
         "attains_nearby": _load(j.get("attains_nearby")) or {},

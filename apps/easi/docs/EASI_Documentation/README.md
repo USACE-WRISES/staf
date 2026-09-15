@@ -4,6 +4,34 @@ This folder builds the EASI verification and validation report into a single
 self-contained web page at `../../www/documentation.html`. The EASI app serves that
 file and links to it from its header ("Documentation").
 
+## Historical scope as of 2026-09-15
+
+The committed report is a historical validation record. Its cached cases,
+figures, method tables and 13 / 8 / 3 scores precede the regional-criteria
+decision of 2026-09-14. Current EASI uses regional reference criteria and
+0.90 / 0.55 / 0.10 anchors, producing 14 / 8 / 2. Neither a prose update nor
+the runtime legacy switch revalidates the old comparisons under this mapping.
+
+For the current criteria, use the
+[EASI walkthrough](https://usace-wrises.github.io/staf/walkthroughs/easi/#regional-reference-criteria).
+Keep historical figures and `_generated/` tables intact while adding the
+scope notice to `easi-vnv.qmd`. Render only the document from this folder:
+
+```powershell
+quarto render
+```
+
+`_quarto.yml` writes the self-contained result directly to
+`../../www/documentation.html`. This render uses the existing figures and
+tables and performs no scientific analysis or network assessment.
+
+The full `scripts/build_docs.py` workflow below regenerates method tables
+from the active catalog before reading cached validation cases. Running it
+now without refreshing the validation record would mix current methods with
+historical results. A full scientific report revision is a separate task
+that must recompute and review its validation inputs and document the
+criteria set and mapping used.
+
 ## Prerequisites
 
 - The project virtual environment (`.venv`) with the project dependencies installed.
@@ -20,13 +48,13 @@ need the private inputs: edit `easi-vnv.qmd` and run `quarto render`, which reus
 committed `figures/` and `_generated/`. For a full rebuild, restore the private SFARI
 xlsx locally and run `python scripts/build_docs.py --all`.
 
-## The one command
+## Full scientific report revision
 
-From the repo root, using the venv Python:
+From `apps/easi`, using the shared repository virtual environment, after
+the validation revision is explicitly in scope:
 
-```
-.venv/Scripts/python.exe scripts/build_docs.py     # Windows
-.venv/bin/python scripts/build_docs.py             # macOS / Linux
+```powershell
+& ..\..\.venv\Scripts\python.exe scripts/build_docs.py
 ```
 
 This regenerates the metric-method tables from the scoring catalog, rebuilds the
@@ -39,7 +67,7 @@ Flags:
 - `--all`       re-run EASI for every site before building. Uses the network, about 10 minutes.
 - `--no-render` rebuild the figures and tables only, skip the Quarto render.
 
-For a prose-only change you can also just run `quarto render` inside this folder.
+For the historical scope notice, use only `quarto render` inside this folder.
 
 ## What to edit for each kind of change
 

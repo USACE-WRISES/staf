@@ -32,7 +32,8 @@ def _stage_inputs(stage: str) -> str:
 
 
 def _streamcat_inputs() -> str:
-    return digest("streamcat", config.streamcat_names(), config.STREAMCAT_AOIS, 1)
+    return digest("streamcat", config.streamcat_names(), config.STREAMCAT_AOIS,
+                  config.streamcat_aoi_by_name(), 2)
 
 
 def _gdb_steps(root: DataRoot, progress: Progress) -> tuple:
@@ -42,6 +43,7 @@ def _gdb_steps(root: DataRoot, progress: Progress) -> tuple:
     if local_gdb.nhdplus_gdb(root) is not None:
         steps.append(("flowlines", lambda: local_gdb.convert_flowlines(root, progress)))
         steps.append(("huc12", lambda: local_gdb.convert_huc12(root, progress)))
+        steps.append(("erom", lambda: local_gdb.convert_erom(root, progress)))
     if local_gdb.attains_gdb(root) is not None:
         steps.append(("attains", lambda: local_gdb.convert_attains(root, progress)))
     return tuple(steps)
@@ -51,6 +53,9 @@ def _inputs_for(stage: str, root: DataRoot) -> str:
     from . import local_gdb
     if stage == "streamcat":
         return _streamcat_inputs()
+    if stage == "erom":
+        gdb = local_gdb.nhdplus_gdb(root)
+        return digest(stage, gdb.name if gdb else "", local_gdb.EROM_EVIDENCE_COLUMNS, 1)
     if stage in ("flowlines", "huc12"):
         gdb = local_gdb.nhdplus_gdb(root)
         return digest(stage, gdb.name if gdb else "", 1)

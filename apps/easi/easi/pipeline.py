@@ -193,7 +193,7 @@ async def delineate_only(lat: float, lon: float,
         "huc8": d.huc8, "watershed_geojson": d.watershed_geojson,
         "reach_geojson": d.reach_geojson, "drainage_area_sqkm": d.drainage_area_sqkm,
         "slope": d.slope, "fcode": d.fcode, "stream_order": d.stream_order,
-        "sinuosity": d.sinuosity, "siteAnchor": site_anchor,
+        "sinuosity": d.sinuosity, "siteAnchor": site_anchor, "erom": d.erom,
         "watershedPolicy": watershed_engine,
     }
     out_reach = d.reach_geojson
@@ -264,6 +264,8 @@ def _ctx_from_inputs(ci: dict) -> AnalysisContext:
         drainage_area_sqkm=ci.get("drainage_area_sqkm"), slope=ci.get("slope"),
         fcode=ci.get("fcode"), stream_order=ci.get("stream_order"),
         sinuosity=ci.get("sinuosity"))
+    # EROM stays on the surrogate COMID when other reach inputs reanchor.
+    ctx.extras["erom"] = ci.get("erom")
     if ci.get("siteAnchor"):
         ctx.extras["siteAnchor"] = ci["siteAnchor"]
     if ci.get("watershedEngine"):

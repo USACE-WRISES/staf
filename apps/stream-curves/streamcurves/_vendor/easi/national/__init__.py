@@ -21,7 +21,7 @@ from pathlib import Path
 from .. import config
 
 #: The evidence / scores record schema written by the builder and read here.
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 #: The rolling GitHub prerelease that carries the dataset (always a prerelease).
 DATASET_TAG = "easi-national-current"
@@ -31,19 +31,27 @@ DATASET_TAG = "easi-national-current"
 # digest are stale, while a report recalled from evidence always uses the
 # current methods.
 _METHOD_SOURCES = ("scoring.py", "screening_methods.py", "config.py",
-                   "watershed.py", "assessment.py", "bieger.py")
-_METHOD_DATA = ("screening-methods.json", "easi-metrics.json",
-                "cwa-mapping.json", "functions.json")
+                   "watershed.py", "assessment.py", "bieger.py", "geo.py",
+                   "datasources/fabric.py", "national/records.py")
+_METHOD_DATA = ("easi-metrics.json",
+                "cwa-mapping.json", "functions.json", "ecoregion-crosswalk.json",
+                "reference-curves.json")
 
 
-@lru_cache(maxsize=1)
 def method_version() -> str:
     """A short, deterministic digest of the scoring method."""
+    return _method_version(config.criteria_set())
+
+
+@lru_cache(maxsize=2)
+def _method_version(criteria_set: str) -> str:
     pkg = Path(__file__).resolve().parent.parent
     files = [pkg / name for name in _METHOD_SOURCES]
     files += sorted((pkg / "metrics").glob("*.py"))
-    files += [Path(config.DATA_DIR) / name for name in _METHOD_DATA]
+    files += [Path(config.DATA_DIR) / name
+              for name in (config.screening_methods_filename(), *_METHOD_DATA)]
     digest = hashlib.sha256()
+    digest.update(criteria_set.encode("utf-8") + b"\0")
     for path in files:
         digest.update(path.name.encode("utf-8"))
         digest.update(b"\0")
@@ -53,3 +61,6 @@ def method_version() -> str:
             digest.update(b"<missing>")
         digest.update(b"\0")
     return digest.hexdigest()[:12]
+
+
+method_version.cache_clear = _method_version.cache_clear

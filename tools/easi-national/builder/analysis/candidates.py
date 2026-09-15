@@ -143,10 +143,13 @@ def erom_metrics(frame):
     ratio is null where its denominator is not positive (ephemeral and
     isolated reaches). Flows are cubic feet per second."""
     import pandas as pd
+    from easi.metrics.hydraulics import monthly_flow_cv
+    from easi.datasources.fabric import EROM_PROPERTIES, erom_from_properties
     frame = frame.copy()
     frame.columns = [str(c).lower() for c in frame.columns]
     qe = np.column_stack([frame[f"qe_{m}"].to_numpy(dtype=float) for m in EROM_MONTHS])
-    qc = np.column_stack([frame[f"qc_{m}"].to_numpy(dtype=float) for m in EROM_MONTHS])
+    qc = np.column_stack([frame[f"qc_{m}"].to_numpy(dtype=float) if f"qc_{m}" in frame
+                          else np.full(len(frame), np.nan) for m in EROM_MONTHS])
     qe_ma = frame["qe_ma"].to_numpy(dtype=float)
     out = pd.DataFrame({"comid": frame["comid"].astype("int64").to_numpy()})
     for name in EROM_KEEP:
@@ -156,10 +159,11 @@ def erom_metrics(frame):
     with np.errstate(invalid="ignore"):
         out["q_min_ratio"] = _ratio(np.nanmin(qe, axis=1), qe_ma)
         out["q_max_ratio"] = _ratio(np.nanmax(qe, axis=1), qe_ma)
-        mean = np.nanmean(qe, axis=1)
-        out["q_cv_monthly"] = _ratio(np.nanstd(qe, axis=1), mean)
-        out["q_alteration"] = _ratio(qe_ma, frame["qa_ma"].to_numpy(dtype=float))
-        out["q_alteration_c"] = _ratio(qe_ma, frame["qc_ma"].to_numpy(dtype=float))
+        evidence = frame[list(EROM_PROPERTIES)].itertuples(index=False, name=None)
+        out["q_cv_monthly"] = [monthly_flow_cv(erom_from_properties(dict(zip(EROM_PROPERTIES, row))))
+                               for row in evidence]
+        out["q_alteration"] = _ratio(qe_ma, frame["qa_ma"].to_numpy(dtype=float)) if "qa_ma" in frame else np.nan
+        out["q_alteration_c"] = _ratio(qe_ma, frame["qc_ma"].to_numpy(dtype=float)) if "qc_ma" in frame else np.nan
         monthly = np.abs(_ratio(qe, qc) - 1.0)
         out["q_seasonal_alteration"] = np.where(np.isfinite(monthly).any(axis=1), np.nanmax(
             np.where(np.isfinite(monthly), monthly, -np.inf), axis=1), np.nan)
@@ -168,16 +172,28 @@ def erom_metrics(frame):
 
 
 def inputs_erom(root: DataRoot, options: Optional[dict] = None) -> str:
-    gdb = local_gdb.nhdplus_gdb(root)
-    return digest("erom", ANALYSIS_VERSION, gdb.name if gdb else "", list(local_gdb.EROM_COLUMNS), 1)
+    from ..stages.score import erom_stamp
+    return digest("erom", ANALYSIS_VERSION, erom_stamp(root), 2)
 
 
 def run_erom(root: DataRoot, progress: Progress, control: Control, options: Optional[dict] = None) -> Path:
-    frame = local_gdb.read_erom(root, progress)
+    import pyarrow.parquet as pq
+    if not root.erom.exists():
+        raise RuntimeError("national/erom.parquet not found: run the national erom step first")
+    control.check()
+    frame = pq.read_table(root.erom).to_pandas()
     out = erom_metrics(frame)
-    path = common.write_parquet(out, erom_path(root))
-    exact = float(np.isclose(out["q_alteration_c"].to_numpy(dtype=float), 1.0).mean()) if len(out) else 0.0
-    progress.say(f"erom.parquet: {len(out):,} reaches; QE equals QC (no gage evidence) on {exact:.1%}")
+    path = erom_path(root)
+    # The runtime cache deliberately omits QA/QC and area. Retain those
+    # historical analysis quantities from stored evidence when available.
+    if path.exists():
+        previous = pq.read_table(path).to_pandas().set_index("comid")
+        refreshed = {"qe_ma", "q_min_ratio", "q_max_ratio", "q_cv_monthly"}
+        for name in previous.columns:
+            if name not in refreshed:
+                out[name] = out["comid"].map(previous[name])
+    path = common.write_parquet(out, path)
+    progress.say(f"erom.parquet: {len(out):,} reaches from stored national flow evidence")
     return path
 
 

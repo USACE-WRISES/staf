@@ -6,6 +6,7 @@ registry render as 'pending' in the report and are excluded from the rollup
 """
 from __future__ import annotations
 
+from .. import config
 from . import biology, geomorphology, hydraulics, hydrology, physicochemistry
 
 REGISTRY = {
@@ -101,6 +102,20 @@ WATERSHED_METRIC_IDS = (
     physicochemistry.TEMPERATURE_ID, biology.HABITAT_ID,
 )
 
+
+def metric_anchor(metric_id: str) -> str:
+    """The active method's evidence location, resolved at call time."""
+    if config.criteria_set() == "regional" and metric_id == geomorphology.SUBSTRATE_ID:
+        return "watershed"
+    return METRIC_ANCHOR.get(metric_id, "watershed")
+
+
+def watershed_metric_ids() -> tuple[str, ...]:
+    """Metrics recalculated when the watershed evidence layer changes."""
+    if config.criteria_set() == "regional":
+        return (*WATERSHED_METRIC_IDS, geomorphology.SUBSTRATE_ID)
+    return WATERSHED_METRIC_IDS
+
 # StreamCat base metric names needed by the registered adapters (one batched call
 # returns ws / cat / wsrp100 / catrp100 variants for each).
 STREAMCAT_NAMES = [
@@ -115,3 +130,14 @@ STREAMCAT_NAMES = [
     "hyd", "sed", "chem", "conn", "temp", "habt",
     "prG_BMMI",                   # modeled probability of good benthic condition
 ]
+
+# These model columns have no watershed/catchment suffix and require a
+# separate request with aoi="other". Only regional criteria request them.
+STREAMCAT_OTHER_NAMES = ["prg_bmmi0809"]
+
+
+def streamcat_names() -> list[str]:
+    """Standard-area names for the active criteria set."""
+    if config.criteria_set() == "regional":
+        return [name for name in STREAMCAT_NAMES if name != "prG_BMMI"]
+    return list(STREAMCAT_NAMES)

@@ -12,8 +12,8 @@ geometry quantities are fitted at national x slope class in every run.
 Three views per run, all from the same class edges (the 0.69 and 0.39
 crossings of each curve, the Good and Poor edges of each guidance line):
 ``continuous`` (curves interpolated, guidance quantities on a line anchored
-at 1.0 / 0.69 / 0.39 / 0.0, counts and categories at their class midpoints),
-``banded`` (every class collapsed to its midpoint 0.85 / 0.545 / 0.195) and
+at 1.0 / 0.69 / 0.39 / 0.0, counts and categories at their EASI rating indices),
+``banded`` (every class mapped through ``easi.config.RATING_INDEX``) and
 ``mix`` (continuous only where the criterion is a fitted curve). Function
 scores are ``round(index x 15)`` and the rollup is the app's own arithmetic,
 vectorised and proven equal to ``easi.scoring.rollup``.
@@ -35,6 +35,8 @@ from typing import Callable, Optional
 
 import numpy as np
 
+from easi.config import RATING_INDEX
+
 from ..paths import DataRoot
 from ..state import Control, Progress, digest
 from ..stages import common
@@ -44,7 +46,7 @@ from .values import values_path
 
 RUNS = {"S0": None, "SN": "national", "S9": "nars9", "S2": "l2", "S3": "l3"}
 VIEWS = ("continuous", "banded", "mix")
-MIDPOINT = {"Good": 0.85, "Fair": 0.545, "Poor": 0.195}
+MIDPOINT = RATING_INDEX
 CLASSES = ("Poor", "Fair", "Good")
 INDEX_EDGES = (0.39, 0.69)
 SCORE_MAX = 15
@@ -61,8 +63,7 @@ CURVE_INPUTS: dict[str, list[tuple[str, str, Optional[str]]]] = {
     "high_flow_dynamics": [("bhr_median", "v__high_flow_dynamics__bhr", None)],
     "channel_floodplain_dynamics": [("bhr_median", "v__channel_floodplain_dynamics__bhr", "bank-height-ratio")],
     "channel_evolution": [("bhr_median", "v__channel_evolution__bhr", None), ("er_median", "v__channel_evolution__er", None)],
-    "low_flow_baseflow_dynamics": [("hyd_min", "c__low_flow_baseflow_dynamics", "streamcat-hyd-integrity")],
-    "bed_composition_bedform_dynamics": [("sed_min", "c__bed_composition_bedform_dynamics", "streamcat-sed-integrity")],
+    "low_flow_baseflow_dynamics": [("q_cv_monthly", "c__low_flow_baseflow_dynamics", "erom-flow-variability")],
     "nutrient_cycling": [("chem_min", "c__nutrient_cycling", "streamcat-chem-integrity-nutrient")],
     "water_soil_quality": [("chem_min", "c__water_soil_quality", "streamcat-chem-integrity-regulatory")],
 }
@@ -166,13 +167,13 @@ def _nanagg(stack: np.ndarray, operator: str) -> np.ndarray:
 
 
 def class_of_index(index) -> np.ndarray:
-    """Poor at or below 0.39, Fair at or below 0.69, else Good; None where NaN."""
+    """Curve classes: Fair starts at 0.39 and Good at 0.69; None where NaN."""
     x = np.asarray(index, dtype=float)
     out = np.full(x.shape, None, dtype=object)
     ok = np.isfinite(x)
-    out[ok & (x <= INDEX_EDGES[0])] = "Poor"
-    out[ok & (x > INDEX_EDGES[0]) & (x <= INDEX_EDGES[1])] = "Fair"
-    out[ok & (x > INDEX_EDGES[1])] = "Good"
+    out[ok & (x < INDEX_EDGES[0])] = "Poor"
+    out[ok & (x >= INDEX_EDGES[0]) & (x < INDEX_EDGES[1])] = "Fair"
+    out[ok & (x >= INDEX_EDGES[1])] = "Good"
     return out
 
 
@@ -417,7 +418,8 @@ def candidate_indices(run: Run) -> dict[str, np.ndarray]:
     p50, p90 = _percentile_edges(rdcrsws, 0.50, 0.90)
     nabd = col("sc__nabd_densws")
     nabd_p50 = _percentile_edges(nabd[nabd > 0], 0.5, 0.5)[0] if np.isfinite(nabd).any() and (nabd > 0).any() else float("nan")
-    nabd_index = np.where(nabd == 0, 0.85, np.where(nabd <= nabd_p50, 0.545, 0.195)).astype(float)
+    nabd_index = np.where(nabd == 0, MIDPOINT["Good"],
+                          np.where(nabd <= nabd_p50, MIDPOINT["Fair"], MIDPOINT["Poor"])).astype(float)
     nabd_index[~np.isfinite(nabd)] = np.nan
     out["cand__watershed_connectivity__crossings_nabd"] = worst(line_index(rdcrsws, p50, p90, False), nabd_index)
     # 18 Population support: the published model probability
@@ -428,7 +430,8 @@ def candidate_indices(run: Run) -> dict[str, np.ndarray]:
     npdes, canal, cross = col("sc__npdesdenscat"), col("sc__canaldenscat"), col("sc__rdcrscat")
     c50, c90 = _percentile_edges(cross, 0.50, 0.90)
     kinds = (npdes > 0).astype(int) + (canal > 0).astype(int)
-    ladder = np.where((kinds == 0) & (cross <= c50), 0.85, np.where((kinds >= 2) | (cross >= c90), 0.195, 0.545)).astype(float)
+    ladder = np.where((kinds == 0) & (cross <= c50), MIDPOINT["Good"],
+                      np.where((kinds >= 2) | (cross >= c90), MIDPOINT["Poor"], MIDPOINT["Fair"])).astype(float)
     ladder[~(np.isfinite(npdes) & np.isfinite(canal) & np.isfinite(cross))] = np.nan
     out["cand__reach_inflow__catchment_ladder"] = ladder
     # 11 Sediment continuity: agriculture on slopes and the agricultural K factor
@@ -611,7 +614,8 @@ def frame_for(table):
 def inputs(root: DataRoot, options: Optional[dict] = None) -> str:
     stamps = [(p.name, p.stat().st_size, int(p.stat().st_mtime)) if p.exists() else None
               for p in (values_path(root), registry_path(root))]
-    return digest("runs", ANALYSIS_VERSION, stamps, sorted(RUNS.items()), VIEWS, sorted(CURVE_INPUTS), 1)
+    return digest("runs", ANALYSIS_VERSION, stamps, sorted(RUNS.items()), VIEWS, sorted(CURVE_INPUTS.items()),
+                  sorted(MIDPOINT.items()), 2)
 
 
 def run(root: DataRoot, progress: Progress, control: Control, options: Optional[dict] = None) -> Path:

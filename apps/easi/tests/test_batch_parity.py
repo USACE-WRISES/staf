@@ -18,8 +18,10 @@ import json
 import os
 from pathlib import Path
 
+import pytest
+
 from easi import assessment
-from easi.metrics import base, biology, physicochemistry
+from easi.metrics import base, biology, hydraulics, physicochemistry
 
 GOLDEN = Path(__file__).parent / "data" / "parity_golden.json"
 
@@ -45,8 +47,16 @@ _SC_INTEGRITY = {   # published StreamCat integrity components + biological mode
     "chemcat": 0.74, "chemws": 0.71, "conncat": 0.90, "connws": 0.88,
     "tempcat": 0.85, "tempws": 0.83, "habtcat": 0.80, "habtws": 0.77,
     "prg_bmmiws": 0.71,
+    "prg_bmmi0809": 0.71,
 }
 STREAMCAT = {**_SC_WS, **_SC_RP100, **_SC_INTEGRITY}
+
+# Raw COMID 1086969 EROM evidence, also used by the stored-record parity fixture.
+EROM_MONTHS = [589.619, 704.108, 811.322, 726.441, 546.837, 297.317,
+               175.612, 137.997, 92.747, 145.582, 222.141, 369.55]
+EROM = {"qe_ma": 402.379,
+        **{f"qe_{i:02d}": value for i, value in enumerate(EROM_MONTHS, 1)}}
+L3_CODE, NARS9 = "55", "TPL"
 
 REACH_GEOMORPH = {
     "entrenchment_ratio": 2.5,    # >= 2.2 -> Good (floodplain access)
@@ -85,10 +95,16 @@ def _stub(monkeypatch):
 
 
 def _ctx() -> base.AnalysisContext:
-    return base.AnalysisContext(
+    ctx = base.AnalysisContext(
         lat=40.10, lon=-83.10, comid=1234567, huc8="01020304",
         drainage_area_sqkm=50.0, slope=0.005, fcode=46006,
         stream_order=3, sinuosity=1.2)
+    ctx.extras["erom"] = dict(EROM)
+    return ctx
+
+
+def test_parity_flow_evidence_uses_the_verified_monthly_cv():
+    assert hydraulics.monthly_flow_cv(EROM) == .621233
 
 
 def _parity_view(report: dict) -> dict:
@@ -107,17 +123,20 @@ def _parity_view(report: dict) -> dict:
     }
 
 
-def test_scoring_parity(monkeypatch):
+@pytest.mark.parametrize("criteria_set", ["regional", "legacy"], indirect=True)
+def test_scoring_parity(monkeypatch, criteria_set):
     _stub(monkeypatch)
     report = asyncio.run(assessment.assess(_ctx()))
     view = _parity_view(report)
+    golden_path = (GOLDEN if criteria_set == "regional" else
+                   GOLDEN.with_name("parity_golden_legacy.json"))
 
     if os.environ.get("EASI_WRITE_GOLDEN"):
-        GOLDEN.parent.mkdir(parents=True, exist_ok=True)
-        GOLDEN.write_text(json.dumps(view, indent=2, sort_keys=True) + "\n",
-                          encoding="utf-8")
+        golden_path.parent.mkdir(parents=True, exist_ok=True)
+        golden_path.write_text(json.dumps(view, indent=2, sort_keys=True) + "\n",
+                               encoding="utf-8")
 
-    golden = json.loads(GOLDEN.read_text(encoding="utf-8"))
+    golden = json.loads(golden_path.read_text(encoding="utf-8"))
     assert view == golden
 
 
