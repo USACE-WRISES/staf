@@ -366,7 +366,7 @@ def paradigm_tables(root: DataRoot, comparison_rows: list[dict]) -> tuple[list[d
 def inputs(root: DataRoot, options: Optional[dict] = None) -> str:
     stamps = [(p.name, p.stat().st_size, int(p.stat().st_mtime)) if p.exists() else None
               for p in (values_path(root), registry_path(root), schemes_dir(root) / "scheme_comparison.csv")]
-    return digest("stats", ANALYSIS_VERSION, stamps, diagnostic_quantities(), quantity_methods(), 3)
+    return digest("stats", ANALYSIS_VERSION, stamps, diagnostic_quantities(), quantity_methods(), 4)
 
 
 def run(root: DataRoot, progress: Progress, control: Control, options: Optional[dict] = None) -> Path:

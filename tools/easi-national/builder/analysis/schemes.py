@@ -312,7 +312,10 @@ class Run:
             ok = np.isfinite(line) & rated
             base_index[ok] = line[ok]
             mode[ok] = "line"
-        elif operator in ("worst_index", "best_index") and lines:
+        elif (operator in ("worst_index", "best_index") and lines
+              and all(inp["key"] in lines for inp in rule["inputs"])):
+            # A partial guidance line does not represent a composite that also
+            # uses a reference curve. Keep its stored class anchors instead.
             stack = np.vstack([lines[k] for k in lines])
             agg = _nanagg(stack, operator)
             ok = np.isfinite(agg) & rated & (~np.isnan(stack)).all(axis=0)
@@ -615,7 +618,7 @@ def inputs(root: DataRoot, options: Optional[dict] = None) -> str:
     stamps = [(p.name, p.stat().st_size, int(p.stat().st_mtime)) if p.exists() else None
               for p in (values_path(root), registry_path(root))]
     return digest("runs", ANALYSIS_VERSION, stamps, sorted(RUNS.items()), VIEWS, sorted(CURVE_INPUTS.items()),
-                  sorted(MIDPOINT.items()), 2)
+                  sorted(MIDPOINT.items()), 3)
 
 
 def run(root: DataRoot, progress: Progress, control: Control, options: Optional[dict] = None) -> Path:

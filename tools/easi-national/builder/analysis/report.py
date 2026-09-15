@@ -50,6 +50,14 @@ QUANTITY_OF = {"low_flow_baseflow_dynamics": "hyd_integrity", "bed_composition_b
                "population_support": "hyd_integrity"}
 LEVEL_ORDER = ("national", "nars9", "l2", "l3")
 LEVEL_LABEL = {"national": "National", "nars9": "NARS-9", "l2": "Level II", "l1": "Level I", "l3": "Level III"}
+RUN_LEGEND = (
+    "S0 represents the loaded values method, not the saved historical baseline. "
+    "Its banded view retains the loaded ratings and can be checked against current scored outputs. "
+    "Guidance lines provide diagnostic continuous indices where available; incomplete guidance composites retain class anchors. "
+    "S0 function AUC and rank correlations use those diagnostic indices; class agreement uses the retained classes. "
+    "SN, S9, S2 and S3 are diagnostic refits at national, NARS-9, Level II and Level III levels. "
+    "In the route table, incumbent_* refers to the displayed diagnostic run, while s0_auc_poor refers to S0. "
+    "These scenarios and recommendations do not change the accepted criteria.")
 
 
 def quantity_of() -> dict:
@@ -468,6 +476,7 @@ def run(root: DataRoot, progress: Progress, control: Control, options: Optional[
         "<h1>EASI sensitivity stress test</h1>",
         f"<p class='note'>Analysis version {ANALYSIS_VERSION}. Recommendation rules applied: level <b>{LEVEL_LABEL[level]}</b>, paradigm <b>{paradigm}</b>. The owner decides; the decision sheet and routes.csv carry the numbers.</p>",
         f"<p class='note'>Target states (fully scored): {html.escape(', '.join(sorted(targets)) if targets else 'every state in the values table')}. National rows pool every scored reach, border spill included.</p>",
+        f"<p class='note'>{html.escape(RUN_LEGEND)}</p>",
         "<h2>1. Paradigm views</h2>",
         *[f"<p class='note'>{html.escape(n)}</p>" for n in paradigm_notes],
         *figures[:1],
@@ -494,7 +503,7 @@ def run(root: DataRoot, progress: Progress, control: Control, options: Optional[
 
 def decision_sheet(level: str, level_notes: list[str], paradigm: str, paradigm_notes: list[str], routes: list[dict],
                    gradients: list[dict], t_p3: list[dict], t_l1: list[dict]) -> str:
-    lines = ["# Decision sheet: EASI sensitivity stress test", "",
+    lines = ["# Decision sheet: EASI sensitivity stress test", "", RUN_LEGEND, "",
              f"Recommended level (rule C15): **{LEVEL_LABEL[level]}**", *[f"- {n}" for n in level_notes], "",
              f"Recommended paradigm (rule C16): **{paradigm}**", *[f"- {n}" for n in paradigm_notes], "",
              "## Routes per function", "", "| function | route | rule | best candidate | beats incumbent |", "|---|---|---|---|---|"]
