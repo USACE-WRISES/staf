@@ -307,10 +307,10 @@ def render_page(root: Path, data_dir: Path, criteria: str, method: str, selected
     if isinstance(comparison_rows, dict):
         comparison_rows = [{"measure": key, "current": value} for key, value in comparison_rows.items()
                            if not isinstance(value, (dict, list))]
-    sections.append('<section><h2>Saved baseline and rebuilt results</h2><p>Matched-reach comparisons keep changes in coverage '
-                    'separate from changes in criteria and score anchors. More score spread alone does not establish field accuracy.</p>'
-                    '<p>The saved baseline for this rebuild used the earlier 13/8/3 scores. The current legacy switch retains '
-                    'the previous criteria with the current 14/8/2 scores. The differences below include both criteria and anchor changes.</p>'
+    sections.append('<section><h2>Saved baseline and rebuilt results</h2><p>Matched-reach comparisons show changes in criteria '
+                    'and input evidence, with coverage changes reported separately. More score spread alone does not establish field accuracy.</p>'
+                    '<p>The saved baseline and both current criteria sets use 13/8/3 scores for Good / Fair / Poor. '
+                    'The legacy switch retains the previous criteria.</p>'
                     + _table(_summary_rows(comparison_rows), [("measure", "Measure"), ("legacy", "Baseline"),
                         ("current", "Rebuilt"), ("change", "Change")])
                     + ('<details><summary>Comparison provenance</summary><pre>' + _e(json.dumps(comparison.get("provenance") or {}, indent=2))
@@ -333,7 +333,7 @@ def render_page(root: Path, data_dir: Path, criteria: str, method: str, selected
     sections.append('<section><h2>Reference fits</h2><form method="get"><label for="curve">Quantity and reference region</label> '
                     f'<select id="curve" name="curve">{options}</select> <button type="submit">Show fit</button></form>'
                     '<p>The frozen regional artifact supplies scoring curves. Its interpolated reference index is banded at '
-                    '0.39 and 0.69, then Good / Fair / Poor maps to 0.90 / 0.55 / 0.10. Displayed physical crossings are approximate. '
+                    '0.39 and 0.69, then Good / Fair / Poor maps to 0.85 / 0.545 / 0.195 and rounds to 13/8/3 scores. Displayed physical crossings are approximate. '
                     'Diagnostic fits are regenerated analysis outputs and do not change the scoring artifact.</p>'
                     + ('<p class="status">Legacy criteria are active; the regional fits below are not used by this app session.</p>'
                        if criteria != "regional" else ''))

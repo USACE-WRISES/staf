@@ -9,8 +9,9 @@ file and links to it from its header ("Documentation").
 The committed report is a historical validation record. Its cached cases,
 figures, method tables and 13 / 8 / 3 scores precede the regional-criteria
 decision of 2026-09-14. Current EASI uses regional reference criteria and
-0.90 / 0.55 / 0.10 anchors, producing 14 / 8 / 2. Neither a prose update nor
-the runtime legacy switch revalidates the old comparisons under this mapping.
+the same 0.85 / 0.545 / 0.195 anchors, producing 13 / 8 / 3. The regional
+and legacy criteria sets share this mapping. Neither a prose update nor
+the runtime legacy switch revalidates the old comparisons under regional criteria.
 
 For the current criteria, use the
 [EASI walkthrough](https://usace-wrises.github.io/staf/walkthroughs/easi/#regional-reference-criteria).

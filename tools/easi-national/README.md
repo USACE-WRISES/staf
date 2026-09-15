@@ -52,7 +52,7 @@ the places where more helps.
 The builder and live app share the same adapters and criteria selection.
 `EASI_CRITERIA_SET` defaults to `regional`; `legacy` retains the former
 criteria with the current EASI rating anchors. Good / Fair / Poor map to
-0.90 / 0.55 / 0.10 and function scores 14 / 8 / 2. SFARI and DEEP are unaffected.
+0.85 / 0.545 / 0.195 and function scores 13 / 8 / 3. SFARI and DEEP are unaffected.
 The set name, active catalog, crosswalk and reference artifact contribute to
 the method version. Staging records `criteria_set` beside `method_version`.
 A mismatched set or method makes baked scores stale, while recalled reports

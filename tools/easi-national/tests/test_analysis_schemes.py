@@ -47,22 +47,22 @@ def test_line_class_and_score_helpers():
     bounded = schemes.line_index([0.0, 0.25, 0.5, 1.0], 0.5, 0.25, True, (0.0, 1.0))
     assert bounded == pytest.approx([0.0, 0.39, 0.69, 1.0])
     assert schemes.class_of_index([0.39, 0.3900001, 0.69, 0.7, np.nan]).tolist() == ["Fair", "Fair", "Good", "Good", None]
-    scores = schemes.function_scores([0.90, 0.55, 0.10, np.nan, 0.7])
-    assert scores[:3].tolist() == [14.0, 8.0, 2.0] and np.isnan(scores[3]) and scores[4] == 10.0
+    scores = schemes.function_scores([0.85, 0.545, 0.195, np.nan, 0.7])
+    assert scores[:3].tolist() == [13.0, 8.0, 3.0] and np.isnan(scores[3]) and scores[4] == 10.0
     indices = schemes.midpoint_index(["Good", "Fair", "Poor", None])
-    assert indices[:3].tolist() == [0.90, 0.55, 0.10] and np.isnan(indices[3])
+    assert indices[:3].tolist() == [0.85, 0.545, 0.195] and np.isnan(indices[3])
 
 
-def test_rating_mapping_pins_python_numpy_and_app_half_even_scores():
+def test_rating_mapping_pins_python_numpy_and_app_scores():
     from easi import config, scoring
 
     assert schemes.MIDPOINT is config.RATING_INDEX
     indices = schemes.midpoint_index(["Good", "Fair", "Poor"])
-    assert (indices * 15).tolist() == [13.5, 8.25, 1.5]
-    assert [round(float(index) * 15) for index in indices] == [14, 8, 2]
-    assert np.rint(indices * 15).tolist() == [14.0, 8.0, 2.0]
-    assert schemes.function_scores(indices).tolist() == [14.0, 8.0, 2.0]
-    assert [scoring.function_score(float(index)) for index in indices] == [14, 8, 2]
+    assert (indices * 15).tolist() == pytest.approx([12.75, 8.175, 2.925])
+    assert [round(float(index) * 15) for index in indices] == [13, 8, 3]
+    assert np.rint(indices * 15).tolist() == [13.0, 8.0, 3.0]
+    assert schemes.function_scores(indices).tolist() == [13.0, 8.0, 3.0]
+    assert [scoring.function_score(float(index)) for index in indices] == [13, 8, 3]
 
 
 def test_candidate_count_ladders_use_the_easi_rating_mapping():
@@ -77,15 +77,15 @@ def test_candidate_count_ladders_use_the_easi_rating_mapping():
     candidates = schemes.candidate_indices(run)
     for key in ("cand__watershed_connectivity__crossings_nabd", "cand__reach_inflow__catchment_ladder"):
         indices = candidates[key]
-        assert indices[:3].tolist() == [0.90, 0.55, 0.10]
-        assert schemes.function_scores(indices[:3]).tolist() == [14.0, 8.0, 2.0]
+        assert indices[:3].tolist() == [0.85, 0.545, 0.195]
+        assert schemes.function_scores(indices[:3]).tolist() == [13.0, 8.0, 3.0]
         assert np.isnan(indices[-1])
 
 
 def test_runs_digest_includes_the_rating_mapping(tmp_path, monkeypatch):
     root = DataRoot(tmp_path / "data")
     current = schemes.inputs(root)
-    monkeypatch.setitem(schemes.MIDPOINT, "Good", 0.85)
+    monkeypatch.setitem(schemes.MIDPOINT, "Good", 0.90)
     assert schemes.inputs(root) != current
 
 

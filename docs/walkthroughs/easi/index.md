@@ -51,15 +51,15 @@ The scoring panel identifies the resolved reference and its sample size.
 
 | Rating | EASI index anchor | Function score |
 |---|---:|---:|
-| Good | 0.90 | 14 |
-| Fair | 0.55 | 8 |
-| Poor | 0.10 | 2 |
+| Good | 0.85 | 13 |
+| Fair | 0.545 | 8 |
+| Poor | 0.195 | 3 |
 
 The reference curve's interpolated index determines a Good / Fair / Poor
 band at 0.69 and 0.39. That band maps to the index anchor above, then to a
-rounded score out of 15. Good and Poor sit nearer their band ends and Fair
-near the At-Risk middle. The outcome weights, rollup and condition
-boundaries remain the same. This anchor mapping applies to EASI only.
+rounded score out of 15. These anchors are the midpoints of the Good
+(0.70 to 1.00), Fair (0.40 to 0.69) and Poor (0.00 to 0.39) bands. The
+outcome weights, rollup and condition boundaries remain the same.
 
 ### Interpreting the updated proxies
 
@@ -83,7 +83,7 @@ the national refresh completes, so check the app's dataset freshness notice.
 Operators can select the former criteria with `EASI_CRITERIA_SET=legacy`.
 Both sets use the current anchors above. The regional set is the default.
 The app's extended verification and validation report is a historical record
-with earlier criteria and score mapping. Its cached field comparisons have
+with earlier criteria and the same 13/8/3 scores. Its cached field comparisons have
 not been rerun to validate these regional changes.
 
 The displayed physical-value crossings are rounded approximations. Ratings

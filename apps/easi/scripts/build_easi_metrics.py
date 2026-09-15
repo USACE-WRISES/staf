@@ -88,8 +88,7 @@ def main() -> int:
             rating = BIN_TO_RATING[n]
             rng = parse_range(row.get(f"Bin {n} Recommended Index (0-1.0)", ""))
             ranges[rating] = rng if rng else DEFAULT_RANGES[rating]
-        # Keep this existing payload key for consumers; EASI now uses rating
-        # anchors rather than arithmetic midpoints of the condition bands.
+        # Use the shared EASI rating midpoints for every generated metric.
         midpoints = dict(RATING_INDEX)
 
         metrics.append({

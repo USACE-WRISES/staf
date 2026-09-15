@@ -62,11 +62,11 @@ def test_flatten_trace_carries_every_input_rating_and_context(selected, monkeypa
     rec["erom"] = {"qe_ma": 6.5, **{f"qe_{month:02d}": float(month) for month in range(1, 13)}}
     report = client.score_record(rec, cross_section=False)
     flat = values.flatten_trace(report)
-    assert flat["rating_catchment_hydrology"] == "Good" and flat["index_catchment_hydrology"] == 0.90
-    assert flat["fs_catchment_hydrology"] == 14 and flat["kind_catchment_hydrology"] == "worst_index"
+    assert flat["rating_catchment_hydrology"] == "Good" and flat["index_catchment_hydrology"] == 0.85
+    assert flat["fs_catchment_hydrology"] == 13 and flat["kind_catchment_hydrology"] == "worst_index"
     assert flat["v__catchment_hydrology__impervious"] == pytest.approx(0.35)
     assert flat["v__catchment_hydrology__agriculture"] == pytest.approx(20.0)
-    assert flat["r__catchment_hydrology__agriculture"] == "Good" and flat["c__catchment_hydrology"] == 0.90
+    assert flat["r__catchment_hydrology__agriculture"] == "Good" and flat["c__catchment_hydrology"] == 0.85
     assert flat["governing_catchment_hydrology"] in ("impervious", "agriculture")
     assert flat["c__streamflow_regime"] == pytest.approx(100.0 * 500.0 / (1000.0 * 400.0), abs=1e-9)
     assert flat["v__streamflow_regime__runoff"] == pytest.approx(400.0)

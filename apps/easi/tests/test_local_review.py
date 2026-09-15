@@ -51,17 +51,19 @@ def test_pending_outputs_render_frozen_fit_and_leave_files_unchanged(fixture):
     assert "Pending or unavailable" in page and "rebuild pending" in page
     assert "Reference panel q25: 50" in page and "Fitted knot: 50, 0.7" in page
     assert "0.39" in page and "0.69" in page and "Finite observations" in page
+    assert "0.85 / 0.545 / 0.195" in page and "rounds to 13/8/3 scores" in page
     assert "Reference stratum: 8.3" in page
     after = {p: p.read_bytes() for folder in (root, data) for p in folder.rglob('*') if p.is_file()}
     assert before == after
 
 
-def test_comparison_contract_baseline_and_untrusted_text(fixture, monkeypatch):
+@pytest.mark.parametrize("criteria", ["regional", "legacy"])
+def test_comparison_contract_baseline_and_untrusted_text(fixture, monkeypatch, criteria):
     root, data = fixture
     baseline = root / "baseline"
     write_json(baseline / "staging/manifest.json", {"method_version": "old", "updated": "yesterday"})
     monkeypatch.setenv(review.ENV_BASELINE, str(baseline))
-    write_json(root / "staging/manifest.json", {"criteria_set": "regional", "method_version": "current"})
+    write_json(root / "staging/manifest.json", {"criteria_set": criteria, "method_version": "current"})
     write_json(root / "staging/stats.json", {"groups": {"US": {"indices": {
         "eci": {"n": 5, "p50": .65, "sd": .1, "bands": [1, 1, 3]}}}}})
     write_json(root / "analysis/local-review/comparison.json", {
@@ -70,14 +72,17 @@ def test_comparison_contract_baseline_and_untrusted_text(fixture, monkeypatch):
         "states": [{"name": "Virginia", "reaches": 5, "legacy_functioning_share": .1, "current_functioning_share": .3}],
         "functions": [{"name": "<script>alert(1)</script>", "rating_changed_share": .4}],
         "provenance": {"method_version": "current"}})
-    page = review.render_page(root, data, "regional", "current")
+    page = review.render_page(root, data, criteria, "current")
     assert "method old; build yesterday" in page
     assert "Matched reaches" in page and "Virginia" in page and "30.0%" in page and "40.0%" in page
     assert "<script>alert(1)</script>" not in page and "&lt;script&gt;" in page
     assert "<td>Yes</td>" in page
     assert "<td>0.650</td>" in page and "<td>60.0%</td>" in page
     assert "<td>25.0%</td>" in page
-    assert "Saved baseline and rebuilt results" in page and "13/8/3" in page and "14/8/2" in page
+    assert "Saved baseline and rebuilt results" in page
+    assert "saved baseline and both current criteria sets use 13/8/3" in page
+    assert "changes in criteria and input evidence" in page
+    assert "14/8/2" not in page and "anchor changes" not in page
 
 
 def test_field_statistics_use_readable_names_and_precision(fixture):

@@ -17,7 +17,7 @@ def _result() -> dict:
              "name": "Impervious Surface Cover", "discipline": "Hydrology",
              "functionName": "Catchment hydrology", "functionId": "catchment-hydrology",
              "scale": "W", "confidence": "H", "rating": "Poor", "generatedRating": "Poor",
-             "index": 0.10, "functionScore": 2, "valueText": "38% impervious",
+             "index": 0.195, "functionScore": 3, "valueText": "38% impervious",
              "criteria": ">25%", "source": "EPA StreamCat", "status": "ok",
              "overrideable": False},
         ],
