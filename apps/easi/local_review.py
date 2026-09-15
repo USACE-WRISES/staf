@@ -291,6 +291,7 @@ def render_page(root: Path, data_dir: Path, criteria: str, method: str, selected
     sections = ['<h1>Local EASI review</h1><p><a href="../">Open EASI</a>. Use <b>Nationwide screening</b> and '
                 '<b>Dashboard</b> for the local map, reach reports, state comparisons and CSV export. '
                 'This page is read-only. Refresh it as rebuild outputs become available.</p>',
+                '<p><a href="alternatives/">Compare local alternative studies</a>. Alternative 1 remains the main app default.</p>',
                 '<section><h2>Build provenance</h2>' + _table(rows, [("item", "Item"), ("value", "Value")]) + '</section>']
     indices = ((stats.get("groups") or {}).get("US") or {}).get("indices") or {}
     summary = []
@@ -414,7 +415,8 @@ def routes(root: Path | None):
             return Response(status_code=404)
         return FileResponse(path, headers={"Cache-Control": "no-store"})
 
-    return [Route("/local-review/", page), Route("/local-review/report/{path:path}", report_asset)]
+    from alternative_review import routes as alternative_routes
+    return [Route("/local-review/", page), Route("/local-review/report/{path:path}", report_asset), *alternative_routes(root)]
 
 
 def _loopback(request) -> bool:
