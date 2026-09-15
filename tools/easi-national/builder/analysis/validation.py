@@ -99,7 +99,9 @@ def agreement(index: np.ndarray, desktop_class: np.ndarray, target_class: Option
     """The statistics for one subject, one target set and one station subset."""
     out: dict = {"n": int(np.isfinite(index).sum())}
     if target_class is not None:
-        have = np.isfinite(index) & np.array([c is not None for c in target_class])
+        # Missing and unrecognized labels cannot serve as negative AUC controls.
+        known_class = np.array([isinstance(c, str) and c in CLASSES for c in target_class], dtype=bool)
+        have = np.isfinite(index) & known_class
         classes = target_class[have]
         idx = index[have]
         counts = {c: int((classes == c).sum()) for c in CLASSES}

@@ -98,6 +98,7 @@ def test_small_statistics():
 
 def test_desktop_rows_from_evidence_and_from_the_caches(tmp_path, monkeypatch):
     from easi.national import records
+    monkeypatch.setenv("EASI_CRITERIA_SET", "regional")
     root = DataRoot(tmp_path / "data").ensure()
     root.analysis.mkdir()
     huc8 = "02080204"
@@ -114,6 +115,9 @@ def test_desktop_rows_from_evidence_and_from_the_caches(tmp_path, monkeypatch):
     pq.write_table(pa.Table.from_pylist([joins_row]), root.huc8_file(huc8, "joins"))
     root.chunk_raw(chunk.id, "streamcat").parent.mkdir(parents=True, exist_ok=True)
     pq.write_table(pa.Table.from_pylist([{"comid": 1, **rec["streamcat"]}]), root.chunk_raw(chunk.id, "streamcat"))
+    # An in-extent station must keep the raw evidence stored when it was scored.
+    pq.write_table(pa.Table.from_pylist([{"comid": 1, "qe_ma": 10.0,
+                                        **{f"qe_{m:02d}": 10.0 for m in range(1, 13)}}]), root.erom)
     states, progress, control = state.UnitStates(root), state.Progress(root, quiet=True), state.Control(root)
     score_stage.run_score(root, chunk, huc8, states, progress, control)
     monkeypatch.setattr(values, "chunk_of_huc8", lambda r: {huc8: chunk.id})
@@ -128,6 +132,10 @@ def test_desktop_rows_from_evidence_and_from_the_caches(tmp_path, monkeypatch):
                              "sinuosity_flowline": [1.3], "l3": ["45"], "nars9": ["SAP"], "physio": ["APL"]}),
                    nrsa.strata_path(root))
     pq.write_table(pa.Table.from_pylist([{"comid": 2, **rec["streamcat"]}]), root.national / "streamcat.parquet")
+    # A later national cache is used only for the outside-extent synthetic row.
+    pq.write_table(pa.Table.from_pylist([{"comid": c, "qe_ma": 6.5,
+                                        **{f"qe_{m:02d}": float(m) for m in range(1, 13)}}
+                                       for c in (1, 2)]), root.erom)
     archive = tmp_path / "nrsa"
     archive.mkdir()
     monkeypatch.setattr(nrsa, "NRSA_DIR", archive)
@@ -169,6 +177,7 @@ def test_desktop_rows_from_evidence_and_from_the_caches(tmp_path, monkeypatch):
     assert desktop["IN-1"]["in_set"] is True and desktop["IN-1"]["desktop_source"] == "evidence"
     assert desktop["IN-1"]["rating_catchment_hydrology"] == "Good" and desktop["IN-1"]["pctimp2019ws"] == pytest.approx(0.35)
     assert desktop["IN-1"]["agriculture_ws"] == pytest.approx(20.0)
+    assert desktop["IN-1"]["v__low_flow_baseflow_dynamics__flowCv"] == 0.0
     # the quantities derived from the candidate cache exist only when the caches are joined first
     assert desktop["IN-1"]["mines_ws"] == 0.0 and desktop["OUT-2"]["mines_ws"] == pytest.approx(0.5)
     assert desktop["IN-1"]["woody_catrp100"] == pytest.approx(50.0) and desktop["IN-1"]["wetland_retention"] == pytest.approx(0.2)
@@ -178,6 +187,11 @@ def test_desktop_rows_from_evidence_and_from_the_caches(tmp_path, monkeypatch):
     assert out["rating_catchment_hydrology"] == "Good" and out["v__catchment_hydrology__impervious"] == pytest.approx(0.35)
     assert out["sinuosity"] == 1.3 and out["lat"] == 37.5 and out["nid_dam_count"] is None      # no dam inventory on disk
     assert out["rating_high_flow_dynamics"] is None
+    expected_cv = round(float(np.std(np.arange(1, 13), ddof=0) / 6.5), 6)
+    assert out["v__low_flow_baseflow_dynamics__flowCv"] == expected_cv
+    assert out["method_low_flow_baseflow_dynamics"] == "erom-flow-variability"
+    assert out["ctx__low_flow_baseflow_dynamics__strata_l2"] == "8.3"
+    assert out["l3_code"] == "45" and out["nars9"] == "SAP"
     assert desktop["NONE-3"]["desktop_source"] == "missing" if "NONE-3" in desktop else True
     frame = pq.read_table(nrsa.frame_path(root)).to_pylist()
     by = {(r["station_key"], r["cycle"]): r for r in frame}
@@ -188,3 +202,25 @@ def test_desktop_rows_from_evidence_and_from_the_caches(tmp_path, monkeypatch):
     assert ("OUT-2", "1314") in by and all(r["visit_no"] == "1" for r in frame)
     check = (nrsa.screen_check_path(root)).read_text(encoding="utf-8")
     assert "strict,US" in check and "relaxed,SAP" in check
+
+
+def test_desktop_cache_invalidates_for_raw_erom_streamcat_and_criteria(tmp_path, monkeypatch):
+    root = DataRoot(tmp_path / "data").ensure()
+    monkeypatch.setenv("EASI_CRITERIA_SET", "regional")
+    before = nrsa.inputs(root)
+    pq.write_table(pa.table({"comid": [2], "qe_ma": [6.5]}), root.erom)
+    erom = nrsa.inputs(root)
+    assert erom != before
+    pq.write_table(pa.table({"comid": [2], "prg_bmmi0809": [0.75]}), root.national / "streamcat.parquet")
+    streamcat = nrsa.inputs(root)
+    assert streamcat != erom
+    monkeypatch.setenv("EASI_CRITERIA_SET", "legacy")
+    assert nrsa.inputs(root) != streamcat
+
+
+@pytest.mark.parametrize("raw", [None, {"qe_ma": 6.5, "qe_01": 1.0},
+                                 {"qe_ma": 6.5, **{f"qe_{m:02d}": 1.0 for m in range(1, 13)}, "qe_07": True}])
+def test_synthetic_record_keeps_incomplete_erom_unknown(raw):
+    record = nrsa.synthetic_record(2, {"comid": 2}, {}, {}, attains=({}, {}),
+                                   wqp_tn=None, wqp_tp=None, nid_dams=None, nas_taxa=None, erom=raw)
+    assert record["erom"] is None

@@ -39,7 +39,7 @@ from .strata import crosswalk_path, read_crosswalk
 from .values import target_states, values_path
 
 LEVELS_DIAG = ("state", "l3", "l2", "l1", "nars9", "national")
-#: quantities the distribution diagnostics cover: key -> (values column, resolution floor, cap, zero-inflated)
+#: Legacy quantities: key -> (values column, resolution floor, cap).
 DIAG_QUANTITIES = {
     "impervious": ("v__catchment_hydrology__impervious", 1.0, None),
     "agriculture": ("v__catchment_hydrology__agriculture", 1.0, None),
@@ -62,6 +62,33 @@ DIAG_QUANTITIES = {
 }
 MIN_GROUP = 200
 H_MATERIAL = 0.5
+
+
+def diagnostic_quantities() -> dict:
+    """Physical inputs of the selected criteria, without mixing source routes."""
+    from easi.config import criteria_set
+    quantities = dict(DIAG_QUANTITIES)
+    if criteria_set() == "regional":
+        quantities.pop("hyd_integrity")
+        quantities.pop("sed_integrity")
+        quantities.update({
+            "flow_variability_cv": ("v__low_flow_baseflow_dynamics__flowCv", None, None),
+            "bed_agriculture": ("v__bed_composition_bedform_dynamics__agriculture", 1.0, 100.0),
+            "biological_model_probability": ("v__population_support__prGBmmi", None, 1.0),
+            "biological_integrity_fallback": ("c__population_support", None, 1.0),
+        })
+    return quantities
+
+
+def quantity_methods() -> dict:
+    """Restrict the two biological quantities to their actual source method."""
+    from easi.config import criteria_set
+    if criteria_set() == "legacy":
+        return {}
+    return {
+        "biological_model_probability": ("method_population_support", "streamcat-prg-bmmi"),
+        "biological_integrity_fallback": ("method_population_support", "streamcat-integrity-products"),
+    }
 
 
 def stats_dir(root: DataRoot) -> Path:
@@ -146,8 +173,12 @@ def distributions(table, progress: Progress) -> tuple[list[dict], list[dict]]:
     groups = {"state": col("state", "object"), "l3": col("l3_code", "object"), "l2": col("l2", "object"),
               "l1": col("l1", "object"), "nars9": col("nars9", "object"), "national": np.full(n, "national", dtype=object)}
     diag_rows, var_rows = [], []
-    for key, (column, floor, cap) in DIAG_QUANTITIES.items():
+    methods = quantity_methods()
+    for key, (column, floor, cap) in diagnostic_quantities().items():
         values = col(column)
+        if key in methods:
+            method_column, method_key = methods[key]
+            values = np.where(col(method_column, "object") == method_key, values, np.nan)
         if not np.isfinite(values).any():
             continue
         var_row = {"quantity": key, "column": column}
@@ -335,7 +366,7 @@ def paradigm_tables(root: DataRoot, comparison_rows: list[dict]) -> tuple[list[d
 def inputs(root: DataRoot, options: Optional[dict] = None) -> str:
     stamps = [(p.name, p.stat().st_size, int(p.stat().st_mtime)) if p.exists() else None
               for p in (values_path(root), registry_path(root), schemes_dir(root) / "scheme_comparison.csv")]
-    return digest("stats", ANALYSIS_VERSION, stamps, sorted(DIAG_QUANTITIES), 1)
+    return digest("stats", ANALYSIS_VERSION, stamps, diagnostic_quantities(), quantity_methods(), 3)
 
 
 def run(root: DataRoot, progress: Progress, control: Control, options: Optional[dict] = None) -> Path:
@@ -344,7 +375,9 @@ def run(root: DataRoot, progress: Progress, control: Control, options: Optional[
     reuse = set(options.get("reuse") or ())      # parts whose existing outputs are read instead of recomputed
     stats_dir(root).mkdir(parents=True, exist_ok=True)
     progress.begin("analysis", "stats", total=6, message="stats: distributions")
-    columns = ["comid", "state", "l3_code", "l2", "l1", "nars9", "tocomid"] + [c for _k, (c, _f, _cap) in DIAG_QUANTITIES.items()]
+    columns = ["comid", "state", "l3_code", "l2", "l1", "nars9", "tocomid"] + [c for c, _f, _cap in diagnostic_quantities().values()]
+    columns += [c for c, _m in quantity_methods().values()]
+    columns = list(dict.fromkeys(columns))
     schema = pq.read_schema(values_path(root)).names
     table = pq.read_table(values_path(root), columns=[c for c in columns if c in schema])
     if "distributions" in reuse and (stats_dir(root) / "diag_metric_stratum.csv").exists():

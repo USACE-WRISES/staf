@@ -23,6 +23,7 @@ os.environ.setdefault("HYRIVER_CACHE_NAME",
 os.environ.setdefault("HYRIVER_CACHE_EXPIRE", str(7 * 24 * 3600))
 
 import anyio  # noqa: E402
+import local_review  # noqa: E402
 from shiny import App, reactive, render, ui  # noqa: E402
 
 from easi import (assessment, basin, batch_ui, notices, xsplotly, bieger, config, delineation,  # noqa: E402
@@ -42,6 +43,7 @@ from easi.pipeline import DEFAULT_REACH_FT  # noqa: E402
 from easi.snapcard import hr_snap_card  # noqa: E402
 
 FT_PER_M = 3.28083989501312
+LOCAL_REVIEW_ROOT = local_review.review_root()
 
 try:
     from ipyleaflet import (CircleMarker, GeoJSON, LayerGroup, LayersControl, Map, Marker,  # noqa: F401
@@ -453,6 +455,8 @@ app_ui = ui.page_fillable(
                 # so the analysis session is preserved.
                 ui.tags.a("Documentation", href="documentation.html",
                           target="_blank", rel="noopener", class_="easi-doclink"),
+                (ui.tags.a("Local review", href="local-review/", target="_blank",
+                           rel="noopener", class_="easi-doclink") if LOCAL_REVIEW_ROOT else None),
                 class_="easi-nav",
             ),
             class_="easi-header",
@@ -4252,3 +4256,4 @@ def server(input, output, session):
 
 # Shiny for Python serves a static dir only when configured (no implicit www/).
 app = App(app_ui, server, static_assets=Path(__file__).parent / "www")
+app.starlette_app.routes[0:0] = local_review.routes(LOCAL_REVIEW_ROOT)

@@ -95,6 +95,52 @@ CSV export. A reach belongs to the state containing the midpoint of its
 flowline; states with under half their reaches screened are drawn muted.
 Everything is precomputed, so the view needs no per-reach reads.
 
+## Local rebuild review
+
+For a local-only review of a rebuilt national dataset, launch from `apps/easi`:
+
+```powershell
+$env:EASI_CRITERIA_SET = 'regional'
+$env:EASI_NATIONAL_BASE = 'D:/Data/easi-national/staging'
+$env:EASI_REVIEW_ROOT = 'D:/Data/easi-national'
+$env:EASI_REVIEW_BASELINE = 'D:/Data/easi-national/review/2026-09-15-regional/baseline'
+& ..\..\.venv\Scripts\python.exe -m shiny run app.py --host 127.0.0.1 --port 8000
+```
+
+`EASI_REVIEW_BASELINE` is optional and identifies the saved pre-rebuild tree.
+The **Local review** header link appears only when `EASI_REVIEW_ROOT` is set.
+It opens a read-only page with staging and analysis build provenance,
+matched-reach comparisons, frozen regional scoring fits, diagnostic fits,
+and the local analysis report. The main **Nationwide screening** map and
+**Dashboard** read local staging, with reach reports, state comparisons and
+statistics CSV export.
+The saved baseline for the September 2026 rebuild uses the earlier 13/8/3
+scores. It differs from the current `legacy` switch, which retains the previous
+criteria with the current 14/8/2 scores. Baseline comparisons therefore include
+both criteria and score-anchor changes.
+
+The review page reads the bundled `data/reference-curves.json` for frozen
+scoring fits. It reads regenerated fits from
+`analysis/curves/curve_registry.csv` separately. Reference-panel quartiles
+and fitted knots are shown where available. A diagnostic refresh cannot
+replace the frozen scoring artifact through this page. Pending or stale
+outputs retain their method and build labels.
+Diagnostic fits, field validation and the report remain marked pending until
+the analysis values method matches the app and the output file is newer than
+those values metadata. A partially finished analysis refresh stays visible.
+The final verified label also requires `analysis/local-review/completion.json`
+to match the app method, criteria, exact staging build and frozen artifact hash,
+with passed analysis, comparison and landscape checks. Until then checks remain
+pending even when individual outputs are ready.
+
+Optional `analysis/local-review/comparison.json` provides `provenance`,
+`summary_rows` (`measure`, `legacy`, `current`, `change`), `states` and
+`functions` from the local comparison script. The page reads only small
+JSON/CSV summaries, with no Parquet scans. Report assets are restricted to
+HTML, PNG, SVG and CSS within `analysis/report`; routes reject non-loopback
+clients. No review routes or filesystem exposure are enabled by default,
+and the review page has no publication controls or data-writing actions.
+
 ## How it scores (STAF rollup)
 
 Each metric is rated **Good / Fair / Poor**, mapped to an index (0–1) and a
