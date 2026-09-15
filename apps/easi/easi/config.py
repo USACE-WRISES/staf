@@ -34,9 +34,10 @@ def _resolve_data_dir() -> Path:
 DATA_DIR = _resolve_data_dir()
 
 # --- STAF scoring constants ---
-# rating -> index (0-1): the midpoint of each STAF condition band
-# (Functioning 0.70-1.0, Functioning-at-Risk 0.40-0.69, Non-Functioning 0-0.39)
-RATING_INDEX: dict[str, float] = {"Good": 0.85, "Fair": 0.545, "Poor": 0.195}
+# EASI rating anchors within the STAF condition bands. Good and Poor sit near
+# the ends of their bands; Fair stays near the At-Risk middle. Rounded scores
+# are 14 / 8 / 2, matching the Strongly Agree / Neutral / Strongly Disagree anchors.
+RATING_INDEX: dict[str, float] = {"Good": 0.90, "Fair": 0.55, "Poor": 0.10}
 RATINGS = ("Good", "Fair", "Poor")
 
 # CWA outcome contribution weights: Direct, indirect, none
@@ -80,15 +81,43 @@ def metrics_by_id() -> dict[str, dict]:
     return {m["metricId"]: m for m in easi_metrics()["metrics"]}
 
 
+def criteria_set() -> str:
+    """Select the EASI criteria at call time, including in the national builder."""
+    selected = os.environ.get("EASI_CRITERIA_SET", "regional")
+    if selected not in ("regional", "legacy"):
+        raise ValueError("EASI_CRITERIA_SET must be 'regional' or 'legacy'")
+    return selected
+
+
+def screening_methods_filename() -> str:
+    return ("screening-methods-legacy.json" if criteria_set() == "legacy"
+            else "screening-methods.json")
+
+
+def reset_caches() -> None:
+    """Reset criteria-dependent caches after changing test catalogs or settings."""
+    from . import methods, screening_methods as sm
+    from .national import method_version
+
+    _load.cache_clear()
+    methods._catalog_methods.cache_clear()
+    methods._catalog_variants.cache_clear()
+    if hasattr(sm, "curve_sets"):
+        sm.curve_sets.cache_clear()
+    method_version.cache_clear()
+
+
 def screening_methods() -> dict:
     """The canonical automated screening-method catalog.
 
-    ``data/screening-methods.json`` is the single source of truth for the automated
+    The selected catalog is the single source of truth for the automated
     formulas, exact Good/Fair/Poor boundaries, source hierarchy, and method provenance.
     :mod:`easi.screening_methods` evaluates it and :mod:`easi.methods` renders it, so the
     displayed criteria cannot drift from what actually produced the rating.
     """
-    return _load("screening-methods.json")
+    # Revisit: once regional criteria are accepted, remove the legacy catalog,
+    # legacy adapter branches and NRSA scoring tier together.
+    return _load(screening_methods_filename())
 
 
 def criteria_bands(mid: str, indicator: str | None = None) -> dict:
@@ -292,6 +321,57 @@ METRIC_CALCULATIONS: dict[str, str] = {
     "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity":
         "From dam/barrier presence affecting upstream-downstream passage.",
 }
+
+
+def metric_registry() -> dict[str, dict]:
+    """Metadata for the active methods without changing legacy definitions."""
+    entries = {mid: dict(info) for mid, info in METRIC_REGISTRY.items()}
+    if criteria_set() == "regional":
+        entries["low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity"].update(
+            datasource="nhdplus:erom_monthly_flow_cv")
+        entries["bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation"].update(
+            scale="W", confidence="L", datasource="watershed:crop+hay")
+        entries["population-support-biological-integrity-ibi-community-condition"].update(
+            confidence="M/L", datasource="streamcat:prg_bmmi0809|ici_iwi")
+    return entries
+
+
+def metric_definition(mid: str, *, fallback: str | None = None) -> str:
+    """Define the active automatic evidence route for report and reference copy."""
+    if criteria_set() == "regional":
+        regional = {
+            "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity":
+                "Unvalidated screening proxy for low-flow condition based on modeled monthly flow variability. "
+                "It does not measure daily low flow or channel wetted connectivity.",
+            "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation":
+                "Watershed agricultural cover as a pressure proxy for bed condition. It does not measure "
+                "streambed grain size, embeddedness, fines, or large wood.",
+            "population-support-biological-integrity-ibi-community-condition":
+                "Aquatic-community condition inferred from EPA's benthic-condition model where available, "
+                "otherwise from complete landscape-integrity products. This is not a field biological assessment.",
+        }
+        if mid in regional:
+            return regional[mid]
+    return fallback if fallback is not None else METRIC_DEFINITIONS.get(mid, "")
+
+
+def metric_calculation(mid: str) -> str | None:
+    """Describe the active route when a report has no recorded equation."""
+    if criteria_set() == "regional":
+        regional = {
+            "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity":
+                "Population standard deviation of all twelve EROM monthly flows divided by their mean. "
+                "The CV is rated against Level II reference curves, with a national fallback; this proxy is unvalidated.",
+            "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation":
+                "Watershed crop plus hay cover, using the same 30/50 percent bands as Catchment hydrology. "
+                "This is a disclosed correlated pressure proxy.",
+            "population-support-biological-integrity-ibi-community-condition":
+                "EPA prg_bmmi0809 probability from the other area of interest, using 0.25/0.50 bands. "
+                "Where unavailable, the lower complete ICI/IWI integrity product is the fallback.",
+        }
+        if mid in regional:
+            return regional[mid]
+    return METRIC_CALCULATIONS.get(mid)
 
 
 def validate_registry() -> list[str]:

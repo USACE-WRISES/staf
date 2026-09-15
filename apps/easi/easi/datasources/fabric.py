@@ -13,6 +13,7 @@ service does not answer; callers degrade with recorded reasons.
 """
 from __future__ import annotations
 
+import math
 import time
 from typing import Any, Optional
 
@@ -22,7 +23,8 @@ ITEMS_URL = ("https://api.water.usgs.gov/fabric/pygeoapi/collections/"
              "nhdflowline_network/items")
 # pygeoapi's default page is 10 items; the map asks for the whole viewport.
 BBOX_LIMIT = 1000
-ATTR_PROPERTIES = "comid,gnis_name,reachcode,totdasqkm,slope,fcode,streamorde,lengthkm"
+EROM_PROPERTIES = ("qe_ma",) + tuple(f"qe_{month:02d}" for month in range(1, 13))
+ATTR_PROPERTIES = "comid,gnis_name,reachcode,totdasqkm,slope,fcode,streamorde,lengthkm," + ",".join(EROM_PROPERTIES)
 BBOX_PROPERTIES = "comid,gnis_name"
 _BACKOFF_S = (1.0, 3.0)
 
@@ -101,6 +103,28 @@ def _int(v) -> Optional[int]:
         return None
 
 
+def erom_from_properties(properties: Optional[dict]) -> Optional[dict[str, float]]:
+    """The complete 13 EROM flow estimates, or None if any value is unknown.
+
+    Shared by live feature decoding and stored evidence normalization; this
+    function performs no I/O and preserves the source float precision.
+    """
+    if not isinstance(properties, dict):
+        return None
+    out = {}
+    for key in EROM_PROPERTIES:
+        try:
+            if isinstance(properties[key], bool):
+                return None
+            value = float(properties[key])
+        except (KeyError, TypeError, ValueError, OverflowError):
+            return None
+        if not math.isfinite(value):
+            return None
+        out[key] = value
+    return out
+
+
 def attrs_from_feature(feature: Optional[dict]) -> dict[str, Any]:
     """The ``delineation.flowline_attrs`` keys (minus sinuosity) from a feature."""
     out: dict[str, Any] = {"gnis_name": None, "drainage_area_sqkm": None, "huc8": None,
@@ -115,4 +139,5 @@ def attrs_from_feature(feature: Optional[dict]) -> dict[str, Any]:
     out["slope"] = slope if slope is not None and slope >= 0 else None
     out["fcode"] = _int(props.get("fcode"))
     out["stream_order"] = _int(props.get("streamorde"))
+    out["erom"] = erom_from_properties(props)
     return out

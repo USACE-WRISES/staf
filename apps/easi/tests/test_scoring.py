@@ -8,9 +8,9 @@ from easi import config, scoring
 
 # --- metric-level ---------------------------------------------------------- #
 def test_rating_to_index_defaults():
-    assert scoring.rating_to_index("Good") == 0.85
-    assert scoring.rating_to_index("Fair") == 0.545
-    assert scoring.rating_to_index("Poor") == 0.195
+    assert scoring.rating_to_index("Good") == 0.90
+    assert scoring.rating_to_index("Fair") == 0.55
+    assert scoring.rating_to_index("Poor") == 0.10
 
 
 def test_rating_to_index_per_metric_midpoints():
@@ -24,14 +24,24 @@ def test_rating_to_index_unknown():
 
 
 @pytest.mark.parametrize("index,expected", [
-    (0.85, 13),   # Good  -> round(12.75)
-    (0.545, 8),   # Fair  -> round(8.175)
-    (0.195, 3),   # Poor  -> round(2.925)
+    (0.90, 14),   # Good  -> round(13.5), half to even
+    (0.55, 8),    # Fair  -> round(8.25)
+    (0.10, 2),    # Poor  -> round(1.5), half to even
     (1.0, 15),    # clamp high
     (0.0, 0),     # clamp low
     (1.5, 15),    # clamp over
 ])
 def test_function_score(index, expected):
+    assert scoring.function_score(index) == expected
+
+
+@pytest.mark.parametrize("rating,half_score,expected", [
+    ("Good", 13.5, 14),
+    ("Poor", 1.5, 2),
+])
+def test_rating_function_scores_round_half_to_even(rating, half_score, expected):
+    index = scoring.rating_to_index(rating)
+    assert index * config.FUNCTION_SCORE_MAX == half_score
     assert scoring.function_score(index) == expected
 
 
@@ -108,29 +118,31 @@ def test_score_assessment_all_good():
     res = scoring.score_assessment(_all("Good"))
     assert len(res["metrics"]) == 20
     assert len(res["functionScores"]) == 20
-    assert set(res["functionScores"].values()) == {13}
+    assert set(res["functionScores"].values()) == {14}
     for key in config.OUTCOMES:
-        assert res["subIndices"][key] == 0.87  # 13/15 = 0.8667 -> 0.87
-    assert res["ecosystemConditionIndex"] == 0.87
+        assert res["subIndices"][key] == 0.93  # 14/15 = 0.9333 -> 0.93
+    assert res["ecosystemConditionIndex"] == 0.93
 
 
 def test_score_assessment_all_fair():
     res = scoring.score_assessment(_all("Fair"))
     assert set(res["functionScores"].values()) == {8}
+    assert set(res["subIndices"].values()) == {0.53}
     assert res["ecosystemConditionIndex"] == 0.53  # 8/15 = 0.5333 -> 0.53
 
 
 def test_score_assessment_all_poor():
     res = scoring.score_assessment(_all("Poor"))
-    assert set(res["functionScores"].values()) == {3}
-    assert res["ecosystemConditionIndex"] == 0.20  # 3/15 = 0.20
+    assert set(res["functionScores"].values()) == {2}
+    assert set(res["subIndices"].values()) == {0.13}
+    assert res["ecosystemConditionIndex"] == 0.13  # 2/15 = 0.1333 -> 0.13
 
 
 def test_score_assessment_degrades_on_missing():
     ratings = {"catchment-hydrology-impervious-surface-cover": "Good"}
     res = scoring.score_assessment(ratings)
     assert len(res["metrics"]) == 1
-    assert res["functionScores"] == {"catchment-hydrology": 13}
+    assert res["functionScores"] == {"catchment-hydrology": 14}
     # physical sub-index built from the single direct function only
     assert 0.0 <= res["ecosystemConditionIndex"] <= 1.0
 

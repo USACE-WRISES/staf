@@ -13,9 +13,10 @@ import pytest
 
 from easi import assessment
 from easi.datasources import attains, nas, nid_barriers, wqp
-from easi.national import method_version, providers, records
+from easi.national import SCHEMA_VERSION, method_version, providers, records
 from easi.national import client
-from test_batch_parity import BIEGER, GOLDEN, REACH_GEOMORPH, STREAMCAT, _parity_view
+from test_batch_parity import (BIEGER, EROM, GOLDEN, L3_CODE, NARS9,
+                               REACH_GEOMORPH, STREAMCAT, _parity_view)
 
 LAT, LON = 40.10, -83.10
 
@@ -27,6 +28,7 @@ def _record(**overrides) -> dict:
         "totdasqkm": 50.0, "lengthkm": 2.0, "slope": 0.005, "sinuosity": 1.2,
         "lat": LAT, "lon": LON, "hydroseq": 1, "dnhydroseq": 0, "levelpathi": 1,
         "tocomid": 0,
+        "l3_code": L3_CODE, "nars9": NARS9, "erom": dict(EROM),
         "streamcat": dict(STREAMCAT), "nrsa": None,
         "bankfull": {**BIEGER, "extrapolated": False, "fit_range_sqkm": None},
         "attains_exact": {}, "attains_nearby": {}, "wqp_tn": None, "wqp_tp": None,
@@ -44,11 +46,14 @@ def clean_providers():
     providers.uninstall()
 
 
-def test_preloaded_matches_the_live_parity_golden(clean_providers):
+@pytest.mark.parametrize("criteria_set", ["regional", "legacy"], indirect=True)
+def test_preloaded_matches_the_live_parity_golden(clean_providers, criteria_set):
     report = client.score_record(_record(), cross_section=False)
-    golden = json.loads(GOLDEN.read_text(encoding="utf-8"))
+    golden_path = (GOLDEN if criteria_set == "regional" else
+                   GOLDEN.with_name("parity_golden_legacy.json"))
+    golden = json.loads(golden_path.read_text(encoding="utf-8"))
     assert _parity_view(report) == golden
-    assert report["precomputed"]["schema"] == 1
+    assert report["precomputed"]["schema"] == SCHEMA_VERSION
     assert report["precomputed"]["method_current"] is True
     assert report["basin"]["rows"]
 

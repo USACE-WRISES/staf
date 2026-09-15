@@ -87,7 +87,12 @@ def basin_characteristics(ctx) -> dict:
     # and arid ecoregions, so the detrital CPOM proxy counts grass/shrub there too).
     try:
         from . import geo
-        eco = geo.level3_at(getattr(ctx, "lat", None), getattr(ctx, "lon", None))
+        if "strata" in ctx.extras:
+            code = ctx.extras["strata"].get("l3")
+            entry = geo.ecoregion_crosswalk().get("l3", {}).get(code) or {}
+            eco = {"code": code, "name": entry.get("name")}
+        else:
+            eco = geo.level3_at(getattr(ctx, "lat", None), getattr(ctx, "lon", None))
     except Exception:  # noqa: BLE001 - resilience by design
         eco = None
     if eco and eco.get("name"):

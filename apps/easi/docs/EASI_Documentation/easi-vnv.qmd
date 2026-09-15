@@ -1,6 +1,6 @@
 ---
 title: "Ecosystem Assessment Screening Index (EASI)"
-subtitle: "Method documentation, verification, and validation"
+subtitle: "Historical method documentation, verification, and validation"
 abstract: >
   The Ecosystem Assessment Screening Index (EASI) is the Screening tier of the
   Stream Tiered Assessment Framework (STAF). It estimates the condition of
@@ -35,6 +35,19 @@ This document is the extended documentation for EASI. A shorter technical note
 introduces the method for first-time readers (Stepchinski and Menichino In Review).
 The EASI web application is available at
 [usace-wrises.github.io/staf/easi](https://usace-wrises.github.io/staf/easi/).
+:::
+
+::: callout-note-soft
+**Historical validation scope, recorded 2026-09-15.** This report preserves
+the methods, cached cases, figures and field comparisons preceding the
+regional-criteria decision of 2026-09-14. Its midpoint mapping produces
+function scores of 13 / 8 / 3. Current EASI uses 0.90 / 0.55 / 0.10 anchors
+and scores of 14 / 8 / 2, with regional reference criteria by default.
+The validation results below have not been rerun under that configuration
+and do not establish validation of those changes. The current
+[regional reference criteria](https://usace-wrises.github.io/staf/walkthroughs/easi/#regional-reference-criteria)
+are documented in the walkthrough. Selecting legacy criteria preserves the
+former rating rules with the current anchors.
 :::
 
 # Introduction
@@ -244,7 +257,8 @@ a moderate departure. Poor indicates a substantial departure. In the web
 application these ratings are assigned automatically from the underlying data,
 and an assessor can override any rating with field evidence.
 
-Each rating maps to a function score on a 0 to 15 scale. A rating maps to the
+For the historical runs documented here, each rating maps to a function
+score on a 0 to 15 scale. A rating maps to the
 midpoint index of its range, and the function score is that index multiplied by
 15 and rounded. This gives 13 for Good, 8 for Fair, and 3 for Poor. Function
 scores of 11 to 15 indicate a Functioning state, 6 to 10 indicate a

@@ -1,0 +1,491 @@
+{
+  "l2": {
+    "10.1": {
+      "name": "COLD DESERTS"
+    },
+    "10.2": {
+      "name": "WARM DESERTS"
+    },
+    "11.1": {
+      "name": "MEDITERRANEAN CALIFORNIA"
+    },
+    "12.1": {
+      "name": "WESTERN SIERRA MADRE PIEDMONT"
+    },
+    "13.1": {
+      "name": "UPPER GILA MOUNTAINS"
+    },
+    "15.4": {
+      "name": "EVERGLADES"
+    },
+    "5.2": {
+      "name": "MIXED WOOD SHIELD"
+    },
+    "5.3": {
+      "name": "ATLANTIC HIGHLANDS"
+    },
+    "6.2": {
+      "name": "WESTERN CORDILLERA"
+    },
+    "7.1": {
+      "name": "MARINE WEST COAST FOREST"
+    },
+    "8.1": {
+      "name": "MIXED WOOD PLAINS"
+    },
+    "8.2": {
+      "name": "CENTRAL USA PLAINS"
+    },
+    "8.3": {
+      "name": "SOUTHEASTERN USA PLAINS"
+    },
+    "8.4": {
+      "name": "OZARK/OUACHITA-APPALACHIAN FORESTS"
+    },
+    "8.5": {
+      "name": "MISSISSIPPI ALLUVIAL AND SOUTHEAST USA COASTAL PLAINS"
+    },
+    "9.2": {
+      "name": "TEMPERATE PRAIRIES"
+    },
+    "9.3": {
+      "name": "WEST-CENTRAL SEMI-ARID PRAIRIES"
+    },
+    "9.4": {
+      "name": "SOUTH CENTRAL SEMI-ARID PRAIRIES"
+    },
+    "9.5": {
+      "name": "TEXAS-LOUISIANA COASTAL PLAIN"
+    },
+    "9.6": {
+      "name": "TAMAULIPAS-TEXAS SEMIARID PLAIN"
+    }
+  },
+  "l3": {
+    "1": {
+      "l1": "7",
+      "l2": "7.1",
+      "name": "Coast Range"
+    },
+    "10": {
+      "l1": "10",
+      "l2": "10.1",
+      "name": "Columbia Plateau"
+    },
+    "11": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "Blue Mountains"
+    },
+    "12": {
+      "l1": "10",
+      "l2": "10.1",
+      "name": "Snake River Plain"
+    },
+    "13": {
+      "l1": "10",
+      "l2": "10.1",
+      "name": "Central Basin and Range"
+    },
+    "14": {
+      "l1": "10",
+      "l2": "10.2",
+      "name": "Mojave Basin and Range"
+    },
+    "15": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "Northern Rockies"
+    },
+    "16": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "Idaho Batholith"
+    },
+    "17": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "Middle Rockies"
+    },
+    "18": {
+      "l1": "10",
+      "l2": "10.1",
+      "name": "Wyoming Basin"
+    },
+    "19": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "Wasatch and Uinta Mountains"
+    },
+    "2": {
+      "l1": "7",
+      "l2": "7.1",
+      "name": "Puget Lowland"
+    },
+    "20": {
+      "l1": "10",
+      "l2": "10.1",
+      "name": "Colorado Plateaus"
+    },
+    "21": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "Southern Rockies"
+    },
+    "22": {
+      "l1": "10",
+      "l2": "10.1",
+      "name": "Arizona/New Mexico Plateau"
+    },
+    "23": {
+      "l1": "13",
+      "l2": "13.1",
+      "name": "Arizona/New Mexico Mountains"
+    },
+    "24": {
+      "l1": "10",
+      "l2": "10.2",
+      "name": "Chihuahuan Deserts"
+    },
+    "25": {
+      "l1": "9",
+      "l2": "9.4",
+      "name": "High Plains"
+    },
+    "26": {
+      "l1": "9",
+      "l2": "9.4",
+      "name": "Southwestern Tablelands"
+    },
+    "27": {
+      "l1": "9",
+      "l2": "9.4",
+      "name": "Central Great Plains"
+    },
+    "28": {
+      "l1": "9",
+      "l2": "9.4",
+      "name": "Flint Hills"
+    },
+    "29": {
+      "l1": "9",
+      "l2": "9.4",
+      "name": "Cross Timbers"
+    },
+    "3": {
+      "l1": "7",
+      "l2": "7.1",
+      "name": "Willamette Valley"
+    },
+    "30": {
+      "l1": "9",
+      "l2": "9.4",
+      "name": "Edwards Plateau"
+    },
+    "31": {
+      "l1": "9",
+      "l2": "9.6",
+      "name": "Southern Texas Plains"
+    },
+    "32": {
+      "l1": "9",
+      "l2": "9.4",
+      "name": "Texas Blackland Prairies"
+    },
+    "33": {
+      "l1": "8",
+      "l2": "8.3",
+      "name": "East Central Texas Plains"
+    },
+    "34": {
+      "l1": "9",
+      "l2": "9.5",
+      "name": "Western Gulf Coastal Plain"
+    },
+    "35": {
+      "l1": "8",
+      "l2": "8.3",
+      "name": "South Central Plains"
+    },
+    "36": {
+      "l1": "8",
+      "l2": "8.4",
+      "name": "Ouachita Mountains"
+    },
+    "37": {
+      "l1": "8",
+      "l2": "8.4",
+      "name": "Arkansas Valley"
+    },
+    "38": {
+      "l1": "8",
+      "l2": "8.4",
+      "name": "Boston Mountains"
+    },
+    "39": {
+      "l1": "8",
+      "l2": "8.4",
+      "name": "Ozark Highlands"
+    },
+    "4": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "Cascades"
+    },
+    "40": {
+      "l1": "9",
+      "l2": "9.2",
+      "name": "Central Irregular Plains"
+    },
+    "41": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "Canadian Rockies"
+    },
+    "42": {
+      "l1": "9",
+      "l2": "9.3",
+      "name": "Northwestern Glaciated Plains"
+    },
+    "43": {
+      "l1": "9",
+      "l2": "9.3",
+      "name": "Northwestern Great Plains"
+    },
+    "44": {
+      "l1": "9",
+      "l2": "9.3",
+      "name": "Nebraska Sand Hills"
+    },
+    "45": {
+      "l1": "8",
+      "l2": "8.3",
+      "name": "Piedmont"
+    },
+    "46": {
+      "l1": "9",
+      "l2": "9.2",
+      "name": "Northern Glaciated Plains"
+    },
+    "47": {
+      "l1": "9",
+      "l2": "9.2",
+      "name": "Western Corn Belt Plains"
+    },
+    "48": {
+      "l1": "9",
+      "l2": "9.2",
+      "name": "Lake Agassiz Plain"
+    },
+    "49": {
+      "l1": "5",
+      "l2": "5.2",
+      "name": "Northern Minnesota Wetlands"
+    },
+    "5": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "Sierra Nevada"
+    },
+    "50": {
+      "l1": "5",
+      "l2": "5.2",
+      "name": "Northern Lakes and Forests"
+    },
+    "51": {
+      "l1": "8",
+      "l2": "8.1",
+      "name": "North Central Hardwood Forests"
+    },
+    "52": {
+      "l1": "8",
+      "l2": "8.1",
+      "name": "Driftless Area"
+    },
+    "53": {
+      "l1": "8",
+      "l2": "8.2",
+      "name": "Southeastern Wisconsin Till Plains"
+    },
+    "54": {
+      "l1": "8",
+      "l2": "8.2",
+      "name": "Central Corn Belt Plains"
+    },
+    "55": {
+      "l1": "8",
+      "l2": "8.2",
+      "name": "Eastern Corn Belt Plains"
+    },
+    "56": {
+      "l1": "8",
+      "l2": "8.1",
+      "name": "Southern Michigan/Northern Indiana Drift Plains"
+    },
+    "57": {
+      "l1": "8",
+      "l2": "8.2",
+      "name": "Huron/Erie Lake Plains"
+    },
+    "58": {
+      "l1": "5",
+      "l2": "5.3",
+      "name": "Northeastern Highlands"
+    },
+    "59": {
+      "l1": "8",
+      "l2": "8.1",
+      "name": "Northeastern Coastal Zone"
+    },
+    "6": {
+      "l1": "11",
+      "l2": "11.1",
+      "name": "Central California Foothills and Coastal Mountains"
+    },
+    "60": {
+      "l1": "8",
+      "l2": "8.1",
+      "name": "Northern Allegheny Plateau"
+    },
+    "61": {
+      "l1": "8",
+      "l2": "8.1",
+      "name": "Erie Drift Plain"
+    },
+    "62": {
+      "l1": "5",
+      "l2": "5.3",
+      "name": "North Central Appalachians"
+    },
+    "63": {
+      "l1": "8",
+      "l2": "8.5",
+      "name": "Middle Atlantic Coastal Plain"
+    },
+    "64": {
+      "l1": "8",
+      "l2": "8.3",
+      "name": "Northern Piedmont"
+    },
+    "65": {
+      "l1": "8",
+      "l2": "8.3",
+      "name": "Southeastern Plains"
+    },
+    "66": {
+      "l1": "8",
+      "l2": "8.4",
+      "name": "Blue Ridge"
+    },
+    "67": {
+      "l1": "8",
+      "l2": "8.4",
+      "name": "Ridge and Valley"
+    },
+    "68": {
+      "l1": "8",
+      "l2": "8.4",
+      "name": "Southwestern Appalachians"
+    },
+    "69": {
+      "l1": "8",
+      "l2": "8.4",
+      "name": "Central Appalachians"
+    },
+    "7": {
+      "l1": "11",
+      "l2": "11.1",
+      "name": "Central California Valley"
+    },
+    "70": {
+      "l1": "8",
+      "l2": "8.4",
+      "name": "Western Allegheny Plateau"
+    },
+    "71": {
+      "l1": "8",
+      "l2": "8.3",
+      "name": "Interior Plateau"
+    },
+    "72": {
+      "l1": "8",
+      "l2": "8.3",
+      "name": "Interior River Valleys and Hills"
+    },
+    "73": {
+      "l1": "8",
+      "l2": "8.5",
+      "name": "Mississippi Alluvial Plain"
+    },
+    "74": {
+      "l1": "8",
+      "l2": "8.3",
+      "name": "Mississippi Valley Loess Plains"
+    },
+    "75": {
+      "l1": "8",
+      "l2": "8.5",
+      "name": "Southern Coastal Plain"
+    },
+    "76": {
+      "l1": "15",
+      "l2": "15.4",
+      "name": "Southern Florida Coastal Plain"
+    },
+    "77": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "North Cascades"
+    },
+    "78": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "Klamath Mountains/California High North Coast Range"
+    },
+    "79": {
+      "l1": "12",
+      "l2": "12.1",
+      "name": "Madrean Archipelago"
+    },
+    "8": {
+      "l1": "11",
+      "l2": "11.1",
+      "name": "Southern California Mountains"
+    },
+    "80": {
+      "l1": "10",
+      "l2": "10.1",
+      "name": "Northern Basin and Range"
+    },
+    "81": {
+      "l1": "10",
+      "l2": "10.2",
+      "name": "Sonoran Basin and Range"
+    },
+    "82": {
+      "l1": "8",
+      "l2": "8.1",
+      "name": "Acadian Plains and Hills"
+    },
+    "83": {
+      "l1": "8",
+      "l2": "8.1",
+      "name": "Eastern Great Lakes Lowlands"
+    },
+    "84": {
+      "l1": "8",
+      "l2": "8.5",
+      "name": "Atlantic Coastal Pine Barrens"
+    },
+    "85": {
+      "l1": "11",
+      "l2": "11.1",
+      "name": "Southern California/Northern Baja Coast"
+    },
+    "9": {
+      "l1": "6",
+      "l2": "6.2",
+      "name": "Eastern Cascades Slopes and Foothills"
+    }
+  }
+}

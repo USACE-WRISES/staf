@@ -47,6 +47,87 @@ the places where more helps.
 | `EASI_NATIONAL_WQP_MONTHLY_WORKERS` | 3 | months downloaded at once in the national monthly WQP pull |
 | `EASI_NATIONAL_WQP_MONTHLY_START` | 2016-09 | first calendar month of that pull (through the current month) |
 
+## Regional criteria and stored evidence
+
+The builder and live app share the same adapters and criteria selection.
+`EASI_CRITERIA_SET` defaults to `regional`; `legacy` retains the former
+criteria with the current EASI rating anchors. Good / Fair / Poor map to
+0.90 / 0.55 / 0.10 and function scores 14 / 8 / 2. SFARI and DEEP are unaffected.
+The set name, active catalog, crosswalk and reference artifact contribute to
+the method version. Staging records `criteria_set` beside `method_version`.
+A mismatched set or method makes baked scores stale, while recalled reports
+still score their stored evidence with the app's active criteria.
+
+Schema 2 evidence stores `l3_code` and `nars9` at the existing derive anchor,
+and an `erom` JSON block containing `qe_ma` plus `qe_01` through `qe_12` in
+cubic feet per second. The national `erom` step reads those thirteen raw
+estimates and COMID from `NHDFlowline_Network` into sorted
+`national/erom.parquet`. The score stage reads only each HUC8's COMIDs and
+passes the raw block to the app. A missing or nonfinite estimate makes the
+block unknown. Derive and the elevation archive do not need to rerun.
+
+The same `hydraulics.monthly_flow_cv()` evaluates both paths. It requires all
+twelve months, uses population variance, rejects a nonpositive monthly mean
+and rounds the CV to six decimals. The national path never fetches missing
+evidence during scoring. Schema 1 records remain readable, resolving absent
+regional keys from the bundled polygons and leaving absent EROM unknown.
+
+`config.streamcat_aoi_by_name()` sends `prg_bmmi0809` to `other` and the
+remaining names to their applicable AOIs. The map is part of both national
+and chunk StreamCat digests. The model column has no AOI suffix. Population
+support uses the integrity products when this probability is unavailable.
+Live StreamCat GET requests for this model require `aoi=other`. The
+2026-09-15 check found that `areaOfInterest=other` returned HTTP 200 with
+only COMID. Check for the requested model column as well as the HTTP status.
+The builder also sends `aoi` in its request payload. Standard live AOIs
+retain their existing `areaOfInterest` parameter.
+
+### Reference artifact
+
+The emitter reads the completed registry, its historical `values_meta.json`,
+the dataset vintage and existing panel evidence. It writes only the four
+approved sets: corridor woody cover, corridor natural cover, monthly flow
+variability and entrenchment. Level II sets require national fallbacks.
+Entrenchment uses the three slope classes and a pooled national fallback
+for missing slope. The latter is fitted from the already-selected national
+panel and stored ER measurements, including members with unknown slope.
+
+From this folder, using the shared root virtual environment:
+
+```powershell
+& ..\..\.venv\Scripts\python.exe -m builder.analysis.artifact --out ..\..\apps\easi\data\reference-curves.json
+```
+
+The export has sorted keys and six-place floats, and records historical
+values method/version/date, registry timestamp/hash, StreamCurves engine
+hash, screen caps and panel floors of 100 / 30. It does not rerun the stress
+test or change the national data root. Re-vendor EASI into StreamCurves
+after changing either generated scoring artifact. Displayed physical-value
+crossings are rounded approximations; scoring interpolates the stored curve
+at the exact 0.39 / 0.69 index edges.
+
+### Phase F refresh order
+
+The 2026-09 rework stops before Phase F until the owner confirms the national
+refresh and publication. Once confirmed, use this order:
+
+1. Run the national `erom` step to create the raw evidence cache.
+2. Rebuild the national StreamCat cache for the new name-to-AOI map.
+3. For each of the sixteen existing states, queue the `streamcat` and `score`
+   chunk stages, then the affected tiles. Existing derive and cross-section
+   evidence are reused. Run the queue with its retry wrapper.
+4. Run one staging pass, inspect method/set freshness and the regional rating
+   shares, then publish once. Upload the manifest last.
+5. Verify live/preloaded parity at the stored anchors and `method_current`
+   at the spot reports. `easi-national-current` must **always remain a prerelease**.
+6. Snapshot `analysis/values.parquet` as `analysis/values_legacy.parquet`
+   before the approved closing re-harvest. Refresh the closing analysis
+   against the shipped criteria and verify S0 agrees with published stats.
+
+The expected approximate 47% Functioning / 50% At-Risk / 3% Non-Functioning
+shares are the approved analysis comparison, not a claim that Phase F has
+already published those results.
+
 ## How it works
 
 - A **chunk** is a set of HUC8s (one HUC8, a HUC4, a state, a region). Every
@@ -63,7 +144,7 @@ the places where more helps.
   With the NHDPlus V2 seamless geodatabase extracted under `national/nhdplus/`
   and the ATTAINS national geodatabase under `national/attains/`, the national
   job converts them once (`flowlines.parquet`, `huc12.parquet`,
-  `attains.parquet`) and the geometry, HUC12 and ATTAINS stages filter those
+  `erom.parquet`, `attains.parquet`) and the geometry, HUC12 and ATTAINS stages filter those
   files instead of paging the services. The other one-time pulls are the
   NHDPlus attribute tables, the dam inventory, the HUC4 polygons and the two
   3DEP catalogs (below).
@@ -222,7 +303,7 @@ queue worker.
 |---|---|---|
 | `strata` | `strata.parquet`, `l3_to_l2_l1.csv`, `strata_parity.json` | every flowline's Level III / II / I, NARS-9 and physiographic keys, HUC12, state, anchor, flowline sinuosity and the slope, drainage-area and FCODE classes; the crosswalk from the NRSA site files |
 | `candidates` | `streamcat_candidates.parquet` | about 60 StreamCat names the candidate metrics read, pulled by region with a per-name area of interest (`prg_bmmi0809`, `nrsa_frame`, `nars_region` only under `other`), after a probe of every name and scale |
-| `erom` | `erom.parquet` | the EROM flow estimates per reach from the seamless geodatabase and the low-flow, variability and alteration ratios |
+| `erom` | `erom.parquet` | QE flow quantities from the raw national EROM cache, with earlier QA/QC/area-derived analysis quantities retained from stored analysis evidence when available |
 | `attains` | `attains_au_attributes.parquet` | every ATTAINS assessment unit with its per-use statuses, cause columns and the two aquatic-life-use ratings |
 | `landscape` | `landscape.parquet` | every reach: strata, cached StreamCat columns, candidates, EROM and the derived screen and curve quantities (checked against the values table) |
 | `values` | `values.parquet`, `parity_A.json` | every scored reach re-scored with the app's evaluator; the flattened scoring trace (every input value, per-input rating, context), cross-section extras, evidence facts; scheme A parity is asserted |

@@ -165,7 +165,7 @@ def test_engine_provider_changes_only_the_watershed_rows(monkeypatch):
     ctx.extras["watershedEngine"] = {"status": "ok", "record": _ENGINE_RECORD,
                                      "engineVersion": "0.2.0"}
     report = asyncio.run(assessment.assess(ctx))
-    watershed_ids = set(assessment.WATERSHED_METRIC_IDS)
+    watershed_ids = set(assessment.registry.watershed_metric_ids())
     for row in report["metricRows"]:
         if row["metricId"] in watershed_ids:
             assert "STAF site engine v0.2.0" in row["source"], row["metricId"]

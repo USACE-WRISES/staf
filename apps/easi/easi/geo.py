@@ -1,4 +1,4 @@
-"""Point -> EPA Level III ecoregion resolution for EASI.
+"""EPA ecoregion and slope strata for EASI.
 
 Reports the site's EPA Level III ecoregion in the basin characteristics so a reviewer can
 interpret land-cover metrics (e.g. the natural-riparian-vegetation CPOM proxy is non-forest in
@@ -109,3 +109,55 @@ def nars9_at(lat, lon) -> dict | None:
         if prepared.covers(point):
             return {"code": None if value is None else str(value), "name": name or ""}
     return None
+
+
+def ecoregion_crosswalk() -> dict:
+    """The bundled Level III -> Level II / I crosswalk, cached with EASI data."""
+    return config._load("ecoregion-crosswalk.json")
+
+
+def slope_class(slope) -> str | None:
+    """Slope in m/m, with the analysis's right=False boundaries at 0.005 and 0.02."""
+    if isinstance(slope, bool) or not _finite(slope) or float(slope) < 0:
+        return None
+    value = float(slope)
+    return "lt_0.5" if value < 0.005 else "0.5_to_2" if value < 0.02 else "ge_2"
+
+
+def strata_for(l3_code, *, slope=None) -> dict:
+    """Resolve stored Level III identity and slope without looking up polygons."""
+    code = None if l3_code is None else str(l3_code).strip()
+    if code and code.endswith(".0"):
+        code = code[:-2]
+    code = code or None
+    crosswalk = ecoregion_crosswalk()
+    entry = crosswalk.get("l3", {}).get(code) or {}
+    l2 = entry.get("l2")
+    return {"l3": code, "l2": l2, "l1": entry.get("l1"),
+            "l2_name": (crosswalk.get("l2", {}).get(l2) or {}).get("name"),
+            "slope_class": slope_class(slope)}
+
+
+@functools.lru_cache(maxsize=None)
+def _nars9_names(path_str: str) -> dict:
+    """Names only, read without constructing geometries or performing a spatial lookup."""
+    path = Path(path_str)
+    if not path.exists():
+        return {}
+    try:
+        with gzip.open(path, "rt", encoding="utf-8") as stream:
+            features = json.load(stream).get("features", [])
+    except (OSError, ValueError):
+        return {}
+    return {str(props["WSA_9"]): props.get("WSA_9_NM")
+            for feature in features if (props := feature.get("properties") or {}).get("WSA_9")}
+
+
+def nars9_name(code) -> str | None:
+    return _nars9_names(str(NARS9_PATH)).get(code)
+
+
+def strata_at(lat, lon, *, slope=None) -> dict:
+    """Resolve a live location once, retaining the official NARS nutrient region."""
+    l3, nars = level3_at(lat, lon) or {}, nars9_at(lat, lon) or {}
+    return {**strata_for(l3.get("code"), slope=slope), "nars9": nars.get("code")}

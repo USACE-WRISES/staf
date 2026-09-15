@@ -41,7 +41,8 @@ def _record():
     return {"comid": 1, "huc4": "0208", "huc8": "02080204", "huc12": "020802040101", "vpu": "02",
             "gnis_name": "Test Run", "streamorde": 2, "fcode": 46006, "totdasqkm": 50.0, "lengthkm": 1.2,
             "slope": 0.004, "sinuosity": 1.15, "lat": 37.9, "lon": -78.5, "hydroseq": 1, "dnhydroseq": 0,
-            "levelpathi": 1, "tocomid": 0, "streamcat": _streamcat_row(), "nrsa": None, "bankfull": None,
+            "levelpathi": 1, "tocomid": 0, "l3_code": "45", "nars9": "SAP",
+            "streamcat": _streamcat_row(), "nrsa": None, "bankfull": None,
             "attains_exact": {},
             "attains_nearby": {"assessment_unit": "VA-1", "assessment_name": "Test Creek", "overallstatus": "Not Assessed",
                                "isimpaired": "N", "ircategory": "3", "distance_m": 120.0, "match_type": "nearby",
@@ -51,20 +52,33 @@ def _record():
             "nas_taxa": ["Corbicula fluminea"], "nas_scope": "huc12", "geomorph": None, "schema_version": 1}
 
 
-def test_flatten_trace_carries_every_input_rating_and_context():
+@pytest.mark.parametrize("selected", ["regional", "legacy"])
+def test_flatten_trace_carries_every_input_rating_and_context(selected, monkeypatch):
+    from easi import config as easi_config
     from easi.national import client
-    report = client.score_record(_record(), cross_section=False)
+    monkeypatch.setenv("EASI_CRITERIA_SET", selected)
+    easi_config.reset_caches()
+    rec = _record()
+    rec["erom"] = {"qe_ma": 6.5, **{f"qe_{month:02d}": float(month) for month in range(1, 13)}}
+    report = client.score_record(rec, cross_section=False)
     flat = values.flatten_trace(report)
-    assert flat["rating_catchment_hydrology"] == "Good" and flat["index_catchment_hydrology"] == 0.85
-    assert flat["fs_catchment_hydrology"] == 13 and flat["kind_catchment_hydrology"] == "worst_index"
+    assert flat["rating_catchment_hydrology"] == "Good" and flat["index_catchment_hydrology"] == 0.90
+    assert flat["fs_catchment_hydrology"] == 14 and flat["kind_catchment_hydrology"] == "worst_index"
     assert flat["v__catchment_hydrology__impervious"] == pytest.approx(0.35)
     assert flat["v__catchment_hydrology__agriculture"] == pytest.approx(20.0)
-    assert flat["r__catchment_hydrology__agriculture"] == "Good" and flat["c__catchment_hydrology"] == 0.85
+    assert flat["r__catchment_hydrology__agriculture"] == "Good" and flat["c__catchment_hydrology"] == 0.90
     assert flat["governing_catchment_hydrology"] in ("impervious", "agriculture")
     assert flat["c__streamflow_regime"] == pytest.approx(100.0 * 500.0 / (1000.0 * 400.0), abs=1e-9)
     assert flat["v__streamflow_regime__runoff"] == pytest.approx(400.0)
-    assert flat["method_low_flow_baseflow_dynamics"] == "streamcat-hyd-integrity"
-    assert flat["fallback_low_flow_baseflow_dynamics"] is True and flat["c__low_flow_baseflow_dynamics"] == pytest.approx(0.95)
+    if selected == "regional":
+        assert flat["method_low_flow_baseflow_dynamics"] == "erom-flow-variability"
+        assert flat["fallback_low_flow_baseflow_dynamics"] is False
+        assert flat["c__low_flow_baseflow_dynamics"] == pytest.approx(0.531085)
+        assert flat["ctx__low_flow_baseflow_dynamics__strata_l2"] == "8.3"
+    else:
+        assert flat["method_low_flow_baseflow_dynamics"] == "streamcat-hyd-integrity"
+        assert flat["fallback_low_flow_baseflow_dynamics"] is True
+        assert flat["c__low_flow_baseflow_dynamics"] == pytest.approx(0.95)
     assert flat["ctx__nutrient_cycling__region"] == "SAP" and flat["v__nutrient_cycling__tn"] == pytest.approx(0.5)
     assert flat["r__nutrient_cycling__tp"] in ("Good", "Fair", "Poor")
     assert flat["method_water_soil_quality"] == "streamcat-chem-integrity-regulatory"

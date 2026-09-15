@@ -15,6 +15,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from easi.config import RATING_INDEX
 SRC_TSV = ROOT / "data" / "source" / "screening-metrics.tsv"
 FUNCTIONS_JSON = ROOT / "data" / "functions.json"
 OUT_JSON = ROOT / "data" / "easi-metrics.json"
@@ -86,7 +88,9 @@ def main() -> int:
             rating = BIN_TO_RATING[n]
             rng = parse_range(row.get(f"Bin {n} Recommended Index (0-1.0)", ""))
             ranges[rating] = rng if rng else DEFAULT_RANGES[rating]
-        midpoints = {r: round((v[0] + v[1]) / 2, 3) for r, v in ranges.items()}
+        # Keep this existing payload key for consumers; EASI now uses rating
+        # anchors rather than arithmetic midpoints of the condition bands.
+        midpoints = dict(RATING_INDEX)
 
         metrics.append({
             "metricId": (row.get("Metric ID") or "").strip(),
@@ -116,10 +120,10 @@ def main() -> int:
         "method": "Ecosystem Assessment Screening Index (EASI)",
         "generatedFrom": "data/source/screening-metrics.tsv",
         "count": len(metrics),
-        "ratingIndexDefault": {"Good": 0.85, "Fair": 0.545, "Poor": 0.195},
+        "ratingIndexDefault": dict(RATING_INDEX),
         "metrics": metrics,
     }
-    OUT_JSON.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
+    OUT_JSON.write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8", newline="\n")
 
     # ---- report ----
     print(f"Wrote {OUT_JSON.relative_to(ROOT)} with {len(metrics)} EASI metrics")

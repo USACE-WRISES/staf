@@ -39,6 +39,8 @@ PRECISION = 7
 #: annual and monthly, unit-runoff (QA), reference-gage (QC) and gage-adjusted (QE)
 EROM_COLUMNS = ("COMID", "TotDASqKM", "QA_MA", "QE_MA", "QC_MA", "VA_MA", "VE_MA") + tuple(
     f"{kind}_{month:02d}" for month in range(1, 13) for kind in ("QA", "QE", "QC"))
+#: The runtime evidence cache keeps only COMID and the 13 QE estimates.
+EROM_EVIDENCE_COLUMNS = ("COMID", "QE_MA") + tuple(f"QE_{month:02d}" for month in range(1, 13))
 ATTAINS_ATTRIBUTES_LAYER = "attains_au_attributes"
 
 
@@ -179,6 +181,29 @@ def convert_attains(root: DataRoot, progress: Progress, *, gdb: Optional[Path] =
     path = write_attains_rows(root, rows)
     progress.say(f"attains.parquet: {len(rows):,} segments of "
                  f"{len({r['assessment_unit'] for r in rows}):,} assessment units")
+    return path
+
+
+def convert_erom(root: DataRoot, progress: Progress, *, gdb: Optional[Path] = None) -> Path:
+    """Cache COMID and the 13 raw QE estimates, sorted by COMID."""
+    import numpy as np
+    import pandas as pd
+    import pyogrio
+    gdb = gdb or nhdplus_gdb(root)
+    if gdb is None:
+        raise RuntimeError("NHDPlus seamless geodatabase not found under national/nhdplus")
+    progress.say(f"reading EROM evidence from {gdb.name} ...")
+    frame = pyogrio.read_dataframe(str(gdb), layer="NHDFlowline_Network",
+                                   columns=list(EROM_EVIDENCE_COLUMNS), read_geometry=False)
+    frame.columns = [str(c).lower() for c in frame.columns]
+    frame = frame[[c.lower() for c in EROM_EVIDENCE_COLUMNS]].copy()
+    frame["comid"] = frame["comid"].astype("int64")
+    for name in frame.columns[1:]:
+        numbers = pd.to_numeric(frame[name], errors="coerce").astype("float64")
+        frame[name] = numbers.where(np.isfinite(numbers))
+    frame = frame.sort_values("comid", kind="stable").reset_index(drop=True)
+    path = common.write_parquet(frame, root.erom)
+    progress.say(f"erom.parquet: {len(frame):,} reaches, 13 raw flow estimates each")
     return path
 
 

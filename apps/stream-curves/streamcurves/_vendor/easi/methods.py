@@ -14,7 +14,7 @@ the report and can never drift from it.
 from __future__ import annotations
 
 import functools
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Optional
 
 from . import config, scoring
@@ -82,6 +82,8 @@ class ScoringMethod:
     value_unit: str = ""
     method_key: str = ""                     # catalog methodKey this was projected from
     title: str = ""                          # revised method title, shown in the panel header
+    context: dict = field(default_factory=dict)  # same strata as the site's scoring trace
+    reference: str = ""                      # resolved reference-panel provenance
 
 
 # --------------------------------------------------------------------------- #
@@ -121,6 +123,12 @@ def _rate_fn(raw_bands: list[dict]) -> Callable:
         if value is None:
             return None
         return sm.rating_for_value(float(value), raw_bands)
+    return f
+
+
+def _quantity_rate_fn(rule: dict, context: dict | None) -> Callable:
+    def f(value):
+        return sm.score_quantity(value, rule, sm._strata(context))[0]
     return f
 
 
@@ -170,8 +178,8 @@ def _value_label_unit(method: dict, mode: str) -> tuple[str, str]:
 def _project(method: dict, context: Optional[dict] = None) -> Optional[ScoringMethod]:
     """Project one resolved catalog method into the renderer's shape.
 
-    ``context`` supplies evaluation context the bands depend on — currently only the NARS
-    region, which selects the nutrient method's regional TN/TP boundaries."""
+    ``context`` supplies the NARS region and the reference-curve strata used by
+    the recorded assessment and every what-if recomputation."""
     mode = _mode(method)
     if mode is None:
         return None
@@ -192,7 +200,8 @@ def _project(method: dict, context: Optional[dict] = None) -> Optional[ScoringMe
     per_input: tuple = ()
     if mode in {"worst", "best"}:
         per_input = tuple(
-            (i["key"], _rate_fn(bands), _bands(bands, _input_domain(i, bands)))
+            (i["key"], _quantity_rate_fn(sm.rule_for_input(method, i, context), context),
+             _bands(bands, _input_domain(i, bands)))
             for i, bands in ((i, sm.bands_for_input(method, i, context))
                              for i in method.get("inputs", []) if not i.get("contextOnly"))
             if bands
@@ -205,11 +214,25 @@ def _project(method: dict, context: Optional[dict] = None) -> Optional[ScoringMe
             if item.get("rating")
         )
     plot = method.get("plot") or {}
-    raw_bands = method.get("bands") or []
+    rule = sm.rule_for_method(method)
+    raw_bands = (sm.curve_bands(rule["curve"], sm._strata(context))
+                 if rule.get("curve") else rule.get("bands") or [])
     domain = (tuple(plot["domain"]) if plot.get("domain")
               else _derived_domain(_bands(raw_bands)))
     bands = _bands(raw_bands, domain)
     value_label, value_unit = _value_label_unit(method, mode)
+    specs = [item["curve"] for item in [method, *method.get("inputs", [])]
+             if item.get("curve")]
+    reference = "; ".join(dict.fromkeys(sm.curve_reference(spec, sm._strata(context))
+                                       for spec in specs))
+    breakpoints = (tuple(sm._fmt(float(edge)) for band in raw_bands
+                         for edge in [band.get("max")] if edge is not None)
+                   if rule.get("curve") else
+                   tuple(b.get("label", "") for b in method.get("breakpoints", [])))
+    direction = _DIRECTION.get(plot.get("direction", ""), HIGHER_WORSE)
+    if rule.get("curve"):
+        direction = (HIGHER_BETTER if sm.curve_sets()[rule["curve"]["set"]]["higherIsBetter"]
+                     else HIGHER_WORSE)
     return ScoringMethod(
         metric_id=method["metricId"],
         mode=mode,
@@ -218,19 +241,21 @@ def _project(method: dict, context: Optional[dict] = None) -> Optional[ScoringMe
         bands=bands,
         per_input=per_input,
         decisions=decisions,
-        breakpoints=tuple(b.get("label", "") for b in method.get("breakpoints", [])),
+        breakpoints=breakpoints,
         domain=domain,
-        direction=_DIRECTION.get(plot.get("direction", ""), HIGHER_WORSE),
+        direction=direction,
         value_label=value_label,
         value_unit=value_unit,
         round_ndigits=0 if mode == "count" else 2,
         method_key=method["methodKey"],
         title=method.get("title", ""),
+        context=dict(context or {}),
+        reference=reference,
     )
 
 
 @functools.lru_cache(maxsize=None)
-def _catalog_methods() -> dict[str, ScoringMethod]:
+def _catalog_methods(criteria_set: str | None = None) -> dict[str, ScoringMethod]:
     """metricId -> the primary (top-level) projected method."""
     out = {}
     for method in sm.catalog().get("methods", []):
@@ -241,7 +266,7 @@ def _catalog_methods() -> dict[str, ScoringMethod]:
 
 
 @functools.lru_cache(maxsize=None)
-def _catalog_variants() -> dict[str, dict[str, ScoringMethod]]:
+def _catalog_variants(criteria_set: str | None = None) -> dict[str, dict[str, ScoringMethod]]:
     """metricId -> {methodKey: projected variant}, including the parent's own key."""
     out: dict[str, dict[str, ScoringMethod]] = {}
     for method in sm.catalog().get("methods", []):
@@ -259,7 +284,7 @@ def __getattr__(name: str):
     """``methods.METHODS`` stays a metricId -> ScoringMethod mapping for callers that
     enumerate the catalog, built on first access rather than at import time."""
     if name == "METHODS":
-        return _catalog_methods()
+        return _catalog_methods(config.criteria_set())
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
@@ -267,7 +292,8 @@ def __getattr__(name: str):
 # Public API (unchanged surface)
 # --------------------------------------------------------------------------- #
 def _needs_context(method: dict) -> bool:
-    return any(i.get("regionalBands") for i in method.get("inputs", []))
+    return bool(method.get("curve") or any(i.get("regionalBands") or i.get("curve")
+                                           for i in method.get("inputs", [])))
 
 
 def resolve(mid: str, model: Optional[str] = None,
@@ -284,13 +310,13 @@ def resolve(mid: str, model: Optional[str] = None,
     # ``model`` is a catalog methodKey. Reports written before the catalog existed carry
     # legacy mode names ("combined", "wqp", ...); those resolve to the primary method
     # rather than failing, so an archived report still renders.
-    variants = _catalog_variants().get(mid) or {}
+    variants = _catalog_variants(config.criteria_set()).get(mid) or {}
     resolved = parent if not model or model not in variants else sm._resolved_method(parent, model)
     if context and _needs_context(resolved):
         return _project(resolved, context)
     if model and model in variants:
         return variants[model]
-    return _catalog_methods().get(mid)
+    return _catalog_methods(config.criteria_set()).get(mid)
 
 
 def sliderable(method: ScoringMethod) -> list:
@@ -313,7 +339,8 @@ def evaluate_method(method: ScoringMethod, values: dict) -> dict:
         return {"value": values.get("value"), "rating": rating, "index": _index_of(rating),
                 "functionScore": scoring.function_score(_index_of(rating))
                 if rating in config.RATINGS else None}
-    result = sm.evaluate(method.metric_id, values, variant_key=method.method_key or None)
+    result = sm.evaluate(method.metric_id, values, variant_key=method.method_key or None,
+                         context=method.context)
     rating, value = result.rating, result.combined_value
     idx = _index_of(rating)
     if method.mode in {"worst", "best"}:
@@ -425,12 +452,15 @@ def band_range_texts(method: ScoringMethod) -> dict:
             hi_edge = max(his) if his else None
             for rating, rng in _range_from_bands(bands, lo_edge, hi_edge).items():
                 per_rating[rating].append(f"{tag} {_join_unit(rng, unit)}")
-        return {r: " · ".join(parts) for r, parts in per_rating.items() if parts}
+        suffix = f" ({method.reference})" if method.reference else ""
+        return {r: " · ".join(parts) + suffix for r, parts in per_rating.items() if parts}
     lo_edge, hi_edge = method.domain or (0.0, 1.0)
     integer = method.mode == "count"
     ranges = _range_from_bands(method.bands, lo_edge, hi_edge, integer=integer)
     prefix = "" if integer else (f"{method.value_label} " if method.value_label else "")
-    return {r: f"{prefix}{_join_unit(rng, method.value_unit)}" for r, rng in ranges.items()}
+    suffix = f" ({method.reference})" if method.reference else ""
+    return {r: f"{prefix}{_join_unit(rng, method.value_unit)}{suffix}"
+            for r, rng in ranges.items()}
 
 
 def slider_specs(method: ScoringMethod, site_inputs: dict) -> list:

@@ -7,7 +7,7 @@ builder's staging statistics by state).
 Pure builders: htmltools tags and inline SVG whose x coordinates are
 percentages of the plot column, so the plots stretch with the pane while
 the text keeps its size and nothing new is loaded. Function scores are
-three-valued (3, 8 and 13), so a function's picture is its rating shares;
+three-valued (2, 8 and 14), so a function's picture is its rating shares;
 the indices are continuous, so they get real box plots. Copy avoids em
 dashes.
 """
@@ -386,7 +386,7 @@ def functions_card(stats: dict, scope: str, mode: str = "shares", controls=None)
             tags.span(tags.span(class_="easi-dash-key-whisker"), "whiskers p5 to p95", class_="easi-leg-item"),
             tags.span(tags.span(class_="easi-dash-key-mean"), "mean", class_="easi-leg-item"),
             class_="easi-plot-legend")
-        note = ("Scores take three values (3, 8 and 13: the rating times 15), so a box "
+        note = ("Current EASI scores take three values (2, 8 and 14: the rating index times 15, rounded), so a box "
                 "collapses onto them; the rating shares are the fuller picture.")
     else:
         key = legend([(BAND_COLORS[2], "Functioning 11 to 15"), (BAND_COLORS[1], "At-Risk 6 to 10"),

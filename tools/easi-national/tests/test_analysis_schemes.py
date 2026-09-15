@@ -7,6 +7,7 @@ import json
 
 import numpy as np
 import pandas as pd
+import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 
@@ -45,10 +46,47 @@ def test_line_class_and_score_helpers():
     assert higher == pytest.approx([0.0, 0.39, 0.69, 1.0, 1.0])
     bounded = schemes.line_index([0.0, 0.25, 0.5, 1.0], 0.5, 0.25, True, (0.0, 1.0))
     assert bounded == pytest.approx([0.0, 0.39, 0.69, 1.0])
-    assert schemes.class_of_index([0.39, 0.3900001, 0.69, 0.7, np.nan]).tolist() == ["Poor", "Fair", "Fair", "Good", None]
-    scores = schemes.function_scores([0.85, 0.545, 0.195, np.nan, 0.7])
-    assert scores[:3].tolist() == [13.0, 8.0, 3.0] and np.isnan(scores[3]) and scores[4] == 10.0
-    assert schemes.midpoint_index(["Good", None, "Poor"]).tolist()[0] == 0.85
+    assert schemes.class_of_index([0.39, 0.3900001, 0.69, 0.7, np.nan]).tolist() == ["Fair", "Fair", "Good", "Good", None]
+    scores = schemes.function_scores([0.90, 0.55, 0.10, np.nan, 0.7])
+    assert scores[:3].tolist() == [14.0, 8.0, 2.0] and np.isnan(scores[3]) and scores[4] == 10.0
+    indices = schemes.midpoint_index(["Good", "Fair", "Poor", None])
+    assert indices[:3].tolist() == [0.90, 0.55, 0.10] and np.isnan(indices[3])
+
+
+def test_rating_mapping_pins_python_numpy_and_app_half_even_scores():
+    from easi import config, scoring
+
+    assert schemes.MIDPOINT is config.RATING_INDEX
+    indices = schemes.midpoint_index(["Good", "Fair", "Poor"])
+    assert (indices * 15).tolist() == [13.5, 8.25, 1.5]
+    assert [round(float(index) * 15) for index in indices] == [14, 8, 2]
+    assert np.rint(indices * 15).tolist() == [14.0, 8.0, 2.0]
+    assert schemes.function_scores(indices).tolist() == [14.0, 8.0, 2.0]
+    assert [scoring.function_score(float(index)) for index in indices] == [14, 8, 2]
+
+
+def test_candidate_count_ladders_use_the_easi_rating_mapping():
+    frame = pd.DataFrame({
+        "sc__rdcrsws": [0.0, 0.0, 0.0, 10.0, 10.0, 10.0, np.nan],
+        "sc__nabd_densws": [0.0, 1.0, 3.0, np.nan, np.nan, np.nan, np.nan],
+        "sc__npdesdenscat": [0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+        "sc__canaldenscat": [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+        "sc__rdcrscat": [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, np.nan],
+    })
+    run = schemes.Run("S0", None, pa.Table.from_pandas(frame), frame, {}, [])
+    candidates = schemes.candidate_indices(run)
+    for key in ("cand__watershed_connectivity__crossings_nabd", "cand__reach_inflow__catchment_ladder"):
+        indices = candidates[key]
+        assert indices[:3].tolist() == [0.90, 0.55, 0.10]
+        assert schemes.function_scores(indices[:3]).tolist() == [14.0, 8.0, 2.0]
+        assert np.isnan(indices[-1])
+
+
+def test_runs_digest_includes_the_rating_mapping(tmp_path, monkeypatch):
+    root = DataRoot(tmp_path / "data")
+    current = schemes.inputs(root)
+    monkeypatch.setitem(schemes.MIDPOINT, "Good", 0.85)
+    assert schemes.inputs(root) != current
 
 
 def test_function_rules_read_the_catalog_edges():
@@ -117,7 +155,7 @@ def test_runs_score_the_views_and_write_the_comparison(tmp_path):
     s0 = pq.read_table(schemes.run_path(root, "S0")).to_pandas()
     sn = pq.read_table(schemes.run_path(root, "SN")).to_pandas()
     s3 = pq.read_table(schemes.run_path(root, "S3")).to_pandas()
-    # S0 reproduces today's classes; its banded view equals the app rollup of the midpoints
+    # S0 preserves harvested classes; its banded view uses the app's active rating mapping
     assert (s0["cls_catchment_hydrology"].fillna("x") == table["rating_catchment_hydrology"].fillna("x")).all()
     from easi import scoring
     row = 0

@@ -22,7 +22,7 @@ from .. import config, http
 from ..paths import DataRoot
 from ..state import CancelRequested, Control, Ledger, PauseRequested, Progress
 from . import common
-from .streamcat import _groups, _normalize, _post
+from .streamcat import _normalize, _plan_groups, _post, _prepare_plan, _response_columns
 
 STAGE = "streamcat"
 #: the 21 CONUS hydro-regions, used when the API root does not list them
@@ -56,11 +56,11 @@ def _parts_dir(root: DataRoot) -> Path:
     return path
 
 
-def table_of(rows: dict[int, dict]):
+def table_of(rows: dict[int, dict], *, columns=()):
     """``comid`` (int64) plus one float64 column per metric column, sorted by comid."""
     import pyarrow as pa
     comids = sorted(rows)
-    columns = sorted({k for r in rows.values() for k in r})
+    columns = sorted(set(columns) | {k for r in rows.values() for k in r})
     arrays = {"comid": pa.array(comids, pa.int64())}
     for col in columns:
         values = []
@@ -74,26 +74,6 @@ def table_of(rows: dict[int, dict]):
     return pa.table(arrays)
 
 
-def _plan_groups(names: list[str], aoi_by_name: Optional[dict[str, str]]) -> list[tuple[list[str], str, str]]:
-    """``(names, aoi, key suffix)`` per request group. Without a per-name map
-    every name goes at the adapters' areas of interest in groups of
-    ``STREAMCAT_NAME_GROUP`` (key suffix ``g<i>``, the historical ledger keys).
-    With one, names are grouped per distinct area-of-interest string, in
-    first-seen order (suffix ``<aoi>-g<i>``)."""
-    default_aoi = ",".join(config.STREAMCAT_AOIS)
-    if not aoi_by_name:
-        return [(group, default_aoi, f"g{gi}") for gi, group in enumerate(_groups(names))]
-    by_aoi: dict[str, list[str]] = {}
-    for name in names:
-        by_aoi.setdefault(aoi_by_name.get(name, default_aoi), []).append(name)
-    out = []
-    for aoi, aoi_names in by_aoi.items():
-        token = aoi.replace(",", "+")
-        for gi, group in enumerate(_groups(aoi_names)):
-            out.append((group, aoi, f"{token}-g{gi}"))
-    return out
-
-
 def run_streamcat_national(root: DataRoot, progress: Progress, control: Control, *,
                            names: Optional[list[str]] = None, post=_post,
                            region_list: Optional[list[str]] = None,
@@ -105,7 +85,10 @@ def run_streamcat_national(root: DataRoot, progress: Progress, control: Control,
     merge into the cache parquet (``cache``, default the national cache)."""
     import pyarrow as pa
     import pyarrow.parquet as pq
-    names = names or config.streamcat_names()
+    if names is None:
+        names = config.streamcat_names()
+        if aoi_by_name is None:
+            aoi_by_name = config.streamcat_aoi_by_name()
     groups = _plan_groups(names, aoi_by_name)
     region_list = list(region_list or regions())
     plan = [(f"{region}-{suffix}", {"name": ",".join(group), "aoi": aoi, "region": region})
@@ -114,7 +97,10 @@ def run_streamcat_national(root: DataRoot, progress: Progress, control: Control,
     parts = parts or _parts_dir(root)
     parts.mkdir(parents=True, exist_ok=True)
     cache = cache or cache_path(root)
-    pending = [(key, payload) for key, payload in plan if key not in ledger]
+    _prepare_plan(parts, ledger, plan)
+    payloads = dict(plan)
+    pending = [(key, payload) for key, payload in plan
+               if key not in ledger or not (parts / f"{key}.parquet").exists()]
     done_n = len(plan) - len(pending)
     workers = max(1, workers or config.STREAMCAT_CONCURRENCY)
     progress.begin("national", STAGE, total=len(plan),
@@ -133,7 +119,9 @@ def run_streamcat_national(root: DataRoot, progress: Progress, control: Control,
                 for future in finished:
                     key = running.pop(future)
                     rows = _normalize(future.result())            # re-raises Pause/Cancel/failures
-                    common.write_parquet(table_of(rows), parts / f"{key}.parquet")
+                    payload = payloads[key]
+                    columns = _response_columns(payload["name"].split(","), payload["aoi"])
+                    common.write_parquet(table_of(rows, columns=columns), parts / f"{key}.parquet")
                     ledger.add(key, n=len(rows))
                     done_n += 1
                     progress.tick(done=done_n, message=f"StreamCat {key}: {len(rows):,} reaches")
@@ -149,7 +137,8 @@ def run_streamcat_national(root: DataRoot, progress: Progress, control: Control,
         if table is not None and table.num_rows:
             region_tables.append(table)
     merged = (pa.concat_tables(region_tables, promote_options="default").sort_by("comid")
-              if region_tables else table_of({}))
+              if region_tables else table_of({}, columns={
+                  k for group, aoi, _ in groups for k in _response_columns(group, aoi)}))
     common.write_parquet(merged, cache)
     progress.say(f"{cache.name}: {merged.num_rows:,} reaches, {len(merged.column_names) - 1} columns")
     common.drop_parts(parts)
@@ -171,5 +160,7 @@ def cached_rows(root: DataRoot, wanted: list[int]) -> dict[int, dict]:
     data = {c: sub.column(c).to_pylist() for c in columns}
     out: dict[int, dict] = {}
     for i, comid in enumerate(sub.column("comid").to_pylist()):
-        out[int(comid)] = {c: data[c][i] for c in columns if data[c][i] is not None}
+        # A present column with a null is an answered model request. Dropping
+        # it would make a later chunk mistake a valid null for an old schema.
+        out[int(comid)] = {c: data[c][i] for c in columns}
     return out

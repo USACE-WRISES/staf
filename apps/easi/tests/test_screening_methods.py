@@ -117,6 +117,7 @@ def test_bhr_below_one_adds_geometry_warning():
     "er,expected",
     [(1.3999, "Poor"), (1.4, "Fair"), (2.1999, "Fair"), (2.2, "Good")],
 )
+@pytest.mark.usefixtures("legacy_criteria")
 def test_entrenchment_boundaries(er, expected):
     assert sm.evaluate(hydraulics.ENTRENCHMENT_ID, {"er": er}).rating == expected
 
@@ -201,6 +202,7 @@ def test_sediment_governing_input_is_traced():
     "woody,expected",
     [(49.999, "Poor"), (50, "Fair"), (70, "Fair"), (70.001, "Good")],
 )
+@pytest.mark.usefixtures("legacy_criteria")
 def test_habitat_woody_cover_breakpoints(woody, expected):
     result = sm.evaluate(biology.HABITAT_ID, {
         "woodyRiparian": woody, "sinuosity": None,
@@ -226,6 +228,7 @@ def test_cpom_requires_all_components_and_caps_sum():
     [(19.999, "Poor"), (20, "Poor"), (20.001, "Fair"),
      (50, "Fair"), (50.001, "Good")],
 )
+@pytest.mark.usefixtures("legacy_criteria")
 def test_cpom_exact_boundaries(total, expected):
     result = sm.evaluate(physicochemistry.CPOM_ID, {
         "forest": total, "shrub": 0, "grassland": 0, "wetland": 0,
@@ -248,6 +251,7 @@ def test_thermal_requires_both_inputs_and_min_index():
     "woody,expected",
     [(24.999, "Poor"), (25, "Fair"), (74.999, "Fair"), (75, "Good")],
 )
+@pytest.mark.usefixtures("legacy_criteria")
 def test_thermal_woody_cover_exact_boundaries(woody, expected):
     assert sm.evaluate(physicochemistry.TEMPERATURE_ID, {
         "woodyRiparian": woody, "impervious": 0,
@@ -368,6 +372,7 @@ def test_categorical_decision_table_highlights_the_site_rating():
 
 @pytest.mark.parametrize("value,expected", [
     (24.999, "Poor"), (25, "Fair"), (75, "Fair"), (75.001, "Good")])
+@pytest.mark.usefixtures("legacy_criteria")
 def test_nrsa_wetted_channel_boundaries(value, expected):
     result = sm.evaluate(hydraulics.LOW_FLOW_ID, {"wettedPct": value})
     assert result.rating == expected
@@ -375,6 +380,7 @@ def test_nrsa_wetted_channel_boundaries(value, expected):
 
 @pytest.mark.parametrize("value,expected", [
     (24.999, "Good"), (25, "Fair"), (75, "Fair"), (75.001, "Poor")])
+@pytest.mark.usefixtures("legacy_criteria")
 def test_nrsa_embeddedness_boundaries(value, expected):
     result = sm.evaluate(geomorphology.SUBSTRATE_ID, {"embeddednessPct": value})
     assert result.rating == expected
@@ -382,6 +388,7 @@ def test_nrsa_embeddedness_boundaries(value, expected):
 
 @pytest.mark.parametrize("value,expected", [
     (0.3999, "Poor"), (0.4, "Fair"), (0.6999, "Fair"), (0.7, "Good")])
+@pytest.mark.usefixtures("legacy_criteria")
 def test_streamcat_integrity_fallback_boundaries(value, expected):
     result = sm.evaluate(
         hydraulics.LOW_FLOW_ID,

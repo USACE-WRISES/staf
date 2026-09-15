@@ -103,6 +103,7 @@ def test_low_flow_without_sources_is_unavailable():
     assert hydraulics.low_flow_connectivity(_ctx()).status == "unavailable"
 
 
+@pytest.mark.usefixtures("legacy_criteria")
 def test_low_flow_prefers_nrsa_over_hyd_fallback():
     ctx = _ctx(streamcat={"hydcat": 0.1, "hydws": 0.1}, fcode=46006)
     ctx.extras["nrsa"] = {
@@ -116,6 +117,7 @@ def test_low_flow_prefers_nrsa_over_hyd_fallback():
     assert result.scoring["completeness"] == "partial"
 
 
+@pytest.mark.usefixtures("legacy_criteria")
 def test_low_flow_uses_lower_hyd_integrity_component():
     result = hydraulics.low_flow_connectivity(
         _ctx(streamcat={"hydcat": 0.8, "hydws": 0.6}, fcode=46006))
@@ -144,6 +146,7 @@ def test_sediment_supply_composite():
     assert low.rating == "Good" and high.rating == "Poor"
 
 
+@pytest.mark.usefixtures("legacy_criteria")
 def test_substrate_prefers_nrsa_then_uses_sed_integrity():
     ctx = _ctx(streamcat={"sedcat": 0.9, "sedws": 0.9})
     ctx.extras["nrsa"] = {
@@ -236,6 +239,7 @@ def test_floodplain_engagement_missing_is_unscored():
 
 # --- floodplain connectivity: access / entrenchment (ER, lateral) ----------- #
 @pytest.mark.parametrize("er,expected", [(3.0, "Good"), (1.8, "Fair"), (1.2, "Poor")])
+@pytest.mark.usefixtures("legacy_criteria")
 def test_rate_entrenchment_er_only(er, expected):
     assert hydraulics.rate_entrenchment(er) == expected
 
@@ -252,7 +256,7 @@ def test_floodplain_access_is_lateral_only():
     assert incised.rating == "Good" and incised.metric_id == hydraulics.ENTRENCHMENT_ID
     entrenched = hydraulics.floodplain_access(_geom_ctx(
         {"entrenchment_ratio": 1.2, "n_transects": 9}))
-    assert entrenched.rating == "Poor"
+    assert entrenched.rating == "Fair"
 
 
 def _reach_geom(er=2.5, bhr=2.0, n=9, edge=False):
@@ -307,7 +311,7 @@ def test_rate_metrics_from_stages_splits_axes():
     block = {"stations": st, "elevs": elevs, "thalweg": 0.0, "slope": 0.004,
              "bankfull_stage": 1.0, "floodplain_stage": 1.0}
     out = assessment.rate_metrics_from_stages(block, bankfull_stage=1.0, floodplain_stage=3.0)
-    assert out[hydraulics.ENTRENCHMENT_ID]["rating"] == "Fair"          # ER 2.0 -> moderate access
+    assert out[hydraulics.ENTRENCHMENT_ID]["rating"] == "Good"          # ER 2.0 exceeds the reference Good edge
     assert out[hydraulics.FLOODPLAIN_ENGAGEMENT_ID]["rating"] == "Poor"  # BHR 3.0 -> rarely engaged
     assert "entrenchment ratio" in out[hydraulics.ENTRENCHMENT_ID]["valueText"]
     assert "bank-height ratio" in out[hydraulics.FLOODPLAIN_ENGAGEMENT_ID]["valueText"]
@@ -346,7 +350,7 @@ def test_rate_metrics_from_stages_updates_all_four_geometry_metrics():
     low = assessment.rate_metrics_from_stages(block, 1.0, 1.2)   # BHR 1.2 -> stable
     high = assessment.rate_metrics_from_stages(block, 1.0, 3.5)  # BHR 3.5 -> incised
     assert ce in low and ce in high
-    assert low[ce]["rating"] == "Fair"   # BHR Good, ER Fair
+    assert low[ce]["rating"] == "Good"   # BHR Good, ER Good on the reference curve
     assert high[ce]["rating"] == "Poor"
     assert geomorphology.BANK_EROSION_ID in low
     assert hydraulics.FLOODPLAIN_ENGAGEMENT_ID in low
@@ -427,6 +431,7 @@ def test_biological_integrity_no_default_fair():
     assert r.rating is None and r.status == "unavailable"
 
 
+@pytest.mark.usefixtures("legacy_criteria")
 def test_biological_integrity_prefers_measured_nrsa_classes():
     ctx = _ctx(streamcat={"prg_bmmi": 0.1})
     ctx.extras["nrsa"] = {
@@ -440,6 +445,7 @@ def test_biological_integrity_prefers_measured_nrsa_classes():
     assert result.scoring["methodKey"] == "nrsa-biological-condition"
 
 
+@pytest.mark.usefixtures("legacy_criteria")
 def test_biological_integrity_uses_prg_then_integrity_products():
     modeled = biology.biological_integrity(_ctx(streamcat={"prg_bmmi": 0.8}))
     assert modeled.rating == "Good"
@@ -454,6 +460,7 @@ def test_biological_integrity_uses_prg_then_integrity_products():
 
 @pytest.mark.parametrize(
     "key", ["prg_bmmi", "prgbmmi", "prg_bmmiws", "prgbmmiws", "prg_bmmicat"])
+@pytest.mark.usefixtures("legacy_criteria")
 def test_prg_bmmi_is_found_under_every_streamcat_column_spelling(key):
     """A missed column would silently demote the metric to the weaker ICI/IWI tier
     instead of using the published model, so every documented spelling must resolve."""
@@ -741,7 +748,7 @@ def test_rescore_keeps_agriculture_criteria_through_override():
         "functionId": "catchment-hydrology", "functionName": "Catchment hydrology",
         "rating": "Poor", "generatedRating": "Poor", "criteria": ">50%",
         "criteriaBands": {"Good": "<25%", "Fair": "25%-50%", "Poor": ">50%"},
-        "index": 0.195, "functionScore": 3, "valueText": "61.0% agricultural land (watershed)",
+        "index": 0.10, "functionScore": 2, "valueText": "61.0% agricultural land (watershed)",
         "source": "EPA StreamCat crop+hay (watershed)", "status": "ok", "overrideable": True,
     }], "totalCount": 20}
     row = assessment.rescore(base_report, {mid: "Fair"})["metricRows"][0]
@@ -763,29 +770,29 @@ def _riparian_streamcat(**values):
 
 
 # --- organic-matter supply potential: complete riparian components --------- #
-def test_detrital_forest_only_unchanged():
+def test_detrital_forest_quantity_uses_national_reference_without_strata():
     r = physicochemistry.detrital_cpom(_ctx(streamcat=_riparian_streamcat(
         pctconif2019wsrp100=8, pctdecid2019wsrp100=20, pctmxfst2019wsrp100=12)))
-    assert r.value == 40.0 and r.rating == "Fair"
+    assert r.value == 40.0 and r.rating == "Poor"
     assert r.detail["forest"] == 40.0 and r.detail["total"] == 40.0
 
 
-def test_detrital_grassland_buffer_scores_good():
-    # grassland-region stream: ~0 forest but a dense grass/shrub buffer -> Good (was Poor forest-only)
+def test_detrital_grassland_and_shrub_contribute_to_the_natural_corridor_quantity():
     r = physicochemistry.detrital_cpom(_ctx(streamcat=_riparian_streamcat(
         pctgrs2019wsrp100=55, pctshrb2019wsrp100=10, pctmxfst2019wsrp100=2)))
-    assert r.value == 67.0 and r.rating == "Good"
+    assert r.value == 67.0 and r.rating == "Fair"
     assert r.detail["grassland"] == 55.0 and r.detail["shrub"] == 10.0 and r.detail["forest"] == 2.0
 
 
 def test_detrital_wetland_counts():
     r = physicochemistry.detrital_cpom(_ctx(streamcat=_riparian_streamcat(
         pctwdwet2019wsrp100=30, pcthbwet2019wsrp100=25)))
-    assert r.detail["wetland"] == 55.0 and r.rating == "Good"
+    assert r.detail["wetland"] == 55.0 and r.rating == "Fair"
 
 
 @pytest.mark.parametrize("grass,expected", [(15, "Poor"), (20, "Poor"), (20.1, "Fair"),
                                             (50, "Fair"), (50.1, "Good"), (60, "Good")])
+@pytest.mark.usefixtures("legacy_criteria")
 def test_detrital_bins_unchanged(grass, expected):
     # thresholds unchanged: Good >50, Fair 20-50, Poor <=20 (applied to natural-veg %)
     r = physicochemistry.detrital_cpom(_ctx(streamcat=_riparian_streamcat(

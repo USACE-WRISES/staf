@@ -28,6 +28,7 @@ from typing import Any, Callable, Optional
 
 import requests
 
+from .. import config
 from . import DATASET_TAG, SCHEMA_VERSION, method_version, providers, records
 
 _LOG = logging.getLogger(__name__)
@@ -42,6 +43,15 @@ STATS = "stats.json"
 
 _RESOLVE_TTL_S = 40 * 60.0
 _TABLE_CACHE = 8
+
+
+def criteria_status(manifest: dict) -> dict:
+    """Published schema-1 datasets predate the switch and use legacy criteria."""
+    if not manifest:
+        return {"criteria_set": None, "criteria_current": None}
+    published = manifest.get("criteria_set") or "legacy"
+    return {"criteria_set": published,
+            "criteria_current": published == config.criteria_set()}
 
 
 def evidence_asset(huc4: str) -> str:
@@ -360,6 +370,7 @@ class Dataset:
             "updated": manifest.get("updated"),
             "method_version": manifest.get("method_version"),
             "method_current": manifest.get("method_version") == method_version(),
+            **criteria_status(manifest),
             "units_total": int(manifest.get("units_total") or 222),
             "units_published": len(published),
             "units_tier2": sum(1 for u in published if u.get("tier") == 2),
@@ -427,6 +438,7 @@ def score_record(record: dict, *, cross_section: bool = True,
         "updated": manifest.get("updated"),
         "method_version": manifest.get("method_version"),
         "method_current": (manifest.get("method_version") in (None, method_version())),
+        **criteria_status(manifest),
         "huc4": record.get("huc4"),
         "schema": SCHEMA_VERSION,
     }

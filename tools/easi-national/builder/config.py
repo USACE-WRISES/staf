@@ -92,5 +92,18 @@ def data_root() -> Path:
 
 
 def streamcat_names() -> list[str]:
+    from easi import config as easi_config
     from easi.metrics import registry
-    return list(registry.STREAMCAT_NAMES)
+    names = registry.streamcat_names()
+    if easi_config.criteria_set() == "regional":
+        names.extend(registry.STREAMCAT_OTHER_NAMES)
+    return names
+
+
+def streamcat_aoi_by_name() -> dict[str, str]:
+    """Request the regional biological model in its unsuffixed API area."""
+    from easi import config as easi_config
+    from easi.metrics import registry
+    if easi_config.criteria_set() == "regional":
+        return {name: STREAMCAT_OTHER_AOI for name in registry.STREAMCAT_OTHER_NAMES}
+    return {}

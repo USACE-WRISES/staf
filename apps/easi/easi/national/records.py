@@ -8,7 +8,8 @@ identity
     ``comid, huc4, huc8, huc12, vpu, gnis_name, streamorde, fcode, totdasqkm,
     lengthkm, slope, sinuosity, lat, lon`` (the anchor point: the flowline's
     downstream node, a few metres upstream), ``hydroseq, dnhydroseq,
-    levelpathi, tocomid`` (topology, informational).
+    levelpathi, tocomid`` (topology, informational), ``l3_code, nars9``
+    (stored region identities; introduced in schema 2).
 evidence
     ``streamcat`` (``{column: value}`` exactly as ``streamcat.metrics_by_comid``
     returns, lowercase columns), ``nrsa`` (the record ``nrsa.evidence_for_reach``
@@ -29,23 +30,23 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from .. import bieger, routing, watershed
+from .. import bieger, geo, routing, watershed
 from ..metrics.base import AnalysisContext
 
 IDENTITY_FIELDS = ("comid", "huc4", "huc8", "huc12", "vpu", "gnis_name",
                    "streamorde", "fcode", "totdasqkm", "lengthkm", "slope",
                    "sinuosity", "lat", "lon", "hydroseq", "dnhydroseq",
-                   "levelpathi", "tocomid")
+                   "levelpathi", "tocomid", "l3_code", "nars9")
 EVIDENCE_FIELDS = ("streamcat", "nrsa", "bankfull", "attains_exact",
                    "attains_nearby", "wqp_tn", "wqp_tp", "nid_dams", "nas_taxa",
-                   "nas_scope", "geomorph")
+                   "nas_scope", "geomorph", "erom")
 POINT_SERVICE_KEYS = ("attains_exact", "attains_nearby", "wqp_tn", "wqp_tp",
                       "nid_dams", "nas_taxa", "nas_scope")
 #: Variable-shaped fields travel as JSON text inside the parquet row: parquet
 #: cannot hold an empty struct (an ATTAINS "queried, nothing found" is ``{}``),
 #: and the shapes may grow with later builder versions.
 JSON_FIELDS = ("streamcat", "nrsa", "bankfull", "attains_exact", "attains_nearby",
-               "wqp_tn", "wqp_tp", "nid_dams", "nas_taxa", "geomorph")
+               "wqp_tn", "wqp_tp", "nid_dams", "nas_taxa", "geomorph", "erom")
 
 
 def to_row(record: dict) -> dict:
@@ -144,6 +145,15 @@ def apply_evidence(ctx: AnalysisContext, record: dict) -> AnalysisContext:
     ctx.fcode = _int(record.get("fcode"))
     ctx.stream_order = _int(record.get("streamorde"))
     ctx.sinuosity = _num(record.get("sinuosity"))
+    from ..datasources.fabric import erom_from_properties
+    ctx.extras["erom"] = erom_from_properties(record.get("erom"))
+    # Presence is authoritative, including None outside the mapped regions.
+    # Old schema-1 records omit these keys and resolve only the missing identity.
+    l3_code = (record["l3_code"] if "l3_code" in record else
+               (geo.level3_at(ctx.lat, ctx.lon) or {}).get("code"))
+    nars9 = (record["nars9"] if "nars9" in record else
+             (geo.nars9_at(ctx.lat, ctx.lon) or {}).get("code"))
+    ctx.extras["strata"] = {**geo.strata_for(l3_code, slope=ctx.slope), "nars9": nars9}
     sc = streamcat_row(record)
     ctx.extras["streamcat"] = sc
     ctx.extras["landcover"] = {}

@@ -1,6 +1,8 @@
 """The hand-built SVG / decision renderers for the "Scoring method" panel."""
 from __future__ import annotations
 
+import pytest
+
 from easi import method_plot, methods
 from easi.metrics.biology import INVASIVES_ID
 from easi.metrics.hydraulics import ENTRENCHMENT_ID, HYPORHEIC_ID, LOW_FLOW_ID
@@ -8,6 +10,7 @@ from easi.metrics.hydrology import IMPERVIOUS_ID
 from easi.metrics.physicochemistry import IMPAIRMENT_ID
 
 
+@pytest.mark.usefixtures("legacy_criteria")
 def test_scalar_svg_regions_markers_breakpoints():
     svg = method_plot.scalar_svg(methods.METHODS[ENTRENCHMENT_ID], 2.5, "Good", 1.3, "Poor")
     assert svg.startswith("<svg")
@@ -57,6 +60,7 @@ def test_decision_html_highlights_site_category():
     assert "this reach" in html
 
 
+@pytest.mark.usefixtures("legacy_criteria")
 def test_low_flow_is_a_scalar_wetted_channel_method():
     method = methods.METHODS[LOW_FLOW_ID]
     assert method.mode == "scalar"

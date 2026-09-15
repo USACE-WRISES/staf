@@ -2328,7 +2328,7 @@ padding: .6rem .9rem; border-radius: 4px; margin: 1rem 0; }
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">Ecosystem Assessment Screening Index (EASI)</h1>
-<p class="subtitle lead">Method documentation, verification, and validation</p>
+<p class="subtitle lead">Historical method documentation, verification, and validation</p>
 </div>
 
 
@@ -2353,6 +2353,9 @@ padding: .6rem .9rem; border-radius: 4px; margin: 1rem 0; }
 
 <div class="callout-note-soft">
 <p>This document is the extended documentation for EASI. A shorter technical note introduces the method for first-time readers (Stepchinski and Menichino In Review). The EASI web application is available at <a href="https://usace-wrises.github.io/staf/easi/">usace-wrises.github.io/staf/easi</a>.</p>
+</div>
+<div class="callout-note-soft">
+<p><strong>Historical validation scope, recorded 2026-09-15.</strong> This report preserves the methods, cached cases, figures and field comparisons preceding the regional-criteria decision of 2026-09-14. Its midpoint mapping produces function scores of 13 / 8 / 3. Current EASI uses 0.90 / 0.55 / 0.10 anchors and scores of 14 / 8 / 2, with regional reference criteria by default. The validation results below have not been rerun under that configuration and do not establish validation of those changes. The current <a href="https://usace-wrises.github.io/staf/walkthroughs/easi/#regional-reference-criteria">regional reference criteria</a> are documented in the walkthrough. Selecting legacy criteria preserves the former rating rules with the current anchors.</p>
 </div>
 <section id="introduction" class="level1" data-number="1">
 <h1 data-number="1"><span class="header-section-number">1</span> Introduction</h1>
@@ -3478,7 +3481,7 @@ Table 6: Biology metrics
 <section id="scoring" class="level2" data-number="3.3">
 <h2 data-number="3.3" class="anchored" data-anchor-id="scoring"><span class="header-section-number">3.3</span> Scoring</h2>
 <p>Each metric is rated Good, Fair, or Poor against the published thresholds in the discipline tables (<a href="#tbl-metrics-hydrology" class="quarto-xref">Table 2</a> through <a href="#tbl-metrics-biology" class="quarto-xref">Table 6</a>). A rating of Good indicates condition at or near reference for that metric. Fair indicates a moderate departure. Poor indicates a substantial departure. In the web application these ratings are assigned automatically from the underlying data, and an assessor can override any rating with field evidence.</p>
-<p>Each rating maps to a function score on a 0 to 15 scale. A rating maps to the midpoint index of its range, and the function score is that index multiplied by 15 and rounded. This gives 13 for Good, 8 for Fair, and 3 for Poor. Function scores of 11 to 15 indicate a Functioning state, 6 to 10 indicate a Functioning-at-Risk state, and 0 to 5 indicate a Non-Functioning state.</p>
+<p>For the historical runs documented here, each rating maps to a function score on a 0 to 15 scale. A rating maps to the midpoint index of its range, and the function score is that index multiplied by 15 and rounded. This gives 13 for Good, 8 for Fair, and 3 for Poor. Function scores of 11 to 15 indicate a Functioning state, 6 to 10 indicate a Functioning-at-Risk state, and 0 to 5 indicate a Non-Functioning state.</p>
 <p>The index values behind those scores (0.85, 0.545, and 0.195) are the midpoints of the three STAF condition bands (0.70 to 1.0, 0.40 to 0.69, and 0 to 0.39), which places each rating at the center of its band on both scales. The midpoint is the unbiased representative of a band when only the band is known, which is the screening situation by design.</p>
 </section>
 <section id="aggregation" class="level2" data-number="3.4">

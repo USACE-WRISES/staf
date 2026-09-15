@@ -46,7 +46,7 @@ stepper: **Identify → Basin → Assessment → Report**.
    the watershed metrics in seconds. On other streams,
    the STAF site engine calculates the HR reach watershed of the clicked stream
    (usually well under a minute, up to about five minutes on a large basin,
-   with a progress line); reach-keyed metrics (including low flow, substrate,
+   with a progress line); reach-keyed metrics (including low flow and
    biological integrity) come from the nearest StreamCat reach downstream,
    and each says so with the routed distance and the drainage-area ratio,
    whatever that ratio is. The policy is fixed by the framework: nothing
@@ -103,15 +103,83 @@ function score (0–15), then combined with Clean-Water-Act outcome weights into
 - **Physical**, **Chemical**, and **Biological** sub-indices, and
 - a single **Ecosystem Condition Index (ECI)**.
 
+### EASI rating anchors
+
+| Rating | Index anchor | Function score, rounded from index x 15 |
+|---|---:|---:|
+| Good | 0.90 | 14 |
+| Fair | 0.55 | 8 |
+| Poor | 0.10 | 2 |
+
+These are EASI rating anchors, rather than arithmetic band midpoints. Good
+and Poor sit nearer the ends of their condition bands so a three-valued
+rating can express more of the difference in condition. Fair stays near the
+middle of the At-Risk band. Python's half-to-even rounding gives 14 from
+13.5 and 2 from 1.5. The twenty functions, CWA weights, rollup formulas and
+0.39 / 0.69 outcome boundaries retain their existing definitions. SFARI and
+DEEP scoring are unchanged.
+
+### Regional reference criteria
+
+`EASI_CRITERIA_SET=regional` is the default for the app and national builder.
+It uses banded Good / Fair / Poor scoring with the following reference rules:
+
+| Functions | Regional criteria |
+|---|---|
+| Habitat provision; woody input to Light and thermal regime | Woody vegetation in the 100 m watershed corridor, using an EPA Level II reference curve |
+| Carbon processing | Natural vegetation in the same corridor, using an EPA Level II reference curve |
+| Floodplain connectivity; ER input to Channel evolution | National entrenchment-ratio reference curves for slopes below 0.5%, 0.5% to below 2%, and 2% or greater |
+| Low flow and baseflow dynamics | Monthly EROM flow variability, using an EPA Level II reference curve with lower variability rated better |
+| Bed composition and bedform dynamics | Watershed agriculture share, with the same 30 / 50 bands as the agriculture input to Catchment hydrology |
+| Population support | EPA StreamCat `prg_bmmi0809`, requested in the `other` area of interest: Good at 0.50 or above, Fair from 0.25 to below 0.50, Poor below 0.25 |
+
+A missing or unusable Level II curve resolves to its national curve. Missing
+or invalid slope resolves to the pooled national entrenchment curve. The
+artifact is `data/reference-curves.json`, with its historical dataset,
+reference-screen, panel and curve-engine provenance. `data/ecoregion-crosswalk.json`
+maps the existing Level III polygon codes to Level II and Level I.
+
+Curves describe the existing least-disturbed reference panels. A quantity's
+interpolated reference index determines its band at 0.39 and 0.69, and the
+band maps to the anchors above. The trace and scoring panel identify the
+resolved region or national fallback, reference sample size and approximate
+physical-value crossings. Displayed crossings are rounded; ratings use curve
+interpolation at the exact index edges. Fixed impervious-cover and bank-height-ratio inputs retain their bands.
+
+Low-flow variability is the population standard deviation of all twelve
+monthly QE estimates divided by their mean, rounded to six decimals. Missing
+or nonfinite flow evidence, or a nonpositive monthly mean, leaves it unknown.
+This proxy is **unvalidated for field low-flow condition** and must not be
+interpreted as measured baseflow. Bed composition and Catchment hydrology
+share agriculture evidence and form a disclosed correlated pair. Where the
+benthic model is unavailable, Population support retains the disclosed
+catchment/watershed integrity-product fallback.
+
+For live StreamCat GET requests, the model requires the query parameter
+`aoi=other`. The 2026-09-15 check found that `areaOfInterest=other` returned
+HTTP 200 with only COMID, so successful status alone does not establish that
+`prg_bmmi0809` was returned. Standard-AOI requests retain their existing
+`areaOfInterest` parameter.
+
+Set `EASI_CRITERIA_SET=legacy` before launching the app or worker to retain
+the former criteria and NRSA/integrity adapter tiers. Legacy criteria use
+the same current 0.90 / 0.55 / 0.10 anchors. Invalid set names raise an error.
+The set is part of `method_version()`, and a national manifest for another
+set is flagged by the app. The criteria switch is separate from the
+`streamcat-legacy` watershed-routing policy.
+
+After the regional criteria are accepted, revisit removal of the legacy
+catalog, legacy adapter branches and NRSA scoring tier together.
+
 The 20 metrics span five disciplines:
 
 | Discipline | Automated method |
 |---|---|
 | **Hydrology** | Land-cover pressure (worse of impervious / agricultural cover) · Wetland extent · Road-density inflow proxy · Degree of regulation (storage ÷ runoff) |
-| **Hydraulics** | Low-flow condition (NRSA wetted channel → StreamCat HYD) · Floodplain engagement (BHR) · Floodplain access (ER) · Hyporheic-exchange potential (better of channel gradient / sinuosity) |
-| **Geomorphology** | Channel-adjustment susceptibility (FCODE + BHR/ER) · Bank-instability susceptibility (BHR, observed bank evidence supersedes) · Sediment-supply potential (worst of agriculture, soil K-factor, roads) · Substrate condition (NRSA embeddedness → StreamCat SED) |
+| **Hydraulics** | EROM monthly flow variability · Floodplain engagement (BHR) · Floodplain access (slope-class ER reference curves) · Hyporheic-exchange potential (better of channel gradient / sinuosity) |
+| **Geomorphology** | Channel-adjustment susceptibility (FCODE + BHR/ER) · Bank-instability susceptibility (BHR, observed bank evidence supersedes) · Sediment-supply potential (worst of agriculture, soil K-factor, roads) · Bed-composition proxy (watershed agriculture share) |
 | **Physicochemistry** | Thermal-regulation vulnerability (worse of woody riparian and impervious) · Organic-matter supply potential · Nutrient condition (WQP vs NRSA regional benchmarks → StreamCat CHEM) · Regulatory impairment (ATTAINS → StreamCat CHEM) |
-| **Biology** | Habitat-support potential (woody riparian corridor) · Biological integrity (measured NRSA → prG_BMMI → ICI/IWI) · Invasive-species pressure · Nearby dam proximity |
+| **Biology** | Habitat-support potential (Level II woody-corridor curve) · Population support (published benthic model → ICI/IWI) · Invasive-species pressure · Nearby dam proximity |
 
 Every metric produces a value; field- or low-confidence metrics show a confidence
 badge and can be **overridden** in the report.
@@ -155,12 +223,13 @@ complete availability, not 20 independent field observations.
 
 | Source | Used for |
 |---|---|
-| **NHDPlus V2** via the USGS fabric API (flowlines and attributes; the successor of the retiring WaterData WFS) and HyRiver `pynhd` (NLDI basins, navigation, point snap with a flowtrace fallback) | Stream vectors, point snap, watershed delineation, reach derivation, VAAs |
+| **NHDPlus V2** via the USGS fabric API (flowlines and attributes; the successor of the retiring WaterData WFS) and HyRiver `pynhd` (NLDI basins, navigation, point snap with a flowtrace fallback) | Stream vectors, point snap, watershed delineation, reach derivation, VAAs and raw mean-annual/monthly EROM QE flows |
 | **NHDPlus HR** (hydro.nationalmap.gov MapServer) | Full-resolution stream display, the clicked reach's attributes, and the nearest-covered-reach routing for streams outside the V2 network (`easi/routing.py`, `easi/datasources/nhd_hr.py`) |
 | **STAF site engine** (vendored from `libs/site_engine`, `easi/watershed.py`) | The HR reach watershed (the drainage area of the high-resolution reach the click snaps to) and its land cover, roads, dams, soil K and EROM runoff for streams outside the StreamCat lookup network. Never used on covered streams. Definitions of both engines: `libs/README.md` |
 | **USGS 3DEP** (`py3dep`) | DEM cross-sections → entrenchment, bank-height ratio, slope |
-| **EPA StreamCat** (the StreamCat lookup engine) | Watershed landscape metrics on the V2 network (impervious, wetlands, roads, dam storage, runoff, riparian, erodibility) plus the published HYD/SED/CHEM/CONN/TEMP/HABT integrity components and prG_BMMI, which exist only per V2 COMID |
-| **EPA NRSA 2018–19** (bundled extract) | Connected field evidence: wetted channel, embeddedness, benthic/fish condition |
+| **EPA StreamCat** (the StreamCat lookup engine) | Watershed landscape metrics on the V2 network (impervious, wetlands, roads, dam storage, runoff, riparian, erodibility) plus the published HYD/SED/CHEM/CONN/TEMP/HABT integrity components and `prg_bmmi0809` at AOI `other`, which exist only per V2 COMID |
+| **EPA NRSA 2018–19** (bundled extract) | Connected field evidence retained by the legacy criteria: wetted channel, embeddedness, benthic/fish condition |
+| **EPA ecoregions and stored reference panels** (bundled crosswalk/curves) | Level II corridor/flow expectations and national slope-class entrenchment expectations |
 | **NLCD** (via `pygeohydro`) | Land cover (fallback where StreamCat is absent) |
 | **EPA Water Quality Portal (WQP)** | Total N / total P observations (normalized); context-only temperature |
 | **EPA NARS nine regions** (bundled) | Regional NRSA nutrient benchmarks |
@@ -175,7 +244,7 @@ Source selection is automatic and fixed per metric (see **Evidence hierarchy** a
 a fallback is recorded in the trace and shown in the Scoring method panel, so it is
 always visible which tier produced a rating.
 
-**Two watershed engines, one fixed policy.** The eight watershed metrics read
+**Two watershed engines, one fixed policy.** The watershed metrics read
 their inputs from a watershed evidence layer (`easi/watershed.py`) with two
 providers. On the NHDPlus V2 network the StreamCat lookup engine supplies them
 (precomputed EPA StreamCat summaries keyed by COMID). On any other NHD stream
@@ -271,8 +340,10 @@ easi/
   datasources/             thin keyless clients (NHD, 3DEP, StreamCat, NLCD, WQP, ATTAINS, NID,
                            NAS, NRSA, geocode)
 data/
-  screening-methods.json   the automated method catalog: inputs, operators, exact bands, source
-                           hierarchy, basis, limitations, citations (single source of truth)
+  screening-methods.json   regional automated methods: inputs, bands/curves, hierarchy and citations
+  screening-methods-legacy.json  former criteria, selected with EASI_CRITERIA_SET=legacy
+  reference-curves.json    deterministic regional and national reference curves with provenance
+  ecoregion-crosswalk.json Level III to Level II/Level I keys and region names
   easi-metrics.json        20 STAF metric defs (names, statements, prose criteria kept as a
                            dormant fallback; generated from the STAF source TSV)
   nrsa-2018-19-evidence.json.gz  deterministic NRSA extract for connected field evidence
@@ -304,12 +375,18 @@ the report tooltip rendering.
 
 ## Documentation
 
-Extended verification and validation documentation is published as a single
-self-contained page at `www/documentation.html`, served by the app and linked from its
-header ("Documentation"). The source is a Quarto report in `docs/EASI_Documentation/`.
-To rebuild it after editing text, values, or figures, run `python scripts/build_docs.py`
-(see [docs/EASI_Documentation/README.md](docs/EASI_Documentation/README.md) for the full
-edit-and-rebuild guide).
+The [EASI walkthrough](https://usace-wrises.github.io/staf/walkthroughs/easi/#regional-reference-criteria)
+describes the current regional criteria. Its metric reference is generated by
+`scripts/build_walkthrough_reference.py` from the active catalog.
+
+The app also serves `www/documentation.html`, a **historical verification and
+validation record** with cached cases and the earlier 13 / 8 / 3 mapping. Its
+scope notice is dated 2026-09-15. Those results have not been revalidated under
+the regional criteria or current anchors. The canonical source is
+`docs/EASI_Documentation/easi-vnv.qmd`. For this scope-only update, use a
+prose-only Quarto render that preserves the existing figures and tables. See
+[the documentation build guide](docs/EASI_Documentation/README.md) before any
+full rebuild, which regenerates methods and validation assets.
 
 ## Methodology & references
 

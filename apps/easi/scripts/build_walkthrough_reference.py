@@ -2,7 +2,7 @@
 
 Writes the section between the BEGIN/END GENERATED markers in
 ``docs/walkthroughs/easi/index.md`` (repo root) from
-``data/screening-methods.json`` plus ``easi.config.METRIC_DEFINITIONS``, so the
+the active scoring catalog plus ``easi.config.metric_definition``, so the
 public metric reference cannot drift from what the app actually scores. The
 rest of the page stays hand-authored.
 
@@ -44,13 +44,19 @@ def gfp_figures(method: dict) -> str:
     for block in blocks:
         units = f" ({block['units']})" if block.get("units") else ""
         caption = f"{block['label']}{units}"
+        reference = block.get("reference") or ""
+        reference_note = (f'<p class="metric-ref-note">Reference: {esc(reference)}</p>'
+                          if reference else "")
+        suffix = f" ({reference})" if reference else ""
+        bands = {rating: (label[:-len(suffix)] if suffix and label.endswith(suffix) else label)
+                 for rating, label in block["bands"].items()}
         segs = "".join(
             f'<div class="gfp-seg {rating.lower()}"><b>{rating}</b>'
-            f'<span>{esc(block["bands"][rating])}</span></div>'
+            f'<span>{esc(bands[rating])}</span></div>'
             for rating in ("Good", "Fair", "Poor")
             if block["bands"].get(rating))
         figures.append(f'<figure class="gfp"><figcaption>{esc(caption)}'
-                       f'</figcaption><div class="gfp-strip">{segs}</div>'
+                       f'</figcaption>{reference_note}<div class="gfp-strip">{segs}</div>'
                        f'</figure>')
     if figures:
         return ('<div class="metric-ref-sec"><div class="metric-ref-label">'
@@ -158,7 +164,7 @@ def basis_section(method: dict, citations: dict) -> str:
 
 
 def block(meta: dict, method: dict, citations: dict) -> str:
-    definition = config.METRIC_DEFINITIONS.get(meta["metricId"], "")
+    definition = config.metric_definition(meta["metricId"])
     sections = [s for s in (
         gfp_figures(method),
         breakpoints_section(method),

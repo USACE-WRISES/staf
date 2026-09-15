@@ -15,7 +15,7 @@ def _row(mid, **over):
     m = config.metrics_by_id()[mid]
     row = {"metricId": mid, "discipline": m["discipline"], "functionName": m["functionName"],
            "name": m["name"], "valueText": "x", "rating": "Good", "generatedRating": "Good",
-           "index": 0.85, "functionScore": 13, "confidence": "H",
+           "index": 0.90, "functionScore": 14, "confidence": "H",
            "source": "EPA StreamCat pctimp2019 (watershed)", "note": "", "status": "computed"}
     row.update(over)
     return row

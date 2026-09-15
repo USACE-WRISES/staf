@@ -42,6 +42,7 @@ class Delineation:
     fcode: Optional[int] = None
     stream_order: Optional[int] = None
     sinuosity: Optional[float] = None
+    erom: Optional[dict[str, float]] = None
     snapped_lat: Optional[float] = None
     snapped_lon: Optional[float] = None
     watershed_geojson: Optional[dict] = None
@@ -152,7 +153,7 @@ def flowline_attrs(comid: int) -> dict:
 
     out: dict[str, Any] = {"gnis_name": None, "drainage_area_sqkm": None, "huc8": None,
                            "slope": None, "fcode": None, "stream_order": None,
-                           "sinuosity": None}
+                           "sinuosity": None, "erom": None}
     try:
         feat = fabric.feature_by_comid(comid)
         if feat is None:
@@ -209,7 +210,7 @@ def snap_point(lat: float, lon: float) -> dict:
     out: dict[str, Any] = {"comid": None, "gnis_name": None,
                            "drainage_area_sqkm": None, "huc8": None,
                            "slope": None, "fcode": None, "stream_order": None,
-                           "sinuosity": None,
+                           "sinuosity": None, "erom": None,
                            "snapped_lat": None, "snapped_lon": None}
 
     comid: Optional[int] = None
@@ -450,6 +451,7 @@ def run_delineation(lat: float, lon: float,
         d.fcode = attrs.get("fcode")
         d.stream_order = attrs.get("stream_order")
         d.sinuosity = attrs.get("sinuosity")
+        d.erom = attrs.get("erom")
         if attrs.get("_flowline_error"):
             d.warnings.append(f"flowline context: {attrs['_flowline_error']}")
     else:
@@ -462,6 +464,7 @@ def run_delineation(lat: float, lon: float,
         d.fcode = snap.get("fcode")
         d.stream_order = snap.get("stream_order")
         d.sinuosity = snap.get("sinuosity")
+        d.erom = snap.get("erom")
         d.snapped_lat = snap.get("snapped_lat")
         d.snapped_lon = snap.get("snapped_lon")
         d.snap_error = snap.get("_snap_error")

@@ -18,7 +18,7 @@ def _rows():
         rows.append({"metricId": m["metricId"], "name": m["name"],
                      "discipline": m["discipline"], "functionName": m["functionName"],
                      "valueText": "example value", "rating": ratings[len(rows) % 3],
-                     "generatedRating": "Good", "functionScore": 13, "status": "computed"})
+                     "generatedRating": "Good", "functionScore": 14, "status": "computed"})
     return rows
 
 

@@ -61,7 +61,7 @@ def main() -> int:
                           if not k.endswith(".py")},
     }
     (DEST / "VENDOR_INFO.json").write_text(
-        json.dumps(info, indent=1, sort_keys=True), encoding="utf-8")
+        json.dumps(info, indent=1, sort_keys=True), encoding="utf-8", newline="\n")
     print(f"vendored site_engine {info['engine_version']} "
           f"({len(info['manifest'])} py + {len(info['data_manifest'])} data) "
           f"-> {DEST.relative_to(REPO)}")

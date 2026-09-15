@@ -642,13 +642,13 @@ def _metric_card_tip(row):
     # The equation comes from the trace that produced this rating, so a composite is never
     # described as a dataset value used directly.
     calc = ((row.get("scoring") or {}).get("equation")
-            or config.METRIC_CALCULATIONS.get(mid)
+            or config.metric_calculation(mid)
             or "See the Scoring method panel for the equation and breakpoints.")
     # A routed site's COMID-keyed rows carry ``anchorNote`` (which covered reach
     # scored them, how far downstream, the drainage-area ratio) ahead of the
     # adapter's own note.
     tip_html = _metric_tip_html(
-        name=row.get("name"), definition=config.METRIC_DEFINITIONS.get(mid, ""),
+        name=row.get("name"), definition=config.metric_definition(mid),
         source=row.get("source") or "",
         note=" ".join(x for x in (row.get("anchorNote") if notices.is_borrowed(row) else None,
                                  row.get("note")) if x),
@@ -768,13 +768,14 @@ def _method_body_ui(method, row, site_inputs):
     """How the number is computed: inputs used plus equation, or (for categorical metrics) the
     decision table. The reference-curve plot and what-if sliders were removed; the scoring
     breakpoints live in 'Scoring criteria' and on the docs site's Screening Metric Reference."""
-    if method.mode == "categorical":
-        return ui.HTML(method_plot.decision_html(method, row.get("generatedRating")))
-    parts = [_method_inputs_ui(method, site_inputs)]
-    if method.equation:
+    parts = ([ui.HTML(method_plot.decision_html(method, row.get("generatedRating")))]
+             if method.mode == "categorical" else [_method_inputs_ui(method, site_inputs)])
+    if method.equation and method.mode != "categorical":
         parts.append(ui.div(ui.span("Equation", class_="easi-method-equation-label"),
                             ui.tags.code(method.equation),
                             class_="easi-method-equation"))
+    if method.reference:
+        parts.append(ui.p(method.reference, class_="easi-method-equation"))
     return ui.TagList(*parts)
 
 
@@ -972,6 +973,15 @@ def _precomputed_text(pre: dict) -> str:
     if pre.get("method_current") is False:
         parts.append("rescored with the current methods")
     return ", ".join(parts)
+
+
+def _criteria_mismatch_text(pre: dict) -> str:
+    """Explain when stored map scores and a freshly opened report differ."""
+    if pre.get("criteria_current") is not False:
+        return ""
+    published = pre.get("criteria_set") or "legacy"
+    return (f"The national map and dashboard use {published} criteria. "
+            f"Opened reports use {config.criteria_set()} criteria.")
 
 
 def _basin_block(d, rep):
@@ -1221,15 +1231,18 @@ def _header_with_map(d, rep, geo, minimap_html=None):
     the table exactly as the report had them before.
     """
     basin = _basin_block(d, rep)
+    mismatch = _criteria_mismatch_text((rep or {}).get("precomputed") or {})
+    header = ui.TagList(_summary_header(d),
+                        ui.p(mismatch, class_="easi-muted") if mismatch else None)
     minimap = minimap_html or ""
     if minimap_html is None and geo:
         minimap = reportmap.svg(
             delineation.display_simplify(geo.get("watershed"), max_vertices=700),
             geo.get("reach"))
     if not minimap:
-        return ui.TagList(_summary_header(d), basin)
+        return ui.TagList(header, basin)
     return ui.div(
-        ui.div(_summary_header(d), basin, style="flex:1 1 380px;min-width:0;"),
+        ui.div(header, basin, style="flex:1 1 380px;min-width:0;"),
         ui.HTML(minimap),
         style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;")
 
@@ -2637,7 +2650,8 @@ def server(input, output, session):
         if own and block:
             _geom_reason.set(reason)
             derived = assessment.rate_metrics_from_stages(block, bankfull_stage, floodplain_stage,
-                                                          reason=reason)
+                                                          reason=reason,
+                                                          strata=((base_result() or {}).get("report") or {}).get("strata"))
             new_owned = set()
             for mid, info in derived.items():
                 if info.get("rating"):
@@ -3124,6 +3138,7 @@ def server(input, output, session):
         fid = fn["id"]
         meta = _METRIC_BY_FID.get(fid) or {}
         mid = meta.get("metricId")
+        statement = config.metric_definition(mid, fallback=meta.get("metricStatement", ""))
         is_xs = fid in XS_FUNCTION_IDS
         with reactive.isolate():
             note0 = (_notes() or {}).get(mid, "")
@@ -3135,8 +3150,7 @@ def server(input, output, session):
                    class_="sfari-sec-lbl"),
             ui.div(ui.span(meta.get("name", ""), class_="easi-metric-title"),
                    class_="sfari-metric-name"),
-            (ui.div(meta.get("metricStatement", ""), class_="sfari-metric-statement")
-             if meta.get("metricStatement") else None),
+            (ui.div(statement, class_="sfari-metric-statement") if statement else None),
             ui.output_ui("fn_metric_live"),
             _method_expander(mid, _active_scoring(brow, None)),
             ui.tags.textarea(note0, {"class": "easi-note-ta", "data-mid": mid, "rows": "2",
@@ -4097,7 +4111,8 @@ def server(input, output, session):
         return (f"{s.get('units_published', 0)} of {s.get('units_total', 222)} HUC4 units published, "
                 f"{s.get('reaches_scored', 0):,} reaches, vintage {s.get('vintage')}"
                 + (f", tier {s.get('tier')}" if s.get("tier") else "")
-                + (f", updated {str(s.get('updated'))[:10]}" if s.get("updated") else ""))
+                + (f", updated {str(s.get('updated'))[:10]}" if s.get("updated") else "")
+                + (". " + _criteria_mismatch_text(s) if _criteria_mismatch_text(s) else ""))
 
     @render.ui
     def viewer_summary_line():

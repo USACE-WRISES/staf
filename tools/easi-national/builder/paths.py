@@ -72,6 +72,10 @@ class DataRoot:
         return self.national / "vaa_slim.parquet"
 
     @property
+    def erom(self) -> Path:
+        return self.national / "erom.parquet"
+
+    @property
     def vaa_raw(self) -> Path:
         return self.national / "nhdplus_vaa.parquet"
 

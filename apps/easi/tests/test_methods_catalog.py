@@ -8,6 +8,8 @@ through the canonical evaluator, and that the displayed ranges are the catalog's
 """
 from __future__ import annotations
 
+import pytest
+
 import asyncio
 
 from easi import assessment, config, methods, screening_methods as sm
@@ -93,6 +95,7 @@ def test_panel_recomputation_matches_the_recorded_rating(monkeypatch):
     assert checked >= 12
 
 
+@pytest.mark.usefixtures("legacy_criteria")
 def test_projection_uses_the_catalog_bands():
     """The plotted regions are the evaluator's own bands.
 
@@ -127,6 +130,7 @@ def test_best_projection_uses_the_per_input_catalog_bands():
                 assert band.hi == raw["max"]
 
 
+@pytest.mark.usefixtures("legacy_criteria")
 def test_band_range_texts_scalar_and_worst_and_categorical():
     best = methods.band_range_texts(methods.METHODS[HYPORHEIC_ID])
     assert "> 0.006 m/m" in best["Good"] and "> 1.2" in best["Good"]
