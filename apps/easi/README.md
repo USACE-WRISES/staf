@@ -78,7 +78,9 @@ reach screened automatically and not reviewed, for fast site screening in
 support of an assessment. Reaches draw by condition
 band, a coverage layer shows which HUC4 units are published, and a click
 rebuilds the reach's full report from its stored evidence with the app's own
-adapters (`easi.national`). Set `EASI_NATIONAL_BASE` to read another base, such
+adapters (`easi.national`). While the tiles for a new area load, a small cue at
+the bottom of the map says so, and a tile the server could not fetch leaves a
+note asking for a Refresh. Set `EASI_NATIONAL_BASE` to read another base, such
 as the builder's local `staging/` folder.
 
 The screening pane's **Dashboard** view (`easi/national/dashboard.py`) draws the

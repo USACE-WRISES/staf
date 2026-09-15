@@ -17,6 +17,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 import os
 import tempfile
 import threading
@@ -28,6 +29,8 @@ from typing import Any, Callable, Optional
 import requests
 
 from . import DATASET_TAG, SCHEMA_VERSION, method_version, providers, records
+
+_LOG = logging.getLogger(__name__)
 
 DEFAULT_BASE = f"https://github.com/USACE-WRISES/staf/releases/download/{DATASET_TAG}/"
 ENV_BASE = "EASI_NATIONAL_BASE"
@@ -207,17 +210,23 @@ class Dataset:
             return _local
 
         def _remote(offset: int, length: int) -> bytes:
+            started = time.perf_counter()
             for attempt in range(2):
                 url = self.resolve(name, force=attempt > 0)
                 headers = {"Range": f"bytes={offset}-{offset + length - 1}"}
                 response = requests.get(url, headers=headers, timeout=self.timeout)
-                if response.status_code == 206:
+                if response.status_code in (200, 206):
+                    _LOG.debug("%s: range %d+%d -> %d in %.0f ms", name, offset, length,
+                               response.status_code, 1000 * (time.perf_counter() - started))
+                    if response.status_code == 200:  # the host ignored Range
+                        return response.content[offset:offset + length]
                     return response.content
-                if response.status_code == 200:      # the host ignored Range
-                    return response.content[offset:offset + length]
                 if response.status_code in (403, 404) and attempt == 0:
                     continue
+                _LOG.warning("%s: HTTP %s for range %d+%d after %.0f ms", name, response.status_code,
+                             offset, length, 1000 * (time.perf_counter() - started))
                 raise DatasetError(f"{name}: HTTP {response.status_code} for range")
+            _LOG.warning("%s: could not resolve the asset for range %d+%d", name, offset, length)
             raise DatasetError(f"{name}: could not resolve the asset")
         return _remote
 

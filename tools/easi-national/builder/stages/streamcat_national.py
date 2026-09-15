@@ -7,6 +7,10 @@ The per-region zip files EPA used to publish are gone (404). The API's
 ``region`` selector (values such as ``Region02`` and ``Region03N``, listed by
 the API root) answers a region's rows for a group of metrics in seconds, so
 the national pull is about 21 regions times a handful of metric groups.
+
+The same pull, pointed at another cache, ledger and parts folder with a
+per-name area of interest, builds the analysis package's candidate cache
+(``builder.analysis.candidates``).
 """
 from __future__ import annotations
 
@@ -70,27 +74,51 @@ def table_of(rows: dict[int, dict]):
     return pa.table(arrays)
 
 
+def _plan_groups(names: list[str], aoi_by_name: Optional[dict[str, str]]) -> list[tuple[list[str], str, str]]:
+    """``(names, aoi, key suffix)`` per request group. Without a per-name map
+    every name goes at the adapters' areas of interest in groups of
+    ``STREAMCAT_NAME_GROUP`` (key suffix ``g<i>``, the historical ledger keys).
+    With one, names are grouped per distinct area-of-interest string, in
+    first-seen order (suffix ``<aoi>-g<i>``)."""
+    default_aoi = ",".join(config.STREAMCAT_AOIS)
+    if not aoi_by_name:
+        return [(group, default_aoi, f"g{gi}") for gi, group in enumerate(_groups(names))]
+    by_aoi: dict[str, list[str]] = {}
+    for name in names:
+        by_aoi.setdefault(aoi_by_name.get(name, default_aoi), []).append(name)
+    out = []
+    for aoi, aoi_names in by_aoi.items():
+        token = aoi.replace(",", "+")
+        for gi, group in enumerate(_groups(aoi_names)):
+            out.append((group, aoi, f"{token}-g{gi}"))
+    return out
+
+
 def run_streamcat_national(root: DataRoot, progress: Progress, control: Control, *,
                            names: Optional[list[str]] = None, post=_post,
                            region_list: Optional[list[str]] = None,
-                           workers: Optional[int] = None) -> Path:
+                           workers: Optional[int] = None,
+                           cache: Optional[Path] = None, ledger_name: str = "streamcat-national",
+                           parts: Optional[Path] = None,
+                           aoi_by_name: Optional[dict[str, str]] = None) -> Path:
     """Pull every region for every metric group (resumable by request) and
-    merge into the cache parquet."""
+    merge into the cache parquet (``cache``, default the national cache)."""
     import pyarrow as pa
     import pyarrow.parquet as pq
     names = names or config.streamcat_names()
-    groups = _groups(names)
-    aoi = ",".join(config.STREAMCAT_AOIS)
+    groups = _plan_groups(names, aoi_by_name)
     region_list = list(region_list or regions())
-    plan = [(f"{region}-g{gi}", {"name": ",".join(group), "aoi": aoi, "region": region})
-            for region in region_list for gi, group in enumerate(groups)]
-    ledger = Ledger(root, "streamcat-national")
-    parts = _parts_dir(root)
+    plan = [(f"{region}-{suffix}", {"name": ",".join(group), "aoi": aoi, "region": region})
+            for region in region_list for group, aoi, suffix in groups]
+    ledger = Ledger(root, ledger_name)
+    parts = parts or _parts_dir(root)
+    parts.mkdir(parents=True, exist_ok=True)
+    cache = cache or cache_path(root)
     pending = [(key, payload) for key, payload in plan if key not in ledger]
     done_n = len(plan) - len(pending)
     workers = max(1, workers or config.STREAMCAT_CONCURRENCY)
     progress.begin("national", STAGE, total=len(plan),
-                   message=f"StreamCat national: {len(region_list)} regions x {len(groups)} metric groups, "
+                   message=f"StreamCat {cache.stem}: {len(region_list)} regions x {len(groups)} metric groups, "
                            f"{len(pending)} requests to go, {workers} at a time")
     progress.tick(done=done_n)
     with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -115,18 +143,18 @@ def run_streamcat_national(root: DataRoot, progress: Progress, control: Control,
     region_tables = []
     for region in region_list:
         table = None
-        for gi in range(len(groups)):
-            part = pq.read_table(parts / f"{region}-g{gi}.parquet")
+        for _group, _aoi, suffix in groups:
+            part = pq.read_table(parts / f"{region}-{suffix}.parquet")
             table = part if table is None else table.join(part, keys="comid", join_type="full outer")
         if table is not None and table.num_rows:
             region_tables.append(table)
     merged = (pa.concat_tables(region_tables, promote_options="default").sort_by("comid")
               if region_tables else table_of({}))
-    common.write_parquet(merged, cache_path(root))
-    progress.say(f"streamcat.parquet: {merged.num_rows:,} reaches, {len(merged.column_names) - 1} columns")
+    common.write_parquet(merged, cache)
+    progress.say(f"{cache.name}: {merged.num_rows:,} reaches, {len(merged.column_names) - 1} columns")
     common.drop_parts(parts)
     ledger.clear()
-    return cache_path(root)
+    return cache
 
 
 def cached_rows(root: DataRoot, wanted: list[int]) -> dict[int, dict]:

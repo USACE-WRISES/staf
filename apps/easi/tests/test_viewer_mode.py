@@ -98,14 +98,14 @@ def test_viewer_copy_has_no_em_dashes():
 def test_viewer_workspace_render_never_reads_the_summary():
     """The workspace holds the map's container: a reactive read of the summary
     inside it re-renders the workspace when the summary arrives and leaves
-    MapLibre drawing into a detached div (2026-09-11). The tier sentence and
-    the header line are their own outputs."""
+    MapLibre drawing into a detached div (2026-09-11). The summary line is its
+    own output; the tier sentence was dropped from the legend on 2026-09-14."""
     start = SRC.index("def viewer_workspace():")
     end = SRC.index("class_=\"easi-viewer\")", start)
     body = SRC[start:end]
     assert "viewer_summary()" not in body
-    assert 'ui.output_ui("viewer_tier_note"' in body and 'ui.output_ui("viewer_summary_line"' in body
-    assert "def viewer_tier_note():" in SRC
+    assert 'ui.output_ui("viewer_summary_line"' in body
+    assert "viewer_tier_note" not in SRC
     # no banner row: the takeover is the map, its legend (summary + Refresh) and the status pill
     assert "easi-batch-head" not in body and "easi-viewer-intro" not in body
     assert 'ui.input_action_link("viewer_refresh", "Refresh")' in body
@@ -139,3 +139,14 @@ def test_viewer_reports_open_in_two_phases():
     assert 'selector="#easi-viewer-minimap-pending"' in SRC and 'ui.remove_ui("#easi-viewer-minimap-pending")' in SRC
     assert '"pending": bool(base.get("geometry_pending"))' in SRC
     assert "viewer_geometry_task(comid, generation)" in SRC
+
+
+def test_the_tile_loading_cue_is_static_markup_the_viewer_script_drives():
+    # the cue is markup rendered once with the workspace (never a reactive
+    # output, which would re-render the map's container) and viewer.js shows it
+    # on a screening source's loading event and hides it on idle
+    assert 'id="easi-viewer-loading"' in SRC and 'class_="easi-viewer-loading"' in SRC
+    js = (Path(app.__file__).parent / "www" / "viewer.js").read_text(encoding="utf-8")
+    assert "easi-viewer-loading" in js and '"sourcedataloading"' in js and '"idle"' in js
+    # a failed range read answers 502 (an empty tile stays 204) so the map can tell them apart
+    assert "national_tiles.TileReadError" in SRC and "status_code=502" in SRC

@@ -35,6 +35,11 @@ ATTAINS_LAYERS = {0: "attains_au_points", 1: "attains_au_lines", 2: "attains_au_
 _ATTAINS_FIELDS = ("assessmentunitidentifier", "assessmentunitname", "overallstatus",
                    "isimpaired", "ircategory")
 PRECISION = 7
+#: the EROM flow estimates on NHDFlowline_Network (cfs; VE/VA in fps): mean
+#: annual and monthly, unit-runoff (QA), reference-gage (QC) and gage-adjusted (QE)
+EROM_COLUMNS = ("COMID", "TotDASqKM", "QA_MA", "QE_MA", "QC_MA", "VA_MA", "VE_MA") + tuple(
+    f"{kind}_{month:02d}" for month in range(1, 13) for kind in ("QA", "QE", "QC"))
+ATTAINS_ATTRIBUTES_LAYER = "attains_au_attributes"
 
 
 # ------------------------------------------------------------- locations
@@ -175,6 +180,37 @@ def convert_attains(root: DataRoot, progress: Progress, *, gdb: Optional[Path] =
     progress.say(f"attains.parquet: {len(rows):,} segments of "
                  f"{len({r['assessment_unit'] for r in rows}):,} assessment units")
     return path
+
+
+def read_erom(root: DataRoot, progress: Progress, *, gdb: Optional[Path] = None):
+    """The EROM columns of ``NHDFlowline_Network`` as a pandas frame (lowercase
+    column names, no geometry), for the analysis package."""
+    import pyogrio
+    gdb = gdb or nhdplus_gdb(root)
+    if gdb is None:
+        raise RuntimeError("NHDPlus seamless geodatabase not found under national/nhdplus")
+    progress.say(f"reading EROM flow columns from {gdb.name} ...")
+    frame = pyogrio.read_dataframe(str(gdb), layer="NHDFlowline_Network",
+                                   columns=list(EROM_COLUMNS), read_geometry=False)
+    frame.columns = [str(c).lower() for c in frame.columns]
+    frame["comid"] = frame["comid"].astype("int64")
+    progress.say(f"EROM: {len(frame):,} reaches")
+    return frame
+
+
+def read_attains_attributes(root: DataRoot, progress: Progress, *, gdb: Optional[Path] = None):
+    """``attains_au_attributes`` (every assessment unit with its use statuses
+    and cause columns) as a pandas frame with lowercase column names."""
+    import pyogrio
+    gdb = gdb or attains_gdb(root)
+    if gdb is None:
+        raise RuntimeError("ATTAINS geodatabase not found under national/attains")
+    progress.say(f"reading {ATTAINS_ATTRIBUTES_LAYER} from {gdb.name} ...")
+    frame = pyogrio.read_dataframe(str(gdb), layer=ATTAINS_ATTRIBUTES_LAYER, read_geometry=False)
+    frame.columns = [str(c).lower() for c in frame.columns]
+    frame = frame.drop(columns=[c for c in ("globalid",) if c in frame.columns])
+    progress.say(f"{ATTAINS_ATTRIBUTES_LAYER}: {len(frame):,} assessment units")
+    return frame
 
 
 # ------------------------------------------------------------ chunk reads

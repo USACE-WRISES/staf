@@ -418,10 +418,10 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=58"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=59"),
                     ui.tags.link(rel="stylesheet", href="vendor/maplibre-gl.css"),
                     ui.tags.script(src="vendor/maplibre-gl.js", defer=""),
-                    ui.tags.script(src="viewer.js?v=5", defer=""),
+                    ui.tags.script(src="viewer.js?v=6", defer=""),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -3890,7 +3890,12 @@ def server(input, output, session):
         if not vpu.isalnum() or len(vpu) > 3:
             return Response(status_code=400)
         store = national_tiles.default_store()
-        data, encoding, media = await anyio.to_thread.run_sync(store.tile, vpu, z, x, y)
+        try:
+            data, encoding, media = await anyio.to_thread.run_sync(store.tile, vpu, z, x, y)
+        except national_tiles.TileReadError:
+            # a failed range read is not an empty tile: 502 makes the map
+            # report the tile as errored (the viewer shows a note on idle)
+            return Response(status_code=502, headers={"Cache-Control": "no-store"})
         if not data:
             return Response(status_code=204, headers={"Cache-Control": "public, max-age=600"})
         headers = {"Cache-Control": "public, max-age=3600"}
@@ -4111,27 +4116,6 @@ def server(input, output, session):
                 + "</div>")
         return _info(html_tip=card)
 
-    def _viewer_tier_note(summary) -> str:
-        """The legend's tier sentence: Tier 1 everywhere, Tier 2 everywhere, or mixed."""
-        s = summary or {}
-        published = int(s.get("units_published") or 0)
-        tier2 = int(s.get("units_tier2") or 0)
-        if published and tier2 == published:
-            return ("Tier 2: the four cross-section metrics are computed from USGS 3DEP "
-                    "elevation, 1 m lidar where available.")
-        if tier2:
-            return (f"Tier 2 in {tier2} of {published} published units (cross-section metrics "
-                    "from USGS 3DEP elevation); Tier 1 elsewhere, physical sub-index provisional.")
-        return ("Tier 1: the four cross-section metrics are not computed, so the "
-                "physical sub-index is provisional.")
-
-    @render.ui
-    def viewer_tier_note():
-        # its own output: the workspace render must not read the summary, or
-        # the whole workspace (and the map's container) re-renders when the
-        # summary arrives and MapLibre is left drawing into a detached div
-        return ui.span(_viewer_tier_note(viewer_summary()))
-
     @render.ui
     def viewer_workspace():
         if app_mode() != "viewer":
@@ -4143,7 +4127,6 @@ def server(input, output, session):
               for label, color in (("Functioning", "#5b8fd6"), ("Functioning-at-Risk", "#d9b93a"),
                                    ("Non-Functioning", "#d6453d"), ("Not yet screened", "#a9b1bd"))],
             ui.div("Coverage: blue complete, yellow partial", class_="easi-viewer-legend-note"),
-            ui.div(ui.output_ui("viewer_tier_note", inline=True), class_="easi-viewer-legend-note"),
             ui.div(ui.output_ui("viewer_summary_line", inline=True),
                    ui.input_action_link("viewer_refresh", "Refresh"),
                    class_="easi-viewer-legend-foot"),
@@ -4160,6 +4143,11 @@ def server(input, output, session):
             ui.div(ui.div(id="easi-viewer-map"),
                    legend,
                    ui.div(id="easi-viewer-status", class_="easi-viewer-status",
+                          role="status", hidden=True, **{"aria-live": "polite"}),
+                   # the tile-loading cue: static markup that viewer.js shows and hides
+                   ui.div(ui.div(class_="easi-spinner"),
+                          ui.span("Loading screening tiles…", class_="easi-viewer-loading-text"),
+                          id="easi-viewer-loading", class_="easi-viewer-loading",
                           role="status", hidden=True, **{"aria-live": "polite"}),
                    ui.output_ui("viewer_dashboard"),
                    class_="easi-viewer-body"),
