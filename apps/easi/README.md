@@ -77,7 +77,11 @@ stepper: **Identify → Basin → Assessment → Report**.
 A **Batch** mode runs up to 10 sites from a pasted list and packages the reports
 as a ZIP (the engine itself accepts up to 150 sites for programmatic use).
 
-The **Nationwide screening** switch in the header opens a view-only map over
+**Nationwide screening** is a developer preview and is not part of the public
+application. It mounts only when the environment variable `EASI_NATIONAL_VIEWER=1`
+is set at startup. Without it the header switch, the map renderers, their
+vendored assets and the session tile route are absent, while `easi.national`
+and the builder stay in place. When enabled, the switch opens a view-only map over
 the precomputed national dataset (`tools/easi-national` builds it chunk by chunk and publishes
 it to the rolling `easi-national-current` GitHub prerelease): every NHDPlus V2
 reach screened automatically and not reviewed, for fast site screening in
@@ -110,7 +114,8 @@ recommendation to retain Alternative 1 remains unchanged in its archive. No
 Alternative 1 or baseline selector is exposed. The historical `legacy`
 environment option remains available for backward compatibility.
 
-Nationwide screening starts each new session in **Compatibility** mode. It uses
+Nationwide screening (when enabled with `EASI_NATIONAL_VIEWER=1`) starts each
+new session in **Compatibility** mode. It uses
 Leaflet image tiles for the USGS basemap and draws visible vector tiles into
 temporary 2D canvases, then displays the resulting images. Panning and zooming
 move those images. **Standard** retains MapLibre. Switching preserves the map
