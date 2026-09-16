@@ -276,11 +276,72 @@ def test_source_inventory_stat_only_and_actual_changes_hide_completed_results(st
 
 
 @pytest.mark.parametrize("scope,path", [("data", "../outside.bin"), ("workspace", "../outside.bin"),
-                                         ("other", "source.bin"), ([], "source.bin"), ("data", "D:/outside.bin")])
+                                         ("other", "source.bin"), ([], "source.bin"), ("data", "D:/outside.bin"),
+                                         ("data", "raw/\x00invalid")])
 def test_source_inventory_rejects_escaping_paths_and_unknown_scopes(study, scope, path):
     row = {"scope": scope, "path": path, "size": 1, "mtime_ns": 1, "sha256": "a" * 64}
     set_sources(study, [row])
     with pytest.raises(alternatives.StudyUnavailable):
+        load(study)
+
+
+def test_source_inventory_resolves_every_file_again_each_request(study, monkeypatch):
+    from collections import Counter
+    workspace = study["data"].parents[2]
+    rows = [source_row(study["root"], f"raw/source-{i}.bin", "data") for i in range(4)]
+    rows += [source_row(workspace, "raw/workspace.bin", "workspace")]
+    set_sources(study, rows)
+    completion = json.loads((study["folder"] / "completion.json").read_text())
+    original = type(workspace).resolve
+    calls = Counter()
+    def count_resolve(path, *args, **kwargs):
+        calls[str(path)] += 1
+        return original(path, *args, **kwargs)
+    monkeypatch.setattr(type(workspace), "resolve", count_resolve)
+    for _ in range(2):
+        alternatives._source_freshness(study["root"], workspace, study["manifest"], completion)
+    assert calls[str(study["root"])] == calls[str(workspace)] == 2
+    for row in rows:
+        base = study["root"] if row["scope"] == "data" else workspace
+        assert calls[str(base / row["path"])] == 2
+    path = workspace / rows[-1]["path"]
+    stamp = path.stat()
+    os.utime(path, ns=(stamp.st_atime_ns, stamp.st_mtime_ns + 1000000))
+    assert path.stat().st_size == rows[-1]["size"]
+    with pytest.raises(alternatives.StudyUnavailable, match="source files have changed"):
+        alternatives._source_freshness(study["root"], workspace, study["manifest"], completion)
+
+
+@pytest.mark.parametrize("replacement", ["missing", "directory"])
+def test_source_inventory_rejects_missing_and_nonregular_entries(study, replacement):
+    row = source_row(study["root"], "raw/source.bin", "data")
+    path = study["root"] / row["path"]
+    path.unlink()
+    if replacement == "directory":
+        path.mkdir()
+        stamp = path.stat()
+        row.update(size=stamp.st_size, mtime_ns=stamp.st_mtime_ns)
+    set_sources(study, [row])
+    with pytest.raises(alternatives.StudyUnavailable):
+        load(study)
+
+
+def test_source_inventory_rejects_directory_link_escape(study):
+    outside = study["root"].parent / "outside-source"
+    outside.mkdir()
+    target = outside / "source.bin"
+    target.write_bytes(b"outside source")
+    link = study["root"] / "linked-source"
+    if os.name == "nt":
+        import subprocess
+        subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(outside)],
+                       check=True, capture_output=True)
+    else:
+        link.symlink_to(outside, target_is_directory=True)
+    stamp = target.stat()
+    set_sources(study, [{"scope": "data", "path": "linked-source/source.bin", "size": stamp.st_size,
+                         "mtime_ns": stamp.st_mtime_ns, "sha256": digest(target)}])
+    with pytest.raises(alternatives.StudyUnavailable, match="outside"):
         load(study)
 
 
