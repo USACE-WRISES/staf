@@ -1,0 +1,913 @@
+{
+ "record_version": 1,
+ "written": "2026-09-16T20:01:27Z",
+ "dataset": {
+  "name": "EASI development dataset, 16 states, September 2026",
+  "status": "development dataset for methodology evaluation and refinement; not an assessment product",
+  "release_tag": "easi-national-current",
+  "release_is_prerelease": true,
+  "alternative_id": "alternative-2",
+  "build_id": "3d8a4711c5414d4e9e76ca2233815783",
+  "method_version": "b2e3033116e3",
+  "criteria_set": "regional",
+  "schema_version": 2,
+  "vintage": "2026.09",
+  "reaches_scored": 1357265,
+  "huc8s_scored": 1169,
+  "huc4_units_published": 145,
+  "huc4_units_complete": 67,
+  "huc4_units_partial": 78,
+  "huc4_units_total": 222,
+  "tile_partitions": 21,
+  "assets": 192,
+  "asset_bytes": 3262354630,
+  "manifest_sha256": "43574e9b71530c49f91cd52e32559d0dfb3e42bf28e342771d197121db9e5016",
+  "completion_sha256": "42fc11ac9cfb17b1bfa0e72dafd400f2acf4a7e3973355c96460b4856c86793e",
+  "stats_sha256": "6cda451fd7271eff04f31a274b198a8bf24c70c67d0c10569702ef6cc169ae42",
+  "build_created": "2026-09-16T03:32:28Z",
+  "build_completed": "2026-09-16T04:33:21Z",
+  "staging_updated": "2026-09-16T04:32:56Z"
+ },
+ "code": {
+  "repository": "https://github.com/USACE-WRISES/staf",
+  "record_written_at_commit": "d93f725",
+  "method_first_commit": "02f39a8",
+  "builder": "tools/easi-national (builder.worker, builder.alternative2_rollout)",
+  "scorer": "apps/easi (easi.assessment.assess_preloaded, easi.national.client.score_record)",
+  "chunk_stages": [
+   "streamcat",
+   "geometry",
+   "huc12",
+   "wqp",
+   "attains",
+   "nas"
+  ],
+  "huc8_stages": [
+   "derive",
+   "xs_sample",
+   "xs_derive",
+   "joins",
+   "score"
+  ],
+  "tiles": "v2.82.0",
+  "producer_provenance": {
+   "captured_at": "2026-09-16T03:47:14.0233632Z",
+   "method_version": "b2e3033116e3",
+   "docker_image_tag": "staf-tippecanoe",
+   "docker_image_id": "sha256:9a1f44e710eb83fd042bb6a91a207c959723cd2511b746cb9540ad1ef36dbd74",
+   "tippecanoe_version": "v2.82.0",
+   "providers_path": "apps/easi/easi/national/providers.py",
+   "providers_sha256": "4821962f781c6bb211eb827af847e31da024744c9f0a179f2e9092e329fbce1f",
+   "dockerfile_sha256": "6988abce453f8697f94d8f4c84ffda0f8d8138d1fd64bba77455ebe401d0473f",
+   "note": "Supplemental producer provenance captured before tile production. Verify these fingerprints again after completion."
+  }
+ },
+ "states": {
+  "requested": [
+   "AR",
+   "CA",
+   "FL",
+   "IN",
+   "KS",
+   "KY",
+   "MN",
+   "MT",
+   "NH",
+   "NM",
+   "NY",
+   "OH",
+   "OR",
+   "TX",
+   "VA",
+   "WA"
+  ],
+  "requested_count": 16,
+  "chunks": [
+   {
+    "id": "huc8-02080204",
+    "kind": "huc8",
+    "label": "HUC8 02080204",
+    "states": [],
+    "huc8s": 1,
+    "n_comids": 896,
+    "vpus": [
+     "02"
+    ],
+    "created": "2026-09-10T17:32:55Z"
+   },
+   {
+    "id": "state-AR",
+    "kind": "state",
+    "label": "Arkansas",
+    "states": [
+     "AR"
+    ],
+    "huc8s": 58,
+    "n_comids": 120271,
+    "vpus": [
+     "08",
+     "11"
+    ],
+    "created": "2026-09-13T17:01:36Z"
+   },
+   {
+    "id": "state-CA",
+    "kind": "state",
+    "label": "California",
+    "states": [
+     "CA"
+    ],
+    "huc8s": 140,
+    "n_comids": 159049,
+    "vpus": [
+     "15",
+     "16",
+     "17",
+     "18"
+    ],
+    "created": "2026-09-12T20:32:01Z"
+   },
+   {
+    "id": "state-FL",
+    "kind": "state",
+    "label": "Florida",
+    "states": [
+     "FL"
+    ],
+    "huc8s": 56,
+    "n_comids": 53028,
+    "vpus": [
+     "03S",
+     "03W"
+    ],
+    "created": "2026-09-12T16:07:27Z"
+   },
+   {
+    "id": "state-IN",
+    "kind": "state",
+    "label": "Indiana",
+    "states": [
+     "IN"
+    ],
+    "huc8s": 38,
+    "n_comids": 36736,
+    "vpus": [
+     "04",
+     "05",
+     "07"
+    ],
+    "created": "2026-09-13T17:04:08Z"
+   },
+   {
+    "id": "state-KS",
+    "kind": "state",
+    "label": "Kansas",
+    "states": [
+     "KS"
+    ],
+    "huc8s": 90,
+    "n_comids": 130481,
+    "vpus": [
+     "10L",
+     "11"
+    ],
+    "created": "2026-09-13T09:08:31Z"
+   },
+   {
+    "id": "state-KY",
+    "kind": "state",
+    "label": "Kentucky",
+    "states": [
+     "KY"
+    ],
+    "huc8s": 44,
+    "n_comids": 65644,
+    "vpus": [
+     "05",
+     "06",
+     "08"
+    ],
+    "created": "2026-09-13T17:02:00Z"
+   },
+   {
+    "id": "state-MN",
+    "kind": "state",
+    "label": "Minnesota",
+    "states": [
+     "MN"
+    ],
+    "huc8s": 80,
+    "n_comids": 82755,
+    "vpus": [
+     "04",
+     "07",
+     "09",
+     "10U",
+     "10L"
+    ],
+    "created": "2026-09-13T17:00:49Z"
+   },
+   {
+    "id": "state-MT",
+    "kind": "state",
+    "label": "Montana",
+    "states": [
+     "MT"
+    ],
+    "huc8s": 114,
+    "n_comids": 162940,
+    "vpus": [
+     "10U",
+     "17"
+    ],
+    "created": "2026-09-13T17:01:16Z"
+   },
+   {
+    "id": "state-NH",
+    "kind": "state",
+    "label": "New Hampshire",
+    "states": [
+     "NH"
+    ],
+    "huc8s": 17,
+    "n_comids": 20662,
+    "vpus": [
+     "01"
+    ],
+    "created": "2026-09-12T14:57:52Z"
+   },
+   {
+    "id": "state-NM",
+    "kind": "state",
+    "label": "New Mexico",
+    "states": [
+     "NM"
+    ],
+    "huc8s": 85,
+    "n_comids": 85681,
+    "vpus": [
+     "11",
+     "12",
+     "13",
+     "14",
+     "15"
+    ],
+    "created": "2026-09-12T11:42:26Z"
+   },
+   {
+    "id": "state-NY",
+    "kind": "state",
+    "label": "New York",
+    "states": [
+     "NY"
+    ],
+    "huc8s": 54,
+    "n_comids": 65882,
+    "vpus": [
+     "01",
+     "02",
+     "04",
+     "05"
+    ],
+    "created": "2026-09-13T17:02:43Z"
+   },
+   {
+    "id": "state-OH",
+    "kind": "state",
+    "label": "Ohio",
+    "states": [
+     "OH"
+    ],
+    "huc8s": 43,
+    "n_comids": 66237,
+    "vpus": [
+     "04",
+     "05"
+    ],
+    "created": "2026-09-12T16:07:16Z"
+   },
+   {
+    "id": "state-OR",
+    "kind": "state",
+    "label": "Oregon",
+    "states": [
+     "OR"
+    ],
+    "huc8s": 91,
+    "n_comids": 89013,
+    "vpus": [
+     "16",
+     "17",
+     "18"
+    ],
+    "created": "2026-09-12T00:36:11Z"
+   },
+   {
+    "id": "state-TX",
+    "kind": "state",
+    "label": "Texas",
+    "states": [
+     "TX"
+    ],
+    "huc8s": 209,
+    "n_comids": 121879,
+    "vpus": [
+     "08",
+     "11",
+     "12",
+     "13"
+    ],
+    "created": "2026-09-13T17:00:21Z"
+   },
+   {
+    "id": "state-VA",
+    "kind": "state",
+    "label": "Virginia",
+    "states": [
+     "VA"
+    ],
+    "huc8s": 52,
+    "n_comids": 96315,
+    "vpus": [
+     "02",
+     "03N",
+     "05",
+     "06"
+    ],
+    "created": "2026-09-11T13:21:37Z"
+   },
+   {
+    "id": "state-WA",
+    "kind": "state",
+    "label": "Washington",
+    "states": [
+     "WA"
+    ],
+    "huc8s": 72,
+    "n_comids": 68607,
+    "vpus": [
+     "17"
+    ],
+    "created": "2026-09-13T17:03:20Z"
+   }
+  ],
+  "at_least_half_screened": [
+   "AR",
+   "CA",
+   "DC",
+   "FL",
+   "IN",
+   "KS",
+   "KY",
+   "MN",
+   "MT",
+   "NH",
+   "NM",
+   "NY",
+   "OH",
+   "OR",
+   "TX",
+   "VA",
+   "VT",
+   "WA"
+  ],
+  "coverage_by_state": {
+   "AL": {
+    "name": "Alabama",
+    "n_scored": 8017,
+    "n_total": 77900,
+    "coverage": 0.1029
+   },
+   "AR": {
+    "name": "Arkansas",
+    "n_scored": 84242,
+    "n_total": 84242,
+    "coverage": 1.0
+   },
+   "AZ": {
+    "name": "Arizona",
+    "n_scored": 11282,
+    "n_total": 77815,
+    "coverage": 0.145
+   },
+   "CA": {
+    "name": "California",
+    "n_scored": 141953,
+    "n_total": 141961,
+    "coverage": 0.9999
+   },
+   "CO": {
+    "name": "Colorado",
+    "n_scored": 9593,
+    "n_total": 62726,
+    "coverage": 0.1529
+   },
+   "CT": {
+    "name": "Connecticut",
+    "n_scored": 3588,
+    "n_total": 8270,
+    "coverage": 0.4339
+   },
+   "DC": {
+    "name": "District of Columbia",
+    "n_scored": 55,
+    "n_total": 55,
+    "coverage": 1.0
+   },
+   "DE": {
+    "name": "Delaware",
+    "n_scored": 612,
+    "n_total": 3391,
+    "coverage": 0.1805
+   },
+   "FL": {
+    "name": "Florida",
+    "n_scored": 36924,
+    "n_total": 36924,
+    "coverage": 1.0
+   },
+   "GA": {
+    "name": "Georgia",
+    "n_scored": 8087,
+    "n_total": 78656,
+    "coverage": 0.1028
+   },
+   "IA": {
+    "name": "Iowa",
+    "n_scored": 9950,
+    "n_total": 61198,
+    "coverage": 0.1626
+   },
+   "ID": {
+    "name": "Idaho",
+    "n_scored": 26750,
+    "n_total": 77930,
+    "coverage": 0.3433
+   },
+   "IL": {
+    "name": "Illinois",
+    "n_scored": 7341,
+    "n_total": 58802,
+    "coverage": 0.1248
+   },
+   "IN": {
+    "name": "Indiana",
+    "n_scored": 20960,
+    "n_total": 20960,
+    "coverage": 1.0
+   },
+   "KS": {
+    "name": "Kansas",
+    "n_scored": 99626,
+    "n_total": 99626,
+    "coverage": 1.0
+   },
+   "KY": {
+    "name": "Kentucky",
+    "n_scored": 44339,
+    "n_total": 44339,
+    "coverage": 1.0
+   },
+   "LA": {
+    "name": "Louisiana",
+    "n_scored": 7840,
+    "n_total": 45700,
+    "coverage": 0.1716
+   },
+   "MA": {
+    "name": "Massachusetts",
+    "n_scored": 2987,
+    "n_total": 11744,
+    "coverage": 0.2543
+   },
+   "MD": {
+    "name": "Maryland",
+    "n_scored": 5075,
+    "n_total": 15189,
+    "coverage": 0.3341
+   },
+   "ME": {
+    "name": "Maine",
+    "n_scored": 3835,
+    "n_total": 30103,
+    "coverage": 0.1274
+   },
+   "MI": {
+    "name": "Michigan",
+    "n_scored": 4347,
+    "n_total": 44288,
+    "coverage": 0.0982
+   },
+   "MN": {
+    "name": "Minnesota",
+    "n_scored": 59927,
+    "n_total": 59927,
+    "coverage": 1.0
+   },
+   "MO": {
+    "name": "Missouri",
+    "n_scored": 25808,
+    "n_total": 93558,
+    "coverage": 0.2759
+   },
+   "MS": {
+    "name": "Mississippi",
+    "n_scored": 248,
+    "n_total": 76184,
+    "coverage": 0.0033
+   },
+   "MT": {
+    "name": "Montana",
+    "n_scored": 128105,
+    "n_total": 128105,
+    "coverage": 1.0
+   },
+   "NC": {
+    "name": "North Carolina",
+    "n_scored": 11536,
+    "n_total": 69999,
+    "coverage": 0.1648
+   },
+   "ND": {
+    "name": "North Dakota",
+    "n_scored": 5081,
+    "n_total": 39388,
+    "coverage": 0.129
+   },
+   "NE": {
+    "name": "Nebraska",
+    "n_scored": 10119,
+    "n_total": 61746,
+    "coverage": 0.1639
+   },
+   "NH": {
+    "name": "New Hampshire",
+    "n_scored": 12017,
+    "n_total": 12018,
+    "coverage": 0.9999
+   },
+   "NJ": {
+    "name": "New Jersey",
+    "n_scored": 2538,
+    "n_total": 12743,
+    "coverage": 0.1992
+   },
+   "NM": {
+    "name": "New Mexico",
+    "n_scored": 64706,
+    "n_total": 64706,
+    "coverage": 1.0
+   },
+   "NV": {
+    "name": "Nevada",
+    "n_scored": 14732,
+    "n_total": 83119,
+    "coverage": 0.1772
+   },
+   "NY": {
+    "name": "New York",
+    "n_scored": 50848,
+    "n_total": 51149,
+    "coverage": 0.9941
+   },
+   "OH": {
+    "name": "Ohio",
+    "n_scored": 51196,
+    "n_total": 51196,
+    "coverage": 1.0
+   },
+   "OK": {
+    "name": "Oklahoma",
+    "n_scored": 29025,
+    "n_total": 62613,
+    "coverage": 0.4636
+   },
+   "OR": {
+    "name": "Oregon",
+    "n_scored": 70707,
+    "n_total": 70707,
+    "coverage": 1.0
+   },
+   "PA": {
+    "name": "Pennsylvania",
+    "n_scored": 11713,
+    "n_total": 55167,
+    "coverage": 0.2123
+   },
+   "SD": {
+    "name": "South Dakota",
+    "n_scored": 9317,
+    "n_total": 75412,
+    "coverage": 0.1235
+   },
+   "TN": {
+    "name": "Tennessee",
+    "n_scored": 13046,
+    "n_total": 62198,
+    "coverage": 0.2097
+   },
+   "TX": {
+    "name": "Texas",
+    "n_scored": 97446,
+    "n_total": 97446,
+    "coverage": 1.0
+   },
+   "UT": {
+    "name": "Utah",
+    "n_scored": 592,
+    "n_total": 52690,
+    "coverage": 0.0112
+   },
+   "VA": {
+    "name": "Virginia",
+    "n_scored": 61615,
+    "n_total": 61615,
+    "coverage": 1.0
+   },
+   "VT": {
+    "name": "Vermont",
+    "n_scored": 2860,
+    "n_total": 5717,
+    "coverage": 0.5003
+   },
+   "WA": {
+    "name": "Washington",
+    "n_scored": 57563,
+    "n_total": 57563,
+    "coverage": 1.0
+   },
+   "WI": {
+    "name": "Wisconsin",
+    "n_scored": 7668,
+    "n_total": 52826,
+    "coverage": 0.1452
+   },
+   "WV": {
+    "name": "West Virginia",
+    "n_scored": 11278,
+    "n_total": 31000,
+    "coverage": 0.3638
+   },
+   "WY": {
+    "name": "Wyoming",
+    "n_scored": 10171,
+    "n_total": 78143,
+    "coverage": 0.1302
+   }
+  }
+ },
+ "sources": [
+  {
+   "source": "NHDPlus V2 seamless geodatabase (EPA, NHDPlusV21_NationalData_Seamless_Geodatabase_Lower48_07)",
+   "role": "flowline geometry, value-added attributes, EROM monthly flows, HUC12 boundaries",
+   "caches": [
+    {
+     "file": "national/flowlines.parquet",
+     "exists": true,
+     "modified": "2026-09-11T03:01:01Z",
+     "rows": 2691339,
+     "bytes": 1174902977
+    },
+    {
+     "file": "national/erom.parquet",
+     "exists": true,
+     "modified": "2026-09-15T13:50:04Z",
+     "rows": 2691339,
+     "bytes": 120422519
+    },
+    {
+     "file": "national/huc12.parquet",
+     "exists": true,
+     "modified": "2026-09-11T02:59:33Z",
+     "rows": 83509,
+     "bytes": 1554079623
+    }
+   ]
+  },
+  {
+   "source": "EPA StreamCat API (https://api.epa.gov/StreamCat)",
+   "role": "watershed, catchment and riparian-corridor landscape summaries; prg_bmmi0809 at the other area of interest",
+   "caches": [
+    {
+     "file": "national/streamcat.parquet",
+     "exists": true,
+     "modified": "2026-09-15T15:52:52Z",
+     "rows": 2647057,
+     "bytes": 354305696
+    }
+   ]
+  },
+  {
+   "source": "EPA ATTAINS assessment geodatabase and MapServer",
+   "role": "integrated-report category of the assessment unit at or near the reach",
+   "caches": [
+    {
+     "file": "national/attains.parquet",
+     "exists": true,
+     "modified": "2026-09-11T03:06:10Z",
+     "rows": 3497999,
+     "bytes": 2655618723
+    }
+   ]
+  },
+  {
+   "source": "USGS Nonindigenous Aquatic Species database (NAS API)",
+   "role": "established non-native taxa per HUC12",
+   "caches": [
+    {
+     "file": "national/nas.parquet",
+     "exists": true,
+     "modified": "2026-09-11T03:29:59Z",
+     "rows": 372357,
+     "bytes": 2437936
+    }
+   ]
+  },
+  {
+   "source": "USACE National Inventory of Dams (NID FeatureServer)",
+   "role": "mapped dams within one mile of the reach anchor",
+   "caches": [
+    {
+     "file": "national/nid.parquet",
+     "exists": true,
+     "modified": "2026-09-10T17:30:09Z",
+     "rows": 92606,
+     "bytes": 3165520
+    }
+   ]
+  },
+  {
+   "source": "Water Quality Portal (WQX3 result search, monthly national pull)",
+   "role": "total nitrogen and total phosphorus results within five miles and ten years",
+   "caches": [
+    {
+     "file": "national/wqp/wqp_results.parquet",
+     "exists": true,
+     "modified": "2026-09-12T03:01:39Z",
+     "rows": 1877487,
+     "bytes": 204370026
+    }
+   ]
+  },
+  {
+   "source": "USGS 3DEP elevation (1 m lidar projects, 1/9 arc-second quads, 10 m seamless)",
+   "role": "reach cross-sections for the bank-height and entrenchment ratios",
+   "caches": [
+    {
+     "file": "national/dem/1m/tiles.parquet",
+     "exists": true,
+     "modified": "2026-09-11T12:31:12Z",
+     "rows": 125853,
+     "bytes": 5847053
+    },
+    {
+     "file": "national/dem/19/quads.parquet",
+     "exists": true,
+     "modified": "2026-09-11T12:31:14Z",
+     "rows": 8345,
+     "bytes": 159152
+    }
+   ]
+  },
+  {
+   "source": "Census cartographic state boundaries (1:500k)",
+   "role": "the state of every flowline by its midpoint",
+   "caches": [
+    {
+     "file": "national/comid_state.parquet",
+     "exists": true,
+     "modified": "2026-09-12T00:07:10Z",
+     "rows": 2691339,
+     "bytes": 3690339
+    }
+   ]
+  },
+  {
+   "source": "EPA NARS nine aggregate ecoregions and Level III ecoregions (app data)",
+   "role": "the regional criteria and the reference-curve stratum",
+   "caches": []
+  },
+  {
+   "source": "WQP window",
+   "role": "calendar months pulled",
+   "value": "2016-09 to the month before the pull; 10 years before the assessment date are used per reach"
+  }
+ ],
+ "assumptions": {
+  "reach_length_ft": 1000.0,
+  "reach_source": "nhdplus_v2_flowline",
+  "chunk_buffer_mi": 10.0,
+  "wqp_radius_mi": 5.0,
+  "wqp_years": 10,
+  "nid_radius_mi": 1.0,
+  "attains_buffer_m": 2000.0,
+  "streamcat_aois": [
+   "ws",
+   "cat",
+   "wsrp100",
+   "other (prg_bmmi0809)"
+  ],
+  "nrsa_as_of": "2026-09-10",
+  "state_of_a_reach": "the Census state polygon containing the flowline midpoint; nearest polygon for coastal midpoints",
+  "cross_sections": {
+   "resolutions_m": [
+    1,
+    3,
+    10
+   ],
+   "rule": "1 m where a 3DEP lidar project covers at least half the reach buffer, else the 1/9 arc-second (3 m) quads where they exist, else the 10 m seamless",
+   "source": "USGS 3DEP"
+  },
+  "tier": 2,
+  "reference_screen": {
+   "frame": {
+    "fcode_class": [
+     "!=",
+     "canal"
+    ],
+    "wadeable": [
+     "==",
+     true
+    ]
+   },
+   "id": "least-disturbed-v1",
+   "relaxed": {
+    "agriculture_ws": [
+     "<=",
+     25.0
+    ],
+    "dor": [
+     "<",
+     5.0
+    ],
+    "mines_ws": [
+     "==",
+     0.0
+    ],
+    "pctimp2019ws": [
+     "<=",
+     3.0
+    ],
+    "rddensws": [
+     "<=",
+     2.0
+    ],
+    "sc__npdesdensws": [
+     "==",
+     0.0
+    ]
+   },
+   "roadDensityCap": 2.0,
+   "strict": {
+    "agriculture_ws": [
+     "<=",
+     10.0
+    ],
+    "dor": [
+     "<",
+     2.0
+    ],
+    "mines_ws": [
+     "==",
+     0.0
+    ],
+    "pctimp2019ws": [
+     "<=",
+     1.0
+    ],
+    "rddensws": [
+     "<=",
+     2.0
+    ],
+    "sc__nabd_densws": [
+     "==",
+     0.0
+    ],
+    "sc__npdesdensws": [
+     "==",
+     0.0
+    ]
+   }
+  },
+  "reference_panel_floors": {
+   "complete": 100,
+   "exploratory": 30,
+   "split": 30
+  },
+  "scores_from": "stored evidence through easi.assessment.assess_preloaded with the application's adapters; no per-reach network call"
+ },
+ "history": [
+  {
+   "method_version": "477bf7771e24",
+   "note": "published to the prerelease 2026-09-14 under the pre-revision criteria (national bands); superseded"
+  },
+  {
+   "method_version": "e9f472b31fe5",
+   "note": "Alternative 1, Level II reference curves (62 curves), local staging 2026-09-15; the controlled study's retained control"
+  },
+  {
+   "method_version": "b2e3033116e3",
+   "note": "Alternative 2, NARS-9 reference curves (34 curves), adopted 2026-09-16; the release method"
+  }
+ ]
+}
