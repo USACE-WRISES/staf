@@ -327,6 +327,54 @@ def test_recommendation_and_acquisition_use_bounded_summary_and_qualified_counts
     assert "<script>unavailable</script>" not in page and "&lt;script&gt;unavailable" in page
 
 
+def test_recommendation_explains_rejection_and_keeps_full_supporting_findings():
+    common = {"function": "light_thermal_regime", "target": "bent_mmi", "region": "8.2",
+              "cohort": "latest_visit1", "reference": .62, "alternative": .59, "delta": -.03,
+              "ci_low": -.05, "ci_high": -.01, "n": 123, "n_huc8": 45,
+              "boot_valid": 1000, "boot_requested": 1000}
+    deterioration = {**common, "statistic": "auc", "comparison_design": "spatial_refit",
+                     "reason": "Supported regional AUC decline"}
+    findings = [{**common, "statistic": "signed_spearman", "comparison_design": "frozen",
+                 "reason": "Correlation decline needs review"},
+                {**common, "statistic": "weighted_kappa", "comparison_design": "spatial_refit",
+                 "reason": "Class-agreement decline needs review"}]
+    page = alternatives._recommendation({"recommended": "alternative-1", "decision": "Retain Alternative 1",
+        "candidates": [{"alternative_id": "alternative-2", "curve_count": 34, "eligible": False,
+                        "aggregate_noninferiority": True, "availability_unchanged": True,
+                        "spatial_support_available": True, "deterioration_findings": [deterioration],
+                        "spatial_conflicts": [deterioration], "unresolved_review_findings": findings,
+                        "reasons": ["Review unresolved correlation and class agreement", "<script>unsafe</script>"]}]})
+    assert '<td>alternative-2</td><td>34</td><td>No</td><td>Yes</td><td>Yes</td><td>Yes</td><td>1</td><td>1</td><td>2</td>' in page
+    assert "Review unresolved correlation and class agreement" in page
+    assert '<details><summary>alternative-2: supporting findings (3 rows)</summary>' in page
+    assert "Overlapping exploratory findings" in page and "do not represent independent tests" in page
+    assert "Spatial conflicts are a subset" in page
+    for text in ("Comparison design", "Review reason", "spatial_refit", "frozen", "latest_visit1", "8.2",
+                 "Change CI lower", "Change CI upper", "-0.05", "-0.01", "123", "45", "1,000",
+                 "Correlation decline needs review", "Class-agreement decline needs review", "Supported regional AUC decline"):
+        assert text in page
+    assert page.count("Supported regional AUC decline") == 1
+    assert "<script>unsafe</script>" not in page and "&lt;script&gt;unsafe" in page
+
+
+def test_difference_count_describes_curve_entries_without_changing_value(study):
+    row = next(row for row in study["summary"]["alternatives"] if row["id"] == "alternative-2")
+    row["differences"]["changed_curves"] = 82
+    seal(study)
+    page = render(study)
+    assert '<td>Curve entries added, removed or replaced relative to Alternative 1</td><td>82</td>' in page
+    assert "Curves changed relative to Alternative 1" not in page
+
+
+def test_complete_study_distinguishes_unavailable_curve_uncertainty_from_pending(study):
+    unavailable = render(study, selected="corridor-woody|s0")
+    assert "Reference-resampling uncertainty is unavailable for this selected curve." in unavailable
+    assert "Pending: no results available yet." not in unavailable
+    supplied = render(study, selected="corridor-woody|8.2")
+    assert "canonical_match" in supplied and "x39 CI lower" in supplied and "9.44" in supplied
+    assert "Reference-resampling uncertainty is unavailable for this selected curve." not in supplied
+
+
 def test_nars9_selector_displays_selected_candidate_curve_without_crosswalk(study):
     path = study["folder"] / alternatives.DOWNLOADS["alternative-2-curves"]
     artifact = json.loads(path.read_text())

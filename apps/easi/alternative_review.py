@@ -261,14 +261,17 @@ def _field_table(rows) -> str:
     for row in _rows(rows):
         formatted.append({key: _value(value, count=key in {"n", "n_huc8", "boot_requested", "boot_valid"})
                           for key, value in row.items()})
-    return review._table(formatted, [
+    columns = [
         ("function", "Function"), ("target", "Field target"), ("statistic", "Statistic"),
         ("region", "Region"), ("cohort", "Paired cohort"), ("reference", "Alternative 1"),
         ("alternative", "Selected alternative"), ("delta", "Paired change"),
         ("ci_low", "Change CI lower"), ("ci_high", "Change CI upper"), ("n", "Paired observations"),
         ("n_huc8", "HUC8 clusters"), ("boot_valid", "Valid bootstrap draws"),
         ("boot_requested", "Requested draws"), ("noninferiority_margin", "Noninferiority margin"),
-        ("noninferiority_status", "Noninferiority result"), ("interpretation", "Interpretation")])
+        ("noninferiority_status", "Noninferiority result"), ("interpretation", "Interpretation")]
+    columns += [(key, label) for key, label in [("comparison_design", "Comparison design"), ("reason", "Review reason")]
+                if any(row.get(key) for row in formatted)]
+    return review._table(formatted, columns)
 
 
 def _diagnostic(title: str, section) -> str:
@@ -315,17 +318,35 @@ def _diagnostic(title: str, section) -> str:
 def _recommendation(value) -> str:
     if not isinstance(value, dict) or not value:
         return ""
+    candidates = _rows(value.get("candidates"))
     rows = [{"alternative": row.get("alternative_id"), "curves": _value(row.get("curve_count"), count=True),
              "eligible": _value(row.get("eligible")), "aggregate": _value(row.get("aggregate_noninferiority")),
              "availability": _value(row.get("availability_unchanged")), "spatial": _value(row.get("spatial_support_available")),
-             "deterioration": len(_rows(row.get("deterioration_findings"))), "conflicts": len(_rows(row.get("spatial_conflicts")))}
-            for row in _rows(value.get("candidates"))]
+             "deterioration": len(_rows(row.get("deterioration_findings"))), "conflicts": len(_rows(row.get("spatial_conflicts"))),
+             "review": len(_rows(row.get("unresolved_review_findings")))}
+            for row in candidates]
+    details = []
+    for row in candidates:
+        label = review._e(row.get("alternative_id"))
+        details.append(f'<h3>{label}: decision reasons</h3>' + _notes(row.get("reasons")))
+        deterioration = _rows(row.get("deterioration_findings"))
+        unresolved = _rows(row.get("unresolved_review_findings"))
+        if deterioration or unresolved:
+            details.append(f'<details><summary>{label}: supporting findings ({len(deterioration) + len(unresolved)} rows)</summary>'
+                           '<p>Overlapping exploratory findings can share observations, cohorts and targets. '
+                           'These counts do not represent independent tests. Spatial conflicts are a subset of the deterioration findings.</p>')
+            if deterioration:
+                details.append('<h4>Supported AUC deterioration</h4>' + _field_table(deterioration))
+            if unresolved:
+                details.append('<h4>Unresolved correlation or class-agreement findings</h4>' + _field_table(unresolved))
+            details.append('</details>')
     return ('<section><h2>Study recommendation</h2><p><strong>' + review._e(value.get("decision")) + '</strong></p>'
             '<p>Suggested alternative: ' + review._e(value.get("recommended")) + '. Alternative 1 remains the main app default.</p>'
             + _notes(value.get("criteria")) + review._table(rows, [("alternative", "Alternative"), ("curves", "Curves"),
                 ("eligible", "Eligible under declared rule"), ("aggregate", "Aggregate noninferiority"),
                 ("availability", "Availability unchanged"), ("spatial", "Held-out support"),
-                ("deterioration", "Supported deterioration findings"), ("conflicts", "Spatial conflicts")])
+                ("deterioration", "Supported deterioration findings"), ("conflicts", "Spatial conflicts"),
+                ("review", "Unresolved correlation or class-agreement findings")]) + ''.join(details)
             + '<p>This stored recommendation supports review. It does not promote a method or change scoring.</p></section>')
 
 
@@ -434,7 +455,7 @@ def render_page(root: Path, data_dir: Path, method: str, study_id="", alternativ
     for key, label, source, share, count in [
         ("cohort", "Difference cohort", differences, False, False),
         ("weighted", "Differences use weighted estimates", differences, False, False),
-        ("changed_curves", "Curves changed relative to Alternative 1", differences, False, True),
+        ("changed_curves", "Curve entries added, removed or replaced relative to Alternative 1", differences, False, True),
         ("changed_ratings_n", "Ratings changed in the reported cohort", differences, False, True),
         ("changed_ratings_share", "Reported rating change share", differences, True, False),
         ("eci_mean", "Reported mean ECI", differences, False, False),
@@ -516,7 +537,8 @@ def render_page(root: Path, data_dir: Path, method: str, study_id="", alternativ
             ("x39_lo", "x39 CI lower"), ("x39_hi", "x39 CI upper"), ("x69_lo", "x69 CI lower"), ("x69_hi", "x69 CI upper"),
             ("mean_flip", "Mean flip share"), ("p90_flip", "P90 flip share"), ("n_members", "Finite references"),
             ("n_clusters", "HUC12 clusters"), ("n_population", "Evaluated population"), ("n_valid", "Valid draws"),
-            ("n_requested", "Requested draws")]))
+            ("n_requested", "Requested draws")]) if uncertainty else
+            '<p class="muted">Reference-resampling uncertainty is unavailable for this selected curve.</p>')
     sections.append('<p>Plots show stored points only. Reference-sampling uncertainty is not field accuracy. Absent uncertainty '
                     'is unavailable, and no national result is inferred from a regional bootstrap.</p></section>')
     sections.append(_diagnostic("Low-flow evidence and alternatives", row.get("low_flow")))
