@@ -32,6 +32,20 @@ stage and dependents. Fine-grained evidence/scoring checkpoints are reusable
 only when their data and computation signatures match. A partially completed
 study has no completion receipt and its results are withheld by the page.
 
+An acquisition receipt records a completed attempt, which can still contain
+explicitly unavailable downloads. To retry those downloads after the service's
+recorded `Retry-After` time, call the same acquisition producer from this
+directory. Successful cached responses are reused:
+
+```powershell
+& 'D:/Code/Work/staf_codex_2026-09-14/.venv/Scripts/python.exe' -c "from pathlib import Path; from builder.analysis.alternatives.acquisition import acquire; r=Path('D:/Data/easi-national'); acquire(r, r/'review/alternative-studies/2026-09-15-controlled-alternatives')"
+```
+
+Then run the CLI with `--steps acquisition field spatial report` to regenerate
+the diagnostics and downstream receipts against the updated acquisition. Do
+this after active evaluation processes finish. Acquisition changes invalidate
+the previous dependent results; page requests do not initiate retries.
+
 ## Controlled scoring authorities
 
 | Alternative | Sole change from Alternative 1 | Curves |
