@@ -24,7 +24,7 @@ from htmltools import HTML, Tag, tags
 from .. import config
 
 NATIONAL = "US"
-NATIONAL_LABEL = "All published reaches"
+NATIONAL_LABEL = "All screened reaches"
 #: a state below this share of its reaches screened is drawn muted: only
 #: the HUC8s that spill over from a neighbour are in
 COVERAGE_FLOOR = 0.5
@@ -515,7 +515,7 @@ def compare_card(stats: dict, measure: str) -> Tag:
         note = (f"Muted rows have under half their reaches screened ({', '.join(sorted(muted))}): only HUC8s "
                 "spilling over from a neighboring state are in, so they do not describe the state.")
     if len(entries) < 2:
-        note = ((note + " ") if note else "") + "More states appear here as they are published."
+        note = ((note + " ") if note else "") + "More states appear here as screening becomes available."
     return card(f"{name} by state", key, tags.div(body, class_="easi-dash-compare"), note=note)
 
 
@@ -546,7 +546,7 @@ def summary_strip(stats: dict, scope: str) -> Tag:
 
 def footer_note(stats: dict) -> Tag:
     return tags.div(
-        tags.p("Distributions of the precomputed, unreviewed EASI screening over the reaches published so far. "
+        tags.p("Distributions of the precomputed, unreviewed EASI screening over the available reaches. "
                "A reach belongs to the state containing the midpoint of its NHDPlus V2 flowline; a state's "
                "coverage is the share of its reaches screened. Box plots span the 5th to the 95th percentile. "
                f"Groups under {MIN_N} reaches are sketches. Reaches without a rating for a function are "
@@ -560,7 +560,7 @@ def unavailable(summary: Optional[dict]) -> Tag:
     elif not summary.get("available"):
         text = "The national dataset is not reachable right now."
     else:
-        text = "Statistics are not published for this dataset yet."
+        text = "Statistics are not available for this dataset yet."
     return tags.div(text, class_="easi-dash-empty")
 
 
@@ -597,4 +597,7 @@ def export_csv(stats: dict) -> str:
             rows += [(f"tier_{tier}", count) for tier, count in sorted((f.get("tiers") or {}).items())]
             for stat, value in rows:
                 writer.writerow([scope, sname, "function", name, stat, value])
+    for key in ("alternative_id", "build_id", "method_version"):
+        if stats.get(key):
+            writer.writerow([NATIONAL, NATIONAL_LABEL, "dataset", key, "identity", stats[key]])
     return buffer.getvalue()

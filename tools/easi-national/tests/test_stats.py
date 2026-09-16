@@ -19,8 +19,10 @@ HUC8_A, HUC8_B = "02080204", "02080205"
 
 
 def _scores(root, huc8, comids, eci, fs, tiers, provisional=None, n_rated=None, tier=None):
+    from easi.national import method_version
     n = len(comids)
     table = pa.table({
+        "method_version": [method_version()] * n,
         "comid": pa.array(comids, pa.int64()),
         "huc4": pa.array([huc8[:4]] * n, pa.string()), "huc8": pa.array([huc8] * n, pa.string()),
         "eci_raw": pa.array(eci, pa.float64()), "phys_raw": pa.array(eci, pa.float64()),

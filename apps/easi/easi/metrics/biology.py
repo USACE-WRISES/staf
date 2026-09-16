@@ -103,7 +103,7 @@ def habitat_complexity(ctx: AnalysisContext) -> MetricResult:
         value_text=f"woody riparian cover {value:.1f}%{sin_txt}",
         rating=ev.rating, confidence="L",
         source=watershed.result_source(ctx, "habitat"),
-        note=(("Corridor-cover proxy for habitat support. Level II reference expectations "
+        note=(("Corridor-cover proxy for habitat support. NARS-9 reference expectations "
                "can credit naturally open prairie and desert channels; this is not a field habitat inventory.")
               if config.criteria_set() == "regional" else
               ("Corridor-cover proxy for habitat support, not a field habitat "

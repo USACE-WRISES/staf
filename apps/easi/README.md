@@ -95,7 +95,62 @@ CSV export. A reach belongs to the state containing the midpoint of its
 flowline; states with under half their reaches screened are drawn muted.
 Everything is precomputed, so the view needs no per-reach reads.
 
-## Local rebuild review
+## Alternative 2 rollout and map compatibility
+
+The active regional method is **Alternative 2: NARS-9 references**, with **34
+frozen curves**, unchanged weights and **13/8/3** scores. The owner adopted it
+after reviewing the completed alternatives study. The study's conservative
+recommendation to retain Alternative 1 remains unchanged in its archive. No
+Alternative 1 or baseline selector is exposed. The historical `legacy`
+environment option remains available for backward compatibility.
+
+Nationwide screening starts each new session in **Compatibility** mode. It uses
+Leaflet image tiles for the USGS basemap and draws visible vector tiles into
+temporary 2D canvases, then displays the resulting images. Panning and zooming
+move those images. **Standard** retains MapLibre. Switching preserves the map
+extent; the choice survives toggling screening off and on in the same session.
+The single-site map and dashboard are independent of this choice.
+
+Both renderers use the same completed national bundle, condition colors,
+eight-pixel reach selection, stored evidence and reports. Unavailable, incomplete
+or outdated bundles cannot supply screening results. Completion receipts bind
+scores, statistics, coverage and tiles to the same method and input inventory.
+Local assets are hash-verified before activation and checked again when used.
+Dataset identities and request generations prevent stale responses crossing a
+refresh. Compatibility avoids WebGL, but improvement on an affected workplace
+browser must still be verified through its actual online environment.
+
+The pinned browser assets and their licenses are reproducibly built with
+`npm ci` and `npm run build` from `scripts/nationwide-assets`. They are Leaflet
+1.9.4, `@mapbox/vector-tile` 2.0.5 and `pbf` 4.0.2. The dependency lock and
+`www/vendor/nationwide-assets.json` record exact versions and hashes.
+
+The dedicated local national workflow is documented in
+[`tools/easi-national/README.md`](../../tools/easi-national/README.md). It writes
+only `D:/Data/easi-national/review/alternative-2-rollout/`, preserving the prior
+staging tree. It never enters the automatic publication queue. After its
+completion verifies, launch from the repository root:
+
+```powershell
+& apps/easi/scripts/run_alternative2_local.ps1 -Port 8004
+```
+
+The launcher uses the workspace interpreter, checks the completed bundle, binds
+to loopback and records logs under the rollout directory. It leaves an occupied
+port alone. Source changes and artifacts are local until the owner makes a
+separate publication decision. Any later `easi-national-current` release must
+remain a prerelease.
+
+## Historical rework review
+
+The following analysis review describes the earlier Alternative 1 rebuild.
+Its completion and the subsequent alternatives study are preserved historical
+records. They do not certify the active Alternative 2 rollout. The earlier
+analysis page labels its staging separately from the active bundle. The promoted
+alternatives study remains viewable through its sealed completion hash and
+archived Alternative 1 parent, with every displayed output hash checked. Its
+historical producer sources need not match the adopted app. The archived reports,
+scientific calculations and receipts remain unchanged.
 
 For a local-only review of a rebuilt national dataset, launch from `apps/easi`:
 
@@ -173,18 +228,22 @@ It uses banded Good / Fair / Poor scoring with the following reference rules:
 
 | Functions | Regional criteria |
 |---|---|
-| Habitat provision; woody input to Light and thermal regime | Woody vegetation in the 100 m watershed corridor, using an EPA Level II reference curve |
-| Carbon processing | Natural vegetation in the same corridor, using an EPA Level II reference curve |
+| Habitat provision; woody input to Light and thermal regime | Woody vegetation in the 100 m watershed corridor, using a NARS-9 reference curve |
+| Carbon processing | Natural vegetation in the same corridor, using a NARS-9 reference curve |
 | Floodplain connectivity; ER input to Channel evolution | National entrenchment-ratio reference curves for slopes below 0.5%, 0.5% to below 2%, and 2% or greater |
-| Low flow and baseflow dynamics | Monthly EROM flow variability, using an EPA Level II reference curve with lower variability rated better |
+| Low flow and baseflow dynamics | Monthly EROM flow variability, using a NARS-9 reference curve with lower variability rated better |
 | Bed composition and bedform dynamics | Watershed agriculture share, with the same 30 / 50 bands as the agriculture input to Catchment hydrology |
 | Population support | EPA StreamCat `prg_bmmi0809`, requested in the `other` area of interest: Good at 0.50 or above, Fair from 0.25 to below 0.50, Poor below 0.25 |
 
-A missing or unusable Level II curve resolves to its national curve. Missing
+A missing or unusable NARS-9 curve resolves to its national curve. Missing
 or invalid slope resolves to the pooled national entrenchment curve. The
 artifact is `data/reference-curves.json`, with its historical dataset,
 reference-screen, panel and curve-engine provenance. `data/ecoregion-crosswalk.json`
-maps the existing Level III polygon codes to Level II and Level I.
+maps the existing Level III polygon codes to Level II and Level I for retained
+context. `data/nars-ecoregions-9.geojson.gz` supplies NARS geography and is included
+in method provenance. The 34 curves are three families with nine regional curves
+and one national fallback each, plus three slope-class entrenchment curves and
+their national fallback. There is no region-by-slope cross-stratification.
 
 Curves describe the existing least-disturbed reference panels. A quantity's
 interpolated reference index determines its band at 0.39 and 0.69, and the
@@ -276,7 +335,7 @@ complete availability, not 20 independent field observations.
 | **USGS 3DEP** (`py3dep`) | DEM cross-sections → entrenchment, bank-height ratio, slope |
 | **EPA StreamCat** (the StreamCat lookup engine) | Watershed landscape metrics on the V2 network (impervious, wetlands, roads, dam storage, runoff, riparian, erodibility) plus the published HYD/SED/CHEM/CONN/TEMP/HABT integrity components and `prg_bmmi0809` at AOI `other`, which exist only per V2 COMID |
 | **EPA NRSA 2018–19** (bundled extract) | Connected field evidence retained by the legacy criteria: wetted channel, embeddedness, benthic/fish condition |
-| **EPA ecoregions and stored reference panels** (bundled crosswalk/curves) | Level II corridor/flow expectations and national slope-class entrenchment expectations |
+| **EPA ecoregions and stored reference panels** (bundled crosswalk/curves) | NARS-9 corridor/flow expectations and national slope-class entrenchment expectations |
 | **NLCD** (via `pygeohydro`) | Land cover (fallback where StreamCat is absent) |
 | **EPA Water Quality Portal (WQP)** | Total N / total P observations (normalized); context-only temperature |
 | **EPA NARS nine regions** (bundled) | Regional NRSA nutrient benchmarks |

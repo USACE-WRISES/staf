@@ -57,6 +57,7 @@ def test_report_context_and_completion_know_the_viewer_mode():
     # the harness compiles each closure over a copy of its namespace, so the
     # viewer value has to exist before the report functions are extracted
     h.scope["viewer_base"] = h.scope["base_result"].__class__(base)
+    h.scope["_viewer_binding_current"] = lambda binding: True
     for name in ("_report_context_matches", "_cancel_report", "_cancel_stale_report",
                  "_begin_report", "_show_report_modal", "_report_map_done"):
         h.scope[name] = _function("easi", name, h.scope)
@@ -126,7 +127,7 @@ def test_the_dashboard_is_an_overlay_the_map_never_re_renders_for():
     assert 'ui.download_button("dash_export"' in dash and "_dash_current(" in dash
     assert "viewer_stats.set(stats)" in SRC and "viewer_stats.set(None)" in SRC
     config_task = SRC[SRC.index("async def viewer_config_task"):SRC.index("def _viewer_config_request")]
-    assert "ds.stats()" in config_task
+    assert 'ds.current_stats(summary.get("dataset_key"))' in config_task
 
 
 def test_viewer_reports_open_in_two_phases():
@@ -138,7 +139,7 @@ def test_viewer_reports_open_in_two_phases():
     assert 'id="easi-viewer-minimap-pending"' in SRC
     assert 'selector="#easi-viewer-minimap-pending"' in SRC and 'ui.remove_ui("#easi-viewer-minimap-pending")' in SRC
     assert '"pending": bool(base.get("geometry_pending"))' in SRC
-    assert "viewer_geometry_task(comid, generation)" in SRC
+    assert 'viewer_geometry_task(comid, generation, base["_viewer_binding"])' in SRC
 
 
 def test_the_tile_loading_cue_is_static_markup_the_viewer_script_drives():
@@ -147,6 +148,25 @@ def test_the_tile_loading_cue_is_static_markup_the_viewer_script_drives():
     # on a screening source's loading event and hides it on idle
     assert 'id="easi-viewer-loading"' in SRC and 'class_="easi-viewer-loading"' in SRC
     js = (Path(app.__file__).parent / "www" / "viewer.js").read_text(encoding="utf-8")
-    assert "easi-viewer-loading" in js and '"sourcedataloading"' in js and '"idle"' in js
+    standard = (Path(app.__file__).parent / "www" / "viewer-standard.js").read_text(encoding="utf-8")
+    assert "easi-viewer-loading" in js and '"sourcedataloading"' in standard and '"idle"' in standard
     # a failed range read answers 502 (an empty tile stays 204) so the map can tell them apart
     assert "national_tiles.TileReadError" in SRC and "status_code=502" in SRC
+
+
+def test_compatibility_default_scoped_controls_and_identity_bound_requests():
+    assert '_viewer_renderer = {"value": "compatibility"}' in SRC
+    workspace = SRC[SRC.index("def viewer_workspace():"):SRC.index("def _dash_current(")]
+    assert '"compatibility": "Compatibility", "standard": "Standard"' in workspace
+    assert 'selected=_viewer_renderer["value"]' in workspace
+    assert 'input.viewer_renderer()' not in workspace
+    assert '"easi-viewer-renderer"' in SRC
+    assert '"datasetKey": summary.get("dataset_key")' in SRC
+    assert '"generation": generation' in SRC
+    assert 'ds.require_current, q.get("datasetKey")' in SRC
+    assert 'status_code=409' in SRC
+    pick = SRC[SRC.index("async def _viewer_pick():"):SRC.index("def _open_precomputed_done():")]
+    assert 'ev.get("datasetKey") != summary.get("dataset_key")' in pick
+    assert 'ev.get("generation") != _viewer_dataset_gen["value"]' in pick
+    assert 'national_client.default_dataset().require_current' in pick
+    assert '_viewer_records.clear()' in SRC

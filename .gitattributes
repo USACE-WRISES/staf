@@ -11,3 +11,8 @@
 *.docx binary
 *.mp4 binary
 *.gz binary
+# Preserve the frozen candidate bytes, including the recorded CRLF line endings.
+apps/easi/data/reference-curves.json -text whitespace=cr-at-eol
+apps/easi/data/screening-methods.json -text whitespace=cr-at-eol
+apps/stream-curves/streamcurves/_vendor/easi/data/reference-curves.json -text whitespace=cr-at-eol
+apps/stream-curves/streamcurves/_vendor/easi/data/screening-methods.json -text whitespace=cr-at-eol

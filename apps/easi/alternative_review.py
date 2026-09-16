@@ -133,7 +133,7 @@ def _input_freshness(root: Path, inputs) -> None:
             raise StudyUnavailable("A study input is unavailable.") from exc
 
 
-def _source_freshness(root: Path, workspace: Path, manifest: dict, completion: dict) -> None:
+def _source_freshness(root: Path, workspace: Path, manifest: dict, completion: dict, *, archived=False) -> None:
     """Bind the producer's source inventory, checking stamps without payload reads."""
     if "source_files" not in manifest:
         if "source_digest" in manifest or "source_digest" in completion:
@@ -149,6 +149,10 @@ def _source_freshness(root: Path, workspace: Path, manifest: dict, completion: d
     digest = _sha(canonical)
     if manifest.get("source_digest") != digest or completion.get("source_digest") != digest:
         raise StudyUnavailable("Study source digests do not agree; refreshed results are pending.")
+    if archived:
+        # A promoted study is sealed by its completion hash. Its historical
+        # source inventory remains evidence, not a claim about today's code.
+        return
     try:
         folders = {"data": root.resolve(), "workspace": workspace.resolve()}
     except (OSError, RuntimeError) as exc:
@@ -176,7 +180,7 @@ def load_study(root: Path, data_dir: Path, method: str, study_id: str) -> dict:
         raise StudyUnavailable("The selected study manifest is invalid.")
     if manifest.get("status") != "complete":
         raise StudyUnavailable(f"Study {study_id}: {manifest.get('status') or 'pending'}. Completed results are not available yet.")
-    completion, _ = _read_json(_inside(folder, "completion.json"))
+    completion, completion_raw = _read_json(_inside(folder, "completion.json"))
     if (completion.get("schema_version") != 1 or completion.get("study_id") != study_id
             or completion.get("status") != "complete"):
         raise StudyUnavailable("The study completion receipt is pending or invalid.")
@@ -186,8 +190,23 @@ def load_study(root: Path, data_dir: Path, method: str, study_id: str) -> dict:
     binding = manifest.get("parent_binding")
     if not isinstance(binding, dict) or completion.get("parent_binding") != binding:
         raise StudyUnavailable("The completed study has an invalid parent binding.")
-    parent, parent_raw = _read_json(_inside(root, "analysis/local-review/completion.json"))
-    _, frozen_raw = _read_json(data_dir / "reference-curves.json")
+    archived = False
+    promotion_path = data_dir / "source/alternative-2-promotion.json"
+    if promotion_path.is_file():
+        promotion, _ = _read_json(promotion_path)
+        if promotion.get("source_study_id") == study_id:
+            if (promotion.get("operation") != "promote-frozen-alternative-2"
+                    or promotion.get("source_completion_sha256") != _sha(completion_raw)):
+                raise StudyUnavailable("The archived study differs from its promotion receipt.")
+            archived = True
+            preserved = promotion.get("preserved_alternative_1") or {}
+            method = preserved.get("method_version")
+            if not method or preserved.get("curves_sha256") != binding.get("frozen_sha256"):
+                raise StudyUnavailable("The archived Alternative 1 identity is invalid.")
+    parent_root = folder / "snapshot" if archived else root
+    parent, parent_raw = _read_json(_inside(parent_root, "analysis/local-review/completion.json"))
+    frozen_path = _inside(folder, DOWNLOADS["alternative-1-curves"]) if archived else data_dir / "reference-curves.json"
+    _, frozen_raw = _read_json(frozen_path)
     frozen_sha = _sha(frozen_raw)
     reference = manifest.get("alternative_1") or {}
     if (parent.get("status") != "complete" or parent.get("method_version") != method
@@ -201,8 +220,9 @@ def load_study(root: Path, data_dir: Path, method: str, study_id: str) -> dict:
             or reference.get("source_commit") != binding.get("source_commit")
             or reference.get("frozen_sha") != frozen_sha):
         raise StudyUnavailable("The parent build or Alternative 1 has changed; this study is stale.")
-    _input_freshness(root, manifest.get("input_files"))
-    _source_freshness(root, data_dir.resolve().parents[2], manifest, completion)
+    if not archived:
+        _input_freshness(root, manifest.get("input_files"))
+    _source_freshness(root, data_dir.resolve().parents[2], manifest, completion, archived=archived)
     alternatives = manifest.get("alternatives")
     if (not isinstance(alternatives, list) or len(alternatives) != 4
             or {row.get("id") for row in alternatives if isinstance(row, dict)} != set(ALTERNATIVES)):
@@ -218,7 +238,7 @@ def load_study(root: Path, data_dir: Path, method: str, study_id: str) -> dict:
         decoded[relative] = value
         if relative == DOWNLOADS["alternative-1-curves"] and _sha(raw) != frozen_sha:
             raise StudyUnavailable("Alternative 1 differs from the current frozen artifact.")
-    if "manifest.json" in outputs and _sha(manifest_raw) != _expected_hash(outputs, "manifest.json"):
+    if (archived or "manifest.json" in outputs) and _sha(manifest_raw) != _expected_hash(outputs, "manifest.json"):
         raise StudyUnavailable("The study manifest differs from its completion hash.")
     artifacts = {}
     for alternative in alternatives:
@@ -240,7 +260,7 @@ def load_study(root: Path, data_dir: Path, method: str, study_id: str) -> dict:
             or {row.get("id") for row in rows if isinstance(row, dict)} != set(ALTERNATIVES)):
         raise StudyUnavailable("The completed summary does not contain all four alternatives.")
     return {"folder": folder, "manifest": manifest, "completion": completion,
-            "summary": summary, "artifacts": artifacts}
+            "summary": summary, "artifacts": artifacts, "archived": archived}
 
 
 def _rows(value) -> list[dict]:
@@ -352,7 +372,8 @@ def _recommendation(value) -> str:
                 details.append('<h4>Unresolved correlation or class-agreement findings</h4>' + _field_table(unresolved))
             details.append('</details>')
     return ('<section><h2>Study recommendation</h2><p><strong>' + review._e(value.get("decision")) + '</strong></p>'
-            '<p>Suggested alternative: ' + review._e(value.get("recommended")) + '. Alternative 1 remains the main app default.</p>'
+            '<p>Suggested alternative: ' + review._e(value.get("recommended")) + '. This historical recommendation is unchanged. '
+            'The owner separately adopted Alternative 2 for the application.</p>'
             + _notes(value.get("criteria")) + review._table(rows, [("alternative", "Alternative"), ("curves", "Curves"),
                 ("eligible", "Eligible under declared rule"), ("aggregate", "Aggregate noninferiority"),
                 ("availability", "Availability unchanged"), ("spatial", "Held-out support"),
@@ -425,8 +446,8 @@ def render_page(root: Path, data_dir: Path, method: str, study_id="", alternativ
     study_id = study_id or (known[0]["study_id"] if known else "")
     alternative = alternative if alternative in ALTERNATIVES else "alternative-2"
     sections = ['<h1>Local alternative studies</h1><p><a href="../">Local review</a> | <a href="../../">Open EASI</a></p>',
-        '<p><strong>Alternative 1 remains the main app default.</strong> It has 62 frozen curves and Good / Fair / Poor '
-        'scores of 13 / 8 / 3. This page compares stored study outputs against Alternative 1. Selecting an alternative '
+        '<p><strong>The owner adopted Alternative 2 for the application.</strong> Alternative 1 is the preserved study reference, '
+        'with 62 frozen curves and Good / Fair / Poor scores of 13 / 8 / 3. This page compares historical stored outputs against Alternative 1. Selecting an alternative '
         'does not change the app, criteria, weights, evidence or national scores.</p>']
     options = ''.join(f'<option value="{review._e(row["study_id"])}"'
                       f'{" selected" if row["study_id"] == study_id else ""}>'
@@ -447,8 +468,9 @@ def render_page(root: Path, data_dir: Path, method: str, study_id="", alternativ
     manifest, summary = study["manifest"], study["summary"]
     metadata = next(row for row in manifest["alternatives"] if row["id"] == alternative)
     row = next(row for row in summary["alternatives"] if row["id"] == alternative)
-    sections.append('<section><h2>Alternative study verified</h2><p class="verified">Completed study; displayed output hashes '
-                    'and current input binding verified.</p>' + review._table([
+    status = ('Archived study; displayed output hashes and sealed completion verified.' if study["archived"] else
+              'Completed study; displayed output hashes and current input binding verified.')
+    sections.append('<section><h2>Alternative study verified</h2><p class="verified">' + status + '</p>' + review._table([
                         {"item": "Study", "value": study_id}, {"item": "Created", "value": manifest.get("created_at")},
                         {"item": "Fixed reference", "value": "Alternative 1"},
                         {"item": "Reference method", "value": manifest["alternative_1"]["method_version"]},
@@ -456,8 +478,10 @@ def render_page(root: Path, data_dir: Path, method: str, study_id="", alternativ
                         {"item": "Input digest", "value": manifest["input_digest"]},
                         {"item": "Selected alternative", "value": metadata.get("label") or alternative},
                     ], [("item", "Item"), ("value", "Value")])
-                    + '<p>This independent study status does not reuse the national rebuild badge. Large inputs are checked '
-                    'against producer-recorded file stamps; full input hashes belong to the completed producer receipt. '
+                    + '<p>This independent study status does not reuse the national rebuild badge. '
+                    + ('Archived inputs and producer code are historical evidence; they are not required to match the adopted application. '
+                       if study["archived"] else 'Large inputs are checked against producer-recorded file stamps. ')
+                    + 'Full input hashes belong to the completed producer receipt. '
                     'No scoring, fitting or field-statistic calculation runs on this page.</p></section>')
     sections.append(_recommendation(summary.get("recommendation")))
     sections.append(_acquisition(summary.get("acquisition")))

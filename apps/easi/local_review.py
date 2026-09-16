@@ -291,7 +291,9 @@ def render_page(root: Path, data_dir: Path, criteria: str, method: str, selected
     sections = ['<h1>Local EASI review</h1><p><a href="../">Open EASI</a>. Use <b>Nationwide screening</b> and '
                 '<b>Dashboard</b> for the local map, reach reports, state comparisons and CSV export. '
                 'This page is read-only. Refresh it as rebuild outputs become available.</p>',
-                '<p><a href="alternatives/">Compare local alternative studies</a>. Alternative 1 remains the main app default.</p>',
+                '<p><a href="alternatives/">Compare archived alternative studies</a>. The owner adopted Alternative 2 for the application. '
+                'The historical analysis and Alternative 1 staging below remain preserved; they do not describe the active nationwide bundle. '
+                'Use Nationwide screening and Dashboard for current Alternative 2 results.</p>',
                 '<section><h2>Build provenance</h2>' + _table(rows, [("item", "Item"), ("value", "Value")]) + '</section>']
     indices = ((stats.get("groups") or {}).get("US") or {}).get("indices") or {}
     summary = []

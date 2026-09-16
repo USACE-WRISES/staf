@@ -93,10 +93,12 @@ class Dataset:
         self._lock = threading.RLock()
         self._manifest: Optional[dict] = None
         self._manifest_at = 0.0
+        self._manifest_stamp = None
         self._tables: "OrderedDict[str, Any]" = OrderedDict()
         self._index = None
         self._stats: Optional[tuple[Optional[str], dict]] = None
         self._resolved: dict[str, tuple[str, float]] = {}
+        self._verified: dict[str, tuple] = {}
 
     # ------------------------------------------------------------------ urls
     def url(self, name: str) -> str:
@@ -124,9 +126,17 @@ class Dataset:
     # -------------------------------------------------------------- manifest
     def manifest(self, *, refresh: bool = False) -> Optional[dict]:
         """The dataset manifest, or None when it cannot be read."""
+        stamp = None
+        if self.local is not None:
+            try:
+                stat = (self.local / MANIFEST).stat()
+                stamp = (stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
+            except OSError:
+                return None
         with self._lock:
             fresh = (self._manifest is not None
-                     and time.monotonic() - self._manifest_at < self.manifest_ttl_s)
+                     and time.monotonic() - self._manifest_at < self.manifest_ttl_s
+                     and (self.local is None or stamp == self._manifest_stamp))
             if fresh and not refresh:
                 return self._manifest
         try:
@@ -138,11 +148,19 @@ class Dataset:
                     return self._manifest
                 text = response.text
             manifest = json.loads(text)
+            if not isinstance(manifest, dict):
+                raise ValueError("National manifest must be an object")
         except (OSError, ValueError, requests.RequestException):
-            return self._manifest
+            # A disappearing local manifest marks an incomplete replacement.
+            return None if self.local is not None else self._manifest
         with self._lock:
+            if self._manifest != manifest:
+                self._tables.clear()
+                self._index = None
+                self._stats = None
             self._manifest = manifest
             self._manifest_at = time.monotonic()
+            self._manifest_stamp = stamp
         return manifest
 
     def _asset_entry(self, name: str) -> Optional[dict]:
@@ -169,7 +187,20 @@ class Dataset:
         """A local path for ``name`` (the directory file, or the cached download)."""
         if self.local is not None:
             path = self.local / name
-            return path if path.exists() else None
+            if (Path(name).name != name or not path.is_file()
+                    or path.resolve().parent != self.local.resolve()):
+                return None
+            sha = self.asset_sha(name)
+            if sha:
+                stat = path.stat()
+                stamp = (sha, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
+                with self._lock:
+                    if self._verified.get(name) != stamp:
+                        if _sha256(path) != sha:
+                            self._verified.pop(name, None)
+                            return None
+                        self._verified[name] = stamp
+            return path
         sha = self.asset_sha(name)
         target = self.cache_dir / name
         sidecar = self.cache_dir / (name + ".sha256")
@@ -211,7 +242,9 @@ class Dataset:
         """A ``get_bytes(offset, length)`` over ``name`` for the tile store:
         file reads locally, HTTP Range requests remotely."""
         if self.local is not None:
-            path = self.local / name
+            path = self.asset_path(name)
+            if path is None:
+                raise DatasetError(f"{name}: missing or damaged national asset")
 
             def _local(offset: int, length: int) -> bytes:
                 with open(path, "rb") as handle:
@@ -343,11 +376,15 @@ class Dataset:
         sha = self.asset_sha(STATS)
         if sha is None and self.local is None:
             return None
+        # Local files can change even when a manifest has not been replaced.
+        local_path = self.asset_path(STATS) if self.local is not None else None
+        if self.local is not None and local_path is None:
+            return None
         with self._lock:
             hit = self._stats
             if hit is not None and hit[0] == sha:
                 return hit[1]
-        path = self.asset_path(STATS)
+        path = local_path or self.asset_path(STATS)
         if path is None:
             return None
         try:
@@ -358,13 +395,51 @@ class Dataset:
             self._stats = (sha, data)
         return data
 
+    def require_current(self, dataset_key: Optional[str] = None, verify_all: bool = True) -> dict:
+        """Gate interactive use on a completed build matching this application."""
+        from . import bundle
+        try:
+            manifest = bundle.validate(self, verify_all=verify_all)
+        except (OSError, ValueError, TypeError, KeyError, AttributeError) as exc:
+            raise DatasetError(str(exc)) from exc
+        if dataset_key is not None and bundle.dataset_key(manifest) != dataset_key:
+            raise DatasetError("The national dataset changed. Refresh Nationwide screening.")
+        return manifest
+
+    def is_current_key(self, dataset_key: str) -> bool:
+        """Cheap post-await guard; activation already verified the full bundle."""
+        from . import bundle
+        manifest = self.manifest() or {}
+        return bundle.identity_error(manifest) is None and bundle.dataset_key(manifest) == dataset_key
+
+    def current_stats(self, dataset_key: Optional[str] = None) -> Optional[dict]:
+        manifest = self.require_current(dataset_key)
+        stats = self.stats()
+        if stats is None or any(stats.get(key) != manifest.get(key)
+                                for key in ("build_id", "alternative_id", "method_version")):
+            raise DatasetError("The dashboard statistics do not match the national build.")
+        return stats
+
     def summary(self) -> dict:
         """What the viewer header says: units, reaches, vintage, freshness."""
         manifest = self.manifest() or {}
+        from . import bundle
+        try:
+            self.require_current()
+            unavailable = None
+        except DatasetError as exc:
+            unavailable = str(exc)
         units = manifest.get("units") or {}
         published = [u for u in units.values() if u.get("status") in ("partial", "complete")]
         return {
-            "available": bool(manifest),
+            "available": bool(manifest) and unavailable is None,
+            "error": unavailable,
+            "dataset_key": bundle.dataset_key(manifest) if manifest else None,
+            "alternative_id": manifest.get("alternative_id"),
+            "alternative_name": (manifest.get("scoring_identity") or {}).get("alternative_name"),
+            "build_id": manifest.get("build_id"),
+            "vpu_bounds": {key: entry.get("bounds") for key, entry in
+                           (manifest.get("tiles") or {}).items() if entry.get("bounds")},
             "vintage": manifest.get("vintage"),
             "tier": manifest.get("tier"),
             "updated": manifest.get("updated"),
@@ -377,7 +452,7 @@ class Dataset:
             "tiers": manifest.get("tiers") or {},
             "units_complete": sum(1 for u in published if u.get("status") == "complete"),
             "reaches_scored": sum(int(u.get("n_scored") or 0) for u in published),
-            "vpus": sorted((manifest.get("tiles") or {}).keys()),
+            "vpus": sorted((manifest.get("tiles") or {}).keys()) if unavailable is None else [],
         }
 
     def summary_refreshed(self) -> dict:
@@ -389,10 +464,12 @@ class Dataset:
         with self._lock:
             self._manifest = None
             self._manifest_at = 0.0
+            self._manifest_stamp = None
             self._tables.clear()
             self._index = None
             self._stats = None
             self._resolved.clear()
+            self._verified.clear()
 
 
 _DEFAULT: dict[str, Dataset] = {}
@@ -431,6 +508,8 @@ def score_record(record: dict, *, cross_section: bool = True,
     manifest = (dataset.manifest() if dataset is not None else None) or {}
     unit = (manifest.get("units") or {}).get(str(record.get("huc4") or "")) or {}
     report["precomputed"] = {
+        "alternative_id": manifest.get("alternative_id"),
+        "build_id": manifest.get("build_id"),
         "vintage": manifest.get("vintage"),
         "tier": unit.get("tier") or manifest.get("tier"),
         "dem_resolution_m": ((record.get("geomorph") or {}).get("dem_resolution_m")
@@ -484,6 +563,7 @@ async def precomputed_geometry_async(comid: int, reach_length_ft: Optional[float
 
 async def open_precomputed_async(comid: int, reach_length_ft: Optional[float] = None, *,
                                  dataset: Optional[Dataset] = None,
+                                 dataset_key: Optional[str] = None,
                                  cross_section: bool = True, geometry: bool = True) -> dict:
     """The ``base`` dict (delineation, geometry, anchor, report) for a reach
     from the dataset: the record supplies every metric input, NLDI supplies
@@ -494,6 +574,10 @@ async def open_precomputed_async(comid: int, reach_length_ft: Optional[float] = 
     ``geometry_pending`` is set, for ``precomputed_geometry_async`` to fill."""
     from .. import pipeline
     ds = dataset or default_dataset()
+    try:
+        await asyncio.to_thread(ds.require_current, dataset_key)
+    except DatasetError as exc:
+        return _error("outdated_dataset", str(exc), comid)
     reach_ft = float(reach_length_ft or (ds.manifest() or {}).get("reach_length_ft")
                      or pipeline.DEFAULT_REACH_FT)
     record = (await asyncio.to_thread(ds.records, [int(comid)])).get(int(comid))

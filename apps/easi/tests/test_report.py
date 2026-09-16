@@ -62,6 +62,21 @@ def test_build_geojson():
     assert pt["properties"]["ecosystem_condition_index"] == 0.32
 
 
+def test_national_exports_preserve_dataset_identity_without_changing_live_exports():
+    result = _result()
+    assert b"National dataset build" not in report.build_csv(result)
+    identity = {"alternative_id": "alternative-2", "build_id": "frozen-build",
+                "method_version": "b2e3033116e3", "criteria_set": "regional", "vintage": "2026"}
+    result["report"]["precomputed"] = identity
+    exported = report.build_csv(result).decode("utf-8-sig")
+    assert "National dataset build,frozen-build" in exported
+    assert "National execution method,b2e3033116e3" in exported
+    assert "National scoring alternative,alternative-2" in exported
+    for feature in json.loads(report.build_geojson(result))["features"]:
+        assert feature["properties"]["national_dataset"] == identity
+    assert report.build_pdf(result).startswith(b"%PDF")
+
+
 def test_build_pdf():
     b = report.build_pdf(_result())
     assert b[:4] == b"%PDF" and len(b) > 1000

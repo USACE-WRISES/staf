@@ -107,10 +107,47 @@ def render(study, **kwargs):
     return alternatives.render_page(study["root"], study["data"], "current-method", study["id"], **kwargs)
 
 
+def archive(study):
+    parent = study["root"] / "analysis/local-review/completion.json"
+    archived_parent = study["folder"] / "snapshot/analysis/local-review/completion.json"
+    archived_parent.parent.mkdir(parents=True)
+    archived_parent.write_bytes(parent.read_bytes())
+    promotion = {"operation": "promote-frozen-alternative-2", "source_study_id": study["id"],
+                 "source_completion_sha256": digest(study["folder"] / "completion.json"),
+                 "preserved_alternative_1": {"method_version": "current-method",
+                     "curves_sha256": study["manifest"]["alternative_1"]["frozen_sha"]}}
+    write_json(study["data"] / "source/alternative-2-promotion.json", promotion)
+
+
+def test_promoted_archive_remains_readable_after_live_method_and_inputs_change(study):
+    archive(study)
+    write_json(study["data"] / "reference-curves.json", {"new": "Alternative 2"})
+    write_json(study["root"] / "analysis/local-review/completion.json", {"new": "build"})
+    write_json(study["root"] / "analysis/values_meta.json", {"new": "analysis"})
+    loaded = alternatives.load_study(study["root"], study["data"], "adopted-method", study["id"])
+    assert loaded["archived"] is True
+    page = render(study)
+    assert "Archived study; displayed output hashes and sealed completion verified" in page
+    assert "current input binding verified" not in page
+    assert "historical evidence" in page
+
+
+@pytest.mark.parametrize("relative", ["completion.json", "manifest.json", "snapshot/analysis/local-review/completion.json",
+                                    "candidates/alternative-1/app-data/reference-curves.json", "summary.json"])
+def test_promoted_archive_rejects_modified_receipts_and_displayed_artifacts(study, relative):
+    archive(study)
+    path = study["folder"] / relative
+    value = json.loads(path.read_text())
+    value["modified"] = True
+    write_json(path, value)
+    with pytest.raises(alternatives.StudyUnavailable):
+        load(study)
+
+
 def test_completed_paired_comparison_keeps_reference_and_files_unchanged(study):
     before = {p: (digest(p), p.stat().st_mtime_ns) for p in study["root"].rglob("*") if p.is_file()}
     page = render(study, alternative="alternative-4", selected="corridor-woody|8.2")
-    assert "Alternative study verified" in page and "Alternative 1 remains the main app default" in page
+    assert "Alternative study verified" in page and "The owner adopted Alternative 2 for the application" in page
     assert "13 / 8 / 3" in page and "No curve for 8.2; stored national fallback shown" in page
     assert "Weighted stratified sample, target 100,000 reaches" in page and "Full Level II 8.2 population" in page
     assert "1,357,265" in page and "74,686" in page and "100,000" in page
@@ -382,7 +419,7 @@ def test_recommendation_and_acquisition_use_bounded_summary_and_qualified_counts
     seal(study)
     page = render(study)
     assert "Study recommendation" in page and "Evidence remains inconclusive" in page
-    assert "Held-out support" in page and "Alternative 1 remains the main app default" in page
+    assert "Held-out support" in page and "This historical recommendation is unchanged" in page
     assert "Station keys with an exact gage match" in page and "120,000" in page
     assert "Paired gage records" in page and "descriptive exact-gage pairs" in page
     assert "<script>unavailable</script>" not in page and "&lt;script&gt;unavailable" in page

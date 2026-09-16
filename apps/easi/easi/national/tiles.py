@@ -100,18 +100,23 @@ class TileStore:
         name = tiles_asset(vpu)
         sha = self.dataset.asset_sha(name) or ""
         key = f"{name}@{sha}"
+        if self.dataset.local is not None and self.dataset.asset_path(name) is None:
+            if sha:
+                raise TileReadError(f"{name}: missing or damaged national tile archive")
+            return None
         with self._lock:
             src = self._sources.get(vpu)
             if src is not None and src.key == key:
                 return src
-        if self.dataset.local is not None and self.dataset.asset_path(name) is None:
-            return None
         if self.dataset.local is None and not sha and not self.dataset.manifest():
             return None
         try:
             src = TileSource(self.dataset.range_reader(name), key,
                              max_entries=self._max_entries)
-        except Exception:  # noqa: BLE001 - a missing or unreadable archive is "no tiles"
+        except Exception as exc:  # noqa: BLE001 - a declared archive must not look empty
+            if sha:
+                _LOG.warning("tile archive %s could not initialize: %s", name, exc)
+                raise TileReadError(f"{name}: archive initialization failed: {exc}") from exc
             return None
         with self._lock:
             self._sources[vpu] = src

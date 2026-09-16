@@ -65,6 +65,29 @@ def _sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _complete_dataset(root):
+    from easi import config
+    from easi.national import bundle, method_version, SCHEMA_VERSION
+    manifest = _write_dataset(root)
+    identity = {"build_id": "fixture-build", "alternative_id": config.scoring_alternative_id(),
+                "method_version": method_version(), "source_manifest_sha256": "1" * 64}
+    manifest.update(identity, build_status="complete", criteria_set=config.criteria_set(),
+                    scoring_identity=config.scoring_identity(), schema_version=SCHEMA_VERSION, reaches_scored=2)
+    (root / client.STATS).write_text(json.dumps({**identity, "groups": {"US": {"n": 2}}}))
+    (root / "tiles_01.pmtiles").write_bytes(b"fixture tile archive")
+    manifest["tiles"] = {"01": {"asset": "tiles_01.pmtiles", "sha256": _sha(root / "tiles_01.pmtiles")}}
+    manifest["assets"][client.STATS] = {"asset": client.STATS, "sha256": _sha(root / client.STATS)}
+    artifacts = {name: entry["sha256"] for name, entry in bundle.asset_entries(manifest).items()}
+    receipt = {**identity, "status": "complete", "scoring_identity": config.scoring_identity(),
+               "validation": {"passed": True, "reaches": 2}, "artifacts": artifacts,
+               "artifact_inventory_sha256": hashlib.sha256(json.dumps(
+                   artifacts, sort_keys=True, separators=(",", ":")).encode()).hexdigest()}
+    (root / "completion.json").write_text(json.dumps(receipt))
+    manifest["assets"]["completion.json"] = {"asset": "completion.json", "sha256": _sha(root / "completion.json")}
+    (root / client.MANIFEST).write_text(json.dumps(manifest))
+    return manifest
+
+
 def test_local_dataset_reads_records_scores_and_summary(tmp_path):
     _write_dataset(tmp_path / "ds")
     ds = client.Dataset(base=str(tmp_path / "ds"))
@@ -77,7 +100,8 @@ def test_local_dataset_reads_records_scores_and_summary(tmp_path):
     scores = ds.scores([COMID, OTHER])
     assert scores[COMID]["band"] == "Functioning" and OTHER not in scores
     s = ds.summary()
-    assert s["available"] and s["units_published"] == 1 and s["reaches_scored"] == 2
+    assert not s["available"] and s["units_published"] == 1 and s["reaches_scored"] == 2
+    assert s["vpus"] == [] and "outdated" in s["error"]
     assert s["vintage"] == "2026.09" and s["method_current"] is False
     assert ds.coverage()["type"] == "FeatureCollection"
 
@@ -184,7 +208,7 @@ def test_remote_assets_download_once_and_refresh_on_a_new_hash(tmp_path, monkeyp
 
 
 def test_open_precomputed_scores_the_record_with_live_geometry_only(tmp_path, monkeypatch):
-    _write_dataset(tmp_path / "ds")
+    _complete_dataset(tmp_path / "ds")
     ds = client.Dataset(base=str(tmp_path / "ds"))
     seen = {}
 
@@ -231,7 +255,7 @@ def test_default_dataset_is_a_singleton():
 
 def test_open_precomputed_without_geometry_needs_no_network_and_the_geometry_follows(tmp_path, monkeypatch):
     import asyncio
-    _write_dataset(tmp_path / "ds")
+    _complete_dataset(tmp_path / "ds")
     ds = client.Dataset(base=str(tmp_path / "ds"))
     calls = []
 

@@ -36,6 +36,10 @@ function fakeMaplibre() {
     getSource(id) { return this.sources[id]; }
     addSource(id, def) { this.sources[id] = Object.assign({ setData(d) { this.data = d; } }, def); }
     addLayer(def) { this.layers.push(def); }
+    removeLayer(id) { this.layers = this.layers.filter(layer => layer.id !== id); }
+    removeSource(id) { delete this.sources[id]; }
+    getCenter() { const c = this.options.center; return {lng: c[0], lat: c[1]}; }
+    getZoom() { return this.options.zoom; }
     getCanvas() { return this.canvas; }
     getContainer() { return this.options.container; }
     // screen space equals lng/lat times 100 for the tests
@@ -49,6 +53,8 @@ function fakeMaplibre() {
 
 function harness() {
   const handlers = new Map();
+  const frames = new Map();
+  let frameId = 0;
   const inputs = [];
   const status = { textContent: "", hidden: true };
   const loadingText = { textContent: "Loading screening tiles…" };
@@ -72,18 +78,23 @@ function harness() {
     console: { error(message) { logged.push(message); }, warn() {}, log() {} },
     location: { href: "https://example.test/app/" },
     Shiny: {
-      addCustomMessageHandler(name, fn) { handlers.set(name, fn); },
+      // These legacy assertions intentionally exercise the manual Standard renderer.
+      addCustomMessageHandler(name, fn) { handlers.set(name, name === "easi-viewer-init" ? config => fn({renderer: "standard", ...config}) : fn); },
       setInputValue(name, value, opts) { inputs.push({ name, value, opts }); },
     },
     maplibregl,
     URL,
     setTimeout, clearTimeout,
+    requestAnimationFrame(fn) { frames.set(++frameId, fn); return frameId; },
+    cancelAnimationFrame(id) { frames.delete(id); },
   };
   window.window = window;
   const context = vm.createContext({ window, document, URL, setTimeout, clearTimeout, Date, Number, String, Math, Infinity, encodeURIComponent, console });
-  const src = fs.readFileSync(path.join(__dirname, "..", "www", "viewer.js"), "utf8");
-  vm.runInContext(src, context);
-  return { handlers, inputs, status, loading, loadingText, logged, maplibregl, window, mapDiv };
+  for (const filename of ["viewer-standard.js", "viewer.js"]) {
+    vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "www", filename), "utf8"), context);
+  }
+  return { handlers, inputs, status, loading, loadingText, logged, maplibregl, window, mapDiv,
+    flushFrames() { const queued = [...frames.values()]; frames.clear(); queued.forEach(fn => fn()); } };
 }
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -93,6 +104,7 @@ function loadedViewer(vpus) {
   h.handlers.get("easi-viewer-init")({ routeBase: "session/abc/dynamic_route/national-tiles?nonce=1",
                                        vpus: vpus || ["02"], minzoom: 4, maxzoom: 12 });
   const map = h.maplibregl.maps[0];
+  assert.equal(map.options.style.sources.basemap.maxzoom, 16, "USGS imagery overzooms above its native coverage");
   map.loaded = true;
   map.fire("style.load");
   return { h, map };
@@ -197,21 +209,25 @@ test("hovering highlights the nearest reach through feature state and clears on 
   map.fire("style.load");
   map.features = [reach(11, "Functioning", [[0.9, 1.0], [1.1, 1.0]], { name: "Mink Brook", eci: 0.72 })];
   map.fire("mousemove", { point: { x: 100, y: 100 }, lngLat: { lng: 1, lat: 1 } });
+  h.flushFrames();
   same(map.featureState, [{ target: { source: "easi-02", sourceLayer: "flowlines", id: 11 }, state: { hover: true } }]);
   assert.equal(map.canvas.style.cursor, "pointer");
   assert.match(h.window.EASIViewer.state.popup.html, /Mink Brook/);
   // the same reach again: no extra state writes
   map.fire("mousemove", { point: { x: 101, y: 100 }, lngLat: { lng: 1.01, lat: 1 } });
+  h.flushFrames();
   assert.equal(map.featureState.length, 1);
   // a different reach: the old one is cleared, the new one set
   map.features = [reach(12, "Functioning", [[0.9, 1.0], [1.1, 1.0]])];
   map.fire("mousemove", { point: { x: 100, y: 100 }, lngLat: { lng: 1, lat: 1 } });
+  h.flushFrames();
   same(map.featureState.slice(1), [
     { target: { source: "easi-02", sourceLayer: "flowlines", id: 11 }, state: { hover: false } },
     { target: { source: "easi-02", sourceLayer: "flowlines", id: 12 }, state: { hover: true } }]);
   // nothing near the cursor: cleared, cursor back, popup gone
   map.features = [];
   map.fire("mousemove", { point: { x: 500, y: 500 }, lngLat: { lng: 5, lat: 5 } });
+  h.flushFrames();
   same(map.featureState[3], { target: { source: "easi-02", sourceLayer: "flowlines", id: 12 }, state: { hover: false } });
   assert.equal(map.canvas.style.cursor, "");
   assert.equal(h.window.EASIViewer.state.popup.removed, true);
@@ -269,4 +285,62 @@ test("a failed screening tile leaves a note once the map is idle; teardown clear
   h.handlers.get("easi-viewer-teardown")({});
   assert.equal(h.loading.hidden, true);
   assert.equal(h.window.EASIViewer.state.loading.failed, 0);
+});
+
+test("generation identities guard refresh, report picks, status, and unavailable data", () => {
+  const h = harness(), init = h.handlers.get("easi-viewer-init");
+  const config = {routeBase: "r", vpus: ["02"], datasetKey: "alternative-2:hash", generation: 4};
+  init(config);
+  const map = h.maplibregl.maps[0]; map.fire("style.load");
+  assert.match(map.sources["easi-02"].tiles[0], /datasetKey=alternative-2%3Ahash&generation=4/);
+  init({...config, datasetKey: "older", generation: 3});
+  assert.equal(h.window.EASIViewer.state.config.datasetKey, config.datasetKey);
+  map.features = [reach(123, "Functioning", [[0.9, 1], [1.1, 1]])];
+  map.fire("click", {point: {x:100,y:100}});
+  assert.equal(h.inputs[0].value.datasetKey, config.datasetKey);
+  assert.equal(h.inputs[0].value.generation, 4);
+  h.handlers.get("easi-viewer-status")({busy:false, datasetKey: "older", generation: 3});
+  assert.equal(h.status.hidden, false);
+  init({...config, generation:5, available:false, error:"Bundle is incomplete."});
+  assert.equal(map.sources["easi-02"], undefined);
+  assert.equal(map.sources["easi-coverage"], undefined);
+  assert.equal(h.status.textContent, "Bundle is incomplete.");
+  h.handlers.get("easi-viewer-status")({busy:false, datasetKey:config.datasetKey, generation:5});
+  assert.equal(h.status.textContent, "Bundle is incomplete.");
+  assert.equal(h.status.hidden, false);
+  assert.equal(h.window.EASIViewer.nearestReach(map, {x:100,y:100}), null);
+  h.handlers.get("easi-viewer-teardown")({});
+});
+
+test("hover is throttled and suspended through gestures; hit radius is circular", () => {
+  const {h,map} = loadedViewer();
+  map.features = [reach(1, "Functioning", [[0.9, 1], [1.1, 1]])];
+  for (let n=0; n<10; n++) map.fire("mousemove", {point:{x:100,y:100},lngLat:{lng:1,lat:1}});
+  assert.equal(map.queries.length, 0);
+  h.flushFrames(); assert.equal(map.queries.length, 1);
+  map.fire("movestart");
+  map.fire("mousemove", {point:{x:100,y:100},lngLat:{lng:1,lat:1}});
+  map.fire("click", {point:{x:100,y:100}});
+  h.flushFrames(); assert.equal(map.queries.length, 1); assert.equal(h.inputs.length, 0);
+  map.fire("moveend");
+  map.features = [reach(2, "Functioning", [[1.07, 1.07], [1.08, 1.08]])];
+  assert.equal(h.window.EASIViewer.nearestReach(map, {x:100,y:100}), null);
+  h.handlers.get("easi-viewer-teardown")({});
+});
+
+test("Compatibility is the default and manual renderer switching preserves logical camera", () => {
+  const h = harness(); let passedCamera = null, destroyed = false;
+  h.window.EASIViewerRenderers.compatibility = (ctx, config, camera) => {
+    passedCamera = camera; ctx.state.map = {getContainer:()=>h.mapDiv};
+    return {camera:()=>({center:[-80,35],zoom:9}), refresh(){}, nearest(){}, destroy(){destroyed=true;}};
+  };
+  h.window.EASIViewer.init({routeBase:"r",vpus:[],datasetKey:"d",generation:1});
+  assert.equal(h.window.EASIViewer.state.renderer, "compatibility");
+  assert.equal(passedCamera, null);
+  h.handlers.get("easi-viewer-renderer")({renderer:"standard"});
+  assert.equal(destroyed, true);
+  const map = h.maplibregl.maps[0]; same(map.options.center, [-80,35]); assert.equal(map.options.zoom,9);
+  h.handlers.get("easi-viewer-renderer")({renderer:"compatibility"});
+  same(passedCamera, {center:[-80,35],zoom:9}); assert.equal(map.removed,true);
+  h.handlers.get("easi-viewer-teardown")({});
 });

@@ -55,6 +55,10 @@ criteria with the current EASI rating anchors. Good / Fair / Poor map to
 0.85 / 0.545 / 0.195 and function scores 13 / 8 / 3. SFARI and DEEP are unaffected.
 The set name, active catalog, crosswalk and reference artifact contribute to
 the method version. Staging records `criteria_set` beside `method_version`.
+A scoring identity separately names the selected alternative. The current
+regional default is Alternative 2: 34 frozen curves with NARS-9 regional
+references and the existing slope-specific entrenchment references. The local
+rollout below rebuilds scores from unchanged evidence; it does not refit curves.
 A mismatched set or method makes baked scores stale, while recalled reports
 still score their stored evidence with the app's active criteria.
 
@@ -83,6 +87,10 @@ The builder also sends `aoi` in its request payload. Standard live AOIs
 retain their existing `areaOfInterest` parameter.
 
 ### Reference artifact
+
+The emitter procedure in this section documents the historical Alternative 1
+Level II artifact. It must not overwrite the promoted Alternative 2 artifact or
+its identity. Alternative 2 uses the reviewed frozen candidate coordinates.
 
 The emitter reads the completed registry, its historical `values_meta.json`,
 the dataset vintage and existing panel evidence. It writes only the four
@@ -316,3 +324,56 @@ queue worker.
 
 Tests: `tests/test_analysis_*.py` (synthetic fixtures; the values and NRSA
 tests run the real evaluator over hand-built records).
+# Isolated local Alternative 2 rollout
+
+The explicit `builder.alternative2_rollout` command rebuilds the saved national
+cohort under the active Alternative 2 method. It reads the existing Alternative 1
+`staging/` evidence and never enters the automatic queue, acquires evidence, or
+publishes. Its only output directory is
+`D:/Data/easi-national/review/alternative-2-rollout`.
+
+Run from `tools/easi-national` with the workspace interpreter and the reviewed
+current method digest (the command rejects any other active identity):
+
+```powershell
+$env:OPENBLAS_NUM_THREADS = '1'
+$env:OMP_NUM_THREADS = '1'
+$env:MKL_NUM_THREADS = '1'
+& 'D:/Code/Work/staf_codex_2026-09-14/.venv/Scripts/python.exe' -m builder.alternative2_rollout --expected-method b2e3033116e3 --workers 8
+```
+
+The runner captures hashes of source evidence, score metadata, geometry, state
+indexes and scoring sources. It splits only saved staged evidence, calls the app's
+`score_record` with network access blocked, and checkpoints each HUC8. Canonical
+statistics, coverage and Docker tippecanoe stages run against isolated output
+paths. The staged evidence files are byte-identical to the source assets. Source
+files are checked again before completion. The ordinary national root, Alternative
+1 archives and prerelease stay unchanged.
+
+Rerunning the same command resumes verified checkpoints. Changed inputs, damaged
+completed checkpoints, stale methods and conflicting run locks fail closed. A
+leftover `run.lock` after an interrupted process must be inspected against its
+recorded PID before an operator removes it. Do not delete it while work is active.
+Keep the scoring client source stable while the process runs. Its entry-point
+fingerprint uses Python source inspection, whose line offsets can become stale
+if unrelated lines in the loaded module are edited. If a final fingerprint guard
+stops such a run, first verify the fresh-process digest against `build.json`;
+only an exact match permits the normal checkpoint resume. Do not alter receipts
+or bypass a mismatch.
+
+The final `staging/manifest.json` is written last and carries `build_status`,
+`alternative_id`, `method_version`, `build_id`, `source_manifest_sha256` and
+`scoring_identity`. Its hashed `completion.json` binds the exact artifact inventory
+and successful COMID, homogeneous-method and all-function rating-anchor checks.
+The inventory digest hashes compact sorted-key JSON of `{asset_filename: sha256}`,
+excluding the manifest and completion receipt to avoid circular dependencies.
+Statistics and score rows carry the same build/method identity; tile entries also
+include geographic bounds. Canonical tile partitions follow HUC8 VPU assignments,
+while score partitions follow HUC4 VPU assignments, so their regional counts need
+not coincide at boundaries even though their complete scored cohort agrees.
+
+Read-only verification of an existing completed build:
+
+```powershell
+& 'D:/Code/Work/staf_codex_2026-09-14/.venv/Scripts/python.exe' -m builder.alternative2_rollout --expected-method b2e3033116e3 --verify-only
+```

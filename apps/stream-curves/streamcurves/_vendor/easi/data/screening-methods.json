@@ -1,11 +1,9 @@
 {
-  "schemaVersion": 1,
-  "ratingIndex": {
-    "Good": 0.85,
-    "Fair": 0.545,
-    "Poor": 0.195
-  },
   "citations": {
+    "allan-2004": {
+      "title": "Allan 2004, Landscapes and riverscapes: the influence of land use on stream ecosystems",
+      "url": "https://doi.org/10.1146/annurev.ecolsys.35.120202.110122"
+    },
     "attains": {
       "title": "EPA ATTAINS Reporting Categories",
       "url": "https://www.epa.gov/waterdata/assessing-and-reporting-water-quality-questions-and-answers"
@@ -13,6 +11,10 @@
     "bio-model": {
       "title": "National model of stream biological condition",
       "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5796808/"
+    },
+    "boano-2006": {
+      "title": "Boano et al. 2006, Sinuosity-driven hyporheic exchange in meandering rivers",
+      "url": "https://doi.org/10.1029/2006GL027630"
     },
     "caddis-habitat": {
       "title": "EPA CADDIS Physical Habitat",
@@ -26,9 +28,21 @@
       "title": "EPA CADDIS: Urbanization and Stormwater Runoff",
       "url": "https://www.epa.gov/caddis/urbanization-stormwater-runoff"
     },
+    "cardenas-2009": {
+      "title": "Cardenas 2009, A model for lateral hyporheic flow based on valley slope and channel sinuosity",
+      "url": "https://doi.org/10.1029/2008WR007442"
+    },
+    "cbp-wetland-review": {
+      "title": "Chesapeake Bay Program 2016, Wetland Expert Panel literature review (Appendix B)",
+      "url": "https://d18lev1ok5leia.cloudfront.net/chesapeakebay/documents/appendix_b_wetlands_expert_panel_literature_review_habitat_benefits_mar2016.pdf"
+    },
     "csqt": {
       "title": "Colorado Stream Quantification Tool v1.0 Science Document",
       "url": "https://stream-mechanics.com/wp-content/uploads/2020/10/CSQT-v1_Science-Document-1.pdf"
+    },
+    "easi-reference-curves": {
+      "title": "EASI regional reference criteria, September 2026",
+      "url": "https://usace-wrises.github.io/staf/walkthroughs/easi/#regional-reference-criteria"
     },
     "epa-rbp": {
       "title": "EPA Rapid Bioassessment Protocols for Streams and Wadeable Rivers",
@@ -37,6 +51,26 @@
     "function-framework": {
       "title": "EPA Function-Based Framework for Stream Assessment and Restoration Projects",
       "url": "https://www.epa.gov/sites/production/files/2015-08/documents/a_function_based_framework_for_stream_assessment_3.pdf"
+    },
+    "grill-2019": {
+      "title": "Grill et al. 2019, Mapping the world's free-flowing rivers",
+      "url": "https://www.nature.com/articles/s41586-019-1111-9"
+    },
+    "hyporheic-review": {
+      "title": "Harvey et al., How hydrologic connectivity regulates water quality in river corridors (NEXSS synthesis)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8312628/"
+    },
+    "king-2011": {
+      "title": "King et al. 2011, Stream community thresholds at exceptionally low levels of catchment urbanization",
+      "url": "https://doi.org/10.1890/10-1357.1"
+    },
+    "lehner-2011": {
+      "title": "Lehner et al. 2011, High-resolution mapping of the world's reservoirs and dams",
+      "url": "https://esajournals.onlinelibrary.wiley.com/doi/10.1890/100125"
+    },
+    "mangiante-2019": {
+      "title": "Mangiante et al. 2018, Trends in nonindigenous aquatic species richness in the United States",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6707539/"
     },
     "mnsqt": {
       "title": "Scientific Support for the Minnesota Stream Quantification Tool v1.0",
@@ -50,9 +84,17 @@
       "title": "USGS Nonindigenous Aquatic Species database",
       "url": "https://nas.er.usgs.gov/"
     },
+    "nhdplus-erom": {
+      "title": "NHDPlus V2.1 EROM Monthly Flows technical documentation",
+      "url": "https://dmap-data-commons-ow.s3.amazonaws.com/NHDPlusV21/Documentation/TechnicalDocs/EROM_Monthly_Flows.pdf"
+    },
     "nid": {
       "title": "USACE National Inventory of Dams",
       "url": "https://nid.sec.usace.army.mil/"
+    },
+    "nmfs-roads": {
+      "title": "NMFS 1996 salmonid watershed road-density criteria (as compiled in KRIS)",
+      "url": "http://www.krisweb.com/krisrussian/krisdb/html/krisweb/watershd/roads.htm"
     },
     "nrsa-2018-19": {
       "title": "National Rivers and Streams Assessment 2018-19 Technical Support Document",
@@ -62,6 +104,14 @@
       "title": "EPA National Aquatic Resource Surveys Data",
       "url": "https://www.epa.gov/national-aquatic-resource-surveys/data-national-aquatic-resource-surveys"
     },
+    "rusle-k": {
+      "title": "RUSLE soil erodibility factor classes (Michigan State University Institute of Water Research)",
+      "url": "https://iwr.msu.edu/rusle/kfactor.htm"
+    },
+    "schueler-1994": {
+      "title": "Schueler 1994, The importance of imperviousness",
+      "url": "https://pinelakedistrict.org/doc/resources/The%20Importance%20of%20Imperviousness.pdf"
+    },
     "streamcat": {
       "title": "EPA StreamCat Metrics and Definitions",
       "url": "https://www.epa.gov/national-aquatic-resource-surveys/streamcat-metrics-and-definitions"
@@ -70,200 +120,43 @@
       "title": "EPA StreamCat and LakeCat Updates",
       "url": "https://www.epa.gov/national-aquatic-resource-surveys/streamcat-and-lakecat-updates"
     },
-    "wqp": {
-      "title": "Water Quality Portal User Guide",
-      "url": "https://www.waterqualitydata.us/portal_userguide/"
-    },
-    "lehner-2011": {
-      "title": "Lehner et al. 2011, High-resolution mapping of the world's reservoirs and dams",
-      "url": "https://esajournals.onlinelibrary.wiley.com/doi/10.1890/100125"
-    },
-    "grill-2019": {
-      "title": "Grill et al. 2019, Mapping the world's free-flowing rivers",
-      "url": "https://www.nature.com/articles/s41586-019-1111-9"
-    },
-    "schueler-1994": {
-      "title": "Schueler 1994, The importance of imperviousness",
-      "url": "https://pinelakedistrict.org/doc/resources/The%20Importance%20of%20Imperviousness.pdf"
-    },
-    "allan-2004": {
-      "title": "Allan 2004, Landscapes and riverscapes: the influence of land use on stream ecosystems",
-      "url": "https://doi.org/10.1146/annurev.ecolsys.35.120202.110122"
+    "usfs-wcf": {
+      "title": "USDA Forest Service 2011, Watershed Condition Classification Technical Guide (FS-978)",
+      "url": "https://www.fs.usda.gov/biology/resources/pubs/watershed/maps/watershed_classification_guide2011FS978.pdf"
     },
     "wang-1997": {
       "title": "Wang et al. 1997, Influences of watershed land use on habitat quality and biotic integrity in Wisconsin streams",
       "url": "https://doi.org/10.1577/1548-8446(1997)022%3C0006:IOWLUO%3E2.0.CO;2"
     },
-    "rusle-k": {
-      "title": "RUSLE soil erodibility factor classes (Michigan State University Institute of Water Research)",
-      "url": "https://iwr.msu.edu/rusle/kfactor.htm"
-    },
-    "nmfs-roads": {
-      "title": "NMFS 1996 salmonid watershed road-density criteria (as compiled in KRIS)",
-      "url": "http://www.krisweb.com/krisrussian/krisdb/html/krisweb/watershd/roads.htm"
-    },
-    "usfs-wcf": {
-      "title": "USDA Forest Service 2011, Watershed Condition Classification Technical Guide (FS-978)",
-      "url": "https://www.fs.usda.gov/biology/resources/pubs/watershed/maps/watershed_classification_guide2011FS978.pdf"
-    },
-    "king-2011": {
-      "title": "King et al. 2011, Stream community thresholds at exceptionally low levels of catchment urbanization",
-      "url": "https://doi.org/10.1890/10-1357.1"
-    },
-    "mangiante-2019": {
-      "title": "Mangiante et al. 2018, Trends in nonindigenous aquatic species richness in the United States",
-      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6707539/"
-    },
-    "hyporheic-review": {
-      "title": "Harvey et al., How hydrologic connectivity regulates water quality in river corridors (NEXSS synthesis)",
-      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8312628/"
-    },
-    "cbp-wetland-review": {
-      "title": "Chesapeake Bay Program 2016, Wetland Expert Panel literature review (Appendix B)",
-      "url": "https://d18lev1ok5leia.cloudfront.net/chesapeakebay/documents/appendix_b_wetlands_expert_panel_literature_review_habitat_benefits_mar2016.pdf"
-    },
-    "boano-2006": {
-      "title": "Boano et al. 2006, Sinuosity-driven hyporheic exchange in meandering rivers",
-      "url": "https://doi.org/10.1029/2006GL027630"
-    },
-    "cardenas-2009": {
-      "title": "Cardenas 2009, A model for lateral hyporheic flow based on valley slope and channel sinuosity",
-      "url": "https://doi.org/10.1029/2008WR007442"
-    },
-    "easi-reference-curves": {
-      "title": "EASI regional reference criteria, September 2026",
-      "url": "https://usace-wrises.github.io/staf/walkthroughs/easi/#regional-reference-criteria"
-    },
-    "nhdplus-erom": {
-      "title": "NHDPlus V2.1 EROM Monthly Flows technical documentation",
-      "url": "https://dmap-data-commons-ow.s3.amazonaws.com/NHDPlusV21/Documentation/TechnicalDocs/EROM_Monthly_Flows.pdf"
+    "wqp": {
+      "title": "Water Quality Portal User Guide",
+      "url": "https://www.waterqualitydata.us/portal_userguide/"
     }
   },
   "methods": [
     {
-      "methodKey": "catchment-land-cover-pressure",
-      "metricId": "catchment-hydrology-impervious-surface-cover",
-      "title": "Catchment hydrology (land-cover pressure)",
-      "status": "computed",
-      "operator": "worst_index",
       "basisClass": "published directional relationship",
-      "provisional": true,
-      "confidence": "H",
-      "inputs": [
-        {
-          "key": "impervious",
-          "label": "Watershed impervious cover",
-          "symbol": "impervious",
-          "indexSymbol": "Iimpervious",
-          "sourceField": "pctimp2019ws",
-          "units": "%",
-          "required": true,
-          "rationale": "Impervious cover represents altered infiltration, runoff routing, and hydrologic flashiness.",
-          "slider": {
-            "min": 0,
-            "max": 100,
-            "step": 1
-          },
-          "bands": [
-            {
-              "rating": "Good",
-              "min": null,
-              "max": 10,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": "<10%"
-            },
-            {
-              "rating": "Fair",
-              "min": 10,
-              "max": 25,
-              "minInclusive": true,
-              "maxInclusive": true,
-              "label": "10-25%"
-            },
-            {
-              "rating": "Poor",
-              "min": 25,
-              "max": null,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": ">25%"
-            }
-          ]
-        },
-        {
-          "key": "agriculture",
-          "label": "Watershed agricultural cover",
-          "symbol": "agriculture",
-          "indexSymbol": "Iagriculture",
-          "sourceField": "pctcrop2019ws + pcthay2019ws",
-          "units": "%",
-          "required": true,
-          "rationale": "Agricultural cover represents a separate soil-disturbance, drainage, and runoff pathway that impervious cover does not capture.",
-          "slider": {
-            "min": 0,
-            "max": 100,
-            "step": 1
-          },
-          "bands": [
-            {
-              "rating": "Good",
-              "min": null,
-              "max": 30,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": "<30%"
-            },
-            {
-              "rating": "Fair",
-              "min": 30,
-              "max": 50,
-              "minInclusive": true,
-              "maxInclusive": true,
-              "label": "30-50%"
-            },
-            {
-              "rating": "Poor",
-              "min": 50,
-              "max": null,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": ">50%"
-            }
-          ]
-        }
-      ],
-      "formula": {
-        "allowPartial": true
-      },
       "breakpoints": [
         {
+          "description": "Boundary between the sensitive and impacted classes of the Impervious Cover Model (Schueler 1994).",
           "input": "impervious",
-          "label": "10% impervious",
-          "description": "Boundary between the sensitive and impacted classes of the Impervious Cover Model (Schueler 1994)."
+          "label": "10% impervious"
         },
         {
+          "description": "Boundary of the non-supporting class of the Impervious Cover Model (Schueler 1994).",
           "input": "impervious",
-          "label": "25% impervious",
-          "description": "Boundary of the non-supporting class of the Impervious Cover Model (Schueler 1994)."
+          "label": "25% impervious"
         },
         {
+          "description": "Lower agricultural transition. Fish-index decline and subsidy-stress responses are reported above about 30 percent watershed agriculture (Allan 2004).",
           "input": "agriculture",
-          "label": "30% agriculture",
-          "description": "Lower agricultural transition. Fish-index decline and subsidy-stress responses are reported above about 30 percent watershed agriculture (Allan 2004)."
+          "label": "30% agriculture"
         },
         {
+          "description": "Upper agricultural screen. Habitat and biotic integrity decline become apparent above 50 percent watershed agriculture (Wang et al. 1997), aligned with NRSA reference-site screening practice.",
           "input": "agriculture",
-          "label": "50% agriculture",
-          "description": "Upper agricultural screen. Habitat and biotic integrity decline become apparent above 50 percent watershed agriculture (Wang et al. 1997), aligned with NRSA reference-site screening practice."
+          "label": "50% agriculture"
         }
-      ],
-      "fieldReference": null,
-      "limitations": [
-        "The worse input governs because hydrologic alteration through one pathway is not offset by low pressure in the other.",
-        "Agricultural bands are national screening tiers, not ecological criteria.",
-        "A result computed from one input is labeled partial.",
-        "Sensitive macroinvertebrate taxa decline well below the 10 percent impervious Good boundary (community thresholds near 0.5 to 2 percent), so a Good rating is not a no-effect finding (King et al. 2011)."
       ],
       "citations": [
         "nrsa-2018-19",
@@ -272,646 +165,645 @@
         "wang-1997",
         "king-2011"
       ],
-      "plot": {
-        "mode": "worst_index",
-        "direction": "lower_better"
-      },
-      "evidenceFamily": "landcover_pressure"
-    },
-    {
-      "methodKey": "watershed-wetland-extent",
-      "metricId": "surface-water-storage-percent-wetlands-in-watershed",
-      "title": "Wetland extent",
-      "status": "computed",
-      "operator": "sum_capped",
-      "basisClass": "provisional STAF screening judgment",
-      "provisional": true,
       "confidence": "H",
+      "evidenceFamily": "landcover_pressure",
+      "fieldReference": null,
+      "formula": {
+        "allowPartial": true
+      },
       "inputs": [
         {
-          "key": "woodyWetland",
-          "label": "Woody wetland cover",
-          "symbol": "woody wetland",
-          "sourceField": "pctwdwet2019ws",
-          "units": "%",
+          "bands": [
+            {
+              "label": "<10%",
+              "max": 10,
+              "maxInclusive": false,
+              "min": null,
+              "minInclusive": false,
+              "rating": "Good"
+            },
+            {
+              "label": "10-25%",
+              "max": 25,
+              "maxInclusive": true,
+              "min": 10,
+              "minInclusive": true,
+              "rating": "Fair"
+            },
+            {
+              "label": ">25%",
+              "max": null,
+              "maxInclusive": false,
+              "min": 25,
+              "minInclusive": false,
+              "rating": "Poor"
+            }
+          ],
+          "indexSymbol": "Iimpervious",
+          "key": "impervious",
+          "label": "Watershed impervious cover",
+          "rationale": "Impervious cover represents altered infiltration, runoff routing, and hydrologic flashiness.",
           "required": true,
-          "rationale": "Woody wetlands contribute surface storage and hydrologic attenuation.",
           "slider": {
-            "min": 0,
             "max": 100,
+            "min": 0,
             "step": 1
-          }
+          },
+          "sourceField": "pctimp2019ws",
+          "symbol": "impervious",
+          "units": "%"
         },
         {
-          "key": "herbaceousWetland",
-          "label": "Herbaceous wetland cover",
-          "symbol": "herbaceous wetland",
-          "sourceField": "pcthbwet2019ws",
-          "units": "%",
+          "bands": [
+            {
+              "label": "<30%",
+              "max": 30,
+              "maxInclusive": false,
+              "min": null,
+              "minInclusive": false,
+              "rating": "Good"
+            },
+            {
+              "label": "30-50%",
+              "max": 50,
+              "maxInclusive": true,
+              "min": 30,
+              "minInclusive": true,
+              "rating": "Fair"
+            },
+            {
+              "label": ">50%",
+              "max": null,
+              "maxInclusive": false,
+              "min": 50,
+              "minInclusive": false,
+              "rating": "Poor"
+            }
+          ],
+          "indexSymbol": "Iagriculture",
+          "key": "agriculture",
+          "label": "Watershed agricultural cover",
+          "rationale": "Agricultural cover represents a separate soil-disturbance, drainage, and runoff pathway that impervious cover does not capture.",
           "required": true,
-          "rationale": "Herbaceous wetlands contribute storage not represented by woody-wetland cover.",
           "slider": {
-            "min": 0,
             "max": 100,
+            "min": 0,
             "step": 1
-          }
+          },
+          "sourceField": "pctcrop2019ws + pcthay2019ws",
+          "symbol": "agriculture",
+          "units": "%"
         }
       ],
-      "formula": {
-        "cap": 100,
-        "resultSymbol": "wetland %"
+      "limitations": [
+        "The worse input governs because hydrologic alteration through one pathway is not offset by low pressure in the other.",
+        "Agricultural bands are national screening tiers, not ecological criteria.",
+        "A result computed from one input is labeled partial.",
+        "Sensitive macroinvertebrate taxa decline well below the 10 percent impervious Good boundary (community thresholds near 0.5 to 2 percent), so a Good rating is not a no-effect finding (King et al. 2011)."
+      ],
+      "methodKey": "catchment-land-cover-pressure",
+      "metricId": "catchment-hydrology-impervious-surface-cover",
+      "operator": "worst_index",
+      "plot": {
+        "direction": "lower_better",
+        "mode": "worst_index"
       },
+      "provisional": true,
+      "status": "computed",
+      "title": "Catchment hydrology (land-cover pressure)"
+    },
+    {
       "bands": [
         {
-          "rating": "Poor",
-          "min": null,
+          "label": "<1%",
           "max": 1,
-          "minInclusive": false,
           "maxInclusive": false,
-          "label": "<1%"
+          "min": null,
+          "minInclusive": false,
+          "rating": "Poor"
         },
         {
-          "rating": "Fair",
-          "min": 1,
+          "label": "1-5%",
           "max": 5,
-          "minInclusive": true,
           "maxInclusive": true,
-          "label": "1-5%"
+          "min": 1,
+          "minInclusive": true,
+          "rating": "Fair"
         },
         {
-          "rating": "Good",
-          "min": 5,
+          "label": ">5%",
           "max": null,
-          "minInclusive": false,
           "maxInclusive": false,
-          "label": ">5%"
+          "min": 5,
+          "minInclusive": false,
+          "rating": "Good"
         }
       ],
+      "basisClass": "provisional STAF screening judgment",
       "breakpoints": [
         {
-          "label": "1%",
-          "description": "Lower national screening transition. Watershed wetland extents of 1 to 5 percent are associated with water-quality benefit and about 7 percent with flood attenuation (Mitsch and Gosselink, as reviewed by the Chesapeake Bay Program 2016)."
+          "description": "Lower national screening transition. Watershed wetland extents of 1 to 5 percent are associated with water-quality benefit and about 7 percent with flood attenuation (Mitsch and Gosselink, as reviewed by the Chesapeake Bay Program 2016).",
+          "label": "1%"
         },
         {
-          "label": "5%",
-          "description": "Upper national screening transition, the top of the same reviewed 1 to 5 percent benefit range."
+          "description": "Upper national screening transition, the top of the same reviewed 1 to 5 percent benefit range.",
+          "label": "5%"
         }
-      ],
-      "fieldReference": null,
-      "limitations": [
-        "Natural wetland abundance varies substantially among regions."
       ],
       "citations": [
         "streamcat",
         "cbp-wetland-review"
       ],
+      "confidence": "H",
+      "fieldReference": null,
+      "formula": {
+        "cap": 100,
+        "resultSymbol": "wetland %"
+      },
+      "inputs": [
+        {
+          "key": "woodyWetland",
+          "label": "Woody wetland cover",
+          "rationale": "Woody wetlands contribute surface storage and hydrologic attenuation.",
+          "required": true,
+          "slider": {
+            "max": 100,
+            "min": 0,
+            "step": 1
+          },
+          "sourceField": "pctwdwet2019ws",
+          "symbol": "woody wetland",
+          "units": "%"
+        },
+        {
+          "key": "herbaceousWetland",
+          "label": "Herbaceous wetland cover",
+          "rationale": "Herbaceous wetlands contribute storage not represented by woody-wetland cover.",
+          "required": true,
+          "slider": {
+            "max": 100,
+            "min": 0,
+            "step": 1
+          },
+          "sourceField": "pcthbwet2019ws",
+          "symbol": "herbaceous wetland",
+          "units": "%"
+        }
+      ],
+      "limitations": [
+        "Natural wetland abundance varies substantially among regions."
+      ],
+      "methodKey": "watershed-wetland-extent",
+      "metricId": "surface-water-storage-percent-wetlands-in-watershed",
+      "operator": "sum_capped",
       "plot": {
-        "mode": "scalar",
         "direction": "higher_better",
         "domain": [
           0,
           10
-        ]
-      }
+        ],
+        "mode": "scalar"
+      },
+      "provisional": true,
+      "status": "computed",
+      "title": "Wetland extent"
     },
     {
-      "methodKey": "road-density-inflow-pressure",
-      "metricId": "reach-inflow-concentrated-runoff-stormwater-inputs",
-      "title": "Road-density proxy for concentrated inflow pressure",
-      "status": "computed",
-      "operator": "threshold",
-      "basisClass": "published directional relationship",
-      "provisional": true,
-      "confidence": "L",
-      "inputs": [
-        {
-          "key": "roadDensity",
-          "label": "Watershed road density",
-          "symbol": "road density",
-          "sourceField": "rddensws",
-          "units": "km/km²",
-          "required": true,
-          "rationale": "Road density is a directional proxy for concentrated runoff sources and hillslope-to-channel connectivity."
-        }
-      ],
       "bands": [
         {
-          "rating": "Good",
-          "min": null,
+          "label": "<1 km/km\u00b2",
           "max": 1,
+          "maxInclusive": false,
+          "min": null,
           "minInclusive": false,
-          "maxInclusive": false,
-          "label": "<1 km/km²"
+          "rating": "Good"
         },
         {
-          "rating": "Fair",
-          "min": 1,
+          "label": "1-<3 km/km\u00b2",
           "max": 3,
-          "minInclusive": true,
           "maxInclusive": false,
-          "label": "1-<3 km/km²"
+          "min": 1,
+          "minInclusive": true,
+          "rating": "Fair"
         },
         {
-          "rating": "Poor",
-          "min": 3,
+          "label": "\u22653 km/km\u00b2",
           "max": null,
-          "minInclusive": true,
           "maxInclusive": false,
-          "label": "≥3 km/km²"
+          "min": 3,
+          "minInclusive": true,
+          "rating": "Poor"
         }
       ],
+      "basisClass": "published directional relationship",
       "breakpoints": [
         {
-          "label": "1 km/km²",
-          "description": "Lower STAF screening transition. It is not a demonstrated ecological threshold."
+          "description": "Lower STAF screening transition. It is not a demonstrated ecological threshold.",
+          "label": "1 km/km\u00b2"
         },
         {
-          "label": "3 km/km²",
-          "description": "Upper transition grounded in NRSA least-disturbed-site road-density screening."
+          "description": "Upper transition grounded in NRSA least-disturbed-site road-density screening.",
+          "label": "3 km/km\u00b2"
         }
-      ],
-      "fieldReference": null,
-      "limitations": [
-        "Road density does not count actual outfalls or establish whether runoff is treated.",
-        "The 1 km/km² breakpoint is a screening judgment.",
-        "USFS watershed-condition guidance classes road density more strictly (good under 1, impaired over 2.4 miles per square mile, about 0.62 and 1.49 km/km²), derived from salmonid watersheds. EASI keeps the NRSA-anchored national screen and discloses the stricter alternative."
       ],
       "citations": [
         "nrsa-2018-19",
         "usfs-wcf"
       ],
+      "confidence": "L",
+      "evidenceFamily": "landcover_pressure",
+      "fieldReference": null,
+      "inputs": [
+        {
+          "key": "roadDensity",
+          "label": "Watershed road density",
+          "rationale": "Road density is a directional proxy for concentrated runoff sources and hillslope-to-channel connectivity.",
+          "required": true,
+          "sourceField": "rddensws",
+          "symbol": "road density",
+          "units": "km/km\u00b2"
+        }
+      ],
+      "limitations": [
+        "Road density does not count actual outfalls or establish whether runoff is treated.",
+        "The 1 km/km\u00b2 breakpoint is a screening judgment.",
+        "USFS watershed-condition guidance classes road density more strictly (good under 1, impaired over 2.4 miles per square mile, about 0.62 and 1.49 km/km\u00b2), derived from salmonid watersheds. EASI keeps the NRSA-anchored national screen and discloses the stricter alternative."
+      ],
+      "methodKey": "road-density-inflow-pressure",
+      "metricId": "reach-inflow-concentrated-runoff-stormwater-inputs",
+      "operator": "threshold",
       "plot": {
-        "mode": "scalar",
         "direction": "lower_better",
         "domain": [
           0,
           6
-        ]
+        ],
+        "mode": "scalar"
       },
-      "evidenceFamily": "landcover_pressure"
+      "provisional": true,
+      "status": "computed",
+      "title": "Road-density proxy for concentrated inflow pressure"
     },
     {
-      "methodKey": "degree-of-regulation",
-      "metricId": "streamflow-regime-flow-alteration-regulation-water-use",
-      "title": "Flow alteration (degree of regulation)",
-      "status": "computed",
-      "operator": "ratio",
-      "basisClass": "published threshold",
-      "provisional": false,
-      "confidence": "M",
-      "sourceTier": "screening-proxy",
-      "evidenceFamily": "flow_regulation",
-      "usedFallback": false,
-      "inputs": [
-        {
-          "key": "storage",
-          "label": "Upstream normalized storage",
-          "symbol": "DamNrmStorWs",
-          "sourceField": "damnrmstorws",
-          "units": "m³/km²",
-          "required": true,
-          "rationale": "Upstream storage is the regulated volume available to alter the natural flow regime.",
-          "slider": {
-            "min": 0,
-            "max": 500000,
-            "step": 1000
-          }
-        },
-        {
-          "key": "runoff",
-          "label": "Annual runoff",
-          "symbol": "RunoffWs",
-          "sourceField": "runoffws",
-          "units": "mm",
-          "required": true,
-          "positive": true,
-          "rationale": "Annual runoff converts storage to a dimensionless degree of regulation relative to the river's annual water volume.",
-          "slider": {
-            "min": 1,
-            "max": 3000,
-            "step": 10
-          }
-        }
-      ],
-      "formula": {
-        "numerator": "storage",
-        "denominator": "runoff",
-        "numeratorMultiplier": 100,
-        "denominatorMultiplier": 1000,
-        "resultSymbol": "DOR",
-        "units": "%"
-      },
       "bands": [
         {
-          "rating": "Good",
-          "min": null,
+          "label": "<2%",
           "max": 2,
-          "minInclusive": false,
           "maxInclusive": false,
-          "label": "<2%"
+          "min": null,
+          "minInclusive": false,
+          "rating": "Good"
         },
         {
-          "rating": "Fair",
-          "min": 2,
+          "label": "2-15%",
           "max": 15,
-          "minInclusive": true,
           "maxInclusive": true,
-          "label": "2-15%"
+          "min": 2,
+          "minInclusive": true,
+          "rating": "Fair"
         },
         {
-          "rating": "Poor",
-          "min": 15,
+          "label": ">15%",
           "max": null,
-          "minInclusive": false,
           "maxInclusive": false,
-          "label": ">15%"
+          "min": 15,
+          "minInclusive": false,
+          "rating": "Poor"
         }
       ],
+      "basisClass": "published threshold",
       "breakpoints": [
         {
-          "label": "2% DOR",
-          "description": "Onset-of-regulation boundary. Comparative global assessment treats storage above 2 percent of annual flow as regulated (Lehner et al. 2011)."
+          "description": "Onset-of-regulation boundary. Comparative global assessment treats storage above 2 percent of annual flow as regulated (Lehner et al. 2011).",
+          "label": "2% DOR"
         },
         {
-          "label": "15% DOR",
-          "description": "Severe-regulation boundary. The free-flowing rivers analysis uses 15 percent as its operational pressure limit, the high end of a published 2 to 15 percent range (Grill et al. 2019). It is not a regulatory standard."
+          "description": "Severe-regulation boundary. The free-flowing rivers analysis uses 15 percent as its operational pressure limit, the high end of a published 2 to 15 percent range (Grill et al. 2019). It is not a regulatory standard.",
+          "label": "15% DOR"
         }
-      ],
-      "fieldReference": null,
-      "limitations": [
-        "Degree of regulation does not describe operating rules, diversions, seasonality, or dam location on the network.",
-        "Missing or non-positive runoff is not converted to zero and leaves the metric unscored."
       ],
       "citations": [
         "streamcat",
         "lehner-2011",
         "grill-2019"
       ],
+      "confidence": "M",
+      "evidenceFamily": "flow_regulation",
+      "fieldReference": null,
+      "formula": {
+        "denominator": "runoff",
+        "denominatorMultiplier": 1000,
+        "numerator": "storage",
+        "numeratorMultiplier": 100,
+        "resultSymbol": "DOR",
+        "units": "%"
+      },
+      "inputs": [
+        {
+          "key": "storage",
+          "label": "Upstream normalized storage",
+          "rationale": "Upstream storage is the regulated volume available to alter the natural flow regime.",
+          "required": true,
+          "slider": {
+            "max": 500000,
+            "min": 0,
+            "step": 1000
+          },
+          "sourceField": "damnrmstorws",
+          "symbol": "DamNrmStorWs",
+          "units": "m\u00b3/km\u00b2"
+        },
+        {
+          "key": "runoff",
+          "label": "Annual runoff",
+          "positive": true,
+          "rationale": "Annual runoff converts storage to a dimensionless degree of regulation relative to the river's annual water volume.",
+          "required": true,
+          "slider": {
+            "max": 3000,
+            "min": 1,
+            "step": 10
+          },
+          "sourceField": "runoffws",
+          "symbol": "RunoffWs",
+          "units": "mm"
+        }
+      ],
+      "limitations": [
+        "Degree of regulation does not describe operating rules, diversions, seasonality, or dam location on the network.",
+        "Missing or non-positive runoff is not converted to zero and leaves the metric unscored."
+      ],
+      "methodKey": "degree-of-regulation",
+      "metricId": "streamflow-regime-flow-alteration-regulation-water-use",
+      "operator": "ratio",
       "plot": {
-        "mode": "scalar",
         "direction": "lower_better",
         "domain": [
           0,
           50
-        ]
-      }
+        ],
+        "mode": "scalar"
+      },
+      "provisional": false,
+      "sourceTier": "screening-proxy",
+      "status": "computed",
+      "title": "Flow alteration (degree of regulation)",
+      "usedFallback": false
     },
     {
-      "methodKey": "erom-flow-variability",
-      "metricId": "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity",
-      "title": "Low-flow condition",
-      "status": "computed",
-      "operator": "threshold",
       "basisClass": "provisional STAF screening judgment",
-      "provisional": true,
-      "confidence": "L",
-      "sourceTier": "published-model",
-      "evidenceFamily": "erom_flow",
-      "usedFallback": false,
-      "inputs": [
-        {
-          "key": "flowCv",
-          "label": "Monthly flow variability",
-          "symbol": "CV",
-          "sourceField": "NHDPlus V2 EROM QE_01 through QE_12",
-          "units": "ratio",
-          "required": true,
-          "rationale": "Population standard deviation of all twelve mean monthly flows divided by their mean. All months must be finite and the mean must be positive.",
-          "slider": {
-            "min": 0,
-            "max": 3.5,
-            "step": 0.01
-          }
-        },
-        {
-          "key": "meanAnnualFlow",
-          "label": "EROM mean annual flow",
-          "symbol": "QE_MA",
-          "sourceField": "NHDPlus V2 EROM QE_MA",
-          "units": "cfs",
-          "required": false,
-          "contextOnly": true,
-          "rationale": "Mean annual modeled flow provides scale context; it does not determine the rating."
-        },
-        {
-          "key": "fcodeContext",
-          "label": "Expected NHD flow regime",
-          "symbol": "FCODE",
-          "sourceField": "NHDPlus FCODE",
-          "units": "",
-          "required": false,
-          "contextOnly": true,
-          "rationale": "Flow classification provides context for natural intermittency and does not determine the rating."
-        }
-      ],
       "breakpoints": [
         {
-          "label": "Reference index 0.39",
-          "description": "Fair begins at an interpolated reference index of 0.39."
+          "description": "Fair begins at an interpolated reference index of 0.39.",
+          "label": "Reference index 0.39"
         },
         {
-          "label": "Reference index 0.69",
-          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum."
+          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum.",
+          "label": "Reference index 0.69"
         }
-      ],
-      "sourceHierarchy": [
-        {
-          "methodKey": "erom-flow-variability",
-          "label": "EROM monthly flow variability",
-          "description": "Use all twelve modeled monthly flows; missing or nonpositive-mean flow remains unscored."
-        }
-      ],
-      "limitations": [
-        "Unvalidated screening proxy for low-flow condition. Agreement with the field wetted-channel measure was weak (0.18).",
-        "Monthly climatological variability is not a measurement of daily low flow, baseflow contribution, or wetted connectivity.",
-        "Level II curves compare variability with regional reference expectations; lower variability rates better. A national curve is the fallback.",
-        "All twelve months are required. Missing months are unknown, not zero. Natural intermittent and ephemeral streams require interpretation."
       ],
       "citations": [
         "nhdplus-erom",
         "easi-reference-curves"
       ],
+      "confidence": "L",
+      "curve": {
+        "fallback": [
+          "national"
+        ],
+        "mode": "banded",
+        "set": "flow-variability",
+        "stratifier": "nars9"
+      },
+      "evidenceFamily": "erom_flow",
+      "inputs": [
+        {
+          "key": "flowCv",
+          "label": "Monthly flow variability",
+          "rationale": "Population standard deviation of all twelve mean monthly flows divided by their mean. All months must be finite and the mean must be positive.",
+          "required": true,
+          "slider": {
+            "max": 3.5,
+            "min": 0,
+            "step": 0.01
+          },
+          "sourceField": "NHDPlus V2 EROM QE_01 through QE_12",
+          "symbol": "CV",
+          "units": "ratio"
+        },
+        {
+          "contextOnly": true,
+          "key": "meanAnnualFlow",
+          "label": "EROM mean annual flow",
+          "rationale": "Mean annual modeled flow provides scale context; it does not determine the rating.",
+          "required": false,
+          "sourceField": "NHDPlus V2 EROM QE_MA",
+          "symbol": "QE_MA",
+          "units": "cfs"
+        },
+        {
+          "contextOnly": true,
+          "key": "fcodeContext",
+          "label": "Expected NHD flow regime",
+          "rationale": "Flow classification provides context for natural intermittency and does not determine the rating.",
+          "required": false,
+          "sourceField": "NHDPlus FCODE",
+          "symbol": "FCODE",
+          "units": ""
+        }
+      ],
+      "limitations": [
+        "Unvalidated screening proxy for low-flow condition. Agreement with the field wetted-channel measure was weak (0.18).",
+        "Monthly climatological variability is not a measurement of daily low flow, baseflow contribution, or wetted connectivity.",
+        "NARS-9 curves compare variability with regional reference expectations; lower variability rates better. A national curve is the fallback.",
+        "All twelve months are required. Missing months are unknown, not zero. Natural intermittent and ephemeral streams require interpretation."
+      ],
+      "methodKey": "erom-flow-variability",
+      "metricId": "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity",
+      "operator": "threshold",
       "plot": {
-        "mode": "scalar",
         "direction": "lower_better",
         "domain": [
           0,
           3.5
-        ]
-      },
-      "curve": {
-        "set": "flow-variability",
-        "stratifier": "l2",
-        "fallback": [
-          "national"
         ],
-        "mode": "banded"
-      }
+        "mode": "scalar"
+      },
+      "provisional": true,
+      "sourceHierarchy": [
+        {
+          "description": "Use all twelve modeled monthly flows; missing or nonpositive-mean flow remains unscored.",
+          "label": "EROM monthly flow variability",
+          "methodKey": "erom-flow-variability"
+        }
+      ],
+      "sourceTier": "published-model",
+      "status": "computed",
+      "title": "Low-flow condition",
+      "usedFallback": false
     },
     {
-      "methodKey": "bank-height-ratio",
-      "metricId": "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
-      "title": "Floodplain engagement (bank-height ratio)",
-      "status": "computed",
-      "operator": "threshold",
-      "basisClass": "published threshold",
-      "provisional": false,
-      "confidence": "M",
-      "sourceTier": "screening-proxy",
-      "evidenceFamily": "incision_geometry",
-      "usedFallback": false,
-      "inputs": [
-        {
-          "key": "bhr",
-          "label": "Bank-height ratio",
-          "symbol": "BHR",
-          "sourceField": "low-bank height / maximum bankfull depth",
-          "units": "ratio",
-          "required": true,
-          "rationale": "BHR directly measures the vertical separation between bankfull flow and the low floodplain surface."
-        }
-      ],
       "bands": [
         {
-          "rating": "Good",
-          "min": null,
+          "label": "\u22641.3",
           "max": 1.3,
-          "minInclusive": false,
           "maxInclusive": true,
-          "label": "≤1.3"
+          "min": null,
+          "minInclusive": false,
+          "rating": "Good"
         },
         {
-          "rating": "Fair",
-          "min": 1.3,
+          "label": ">1.3-\u22641.5",
           "max": 1.5,
-          "minInclusive": false,
           "maxInclusive": true,
-          "label": ">1.3-≤1.5"
+          "min": 1.3,
+          "minInclusive": false,
+          "rating": "Fair"
         },
         {
-          "rating": "Poor",
-          "min": 1.5,
+          "label": ">1.5",
           "max": null,
-          "minInclusive": false,
           "maxInclusive": false,
-          "label": ">1.5"
+          "min": 1.5,
+          "minInclusive": false,
+          "rating": "Poor"
         }
       ],
-      "formula": {
-        "geometryWarningBelow": 1.0
-      },
+      "basisClass": "published threshold",
       "breakpoints": [
         {
-          "label": "BHR 1.3",
-          "description": "Upper boundary of the functioning floodplain-connectivity class."
+          "description": "Upper boundary of the functioning floodplain-connectivity class.",
+          "label": "BHR 1.3"
         },
         {
-          "label": "BHR 1.5",
-          "description": "Boundary above which published stream-quantification guidance identifies non-functioning connectivity."
+          "description": "Boundary above which published stream-quantification guidance identifies non-functioning connectivity.",
+          "label": "BHR 1.5"
         }
-      ],
-      "fieldReference": null,
-      "limitations": [
-        "A BHR below 1.0 remains Good but requires geometry verification.",
-        "The DEM-derived cross section is a screening estimate and may require surveyed geometry."
       ],
       "citations": [
         "csqt"
       ],
+      "confidence": "M",
+      "evidenceFamily": "incision_geometry",
+      "fieldReference": null,
+      "formula": {
+        "geometryWarningBelow": 1.0
+      },
+      "inputs": [
+        {
+          "key": "bhr",
+          "label": "Bank-height ratio",
+          "rationale": "BHR directly measures the vertical separation between bankfull flow and the low floodplain surface.",
+          "required": true,
+          "sourceField": "low-bank height / maximum bankfull depth",
+          "symbol": "BHR",
+          "units": "ratio"
+        }
+      ],
+      "limitations": [
+        "A BHR below 1.0 remains Good but requires geometry verification.",
+        "The DEM-derived cross section is a screening estimate and may require surveyed geometry."
+      ],
+      "methodKey": "bank-height-ratio",
+      "metricId": "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
+      "operator": "threshold",
       "plot": {
-        "mode": "scalar",
         "direction": "lower_better",
         "domain": [
           0.8,
           2.2
-        ]
-      }
+        ],
+        "mode": "scalar"
+      },
+      "provisional": false,
+      "sourceTier": "screening-proxy",
+      "status": "computed",
+      "title": "Floodplain engagement (bank-height ratio)",
+      "usedFallback": false
     },
     {
-      "methodKey": "entrenchment-ratio",
-      "metricId": "floodplain-connectivity-floodplain-access-entrenchment",
-      "title": "Floodplain access (entrenchment ratio)",
-      "status": "computed",
-      "operator": "threshold",
       "basisClass": "provisional STAF screening judgment",
-      "provisional": true,
-      "confidence": "M",
-      "sourceTier": "screening-proxy",
-      "evidenceFamily": "incision_geometry",
-      "usedFallback": false,
-      "inputs": [
-        {
-          "key": "er",
-          "label": "Entrenchment ratio",
-          "symbol": "ER",
-          "sourceField": "flood-prone width / bankfull width",
-          "units": "ratio",
-          "required": true,
-          "rationale": "ER directly represents lateral floodplain width available relative to the bankfull channel."
-        }
-      ],
       "breakpoints": [
         {
-          "label": "Reference index 0.39",
-          "description": "Fair begins at an interpolated reference index of 0.39."
+          "description": "Fair begins at an interpolated reference index of 0.39.",
+          "label": "Reference index 0.39"
         },
         {
-          "label": "Reference index 0.69",
-          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum."
+          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum.",
+          "label": "Reference index 0.69"
         }
-      ],
-      "fieldReference": null,
-      "limitations": [
-        "National reference curves group channel slopes below 0.5 percent, from 0.5 to below 2 percent, and at least 2 percent.",
-        "An unsplit national reference curve is used when slope is unknown. Naturally confined valleys still require field interpretation.",
-        "Entrenchment ratio measures floodplain access; it does not establish channel stability or flood frequency."
       ],
       "citations": [
         "csqt",
         "easi-reference-curves"
       ],
+      "confidence": "M",
+      "curve": {
+        "fallback": [
+          "national"
+        ],
+        "mode": "banded",
+        "set": "entrenchment",
+        "stratifier": "slope_class"
+      },
+      "evidenceFamily": "incision_geometry",
+      "fieldReference": null,
+      "inputs": [
+        {
+          "key": "er",
+          "label": "Entrenchment ratio",
+          "rationale": "ER directly represents lateral floodplain width available relative to the bankfull channel.",
+          "required": true,
+          "sourceField": "flood-prone width / bankfull width",
+          "symbol": "ER",
+          "units": "ratio"
+        }
+      ],
+      "limitations": [
+        "National reference curves group channel slopes below 0.5 percent, from 0.5 to below 2 percent, and at least 2 percent.",
+        "An unsplit national reference curve is used when slope is unknown. Naturally confined valleys still require field interpretation.",
+        "Entrenchment ratio measures floodplain access; it does not establish channel stability or flood frequency."
+      ],
+      "methodKey": "entrenchment-ratio",
+      "metricId": "floodplain-connectivity-floodplain-access-entrenchment",
+      "operator": "threshold",
       "plot": {
-        "mode": "scalar",
         "direction": "higher_better",
         "domain": [
           0.8,
           3.5
-        ]
-      },
-      "curve": {
-        "set": "entrenchment",
-        "stratifier": "slope_class",
-        "fallback": [
-          "national"
         ],
-        "mode": "banded"
-      }
+        "mode": "scalar"
+      },
+      "provisional": true,
+      "sourceTier": "screening-proxy",
+      "status": "computed",
+      "title": "Floodplain access (entrenchment ratio)",
+      "usedFallback": false
     },
     {
-      "methodKey": "hyporheic-exchange-potential",
-      "metricId": "hyporheic-connectivity-hyporheic-exchange-indicators",
-      "title": "Hyporheic-exchange potential (channel gradient or sinuosity)",
-      "status": "computed",
-      "operator": "best_index",
       "basisClass": "provisional STAF screening judgment",
-      "provisional": true,
-      "confidence": "L",
-      "inputs": [
-        {
-          "key": "slope",
-          "label": "Channel slope",
-          "symbol": "slope",
-          "indexSymbol": "Islope",
-          "sourceField": "NHDPlus slope",
-          "units": "m/m",
-          "required": true,
-          "rationale": "Slope sets the vertical hydraulic gradient that drives bedform-driven bed exchange, the dominant hyporheic pathway in steeper channels.",
-          "slider": {
-            "min": 0,
-            "max": 0.02,
-            "step": 0.0001
-          },
-          "bands": [
-            {
-              "rating": "Poor",
-              "min": null,
-              "max": 0.003,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": "<0.003 m/m"
-            },
-            {
-              "rating": "Fair",
-              "min": 0.003,
-              "max": 0.006,
-              "minInclusive": true,
-              "maxInclusive": false,
-              "label": "0.003-<0.006 m/m"
-            },
-            {
-              "rating": "Good",
-              "min": 0.006,
-              "max": null,
-              "minInclusive": true,
-              "maxInclusive": false,
-              "label": "≥0.006 m/m"
-            }
-          ]
-        },
-        {
-          "key": "sinuosity",
-          "label": "Reach sinuosity",
-          "symbol": "sinuosity",
-          "indexSymbol": "Isinuosity",
-          "sourceField": "reach geometry",
-          "units": "ratio",
-          "required": true,
-          "rationale": "Sinuosity indicates lateral exchange through meander necks and point bars, the dominant hyporheic pathway in low-gradient meandering channels. Because the better pathway governs, sinuosity understated by generalized reach geometry can only fail to credit lateral exchange, never lower the rating.",
-          "slider": {
-            "min": 1,
-            "max": 2.5,
-            "step": 0.01
-          },
-          "bands": [
-            {
-              "rating": "Poor",
-              "min": null,
-              "max": 1.05,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": "<1.05"
-            },
-            {
-              "rating": "Fair",
-              "min": 1.05,
-              "max": 1.2,
-              "minInclusive": true,
-              "maxInclusive": false,
-              "label": "1.05-<1.2"
-            },
-            {
-              "rating": "Good",
-              "min": 1.2,
-              "max": null,
-              "minInclusive": true,
-              "maxInclusive": false,
-              "label": "≥1.2"
-            }
-          ]
-        }
-      ],
-      "formula": {
-        "allowPartial": true
-      },
       "breakpoints": [
         {
+          "description": "Lower screening transition, carried over from the prior exchange-potential index. A screening judgment, not a published threshold.",
           "input": "slope",
-          "label": "0.003 m/m",
-          "description": "Lower screening transition, carried over from the prior exchange-potential index. A screening judgment, not a published threshold."
+          "label": "0.003 m/m"
         },
         {
+          "description": "Upper screening transition, carried over from the prior exchange-potential index. A screening judgment, not a published threshold.",
           "input": "slope",
-          "label": "0.006 m/m",
-          "description": "Upper screening transition, carried over from the prior exchange-potential index. A screening judgment, not a published threshold."
+          "label": "0.006 m/m"
         },
         {
+          "description": "Boundary between straight and sinuous planform in common geomorphic classifications. A screening judgment, not a published threshold.",
           "input": "sinuosity",
-          "label": "1.05",
-          "description": "Boundary between straight and sinuous planform in common geomorphic classifications. A screening judgment, not a published threshold."
+          "label": "1.05"
         },
         {
+          "description": "Boundary above which meandering is well expressed in generalized reach geometry and lateral exchange across bends is expected (Boano et al. 2006, Cardenas 2009). A screening judgment, not a published threshold.",
           "input": "sinuosity",
-          "label": "1.2",
-          "description": "Boundary above which meandering is well expressed in generalized reach geometry and lateral exchange across bends is expected (Boano et al. 2006, Cardenas 2009). A screening judgment, not a published threshold."
+          "label": "1.2"
         }
-      ],
-      "fieldReference": null,
-      "limitations": [
-        "Slope screens vertical bedform-driven exchange and sinuosity screens lateral meander-driven exchange. Bed hydraulic conductivity is a co-dominant control that is unavailable, so steep reaches over bedrock or fine beds can overpredict exchange.",
-        "The better pathway governs because vertical and lateral exchange are alternative mechanisms. Either alone indicates exchange potential.",
-        "Sinuosity measured over generalized reach geometry understates planform sinuosity. Under the better-pathway rule that bias can only fail to lift a rating, never lower one. The earlier weighted slope and sinuosity composite was retired for exactly that downward bias.",
-        "A result computed from one pathway is labeled partial.",
-        "The slope and sinuosity bands are screening judgments, not published thresholds."
       ],
       "citations": [
         "streamcat",
@@ -920,701 +812,659 @@
         "boano-2006",
         "cardenas-2009"
       ],
-      "plot": {
-        "mode": "best_index",
-        "direction": "higher_better"
-      }
-    },
-    {
-      "methodKey": "channel-adjustment-susceptibility",
-      "metricId": "channel-evolution-channel-evolution-stage-and-trends",
-      "title": "Channel evolution",
-      "status": "computed",
-      "operator": "worst_index",
-      "basisClass": "provisional STAF screening judgment",
-      "provisional": true,
       "confidence": "L",
-      "sourceTier": "screening-proxy",
-      "evidenceFamily": "incision_geometry",
-      "usedFallback": true,
+      "fieldReference": null,
+      "formula": {
+        "allowPartial": true
+      },
       "inputs": [
         {
-          "key": "bhr",
-          "label": "Bank-height ratio",
-          "symbol": "BHR",
-          "indexSymbol": "IBHR",
-          "sourceField": "3DEP cross section",
-          "units": "ratio",
-          "required": true,
-          "rationale": "BHR is a documented incision and floodplain-disconnection clue used in channel-evolution interpretation.",
-          "slider": {
-            "min": 0.8,
-            "max": 2.5,
-            "step": 0.01
-          },
           "bands": [
             {
-              "rating": "Good",
-              "min": null,
-              "max": 1.3,
-              "minInclusive": false,
-              "maxInclusive": true,
-              "label": "≤1.3"
-            },
-            {
-              "rating": "Fair",
-              "min": 1.3,
-              "max": 1.5,
-              "minInclusive": false,
-              "maxInclusive": true,
-              "label": ">1.3-≤1.5"
-            },
-            {
-              "rating": "Poor",
-              "min": 1.5,
-              "max": null,
-              "minInclusive": false,
+              "label": "<0.003 m/m",
+              "max": 0.003,
               "maxInclusive": false,
-              "label": ">1.5"
+              "min": null,
+              "minInclusive": false,
+              "rating": "Poor"
+            },
+            {
+              "label": "0.003-<0.006 m/m",
+              "max": 0.006,
+              "maxInclusive": false,
+              "min": 0.003,
+              "minInclusive": true,
+              "rating": "Fair"
+            },
+            {
+              "label": "\u22650.006 m/m",
+              "max": null,
+              "maxInclusive": false,
+              "min": 0.006,
+              "minInclusive": true,
+              "rating": "Good"
             }
-          ]
+          ],
+          "indexSymbol": "Islope",
+          "key": "slope",
+          "label": "Channel slope",
+          "rationale": "Slope sets the vertical hydraulic gradient that drives bedform-driven bed exchange, the dominant hyporheic pathway in steeper channels.",
+          "required": true,
+          "slider": {
+            "max": 0.02,
+            "min": 0,
+            "step": 0.0001
+          },
+          "sourceField": "NHDPlus slope",
+          "symbol": "slope",
+          "units": "m/m"
         },
         {
-          "key": "er",
-          "label": "Entrenchment ratio",
-          "symbol": "ER",
-          "indexSymbol": "IER",
-          "sourceField": "3DEP cross section",
-          "units": "ratio",
+          "bands": [
+            {
+              "label": "<1.05",
+              "max": 1.05,
+              "maxInclusive": false,
+              "min": null,
+              "minInclusive": false,
+              "rating": "Poor"
+            },
+            {
+              "label": "1.05-<1.2",
+              "max": 1.2,
+              "maxInclusive": false,
+              "min": 1.05,
+              "minInclusive": true,
+              "rating": "Fair"
+            },
+            {
+              "label": "\u22651.2",
+              "max": null,
+              "maxInclusive": false,
+              "min": 1.2,
+              "minInclusive": true,
+              "rating": "Good"
+            }
+          ],
+          "indexSymbol": "Isinuosity",
+          "key": "sinuosity",
+          "label": "Reach sinuosity",
+          "rationale": "Sinuosity indicates lateral exchange through meander necks and point bars, the dominant hyporheic pathway in low-gradient meandering channels. Because the better pathway governs, sinuosity understated by generalized reach geometry can only fail to credit lateral exchange, never lower the rating.",
           "required": true,
-          "rationale": "ER indicates lateral confinement and access to flood-prone width, another documented clue to adjustment state.",
           "slider": {
-            "min": 0.8,
-            "max": 3.5,
+            "max": 2.5,
+            "min": 1,
             "step": 0.01
           },
-          "curve": {
-            "set": "entrenchment",
-            "stratifier": "slope_class",
-            "fallback": [
-              "national"
-            ],
-            "mode": "banded"
-          }
-        },
-        {
-          "key": "fcodeContext",
-          "label": "NHD feature classification",
-          "symbol": "FCODE",
-          "sourceField": "NHDPlus FCODE",
-          "units": "",
-          "required": false,
-          "contextOnly": true,
-          "rationale": "A canal/ditch classification is decisive. Other FCODEs are neutral and cannot imply stable condition."
+          "sourceField": "reach geometry",
+          "symbol": "sinuosity",
+          "units": "ratio"
         }
       ],
-      "formula": {
-        "allowPartial": false
+      "limitations": [
+        "Slope screens vertical bedform-driven exchange and sinuosity screens lateral meander-driven exchange. Bed hydraulic conductivity is a co-dominant control that is unavailable, so steep reaches over bedrock or fine beds can overpredict exchange.",
+        "The better pathway governs because vertical and lateral exchange are alternative mechanisms. Either alone indicates exchange potential.",
+        "Sinuosity measured over generalized reach geometry understates planform sinuosity. Under the better-pathway rule that bias can only fail to lift a rating, never lower one. The earlier weighted slope and sinuosity composite was retired for exactly that downward bias.",
+        "A result computed from one pathway is labeled partial.",
+        "The slope and sinuosity bands are screening judgments, not published thresholds."
+      ],
+      "methodKey": "hyporheic-exchange-potential",
+      "metricId": "hyporheic-connectivity-hyporheic-exchange-indicators",
+      "operator": "best_index",
+      "plot": {
+        "direction": "higher_better",
+        "mode": "best_index"
       },
+      "provisional": true,
+      "status": "computed",
+      "title": "Hyporheic-exchange potential (channel gradient or sinuosity)"
+    },
+    {
+      "basisClass": "provisional STAF screening judgment",
       "breakpoints": [
         {
+          "description": "Upper boundary for functioning floodplain connection.",
           "input": "bhr",
-          "label": "BHR 1.3",
-          "description": "Upper boundary for functioning floodplain connection."
+          "label": "BHR 1.3"
         },
         {
+          "description": "Boundary above which incision/disconnection is Poor.",
           "input": "bhr",
-          "label": "BHR 1.5",
-          "description": "Boundary above which incision/disconnection is Poor."
+          "label": "BHR 1.5"
         },
         {
+          "description": "Fair begins at an interpolated reference index of 0.39.",
           "input": "er",
-          "label": "Reference index 0.39",
-          "description": "Fair begins at an interpolated reference index of 0.39."
+          "label": "Reference index 0.39"
         },
         {
+          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum.",
           "input": "er",
-          "label": "Reference index 0.69",
-          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum."
+          "label": "Reference index 0.69"
         }
-      ],
-      "sourceHierarchy": [
-        {
-          "methodKey": "observed-channel-adjustment",
-          "label": "Documented channel-stage assessment",
-          "description": "A user-documented stable/recovered, moderately adjusting, or severely adjusting condition supersedes the proxy."
-        },
-        {
-          "methodKey": "channelized-fcode",
-          "label": "Canal/ditch classification",
-          "description": "A canal/ditch FCODE is directly classified Poor."
-        },
-        {
-          "methodKey": "channel-adjustment-susceptibility",
-          "label": "BHR and ER susceptibility proxy",
-          "description": "For other reaches, the worse BHR or ER index governs."
-        }
-      ],
-      "variants": [
-        {
-          "methodKey": "channelized-fcode",
-          "status": "conditional",
-          "operator": "categorical_lookup",
-          "basisClass": "dataset reference",
-          "provisional": false,
-          "confidence": "M",
-          "sourceTier": "screening-proxy",
-          "evidenceFamily": "channelization_class",
-          "usedFallback": true,
-          "inputs": [
-            {
-              "key": "fcode",
-              "label": "NHD feature classification",
-              "symbol": "FCODE",
-              "sourceField": "NHDPlus FCODE",
-              "units": "",
-              "required": true,
-              "rationale": "The NHD canal/ditch class directly identifies an artificial channel."
-            }
-          ],
-          "formula": {
-            "input": "fcode",
-            "lookup": {
-              "33600": {
-                "rating": "Poor",
-                "label": "Canal/ditch"
-              },
-              "33601": {
-                "rating": "Poor",
-                "label": "Canal/ditch"
-              },
-              "33603": {
-                "rating": "Poor",
-                "label": "Canal/ditch"
-              }
-            }
-          },
-          "breakpoints": [],
-          "limitations": [
-            "FCODE identifies channelization but does not quantify current geomorphic adjustment."
-          ],
-          "citations": [
-            "function-framework"
-          ],
-          "plot": {
-            "mode": "categorical"
-          }
-        },
-        {
-          "methodKey": "observed-channel-adjustment",
-          "status": "conditional",
-          "operator": "categorical_lookup",
-          "basisClass": "field-only method",
-          "provisional": false,
-          "confidence": "H",
-          "sourceTier": "observed",
-          "evidenceFamily": "channel_observation",
-          "usedFallback": false,
-          "observedOverridesProxy": true,
-          "inputs": [
-            {
-              "key": "stageClass",
-              "label": "Documented adjustment class",
-              "symbol": "stage",
-              "sourceField": "user field assessment",
-              "units": "",
-              "required": true,
-              "rationale": "The class records an integrated field interpretation of channel stage and active adjustment."
-            },
-            {
-              "key": "indicators",
-              "label": "Observed indicators",
-              "symbol": "evidence",
-              "sourceField": "user field notes",
-              "units": "",
-              "required": false,
-              "contextOnly": true,
-              "rationale": "Headcuts, bars, width/depth change, bank erosion, and recovery features support the selected class."
-            }
-          ],
-          "formula": {
-            "input": "stageClass",
-            "lookup": {
-              "GOOD": {
-                "rating": "Good",
-                "label": "Stable or recovered"
-              },
-              "FAIR": {
-                "rating": "Fair",
-                "label": "Moderately adjusting or recovering"
-              },
-              "POOR": {
-                "rating": "Poor",
-                "label": "Severely or destructively adjusting"
-              }
-            }
-          },
-          "breakpoints": [],
-          "limitations": [
-            "A defensible replacement requires a selected class plus a narrative identifying the observed adjustment indicators."
-          ],
-          "citations": [
-            "function-framework",
-            "mnsqt"
-          ],
-          "plot": {
-            "mode": "categorical"
-          }
-        }
-      ],
-      "fieldReference": {
-        "title": "Field channel-adjustment profile",
-        "criteria": {
-          "Good": "Stable or recovered Stage I/VI condition",
-          "Fair": "Moderate adjustment or recovery, generally Stages III-V",
-          "Poor": "Severe incision or destructive adjustment, generally Stage II or severe III-IV"
-        }
-      },
-      "limitations": [
-        "This is a susceptibility proxy, not a formal channel-evolution stage assessment. Both BHR and ER are required.",
-        "BHR retains its 1.3/1.5 bands; ER uses national reference curves by slope class, with an unsplit national fallback when slope is unknown.",
-        "Canal/ditch classification and documented field-stage overrides remain decisive. Naturally confined valleys require field interpretation."
       ],
       "citations": [
         "mnsqt",
         "function-framework",
         "easi-reference-curves"
       ],
+      "confidence": "L",
+      "evidenceFamily": "incision_geometry",
+      "fieldReference": {
+        "criteria": {
+          "Fair": "Moderate adjustment or recovery, generally Stages III-V",
+          "Good": "Stable or recovered Stage I/VI condition",
+          "Poor": "Severe incision or destructive adjustment, generally Stage II or severe III-IV"
+        },
+        "title": "Field channel-adjustment profile"
+      },
+      "formula": {
+        "allowPartial": false
+      },
+      "inputs": [
+        {
+          "bands": [
+            {
+              "label": "\u22641.3",
+              "max": 1.3,
+              "maxInclusive": true,
+              "min": null,
+              "minInclusive": false,
+              "rating": "Good"
+            },
+            {
+              "label": ">1.3-\u22641.5",
+              "max": 1.5,
+              "maxInclusive": true,
+              "min": 1.3,
+              "minInclusive": false,
+              "rating": "Fair"
+            },
+            {
+              "label": ">1.5",
+              "max": null,
+              "maxInclusive": false,
+              "min": 1.5,
+              "minInclusive": false,
+              "rating": "Poor"
+            }
+          ],
+          "indexSymbol": "IBHR",
+          "key": "bhr",
+          "label": "Bank-height ratio",
+          "rationale": "BHR is a documented incision and floodplain-disconnection clue used in channel-evolution interpretation.",
+          "required": true,
+          "slider": {
+            "max": 2.5,
+            "min": 0.8,
+            "step": 0.01
+          },
+          "sourceField": "3DEP cross section",
+          "symbol": "BHR",
+          "units": "ratio"
+        },
+        {
+          "curve": {
+            "fallback": [
+              "national"
+            ],
+            "mode": "banded",
+            "set": "entrenchment",
+            "stratifier": "slope_class"
+          },
+          "indexSymbol": "IER",
+          "key": "er",
+          "label": "Entrenchment ratio",
+          "rationale": "ER indicates lateral confinement and access to flood-prone width, another documented clue to adjustment state.",
+          "required": true,
+          "slider": {
+            "max": 3.5,
+            "min": 0.8,
+            "step": 0.01
+          },
+          "sourceField": "3DEP cross section",
+          "symbol": "ER",
+          "units": "ratio"
+        },
+        {
+          "contextOnly": true,
+          "key": "fcodeContext",
+          "label": "NHD feature classification",
+          "rationale": "A canal/ditch classification is decisive. Other FCODEs are neutral and cannot imply stable condition.",
+          "required": false,
+          "sourceField": "NHDPlus FCODE",
+          "symbol": "FCODE",
+          "units": ""
+        }
+      ],
+      "limitations": [
+        "This is a susceptibility proxy, not a formal channel-evolution stage assessment. Both BHR and ER are required.",
+        "BHR retains its 1.3/1.5 bands; ER uses national reference curves by slope class, with an unsplit national fallback when slope is unknown.",
+        "Canal/ditch classification and documented field-stage overrides remain decisive. Naturally confined valleys require field interpretation."
+      ],
+      "methodKey": "channel-adjustment-susceptibility",
+      "metricId": "channel-evolution-channel-evolution-stage-and-trends",
+      "operator": "worst_index",
       "plot": {
         "mode": "worst_index"
-      }
+      },
+      "provisional": true,
+      "sourceHierarchy": [
+        {
+          "description": "A user-documented stable/recovered, moderately adjusting, or severely adjusting condition supersedes the proxy.",
+          "label": "Documented channel-stage assessment",
+          "methodKey": "observed-channel-adjustment"
+        },
+        {
+          "description": "A canal/ditch FCODE is directly classified Poor.",
+          "label": "Canal/ditch classification",
+          "methodKey": "channelized-fcode"
+        },
+        {
+          "description": "For other reaches, the worse BHR or ER index governs.",
+          "label": "BHR and ER susceptibility proxy",
+          "methodKey": "channel-adjustment-susceptibility"
+        }
+      ],
+      "sourceTier": "screening-proxy",
+      "status": "computed",
+      "title": "Channel evolution",
+      "usedFallback": true,
+      "variants": [
+        {
+          "basisClass": "dataset reference",
+          "breakpoints": [],
+          "citations": [
+            "function-framework"
+          ],
+          "confidence": "M",
+          "evidenceFamily": "channelization_class",
+          "formula": {
+            "input": "fcode",
+            "lookup": {
+              "33600": {
+                "label": "Canal/ditch",
+                "rating": "Poor"
+              },
+              "33601": {
+                "label": "Canal/ditch",
+                "rating": "Poor"
+              },
+              "33603": {
+                "label": "Canal/ditch",
+                "rating": "Poor"
+              }
+            }
+          },
+          "inputs": [
+            {
+              "key": "fcode",
+              "label": "NHD feature classification",
+              "rationale": "The NHD canal/ditch class directly identifies an artificial channel.",
+              "required": true,
+              "sourceField": "NHDPlus FCODE",
+              "symbol": "FCODE",
+              "units": ""
+            }
+          ],
+          "limitations": [
+            "FCODE identifies channelization but does not quantify current geomorphic adjustment."
+          ],
+          "methodKey": "channelized-fcode",
+          "operator": "categorical_lookup",
+          "plot": {
+            "mode": "categorical"
+          },
+          "provisional": false,
+          "sourceTier": "screening-proxy",
+          "status": "conditional",
+          "usedFallback": true
+        },
+        {
+          "basisClass": "field-only method",
+          "breakpoints": [],
+          "citations": [
+            "function-framework",
+            "mnsqt"
+          ],
+          "confidence": "H",
+          "evidenceFamily": "channel_observation",
+          "formula": {
+            "input": "stageClass",
+            "lookup": {
+              "FAIR": {
+                "label": "Moderately adjusting or recovering",
+                "rating": "Fair"
+              },
+              "GOOD": {
+                "label": "Stable or recovered",
+                "rating": "Good"
+              },
+              "POOR": {
+                "label": "Severely or destructively adjusting",
+                "rating": "Poor"
+              }
+            }
+          },
+          "inputs": [
+            {
+              "key": "stageClass",
+              "label": "Documented adjustment class",
+              "rationale": "The class records an integrated field interpretation of channel stage and active adjustment.",
+              "required": true,
+              "sourceField": "user field assessment",
+              "symbol": "stage",
+              "units": ""
+            },
+            {
+              "contextOnly": true,
+              "key": "indicators",
+              "label": "Observed indicators",
+              "rationale": "Headcuts, bars, width/depth change, bank erosion, and recovery features support the selected class.",
+              "required": false,
+              "sourceField": "user field notes",
+              "symbol": "evidence",
+              "units": ""
+            }
+          ],
+          "limitations": [
+            "A defensible replacement requires a selected class plus a narrative identifying the observed adjustment indicators."
+          ],
+          "methodKey": "observed-channel-adjustment",
+          "observedOverridesProxy": true,
+          "operator": "categorical_lookup",
+          "plot": {
+            "mode": "categorical"
+          },
+          "provisional": false,
+          "sourceTier": "observed",
+          "status": "conditional",
+          "usedFallback": false
+        }
+      ]
     },
     {
-      "methodKey": "bhr-bank-instability-susceptibility",
-      "metricId": "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition",
-      "title": "Bank erosion and armoring",
-      "status": "computed",
-      "operator": "threshold",
+      "bands": [
+        {
+          "label": "\u22641.3",
+          "max": 1.3,
+          "maxInclusive": true,
+          "min": null,
+          "minInclusive": false,
+          "rating": "Good"
+        },
+        {
+          "label": ">1.3-\u22641.5",
+          "max": 1.5,
+          "maxInclusive": true,
+          "min": 1.3,
+          "minInclusive": false,
+          "rating": "Fair"
+        },
+        {
+          "label": ">1.5",
+          "max": null,
+          "maxInclusive": false,
+          "min": 1.5,
+          "minInclusive": false,
+          "rating": "Poor"
+        }
+      ],
       "basisClass": "published directional relationship",
-      "provisional": true,
+      "breakpoints": [
+        {
+          "description": "Upper published functioning boundary, used here as the Good/Fair susceptibility transition.",
+          "label": "BHR 1.3"
+        },
+        {
+          "description": "Published non-functioning floodplain-connectivity boundary, used here as the Fair/Poor susceptibility transition.",
+          "label": "BHR 1.5"
+        }
+      ],
+      "citations": [
+        "mnsqt",
+        "function-framework"
+      ],
       "confidence": "L",
-      "sourceTier": "screening-proxy",
       "evidenceFamily": "incision_geometry",
-      "usedFallback": true,
+      "fieldReference": {
+        "criteria": {
+          "Fair": "5-<60% eroding bank or >0-<50% armored bank, with neither component Poor",
+          "Good": "<5% eroding bank and 0% armored bank",
+          "Poor": "\u226560% eroding bank or \u226550% armored bank"
+        },
+        "title": "Observed bank condition (both components required)"
+      },
+      "formula": {
+        "geometryWarningBelow": 1.0
+      },
       "inputs": [
         {
           "key": "bhr",
           "label": "Bank-height ratio",
-          "symbol": "BHR",
-          "sourceField": "3DEP cross section",
-          "units": "ratio",
-          "required": true,
           "rationale": "BHR is an established incision and floodplain-connectivity measure used here only as a susceptibility proxy, not as measured erosion or armoring.",
+          "required": true,
           "slider": {
-            "min": 0.8,
             "max": 2.5,
+            "min": 0.8,
             "step": 0.01
-          }
+          },
+          "sourceField": "3DEP cross section",
+          "symbol": "BHR",
+          "units": "ratio"
         }
       ],
-      "bands": [
-        {
-          "rating": "Good",
-          "min": null,
-          "max": 1.3,
-          "minInclusive": false,
-          "maxInclusive": true,
-          "label": "≤1.3"
-        },
-        {
-          "rating": "Fair",
-          "min": 1.3,
-          "max": 1.5,
-          "minInclusive": false,
-          "maxInclusive": true,
-          "label": ">1.3-≤1.5"
-        },
-        {
-          "rating": "Poor",
-          "min": 1.5,
-          "max": null,
-          "minInclusive": false,
-          "maxInclusive": false,
-          "label": ">1.5"
-        }
+      "limitations": [
+        "BHR does not detect existing armoring and does not directly measure erosion rate or eroding-bank extent.",
+        "The DEM-derived cross section is a susceptibility screen and may require surveyed geometry.",
+        "BHR is reused by floodplain engagement and channel adjustment and is therefore correlated evidence."
       ],
-      "formula": {
-        "geometryWarningBelow": 1.0
+      "methodKey": "bhr-bank-instability-susceptibility",
+      "metricId": "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition",
+      "operator": "threshold",
+      "plot": {
+        "direction": "lower_better",
+        "domain": [
+          0.8,
+          2.5
+        ],
+        "mode": "scalar"
       },
-      "breakpoints": [
-        {
-          "label": "BHR 1.3",
-          "description": "Upper published functioning boundary, used here as the Good/Fair susceptibility transition."
-        },
-        {
-          "label": "BHR 1.5",
-          "description": "Published non-functioning floodplain-connectivity boundary, used here as the Fair/Poor susceptibility transition."
-        }
-      ],
+      "provisional": true,
       "sourceHierarchy": [
         {
-          "methodKey": "observed-bank-condition",
+          "description": "Complete user observations of both components supersede the proxy.",
           "label": "Observed erosion and armoring",
-          "description": "Complete user observations of both components supersede the proxy."
+          "methodKey": "observed-bank-condition"
         },
         {
-          "methodKey": "bhr-bank-instability-susceptibility",
+          "description": "Used automatically when complete bank observations are unavailable.",
           "label": "BHR susceptibility fallback",
-          "description": "Used automatically when complete bank observations are unavailable."
+          "methodKey": "bhr-bank-instability-susceptibility"
         }
       ],
+      "sourceTier": "screening-proxy",
+      "status": "computed",
+      "title": "Bank erosion and armoring",
+      "usedFallback": true,
       "variants": [
         {
-          "methodKey": "observed-bank-condition",
-          "status": "conditional",
-          "operator": "worst_index",
           "basisClass": "provisional STAF screening judgment",
-          "provisional": true,
-          "confidence": "H",
-          "sourceTier": "observed",
-          "evidenceFamily": "bank_observation",
-          "usedFallback": false,
-          "observedOverridesProxy": true,
-          "inputs": [
+          "breakpoints": [
             {
-              "key": "erodingBankPct",
-              "label": "Eroding bank",
-              "symbol": "erosion",
-              "indexSymbol": "Ierosion",
-              "sourceField": "user field or verified-imagery observation",
-              "units": "%",
-              "required": true,
-              "rationale": "Percent eroding bank directly records the longitudinal extent of active erosion.",
-              "slider": {
-                "min": 0,
-                "max": 100,
-                "step": 1
-              },
-              "bands": [
-                {
-                  "rating": "Good",
-                  "min": null,
-                  "max": 5,
-                  "minInclusive": false,
-                  "maxInclusive": false,
-                  "label": "<5%"
-                },
-                {
-                  "rating": "Fair",
-                  "min": 5,
-                  "max": 60,
-                  "minInclusive": true,
-                  "maxInclusive": false,
-                  "label": "5-<60%"
-                },
-                {
-                  "rating": "Poor",
-                  "min": 60,
-                  "max": null,
-                  "minInclusive": true,
-                  "maxInclusive": false,
-                  "label": "≥60%"
-                }
-              ]
+              "description": "Lower EASI transition for observed erosion extent.",
+              "input": "erodingBankPct",
+              "label": "5%"
             },
             {
-              "key": "armoredBankPct",
-              "label": "Armored bank",
-              "symbol": "armoring",
-              "indexSymbol": "Iarmoring",
-              "sourceField": "user field or verified-imagery observation",
-              "units": "%",
-              "required": true,
-              "rationale": "Percent armored bank directly records the extent of hard bank protection, which BHR cannot detect.",
-              "slider": {
-                "min": 0,
-                "max": 100,
-                "step": 1
-              },
-              "bands": [
-                {
-                  "rating": "Good",
-                  "min": null,
-                  "max": 0,
-                  "minInclusive": false,
-                  "maxInclusive": true,
-                  "label": "0%"
-                },
-                {
-                  "rating": "Fair",
-                  "min": 0,
-                  "max": 50,
-                  "minInclusive": false,
-                  "maxInclusive": false,
-                  "label": ">0-<50%"
-                },
-                {
-                  "rating": "Poor",
-                  "min": 50,
-                  "max": null,
-                  "minInclusive": true,
-                  "maxInclusive": false,
-                  "label": "≥50%"
-                }
-              ]
+              "description": "Upper EASI transition for widespread observed erosion. EPA's 30% moderate-to-marginal transition remains annotated context.",
+              "input": "erodingBankPct",
+              "label": "60%"
             },
             {
-              "key": "annualRetreatContext",
-              "label": "Annual bank retreat",
-              "symbol": "retreat",
-              "sourceField": "user supporting evidence",
-              "units": "distance/year",
-              "required": false,
-              "contextOnly": true,
-              "rationale": "Retreat rate may support interpretation but receives no universal class without a regional reference rate."
+              "description": "Any observed hard armoring moves the armoring component out of Good.",
+              "input": "armoredBankPct",
+              "label": "0%"
+            },
+            {
+              "description": "Half or more of the bank length armored is classified Poor. Armoring of 75% or more is annotated as pervasive.",
+              "input": "armoredBankPct",
+              "label": "50%"
             }
           ],
+          "citations": [
+            "epa-rbp",
+            "mnsqt"
+          ],
+          "confidence": "H",
+          "evidenceFamily": "bank_observation",
           "formula": {
             "allowPartial": false
           },
-          "breakpoints": [
+          "inputs": [
             {
-              "input": "erodingBankPct",
-              "label": "5%",
-              "description": "Lower EASI transition for observed erosion extent."
+              "bands": [
+                {
+                  "label": "<5%",
+                  "max": 5,
+                  "maxInclusive": false,
+                  "min": null,
+                  "minInclusive": false,
+                  "rating": "Good"
+                },
+                {
+                  "label": "5-<60%",
+                  "max": 60,
+                  "maxInclusive": false,
+                  "min": 5,
+                  "minInclusive": true,
+                  "rating": "Fair"
+                },
+                {
+                  "label": "\u226560%",
+                  "max": null,
+                  "maxInclusive": false,
+                  "min": 60,
+                  "minInclusive": true,
+                  "rating": "Poor"
+                }
+              ],
+              "indexSymbol": "Ierosion",
+              "key": "erodingBankPct",
+              "label": "Eroding bank",
+              "rationale": "Percent eroding bank directly records the longitudinal extent of active erosion.",
+              "required": true,
+              "slider": {
+                "max": 100,
+                "min": 0,
+                "step": 1
+              },
+              "sourceField": "user field or verified-imagery observation",
+              "symbol": "erosion",
+              "units": "%"
             },
             {
-              "input": "erodingBankPct",
-              "label": "60%",
-              "description": "Upper EASI transition for widespread observed erosion. EPA's 30% moderate-to-marginal transition remains annotated context."
+              "bands": [
+                {
+                  "label": "0%",
+                  "max": 0,
+                  "maxInclusive": true,
+                  "min": null,
+                  "minInclusive": false,
+                  "rating": "Good"
+                },
+                {
+                  "label": ">0-<50%",
+                  "max": 50,
+                  "maxInclusive": false,
+                  "min": 0,
+                  "minInclusive": false,
+                  "rating": "Fair"
+                },
+                {
+                  "label": "\u226550%",
+                  "max": null,
+                  "maxInclusive": false,
+                  "min": 50,
+                  "minInclusive": true,
+                  "rating": "Poor"
+                }
+              ],
+              "indexSymbol": "Iarmoring",
+              "key": "armoredBankPct",
+              "label": "Armored bank",
+              "rationale": "Percent armored bank directly records the extent of hard bank protection, which BHR cannot detect.",
+              "required": true,
+              "slider": {
+                "max": 100,
+                "min": 0,
+                "step": 1
+              },
+              "sourceField": "user field or verified-imagery observation",
+              "symbol": "armoring",
+              "units": "%"
             },
             {
-              "input": "armoredBankPct",
-              "label": "0%",
-              "description": "Any observed hard armoring moves the armoring component out of Good."
-            },
-            {
-              "input": "armoredBankPct",
-              "label": "50%",
-              "description": "Half or more of the bank length armored is classified Poor. Armoring of 75% or more is annotated as pervasive."
+              "contextOnly": true,
+              "key": "annualRetreatContext",
+              "label": "Annual bank retreat",
+              "rationale": "Retreat rate may support interpretation but receives no universal class without a regional reference rate.",
+              "required": false,
+              "sourceField": "user supporting evidence",
+              "symbol": "retreat",
+              "units": "distance/year"
             }
           ],
           "limitations": [
             "The 5%, 50%, and 60% class limits are transparent EASI screening judgments. The 30% erosion and 75% armoring marks are interpretive annotations.",
             "Annual retreat requires a regional reference rate and is supporting evidence only."
           ],
-          "citations": [
-            "epa-rbp",
-            "mnsqt"
-          ],
+          "methodKey": "observed-bank-condition",
+          "observedOverridesProxy": true,
+          "operator": "worst_index",
           "plot": {
             "mode": "worst_index"
-          }
+          },
+          "provisional": true,
+          "sourceTier": "observed",
+          "status": "conditional",
+          "usedFallback": false
         }
-      ],
-      "fieldReference": {
-        "title": "Observed bank condition (both components required)",
-        "criteria": {
-          "Good": "<5% eroding bank and 0% armored bank",
-          "Fair": "5-<60% eroding bank or >0-<50% armored bank, with neither component Poor",
-          "Poor": "≥60% eroding bank or ≥50% armored bank"
-        }
-      },
-      "limitations": [
-        "BHR does not detect existing armoring and does not directly measure erosion rate or eroding-bank extent.",
-        "The DEM-derived cross section is a susceptibility screen and may require surveyed geometry.",
-        "BHR is reused by floodplain engagement and channel adjustment and is therefore correlated evidence."
-      ],
-      "citations": [
-        "mnsqt",
-        "function-framework"
-      ],
-      "plot": {
-        "mode": "scalar",
-        "direction": "lower_better",
-        "domain": [
-          0.8,
-          2.5
-        ]
-      }
+      ]
     },
     {
-      "methodKey": "sediment-supply-potential",
-      "metricId": "sediment-continuity-sediment-supply-potential-watershed-banks",
-      "title": "Sediment-supply potential",
-      "status": "computed",
-      "operator": "worst_index",
       "basisClass": "published directional relationship",
-      "provisional": true,
-      "confidence": "M",
-      "inputs": [
-        {
-          "key": "agriculture",
-          "label": "Agricultural cover",
-          "symbol": "ag",
-          "sourceField": "pctcrop2019ws + pcthay2019ws",
-          "units": "%",
-          "required": true,
-          "rationale": "Agriculture represents the dominant disturbed upland sediment-source pathway.",
-          "slider": {
-            "min": 0,
-            "max": 100,
-            "step": 1
-          },
-          "indexSymbol": "Iagriculture",
-          "bands": [
-            {
-              "rating": "Good",
-              "min": null,
-              "max": 30,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": "<30%"
-            },
-            {
-              "rating": "Fair",
-              "min": 30,
-              "max": 50,
-              "minInclusive": true,
-              "maxInclusive": true,
-              "label": "30-50%"
-            },
-            {
-              "rating": "Poor",
-              "min": 50,
-              "max": null,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": ">50%"
-            }
-          ]
-        },
-        {
-          "key": "kFactor",
-          "label": "Soil erodibility K-factor",
-          "symbol": "K",
-          "sourceField": "kffactws",
-          "units": "",
-          "required": true,
-          "rationale": "K-factor represents inherent soil erodibility, the susceptibility term no other metric screens.",
-          "slider": {
-            "min": 0,
-            "max": 0.65,
-            "step": 0.01
-          },
-          "indexSymbol": "IK",
-          "bands": [
-            {
-              "rating": "Good",
-              "min": null,
-              "max": 0.25,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": "<0.25"
-            },
-            {
-              "rating": "Fair",
-              "min": 0.25,
-              "max": 0.4,
-              "minInclusive": true,
-              "maxInclusive": true,
-              "label": "0.25-0.40"
-            },
-            {
-              "rating": "Poor",
-              "min": 0.4,
-              "max": null,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": ">0.40"
-            }
-          ]
-        },
-        {
-          "key": "roadDensity",
-          "label": "Road density",
-          "symbol": "roads",
-          "sourceField": "rddensws",
-          "units": "km/km²",
-          "required": true,
-          "rationale": "Roads are both a sediment source and a hillslope-to-channel connectivity pathway.",
-          "slider": {
-            "min": 0,
-            "max": 10,
-            "step": 0.1
-          },
-          "indexSymbol": "Iroads",
-          "bands": [
-            {
-              "rating": "Good",
-              "min": null,
-              "max": 1.24,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": "<1.24 km/km²"
-            },
-            {
-              "rating": "Fair",
-              "min": 1.24,
-              "max": 1.86,
-              "minInclusive": true,
-              "maxInclusive": false,
-              "label": "1.24-<1.86 km/km²"
-            },
-            {
-              "rating": "Poor",
-              "min": 1.86,
-              "max": null,
-              "minInclusive": true,
-              "maxInclusive": false,
-              "label": "≥1.86 km/km²"
-            }
-          ]
-        }
-      ],
-      "formula": {
-        "allowPartial": false
-      },
       "breakpoints": [
         {
+          "description": "Lower agricultural transition (Allan 2004), shared with the land-cover pressure metric.",
           "input": "agriculture",
-          "label": "30% agriculture",
-          "description": "Lower agricultural transition (Allan 2004), shared with the land-cover pressure metric."
+          "label": "30% agriculture"
         },
         {
+          "description": "Upper agricultural transition (Wang et al. 1997).",
           "input": "agriculture",
-          "label": "50% agriculture",
-          "description": "Upper agricultural transition (Wang et al. 1997)."
+          "label": "50% agriculture"
         },
         {
+          "description": "Lower boundary of the moderate RUSLE erodibility class (silt loams).",
           "input": "kFactor",
-          "label": "K 0.25",
-          "description": "Lower boundary of the moderate RUSLE erodibility class (silt loams)."
+          "label": "K 0.25"
         },
         {
+          "description": "Upper boundary of the moderate RUSLE erodibility class. Values above 0.40 mark the most erodible high-silt soils.",
           "input": "kFactor",
-          "label": "K 0.40",
-          "description": "Upper boundary of the moderate RUSLE erodibility class. Values above 0.40 mark the most erodible high-silt soils."
+          "label": "K 0.40"
         },
         {
+          "description": "2 miles per square mile, the properly-functioning limit in NMFS salmonid watershed criteria (as compiled in KRIS).",
           "input": "roadDensity",
-          "label": "1.24 km/km²",
-          "description": "2 miles per square mile, the properly-functioning limit in NMFS salmonid watershed criteria (as compiled in KRIS)."
+          "label": "1.24 km/km\u00b2"
         },
         {
+          "description": "3 miles per square mile, the not-properly-functioning boundary in the same criteria. Fine sediment in spawning gravels increases above about this density (Cedarholm et al. 1981).",
           "input": "roadDensity",
-          "label": "1.86 km/km²",
-          "description": "3 miles per square mile, the not-properly-functioning boundary in the same criteria. Fine sediment in spawning gravels increases above about this density (Cedarholm et al. 1981)."
+          "label": "1.86 km/km\u00b2"
         }
-      ],
-      "fieldReference": null,
-      "limitations": [
-        "The worse input governs. Source indicators are screened separately and are not summed.",
-        "Intrinsic soil erodibility (K-factor) can lower the rating in undisturbed watersheds. It indicates susceptibility rather than an active source.",
-        "The road-density bands derive from salmonid watershed criteria applied here nationally.",
-        "Agricultural cover and road density are also rated by other metrics and are therefore correlated evidence.",
-        "All three inputs are required. Missing inputs are not converted to zero.",
-        "Bank-derived sediment supply is not represented. The method screens watershed sources only."
       ],
       "citations": [
         "streamcat",
@@ -1623,88 +1473,193 @@
         "rusle-k",
         "nmfs-roads"
       ],
-      "plot": {
-        "mode": "worst_index",
-        "direction": "lower_better"
+      "confidence": "M",
+      "evidenceFamily": "landcover_pressure",
+      "fieldReference": null,
+      "formula": {
+        "allowPartial": false
       },
-      "evidenceFamily": "landcover_pressure"
-    },
-    {
-      "methodKey": "watershed-agriculture-share",
-      "metricId": "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation",
-      "title": "Substrate condition",
-      "status": "computed",
-      "operator": "threshold",
-      "basisClass": "published directional relationship",
-      "provisional": true,
-      "confidence": "L",
-      "sourceTier": "screening-proxy",
-      "evidenceFamily": "watershed_landcover",
-      "usedFallback": false,
       "inputs": [
         {
-          "key": "agriculture",
-          "label": "Watershed agricultural cover",
-          "symbol": "agriculture",
+          "bands": [
+            {
+              "label": "<30%",
+              "max": 30,
+              "maxInclusive": false,
+              "min": null,
+              "minInclusive": false,
+              "rating": "Good"
+            },
+            {
+              "label": "30-50%",
+              "max": 50,
+              "maxInclusive": true,
+              "min": 30,
+              "minInclusive": true,
+              "rating": "Fair"
+            },
+            {
+              "label": ">50%",
+              "max": null,
+              "maxInclusive": false,
+              "min": 50,
+              "minInclusive": false,
+              "rating": "Poor"
+            }
+          ],
           "indexSymbol": "Iagriculture",
-          "sourceField": "pctcrop2019ws + pcthay2019ws",
-          "units": "%",
+          "key": "agriculture",
+          "label": "Agricultural cover",
+          "rationale": "Agriculture represents the dominant disturbed upland sediment-source pathway.",
           "required": true,
-          "rationale": "Agricultural cover represents a separate soil-disturbance, drainage, and runoff pathway that impervious cover does not capture.",
           "slider": {
-            "min": 0,
             "max": 100,
+            "min": 0,
             "step": 1
-          }
-        }
-      ],
-      "bands": [
-        {
-          "rating": "Good",
-          "min": null,
-          "max": 30,
-          "minInclusive": false,
-          "maxInclusive": false,
-          "label": "<30%"
+          },
+          "sourceField": "pctcrop2019ws + pcthay2019ws",
+          "symbol": "ag",
+          "units": "%"
         },
         {
-          "rating": "Fair",
-          "min": 30,
-          "max": 50,
-          "minInclusive": true,
-          "maxInclusive": true,
-          "label": "30-50%"
+          "bands": [
+            {
+              "label": "<0.25",
+              "max": 0.25,
+              "maxInclusive": false,
+              "min": null,
+              "minInclusive": false,
+              "rating": "Good"
+            },
+            {
+              "label": "0.25-0.40",
+              "max": 0.4,
+              "maxInclusive": true,
+              "min": 0.25,
+              "minInclusive": true,
+              "rating": "Fair"
+            },
+            {
+              "label": ">0.40",
+              "max": null,
+              "maxInclusive": false,
+              "min": 0.4,
+              "minInclusive": false,
+              "rating": "Poor"
+            }
+          ],
+          "indexSymbol": "IK",
+          "key": "kFactor",
+          "label": "Soil erodibility K-factor",
+          "rationale": "K-factor represents inherent soil erodibility, the susceptibility term no other metric screens.",
+          "required": true,
+          "slider": {
+            "max": 0.65,
+            "min": 0,
+            "step": 0.01
+          },
+          "sourceField": "kffactws",
+          "symbol": "K",
+          "units": ""
         },
         {
-          "rating": "Poor",
-          "min": 50,
-          "max": null,
-          "minInclusive": false,
-          "maxInclusive": false,
-          "label": ">50%"
-        }
-      ],
-      "breakpoints": [
-        {
-          "label": "30% agriculture",
-          "description": "Same Good/Fair boundary as the Catchment hydrology agriculture input."
-        },
-        {
-          "label": "50% agriculture",
-          "description": "Same Fair/Poor boundary as the Catchment hydrology agriculture input."
-        }
-      ],
-      "sourceHierarchy": [
-        {
-          "methodKey": "watershed-agriculture-share",
-          "label": "Watershed agriculture share",
-          "description": "Crop plus hay cover from the active watershed evidence engine."
+          "bands": [
+            {
+              "label": "<1.24 km/km\u00b2",
+              "max": 1.24,
+              "maxInclusive": false,
+              "min": null,
+              "minInclusive": false,
+              "rating": "Good"
+            },
+            {
+              "label": "1.24-<1.86 km/km\u00b2",
+              "max": 1.86,
+              "maxInclusive": false,
+              "min": 1.24,
+              "minInclusive": true,
+              "rating": "Fair"
+            },
+            {
+              "label": "\u22651.86 km/km\u00b2",
+              "max": null,
+              "maxInclusive": false,
+              "min": 1.86,
+              "minInclusive": true,
+              "rating": "Poor"
+            }
+          ],
+          "indexSymbol": "Iroads",
+          "key": "roadDensity",
+          "label": "Road density",
+          "rationale": "Roads are both a sediment source and a hillslope-to-channel connectivity pathway.",
+          "required": true,
+          "slider": {
+            "max": 10,
+            "min": 0,
+            "step": 0.1
+          },
+          "sourceField": "rddensws",
+          "symbol": "roads",
+          "units": "km/km\u00b2"
         }
       ],
       "limitations": [
-        "Watershed agriculture is a pressure proxy; it does not measure bed composition, embeddedness, or large wood.",
-        "Disclosed correlated pair with Catchment hydrology: the agriculture input and 30/50 percent bands are shared. The two functions have the same class on about 95 percent of analyzed reaches (rank correlation 0.94).",
-        "The substrate route is unvalidated. Natural slope and stream power strongly influence bed condition; field verification remains necessary."
+        "The worse input governs. Source indicators are screened separately and are not summed.",
+        "Intrinsic soil erodibility (K-factor) can lower the rating in undisturbed watersheds. It indicates susceptibility rather than an active source.",
+        "The road-density bands derive from salmonid watershed criteria applied here nationally.",
+        "Agricultural cover and road density are also rated by other metrics and are therefore correlated evidence.",
+        "All three inputs are required. Missing inputs are not converted to zero.",
+        "Bank-derived sediment supply is not represented. The method screens watershed sources only."
+      ],
+      "methodKey": "sediment-supply-potential",
+      "metricId": "sediment-continuity-sediment-supply-potential-watershed-banks",
+      "operator": "worst_index",
+      "plot": {
+        "direction": "lower_better",
+        "mode": "worst_index"
+      },
+      "provisional": true,
+      "status": "computed",
+      "title": "Sediment-supply potential"
+    },
+    {
+      "bands": [
+        {
+          "label": "<30%",
+          "max": 30,
+          "maxInclusive": false,
+          "min": null,
+          "minInclusive": false,
+          "rating": "Good"
+        },
+        {
+          "label": "30-50%",
+          "max": 50,
+          "maxInclusive": true,
+          "min": 30,
+          "minInclusive": true,
+          "rating": "Fair"
+        },
+        {
+          "label": ">50%",
+          "max": null,
+          "maxInclusive": false,
+          "min": 50,
+          "minInclusive": false,
+          "rating": "Poor"
+        }
+      ],
+      "basisClass": "published directional relationship",
+      "breakpoints": [
+        {
+          "description": "Same Good/Fair boundary as the Catchment hydrology agriculture input.",
+          "label": "30% agriculture"
+        },
+        {
+          "description": "Same Fair/Poor boundary as the Catchment hydrology agriculture input.",
+          "label": "50% agriculture"
+        }
       ],
       "citations": [
         "nrsa-2018-19",
@@ -1714,266 +1669,308 @@
         "king-2011",
         "easi-reference-curves"
       ],
+      "confidence": "L",
+      "evidenceFamily": "watershed_landcover",
+      "inputs": [
+        {
+          "indexSymbol": "Iagriculture",
+          "key": "agriculture",
+          "label": "Watershed agricultural cover",
+          "rationale": "Agricultural cover represents a separate soil-disturbance, drainage, and runoff pathway that impervious cover does not capture.",
+          "required": true,
+          "slider": {
+            "max": 100,
+            "min": 0,
+            "step": 1
+          },
+          "sourceField": "pctcrop2019ws + pcthay2019ws",
+          "symbol": "agriculture",
+          "units": "%"
+        }
+      ],
+      "limitations": [
+        "Watershed agriculture is a pressure proxy; it does not measure bed composition, embeddedness, or large wood.",
+        "Disclosed correlated pair with Catchment hydrology: the agriculture input and 30/50 percent bands are shared. The two functions have the same class on about 95 percent of analyzed reaches (rank correlation 0.94).",
+        "The substrate route is unvalidated. Natural slope and stream power strongly influence bed condition; field verification remains necessary."
+      ],
+      "methodKey": "watershed-agriculture-share",
+      "metricId": "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation",
+      "operator": "threshold",
       "plot": {
-        "mode": "scalar",
         "direction": "lower_better",
         "domain": [
           0,
           100
-        ]
-      }
+        ],
+        "mode": "scalar"
+      },
+      "provisional": true,
+      "sourceHierarchy": [
+        {
+          "description": "Crop plus hay cover from the active watershed evidence engine.",
+          "label": "Watershed agriculture share",
+          "methodKey": "watershed-agriculture-share"
+        }
+      ],
+      "sourceTier": "screening-proxy",
+      "status": "computed",
+      "title": "Substrate condition",
+      "usedFallback": false
     },
     {
-      "methodKey": "thermal-regulation-vulnerability",
-      "metricId": "light-and-thermal-regime-stream-temperature",
-      "title": "Thermal-regulation vulnerability",
-      "status": "computed",
-      "operator": "worst_index",
       "basisClass": "provisional STAF screening judgment",
-      "provisional": true,
-      "confidence": "L",
-      "inputs": [
-        {
-          "key": "woodyRiparian",
-          "label": "Woody riparian cover",
-          "symbol": "woody",
-          "indexSymbol": "Iwoody",
-          "sourceField": "forest + shrub + woody wetland in 100 m corridor",
-          "units": "%",
-          "required": true,
-          "rationale": "Woody cover represents potential shade and thermal buffering. Grass and herbaceous wetland do not receive thermal-shade credit.",
-          "slider": {
-            "min": 0,
-            "max": 100,
-            "step": 1
-          },
-          "curve": {
-            "set": "corridor-woody",
-            "stratifier": "l2",
-            "fallback": [
-              "national"
-            ],
-            "mode": "banded"
-          }
-        },
-        {
-          "key": "impervious",
-          "label": "Watershed impervious cover",
-          "symbol": "impervious",
-          "indexSymbol": "Iimpervious",
-          "sourceField": "pctimp2019ws",
-          "units": "%",
-          "required": true,
-          "rationale": "Impervious cover represents heated runoff and altered runoff routing.",
-          "slider": {
-            "min": 0,
-            "max": 100,
-            "step": 1
-          },
-          "bands": [
-            {
-              "rating": "Good",
-              "min": null,
-              "max": 10,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": "<10%"
-            },
-            {
-              "rating": "Fair",
-              "min": 10,
-              "max": 25,
-              "minInclusive": true,
-              "maxInclusive": true,
-              "label": "10-25%"
-            },
-            {
-              "rating": "Poor",
-              "min": 25,
-              "max": null,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": ">25%"
-            }
-          ]
-        }
-      ],
-      "formula": {
-        "allowPartial": false
-      },
       "breakpoints": [
         {
+          "description": "Lower impervious-cover pressure transition.",
           "input": "impervious",
-          "label": "10% impervious",
-          "description": "Lower impervious-cover pressure transition."
+          "label": "10% impervious"
         },
         {
+          "description": "Upper impervious-cover pressure transition.",
           "input": "impervious",
-          "label": "25% impervious",
-          "description": "Upper impervious-cover pressure transition."
+          "label": "25% impervious"
         },
         {
+          "description": "Fair begins at an interpolated reference index of 0.39.",
           "input": "woodyRiparian",
-          "label": "Reference index 0.39",
-          "description": "Fair begins at an interpolated reference index of 0.39."
+          "label": "Reference index 0.39"
         },
         {
+          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum.",
           "input": "woodyRiparian",
-          "label": "Reference index 0.69",
-          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum."
+          "label": "Reference index 0.69"
         }
-      ],
-      "fieldReference": null,
-      "limitations": [
-        "This screens thermal vulnerability from corridor shade and watershed impervious cover; it does not rate measured stream temperature.",
-        "Woody cover uses Level II reference expectations with a national fallback. Impervious cover retains its 10/25 percent bands.",
-        "Both inputs are required. Natural prairie and desert channels can meet regional woody-cover expectations with little cover."
       ],
       "citations": [
         "caddis-temperature",
         "caddis-urban",
         "easi-reference-curves"
       ],
-      "plot": {
-        "mode": "worst_index",
-        "direction": "mixed"
+      "confidence": "L",
+      "evidenceFamily": "landcover_pressure",
+      "fieldReference": null,
+      "formula": {
+        "allowPartial": false
       },
-      "evidenceFamily": "landcover_pressure"
-    },
-    {
-      "methodKey": "organic-matter-supply-potential",
-      "metricId": "carbon-processing-detrital-processing-cpom-retention-shredders",
-      "title": "Organic-matter supply potential proxy",
-      "status": "computed",
-      "operator": "sum_capped",
-      "basisClass": "provisional STAF screening judgment",
-      "provisional": true,
-      "confidence": "M",
       "inputs": [
         {
-          "key": "forest",
-          "label": "Riparian forest",
-          "symbol": "forest",
-          "sourceField": "conifer + deciduous + mixed forest, rp100",
-          "units": "%",
+          "curve": {
+            "fallback": [
+              "national"
+            ],
+            "mode": "banded",
+            "set": "corridor-woody",
+            "stratifier": "nars9"
+          },
+          "indexSymbol": "Iwoody",
+          "key": "woodyRiparian",
+          "label": "Woody riparian cover",
+          "rationale": "Woody cover represents potential shade and thermal buffering. Grass and herbaceous wetland do not receive thermal-shade credit.",
           "required": true,
-          "rationale": "Forest contributes woody and leaf-litter inputs.",
           "slider": {
-            "min": 0,
             "max": 100,
+            "min": 0,
             "step": 1
-          }
+          },
+          "sourceField": "forest + shrub + woody wetland in 100 m corridor",
+          "symbol": "woody",
+          "units": "%"
         },
         {
-          "key": "shrub",
-          "label": "Riparian shrub",
-          "symbol": "shrub",
-          "sourceField": "shrub, rp100",
-          "units": "%",
+          "bands": [
+            {
+              "label": "<10%",
+              "max": 10,
+              "maxInclusive": false,
+              "min": null,
+              "minInclusive": false,
+              "rating": "Good"
+            },
+            {
+              "label": "10-25%",
+              "max": 25,
+              "maxInclusive": true,
+              "min": 10,
+              "minInclusive": true,
+              "rating": "Fair"
+            },
+            {
+              "label": ">25%",
+              "max": null,
+              "maxInclusive": false,
+              "min": 25,
+              "minInclusive": false,
+              "rating": "Poor"
+            }
+          ],
+          "indexSymbol": "Iimpervious",
+          "key": "impervious",
+          "label": "Watershed impervious cover",
+          "rationale": "Impervious cover represents heated runoff and altered runoff routing.",
           "required": true,
-          "rationale": "Shrub cover contributes litter and low woody material.",
           "slider": {
-            "min": 0,
             "max": 100,
-            "step": 1
-          }
-        },
-        {
-          "key": "grassland",
-          "label": "Riparian grassland",
-          "symbol": "grassland",
-          "sourceField": "grassland, rp100",
-          "units": "%",
-          "required": true,
-          "rationale": "Grassland contributes organic material in naturally non-forested settings.",
-          "slider": {
             "min": 0,
-            "max": 100,
             "step": 1
-          }
-        },
-        {
-          "key": "wetland",
-          "label": "Riparian wetland",
-          "symbol": "wetland",
-          "sourceField": "woody + herbaceous wetland, rp100",
-          "units": "%",
-          "required": true,
-          "rationale": "Wetland vegetation contributes organic matter and avoids a forest-only bias.",
-          "slider": {
-            "min": 0,
-            "max": 100,
-            "step": 1
-          }
+          },
+          "sourceField": "pctimp2019ws",
+          "symbol": "impervious",
+          "units": "%"
         }
       ],
-      "formula": {
-        "cap": 100,
-        "resultSymbol": "V"
+      "limitations": [
+        "This screens thermal vulnerability from corridor shade and watershed impervious cover; it does not rate measured stream temperature.",
+        "Woody cover uses NARS-9 reference expectations with a national fallback. Impervious cover retains its 10/25 percent bands.",
+        "Both inputs are required. Natural prairie and desert channels can meet regional woody-cover expectations with little cover."
+      ],
+      "methodKey": "thermal-regulation-vulnerability",
+      "metricId": "light-and-thermal-regime-stream-temperature",
+      "operator": "worst_index",
+      "plot": {
+        "direction": "mixed",
+        "mode": "worst_index"
       },
+      "provisional": true,
+      "status": "computed",
+      "title": "Thermal-regulation vulnerability"
+    },
+    {
+      "basisClass": "provisional STAF screening judgment",
       "breakpoints": [
         {
-          "label": "Reference index 0.39",
-          "description": "Fair begins at an interpolated reference index of 0.39."
+          "description": "Fair begins at an interpolated reference index of 0.39.",
+          "label": "Reference index 0.39"
         },
         {
-          "label": "Reference index 0.69",
-          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum."
+          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum.",
+          "label": "Reference index 0.69"
         }
-      ],
-      "fieldReference": null,
-      "limitations": [
-        "This estimates organic-matter supply potential, not CPOM retention or shredder condition.",
-        "All four source classes are required; missing classes are unknown. The capped sum is compared with Level II reference expectations, with a national fallback."
       ],
       "citations": [
         "streamcat",
         "easi-reference-curves"
       ],
+      "confidence": "M",
+      "curve": {
+        "fallback": [
+          "national"
+        ],
+        "mode": "banded",
+        "set": "corridor-natural",
+        "stratifier": "nars9"
+      },
+      "fieldReference": null,
+      "formula": {
+        "cap": 100,
+        "resultSymbol": "V"
+      },
+      "inputs": [
+        {
+          "key": "forest",
+          "label": "Riparian forest",
+          "rationale": "Forest contributes woody and leaf-litter inputs.",
+          "required": true,
+          "slider": {
+            "max": 100,
+            "min": 0,
+            "step": 1
+          },
+          "sourceField": "conifer + deciduous + mixed forest, rp100",
+          "symbol": "forest",
+          "units": "%"
+        },
+        {
+          "key": "shrub",
+          "label": "Riparian shrub",
+          "rationale": "Shrub cover contributes litter and low woody material.",
+          "required": true,
+          "slider": {
+            "max": 100,
+            "min": 0,
+            "step": 1
+          },
+          "sourceField": "shrub, rp100",
+          "symbol": "shrub",
+          "units": "%"
+        },
+        {
+          "key": "grassland",
+          "label": "Riparian grassland",
+          "rationale": "Grassland contributes organic material in naturally non-forested settings.",
+          "required": true,
+          "slider": {
+            "max": 100,
+            "min": 0,
+            "step": 1
+          },
+          "sourceField": "grassland, rp100",
+          "symbol": "grassland",
+          "units": "%"
+        },
+        {
+          "key": "wetland",
+          "label": "Riparian wetland",
+          "rationale": "Wetland vegetation contributes organic matter and avoids a forest-only bias.",
+          "required": true,
+          "slider": {
+            "max": 100,
+            "min": 0,
+            "step": 1
+          },
+          "sourceField": "woody + herbaceous wetland, rp100",
+          "symbol": "wetland",
+          "units": "%"
+        }
+      ],
+      "limitations": [
+        "This estimates organic-matter supply potential, not CPOM retention or shredder condition.",
+        "All four source classes are required; missing classes are unknown. The capped sum is compared with NARS-9 reference expectations, with a national fallback."
+      ],
+      "methodKey": "organic-matter-supply-potential",
+      "metricId": "carbon-processing-detrital-processing-cpom-retention-shredders",
+      "operator": "sum_capped",
       "plot": {
-        "mode": "scalar",
         "direction": "higher_better",
         "domain": [
           0,
           100
-        ]
-      },
-      "curve": {
-        "set": "corridor-natural",
-        "stratifier": "l2",
-        "fallback": [
-          "national"
         ],
-        "mode": "banded"
-      }
+        "mode": "scalar"
+      },
+      "provisional": true,
+      "status": "computed",
+      "title": "Organic-matter supply potential proxy"
     },
     {
-      "methodKey": "regional-nutrient-condition",
-      "metricId": "nutrient-cycling-nitrogen-and-phosphorus-concentrations",
-      "title": "Nutrient condition",
-      "status": "computed",
-      "operator": "worst_index",
       "basisClass": "published threshold",
-      "provisional": false,
+      "breakpoints": [
+        {
+          "description": "At or below the applicable NRSA Table 7-1 good/fair value is Good.",
+          "label": "Good/Fair"
+        },
+        {
+          "description": "At or above the applicable NRSA Table 7-1 fair/poor value is Poor.",
+          "label": "Fair/Poor"
+        }
+      ],
+      "citations": [
+        "nrsa-2018-19",
+        "nars-regions",
+        "wqp"
+      ],
       "confidence": "M/L",
-      "sourceTier": "connected-nearby",
       "evidenceFamily": "wqp_monitoring",
-      "usedFallback": false,
+      "fieldReference": null,
+      "formula": {
+        "allowPartial": true,
+        "regionalContextKey": "region"
+      },
       "inputs": [
         {
+          "indexSymbol": "ITN",
           "key": "tn",
           "label": "Total nitrogen",
-          "symbol": "TN",
-          "indexSymbol": "ITN",
-          "sourceField": "WQP total-fraction observations",
-          "units": "mg/L",
-          "required": true,
           "rationale": "TN represents observed nitrogen condition relative to the applicable NRSA region.",
-          "slider": {
-            "min": 0,
-            "max": 2,
-            "step": 0.01
-          },
           "regionalBands": {
             "CPL": [
               0.624,
@@ -1983,25 +1980,25 @@
               0.345,
               0.482
             ],
+            "NPL": [
+              0.575,
+              0.937
+            ],
             "SAP": [
               0.24,
               0.456
             ],
-            "UMW": [
-              0.583,
-              1.024
+            "SPL": [
+              0.581,
+              1.069
             ],
             "TPL": [
               0.7,
               1.274
             ],
-            "NPL": [
-              0.575,
-              0.937
-            ],
-            "SPL": [
-              0.581,
-              1.069
+            "UMW": [
+              0.583,
+              1.024
             ],
             "WMT": [
               0.139,
@@ -2011,22 +2008,22 @@
               0.285,
               0.529
             ]
-          }
+          },
+          "required": true,
+          "slider": {
+            "max": 2,
+            "min": 0,
+            "step": 0.01
+          },
+          "sourceField": "WQP total-fraction observations",
+          "symbol": "TN",
+          "units": "mg/L"
         },
         {
+          "indexSymbol": "ITP",
           "key": "tp",
           "label": "Total phosphorus",
-          "symbol": "TP",
-          "indexSymbol": "ITP",
-          "sourceField": "WQP total-fraction observations",
-          "units": "mg/L",
-          "required": true,
           "rationale": "TP represents observed phosphorus condition relative to the applicable NRSA region.",
-          "slider": {
-            "min": 0,
-            "max": 0.25,
-            "step": 0.001
-          },
           "regionalBands": {
             "CPL": [
               0.0559,
@@ -2036,25 +2033,25 @@
               0.0171,
               0.0326
             ],
+            "NPL": [
+              0.064,
+              0.107
+            ],
             "SAP": [
               0.0148,
               0.0244
             ],
-            "UMW": [
-              0.0363,
-              0.0499
+            "SPL": [
+              0.0558,
+              0.127
             ],
             "TPL": [
               0.0886,
               0.143
             ],
-            "NPL": [
-              0.064,
-              0.107
-            ],
-            "SPL": [
-              0.0558,
-              0.127
+            "UMW": [
+              0.0363,
+              0.0499
             ],
             "WMT": [
               0.0177,
@@ -2064,469 +2061,462 @@
               0.052,
               0.0959
             ]
-          }
-        }
-      ],
-      "formula": {
-        "allowPartial": true,
-        "regionalContextKey": "region"
-      },
-      "breakpoints": [
-        {
-          "label": "Good/Fair",
-          "description": "At or below the applicable NRSA Table 7-1 good/fair value is Good."
-        },
-        {
-          "label": "Fair/Poor",
-          "description": "At or above the applicable NRSA Table 7-1 fair/poor value is Poor."
-        }
-      ],
-      "sourceHierarchy": [
-        {
-          "methodKey": "regional-nutrient-condition",
-          "label": "Normalized WQP TN/TP observations",
-          "description": "Use valid total-fraction observations from stations within five miles and the preceding ten years."
-        },
-        {
-          "methodKey": "streamcat-chem-integrity-nutrient",
-          "label": "StreamCat CHEM integrity fallback",
-          "description": "Use when no qualifying TN or TP observation can be normalized."
-        }
-      ],
-      "variants": [
-        {
-          "methodKey": "streamcat-chem-integrity-nutrient",
-          "status": "computed",
-          "operator": "minimum",
-          "basisClass": "published directional relationship",
-          "provisional": true,
-          "confidence": "L",
-          "sourceTier": "screening-proxy",
-          "evidenceFamily": "iwi_landscape",
-          "usedFallback": true,
-          "inputs": [
-            {
-              "key": "chemCatchment",
-              "label": "Catchment CHEM integrity",
-              "symbol": "CHEMcat",
-              "sourceField": "StreamCat CHEMcat",
-              "units": "index",
-              "required": true,
-              "rationale": "The catchment CHEM component summarizes modeled chemical integrity close to the reach.",
-              "slider": {
-                "min": 0,
-                "max": 1,
-                "step": 0.01
-              }
-            },
-            {
-              "key": "chemWatershed",
-              "label": "Watershed CHEM integrity",
-              "symbol": "CHEMws",
-              "sourceField": "StreamCat CHEMws",
-              "units": "index",
-              "required": true,
-              "rationale": "The watershed CHEM component captures cumulative upstream chemical-integrity pressure.",
-              "slider": {
-                "min": 0,
-                "max": 1,
-                "step": 0.01
-              }
-            }
-          ],
-          "formula": {
-            "resultSymbol": "V"
           },
-          "bands": [
-            {
-              "rating": "Poor",
-              "min": null,
-              "max": 0.4,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": "<0.40"
-            },
-            {
-              "rating": "Fair",
-              "min": 0.4,
-              "max": 0.7,
-              "minInclusive": true,
-              "maxInclusive": false,
-              "label": "0.40-<0.70"
-            },
-            {
-              "rating": "Good",
-              "min": 0.7,
-              "max": null,
-              "minInclusive": true,
-              "maxInclusive": false,
-              "label": "≥0.70"
-            }
-          ],
-          "breakpoints": [
-            {
-              "label": "V 0.40",
-              "description": "Lower EASI integration tier for the published CHEM integrity component."
-            },
-            {
-              "label": "V 0.70",
-              "description": "Upper EASI integration tier. It is not an EPA nutrient criterion."
-            }
-          ],
-          "limitations": [
-            "The CHEM component is a landscape-integrity fallback and does not estimate TN or TP concentration.",
-            "The 0.40 and 0.70 breakpoints are EASI integration tiers, not EPA ecological or regulatory thresholds."
-          ],
-          "citations": [
-            "streamcat-updates"
-          ],
-          "plot": {
-            "mode": "scalar",
-            "direction": "higher_better",
-            "domain": [
-              0,
-              1
-            ]
-          }
+          "required": true,
+          "slider": {
+            "max": 0.25,
+            "min": 0,
+            "step": 0.001
+          },
+          "sourceField": "WQP total-fraction observations",
+          "symbol": "TP",
+          "units": "mg/L"
         }
       ],
-      "fieldReference": null,
       "limitations": [
         "Nearby monitoring stations are not necessarily reach-specific.",
         "Each station is reduced to a median before station medians are combined, preventing heavily sampled stations from dominating.",
         "One analyte may produce a partial rating.",
         "When observations are unavailable, the CHEM fallback represents landscape integrity rather than measured nutrient concentration."
       ],
-      "citations": [
-        "nrsa-2018-19",
-        "nars-regions",
-        "wqp"
-      ],
+      "methodKey": "regional-nutrient-condition",
+      "metricId": "nutrient-cycling-nitrogen-and-phosphorus-concentrations",
+      "operator": "worst_index",
       "plot": {
-        "mode": "worst_index",
-        "direction": "lower_better"
-      }
-    },
-    {
-      "methodKey": "attains-regulatory-category",
-      "metricId": "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl",
-      "title": "Regulatory impairment",
-      "status": "conditional",
-      "operator": "categorical_lookup",
-      "basisClass": "dataset reference",
-      "provisional": false,
-      "confidence": "H",
-      "sourceTier": "observed",
-      "evidenceFamily": "attains_assessment",
-      "usedFallback": false,
-      "inputs": [
-        {
-          "key": "category",
-          "label": "ATTAINS integrated-report category",
-          "symbol": "IR category",
-          "sourceField": "EPA ATTAINS",
-          "units": "",
-          "required": true,
-          "rationale": "ATTAINS is the authoritative national source for assessed-water reporting categories."
-        }
-      ],
-      "formula": {
-        "input": "category",
-        "lookup": {
-          "1": {
-            "rating": "Good",
-            "label": "Category 1"
-          },
-          "2": {
-            "rating": "Good",
-            "label": "Category 2"
-          },
-          "3": {
-            "rating": null,
-            "label": "Category 3 (insufficient evidence)"
-          },
-          "4A": {
-            "rating": "Fair",
-            "label": "Category 4a"
-          },
-          "4B": {
-            "rating": "Fair",
-            "label": "Category 4b"
-          },
-          "4C": {
-            "rating": "Poor",
-            "label": "Category 4c"
-          },
-          "5": {
-            "rating": "Poor",
-            "label": "Category 5"
-          }
-        }
+        "direction": "lower_better",
+        "mode": "worst_index"
       },
-      "breakpoints": [],
+      "provisional": false,
       "sourceHierarchy": [
         {
-          "methodKey": "attains-regulatory-category",
-          "label": "Conclusive ATTAINS category",
-          "description": "Use an intersecting or qualifying nearby Category 1, 2, 4a, 4b, 4c, or 5 assessment."
+          "description": "Use valid total-fraction observations from stations within five miles and the preceding ten years.",
+          "label": "Normalized WQP TN/TP observations",
+          "methodKey": "regional-nutrient-condition"
         },
         {
-          "methodKey": "streamcat-chem-integrity-regulatory",
-          "label": "StreamCat CHEM condition fallback",
-          "description": "Use when ATTAINS is absent or Category 3 is inconclusive. The result is condition context, not a regulatory determination."
+          "description": "Use when no qualifying TN or TP observation can be normalized.",
+          "label": "StreamCat CHEM integrity fallback",
+          "methodKey": "streamcat-chem-integrity-nutrient"
         }
       ],
+      "sourceTier": "connected-nearby",
+      "status": "computed",
+      "title": "Nutrient condition",
+      "usedFallback": false,
       "variants": [
         {
-          "methodKey": "streamcat-chem-integrity-regulatory",
-          "status": "computed",
-          "operator": "minimum",
-          "basisClass": "published directional relationship",
-          "provisional": true,
-          "confidence": "L",
-          "sourceTier": "screening-proxy",
-          "evidenceFamily": "iwi_landscape",
-          "usedFallback": true,
-          "inputs": [
-            {
-              "key": "chemCatchment",
-              "label": "Catchment CHEM integrity",
-              "symbol": "CHEMcat",
-              "sourceField": "StreamCat CHEMcat",
-              "units": "index",
-              "required": true,
-              "rationale": "The catchment CHEM component provides condition context near the selected reach.",
-              "slider": {
-                "min": 0,
-                "max": 1,
-                "step": 0.01
-              }
-            },
-            {
-              "key": "chemWatershed",
-              "label": "Watershed CHEM integrity",
-              "symbol": "CHEMws",
-              "sourceField": "StreamCat CHEMws",
-              "units": "index",
-              "required": true,
-              "rationale": "The watershed CHEM component captures cumulative upstream chemical-integrity pressure.",
-              "slider": {
-                "min": 0,
-                "max": 1,
-                "step": 0.01
-              }
-            }
-          ],
-          "formula": {
-            "resultSymbol": "V"
-          },
           "bands": [
             {
-              "rating": "Poor",
-              "min": null,
+              "label": "<0.40",
               "max": 0.4,
+              "maxInclusive": false,
+              "min": null,
               "minInclusive": false,
-              "maxInclusive": false,
-              "label": "<0.40"
+              "rating": "Poor"
             },
             {
-              "rating": "Fair",
-              "min": 0.4,
+              "label": "0.40-<0.70",
               "max": 0.7,
-              "minInclusive": true,
               "maxInclusive": false,
-              "label": "0.40-<0.70"
+              "min": 0.4,
+              "minInclusive": true,
+              "rating": "Fair"
             },
             {
-              "rating": "Good",
-              "min": 0.7,
+              "label": "\u22650.70",
               "max": null,
-              "minInclusive": true,
               "maxInclusive": false,
-              "label": "≥0.70"
+              "min": 0.7,
+              "minInclusive": true,
+              "rating": "Good"
             }
           ],
+          "basisClass": "published directional relationship",
           "breakpoints": [
             {
-              "label": "V 0.40",
-              "description": "Lower EASI condition-integration tier."
+              "description": "Lower EASI integration tier for the published CHEM integrity component.",
+              "label": "V 0.40"
             },
             {
-              "label": "V 0.70",
-              "description": "Upper EASI condition-integration tier. It is not an ATTAINS category or regulatory finding."
+              "description": "Upper EASI integration tier. It is not an EPA nutrient criterion.",
+              "label": "V 0.70"
             }
-          ],
-          "limitations": [
-            "This fallback changes the automated interpretation to water-quality condition context. It is not a regulatory impairment determination.",
-            "The 0.40 and 0.70 breakpoints are EASI integration tiers, not EPA regulatory thresholds."
           ],
           "citations": [
             "streamcat-updates"
           ],
+          "confidence": "L",
+          "evidenceFamily": "iwi_landscape",
+          "formula": {
+            "resultSymbol": "V"
+          },
+          "inputs": [
+            {
+              "key": "chemCatchment",
+              "label": "Catchment CHEM integrity",
+              "rationale": "The catchment CHEM component summarizes modeled chemical integrity close to the reach.",
+              "required": true,
+              "slider": {
+                "max": 1,
+                "min": 0,
+                "step": 0.01
+              },
+              "sourceField": "StreamCat CHEMcat",
+              "symbol": "CHEMcat",
+              "units": "index"
+            },
+            {
+              "key": "chemWatershed",
+              "label": "Watershed CHEM integrity",
+              "rationale": "The watershed CHEM component captures cumulative upstream chemical-integrity pressure.",
+              "required": true,
+              "slider": {
+                "max": 1,
+                "min": 0,
+                "step": 0.01
+              },
+              "sourceField": "StreamCat CHEMws",
+              "symbol": "CHEMws",
+              "units": "index"
+            }
+          ],
+          "limitations": [
+            "The CHEM component is a landscape-integrity fallback and does not estimate TN or TP concentration.",
+            "The 0.40 and 0.70 breakpoints are EASI integration tiers, not EPA ecological or regulatory thresholds."
+          ],
+          "methodKey": "streamcat-chem-integrity-nutrient",
+          "operator": "minimum",
           "plot": {
-            "mode": "scalar",
             "direction": "higher_better",
             "domain": [
               0,
               1
-            ]
+            ],
+            "mode": "scalar"
+          },
+          "provisional": true,
+          "sourceTier": "screening-proxy",
+          "status": "computed",
+          "usedFallback": true
+        }
+      ]
+    },
+    {
+      "basisClass": "dataset reference",
+      "breakpoints": [],
+      "citations": [
+        "attains"
+      ],
+      "confidence": "H",
+      "evidenceFamily": "attains_assessment",
+      "fieldReference": null,
+      "formula": {
+        "input": "category",
+        "lookup": {
+          "1": {
+            "label": "Category 1",
+            "rating": "Good"
+          },
+          "2": {
+            "label": "Category 2",
+            "rating": "Good"
+          },
+          "3": {
+            "label": "Category 3 (insufficient evidence)",
+            "rating": null
+          },
+          "4A": {
+            "label": "Category 4a",
+            "rating": "Fair"
+          },
+          "4B": {
+            "label": "Category 4b",
+            "rating": "Fair"
+          },
+          "4C": {
+            "label": "Category 4c",
+            "rating": "Poor"
+          },
+          "5": {
+            "label": "Category 5",
+            "rating": "Poor"
           }
         }
+      },
+      "inputs": [
+        {
+          "key": "category",
+          "label": "ATTAINS integrated-report category",
+          "rationale": "ATTAINS is the authoritative national source for assessed-water reporting categories.",
+          "required": true,
+          "sourceField": "EPA ATTAINS",
+          "symbol": "IR category",
+          "units": ""
+        }
       ],
-      "fieldReference": null,
       "limitations": [
         "Category 3 remains unscored because evidence is insufficient.",
         "A nearby unit within 2 km is explicitly labeled nearby and may not represent the selected reach.",
         "When ATTAINS is absent or inconclusive, the CHEM fallback is labeled water-quality condition context and not a regulatory determination.",
         "The category mapping reflects remedy status, not severity. A Category 4a water is as impaired as a Category 5 water but has an approved TMDL, so 4a and 4b rate Fair as impaired-with-a-management-pathway. Category 2 means no assessed use is failing, which is weaker than Category 1."
       ],
-      "citations": [
-        "attains"
-      ],
+      "methodKey": "attains-regulatory-category",
+      "metricId": "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl",
+      "operator": "categorical_lookup",
       "plot": {
         "mode": "categorical"
-      }
+      },
+      "provisional": false,
+      "sourceHierarchy": [
+        {
+          "description": "Use an intersecting or qualifying nearby Category 1, 2, 4a, 4b, 4c, or 5 assessment.",
+          "label": "Conclusive ATTAINS category",
+          "methodKey": "attains-regulatory-category"
+        },
+        {
+          "description": "Use when ATTAINS is absent or Category 3 is inconclusive. The result is condition context, not a regulatory determination.",
+          "label": "StreamCat CHEM condition fallback",
+          "methodKey": "streamcat-chem-integrity-regulatory"
+        }
+      ],
+      "sourceTier": "observed",
+      "status": "conditional",
+      "title": "Regulatory impairment",
+      "usedFallback": false,
+      "variants": [
+        {
+          "bands": [
+            {
+              "label": "<0.40",
+              "max": 0.4,
+              "maxInclusive": false,
+              "min": null,
+              "minInclusive": false,
+              "rating": "Poor"
+            },
+            {
+              "label": "0.40-<0.70",
+              "max": 0.7,
+              "maxInclusive": false,
+              "min": 0.4,
+              "minInclusive": true,
+              "rating": "Fair"
+            },
+            {
+              "label": "\u22650.70",
+              "max": null,
+              "maxInclusive": false,
+              "min": 0.7,
+              "minInclusive": true,
+              "rating": "Good"
+            }
+          ],
+          "basisClass": "published directional relationship",
+          "breakpoints": [
+            {
+              "description": "Lower EASI condition-integration tier.",
+              "label": "V 0.40"
+            },
+            {
+              "description": "Upper EASI condition-integration tier. It is not an ATTAINS category or regulatory finding.",
+              "label": "V 0.70"
+            }
+          ],
+          "citations": [
+            "streamcat-updates"
+          ],
+          "confidence": "L",
+          "evidenceFamily": "iwi_landscape",
+          "formula": {
+            "resultSymbol": "V"
+          },
+          "inputs": [
+            {
+              "key": "chemCatchment",
+              "label": "Catchment CHEM integrity",
+              "rationale": "The catchment CHEM component provides condition context near the selected reach.",
+              "required": true,
+              "slider": {
+                "max": 1,
+                "min": 0,
+                "step": 0.01
+              },
+              "sourceField": "StreamCat CHEMcat",
+              "symbol": "CHEMcat",
+              "units": "index"
+            },
+            {
+              "key": "chemWatershed",
+              "label": "Watershed CHEM integrity",
+              "rationale": "The watershed CHEM component captures cumulative upstream chemical-integrity pressure.",
+              "required": true,
+              "slider": {
+                "max": 1,
+                "min": 0,
+                "step": 0.01
+              },
+              "sourceField": "StreamCat CHEMws",
+              "symbol": "CHEMws",
+              "units": "index"
+            }
+          ],
+          "limitations": [
+            "This fallback changes the automated interpretation to water-quality condition context. It is not a regulatory impairment determination.",
+            "The 0.40 and 0.70 breakpoints are EASI integration tiers, not EPA regulatory thresholds."
+          ],
+          "methodKey": "streamcat-chem-integrity-regulatory",
+          "operator": "minimum",
+          "plot": {
+            "direction": "higher_better",
+            "domain": [
+              0,
+              1
+            ],
+            "mode": "scalar"
+          },
+          "provisional": true,
+          "sourceTier": "screening-proxy",
+          "status": "computed",
+          "usedFallback": true
+        }
+      ]
     },
     {
-      "methodKey": "habitat-support-potential",
-      "metricId": "habitat-provision-in-stream-habitat-complexity-and-cover",
-      "title": "Habitat-support potential (woody riparian corridor)",
-      "status": "computed",
-      "operator": "threshold",
       "basisClass": "provisional STAF screening judgment",
-      "provisional": true,
-      "confidence": "L",
-      "inputs": [
-        {
-          "key": "woodyRiparian",
-          "label": "Woody riparian cover",
-          "symbol": "woodyRiparian",
-          "sourceField": "forest + shrub + woody wetland in 100 m corridor",
-          "units": "%",
-          "required": true,
-          "rationale": "Woody riparian cover represents potential cover, wood recruitment, and bank-zone structure, the strongest desktop indicator of habitat support.",
-          "slider": {
-            "min": 0,
-            "max": 100,
-            "step": 1
-          }
-        },
-        {
-          "key": "sinuosity",
-          "label": "Reach sinuosity",
-          "symbol": "sinuosity",
-          "sourceField": "reach geometry",
-          "units": "ratio",
-          "required": false,
-          "rationale": "Sinuosity indicates planform variability and is shown for context. It is not rated because sinuosity measured over the fixed assessment reach understates planform sinuosity.",
-          "slider": {
-            "min": 1,
-            "max": 2.5,
-            "step": 0.01
-          },
-          "contextOnly": true
-        }
-      ],
       "breakpoints": [
         {
-          "label": "Reference index 0.39",
-          "description": "Fair begins at an interpolated reference index of 0.39."
+          "description": "Fair begins at an interpolated reference index of 0.39.",
+          "label": "Reference index 0.39"
         },
         {
-          "label": "Reference index 0.69",
-          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum."
+          "description": "Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum.",
+          "label": "Reference index 0.69"
         }
-      ],
-      "fieldReference": null,
-      "limitations": [
-        "Corridor woody cover is a habitat-support proxy, not a field inventory of pools, wood, cover, or bedforms.",
-        "Level II reference curves account for regional cover expectations; a national curve is used when the regional curve is unavailable.",
-        "Naturally open prairie and desert channels may rate Good with little woody cover where reference expectations are low. Sinuosity is context only."
       ],
       "citations": [
         "caddis-habitat",
         "epa-rbp",
         "easi-reference-curves"
       ],
+      "confidence": "L",
+      "curve": {
+        "fallback": [
+          "national"
+        ],
+        "mode": "banded",
+        "set": "corridor-woody",
+        "stratifier": "nars9"
+      },
+      "fieldReference": null,
+      "inputs": [
+        {
+          "key": "woodyRiparian",
+          "label": "Woody riparian cover",
+          "rationale": "Woody riparian cover represents potential cover, wood recruitment, and bank-zone structure, the strongest desktop indicator of habitat support.",
+          "required": true,
+          "slider": {
+            "max": 100,
+            "min": 0,
+            "step": 1
+          },
+          "sourceField": "forest + shrub + woody wetland in 100 m corridor",
+          "symbol": "woodyRiparian",
+          "units": "%"
+        },
+        {
+          "contextOnly": true,
+          "key": "sinuosity",
+          "label": "Reach sinuosity",
+          "rationale": "Sinuosity indicates planform variability and is shown for context. It is not rated because sinuosity measured over the fixed assessment reach understates planform sinuosity.",
+          "required": false,
+          "slider": {
+            "max": 2.5,
+            "min": 1,
+            "step": 0.01
+          },
+          "sourceField": "reach geometry",
+          "symbol": "sinuosity",
+          "units": "ratio"
+        }
+      ],
+      "limitations": [
+        "Corridor woody cover is a habitat-support proxy, not a field inventory of pools, wood, cover, or bedforms.",
+        "NARS-9 reference curves account for regional cover expectations; a national curve is used when the regional curve is unavailable.",
+        "Naturally open prairie and desert channels may rate Good with little woody cover where reference expectations are low. Sinuosity is context only."
+      ],
+      "methodKey": "habitat-support-potential",
+      "metricId": "habitat-provision-in-stream-habitat-complexity-and-cover",
+      "operator": "threshold",
       "plot": {
-        "mode": "scalar",
         "direction": "higher_better",
         "domain": [
           0,
           100
-        ]
-      },
-      "curve": {
-        "set": "corridor-woody",
-        "stratifier": "l2",
-        "fallback": [
-          "national"
         ],
-        "mode": "banded"
-      }
+        "mode": "scalar"
+      },
+      "provisional": true,
+      "status": "computed",
+      "title": "Habitat-support potential (woody riparian corridor)"
     },
     {
-      "metricId": "population-support-biological-integrity-ibi-community-condition",
-      "title": "Biological integrity",
-      "methodKey": "streamcat-prg-bmmi",
-      "status": "computed",
-      "operator": "threshold",
+      "bands": [
+        {
+          "label": "<0.25",
+          "max": 0.25,
+          "maxInclusive": false,
+          "min": null,
+          "minInclusive": false,
+          "rating": "Poor"
+        },
+        {
+          "label": "0.25 to <0.50",
+          "max": 0.5,
+          "maxInclusive": false,
+          "min": 0.25,
+          "minInclusive": true,
+          "rating": "Fair"
+        },
+        {
+          "label": ">=0.50",
+          "max": null,
+          "maxInclusive": false,
+          "min": 0.5,
+          "minInclusive": true,
+          "rating": "Good"
+        }
+      ],
       "basisClass": "published directional relationship",
-      "provisional": true,
+      "breakpoints": [
+        {
+          "description": "Lower EASI probability-integration tier.",
+          "label": "0.25"
+        },
+        {
+          "description": "Upper EASI probability-integration tier. This is a modeled probability, not a measured class.",
+          "label": "0.50"
+        }
+      ],
+      "citations": [
+        "bio-model",
+        "streamcat-updates"
+      ],
       "confidence": "M/L",
-      "sourceTier": "published-model",
       "evidenceFamily": "streamcat_biological_model",
-      "usedFallback": false,
       "inputs": [
         {
           "key": "prGBmmi",
           "label": "Predicted probability of Good BMMI condition",
-          "symbol": "prg_bmmi0809",
-          "sourceField": "EPA StreamCat prg_bmmi0809 (areaOfInterest other)",
-          "units": "probability",
-          "required": true,
           "rationale": "The published model predicts the probability that benthic condition is Good. It is not a measured IBI class.",
+          "required": true,
           "slider": {
-            "min": 0,
             "max": 1,
+            "min": 0,
             "step": 0.01
-          }
-        }
-      ],
-      "bands": [
-        {
-          "rating": "Poor",
-          "min": null,
-          "max": 0.25,
-          "minInclusive": false,
-          "maxInclusive": false,
-          "label": "<0.25"
-        },
-        {
-          "rating": "Fair",
-          "min": 0.25,
-          "max": 0.5,
-          "minInclusive": true,
-          "maxInclusive": false,
-          "label": "0.25 to <0.50"
-        },
-        {
-          "rating": "Good",
-          "min": 0.5,
-          "max": null,
-          "minInclusive": true,
-          "maxInclusive": false,
-          "label": ">=0.50"
-        }
-      ],
-      "breakpoints": [
-        {
-          "label": "0.25",
-          "description": "Lower EASI probability-integration tier."
-        },
-        {
-          "label": "0.50",
-          "description": "Upper EASI probability-integration tier. This is a modeled probability, not a measured class."
+          },
+          "sourceField": "EPA StreamCat prg_bmmi0809 (areaOfInterest other)",
+          "symbol": "prg_bmmi0809",
+          "units": "probability"
         }
       ],
       "limitations": [
@@ -2534,139 +2524,79 @@
         "The 0.25 and 0.50 cutoffs are EASI integration tiers. The model is unavailable for about 59 percent of analyzed reaches; the disclosed ICI/IWI fallback remains.",
         "The integrity fallback reuses landscape evidence scored by other functions and requires all twelve components."
       ],
-      "citations": [
-        "bio-model",
-        "streamcat-updates"
-      ],
+      "methodKey": "streamcat-prg-bmmi",
+      "metricId": "population-support-biological-integrity-ibi-community-condition",
+      "operator": "threshold",
       "plot": {
-        "mode": "scalar",
         "direction": "higher_better",
         "domain": [
           0,
           1
-        ]
+        ],
+        "mode": "scalar"
       },
+      "provisional": true,
+      "sourceHierarchy": [
+        {
+          "description": "Use prg_bmmi0809 from the other area of interest within the published model frame.",
+          "label": "Published BMMI probability",
+          "methodKey": "streamcat-prg-bmmi"
+        },
+        {
+          "description": "When the BMMI model has no value, use the lower of the two complete integrity products.",
+          "label": "Published ICI/IWI landscape products",
+          "methodKey": "streamcat-integrity-products"
+        }
+      ],
+      "sourceTier": "published-model",
+      "status": "computed",
+      "title": "Biological integrity",
+      "usedFallback": false,
       "variants": [
         {
-          "methodKey": "streamcat-integrity-products",
-          "status": "computed",
-          "operator": "minimum_of_products",
-          "basisClass": "published directional relationship",
-          "provisional": true,
-          "confidence": "L",
-          "sourceTier": "published-model",
-          "evidenceFamily": "iwi_landscape",
-          "usedFallback": true,
-          "inputs": [
+          "bands": [
             {
-              "key": "hydCat",
-              "label": "Catchment hydrologic integrity",
-              "symbol": "CHYD",
-              "sourceField": "StreamCat HYDcat",
-              "units": "index",
-              "required": true,
-              "rationale": "Published catchment integrity-product component."
+              "label": "<0.40",
+              "max": 0.4,
+              "maxInclusive": false,
+              "min": null,
+              "minInclusive": false,
+              "rating": "Poor"
             },
             {
-              "key": "chemCat",
-              "label": "Catchment chemical integrity",
-              "symbol": "CCHEM",
-              "sourceField": "StreamCat CHEMcat",
-              "units": "index",
-              "required": true,
-              "rationale": "Published catchment integrity-product component."
+              "label": "0.40-<0.70",
+              "max": 0.7,
+              "maxInclusive": false,
+              "min": 0.4,
+              "minInclusive": true,
+              "rating": "Fair"
             },
             {
-              "key": "sedCat",
-              "label": "Catchment sediment integrity",
-              "symbol": "CSED",
-              "sourceField": "StreamCat SEDcat",
-              "units": "index",
-              "required": true,
-              "rationale": "Published catchment integrity-product component."
-            },
-            {
-              "key": "connCat",
-              "label": "Catchment connectivity integrity",
-              "symbol": "CCONN",
-              "sourceField": "StreamCat CONNcat",
-              "units": "index",
-              "required": true,
-              "rationale": "Published catchment integrity-product component."
-            },
-            {
-              "key": "tempCat",
-              "label": "Catchment thermal integrity",
-              "symbol": "CTEMP",
-              "sourceField": "StreamCat TEMPcat",
-              "units": "index",
-              "required": true,
-              "rationale": "Published catchment integrity-product component."
-            },
-            {
-              "key": "habtCat",
-              "label": "Catchment habitat integrity",
-              "symbol": "CHABT",
-              "sourceField": "StreamCat HABTcat",
-              "units": "index",
-              "required": true,
-              "rationale": "Published catchment integrity-product component."
-            },
-            {
-              "key": "hydWs",
-              "label": "Watershed hydrologic integrity",
-              "symbol": "WHYD",
-              "sourceField": "StreamCat HYDws",
-              "units": "index",
-              "required": true,
-              "rationale": "Published watershed integrity-product component."
-            },
-            {
-              "key": "chemWs",
-              "label": "Watershed chemical integrity",
-              "symbol": "WCHEM",
-              "sourceField": "StreamCat CHEMws",
-              "units": "index",
-              "required": true,
-              "rationale": "Published watershed integrity-product component."
-            },
-            {
-              "key": "sedWs",
-              "label": "Watershed sediment integrity",
-              "symbol": "WSED",
-              "sourceField": "StreamCat SEDws",
-              "units": "index",
-              "required": true,
-              "rationale": "Published watershed integrity-product component."
-            },
-            {
-              "key": "connWs",
-              "label": "Watershed connectivity integrity",
-              "symbol": "WCONN",
-              "sourceField": "StreamCat CONNws",
-              "units": "index",
-              "required": true,
-              "rationale": "Published watershed integrity-product component."
-            },
-            {
-              "key": "tempWs",
-              "label": "Watershed thermal integrity",
-              "symbol": "WTEMP",
-              "sourceField": "StreamCat TEMPws",
-              "units": "index",
-              "required": true,
-              "rationale": "Published watershed integrity-product component."
-            },
-            {
-              "key": "habtWs",
-              "label": "Watershed habitat integrity",
-              "symbol": "WHABT",
-              "sourceField": "StreamCat HABTws",
-              "units": "index",
-              "required": true,
-              "rationale": "Published watershed integrity-product component."
+              "label": "\u22650.70",
+              "max": null,
+              "maxInclusive": false,
+              "min": 0.7,
+              "minInclusive": true,
+              "rating": "Good"
             }
           ],
+          "basisClass": "published directional relationship",
+          "breakpoints": [
+            {
+              "description": "Lower EASI integration tier applied to the lower published integrity product.",
+              "label": "V 0.40"
+            },
+            {
+              "description": "Upper EASI integration tier. It is not a measured IBI threshold.",
+              "label": "V 0.70"
+            }
+          ],
+          "citations": [
+            "streamcat-updates",
+            "bio-model"
+          ],
+          "confidence": "L",
+          "evidenceFamily": "iwi_landscape",
           "formula": {
             "products": {
               "ICI": [
@@ -2688,40 +2618,114 @@
             },
             "resultSymbol": "V"
           },
-          "bands": [
+          "inputs": [
             {
-              "rating": "Poor",
-              "min": null,
-              "max": 0.4,
-              "minInclusive": false,
-              "maxInclusive": false,
-              "label": "<0.40"
+              "key": "hydCat",
+              "label": "Catchment hydrologic integrity",
+              "rationale": "Published catchment integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat HYDcat",
+              "symbol": "CHYD",
+              "units": "index"
             },
             {
-              "rating": "Fair",
-              "min": 0.4,
-              "max": 0.7,
-              "minInclusive": true,
-              "maxInclusive": false,
-              "label": "0.40-<0.70"
+              "key": "chemCat",
+              "label": "Catchment chemical integrity",
+              "rationale": "Published catchment integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat CHEMcat",
+              "symbol": "CCHEM",
+              "units": "index"
             },
             {
-              "rating": "Good",
-              "min": 0.7,
-              "max": null,
-              "minInclusive": true,
-              "maxInclusive": false,
-              "label": "≥0.70"
-            }
-          ],
-          "breakpoints": [
-            {
-              "label": "V 0.40",
-              "description": "Lower EASI integration tier applied to the lower published integrity product."
+              "key": "sedCat",
+              "label": "Catchment sediment integrity",
+              "rationale": "Published catchment integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat SEDcat",
+              "symbol": "CSED",
+              "units": "index"
             },
             {
-              "label": "V 0.70",
-              "description": "Upper EASI integration tier. It is not a measured IBI threshold."
+              "key": "connCat",
+              "label": "Catchment connectivity integrity",
+              "rationale": "Published catchment integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat CONNcat",
+              "symbol": "CCONN",
+              "units": "index"
+            },
+            {
+              "key": "tempCat",
+              "label": "Catchment thermal integrity",
+              "rationale": "Published catchment integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat TEMPcat",
+              "symbol": "CTEMP",
+              "units": "index"
+            },
+            {
+              "key": "habtCat",
+              "label": "Catchment habitat integrity",
+              "rationale": "Published catchment integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat HABTcat",
+              "symbol": "CHABT",
+              "units": "index"
+            },
+            {
+              "key": "hydWs",
+              "label": "Watershed hydrologic integrity",
+              "rationale": "Published watershed integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat HYDws",
+              "symbol": "WHYD",
+              "units": "index"
+            },
+            {
+              "key": "chemWs",
+              "label": "Watershed chemical integrity",
+              "rationale": "Published watershed integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat CHEMws",
+              "symbol": "WCHEM",
+              "units": "index"
+            },
+            {
+              "key": "sedWs",
+              "label": "Watershed sediment integrity",
+              "rationale": "Published watershed integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat SEDws",
+              "symbol": "WSED",
+              "units": "index"
+            },
+            {
+              "key": "connWs",
+              "label": "Watershed connectivity integrity",
+              "rationale": "Published watershed integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat CONNws",
+              "symbol": "WCONN",
+              "units": "index"
+            },
+            {
+              "key": "tempWs",
+              "label": "Watershed thermal integrity",
+              "rationale": "Published watershed integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat TEMPws",
+              "symbol": "WTEMP",
+              "units": "index"
+            },
+            {
+              "key": "habtWs",
+              "label": "Watershed habitat integrity",
+              "rationale": "Published watershed integrity-product component.",
+              "required": true,
+              "sourceField": "StreamCat HABTws",
+              "symbol": "WHABT",
+              "units": "index"
             }
           ],
           "limitations": [
@@ -2729,184 +2733,180 @@
             "Multiplication makes the result sensitive to every component and reuses landscape evidence scored elsewhere in EASI.",
             "The 0.40 and 0.70 classes are EASI integration tiers."
           ],
-          "citations": [
-            "streamcat-updates",
-            "bio-model"
-          ],
+          "methodKey": "streamcat-integrity-products",
+          "operator": "minimum_of_products",
           "plot": {
-            "mode": "scalar",
             "direction": "higher_better",
             "domain": [
               0,
               1
-            ]
-          }
-        }
-      ],
-      "sourceHierarchy": [
-        {
-          "methodKey": "streamcat-prg-bmmi",
-          "label": "Published BMMI probability",
-          "description": "Use prg_bmmi0809 from the other area of interest within the published model frame."
-        },
-        {
-          "methodKey": "streamcat-integrity-products",
-          "label": "Published ICI/IWI landscape products",
-          "description": "When the BMMI model has no value, use the lower of the two complete integrity products."
+            ],
+            "mode": "scalar"
+          },
+          "provisional": true,
+          "sourceTier": "published-model",
+          "status": "computed",
+          "usedFallback": true
         }
       ]
     },
     {
-      "methodKey": "nas-established-taxa-count",
-      "metricId": "community-dynamics-invasive-non-native-species-presence",
-      "title": "Invasive-species pressure",
-      "status": "computed",
-      "operator": "threshold",
+      "bands": [
+        {
+          "label": "0 recorded",
+          "max": 0,
+          "maxInclusive": true,
+          "min": 0,
+          "minInclusive": true,
+          "rating": "Good"
+        },
+        {
+          "label": "1-2 recorded",
+          "max": 2,
+          "maxInclusive": true,
+          "min": 1,
+          "minInclusive": true,
+          "rating": "Fair"
+        },
+        {
+          "label": "\u22653 recorded",
+          "max": null,
+          "maxInclusive": false,
+          "min": 3,
+          "minInclusive": true,
+          "rating": "Poor"
+        }
+      ],
       "basisClass": "dataset reference",
-      "provisional": true,
+      "breakpoints": [
+        {
+          "description": "Transparent STAF transition from no established taxa recorded to recorded pressure.",
+          "label": "1 taxon"
+        },
+        {
+          "description": "Transparent STAF transition to the upper count tier.",
+          "label": "3 taxa"
+        }
+      ],
+      "citations": [
+        "nas",
+        "mangiante-2019"
+      ],
       "confidence": "M",
+      "fieldReference": null,
       "inputs": [
         {
           "key": "taxaCount",
           "label": "Established NAS taxa count",
-          "symbol": "taxa",
-          "sourceField": "USGS NAS",
-          "units": "recorded taxa",
-          "valueType": "integer",
+          "rationale": "Established taxa records provide a transparent national indicator of invasive-species pressure.",
           "required": true,
-          "rationale": "Established taxa records provide a transparent national indicator of invasive-species pressure."
+          "sourceField": "USGS NAS",
+          "symbol": "taxa",
+          "units": "recorded taxa",
+          "valueType": "integer"
         }
       ],
-      "bands": [
-        {
-          "rating": "Good",
-          "min": 0,
-          "max": 0,
-          "minInclusive": true,
-          "maxInclusive": true,
-          "label": "0 recorded"
-        },
-        {
-          "rating": "Fair",
-          "min": 1,
-          "max": 2,
-          "minInclusive": true,
-          "maxInclusive": true,
-          "label": "1-2 recorded"
-        },
-        {
-          "rating": "Poor",
-          "min": 3,
-          "max": null,
-          "minInclusive": true,
-          "maxInclusive": false,
-          "label": "≥3 recorded"
-        }
-      ],
-      "breakpoints": [
-        {
-          "label": "1 taxon",
-          "description": "Transparent STAF transition from no established taxa recorded to recorded pressure."
-        },
-        {
-          "label": "3 taxa",
-          "description": "Transparent STAF transition to the upper count tier."
-        }
-      ],
-      "fieldReference": null,
       "limitations": [
         "A zero count means no established taxa were recorded. It does not confirm absence.",
         "HUC8 fallback results carry lower confidence than HUC12 results.",
         "Count bands are STAF screening judgments.",
         "Establishment status often cannot be confirmed from occurrence records, and uneven sampling effort inflates richness where effort is high (Mangiante et al. 2018)."
       ],
-      "citations": [
-        "nas",
-        "mangiante-2019"
-      ],
+      "methodKey": "nas-established-taxa-count",
+      "metricId": "community-dynamics-invasive-non-native-species-presence",
+      "operator": "threshold",
       "plot": {
-        "mode": "scalar",
         "direction": "lower_better",
         "domain": [
           0,
           6
-        ]
-      }
+        ],
+        "mode": "scalar"
+      },
+      "provisional": true,
+      "status": "computed",
+      "title": "Invasive-species pressure"
     },
     {
-      "methodKey": "nearby-dam-proximity",
-      "metricId": "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity",
-      "title": "Nearby dam-proximity proxy",
-      "status": "conditional",
-      "operator": "threshold",
+      "bands": [
+        {
+          "label": "0 mapped dams",
+          "max": 0,
+          "maxInclusive": true,
+          "min": 0,
+          "minInclusive": true,
+          "rating": "Good"
+        },
+        {
+          "label": "1 mapped dam",
+          "max": 1,
+          "maxInclusive": true,
+          "min": 1,
+          "minInclusive": true,
+          "rating": "Fair"
+        },
+        {
+          "label": "\u22652 mapped dams",
+          "max": null,
+          "maxInclusive": false,
+          "min": 2,
+          "minInclusive": true,
+          "rating": "Poor"
+        }
+      ],
       "basisClass": "dataset reference",
-      "provisional": true,
+      "breakpoints": [
+        {
+          "description": "A single mapped dam within one mile changes the automated result from Good to Fair.",
+          "label": "1 dam"
+        },
+        {
+          "description": "Two or more mapped dams within one mile rate Poor.",
+          "label": "2 dams"
+        }
+      ],
+      "citations": [
+        "nid"
+      ],
       "confidence": "M",
+      "fieldReference": {
+        "criteria": {
+          "Poor": "Verified adverse effect on aquatic organism passage within one mile"
+        },
+        "title": "Verified connectivity evidence"
+      },
       "inputs": [
         {
           "key": "damCount",
           "label": "Mapped NID dams within one mile",
-          "symbol": "dams",
-          "sourceField": "USACE NID geodesic proximity query",
-          "units": "mapped dams",
-          "valueType": "integer",
+          "rationale": "Mapped dam proximity identifies potential longitudinal-connectivity pressure.",
           "required": true,
-          "rationale": "Mapped dam proximity identifies potential longitudinal-connectivity pressure."
+          "sourceField": "USACE NID geodesic proximity query",
+          "symbol": "dams",
+          "units": "mapped dams",
+          "valueType": "integer"
         }
       ],
-      "bands": [
-        {
-          "rating": "Good",
-          "min": 0,
-          "max": 0,
-          "minInclusive": true,
-          "maxInclusive": true,
-          "label": "0 mapped dams"
-        },
-        {
-          "rating": "Fair",
-          "min": 1,
-          "max": 1,
-          "minInclusive": true,
-          "maxInclusive": true,
-          "label": "1 mapped dam"
-        },
-        {
-          "rating": "Poor",
-          "min": 2,
-          "max": null,
-          "minInclusive": true,
-          "maxInclusive": false,
-          "label": "≥2 mapped dams"
-        }
-      ],
-      "breakpoints": [
-        {
-          "label": "1 dam",
-          "description": "A single mapped dam within one mile changes the automated result from Good to Fair."
-        },
-        {
-          "label": "2 dams",
-          "description": "Two or more mapped dams within one mile rate Poor."
-        }
-      ],
-      "fieldReference": {
-        "title": "Verified connectivity evidence",
-        "criteria": {
-          "Poor": "Verified adverse effect on aquatic organism passage within one mile"
-        }
-      },
       "limitations": [
         "A mapped dam count is a proximity screen and cannot confirm passability or the severity of a barrier.",
         "NID carries about 91,000 regulated dams while the National Aquatic Barrier Inventory maps over 500,000 barriers of all sizes, so zero mapped dams is frequently a false negative for passage.",
         "Query failure is unscored, not Good."
       ],
-      "citations": [
-        "nid"
-      ],
+      "methodKey": "nearby-dam-proximity",
+      "metricId": "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity",
+      "operator": "threshold",
       "plot": {
         "mode": "categorical"
-      }
+      },
+      "provisional": true,
+      "status": "conditional",
+      "title": "Nearby dam-proximity proxy"
     }
-  ]
+  ],
+  "ratingIndex": {
+    "Fair": 0.545,
+    "Good": 0.85,
+    "Poor": 0.195
+  },
+  "schemaVersion": 1
 }

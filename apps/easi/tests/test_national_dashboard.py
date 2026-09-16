@@ -70,7 +70,7 @@ def test_spread_quantiles_and_shares():
 def test_scope_and_measure_choices():
     scopes = d.scope_choices(_stats())
     assert list(scopes) == ["US", "NC", "VA", "WV"]              # everything first, then states by name; MD has no reaches
-    assert scopes["US"] == "All published reaches (1,000)" and scopes["VA"] == "Virginia (900 reaches, 90% screened)"
+    assert scopes["US"] == "All screened reaches (1,000)" and scopes["VA"] == "Virginia (900 reaches, 90% screened)"
     measures = d.measure_choices(_stats())
     assert list(measures) == ["Condition indices", "Hydrology", "Physicochemistry"]
     assert list(measures["Condition indices"]) == ["eci", "physical", "chemical", "biological"]
@@ -119,13 +119,13 @@ def test_sensitivity_orders_least_spread_first_and_ranges_over_covered_states():
 
 def test_compare_pins_everything_first_sorts_the_rest_and_mutes_border_only_states():
     html = str(d.compare_card(_stats(), "eci"))
-    order = [html.index(name) for name in ("All published reaches", "Virginia", "West Virginia", "North Carolina")]
+    order = [html.index(name) for name in ("All screened reaches", "Virginia", "West Virginia", "North Carolina")]
     assert order == sorted(order)                                        # by median: 0.62, 0.58, 0.55
     assert html.count("easi-dash-box-row muted") == 1 and "(NC)" in html
     assert "300 reaches, 60% screened" in html and "Ecosystem Condition Index by state" in html
     html = str(d.compare_card(_stats(), "catchment-hydrology"))
     assert "Catchment hydrology by state" in html and html.count('class="easi-dash-stack"') == 4
-    order = [html.index(name) for name in ("All published reaches", "Virginia", "North Carolina", "West Virginia")]
+    order = [html.index(name) for name in ("All screened reaches", "Virginia", "North Carolina", "West Virginia")]
     assert order == sorted(order)                                        # by share Functioning: 0.73, 0.60, 0.50
 
 
@@ -136,7 +136,7 @@ def test_summary_strip_footer_and_empty_states():
     html = str(d.summary_strip(_stats(), "VA"))
     assert "90%" in html and "of 1,000 reaches screened" in html
     assert "midpoint of its NHDPlus V2 flowline" in str(d.footer_note(_stats()))
-    assert "not published" in str(d.unavailable({"available": True}))
+    assert "not available" in str(d.unavailable({"available": True}))
     assert "not reachable" in str(d.unavailable({"available": False}))
 
 
@@ -166,3 +166,13 @@ def test_no_em_dashes_anywhere_in_the_dashboard_copy():
               str(d.summary_strip(stats, "US")), str(d.footer_note(stats)), d.export_csv(stats),
               str(d.unavailable(None))]
     assert not any("—" in p for p in pieces)
+
+
+def test_csv_records_the_completed_bundle_identity():
+    stats = _stats()
+    identity = {"alternative_id": "alternative-2", "build_id": "completed-local-build", "method_version": "b2e3033116e3"}
+    stats.update(identity)
+    rows = list(csv.DictReader(io.StringIO(d.export_csv(stats))))
+    actual = {r["measure"]: r["value"] for r in rows if r["kind"] == "dataset"}
+    assert actual == identity
+    assert rows[0]["scope"] == "US" and rows[0]["statistic"] == "n"

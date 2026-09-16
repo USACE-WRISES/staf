@@ -1,0 +1,12 @@
+{
+  "name": "easi-nationwide-assets",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "node build.mjs" },
+  "dependencies": {
+    "@mapbox/vector-tile": "2.0.5",
+    "leaflet": "1.9.4",
+    "pbf": "4.0.2"
+  },
+  "devDependencies": { "esbuild": "0.25.12" }
+}
