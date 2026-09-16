@@ -45,6 +45,64 @@ from easi.snapcard import hr_snap_card  # noqa: E402
 FT_PER_M = 3.28083989501312
 LOCAL_REVIEW_ROOT = local_review.review_root()
 
+
+def _env_flag(name: str) -> bool:
+    """True when the environment variable reads 1, true, yes or on."""
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+# The Nationwide screening viewer (the precomputed national dataset) is a
+# developer preview. It mounts only when EASI_NATIONAL_VIEWER is set at startup,
+# so the public app ships without the switch, the map assets and the tile route.
+# Everything under easi.national and the builder in tools/easi-national is
+# untouched by the flag.
+NATIONAL_VIEWER = _env_flag("EASI_NATIONAL_VIEWER")
+
+
+def _viewer_head_tags(viewer: bool) -> list:
+    """The stylesheet and script tags the two Nationwide renderers need."""
+    if not viewer:
+        return []
+    return [ui.tags.link(rel="stylesheet", href="vendor/maplibre-gl.css"),
+            ui.tags.link(rel="stylesheet", href="vendor/leaflet/leaflet.css"),
+            ui.tags.link(rel="stylesheet", href="nationwide-viewer.css?v=2"),
+            ui.tags.script(src="vendor/maplibre-gl.js", defer=""),
+            ui.tags.script(src="vendor/leaflet/leaflet.js", defer=""),
+            ui.tags.script(src="vendor/easi-vector-tile.js", defer=""),
+            ui.tags.script(src="viewer-standard.js?v=3", defer=""),
+            ui.tags.script(src="viewer-compatibility.js?v=5", defer=""),
+            ui.tags.script(src="viewer.js?v=9", defer="")]
+
+
+def _viewer_switch(viewer: bool):
+    """The header's middle column: the switch that opens the viewer, with the
+    circled i beside it, or an empty placeholder that keeps the nav at the right."""
+    if not viewer:
+        return ui.div(class_="easi-mode-toggle")
+    # the precomputed national screening is a switch in the middle of
+    # the bar; the circled i beside it says what the map is and is not
+    return ui.div(ui.input_switch("viewer_on", "Nationwide screening", value=False),
+                  ui.output_ui("viewer_info", inline=True),
+                  class_="easi-mode-toggle")
+
+
+def _viewer_workspace_slot(viewer: bool):
+    """The takeover output the viewer renders into (absent when gated off)."""
+    return ui.output_ui("viewer_workspace") if viewer else None
+
+
+def _viewer_help(viewer: bool) -> str:
+    """The Help paragraph about the viewer (empty when gated off)."""
+    if not viewer:
+        return ""
+    return ("Turn on **Nationwide screening** in the header to see the precomputed, "
+            "unreviewed screening of every NHDPlus V2 reach in the available dataset, for fast "
+            "site screening in support of an assessment; turn it off to return to the "
+            "single-site workflow. The circled i beside the switch describes the "
+            "dataset. Click a colored reach to open its report; gray reaches are not "
+            "screened yet. A full EASI assessment should be run on the reach itself, "
+            "with every metric reviewed in detail.\n\n")
+
 try:
     from ipyleaflet import (CircleMarker, GeoJSON, LayerGroup, LayersControl, Map, Marker,  # noqa: F401
                         ScaleControl, TileLayer)
@@ -421,15 +479,7 @@ def staf_topnav():
 
 app_ui = ui.page_fillable(
     ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=59"),
-                    ui.tags.link(rel="stylesheet", href="vendor/maplibre-gl.css"),
-                    ui.tags.link(rel="stylesheet", href="vendor/leaflet/leaflet.css"),
-                    ui.tags.link(rel="stylesheet", href="nationwide-viewer.css?v=2"),
-                    ui.tags.script(src="vendor/maplibre-gl.js", defer=""),
-                    ui.tags.script(src="vendor/leaflet/leaflet.js", defer=""),
-                    ui.tags.script(src="vendor/easi-vector-tile.js", defer=""),
-                    ui.tags.script(src="viewer-standard.js?v=3", defer=""),
-                    ui.tags.script(src="viewer-compatibility.js?v=5", defer=""),
-                    ui.tags.script(src="viewer.js?v=9", defer=""),
+                    *_viewer_head_tags(NATIONAL_VIEWER),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -447,11 +497,7 @@ app_ui = ui.page_fillable(
                            class_="easi-brand"),
                    staf_topnav(),
                    class_="easi-header-left"),
-            # the precomputed national screening is a switch in the middle of
-            # the bar; the circled i beside it says what the map is and is not
-            ui.div(ui.input_switch("viewer_on", "Nationwide screening", value=False),
-                   ui.output_ui("viewer_info", inline=True),
-                   class_="easi-mode-toggle"),
+            _viewer_switch(NATIONAL_VIEWER),
             ui.div(
                 ui.input_action_link("nav_new", "New analysis"),
                 ui.input_action_link("nav_batch", "Batch"),
@@ -475,7 +521,7 @@ app_ui = ui.page_fillable(
         ui.div(ui.output_ui("leftpane"), class_="easi-leftpane"),
         ui.output_ui("worksheet"),
         ui.output_ui("batch_workspace"),
-        ui.output_ui("viewer_workspace"),
+        _viewer_workspace_slot(NATIONAL_VIEWER),
         # Stream legend: legend-dock.js moves this wrapper into the map's
         # top-right control stack under the layers button. The card look lives
         # on the rendered content, so an empty output shows nothing.
@@ -2429,13 +2475,7 @@ def server(input, output, session):
                 "CSV, or GeoJSON.\n\n"
                 f"**Batch** runs up to {BATCH_UI_MAX_SITES} sites at once and "
                 "packages the reports as a ZIP.\n\n"
-                "Turn on **Nationwide screening** in the header to see the precomputed, "
-                "unreviewed screening of every NHDPlus V2 reach in the available dataset, for fast "
-                "site screening in support of an assessment; turn it off to return to the "
-                "single-site workflow. The circled i beside the switch describes the "
-                "dataset. Click a colored reach to open its report; gray reaches are not "
-                "screened yet. A full EASI assessment should be run on the reach itself, "
-                "with every metric reviewed in detail.\n\n"
+                + _viewer_help(NATIONAL_VIEWER) +
                 "Switch basemaps and stream visibility with the layers control "
                 "at the top right. Turn on **StreamCat coverage** there to inspect "
                 "stream coverage and the source reach for the selected site.\n\n"
@@ -4059,7 +4099,8 @@ def server(input, output, session):
             headers["Content-Encoding"] = encoding
         return Response(content=data, media_type=media, headers=headers)
 
-    tiles_route = session.dynamic_route("national-tiles", _national_tiles_handler)
+    tiles_route = (session.dynamic_route("national-tiles", _national_tiles_handler)
+                   if NATIONAL_VIEWER else None)
 
     @reactive.effect
     @reactive.event(input.viewer_on)
