@@ -54,6 +54,7 @@
   "batch/runtime.py": "c92ac99171a48db426001fa56e8563fb76396c52391e7b564fca73fcf6ac8cc4",
   "batch_ui.py": "ae8139a5d7e3d787b0a7f7a2c630b2587a8ba8ba3ba2e6f979f4ab0bbb25183d",
   "bieger.py": "4421ab46f7706312802ab52beaba7ad258eb1675f7d3354abfa178a49efa9fdd",
+  "calculator.py": "2e81b734996fc25ec1158afcacaa90840a9dd4f2f58e083ca4d0450fedc61823",
   "config.py": "eba865d4ea9bdf8397c56e700292e0fb7aadb9b5dd1c6c0452619f04e3e70820",
   "datasources/__init__.py": "97cb1580d84ad209917301ab780de337db5abcc535dd91b2bb4636f34731b064",
   "datasources/attains.py": "1caef745fc4c9fe34de38feb7e41bd06b2a39a7501179a2143f0280bb8e53f95",

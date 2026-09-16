@@ -521,6 +521,30 @@ prose-only Quarto render that preserves the existing figures and tables. See
 [the documentation build guide](docs/EASI_Documentation/README.md) before any
 full rebuild, which regenerates methods and validation assets.
 
+## Excel calculator
+
+`www/calculator/EASI_Calculator_1.0.0.xlsx` is an offline implementation of the
+same methodology: the user enters the desktop quantities, the NARS-9 region and
+the channel slope, and the workbook rates the 20 metrics, applies the reference
+curves and the STAF rollup, and reports the sub-indices and the ECI. It is
+generated, never edited by hand, by `scripts/build_calculator.py` from the
+scoring definitions the app reads (`data/screening-methods.json`,
+`data/reference-curves.json`, `data/cwa-mapping.json`, `data/easi-metrics.json`,
+`data/scoring-identity.json`); its Metadata sheet carries the method digest and
+the catalog and curve hashes. The app serves it from the report footer and the
+header link, and it is reachable directly at `calculator/EASI_Calculator_1.0.0.xlsx`.
+
+`tests/test_calculator_parity.py` proves same inputs, same results on a retained
+case set (`tests/data/calculator_cases.json`, built by `tests/calculator_cases.py`
+from evidence records scored by the app's own engine): band edges on both sides,
+every reference curve at its crossings and knots, missing inputs, every fallback
+route, the observed overrides, the strata and the rollup extremes. The everyday
+gate evaluates the workbook with the `formulas` package; `EASI_EXCEL_PARITY=1`
+repeats it in the installed Excel. Regenerate the case set with
+`EASI_WRITE_GOLDEN=1` after an intended method change, and rebuild the workbook
+with `python scripts/build_calculator.py` (the test fails if the committed file
+differs from a fresh build).
+
 ## Methodology & references
 
 - **STAF — Stream Type Assessment Framework**: the screening method EASI automates
