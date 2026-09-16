@@ -30,7 +30,7 @@ class TileReadError(RuntimeError):
 
 
 def viewer_zoom_range(manifest: dict) -> tuple[int, int]:
-    """Shared native tile range, with reaches hidden below logical zoom seven."""
+    """Shared native tile range, starting at the logical zoom-four overview."""
     entries = manifest.get("tiles")
     if not isinstance(entries, dict) or not entries:
         raise ValueError("The national dataset has no tile zoom ranges. Refresh Nationwide screening.")
@@ -42,7 +42,7 @@ def viewer_zoom_range(manifest: dict) -> tuple[int, int]:
         if type(lo) is not int or type(hi) is not int or not 0 <= lo <= hi <= 31:
             raise ValueError("The national dataset has an invalid tile zoom range.")
         ranges.append((lo, hi))
-    minimum = max(7, max(lo for lo, _ in ranges))
+    minimum = max(4, max(lo for lo, _ in ranges))
     maximum = min(hi for _, hi in ranges)
     if minimum > maximum or minimum > 16:
         raise ValueError("The national dataset has no shared tile zoom range supported by this viewer.")

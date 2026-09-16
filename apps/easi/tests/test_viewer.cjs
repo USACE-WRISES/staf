@@ -347,7 +347,27 @@ test("Compatibility is the default and manual renderer switching preserves logic
   h.handlers.get("easi-viewer-teardown")({});
 });
 
-test("overview has coverage but no reach sources until the shared minimum; zoom note is independent", () => {
+test("Standard loads selectable reach sources in the initial logical zoom-four US view", () => {
+  const h = harness();
+  h.handlers.get("easi-viewer-init")({routeBase:"r",vpus:["02"],minzoom:4,maxzoom:12,zoom:4});
+  const map = h.maplibregl.maps[0]; map.fire("style.load");
+  same(map.options.center,[-96,38.5]);assert.equal(map.options.zoom,4);
+  assert.equal(map.options.minZoom,3);assert.equal(map.options.maxZoom,16);
+  assert.ok(map.sources["easi-coverage"]);
+  assert.equal(map.sources["easi-02"].minzoom,4);assert.equal(map.sources["easi-02"].maxzoom,12);
+  assert.equal(h.zoomNote.hidden,true);assert.equal(h.status.hidden,true);
+  assert.ok(map.layers.filter(layer=>layer["source-layer"]==="flowlines").every(layer=>layer.minzoom===4));
+  map.features=[reach(17,"Functioning",[[1,1],[2,1]])];
+  map.fire("click",{point:{x:150,y:100}});
+  assert.equal(h.inputs.at(-1).value.comid,17);
+  map.options.zoom=3;map.fire("zoom");
+  assert.equal(map.sources["easi-02"],undefined);assert.equal(h.zoomNote.hidden,false);
+  map.options.zoom=4;map.fire("zoom");
+  assert.ok(map.sources["easi-02"]);assert.equal(h.zoomNote.hidden,true);
+  h.handlers.get("easi-viewer-teardown")({});
+});
+
+test("a higher archive minimum keeps overview reach-free; zoom note is independent", () => {
   const h = harness(), init = h.handlers.get("easi-viewer-init");
   const config = {routeBase:"r", vpus:["02"], minzoom:8, maxzoom:11, zoom:4};
   init(config);
@@ -378,7 +398,7 @@ test("overview has coverage but no reach sources until the shared minimum; zoom 
 });
 
 test("malformed zoom config shows unavailable and creates no reach sources", () => {
-  for (const range of [{minzoom:null}, {minzoom:6}, {minzoom:7.5}, {maxzoom:6}, {maxzoom:32}]) {
+  for (const range of [{minzoom:null}, {minzoom:3}, {minzoom:7.5}, {maxzoom:6}, {maxzoom:32}]) {
     const h=harness(); h.handlers.get("easi-viewer-init")({routeBase:"r",vpus:["02"],...range});
     const map=h.maplibregl.maps[0]; map.fire("style.load");
     assert.equal(map.sources["easi-02"],undefined); assert.equal(h.zoomNote.hidden,true);

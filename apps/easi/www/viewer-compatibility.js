@@ -226,7 +226,9 @@
       if (!entry.ended) { entry.ended = true; end(); }
     }
     function fetchTile(vpu, coords, signal) {
-      if (!current() || config.available === false || map.getZoom() - 1 < config.minzoom ||
+      // GridLayer gates its target zoom with minZoom. During animation the
+      // map still reports the previous zoom, so validate the requested tile.
+      if (!current() || config.available === false ||
           coords.z - 1 < config.minzoom || coords.z - 1 > config.maxzoom) return Promise.resolve([]);
       var url = C.tileUrl(config, vpu).replace("{z}", coords.z - 1).replace("{x}", coords.x).replace("{y}", coords.y);
       return sources.acquire(url, signal);

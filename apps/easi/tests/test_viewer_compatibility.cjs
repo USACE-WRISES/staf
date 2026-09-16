@@ -177,7 +177,7 @@ function rendererHarness(options={}) {
   };
   context.document.getElementById=()=>container;
   function simple(){return {addTo(){layers.push(this);return this;},setStyle(){},setContent(){return this;},setLatLng(){return this;},openOn(){return this;}};}
-  const L={map(){classes.add("leaflet-container");classes.add("leaflet-touch");attrs.set("tabindex","0");return map;},control:{zoom:simple},
+  const L={map(container,mapOptions){map.options=mapOptions;classes.add("leaflet-container");classes.add("leaflet-touch");attrs.set("tabindex","0");return map;},control:{zoom:simple},
     tileLayer(url,options){return Object.assign(simple(),{url,options});},geoJSON:simple,layerGroup:simple,polyline:simple,popup:simple,
     GridLayer:{extend(def){return class {
       constructor(options){this.options=options;this.handlers={};}
@@ -206,8 +206,25 @@ function rendererHarness(options={}) {
     loading(){notes.loading++;},idle(){notes.idle++;},failed(){notes.failed++;},zoom(value){notes.zoom=value;},pick(){}},
     {routeBase:"tiles",vpus:["02"],datasetKey:"old",generation:1,minzoom:7,maxzoom:12,...options.config},null);
   function resolve(job){job.resolve({ok:true,status:200,json:async()=>({type:"FeatureCollection",features:[]}),arrayBuffer:async()=>new ArrayBuffer(1)});}
-  return {engine,network,images,canvases,blobs,created,revoked,notes,resolve,container,layers,handlers,options,decoded:()=>decoded};
+  return {engine,map,network,images,canvases,blobs,created,revoked,notes,resolve,container,layers,handlers,options,decoded:()=>decoded};
 }
+
+test("Compatibility requests and renders reaches in the initial logical zoom-four US view", async () => {
+  const h=rendererHarness({zoom:5,coords:[{x:3,y:5,z:5}],config:{minzoom:4,maxzoom:12}});
+  await tick();
+  assert.equal(h.map.options.zoom,5);assert.equal(JSON.stringify(h.map.options.center),JSON.stringify([38.5,-96]));
+  assert.equal(h.notes.zoom,4);
+  const grid=h.layers.find(layer=>layer.options?.pane==="easiLines");
+  assert.equal(grid.options.minZoom,5);assert.equal(grid.options.minNativeZoom,5);
+  const reaches=h.network.filter(job=>job.url.includes("vpu="));
+  assert.equal(reaches.length,1);assert.equal(new URL(reaches[0].url).searchParams.get("z"),"4");
+  h.network.forEach(h.resolve);await tick();await tick();
+  assert.equal(h.decoded(),1);assert.equal(h.canvases.length,1);
+  h.blobs[0]({});h.images[0].onload();
+  assert.equal(h.images[0]._easiEntry.loaded,true);assert.equal(h.images[0]._easiEntry.features.length,1);
+  assert.equal(h.engine.diagnostics().cacheEntries,1);
+  h.engine.destroy();
+});
 
 test("logical zoom 16 draws full-width strokes on 512-pixel child images from one zoom-12 parent", async () => {
   const coords=[{x:55,y:88,z:17},{x:56,y:88,z:17}];
@@ -269,6 +286,34 @@ test("below-minimum compatibility requests only coverage and reports logical zoo
   h.engine.refresh({routeBase:"tiles",vpus:["02"],datasetKey:"old",generation:2,minzoom:7,maxzoom:10});
   await tick(); const reach=h.network.filter(job=>job.url.includes("vpu="));
   assert.equal(reach.length,1); assert.equal(new URL(reach[0].url).searchParams.get("z"),"7");
+  h.engine.destroy();
+});
+
+test("animated threshold entry loads target tiles before Leaflet updates the map zoom", async () => {
+  // During an animated 7 -> 8 transition, GridLayer creates zoom-8 tiles
+  // while map.getZoom() still returns 7. That is logical zoom 6 -> 7.
+  const h=rendererHarness({zoom:7,coords:[{x:3,y:5,z:8}],config:{minzoom:7,maxzoom:12}});
+  await tick();
+  const reaches=h.network.filter(job=>job.url.includes("vpu="));
+  assert.equal(reaches.length,1);
+  assert.equal(new URL(reaches[0].url).searchParams.get("z"),"7");
+  h.network.forEach(h.resolve);await tick();await tick();
+  assert.equal(h.decoded(),1);assert.equal(h.canvases.length,1);
+  h.blobs[0]({});h.images[0].onload();
+  assert.equal(h.images[0]._easiEntry.loaded,true);
+  assert.equal(h.images[0]._easiEntry.features.length,1);
+  h.options.zoom=8;h.handlers.zoom.forEach(fn=>fn());
+  assert.equal(h.notes.zoom,7);
+  assert.equal(h.engine.diagnostics().cacheEntries,1);
+  assert.equal(h.network.filter(job=>job.url.includes("vpu=")).length,1);
+  h.engine.destroy();
+});
+
+test("below-threshold tile coordinates never fetch reaches even when the map zoom is higher", async () => {
+  const h=rendererHarness({zoom:8,coords:[{x:3,y:5,z:7}],config:{minzoom:7,maxzoom:12}});
+  await tick();
+  assert.equal(h.network.length,1);assert.match(h.network[0].url,/meta=coverage/);
+  assert.equal(h.decoded(),0);assert.equal(h.canvases.length,0);
   h.engine.destroy();
 });
 

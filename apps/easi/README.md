@@ -117,11 +117,14 @@ move those images. **Standard** retains MapLibre. Switching preserves the map
 extent; the choice survives toggling screening off and on in the same session.
 The single-site map and dashboard are independent of this choice.
 
-The nationwide overview shows the basemap and coverage without requesting reach
-tiles. A **Zoom in to see screened reaches.** note disappears when reaches can
-load. Both renderers share the manifest's compatible native tile range, with a
-minimum logical zoom of 7 (currently 7 through 12); closer views reuse those
-tiles. Incompatible or malformed archive ranges make screening unavailable.
+The nationwide overview shows screened reaches alongside the basemap and
+coverage at the initial US-wide view. Both renderers share the manifest's
+compatible native tile range, with a minimum logical zoom of 4 (currently 4
+through 12); closer views reuse those tiles. Below the available range, a
+**Zoom in to see screened reaches.** note appears and no reach tiles load.
+The overview uses the existing generalized tiles, so opening it transfers more
+data than a coverage-only view. Incompatible or malformed archive ranges make
+screening unavailable.
 
 Report lookups stream Parquet in 512-row batches instead of retaining evidence
 tables. Two readers may run at once across datasets. Position caches are limited

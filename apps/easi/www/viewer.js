@@ -113,7 +113,7 @@
     var previous = state.config;
     if (previous && Number.isFinite(config.generation) && Number.isFinite(previous.generation) && config.generation < previous.generation) return;
     if (config.available !== false && (!Number.isInteger(config.minzoom) || !Number.isInteger(config.maxzoom) ||
-        config.minzoom < 7 || config.minzoom > 16 || config.maxzoom < config.minzoom || config.maxzoom > 31))
+        config.minzoom < 4 || config.minzoom > 16 || config.maxzoom < config.minzoom || config.maxzoom > 31))
       config = Object.assign({}, config, { available: false, error: "The national dataset has an invalid tile zoom range. Refresh Nationwide screening." });
     var renderer = normalizeRenderer(config.renderer || state.renderer);
     var camera = state.engine && state.engine.camera();
