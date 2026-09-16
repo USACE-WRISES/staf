@@ -9,6 +9,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
+from stat import S_ISREG
 
 import local_review as review
 
@@ -42,10 +43,17 @@ class StudyUnavailable(ValueError):
 
 def _inside(folder: Path, relative: str) -> Path:
     """Resolve only a relative path contained in the intended local folder."""
+    return _inside_resolved(folder.resolve(), relative)
+
+
+def _inside_resolved(folder: Path, relative: str) -> Path:
+    """Resolve every target against a root already resolved in this request."""
     if not isinstance(relative, str) or not relative or Path(relative).is_absolute():
         raise StudyUnavailable("An input path is invalid.")
-    folder = folder.resolve()
-    path = (folder / relative).resolve()
+    try:
+        path = (folder / relative).resolve()
+    except (OSError, RuntimeError, ValueError) as exc:
+        raise StudyUnavailable("An input path is unavailable or invalid.") from exc
     if not path.is_relative_to(folder) or path == folder:
         raise StudyUnavailable("An input path is outside its study or data folder.")
     return path
@@ -141,17 +149,20 @@ def _source_freshness(root: Path, workspace: Path, manifest: dict, completion: d
     digest = _sha(canonical)
     if manifest.get("source_digest") != digest or completion.get("source_digest") != digest:
         raise StudyUnavailable("Study source digests do not agree; refreshed results are pending.")
-    folders = {"data": root, "workspace": workspace}
+    try:
+        folders = {"data": root.resolve(), "workspace": workspace.resolve()}
+    except (OSError, RuntimeError) as exc:
+        raise StudyUnavailable("A study source folder is unavailable.") from exc
     for row in rows:
         if not isinstance(row, dict) or row.get("scope") not in ("data", "workspace"):
             raise StudyUnavailable("A study source scope is invalid.")
         if (type(row.get("size")) is not int or row["size"] < 0 or type(row.get("mtime_ns")) is not int
                 or not isinstance(row.get("sha256"), str) or not re.fullmatch(r"[a-f0-9]{64}", row["sha256"])):
             raise StudyUnavailable("A study source stamp or producer hash is invalid.")
-        path = _inside(folders[row["scope"]], row.get("path"))
+        path = _inside_resolved(folders[row["scope"]], row.get("path"))
         try:
             stamp = path.stat()
-            if not path.is_file() or stamp.st_size != row["size"] or stamp.st_mtime_ns != row["mtime_ns"]:
+            if not S_ISREG(stamp.st_mode) or stamp.st_size != row["size"] or stamp.st_mtime_ns != row["mtime_ns"]:
                 raise StudyUnavailable("Study source files have changed; refreshed results are pending.")
         except OSError as exc:
             raise StudyUnavailable("A study source file is unavailable.") from exc
