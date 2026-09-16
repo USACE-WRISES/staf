@@ -5,3 +5,6 @@ pytest>=8
 # pypdf reads the generated PDF back in tests/test_report_anchor.py (the routed
 # note and the borrowed-row marker). Pure Python, never ships to the deployed app.
 pypdf==6.14.2
+# formulas evaluates the generated Excel calculator in tests/test_calculator_parity.py
+# (pure Python, EUPL). Dev only; the app never opens a workbook at runtime.
+formulas==1.3.4
