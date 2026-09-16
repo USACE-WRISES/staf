@@ -226,6 +226,8 @@
       if (!entry.ended) { entry.ended = true; end(); }
     }
     function fetchTile(vpu, coords, signal) {
+      if (!current() || config.available === false || map.getZoom() - 1 < config.minzoom ||
+          coords.z - 1 < config.minzoom || coords.z - 1 > config.maxzoom) return Promise.resolve([]);
       var url = C.tileUrl(config, vpu).replace("{z}", coords.z - 1).replace("{x}", coords.x).replace("{y}", coords.y);
       return sources.acquire(url, signal);
     }
@@ -234,7 +236,7 @@
         var token = revision, image = document.createElement("img"); image.alt = ""; image.setAttribute("role", "presentation");
         var entry = { coords: { x: coords.x, y: coords.y, z: coords.z }, image: image, features: [], loaded: false,
           controller: new AbortController(), released: false, ended: false, url: null };
-        entry.sourceCoords = sourceCoords(coords, config.maxzoom || 12);
+        entry.sourceCoords = sourceCoords(coords, config.maxzoom);
         image._easiEntry = entry; entries.add(entry); begin();
         function valid() { return current(token) && !entry.released; }
         function finish(error) {
@@ -284,13 +286,13 @@
         return image;
       } });
       var result = new Layer({ pane: "easiLines", tileSize: TILE_SIZE, noWrap: true, keepBuffer: 1,
-        minZoom: (config.minzoom || 4) + 1, maxZoom: 17, minNativeZoom: (config.minzoom || 4) + 1,
+        minZoom: config.minzoom + 1, maxZoom: 17, minNativeZoom: config.minzoom + 1,
         maxNativeZoom: 17, updateWhenIdle: true, updateWhenZooming: false, className: "easi-screening-tile" });
       result.on("tileunload", function (event) { if (event.tile._easiEntry) release(event.tile._easiEntry); });
       return result;
     }
     function nearest(point) {
-      if (!current() || config.available === false || !point) return null;
+      if (!current() || config.available === false || map.getZoom() - 1 < config.minzoom || !point) return null;
       var latlng = map.containerPointToLatLng(point), projected = new Map();
       return nearestInTiles(entries, function (z) { if (!projected.has(z)) projected.set(z, map.project(latlng, z)); return projected.get(z); }, map.getZoom(), C.HIT_PX, C.segmentDistance);
     }
@@ -326,7 +328,9 @@
     map.on("mouseout", leave);
     map.on("movestart", function () { moving = true; leave(); });
     map.on("moveend", function () { moving = false; });
-    map.on("zoomend", function () { leave(); if (coverage) coverage.setStyle(coverageStyle); });
+    function syncZoom() { if (current()) ctx.zoom(map.getZoom() - 1); }
+    map.on("zoom", syncZoom);
+    map.on("zoomend", function () { syncZoom(); leave(); if (coverage) coverage.setStyle(coverageStyle); });
     map.on("click", function (event) { if (!current() || moving) return; var found = nearest(event.containerPoint); if (found) ctx.pick(found.properties); });
     function clear() {
       revision += 1; leave();
@@ -337,6 +341,7 @@
       sources.clear(); requests = 0; ctx.idle();
     }
     function apply() {
+      syncZoom();
       if (config.available === false) return;
       var token = revision, controller = new AbortController(); coverageRequest = controller; begin();
       window.fetch(C.metaUrl(config, "coverage"), { signal: controller.signal }).then(function (response) {

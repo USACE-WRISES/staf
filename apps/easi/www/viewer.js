@@ -55,6 +55,10 @@
     if (state.busy) { clearTimeout(state.busy); state.busy = null; }
     if (text && ttl) state.busy = setTimeout(function () { el.hidden = true; state.busy = null; }, ttl);
   }
+  function zoomNote(zoom) {
+    var el = document.getElementById("easi-viewer-zoom-note"), config = state.config;
+    if (el) el.hidden = !(config && config.available !== false && Number.isFinite(zoom) && zoom < config.minzoom);
+  }
   function setLoadingCue(text) {
     var el = document.getElementById("easi-viewer-loading"); if (!el) return;
     var span = el.querySelector ? el.querySelector(".easi-viewer-loading-text") : null;
@@ -99,6 +103,7 @@
     state.epoch += 1; if (state.engine) state.engine.destroy();
     else if (state.map) state.map.remove();
     state.engine = null; state.map = null; state.lineLayers = []; state.hover = null; hideLoadingCue();
+    zoomNote(null);
     if (state.loading.noteTimer) clearTimeout(state.loading.noteTimer);
     state.loading.noteTimer = null; state.loading.failed = 0;
     if (state.busy) clearTimeout(state.busy); state.busy = null;
@@ -107,6 +112,9 @@
     if (!config || !document.getElementById("easi-viewer-map")) return;
     var previous = state.config;
     if (previous && Number.isFinite(config.generation) && Number.isFinite(previous.generation) && config.generation < previous.generation) return;
+    if (config.available !== false && (!Number.isInteger(config.minzoom) || !Number.isInteger(config.maxzoom) ||
+        config.minzoom < 7 || config.minzoom > 16 || config.maxzoom < config.minzoom || config.maxzoom > 31))
+      config = Object.assign({}, config, { available: false, error: "The national dataset has an invalid tile zoom range. Refresh Nationwide screening." });
     var renderer = normalizeRenderer(config.renderer || state.renderer);
     var camera = state.engine && state.engine.camera();
     var same = state.engine && state.renderer === renderer && state.map &&
@@ -120,6 +128,7 @@
     if (!factory) { showStatus("The selected map renderer did not load. Reload this page to retry.", 0); return; }
     var epoch = state.epoch;
     var context = { shared: shared, state: state, current: function () { return state.epoch === epoch; },
+      zoom: function (value) { if (state.epoch === epoch) zoomNote(value); },
       loading: function () { if (state.epoch === epoch) loading(); },
       idle: function () { if (state.epoch === epoch) idle(); },
       failed: function () { if (state.epoch === epoch) state.loading.failed += 1; },

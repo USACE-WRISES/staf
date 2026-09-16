@@ -35,6 +35,12 @@ stepper: **Identify → Basin → Assessment → Report**.
    the display. The assessment point, reach, and watershed remain distinct.
    Detailed engine information stays in per-metric sources and exports.
    **Clicking snaps to the nearest stream line** (or tells you if you missed).
+   Clicks and typed coordinates place the point on the displayed high-resolution
+   NHD line within 150 ft. The NHDPlus V2 COMID remains a separate evidence-source
+   location, so resolving StreamCat evidence does not move the point off that line.
+   Where the display uses a V2 fallback or orphan segment, that visible segment
+   remains selectable. The analysis-point coordinates follow the selected site;
+   the existing assessment-reach and watershed policies still apply.
    The point stays visible while its StreamCat source resolves. Delineate and
    screening require that source; temporary routing failures retry up to three
    times, after pauses of 5, 10, and 15 seconds,
@@ -110,6 +116,19 @@ temporary 2D canvases, then displays the resulting images. Panning and zooming
 move those images. **Standard** retains MapLibre. Switching preserves the map
 extent; the choice survives toggling screening off and on in the same session.
 The single-site map and dashboard are independent of this choice.
+
+The nationwide overview shows the basemap and coverage without requesting reach
+tiles. A **Zoom in to see screened reaches.** note disappears when reaches can
+load. Both renderers share the manifest's compatible native tile range, with a
+minimum logical zoom of 7 (currently 7 through 12); closer views reuse those
+tiles. Incompatible or malformed archive ranges make screening unavailable.
+
+Report lookups stream Parquet in 512-row batches instead of retaining evidence
+tables. Two readers may run at once across datasets. Position caches are limited
+to 16 assets and 8 MiB, and decoded-record caches to 256 records and 16 MiB per
+dataset. The national index uses compact integer COMIDs and four-byte HUC4 codes.
+Remote reads reuse thread-local HTTP connections; local datasets open no HTTP
+sessions. Verified downloads remain on disk between lookups.
 
 Both renderers use the same completed national bundle, condition colors,
 eight-pixel reach selection, stored evidence and reports. Unavailable, incomplete

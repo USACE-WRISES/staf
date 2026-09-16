@@ -15,10 +15,12 @@ for a while and re-resolved on a 403/404, which is also what a replaced
 from __future__ import annotations
 
 import asyncio
+import copy
 import hashlib
 import json
 import logging
 import os
+import sys
 import tempfile
 import threading
 import time
@@ -30,6 +32,7 @@ import requests
 
 from .. import config
 from . import DATASET_TAG, SCHEMA_VERSION, method_version, providers, records
+from .http import session as _http_session
 
 _LOG = logging.getLogger(__name__)
 
@@ -42,7 +45,30 @@ COVERAGE = "coverage.geojson"
 STATS = "stats.json"
 
 _RESOLVE_TTL_S = 40 * 60.0
-_TABLE_CACHE = 8
+_PARQUET_BATCH_SIZE = 512
+_PARQUET_BUFFER_SIZE = 256 * 1024
+_POSITION_CACHE_COUNT = 16
+_POSITION_CACHE_BYTES = 8 * 1024 * 1024
+_RECORD_CACHE_COUNT = 256
+_RECORD_CACHE_BYTES = 16 * 1024 * 1024
+# Readers across all Dataset instances share the same process memory budget.
+_PARQUET_READERS = threading.BoundedSemaphore(2)
+
+
+def _deep_size(value: Any, seen: Optional[set[int]] = None) -> int:
+    """Owned size of a decoded JSON record, including its nested values."""
+    if seen is None:
+        seen = set()
+    identity = id(value)
+    if identity in seen:
+        return 0
+    seen.add(identity)
+    size = sys.getsizeof(value)
+    if isinstance(value, dict):
+        size += sum(_deep_size(k, seen) + _deep_size(v, seen) for k, v in value.items())
+    elif isinstance(value, (list, tuple, set, frozenset)):
+        size += sum(_deep_size(v, seen) for v in value)
+    return size
 
 
 def criteria_status(manifest: dict) -> dict:
@@ -91,10 +117,17 @@ class Dataset:
         self.manifest_ttl_s = manifest_ttl_s
         self.cache_dir = Path(cache_dir or Path(tempfile.gettempdir()) / "easi_national")
         self._lock = threading.RLock()
+        # Serialize misses within a dataset so simultaneous clicks decode once.
+        # Refresh uses only _lock and can invalidate an in-flight read.
+        self._read_lock = threading.RLock()
+        self._generation = 0
         self._manifest: Optional[dict] = None
         self._manifest_at = 0.0
         self._manifest_stamp = None
-        self._tables: "OrderedDict[str, Any]" = OrderedDict()
+        self._positions: "OrderedDict[str, tuple[Any, Any, int]]" = OrderedDict()
+        self._position_bytes = 0
+        self._records: "OrderedDict[tuple[str, int], tuple[dict, int]]" = OrderedDict()
+        self._record_bytes = 0
         self._index = None
         self._stats: Optional[tuple[Optional[str], dict]] = None
         self._resolved: dict[str, tuple[str, float]] = {}
@@ -114,10 +147,10 @@ class Dataset:
             if hit and not force and hit[1] > now:
                 return hit[0]
         try:
-            head = requests.head(url, allow_redirects=False, timeout=self.timeout)
+            with _http_session().head(url, allow_redirects=False, timeout=self.timeout) as head:
+                target = head.headers.get("Location") if head.is_redirect else None
         except requests.RequestException:
             return url
-        target = head.headers.get("Location") if head.is_redirect else None
         resolved = target or url
         with self._lock:
             self._resolved[name] = (resolved, now + _RESOLVE_TTL_S)
@@ -143,10 +176,10 @@ class Dataset:
             if self.local is not None:
                 text = (self.local / MANIFEST).read_text(encoding="utf-8")
             else:
-                response = requests.get(self.url(MANIFEST), timeout=self.timeout)
-                if response.status_code != 200:
-                    return self._manifest
-                text = response.text
+                with _http_session().get(self.url(MANIFEST), timeout=self.timeout) as response:
+                    if response.status_code != 200:
+                        return self._manifest
+                    text = response.text
             manifest = json.loads(text)
             if not isinstance(manifest, dict):
                 raise ValueError("National manifest must be an object")
@@ -155,9 +188,7 @@ class Dataset:
             return None if self.local is not None else self._manifest
         with self._lock:
             if self._manifest != manifest:
-                self._tables.clear()
-                self._index = None
-                self._stats = None
+                self._clear_read_caches()
             self._manifest = manifest
             self._manifest_at = time.monotonic()
             self._manifest_stamp = stamp
@@ -218,7 +249,7 @@ class Dataset:
         for attempt in range(2):
             url = self.resolve(name, force=attempt > 0)
             try:
-                with requests.get(url, stream=True, timeout=self.timeout) as response:
+                with _http_session().get(url, stream=True, timeout=self.timeout) as response:
                     if response.status_code in (403, 404) and attempt == 0:
                         continue
                     if response.status_code != 200:
@@ -257,55 +288,135 @@ class Dataset:
             for attempt in range(2):
                 url = self.resolve(name, force=attempt > 0)
                 headers = {"Range": f"bytes={offset}-{offset + length - 1}"}
-                response = requests.get(url, headers=headers, timeout=self.timeout)
-                if response.status_code in (200, 206):
-                    _LOG.debug("%s: range %d+%d -> %d in %.0f ms", name, offset, length,
-                               response.status_code, 1000 * (time.perf_counter() - started))
-                    if response.status_code == 200:  # the host ignored Range
-                        return response.content[offset:offset + length]
-                    return response.content
-                if response.status_code in (403, 404) and attempt == 0:
-                    continue
-                _LOG.warning("%s: HTTP %s for range %d+%d after %.0f ms", name, response.status_code,
-                             offset, length, 1000 * (time.perf_counter() - started))
-                raise DatasetError(f"{name}: HTTP {response.status_code} for range")
+                with _http_session().get(url, headers=headers, timeout=self.timeout) as response:
+                    if response.status_code in (200, 206):
+                        _LOG.debug("%s: range %d+%d -> %d in %.0f ms", name, offset, length,
+                                   response.status_code, 1000 * (time.perf_counter() - started))
+                        if response.status_code == 200:  # the host ignored Range
+                            return response.content[offset:offset + length]
+                        return response.content
+                    if response.status_code in (403, 404) and attempt == 0:
+                        continue
+                    _LOG.warning("%s: HTTP %s for range %d+%d after %.0f ms", name, response.status_code,
+                                 offset, length, 1000 * (time.perf_counter() - started))
+                    raise DatasetError(f"{name}: HTTP {response.status_code} for range")
             _LOG.warning("%s: could not resolve the asset for range %d+%d", name, offset, length)
             raise DatasetError(f"{name}: could not resolve the asset")
         return _remote
 
-    # ---------------------------------------------------------------- tables
-    def _table(self, name: str):
-        with self._lock:
-            table = self._tables.get(name)
-            if table is not None:
-                self._tables.move_to_end(name)
-                return table
-        path = self.asset_path(name)
-        if path is None:
-            return None
-        import pyarrow.parquet as pq
-        table = pq.read_table(path)
-        with self._lock:
-            self._tables[name] = table
-            while len(self._tables) > _TABLE_CACHE:
-                self._tables.popitem(last=False)
-        return table
+    # ----------------------------------------------------------- bounded rows
+    def _clear_read_caches(self) -> None:
+        """Called under _lock; old readers may finish but cannot refill caches."""
+        self._generation += 1
+        self._positions.clear()
+        self._position_bytes = 0
+        self._records.clear()
+        self._record_bytes = 0
+        self._index = None
+        self._stats = None
 
     def _load_index(self):
-        with self._lock:
-            if self._index is not None:
-                return self._index
-        table = self._table(INDEX)
-        if table is None:
-            return None
         import numpy as np
-        comids = np.asarray(table.column("comid").to_numpy(), dtype=np.int64)
-        huc4s = np.asarray(table.column("huc4").to_pylist(), dtype=object)
-        order = np.argsort(comids, kind="stable")
-        index = (comids[order], huc4s[order])
+        import pyarrow as pa
+        import pyarrow.compute as pc
+        import pyarrow.parquet as pq
+
+        with self._read_lock:
+            self.manifest()
+            with self._lock:
+                if self._index is not None:
+                    return self._index
+                generation = self._generation
+            path = self.asset_path(INDEX)
+            if path is None:
+                return None
+            with self._lock:
+                if generation != self._generation:
+                    raise DatasetError("The national dataset changed. Refresh Nationwide screening.")
+            with _PARQUET_READERS, pq.ParquetFile(
+                    path, buffer_size=_PARQUET_BUFFER_SIZE, pre_buffer=False) as parquet:
+                count = parquet.metadata.num_rows
+                comids = np.empty(count, dtype=np.int64)
+                huc4s = np.empty(count, dtype="S4")
+                batches = parquet.iter_batches(batch_size=_PARQUET_BATCH_SIZE,
+                                               columns=["comid", "huc4"], use_threads=False)
+                offset = 0
+                try:
+                    for batch in batches:
+                        try:
+                            end = offset + batch.num_rows
+                            comids[offset:end] = batch.column("comid").to_numpy()
+                            column = batch.column("huc4")
+                            if column.null_count or not (pa.types.is_string(column.type)
+                                                         or pa.types.is_large_string(column.type)):
+                                raise DatasetError("The national index contains an invalid HUC4.")
+                            try:
+                                fixed = pc.cast(column, pa.binary(4))
+                            except pa.ArrowInvalid as exc:
+                                raise DatasetError("The national index contains an invalid HUC4.") from exc
+                            values = np.frombuffer(fixed.buffers()[1], dtype="S4",
+                                                   count=len(fixed), offset=fixed.offset * 4)
+                            digits = values.view(np.uint8)
+                            if not np.all((digits >= 48) & (digits <= 57)):
+                                raise DatasetError("The national index contains an invalid HUC4.")
+                            # Copy out of Arrow's buffer; the retained index has
+                            # no per-code Python objects or borrowed Arrow data.
+                            huc4s[offset:end] = values
+                            offset = end
+                        finally:
+                            del batch
+                finally:
+                    batches.close()
+            if np.all(comids[1:] >= comids[:-1]):
+                index = (comids, huc4s)
+            else:
+                order = np.argsort(comids, kind="stable")
+                index = (comids[order], huc4s[order])
+            with self._lock:
+                if generation != self._generation:
+                    raise DatasetError("The national dataset changed. Refresh Nationwide screening.")
+                self._index = index
+            return index
+
+    def _row_positions(self, name: str, path: Path, generation: int):
+        """Sorted COMIDs and physical positions, owned by numpy rather than Arrow."""
+        import numpy as np
+        import pyarrow.parquet as pq
+
         with self._lock:
-            self._index = index
-        return index
+            if generation != self._generation:
+                raise DatasetError("The national dataset changed. Refresh Nationwide screening.")
+            hit = self._positions.get(name)
+            if hit is not None:
+                self._positions.move_to_end(name)
+                return hit[:2]
+        with _PARQUET_READERS, pq.ParquetFile(
+                path, buffer_size=_PARQUET_BUFFER_SIZE, pre_buffer=False) as parquet:
+            comids = np.empty(parquet.metadata.num_rows, dtype=np.int64)
+            batches = parquet.iter_batches(batch_size=_PARQUET_BATCH_SIZE,
+                                           columns=["comid"], use_threads=False)
+            offset = 0
+            try:
+                for batch in batches:
+                    try:
+                        end = offset + batch.num_rows
+                        comids[offset:end] = batch.column("comid").to_numpy()
+                        offset = end
+                    finally:
+                        del batch
+            finally:
+                batches.close()
+        order = np.argsort(comids, kind="stable")
+        sorted_comids = comids[order]
+        size = _deep_size((name, sorted_comids, order))
+        with self._lock:
+            if generation == self._generation and size <= _POSITION_CACHE_BYTES:
+                self._positions[name] = (sorted_comids, order, size)
+                self._position_bytes += size
+                while (len(self._positions) > _POSITION_CACHE_COUNT
+                       or self._position_bytes > _POSITION_CACHE_BYTES):
+                    self._position_bytes -= self._positions.popitem(last=False)[1][2]
+        return sorted_comids, order
 
     def huc4_of(self, comids) -> dict[int, str]:
         """COMID -> HUC4 for the COMIDs the index knows."""
@@ -319,19 +430,89 @@ class Dataset:
         out: dict[int, str] = {}
         for comid, pos in zip(wanted.tolist(), positions.tolist()):
             if pos < len(sorted_comids) and sorted_comids[pos] == comid:
-                out[comid] = str(huc4s[pos])
+                out[comid] = huc4s[pos].decode("ascii")
         return out
 
     def _rows_for(self, name: str, comids: list[int]) -> dict[int, dict]:
-        table = self._table(name)
-        if table is None or not comids:
+        if not comids:
             return {}
-        import pyarrow as pa
-        import pyarrow.compute as pc
-        column = pc.cast(table.column("comid"), pa.int64())
-        mask = pc.is_in(column, value_set=pa.array(comids, pa.int64()))
-        rows = table.filter(mask).to_pylist()
-        return {int(row["comid"]): records.from_row(row) for row in rows}
+        import numpy as np
+        import pyarrow.parquet as pq
+
+        with self._read_lock:
+            self.manifest()
+            with self._lock:
+                generation = self._generation
+                found: dict[int, dict] = {}
+                missing = []
+                for comid in dict.fromkeys(comids):
+                    key = (name, int(comid))
+                    hit = self._records.get(key)
+                    if hit is None:
+                        missing.append(int(comid))
+                    else:
+                        self._records.move_to_end(key)
+                        found[int(comid)] = hit[0]
+            if missing:
+                path = self.asset_path(name)
+                if path is None:
+                    with self._lock:
+                        if generation != self._generation:
+                            raise DatasetError("The national dataset changed. Refresh Nationwide screening.")
+                    return copy.deepcopy(found)
+                # asset_path may have refreshed the manifest while verifying it.
+                with self._lock:
+                    if generation != self._generation:
+                        raise DatasetError("The national dataset changed. Refresh Nationwide screening.")
+                sorted_comids, positions = self._row_positions(name, path, generation)
+                wanted = np.asarray(missing, dtype=np.int64)
+                # Stable sorting plus the rightmost match preserves the old
+                # dict comprehension's last-physical-duplicate-wins behavior.
+                matches = np.searchsorted(sorted_comids, wanted, side="right") - 1
+                needed = sorted(int(positions[pos]) for comid, pos in zip(wanted, matches)
+                                if pos >= 0 and sorted_comids[pos] == comid)
+                decoded: dict[int, dict] = {}
+                if needed:
+                    with _PARQUET_READERS, pq.ParquetFile(
+                            path, buffer_size=_PARQUET_BUFFER_SIZE, pre_buffer=False) as parquet:
+                        batches = parquet.iter_batches(batch_size=_PARQUET_BATCH_SIZE,
+                                                       use_threads=False)
+                        offset = cursor = 0
+                        try:
+                            for batch in batches:
+                                try:
+                                    end = offset + batch.num_rows
+                                    while cursor < len(needed) and needed[cursor] < end:
+                                        row = batch.slice(needed[cursor] - offset, 1).to_pylist()[0]
+                                        decoded[int(row["comid"])] = records.from_row(row)
+                                        cursor += 1
+                                    offset = end
+                                    if cursor == len(needed):
+                                        break
+                                finally:
+                                    del batch
+                        finally:
+                            batches.close()
+                with self._lock:
+                    if generation == self._generation:
+                        for comid, record in decoded.items():
+                            key = (name, comid)
+                            size = _deep_size((key, record))
+                            if size > _RECORD_CACHE_BYTES:
+                                continue
+                            self._records[key] = (record, size)
+                            self._record_bytes += size
+                            while (len(self._records) > _RECORD_CACHE_COUNT
+                                   or self._record_bytes > _RECORD_CACHE_BYTES):
+                                self._record_bytes -= self._records.popitem(last=False)[1][1]
+                found.update(decoded)
+            # Evidence providers can mutate nested values while building a
+            # report. Neither another caller nor our cache may see those edits.
+            result = copy.deepcopy(found)
+            with self._lock:
+                if generation != self._generation:
+                    raise DatasetError("The national dataset changed. Refresh Nationwide screening.")
+            return result
 
     def _vpu_of(self, huc4: str) -> str:
         manifest = self.manifest() or {}
@@ -340,6 +521,9 @@ class Dataset:
 
     def records(self, comids) -> dict[int, dict]:
         """Evidence records by COMID (missing COMIDs are absent)."""
+        self.manifest()
+        with self._lock:
+            generation = self._generation
         wanted = [int(c) for c in comids]
         by_huc4: dict[str, list[int]] = {}
         for comid, huc4 in self.huc4_of(wanted).items():
@@ -347,10 +531,16 @@ class Dataset:
         out: dict[int, dict] = {}
         for huc4, group in by_huc4.items():
             out.update(self._rows_for(evidence_asset(huc4), group))
+        with self._lock:
+            if generation != self._generation:
+                raise DatasetError("The national dataset changed. Refresh Nationwide screening.")
         return out
 
     def scores(self, comids) -> dict[int, dict]:
         """Baked score rows by COMID (missing COMIDs are absent)."""
+        self.manifest()
+        with self._lock:
+            generation = self._generation
         wanted = [int(c) for c in comids]
         by_vpu: dict[str, list[int]] = {}
         for comid, huc4 in self.huc4_of(wanted).items():
@@ -358,6 +548,9 @@ class Dataset:
         out: dict[int, dict] = {}
         for vpu, group in by_vpu.items():
             out.update(self._rows_for(scores_asset(vpu), group))
+        with self._lock:
+            if generation != self._generation:
+                raise DatasetError("The national dataset changed. Refresh Nationwide screening.")
         return out
 
     # -------------------------------------------------------------- coverage
@@ -465,9 +658,7 @@ class Dataset:
             self._manifest = None
             self._manifest_at = 0.0
             self._manifest_stamp = None
-            self._tables.clear()
-            self._index = None
-            self._stats = None
+            self._clear_read_caches()
             self._resolved.clear()
             self._verified.clear()
 

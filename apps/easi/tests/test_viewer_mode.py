@@ -154,6 +154,16 @@ def test_the_tile_loading_cue_is_static_markup_the_viewer_script_drives():
     assert "national_tiles.TileReadError" in SRC and "status_code=502" in SRC
 
 
+def test_zoom_note_is_separate_from_report_status_and_does_not_remount_map():
+    workspace = SRC[SRC.index("def viewer_workspace():"):SRC.index("def _dash_current(")]
+    assert 'id="easi-viewer-zoom-note"' in workspace
+    assert '"Zoom in to see screened reaches."' in workspace
+    assert 'id="easi-viewer-status"' in workspace
+    assert "viewer_summary()" not in workspace
+    assert '"minzoom": summary.get("minzoom")' in SRC
+    assert '"maxzoom": summary.get("maxzoom")' in SRC
+
+
 def test_compatibility_default_scoped_controls_and_identity_bound_requests():
     assert '_viewer_renderer = {"value": "compatibility"}' in SRC
     workspace = SRC[SRC.index("def viewer_workspace():"):SRC.index("def _dash_current(")]

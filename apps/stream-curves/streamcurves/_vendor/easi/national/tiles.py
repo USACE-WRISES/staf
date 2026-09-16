@@ -28,6 +28,26 @@ _SLOW_TILE_S = 1.0                 # a lookup slower than this is logged as a wa
 class TileReadError(RuntimeError):
     """A tile the archive should hold could not be read (a failed range fetch)."""
 
+
+def viewer_zoom_range(manifest: dict) -> tuple[int, int]:
+    """Shared native tile range, with reaches hidden below logical zoom seven."""
+    entries = manifest.get("tiles")
+    if not isinstance(entries, dict) or not entries:
+        raise ValueError("The national dataset has no tile zoom ranges. Refresh Nationwide screening.")
+    ranges = []
+    for entry in entries.values():
+        if not isinstance(entry, dict):
+            raise ValueError("The national dataset has an invalid tile zoom range.")
+        lo, hi = entry.get("minzoom"), entry.get("maxzoom")
+        if type(lo) is not int or type(hi) is not int or not 0 <= lo <= hi <= 31:
+            raise ValueError("The national dataset has an invalid tile zoom range.")
+        ranges.append((lo, hi))
+    minimum = max(7, max(lo for lo, _ in ranges))
+    maximum = min(hi for _, hi in ranges)
+    if minimum > maximum or minimum > 16:
+        raise ValueError("The national dataset has no shared tile zoom range supported by this viewer.")
+    return minimum, maximum
+
 # pmtiles.tile.Compression values -> the HTTP Content-Encoding a browser accepts
 _ENCODINGS = {1: None, 2: "gzip", 3: "br", 4: "zstd"}
 _MEDIA_TYPES = {1: "application/x-protobuf", 2: "image/png", 3: "image/jpeg",
