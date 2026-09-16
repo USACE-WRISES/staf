@@ -171,7 +171,7 @@ function rendererHarness(options={}) {
   const map={
     on(name,fn){(handlers[name] ||= []).push(fn); return this;},
     createPane(name){return panes[name]={style:{}};},getPane(name){return panes[name];},
-    getContainer(){return container;},getZoom(){return options.zoom??5;},getCenter(){return{lng:-96,lat:38.5};},
+    getContainer(){return container;},getZoom(){return options.zoom??8;},getCenter(){return{lng:-96,lat:38.5};},
     removeLayer(layer){(layer.images||[]).forEach(image=>layer.handlers.tileunload?.({tile:image}));},
     remove(){layers.forEach(layer=>map.removeLayer(layer));},invalidateSize(){}
   };
@@ -182,7 +182,7 @@ function rendererHarness(options={}) {
     GridLayer:{extend(def){return class {
       constructor(options){this.options=options;this.handlers={};}
       on(name,fn){this.handlers[name]=fn;return this;}
-      addTo(){layers.push(this);this.images=(options.coords||[{x:3,y:5,z:5}]).map(coords=>def.createTile(coords,()=>{}));this.image=this.images[0];return this;}
+      addTo(){layers.push(this);this.images=(options.coords||[{x:3,y:5,z:8}]).map(coords=>def.createTile(coords,()=>{}));this.image=this.images[0];return this;}
       redraw(){}
     };}}
   };
@@ -201,12 +201,12 @@ function rendererHarness(options={}) {
     EASIVectorTile:{decode(){decoded++;return options.features||[feature(123,2048)];}},
     fetch(url,options){return new Promise(resolve=>network.push({url,signal:options.signal,resolve}));}
   });
-  const state={}, notes={loading:0,idle:0,failed:0};
+  const state={}, notes={loading:0,idle:0,failed:0,zoom:null};
   const engine=window.EASIViewerRenderers.compatibility({shared,state,current:()=>true,
-    loading(){notes.loading++;},idle(){notes.idle++;},failed(){notes.failed++;},pick(){}},
-    {routeBase:"tiles",vpus:["02"],datasetKey:"old",generation:1},null);
+    loading(){notes.loading++;},idle(){notes.idle++;},failed(){notes.failed++;},zoom(value){notes.zoom=value;},pick(){}},
+    {routeBase:"tiles",vpus:["02"],datasetKey:"old",generation:1,minzoom:7,maxzoom:12,...options.config},null);
   function resolve(job){job.resolve({ok:true,status:200,json:async()=>({type:"FeatureCollection",features:[]}),arrayBuffer:async()=>new ArrayBuffer(1)});}
-  return {engine,network,images,canvases,blobs,created,revoked,notes,resolve,container,layers,decoded:()=>decoded};
+  return {engine,network,images,canvases,blobs,created,revoked,notes,resolve,container,layers,handlers,options,decoded:()=>decoded};
 }
 
 test("logical zoom 16 draws full-width strokes on 512-pixel child images from one zoom-12 parent", async () => {
@@ -245,7 +245,7 @@ test("unloading one overzoom image keeps its sibling request and raster alive", 
 test("late old-generation network results cannot populate images, coverage or decoded cache", async () => {
   const h=rendererHarness();await tick();assert.equal(h.network.length,2);
   const old=[...h.network];
-  h.engine.refresh({routeBase:"tiles",vpus:["02"],datasetKey:"new",generation:2});await tick();
+  h.engine.refresh({routeBase:"tiles",vpus:["02"],datasetKey:"new",generation:2,minzoom:7,maxzoom:12});await tick();
   assert.ok(old.every(job=>job.signal.aborted));
   old.forEach(h.resolve);await tick();await tick();
   assert.equal(h.decoded(),0);assert.equal(h.engine.diagnostics().cacheEntries,0);assert.equal(h.images[0].src,undefined);
@@ -254,6 +254,31 @@ test("late old-generation network results cannot populate images, coverage or de
   h.blobs[0]({});assert.equal(h.images[1].src,"blob:test-0");h.images[1].onload();
   h.engine.destroy();assert.deepEqual(h.revoked,["blob:test-0"]);assert.equal(h.engine.diagnostics().tiles,0);
   assert.deepEqual([...h.container.classList],["original"]);assert.equal(h.container.getAttribute("tabindex"),null);
+});
+
+test("below-minimum compatibility requests only coverage and reports logical zoom changes", async () => {
+  const h=rendererHarness({zoom:7,coords:[{x:3,y:5,z:7}],config:{minzoom:7,maxzoom:10}});
+  await tick();
+  assert.equal(h.network.length,1); assert.match(h.network[0].url,/meta=coverage/);
+  assert.equal(h.notes.zoom,6);
+  const grid=h.layers.find(layer=>layer.options?.pane==="easiLines");
+  assert.equal(grid.options.minZoom,8); assert.equal(grid.options.minNativeZoom,8);
+  assert.equal(grid.options.maxZoom,17); assert.equal(h.engine.nearest({x:0,y:0}),null);
+  h.options.zoom=8; h.options.coords=[{x:3,y:5,z:8}];
+  h.handlers.zoom.forEach(fn=>fn()); assert.equal(h.notes.zoom,7);
+  h.engine.refresh({routeBase:"tiles",vpus:["02"],datasetKey:"old",generation:2,minzoom:7,maxzoom:10});
+  await tick(); const reach=h.network.filter(job=>job.url.includes("vpu="));
+  assert.equal(reach.length,1); assert.equal(new URL(reach[0].url).searchParams.get("z"),"7");
+  h.engine.destroy();
+});
+
+test("compatibility overzoom requests the manifest maximum instead of a fixed zoom 12", async () => {
+  const h=rendererHarness({zoom:17,coords:[{x:192,y:320,z:17}],config:{minzoom:8,maxzoom:10}});
+  await tick(); const reach=h.network.find(job=>job.url.includes("vpu="));
+  const url=new URL(reach.url);
+  assert.equal(url.searchParams.get("z"),"10"); assert.equal(url.searchParams.get("x"),"3");
+  assert.equal(url.searchParams.get("y"),"5");
+  h.engine.destroy();
 });
 test("late image encoding is discarded and unavailable data makes no requests", async () => {
   const h=rendererHarness();await tick();h.network.forEach(h.resolve);await tick();await tick();

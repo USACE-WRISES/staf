@@ -6,3 +6,9 @@
 #easi-viewer-map .easi-viewer-hover { pointer-events: none; }
 #easi-viewer-map .easi-viewer-hover .leaflet-popup-content { margin: 10px 12px; }
 #easi-viewer-map .leaflet-control-attribution { font-size: 10px; }
+.easi-viewer .easi-viewer-zoom-note { position: absolute; top: 52px; left: 50%; transform: translateX(-50%);
+  z-index: 6; max-width: calc(100% - 100px); padding: 5px 14px; border-radius: 16px;
+  background: rgba(255, 255, 255, .96); border: 1px solid var(--card-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .08); color: #33415c; font-size: 12px;
+  text-align: center; pointer-events: none; }
+.easi-viewer .easi-viewer-zoom-note[hidden] { display: none; }

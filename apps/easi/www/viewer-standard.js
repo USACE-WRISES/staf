@@ -23,14 +23,14 @@
     }
     function addRegion(vpu) {
       var id = "easi-" + vpu; if (map.getSource(id)) return;
-      var source = { type: "vector", tiles: [C.tileUrl(config, vpu)], minzoom: config.minzoom || 4,
-        maxzoom: config.maxzoom || 12, promoteId: { flowlines: "comid" } };
+      var source = { type: "vector", tiles: [C.tileUrl(config, vpu)], minzoom: config.minzoom,
+        maxzoom: config.maxzoom, promoteId: { flowlines: "comid" } };
       var bounds = (config.vpuBounds || {})[vpu]; if (Array.isArray(bounds) && bounds.length === 4) source.bounds = bounds;
       map.addSource(id, source);
-      map.addLayer({ id: id + "-glow", type: "line", source: id, "source-layer": "flowlines", minzoom: 7,
+      map.addLayer({ id: id + "-glow", type: "line", source: id, "source-layer": "flowlines", minzoom: config.minzoom,
         paint: { "line-color": "#ffffff", "line-width": widths(true), "line-blur": 2,
           "line-opacity": ["case", hovered(), .9, 0] }, layout: { "line-cap": "round", "line-join": "round" } });
-      map.addLayer({ id: id + "-lines", type: "line", source: id, "source-layer": "flowlines",
+      map.addLayer({ id: id + "-lines", type: "line", source: id, "source-layer": "flowlines", minzoom: config.minzoom,
         paint: { "line-color": ["match", ["get", "band"], "Functioning", C.BAND_COLORS.Functioning,
           "Functioning-at-Risk", C.BAND_COLORS["Functioning-at-Risk"], "Non-Functioning", C.BAND_COLORS["Non-Functioning"], C.BAND_COLORS.pending],
           "line-width": widths(false), "line-opacity": .95 }, layout: { "line-cap": "round", "line-join": "round" } });
@@ -46,7 +46,7 @@
         paint: { "line-color": "#8a93a3", "line-width": .6, "line-opacity": .8 } });
     }
     function nearest(point) {
-      if (!current() || !point || !state.lineLayers.length) return null;
+      if (!current() || config.available === false || map.getZoom() < config.minzoom || !point || !state.lineLayers.length) return null;
       var box = [[point.x - C.HIT_PX, point.y - C.HIT_PX], [point.x + C.HIT_PX, point.y + C.HIT_PX]];
       var features = map.queryRenderedFeatures(box, { layers: state.lineLayers }) || [];
       var best = null, distance = C.HIT_PX + 1e-8, seen = new Map();
@@ -95,14 +95,32 @@
       if (event && event.tile && screening(event)) ctx.failed();
       else if (event && event.error && window.console) window.console.error(event.error);
     });
-    function apply() { if (!current() || !ready || config.available === false) return; coverage(); (config.vpus || []).forEach(addRegion); }
+    function syncZoom() {
+      if (!current()) return;
+      ctx.zoom(map.getZoom());
+      if (!ready) return;
+      if (config.available !== false && map.getZoom() >= config.minzoom) (config.vpus || []).forEach(addRegion);
+      else {
+        leave(); state.lineLayers.forEach(function (id) {
+          var source = id.slice(0, -6); map.removeLayer(id); map.removeLayer(source + "-glow"); map.removeSource(source);
+        }); state.lineLayers = [];
+      }
+    }
+    map.on("zoom", syncZoom);
+    function apply() {
+      if (!current()) return;
+      if (ready && config.available !== false) coverage();
+      syncZoom();
+    }
     map.on("style.load", function () { if (!current()) return; ready = true; apply(); });
+    syncZoom();
     return {
       nearest: nearest,
       camera: function () { var center = map.getCenter ? map.getCenter() : null;
         return { center: center ? [center.lng, center.lat] : config.center || [-96, 38.5], zoom: map.getZoom ? map.getZoom() : config.zoom || 4 }; },
       refresh: function (next) {
-        var changed = next.datasetKey !== config.datasetKey || next.generation !== config.generation || next.routeBase !== config.routeBase;
+        var changed = next.datasetKey !== config.datasetKey || next.generation !== config.generation || next.routeBase !== config.routeBase ||
+          next.minzoom !== config.minzoom || next.maxzoom !== config.maxzoom;
         if (ready) {
           leave(); state.lineLayers = state.lineLayers.filter(function (id) { var source = id.slice(0, -6);
             if (!changed && next.available !== false && (next.vpus || []).indexOf(source.slice(5)) >= 0) return true;

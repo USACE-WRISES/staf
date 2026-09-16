@@ -67,7 +67,7 @@ REACH_STYLE = {"color": "#d6453d", "weight": 4}
 FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
 HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 3, "opacity": 0.9}
 # Translucent glow under the scored StreamCat reach after a click, so the
-# snap from the clicked line to the V2 reach is visible.
+# V2 evidence location can be inspected separately from the selected site.
 SCORED_REACH_STYLE = {"color": "#1f6feb", "weight": 11, "opacity": 0.3}
 # Dashed connector from a clicked HR-only stream to its covered surrogate reach.
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
@@ -423,13 +423,13 @@ app_ui = ui.page_fillable(
     ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=59"),
                     ui.tags.link(rel="stylesheet", href="vendor/maplibre-gl.css"),
                     ui.tags.link(rel="stylesheet", href="vendor/leaflet/leaflet.css"),
-                    ui.tags.link(rel="stylesheet", href="nationwide-viewer.css?v=1"),
+                    ui.tags.link(rel="stylesheet", href="nationwide-viewer.css?v=2"),
                     ui.tags.script(src="vendor/maplibre-gl.js", defer=""),
                     ui.tags.script(src="vendor/leaflet/leaflet.js", defer=""),
                     ui.tags.script(src="vendor/easi-vector-tile.js", defer=""),
-                    ui.tags.script(src="viewer-standard.js?v=2", defer=""),
-                    ui.tags.script(src="viewer-compatibility.js?v=3", defer=""),
-                    ui.tags.script(src="viewer.js?v=7", defer=""),
+                    ui.tags.script(src="viewer-standard.js?v=3", defer=""),
+                    ui.tags.script(src="viewer-compatibility.js?v=4", defer=""),
+                    ui.tags.script(src="viewer.js?v=8", defer=""),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -1582,15 +1582,18 @@ def server(input, output, session):
             lat, lon = clicked()
             fc = flow_geojson()
             hit = flowlines.nearest_point_on_lines(fc, lat, lon) if fc else None
-            if hit and hit[2] <= SNAP_TOL_FT:
-                # covered by the viewport vectors: the scored reach glows
-                _apply_snap(hit, network_display.feature_by_id(fc, "comid", hit[3]))
-                return
-            # The viewport's HR vectors, when loaded, settle an HR-only click
-            # without re-fetching a box around it (2026-09-02).
             hr_fc = hr_geojson()
             hr_hit = nhd_hr.nearest_point_on_hr_lines(hr_fc, lat, lon) if hr_fc else None
-            if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+            if (fc is not None and (hr_fc is not None or streams_mode() == "v2-only")
+                    and hit and hit[2] <= SNAP_TOL_FT):
+                # HR supplies the displayed site; a V2-only pick must be visible.
+                visible_hit = (hit if _valid_site_hit(hr_hit) else _visible_v2_hit(
+                    hit, _stream_layers.flow.data, streams_mode(), lat, lon))
+                if visible_hit:
+                    _apply_snap(visible_hit, network_display.feature_by_id(fc, "comid", hit[3]),
+                                site_hit=hr_hit, clicked_at=(lat, lon))
+                    return
+            if fc is not None and _valid_site_hit(hr_hit):
                 _start_route(lat, lon, tuple(hr_hit))
             else:
                 stage.set(_FINDING_TEXT)
@@ -1609,13 +1612,84 @@ def server(input, output, session):
             ui.update_numeric("lat", value=round(slat, 5))
             ui.update_numeric("lon", value=round(slon, 5))
 
-        def _apply_snap(hit, scored_feature=None):
-            """Pin the snap point. ``scored_feature`` is the NHDPlus V2 reach
-            the StreamCat lookup engine scores (the clicked reach on a covered
-            click, the surrogate on a routed one): it draws as a glow under
-            the pin so the snap to the V2 line is visible (2026-09-03)."""
+        def _valid_site_hit(hit):
+            """Accept a complete HR snap inside the same published tolerance."""
+            import math
+            if not isinstance(hit, (tuple, list)) or len(hit) != 4:
+                return False
+            try:
+                if isinstance(hit[3], bool):
+                    return False
+                ident = int(hit[3])
+                lat, lon, dist, nhdplusid = (float(value) for value in hit)
+                return (all(math.isfinite(value) for value in (lat, lon, dist, nhdplusid))
+                        and -90 <= lat <= 90 and -180 <= lon <= 180
+                        and 0 <= dist <= SNAP_TOL_FT and nhdplusid > 0
+                        and nhdplusid.is_integer() and ident == nhdplusid)
+            except (TypeError, ValueError, OverflowError, IndexError):
+                return False
+
+        def _visible_v2_hit(hit, covered, mode, lat, lon):
+            """Only actual V2 fallback/orphan segments can supply a V2 site pin."""
+            if not hit or hit[2] > SNAP_TOL_FT:
+                return None
+            visible = {"type": "FeatureCollection", "features": [
+                feature for feature in (covered or {}).get("features", [])
+                if (feature.get("properties") or {}).get("comid") == hit[3]
+                and (mode == "v2-only"
+                     or (feature.get("properties") or {}).get("cover") == "v2-orphan")]}
+            selected = flowlines.nearest_point_on_lines(visible, lat, lon)
+            return selected if selected and selected[2] <= SNAP_TOL_FT else None
+
+        def _display_snap_result(res):
+            """Reconcile a worker response with the network currently on the map."""
+            result = dict(res)
+            if result.get("snap_error"):
+                return result
+            lat, lon = result["lat"], result["lon"]
+            with reactive.isolate():
+                cached_hr = hr_geojson()
+                covered, mode = _stream_layers.flow.data, streams_mode()
+            has_cached_hr = bool((cached_hr or {}).get("features"))
+            hr_hit = result.get("hrHit")
+            if not _valid_site_hit(hr_hit) and has_cached_hr:
+                cached_hit = nhd_hr.nearest_point_on_hr_lines(cached_hr, lat, lon)
+                if _valid_site_hit(cached_hit):
+                    hr_hit = result["hrHit"] = cached_hit
+            if not _valid_site_hit(hr_hit):
+                display = ({"covered": covered, "mode": mode} if has_cached_hr
+                           else result.get("display") or {})
+                result["hit"] = _visible_v2_hit(
+                    result.get("hit"), display.get("covered"), display.get("mode"), lat, lon)
+                if result["hit"] is None and has_cached_hr and result.get("hrAvailable") is False:
+                    result["snap_error"] = True
+            return result
+
+        def _apply_snap(hit, scored_feature=None, *, site_hit=None, clicked_at=None):
+            """Keep the site on the displayed HR stream and its V2 source separate.
+
+            A missing HR hit retains the visible V2 fallback. Routed completions
+            already contain the HR site and must keep their surrogate anchor.
+            """
             slat, slon, dist, comid = hit
-            scored = (pending_anchor() or {}).get("scoredReach") or {}
+            # Completion effects write this state. Reading it as a dependency
+            # would replay the same task result whenever its anchor is replaced.
+            with reactive.isolate():
+                anchor = pending_anchor() or {}
+            if _valid_site_hit(site_hit):
+                anchor = routing.v2_anchor(comid, *(clicked_at or (slat, slon)),
+                                           slat, slon, dist)
+                slat, slon, dist = (float(value) for value in site_hit[:3])
+                anchor["selectedSite"] = {
+                    "network": "nhdplus-hr", "nhdplusid": int(site_hit[3]),
+                    "snapLat": slat, "snapLon": slon, "snapDistFt": dist,
+                }
+                pending_anchor.set(anchor)
+            elif anchor.get("anchorKind") != "hrSurrogate":
+                anchor = routing.v2_anchor(
+                    comid, *(clicked_at or (slat, slon)), slat, slon, dist)
+                pending_anchor.set(anchor)
+            scored = anchor.get("scoredReach") or {}
             scored_reach.set({"comid": comid, "name": scored.get("gnisName")})
             if scored_feature and scored_feature.get("geometry"):
                 props = scored_feature.get("properties") or {}
@@ -1665,18 +1739,21 @@ def server(input, output, session):
                 source_lookup.set(progress)
 
         def _snap_both(lat: float, lon: float) -> dict:
-            """V2 snap first; if the click misses the scoring network, try the HR
-            network so the point can be routed to a covered surrogate. Worker-thread
-            sync helper shared by the click and typed-coordinate paths."""
-            d = 0.012  # ~0.8 mi half-box around the click, so the snap uses the
+            """Resolve the displayed HR site and V2 evidence independently.
+
+            Both click and coordinate entry need HR even when V2 is nearby.
+            """
+            d = 0.012  # ~0.8 mi half-box around the click
             v2_fc = flowlines.flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d)
-            hit = flowlines.nearest_point_on_lines(v2_fc, lat, lon)  # line you actually clicked
-            if hit and hit[2] <= SNAP_TOL_FT:
-                return {"hit": hit,
-                        "hitFeature": network_display.feature_by_id(v2_fc, "comid", hit[3])}
-            hr_hit = nhd_hr.nearest_point_on_hr_lines(
-                nhd_hr.hr_flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d), lat, lon)
-            return {"hit": hit, "hrHit": hr_hit, "lat": lat, "lon": lon}
+            hit = flowlines.nearest_point_on_lines(v2_fc, lat, lon)
+            hr_fc = nhd_hr.hr_flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d)
+            hr_hit = nhd_hr.nearest_point_on_hr_lines(hr_fc, lat, lon)
+            return {"hit": hit, "hrHit": hr_hit, "lat": lat, "lon": lon,
+                    "hrAvailable": hr_fc is not None,
+                    "display": (None if _valid_site_hit(hr_hit)
+                                else network_display.build_display(v2_fc, hr_fc, tol_ft=SNAP_TOL_FT)),
+                    "hitFeature": network_display.feature_by_id(v2_fc, "comid", hit[3])
+                    if hit else None}
 
         @reactive.extended_task
         async def click_snap_task(lat: float, lon: float, generation: int) -> tuple[int, dict]:
@@ -1695,16 +1772,18 @@ def server(input, output, session):
             if generation != _map_pick["generation"]:
                 return
             stage.set("")
+            res = _display_snap_result(res)
             if res.get("snap_error"):
                 source_lookup.set({"status": "failed", "generation": generation,
                                    "snap_error": True})
                 return
             hit = res.get("hit")
             if hit and hit[2] <= SNAP_TOL_FT:
-                _apply_snap(hit, _scored_feature_for(res, hit))
+                _apply_snap(hit, _scored_feature_for(res, hit), site_hit=res.get("hrHit"),
+                            clicked_at=(res["lat"], res["lon"]))
                 return
             hr_hit = res.get("hrHit")
-            if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+            if _valid_site_hit(hr_hit):
                 _start_route(res["lat"], res["lon"], tuple(hr_hit))
                 return
             _remove_layer("marker")       # the last point is gone, see above
@@ -1835,16 +1914,18 @@ def server(input, output, session):
             if generation != _map_pick["generation"]:
                 return
             stage.set("")
+            res = _display_snap_result(res)
             if res.get("snap_error"):
                 source_lookup.set({"status": "failed", "generation": generation,
                                    "snap_error": True})
                 return
             hit = res.get("hit")
             if hit and hit[2] <= SNAP_TOL_FT:
-                _apply_snap(hit, _scored_feature_for(res, hit))
+                _apply_snap(hit, _scored_feature_for(res, hit), site_hit=res.get("hrHit"),
+                            clicked_at=(res["lat"], res["lon"]))
                 return
             hr_hit = res.get("hrHit")
-            if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+            if _valid_site_hit(hr_hit):
                 _start_route(res["lat"], res["lon"], tuple(hr_hit))
                 return
             # No stream near the typed point: place nothing and clear any stale point
@@ -1918,7 +1999,7 @@ def server(input, output, session):
     # ---- enable "Delineate" only once a point is picked on the map ----
     @reactive.effect
     def _toggle_delineate():
-        routed = pending_anchor() is not None
+        routed = (pending_anchor() or {}).get("anchorKind") == "hrSurrogate"
         ui.update_action_button(
             "delineate", disabled=(not _source_ready() or delineate_task.status() == "running"),
             label=("Compute watershed and reach" if routed
@@ -2895,7 +2976,7 @@ def server(input, output, session):
             return ui.p(f"⚠ {err}", class_="easi-snap-note",
                         style="color:#8a5a00;")
         anchor = pending_anchor()
-        if anchor:
+        if (anchor or {}).get("anchorKind") == "hrSurrogate":
             # Two short lines; the ratio, the COMID, and the reasoning sit
             # behind the info icon on the reach line (easi.snapcard).
             card = hr_snap_card(anchor)
@@ -2966,7 +3047,8 @@ def server(input, output, session):
             return None
         glow, route = source_geometry()
         return _legend_ui(current_step(), zoomed_in(), streams_mode(), scored_reach(),
-                          pending_anchor() is not None, coverage=coverage_enabled(),
+                          (pending_anchor() or {}).get("anchorKind") == "hrSurrogate",
+                          coverage=coverage_enabled(),
                           streams_visible=streams_visible(), source_visible=glow,
                           route_visible=route)
 
@@ -3996,6 +4078,9 @@ def server(input, output, session):
 
         def load():
             summary = ds.summary_refreshed()
+            if summary.get("available"):
+                manifest = ds.require_current(summary.get("dataset_key"))
+                summary["minzoom"], summary["maxzoom"] = national_tiles.viewer_zoom_range(manifest)
             try:
                 stats = ds.current_stats(summary.get("dataset_key")) if summary.get("available") else None
             except Exception:  # noqa: BLE001
@@ -4058,7 +4143,8 @@ def server(input, output, session):
             viewer_summary.set(summary)
             viewer_stats.set(stats)
             config = {"routeBase": tiles_route, "vpus": summary.get("vpus") or [],
-                      "minzoom": 4, "maxzoom": 12, "vintage": summary.get("vintage"),
+                      "minzoom": summary.get("minzoom"), "maxzoom": summary.get("maxzoom"),
+                      "vintage": summary.get("vintage"),
                       "center": [-96, 38.5], "zoom": 4,
                       "datasetKey": summary.get("dataset_key"), "generation": generation,
                       "vpuBounds": summary.get("vpu_bounds") or {},
@@ -4305,6 +4391,9 @@ def server(input, output, session):
                    legend,
                    ui.div(id="easi-viewer-status", class_="easi-viewer-status",
                           role="status", hidden=True, **{"aria-live": "polite"}),
+                   ui.div("Zoom in to see screened reaches.", id="easi-viewer-zoom-note",
+                          class_="easi-viewer-zoom-note", role="status", hidden=True,
+                          **{"aria-live": "polite"}),
                    # the tile-loading cue: static markup that viewer.js shows and hides
                    ui.div(ui.div(class_="easi-spinner"),
                           ui.span("Loading screening tiles…", class_="easi-viewer-loading-text"),

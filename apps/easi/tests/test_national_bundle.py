@@ -49,16 +49,17 @@ def test_modified_asset_rejected_after_initial_success(tmp_path, asset):
     assert ds.asset_path(asset) is None
 
 
-def test_manifest_refresh_invalidates_table_and_stat_caches(tmp_path):
+def test_manifest_refresh_invalidates_row_and_stat_caches(tmp_path):
     manifest = _complete_dataset(tmp_path)
     ds = client.Dataset(str(tmp_path))
     ds.records([COMID])
     ds.stats()
-    assert ds._tables and ds._index is not None and ds._stats is not None
+    assert ds._positions and ds._records and ds._index is not None and ds._stats is not None
     manifest["build_id"] = "replacement"
     (tmp_path / "manifest.json").write_text(json.dumps(manifest))
     assert not ds.summary_refreshed()["available"]
-    assert not ds._tables and ds._index is None and ds._stats is None
+    assert not ds._positions and not ds._records and ds._index is None and ds._stats is None
+    assert ds._position_bytes == ds._record_bytes == 0
 
 
 def test_completion_inventory_cannot_omit_or_relabel_an_asset(tmp_path):

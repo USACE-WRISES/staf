@@ -57,6 +57,7 @@ function harness() {
   let frameId = 0;
   const inputs = [];
   const status = { textContent: "", hidden: true };
+  const zoomNote = { textContent: "Zoom in to see screened reaches.", hidden: true };
   const loadingText = { textContent: "Loading screening tiles…" };
   const loading = {
     hidden: true, textContent: "",
@@ -67,6 +68,7 @@ function harness() {
     getElementById(id) {
       if (id === "easi-viewer-map") return mapDiv;
       if (id === "easi-viewer-status") return status;
+      if (id === "easi-viewer-zoom-note") return zoomNote;
       if (id === "easi-viewer-loading") return loading;
       return null;
     },
@@ -79,7 +81,7 @@ function harness() {
     location: { href: "https://example.test/app/" },
     Shiny: {
       // These legacy assertions intentionally exercise the manual Standard renderer.
-      addCustomMessageHandler(name, fn) { handlers.set(name, name === "easi-viewer-init" ? config => fn({renderer: "standard", ...config}) : fn); },
+      addCustomMessageHandler(name, fn) { handlers.set(name, name === "easi-viewer-init" ? config => fn({renderer: "standard", minzoom: 7, maxzoom: 12, zoom: 7, ...config}) : fn); },
       setInputValue(name, value, opts) { inputs.push({ name, value, opts }); },
     },
     maplibregl,
@@ -93,7 +95,7 @@ function harness() {
   for (const filename of ["viewer-standard.js", "viewer.js"]) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "www", filename), "utf8"), context);
   }
-  return { handlers, inputs, status, loading, loadingText, logged, maplibregl, window, mapDiv,
+  return { handlers, inputs, status, zoomNote, loading, loadingText, logged, maplibregl, window, mapDiv,
     flushFrames() { const queued = [...frames.values()]; frames.clear(); queued.forEach(fn => fn()); } };
 }
 
@@ -102,7 +104,7 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 function loadedViewer(vpus) {
   const h = harness();
   h.handlers.get("easi-viewer-init")({ routeBase: "session/abc/dynamic_route/national-tiles?nonce=1",
-                                       vpus: vpus || ["02"], minzoom: 4, maxzoom: 12 });
+                                       vpus: vpus || ["02"], minzoom: 7, maxzoom: 12 });
   const map = h.maplibregl.maps[0];
   assert.equal(map.options.style.sources.basemap.maxzoom, 16, "USGS imagery overzooms above its native coverage");
   map.loaded = true;
@@ -134,7 +136,7 @@ test("init builds one map, adds coverage and a glow plus a line layer per region
   const h = harness();
   const init = h.handlers.get("easi-viewer-init");
   assert.ok(init, "init handler registered");
-  init({ routeBase: "session/abc/dynamic_route/national-tiles?nonce=1", vpus: ["02", "05"], minzoom: 4, maxzoom: 12 });
+  init({ routeBase: "session/abc/dynamic_route/national-tiles?nonce=1", vpus: ["02", "05"], minzoom: 7, maxzoom: 12 });
   assert.equal(h.maplibregl.maps.length, 1);
   const map = h.maplibregl.maps[0];
   map.loaded = true;
@@ -334,7 +336,7 @@ test("Compatibility is the default and manual renderer switching preserves logic
     passedCamera = camera; ctx.state.map = {getContainer:()=>h.mapDiv};
     return {camera:()=>({center:[-80,35],zoom:9}), refresh(){}, nearest(){}, destroy(){destroyed=true;}};
   };
-  h.window.EASIViewer.init({routeBase:"r",vpus:[],datasetKey:"d",generation:1});
+  h.window.EASIViewer.init({routeBase:"r",vpus:[],datasetKey:"d",generation:1,minzoom:7,maxzoom:12});
   assert.equal(h.window.EASIViewer.state.renderer, "compatibility");
   assert.equal(passedCamera, null);
   h.handlers.get("easi-viewer-renderer")({renderer:"standard"});
@@ -343,4 +345,44 @@ test("Compatibility is the default and manual renderer switching preserves logic
   h.handlers.get("easi-viewer-renderer")({renderer:"compatibility"});
   same(passedCamera, {center:[-80,35],zoom:9}); assert.equal(map.removed,true);
   h.handlers.get("easi-viewer-teardown")({});
+});
+
+test("overview has coverage but no reach sources until the shared minimum; zoom note is independent", () => {
+  const h = harness(), init = h.handlers.get("easi-viewer-init");
+  const config = {routeBase:"r", vpus:["02"], minzoom:8, maxzoom:11, zoom:4};
+  init(config);
+  const map = h.maplibregl.maps[0]; map.fire("style.load");
+  assert.equal(map.options.minZoom,3); assert.equal(map.options.maxZoom,16);
+  assert.ok(map.sources["easi-coverage"]);
+  assert.equal(map.sources["easi-02"],undefined);
+  assert.equal(h.zoomNote.hidden,false);
+  h.handlers.get("easi-viewer-status")({busy:true});
+  map.options.zoom = 7.99; map.fire("zoom");
+  assert.equal(map.sources["easi-02"],undefined);
+  assert.equal(h.status.textContent,"Preparing report…");
+  map.options.zoom = 8; map.fire("zoom");
+  assert.equal(map.sources["easi-02"].minzoom,8);
+  assert.equal(map.sources["easi-02"].maxzoom,11);
+  assert.ok(map.layers.filter(layer => layer["source-layer"] === "flowlines").every(layer => layer.minzoom === 8));
+  assert.equal(h.zoomNote.hidden,true);
+  map.options.zoom = 16; map.fire("zoom"); assert.ok(map.sources["easi-02"]);
+  map.options.zoom = 7; map.fire("zoom");
+  assert.equal(map.sources["easi-02"],undefined); assert.equal(h.zoomNote.hidden,false);
+  init({...config, minzoom:7, maxzoom:10});
+  assert.equal(map.sources["easi-02"].maxzoom,10); assert.equal(h.zoomNote.hidden,true);
+  init({...config, available:false});
+  assert.equal(h.zoomNote.hidden,true); assert.equal(map.sources["easi-coverage"],undefined);
+  init(config); assert.equal(h.zoomNote.hidden,false);
+  h.handlers.get("easi-viewer-teardown")({}); assert.equal(h.zoomNote.hidden,true);
+  map.fire("zoom"); assert.equal(h.zoomNote.hidden,true);
+});
+
+test("malformed zoom config shows unavailable and creates no reach sources", () => {
+  for (const range of [{minzoom:null}, {minzoom:6}, {minzoom:7.5}, {maxzoom:6}, {maxzoom:32}]) {
+    const h=harness(); h.handlers.get("easi-viewer-init")({routeBase:"r",vpus:["02"],...range});
+    const map=h.maplibregl.maps[0]; map.fire("style.load");
+    assert.equal(map.sources["easi-02"],undefined); assert.equal(h.zoomNote.hidden,true);
+    assert.match(h.status.textContent,/invalid tile zoom range/);
+    h.handlers.get("easi-viewer-teardown")({});
+  }
 });

@@ -123,8 +123,8 @@ def test_stats_asset_reads_locally_and_only_when_listed_remotely(tmp_path, monke
         fetched.append(name)
         return _FakeResponse(200, (src / name).read_bytes())
 
-    monkeypatch.setattr(client.requests, "head", lambda *a, **k: _FakeResponse(200))
-    monkeypatch.setattr(client.requests, "get", get)
+    transport = SimpleNamespace(head=lambda *a, **k: _FakeResponse(200), get=get)
+    monkeypatch.setattr(client, "_http_session", lambda: transport)
     remote = client.Dataset(base=base, cache_dir=tmp_path / "cache", manifest_ttl_s=0)
     assert remote.stats() is None and fetched == [client.MANIFEST]
     manifest["assets"][client.STATS] = {"asset": client.STATS, "sha256": _sha(src / client.STATS)}
@@ -149,6 +149,7 @@ class _FakeResponse:
         self.headers = headers or {}
         self.text = text or content.decode("utf-8", "replace")
         self.is_redirect = status in (301, 302)
+        self.closed = False
 
     def iter_content(self, n):
         for i in range(0, len(self.content), n):
@@ -158,6 +159,7 @@ class _FakeResponse:
         return self
 
     def __exit__(self, *exc):
+        self.closed = True
         return False
 
 
@@ -184,8 +186,8 @@ def test_remote_assets_download_once_and_refresh_on_a_new_hash(tmp_path, monkeyp
             return _FakeResponse(206, data[int(lo):int(hi) + 1])
         return _FakeResponse(200, data)
 
-    monkeypatch.setattr(client.requests, "head", head)
-    monkeypatch.setattr(client.requests, "get", get)
+    transport = SimpleNamespace(head=head, get=get)
+    monkeypatch.setattr(client, "_http_session", lambda: transport)
     ds = client.Dataset(base=base, cache_dir=tmp_path / "cache", manifest_ttl_s=0)
     assert ds.remote and ds.manifest()["vintage"] == "2026.09"
     recs = ds.records([COMID])

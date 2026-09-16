@@ -10,6 +10,35 @@ from test_report_opening import Task
 from test_streamcat_readiness import Value
 
 
+@pytest.mark.parametrize("tiles,expected", [
+    ({"01": {"minzoom": 4, "maxzoom": 12}, "02": {"minzoom": 8, "maxzoom": 10}}, (8, 10)),
+    ({"01": {"minzoom": 4}}, None),
+    ({}, None),
+])
+def test_config_worker_derives_zoom_range_or_marks_dataset_unavailable(tiles, expected):
+    from easi.national import tiles as national_tiles
+    checked, stats_calls = [], []
+    def require_current(key):
+        checked.append(key)
+        return {"tiles": tiles}
+    ds = SimpleNamespace(summary_refreshed=lambda: {"available": True, "dataset_key": "current"},
+                         require_current=require_current,
+                         current_stats=lambda key: stats_calls.append(key) or {"count": 1})
+    async def run_sync(fn, *args):
+        return fn(*args)
+    worker = _function("easi", "viewer_config_task", {
+        "national_client": SimpleNamespace(default_dataset=lambda: ds), "national_tiles": national_tiles,
+        "anyio": SimpleNamespace(to_thread=SimpleNamespace(run_sync=run_sync))})
+    generation, summary, stats = asyncio.run(worker(3))
+    assert generation == 3 and checked == ["current"]
+    if expected:
+        assert (summary["minzoom"], summary["maxzoom"]) == expected
+        assert summary["available"] and stats == {"count": 1}
+    else:
+        assert not summary["available"] and "tile zoom range" in summary["error"]
+        assert stats is None and not stats_calls
+
+
 def config_request_harness(mode="viewer", count=None):
     action = {"count": count}
     def refresh():

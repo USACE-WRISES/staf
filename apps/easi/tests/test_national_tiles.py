@@ -15,6 +15,31 @@ from easi.national import client, tiles
 TILES = {(0, 0, 0): b"tile-000", (1, 0, 0): b"tile-100", (1, 1, 1): b"tile-111"}
 
 
+@pytest.mark.parametrize("ranges,expected", [
+    ([(4, 12), (4, 12)], (7, 12)),
+    ([(8, 12), (7, 10)], (8, 10)),
+    ([(7, 7)], (7, 7)),
+    ([(0, 16), (4, 31)], (7, 16)),
+])
+def test_viewer_zoom_range_uses_shared_manifest_bounds(ranges, expected):
+    manifest = {"tiles": {str(i): {"minzoom": lo, "maxzoom": hi}
+                          for i, (lo, hi) in enumerate(ranges)}}
+    assert tiles.viewer_zoom_range(manifest) == expected
+
+
+@pytest.mark.parametrize("entries", [None, {}, [], {"01": None}, {"01": {}},
+    {"01": {"minzoom": 7}}, {"01": {"minzoom": "7", "maxzoom": 12}},
+    {"01": {"minzoom": True, "maxzoom": 12}}, {"01": {"minzoom": 7.0, "maxzoom": 12}},
+    {"01": {"minzoom": -1, "maxzoom": 12}}, {"01": {"minzoom": 4, "maxzoom": 32}},
+    {"01": {"minzoom": 12, "maxzoom": 7}}, {"01": {"minzoom": 4, "maxzoom": 6}},
+    {"01": {"minzoom": 17, "maxzoom": 20}},
+    {"01": {"minzoom": 8, "maxzoom": 12}, "02": {"minzoom": 4, "maxzoom": 7}},
+])
+def test_viewer_zoom_range_rejects_invalid_or_incompatible_manifest(entries):
+    with pytest.raises(ValueError, match="tile zoom range"):
+        tiles.viewer_zoom_range({"tiles": entries})
+
+
 def _write_pmtiles(path):
     with open(path, "wb") as handle:
         writer = Writer(handle)
