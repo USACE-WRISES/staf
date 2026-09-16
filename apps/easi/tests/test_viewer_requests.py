@@ -11,6 +11,7 @@ from test_streamcat_readiness import Value
 
 
 @pytest.mark.parametrize("tiles,expected", [
+    ({"01": {"minzoom": 4, "maxzoom": 12}, "02": {"minzoom": 4, "maxzoom": 12}}, (4, 12)),
     ({"01": {"minzoom": 4, "maxzoom": 12}, "02": {"minzoom": 8, "maxzoom": 10}}, (8, 10)),
     ({"01": {"minzoom": 4}}, None),
     ({}, None),
