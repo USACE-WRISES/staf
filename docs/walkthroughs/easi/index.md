@@ -88,18 +88,20 @@ outcome weights, rollup and condition boundaries remain the same.
   Fair is 0.25 to below 0.50, and Poor is below 0.25. Where the model has no
   value, the catchment/watershed integrity products remain a labeled fallback.
 
-The national dataset stores the raw evidence and uses the same adapters as
-the live app. Its reports score from that evidence without fetching missing
-sources. The map, dashboard and opened reports require one completed bundle
-matching the active scoring method. Earlier or incomplete bundles show an
-unavailable or outdated message.
+The 16-state development dataset that was used to evaluate and refine these
+criteria is archived as a GitHub prerelease with a provenance record; it is a
+development dataset, not an assessment product. The in-app Nationwide
+screening map that reads it is a developer preview and is not part of the
+public application (it mounts only when an operator sets
+`EASI_NATIONAL_VIEWER=1`).
 
-Nationwide screening opens in **Compatibility** mode, which displays image
-tiles without WebGL. **Standard** retains the MapLibre renderer. The choice
-lasts for the session and changing it preserves geographic extent. The
-single-site map is unchanged. Compatibility is intended for browsers with
-limited graphics support; performance through a workplace browser must be
-checked in that actual environment.
+**Excel calculator.** The app ships an offline implementation of the same
+methodology: enter the desktop quantities, the NARS-9 region and the channel
+slope, and the workbook rates the 20 metrics with the same criteria and
+reference curves, then applies the STAF rollup. It is generated from the
+app's own scoring definitions and checked against the app's engine on a
+retained case set, so the same inputs give the same results. Download it from
+the report footer, the app header, or the Tools page.
 
 Operators can select the former criteria with `EASI_CRITERIA_SET=legacy`.
 Both sets use the current anchors above. The regional set is the default.
