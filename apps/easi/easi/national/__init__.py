@@ -35,7 +35,8 @@ _METHOD_SOURCES = ("scoring.py", "screening_methods.py", "config.py",
                    "datasources/fabric.py", "national/records.py")
 _METHOD_DATA = ("easi-metrics.json",
                 "cwa-mapping.json", "functions.json", "ecoregion-crosswalk.json",
-                "reference-curves.json")
+                "reference-curves.json", "scoring-identity.json",
+                "nars-ecoregions-9.geojson.gz")
 
 
 def method_version() -> str:

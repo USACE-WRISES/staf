@@ -51,6 +51,8 @@ def run_staging(root: DataRoot, states: UnitStates, progress: Progress) -> dict:
     index = load_huc8_index(root)
     huc4_vpu = load_huc4_vpu(root)
     by_huc4 = scored_by_huc4(root)
+    expected_method = method_version()
+    validate_score_methods(root, [h for hs in by_huc4.values() for h in hs], expected_method)
     progress.begin("staging", "stage", total=len(by_huc4) + 2, message="assembling the publish set")
     units: dict[str, dict] = {}
     keep: set[str] = set()
@@ -119,7 +121,7 @@ def run_staging(root: DataRoot, states: UnitStates, progress: Progress) -> dict:
         "schema_version": SCHEMA_VERSION, "dataset": "easi-national", "vintage": VINTAGE,
         "tier": min((u.get("tier") or config.BASE_TIER) for u in units.values()) if units else config.BASE_TIER,
         "tiers": tiers, "reach_length_ft": config.REACH_LENGTH_FT,
-        "method_version": method_version(), "criteria_set": easi_config.criteria_set(),
+        "method_version": expected_method, "criteria_set": easi_config.criteria_set(),
         "xs_method_version": xs_derive.xs_method_version(),
         "dem": {"source": "USGS 3DEP", "resolutions_m": [1, 3, 10],
                 "rule": "1 m where a 3DEP lidar project covers at least half the reach buffer, "
@@ -140,6 +142,18 @@ def run_staging(root: DataRoot, states: UnitStates, progress: Progress) -> dict:
                  f"{len(tiles_block)} tile archives")
     states.set("staging", "stage", "done", note=f"{len(units)} units")
     return manifest
+
+
+def validate_score_methods(root: DataRoot, huc8s: list[str], expected_method: str) -> None:
+    """Never label mixed, missing or stale scored methods as current staging."""
+    import pyarrow.parquet as pq
+    for huc8 in huc8s:
+        path = root.huc8_file(huc8, "scores")
+        if "method_version" not in pq.read_schema(path).names:
+            raise RuntimeError(f"Missing score method_version: {huc8}")
+        methods = set(pq.read_table(path, columns=["method_version"])["method_version"].to_pylist())
+        if methods != {expected_method}:
+            raise RuntimeError(f"Mixed or stale score methods: {huc8}: {sorted(map(str, methods))}")
 
 
 def _stats_asset(root: DataRoot, huc8s: list[str], progress: Progress):

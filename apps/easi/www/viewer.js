@@ -1,438 +1,154 @@
-/* EASI Nationwide viewer: a MapLibre map over the precomputed national
-   dataset. The server sends `easi-viewer-init` with the tile route (a
-   session route that proxies the per-region PMTiles archives), the published
-   regions, the coverage polygons, and the vintage; `easi-viewer-teardown`
-   removes the map. A click on a reach posts `viewer_pick`; the server answers
-   with the read-only report modal and the `staf-report-state` busy message. */
+/* Nationwide message bridge. Both renderers read the same stored tiles. */
 (function () {
   "use strict";
-
-  var BAND_COLORS = {
-    "Functioning": "#5b8fd6",
-    "Functioning-at-Risk": "#d9b93a",
-    "Non-Functioning": "#d6453d",
-    "pending": "#a9b1bd"
-  };
+  var state = { map: null, config: null, engine: null, renderer: null, epoch: 0,
+    lineLayers: [], hover: null, busy: null,
+    loading: { pending: false, showTimer: null, longTimer: null, safetyTimer: null, noteTimer: null, failed: 0 } };
+  var BAND_COLORS = { Functioning: "#5b8fd6", "Functioning-at-Risk": "#d9b93a", "Non-Functioning": "#d6453d", pending: "#a9b1bd" };
   var COVER_COLORS = { complete: "#c8d9f2", partial: "#f5e7a6", not_started: "#eef1f5" };
-  var BASEMAP = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}";
-
-  var state = { map: null, config: null, popup: null, busy: null, styleReady: false,
-                lineLayers: [], hover: null,
-                loading: { pending: false, showTimer: null, longTimer: null, safetyTimer: null,
-                           noteTimer: null, failed: 0 } };
-  var HIT_PX = 8;          // half-width of the box a click or hover searches for a reach
-  var GLOW_MIN_ZOOM = 7;   // below this the lines are hairlines and a glow means nothing
-  // the tile-loading cue: shown once a screening source has been fetching for
-  // SHOW_DELAY_MS (a cached tile never flashes it), reworded after LONG_MS so a
-  // slow fetch never reads as stuck, hidden on the map's idle event or, whatever
-  // the map reports, after SAFETY_MS
-  var SHOW_DELAY_MS = 300;
-  var LONG_MS = 6000;
-  var SAFETY_MS = 60000;
-  var NOTE_MS = 6000;
-  var LOADING_TEXT = "Loading screening tiles…";
-  var LONG_TEXT = "Still loading screening tiles…";
-  var FAILED_TEXT = "Some screening tiles did not load, use Refresh to retry.";
-
-  function absolute(url) {
-    try { return new URL(url, window.location.href).href; } catch (e) { return url; }
-  }
-
-  function tileUrl(config, vpu) {
-    var base = absolute(config.routeBase);
-    var sep = base.indexOf("?") >= 0 ? "&" : "?";
-    return base + sep + "vpu=" + encodeURIComponent(vpu) + "&z={z}&x={x}&y={y}";
-  }
-
-  function metaUrl(config, name) {
-    var base = absolute(config.routeBase);
-    var sep = base.indexOf("?") >= 0 ? "&" : "?";
-    return base + sep + "meta=" + encodeURIComponent(name);
-  }
-
-  function lineColor() {
-    return ["match", ["get", "band"],
-      "Functioning", BAND_COLORS["Functioning"],
-      "Functioning-at-Risk", BAND_COLORS["Functioning-at-Risk"],
-      "Non-Functioning", BAND_COLORS["Non-Functioning"],
-      BAND_COLORS.pending];
-  }
-
-  // width stops: wider with zoom and with stream order; order 1 stays thin
   var WIDTH_STOPS = [[4, 0.4, 0.15], [8, 0.8, 0.35], [12, 1.6, 0.6], [16, 3.0, 0.9]];
-
-  function hovered() {
-    return ["boolean", ["feature-state", "hover"], false];
-  }
-
-  function baseWidth(stop) {
-    return ["+", stop[1], ["*", stop[2], ["coalesce", ["get", "order"], 1]]];
-  }
-
-  function widthCurve(perStop) {
-    // the zoom interpolation must stay the outermost expression (MapLibre
-    // rejects a zoom expression nested inside case or arithmetic), so the
-    // hover factor is applied inside every stop instead
-    var curve = ["interpolate", ["linear"], ["zoom"]];
-    WIDTH_STOPS.forEach(function (stop) { curve.push(stop[0], perStop(baseWidth(stop))); });
-    return curve;
-  }
-
-  function lineWidth() {
-    return widthCurve(function (base) { return base; });
-  }
-
-  function hoverLineWidth() {
-    // the hovered reach draws almost twice as wide
-    return widthCurve(function (base) { return ["*", ["case", hovered(), 1.8, 1], base]; });
-  }
-
-  function glowWidth() {
-    return widthCurve(function (base) { return ["+", 8, ["*", 1.8, base]]; });
-  }
-
-  function addRegion(map, config, vpu) {
-    var sourceId = "easi-" + vpu;
-    if (map.getSource(sourceId)) return;
-    map.addSource(sourceId, {
-      type: "vector",
-      tiles: [tileUrl(config, vpu)],
-      minzoom: config.minzoom || 4,
-      maxzoom: config.maxzoom || 12,
-      promoteId: { flowlines: "comid" }      // feature ids for the hover state
-    });
-    // the glow sits under the line and only shows for the hovered feature
-    // (feature state, so no tile is re-parsed and no data is re-sent)
-    map.addLayer({
-      id: sourceId + "-glow",
-      type: "line",
-      source: sourceId,
-      "source-layer": "flowlines",
-      minzoom: GLOW_MIN_ZOOM,
-      paint: { "line-color": "#ffffff", "line-width": glowWidth(), "line-blur": 2,
-               "line-opacity": ["case", hovered(), 0.9, 0] },
-      layout: { "line-cap": "round", "line-join": "round" }
-    });
-    map.addLayer({
-      id: sourceId + "-lines",
-      type: "line",
-      source: sourceId,
-      "source-layer": "flowlines",
-      paint: { "line-color": lineColor(), "line-width": hoverLineWidth(), "line-opacity": 0.95 },
-      layout: { "line-cap": "round", "line-join": "round" }
-    });
-    state.lineLayers.push(sourceId + "-lines");
-  }
-
-  function segmentDistance(p, a, b) {
-    var dx = b.x - a.x, dy = b.y - a.y;
-    var len2 = dx * dx + dy * dy;
-    var t = len2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2)) : 0;
-    var x = a.x + t * dx, y = a.y + t * dy;
-    return Math.sqrt((p.x - x) * (p.x - x) + (p.y - y) * (p.y - y));
-  }
-
-  function screenDistance(map, point, geometry) {
-    if (!geometry || !geometry.coordinates) return Infinity;
-    var lines = geometry.type === "MultiLineString" ? geometry.coordinates : [geometry.coordinates];
-    var best = Infinity;
-    lines.forEach(function (line) {
-      var prev = null;
-      line.forEach(function (c) {
-        var p = map.project(c);
-        if (prev) best = Math.min(best, segmentDistance(point, prev, p));
-        prev = p;
-      });
-    });
-    return best;
-  }
-
-  function nearestReach(map, point) {
-    // the reach nearest the cursor within HIT_PX, so a thin line is easy to hit
-    if (!point || !state.lineLayers.length) return null;
-    var box = [[point.x - HIT_PX, point.y - HIT_PX], [point.x + HIT_PX, point.y + HIT_PX]];
-    var features = map.queryRenderedFeatures(box, { layers: state.lineLayers }) || [];
-    var best = null, bestDistance = Infinity;
-    features.forEach(function (f) {
-      var d = screenDistance(map, point, f.geometry);
-      if (d < bestDistance) { best = f; bestDistance = d; }
-    });
-    return best;
-  }
-
-  function setHover(map, feature) {
-    var next = feature && feature.id !== undefined && feature.id !== null
-      ? { source: feature.source, sourceLayer: feature.sourceLayer || "flowlines", id: feature.id } : null;
-    var prev = state.hover;
-    if (prev && next && prev.source === next.source && prev.id === next.id) return;
-    if (prev) { try { map.setFeatureState(prev, { hover: false }); } catch (e) { /* source gone */ } }
-    if (next) { try { map.setFeatureState(next, { hover: true }); } catch (e) { next = null; } }
-    state.hover = next;
-  }
-
-  function addCoverage(map, config) {
-    if (map.getSource("easi-coverage")) return;
-    map.addSource("easi-coverage", { type: "geojson", data: metaUrl(config, "coverage") });
-    map.addLayer({
-      id: "easi-coverage-fill", type: "fill", source: "easi-coverage",
-      paint: {
-        "fill-color": ["match", ["get", "status"],
-          "complete", COVER_COLORS.complete, "partial", COVER_COLORS.partial, COVER_COLORS.not_started],
-        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0.45, 9, 0.15, 11, 0.0]
-      }
-    });
-    map.addLayer({
-      id: "easi-coverage-line", type: "line", source: "easi-coverage",
-      paint: { "line-color": "#8a93a3", "line-width": 0.6, "line-opacity": 0.8 }
-    });
-  }
-
+  var HIT_PX = 8, SHOW_DELAY_MS = 300, LONG_MS = 6000, SAFETY_MS = 60000, NOTE_MS = 6000;
+  var BASEMAP = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}";
+  function escapeHtml(text) { return String(text).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function fmt(v) { return v === undefined || v === null || v === "" ? "–" : Number(v).toFixed(2); }
   function describe(props) {
-    var name = props.name || "(unnamed reach)";
+    var name = props.name || "(unnamed reach)", band = props.band || "pending";
     var eci = props.eci === undefined || props.eci === null ? null : Number(props.eci);
-    var band = props.band || "pending";
     var lines = ["<b>" + escapeHtml(name) + "</b> · COMID " + escapeHtml(String(props.comid || ""))];
-    if (band === "pending" || eci === null) {
-      lines.push("Not yet screened");
-    } else {
+    if (band === "pending" || eci === null) lines.push("Not yet screened");
+    else {
       lines.push("ECI " + eci.toFixed(2) + " · " + escapeHtml(band));
       lines.push("Physical " + fmt(props.phys) + " · Chemical " + fmt(props.chem) + " · Biological " + fmt(props.bio));
-      if (props.prov === true || props.prov === "true" || props.prov === 1) {
+      if (props.prov === true || props.prov === "true" || props.prov === 1)
         lines.push("<span class='easi-viewer-note'>Provisional: cross-section metrics not computed</span>");
-      }
     }
     return lines.join("<br>");
   }
-
-  function fmt(v) {
-    return v === undefined || v === null || v === "" ? "–" : Number(v).toFixed(2);
+  function query(config, suffix) {
+    var base; try { base = new URL(config.routeBase, window.location.href).href; } catch (_) { base = config.routeBase; }
+    var pairs = [];
+    if (config.datasetKey != null) pairs.push("datasetKey=" + encodeURIComponent(config.datasetKey));
+    if (config.generation != null) pairs.push("generation=" + encodeURIComponent(config.generation));
+    pairs.push(suffix); return base + (base.indexOf("?") >= 0 ? "&" : "?") + pairs.join("&");
   }
-
-  function escapeHtml(text) {
-    return String(text).replace(/[&<>"']/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-    });
-  }
-
-  function onMove(e) {
-    var map = state.map;
-    if (!map || !e) return;
-    var feature = nearestReach(map, e.point);
-    if (!feature) { onLeave(); return; }
-    setHover(map, feature);
-    map.getCanvas().style.cursor = "pointer";
-    var props = feature.properties || {};
-    if (!state.popup) {
-      state.popup = new window.maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
+  function tileUrl(config, vpu) { return query(config, "vpu=" + encodeURIComponent(vpu) + "&z={z}&x={x}&y={y}"); }
+  function metaUrl(config, name) { return query(config, "meta=" + encodeURIComponent(name)); }
+  function widthAt(zoom, order) {
+    order = order != null && Number.isFinite(Number(order)) ? Number(order) : 1;
+    if (zoom <= WIDTH_STOPS[0][0]) return WIDTH_STOPS[0][1] + order * WIDTH_STOPS[0][2];
+    for (var i = 1; i < WIDTH_STOPS.length; i++) {
+      var low = WIDTH_STOPS[i - 1], high = WIDTH_STOPS[i];
+      if (zoom <= high[0]) { var t = (zoom - low[0]) / (high[0] - low[0]);
+        return low[1] + order * low[2] + t * (high[1] - low[1] + order * (high[2] - low[2])); }
     }
-    state.popup.setLngLat(e.lngLat).setHTML("<div class='easi-viewer-popup'>" + describe(props) + "</div>").addTo(map);
+    var last = WIDTH_STOPS[WIDTH_STOPS.length - 1]; return last[1] + order * last[2];
   }
-
-  function onLeave() {
-    var map = state.map;
-    if (!map) return;
-    setHover(map, null);
-    map.getCanvas().style.cursor = "";
-    if (state.popup) state.popup.remove();
+  function segmentDistance(p, a, b) {
+    var dx = b.x - a.x, dy = b.y - a.y, len2 = dx * dx + dy * dy;
+    var t = len2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2)) : 0;
+    return Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy);
   }
-
-  function onMapClick(e) {
-    var map = state.map;
-    if (!map || !e) return;
-    var feature = nearestReach(map, e.point);
-    if (feature) onClick({ features: [feature], lngLat: e.lngLat });
-  }
-
-  function onClick(e) {
-    if (!e.features || !e.features.length || !window.Shiny) return;
-    var props = e.features[0].properties || {};
-    if (!props.comid) return;
-    if (props.band === "pending" || props.band === undefined) {
-      showStatus("This reach has no precomputed assessment yet.", 2500);
-      return;
-    }
-    window.Shiny.setInputValue("viewer_pick", {
-      comid: Number(props.comid), huc4: props.huc4 || null, name: props.name || null,
-      nonce: Date.now()
-    }, { priority: "event" });
-    showStatus("Preparing report…", 0);
-  }
-
   function showStatus(text, ttl) {
-    var el = document.getElementById("easi-viewer-status");
-    if (!el) return;
-    el.textContent = text;
-    el.hidden = !text;
+    var el = document.getElementById("easi-viewer-status"); if (!el) return;
+    el.textContent = text; el.hidden = !text;
     if (state.busy) { clearTimeout(state.busy); state.busy = null; }
-    if (text && ttl) state.busy = setTimeout(function () { el.hidden = true; }, ttl);
+    if (text && ttl) state.busy = setTimeout(function () { el.hidden = true; state.busy = null; }, ttl);
   }
-
-  function loadingElement() {
-    return document.getElementById("easi-viewer-loading");
-  }
-
   function setLoadingCue(text) {
-    var el = loadingElement();
-    if (!el) return;
-    // the text lives in its own span so the spinner element (and its
-    // animation) survives every wording change
+    var el = document.getElementById("easi-viewer-loading"); if (!el) return;
     var span = el.querySelector ? el.querySelector(".easi-viewer-loading-text") : null;
-    if (span) span.textContent = text; else el.textContent = text;
-    el.hidden = false;
+    if (span) span.textContent = text; else el.textContent = text; el.hidden = false;
   }
-
-  function clearLoadingTimers() {
-    var l = state.loading;
-    ["showTimer", "longTimer", "safetyTimer"].forEach(function (name) {
-      if (l[name]) { clearTimeout(l[name]); l[name] = null; }
-    });
-  }
-
   function hideLoadingCue() {
-    clearLoadingTimers();
+    ["showTimer", "longTimer", "safetyTimer"].forEach(function (key) {
+      if (state.loading[key]) clearTimeout(state.loading[key]); state.loading[key] = null;
+    });
     state.loading.pending = false;
-    var el = loadingElement();
-    if (el) el.hidden = true;
+    var el = document.getElementById("easi-viewer-loading"); if (el) el.hidden = true;
   }
-
-  function screeningSource(e) {
-    // the coverage polygons and every region's reaches are "easi-" sources;
-    // the basemap is not ours to report on
-    var id = e && (e.sourceId || (e.source && e.source.id));
-    return typeof id === "string" && id.indexOf("easi-") === 0;
-  }
-
-  function onSourceLoading(e) {
-    if (!screeningSource(e)) return;
-    var l = state.loading;
-    l.pending = true;
-    if (!l.safetyTimer) l.safetyTimer = setTimeout(function () { l.safetyTimer = null; hideLoadingCue(); }, SAFETY_MS);
-    if (l.showTimer || !loadingElement()) return;
+  function loading() {
+    var l = state.loading; if (l.pending) return; l.pending = true;
+    if (l.noteTimer) { clearTimeout(l.noteTimer); l.noteTimer = null; }
+    l.safetyTimer = setTimeout(hideLoadingCue, SAFETY_MS);
     l.showTimer = setTimeout(function () {
-      l.showTimer = null;
-      if (!l.pending) return;
-      setLoadingCue(LOADING_TEXT);
-      l.longTimer = setTimeout(function () {
-        l.longTimer = null;
-        if (l.pending) setLoadingCue(LONG_TEXT);
-      }, LONG_MS - SHOW_DELAY_MS);
+      l.showTimer = null; if (!l.pending) return; setLoadingCue("Loading screening tiles…");
+      l.longTimer = setTimeout(function () { l.longTimer = null;
+        if (l.pending) setLoadingCue("Still loading screening tiles…"); }, LONG_MS - SHOW_DELAY_MS);
     }, SHOW_DELAY_MS);
   }
-
-  function onIdle() {
-    // idle: every requested tile has arrived or failed and the frame is drawn
-    var l = state.loading;
-    var failed = l.failed;
-    hideLoadingCue();
-    if (!failed) return;
-    l.failed = 0;
-    setLoadingCue(FAILED_TEXT);
-    if (l.noteTimer) clearTimeout(l.noteTimer);
-    l.noteTimer = setTimeout(function () {
-      l.noteTimer = null;
-      if (!l.pending) hideLoadingCue();
-    }, NOTE_MS);
+  function idle() {
+    var failed = state.loading.failed; state.loading.failed = 0; hideLoadingCue();
+    if (!failed) return; setLoadingCue("Some screening tiles did not load, use Refresh to retry.");
+    state.loading.noteTimer = setTimeout(function () { state.loading.noteTimer = null;
+      if (!state.loading.pending) hideLoadingCue(); }, NOTE_MS);
   }
-
-  function onMapError(e) {
-    // a tile the route answered with an error (a failed range read is 502;
-    // an empty tile is 204 and never reaches here); the note waits for idle.
-    // Listening for "error" silences MapLibre's own console report of every
-    // other error, so those are logged here instead
-    if (!e || !e.tile || !screeningSource(e)) {
-      if (e && e.error && window.console && window.console.error) window.console.error(e.error);
-      return;
-    }
-    state.loading.failed += 1;
+  function pick(props) {
+    if (!props || !props.comid || !window.Shiny) return;
+    if (!props.band || props.band === "pending") { showStatus("This reach has no precomputed assessment yet.", 2500); return; }
+    var config = state.config || {};
+    window.Shiny.setInputValue("viewer_pick", { comid: Number(props.comid), huc4: props.huc4 || null,
+      name: props.name || null, datasetKey: config.datasetKey, generation: config.generation, nonce: Date.now() }, { priority: "event" });
+    showStatus("Preparing report…", 0);
   }
-
+  var shared = { BAND_COLORS: BAND_COLORS, COVER_COLORS: COVER_COLORS, WIDTH_STOPS: WIDTH_STOPS,
+    HIT_PX: HIT_PX, BASEMAP: BASEMAP, tileUrl: tileUrl, metaUrl: metaUrl, describe: describe,
+    widthAt: widthAt, segmentDistance: segmentDistance, escapeHtml: escapeHtml };
+  function normalizeRenderer(value) { return value === "standard" ? "standard" : "compatibility"; }
+  function destroyEngine() {
+    state.epoch += 1; if (state.engine) state.engine.destroy();
+    else if (state.map) state.map.remove();
+    state.engine = null; state.map = null; state.lineLayers = []; state.hover = null; hideLoadingCue();
+    if (state.loading.noteTimer) clearTimeout(state.loading.noteTimer);
+    state.loading.noteTimer = null; state.loading.failed = 0;
+    if (state.busy) clearTimeout(state.busy); state.busy = null;
+  }
   function init(config) {
-    var container = document.getElementById("easi-viewer-map");
-    if (!container || !window.maplibregl) return;
-    if (state.map && state.map.getContainer() !== container) teardown();
-    if (!state.map) {
-      state.map = new window.maplibregl.Map({
-        container: container,
-        style: {
-          version: 8,
-          sources: { basemap: { type: "raster", tiles: [BASEMAP], tileSize: 256,
-                                attribution: "USGS The National Map" } },
-          layers: [{ id: "basemap", type: "raster", source: "basemap" }]
-        },
-        center: config.center || [-96, 38.5],
-        zoom: config.zoom || 4,
-        minZoom: 3,
-        maxZoom: 16,
-        attributionControl: true
-      });
-      state.map.addControl(new window.maplibregl.NavigationControl({ showCompass: false }), "top-right");
-      // one set of map-level handlers: the hit test picks the nearest reach
-      // within HIT_PX of the cursor across every region layer
-      state.map.on("mousemove", onMove);
-      state.map.on("mouseout", onLeave);
-      state.map.on("click", onMapClick);
-      // the loading cue: a screening source starts fetching, idle means every
-      // requested tile has arrived (or failed) and the frame is drawn
-      state.map.on("sourcedataloading", onSourceLoading);
-      state.map.on("idle", onIdle);
-      state.map.on("error", onMapError);
-      // style.load fires once the style is parsed, before every basemap tile has
-      // arrived; the sources can be added from then on (load would wait for tiles)
-      state.styleReady = false;
-      state.map.on("style.load", function () { state.styleReady = true; apply(config); });
-    } else {
-      apply(config);
-    }
-    state.config = config;
+    if (!config || !document.getElementById("easi-viewer-map")) return;
+    var previous = state.config;
+    if (previous && Number.isFinite(config.generation) && Number.isFinite(previous.generation) && config.generation < previous.generation) return;
+    var renderer = normalizeRenderer(config.renderer || state.renderer);
+    var camera = state.engine && state.engine.camera();
+    var same = state.engine && state.renderer === renderer && state.map &&
+      state.map.getContainer() === document.getElementById("easi-viewer-map");
+    state.config = Object.assign({}, config, { renderer: renderer }); state.renderer = renderer;
+    if (config.available === false) showStatus(config.error || "This Nationwide dataset is unavailable.", 0);
+    else showStatus("", 0);
+    if (same) { state.engine.refresh(state.config); return; }
+    destroyEngine();
+    var factory = (window.EASIViewerRenderers || {})[renderer];
+    if (!factory) { showStatus("The selected map renderer did not load. Reload this page to retry.", 0); return; }
+    var epoch = state.epoch;
+    var context = { shared: shared, state: state, current: function () { return state.epoch === epoch; },
+      loading: function () { if (state.epoch === epoch) loading(); },
+      idle: function () { if (state.epoch === epoch) idle(); },
+      failed: function () { if (state.epoch === epoch) state.loading.failed += 1; },
+      pick: function (props) { if (state.epoch === epoch) pick(props); } };
+    try { state.engine = factory(context, state.config, camera); }
+    catch (error) { destroyEngine(); showStatus("The map could not start. Try the other map renderer or reload this page.", 0);
+      if (window.console) window.console.error(error); }
   }
-
-  function apply(config) {
-    var map = state.map;
-    if (!map || !state.styleReady) {
-      if (map) map.once("style.load", function () { state.styleReady = true; apply(config); });
-      return;
-    }
-    addCoverage(map, config);
-    (config.vpus || []).forEach(function (vpu) { addRegion(map, config, vpu); });
-    // a refresh re-reads the coverage file (the data url carries a nonce)
-    var source = map.getSource("easi-coverage");
-    if (source && source.setData) source.setData(metaUrl(config, "coverage") + "&t=" + Date.now());
+  function setRenderer(value) {
+    var renderer = normalizeRenderer(value);
+    if (state.config) init(Object.assign({}, state.config, { renderer: renderer }));
+    else state.renderer = renderer;
   }
-
-  function teardown(message) {   // Shiny requires exactly one parameter on a message handler
-    void message;
-    if (state.popup) { state.popup.remove(); state.popup = null; }
-    if (state.map) { try { state.map.remove(); } catch (e) { /* already gone */ } }
-    hideLoadingCue();
-    if (state.loading.noteTimer) { clearTimeout(state.loading.noteTimer); state.loading.noteTimer = null; }
-    state.loading.failed = 0;
-    state.map = null;
-    state.config = null;
-    state.styleReady = false;
-    state.lineLayers = [];
-    state.hover = null;
-  }
-
+  function teardown(message) { void message; destroyEngine(); state.config = null; showStatus("", 0); }
   function register() {
     if (!window.Shiny || !window.Shiny.addCustomMessageHandler) return false;
     window.Shiny.addCustomMessageHandler("easi-viewer-init", init);
     window.Shiny.addCustomMessageHandler("easi-viewer-teardown", teardown);
-    // the server mirrors the report's busy state on a viewer-only message
-    // (Shiny keeps one handler per message name, and staf-report-state
-    // belongs to report-ready.js)
+    window.Shiny.addCustomMessageHandler("easi-viewer-renderer", function (message) { setRenderer(message && message.renderer); });
     window.Shiny.addCustomMessageHandler("easi-viewer-status", function (message) {
-      if (!document.getElementById("easi-viewer-map")) return;
-      if (message && message.busy) showStatus("Preparing report…", 0);
-      else showStatus("", 0);
-    });
-    return true;
+      if (!state.config || !document.getElementById("easi-viewer-map")) return;
+      if (state.config.available === false) return;
+      if (message && message.datasetKey != null && message.datasetKey !== state.config.datasetKey) return;
+      if (message && message.generation != null && message.generation !== state.config.generation) return;
+      showStatus(message && message.busy ? "Preparing report…" : "", 0);
+    }); return true;
   }
-
-  if (!register()) {
-    document.addEventListener("shiny:connected", register, { once: true });
-  }
-
-  window.EASIViewer = { init: init, teardown: teardown, describe: describe, tileUrl: tileUrl, state: state,
-                        nearestReach: nearestReach, HIT_PX: HIT_PX,
-                        SHOW_DELAY_MS: SHOW_DELAY_MS, NOTE_MS: NOTE_MS };
+  if (!register()) document.addEventListener("shiny:connected", register, { once: true });
+  window.EASIViewer = { init: init, teardown: teardown, setRenderer: setRenderer, state: state,
+    describe: describe, tileUrl: tileUrl, shared: shared, HIT_PX: HIT_PX, SHOW_DELAY_MS: SHOW_DELAY_MS, NOTE_MS: NOTE_MS,
+    nearestReach: function (map, point) { return state.engine ? state.engine.nearest(point) : null; } };
 })();

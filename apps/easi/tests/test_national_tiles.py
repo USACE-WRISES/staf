@@ -101,6 +101,17 @@ def test_a_failed_range_read_raises_and_logs(tmp_path, monkeypatch, caplog):
     assert any(r.getMessage().startswith("tile 02/0/0/0 failed") for r in caplog.records)
 
 
+def test_failed_initial_header_read_of_declared_archive_raises(tmp_path, monkeypatch):
+    ds, _ = _dataset(tmp_path)
+    def failing_reader(name):
+        def read(offset, length):
+            raise OSError("header connection reset")
+        return read
+    monkeypatch.setattr(ds, "range_reader", failing_reader)
+    with pytest.raises(tiles.TileReadError, match="archive initialization failed"):
+        tiles.TileStore(ds).tile("02", 0, 0, 0)
+
+
 def test_a_slow_tile_is_logged_as_a_warning(tmp_path, monkeypatch, caplog):
     ds, _ = _dataset(tmp_path)
     store = tiles.TileStore(ds)

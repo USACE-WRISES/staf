@@ -449,7 +449,7 @@ def test_sample_size_disposition_calibrated_bands(n, expected):
 
 def test_run_offline_end_to_end_no_screen():
     """Full pipeline offline (do_screen=False): curves + a valid bundle, no network."""
-    res = ra.run("58", "Northeastern Highlands", do_screen=False,
+    res = ra.run("58", "Northeastern Highlands", do_screen=False, use_streamcat=False,
                  diagnostics_n_boot=20)
     assert res["n_candidates"] == 71
     assert res["screening_method"] == "unscreened_test"

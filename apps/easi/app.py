@@ -422,8 +422,14 @@ def staf_topnav():
 app_ui = ui.page_fillable(
     ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=59"),
                     ui.tags.link(rel="stylesheet", href="vendor/maplibre-gl.css"),
+                    ui.tags.link(rel="stylesheet", href="vendor/leaflet/leaflet.css"),
+                    ui.tags.link(rel="stylesheet", href="nationwide-viewer.css?v=1"),
                     ui.tags.script(src="vendor/maplibre-gl.js", defer=""),
-                    ui.tags.script(src="viewer.js?v=6", defer=""),
+                    ui.tags.script(src="vendor/leaflet/leaflet.js", defer=""),
+                    ui.tags.script(src="vendor/easi-vector-tile.js", defer=""),
+                    ui.tags.script(src="viewer-standard.js?v=2", defer=""),
+                    ui.tags.script(src="viewer-compatibility.js?v=3", defer=""),
+                    ui.tags.script(src="viewer.js?v=7", defer=""),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -2343,7 +2349,7 @@ def server(input, output, session):
                 f"**Batch** runs up to {BATCH_UI_MAX_SITES} sites at once and "
                 "packages the reports as a ZIP.\n\n"
                 "Turn on **Nationwide screening** in the header to see the precomputed, "
-                "unreviewed screening of every NHDPlus V2 reach published so far, for fast "
+                "unreviewed screening of every NHDPlus V2 reach in the available dataset, for fast "
                 "site screening in support of an assessment; turn it off to return to the "
                 "single-site workflow. The circled i beside the switch describes the "
                 "dataset. Click a colored reach to open its report; gray reaches are not "
@@ -2411,6 +2417,8 @@ def server(input, output, session):
                 return False
         elif request["mode"] == "viewer":
             base = viewer_base()
+            if not _viewer_binding_current((base or {}).get("_viewer_binding")):
+                return False
         else:
             base = base_result()
         return (base is request["base"] and base is not None
@@ -3811,21 +3819,30 @@ def server(input, output, session):
         safe = "".join(ch if ch.isalnum() or ch in "-._" else "_" for ch in sid)
         return f"easi_{safe}_report.{ext}"
 
+    def _modal_download_base():
+        base = (batch_modal_site() or {}).get("base")
+        if base and "_viewer_binding" in base and not _viewer_binding_current(
+                base["_viewer_binding"], verify=True):
+            ui.notification_show("The national dataset changed or is unavailable. Refresh Nationwide screening before downloading.",
+                                 type="warning", duration=6)
+            return None
+        return base
+
     @render.download(filename=lambda: _modal_site_file("pdf"))
     def dl_site_pdf():
-        base = (batch_modal_site() or {}).get("base")
+        base = _modal_download_base()
         if base:
             yield report.build_pdf(base)
 
     @render.download(filename=lambda: _modal_site_file("csv"))
     def dl_site_csv():
-        base = (batch_modal_site() or {}).get("base")
+        base = _modal_download_base()
         if base:
             yield report.build_csv(base)
 
     @render.download(filename=lambda: _modal_site_file("geojson"))
     def dl_site_geojson():
-        base = (batch_modal_site() or {}).get("base")
+        base = _modal_download_base()
         if base:
             yield report.build_geojson(base).encode("utf-8")
 
@@ -3876,7 +3893,7 @@ def server(input, output, session):
             yield batch_exports.build_batch_zip(obj, include_pdf=False)
 
     # ---- Nationwide screening: the precomputed national dataset -------------
-    # A view-only takeover (like batch) with a MapLibre map (www/viewer.js) that
+    # A view-only takeover (like batch) with either Nationwide renderer that
     # reads the per-region PMTiles archives through a session route on this
     # server (the release host answers Range requests but sends no CORS header,
     # so the browser cannot read the archives directly). A click on a reach
@@ -3885,27 +3902,64 @@ def server(input, output, session):
     viewer_base = reactive.value(None)        # the base of the last opened reach
     viewer_summary = reactive.value(None)     # dataset summary for the header line
     viewer_stats = reactive.value(None)       # the dashboard's statistics asset (stats.json)
-    _viewer_records: dict = {}                # comid -> base (session cache)
+    _viewer_records: dict = {}                # cleared whenever the dataset generation changes
     _viewer_gen = {"value": 0}
+    _viewer_dataset_gen = {"value": 0}
+    _viewer_renderer = {"value": "compatibility"}
+    _viewer_config_trigger = {"active": False, "refresh": 0}
+
+    def _viewer_binding_current(binding, *, verify=False):
+        """A report, geometry response or export belongs to one captured bundle."""
+        summary = viewer_summary() or {}
+        if (not isinstance(binding, dict) or not binding.get("dataset_key")
+                or app_mode() != "viewer" or not summary.get("available")
+                or binding.get("generation") != _viewer_dataset_gen["value"]
+                or binding["dataset_key"] != summary.get("dataset_key")):
+            return False
+        ds = national_client.default_dataset()
+        try:
+            if verify:
+                ds.require_current(binding["dataset_key"])
+                return True
+            return ds.is_current_key(binding["dataset_key"])
+        except national_client.DatasetError:
+            return False
 
     async def _national_tiles_handler(request):
         from starlette.responses import JSONResponse, Response
         q = request.query_params
         ds = national_client.default_dataset()
+        try:
+            requested_generation = int(q.get("generation", "-1"))
+            if requested_generation != _viewer_dataset_gen["value"] or not q.get("datasetKey"):
+                raise national_client.DatasetError("This map request is outdated. Refresh the map.")
+            manifest = await anyio.to_thread.run_sync(ds.require_current, q.get("datasetKey"), False)
+        except (ValueError, national_client.DatasetError) as exc:
+            return JSONResponse({"error": str(exc)}, status_code=409,
+                                headers={"Cache-Control": "no-store"})
         meta = q.get("meta")
+        def current_request():
+            return (requested_generation == _viewer_dataset_gen["value"]
+                    and ds.is_current_key(q.get("datasetKey")))
         if meta == "coverage":
             data = await anyio.to_thread.run_sync(ds.coverage)
+            if not current_request():
+                return Response(status_code=409, headers={"Cache-Control": "no-store"})
             return JSONResponse(data or {"type": "FeatureCollection", "features": []},
                                 headers={"Cache-Control": "no-cache"})
         if meta == "summary":
-            return JSONResponse(await anyio.to_thread.run_sync(ds.summary),
+            summary = await anyio.to_thread.run_sync(ds.summary)
+            if not current_request():
+                return Response(status_code=409, headers={"Cache-Control": "no-store"})
+            return JSONResponse(summary,
                                 headers={"Cache-Control": "no-cache"})
         vpu = (q.get("vpu") or "").strip().upper()
         try:
             z, x, y = int(q["z"]), int(q["x"]), int(q["y"])
         except (KeyError, ValueError):
             return Response(status_code=400)
-        if not vpu.isalnum() or len(vpu) > 3:
+        if (not vpu.isalnum() or len(vpu) > 3 or vpu not in manifest.get("tiles", {})
+                or z < 0 or z > 22 or not 0 <= x < 2 ** z or not 0 <= y < 2 ** z):
             return Response(status_code=400)
         store = national_tiles.default_store()
         try:
@@ -3914,6 +3968,8 @@ def server(input, output, session):
             # a failed range read is not an empty tile: 502 makes the map
             # report the tile as errored (the viewer shows a note on idle)
             return Response(status_code=502, headers={"Cache-Control": "no-store"})
+        if not current_request():
+            return Response(status_code=409, headers={"Cache-Control": "no-store"})
         if not data:
             return Response(status_code=204, headers={"Cache-Control": "public, max-age=600"})
         headers = {"Cache-Control": "public, max-age=3600"}
@@ -3941,7 +3997,7 @@ def server(input, output, session):
         def load():
             summary = ds.summary_refreshed()
             try:
-                stats = ds.stats()      # the dashboard's asset; older publishes have none
+                stats = ds.current_stats(summary.get("dataset_key")) if summary.get("available") else None
             except Exception:  # noqa: BLE001
                 stats = None
             return summary, stats
@@ -3956,15 +4012,37 @@ def server(input, output, session):
         # entering the viewer (or Refresh) re-reads the manifest so newly
         # published regions appear without a redeploy
         mode = app_mode()
+        refresh_count = None
         try:
-            input.viewer_refresh()
+            refresh_count = input.viewer_refresh()
         except Exception:  # noqa: BLE001 - the link exists only in viewer mode
             pass
         if mode != "viewer":
+            _viewer_config_trigger["active"] = False
+            return
+        entering = not _viewer_config_trigger["active"]
+        previous_count = _viewer_config_trigger["refresh"]
+        _viewer_config_trigger["active"] = True
+        if refresh_count is not None:
+            _viewer_config_trigger["refresh"] = refresh_count
+        elif entering:
+            _viewer_config_trigger["refresh"] = 0
+        # The dynamically mounted link first sends zero. That is not a click,
+        # and must not cancel the overview already requested on mode entry.
+        # Remember reset counts so the first click after remount still works.
+        if not entering and (refresh_count is None or refresh_count <= previous_count):
             return
         with reactive.isolate():
+            _cancel_report()
+            if viewer_base() is not None:
+                ui.modal_remove()
+                batch_modal_site.set(None)
+            viewer_base.set(None)
             _viewer_gen["value"] += 1
-            viewer_config_task(_viewer_gen["value"])
+            _viewer_dataset_gen["value"] += 1
+            _viewer_records.clear()
+            viewer_stats.set(None)
+            viewer_config_task(_viewer_dataset_gen["value"])
 
     @reactive.effect
     async def _viewer_config_done():
@@ -3975,14 +4053,28 @@ def server(input, output, session):
                 generation, summary, stats = viewer_config_task.result()
             except Exception:  # noqa: BLE001
                 return
-            if generation != _viewer_gen["value"] or app_mode() != "viewer":
+            if generation != _viewer_dataset_gen["value"] or app_mode() != "viewer":
                 return
             viewer_summary.set(summary)
             viewer_stats.set(stats)
             config = {"routeBase": tiles_route, "vpus": summary.get("vpus") or [],
                       "minzoom": 4, "maxzoom": 12, "vintage": summary.get("vintage"),
-                      "center": [-96, 38.5], "zoom": 4}
+                      "center": [-96, 38.5], "zoom": 4,
+                      "datasetKey": summary.get("dataset_key"), "generation": generation,
+                      "vpuBounds": summary.get("vpu_bounds") or {},
+                      "available": bool(summary.get("available")), "error": summary.get("error"),
+                      "renderer": _viewer_renderer["value"]}
         await session.send_custom_message("easi-viewer-init", config)
+
+    @reactive.effect
+    @reactive.event(input.viewer_renderer)
+    async def _viewer_renderer_changed():
+        selected = input.viewer_renderer()
+        if selected not in ("compatibility", "standard"):
+            return
+        _viewer_renderer["value"] = selected
+        if app_mode() == "viewer":
+            await session.send_custom_message("easi-viewer-renderer", {"renderer": selected})
 
     @reactive.effect
     async def _viewer_busy_message():
@@ -3990,13 +4082,23 @@ def server(input, output, session):
         # message name (report-ready.js owns staf-report-state)
         state = _report_ui()
         if app_mode() == "viewer":
-            await session.send_custom_message("easi-viewer-status", state)
+            summary = viewer_summary() or {}
+            await session.send_custom_message("easi-viewer-status", {
+                **state, "datasetKey": summary.get("dataset_key"),
+                "generation": _viewer_dataset_gen["value"]})
 
     @reactive.effect
     async def _viewer_teardown():
         if app_mode() == "viewer":
             return
         with reactive.isolate():
+            _viewer_gen["value"] += 1
+            _viewer_dataset_gen["value"] += 1
+            _viewer_records.clear()
+            if "_viewer_binding" in ((batch_modal_site() or {}).get("base") or {}):
+                ui.modal_remove()
+                batch_modal_site.set(None)
+            viewer_base.set(None)
             if viewer_summary() is None:
                 return
             viewer_summary.set(None)
@@ -4004,21 +4106,27 @@ def server(input, output, session):
         await session.send_custom_message("easi-viewer-teardown", {})
 
     @reactive.extended_task
-    async def open_precomputed_task(comid: int, generation: int):
+    async def open_precomputed_task(comid: int, generation: int, dataset_key: str, dataset_generation: int):
         # phase one: the record scores at once, no network; the geometry follows
         try:
             base = await national_client.open_precomputed_async(comid, cross_section=True,
-                                                                geometry=False)
+                                                                geometry=False, dataset_key=dataset_key)
+            await anyio.to_thread.run_sync(national_client.default_dataset().require_current, dataset_key)
+            if base.get("status") == "ok":
+                base["_viewer_binding"] = {"dataset_key": dataset_key, "generation": dataset_generation}
         except Exception as exc:  # noqa: BLE001
             base = {"status": "error",
                     "message": f"The precomputed assessment could not be opened: {exc}"}
         return comid, generation, base
 
     @reactive.extended_task
-    async def viewer_geometry_task(comid: int, generation: int):
+    async def viewer_geometry_task(comid: int, generation: int, binding: dict):
         # phase two: the NLDI basin and reach for the thumbnail, drawn off the loop
         try:
+            ds = national_client.default_dataset()
+            await anyio.to_thread.run_sync(ds.require_current, binding["dataset_key"])
             geo = await national_client.precomputed_geometry_async(comid)
+            await anyio.to_thread.run_sync(ds.require_current, binding["dataset_key"])
         except Exception as exc:  # noqa: BLE001
             geo = {"status": "error", "message": str(exc)}
         minimap = ""
@@ -4031,7 +4139,7 @@ def server(input, output, session):
                 except Exception:  # noqa: BLE001 - a thumbnail is optional
                     return ""
             minimap = await anyio.to_thread.run_sync(prepare)
-        return comid, generation, geo, minimap
+        return comid, generation, binding, geo, minimap
 
     @reactive.effect
     def _viewer_geometry_done():
@@ -4039,11 +4147,15 @@ def server(input, output, session):
             return
         with reactive.isolate():
             try:
-                comid, generation, geo, minimap = viewer_geometry_task.result()
+                comid, generation, binding, geo, minimap = viewer_geometry_task.result()
             except Exception:  # noqa: BLE001
                 return
+            if generation != _viewer_gen["value"] or app_mode() != "viewer":
+                return
             base = _viewer_records.get(comid)
-            if base is None:
+            if base is None or viewer_base() is not base:
+                return
+            if base.get("_viewer_binding") != binding or not _viewer_binding_current(binding):
                 return
             base["geometry_pending"] = False
             if geo.get("status") == "ok":
@@ -4068,21 +4180,43 @@ def server(input, output, session):
 
     @reactive.effect
     @reactive.event(input.viewer_pick)
-    def _viewer_pick():
+    async def _viewer_pick():
         ev = input.viewer_pick() or {}
         comid = ev.get("comid")
         if app_mode() != "viewer" or not comid:
             return
-        comid = int(comid)
+        summary = viewer_summary() or {}
+        if (not summary.get("available") or ev.get("datasetKey") != summary.get("dataset_key")
+                or ev.get("generation") != _viewer_dataset_gen["value"]):
+            return
+        try:
+            comid = int(comid)
+        except (TypeError, ValueError):
+            return
+        try:
+            await anyio.to_thread.run_sync(national_client.default_dataset().require_current,
+                                          summary["dataset_key"])
+        except national_client.DatasetError as exc:
+            ui.notification_show(str(exc), type="warning", duration=6)
+            _report_ui.set({"busy": False, "requestId": _report_counter["value"], "opened": False})
+            return
+        if (app_mode() != "viewer" or ev.get("generation") != _viewer_dataset_gen["value"]
+                or (viewer_summary() or {}).get("dataset_key") != summary["dataset_key"]):
+            return
         cached = _viewer_records.get(comid)
         if cached is not None:
+            _cancel_report()
+            _viewer_gen["value"] += 1
             _open_viewer_report(cached)
+            if cached.get("geometry_pending"):
+                viewer_geometry_task(comid, _viewer_gen["value"], cached["_viewer_binding"])
             return
         if open_precomputed_task.status() == "running":
             ui.notification_show("Still preparing the previous report.", duration=3)
             return
+        _cancel_report()
         _viewer_gen["value"] += 1
-        open_precomputed_task(comid, _viewer_gen["value"])
+        open_precomputed_task(comid, _viewer_gen["value"], summary["dataset_key"], _viewer_dataset_gen["value"])
 
     @reactive.effect
     def _open_precomputed_done():
@@ -4102,17 +4236,21 @@ def server(input, output, session):
                 _report_ui.set({"busy": False, "requestId": _report_counter["value"],
                                 "opened": False})
                 return
+            if not _viewer_binding_current(base.get("_viewer_binding")):
+                _report_ui.set({"busy": False, "requestId": _report_counter["value"], "opened": False})
+                return
             _viewer_records[comid] = base
             _open_viewer_report(base)
             if base.get("geometry_pending"):
-                viewer_geometry_task(comid, generation)
+                viewer_geometry_task(comid, generation, base["_viewer_binding"])
 
     def _viewer_summary_text(s) -> str:
         if s is None:
             return "Reading the national dataset…"
         if not s.get("available"):
-            return "The national dataset is not reachable right now."
-        return (f"{s.get('units_published', 0)} of {s.get('units_total', 222)} HUC4 units published, "
+            return s.get("error") or "The national dataset is not reachable right now."
+        return (f"{s.get('alternative_name') or 'Alternative 2'}, "
+                f"{s.get('units_published', 0)} of {s.get('units_total', 222)} HUC4 units available, "
                 f"{s.get('reaches_scored', 0):,} reaches, vintage {s.get('vintage')}"
                 + (f", tier {s.get('tier')}" if s.get("tier") else "")
                 + (f", updated {str(s.get('updated'))[:10]}" if s.get("updated") else "")
@@ -4156,6 +4294,10 @@ def server(input, output, session):
             ui.div(ui.input_radio_buttons("viewer_view", None, {"map": "Map", "dashboard": "Dashboard"},
                                           selected="map", inline=True),
                    class_="easi-seg"),
+            ui.div(ui.input_radio_buttons("viewer_renderer", "Map display",
+                                          {"compatibility": "Compatibility", "standard": "Standard"},
+                                          selected=_viewer_renderer["value"], inline=True),
+                   class_="easi-viewer-renderer"),
             class_="easi-viewer-head")
         return ui.div(
             head,
@@ -4251,6 +4393,12 @@ def server(input, output, session):
     @render.download(filename="easi_screening_statistics.csv")
     def dash_export():
         stats = viewer_stats()
+        summary = viewer_summary() or {}
+        binding = {"dataset_key": summary.get("dataset_key"), "generation": _viewer_dataset_gen["value"]}
+        if stats and not _viewer_binding_current(binding, verify=True):
+            ui.notification_show("The national dataset changed or is unavailable. Refresh Nationwide screening before downloading.",
+                                 type="warning", duration=6)
+            return
         yield national_dashboard.export_csv(stats) if stats else "scope,scope_name,kind,measure,statistic,value\n"
 
 

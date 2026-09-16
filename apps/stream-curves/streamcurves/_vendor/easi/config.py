@@ -10,6 +10,7 @@ this module holds the app's design metadata and loaders.
 from __future__ import annotations
 
 import functools
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -93,6 +94,37 @@ def screening_methods_filename() -> str:
             else "screening-methods.json")
 
 
+def scoring_identity() -> dict:
+    """Name the scoring alternative separately from its regional/legacy family.
+
+    Frozen external study directories predate this metadata. They remain usable,
+    but are not identified as the promoted alternative without its identity file.
+    The method digest binds this metadata and the actual scoring assets.
+    """
+    family = criteria_set()
+    if family == "regional" and (DATA_DIR / "scoring-identity.json").is_file():
+        return dict(_load("scoring-identity.json"))
+    catalog_sha = hashlib.sha256((DATA_DIR / screening_methods_filename()).read_bytes()).hexdigest()
+    return {
+        "schema_version": 1,
+        "alternative_id": "legacy" if family == "legacy" else None,
+        "alternative_name": ("Historical legacy baseline" if family == "legacy"
+                             else "Unidentified regional reference artifact"),
+        "criteria_family": family,
+        "curve_count": 0 if family == "legacy" else None,
+        "catalog_sha256": catalog_sha,
+        "curves_sha256": None,
+    }
+
+
+def scoring_alternative_id() -> str | None:
+    return scoring_identity()["alternative_id"]
+
+
+def scoring_alternative_name() -> str:
+    return scoring_identity()["alternative_name"]
+
+
 def reset_caches() -> None:
     """Reset criteria-dependent caches after changing test catalogs or settings."""
     from . import methods, screening_methods as sm
@@ -114,8 +146,8 @@ def screening_methods() -> dict:
     :mod:`easi.screening_methods` evaluates it and :mod:`easi.methods` renders it, so the
     displayed criteria cannot drift from what actually produced the rating.
     """
-    # Revisit: once regional criteria are accepted, remove the legacy catalog,
-    # legacy adapter branches and NRSA scoring tier together.
+    # Revisit: retain historical legacy criteria until its retirement is explicit.
+    # Alternative 1 is preserved separately in the immutable alternatives study.
     return _load(screening_methods_filename())
 
 
@@ -360,7 +392,7 @@ def metric_calculation(mid: str) -> str | None:
         regional = {
             "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity":
                 "Population standard deviation of all twelve EROM monthly flows divided by their mean. "
-                "The CV is rated against Level II reference curves, with a national fallback; this proxy is unvalidated.",
+                "The CV is rated against NARS-9 reference curves, with a national fallback; this proxy is unvalidated.",
             "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation":
                 "Watershed crop plus hay cover, using the same 30/50 percent bands as Catchment hydrology. "
                 "This is a disclosed correlated pressure proxy.",

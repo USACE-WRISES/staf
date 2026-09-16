@@ -30,12 +30,25 @@ description: "Video walkthrough of the EASI screening app, with the full referen
 
 ## Regional reference criteria
 
-EASI's regional criteria, adopted on 2026-09-14, rate twenty functions as
+EASI uses Alternative 2, adopted after the September 2026 alternatives study,
+with 34 frozen reference curves and unchanged scoring weights. It rates twenty functions as
 Good, Fair or Poor. Woody corridor cover for Habitat provision and Light
 and thermal regime, natural corridor cover for Carbon processing, and EROM
-monthly flow variability for Low flow use EPA Level II reference curves.
+monthly flow variability for Low flow use EPA NARS-9 reference curves.
 When a region has no usable curve, EASI uses the national curve and labels
 that fallback in the scoring panel.
+
+Each of those three curve families has nine regional references and one
+national fallback. The regions are Coastal Plains, Northern Appalachians,
+Northern Plains, Southern Appalachians, Southern Plains, Temperate Plains,
+Upper Midwest, Western Mountains and Xeric. The three slope-specific
+entrenchment curves and their national fallback bring the total to 34.
+Regions are not further split by slope or stream size. Regional nutrient
+thresholds remain fixed thresholds, separate from the fitted reference curves.
+
+Alternative 1 and the completed study remain archived. Adopting Alternative 2
+is the owner's decision; it does not revise the study's conservative
+recommendation to retain Alternative 1. No scoring-method selector is exposed.
 
 The reference panels represent reaches passing the fixed least-disturbed
 desktop screen. Its road-density cap is 2.0 km/km², with complete and
@@ -77,8 +90,16 @@ outcome weights, rollup and condition boundaries remain the same.
 
 The national dataset stores the raw evidence and uses the same adapters as
 the live app. Its reports score from that evidence without fetching missing
-sources. Published scores and tiles can remain from an earlier method until
-the national refresh completes, so check the app's dataset freshness notice.
+sources. The map, dashboard and opened reports require one completed bundle
+matching the active scoring method. Earlier or incomplete bundles show an
+unavailable or outdated message.
+
+Nationwide screening opens in **Compatibility** mode, which displays image
+tiles without WebGL. **Standard** retains the MapLibre renderer. The choice
+lasts for the session and changing it preserves geographic extent. The
+single-site map is unchanged. Compatibility is intended for browsers with
+limited graphics support; performance through a workplace browser must be
+checked in that actual environment.
 
 Operators can select the former criteria with `EASI_CRITERIA_SET=legacy`.
 Both sets use the current anchors above. The regional set is the default.
@@ -187,7 +208,7 @@ benchmark table.
 <div class="metric-ref-sec"><div class="metric-ref-label">Breakpoints</div><table class="metric-ref-table"><thead><tr><th>Boundary</th><th>What it marks</th></tr></thead><tbody><tr><td>Reference index 0.39</td><td>Fair begins at an interpolated reference index of 0.39.</td></tr><tr><td>Reference index 0.69</td><td>Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum.</td></tr></tbody></table></div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Input rationale</div><ul class="metric-ref-list"><li><b>Monthly flow variability:</b> Population standard deviation of all twelve mean monthly flows divided by their mean. All months must be finite and the mean must be positive.</li><li><b>EROM mean annual flow:</b> <span class="metric-ref-flag">context only</span> Mean annual modeled flow provides scale context; it does not determine the rating.</li><li><b>Expected NHD flow regime:</b> <span class="metric-ref-flag">context only</span> Flow classification provides context for natural intermittency and does not determine the rating.</li></ul></div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Automatic source hierarchy</div><ul class="metric-ref-list metric-ref-hierarchy"><li><b>EROM monthly flow variability:</b> Use all twelve modeled monthly flows; missing or nonpositive-mean flow remains unscored.</li></ul></div>
-<div class="metric-ref-sec"><div class="metric-ref-label">Known limitations</div><ul class="metric-ref-list"><li>Unvalidated screening proxy for low-flow condition. Agreement with the field wetted-channel measure was weak (0.18).</li><li>Monthly climatological variability is not a measurement of daily low flow, baseflow contribution, or wetted connectivity.</li><li>Level II curves compare variability with regional reference expectations; lower variability rates better. A national curve is the fallback.</li><li>All twelve months are required. Missing months are unknown, not zero. Natural intermittent and ephemeral streams require interpretation.</li></ul></div>
+<div class="metric-ref-sec"><div class="metric-ref-label">Known limitations</div><ul class="metric-ref-list"><li>Unvalidated screening proxy for low-flow condition. Agreement with the field wetted-channel measure was weak (0.18).</li><li>Monthly climatological variability is not a measurement of daily low flow, baseflow contribution, or wetted connectivity.</li><li>NARS-9 curves compare variability with regional reference expectations; lower variability rates better. A national curve is the fallback.</li><li>All twelve months are required. Missing months are unknown, not zero. Natural intermittent and ephemeral streams require interpretation.</li></ul></div>
 <div class="metric-ref-sec">
 <div class="metric-ref-label">Basis and sources</div>
 <p class="metric-ref-meta">Basis: provisional STAF screening judgment &middot; Data confidence: Low &middot; Provisional screening thresholds</p>
@@ -338,7 +359,7 @@ benchmark table.
 </div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Breakpoints</div><table class="metric-ref-table"><thead><tr><th>Boundary</th><th>What it marks</th></tr></thead><tbody><tr><td>10% impervious</td><td>Lower impervious-cover pressure transition.</td></tr><tr><td>25% impervious</td><td>Upper impervious-cover pressure transition.</td></tr><tr><td>Reference index 0.39</td><td>Fair begins at an interpolated reference index of 0.39.</td></tr><tr><td>Reference index 0.69</td><td>Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum.</td></tr></tbody></table></div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Input rationale</div><ul class="metric-ref-list"><li><b>Woody riparian cover:</b> Woody cover represents potential shade and thermal buffering. Grass and herbaceous wetland do not receive thermal-shade credit.</li><li><b>Watershed impervious cover:</b> Impervious cover represents heated runoff and altered runoff routing.</li></ul></div>
-<div class="metric-ref-sec"><div class="metric-ref-label">Known limitations</div><ul class="metric-ref-list"><li>This screens thermal vulnerability from corridor shade and watershed impervious cover; it does not rate measured stream temperature.</li><li>Woody cover uses Level II reference expectations with a national fallback. Impervious cover retains its 10/25 percent bands.</li><li>Both inputs are required. Natural prairie and desert channels can meet regional woody-cover expectations with little cover.</li></ul></div>
+<div class="metric-ref-sec"><div class="metric-ref-label">Known limitations</div><ul class="metric-ref-list"><li>This screens thermal vulnerability from corridor shade and watershed impervious cover; it does not rate measured stream temperature.</li><li>Woody cover uses NARS-9 reference expectations with a national fallback. Impervious cover retains its 10/25 percent bands.</li><li>Both inputs are required. Natural prairie and desert channels can meet regional woody-cover expectations with little cover.</li></ul></div>
 <div class="metric-ref-sec">
 <div class="metric-ref-label">Basis and sources</div>
 <p class="metric-ref-meta">Basis: provisional STAF screening judgment &middot; Data confidence: Low &middot; Provisional screening thresholds</p>
@@ -356,7 +377,7 @@ benchmark table.
 </div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Breakpoints</div><table class="metric-ref-table"><thead><tr><th>Boundary</th><th>What it marks</th></tr></thead><tbody><tr><td>Reference index 0.39</td><td>Fair begins at an interpolated reference index of 0.39.</td></tr><tr><td>Reference index 0.69</td><td>Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum.</td></tr></tbody></table></div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Input rationale</div><ul class="metric-ref-list"><li><b>Riparian forest:</b> Forest contributes woody and leaf-litter inputs.</li><li><b>Riparian shrub:</b> Shrub cover contributes litter and low woody material.</li><li><b>Riparian grassland:</b> Grassland contributes organic material in naturally non-forested settings.</li><li><b>Riparian wetland:</b> Wetland vegetation contributes organic matter and avoids a forest-only bias.</li></ul></div>
-<div class="metric-ref-sec"><div class="metric-ref-label">Known limitations</div><ul class="metric-ref-list"><li>This estimates organic-matter supply potential, not CPOM retention or shredder condition.</li><li>All four source classes are required; missing classes are unknown. The capped sum is compared with Level II reference expectations, with a national fallback.</li></ul></div>
+<div class="metric-ref-sec"><div class="metric-ref-label">Known limitations</div><ul class="metric-ref-list"><li>This estimates organic-matter supply potential, not CPOM retention or shredder condition.</li><li>All four source classes are required; missing classes are unknown. The capped sum is compared with NARS-9 reference expectations, with a national fallback.</li></ul></div>
 <div class="metric-ref-sec">
 <div class="metric-ref-label">Basis and sources</div>
 <p class="metric-ref-meta">Basis: provisional STAF screening judgment &middot; Data confidence: Moderate &middot; Provisional screening thresholds</p>
@@ -369,7 +390,7 @@ benchmark table.
 <div class="metric-ref-body">
 <p class="metric-ref-fn"><span>Stream function</span> Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.</p>
 <p class="metric-ref-def">Whether nutrient (N and P) concentrations stay near reference levels rather than driving enrichment.</p>
-<div class="metric-ref-sec"><div class="metric-ref-label">Good / Fair / Poor</div><p class="metric-ref-note">Rated against the NRSA regional benchmarks for the site’s aggregate ecoregion. Each cell gives the Good boundary (at or below) and the Poor boundary (at or above). The worse available analyte governs.</p><table class="metric-ref-table"><thead><tr><th>Region</th><th>Total nitrogen (mg/L)</th><th>Total phosphorus (mg/L)</th></tr></thead><tbody><tr><td>CPL</td><td>0.624 / 1.081</td><td>0.0559 / 0.103</td></tr><tr><td>NAP</td><td>0.345 / 0.482</td><td>0.0171 / 0.0326</td></tr><tr><td>SAP</td><td>0.24 / 0.456</td><td>0.0148 / 0.0244</td></tr><tr><td>UMW</td><td>0.583 / 1.024</td><td>0.0363 / 0.0499</td></tr><tr><td>TPL</td><td>0.7 / 1.274</td><td>0.0886 / 0.143</td></tr><tr><td>NPL</td><td>0.575 / 0.937</td><td>0.064 / 0.107</td></tr><tr><td>SPL</td><td>0.581 / 1.069</td><td>0.0558 / 0.127</td></tr><tr><td>WMT</td><td>0.139 / 0.249</td><td>0.0177 / 0.041</td></tr><tr><td>XER</td><td>0.285 / 0.529</td><td>0.052 / 0.0959</td></tr></tbody></table></div>
+<div class="metric-ref-sec"><div class="metric-ref-label">Good / Fair / Poor</div><p class="metric-ref-note">Rated against the NRSA regional benchmarks for the site’s aggregate ecoregion. Each cell gives the Good boundary (at or below) and the Poor boundary (at or above). The worse available analyte governs.</p><table class="metric-ref-table"><thead><tr><th>Region</th><th>Total nitrogen (mg/L)</th><th>Total phosphorus (mg/L)</th></tr></thead><tbody><tr><td>CPL</td><td>0.624 / 1.081</td><td>0.0559 / 0.103</td></tr><tr><td>NAP</td><td>0.345 / 0.482</td><td>0.0171 / 0.0326</td></tr><tr><td>NPL</td><td>0.575 / 0.937</td><td>0.064 / 0.107</td></tr><tr><td>SAP</td><td>0.24 / 0.456</td><td>0.0148 / 0.0244</td></tr><tr><td>SPL</td><td>0.581 / 1.069</td><td>0.0558 / 0.127</td></tr><tr><td>TPL</td><td>0.7 / 1.274</td><td>0.0886 / 0.143</td></tr><tr><td>UMW</td><td>0.583 / 1.024</td><td>0.0363 / 0.0499</td></tr><tr><td>WMT</td><td>0.139 / 0.249</td><td>0.0177 / 0.041</td></tr><tr><td>XER</td><td>0.285 / 0.529</td><td>0.052 / 0.0959</td></tr></tbody></table></div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Breakpoints</div><table class="metric-ref-table"><thead><tr><th>Boundary</th><th>What it marks</th></tr></thead><tbody><tr><td>Good/Fair</td><td>At or below the applicable NRSA Table 7-1 good/fair value is Good.</td></tr><tr><td>Fair/Poor</td><td>At or above the applicable NRSA Table 7-1 fair/poor value is Poor.</td></tr></tbody></table></div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Input rationale</div><ul class="metric-ref-list"><li><b>Total nitrogen:</b> TN represents observed nitrogen condition relative to the applicable NRSA region.</li><li><b>Total phosphorus:</b> TP represents observed phosphorus condition relative to the applicable NRSA region.</li></ul></div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Automatic source hierarchy</div><ul class="metric-ref-list metric-ref-hierarchy"><li><b>Normalized WQP TN/TP observations:</b> Use valid total-fraction observations from stations within five miles and the preceding ten years.</li><li><b>StreamCat CHEM integrity fallback:</b> Use when no qualifying TN or TP observation can be normalized.</li></ul></div>
@@ -411,7 +432,7 @@ benchmark table.
 </div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Breakpoints</div><table class="metric-ref-table"><thead><tr><th>Boundary</th><th>What it marks</th></tr></thead><tbody><tr><td>Reference index 0.39</td><td>Fair begins at an interpolated reference index of 0.39.</td></tr><tr><td>Reference index 0.69</td><td>Good begins at an interpolated reference index of 0.69. Physical crossings depend on the reference stratum.</td></tr></tbody></table></div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Input rationale</div><ul class="metric-ref-list"><li><b>Woody riparian cover:</b> Woody riparian cover represents potential cover, wood recruitment, and bank-zone structure, the strongest desktop indicator of habitat support.</li><li><b>Reach sinuosity:</b> <span class="metric-ref-flag">context only</span> Sinuosity indicates planform variability and is shown for context. It is not rated because sinuosity measured over the fixed assessment reach understates planform sinuosity.</li></ul></div>
-<div class="metric-ref-sec"><div class="metric-ref-label">Known limitations</div><ul class="metric-ref-list"><li>Corridor woody cover is a habitat-support proxy, not a field inventory of pools, wood, cover, or bedforms.</li><li>Level II reference curves account for regional cover expectations; a national curve is used when the regional curve is unavailable.</li><li>Naturally open prairie and desert channels may rate Good with little woody cover where reference expectations are low. Sinuosity is context only.</li></ul></div>
+<div class="metric-ref-sec"><div class="metric-ref-label">Known limitations</div><ul class="metric-ref-list"><li>Corridor woody cover is a habitat-support proxy, not a field inventory of pools, wood, cover, or bedforms.</li><li>NARS-9 reference curves account for regional cover expectations; a national curve is used when the regional curve is unavailable.</li><li>Naturally open prairie and desert channels may rate Good with little woody cover where reference expectations are low. Sinuosity is context only.</li></ul></div>
 <div class="metric-ref-sec">
 <div class="metric-ref-label">Basis and sources</div>
 <p class="metric-ref-meta">Basis: provisional STAF screening judgment &middot; Data confidence: Low &middot; Provisional screening thresholds</p>

@@ -52,6 +52,11 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
             f"vintage {(rep.get('precomputed') or {}).get('vintage') or 'staging'}, "
             f"tier {(rep.get('precomputed') or {}).get('tier') or 1}")]
           if rep.get("precomputed") else []),
+        *[(label, rep["precomputed"][key]) for key, label in (
+            ("alternative_id", "National scoring alternative"),
+            ("build_id", "National dataset build"),
+            ("method_version", "National execution method"))
+          if (rep.get("precomputed") or {}).get(key)],
         ("Ecosystem Condition Index", shown(rep.get("ecosystemConditionIndex"))),
         ("Physical sub-index", shown(sub.get("physical"))),
         ("Chemical sub-index", shown(sub.get("chemical"))),
@@ -211,6 +216,10 @@ def build_geojson(result: dict) -> str:
     anchor = result.get("siteAnchor") or {}
     if anchor.get("anchorKind") == "hrSurrogate":
         summary["site_anchor"] = anchor
+    if rep.get("precomputed"):
+        summary["national_dataset"] = {key: rep["precomputed"].get(key) for key in
+            ("alternative_id", "build_id", "method_version", "criteria_set", "vintage", "tier")
+            if rep["precomputed"].get(key) is not None}
 
     def _add(fc, props):
         for f in (fc or {}).get("features", []):

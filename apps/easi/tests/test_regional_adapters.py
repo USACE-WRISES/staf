@@ -17,10 +17,10 @@ def regional(monkeypatch):
     config.reset_caches()
 
 
-def context(row=None, erom=None, *, l3="45", slope=.01):
+def context(row=None, erom=None, *, l3="45", nars9="SAP", slope=.01):
     ctx = base.AnalysisContext(lat=37.9, lon=-78.5, comid=1, slope=slope, fcode=46006)
     ctx.extras.update(streamcat=row or {}, erom=erom,
-                      strata=geo.strata_for(l3, slope=slope))
+                      strata={**geo.strata_for(l3, slope=slope), "nars9": nars9})
     return ctx
 
 
@@ -55,7 +55,7 @@ def test_regional_low_flow_uses_raw_erom_and_reference_strata(monkeypatch):
     assert result.scoring["methodKey"] == "erom-flow-variability"
     assert result.scoring["evidenceFamily"] == "erom_flow"
     assert result.scoring["context"]["strata"]["l2"] == "8.3"
-    assert result.scoring["curves"]["method"]["stratum"] == "8.3"
+    assert result.scoring["curves"]["method"]["stratum"] == "SAP"
     assert "Unvalidated" in result.note
     assert hydraulics.low_flow_connectivity(context()).rating is None
 
@@ -125,8 +125,8 @@ def test_habitat_adapter_retains_selected_curve_context():
            "pctmxfst2019wsrp100": 20, "pctshrb2019wsrp100": 0,
            "pctwdwet2019wsrp100": 0}
     local = biology.habitat_complexity(context(row, l3="45"))
-    fallback = biology.habitat_complexity(context(row, l3=None))
-    assert local.scoring["curves"]["method"]["stratum"] == "8.3"
+    fallback = biology.habitat_complexity(context(row, l3=None, nars9=None))
+    assert local.scoring["curves"]["method"]["stratum"] == "SAP"
     assert fallback.scoring["curves"]["method"]["stratum"] == "national"
     assert fallback.scoring["curves"]["method"]["fallbackDepth"] == 1
 

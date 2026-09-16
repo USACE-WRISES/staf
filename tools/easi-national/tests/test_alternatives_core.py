@@ -15,7 +15,19 @@ from builder.analysis.alternatives.report import recommendation
 
 def _assets():
     data = REPO_ROOT / "apps/easi/data"
-    return read_json(data / "reference-curves.json"), read_json(data / "screening-methods.json")
+    artifact, catalog = read_json(data / "reference-curves.json"), read_json(data / "screening-methods.json")
+    # Candidate transformations start from an A1-shaped snapshot, independently
+    # of whichever candidate the live app currently uses. Synthetic strata keep
+    # the 62 -> 61 deletion/count contract without inventing historical fits.
+    from builder.analysis.alternatives.candidates import replace_stratifiers
+    for name in REGIONAL_SETS:
+        definition = artifact["sets"][name]
+        n = 20 if name == "corridor-woody" else 19
+        base = definition["curves"]["national"]
+        definition.update(stratifier="l2", curves={
+            key: deepcopy(base) for key in ["national", "8.2", *[f"synthetic-{i}" for i in range(n-2)]]})
+    replace_stratifiers(catalog, "l2")
+    return artifact, catalog
 
 
 def test_candidate_copy_does_not_inherit_immutable_snapshot_permissions(tmp_path):

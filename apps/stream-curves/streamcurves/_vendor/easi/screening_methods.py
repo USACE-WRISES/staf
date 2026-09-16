@@ -189,6 +189,10 @@ def curve_reference(spec: dict, strata: dict | None = None) -> str:
     elif spec["stratifier"] == "l2":
         name = (strata or {}).get("l2_name")
         location = f"Level II region {key}" + (f", {name}" if name else "")
+    elif spec["stratifier"] == "nars9":
+        from . import geo
+        name = geo.nars9_name(key)
+        location = f"NARS-9 region {key}" + (f", {name}" if name else "")
     else:
         location = f"slope class {key}"
     return f"{location}, {int(n):,} reference reaches; crossings are approximate"

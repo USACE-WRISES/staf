@@ -1,0 +1,74 @@
+{
+  "build": "npm ci && npm run build in apps/easi/scripts/nationwide-assets",
+  "dependencies": [
+    {
+      "name": "leaflet",
+      "version": "1.9.4",
+      "license": "BSD-2-Clause"
+    },
+    {
+      "name": "@mapbox/vector-tile",
+      "version": "2.0.5",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "name": "@mapbox/point-geometry",
+      "version": "1.1.0",
+      "license": "ISC"
+    },
+    {
+      "name": "pbf",
+      "version": "4.0.2",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "name": "resolve-protobuf-schema",
+      "version": "2.1.0",
+      "license": "MIT"
+    },
+    {
+      "name": "protocol-buffers-schema",
+      "version": "3.6.1",
+      "license": "MIT"
+    }
+  ],
+  "lock_sha256": "71264b0155749e71e083c0daed1723891948f732a162987c6c4711c986c88de0",
+  "files": [
+    {
+      "path": "easi-vector-tile.js",
+      "sha256": "39a1c1f5628144cce4eeb53e59526a5a82b27eae4ebf809247192a247828578d"
+    },
+    {
+      "path": "NATIONWIDE-LICENSES.txt",
+      "sha256": "9b37d2a4e422985385d779990a0904452f4a7792a3dc8d4865b2ed7e983603db"
+    },
+    {
+      "path": "leaflet/leaflet.js",
+      "sha256": "db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a"
+    },
+    {
+      "path": "leaflet/leaflet.css",
+      "sha256": "8c2069f1e40a7ffdc8ae593de3cedda24931fefefc08cea82c144fd63b0bd289"
+    },
+    {
+      "path": "leaflet/images/layers-2x.png",
+      "sha256": "066daca850d8ffbef007af00b06eac0015728dee279c51f3cb6c716df7c42edf"
+    },
+    {
+      "path": "leaflet/images/layers.png",
+      "sha256": "1dbbe9d028e292f36fcba8f8b3a28d5e8932754fc2215b9ac69e4cdecf5107c6"
+    },
+    {
+      "path": "leaflet/images/marker-icon-2x.png",
+      "sha256": "00179c4c1ee830d3a108412ae0d294f55776cfeb085c60129a39aa6fc4ae2528"
+    },
+    {
+      "path": "leaflet/images/marker-icon.png",
+      "sha256": "574c3a5cca85f4114085b6841596d62f00d7c892c7b03f28cbfa301deb1dc437"
+    },
+    {
+      "path": "leaflet/images/marker-shadow.png",
+      "sha256": "264f5c640339f042dd729062cfc04c17f8ea0f29882b538e3848ed8f10edb4da"
+    }
+  ]
+}
