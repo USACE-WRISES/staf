@@ -508,10 +508,6 @@ app_ui = ui.page_fillable(
                 # so the analysis session is preserved.
                 ui.tags.a("Documentation", href="documentation.html",
                           target="_blank", rel="noopener", class_="easi-doclink"),
-                # the Excel calculator: the same scoring, offline, from values
-                # entered by hand (generated from the app's own scoring definitions)
-                ui.tags.a("Calculator", href=f"calculator/{calculator.blank_filename()}",
-                          download=calculator.blank_filename(), class_="easi-doclink"),
                 (ui.tags.a("Local review", href="local-review/", target="_blank",
                            rel="noopener", class_="easi-doclink") if LOCAL_REVIEW_ROOT else None),
                 class_="easi-nav",
@@ -2479,7 +2475,7 @@ def server(input, output, session):
                 "notes, or the cross-section as needed (nine sections are sampled "
                 "along the reach and the geometry metrics score on their medians).\n"
                 "5. The **report** opens when screening finishes. Download it as PDF, "
-                "CSV, or GeoJSON. The **Excel calculator** (also linked in the header) "
+                "CSV, or GeoJSON. The **Excel calculator** download beside them "
                 "scores the same 20 metrics offline from values entered by hand, with "
                 "the same criteria, curves and rollup as this app.\n\n"
                 f"**Batch** runs up to {BATCH_UI_MAX_SITES} sites at once and "

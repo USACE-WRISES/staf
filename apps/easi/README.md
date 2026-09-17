@@ -532,7 +532,7 @@ scoring definitions the app reads (`data/screening-methods.json`,
 `data/reference-curves.json`, `data/cwa-mapping.json`, `data/easi-metrics.json`,
 `data/scoring-identity.json`); its Metadata sheet carries the method digest and
 the catalog and curve hashes. The app serves it from the report footer and the
-header link, and it is reachable directly at `calculator/EASI_Calculator_1.0.0.xlsx`.
+batch modal, and the file is reachable directly at `calculator/EASI_Calculator_1.0.0.xlsx`.
 
 `tests/test_calculator_parity.py` proves same inputs, same results on a retained
 case set (`tests/data/calculator_cases.json`, built by `tests/calculator_cases.py`
