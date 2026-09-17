@@ -1,4 +1,4 @@
-**EASI** ECI 0.77 (Physical 0.75, Chemical 0.72, Biological 0.83). **SFARI** ECI 0.88 (Physical 0.84, Chemical 0.93, Biological 0.87).
+**EASI** ECI 0.72 (Physical 0.78, Chemical 0.6, Biological 0.77). **SFARI** ECI 0.88 (Physical 0.84, Chemical 0.93, Biological 0.87).
 
 | Function | EASI rating | EASI score | SFARI score |
 |---|:--:|--:|--:|
@@ -13,11 +13,11 @@
 | Channel evolution | Good * | 13 | 12.0 |
 | Channel and floodplain dynamics | Good | 13 | 11.5 |
 | Sediment continuity | Fair | 8 | 12.0 |
-| Light & thermal regime | Good | 13 | 14.0 |
-| Carbon processing | Good | 13 | 14.0 |
+| Light & thermal regime | Fair | 8 | 14.0 |
+| Carbon processing | Fair | 8 | 14.0 |
 | Nutrient cycling | Good | 13 | 14.0 |
 | Water & soil quality | Poor | 3 | 15.0 |
-| Habitat provision | Good | 13 | 14.0 |
+| Habitat provision | Fair | 8 | 14.0 |
 | Population support | Good | 13 | 15.0 |
 | Community dynamics | Good | 13 | 12.0 |
 | Watershed connectivity | Good | 13 | 11.0 |
