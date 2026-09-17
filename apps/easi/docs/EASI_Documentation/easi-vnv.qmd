@@ -214,7 +214,7 @@ engine and the approximation is stated here.
 
 Several fallback methods classify published 0 to 1 integrity or probability
 values into Good, Fair, and Poor at 0.70 and 0.40, and the modeled benthic
-probability at 0.67 and 0.33. These are EASI integration tiers. The source
+probability at 0.50 and 0.25. These are EASI integration tiers. The source
 datasets publish no condition cutpoints, so EASI applies one consistent
 convention across its fallbacks and labels it in every scoring trace. The
 tiers sit below the national median watershed integrity value of about 0.79,
@@ -392,13 +392,14 @@ on Non-Functioning condition. @fig-xs-mc shows the EASI cross section and
 # Validation
 
 ::: {.callout-note}
-## Statistics current as of 2026-08-20
+## Statistics current as of 2026-09-16
 
-The statistics in this section were computed with the metric configuration
-adopted in the 2026-08 defensibility review, from a fresh run of all 17 sites
-with service data pulled on 2026-08-20. One caution from that work: paired
-same-day requests returned different catchment-scale StreamCat components at
-one site, which changed two fallback ratings there. Small differences in the
+The statistics in this section were computed with the frozen criteria of
+September 2026 (method digest b2e3033116e3), from a fresh run of all 17 sites
+with service data pulled on 2026-09-16. Two cautions from that work: the dam
+inventory was read from a copy pulled on 2026-09-10 because the live service
+was down that day, and paired same-day requests in August returned different
+catchment-scale StreamCat components at one site. Small differences in the
 agreement statistics are within the noise of the underlying services. To
 refresh these results, re-run the site corpus and the build
 (`python scripts/build_docs.py --all`, network, about ten minutes).
@@ -480,22 +481,24 @@ here so results are read at the right strength. The override workflow and the
 Rapid and Detailed tiers are the designed responses to each of them.
 
 - **Most evidence is landscape data.** At the 17 verification sites, StreamCat
-  variables supplied 11 of 20 ratings on average, and removing them would move
-  7 of 17 sites across a condition class. EASI results carry the strengths and
+  variables supplied 10 of 20 ratings on average, and removing them would move
+  1 of 17 sites across a condition class, although the index moves more than
+  for any other source. EASI results carry the strengths and
   the blind spots of national landscape summaries.
-- **Connected field evidence is rare.** The source hierarchy prefers a
-  connected NRSA observation, but qualifying evidence supplied only about three
-  ratings across all 17 verification sites. In practice most ratings come from
-  StreamCat, the elevation model, WQP, ATTAINS, NAS, and NID.
+- **No reach-scale observation enters the automated result.** The earlier
+  configuration consulted connected NRSA observations, which supplied about three
+  ratings across all 17 verification sites, and the September 2026 revision retired
+  that tier. In practice ratings come from StreamCat, the elevation model, the
+  modeled monthly flows, WQP, ATTAINS, NAS, and NID.
 - **One reach of cross sections drives four physical functions.** The bank-height
   and entrenchment ratios are reach medians of nine DEM transects at the
   elevation model's native resolution (1 m where published, otherwise 10 m).
   Dropping those four ratings shifts the mean index by
-  about 0.04 and changes 3 of 17 site classes, so verifying or editing the
+  about 0.01 and changes 3 of 17 site classes, so verifying or editing the
   cross section is the highest-value check an assessor can make.
 - **Three-bin ratings compress the index.** Every metric scores 0.85, 0.545,
   or 0.195, so extreme sites pull toward the middle. Across the verification
-  sites the EASI index spans about 0.40 to 0.77 while the paired field values
+  sites the EASI index spans about 0.39 to 0.73 while the paired field values
   span 0.15 to 0.94. EASI ranks and screens rather than measures.
 - **Upstream services are not perfectly repeatable.** Paired same-day runs
   returned different catchment-scale StreamCat components at one site. Ratings

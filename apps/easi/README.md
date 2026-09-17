@@ -312,7 +312,7 @@ The 20 metrics span five disciplines:
 | **Hydraulics** | EROM monthly flow variability · Floodplain engagement (BHR) · Floodplain access (slope-class ER reference curves) · Hyporheic-exchange potential (better of channel gradient / sinuosity) |
 | **Geomorphology** | Channel-adjustment susceptibility (FCODE + BHR/ER) · Bank-instability susceptibility (BHR, observed bank evidence supersedes) · Sediment-supply potential (worst of agriculture, soil K-factor, roads) · Bed-composition proxy (watershed agriculture share) |
 | **Physicochemistry** | Thermal-regulation vulnerability (worse of woody riparian and impervious) · Organic-matter supply potential · Nutrient condition (WQP vs NRSA regional benchmarks → StreamCat CHEM) · Regulatory impairment (ATTAINS → StreamCat CHEM) |
-| **Biology** | Habitat-support potential (Level II woody-corridor curve) · Population support (published benthic model → ICI/IWI) · Invasive-species pressure · Nearby dam proximity |
+| **Biology** | Habitat-support potential (NARS-9 woody-corridor curve) · Population support (published benthic model → ICI/IWI) · Invasive-species pressure · Nearby dam proximity |
 
 Every metric produces a value; field- or low-confidence metrics show a confidence
 badge and can be **overridden** in the report.
@@ -565,3 +565,19 @@ or a substitute for a field assessment.
 ## License
 
 [MIT](LICENSE) © 2026 WRISES.
+
+## Release record
+
+EASI 1.0.0, tagged `easi-v1.0.0` (2026-09-16). The scoring method of this release is frozen and identified by:
+
+| Item | Value |
+|---|---|
+| Method digest (`method_version()`) | `b2e3033116e3` |
+| Scoring identity | `alternative-2` (Alternative 2: NARS-9 references) |
+| Catalog sha256 (`data/screening-methods.json`) | `78c1e2921198905ee6e53f18147e2aa33f9a6ffd87ff3e7a23844238b3fb73f3` |
+| Reference curves sha256 (`data/reference-curves.json`) | `a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887` |
+| Excel calculator | `www/calculator/EASI_Calculator_1.0.0.xlsx`, sha256 `f5a652c4a020ee3976a894596f7bf419678dbacf64e210bfa5a40439aa42a830` |
+| Technical report | `TR_EASI_2026-09-16_Clean.docx` and `TR_EASI_2026-09-16_Tracked.docx` (notes/EASI_Report/report) |
+| Development dataset | build `3d8a4711c5414d4e9e76ca2233815783`, published to the `easi-national-current` prerelease with `provenance.json` |
+
+Changing any file in the method digest changes the digest and starts a new method version. The metric display names in `easi/config.py` (for example the low-flow, bed-composition and population-support registry names) predate the September 2026 revision and are left unchanged for this release because they sit inside the digest.
