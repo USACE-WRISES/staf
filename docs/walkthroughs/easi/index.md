@@ -101,7 +101,7 @@ slope, and the workbook rates the 20 metrics with the same criteria and
 reference curves, then applies the STAF rollup. It is generated from the
 app's own scoring definitions and checked against the app's engine on a
 retained case set, so the same inputs give the same results. Download it from
-the report footer, the app header, or the Tools page.
+the report footer, the batch dialog, or the Tools page.
 
 Operators can select the former criteria with `EASI_CRITERIA_SET=legacy`.
 Both sets use the current anchors above. The regional set is the default.

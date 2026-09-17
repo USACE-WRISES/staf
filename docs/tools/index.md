@@ -17,7 +17,7 @@ description: "Launch the STAF web applications."
   <li><button type="button" class="tools-resource-link" data-metric-toolbox-download>Metric Toolbox (Excel)</button> <span class="tools-resource-note">The full STAF metric library as a spreadsheet.</span></li>
   <li><a class="tools-resource-link" href="{{ '/assets/docs/STAF_Factsheet.pdf' | relative_url }}">STAF Factsheet (PDF)</a> <span class="tools-resource-note">Overview of the framework.</span></li>
   {% assign easi_app = site.data.apps | where: "id", "easi" | first %}
-  <li><a class="tools-resource-link" href="{{ easi_app.url }}calculator/EASI_Calculator_1.0.0.xlsx">EASI Calculator (Excel)</a> <span class="tools-resource-note">Offline scoring of the Screening tier: the same criteria, reference curves and rollup as the EASI app, from values you enter by hand.</span></li>
+  <li><a class="tools-resource-link" href="{{ easi_app.url }}calculator/EASI_Calculator_1.1.0.xlsx">EASI Calculator (Excel)</a> <span class="tools-resource-note">Offline scoring of the Screening tier: the same criteria, reference curves and rollup as the EASI app, from values you enter by hand.</span></li>
 </ul>
 
 ## References

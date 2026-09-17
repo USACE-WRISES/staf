@@ -33,7 +33,9 @@ from calculator_eval import ExcelComBackend, FormulasBackend
 
 ALLOWED_FUNCTIONS = {"IF", "AND", "OR", "NOT", "MIN", "MAX", "ROUND", "INDEX", "MATCH", "IFERROR",
                      "ISNUMBER", "COUNT", "SUM", "SUMPRODUCT", "AVERAGE", "STDEV.P", "PRODUCT",
-                     "UPPER", "TRIM", "SUBSTITUTE", "LEN"}
+                     "UPPER", "TRIM", "SUBSTITUTE", "LEN", "NA"}
+SHEETS = ["Instructions", "EASI Score", "Metrics", "Results", "Reference", "Metadata", "ChartData"]
+HIDDEN = {"Results", "ChartData"}
 OUTPUT_NAMES = ([f"m{n:02d}_{field}" for n in range(1, 21) for field in ("rating", "score", "index", "status")]
                 + [f"m{n:02d}_route" for n in range(1, 21)]
                 + ["sub_index_physical", "sub_index_chemical", "sub_index_biological", "eci",
@@ -146,9 +148,16 @@ def test_workbook_structure_and_metadata():
     from easi import config
     from easi.national import method_version
     wb = openpyxl.load_workbook(cc.WORKBOOK)
-    assert wb.sheetnames == ["Instructions", "Inputs", "Metrics", "Results", "Reference", "Metadata"]
+    assert wb.sheetnames == SHEETS
     for ws in wb.worksheets:
         assert ws.protection.sheet, f"{ws.title} is not protected"
+        assert (ws.sheet_state == "hidden") == (ws.title in HIDDEN), ws.title
+    score = wb["EASI Score"]
+    assert score.freeze_panes == "A8" and score.sheet_view.showGridLines is False
+    assert len(score._charts) == 2, "the Function Score and Outcome Score charts"
+    rules = sum(len(cf.rules) for cf in score.conditional_formatting)
+    assert rules >= 21, "three class colours on ratings, input ratings, scores, indices and the summary"
+    assert score.merged_cells.ranges, "the outcome, category and function cells are merged"
     functions, external = set(), []
     for ws in wb.worksheets:
         for row in ws.iter_rows():

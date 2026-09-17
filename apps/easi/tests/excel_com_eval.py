@@ -29,12 +29,16 @@ def main(workbook: str, cases_path: str, results_path: str) -> None:
     results = []
     try:
         wb = app.Workbooks.Open(str(tmp), ReadOnly=True, UpdateLinks=0)
+        # manual calculation: otherwise every entry write recalculates the whole workbook
+        # (charts and class colouring included), which made the 1.1.0 gate take 40 minutes
+        app.Calculation = -4135      # xlCalculationManual
         sheets = {ws.Name: ws for ws in wb.Worksheets}
         for case in cases:
             for name, (sheet, addr, value) in case["entries"].items():
                 cell = sheets[sheet].Range(addr)
                 if value == "" or value is None:
-                    cell.ClearContents()
+                    # a merged entry (the site block) can only be cleared as a whole
+                    cell.MergeArea.ClearContents()
                 else:
                     cell.Value = value
             app.CalculateFull()

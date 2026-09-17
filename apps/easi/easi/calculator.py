@@ -13,7 +13,7 @@ from pathlib import Path
 
 #: The committed calculator. Part of the filename so a returned workbook can be
 #: traced to the release it came from.
-TEMPLATE_VERSION = "1.0.0"
+TEMPLATE_VERSION = "1.1.0"
 
 TEMPLATE_PATH = (Path(__file__).resolve().parent.parent
                  / "www" / "calculator" / f"EASI_Calculator_{TEMPLATE_VERSION}.xlsx")

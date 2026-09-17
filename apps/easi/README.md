@@ -523,7 +523,7 @@ full rebuild, which regenerates methods and validation assets.
 
 ## Excel calculator
 
-`www/calculator/EASI_Calculator_1.0.0.xlsx` is an offline implementation of the
+`www/calculator/EASI_Calculator_1.1.0.xlsx` is an offline implementation of the
 same methodology: the user enters the desktop quantities, the NARS-9 region and
 the channel slope, and the workbook rates the 20 metrics, applies the reference
 curves and the STAF rollup, and reports the sub-indices and the ECI. It is
@@ -532,7 +532,7 @@ scoring definitions the app reads (`data/screening-methods.json`,
 `data/reference-curves.json`, `data/cwa-mapping.json`, `data/easi-metrics.json`,
 `data/scoring-identity.json`); its Metadata sheet carries the method digest and
 the catalog and curve hashes. The app serves it from the report footer and the
-batch modal, and the file is reachable directly at `calculator/EASI_Calculator_1.0.0.xlsx`.
+batch modal, and the file is reachable directly at `calculator/EASI_Calculator_1.1.0.xlsx`.
 
 `tests/test_calculator_parity.py` proves same inputs, same results on a retained
 case set (`tests/data/calculator_cases.json`, built by `tests/calculator_cases.py`
@@ -576,7 +576,7 @@ EASI 1.0.0, tagged `easi-v1.0.0` (2026-09-16). The scoring method of this releas
 | Scoring identity | `alternative-2` (Alternative 2: NARS-9 references) |
 | Catalog sha256 (`data/screening-methods.json`) | `78c1e2921198905ee6e53f18147e2aa33f9a6ffd87ff3e7a23844238b3fb73f3` |
 | Reference curves sha256 (`data/reference-curves.json`) | `a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887` |
-| Excel calculator | `www/calculator/EASI_Calculator_1.0.0.xlsx`, sha256 `f5a652c4a020ee3976a894596f7bf419678dbacf64e210bfa5a40439aa42a830` |
+| Excel calculator | `www/calculator/EASI_Calculator_1.1.0.xlsx`, sha256 `03add4d439300fb81388b2067a4013018cf4818d7b13471e8ebd4c14d8ebb602` (SFARI-style worksheet, 2026-09-17) |
 | Technical report | `TR_EASI_2026-09-16_Clean.docx` and `TR_EASI_2026-09-16_Tracked.docx` (notes/EASI_Report/report) |
 | Development dataset | build `3d8a4711c5414d4e9e76ca2233815783`, published to the `easi-national-current` prerelease with `provenance.json` |
 
