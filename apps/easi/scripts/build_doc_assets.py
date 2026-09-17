@@ -71,6 +71,7 @@ PHOTOS = {  # source filename in docs/Verification Sites -> figures/ name
 EXAMPLE_REPORTS = [
     ("MB", "Mink Brook", "example_high.png"),
     ("CC", "Cowart Creek", "example_low.png"),
+    ("JR", "Jemez River", "example_mid.png"),
 ]
 
 
