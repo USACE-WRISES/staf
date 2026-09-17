@@ -7,6 +7,7 @@ entrypoint = "app.py"
 title = "easi"
 files = [
     "/app.py",
+    "/local_review.py",
     "/requirements.txt",
     "/easi/",
     "/www/",
