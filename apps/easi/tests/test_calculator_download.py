@@ -22,12 +22,14 @@ def test_the_blank_is_the_committed_workbook():
     assert calculator.TEMPLATE_PATH.parent.parent.name == "www"     # a static asset, never vendored
 
 
-def test_the_app_serves_the_calculator_from_both_modals_and_the_header():
+def test_the_app_serves_the_calculator_from_both_modals_and_not_the_header():
     assert 'ui.download_button("dl_calc", "Excel calculator"' in SRC
     assert 'ui.download_button("dl_site_calc", "Excel calculator"' in SRC
     assert re.search(r"@render\.download\(filename=calculator\.blank_filename\(\)\)\s+def dl_calc\(\):", SRC)
     assert re.search(r"@render\.download\(filename=calculator\.blank_filename\(\)\)\s+def dl_site_calc\(\):", SRC)
-    assert 'href=f"calculator/{calculator.blank_filename()}"' in SRC
+    # the owner removed the header link on 2026-09-16: the workbook is downloaded from the
+    # report and the batch modal only, and the file itself stays reachable under www/
     html = str(app.app_ui)
-    assert f'href="calculator/{calculator.blank_filename()}"' in html
+    assert f'href="calculator/{calculator.blank_filename()}"' not in html
+    assert ">Calculator<" not in html
     assert "Excel calculator" in app._help_markdown_probe() if hasattr(app, "_help_markdown_probe") else True
