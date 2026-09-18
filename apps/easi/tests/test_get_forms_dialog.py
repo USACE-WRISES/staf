@@ -38,7 +38,7 @@ def test_the_shell_is_sfaris_with_the_three_downloads_in_the_tab_strip():
     assert "bslib-nav-spacer" in html
     buttons = re.findall(r'<a [^>]*id="(dl_forms_[a-z]+)"[^>]*>(?:\s*<[^>]+>)*\s*([^<]+?)\s*</a>', html, re.S)
     assert buttons == [("dl_forms_pdf", "Desktop metrics PDF"), ("dl_forms_filled", "Completed workbook"),
-                       ("dl_forms_blank", "Blank calculator")]
+                       ("dl_forms_blank", "Blank workbook")]
     # equal downloads: each the app's primary button inside its own wrapper (a bare anchor in
     # a nav strip renders as a link-blue nav link)
     assert html.count('class="ff-dl"') == 3 and html.count("btn-sm btn-primary") == 3

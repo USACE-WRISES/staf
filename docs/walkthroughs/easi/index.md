@@ -106,9 +106,10 @@ the same inputs give the same results.
 
 **Get Forms.** On the Assessment page, Get Forms lists the 20 desktop metrics
 with the values each was rated from. From there you can download that list as a
-PDF, the calculator completed with the site's values, your ratings and your
-notes, or the blank calculator. The batch dialog offers each site's completed
-workbook, and the blank calculator is also on the Tools page.
+PDF, the completed workbook (the calculator with the site's values, your ratings
+and your notes entered), or the blank workbook. The report and the batch dialog
+offer the completed workbook too, and the blank calculator is also on the Tools
+page.
 
 Operators can select the former criteria with `EASI_CRITERIA_SET=legacy`.
 Both sets use the current anchors above. The regional set is the default.

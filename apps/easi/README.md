@@ -543,9 +543,10 @@ The version lives in one place, `easi/calculator.py`, which the generator reads.
 
 **Get Forms** on the Assessment page lists the 20 desktop metrics with the values
 each was rated from and offers three downloads: that list as a PDF
-(`report.build_desktop_metrics_pdf`), the calculator **completed** from the
-screening, and the **blank** calculator. The batch per-site report offers the
-site's completed workbook. The blank is also reachable directly at
+(`report.build_desktop_metrics_pdf`), the **completed workbook** (the calculator
+completed from the screening), and the **blank workbook**. The report footer
+offers the completed workbook too, after GeoJSON, and the batch per-site report
+offers that site's. The blank is also reachable directly at
 `calculator/EASI_Calculator_1.0.xlsx`.
 
 `calculator.build_filled(result)` completes the workbook without a spreadsheet

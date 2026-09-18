@@ -1168,12 +1168,13 @@ def _xs_readonly_block(rep):
 
 
 def _dl_buttons():
-    # the report's own exports; the Excel calculator (blank and completed) is under
-    # Get Forms on the Assessment page
+    # the report's exports, then the Excel calculator completed from this screening (the same
+    # file as Get Forms offers; the blank workbook and the metrics list are only there)
     return ui.div(
         ui.download_button("dl_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
         ui.download_button("dl_csv", "CSV", class_="btn-sm btn-outline-secondary"),
         ui.download_button("dl_geojson", "GeoJSON", class_="btn-sm btn-outline-secondary"),
+        ui.download_button("dl_workbook", "Completed workbook", class_="btn-sm btn-outline-secondary"),
         ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
         class_="easi-modal-footer",
     )
@@ -1449,7 +1450,7 @@ def _forms_modal(res):
                 title="The EASI calculator with this site's values, your ratings and your notes entered"),
                 class_="ff-dl")),
             ui.nav_control(ui.div(ui.download_button(
-                "dl_forms_blank", "Blank calculator", class_="btn-sm btn-primary",
+                "dl_forms_blank", "Blank workbook", class_="btn-sm btn-primary",
                 title="The EASI calculator with empty entry cells"),
                 class_="ff-dl")),
             id="gf_tabs", selected="metrics"),
@@ -2566,12 +2567,13 @@ def server(input, output, session):
                 "notes, or the cross-section as needed (nine sections are sampled "
                 "along the reach and the geometry metrics score on their medians).\n"
                 "5. The **report** opens when screening finishes. Download it as PDF, "
-                "CSV, or GeoJSON.\n"
+                "CSV, or GeoJSON, or download the **completed workbook**, the Excel "
+                "calculator with this site's values, your ratings and your notes entered.\n"
                 "6. **Get Forms** on the Assessment page lists the 20 desktop metrics with "
                 "this site's values and downloads them as a PDF. It also downloads the "
-                "**Excel calculator**, completed with those values, your ratings and your "
-                "notes, or blank. The calculator scores the same 20 metrics offline with "
-                "the same criteria, curves and rollup as this app.\n\n"
+                "completed workbook and the **blank workbook**. The calculator scores the "
+                "same 20 metrics offline with the same criteria, curves and rollup as "
+                "this app.\n\n"
                 f"**Batch** runs up to {BATCH_UI_MAX_SITES} sites at once and "
                 "packages the reports as a ZIP.\n\n"
                 + _viewer_help(NATIONAL_VIEWER) +
@@ -3789,6 +3791,13 @@ def server(input, output, session):
         res = export_result()
         if res:
             yield report.build_geojson(res).encode("utf-8")
+
+    @render.download(filename=lambda: calculator.filled_filename(export_result()))
+    def dl_workbook():
+        # the report footer's copy of Get Forms' completed workbook
+        res = export_result()
+        if res:
+            yield calculator.build_filled(res)
 
     # ---- Get Forms downloads: the list as a PDF, and the Excel calculator completed
     #      from this screening (values, the override scores and the notes) or blank ----

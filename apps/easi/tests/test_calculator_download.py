@@ -25,17 +25,25 @@ def test_the_blank_is_the_committed_workbook():
     assert [p.name for p in calculator.TEMPLATE_PATH.parent.iterdir()] == ["EASI_Calculator_1.0.xlsx"]
 
 
-def test_the_app_serves_the_calculator_from_get_forms_and_not_the_report_or_the_header():
-    # 2026-09-18: the blank and the completed workbook moved to the Get Forms dialog of the
-    # Assessment page; the report footer keeps only the report's own exports
+def test_the_app_serves_the_calculator_from_get_forms_and_the_report_and_not_the_header():
+    # 2026-09-18: the blank workbook lives only in the Get Forms dialog of the Assessment page;
+    # the completed one is there and, after GeoJSON, in the report footer (the owner's call)
     assert re.search(r"@render\.download\(filename=calculator\.blank_filename\(\)\)\s+def dl_forms_blank\(\):", SRC)
-    assert "yield calculator.blank_bytes()" in SRC
+    assert SRC.count("yield calculator.blank_bytes()") == 1
     assert re.search(r"def dl_forms_filled\(\):\s+res = export_result\(\)\s+if res:\s+"
                      r"yield calculator\.build_filled\(res\)", SRC)
     assert "dl_calc" not in SRC.replace("dl_site_calc", "")
     footer = str(app._dl_buttons())
-    assert re.findall(r'id="([^"]+)"', footer) == ["dl_pdf", "dl_csv", "dl_geojson", "close_modal"]
-    assert "calculator" not in footer.lower()
+    assert re.findall(r'id="([^"]+)"', footer) == ["dl_pdf", "dl_csv", "dl_geojson", "dl_workbook", "close_modal"]
+    labels = [text.strip() for text in re.sub(r"<[^>]+>", "\n", footer).split("\n") if text.strip()]
+    assert labels == ["PDF", "CSV", "GeoJSON", "Completed workbook", "Close"]
+    # the visible labels, not the markup (every download link carries target="_blank")
+    assert not any("calculator" in label.lower() or "blank" in label.lower() for label in labels)
+    # the same file as Get Forms offers, named by the site
+    assert re.search(r"@render\.download\(filename=lambda: calculator\.filled_filename\(export_result\(\)\)\)\s+"
+                     r"def dl_workbook\(\):", SRC)
+    body = SRC.split("def dl_workbook():", 1)[1].split("@render", 1)[0]
+    assert "res = export_result()" in body and "yield calculator.build_filled(res)" in body
     # the owner removed the header link on 2026-09-16; the file itself stays reachable under www/
     html = str(app.app_ui)
     assert f'href="calculator/{calculator.blank_filename()}"' not in html
@@ -56,5 +64,6 @@ def test_the_batch_popup_serves_the_site_completed_workbook():
 def test_the_help_points_to_get_forms():
     help_text = SRC.split("def _help():", 1)[1].split("@reactive.calc", 1)[0]
     assert "**Get Forms** on the Assessment page" in help_text
+    assert "**completed workbook**" in help_text and "**blank workbook**" in help_text
     assert "download beside them" not in help_text
     assert "—" not in help_text          # no em dashes in copy
