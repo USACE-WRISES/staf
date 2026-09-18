@@ -41,7 +41,7 @@ from easi.metrics import geomorphology, hydraulics  # noqa: E402  (cross-section
 from easi.datasources.geocode import geocode_address  # noqa: E402
 from easi.pipeline import DEFAULT_REACH_FT  # noqa: E402
 from easi.snapcard import hr_snap_card  # noqa: E402
-from easi import calculator  # noqa: E402  (the Excel calculator, served blank)
+from easi import calculator  # noqa: E402  (the Excel calculator, blank and completed)
 
 FT_PER_M = 3.28083989501312
 LOCAL_REVIEW_ROOT = local_review.review_root()
@@ -479,7 +479,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=59"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=60"),
                     *_viewer_head_tags(NATIONAL_VIEWER),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
@@ -487,7 +487,7 @@ app_ui = ui.page_fillable(
                     ui.tags.script(src="report-controls.js", defer=""),
                     ui.tags.script(src="report-edit.js", defer=""),
                     ui.tags.script(src="report-ready.js?v=2", defer=""),
-                    ui.tags.script(src="worksheet.js?v=8", defer=""),
+                    ui.tags.script(src="worksheet.js?v=9", defer=""),
                     ui.tags.script(src="coord-entry.js", defer="")),
     # Disable Shiny/bslib's page-level "pulse" loading bar at the top of the screen —
     # the bottom-right toast is the app's loading indicator (output spinners unaffected).
@@ -1168,11 +1168,12 @@ def _xs_readonly_block(rep):
 
 
 def _dl_buttons():
+    # the report's own exports; the Excel calculator (blank and completed) is under
+    # Get Forms on the Assessment page
     return ui.div(
         ui.download_button("dl_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
         ui.download_button("dl_csv", "CSV", class_="btn-sm btn-outline-secondary"),
         ui.download_button("dl_geojson", "GeoJSON", class_="btn-sm btn-outline-secondary"),
-        ui.download_button("dl_calc", "Excel calculator", class_="btn-sm btn-outline-secondary"),
         ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
         class_="easi-modal-footer",
     )
@@ -1353,7 +1354,8 @@ def _batch_report_modal(site_id, base, minimap_html=None):
         ui.download_button("dl_site_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
         ui.download_button("dl_site_csv", "CSV", class_="btn-sm btn-outline-secondary"),
         ui.download_button("dl_site_geojson", "GeoJSON", class_="btn-sm btn-outline-secondary"),
-        ui.download_button("dl_site_calc", "Excel calculator", class_="btn-sm btn-outline-secondary"),
+        # batch has no Assessment page, so the site's completed calculator is offered here
+        ui.download_button("dl_site_calc", "Completed workbook", class_="btn-sm btn-outline-secondary"),
         ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
         class_="easi-modal-footer")
     return ui.modal(
@@ -1364,6 +1366,95 @@ def _batch_report_modal(site_id, base, minimap_html=None):
                          ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
         size="xl", easy_close=True, footer=None,
     )
+
+
+# --------------------------------------------------------------------------- #
+# Get Forms dialog (2026-09-18): SFARI's Field Forms shell. One static modal, size
+# xl, built from an export_result() snapshot like the report: nothing under the
+# backdrop can change while it is open, so it has no live outputs to keep alive.
+# The tab strip carries the three downloads; the 20-row table scrolls in its own
+# box under a header that stays put.
+# --------------------------------------------------------------------------- #
+def _count_text(n, one, many):
+    return f"{n} {one if n == 1 else many}"
+
+
+def _forms_summary(res, rows):
+    """What the list holds and what the completed workbook carries."""
+    rated = sum(1 for r in rows if r["rating"])
+    n_assessed = sum(1 for r in rows if r["assessed"])
+    n_notes = sum(1 for r in rows if r["note"])
+    carried = [t for t in (_count_text(n_assessed, "override score", "override scores") if n_assessed else "",
+                           _count_text(n_notes, "note", "notes") if n_notes else "") if t]
+    text = f"{rated} of {len(rows)} desktop metrics rated."
+    if carried:
+        verb = "is" if (n_assessed + n_notes) == 1 else "are"
+        text += f" {' and '.join(carried).capitalize()} {verb} carried into the completed workbook."
+    text += (" Excel calculates the ratings when the workbook opens. In Protected View, choose "
+             "Enable Editing first.")
+    _entries, disclosures = calculator.entries_from_result(res)
+    extra = [ui.span(line, class_="ff-src-sub") for line in disclosures
+             if not line.startswith("Override scores:")]
+    return ui.div(ui.span(text, {"role": "status"}), *extra, class_="ff-status")
+
+
+def _forms_table(rows):
+    dim = "color:#8a93a3;font-size:11px;"
+    body = []
+    for r in rows:
+        entries = [ui.div(ui.span(item["label"] + ": "), ui.tags.b(item["value"]))
+                   for item in r["inputs"]] or [ui.span(r["valueText"] or "not available",
+                                                        style="color:#8a93a3;")]
+        rating = [_rate_chip(r)]
+        if r["assessed"]:
+            rating.append(ui.span(f"override, computed {r['computed'] or 'none'}", class_="ff-src-sub"))
+        body.append(ui.tags.tr(
+            ui.tags.td(str(r["n"]), style=dim),
+            ui.tags.td(r["discipline"], style=dim),
+            ui.tags.td(r["function"]),
+            ui.tags.td(r["metric"] + (notices.BORROWED_MARK if r["borrowed"] else "")),
+            ui.tags.td(*entries, style="font-size:11.5px;color:#2f3a52;"),
+            ui.tags.td(*rating),
+            ui.tags.td(r["source"], ui.span(r["note"], class_="ff-src-sub") if r["note"] else None,
+                       style="font-size:11px;color:#45506a;")))
+    return ui.tags.table(
+        ui.tags.thead(ui.tags.tr(*[ui.tags.th(h) for h in (
+            "#", "Discipline", "Function", "Metric", "Entries (value rated)", "Rating", "Source")])),
+        ui.tags.tbody(*body), class_="easi-tbl ff-table", id="easi-desktop-metrics")
+
+
+def _forms_modal(res):
+    """The Get Forms dialog for one screening (an ``export_result()`` snapshot)."""
+    rows = report.desktop_metric_rows(res)
+    site = calculator.site_identity(res)
+    site_line = " · ".join(part for part in (site["name"] or "(unnamed stream)",
+                                                   site["reach"], site["coords"]) if part)
+    return ui.modal(
+        ui.div(site_line, class_="ff-site"),
+        ui.navset_pill(
+            ui.nav_panel("Desktop metrics",
+                         _forms_summary(res, rows),
+                         ui.div(_forms_table(rows), class_="ff-table-wrap"),
+                         value="metrics"),
+            ui.nav_spacer(),
+            # Each download sits in its own div: Shiny's Bootstrap styles a bare
+            # ``.nav-pills > li > a`` as a nav link (link-blue text, no button
+            # chrome), and the wrapper keeps the anchors real buttons.
+            ui.nav_control(ui.div(ui.download_button(
+                "dl_forms_pdf", "Desktop metrics PDF", class_="btn-sm btn-primary",
+                title="The 20 desktop metrics with this site's values, ratings and sources"),
+                class_="ff-dl")),
+            ui.nav_control(ui.div(ui.download_button(
+                "dl_forms_filled", "Completed workbook", class_="btn-sm btn-primary",
+                title="The EASI calculator with this site's values, your ratings and your notes entered"),
+                class_="ff-dl")),
+            ui.nav_control(ui.div(ui.download_button(
+                "dl_forms_blank", "Blank calculator", class_="btn-sm btn-primary",
+                title="The EASI calculator with empty entry cells"),
+                class_="ff-dl")),
+            id="gf_tabs", selected="metrics"),
+        title="Get Forms", easy_close=True, size="xl",
+        footer=ui.modal_button("Close"), class_="ff-modal-body")
 
 
 def _stepper(active):
@@ -2475,8 +2566,11 @@ def server(input, output, session):
                 "notes, or the cross-section as needed (nine sections are sampled "
                 "along the reach and the geometry metrics score on their medians).\n"
                 "5. The **report** opens when screening finishes. Download it as PDF, "
-                "CSV, or GeoJSON. The **Excel calculator** download beside them "
-                "scores the same 20 metrics offline from values entered by hand, with "
+                "CSV, or GeoJSON.\n"
+                "6. **Get Forms** on the Assessment page lists the 20 desktop metrics with "
+                "this site's values and downloads them as a PDF. It also downloads the "
+                "**Excel calculator**, completed with those values, your ratings and your "
+                "notes, or blank. The calculator scores the same 20 metrics offline with "
                 "the same criteria, curves and rollup as this app.\n\n"
                 f"**Batch** runs up to {BATCH_UI_MAX_SITES} sites at once and "
                 "packages the reports as a ZIP.\n\n"
@@ -2654,6 +2748,21 @@ def server(input, output, session):
     @reactive.event(input.open_report_evt)
     def _open_report():
         _show_report_modal()
+
+    # ---- the Get Forms dialog (posted by www/worksheet.js) ----
+    @reactive.effect
+    @reactive.event(input.forms_evt)
+    def _open_forms():
+        if app_mode() != "single":
+            return
+        res = export_result()
+        if not res:
+            ui.notification_show("The desktop metrics are still being computed. Get Forms opens "
+                                 "when they finish.", type="message", duration=4)
+            return
+        # a report still being prepared would open over this dialog and replace it
+        _cancel_report()
+        ui.modal_show(_forms_modal(res))
 
     # ---- in-table overrides + notes (posted by www/report-edit.js) ----
     @reactive.calc
@@ -3219,6 +3328,11 @@ def server(input, output, session):
                 # the Basin card names the StreamCat reach and each borrowed
                 # metric says so in its tooltip and the report's "Scored at" column.
                 ui.div(_stepper(step), class_="sfari-nav-steps"),
+                ui.tags.button("Get Forms",
+                               {"data-forms": "1", "type": "button",
+                                "title": "The desktop metrics list, and the Excel calculator "
+                                         "completed with this site's values or blank"},
+                               class_="sfari-btn sfari-nav-desktop"),
                 ui.output_ui("fn_nav"),
                 class_="sfari-nav"),
             ui.div(ui.output_ui("fn_panel"), class_="sfari-fnpanel"),
@@ -3676,8 +3790,22 @@ def server(input, output, session):
         if res:
             yield report.build_geojson(res).encode("utf-8")
 
+    # ---- Get Forms downloads: the list as a PDF, and the Excel calculator completed
+    #      from this screening (values, the override scores and the notes) or blank ----
+    @render.download(filename=lambda: report.desktop_metrics_filename(export_result()))
+    def dl_forms_pdf():
+        res = export_result()
+        if res:
+            yield report.build_desktop_metrics_pdf(res)
+
+    @render.download(filename=lambda: calculator.filled_filename(export_result()))
+    def dl_forms_filled():
+        res = export_result()
+        if res:
+            yield calculator.build_filled(res)
+
     @render.download(filename=calculator.blank_filename())
-    def dl_calc():
+    def dl_forms_blank():
         # the committed workbook, generated by scripts/build_calculator.py from the
         # same catalog and curves this app scores with (see tests/test_calculator_parity.py)
         yield calculator.blank_bytes()
@@ -3947,11 +4075,11 @@ def server(input, output, session):
             return
         _begin_report(base, batch=obj, index=int(idx))
 
-    def _modal_site_file(ext):
+    def _modal_site_file(ext, kind="report"):
         with reactive.isolate():
             sid = (batch_modal_site() or {}).get("site_id") or "site"
         safe = "".join(ch if ch.isalnum() or ch in "-._" else "_" for ch in sid)
-        return f"easi_{safe}_report.{ext}"
+        return f"easi_{safe}_{kind}.{ext}"
 
     def _modal_download_base():
         base = (batch_modal_site() or {}).get("base")
@@ -3980,9 +4108,13 @@ def server(input, output, session):
         if base:
             yield report.build_geojson(base).encode("utf-8")
 
-    @render.download(filename=calculator.blank_filename())
+    @render.download(filename=lambda: _modal_site_file("xlsx", "calculator"))
     def dl_site_calc():
-        yield calculator.blank_bytes()
+        # the calculator completed from this batch site's result (batch has no Assessment
+        # page, so Get Forms is not reachable from here)
+        base = _modal_download_base()
+        if base:
+            yield calculator.build_filled(base)
 
 
     @render.ui

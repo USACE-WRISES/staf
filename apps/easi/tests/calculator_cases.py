@@ -3,7 +3,11 @@
 Each case is a stored-evidence record (the ``tests/test_national_preloaded``
 fixture with overrides) that ``easi.national.client.score_record`` scores
 offline with the application's own adapters, optionally followed by the
-observed-evidence overrides of ``assessment.apply_observed_evidence``. The
+override scores (``assessment.rescore``, what the Assessment page's rating
+select does on any of the 20 functions) and then the observed-evidence overrides of
+``assessment.apply_observed_evidence``. That order is the only one the engine
+composes: ``rescore`` rebuilds every row it does not override from its generated
+rating, so it would undo an observed row if it ran second. The
 calculator's entries are read from the report's scoring traces and the record,
 so "same inputs" means the values the engine actually rated, and the expected
 results are the report's own ratings, scores, indices and rollup.
@@ -65,7 +69,11 @@ ROUTED_METRICS = {mid for mid, mk in METHOD_BY_METRIC.items()
                   if mk in ("regional-nutrient-condition", "attains-regulatory-category", "streamcat-prg-bmmi",
                             "channel-adjustment-susceptibility", "bhr-bank-instability-susceptibility")}
 COMPLETENESS = {"complete": "complete", "partial": "partial", "not_assessed": "not rated",
-                "context_only": "not rated", None: "not rated"}
+                "context_only": "not rated", None: "not rated", "override": bc.SCORE_OVERRIDE_ROUTE}
+#: The 20 functions as mNN keys. Every one carries an Override Score in the workbook,
+#: because the Assessment page offers its rating select on every function card (the
+#: registry's ``overrideable`` flag is not enforced there) and ``rescore`` takes any metric.
+FUNCTIONS = {f"m{n:02d}": mid for n, mid in enumerate(METRIC_IDS, 1)}
 
 
 # ---------------------------------------------------------------------------
@@ -113,6 +121,8 @@ def attains(category, *, nearby: bool = False) -> dict:
 def score_case(case: dict) -> dict:
     record = make_record(case.get("record") or {})
     report = client.score_record(record, cross_section=False)
+    if case.get("ratings"):
+        report = assessment.rescore(report, case["ratings"])
     if case.get("observed"):
         report = assessment.apply_observed_evidence(report, case["observed"])
     return report
@@ -166,6 +176,13 @@ def entries_from(report: dict, case: dict) -> dict:
     entries["ov_indicators"] = chan.get("indicators") or BLANK
     entries["ov_erodingBankPct"] = bank.get("erodingBankPct") if bank.get("erodingBankPct") is not None else BLANK
     entries["ov_armoredBankPct"] = bank.get("armoredBankPct") if bank.get("armoredBankPct") is not None else BLANK
+    # the override scores as typed (not as they came out: an observed entry can outrank one);
+    # only the ones given, so a case without any keeps the entries it always had
+    ratings = case.get("ratings") or {}
+    for mkey, mid in FUNCTIONS.items():
+        if mid in ratings:
+            entries[bc.score_override_name(mkey)] = ratings[mid]
+    assert set(ratings) <= set(FUNCTIONS.values()), "an override on something that is not one of the 20 functions"
     return entries
 
 
@@ -175,15 +192,21 @@ def expected_from(report: dict) -> dict:
     for n, mid in enumerate(METRIC_IDS, 1):
         row = rows[mid]
         sc_ = row.get("scoring") or {}
+        # an override score that took effect: the row keeps the trace of the computed
+        # rating it replaced, so its status and route come from the row, not the trace
+        assessed = row.get("status") == "override"
         item = {
             "rating": row.get("rating"),
             "score": row.get("functionScore"),
             "index": row.get("index"),
-            "completeness": sc_.get("completeness"),
+            "completeness": "override" if assessed else sc_.get("completeness"),
             "methodKey": sc_.get("methodKey"),
         }
+        if assessed:
+            item["computed"] = (row.get("effectiveOverride") or {}).get("generatedRating")
         if mid in ROUTED_METRICS:
-            item["route"] = (ROUTE_TEXT.get(sc_.get("methodKey"), "automatic method")
+            item["route"] = (bc.SCORE_OVERRIDE_ROUTE if assessed else
+                             ROUTE_TEXT.get(sc_.get("methodKey"), "automatic method")
                              if row.get("rating") in ("Good", "Fair", "Poor") else "not rated")
         metrics[f"m{n:02d}"] = item
     cov = report.get("coverage") or {}
@@ -255,10 +278,13 @@ def build_cases() -> list[dict]:
 
     ids: set[str] = set()
 
-    def case(cid, group, record=None, observed=None):
+    def case(cid, group, record=None, observed=None, ratings=None):
         assert cid not in ids, f"duplicate case id {cid}"
         ids.add(cid)
-        cases.append({"id": cid, "group": group, "record": record or {}, "observed": observed})
+        item = {"id": cid, "group": group, "record": record or {}, "observed": observed}
+        if ratings:     # only where given, so every older case keeps its stored form
+            item["ratings"] = ratings
+        cases.append(item)
 
     case("base", "base")
     # -- band edges on both sides -------------------------------------------
@@ -338,18 +364,19 @@ def build_cases() -> list[dict]:
     case("missing:slope", "missing", {"slope": None})
     case("missing:sinuosity", "missing", {"sinuosity": None})
     case("missing:slope-and-sinuosity", "missing", {"slope": None, "sinuosity": None})
-    case("missing:everything", "missing", {"streamcat": {k: None for k in
-                                                        ["pctimp2019ws", "pctwdwet2019ws", "pcthbwet2019ws",
-                                                         "pctcrop2019ws", "pcthay2019ws", "kffactws", "rddensws",
-                                                         "damnrmstorws", "runoffws", "pctconif2019wsrp100",
-                                                         "pctdecid2019wsrp100", "pctmxfst2019wsrp100",
-                                                         "pctgrs2019wsrp100", "pctshrb2019wsrp100",
-                                                         "pctwdwet2019wsrp100", "pcthbwet2019wsrp100", "hydcat",
-                                                         "hydws", "sedcat", "sedws", "chemcat", "chemws", "conncat",
-                                                         "connws", "tempcat", "tempws", "habtcat", "habtws",
-                                                         "prg_bmmiws", "prg_bmmi0809"]},
-                                          "erom": None, "geomorph": None, "slope": None, "sinuosity": None,
-                                          "nas_taxa": None, "nid_dams": None})
+    nothing = {"streamcat": {k: None for k in
+                             ["pctimp2019ws", "pctwdwet2019ws", "pcthbwet2019ws",
+                              "pctcrop2019ws", "pcthay2019ws", "kffactws", "rddensws",
+                              "damnrmstorws", "runoffws", "pctconif2019wsrp100",
+                              "pctdecid2019wsrp100", "pctmxfst2019wsrp100",
+                              "pctgrs2019wsrp100", "pctshrb2019wsrp100",
+                              "pctwdwet2019wsrp100", "pcthbwet2019wsrp100", "hydcat",
+                              "hydws", "sedcat", "sedws", "chemcat", "chemws", "conncat",
+                              "connws", "tempcat", "tempws", "habtcat", "habtws",
+                              "prg_bmmiws", "prg_bmmi0809"]},
+               "erom": None, "geomorph": None, "slope": None, "sinuosity": None,
+               "nas_taxa": None, "nid_dams": None}
+    case("missing:everything", "missing", nothing)
     case("edge:runoff-zero", "missing", {"streamcat": {"runoffws": 0.0}})
     case("edge:storage-zero", "band-edges", {"streamcat": {"damnrmstorws": 0.0}})
     case("edge:wetlands-over-cap", "band-edges", {"streamcat": {"pctwdwet2019ws": 80.0, "pcthbwet2019ws": 40.0}})
@@ -428,6 +455,30 @@ def build_cases() -> list[dict]:
     case("rollup:provisional-14", "rollup", {"streamcat": {"pctwdwet2019ws": None, "rddensws": None, "runoffws": None,
                                                            "kffactws": None},
                                              "geomorph": None, "nas_taxa": None})
+    # -- override scores (the Assessment page's rating select, on every function) ---
+    group = "override-score"
+    chan = "channel-evolution-channel-evolution-stage-and-trends"
+    bank = "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition"
+    for mkey, mid in FUNCTIONS.items():
+        for cls in ("Good", "Fair", "Poor"):
+            case(f"{group}:{mkey}:{cls}", group, None, None, {mid: cls})
+    for cls in ("Good", "Fair", "Poor"):
+        case(f"{group}:all:{cls}", group, None, None, {mid: cls for mid in FUNCTIONS.values()})
+    # an override where the evidence gave no rating: the function is rated and coverage counts it
+    case(f"{group}:over-missing-geometry", group, {"geomorph": None}, None,
+         {FUNCTIONS["m06"]: "Fair", FUNCTIONS["m07"]: "Good"})
+    case(f"{group}:over-missing-everything", group, nothing, None, {mid: "Fair" for mid in FUNCTIONS.values()})
+    case(f"{group}:over-canal", group, {"fcode": 33600}, None, {chan: "Good"})
+    # complete observed entries outrank the override; incomplete ones do not
+    case(f"{group}:under-observed-channel", group, None,
+         {chan: {"stageClass": "Poor", "indicators": "headcut upstream"}}, {chan: "Good"})
+    case(f"{group}:over-unnoted-channel", group, None,
+         {chan: {"stageClass": "Poor", "indicators": ""}}, {chan: "Good"})
+    case(f"{group}:under-observed-bank", group, None,
+         {bank: {"erodingBankPct": 70.0, "armoredBankPct": 10.0}}, {bank: "Good"})
+    case(f"{group}:over-incomplete-bank", group, None, {bank: {"erodingBankPct": 70.0}}, {bank: "Good"})
+    case(f"{group}:beside-observed-bank", group, None,
+         {bank: {"erodingBankPct": 30.0, "armoredBankPct": 10.0}}, {chan: "Fair"})
     return cases
 
 

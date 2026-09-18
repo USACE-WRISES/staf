@@ -8,6 +8,7 @@ possibly replaced by a re-scored report from ``assessment.rescore``):
 from __future__ import annotations
 
 from statistics import median
+from xml.sax.saxutils import escape as _esc
 
 import csv
 import io
@@ -536,7 +537,9 @@ def build_pdf(result: dict) -> bytes:
             r["confidence"] or "",
         ]
         if has_notes:
-            row.append(Paragraph(r.get("userNote", ""), styles["BodyText"]))
+            # escaped: the note is the assessor's free text, and Paragraph reads markup
+            # ("see <b>bold" or a stray "</para>" used to fail the whole download)
+            row.append(Paragraph(_esc(r.get("userNote", "")), styles["BodyText"]))
         data.append(row)
         if r["rating"] in RATING_COLOR:
             rating_bg.append((i, rc.HexColor(RATING_COLOR[r["rating"]])))
@@ -579,4 +582,201 @@ def build_pdf(result: dict) -> bytes:
     out = io.BytesIO()
     SimpleDocTemplate(out, pagesize=letter, topMargin=0.6 * inch,
                       bottomMargin=0.6 * inch).build(story)
+    return out.getvalue()
+
+
+# --------------------------------------------------------------------------- #
+# Desktop metrics list (the Get Forms dialog and its PDF)
+# --------------------------------------------------------------------------- #
+#: Units that say nothing beside a number ("1.42 ratio").
+_BARE_UNITS = {"", "ratio", "index", "probability"}
+
+
+def site_slug(result: dict) -> str:
+    """``nhdplusid-<id>`` for a stream outside the StreamCat network, ``comid-<id>``,
+    a hemisphere-based coordinate pair, or empty: the site part of a download name."""
+    result = result or {}
+    d = result.get("delineation") or {}
+    anchor = result.get("siteAnchor") or {}
+    clicked = anchor.get("clickedStream") or {}
+    if anchor.get("anchorKind") == "hrSurrogate" and clicked.get("nhdplusId") not in (None, "", "None"):
+        slug = f"nhdplusid-{clicked['nhdplusId']}"
+    elif d.get("comid") not in (None, "", "None"):
+        slug = f"comid-{d['comid']}"
+    else:
+        try:
+            lat, lon = float(d.get("snapped_lat")), float(d.get("snapped_lon"))
+        except (TypeError, ValueError):
+            return ""
+        slug = (f"{'n' if lat >= 0 else 's'}{abs(lat):.5f}-"
+                f"{'e' if lon >= 0 else 'w'}{abs(lon):.5f}")
+    return "".join(ch for ch in slug if ch.isalnum() or ch in "-._")
+
+
+def _input_value_text(value, units: str = "") -> str:
+    """A traced input for a reader: ``12.4%``, ``1.8 km/km2``, ``4A``, or a dash when blank."""
+    if value is None or value == "":
+        return "-"
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    text = str(int(number)) if number == int(number) and abs(number) < 1e15 else f"{number:g}"
+    units = (units or "").strip()
+    if units in _BARE_UNITS:
+        return text
+    return text + units if units == "%" else f"{text} {units}"
+
+
+def desktop_metric_rows(result: dict) -> list[dict]:
+    """The 20 desktop metrics with the values each was rated from, in catalog order.
+
+    Catalog order (not the report table's discipline-then-name order) because it
+    is the order of the Assessment rail and of the calculator's rows, which this
+    list is read beside. One source for the Get Forms table and its PDF. The
+    inputs are the scoring trace's, so they are the numbers the completed
+    workbook carries; an overridden rating keeps the computed one beside it.
+    """
+    report = (result or {}).get("report") or {}
+    by_id = {row.get("metricId"): row for row in report.get("metricRows") or []}
+    rows = []
+    for n, (mid, meta) in enumerate(config.metrics_by_id().items(), 1):
+        row = by_id.get(mid) or {}
+        inputs = [{"label": item.get("label") or item.get("key") or "",
+                   "value": _input_value_text(item.get("value"), item.get("units") or "")}
+                  for item in (row.get("scoring") or {}).get("inputs") or []
+                  if not item.get("contextOnly")]
+        assessed = row.get("status") == "override"
+        rows.append({
+            "n": n,
+            "metricId": mid,
+            "discipline": row.get("discipline") or meta.get("discipline") or "",
+            "function": row.get("functionName") or meta.get("functionName") or "",
+            "metric": row.get("name") or meta.get("name") or "",
+            "method": row.get("methodTitle") or "",
+            "inputs": inputs,
+            "valueText": row.get("valueText") or "",
+            "rating": row.get("rating") or "",
+            "assessed": assessed,
+            "computed": ((row.get("effectiveOverride") or {}).get("generatedRating") or "") if assessed else "",
+            "status": row.get("status") or "",
+            "source": row.get("source") or "",
+            "note": str(row.get("userNote") or "").strip(),
+            "borrowed": notices.is_borrowed(row),
+        })
+    return rows
+
+
+def desktop_metrics_filename(result: dict) -> str:
+    """``easi-desktop-metrics-comid-<id>.pdf`` (or NHDPlusID, or coordinates)."""
+    slug = site_slug(result)
+    return f"easi-desktop-metrics-{slug}.pdf" if slug else "easi-desktop-metrics.pdf"
+
+
+def build_desktop_metrics_pdf(result: dict) -> bytes:
+    """The desktop metrics list: the site, the 20 metrics with the values each was
+    rated from, the rating, the source, and the override scores and notes.
+
+    The readable twin of the completed calculator: the site block and the
+    disclosures come from ``calculator.entries_from_result``, so the PDF lists
+    what the workbook carries. Every dynamic string is escaped, because Paragraph
+    reads markup and a note is the assessor's free text.
+    """
+    from reportlab.lib import colors as rc
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import inch
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    from . import calculator           # local: calculator reaches back here for the file name
+
+    result = result or {}
+    d, rep = result.get("delineation") or {}, result.get("report") or {}
+    anchor = result.get("siteAnchor") or {}
+    entries, disclosures = calculator.entries_from_result(result)
+    site = calculator.site_identity(result)
+    rows = desktop_metric_rows(result)
+
+    base = getSampleStyleSheet()
+    small = ParagraphStyle("dm_small", parent=base["BodyText"], fontSize=7.5, leading=9.2)
+    dim = ParagraphStyle("dm_dim", parent=small, textColor=rc.HexColor("#556070"))
+    note_style = ParagraphStyle("dm_note", parent=base["BodyText"], fontSize=8.5, leading=10.5)
+
+    def p(text, style=small):
+        return Paragraph(_esc(str(text if text is not None else "")), style)
+
+    def shown(value):
+        return "-" if value in (None, "") else value
+
+    story = [Paragraph("EASI Desktop Metrics", base["Title"]),
+             Paragraph(_esc(site["name"] or "Unnamed stream"), base["Heading2"])]
+    slope_class = entries.get("ctx_slope_override") or (rep.get("strata") or {}).get("slope_class")
+    sub = rep.get("subIndices") or {}
+    site_rows = [
+        ("Reach", site["reach"]),
+        ("Analysis point", site["coords"]),
+        ("COMID (StreamCat reach)", site["comid"]),
+        ("Drainage area (km2)", d.get("drainage_area_sqkm")),
+        ("NARS-9 region", entries.get("ctx_region")),
+        ("Slope class", slope_class or "national"),
+        ("NHD feature code", entries.get("ctx_fcode")),
+        ("Ecosystem Condition Index", rep.get("ecosystemConditionIndex")),
+        ("Physical, chemical, biological", ", ".join(str(shown(sub.get(k)))
+                                                     for k in ("physical", "chemical", "biological"))),
+        ("Functions rated", f"{rep.get('computedCount', 0)} of "
+                            f"{rep.get('selectedCount', rep.get('totalCount', len(rows)))}"),
+    ]
+    site_tbl = Table([[p(label), p(shown(value))] for label, value in site_rows],
+                     colWidths=[2.3 * inch, 5.0 * inch])
+    site_tbl.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("GRID", (0, 0), (-1, -1), 0.25, rc.HexColor("#e5e8ee")),
+        ("BACKGROUND", (0, 0), (0, -1), rc.HexColor("#eef2f8"))]))
+    story += [site_tbl, Spacer(1, 10)]
+
+    data = [[p(h) for h in ("#", "Discipline", "Function", "Metric", "Entries (value rated)", "Rating", "Source")]]
+    rating_bg = []
+    for i, r in enumerate(rows, start=1):
+        entries_cell = "<br/>".join(f"{_esc(item['label'])}: <b>{_esc(item['value'])}</b>" for item in r["inputs"])
+        rating = r["rating"] or "-"
+        if r["assessed"]:
+            rating += f"<br/><font size=6.5>override, computed {_esc(r['computed'] or 'none')}</font>"
+        data.append([p(r["n"]), p(r["discipline"], dim), p(r["function"]),
+                     p(r["metric"] + (notices.BORROWED_MARK if r["borrowed"] else "")),
+                     Paragraph(entries_cell or _esc(r["valueText"] or "-"), small),
+                     Paragraph(rating, small), p(r["source"], dim)])
+        if r["rating"] in RATING_COLOR:
+            rating_bg.append((i, rc.HexColor(RATING_COLOR[r["rating"]])))
+    tbl = Table(data, repeatRows=1,
+                colWidths=[0.32 * inch, 1.0 * inch, 1.05 * inch, 1.25 * inch, 1.88 * inch, 0.65 * inch, 1.15 * inch])
+    style = [("BACKGROUND", (0, 0), (-1, 0), rc.HexColor("#eef2f8")),
+             ("VALIGN", (0, 0), (-1, -1), "TOP"),
+             ("GRID", (0, 0), (-1, -1), 0.25, rc.HexColor("#d7dce5"))]
+    style += [("BACKGROUND", (5, row_i), (5, row_i), color) for row_i, color in rating_bg]
+    tbl.setStyle(TableStyle(style))
+    story.append(tbl)
+
+    if any(r["borrowed"] for r in rows):
+        marker_text = notices.marker_note(anchor)
+        if marker_text:
+            story += [Spacer(1, 4), Paragraph(f"{notices.BORROWED_MARK} {_esc(marker_text)}", dim)]
+    routed = notices.routed_notice(anchor, d)
+    if routed:
+        story += [Spacer(1, 6), Paragraph("<b>Note.</b> " + _esc(" ".join(routed["lines"])), note_style)]
+    notes = [r for r in rows if r["note"]]
+    if disclosures or notes:
+        story += [Spacer(1, 8), Paragraph("Override scores and notes", base["Heading4"])]
+        story += [Paragraph(_esc(line), note_style) for line in disclosures]
+        story += [Paragraph(f"<b>{_esc(r['function'])}.</b> {_esc(r['note'])}", note_style) for r in notes]
+    story += [Spacer(1, 8), Paragraph(
+        "The entries are the values the EASI calculator takes in column J of its EASI Score sheet, as the "
+        "application rated them. Generated from national datasets. A desktop screening estimate with "
+        "per-metric confidence, not a field-validated assessment.", dim)]
+
+    out = io.BytesIO()
+    SimpleDocTemplate(out, pagesize=letter, topMargin=0.6 * inch, bottomMargin=0.6 * inch,
+                      leftMargin=0.6 * inch, rightMargin=0.6 * inch,
+                      title="EASI Desktop Metrics").build(story)
     return out.getvalue()

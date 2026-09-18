@@ -30,7 +30,7 @@ def main(workbook: str, cases_path: str, results_path: str) -> None:
     try:
         wb = app.Workbooks.Open(str(tmp), ReadOnly=True, UpdateLinks=0)
         # manual calculation: otherwise every entry write recalculates the whole workbook
-        # (charts and class colouring included), which made the 1.1.0 gate take 40 minutes
+        # (charts and class colouring included), which made the gate take 40 minutes
         app.Calculation = -4135      # xlCalculationManual
         sheets = {ws.Name: ws for ws in wb.Worksheets}
         for case in cases:

@@ -30,6 +30,16 @@ observed overrides) is written out in ROUTES below and mirrors
     channel evolution  observed class with a note > canal FCODE > worst of BHR and ER
     bank condition     observed erosion and armoring (both) > BHR proxy
 
+Every function ends with one more entry, the Override Score: the rating select
+the Assessment page shows on all 20 function cards (the registry's
+``overrideable`` flag is not enforced there, so neither is it here). It replaces
+the computed rating exactly as ``assessment.rescore`` does. On the two functions
+with observed entries the order is the one the engine composes,
+``apply_observed_evidence(rescore(...))``: complete observed entries, then the
+override, then the automatic result. The row is set apart from the function's
+metrics (a double rule, a band of its own, a taller row), because it is a
+user-defined input and not one of the desktop quantities.
+
 Run:  .venv/Scripts/python.exe scripts/build_calculator.py [--out PATH] [--check]
 """
 from __future__ import annotations
@@ -59,16 +69,17 @@ from openpyxl.utils import get_column_letter  # noqa: E402
 from openpyxl.workbook.defined_name import DefinedName  # noqa: E402
 from openpyxl.worksheet.datavalidation import DataValidation  # noqa: E402
 
+from easi import calculator as served  # noqa: E402
 from easi import config, scoring  # noqa: E402
 from easi import screening_methods as sm  # noqa: E402
 from easi.national import method_version  # noqa: E402
 
-TEMPLATE_VERSION = "1.1.0"
-TEMPLATE_DATE = "2026-09-17"
+TEMPLATE_VERSION = served.TEMPLATE_VERSION   # one source: the module that serves the workbook
+TEMPLATE_DATE = "2026-09-18"
 OUT_DIR = os.path.join(ROOT, "www", "calculator")
 OUT_NAME = f"EASI_Calculator_{TEMPLATE_VERSION}.xlsx"
 PASSWORD = "easi"      # a guard rail against accidental edits, not a secret
-FIXED_STAMP = _dt.datetime(2026, 9, 17, 0, 0, 0)
+FIXED_STAMP = _dt.datetime(2026, 9, 18, 0, 0, 0)
 SCORE = "EASI Score"   # the worksheet the user fills
 
 RATINGS = ("Good", "Fair", "Poor")
@@ -243,6 +254,30 @@ OVERRIDE_INPUTS = [
     ("ov_armoredBankPct", "Observed armored bank", "decimal", (0, 100),
      "Percent of bank length armored."),
 ]
+OBSERVED_SOURCE = "Field assessment or verified imagery"
+
+# The Override Score: the last row of every function, the rating select of the
+# Assessment page. It takes Good, Fair or Poor (the application overrides the
+# rating, and the score follows: 13, 8 or 3), and it is drawn apart from the
+# function's metrics because it is a user-defined input, not a desktop quantity.
+SCORE_OVERRIDE_LABEL = "Override Score (Optional)"
+SCORE_OVERRIDE_SOURCE = "User-defined override"     # one line, so the row keeps its own height
+SCORE_OVERRIDE_NOTE = ("Optional. Pick Good, Fair or Poor to override this function's computed rating and score, as "
+                       "a rating changed on the EASI Assessment page does. Leave blank to keep the computed rating.")
+SCORE_OVERRIDE_NOTE_OBSERVED = ("Optional. Pick Good, Fair or Poor to override this function's computed rating and "
+                                "score, as a rating changed on the EASI Assessment page does. Complete observed "
+                                "entries above take precedence. Leave blank to keep the computed rating.")
+SCORE_OVERRIDE_ROUTE = "override score"
+C_OVERRIDE = "FDE9D9"    # the override row's band: a lighter tint of the entry orange
+FILL_OVERRIDE = solid(C_OVERRIDE)
+DOUBLE = Side(style="double", color="000000")
+OVERRIDE_ROW_HEIGHT = 24.0
+
+
+def score_override_name(mkey: str) -> str:
+    """Defined name of a function's Override Score entry (``ov_m03_rating``: it holds a rating)."""
+    return f"ov_{mkey}_rating"
+
 
 MONTH_INPUTS = [f"m{i:02d}" for i in range(1, 13)]
 
@@ -343,8 +378,9 @@ INSTRUCTIONS = [
     "Leave a cell blank when the evidence is unavailable. Never enter zero for unknown: a zero is evidence. A "
     "blank input leaves its function unrated, and unrated functions drop out of the sub-indices and the index.",
     "Optional: enter the twelve EROM mean monthly flows in the helper block below the table and copy the computed "
-    "variability into the Low flow row, and enter the observed channel class, indicators and bank percentages "
-    "if you have field observations.",
+    "variability into the Low flow row, enter the observed channel class, indicators and bank percentages "
+    "if you have field observations, and pick an Override Score (Good, Fair or Poor) in the last row of any "
+    "function whose computed rating your review replaces.",
     "Ratings, function scores (0 to 15), the outcome sub-indices and the EASI index auto-populate (columns A to "
     "H). The scoring summary table, the legends and the charts to the right of the table also auto-populate.",
     "Record other observations, sources or assumptions in the grey box at the bottom of the worksheet.",
@@ -361,7 +397,10 @@ COMMENTS = [
     "half-hundredth, Excel rounds away from zero and the application rounds to the even digit, so the displayed "
     "value can differ by 0.01 while the class is the same.",
     "The calculator does not retrieve data, delineate a watershed or draw cross-sections. The observed channel and "
-    "bank entries are the only expert-review inputs it supports. Entries outside the documented ranges are refused.",
+    "bank entries and the optional Override Score of each function are the expert-review inputs it supports. An "
+    "Override Score replaces the computed rating and score of its function, as a rating changed in the web "
+    "application does, and the Metrics sheet keeps the computed rating beside it. Entries outside the documented "
+    "ranges are refused.",
     "EASI is a screening-level desktop estimate, not a field-validated assessment. The reference curves express "
     "regional expectations derived from least-disturbed reaches, and several proxies remain unvalidated. The "
     "technical report states each metric's limitations.",
@@ -554,7 +593,23 @@ class Builder:
         self.scores = {k: scoring.function_score(float(self.rating_index[k])) for k in RATINGS}
         self.qspec = {row[1]: row for row in QUANTITY_INPUTS}
         self.ovspec = {row[0]: row for row in OVERRIDE_INPUTS}
+        self.ov_source = {row[0]: OBSERVED_SOURCE for row in OVERRIDE_INPUTS}
         self.ctxspec = {row[0]: row for row in CONTEXT_INPUTS}
+        # the worksheet rows: FRONT_ROWS, then the Override Score as the last row of
+        # every function (the Assessment page offers the rating select on all 20)
+        self.front: dict[str, list[tuple]] = {}
+        self.score_overrides: set[str] = set()
+        for n, m in enumerate(self.metrics, 1):
+            mkey = f"m{n:02d}"
+            rows = list(FRONT_ROWS[mkey])
+            name = score_override_name(mkey)
+            observed = any(kind == "ov" for kind, *_ in rows)
+            self.ovspec[name] = (name, SCORE_OVERRIDE_LABEL, "list_rating", None,
+                                 SCORE_OVERRIDE_NOTE_OBSERVED if observed else SCORE_OVERRIDE_NOTE)
+            self.ov_source[name] = SCORE_OVERRIDE_SOURCE
+            self.score_overrides.add(name)
+            rows.append(("ov", name))
+            self.front[mkey] = rows
         self._check_front_rows()
         # cell references filled while writing
         self.inputs: dict[str, str] = {}       # key -> absolute ref of the entry cell
@@ -571,12 +626,12 @@ class Builder:
 
     def _check_front_rows(self):
         """Every entry appears once, every catalog input of a method is shown under it."""
-        shown = [k for rows in FRONT_ROWS.values() for kind, k, *_ in rows if kind == "in"]
+        shown = [k for rows in self.front.values() for kind, k, *_ in rows if kind == "in"]
         missing = [k for k in self.qspec if k not in shown]
         assert not missing, f"quantities without a worksheet row: {missing}"
         unknown = [k for k in shown if k not in self.qspec]
         assert not unknown, f"worksheet rows without a quantity: {unknown}"
-        ov = [k for rows in FRONT_ROWS.values() for kind, k, *_ in rows if kind == "ov"]
+        ov = [k for rows in self.front.values() for kind, k, *_ in rows if kind == "ov"]
         assert sorted(ov) == sorted(self.ovspec), ov
         for n, m in enumerate(self.metrics, 1):
             mkey = f"m{n:02d}"
@@ -832,7 +887,7 @@ class Builder:
         for n, m in enumerate(self.metrics, 1):
             mkey = f"m{n:02d}"
             first = row
-            for spec in FRONT_ROWS[mkey]:
+            for spec in self.front[mkey]:
                 kind, key = spec[0], spec[1]
                 if kind == "in":
                     grp, _, label, units, qkind, bounds, source, note = self.qspec[key]
@@ -859,8 +914,11 @@ class Builder:
                     self.front_rows.append((mkey, "in", key, row))
                 elif kind == "ov":
                     name, label, okind, bounds, note = self.ovspec[key]
-                    S.cell(9, label + " (optional)", row=row, align=LEFT_MID)
-                    S.cell(13, "Field assessment or verified imagery", row=row, align=LEFT_MID)
+                    # the Override Score carries its own full label; its band, rule and
+                    # height come in the second pass, after the grid borders are drawn
+                    text = label if name in self.score_overrides else label + " (optional)"
+                    S.cell(9, text, row=row, align=LEFT_MID)
+                    S.cell(13, self.ov_source[name], row=row, align=LEFT_MID)
                     if okind == "list_rating":
                         self.inputs[name] = self._entry(S, row, 10, 10, name, kind="list", bounds=list(RATINGS),
                                                         title=label[:32], note=note,
@@ -974,15 +1032,38 @@ class Builder:
 
     # -- shared block pieces --------------------------------------------------
     def _finish(self, S: Sheet, key: str, rating_formula: str, A: dict, route_formula: str,
-                combined_formula: str | None = None, note: str = "", status_formula: str | None = None) -> dict:
-        """Rows: route, combined, rating, index, score, status. Returns the cell refs."""
+                combined_formula: str | None = None, note: str = "", status_formula: str | None = None,
+                blocked: str | None = None) -> dict:
+        """Rows: route, combined, computed rating, override score, rating, index, score, status.
+
+        Every function carries an Override Score entry. It replaces the computed
+        rating the way ``assessment.rescore`` does, unless ``blocked`` (the complete
+        observed entries of channel evolution and bank condition) holds, which is
+        the engine's own order. ``computed`` in the returned refs is the automatic
+        result either way, so the Input Rating column never shows an override as an
+        input's rating.
+        """
         cells = {}
+        ov = self.inputs[score_override_name(key)]
+        applies = f'OR({ov}="Good",{ov}="Fair",{ov}="Poor")'
+        if blocked:
+            applies = f"AND({applies},NOT({blocked}))"
+        route_formula = f"=IF({applies},{q(SCORE_OVERRIDE_ROUTE)},{route_formula[1:]})"
         S.cell(1, "Route that applied"); S.cell(2, route_formula, fill=FILL_CALC)
         cells["route"] = S.name_cell(f"{key}_route", 2, S.row); S.row += 1
         if combined_formula is not None:
             S.cell(1, "Combined value"); S.cell(2, combined_formula, fill=FILL_CALC)
             cells["combined"] = S.name_cell(f"{key}_combined", 2, S.row); S.row += 1
-        S.cell(1, "Function rating"); S.cell(3, rating_formula, fill=FILL_CALC, font=FONT_BOLD)
+        S.cell(1, "Computed rating (before the override score)"); S.cell(3, rating_formula, fill=FILL_CALC)
+        cells["computed"] = S.name_cell(f"{key}_computed", 3, S.row); S.row += 1
+        S.cell(1, "Override score (optional entry on the EASI Score sheet)")
+        S.cell(2, link_formula(ov), fill=FILL_CALC)
+        S.cell(5, "Replaces the computed rating, as a rating changed in the web application does."
+                  + (" Complete observed entries take precedence." if blocked else ""),
+               font=FONT_NOTE, wrap=True)
+        S.row += 1
+        S.cell(1, "Function rating")
+        S.cell(3, f"=IF({applies},{ov},{cells['computed']})", fill=FILL_CALC, font=FONT_BOLD)
         cells["rating"] = S.name_cell(f"{key}_rating", 3, S.row)
         S.cell(4, "=" + index_from_rating(cells["rating"], A), fill=FILL_CALC, fmt="0.000")
         cells["index"] = S.name_cell(f"{key}_index", 4, S.row)
@@ -995,7 +1076,10 @@ class Builder:
                   f"IF({r}={q('Poor')},{self.score_ref['Poor']},\"\")))", fill=FILL_CALC, font=FONT_BOLD)
         cells["score"] = S.name_cell(f"{key}_score", 2, S.row); S.row += 1
         S.cell(1, "Status")
-        S.cell(2, status_formula or f'=IF({r}="","not rated","complete")', fill=FILL_CALC)
+        status_formula = status_formula or f'=IF({r}="","not rated","complete")'
+        # the automatic status describes the computed rating, which an override replaces
+        status_formula = f"=IF({applies},{q(SCORE_OVERRIDE_ROUTE)},{status_formula[1:]})"
+        S.cell(2, status_formula, fill=FILL_CALC)
         cells["status"] = S.name_cell(f"{key}_status", 2, S.row); S.row += 1
         return cells
 
@@ -1104,7 +1188,7 @@ class Builder:
         cells = self._finish(S, key, rating, A, "=" + q("automatic method"),
                              note="All classes are required. A missing class is unknown, not zero.")
         cells["combined"] = comb
-        self.input_rating[(key, "combined")] = cells["rating"]
+        self.input_rating[(key, "combined")] = cells["computed"]
         return cells
 
     def _m_road_density_inflow_pressure(self, S, method, A):
@@ -1120,7 +1204,7 @@ class Builder:
         rule = sm.rule_for_method(method)
         rating = "=" + self._rule_formula(S, rule, v, self.inputs["ctx_region"])
         cells = self._finish(S, key, rating, A, "=" + q("automatic method"), note=note)
-        self.input_rating[(key, inp["key"])] = cells["rating"]
+        self.input_rating[(key, inp["key"])] = cells["computed"]
         return cells
 
     def _m_degree_of_regulation(self, S, method, A):
@@ -1140,7 +1224,7 @@ class Builder:
         rating = "=" + bands_formula(method["bands"], comb)
         cells = self._finish(S, "m04", rating, A, "=" + q("automatic method"))
         cells["combined"] = comb
-        self.input_rating[("m04", "combined")] = cells["rating"]
+        self.input_rating[("m04", "combined")] = cells["computed"]
         return cells
 
     def _m_erom_flow_variability(self, S, method, A):
@@ -1180,7 +1264,8 @@ class Builder:
                  f'IF({proxy}="","not rated","automatic proxy")))')
         rating = (f'=IF({observed},{stage},IF({canal},"Poor",{rating_from_anchor(proxy, A)}))')
         return self._finish(S, key, rating, A, route, None,
-                            "Observed class with a note replaces the proxy; canal and ditch feature codes rate Poor.")
+                            "Observed class with a note replaces the proxy; canal and ditch feature codes rate Poor.",
+                            blocked=observed)
 
     def _m_bhr_bank_instability_susceptibility(self, S, method, A):
         key = "m10"
@@ -1199,7 +1284,8 @@ class Builder:
         route = f'=IF({observed},"observed bank condition",IF({proxy_rating}="","not rated","automatic proxy"))'
         rating = f"=IF({observed},{rating_from_anchor(obs_idx, A)},{proxy_rating})"
         return self._finish(S, key, rating, A, route, None,
-                            "Both observed bank percentages replace the BHR proxy; the worse component governs.")
+                            "Both observed bank percentages replace the BHR proxy; the worse component governs.",
+                            blocked=observed)
 
     def _m_sediment_supply_potential(self, S, method, A):
         return self._worst_best(S, "m11", method, A, "worst_index", "All three inputs are required.")
@@ -1464,11 +1550,29 @@ class Builder:
             side(ws, last, 4, last, 13, bottom=MED)
         for mkey, m, first, last in metric_rows:
             side(ws, last, 6, last, 13, bottom=MED)
+        # the Override Score row, the last of every function: set apart from the function's
+        # metrics as a user-defined input. A double rule above it, a band of its own across
+        # the Metrics columns (the entry keeps the entry orange), a bold label and a taller
+        # row. After the fills and borders above, which would otherwise paint over it.
+        override_rows = {row for _mkey, kind, key, row in self.front_rows
+                         if kind == "ov" and key in self.score_overrides}
+        assert len(override_rows) == len(self.metrics), "one Override Score row per function"
+        for row in override_rows:
+            for col in (9, 11, 12, 13):
+                ws.cell(row=row, column=col).fill = FILL_OVERRIDE
+            label = ws.cell(row=row, column=9)
+            label.font = Font(bold=True, italic=True)
+            # flush against its entry cell, like a form prompt: the metric names above are
+            # left-aligned descriptions, this is a field the user may fill
+            label.alignment = Alignment(horizontal="right", vertical="center", indent=1)
+            ws.cell(row=row, column=13).font = Font(italic=True)
+            side(ws, row - 1, 9, row - 1, 13, bottom=DOUBLE)     # both edges: Excel draws the heavier one
+            side(ws, row, 9, row, 13, top=DOUBLE)
         # row heights follow the longest wrapped text in the row
         for r in range(first_body, last_body + 1):
             lines = max(lines_for(str(ws.cell(row=r, column=9).value or ""), 46),
                         lines_for(str(ws.cell(row=r, column=13).value or ""), 40))
-            ws.row_dimensions[r].height = 15.75 * lines
+            ws.row_dimensions[r].height = max(15.75 * lines, OVERRIDE_ROW_HEIGHT if r in override_rows else 0)
         for mkey, m, first, last in metric_rows:
             need = lines_for(m["functionName"], 24)
             have = sum((ws.row_dimensions[r].height or 15.75) for r in range(first, last + 1))
@@ -1718,7 +1822,8 @@ class Builder:
             (8, "Date of Last Update", _dt.datetime.strptime(TEMPLATE_DATE, "%Y-%m-%d"), None),
             (10, "Waiver", 'This model is provided for free as part of the USACE Technical Report "Ecosystem '
                            'Assessment Screening Index (EASI)" by ' + DEVELOPERS + ". It ships with the STAF web "
-                           "application, whose EASI report offers the same download.", body),
+                           "application, whose EASI Assessment page offers the same download under Get Forms, blank "
+                           "or completed with a site's values.", body),
             (11, "", "None of the authors nor the US Army Corps of Engineers accepts responsibility or liability "
                      "for the model's use by third parties.", body),
         ]
@@ -1753,7 +1858,8 @@ class Builder:
         # colour coding key
         S.cell(4, "Color Coding Key:", row=1)
         for rr, text, fill in ((2, "User Input", FILL_INPUT), (3, "Calculated", None),
-                               (4, "Linked to Another Cell", FILL_LINK)):
+                               (4, "Linked to Another Cell", FILL_LINK),
+                               (5, "Override Score Row", FILL_OVERRIDE)):
             S.cell(4, text, row=rr, fill=fill, align=CENTER_NOWRAP, border=True)
         S.cell(4, "Select an orange cell to read its guidance note.", row=6, font=FONT_NOTE)
         S.cell(4, "Sheets: EASI Score (entries and results), Metrics (every rule and route), "
