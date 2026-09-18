@@ -6,6 +6,7 @@
  *   - [data-nav]         click  -> nav_move {d}                (Previous / Next)
  *   - .sfari-nav-fn      click  -> nav_jump {i}                (rail function jump)
  *   - [data-report]      click  -> open_report_evt {}          (Open report)
+ *   - [data-forms]       click  -> forms_evt {}                (Get Forms dialog)
  *   - [data-suggest]     click  -> override_set {mid, rating: "auto"}  (restore desktop rating)
  *   - [data-xs-view]     click  -> Plotly.relayout on the cross-section (home / extents)
  * Also injects "Zoom Home" / "Zoom to Extents" buttons into the cross-section plot's own
@@ -49,6 +50,10 @@
 
     var report = t.closest("[data-report]");
     if (report) { send("open_report_evt", {}); return; }
+
+    // The desktop metrics list and the Excel calculator downloads.
+    var forms = t.closest("[data-forms]");
+    if (forms) { send("forms_evt", {}); return; }
 
     var sug = t.closest("[data-suggest]");
     if (sug) {

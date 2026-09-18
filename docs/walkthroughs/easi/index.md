@@ -98,10 +98,17 @@ public application (it mounts only when an operator sets
 **Excel calculator.** The app ships an offline implementation of the same
 methodology: enter the desktop quantities, the NARS-9 region and the channel
 slope, and the workbook rates the 20 metrics with the same criteria and
-reference curves, then applies the STAF rollup. It is generated from the
-app's own scoring definitions and checked against the app's engine on a
-retained case set, so the same inputs give the same results. Download it from
-the report footer, the batch dialog, or the Tools page.
+reference curves, then applies the STAF rollup. The last row of each function
+is an optional Override Score (Good, Fair or Poor) that replaces the computed
+rating, as a rating changed on the Assessment page does. The workbook is generated from the app's own scoring
+definitions and checked against the app's engine on a retained case set, so
+the same inputs give the same results.
+
+**Get Forms.** On the Assessment page, Get Forms lists the 20 desktop metrics
+with the values each was rated from. From there you can download that list as a
+PDF, the calculator completed with the site's values, your ratings and your
+notes, or the blank calculator. The batch dialog offers each site's completed
+workbook, and the blank calculator is also on the Tools page.
 
 Operators can select the former criteria with `EASI_CRITERIA_SET=legacy`.
 Both sets use the current anchors above. The regional set is the default.

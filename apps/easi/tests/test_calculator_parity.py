@@ -36,7 +36,8 @@ ALLOWED_FUNCTIONS = {"IF", "AND", "OR", "NOT", "MIN", "MAX", "ROUND", "INDEX", "
                      "UPPER", "TRIM", "SUBSTITUTE", "LEN", "NA"}
 SHEETS = ["Instructions", "EASI Score", "Metrics", "Results", "Reference", "Metadata", "ChartData"]
 HIDDEN = {"Results", "ChartData"}
-OUTPUT_NAMES = ([f"m{n:02d}_{field}" for n in range(1, 21) for field in ("rating", "score", "index", "status")]
+OUTPUT_NAMES = ([f"m{n:02d}_{field}" for n in range(1, 21)
+                 for field in ("rating", "score", "index", "status", "computed")]
                 + [f"m{n:02d}_route" for n in range(1, 21)]
                 + ["sub_index_physical", "sub_index_chemical", "sub_index_biological", "eci",
                    "sub_index_physical_display", "sub_index_chemical_display", "sub_index_biological_display",
@@ -101,6 +102,9 @@ def compare(case: dict, got: dict) -> list[str]:
             problems.append(f"{key} status {status!r} != {e['completeness']!r}")
         if "route" in e and got.get(f"{key}_route") != e["route"]:
             problems.append(f"{key} route {got.get(f'{key}_route')!r} != {e['route']!r}")
+        # under an override score the workbook still shows what the evidence computed
+        if "computed" in e and not _same(got.get(f"{key}_computed"), e["computed"]):
+            problems.append(f"{key} computed {got.get(f'{key}_computed')!r} != {e['computed']!r}")
     for outcome in ("physical", "chemical", "biological"):
         raw = (exp["subIndicesRaw"] or {}).get(outcome)
         if not _same(got.get(f"sub_index_{outcome}"), raw):
@@ -172,6 +176,23 @@ def test_workbook_structure_and_metadata():
     names = {k: v.attr_text for k, v in wb.defined_names.items()}
     for name in OUTPUT_NAMES + ["in_impervious", "ctx_region", "ov_stageClass", "curve_keys", "anchor_good"]:
         assert name in names, name
+    # one Override Score under every function, as on the Assessment page, and the computed
+    # rating kept in a cell of its own beside the final one
+    overrides = {n for n in names if re.fullmatch(r"ov_m\d\d_rating", n)}
+    assert overrides == {cc.bc.score_override_name(mkey) for mkey in cc.FUNCTIONS} and len(overrides) == 20
+    for mkey in cc.FUNCTIONS:
+        assert names[f"{mkey}_computed"] != names[f"{mkey}_rating"], mkey
+    # each is the last row of its function, labelled as the owner asked, and set apart from the
+    # function's metrics: a band of its own, a double rule above it, a bold prompt beside the entry
+    for mkey in cc.FUNCTIONS:
+        row = int(names[cc.bc.score_override_name(mkey)].rsplit("$", 1)[1])
+        label, entry = score.cell(row=row, column=9), score.cell(row=row, column=10)
+        assert label.value == "Override Score (Optional)" and label.font.b and label.alignment.horizontal == "right"
+        assert label.fill.fgColor.rgb.endswith(cc.bc.C_OVERRIDE) and entry.fill.fgColor.rgb.endswith(cc.bc.C_INPUT)
+        assert label.border.top.style == "double" and score.cell(row=row - 1, column=9).border.bottom.style == "double"
+        assert label.border.bottom.style == "medium", "the override closes its function's block"
+        assert score.row_dimensions[row].height >= cc.bc.OVERRIDE_ROW_HEIGHT
+        assert score.cell(row=row, column=6).value is None, "inside the function's merged name, rating and score"
     unlocked = [ws.cell(*openpyxl.utils.cell.coordinate_to_tuple(names[n].split("!")[1].replace("$", "")))
                 for n in names if n.startswith(("in_", "ctx_", "ov_", "site_"))
                 for ws in [wb[names[n].split("!")[0].strip("'")]]]
@@ -182,6 +203,10 @@ def test_workbook_structure_and_metadata():
     assert meta["Catalog sha256"] == identity["catalog_sha256"]
     assert meta["Curves sha256"] == identity["curves_sha256"]
     assert meta["Calculator version"] == cc.bc.TEMPLATE_VERSION
+    # one version: the generator reads it from the module that serves the workbook
+    from easi import calculator
+    assert cc.bc.TEMPLATE_VERSION == calculator.TEMPLATE_VERSION == "1.0"
+    assert cc.bc.OUT_NAME == calculator.blank_filename() == cc.WORKBOOK.name
     ref = wb["Reference"]
     keys = [c.value for c in ref["A"] if isinstance(c.value, str) and "|" in c.value]
     curves = cc.sm.curve_sets()
@@ -191,7 +216,8 @@ def test_workbook_structure_and_metadata():
 # --------------------------------------------------------------------------- #
 # gate 3: the workbook scores every case like the engine
 # --------------------------------------------------------------------------- #
-GROUPS = ["base", "band-edges", "curves", "counts", "missing", "routes", "overrides", "strata", "rollup"]
+GROUPS = ["base", "band-edges", "curves", "counts", "missing", "routes", "overrides", "strata", "rollup",
+          "override-score"]
 
 
 @pytest.mark.parametrize("group", GROUPS)

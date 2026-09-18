@@ -260,6 +260,10 @@ def test_viewer_downloads_refuse_stale_replaced_or_damaged_bundle(patch):
         download = _function("easi", name, {"_modal_download_base": getter,
             "report": SimpleNamespace(**{producer: lambda value: pytest.fail("stale export was built")})})
         assert list(download()) == []
+    # the site's completed calculator is an export of the same record, behind the same guard
+    download = _function("easi", "dl_site_calc", {"_modal_download_base": getter,
+        "calculator": SimpleNamespace(build_filled=lambda value: pytest.fail("stale workbook was built"))})
+    assert list(download()) == []
 
 
 def test_download_guard_keeps_batch_exports_and_valid_viewer_exports():

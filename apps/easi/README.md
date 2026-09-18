@@ -523,27 +523,59 @@ full rebuild, which regenerates methods and validation assets.
 
 ## Excel calculator
 
-`www/calculator/EASI_Calculator_1.1.0.xlsx` is an offline implementation of the
+`www/calculator/EASI_Calculator_1.0.xlsx` is an offline implementation of the
 same methodology: the user enters the desktop quantities, the NARS-9 region and
 the channel slope, and the workbook rates the 20 metrics, applies the reference
-curves and the STAF rollup, and reports the sub-indices and the ECI. It is
-generated, never edited by hand, by `scripts/build_calculator.py` from the
-scoring definitions the app reads (`data/screening-methods.json`,
-`data/reference-curves.json`, `data/cwa-mapping.json`, `data/easi-metrics.json`,
-`data/scoring-identity.json`); its Metadata sheet carries the method digest and
-the catalog and curve hashes. The app serves it from the report footer and the
-batch modal, and the file is reachable directly at `calculator/EASI_Calculator_1.1.0.xlsx`.
+curves and the STAF rollup, and reports the sub-indices and the ECI. Every
+function ends with an **Override Score (Optional)** row, the rating select the
+Assessment page shows on all 20 function cards (the registry's `overrideable`
+flag is not enforced there, so it is not used here either). It takes Good, Fair
+or Poor and replaces the computed rating and score the way `assessment.rescore`
+does; the Metrics sheet keeps the computed rating beside the final one. The row
+is drawn apart from the function's metrics (a band of its own, a double rule
+above it, a right-aligned bold prompt, a taller row) because it is a
+user-defined input and not a desktop quantity. The workbook is generated, never edited by
+hand, by `scripts/build_calculator.py` from the scoring definitions the app reads
+(`data/screening-methods.json`, `data/reference-curves.json`,
+`data/cwa-mapping.json`, `data/easi-metrics.json`, `data/scoring-identity.json`);
+its Metadata sheet carries the method digest and the catalog and curve hashes.
+The version lives in one place, `easi/calculator.py`, which the generator reads.
+
+**Get Forms** on the Assessment page lists the 20 desktop metrics with the values
+each was rated from and offers three downloads: that list as a PDF
+(`report.build_desktop_metrics_pdf`), the calculator **completed** from the
+screening, and the **blank** calculator. The batch per-site report offers the
+site's completed workbook. The blank is also reachable directly at
+`calculator/EASI_Calculator_1.0.xlsx`.
+
+`calculator.build_filled(result)` completes the workbook without a spreadsheet
+library (openpyxl drops the charts on a round trip and is not a runtime
+dependency): it edits the EASI Score part inside the zip and copies every other
+part byte for byte. `calculator.entries_from_result` reads the entries from the
+report alone: the values the engine rated, from each row's scoring trace; the
+site block; the NARS-9 region, the feature code and, only where needed, the slope
+class; the ratings changed on the Assessment page, as Override Scores, and the
+assessor's notes. An entry only
+another route would read stays blank, which leaves the workbook on the route the
+app took. Anything the single shared cell cannot say (a function the app left
+unrated, a quantity the app rated two ways) is written into the workbook's notes
+box and the PDF.
 
 `tests/test_calculator_parity.py` proves same inputs, same results on a retained
 case set (`tests/data/calculator_cases.json`, built by `tests/calculator_cases.py`
 from evidence records scored by the app's own engine): band edges on both sides,
 every reference curve at its crossings and knots, missing inputs, every fallback
-route, the observed overrides, the strata and the rollup extremes. The everyday
-gate evaluates the workbook with the `formulas` package; `EASI_EXCEL_PARITY=1`
-repeats it in the installed Excel. Regenerate the case set with
-`EASI_WRITE_GOLDEN=1` after an intended method change, and rebuild the workbook
-with `python scripts/build_calculator.py` (the test fails if the committed file
-differs from a fresh build).
+route, the observed overrides, the override scores of all 20 functions, the
+strata and the rollup extremes. The everyday gate evaluates the workbook with the `formulas` package;
+`EASI_EXCEL_PARITY=1` repeats it in the installed Excel.
+`tests/test_calculator_fill.py` proves the completed workbook: the report-driven
+entries never disagree with the record-driven ones, the workbook still scores
+like the engine from them (a stratified sample by default, every case with
+`EASI_FILL_PARITY_FULL=1`), and a completed file differs from the blank only in
+the intended cells. Regenerate the case set with `EASI_WRITE_GOLDEN=1` on
+`tests/test_calculator_parity.py` alone after an intended method change, and
+rebuild the workbook with `python scripts/build_calculator.py` (the test fails if
+the committed file differs from a fresh build).
 
 ## Methodology & references
 
@@ -576,7 +608,7 @@ EASI 1.0.0, tagged `easi-v1.0.0` (2026-09-16). The scoring method of this releas
 | Scoring identity | `alternative-2` (Alternative 2: NARS-9 references) |
 | Catalog sha256 (`data/screening-methods.json`) | `78c1e2921198905ee6e53f18147e2aa33f9a6ffd87ff3e7a23844238b3fb73f3` |
 | Reference curves sha256 (`data/reference-curves.json`) | `a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887` |
-| Excel calculator | `www/calculator/EASI_Calculator_1.1.0.xlsx`, sha256 `03add4d439300fb81388b2067a4013018cf4818d7b13471e8ebd4c14d8ebb602` (SFARI-style worksheet, 2026-09-17) |
+| Excel calculator | `www/calculator/EASI_Calculator_1.0.xlsx`, sha256 `b09bb944eda2c5eb3c44305bc5ad04967a02e43c429e4d07820f6e220565b78a` (calculator 1.0: SFARI-style worksheet with an Override Score under every function, 2026-09-18) |
 | Technical report | `TR_EASI_2026-09-16_Clean.docx` and `TR_EASI_2026-09-16_Tracked.docx` (notes/EASI_Report/report) |
 | Development dataset | build `3d8a4711c5414d4e9e76ca2233815783`, published to the `easi-national-current` prerelease with `provenance.json` |
 
