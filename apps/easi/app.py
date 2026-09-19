@@ -12,6 +12,7 @@ from __future__ import annotations
 import html
 import copy
 import json
+import math
 import os
 import tempfile
 from pathlib import Path
@@ -30,6 +31,7 @@ from easi import (assessment, basin, batch_ui, notices, xsplotly, bieger, config
                   geomorph, method_plot, methods as easi_methods, pipeline, report,
                   routing, scoring)
 from easi import network_display, reportmap, viewport  # noqa: E402
+from easi import screening_methods  # noqa: E402  (the observed-evidence criteria shown on the cards)
 from easi.batch import api as batch_api  # noqa: E402
 from easi.batch import contracts as batch_contracts  # noqa: E402
 from easi.batch import exports as batch_exports  # noqa: E402
@@ -290,6 +292,101 @@ XS_METRIC_IDS = {hydraulics.ENTRENCHMENT_ID, hydraulics.FLOODPLAIN_ENGAGEMENT_ID
                  geomorphology.CHANNEL_EVOL_ID}
 XS_FUNCTION_IDS = {_METRICS[mid]["functionId"] for mid in XS_METRIC_IDS if mid in _METRICS}
 
+# Observed evidence the assessor can enter on the card (2026-09-18): the two metrics whose
+# catalog method puts a documented observation above the terrain proxy. The values go to
+# assessment.apply_observed_evidence, which applies an observation only when its metric's
+# entries are complete (a class with its indicators, both bank percentages).
+OBSERVED_INPUTS = {
+    geomorphology.CHANNEL_EVOL_ID: ("stageClass", "indicators"),
+    geomorphology.BANK_EROSION_ID: ("erodingBankPct", "armoredBankPct"),
+}
+_RATINGS = ("Good", "Fair", "Poor")
+
+
+def _observed_value(mid, key, value):
+    """A posted observed entry as the engine takes it, or None to clear the entry."""
+    if key not in OBSERVED_INPUTS.get(mid, ()):
+        return None
+    if key == "stageClass":
+        return value if value in _RATINGS else None
+    if key == "indicators":
+        return " ".join(str(value or "").split())[:500] or None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) and 0.0 <= number <= 100.0 else None
+
+
+def _observed_criteria(mid):
+    """Good/Fair/Poor wording of the observed route, from the catalog the engine scores with."""
+    return ((screening_methods.method_for(mid) or {}).get("fieldReference") or {}).get("criteria") or {}
+
+
+def _observed_editor(mid, current=None):
+    """The optional observed-evidence block of a metric card, None for the other 18 metrics.
+
+    Plain HTML like the rating select and the note (www/worksheet.js posts each entry as
+    ``observed_set``), and seeded from the current values, so typing never re-renders it."""
+    if mid not in OBSERVED_INPUTS:
+        return None
+    cur = current or {}
+    criteria = _observed_criteria(mid)
+    if mid == geomorphology.CHANNEL_EVOL_ID:
+        options = [ui.tags.option("No observation", value="")]
+        for rating in _RATINGS:
+            attrs = {"value": rating, **({"selected": "selected"} if cur.get("stageClass") == rating else {})}
+            options.append(ui.tags.option(f"{rating}: {criteria.get(rating, '')}".rstrip(": "), attrs))
+        return ui.div(
+            ui.div("Observed channel condition ", ui.span("(optional)", class_="easi-obs-opt"),
+                   class_="easi-obs-title"),
+            ui.div("A documented field visit or geomorphic report replaces the automatic rating. "
+                   "Both entries are needed.", class_="easi-obs-help"),
+            ui.tags.label("Observed class", ui.tags.select(
+                *options, {"class": "easi-obs-in", "data-mid": mid, "data-key": "stageClass"}),
+                class_="easi-obs-field"),
+            ui.tags.label("Observed indicators", ui.tags.textarea(
+                cur.get("indicators") or "",
+                {"class": "easi-obs-in", "data-mid": mid, "data-key": "indicators", "rows": "2",
+                 "maxlength": "500",
+                 "placeholder": "Headcuts, bars, width or depth change, bank erosion, recovery "
+                                "features, with the source and date"}),
+                class_="easi-obs-field"),
+            class_="easi-obs")
+
+    def percent(key, label):
+        value = cur.get(key)
+        return ui.tags.label(label, ui.tags.input(
+            {"class": "easi-obs-in", "data-mid": mid, "data-key": key, "type": "number", "min": "0",
+             "max": "100", "step": "1", "value": "" if value is None else f"{value:g}"}),
+            class_="easi-obs-field easi-obs-num")
+
+    return ui.div(
+        ui.div("Observed bank condition ", ui.span("(optional)", class_="easi-obs-opt"),
+               class_="easi-obs-title"),
+        ui.div("Field or verified-imagery estimates replace the automatic rating. Both entries are "
+               "needed, and the worse one governs.", class_="easi-obs-help"),
+        ui.div(percent("erodingBankPct", "Eroding bank (%)"), percent("armoredBankPct", "Armored bank (%)"),
+               class_="easi-obs-row"),
+        ui.div(*[ui.div(ui.tags.b(rating + ": "), criteria.get(rating, "")) for rating in _RATINGS
+                 if criteria.get(rating)], class_="easi-obs-crit"),
+        class_="easi-obs")
+
+
+def _observed_hint(mid, entries, row):
+    """What the card says about the observed entries: applied, or what is still missing."""
+    if mid not in OBSERVED_INPUTS:
+        return None
+    if (row or {}).get("status") == "observed":
+        proxy = ((row.get("proxyResult") or {}).get("rating")) or "not rated"
+        return f"Rated from your observation. The automatic rating was {proxy}."
+    if not entries:
+        return None
+    if mid == geomorphology.CHANNEL_EVOL_ID:
+        return ("Add the observed indicators. The class applies only with them." if entries.get("stageClass")
+                else "Pick the observed class. The indicators alone do not change the rating.")
+    return "Enter both percentages. The observation applies only with both."
+
 
 # --------------------------------------------------------------------------- #
 # UI helpers
@@ -479,7 +576,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=60"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=61"),
                     *_viewer_head_tags(NATIONAL_VIEWER),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
@@ -487,7 +584,7 @@ app_ui = ui.page_fillable(
                     ui.tags.script(src="report-controls.js", defer=""),
                     ui.tags.script(src="report-edit.js", defer=""),
                     ui.tags.script(src="report-ready.js?v=2", defer=""),
-                    ui.tags.script(src="worksheet.js?v=9", defer=""),
+                    ui.tags.script(src="worksheet.js?v=10", defer=""),
                     ui.tags.script(src="coord-entry.js", defer="")),
     # Disable Shiny/bslib's page-level "pulse" loading bar at the top of the screen —
     # the bottom-right toast is the app's loading indicator (output spinners unaffected).
@@ -633,8 +730,12 @@ def _rate_select(mid, r):
         opts.append(ui.tags.option(rt, value=rt, selected="selected") if rt == eff
                     else ui.tags.option(rt, value=rt))
     # the criteria + computed value live in the metric-name ⓘ, so the control stays narrow.
-    return ui.tags.select(*opts, {"class": "easi-rate-sel" + (" set" if eff else ""),
-                                  "data-mid": mid, "title": "Click to override rating"})
+    attrs = {"class": "easi-rate-sel" + (" set" if eff else ""), "data-mid": mid,
+             "title": "Click to override rating"}
+    if r.get("status") == "observed":      # the observation governs until its entries are cleared
+        attrs.update({"disabled": "disabled",
+                      "title": "Rated from your observation. Clear it to set a rating by hand."})
+    return ui.tags.select(*opts, attrs)
 
 
 def _rate_chip(r):
@@ -1490,6 +1591,8 @@ def server(input, output, session):
     _delin_prog = {"stage": None, "reaches": None, "hops": None, "family": None}
     _overrides = reactive.value({})        # {metricId: "Good"/"Fair"/"Poor"} from the worksheet
     _notes = reactive.value({})            # {metricId: note text} from the worksheet
+    _observed = reactive.value({})         # {metricId: {input key: value}} observed channel class and
+    #                                        bank condition, for assessment.apply_observed_evidence
     _geom_owned = reactive.value(set())    # metricIds whose rating is currently derived from
     #                                        an edited cross-section (vs a manual dropdown pick)
     _geom_text = reactive.value({})        # {metricId: value text} for those edited rows
@@ -2449,9 +2552,12 @@ def server(input, output, session):
         merged = {k: v for k, v in d.items() if k != "ctx_inputs"}
         merged["delineation"] = {**d["delineation"], "huc12": res.get("huc12")}
         merged["report"] = res["report"]
+        # the twelve EROM monthly flows behind the low-flow variability, kept for the
+        # completed calculator's monthly flow helper (ctx_inputs itself is dropped above)
+        merged["eromMonthly"] = calculator.monthly_flows((d.get("ctx_inputs") or {}).get("erom"))
         base_result.set(merged)
-        # fresh screening: no overrides / notes / source swaps / geometry edits
-        _overrides.set({}); _notes.set({})
+        # fresh screening: no overrides / notes / observations / source swaps / geometry edits
+        _overrides.set({}); _notes.set({}); _observed.set({})
         _geom_owned.set(set()); _geom_text.set({}); _geom_scoring.set({}); _xs_sel.set(None)
         _xs_unit_prev.set("ft"); current_fn.set(0)
         # Fresh run complete: auto-open the screening report (same path as "Open report",
@@ -2502,7 +2608,7 @@ def server(input, output, session):
         _invalidate_analysis()
         pending_anchor.set(None); anchor_error.set(None); scored_reach.set(None)
         snapped_point.set(None); delin.set(None); base_result.set(None)
-        _overrides.set({}); _notes.set({})
+        _overrides.set({}); _notes.set({}); _observed.set({})
         _geom_owned.set(set()); _geom_text.set({}); _geom_scoring.set({}); current_fn.set(0)
         stage.set("")
         current_step.set(STEP_IDENTIFY)
@@ -2565,7 +2671,11 @@ def server(input, output, session):
                 "20 metrics and scores them with the STAF rollup.\n"
                 "4. Review each function in the **Assessment**. Adjust ratings, "
                 "notes, or the cross-section as needed (nine sections are sampled "
-                "along the reach and the geometry metrics score on their medians).\n"
+                "along the reach and the geometry metrics score on their medians). "
+                "Channel evolution and Channel and floodplain dynamics also take an "
+                "**observation**: a documented channel class with its indicators, or "
+                "the eroding and armored bank percentages. A complete observation "
+                "outranks the automatic rating and a rating you set by hand.\n"
                 "5. The **report** opens when screening finishes. Download it as PDF, "
                 "CSV, or GeoJSON, or download the **completed workbook**, the Excel "
                 "calculator with this site's values, your ratings and your notes entered.\n"
@@ -2808,6 +2918,25 @@ def server(input, output, session):
             cur.pop(mid, None)
         _notes.set(cur)
 
+    # ---- observed evidence (posted per entry by www/worksheet.js) ----
+    @reactive.effect
+    @reactive.event(input.observed_set)
+    def _apply_observed():
+        ev = input.observed_set() or {}
+        mid, key = ev.get("mid"), ev.get("key")
+        if key not in OBSERVED_INPUTS.get(mid, ()):
+            return
+        value = _observed_value(mid, key, ev.get("value"))
+        cur = {m: dict(entries) for m, entries in _observed().items()}
+        entries = cur.setdefault(mid, {})
+        if value is None:
+            entries.pop(key, None)
+        else:
+            entries[key] = value
+        if not entries:
+            cur.pop(mid, None)
+        _observed.set(cur)
+
     # ---- editable cross-section geometry (bankfull / low-bank heights) + which of
     #      the sampled sections (nine stations along the reach) is shown -------------
     _xs_unit_prev = reactive.value("ft")  # tracks the unit for input conversion
@@ -2994,6 +3123,12 @@ def server(input, output, session):
                         row["scoring"] = trace
                         row["generatedRating"] = trace.get("generatedRating")
                         row["completeness"] = trace.get("completeness", row.get("completeness"))
+        # observed channel class and bank condition sit above everything else, in the
+        # engine's own order: rescore first, then the observations (a rescore run second
+        # would rebuild an observed row from its generated rating and undo it)
+        observed = _observed()
+        if observed:
+            sc = assessment.apply_observed_evidence(sc, observed)
         return sc
 
     @reactive.calc
@@ -3397,6 +3532,7 @@ def server(input, output, session):
         is_xs = fid in XS_FUNCTION_IDS
         with reactive.isolate():
             note0 = (_notes() or {}).get(mid, "")
+            observed0 = (_observed() or {}).get(mid)
             brow = next((r for r in ((base_result() or {}).get("report") or {}).get("metricRows", [])
                          if r["metricId"] == mid), None) or {}
         card = ui.div(
@@ -3410,6 +3546,7 @@ def server(input, output, session):
             _method_expander(mid, _active_scoring(brow, None)),
             ui.tags.textarea(note0, {"class": "easi-note-ta", "data-mid": mid, "rows": "2",
                                      "placeholder": "Add a note for this metric…"}),
+            _observed_editor(mid, observed0),
             _xs_editor() if is_xs else None,
             class_="sfari-metric easi-metric-card")
         prev_attrs = {"data-nav": "-1", "type": "button"}
@@ -3451,16 +3588,21 @@ def server(input, output, session):
         current_fn()  # depend on the active function so the slot follows navigation
         mid, row = _cur_row(sc)
         gen = row.get("generatedRating")
+        # an observation outranks the rating select, so while one is in effect the evidence
+        # reads "observed", the restore chip is hidden and the select is locked
+        is_observed = row.get("status") == "observed"
         chip = (ui.tags.button(f"use {gen}", {"data-suggest": mid, "type": "button",
                                               "title": f"Restore the desktop rating ({gen})"},
                                class_="sfari-suggest-chip")
-                if gen and row.get("rating") != gen else None)
+                if gen and row.get("rating") != gen and not is_observed else None)
+        hint = _observed_hint(mid, (_observed() or {}).get(mid) or {}, row)
         return ui.div(
-            ui.div(ui.span("desktop", class_="sfari-ev-tag"),
+            ui.div(ui.span("observed" if is_observed else "desktop", class_="sfari-ev-tag"),
                    ui.tags.b(row.get("valueText") or "—", class_="sfari-ev-val"),
                    chip, class_="sfari-evidence"),
             _borrowed_metric_note(row),
             ui.div(_rate_select(mid, row), class_="easi-rate-cell"),
+            (ui.div(hint, class_="easi-obs-hint" + (" applied" if is_observed else "")) if hint else None),
             class_="easi-metric-live")
 
     def _cur_method():

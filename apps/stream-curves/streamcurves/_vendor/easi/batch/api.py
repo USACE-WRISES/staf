@@ -15,7 +15,7 @@ from __future__ import annotations
 import asyncio
 from typing import Callable, Optional
 
-from .. import config, pipeline, routing, scoring
+from .. import calculator, config, pipeline, routing, scoring
 from ..metrics import registry
 from . import ENGINE_API_VERSION, contracts, runtime
 from .contracts import (BatchConfig, BatchRequest, Completeness,
@@ -231,6 +231,9 @@ async def run_site(site: SiteRequest, *, metric_ids: Optional[list[str]] = None,
         "reach_geojson": delin.get("reach_geojson"),
         "siteAnchor": delin.get("siteAnchor"),
         "report": report,
+        # the twelve monthly flows behind the low-flow variability, for the monthly flow
+        # helper of the site's completed calculator (as the single-site result keeps them)
+        "eromMonthly": calculator.monthly_flows(ctx_inputs.get("erom")),
     }
     _emit(on_event, "site_done", site.site_id, state=result.state)
     return result

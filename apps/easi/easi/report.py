@@ -644,10 +644,12 @@ def desktop_metric_rows(result: dict) -> list[dict]:
     rows = []
     for n, (mid, meta) in enumerate(config.metrics_by_id().items(), 1):
         row = by_id.get(mid) or {}
+        # context inputs are not entries of the calculator, except the observed indicators,
+        # which the observed channel class needs beside it
         inputs = [{"label": item.get("label") or item.get("key") or "",
                    "value": _input_value_text(item.get("value"), item.get("units") or "")}
                   for item in (row.get("scoring") or {}).get("inputs") or []
-                  if not item.get("contextOnly")]
+                  if not item.get("contextOnly") or item.get("key") == "indicators"]
         assessed = row.get("status") == "override"
         rows.append({
             "n": n,

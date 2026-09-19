@@ -351,6 +351,13 @@ complete availability, not 20 independent field observations.
   generated proxy updates underneath it.
 - **Inline Good/Fair/Poor overrides** on any metric (pick the computed value to
   revert) plus **per-metric notes**, all carried into the exports.
+- **Observed evidence** on the two cards whose method puts an observation above the
+  terrain proxy: Channel evolution takes a documented channel class (the card shows
+  the catalog's stage wording) with its indicators, and Channel and floodplain
+  dynamics takes the eroding and armored bank percentages. An observation applies
+  only when complete, through `assessment.apply_observed_evidence` after the
+  rescore, so it outranks a rating set by hand and locks the rating select until it
+  is cleared. It reaches the exports and the completed workbook's observed cells.
 
 ## Data sources (all public, no API keys)
 
@@ -555,8 +562,11 @@ dependency): it edits the EASI Score part inside the zip and copies every other
 part byte for byte. `calculator.entries_from_result` reads the entries from the
 report alone: the values the engine rated, from each row's scoring trace; the
 site block; the NARS-9 region, the feature code and, only where needed, the slope
-class; the ratings changed on the Assessment page, as Override Scores, and the
-assessor's notes. An entry only
+class; the ratings changed on the Assessment page, as Override Scores; the
+observed channel class and bank percentages entered there; the twelve monthly
+flows behind the low-flow variability, into the monthly flow helper (the app and
+the batch engine keep them on the result as `eromMonthly`); and the assessor's
+notes. An entry only
 another route would read stays blank, which leaves the workbook on the route the
 app took. Anything the single shared cell cannot say (a function the app left
 unrated, a quantity the app rated two ways) is written into the workbook's notes
@@ -609,7 +619,7 @@ EASI 1.0.0, tagged `easi-v1.0.0` (2026-09-16). The scoring method of this releas
 | Scoring identity | `alternative-2` (Alternative 2: NARS-9 references) |
 | Catalog sha256 (`data/screening-methods.json`) | `78c1e2921198905ee6e53f18147e2aa33f9a6ffd87ff3e7a23844238b3fb73f3` |
 | Reference curves sha256 (`data/reference-curves.json`) | `a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887` |
-| Excel calculator | `www/calculator/EASI_Calculator_1.0.xlsx`, sha256 `b09bb944eda2c5eb3c44305bc5ad04967a02e43c429e4d07820f6e220565b78a` (calculator 1.0: SFARI-style worksheet with an Override Score under every function, 2026-09-18) |
+| Excel calculator | `www/calculator/EASI_Calculator_1.0.xlsx`, sha256 `6763138e3523fda9e014ec0e815988699956babe290f86a952e98e90df801cae` (calculator 1.0: SFARI-style worksheet with an Override Score under every function, 2026-09-18) |
 | Technical report | `TR_EASI_2026-09-16_Clean.docx` and `TR_EASI_2026-09-16_Tracked.docx` (notes/EASI_Report/report) |
 | Development dataset | build `3d8a4711c5414d4e9e76ca2233815783`, published to the `easi-national-current` prerelease with `provenance.json` |
 
