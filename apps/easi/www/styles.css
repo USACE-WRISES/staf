@@ -859,6 +859,28 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   color: #33415c; white-space: nowrap; min-width: 140px; text-align: center; }
 /* cross-section editor embedded in the 3 XS-metric cards */
 .easi-xs-in-card { margin-top: 10px; border-top: 1px solid var(--rule); padding-top: 12px; }
+/* Observed evidence block (2026-09-18): the optional documented observation of the Channel
+   evolution and Bank condition cards, set apart from the automatic evidence above it. The
+   hint is a full-width line of the live slot, which is a wrapping flex row. */
+.easi-obs { margin-top: 10px; border: 1px solid var(--card-border); border-left: 3px solid #b9c8e0;
+  border-radius: 7px; background: var(--surface-soft); padding: 9px 11px 10px; }
+.easi-obs-title { font-size: 12.5px; font-weight: 700; color: #2f3a52; }
+.easi-obs-opt { font-weight: 500; color: #7c869c; }
+.easi-obs-help { font-size: 11.5px; color: #55607a; margin: 2px 0 8px; }
+.easi-obs-field { display: flex; flex-direction: column; gap: 3px; font-size: 11.5px; font-weight: 600;
+  color: #45506a; margin: 0 0 8px; }
+.easi-obs-field:last-child { margin-bottom: 0; }
+.easi-obs-in { border: 1px solid var(--card-border); border-radius: 6px; padding: 5px 8px; font-size: 12.5px;
+  font-weight: 400; color: #2a3344; background: #fff; width: 100%; box-sizing: border-box; }
+textarea.easi-obs-in { resize: vertical; min-height: 38px; }
+.easi-obs-in:focus { outline: none; border-color: var(--easi-accent);
+  box-shadow: 0 0 0 2px rgba(47, 75, 124, .12); }
+.easi-obs-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.easi-obs-row .easi-obs-num { flex: 1 1 130px; max-width: 190px; }
+.easi-obs-crit { font-size: 11.5px; color: #55607a; line-height: 1.45; }
+.easi-obs-hint { flex: 1 1 100%; font-size: 11.5px; color: #8a5a12; }
+.easi-obs-hint.applied { color: #1f5f3a; }
+.easi-rate-sel[disabled] { cursor: default; opacity: .75; }
 /* compute / empty state */
 .easi-fn-compute { display: flex; flex-direction: column; align-items: center; gap: 12px;
   padding: 60px 20px; color: #55607a; font-size: 14px; }

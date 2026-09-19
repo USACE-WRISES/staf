@@ -84,7 +84,7 @@ def test_the_rail_button_opens_the_dialog():
     assert 'class_="sfari-btn sfari-nav-desktop"' in worksheet
     assert worksheet.index("_stepper(step)") < worksheet.index('"Get Forms"') < worksheet.index('"fn_nav"')
     assert 'var forms = t.closest("[data-forms]");' in JS and 'send("forms_evt", {});' in JS
-    assert 'src="worksheet.js?v=9"' in SRC
+    assert 'src="worksheet.js?v=10"' in SRC
     handler = SRC.split("def _open_forms():", 1)[1].split("@reactive", 1)[0]
     assert "@reactive.event(input.forms_evt)\n    def _open_forms():" in SRC
     assert 'if app_mode() != "single":' in handler and "res = export_result()" in handler
@@ -118,4 +118,4 @@ def test_the_stylesheet_pins_the_header_and_the_layout():
     ):
         assert rule in CSS, rule
     assert ".ff-preview" not in CSS                     # EASI has no preview tab
-    assert 'href="styles.css?v=60"' in SRC              # bumped with the CSS
+    assert 'href="styles.css?v=61"' in SRC              # bumped with the CSS

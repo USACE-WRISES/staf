@@ -233,6 +233,46 @@ def test_workbook_matches_the_engine(fixture, backend, group):
     assert not failures, f"{len(failures)} of {len(cases)} cases differ:\n" + "\n".join(failures[:25])
 
 
+# --------------------------------------------------------------------------- #
+# the monthly flow helper (not linked to any rating, so gate 3 never reaches it)
+# --------------------------------------------------------------------------- #
+HELPER_FLOWS = [14.178, 13.866, 53.395, 70.182, 34.141, 14.33, 7.674, 5.962, 5.026, 14.334, 20.306, 18.268]
+
+
+def _helper_entries(flows):
+    return {f"in_m{month:02d}": value for month, value in enumerate(flows, 1)}
+
+
+def test_the_monthly_flow_helper_computes_the_engines_variability(backend):
+    from easi.metrics import hydraulics
+    want = hydraulics.monthly_flow_cv({f"qe_{m:02d}": v for m, v in enumerate(HELPER_FLOWS, 1)})
+    assert want == 0.851775
+    assert backend.evaluate(_helper_entries(HELPER_FLOWS), ["flow_cv_helper"])["flow_cv_helper"] == want
+    # a full year or nothing, and never a division by a zero mean
+    assert backend.evaluate(_helper_entries(HELPER_FLOWS[:11]), ["flow_cv_helper"])["flow_cv_helper"] is None
+    assert backend.evaluate(_helper_entries([0.0] * 12), ["flow_cv_helper"])["flow_cv_helper"] is None
+
+
+def test_the_helper_names_its_newer_function_the_way_the_file_format_requires():
+    # STDEV.P postdates the original file format: written bare, Excel reads #NAME?, while the
+    # formulas package accepts either spelling, so only the file text can catch it. The error
+    # stayed hidden behind the IF until the application began to enter the twelve flows.
+    import zipfile
+    with zipfile.ZipFile(cc.WORKBOOK) as archive:
+        sheets = "".join(archive.read(n).decode("utf-8") for n in archive.namelist()
+                         if n.startswith("xl/worksheets/"))
+    assert "_xlfn.STDEV.P(" in sheets
+    assert not re.search(r"(?<!_xlfn\.)STDEV\.P\(", sheets)
+
+
+@pytest.mark.excel
+def test_excel_computes_the_monthly_flow_helper():
+    if not ExcelComBackend.available():
+        pytest.skip("set EASI_EXCEL_PARITY=1 on a Windows box with Excel and pywin32 under py -3.12")
+    got = ExcelComBackend(cc.WORKBOOK).evaluate(_helper_entries(HELPER_FLOWS), ["flow_cv_helper"])
+    assert got["flow_cv_helper"] == 0.851775
+
+
 @pytest.mark.excel
 def test_excel_matches_the_engine(fixture):
     if not ExcelComBackend.available():

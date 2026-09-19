@@ -103,6 +103,24 @@ def entry_cells() -> dict[str, str]:
 
 
 # --- Entries from a screening ---------------------------------------------------
+def monthly_flows(erom) -> list[float] | None:
+    """The twelve EROM mean monthly flows (``qe_01`` .. ``qe_12``) as a list, or None.
+
+    All twelve or nothing: the workbook's helper computes the variability only from a
+    full year, exactly as ``metrics.hydraulics.monthly_flow_cv`` does, so a partial
+    year would only leave a helper that shows no result beside an entered one.
+    """
+    if not isinstance(erom, dict):
+        return None
+    flows = []
+    for month in range(1, 13):
+        value = erom.get(f"qe_{month:02d}")
+        if isinstance(value, bool) or not isinstance(value, numbers.Real) or not math.isfinite(float(value)):
+            return None
+        flows.append(float(value))
+    return flows
+
+
 def _catalog_rows(report: dict) -> list[tuple[str, dict]]:
     """``(mNN, row)`` in catalog order, the order of the workbook's rows."""
     from . import config
@@ -193,6 +211,16 @@ def entries_from_result(result: dict) -> tuple[dict, list[str]]:
         used = strata.get("slope_class") or "national"
         if (geo.slope_class(entries.get("in_slope")) or "national") != used:
             entries["ctx_slope_override"] = used
+
+    # the monthly flow helper: the twelve flows behind the variability entered above, when
+    # the result kept them (the application does, as ``eromMonthly``). The helper is not
+    # linked to the entry, so this only lets a reader see where the entered value came from.
+    flows = result.get("eromMonthly")
+    if (isinstance(flows, (list, tuple)) and len(flows) == 12 and "in_flowCv" in entries
+            and all(_number_text(v) is not None for v in flows)):      # a full year or nothing
+        for month, value in enumerate(flows, 1):
+            if f"in_m{month:02d}" in cells:
+                entries[f"in_m{month:02d}"] = value
 
     # the override scores (every function has the entry, as every function card of the
     # Assessment page has the rating select), and what the application left unrated

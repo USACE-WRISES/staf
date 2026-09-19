@@ -7,6 +7,7 @@
  *   - .sfari-nav-fn      click  -> nav_jump {i}                (rail function jump)
  *   - [data-report]      click  -> open_report_evt {}          (Open report)
  *   - [data-forms]       click  -> forms_evt {}                (Get Forms dialog)
+ *   - .easi-obs-in       change / input -> observed_set {mid, key, value}  (observed evidence)
  *   - [data-suggest]     click  -> override_set {mid, rating: "auto"}  (restore desktop rating)
  *   - [data-xs-view]     click  -> Plotly.relayout on the cross-section (home / extents)
  * Also injects "Zoom Home" / "Zoom to Extents" buttons into the cross-section plot's own
@@ -91,6 +92,27 @@
       send("nav_jump", { i: parseInt(fnItem.getAttribute("data-idx"), 10) || 0 });
       return;
     }
+  });
+
+  // ---- observed evidence (channel class + indicators, eroding and armored bank): each entry
+  // is posted on its own and the server applies an observation only when its metric's entries
+  // are complete. A pick or a number posts at once, typed text after a short pause and on blur.
+  function sendObserved(el) {
+    send("observed_set", { mid: el.getAttribute("data-mid"), key: el.getAttribute("data-key"),
+                           value: el.value });
+  }
+  function isObserved(el) { return !!(el && el.classList && el.classList.contains("easi-obs-in")); }
+  var obsTimer = null;
+  document.addEventListener("change", function (e) {
+    if (!isObserved(e.target)) return;
+    clearTimeout(obsTimer);
+    sendObserved(e.target);
+  });
+  document.addEventListener("input", function (e) {
+    var el = e.target;
+    if (!isObserved(el) || el.tagName === "SELECT") return;
+    clearTimeout(obsTimer);
+    obsTimer = setTimeout(function () { sendObserved(el); }, 450);
   });
 
   // ---- cross-section modebar: inject "Zoom Home" / "Zoom to Extents" into the plot's own

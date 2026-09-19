@@ -594,6 +594,7 @@ class Builder:
         self.qspec = {row[1]: row for row in QUANTITY_INPUTS}
         self.ovspec = {row[0]: row for row in OVERRIDE_INPUTS}
         self.ov_source = {row[0]: OBSERVED_SOURCE for row in OVERRIDE_INPUTS}
+        self._observed_guidance()
         self.ctxspec = {row[0]: row for row in CONTEXT_INPUTS}
         # the worksheet rows: FRONT_ROWS, then the Override Score as the last row of
         # every function (the Assessment page offers the rating select on all 20)
@@ -623,6 +624,36 @@ class Builder:
         self.front_rows: list[tuple[str, str, str, int]] = []   # (mkey, kind, key/field, row)
         self.front_span: dict[str, tuple[int, int]] = {}        # mkey -> (first row, last row)
         self.rollup: dict[str, str] = {}                         # results refs used by the worksheet
+
+    def _observed_guidance(self):
+        """Guidance notes of the four observed entries, written from the catalog.
+
+        The note is what a user reads on selecting the cell, so it has to say what Good, Fair
+        and Poor mean and where the value comes from: the stage wording of the channel method's
+        field reference and the class limits of the observed bank bands, the same text the
+        Assessment page shows on the two cards. Excel cuts a note at 255 characters.
+        """
+        chan = self.methods["channel-adjustment-susceptibility"]["fieldReference"]["criteria"]
+        bank = self.variant("bhr-bank-instability-susceptibility", "observed-bank-condition")
+
+        def limits(key: str) -> str:
+            bands = next(i for i in bank["inputs"] if i["key"] == key)["bands"]
+            return ", ".join(f"{b['rating']} {b['label']}" for b in bands)
+
+        notes = {
+            "ov_stageClass": " ".join(f"{r}: {chan[r].rstrip('.')}." for r in RATINGS)
+                             + " From a field visit or report. Needs the note below.",
+            "ov_indicators": "Required for the observed class to apply. Record what was seen (headcuts, bars, width "
+                             "or depth change, bank erosion, recovery features) with the source and the date.",
+            "ov_erodingBankPct": f"Percent of bank length eroding, from a field visit or verified imagery. "
+                                 f"{limits('erodingBankPct')}. Both bank entries are required and the worse governs.",
+            "ov_armoredBankPct": f"Percent of bank length artificially armored. {limits('armoredBankPct')}. "
+                                 "Both bank entries are required and the worse governs.",
+        }
+        for name, note in notes.items():
+            assert len(note) <= 255, (name, len(note))
+            spec = self.ovspec[name]
+            self.ovspec[name] = (*spec[:4], note)
 
     def _check_front_rows(self):
         """Every entry appears once, every catalog input of a method is shown under it."""
@@ -962,7 +993,11 @@ class Builder:
         rng = f"'{SCORE}'!$B${r + 2}:$M${r + 2}"
         S.cell(1, "Flow variability (CV)", row=r + 3, font=FONT_BOLD, align=CENTER)
         ws.row_dimensions[r + 3].height = 30
-        S.cell(2, f'=IF(COUNT({rng})<12,"",IF(AVERAGE({rng})<=0,"",ROUND(STDEV.P({rng})/AVERAGE({rng}),6)))',
+        # STDEV.P postdates the original file format, so the file must name it _xlfn.STDEV.P or Excel
+        # reads #NAME? (Excel shows and edits it as STDEV.P). The IF hid this while the helper was
+        # blank: the branch is only evaluated once all twelve flows are entered (found 2026-09-18,
+        # when the application began to enter them).
+        S.cell(2, f'=IF(COUNT({rng})<12,"",IF(AVERAGE({rng})<=0,"",ROUND(_xlfn.STDEV.P({rng})/AVERAGE({rng}),6)))',
                row=r + 3, fmt="0.000000", align=CENTER_NOWRAP)
         S.name_cell("flow_cv_helper", 2, r + 3)
         S.cell(3, "All twelve flows are required and the mean must be positive. Enter the result in the Monthly "

@@ -95,6 +95,14 @@ screening map that reads it is a developer preview and is not part of the
 public application (it mounts only when an operator sets
 `EASI_NATIONAL_VIEWER=1`).
 
+**Observed evidence.** Two functions take an observation in place of the
+terrain estimate. On the Channel evolution card you can record a documented
+channel class (stable or recovered, moderately adjusting, severely adjusting)
+with the indicators you saw, and on the Channel and floodplain dynamics card the
+eroding and armored percentages of the bank. An observation applies only when
+complete, and it then outranks both the automatic rating and a rating set by
+hand. The Excel calculator has the same entries.
+
 **Excel calculator.** The app ships an offline implementation of the same
 methodology: enter the desktop quantities, the NARS-9 region and the channel
 slope, and the workbook rates the 20 metrics with the same criteria and
@@ -106,8 +114,9 @@ the same inputs give the same results.
 
 **Get Forms.** On the Assessment page, Get Forms lists the 20 desktop metrics
 with the values each was rated from. From there you can download that list as a
-PDF, the completed workbook (the calculator with the site's values, your ratings
-and your notes entered), or the blank workbook. The report and the batch dialog
+PDF, the completed workbook (the calculator with the site's values, your ratings,
+your observations, your notes and the twelve monthly flows entered), or the blank
+workbook. The report and the batch dialog
 offer the completed workbook too, and the blank calculator is also on the Tools
 page.
 
