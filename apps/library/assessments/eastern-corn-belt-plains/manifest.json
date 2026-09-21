@@ -9,8 +9,8 @@
   },
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "StreamCurves reference-curve development",
-  "latestVersion": 6,
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.13-provisional",
+  "latestVersion": 7,
   "versions": [
     {
       "version": 1,
@@ -59,6 +59,14 @@
       "revisionNotes": "Methodology 0.12 rebuild: reference stations selected by the fixed pressure screen, pools assembled per metric on the Level III to Level I ladder, and the five landscape pressure metrics scored on the fixed criteria of the Screening tier. No candidate inside this ecoregion passes the screen, so all 16 reference curves are borrowed from a comparable Level II or Level I pool under the comparability check, with the source geography and transfer risk recorded on each. Sixteen curves cover 16 of the 20 STAF functions. The four remaining functions carry a documented gap for insufficient reference support rather than a forced curve. The fast-water habitat curve is marked for verification against field data before it carries weight in a decision.",
       "contentDigest": "sha256:bc2948a42062bb90030672afe31eb3271f563c790dee145c5cb8d7af8dfa42fd",
       "supersedesVersion": 5
+    },
+    {
+      "version": 7,
+      "updatedAt": "2026-09-21T07:59:28Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 0 of 44 stations of this ecoregion pass. 0 reference curves use local stations, 16 borrow from a parent ecoregion, 5 metrics use fixed criteria, and 7 metrics are withheld for insufficient reference support.  No station of this ecoregion passes the reference screen, so every reference curve here borrows its reference stations from a parent ecoregion.",
+      "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482",
+      "supersedesVersion": 6
     }
   ]
 }

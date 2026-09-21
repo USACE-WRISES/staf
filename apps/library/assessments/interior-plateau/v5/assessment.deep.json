@@ -8183,8 +8183,5 @@
     },
     "contentDigest": "sha256:d339376ab846e645ef6ae9c7c41e9ea0c58f19cca552e72c7e686bf680a19f19",
     "supersedesVersion": 4
-  },
-  "version": 5,
-  "lifecycle": "preliminary",
-  "assessmentRef": "interior-plateau@v5"
+  }
 }

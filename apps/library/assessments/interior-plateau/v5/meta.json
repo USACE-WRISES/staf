@@ -1,0 +1,36 @@
+{
+  "assessmentId": "interior-plateau",
+  "assessmentName": "Interior Plateau reference assessment",
+  "version": 5,
+  "updatedAt": "2026-09-21T07:18:25Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 3 of 41 stations of this ecoregion pass. 0 reference curves use local stations, 25 borrow from a parent ecoregion, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "71",
+    "name": "Interior Plateau"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 71), StreamCurves regional analysis, methodology 0.13-provisional",
+  "contentDigest": "sha256:d339376ab846e645ef6ae9c7c41e9ea0c58f19cca552e72c7e686bf680a19f19",
+  "supersedesVersion": 4,
+  "provenance": "present",
+  "portfolioApprovals": [
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    },
+    {
+      "functionId": "water-soil-quality",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    }
+  ]
+}

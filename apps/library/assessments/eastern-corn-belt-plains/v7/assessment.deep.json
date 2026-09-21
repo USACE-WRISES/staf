@@ -5794,8 +5794,5 @@
     },
     "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482",
     "supersedesVersion": 6
-  },
-  "version": 7,
-  "lifecycle": "preliminary",
-  "assessmentRef": "eastern-corn-belt-plains@v7"
+  }
 }

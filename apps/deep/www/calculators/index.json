@@ -8,6 +8,13 @@
       "contentDigest": "sha256:bc2948a42062bb90030672afe31eb3271f563c790dee145c5cb8d7af8dfa42fd",
       "generatorVersion": "1.0"
     },
+    "eastern-corn-belt-plains@v7": {
+      "file": "eastern-corn-belt-plains@v7.xlsx",
+      "sha256": "sha256:0c7c3bb0303434f3c014446a88be5d15a7e57e6d9e7cbb2c0f087e7250e30713",
+      "bytes": 38320,
+      "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482",
+      "generatorVersion": "1.0"
+    },
     "interior-plateau@v4": {
       "file": "interior-plateau@v4.xlsx",
       "sha256": "sha256:ff9f700b1fa1d69a9e680242c61a68180df52e61ea2c7440f75ed71adb43cccb",
@@ -15,11 +22,25 @@
       "contentDigest": "sha256:f987077df681b36aa080901d24ae79f2b3c61d14ce488fefdfc13daa8091074b",
       "generatorVersion": "1.0"
     },
+    "interior-plateau@v5": {
+      "file": "interior-plateau@v5.xlsx",
+      "sha256": "sha256:1e25be3e4c7494f8f9371dee7aa55b1b7c3f42ec6f154448fb92b3939820c585",
+      "bytes": 40974,
+      "contentDigest": "sha256:d339376ab846e645ef6ae9c7c41e9ea0c58f19cca552e72c7e686bf680a19f19",
+      "generatorVersion": "1.0"
+    },
     "northeastern-highlands@v7": {
       "file": "northeastern-highlands@v7.xlsx",
       "sha256": "sha256:40b3e974ccd7b748a4f47f875492c03ff6e22f5d28e46894d3172c50d52defa6",
       "bytes": 43705,
       "contentDigest": "sha256:9b81c83c765fc428e83267ba82c16153230c4bee088b561ca115c5725c1b57d4",
+      "generatorVersion": "1.0"
+    },
+    "northeastern-highlands@v8": {
+      "file": "northeastern-highlands@v8.xlsx",
+      "sha256": "sha256:cd4447f76385db824998536064244c7cd1e3b8e7db0c2a732341cc4f70fbc2be",
+      "bytes": 44661,
+      "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6",
       "generatorVersion": "1.0"
     }
   },

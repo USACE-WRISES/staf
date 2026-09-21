@@ -43,6 +43,13 @@
       "actor": "gtmenichino",
       "timestamp": "2026-09-20T12:45:39Z",
       "note": "Published new version."
+    },
+    {
+      "version": 7,
+      "status": "preliminary",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "timestamp": "2026-09-21T07:59:29Z",
+      "note": "Published new version."
     }
   ]
 }

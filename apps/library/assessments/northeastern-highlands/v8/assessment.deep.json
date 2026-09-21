@@ -8064,8 +8064,5 @@
     },
     "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6",
     "supersedesVersion": 7
-  },
-  "version": 8,
-  "lifecycle": "preliminary",
-  "assessmentRef": "northeastern-highlands@v8"
+  }
 }
