@@ -27,6 +27,19 @@
       "builtAt": "2026-09-21T07:23:37Z",
       "actor": "StreamCurves regional analysis (STAF)",
       "note": "Built at publish."
+    },
+    {
+      "version": 9,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:18da87e1247c774507717177f748e12faadd32c59c0dd9d2821b81902f5c2604",
+      "bytes": 45003,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:4902d33d13042a2aff1c22bf8ac22e615dcb53ce02507641cf290e61d23ce593",
+      "builtAt": "2026-09-21T16:26:47Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
     }
   ]
 }

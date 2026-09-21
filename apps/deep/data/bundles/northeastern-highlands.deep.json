@@ -5,7 +5,7 @@
   "assessmentName": "Northeastern Highlands reference assessment",
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
   "applicability": "Northeastern Highlands",
   "metricsByFunction": [
     {
@@ -333,6 +333,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -604,6 +609,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -791,6 +801,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -931,6 +946,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -1175,6 +1195,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -1498,6 +1523,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -1748,6 +1778,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -1956,6 +1991,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2051,6 +2091,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2198,6 +2243,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -2448,6 +2498,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -2652,6 +2707,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2761,6 +2821,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2912,6 +2977,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -3125,6 +3195,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -3136,6 +3211,104 @@
       "functionName": "Bed composition and bedform dynamics",
       "discipline": "Geomorphology",
       "metrics": [
+        {
+          "metricId": "spring-phab-lwdeqvolm100",
+          "metricName": "Large wood volume",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
+          "xLabel": "Large wood volume (m3/100m)",
+          "howToMeasure": "Large woody debris volume per 100 m; higher is better.",
+          "methodContext": "Between each pair of transects, tally every piece of wood at least 10 cm in diameter and 1.5 m long in or above the bankfull channel, by length and diameter class. The value is the wood volume per 100 m of channel, computed from the tally classes.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.051078298528279574,
+                "y": 0.3
+              },
+              {
+                "x": 0.11918269656598568,
+                "y": 0.7
+              },
+              {
+                "x": 3.798735737800598,
+                "y": 1.0
+              },
+              {
+                "x": 4.902601650170982,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 50,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 83.3,
+          "referenceRange": [
+            0.0,
+            70.28636169433594
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "58",
+            "regionName": "Northeastern Highlands",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 66,
+            "nComparable": 66,
+            "nUsable": 50,
+            "nLocal": 50,
+            "nHuc12": 49,
+            "disposition": "adequate",
+            "family": "riparian",
+            "covariates": [
+              "drainage_area_sqkm",
+              "precip8110ws"
+            ],
+            "selfCoverage": 0.926,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 74,
+            "q25": 0.013650000095367432,
+            "q50": 0.9152840971946716,
+            "q75": 3.798735737800598
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.457,
+            "nRef": 50,
+            "nPressure": 52,
+            "medianRefIndex": 0.8,
+            "medianPressureIndex": 0.839,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 0,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
         {
           "metricId": "spring-phab-lsub-dmm",
           "metricName": "Substrate size",
@@ -3231,106 +3404,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "discipline": "Geomorphology",
-          "assignmentOrigin": "canonical",
-          "referenceTier": "least_disturbed"
-        },
-        {
-          "metricId": "spring-phab-lwdeqvolm100",
-          "metricName": "Large wood volume",
-          "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-          "xLabel": "Large wood volume (m3/100m)",
-          "howToMeasure": "Large woody debris volume per 100 m; higher is better.",
-          "methodContext": "Between each pair of transects, tally every piece of wood at least 10 cm in diameter and 1.5 m long in or above the bankfull channel, by length and diameter class. The value is the wood volume per 100 m of channel, computed from the tally classes.",
-          "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-            "stratification": "",
-            "form": "monotone",
-            "points": [
-              {
-                "x": 0.0,
-                "y": 0.0
-              },
-              {
-                "x": 0.0357589279966695,
-                "y": 0.3
-              },
-              {
-                "x": 0.08343749865889549,
-                "y": 0.7
-              },
-              {
-                "x": 3.527048707008362,
-                "y": 1.0
-              },
-              {
-                "x": 4.560132069513202,
-                "y": 1.0
-              }
-            ]
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
           },
-          "referenceN": 66,
-          "sampleDisposition": "adequate",
-          "metricRole": "response",
-          "curveCaveats": [
-            "In the discrimination check this curve scored pressured stations above reference stations (area under the curve 0.43), so the score may not track condition here. Read it with the other metrics of the function."
-          ],
-          "confidenceLabel": "Moderate",
-          "confidenceTotal": 79.0,
-          "referenceRange": [
-            0.0,
-            70.28636169433594
-          ],
-          "criteriaBasis": "reference",
-          "referenceSupport": {
-            "status": "local",
-            "level": "l3",
-            "levelLabel": "Level III",
-            "regionCode": "58",
-            "regionName": "Northeastern Highlands",
-            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
-            "nPool": 66,
-            "nComparable": 66,
-            "nUsable": 66,
-            "nLocal": 66,
-            "nHuc12": 62,
-            "disposition": "adequate",
-            "family": "riparian",
-            "covariates": [
-              "drainage_area_sqkm",
-              "precip8110ws"
-            ],
-            "selfCoverage": 0.846,
-            "supportedLevel": "l3",
-            "transferRisk": "none",
-            "transferNote": "",
-            "basis": "regional-reference",
-            "basisLabel": "Regional reference",
-            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
-            "basisLimit": ""
-          },
-          "localComparison": {
-            "label": "Local best-available comparison (not reference)",
-            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
-            "n": 98,
-            "q25": 0.0642788466066122,
-            "q50": 1.2824270725250244,
-            "q75": 3.798735737800598
-          },
-          "discrimination": {
-            "aucRefVsPressure": 0.427,
-            "nRef": 66,
-            "nPressure": 70,
-            "medianRefIndex": 0.809,
-            "medianPressureIndex": 0.895,
-            "aucRvsIm": null,
-            "nR": 7,
-            "nIm": 2,
-            "verdict": "inverted"
-          },
-          "basis": "regional-reference",
-          "basisLabel": "Regional reference",
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3426,6 +3504,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -3441,33 +3524,33 @@
           "metricId": "spring-chem-chla",
           "metricName": "Chlorophyll a",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
           "xLabel": "Chlorophyll a (ug/L)",
           "howToMeasure": "Chlorophyll a; higher indicates algal enrichment/eutrophication (worse).",
           "methodContext": "Chlorophyll a of the water column in micrograms per liter, from a 2 L grab sample taken at mid-channel at the X-site in an amber bottle, filtered and analyzed in a laboratory.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
               {
-                "x": 0.07216500565409661,
+                "x": 0.04717499278485776,
                 "y": 1.0
               },
               {
-                "x": 0.3145500048995018,
+                "x": 0.2407499961555004,
                 "y": 1.0
               },
               {
-                "x": 1.1225000023841858,
+                "x": 0.886000007390976,
                 "y": 0.7
               },
               {
-                "x": 2.199766665697098,
+                "x": 1.7463333557049432,
                 "y": 0.3
               },
               {
-                "x": 3.0077166631817818,
+                "x": 2.391583366940419,
                 "y": 0.0
               }
             ]
@@ -3479,7 +3562,7 @@
           "confidenceLabel": "High",
           "confidenceTotal": 100.0,
           "referenceRange": [
-            0.06800000369548798,
+            0.02979999966919422,
             8.109999656677246
           ],
           "criteriaBasis": "reference",
@@ -3502,7 +3585,7 @@
               "runoffws",
               "lith_group"
             ],
-            "selfCoverage": 0.823,
+            "selfCoverage": 0.903,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -3515,16 +3598,16 @@
             "label": "Local best-available comparison (not reference)",
             "definition": "stations of this ecoregion that pass the relaxed pressure screen",
             "n": 98,
-            "q25": 0.3787499964237213,
-            "q50": 0.6809999942779541,
-            "q75": 1.2874999642372131
+            "q25": 0.3100000023841858,
+            "q50": 0.5610000193119049,
+            "q75": 1.1900000274181366
           },
           "discrimination": {
-            "aucRefVsPressure": 0.732,
+            "aucRefVsPressure": 0.739,
             "nRef": 66,
-            "nPressure": 69,
-            "medianRefIndex": 0.923,
-            "medianPressureIndex": 0.668,
+            "nPressure": 70,
+            "medianRefIndex": 0.911,
+            "medianPressureIndex": 0.591,
             "aucRvsIm": null,
             "nR": 7,
             "nIm": 2,
@@ -3663,6 +3746,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -3846,6 +3934,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3952,6 +4045,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -4051,6 +4149,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -4159,6 +4262,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -4272,6 +4380,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -4371,6 +4484,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -4510,6 +4628,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -4719,6 +4842,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -4808,6 +4936,105 @@
       "functionName": "Population support",
       "discipline": "Biology",
       "metrics": [
+        {
+          "metricId": "spring-bent-totlntax",
+          "metricName": "Benthic total taxa richness",
+          "inputType": "count",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
+          "xLabel": "Benthic total taxa richness",
+          "howToMeasure": "Total benthic taxa richness; higher is better.",
+          "methodContext": "From the same 11-transect composite D-frame net sample (500 micrometer mesh) and laboratory subsample. The value is the total number of taxa.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 14.142857142857142,
+                "y": 0.3
+              },
+              {
+                "x": 33.0,
+                "y": 0.7
+              },
+              {
+                "x": 47.0,
+                "y": 1.0
+              },
+              {
+                "x": 51.2,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 65,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 96.7,
+          "referenceRange": [
+            21.0,
+            61.0
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "58",
+            "regionName": "Northeastern Highlands",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 66,
+            "nComparable": 66,
+            "nUsable": 65,
+            "nLocal": 65,
+            "nHuc12": 61,
+            "disposition": "adequate",
+            "family": "biology",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "tmean8110ws"
+            ],
+            "selfCoverage": 0.937,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 97,
+            "q25": 35.0,
+            "q50": 41.0,
+            "q75": 49.0
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.516,
+            "nRef": 65,
+            "nPressure": 69,
+            "medianRefIndex": 0.832,
+            "medianPressureIndex": 0.85,
+            "aucRvsIm": null,
+            "nR": 7,
+            "nIm": 2,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
         {
           "metricId": "spring-fish-nat-totlntax",
           "metricName": "Native fish taxa richness",
@@ -4938,6 +5165,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -5122,6 +5354,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -5221,6 +5458,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "northeastern-highlands",
+            "fromVersion": 8,
+            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          },
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -8008,64 +8250,32 @@
     "nLocalReference": 66,
     "nCandidates": 175,
     "nInFrame": 175,
-    "nCurvesLocal": 27,
+    "nCurvesLocal": 31,
     "nCurvesBorrowed": 0,
+    "nCurvesRegionalScreen": 0,
+    "nCurvesCarried": 23,
     "nWithheld": 0,
     "curvesByBasis": {
-      "regional-reference": 27
+      "regional-reference": 31
     },
-    "statement": "Reference condition is set by a fixed landscape-pressure screen, never by a score. 27 curves are fitted to least-disturbed stations of this ecoregion. A metric that no basis supports is not scored, and the function it would have scored is reported as unassessed."
+    "statement": "Reference condition is set by a fixed landscape-pressure screen, never by a score. 31 curves are fitted to least-disturbed stations of this ecoregion. 23 of these curves carried forward unchanged from version 8. A metric that no basis supports is not scored, and the function it would have scored is reported as unassessed."
   },
-  "insufficientReferenceSupport": [
-    {
-      "metricId": "spring-bent-tolrpind",
-      "metricKey": "bent_TOLRPIND",
-      "metricName": "Tolerant individuals (%) ~ HBI",
-      "units": "",
-      "functions": [
-        {
-          "functionId": "community-dynamics",
-          "functionName": "Community dynamics"
-        }
-      ],
-      "functionId": "community-dynamics",
-      "reason": "held-for-review",
-      "statement": "Held for review. 64% of this ecoregion's 66 least-disturbed stations have no value for this metric, above the 40% at which a curve needs a reviewer before it is used, and no reviewer has cleared it yet. The curve is not published and the metric is not scored.",
-      "curveStatus": "data_review"
-    },
-    {
-      "metricId": "spring-bent-totlntax",
-      "metricKey": "bent_TOTLNTAX",
-      "metricName": "Benthic total taxa richness",
-      "units": "",
-      "functions": [
-        {
-          "functionId": "population-support",
-          "functionName": "Population support"
-        }
-      ],
-      "functionId": "population-support",
-      "reason": "held-for-review",
-      "statement": "Held for review. 64% of this ecoregion's 66 least-disturbed stations have no value for this metric, above the 40% at which a curve needs a reviewer before it is used, and no reviewer has cleared it yet. The curve is not published and the metric is not scored.",
-      "curveStatus": "data_review"
-    }
-  ],
-  "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6",
+  "contentDigest": "sha256:4902d33d13042a2aff1c22bf8ac22e615dcb53ce02507641cf290e61d23ce593",
   "library": {
     "libraryId": "northeastern-highlands",
-    "version": 8,
-    "updatedAt": "2026-09-21T07:23:37Z",
+    "version": 9,
+    "updatedAt": "2026-09-21T16:26:47Z",
     "author": "StreamCurves regional analysis (STAF)",
-    "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 66 of 175 stations of this ecoregion pass. 27 reference curves use local stations, 0 borrow from a parent ecoregion, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support.",
+    "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 66 of 175 stations of this ecoregion pass. 31 reference curves use local stations, 0 borrow from a wider region, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support. 23 published curves are carried forward unchanged from version 8, and 2 were rebuilt because the data verification corrected values they rested on.",
     "region": {
       "kind": "ecoregion",
       "code": "58",
       "name": "Northeastern Highlands"
     },
-    "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6",
-    "supersedesVersion": 7
+    "contentDigest": "sha256:4902d33d13042a2aff1c22bf8ac22e615dcb53ce02507641cf290e61d23ce593",
+    "supersedesVersion": 8
   },
-  "version": 8,
+  "version": 9,
   "lifecycle": "preliminary",
-  "assessmentRef": "northeastern-highlands@v8"
+  "assessmentRef": "northeastern-highlands@v9"
 }
