@@ -592,10 +592,10 @@ standing_decisions:
   pending_reviewer_marker: "(pending owner confirmation)"
   default_enabled: [curve04-accept-with-flag, data05-exploratory-pool-accepted,
                     red06-instability-is-noise, strat09-defer-floors, select01-complementary-set,
-                    ref05-borrowed-pool-accepted]
+                    ref05-borrowed-pool-accepted, cov01-documented-gap]
   enable_per_run_only: [ref02-accept-best-available, data03-thin-metric-finalized,
                         data06-insufficient-finalized, curve07-thin-metric-finalized]
-  never_automated: "RED-01 keeper choice, CURVE-07 degenerate / shape_conflict / multi_crossing / insufficient_data, direction_unresolved, coverage gaps, portfolio sets off the crosswalk default, a borrowed reference pool at moderate, high or unassessed transfer risk (REF-05), an inverted discrimination check (CURVE-12), the final publish (promote)"
+  never_automated: "RED-01 keeper choice, CURVE-07 degenerate / shape_conflict / multi_crossing / insufficient_data, direction_unresolved, a coverage gap without a documented blocker for every candidate (a documented gap runs under cov01-documented-gap and the owner confirms it at promote), portfolio sets off the crosswalk default, a borrowed reference pool at moderate, high or unassessed transfer risk (REF-05, builds before 0.14), an inverted discrimination check (CURVE-12), a candidate model specification, the final publish (promote)"
   end_review_required_before_promote: true
 
 # --------------------------------------------------------------------------- #

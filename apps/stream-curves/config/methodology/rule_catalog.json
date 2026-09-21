@@ -1342,7 +1342,7 @@
    "name": "Classification error",
    "purpose": "A source must place sites in the same condition class as reference does.",
    "test": "in the recovery test, class agreement with reference (exceedance at least 0.10) in at least two thirds of at least 4 evaluation regions; the metric family's pooled evidence where the metric has fewer regions",
-   "threshold": "a1_share >= 0.667 over >= 4 cells",
+   "threshold": "a1_share >= 2/3 over >= 4 cells",
    "maps_to": "acceptance.evidence; config/basis_validation.yaml; scripts/build_basis_validation.py",
    "note": "v0.14 (2026-09-21). Pre-registration II's accuracy criterion, fixed in Pre-registration IV. The local reference needs no recovery evidence.",
    "outcomes": {
