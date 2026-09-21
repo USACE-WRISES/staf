@@ -571,6 +571,22 @@ _BASIS_TAG = {"site-engine": ("HR reach watershed", "deep-basis-tag engine"),
               "3dep": ("3DEP", "deep-basis-tag threedep"),
               "nid": ("NID", "deep-basis-tag nid")}
 
+#: The curve's basis (StreamCurves REF-08/09/10), shown beside what the metric
+#: is scored against. A curve fitted to this ecoregion's own least-disturbed
+#: stations gets no chip: it is the ordinary case and the sentence already says
+#: so. The other three are the ones a reader has to know about.
+_CURVE_BASIS_TAG = {
+    reference_support.BASIS_NATIONAL: ("National reference", "deep-basis-tag national"),
+    reference_support.BASIS_MODELED: ("Modeled reference", "deep-basis-tag modeled"),
+    reference_support.BASIS_PUBLISHED: ("Published benchmark", "deep-basis-tag published"),
+}
+
+
+def _curve_basis_tag(m):
+    """``(label, css class)`` for a curve that does not rest on this
+    ecoregion's own stations, or None."""
+    return _CURVE_BASIS_TAG.get(reference_support.basis_of(m))
+
 
 def _basis_tag(rc):
     """``(label, css class)`` of the basis badge for a desktop value, or None."""
@@ -705,23 +721,24 @@ def _source_line(m, rc):
     return " · ".join(parts)
 
 
-WITHHELD_TITLE = "Insufficient reference support, not scored"
+WITHHELD_TITLE = reference_support.INSUFFICIENT_TITLE
 
 
 def _withheld_card(w):
     """A metric the assessment withholds (StreamCurves rule REF-06): named, with
     the reason, no input and no index. It never enters a function score."""
     statement = str(w.get("statement") or
-                    "Too few comparable least-disturbed stations carry this metric, so no "
-                    "curve was built and the metric is not scored.")
+                    "No basis supports this metric in this ecoregion, so no curve was built "
+                    "and the metric is not scored.")
     # the card's own title already says it
-    statement = statement.removeprefix("Insufficient reference support.").strip()
+    for prefix in ("Insufficient reference support.", "Held for review."):
+        statement = statement.removeprefix(prefix).strip()
     units = str(w.get("units") or "").strip()
     return ui.div(
         ui.div(w.get("metricName") or w.get("metricId") or "",
                (ui.span(units, class_="sfari-metric-scale") if units else None),
                class_="sfari-metric-name"),
-        ui.div(WITHHELD_TITLE, class_="deep-withheld-title"),
+        ui.div(reference_support.withheld_title(w), class_="deep-withheld-title"),
         ui.div(statement, class_="deep-withheld-text"),
         {"data-metric-withheld": str(w.get("metricId") or "")},
         class_="sfari-metric deep-metric-withheld")
@@ -738,6 +755,12 @@ def _unassessed_panel(fn, la):
     name = fn.get("functionName") or fn.get("functionId")
     detail = (fn.get("unassessed") or {}).get("metrics") or []
     cards = [_withheld_card(w) for w in detail]
+    # a function whose only candidates are curves awaiting a reviewer has a basis,
+    # it is just not cleared yet, so it is not told it has none
+    lead = ("Its candidate curves are held for review, so this function carries no score."
+            if detail and all(reference_support.is_held(w) for w in detail) else
+            "This assessment has no defensible basis for scoring this function, so it "
+            "carries no score.")
     if not cards:
         cards = [ui.div(ui.div("No metric is assigned to this function in this assessment.",
                                class_="deep-withheld-text"),
@@ -747,8 +770,7 @@ def _unassessed_panel(fn, la):
                ui.span("Not assessed", class_="deep-fscore-band",
                        style="background:#eef1f6;color:#6b7280;"),
                class_="deep-fn-head"),
-        ui.div("This assessment has no defensible basis for scoring this function, so it "
-               "carries no score. It is not a low score. The Ecosystem Condition Index is "
+        ui.div(lead + " It is not a low score. The Ecosystem Condition Index is "
                "reported as an interval that allows for whatever this function would have "
                "scored, and names a condition band only when that interval stays inside one.",
                class_="sfari-coverage-note"),
@@ -764,8 +786,11 @@ def _withheld_note(la):
     if not fns:
         return None
     names = ", ".join(str(f.get("functionName") or f.get("functionId")) for f in fns)
-    return ui.div(f"Not scored for insufficient reference support: {names}.",
-                  class_="sfari-coverage-note deep-withheld-note")
+    held = [reference_support.is_held(w) for f in fns for w in f.get("metrics") or []]
+    lead = ("Not scored for insufficient reference support" if not any(held) else
+            "Not scored while their curves are held for review" if all(held) else
+            "Not scored")
+    return ui.div(f"{lead}: {names}.", class_="sfari-coverage-note deep-withheld-note")
 
 
 def _stepper(active):
@@ -818,7 +843,7 @@ def staf_topnav():
 
 app_ui = ui.page_fillable(
     ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=20"),
-                    ui.tags.link(rel="stylesheet", href="deep.css?v=9"),
+                    ui.tags.link(rel="stylesheet", href="deep.css?v=10"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -2562,6 +2587,7 @@ def server(input, output, session_):  # noqa: C901
             plot_val = None if (na or val in (None, "")) else float(val)
             src_line = _source_line(m, rc)
             basis_tag = _basis_tag(rc)
+            curve_basis_tag = _curve_basis_tag(m)
             metric_blocks.append(ui.div(
                 ui.div(m.get("metricName", mid),
                        ui.span(m.get("discipline", ""), class_="sfari-metric-scale"),
@@ -2575,6 +2601,8 @@ def server(input, output, session_):  # noqa: C901
                 # What the value is scored against: fixed criteria, or a reference
                 # curve with the geography its stations came from.
                 (ui.div(ui.span("Scored against", class_="deep-source-key"),
+                        (ui.span(curve_basis_tag[0], class_=curve_basis_tag[1])
+                         if curve_basis_tag else None),
                         ui.span(support_line, class_="deep-source-val"),
                         class_="deep-source-row deep-support-row"
                                + (" borrowed" if reference_support.is_borrowed(m) else ""))
@@ -2937,19 +2965,18 @@ def server(input, output, session_):  # noqa: C901
                                      ui.tags.th("Curve source"))),
             ui.tags.tbody(*rows), class_="easi-tbl")
 
-        withheld_rows = report.withheld_rows(la)
+        withheld_rows = report.withheld_rows(la, short=True)
         withheld_block = None
         if withheld_rows:
             withheld_block = ui.TagList(
-                ui.h4("Metrics withheld for insufficient reference support",
-                      style="margin-top:14px;"),
-                ui.div("These metrics have no curve and are not scored. No defensible pool of "
-                       "least-disturbed stations exists for them in this ecoregion or its "
-                       "parent ecoregions.",
+                ui.h4("Metrics not scored", style="margin-top:14px;"),
+                ui.div(reference_support.withheld_note(reference_support.withheld(la)),
                        style="font-size:11px;color:#8a93a3;margin-bottom:4px;"),
                 ui.tags.table(
-                    ui.tags.thead(ui.tags.tr(ui.tags.th("Metric"), ui.tags.th("Functions"))),
-                    ui.tags.tbody(*[ui.tags.tr(ui.tags.td(r[0]), ui.tags.td(r[1]))
+                    ui.tags.thead(ui.tags.tr(ui.tags.th("Metric"), ui.tags.th("Functions"),
+                                             ui.tags.th("Reason"))),
+                    ui.tags.tbody(*[ui.tags.tr(ui.tags.td(r[0]), ui.tags.td(r[1]),
+                                               ui.tags.td(r[2]))
                                     for r in withheld_rows]),
                     class_="easi-tbl"))
         ref_statement = reference_support.reference_method_statement(la)
@@ -3102,10 +3129,16 @@ def server(input, output, session_):  # noqa: C901
             avail = counts.get(report.STATUS_AVAILABLE, 0)
             text = (f"{avail} of {n_desk} desktop metrics answered. "
                     f"{counts.get(report.STATUS_FIELD, 0)} metrics are measured in the field.")
-        withheld = counts.get(report.STATUS_WITHHELD, 0)
-        if withheld:
-            text += (f" {withheld} metric" + ("" if withheld == 1 else "s")
-                     + " not scored for insufficient reference support.")
+        if counts.get(report.STATUS_WITHHELD, 0):
+            items = reference_support.withheld(la)
+            n_held = sum(1 for w in items if reference_support.is_held(w))
+            n_ins = len(items) - n_held
+            if n_ins:
+                text += (f" {n_ins} metric" + ("" if n_ins == 1 else "s")
+                         + " not scored for insufficient reference support.")
+            if n_held:
+                text += (f" {n_held} metric" + ("" if n_held == 1 else "s")
+                         + " held for review and not scored.")
         return ui.div(ui.span(text, {"role": "status", "aria-live": "polite"}),
                       class_="ff-status")
 

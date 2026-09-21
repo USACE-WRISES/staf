@@ -330,8 +330,9 @@ def build_field_form_pdf(assessment, ref: str = "", *, measured=None, delineatio
             for w in reference_support.withheld_for_function(assessment, fid):
                 rows.append([[Paragraph(f"<b>{_esc(w.get('metricName') or w.get('metricId'))}"
                                         "</b> not scored", body),
-                              Paragraph("Insufficient reference support. No value is needed.",
-                                        note)], Paragraph("NA", center), ""])
+                              Paragraph(f"{reference_support.withheld_reason(w)}. "
+                                        "No value is needed.", note)],
+                             Paragraph("NA", center), ""])
             if not rows:
                 rows.append([[Paragraph("No metric is scored for this function.", note)], "", ""])
 
@@ -362,13 +363,12 @@ def build_field_form_pdf(assessment, ref: str = "", *, measured=None, delineatio
     if withheld:
         names = ", ".join(sorted(str(w.get("metricName") or w.get("metricId"))
                                  for w in withheld))
-        story += [Spacer(1, 6), band("METRICS WITHHELD FOR INSUFFICIENT REFERENCE SUPPORT"),
+        story += [Spacer(1, 6), band("METRICS NOT SCORED"),
                   Table([[Paragraph(
-                      _esc(f"{names}. These metrics were considered for this assessment and are "
-                           "not scored, because too few comparable least-disturbed stations "
-                           "carry them in this ecoregion or in its parent ecoregions. No "
-                           "measurement is needed for the score. A value may still be recorded "
-                           "under Notes."), body)]], colWidths=[full],
+                      _esc(f"{names}. These metrics were considered for this assessment. "
+                           + reference_support.withheld_note(withheld)
+                           + " No measurement is needed for the score. A value may still be "
+                           "recorded under Notes."), body)]], colWidths=[full],
                         style=TableStyle([("BOX", (0, 0), (-1, -1), line, colors.black)]))]
 
     doc.build(story, onFirstPage=page_number, onLaterPages=page_number)

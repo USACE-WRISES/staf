@@ -363,3 +363,197 @@ def test_a_published_bundle_still_validates_and_scores(bundle):
     for m in la.all_metrics():
         if "criteriaBasis" not in m:
             assert rs.support_line(m) == "" and rs.tip_lines(m) == []
+
+
+# --------------------------------------------------------------------------- #
+# the basis ladder, read from the bundle (StreamCurves REF-08/09/10)
+# --------------------------------------------------------------------------- #
+def test_a_bundle_written_before_the_ladder_still_resolves_a_basis():
+    """The 22 bundles published before 0.13 carry no ``basis``. They must not
+    read as unknown: the fixed five were published criteria all along, and
+    everything else rested on a pool of stations."""
+    assert rs.basis_of({"criteriaBasis": "fixed"}) == rs.BASIS_PUBLISHED
+    assert rs.basis_of({"criteriaBasis": "reference"}) == rs.BASIS_REGIONAL
+    assert rs.basis_of({}) == rs.BASIS_REGIONAL
+    assert rs.basis_label({"criteriaBasis": "fixed"}) == "Published benchmark"
+    assert rs.basis_label({"criteriaBasis": "reference"}) == "Regional reference"
+
+
+def test_the_bundles_own_basis_wins_over_the_derivation():
+    for token, label in ((rs.BASIS_NATIONAL, "National reference"),
+                         (rs.BASIS_MODELED, "Modeled reference"),
+                         (rs.BASIS_PUBLISHED, "Published benchmark"),
+                         (rs.BASIS_REGIONAL, "Regional reference")):
+        assert rs.basis_of({"basis": token, "criteriaBasis": "reference"}) == token
+        assert rs.basis_label({"basis": token}) == label
+
+
+def test_an_unknown_basis_falls_back_rather_than_showing_a_raw_token():
+    got = rs.basis_label({"basis": "something-new", "criteriaBasis": "reference"})
+    assert got == "Regional reference"
+
+
+def test_a_curve_that_rests_on_no_local_station_does_not_claim_one():
+    """Every Interior Plateau and Eastern Corn Belt Plains curve is borrowed or
+    higher on the ladder. The line a reader sees must not say the stations came
+    from this ecoregion when they did not."""
+    modeled = {"basis": rs.BASIS_MODELED,
+               "basisStatement": "Reference curve from a modeled expectation.",
+               "referenceSupport": {"status": "modeled", "nUsable": 0}}
+    line = rs.support_line(modeled)
+    assert line == "Reference curve from a modeled expectation."
+    assert "stations of this ecoregion" not in line
+
+    published = {"basis": rs.BASIS_PUBLISHED,
+                 "basisStatement": "Scored against a published criterion.",
+                 "referenceSupport": {"status": "published", "nUsable": 0}}
+    assert rs.support_line(published) == "Scored against a published criterion."
+
+
+def test_a_local_pool_still_says_so():
+    local = {"criteriaBasis": "reference",
+             "referenceSupport": {"status": "local", "nUsable": 66}}
+    line = rs.support_line(local)
+    assert "66 least-disturbed stations of this ecoregion" in line
+
+
+def test_a_borrowed_pool_names_the_level_and_the_risk():
+    borrowed = {"criteriaBasis": "reference",
+                "referenceSupport": {"status": "borrowed_l1", "nUsable": 14, "nLocal": 0,
+                                     "level": "l1", "regionCode": "8",
+                                     "regionName": "Eastern Temperate Forests",
+                                     "transferRisk": "high"}}
+    line = rs.support_line(borrowed)
+    assert "borrowed from Level I ecoregion 8" in line
+    assert "Transfer risk high" in line
+
+
+# --------------------------------------------------------------------------- #
+# a curve held for a reviewer is a different finding from a missing pool
+# --------------------------------------------------------------------------- #
+HELD = {"metricId": "spring-bent-tolrpind", "metricName": "Tolerant individuals",
+        "reason": "held-for-review",
+        "functions": [{"functionId": "community-dynamics", "functionName": "Community dynamics"}],
+        "statement": ("Held for review. 64% of this ecoregion's 66 least-disturbed stations "
+                      "have no value for this metric, above the 40% at which a curve needs a "
+                      "reviewer before it is used, and no reviewer has cleared it yet. The "
+                      "curve is not published and the metric is not scored.")}
+MISSING_POOL = {"metricId": "spring-chem-chla", "metricName": "Chlorophyll a",
+                "reason": "insufficient-reference-support",
+                "functions": [{"functionId": "light-thermal-regime",
+                               "functionName": "Light and thermal regime"}],
+                "statement": "Insufficient reference support. Too few stations."}
+
+
+def test_a_held_curve_is_titled_as_held_not_as_a_missing_pool():
+    assert rs.is_held(HELD) and not rs.is_held(MISSING_POOL)
+    assert rs.withheld_title(HELD) == "Held for review, not scored"
+    assert rs.withheld_title(MISSING_POOL) == "Insufficient reference support, not scored"
+    # a record from before the reason existed reads as it always did
+    assert rs.withheld_title({"metricId": "x"}) == rs.INSUFFICIENT_TITLE
+    assert rs.withheld_reason(HELD) == "Held for review"
+
+
+def test_the_note_explains_only_the_reasons_present():
+    held_only = rs.withheld_note([HELD])
+    assert "held for review" in held_only and "national donor" not in held_only
+    pool_only = rs.withheld_note([MISSING_POOL])
+    assert "no national donor pool" in pool_only and "held for review" not in pool_only
+    both = rs.withheld_note([HELD, MISSING_POOL])
+    assert "held for review" in both and "no modeled expectation" in both
+    for text in (held_only, pool_only, both):
+        assert "modelled" not in text and chr(0x2014) not in text
+
+
+def test_the_withheld_card_and_the_report_say_which_reason():
+    import app as deep_app
+    from deep import report
+    card = str(deep_app._withheld_card(HELD))
+    assert "Held for review, not scored" in card
+    # the title already says it, so the statement does not repeat it
+    assert "Held for review. 64%" not in card and "64% of this ecoregion" in card
+    bundle = {"assessmentId": "t", "metricsByFunction": [],
+              "insufficientReferenceSupport": [HELD, MISSING_POOL]}
+    la = assessments.LoadedAssessment.from_dict(bundle)
+    assert [r[2] for r in report.withheld_rows(la, short=True)] == [
+        "Held for review", "Insufficient reference support"]
+    # the full statement still rides into the CSV
+    assert report.withheld_rows(la)[0][2].startswith("Held for review. 64%")
+
+
+def test_a_function_left_only_with_held_curves_is_not_told_it_has_no_basis():
+    import app as deep_app
+    fn = {"functionId": "community-dynamics", "functionName": "Community dynamics",
+          "unassessed": {"metrics": [HELD]}}
+    panel = str(deep_app._unassessed_panel(fn, None))
+    assert "held for review, so this function carries no score" in panel
+    assert "no defensible basis" not in panel
+    fn["unassessed"]["metrics"] = [MISSING_POOL]
+    assert "no defensible basis" in str(deep_app._unassessed_panel(fn, None))
+
+
+# --------------------------------------------------------------------------- #
+# ladder curves as the first 0.13 bundles actually shaped them (2026-09-21)
+# --------------------------------------------------------------------------- #
+#: a modeled curve with its sentence only inside referenceSupport, and the
+#: model's fit size in nUsable: the shape that made DEEP print "3182
+#: least-disturbed stations borrowed from a parent ecoregion"
+MODELED_AS_SHIPPED = {
+    "metricId": "spring-bent-hprime", "basis": "modeled-reference",
+    "basisLabel": "Modeled reference", "criteriaBasis": "reference",
+    "referenceSupport": {"status": "modeled", "nUsable": 3182, "nLocal": 44, "level": None,
+                         "regionCode": "55", "regionName": "Eastern Corn Belt Plains",
+                         "basisStatement": "Reference curve from a modeled expectation.",
+                         "transferNote": "No stream in this ecoregion is clean enough."}}
+#: a published nutrient benchmark: marked fixed downstream, but regional
+BENCHMARK_AS_SHIPPED = {
+    "metricId": "spring-chem-ptl", "basis": "published-benchmark",
+    "basisLabel": "Published benchmark", "criteriaBasis": "fixed",
+    "criteriaSource": "Nutrient condition",
+    "referenceSupport": {"status": "published", "nUsable": 0,
+                         "basisStatement": "Scored against a published criterion.",
+                         "transferNote": "Scored against a published criterion for NARS-9 "
+                                         "region TPL. Its breakpoints are 88.6 and 143 ug/L."}}
+
+
+def test_a_modeled_curve_never_reads_as_a_borrowed_pool():
+    line = rs.support_line(MODELED_AS_SHIPPED)
+    assert line == "Reference curve from a modeled expectation."
+    assert "borrowed" not in line and "3182" not in line
+    tip = rs.tip_lines(MODELED_AS_SHIPPED)
+    assert "No stream in this ecoregion is clean enough." in tip
+
+
+def test_a_regional_benchmark_is_not_called_the_same_in_every_region():
+    line = rs.support_line(BENCHMARK_AS_SHIPPED)
+    assert line == "Scored against a published criterion."
+    assert "same in every region" not in " ".join(rs.tip_lines(BENCHMARK_AS_SHIPPED))
+    # the first bundles carry no criteria block, so the tip falls back to the note
+    assert any("NARS-9 region TPL" in t for t in rs.tip_lines(BENCHMARK_AS_SHIPPED))
+    # from the rebuilt bundles on, the criterion lists its bands and its sources
+    rebuilt = dict(BENCHMARK_AS_SHIPPED, criteriaSource={
+        "title": "NRSA 2018-19 regional total phosphorus thresholds, NARS-9 region TPL",
+        "bands": [{"rating": "Good", "label": "<=88.6 ug/L"},
+                  {"rating": "Poor", "label": ">=143 ug/L"}],
+        "citations": [{"key": "nrsa-2018-19", "text": "NRSA 2018-19 TSD"}]})
+    tip = rs.tip_lines(rebuilt)
+    assert "Criterion: NRSA 2018-19 regional total phosphorus thresholds, NARS-9 region TPL" in tip
+    assert "Good <=88.6 ug/L" in tip and "Sources: NRSA 2018-19 TSD" in tip
+
+
+def test_a_ladder_curve_with_no_sentence_still_names_its_basis():
+    bare = {"basis": "modeled-reference", "referenceSupport": {"status": "modeled", "nUsable": 9}}
+    assert rs.support_line(bare) == "Modeled reference."
+
+
+def test_the_published_ladder_curves_read_as_their_basis():
+    """The live registry: no curve above the hierarchy may borrow the pool sentence."""
+    for aid in ("northeastern-highlands", "interior-plateau", "eastern-corn-belt-plains"):
+        la = assessments.load_predefined(aid)
+        for fn in la.metrics_by_function:
+            for m in fn.get("metrics") or []:
+                if not rs.is_ladder(m):
+                    continue
+                line = rs.support_line(m)
+                assert "borrowed" not in line and "same in every region" not in line, (aid, line)
+                assert line == rs.basis_text(m, "basisStatement"), (aid, m["metricId"])

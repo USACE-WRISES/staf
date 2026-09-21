@@ -178,6 +178,9 @@ def _rows(assessment, measured):
                 "reference_only": reference_only,
                 # StreamCurves methodology 0.12; both empty for an older bundle
                 "scored_against": reference_support.support_line(m),
+                # 0.13: which rung of the basis ladder the curve rests on. Named
+                # curve_basis because "basis" above is the value's provenance.
+                "curve_basis": reference_support.basis_label(m),
                 "curve_set": curve_set_label(m, raw),
             }
             yield fn, m, val, idx, meta
@@ -198,15 +201,17 @@ def curve_set_label(m: dict, raw: dict) -> str:
     return f"{reference_support.stratum_label(chosen, m)} ({how})"
 
 
-def withheld_rows(assessment) -> list[list[str]]:
-    """``[metric, functions, reason]`` per metric the assessment withholds for
-    insufficient reference support (empty for an older bundle)."""
+def withheld_rows(assessment, *, short: bool = False) -> list[list[str]]:
+    """``[metric, functions, reason]`` per metric the assessment does not score
+    (empty for an older bundle): the bundle's full statement, or with ``short``
+    the reason as a label."""
     out = []
     for w in reference_support.withheld(assessment):
         fns = ", ".join(str(f.get("functionName") or f.get("functionId"))
                         for f in w.get("functions") or [])
-        out.append([str(w.get("metricName") or w.get("metricId") or ""), fns,
-                    str(w.get("statement") or "Insufficient reference support, not scored.")])
+        reason = (reference_support.withheld_reason(w) if short else
+                  str(w.get("statement") or reference_support.withheld_title(w) + "."))
+        out.append([str(w.get("metricName") or w.get("metricId") or ""), fns, reason])
     return out
 
 
@@ -284,7 +289,8 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
     # at the end so every earlier column keeps its position.
     w.writerow(["Function", "Discipline", "Metric", "Measured value", "Curve (source)",
                 "Metric index (0-1)", "Note", "Origin", "Basis", "Source", "Engine value",
-                "Predictor source", "Scoring advisory", "Scored against", "Curve set"])
+                "Predictor source", "Scoring advisory", "Curve basis", "Scored against",
+                "Curve set"])
     for fn, m, val, idx, meta in _rows(assessment, measured):
         note = (measured.get(m["metricId"]) or {}).get("note", "")
         w.writerow([fn.get("functionName", ""), fn.get("discipline", ""),
@@ -293,11 +299,12 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
                     "" if idx is None else round(idx, 3), note,
                     meta["origin"], meta["basis"], meta["source"],
                     "yes" if meta["engine"] else "", meta["predictor_source"],
-                    meta["advisory"] or "", meta["scored_against"], meta["curve_set"]])
+                    meta["advisory"] or "", meta["curve_basis"],
+                    meta["scored_against"], meta["curve_set"]])
     withheld = withheld_rows(assessment)
     if withheld:
         w.writerow([])
-        w.writerow(["Metrics withheld for insufficient reference support (not scored)"])
+        w.writerow(["Metrics not scored"])
         w.writerow(["Metric", "Functions", "Reason"])
         for row in withheld:
             w.writerow(row)
@@ -504,16 +511,15 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
                                     ("BACKGROUND", (0, 0), (-1, 0), head_bg),
                                     ("VALIGN", (0, 0), (-1, -1), "TOP")]))
         story += [st_tbl, Spacer(1, 8)]
-    withheld = withheld_rows(assessment)
+    withheld = withheld_rows(assessment, short=True)
     if withheld:
-        story += [Paragraph("Metrics withheld for insufficient reference support",
-                            styles["Heading3"]),
-                  Paragraph("These metrics have no curve and are not scored. No defensible pool "
-                            "of least-disturbed stations exists for them in this ecoregion or "
-                            "its parent ecoregions.", small), Spacer(1, 4)]
-        wt = Table([["Metric", "Functions"]]
-                   + [[Paragraph(r[0], small), Paragraph(r[1], small)] for r in withheld],
-                   colWidths=[3.0 * inch, 4.05 * inch], repeatRows=1)
+        story += [Paragraph("Metrics not scored", styles["Heading3"]),
+                  Paragraph(reference_support.withheld_note(
+                      reference_support.withheld(assessment)), small), Spacer(1, 4)]
+        wt = Table([["Metric", "Functions", "Reason"]]
+                   + [[Paragraph(r[0], small), Paragraph(r[1], small), Paragraph(r[2], small)]
+                      for r in withheld],
+                   colWidths=[2.6 * inch, 2.75 * inch, 1.7 * inch], repeatRows=1)
         wt.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 7),
                                 ("GRID", (0, 0), (-1, -1), 0.3, light),
                                 ("BACKGROUND", (0, 0), (-1, 0), head_bg),
@@ -648,7 +654,7 @@ def metric_rows(assessment, measured, *, computing: bool = False,
                      "metricId": w.get("metricId"), "metric": w.get("metricName") or "",
                      "units": w.get("units") or "", "code": "", "method": "",
                      "status": STATUS_WITHHELD, "value": "",
-                     "source": "Insufficient reference support",
+                     "source": reference_support.withheld_reason(w),
                      "scored_against": "", "repeat": False})
     return rows
 

@@ -99,7 +99,8 @@ def test_withheld_metrics_are_named_and_need_no_value():
     assert "BIOLOGY FUNCTIONS" not in text
     assert "Nutrient cycling" in text                   # a function only withheld metrics serve
     assert "Dissolved nitrogen not scored" in text
-    assert "METRICS WITHHELD FOR INSUFFICIENT REFERENCE SUPPORT" in text
+    assert "METRICS NOT SCORED" in text
+    assert "Insufficient reference support. No value is needed." in text
 
 
 def test_desktop_values_are_printed_with_their_source():

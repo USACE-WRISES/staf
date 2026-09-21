@@ -19,6 +19,15 @@ from typing import Any, Optional
 
 FIXED = "fixed"
 POOLED_LABEL = "All streams (pooled)"
+#: the basis ladder (StreamCurves REF-08/09/10). A bundle written before 0.13
+#: carries no ``basis``, so it is derived: the fixed five are published criteria
+#: and everything else rested on a pool of stations.
+BASIS_REGIONAL = "regional-reference"
+BASIS_NATIONAL = "national-reference"
+BASIS_MODELED = "modeled-reference"
+BASIS_PUBLISHED = "published-benchmark"
+_BASIS_LABELS = {BASIS_REGIONAL: "Regional reference", BASIS_NATIONAL: "National reference",
+                 BASIS_MODELED: "Modeled reference", BASIS_PUBLISHED: "Published benchmark"}
 _LEVEL_WORDS = {"l3": "Level III", "l2": "Level II", "l1": "Level I"}
 _RISK_WORDS = {"low": "low", "moderate": "moderate", "high": "high",
                "unassessed": "not yet assessed"}
@@ -27,6 +36,27 @@ _RISK_WORDS = {"low": "low", "moderate": "moderate", "high": "high",
 def is_fixed(metric_spec: Optional[dict]) -> bool:
     """The metric is scored on fixed criteria, the same in every region."""
     return str((metric_spec or {}).get("criteriaBasis") or "") == FIXED
+
+
+def basis_of(metric_spec: Optional[dict]) -> str:
+    """Which rung of the basis ladder the curve rests on.
+
+    Prefers the bundle's own ``basis``. For a bundle written before 0.13 the
+    answer is derived rather than guessed: ``criteriaBasis: "fixed"`` marks the
+    five EASI screening thresholds, which are published criteria and always
+    were, and everything else was fitted to a pool of stations.
+    """
+    m = metric_spec or {}
+    declared = str(m.get("basis") or "")
+    if declared in _BASIS_LABELS:
+        return declared
+    return BASIS_PUBLISHED if is_fixed(m) else BASIS_REGIONAL
+
+
+def basis_label(metric_spec: Optional[dict]) -> str:
+    """The label a reader sees beside the curve."""
+    m = metric_spec or {}
+    return str(m.get("basisLabel") or _BASIS_LABELS.get(basis_of(m), ""))
 
 
 def _raw(assessment) -> dict:
@@ -39,12 +69,41 @@ def _raw(assessment) -> dict:
 # --------------------------------------------------------------------------- #
 # the line on the metric card, the report and the CSV
 # --------------------------------------------------------------------------- #
+#: the reference-support statuses a rung above the ecoregion hierarchy writes: a
+#: curve with one of these rests on no pool of this ecoregion or a parent
+LADDER_STATUSES = ("national", "modeled", "published")
+
+
+def _support(metric_spec: Optional[dict]) -> dict:
+    sup = (metric_spec or {}).get("referenceSupport")
+    return sup if isinstance(sup, dict) else {}
+
+
+def is_ladder(metric_spec: Optional[dict]) -> bool:
+    """A curve from the national, modeled or published rung. A published
+    benchmark is marked fixed like the EASI criteria but is regional, so the
+    two must never be told apart by ``criteriaBasis`` alone."""
+    return str(_support(metric_spec).get("status") or "") in LADDER_STATUSES
+
+
+def basis_text(metric_spec: Optional[dict], key: str) -> str:
+    """``basisStatement`` or ``basisLimit`` wherever the bundle put it: at the
+    metric, or (the first 0.13 bundles) only inside ``referenceSupport``."""
+    m = metric_spec or {}
+    return str(m.get(key) or _support(m).get(key) or "").strip()
+
+
 def support_line(metric_spec: Optional[dict]) -> str:
     """One plain line saying what the metric is scored against, or ``""`` for a
     bundle that does not say."""
     m = metric_spec or {}
-    if is_fixed(m):
+    if is_fixed(m) and not is_ladder(m):
         return "Fixed criteria, the same in every region"
+    basis = basis_of(m)
+    if basis in (BASIS_MODELED, BASIS_NATIONAL, BASIS_PUBLISHED) or is_ladder(m):
+        # never the station-pool sentence for a curve that rests on no pool: its
+        # counts would describe a model fit, or nothing at all
+        return basis_text(m, "basisStatement") or f"{basis_label(m)}."
     sup = m.get("referenceSupport")
     if not isinstance(sup, dict) or not sup.get("status"):
         return ""
@@ -110,10 +169,22 @@ def tip_lines(metric_spec: Optional[dict]) -> list[str]:
     line = support_line(m)
     if line:
         lines.append(line)
-    if is_fixed(m):
+    sup = m.get("referenceSupport") or {}
+    if is_fixed(m) and not is_ladder(m):
         lines.extend(criteria_lines(m))
         return lines
-    sup = m.get("referenceSupport") or {}
+    if basis_of(m) == BASIS_PUBLISHED:
+        # which criterion, its bands on this metric's units, and its sources
+        src = m.get("criteriaSource")
+        if isinstance(src, dict) and src.get("title"):
+            lines.append(f"Criterion: {src.get('title')}")
+            lines.extend(criteria_lines(m))
+        elif sup.get("transferNote"):
+            lines.append(str(sup.get("transferNote")))
+        return lines
+    if is_ladder(m) and sup.get("transferNote"):
+        # how the modeled or national curve was built, and how far it reaches
+        lines.append(str(sup.get("transferNote")))
     if sup.get("screen"):
         lines.append(f"Reference screen: {sup.get('screen')}")
     if is_borrowed(m) and sup.get("transferNote"):
@@ -134,6 +205,43 @@ def _num(v: Any) -> str:
 # --------------------------------------------------------------------------- #
 # metrics withheld for insufficient reference support
 # --------------------------------------------------------------------------- #
+#: A withheld record says why in ``reason``. Most have no defensible reference
+#: pool. A curve that was built and is waiting for a reviewer is a different
+#: finding and reads as one (StreamCurves ``held_for_review``, 2026-09-21).
+HELD_FOR_REVIEW = "held-for-review"
+INSUFFICIENT_TITLE = "Insufficient reference support, not scored"
+HELD_TITLE = "Held for review, not scored"
+
+
+def is_held(w) -> bool:
+    """A curve built and not yet cleared by a reviewer, rather than a missing pool."""
+    return str((w or {}).get("reason") or "") == HELD_FOR_REVIEW
+
+
+def withheld_title(w) -> str:
+    return HELD_TITLE if is_held(w) else INSUFFICIENT_TITLE
+
+
+def withheld_reason(w) -> str:
+    """The reason as a short label, for a table cell."""
+    return "Held for review" if is_held(w) else "Insufficient reference support"
+
+
+def withheld_note(items) -> str:
+    """What a list of withheld metrics means, one sentence per reason present."""
+    items = list(items or [])
+    parts = ["These metrics are not scored."]
+    if any(not is_held(w) for w in items):
+        parts.append("A metric withheld for insufficient reference support has no curve. No "
+                     "pool of least-disturbed stations in this ecoregion or its parents "
+                     "supports it, no national donor pool was shown to transfer, no modeled "
+                     "expectation passed validation, and no published criterion applies.")
+    if any(is_held(w) for w in items):
+        parts.append("A metric held for review has a curve that a reviewer has not yet "
+                     "cleared, so the curve is not published.")
+    return " ".join(parts)
+
+
 def withheld(assessment) -> list[dict]:
     items = _raw(assessment).get("insufficientReferenceSupport")
     return [w for w in items if isinstance(w, dict)] if isinstance(items, list) else []
