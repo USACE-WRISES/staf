@@ -645,6 +645,86 @@ def _record(run_id, region_code, rule_id, subject_kind, subject, *,
 _LEVEL_LABELS = {"l3": "Level III", "l2": "Level II", "l1": "Level I"}
 
 
+def _acceptance_thresholds() -> dict:
+    """The acceptance rule set a source was judged by (ACC-01 to ACC-06)."""
+    return dict(methodology.threshold("acceptance", {}) or {})
+
+
+def coverage_gaps(result: dict) -> list[dict]:
+    """COV-01's evidence: every function the bundle leaves unassessed or records as
+    a documented gap for insufficient reference support, with its candidate
+    metrics and whether each was refused by every source for a stated reason."""
+    cov = result.get("coverage") or {}
+    reason = methodology.threshold("coverage.documented_gap_reason",
+                                   "insufficient-reference-support")
+    fids = list(cov.get("missingFunctionIds") or []) + [
+        e.get("functionId") for e in cov.get("exclusions") or []
+        if e.get("reason") == reason]
+    if not fids:
+        return []
+    listed = list((result.get("meta") or {}).get("insufficientReferenceSupport") or [])
+    out = []
+    for fid in dict.fromkeys(str(f) for f in fids if f):
+        cands = [w for w in listed
+                 if fid in {f.get("functionId") for f in w.get("functions") or []}]
+        documented = bool(cands) and all(
+            w.get("reason") == "insufficient-reference-support" and w.get("statement")
+            for w in cands)
+        names = [str(w.get("metricName") or w.get("metricKey")) for w in cands]
+        out.append({"function_id": fid, "candidates": [w.get("metricKey") for w in cands],
+                    "candidates_text": ", ".join(names) or "none",
+                    "n_candidates": len(cands), "blockers_documented": documented,
+                    "held_for_review": [w.get("metricKey") for w in cands
+                                        if w.get("reason") != "insufficient-reference-support"]})
+    return out
+
+
+def _hierarchy_records(result: dict, add) -> None:
+    """Methodology 0.14: the source-by-source walk of every metric that reached
+    the sources after the station pools (REF-12 to REF-14 refusals), the
+    fill-to-two portfolio (SELECT-04) and the documented gaps (COV-01)."""
+    for a in result.get("ladder_attempts") or []:
+        rule = a.get("rung")
+        if rule not in ("REF-12", "REF-13", "REF-14") or a.get("admitted"):
+            continue
+        computed = {"why": a.get("why"), "options": a.get("options"),
+                    "condition": a.get("condition"), "candidate": a.get("candidate")}
+        add(rule, "metric", a.get("metric"),
+            thresholds=_acceptance_thresholds(),
+            computed={k: v for k, v in computed.items() if v is not None},
+            verdict=VERDICT_FAIL, recommendation=a.get("why"))
+    for fid, sel in sorted((result.get("portfolio_selection") or {}).items()):
+        add("SELECT-04", "function", fid,
+            thresholds={"fill_to": methodology.threshold("metric_portfolio.fill_to", 2)},
+            computed=sel, verdict=VERDICT_PASS,
+            recommendation=("Supported, not selected: " + ", ".join(
+                x.get("metric") for x in sel.get("notSelected") or [])
+                if sel.get("notSelected") else None))
+    for rec in coverage_gaps(result):
+        add("COV-01", "function", rec["function_id"],
+            thresholds={"reason": methodology.threshold("coverage.documented_gap_reason",
+                                                        "insufficient-reference-support")},
+            computed=rec, verdict=VERDICT_REVIEW, review_required=True,
+            review_triggers=["function_unassessed"],
+            recommendation=("Every candidate metric was refused by every source, each for a "
+                            "stated reason: publish as a documented gap." if
+                            rec["blockers_documented"] else
+                            "Not every candidate metric has a documented blocker; the owner "
+                            "decides."))
+    carried = result.get("carried_from") or {}
+    if carried:
+        add("REF-05", "run", "carry_forward",
+            inputs={"assessmentId": carried.get("assessmentId"),
+                    "fromVersion": carried.get("fromVersion"),
+                    "contentDigest": carried.get("contentDigest")},
+            computed={"n_carried": len(result.get("carried") or {}),
+                      "rebuilt": {k: v.get("why") for k, v in
+                                  (result.get("carry_rebuilt") or {}).items()}},
+            verdict=VERDICT_PASS,
+            recommendation=("Published curves are carried forward unchanged; a curve whose "
+                            "pool held a value the data verification corrected is rebuilt."))
+
+
 def _pressure_records(result: dict, add) -> None:
     """The records of the pressure-screen reference method (methodology 0.12):
     REF-04 to REF-07, DATA-11, STRAT-10, CURVE-11 and CURVE-12. Derived from the
@@ -684,12 +764,40 @@ def _pressure_records(result: dict, add) -> None:
                           "data_rules.exploratory_n_unstratified"),
                       "envelope_quantiles": methodology.threshold(
                           "reference_pool.envelope_quantiles")}
-        if status == "insufficient":
+        # methodology 0.14: the screen a pool was admitted under and every
+        # source option tried before it, with why each refused
+        if d.get("screen_detail"):
+            computed["screen_detail"] = d.get("screen_detail")
+        if d.get("options_tried"):
+            computed["options_tried"] = d.get("options_tried")
+        basis = str(d.get("basis") or "")
+        if d.get("carried_from"):
+            # a published curve kept unchanged: its pool was decided, and any
+            # review of it adjudicated, in the version it comes from
+            computed["carried_from"] = d.get("carried_from")
+            add("REF-05", "metric", metric, thresholds=thresholds, computed=computed,
+                verdict=VERDICT_PASS,
+                recommendation=(f"Carried forward unchanged from version "
+                                f"{d.get('carried_from')}; its reference support was decided "
+                                f"there."))
+        elif status == "insufficient":
             add("REF-06", "metric", metric, thresholds=thresholds, computed=computed,
                 verdict=VERDICT_FAIL,
-                recommendation="Insufficient reference support: no curve is built and the "
-                               "metric is not scored. Reference quality is never relaxed "
-                               "to reach a sample size.")
+                recommendation="Insufficient reference support: no source in the hierarchy "
+                               "passed acceptance, so no curve is built and the metric is "
+                               "not scored. No curve is forced.")
+        elif basis in ("national-reference", "modeled-reference", "published-benchmark"):
+            rule = {"national-reference": "REF-12", "modeled-reference": "REF-13",
+                    "published-benchmark": "REF-14"}[basis]
+            add(rule, "metric", metric, thresholds=_acceptance_thresholds(),
+                computed=computed, verdict=VERDICT_PASS,
+                recommendation=d.get("transfer_note"))
+        elif d.get("options_tried") and status != "local":
+            # a regional pool that passed the pre-registered acceptance criteria
+            # is the rule's decision, not a review item (REF-11, ACC-01 to ACC-06)
+            add("REF-11", "metric", metric, thresholds=_acceptance_thresholds(),
+                computed=computed, verdict=VERDICT_PASS,
+                recommendation=d.get("transfer_note"))
         elif status != "local":
             add("REF-05", "metric", metric, thresholds=thresholds, computed=computed,
                 verdict=VERDICT_REVIEW, review_required=True,
@@ -706,6 +814,8 @@ def _pressure_records(result: dict, add) -> None:
                           "q75": comp.get("q75"), "definition": comp.get("definition")},
                 verdict=VERDICT_PASS,
                 recommendation="Shown as a labeled comparison. Never a baseline.")
+
+    _hierarchy_records(result, add)
 
     # --- DATA-11: value selection across cycles ---
     selection = result.get("value_selection") or {}
@@ -766,8 +876,20 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
     run_id = manifest.get("inputsDigest", "")[:23]
     region_code = (result.get("region") or {}).get("code")
     records: list[dict] = []
+    # SELECT-04: a reserve candidate whose functions are all scored by other
+    # metrics can never enter the portfolio, so nothing about its curve is a
+    # decision anyone has to make; its records stay, its review items do not
+    moot = set(result.get("moot_reserves") or [])
 
     def add(*args, **kwargs):
+        subject = str(args[2]) if len(args) > 2 else ""
+        if moot and kwargs.get("review_required") and set(subject.split("|")) & moot:
+            kwargs["review_required"] = False
+            kwargs["review_triggers"] = []
+            note = ("A reserve candidate not needed: every function it could serve is scored "
+                    "by other metrics, so it cannot enter the portfolio (SELECT-04).")
+            kwargs["recommendation"] = (f"{kwargs.get('recommendation')} {note}".strip()
+                                        if kwargs.get("recommendation") else note)
         records.append(_record(run_id, region_code, *args, timestamp=timestamp, **kwargs))
 
     # --- REF: the reference definition ---
@@ -1131,6 +1253,8 @@ def rules_not_evaluated(records) -> list[dict]:
             "reason": (
                 "not implemented in the analysis pipeline"
                 if cat.get("implementation_status") == "not_yet_implemented"
+                else f"superseded by {cat.get('superseded_by')}"
+                if cat.get("implementation_status") == "superseded"
                 else "implemented but not applicable to this run"
             ),
         })
@@ -1191,6 +1315,12 @@ _TRIGGER_TIERS = {
         3, False,
         "This pair's redundancy category is unstable across resamples. Treat the "
         "pair as redundant, or keep both metrics?"),
+    # Methodology 0.14 (COV-01):
+    "function_unassessed": (
+        2, False,
+        "No source of the reference hierarchy supports any candidate metric of this "
+        "function. Publish it as a documented gap with its blockers, or stop and supply "
+        "a source?"),
     "confidence_capped": (
         4, False,
         "Confidence is capped by rule. Accept the capped score, or address the "

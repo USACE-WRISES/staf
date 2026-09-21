@@ -1,0 +1,45 @@
+# nrsa_cycle_compatibility.yaml -- which NRSA cycles a metric may pool across.
+#
+# Methodology 0.14, acceptance criterion ACC-02 (sampling compatibility).
+#
+# Judged from EPA's metric definitions and sampling methods, never from how the
+# values moved between surveys: a difference between cycles can be real
+# ecological change. By default a metric pools every cycle that carries it,
+# because EPA reuses a short name for the same definition and the NRSA field and
+# laboratory protocols are shared by 2013-14, 2018-19 and 2023-24. An entry under
+# `metrics` restricts a metric whose definition or method changed.
+#
+# scripts/nrsa/verify_inputs.py checks every mapped metric against this file, the
+# crosswalk and the units, and nrsa_dataset.latest_values applies it, so a value
+# from an incompatible cycle never reaches a pool.
+version: 1
+default: all
+
+metrics:
+  phab_LWDeqVolM100:
+    cycles: ["1819", "2324"]
+    reason: >-
+      From 2018-19 EPA computes wadeable wood volume with version 2 of its
+      algorithm (the 2018-19 definition reads "Wadeable=V2, Boatable=V1"). The
+      2013-14 value is the earlier computation, and EPA marks the two not
+      comparable across cycles.
+
+# Judgments that pool every cycle but needed a reason written down.
+notes:
+  chem_CHLA: >-
+    Water-column chlorophyll a in every cycle. Until 2026-09-21 the 2013-14
+    value was read from EPA's periphyton chlorophyll file, a different
+    measurement; it now comes from the water-column file, whose definition
+    matches the later cycles.
+  phab_RP100_cm: >-
+    Mean residual depth at the thalweg, the same definition in 2018-19 and
+    2023-24. EPA's "not comparable" flag refers to the separately named
+    RP100_CM variable, not to a change of method.
+  benthic_and_fish_2018_19: >-
+    EPA published no site-level benthic or fish metrics for 2018-19. Those values
+    are computed from EPA's counts by aquamet, the package EPA uses to publish
+    the other two cycles, under the same definitions.
+  benthic_and_fish_2013_14_2023_24: >-
+    Until 2026-09-21 twelve fish metrics of these cycles resolved to the benthic
+    file (the two share column names) and the matching benthic metrics were
+    empty. Each assemblage now reads only its own file.

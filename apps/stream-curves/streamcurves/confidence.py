@@ -157,6 +157,11 @@ def curve_confidence(evidence: dict) -> dict:
     # least-disturbed stations from this ecoregion or a parent cannot read as
     # high as one that does. The cap is by basis and applies on top of the
     # transfer-risk cap, never instead of it.
+    # REF-11 (v0.14): a pool admitted under the relaxed regional screen is not
+    # the strict least-disturbed condition
+    if evidence.get("screen") == "regional" and "regional_relaxed_screen" in caps:
+        total = min(total, float(caps["regional_relaxed_screen"]))
+        applied.append("regional_relaxed_screen")
     basis_cap = curve_basis.CAP_REASONS.get(
         curve_basis.resolve(evidence.get("basis"),
                             criteria_basis=evidence.get("criteria_basis")))

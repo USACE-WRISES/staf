@@ -47,7 +47,8 @@ def test_unknown_rules_and_thresholds_raise():
 
 def test_the_catalog_covers_every_rule_family():
     families = {rule_id.split("-")[0] for rule_id in methodology.rule_ids()}
-    assert families == {"DATA", "RED", "STRAT", "CURVE", "REF", "CONF", "SELECT"}
+    assert families == {"DATA", "RED", "STRAT", "CURVE", "REF", "CONF", "SELECT",
+                        "ACC", "COV"}
 
 
 def test_every_rule_declares_both_statuses():
@@ -56,7 +57,9 @@ def test_every_rule_declares_both_statuses():
         assert rule.get("threshold_status") in (
             "provisional", "calibrated", "approved"), rule_id
         assert rule.get("implementation_status") in (
-            "implemented", "partial", "not_yet_implemented"), rule_id
+            "implemented", "partial", "not_yet_implemented", "superseded"), rule_id
+        if rule.get("implementation_status") == "superseded":
+            assert rule.get("superseded_by") in methodology.rule_ids(), rule_id
 
 
 def test_strat00_is_the_approved_implemented_rule_the_agent_relies_on():

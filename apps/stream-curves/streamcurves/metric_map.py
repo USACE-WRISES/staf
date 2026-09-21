@@ -23,6 +23,7 @@ ENTRY_COLUMNS = [
     "label",
     "default_selected",
     "role",
+    "reserve",
 ]
 
 _ENTRIES_CACHE: pd.DataFrame | None = None
@@ -73,6 +74,9 @@ def metric_map_entries() -> pd.DataFrame:
                     "label": "" if m.get("label") is None else str(m.get("label")),
                     "default_selected": m.get("default_selected") is True,
                     "role": str(role).strip().lower(),
+                    # v0.14 (SELECT-04): evaluated in every build, entering a
+                    # portfolio only where its function would otherwise be unassessed
+                    "reserve": m.get("reserve") is True,
                 }
             )
     if rows:
@@ -87,6 +91,7 @@ def metric_map_entries() -> pd.DataFrame:
                 "label": pd.Series([], dtype=object),
                 "default_selected": pd.Series([], dtype=bool),
                 "role": pd.Series([], dtype=object),
+                "reserve": pd.Series([], dtype=bool),
             }
         )
     _ENTRIES_CACHE = df
@@ -103,6 +108,14 @@ def metric_map_default_codes(source) -> list[str]:
     """Codes pre-checked by default for a source (unique, order-preserved)."""
     df = metric_map_entries()
     sel = df[(df["source"] == source) & (df["default_selected"])]
+    return list(dict.fromkeys(sel["code"].tolist()))
+
+
+def metric_map_reserve_codes(source="nrsa") -> list[str]:
+    """Reserve candidates of a source (SELECT-04): loaded and evaluated, kept
+    only where their function would otherwise be unassessed."""
+    df = metric_map_entries()
+    sel = df[(df["source"] == source) & (df["reserve"])]
     return list(dict.fromkeys(sel["code"].tolist()))
 
 

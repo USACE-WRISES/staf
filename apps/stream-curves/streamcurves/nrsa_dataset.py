@@ -29,8 +29,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import lru_cache
+from pathlib import Path
 from typing import Iterable, Optional, Sequence
 
+import numpy as np
 import pandas as pd
 
 from .paths import DATA_DIR
@@ -577,6 +579,109 @@ def panel_values(
 LATEST_LEDGER_COLUMNS = ["station_key", "metric", "source_cycle", "visit_no", "site_name"]
 
 
+def cycle_compatibility(path=None) -> dict:
+    """``{metric: set of cycles it may pool}`` for the metrics a definition or
+    method change restricts (methodology 0.14, ACC-02). A metric absent from the
+    result pools every cycle that carries it."""
+    import yaml
+    p = Path(path) if path is not None else (
+        Path(__file__).resolve().parents[1] / "config" / "nrsa_cycle_compatibility.yaml")
+    if not p.exists():
+        return {}
+    doc = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    return {str(mk): {str(c) for c in (entry or {}).get("cycles") or []}
+            for mk, entry in (doc.get("metrics") or {}).items()
+            if (entry or {}).get("cycles")}
+
+
+def corrected_metrics() -> dict:
+    """``{metric: reason}`` for every metric whose archive values the data
+    verification corrected or removed (methodology 0.14): those listed at
+    ``reference_hierarchy.corrected_metrics`` in the methodology config, every
+    metric a cycle restriction applies to, and every fish metric (a sample EPA
+    flags as below protocol supplies none). A published curve that rests on one
+    of them and carries no station values of its own is rebuilt rather than
+    carried forward."""
+    from . import methodology
+    listed = methodology.threshold("reference_hierarchy.corrected_metrics", {}) or {}
+    out = {str(mk): " ".join(str(why or "").split()) for mk, why in listed.items()}
+    for mk in cycle_compatibility():
+        out.setdefault(mk, "values from an incompatible cycle were removed")
+    out["fish_*"] = "fish samples EPA flags as below protocol were removed"
+    return out
+
+
+def is_corrected(metric: str, corrected: Optional[dict] = None) -> Optional[str]:
+    """The reason ``metric``'s archive values were corrected, or None."""
+    got = corrected if corrected is not None else corrected_metrics()
+    if metric in got:
+        return got[metric]
+    if metric.startswith("fish_") and "fish_*" in got:
+        return got["fish_*"]
+    return None
+
+
+@lru_cache(maxsize=1)
+def fish_protocol_failures() -> frozenset:
+    """``(station_key, cycle)`` pairs whose fish sample EPA flags as below the
+    protocol ("NO-..." in SAMPLED_FISH: too few channel widths, too little of the
+    reach, too few individuals). Their fish metrics never enter a pool (ACC-02),
+    so the station falls back to its newest compatible survey."""
+    path = DATA_DIR / "nrsa" / "fish_counts.parquet"
+    if not path.exists():
+        return frozenset()
+    fc = pd.read_parquet(path, columns=["station_key", "cycle", "sampled_fish"])
+    bad = fc[fc["sampled_fish"].astype(str).str.upper().str.startswith("NO-")]
+    return frozenset(zip(bad["station_key"].astype(str), bad["cycle"].astype(str)))
+
+
+def _index_visit_values(ds: "NrsaDataset", keys: list[str], wanted: list[str],
+                        cycles: Sequence[str]) -> pd.DataFrame:
+    """One row per station per cycle (its index visit), newest cycle first, with
+    every value an incompatible cycle or a failed fish sample supplies removed."""
+    rank = {c: i for i, c in enumerate(c for c in CYCLES_NEWEST_FIRST if c in set(cycles))}
+    visits = ds.visits[ds.visits["station_key"].astype(str).isin(set(keys))
+                       & ds.visits["cycle"].isin(rank)]
+    # one index visit per station per cycle, chosen by the same explicit order
+    # the panel uses
+    visits = (visits.sort_values(INDEX_VISIT_ORDER)
+              .drop_duplicates(["station_key", "cycle"]))
+    index_rows = visits[["station_key", "cycle", "visit_no", "site_id"]]
+    joined = index_rows.merge(ds.values[["station_key", "cycle", "visit_no", "site_id"] + wanted],
+                              on=["station_key", "cycle", "visit_no", "site_id"], how="left")
+    joined["_rank"] = joined["cycle"].map(rank)
+    joined = joined.sort_values(["station_key", "_rank"], kind="stable")
+    # ACC-02: a cycle whose definition or method differs never supplies a value,
+    # so a station falls back to its newest compatible survey instead
+    for metric, allowed in cycle_compatibility().items():
+        if metric in joined.columns:
+            joined.loc[~joined["cycle"].astype(str).isin(allowed), metric] = np.nan
+    failed = fish_protocol_failures()
+    fish_cols = [m for m in wanted if m.startswith("fish_")]
+    if failed and fish_cols:
+        pair = list(zip(joined["station_key"].astype(str), joined["cycle"].astype(str)))
+        joined.loc[[x in failed for x in pair], fish_cols] = np.nan
+    return joined
+
+
+def valid_cycle_values(station_keys: Iterable[str], metric: str, *,
+                       dataset: "str | NrsaDataset" = MULTI_CYCLE_DATASET_ID,
+                       cycles: Sequence[str] = CYCLES_NEWEST_FIRST) -> pd.DataFrame:
+    """Every value the verified archive holds for ``metric`` at each station's
+    index visit of each compatible cycle: ``station_key``, ``cycle``, ``value``.
+    What a published pool value is checked against when a curve is carried
+    forward: a value no compatible, protocol-valid survey holds is one the
+    verification corrected or removed."""
+    ds = dataset if isinstance(dataset, NrsaDataset) else load_dataset(dataset)
+    keys = [str(k) for k in station_keys]
+    if metric not in ds.values.columns or not ds.is_multi_cycle or not keys:
+        return pd.DataFrame(columns=["station_key", "cycle", "value"])
+    joined = _index_visit_values(ds, keys, [metric], cycles)
+    out = joined[["station_key", "cycle", metric]].rename(columns={metric: "value"})
+    out["value"] = pd.to_numeric(out["value"], errors="coerce")
+    return out.dropna(subset=["value"]).reset_index(drop=True)
+
+
 def latest_values(
     station_keys: Iterable[str],
     *,
@@ -615,18 +720,7 @@ def latest_values(
         out = values[["site_id"] + wanted].reset_index(drop=True)
         return out, empty_ledger
 
-    rank = {c: i for i, c in enumerate(c for c in CYCLES_NEWEST_FIRST if c in set(cycles))}
-    visits = ds.visits[ds.visits["station_key"].astype(str).isin(set(keys))
-                       & ds.visits["cycle"].isin(rank)]
-    # one index visit per station per cycle, chosen by the same explicit order
-    # the panel uses
-    visits = (visits.sort_values(INDEX_VISIT_ORDER)
-              .drop_duplicates(["station_key", "cycle"]))
-    index_rows = visits[["station_key", "cycle", "visit_no", "site_id"]]
-    joined = index_rows.merge(ds.values[["station_key", "cycle", "visit_no", "site_id"] + wanted],
-                              on=["station_key", "cycle", "visit_no", "site_id"], how="left")
-    joined["_rank"] = joined["cycle"].map(rank)
-    joined = joined.sort_values(["station_key", "_rank"], kind="stable")
+    joined = _index_visit_values(ds, keys, wanted, cycles)
 
     # GroupBy.first() takes the first NON-NULL value per column, which is the rule
     wide = joined.groupby("station_key", sort=True)[wanted].first()

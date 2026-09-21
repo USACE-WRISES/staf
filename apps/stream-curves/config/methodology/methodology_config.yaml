@@ -20,9 +20,9 @@
 #   4. Re-run the pilot regression fixtures before promoting any status.
 
 meta:
-  methodology_version: "0.13-provisional"
+  methodology_version: "0.14-provisional"
   threshold_status: "provisional"        # global default; rules may override
-  date: "2026-09-19"
+  date: "2026-09-21"
   calibration_note: >
     v0.3 recalibrated the DATA sample-size floors against the two pilots' REAL
     EASI-screened reference sizes (NH-58 = 33 Functioning sites; ECBP-55 = 0 Functioning,
@@ -139,6 +139,26 @@ meta:
     (CURVE-12, advisory). Also new: DATA-11, the most recent non-null value per metric
     across survey cycles, replacing the newest cycle taken whole. The curve engine and
     every numeric floor are unchanged.
+    v0.13 (2026-09-21) adds the basis ladder: after the Level III, II and I pools a
+    metric could borrow from national comparable donors, a validated fitted
+    expectation, or a published criterion admitted on fitness (REF-08, REF-09,
+    REF-10), each labelled and capped (CONF-03).
+    v0.14 (2026-09-21) makes one automated workflow of it, on the owner's decisions.
+    Published curves are carried forward unchanged. Every missing or newly developed
+    curve walks one hierarchy (reference_hierarchy): the local reference, the regional
+    least-disturbed pools under a documented regional screen and a fixed search order
+    per metric family (REF-11), comparable national reference (REF-12), a modeled
+    reference from the approved registry (REF-13), and a published benchmark from the
+    verified catalog (REF-14). The first source that passes six acceptance criteria
+    (acceptance, ACC-01 to ACC-06) is used; exact anchor recovery is a diagnostic,
+    never a gate. A new curve joins a function only while it holds fewer than two
+    metrics (SELECT-04), and a function with no admissible source publishes as a
+    documented gap under the owner's standing decision (COV-01). The two-pass
+    structure of 0.13 and its validated-only gate are removed. Data verification
+    comes first: twelve benthic metrics of 2013-14 and 2023-24 were restored and
+    twelve fish metrics of those cycles corrected (they had read the benthic file),
+    and 2013-14 chlorophyll now reads the water-column file (scripts/nrsa/
+    verify_inputs.py, config/nrsa_cycle_compatibility.yaml).
   authority: "STAF scientific team (human sign-off required for status promotion)"
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
@@ -377,6 +397,71 @@ reference_pool:
   # mandatory review. The caps live at confidence_rules.caps.
   review_risks: ["moderate", "high", "unassessed"]
 
+# --------------------------------------------------------------------------- #
+# One reference-source hierarchy (v0.14, owner decisions 2026-09-21). Rules
+# REF-11 to REF-14. The fixed search order of the regional pools and the faunal
+# provinces live in config/reference_transfer.yaml; the numbers live here.
+# --------------------------------------------------------------------------- #
+reference_hierarchy:
+  sources: [local, regional, national, modeled, published]
+  # Every curve the latest published version scores is carried forward unchanged
+  # (its points, class layers, annotations and source), unless a value in its
+  # published pool is one the data verification corrected or removed: a pool curve
+  # is checked station by station against the verified archive
+  # (nrsa_dataset.valid_cycle_values), and a curve with no station values of its
+  # own (national, modeled) is rebuilt when its metric is listed here, restricted by
+  # nrsa_cycle_compatibility.yaml, or a fish metric (failed samples removed).
+  carry_forward: published_curves
+  corrected_metrics:
+    chem_CHLA: "2013-14 values re-read from EPA's water-column file instead of the periphyton file"
+  regional_screen:
+    id: "least-disturbed-regional-v1"
+    # Agriculture relaxes to this quantile of watershed agriculture at EPA's NRSA
+    # reference (rt_nrsa R) sites in the target's NARS-9 region, never below the
+    # floor; every other limit is the relaxed tier of reference_screen. A region
+    # with fewer EPA reference sites than the minimum uses the floor.
+    agriculture_quantile: 0.90
+    agriculture_floor: 25.0
+    min_epa_reference_sites: 5
+    base_tier: relaxed
+  # comparable national reference, tried in this order (REF-12)
+  national_options: [3c_matched, 3a_envelope]
+  # the comparability envelope is the target's own central range, widened on each
+  # side by this share of the covariate's national 2.5 to 97.5 percent span, so a
+  # compact region does not shut out comparable streams (REF-11, REF-12)
+  envelope_widen_fraction: 0.05
+  # a pool option's position in the transfer-risk scale; NARS-9 is as broad as
+  # Level I
+  option_rank: {l3: 0, l2: 1, nars9: 2, l1: 2, national: 3}
+
+# --------------------------------------------------------------------------- #
+# Acceptance (v0.14, ACC-01 to ACC-06), defined before any outcome is seen and
+# the same for every region. Criteria 1 to 4 are computed per target at build
+# time; 5 and 6 come from recovery-test evidence per metric and source option in
+# config/basis_validation.yaml, with the metric family's pooled evidence standing
+# in where a metric has fewer evaluation cells than min_cells. The local reference
+# is the definition of reference and needs no recovery evidence.
+# --------------------------------------------------------------------------- #
+acceptance:
+  sample_adequacy:                       # ACC-01, independent stations or distinct donors
+    exploratory: 10
+    adequate: 20
+  sampling_compatibility: "config/nrsa_cycle_compatibility.yaml"   # ACC-02
+  applicability:                         # ACC-03
+    comparability: "reference_transfer.yaml families and fauna_groups"
+    national_transport: true             # the target inside the range the basis passed over
+    model_limits: "config/model_registry.yaml"
+  scoring_stability:                     # ACC-04, the scale-free drop-one test (CURVE-04b)
+    max_quartile_shift_iqr: 0.20
+    no_decision_flip: true
+  classification_error:                  # ACC-05, as Pre-registration II's C2
+    min_cells: 4
+    min_share: 0.666667                  # two thirds; shares are recorded to 4 decimals
+  directional_bias:                      # ACC-06, as Pre-registration II's C3
+    max_net_optimism: 0.05
+  anchor_recovery: diagnostic            # C1, reported and never a gate
+  evidence_fallback: family
+
 # all, before any screening. v0.10 (2026-09-07, owner decision).
 # --------------------------------------------------------------------------- #
 reference_panel:
@@ -451,6 +536,10 @@ confidence_rules:
     national_reference: 79
     modeled_reference: 59
     published_benchmark: 59
+    # v0.14 (REF-11): a pool admitted under the relaxed regional screen is not the
+    # least-disturbed condition of the strict screen, the same ceiling as
+    # best-available reference
+    regional_relaxed_screen: 59
   high_confidence_audit_rate: 0.10       # production drift audit: a PROCESS commitment (sample 10 percent of High-confidence curves for owner audit); not enforced in code
   # Review Priority = Impact x Uncertainty x Novelty (net-new; scales in methodology.md)
 
@@ -464,6 +553,15 @@ metric_portfolio:
   default_primary_metrics_per_function: 1
   default_maximum_metrics_per_function: 2
   more_than_two_requires_human_approval: true
+  # SELECT-04 (v0.14, owner decision 2026-09-21): a function fills to two metrics
+  # automatically and never past that without a person. Carried-forward and
+  # fixed-criteria metrics stay where they are. A new curve joins a function only
+  # while it holds fewer than fill_to scored metrics, the higher source first
+  # (source_rank), then the higher SELECT-02 metric score, then the metric key;
+  # the rest are recorded as supported, not selected. A reserve candidate joins
+  # only a function that would otherwise be unassessed.
+  fill_to: 2
+  source_rank: {local: 0, regional: 1, national: 2, modeled: 3, published: 4}
   metric_score_weights:                  # must sum to 100
     ecological_relevance_coverage: 25
     data_quality_support_coverage: 20
@@ -471,6 +569,18 @@ metric_portfolio:
     nonredundancy_complementarity: 15
     interpretability_management: 10
     operational_availability_reproducibility: 10
+
+# --------------------------------------------------------------------------- #
+# Function coverage (v0.14, COV-01). A function whose every candidate metric the
+# hierarchy refused is published as a documented gap, with each source's blocker
+# in its justification, under the owner's standing decision cov01-documented-gap
+# (standing_decisions.yaml): recorded pending and confirmed by the owner at
+# promote. A function with no candidate metric at all, or a gap from any other
+# cause, stays an open item for the owner.
+# --------------------------------------------------------------------------- #
+coverage:
+  documented_gap_reason: "insufficient-reference-support"
+  standing_decision: cov01-documented-gap
 
 # --------------------------------------------------------------------------- #
 # Standing decisions (v0.7). The owner's class decisions a batch run may apply

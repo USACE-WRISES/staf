@@ -31,7 +31,21 @@
 # (reference_pool.*) so the Rules page resolves them. This file holds the
 # structure: which covariates, which metrics.
 
-version: 1
+version: 2
+
+# --------------------------------------------------------------------------- #
+# Methodology 0.14 (2026-09-21): one reference-source hierarchy.
+#
+# A missing curve tries, in order: the local reference (Level III, strict
+# screen), then the regional least-disturbed pools, then comparable national
+# reference, a modeled reference, and a published benchmark. The regional pools
+# use the documented regional screen (methodology_config.yaml,
+# reference_hierarchy.regional_screen) and are searched in each family's fixed
+# `search_order` below. NARS-9 is EPA's grouping of Level III regions for
+# condition reporting, a separate grouping and not another nested level, so each
+# family places it where its drivers put it. The first source that passes the
+# acceptance criteria (methodology_config.yaml, acceptance) is used.
+# --------------------------------------------------------------------------- #
 
 envelope:
   basis: target_frame_stations
@@ -53,26 +67,38 @@ families:
     why: "Bankfull dimensions, pool depth, sinuosity and bank form scale with stream size and slope, and the material the channel is cut into."
     covariates: [drainage_area_sqkm, nhd_slope]
     lithology: true
+    search_order: [l3, l2, l1, nars9]
+    search_why: "Channel geometry follows physiography, which the Omernik hierarchy nests. NARS-9 groups regions for condition reporting across physiographic lines, so it comes last."
   substrate:
     label: "Bed material and sediment"
     why: "Particle size, fines, embeddedness and bed stability follow slope, stream size and the rock and deposits that supply the sediment."
     covariates: [drainage_area_sqkm, nhd_slope]
     lithology: true
+    search_order: [l3, l2, l1, nars9]
+    search_why: "Bed material follows the physiography and deposits the hierarchy nests. NARS-9 crosses those lines, so it comes last."
   water_chemistry:
     label: "Water chemistry"
     why: "Conductivity, pH, nutrients and turbidity in least-disturbed streams follow geology and how much of the flow is groundwater."
     covariates: [bfiws, runoffws]
     lithology: true
+    search_order: [l3, nars9, l2, l1]
+    search_why: "EPA assesses chemical and nutrient condition by NARS-9 region, so the grouping built for that purpose is tried before the wider levels of the hierarchy."
   biology:
     label: "Benthic and fish assemblages"
     why: "Taxa richness and tolerance follow stream size, gradient and temperature."
     covariates: [drainage_area_sqkm, nhd_slope, tmean8110ws]
     lithology: false
+    # every pool keeps to the target's faunal province (fauna_groups below)
+    fauna: true
+    search_order: [l3, l2, nars9, l1]
+    search_why: "Assemblages follow climate and landform, which NARS-9 draws more closely than Level I, and every option keeps to the target's faunal province."
   riparian:
     label: "Riparian cover, shade, wood and fish cover"
     why: "Canopy, woody cover and wood loading follow stream size and the climate that sets the natural vegetation."
     covariates: [drainage_area_sqkm, precip8110ws]
     lithology: false
+    search_order: [l3, l2, nars9, l1]
+    search_why: "Riparian vegetation follows the climate that sets natural vegetation, which NARS-9 draws more closely than Level I."
   hydrology:
     label: "Watershed storage and base flow"
     why: "Natural wetland extent and base flow follow how permeable the watershed is and its climate."
@@ -81,6 +107,28 @@ families:
     # reach slope is a weak stand-in for watershed relief anyway.
     covariates: [hydrlcondws, precip8110ws]
     lithology: true
+    search_order: [l3, l2, l1, nars9]
+    search_why: "Watershed storage follows physiography and climate as the hierarchy nests them. NARS-9 crosses those lines, so it comes last."
+
+# Which streams share a regional species pool (families with `fauna: true`).
+# The distance-matched check of 2026-09-21 found donors matched on size, slope
+# and temperature alone carrying a third of the Eastern Corn Belt Plains' native
+# species, so an assemblage is compared only with streams draining to the same
+# broad faunal province. The provinces follow the major drainages of North
+# American freshwater fish zoogeography, keyed by the two-digit hydrologic region
+# of the station's HUC12: the eastern Mississippi and Great Lakes interior, the
+# Great Plains rivers of the interior, the Atlantic slope, the western Gulf, the
+# Colorado and Great Basin, and the Pacific slope. A target's own provinces are
+# those holding at least `target_share_min` of its in-frame stations.
+fauna_groups:
+  target_share_min: 0.10
+  groups:
+    interior_east: ["04", "05", "06", "07", "08"]
+    interior_plains: ["09", "10", "11"]
+    atlantic: ["01", "02", "03"]
+    gulf_west: ["12", "13"]
+    colorado_great_basin: ["14", "15", "16"]
+    pacific: ["17", "18"]
 
 # One explicit entry per metric. No inference: a metric that is not listed here
 # cannot borrow, and its curve is local or it is not built.
@@ -113,6 +161,9 @@ metric_family:
   bent_TOLRPIND: biology
   fish_NAT_TOTLNTAX: biology
   fish_NAT_NTOLNTAX: biology
+  fish_NAT_NTOLPTAX: biology
+  fish_NAT_TOLRPIND: biology
+  fish_NAT_LITHPIND: biology
   # landscape expectation metrics (scored against reference, never fixed criteria)
   pctwet2019ws: hydrology
   pctwdwet2019ws: hydrology

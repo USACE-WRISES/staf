@@ -25,6 +25,16 @@ Two regimes, because the two targets fail differently:
      four regions, which is the minimum a verdict may rest on.
 
     py -3.12 scripts/run_model_test.py --out <folder> --prereg <file> --jobs 10
+
+Protocol IV (``--protocol iv``, Pre-registration IV, methodology 0.14) tests the
+one specification the model registry runs, ``mixed_local``, exactly as a
+production build fits it (``modeled_reference.training_frame``: every other
+ecoregion, plus the target's own non-reference stations). With nothing selected
+there is no development split, so every testable region is an evaluation cell in
+Regime I, and Regime E is kept as Pre-registration II defined it. The metrics are
+every metric a build can borrow for, reserve candidates included.
+
+    py -3.12 scripts/run_model_test.py --protocol iv --out <folder> --prereg <file> --jobs 10
 """
 from __future__ import annotations
 
@@ -45,6 +55,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from streamcurves import basis_recovery as br          # noqa: E402
 from streamcurves import pressure_evidence as pe       # noqa: E402
+from streamcurves import reference_pool as rp          # noqa: E402
 
 NATURAL = ["drainage_area_sqkm", "nhd_slope", "tmean8110ws", "precip8110ws", "bfiws"]
 METRICS = ["bent_EPT_NTAX", "bent_HPRIME", "bent_TOLRPIND", "bent_TOTLNTAX",
@@ -62,9 +73,14 @@ N_BOOT_TRUTH, N_BOOT_POP, N_BOOT_MODEL, N_DRAWS, N_RESID = 300, 60, 20, 100, 200
 _STATE: dict = {}
 
 
-def _init() -> None:
+def _init(protocol: str = "ii") -> None:
     warnings.simplefilter("ignore")
-    inp = pe.national_inputs()
+    if protocol == "iv":
+        # Protocol IV reads the production frame (the governed wadeable frame)
+        from run_hierarchy_test import production_inputs
+        inp = production_inputs()
+    else:
+        inp = pe.national_inputs()
     frame, values = inp["frame"], inp["values"]
     _STATE.update({"frame": frame, "mc": inp["metric_config"],
                    "wide": values.set_index(values["site_id"].astype(str)),
@@ -283,10 +299,77 @@ def run_metric(metric: str, testable: list[str], dev: list[str], ev: list[str],
     return records, targets, frozen, time.time() - t0
 
 
-def run(out_dir: Path | None, *, seed: int, min_reference: int, jobs: int,
-        prereg: Path | None, only_metrics: list[str] | None) -> dict:
+REGISTRY_SPEC = "mixed_local"
+
+
+def run_metric_iv(metric: str, testable: list[str], regime_e: list[str],
+                  seed: int) -> tuple[list[dict], list[dict], dict, float]:
+    """Protocol IV: the registry specification in every testable region, fitted
+    as production fits it. Records carry the natural coverage and the
+    disturbance gap each cell asked the model to bridge, which is what the
+    registry's application limits are read from."""
+    from streamcurves import modeled_reference as mr
     t0 = time.time()
-    _init()
+    frame, l3 = _STATE["frame"], _STATE["l3"]
+    cfg = _STATE["mc"][metric]
+    tvec = _STATE["target_vector"]
+    series = _series(metric)
+    kind = br.transform_for(metric)
+    offset = br.log_offset(series)
+    records: list[dict] = []
+    plan = [(code, "I") for code in testable] + [(code, "E") for code in regime_e]
+    for code, regime in plan:
+        reg = frame[l3 == str(code)]
+        ref = series.reindex(reg.index)[reg["pass_strict"].astype(bool)].dropna()
+        evald = series.reindex(reg.index).dropna()
+        truth = br.cell_truth(ref, evald, cfg, clusters=reg["huc12"], n_boot=N_BOOT_TRUTH,
+                              seed=br.cell_seed(metric, code, "truth", seed=seed))
+        if truth is None:
+            continue
+        kept_rows = retained(reg, regime)
+        rows = (mr.training_frame(frame, code) if regime == "I" else
+                pd.concat([frame[l3 != str(code)], kept_rows]))
+        kept = {f"kept_{k}": v for k, v in br.disturbance_gap(kept_rows, tvec).items()}
+        base = {"metric": metric, "l3": code, "region": str(reg["l3_name"].iloc[0]),
+                "role": "eval", "regime": regime, "units": cfg.get("units", ""),
+                "transform": kind, **br.disturbance_gap(reg, tvec), **kept}
+        model, train = fit_for(code, regime, [], series, REGISTRY_SPEC, kind=kind,
+                               offset=offset, rows=rows)
+        got = br.model_anchors(model, reg, tvec, group=code, n_resid=N_RESID,
+                               rng=_rng(metric, code, REGISTRY_SPEC, regime, seed=seed))
+        cov = br.coverage_by_covariate(train, reg, NATURAL)
+        boot_rng = _rng(metric, code, REGISTRY_SPEC, regime, "draws", seed=seed)
+
+        def refit(pos, _train=train, _reg=reg, _code=code, _regime=regime):
+            m, _ = fit_for(_code, _regime, [], series, REGISTRY_SPEC, kind=kind, offset=offset,
+                           rows=_train.iloc[pos])
+            return br.model_anchors(m, _reg, tvec, group=_code, rng=boot_rng,
+                                    n_resid=N_RESID)["anchors"]
+
+        iv = br.cluster_bootstrap(refit, train["huc12"], n_boot=N_BOOT_MODEL,
+                                  rng=_rng(metric, code, REGISTRY_SPEC, regime, "iv",
+                                           seed=seed)) if got["anchors"] else None
+        fields = {"basis": f"1B_{REGISTRY_SPEC}", "kind": "model", "spec": REGISTRY_SPEC,
+                  "n_fit": int(model["n_train"]) if model else 0, "n_pred": got["n_pred"],
+                  "n_local_train": int(len(kept_rows)), "blup": got["blup"],
+                  "extrapolation_ok": br.extrapolation_share(train, reg, NATURAL),
+                  "coverage_no_climate": cov.get("joint_no_climate"),
+                  "family": rp.family_of(metric)}
+        if got["anchors"] is None:
+            records.append({**base, **fields, "detail": "no anchors"})
+            continue
+        records.append({**base, **fields,
+                        **br.candidate_record(truth, anchors=got["anchors"], n_fit=None,
+                                              interval=iv, n_draws=N_DRAWS)})
+    frozen = {"spec": REGISTRY_SPEC, "transform": kind,
+              "log_offset": offset if kind == "log10" else None}
+    return records, [], frozen, time.time() - t0
+
+
+def run(out_dir: Path | None, *, seed: int, min_reference: int, jobs: int,
+        prereg: Path | None, only_metrics: list[str] | None, protocol: str = "ii") -> dict:
+    t0 = time.time()
+    _init(protocol)
     frame, l3 = _STATE["frame"], _STATE["l3"]
     testable = sorted([c for c, g in frame.groupby(l3)
                        if int(g["pass_strict"].sum()) >= min_reference and len(g) >= 25],
@@ -294,31 +377,40 @@ def run(out_dir: Path | None, *, seed: int, min_reference: int, jobs: int,
     dev, ev = br.split_regions(testable, seed=seed)
     regime_e = [c for c in testable
                 if len(retained(frame[l3 == c], "E")) >= MIN_LOCAL_E]
-    metrics = [m for m in METRICS if only_metrics is None or m in only_metrics]
-    print(f"[model] {len(metrics)} metrics, {len(ev)} regime I regions, "
+    if protocol == "iv":
+        from run_hierarchy_test import metrics_under_test
+        pool_metrics, worker, args = metrics_under_test(), run_metric_iv, (testable, regime_e, seed)
+        n_i = len(testable)
+    else:
+        pool_metrics, worker, args = METRICS, run_metric, (testable, dev, ev, regime_e, seed)
+        n_i = len(ev)
+    metrics = [m for m in pool_metrics if only_metrics is None or m in only_metrics]
+    print(f"[model] protocol {protocol}: {len(metrics)} metrics, {n_i} regime I regions, "
           f"{len(regime_e)} regime E regions {regime_e}, jobs={jobs}", flush=True)
     records, targets, frozen = [], [], {}
-    args = (testable, dev, ev, regime_e, seed)
     if jobs > 1:
-        with ProcessPoolExecutor(max_workers=jobs, initializer=_init) as pool:
-            futs = {m: pool.submit(run_metric, m, *args) for m in metrics}
+        with ProcessPoolExecutor(max_workers=jobs, initializer=_init,
+                                 initargs=(protocol,)) as pool:
+            futs = {m: pool.submit(worker, m, *args) for m in metrics}
             for m in metrics:
                 r, t, f, dt = futs[m].result()
                 records += r
                 targets += t
                 frozen[m] = f
-                print(f"[model] {m}: {len(r)} records, spec {f['spec_selected']} in {dt:.0f}s",
-                      flush=True)
+                print(f"[model] {m}: {len(r)} records, spec "
+                      f"{f.get('spec_selected') or f.get('spec')} in {dt:.0f}s", flush=True)
     else:
         for m in metrics:
-            r, t, f, dt = run_metric(m, *args)
+            r, t, f, dt = worker(m, *args)
             records += r
             targets += t
             frozen[m] = f
-            print(f"[model] {m}: {len(r)} records, spec {f['spec_selected']} in {dt:.0f}s",
-                  flush=True)
+            print(f"[model] {m}: {len(r)} records, spec "
+                  f"{f.get('spec_selected') or f.get('spec')} in {dt:.0f}s", flush=True)
     table, tgt = pd.DataFrame(records), pd.DataFrame(targets)
-    summary = {"generated": date.today().isoformat(), "seed": seed,
+    summary = {"generated": date.today().isoformat(), "seed": seed, "protocol": protocol,
+               "frame": "wadeable (DATA-10)" if protocol == "iv" else "all stream orders",
+               "n_frame": int(len(frame)),
                "preregistration_sha256": (hashlib.sha256(prereg.read_bytes()).hexdigest()
                                           if prereg and prereg.exists() else None),
                "development_regions": dev, "evaluation_regions": ev,
@@ -347,9 +439,12 @@ def main(argv=None) -> int:
     ap.add_argument("--jobs", type=int, default=1)
     ap.add_argument("--prereg", default=None)
     ap.add_argument("--metric", action="append", default=None)
+    ap.add_argument("--protocol", choices=("ii", "iv"), default="ii",
+                    help="ii reproduces rounds two and three; iv is Pre-registration IV")
     a = ap.parse_args(argv)
     got = run(Path(a.out) if a.out else None, seed=a.seed, min_reference=a.min_reference,
-              jobs=a.jobs, prereg=Path(a.prereg) if a.prereg else None, only_metrics=a.metric)
+              jobs=a.jobs, prereg=Path(a.prereg) if a.prereg else None, only_metrics=a.metric,
+              protocol=a.protocol)
     print(json.dumps({k: v for k, v in got["summary"].items() if k != "frozen_rules"},
                      indent=1, default=str))
     return 0

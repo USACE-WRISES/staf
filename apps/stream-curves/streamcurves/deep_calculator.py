@@ -884,13 +884,24 @@ def support_text(metric: dict) -> str:
         # never the station-pool sentence: its counts would describe a model fit
         return str(metric.get("basisLabel") or sup_.get("basisLabel") or basis)
     sup = metric.get("referenceSupport")
+    carried = metric.get("carriedForward") if isinstance(metric.get("carriedForward"), dict) else {}
+    tail = (f", carried forward from version {carried.get('fromVersion')}"
+            if carried.get("fromVersion") else "")
     if isinstance(sup, dict) and sup.get("status"):
+        # methodology 0.14: a pool admitted under the regional screen says so
+        lim = sup.get("agricultureLimit")
+        screen = (f" under the regional screen (agriculture at most {float(lim):g} percent)"
+                  if sup.get("screenId") and lim is not None else "")
         if sup.get("status") == "local":
-            return f"{sup.get('nUsable')} least-disturbed stations of this ecoregion"
-        return (f"{sup.get('nUsable')} least-disturbed stations borrowed from "
-                f"{sup.get('levelLabel') or sup.get('level')} ecoregion {sup.get('regionCode')}"
-                + (f" ({sup.get('regionName')})" if sup.get("regionName") else "")
-                + f", transfer risk {sup.get('transferRisk')}")
+            return f"{sup.get('nUsable')} least-disturbed stations of this ecoregion{tail}"
+        if sup.get("status") == "local_relaxed":
+            return (f"{sup.get('nUsable')} least-disturbed streams of this ecoregion{screen}"
+                    f"{tail}")
+        where = (f"NARS-9 region {sup.get('regionCode')}" if sup.get("level") == "nars9" else
+                 f"{sup.get('levelLabel') or sup.get('level')} ecoregion {sup.get('regionCode')}"
+                 + (f" ({sup.get('regionName')})" if sup.get("regionName") else ""))
+        return (f"{sup.get('nUsable')} least-disturbed stations borrowed from {where}{screen}"
+                f", transfer risk {sup.get('transferRisk')}{tail}")
     n = metric.get("referenceN")
     return f"{int(n)} reference sites" if isinstance(n, (int, float)) else ""
 

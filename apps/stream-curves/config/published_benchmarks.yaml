@@ -1,0 +1,133 @@
+# published_benchmarks.yaml: the verified catalog of published criteria a build may
+# score a metric against (REF-14, methodology 0.14). Hand-maintained and verified;
+# a change here is a methodology change and goes through review.
+#
+# A build LOOKS UP this catalog and never searches for a criterion: nothing is
+# fetched at build time. A metric with no entry is recorded as a specific gap
+# ("the catalog holds no criterion for this metric"), and a documented refusal
+# below is a finding in its own right, so a reader can tell "checked and
+# unsuitable" from "never looked at".
+#
+# Every entry states what REF-14's fitness conditions ask about (PB-1 to PB-5):
+# the exact metric and fraction, the units and their conversion, the sampling the
+# criterion assumes, where and for which streams it applies, its thresholds, its
+# citation and how the thresholds become a STAF curve. Where several entries
+# serve one metric, `precedence` picks one, in order: the exact metric and
+# fraction, then the most specific geography (Level III before NARS-9 before
+# national), then the newest edition.
+#
+# The thresholds are copied from the vendored EASI catalog they are read from
+# (thresholds_source) so the record is complete on its own; a test fails if the
+# two ever disagree.
+
+version: 1
+precedence: [exact_metric_and_fraction, most_specific_geography, newest_edition]
+geography_rank: {l3: 0, nars9: 1, national: 2}
+
+entries:
+  - id: nrsa-2018-19-total-phosphorus
+    metric: chem_PTL
+    analyte: total phosphorus
+    fraction: total
+    purpose: condition-assessment
+    units: {benchmark: mg/L, metric: ug/L, factor: 1000.0}
+    resolution: 0.1
+    sampling: >-
+      A mid-channel grab sample at the X-site analyzed in a laboratory for total
+      phosphorus, the NRSA field and laboratory protocol the metric is measured by.
+    stream_types: >-
+      Perennial streams and rivers in the NRSA sample frame, wadeable and boatable.
+    geography: {kind: nars9}
+    edition: "2018-19"
+    thresholds:       # [Good below, Poor above] in mg/L, per NARS-9 region
+      CPL: [0.0559, 0.103]
+      NAP: [0.0171, 0.0326]
+      NPL: [0.064, 0.107]
+      SAP: [0.0148, 0.0244]
+      SPL: [0.0558, 0.127]
+      TPL: [0.0886, 0.143]
+      UMW: [0.0363, 0.0499]
+      WMT: [0.0177, 0.041]
+      XER: [0.052, 0.0959]
+    thresholds_source: {catalog: easi, method: regional-nutrient-condition, input: tp}
+    citation: {key: nrsa-2018-19, title: "National Rivers and Streams Assessment 2018-19 Technical Support Document"}
+    region_citation: {key: nars-regions, title: "Ecoregions Used in the National Aquatic Resource Surveys"}
+    scoring: >-
+      The two breakpoints become the Good to Fair and Fair to Poor boundaries of a
+      STAF curve through the same construction as the fixed criteria (CURVE-11):
+      Good scores above 0.69, Fair between 0.39 and 0.69, Poor below 0.39.
+
+  - id: nrsa-2018-19-total-nitrogen
+    metric: chem_NTL
+    analyte: total nitrogen
+    fraction: total
+    purpose: condition-assessment
+    units: {benchmark: mg/L, metric: mg N/L, factor: 1.0}
+    resolution: 0.001
+    sampling: >-
+      A mid-channel grab sample at the X-site analyzed in a laboratory for total
+      nitrogen, the NRSA field and laboratory protocol the metric is measured by.
+    stream_types: >-
+      Perennial streams and rivers in the NRSA sample frame, wadeable and boatable.
+    geography: {kind: nars9}
+    edition: "2018-19"
+    thresholds:       # [Good below, Poor above] in mg/L, per NARS-9 region
+      CPL: [0.624, 1.081]
+      NAP: [0.345, 0.482]
+      NPL: [0.575, 0.937]
+      SAP: [0.24, 0.456]
+      SPL: [0.581, 1.069]
+      TPL: [0.7, 1.274]
+      UMW: [0.583, 1.024]
+      WMT: [0.139, 0.249]
+      XER: [0.285, 0.529]
+    thresholds_source: {catalog: easi, method: regional-nutrient-condition, input: tn}
+    citation: {key: nrsa-2018-19, title: "National Rivers and Streams Assessment 2018-19 Technical Support Document"}
+    region_citation: {key: nars-regions, title: "Ecoregions Used in the National Aquatic Resource Surveys"}
+    scoring: >-
+      The two breakpoints become the Good to Fair and Fair to Poor boundaries of a
+      STAF curve through the same construction as the fixed criteria (CURVE-11):
+      Good scores above 0.69, Fair between 0.39 and 0.69, Poor below 0.39.
+
+# Criteria checked and found unsuitable. Each `why` is read on a DEEP card, so it
+# names no code, file or constant. `applies_where` limits a sentence to the
+# targets it is true for.
+refusals:
+  - id: dissolved-nitrogen-fraction
+    metrics: [chem_NTL_DISS]
+    why: >-
+      NRSA Table 7-1 is written for total nitrogen. Dissolved nitrogen is a
+      different fraction, so the criterion does not measure it and no conversion
+      would be defensible.
+  - id: no-conductivity-criterion
+    metrics: [chem_COND]
+    why: The published criteria STAF draws on include no regional criterion for conductivity.
+  - id: no-ph-criterion
+    metrics: [chem_PH]
+    why: The published criteria STAF draws on include no regional criterion for pH.
+  - id: no-turbidity-criterion
+    metrics: [chem_TURB]
+    why: The published criteria STAF draws on include no regional criterion for turbidity.
+  - id: state-biological-indices
+    metrics: [fish_NAT_TOTLNTAX, fish_NAT_NTOLNTAX, fish_NAT_NTOLPTAX, fish_NAT_TOLRPIND,
+              fish_NAT_LITHPIND, bent_TOTLNTAX]
+    why: >-
+      Every published biological criterion in the STAF assessment library is
+      scored on a state-specific field index (Michigan Procedure 51, the Carolina
+      IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed
+      from NRSA data, so none measures the same quantity as this metric.
+  - id: ohio-epa-biocriteria
+    metrics: [fish_NAT_TOTLNTAX, fish_NAT_NTOLNTAX, fish_NAT_NTOLPTAX, fish_NAT_TOLRPIND,
+              fish_NAT_LITHPIND, bent_TOTLNTAX]
+    checked_on: "2026-09-21"
+    applies_where: {l3: ["55"]}
+    why: >-
+      Ohio EPA's ecoregional biocriteria, the nearest published criterion for this
+      ecoregion, were checked on 2026-09-21 and are not usable either. They set
+      thresholds on composite indices rather than on a single community metric
+      such as this one, those indices are computed under Ohio's own field
+      protocol and are not carried by the NRSA archive, and they are Ohio water
+      quality standards while half this ecoregion's stations lie in Indiana.
+
+# What a refusal says for a metric the catalog holds nothing on at all.
+no_entry: The published criteria STAF draws on include none for this metric.

@@ -144,6 +144,34 @@ def _confirm_approvals(meta: dict, *, maintainer: str, date: str) -> list[dict]:
     return approvals
 
 
+def _confirm_coverage_exceptions(bundle: dict, session: dict, doc: dict, *,
+                                 maintainer: str, date: str) -> int:
+    """COV-01: a documented gap the standing decision recorded names its pending
+    reviewer; the owner's confirmation at promote puts the owner's name there,
+    in the bundle (which DEEP reads), the session and the provenance. The
+    function coverage block sits outside the content digest, so the published
+    digest still equals the staged one. Returns how many were confirmed."""
+    n = 0
+
+    def fix(entries):
+        nonlocal n
+        for e in entries or []:
+            if isinstance(e, dict) and dec.PENDING_SUFFIX in str(e.get("recordedBy") or ""):
+                e["recordedBy"] = maintainer
+                e["recordedAt"] = date
+                e["confirmedBy"] = maintainer
+                n += 1
+
+    fix(((bundle.get("functionCoverage") or {}).get("exclusions")))
+    fields = session.get("fields") if isinstance(session.get("fields"), dict) else session
+    fix(fields.get("function_coverage_exceptions"))
+    for key in ("coverage",):
+        block = (doc.get("manifest") or {}).get(key)
+        if isinstance(block, dict):
+            fix(block.get("exclusions"))
+    return n
+
+
 def unresolved_share(counts: dict) -> Optional[float]:
     """The share of screened candidates the screen never resolved (None when
     nothing was screened)."""
@@ -349,15 +377,21 @@ def cmd_stage(a) -> int:
     policy_decisions: list[dict] = []
     policy_finalize: dict[str, str] = {}
     approvals: list[dict] = list(owner_approvals)
+    # COV-01: documented gaps the standing decision records, pending the owner
+    policy_exceptions: list[dict] = []
     result = doc = None
     pr = None
     for it in range(1, a.max_iterations + 1):
         finalize = {**policy_finalize, **owner_finalize}
         actor = a.maintainer if owner_finalize or owner_remove else dec.pending_reviewer(
             "curve07-thin-metric-finalized", policy)
+        owner_fids = {str(x.get("functionId")) for x in coverage_exceptions or []}
+        merged_exceptions = (list(coverage_exceptions or [])
+                             + [x for x in policy_exceptions
+                                if str(x.get("functionId")) not in owner_fids]) or None
         result = ra.assemble(
             evidence, source_citation=a.source_citation,
-            coverage_exceptions=coverage_exceptions,
+            coverage_exceptions=merged_exceptions,
             finalize_metrics=finalize or None,
             finalize_actor=actor if finalize or owner_remove else "",
             remove_metrics=owner_remove or None,
@@ -383,13 +417,18 @@ def cmd_stage(a) -> int:
         new_finalize = {k: v for k, v in pr.finalize_metrics.items() if k not in policy_finalize}
         known_fids = {x["functionId"] for x in approvals}
         new_approvals = [x for x in pr.portfolio_approvals if x["functionId"] not in known_fids]
+        known_gaps = {str(x.get("functionId")) for x in policy_exceptions} | {
+            str(x.get("functionId")) for x in coverage_exceptions or []}
+        new_gaps = [x for x in pr.coverage_exceptions
+                    if str(x.get("functionId")) not in known_gaps]
         print(f"[batch] pass {it}: queue open {doc['reviewQueue']['counts']['open']}, "
               f"policy decided {len(new)} new item(s), {len(pr.uncovered)} left open")
-        if not new and not new_finalize and not new_approvals:
+        if not new and not new_finalize and not new_approvals and not new_gaps:
             break
         policy_decisions.extend(new)
         policy_finalize.update(new_finalize)
         approvals.extend(new_approvals)
+        policy_exceptions.extend(new_gaps)
     else:
         print(f"[batch] the queue did not settle within {a.max_iterations} passes; "
               "stop and inspect the run folder")
@@ -431,7 +470,8 @@ def cmd_stage(a) -> int:
     (out_dir / "standing_decisions_applied.json").write_text(
         json.dumps({"policy": policy["meta"], "enabled": enabled,
                     "decisions": policy_decisions, "finalize_metrics": policy_finalize,
-                    "portfolio_approvals": approvals, "open_items": pr.uncovered,
+                    "portfolio_approvals": approvals, "coverage_exceptions": policy_exceptions,
+                    "open_items": pr.uncovered,
                     "hard_stops": pr.hard_stops}, indent=1, default=_json_default) + "\n",
         encoding="utf-8")
     shutil.copy2(policy["meta"]["path"], out_dir / "standing_decisions.applied.yaml")
@@ -528,8 +568,17 @@ def cmd_promote(a) -> int:
             raise SystemExit(f"--override needs ITEM=ACTION:RATIONALE with a known action, got {spec!r}")
         overrides[item.strip()] = (action.strip(), rationale.strip())
     doc, applied = _confirm_doc(doc, reviewer=a.maintainer, date=date, overrides=overrides)
+    _confirm_coverage_exceptions(bundle, session, doc, maintainer=a.maintainer, date=date)
     if dec.is_pending(doc):
         raise SystemExit("a pending-confirmation marker survived confirmation; refusing to publish")
+    # DEEP reads the bundle, so no pending marker may reach it; in the session only
+    # the coverage exceptions COV-01 wrote are checked, because a session has
+    # always kept the marker on the review actors of the curves it finalized
+    fields = session.get("fields") if isinstance(session.get("fields"), dict) else session
+    if dec.PENDING_SUFFIX in json.dumps(bundle) or dec.PENDING_SUFFIX in json.dumps(
+            fields.get("function_coverage_exceptions") or []):
+        raise SystemExit("a pending-confirmation marker survived in the bundle or the coverage "
+                         "exceptions; refusing to publish")
     _confirm_approvals(meta, maintainer=a.maintainer, date=date)
 
     publish_root = Path(a.publish_root).resolve()

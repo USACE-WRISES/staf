@@ -16,3 +16,6 @@ apps/easi/data/reference-curves.json -text whitespace=cr-at-eol
 apps/easi/data/screening-methods.json -text whitespace=cr-at-eol
 apps/stream-curves/streamcurves/_vendor/easi/data/reference-curves.json -text whitespace=cr-at-eol
 apps/stream-curves/streamcurves/_vendor/easi/data/screening-methods.json -text whitespace=cr-at-eol
+# The NRSA archive manifest records this report's bytes as they were written (CRLF),
+# and every multi-cycle build digests that manifest, so the bytes stay as recorded.
+apps/stream-curves/data/nrsa/verification_report.md -text

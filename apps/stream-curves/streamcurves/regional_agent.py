@@ -408,17 +408,21 @@ def region_name_for(l3_code: str, sites_path: Path | str | None = None) -> Optio
     return name or None
 
 
-def build_metric_config(columns: list[str], directions: dict) -> tuple[dict, list[dict]]:
+def build_metric_config(columns: list[str], directions: dict, *,
+                        include_reserve: bool = False) -> tuple[dict, list[dict]]:
     """Construct ``metric_config`` for the NRSA response metrics that (a) are present
     in the data, (b) are default-selected response metrics in the metric_map crosswalk,
     and (c) have a curated monotone direction. Metrics whose direction is flagged for
     review are returned separately (never guessed)."""
     entries = metric_map.metric_map_entries()
-    default_nrsa = set(
-        entries[(entries["source"] == "nrsa")
-                & (entries["role"].isin(["metric", "both"]))
-                & (entries["default_selected"] == True)]["code"].tolist()  # noqa: E712
-    )
+    nrsa_metrics = entries[(entries["source"] == "nrsa") & (entries["role"].isin(["metric", "both"]))]
+    default_nrsa = set(nrsa_metrics[nrsa_metrics["default_selected"] == True]["code"].tolist())  # noqa: E712
+    # v0.14 (SELECT-04): under the pressure-screen hierarchy, reserve candidates
+    # load and are evaluated like any other, and the portfolio decides whether
+    # they enter. The legacy method has no such portfolio step, so they stay out.
+    reserve = (set(nrsa_metrics[nrsa_metrics["reserve"] == True]["code"].tolist())  # noqa: E712
+               if include_reserve else set())
+    default_nrsa |= reserve
     cat = _nrsa_catalog().set_index("name")  # noqa: F841 (kept below)
     metric_config: dict = {}
     flagged_direction: list[dict] = []
@@ -460,6 +464,7 @@ def build_metric_config(columns: list[str], directions: dict) -> tuple[dict, lis
             continue
         metric_config[code] = {
             "column_name": code,
+            "reserve": code in reserve,
             "display_name": label,
             "units": units,
             "higher_is_better": None if hib is None else bool(hib),
@@ -1641,7 +1646,8 @@ def run_evidence(l3_code: str, name: str, *,
                  nrsa_protocols=None,
                  nrsa_keep_sites: Optional[dict] = None,
                  reference_method: str = run_state.REFERENCE_METHOD_EASI,
-                 scale_registry: Optional[dict] = None) -> dict:
+                 scale_registry: Optional[dict] = None,
+                 carry: Any = True) -> dict:
     """The expensive, decision-free half of a regional run.
 
     ``reference_method`` chooses how reference stations are defined. The
@@ -1675,7 +1681,7 @@ def run_evidence(l3_code: str, name: str, *,
                              else nrsa_dataset.default_build_dataset_id()),
             nrsa_cycles=nrsa_cycles, exclude_sites=exclude_sites,
             nrsa_max_stream_order=nrsa_max_stream_order, nrsa_protocols=nrsa_protocols,
-            nrsa_keep_sites=nrsa_keep_sites, scale_registry=scale_registry)
+            nrsa_keep_sites=nrsa_keep_sites, scale_registry=scale_registry, carry=carry)
     directions = load_directions()
     protocols = tuple(nrsa_protocols) if nrsa_protocols else None
     candidates, panel_ledger = select_candidates_detailed(
@@ -2045,7 +2051,12 @@ def assemble(evidence: dict, *,
             diag=diagnostics.get(mk) or {},
             ref02_triggered=bool(tier.get("ref02_triggered")))
         if pressure:
-            if str((support.get(mk) or {}).get("status") or "").startswith("borrowed"):
+            # A 0.12/0.13 borrowed pool was a review item. A 0.14 pool that
+            # passed the pre-registered acceptance criteria is the rule's own
+            # decision (REF-11) and carries its options_tried as the record.
+            d_mk = support.get(mk) or {}
+            if str(d_mk.get("status") or "").startswith("borrowed") \
+                    and not d_mk.get("options_tried"):
                 triggers.append(("REF-05", mk))
             if (discrimination.get(mk) or {}).get("verdict") == "inverted":
                 triggers.append(("CURVE-12", mk))
@@ -2090,6 +2101,8 @@ def assemble(evidence: dict, *,
             "transfer_risk": (support.get(mk) or {}).get("transfer_risk"),
             # CONF-03: which rung of the basis ladder produced the curve.
             "basis": (support.get(mk) or {}).get("basis"),
+            # REF-11: a pool admitted under the relaxed regional screen
+            "screen": (support.get(mk) or {}).get("screen"),
         }
         confidence_map[mk] = conf.curve_confidence(ev)
         metric_scores[mk] = conf.metric_score(ev)
@@ -2164,6 +2177,15 @@ def assemble(evidence: dict, *,
         if held:
             meta["insufficientReferenceSupport"] = (
                 list(meta.get("insufficientReferenceSupport") or []) + held)
+        # SELECT-04: fill each function to two, the rest supported, not selected
+        intended_rows, export_mapping = pressure_evidence.select_portfolio(
+            evidence, intended_rows, export_mapping, export_config, metric_scores, meta)
+        # and the portfolio counts what the bundle publishes
+        portfolio = pressure_evidence.portfolio_from_mapping(
+            portfolio, intended_rows, export_mapping)
+        moot = pressure_evidence.moot_reserves(metric_config, intended_rows, export_mapping)
+    else:
+        moot = []
     bundle = None
     bundle_error = None
     try:
@@ -2273,6 +2295,13 @@ def assemble(evidence: dict, *,
         "ladder_metrics": evidence.get("ladder_metrics") or {},
         "ladder_config": evidence.get("ladder_config") or {},
         "ladder_attempts": evidence.get("ladder_attempts") or [],
+        # methodology 0.14: the published curves this version carries forward,
+        # what it rebuilt and why, and the fill-to-two portfolio record
+        "carried": evidence.get("carried") or {},
+        "carried_from": evidence.get("carried_from") or {},
+        "carry_rebuilt": evidence.get("carry_rebuilt") or {},
+        "portfolio_selection": (meta.get("portfolioSelection") or {}) if pressure else {},
+        "moot_reserves": moot,
         "discrimination": evidence.get("discrimination") or {},
         "stratum_rows": evidence.get("stratum_rows") or {},
         "strata_applied": evidence.get("strata_applied") or {},

@@ -730,7 +730,9 @@ def build_deep_assessment_bundle(
                     # sentence a reader is owed about it (REF-08/09/10)
                     "basis", "basisLabel", "basisStatement", "basisLimit",
                     # PB-5: a published benchmark's own provenance
-                    "publishedBenchmark"):
+                    "publishedBenchmark",
+                    # methodology 0.14: the version a carried-forward curve comes from
+                    "carriedForward"):
             if key in annotations and annotations[key] is not None:
                 base_entry[key] = annotations[key]
 

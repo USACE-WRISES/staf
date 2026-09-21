@@ -3,7 +3,10 @@ per metric, not its newest cycle taken whole.
 
 The motivating measurement (2026-09-19): in the Northeastern Highlands
 dissolved nitrogen and two benthic metrics had 42 usable stations under the
-newest-cycle-whole rule, where 71 carry a value in some cycle.
+newest-cycle-whole rule, where 71 carry a value in some cycle. The two benthic
+metrics stopped being thin on 2026-09-21, when methodology 0.14 restored the
+2013-14 and 2023-24 records the archive had left empty. Dissolved nitrogen was
+measured in one cycle and still shows the gain.
 """
 from __future__ import annotations
 
@@ -19,6 +22,8 @@ pytestmark = pytest.mark.skipif(
 
 NEH = "58"
 THIN = ["chem_NTL_DISS", "bent_TOTLNTAX", "bent_TOLRPIND"]
+ONE_CYCLE = ["chem_NTL_DISS"]
+RESTORED = ["bent_TOTLNTAX", "bent_TOLRPIND"]
 
 
 def _dataset(visits, values) -> nd.NrsaDataset:
@@ -125,8 +130,12 @@ def test_the_thin_metrics_gain_stations_in_the_northeastern_highlands():
     whole = nd.panel_values(panel, dataset=nd.MULTI_CYCLE_DATASET_ID, metrics=THIN)
     latest, ledger = nd.latest_values(panel["station_key"],
                                       dataset=nd.MULTI_CYCLE_DATASET_ID, metrics=THIN)
-    for m in THIN:
+    for m in ONE_CYCLE:
         assert latest[m].notna().sum() > whole[m].notna().sum() + 10, m
+    # restored, nearly every station carries the benthic metrics under either rule
+    for m in RESTORED:
+        assert whole[m].notna().sum() >= len(panel) - 5, m
+        assert latest[m].notna().sum() >= whole[m].notna().sum(), m
     assert len(latest) == len(panel) and latest["site_id"].is_unique
     # every value has a ledger row naming its cycle
     assert len(ledger) == int(latest[THIN].notna().sum().sum())

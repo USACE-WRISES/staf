@@ -101,14 +101,16 @@ def test_the_narrowest_adequate_level_wins_over_a_wider_one():
     assert d.level == "l2" and d.n_usable == 27
 
 
-def test_an_exploratory_pool_is_used_only_when_no_level_is_adequate():
+def test_the_first_option_that_passes_is_used_even_when_exploratory():
+    """Methodology 0.14 (REF-11): the first source that passes acceptance wins, so
+    an exploratory local pool (10 to 19 stations) is used before a wider
+    adequate one. Until 0.13 an adequate parent beat an exploratory Level III."""
     frame = _frame(_stations("T", 12, l3="55", l2="8.2"), _stations("M", 3, l3="56", l2="8.2", flat=True))
     d, _ = _choose("m_form", frame, "55")
     assert d.level == "l3" and d.n_usable == 12 and d.disposition == "exploratory"
-    # with an adequate Level II the exploratory Level III loses
     frame2 = _frame(frame, _stations("N", 20, l3="57", l2="8.2", flat=True))
     d2, _ = _choose("m_form", frame2, "55")
-    assert d2.level == "l2" and d2.disposition == "adequate"
+    assert d2.status == rp.STATUS_LOCAL and d2.disposition == "exploratory"
 
 
 def test_no_level_supports_the_metric_means_insufficient():
@@ -118,7 +120,10 @@ def test_no_level_supports_the_metric_means_insufficient():
     assert d.status == rp.STATUS_INSUFFICIENT and d.level is None and d.station_ids == ()
     assert "Insufficient reference support" in d.transfer_note
     assert not ledger["in_pool"].any()
-    assert [t["level"] for t in d.levels_tried] == ["l3", "l2", "l1"]
+    # the local reference, then the regional options in the family's order
+    assert [t["option"] for t in d.options_tried] == ["local", "regional_l3", "regional_l2",
+                                                      "regional_l1"]
+    assert [t["level"] for t in d.levels_tried] == ["l3", "l3", "l2", "l1"]
 
 
 def test_usable_n_is_judged_per_metric():
@@ -262,9 +267,14 @@ def test_the_support_record_carries_what_deep_must_show():
                 "nComparable", "nUsable", "nLocal", "covariates", "selfCoverage",
                 "transferRisk", "transferNote"):
         assert key in rec, key
-    assert rec["screen"].startswith("least-disturbed-v1 (strict)")
+    # a borrowed pool is admitted under the regional screen and says so
+    assert rec["screen"].startswith("least-disturbed-regional-v1")
+    assert rec["agricultureLimit"] == 25.0 and rec["screenId"] == "least-disturbed-regional-v1"
     assert "lith_group" in rec["covariates"]
     assert "—" not in rec["transferNote"]
+    local = _frame(_stations("A", 30, l3="58", l2="5.3", l1="5"))
+    d2, _ = _choose("m_form", local, "58")
+    assert rp.reference_support_record(d2)["screen"].startswith("least-disturbed-v1 (strict)")
 
 
 def test_every_crosswalked_nrsa_metric_has_a_borrowing_family():

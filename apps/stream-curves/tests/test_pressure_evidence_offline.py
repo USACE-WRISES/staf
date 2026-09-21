@@ -1,14 +1,16 @@
 """The pressure-screen reference method end to end (methodology 0.12), offline.
 
 Everything the pass reads is committed: the station screen table and the pooled
-NRSA archive. Diagnostics are switched off, so one region's evidence takes a few
-seconds and the three pilot regions are built once per module.
+NRSA archive. Diagnostics are switched off, and the three pilot regions are built
+once per module (a few minutes each, since methodology 0.14 walks the whole
+reference-source hierarchy for every metric).
 
-What is pinned here is what the owner decided on 2026-09-19: reference stations
-come from a fixed pressure screen, a thin region borrows comparable stations
-from its Level II and then its Level I ecoregion per metric, a metric with no
-defensible pool is withheld and never scored, landscape pressures are scored on
-fixed criteria, and every curve carries where its reference stations came from.
+What is pinned here is what the owner decided on 2026-09-19 and extended on
+2026-09-21: reference stations come from a fixed pressure screen, a thin region
+takes, per metric, the first source of the reference-source hierarchy that passes
+the acceptance rules, a metric no source supports is withheld and never scored,
+landscape pressures are scored on fixed criteria, and every curve carries where
+its reference came from. The builds here are fresh (no carry-forward).
 """
 from __future__ import annotations
 
@@ -44,6 +46,9 @@ def _evidence(code: str, **kwargs) -> dict:
     # pipeline, not its contents. Without one every borrowed pool reads
     # "unassessed" and no class split applies.
     kwargs.setdefault("scale_registry", {})
+    # These tests pin the hierarchy a fresh build walks; carrying the published
+    # curves forward is tested on its own (methodology 0.14).
+    kwargs.setdefault("carry", False)
     return ra.run_evidence(
         code, REGIONS[code], reference_method=run_state.REFERENCE_METHOD_PRESSURE,
         nrsa_dataset_id=nrsa_dataset.MULTI_CYCLE_DATASET_ID,
@@ -95,21 +100,25 @@ def test_a_region_with_enough_reference_stations_stays_local(evidence):
 def test_a_thin_region_borrows_per_metric_and_withholds_what_nothing_supports(evidence):
     ip = evidence["71"]
     statuses = {mk: d["status"] for mk, d in ip["reference_support"].items()}
-    # Interior Plateau holds three least-disturbed stations, so it borrows
-    # everything it can and withholds what nothing supports. Total nitrogen
-    # borrows its Level I parent exactly as total phosphorus does. (With no
-    # entry in the family map it once could not, and fell through to the
-    # published rung; test_every_crosswalked_nrsa_metric_has_a_borrowing_family
-    # now guards that.)
-    assert set(statuses.values()) == {"borrowed_l2", "borrowed_l1", "insufficient"}
-    assert sorted(ip["insufficient_support"]) == ["bent_TOLRPIND", "bent_TOTLNTAX"]
-    assert statuses["chem_NTL"] == statuses["chem_PTL"]
+    # Interior Plateau holds three least-disturbed stations. Each metric takes the
+    # first source that passes the acceptance rules (methodology 0.14): the
+    # region's own streams under the regional screen, its Level II parent, the
+    # NARS-9 pool, an approved model or a published criterion. What nothing
+    # admits is withheld. Total nitrogen takes the same source as total phosphorus.
+    assert set(statuses.values()) == {"local_relaxed", "borrowed_l2", "borrowed_nars9",
+                                      "modeled", "published", "insufficient"}
+    assert sorted(ip["insufficient_support"]) == [
+        "bent_EPT_NTAX", "bent_TOLRPIND", "bent_TOTLNTAX", "bfiws", "chem_CHLA", "chem_COND",
+        "fish_NAT_TOLRPIND", "pctwet2019ws", "phab_BFWD_RAT", "phab_PCT_FAST",
+        "phab_RP100_cm", "phab_XBKF_H", "phab_XCDENMID", "phab_XCMGW", "phab_XFC_NAT"]
+    assert statuses["chem_NTL"] == statuses["chem_PTL"] == "published"
     # a withheld metric never reaches the curve engine
     assert not set(ip["insufficient_support"]) & set(ip["curve_rows"])
     assert not set(ip["insufficient_support"]) & set(ip["metric_config"])
-    # a borrowed pool always contains the region's own reference stations
+    # a regional pool meets the floor, holds the region's own reference stations
+    # and says where it came from
     for mk, d in ip["reference_support"].items():
-        if d["status"].startswith("borrowed"):
+        if d["status"].startswith("borrowed") or d["status"] == "local_relaxed":
             assert d["n_usable"] >= 10 and d["n_usable"] >= d["n_local"]
             assert d["transfer_note"]
 
@@ -120,17 +129,20 @@ def test_a_region_with_no_reference_station_says_so(evidence):
     assert ecbp["tier"]["review_flags"] == [pe.NO_LOCAL_REFERENCE]
     built = {d["status"] for mk, d in ecbp["reference_support"].items()
              if mk in ecbp["curve_rows"]}
-    assert built == {"borrowed_l1"}
-    # chemistry and biology find no comparable pool at any level
+    assert built == {"borrowed_l1", "borrowed_l2", "borrowed_nars9"}
+    # most chemistry and the benthic metrics find no source that passes
     withheld = set(ecbp["insufficient_support"])
-    assert {"chem_COND", "chem_PH", "bent_EPT_NTAX", "fish_NAT_TOTLNTAX"} <= withheld
-    # ... and since 0.13 four of them are carried by a rung above the hierarchy
+    assert {"chem_COND", "bent_EPT_NTAX", "fish_NAT_TOTLNTAX"} <= withheld
+    # the nutrient criteria carry the published basis. The approved models stay
+    # out of a fresh build: this region's least-disturbed stream lies outside
+    # their validated impervious-cover limits (REF-13)
     ladder = {mk: d["basis"] for mk, d in ecbp["reference_support"].items()
               if mk in (ecbp.get("ladder_metrics") or {})}
-    assert ladder == {"bent_HPRIME": "modeled-reference",
-                      "chem_TURB": "modeled-reference",
-                      "chem_PTL": "published-benchmark",
+    assert ladder == {"chem_PTL": "published-benchmark",
                       "chem_NTL": "published-benchmark"}
+    tried = {(a["metric"], a["rung"]): a for a in ecbp["ladder_attempts"]}
+    assert not tried[("bent_HPRIME", "REF-13")]["admitted"]
+    assert "impervious" in tried[("bent_HPRIME", "REF-13")]["why"]
     # a ladder curve never rides in the pooled station frame
     assert not set(ladder) & set(ecbp["data"].columns)
     # and every refusal names a reason rather than going silent
@@ -138,24 +150,37 @@ def test_a_region_with_no_reference_station_says_so(evidence):
         assert a["why"], a
 
 
-def test_population_support_names_its_blocker_rather_than_shrugging(evidence):
-    """The one Eastern Corn Belt Plains function that still has no basis. The
-    record has to say which rungs were tried and why each refused, because
-    "unassessed" without a reason is what the coverage gate exists to stop."""
+def test_population_support_is_scored_by_proportions_and_counts_name_their_blockers(
+        evidence, results):
+    """The Eastern Corn Belt Plains function 0.13 left without a basis. Under 0.14
+    the native non-tolerant fish taxa, as a count and as a percent, pass the
+    acceptance rules on the Level I and NARS-9 pools and score it (reserve
+    candidates enter only such a function). The two richness counts stay withheld,
+    and each names which source refused and why, because "unassessed" without a
+    reason is what the coverage gate exists to stop."""
     ecbp = evidence["55"]
+    support = ecbp["reference_support"]
+    assert support["fish_NAT_NTOLNTAX"]["status"] == "borrowed_l1"
+    assert support["fish_NAT_NTOLPTAX"]["status"] == "borrowed_nars9"
+    rows = {r["function_id"]: r for r in results["55"]["portfolio"] if r.get("function_id")}
+    assert rows["population-support"]["coverage"] == "covered"
+    assert set(rows["population-support"]["metrics"]) == {"fish_NAT_NTOLNTAX",
+                                                          "fish_NAT_NTOLPTAX"}
     tried = {(a["metric"], a["rung"]): a for a in ecbp["ladder_attempts"]}
     for metric in ("fish_NAT_TOTLNTAX", "bent_TOTLNTAX"):
-        for rung in ("REF-08", "REF-09", "REF-10"):
+        for rung in ("REF-12", "REF-13", "REF-14"):
             got = tried.get((metric, rung))
-            assert got is not None and not got["admitted"], (metric, rung)
-        assert "state-specific field index" in tried[(metric, "REF-10")]["why"]
+            assert got is not None and not got["admitted"] and got["why"], (metric, rung)
+        assert "state-specific field index" in tried[(metric, "REF-14")]["why"]
 
 
 def test_each_metric_column_holds_values_only_inside_its_own_pool(evidence):
     ip = evidence["71"]
     data = ip["data"]
     for mk, d in ip["reference_support"].items():
-        if mk not in data.columns:
+        # a withheld metric has no pool, and a landscape column it shares with the
+        # predictors stays in the frame for them
+        if mk not in data.columns or d["status"] == "insufficient":
             continue
         have = set(data.loc[data[mk].notna(), "site_id"].astype(str))
         assert have == set(d["station_ids"]), mk
@@ -188,11 +213,10 @@ def test_the_bundle_states_its_reference_method(results):
     ref = b["referenceMethod"]
     assert ref["method"] == "pressure-screen" and ref["screenId"] == rscreen.SCREEN_ID
     assert ref["nLocalReference"] == 66 and ref["nCurvesBorrowed"] == 0
-    # every metric has a pool here. The two benthic curves DATA-03 holds for a
-    # reviewer are named instead of silently absent (2026-09-21).
-    held = b.get("insufficientReferenceSupport") or []
-    assert {w["reason"] for w in held} == {pe.HELD_FOR_REVIEW}
-    assert {w["metricKey"] for w in held} == {"bent_TOLRPIND", "bent_TOTLNTAX"}
+    # every metric has a local pool here, and none is held: the two benthic curves
+    # DATA-03 held under 0.13 carry a value at 65 of the 66 stations since the
+    # archive's empty cycles were restored (methodology 0.14)
+    assert not b.get("insufficientReferenceSupport")
     assert b["sourceCitation"].endswith(
         "StreamCurves regional analysis, methodology " + methodology.methodology_version())
 
@@ -232,17 +256,30 @@ def test_every_reference_curve_carries_where_its_stations_came_from(results):
             sup = m["referenceSupport"]
             # 0.13: a curve fitted to a station pool, or a modelled expectation
             # for an ecoregion that holds no clean stream. Either way it says so.
-            assert sup["status"] in ("local", "borrowed_l2", "borrowed_l1",
+            assert sup["status"] in ("local", "local_relaxed", "borrowed_l2",
+                                     "borrowed_nars9", "borrowed_l1",
                                      rp.STATUS_MODELED, rp.STATUS_NATIONAL)
             assert sup["basis"] and sup["basisLabel"]
             if sup["status"] == rp.STATUS_MODELED:
                 assert sup["basis"] == "modeled-reference"
-                assert "no stream in this ecoregion" in sup["transferNote"].lower()
+                # it says whether any stream here passes the screen, and never
+                # claims none where a few do
+                n_ref = res["bundle"]["referenceMethod"]["nLocalReference"]
+                note = sup["transferNote"].lower()
+                assert "reference condition" in note
+                assert ("no stream in this ecoregion" in note) == (n_ref == 0)
                 continue
-            assert sup["screen"] == rscreen.screen_label("strict")
+            if sup.get("screenId"):
+                # 0.14: a pool admitted under the documented regional screen names
+                # the screen and the agriculture limit it was admitted under
+                assert sup["screenId"] != rscreen.SCREEN_ID
+                assert sup["screen"].startswith(sup["screenId"] + " (relaxed tier")
+                assert sup["agricultureLimit"] >= 25
+            else:
+                assert sup["screen"] == rscreen.screen_label("strict")
             assert sup["nUsable"] == m["referenceN"]
             assert m["referenceTier"] == "least_disturbed"
-            if sup["status"] != "local":
+            if sup["status"].startswith("borrowed"):
                 assert sup["transferNote"]
                 assert any("borrowed" in c for c in m["curveCaveats"])
 
@@ -274,11 +311,14 @@ def test_coverage_counts_the_fixed_metrics_and_names_what_withholding_left_open(
     assert results["58"]["coverage"]["covered"] == 20
     ecbp = results["55"]
     missing = set(ecbp["coverage"]["missingFunctionIds"])
-    # 0.13 fills three of the four from rungs above the ecoregion hierarchy:
-    # Community dynamics and Water and soil quality on a modelled expectation,
-    # Nutrient cycling on a published criterion. Population support has no
-    # admissible basis on any rung and stays uncovered.
-    assert missing == {"population-support"}
+    # 0.14, built fresh: the native non-tolerant fish taxa cover Population
+    # support and the nutrient criteria cover Nutrient cycling. With no pool that
+    # passes the acceptance rules, and outside the approved models' limits, eight
+    # functions stay open, each drafted as an exception that names why
+    assert "population-support" not in missing and "nutrient-cycling" not in missing
+    assert missing == {"surface-water-storage", "low-flow-baseflow-dynamics",
+                       "floodplain-connectivity", "channel-evolution", "light-thermal-regime",
+                       "carbon-processing", "habitat-provision", "community-dynamics"}
     draft = pe.coverage_exceptions_draft(ecbp)
     assert {d["functionId"] for d in draft} <= missing
     assert all(d["reason"] == "insufficient-reference-support" and d["recordedBy"] == ""
@@ -302,30 +342,35 @@ def test_the_portfolio_counts_fixed_metrics_in_their_functions(results):
 # --------------------------------------------------------------------------- #
 # review, confidence, provenance
 # --------------------------------------------------------------------------- #
-def test_every_borrowed_pool_is_a_review_item_and_caps_confidence(results):
+def test_an_accepted_regional_pool_is_the_rules_decision_and_caps_confidence(results):
+    """0.14: a regional pool that passes the acceptance rules is REF-11's decision,
+    recorded with every option tried, and no longer a review item. A pool admitted
+    under the regional screen caps confidence at 59."""
     ip = results["71"]
-    borrowed = [mk for mk, d in ip["reference_support"].items()
-                if d["status"].startswith("borrowed")]
-    assert borrowed
-    for mk in borrowed:
-        assert f"REF-05:{mk}" in ip["mandatory_review"][mk]["triggers"]
+    regional = [mk for mk, d in ip["reference_support"].items()
+                if d["status"].startswith("borrowed") or d["status"] == "local_relaxed"]
+    assert regional
+    for mk in regional:
+        rec = ip["mandatory_review"].get(mk) or {}
+        assert not any(t.startswith("REF-05") for t in rec.get("triggers") or []), mk
         conf = ip["confidence"][mk]
-        # no national registry yet, so the risk is unassessed and held to moderate
-        assert "borrowed_reference_moderate_risk" in conf["caps_applied"]
+        assert "regional_relaxed_screen" in conf["caps_applied"]
         assert conf["total"] <= 59
     local = results["58"]
     assert not any(t.startswith("REF-05") for rec in local["mandatory_review"].values()
                    for t in rec["triggers"])
 
 
-def test_an_adjudicated_borrowed_pool_closes_its_review_item(evidence):
+def test_an_adjudicated_review_item_closes(evidence):
+    """An exploratory pool (DATA-05) is still the owner's to accept, and a recorded
+    decision closes it."""
     mk = "phab_XEMBED"
     res = ra.assemble(evidence["71"], reviewer_decisions=[
-        {"rule_id": "REF-05", "subject": mk, "action": "accept",
-         "rationale": "Level I pool reviewed against the region's streams.",
+        {"rule_id": "DATA-05", "subject": mk, "action": "accept",
+         "rationale": "Exploratory pool reviewed against the region's streams.",
          "reviewer": "gtmenichino", "date": "2026-09-19"}])
-    assert f"REF-05:{mk}" not in res["mandatory_review"][mk]["open"]
-    assert f"REF-05:{mk}" in res["mandatory_review"][mk]["adjudicated"]
+    assert f"DATA-05:{mk}" not in res["mandatory_review"][mk]["open"]
+    assert f"DATA-05:{mk}" in res["mandatory_review"][mk]["adjudicated"]
 
 
 def test_the_manifest_and_digest_carry_the_reference_inputs(results):
@@ -358,16 +403,17 @@ def test_the_records_name_the_new_rules(results):
     by_rule: dict[str, list[dict]] = {}
     for r in doc["records"]:
         by_rule.setdefault(r["rule_id"], []).append(r)
-    assert {"REF-04", "REF-05", "REF-06", "REF-07", "DATA-11", "STRAT-10", "CURVE-11"} \
-        <= set(by_rule)
-    assert "REF-01" not in by_rule and "REF-02" not in by_rule
+    assert {"REF-04", "REF-06", "REF-07", "REF-11", "REF-12", "REF-13", "REF-14",
+            "DATA-11", "STRAT-10", "CURVE-11", "SELECT-04", "COV-01"} <= set(by_rule)
+    assert not {"REF-01", "REF-02", "REF-05", "REF-08", "REF-09", "REF-10"} & set(by_rule)
     assert len(by_rule["CURVE-11"]) == len(FIXED)
     assert {r["subject"] for r in by_rule["REF-06"]} == set(res["insufficient_support"])
-    borrowed = [r for r in by_rule["REF-05"] if r["review_required"]]
-    assert borrowed and all(r["review_triggers"] == ["borrowed_reference_pool"]
-                            for r in borrowed)
+    # an accepted regional pool is the rule's decision: recorded, never a review item
+    assert by_rule["REF-11"] and not any(r["review_required"] for r in by_rule["REF-11"])
     queue_triggers = {i["trigger"] for i in doc["reviewQueue"]["items"]}
-    assert "borrowed_reference_pool" in queue_triggers
+    assert "borrowed_reference_pool" not in queue_triggers
+    # a function no source supports reaches the queue as a documented gap
+    assert "function_unassessed" in queue_triggers
 
 
 # --------------------------------------------------------------------------- #
@@ -488,7 +534,10 @@ def test_the_census_agrees_with_the_build(evidence):
     assert set(table.index) == set(support)
     for mk, d in support.items():
         assert table.loc[mk, "status"] == d["status"], mk
-        assert int(table.loc[mk, "n_usable"]) == d["n_usable"], mk
+        # a model has no station pool: the census reports none, the build the
+        # stations the model was fitted on
+        if d["status"] != rp.STATUS_MODELED:
+            assert int(table.loc[mk, "n_usable"]) == d["n_usable"], mk
     region = got["regions"][0]
     assert (region["n_frame"], region["n_strict"], region["n_relaxed"]) == (41, 3, 8)
     assert "| 71 | Interior Plateau | 41 | 3 | 8 |" in pe.census_markdown(got)
@@ -581,23 +630,25 @@ def test_a_held_curve_says_why_in_words_for_every_status():
 
 
 def test_a_finalized_curve_is_scored_and_no_longer_held(evidence):
-    res = ra.assemble(evidence["58"], finalize_metrics={"bent_TOLRPIND": "cleared in test"},
+    """Built fresh, the Eastern Corn Belt Plains holds two curves for a reviewer,
+    large wood volume and fast-water habitat. Finalizing one scores it."""
+    res = ra.assemble(evidence["55"], finalize_metrics={"phab_PCT_FAST": "cleared in test"},
                       finalize_actor="tester")
-    assert "spring-bent-tolrpind" in _entries(res["bundle"])
-    held = {w["metricKey"] for w in res["bundle"].get("insufficientReferenceSupport") or []}
-    assert held == {"bent_TOTLNTAX"}
+    assert "spring-phab-pct-fast" in _entries(res["bundle"])
+    held = {w["metricKey"] for w in res["bundle"].get("insufficientReferenceSupport") or []
+            if w["reason"] == pe.HELD_FOR_REVIEW}
+    assert held == {"phab_LWDeqVolM100"}
 
 
 def test_a_metric_is_never_both_scored_and_withheld(evidence, monkeypatch):
     """The bundle writer drops a record whose metric made it into a scoring block,
     whatever produced the record: an interactive republish restores the session's
     list, and a reviewer may have cleared the curve since."""
-    stale = {"metricId": "spring-bent-tolrpind", "metricKey": "bent_TOLRPIND",
+    stale = {"metricId": "spring-chem-cond", "metricKey": "chem_COND",
              "reason": pe.HELD_FOR_REVIEW, "functions": [], "statement": "stale"}
     monkeypatch.setattr(pe, "held_for_review", lambda *a, **k: [stale])
-    res = ra.assemble(evidence["58"], finalize_metrics={"bent_TOLRPIND": "cleared in test"},
-                      finalize_actor="tester")
-    assert "spring-bent-tolrpind" in _entries(res["bundle"])
+    res = ra.assemble(evidence["58"])
+    assert "spring-chem-cond" in _entries(res["bundle"])
     assert not res["bundle"].get("insufficientReferenceSupport")
 
 
@@ -625,3 +676,44 @@ def test_a_published_benchmark_carries_its_criterion_into_the_bundle(results):
         assert len(src["bands"]) == 3 and src["citations"]
         assert m["sourceCitation"].startswith("USEPA NRSA 2018-19 regional")
         assert m["publishedBenchmark"]["region"] == "TPL"
+
+
+# --------------------------------------------------------------------------- #
+# methodology 0.14: published curves are carried forward unchanged
+# --------------------------------------------------------------------------- #
+#: what a carried block may differ in: where the exporter places it, and the
+#: marker naming the version it comes from
+_PLACEMENT = ("discipline", "assignmentOrigin", "carriedForward")
+
+
+def _blocks_by_function(bundle: dict) -> dict:
+    return {(fn["functionId"], m["metricId"]): m for fn in bundle["metricsByFunction"]
+            for m in fn["metrics"]}
+
+
+def test_a_rebuild_carries_every_published_curve_it_does_not_rebuild():
+    from streamcurves import carry_forward as cf
+    from streamcurves import library as lib
+    prior = cf.prepare("71")
+    assert prior.get("fromVersion"), "Interior Plateau has a published version"
+    ev = _evidence("71", carry=prior)
+    res = ra.assemble(ev)
+    published = lib.load_version_bundle(prior["assessmentId"], prior["fromVersion"])
+    before = _blocks_by_function(published)
+    after = _blocks_by_function(res["bundle"])
+    carried = set(prior["carried"])
+    assert carried and not carried & set(prior["rebuilt"])
+    for (fid, mid), block in before.items():
+        mk = next((k for k in carried if "spring-" + deep_export.deep_slug(k) == mid), None)
+        if mk is None:
+            continue
+        got = after.get((fid, mid))
+        assert got is not None, (fid, mid)
+        strip = lambda b: {k: v for k, v in b.items() if k not in _PLACEMENT}
+        assert strip(got) == strip(block), (fid, mid)
+        assert got["carriedForward"]["fromVersion"] == prior["fromVersion"]
+    # a rebuilt curve walks the hierarchy afresh, and every carried one keeps its record
+    support = res["reference_support"]
+    assert all(support[mk].get("carried_from") == prior["fromVersion"] for mk in carried)
+    for mk in prior["rebuilt"]:
+        assert not support.get(mk, {}).get("carried_from")

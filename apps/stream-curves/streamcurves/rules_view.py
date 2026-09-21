@@ -33,6 +33,8 @@ FAMILY_LABELS = {
     "REF": "Reference screening",
     "CONF": "Confidence",
     "SELECT": "Metric selection",
+    "ACC": "Source acceptance",
+    "COV": "Function coverage",
 }
 
 #: Rule id -> the dotted config paths its numeric thresholds live at. Resolved
@@ -93,6 +95,18 @@ RULE_THRESHOLD_PATHS: dict[str, list[str]] = {
                "confidence_rules.caps.national_reference"],
     "REF-09": ["confidence_rules.caps.modeled_reference"],
     "REF-10": ["confidence_rules.caps.published_benchmark"],
+    # methodology 0.14: one reference-source hierarchy and its acceptance rules
+    "REF-11": ["reference_hierarchy.regional_screen", "reference_hierarchy.envelope_widen_fraction",
+               "confidence_rules.caps.regional_relaxed_screen"],
+    "REF-12": ["reference_hierarchy.national_options", "confidence_rules.caps.national_reference"],
+    "REF-13": ["confidence_rules.caps.modeled_reference"],
+    "REF-14": ["confidence_rules.caps.published_benchmark"],
+    "ACC-01": ["acceptance.sample_adequacy"],
+    "ACC-02": ["acceptance.sampling_compatibility"],
+    "ACC-03": ["acceptance.applicability"],
+    "ACC-04": ["acceptance.scoring_stability"],
+    "ACC-05": ["acceptance.classification_error"],
+    "ACC-06": ["acceptance.directional_bias"],
     "CONF-01": ["confidence_rules.components"],
     "CONF-02": ["confidence_rules.caps", "confidence_rules.deductions"],
     "CONF-03": ["confidence_rules.caps.national_reference",
@@ -100,11 +114,13 @@ RULE_THRESHOLD_PATHS: dict[str, list[str]] = {
                 "confidence_rules.caps.published_benchmark"],
     "SELECT-01": ["metric_portfolio.default_maximum_metrics_per_function"],
     "SELECT-02": ["metric_portfolio.metric_score_weights"],
+    "SELECT-04": ["metric_portfolio.fill_to", "metric_portfolio.source_rank"],
+    "COV-01": ["coverage.documented_gap_reason", "coverage.standing_decision"],
 }
 
 #: Matches every catalog id, including CURVE-07a and STRAT-00, and nothing that
 #: only looks like one (no trailing word characters).
-RULE_ID_RE = re.compile(r"\b(?:DATA|RED|STRAT|CURVE|REF|CONF|SELECT)-\d{2}[a-z]?\b")
+RULE_ID_RE = re.compile(r"\b(?:DATA|RED|STRAT|CURVE|REF|CONF|SELECT|ACC|COV)-\d{2}[a-z]?\b")
 
 #: The page baseline: 36 of 42 rules carry exactly this pair, so a row shows a
 #: status mark only when a rule DEPARTS from it (status_exceptions).

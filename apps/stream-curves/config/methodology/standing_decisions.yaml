@@ -30,12 +30,16 @@
 # tests/test_standing_decisions_replay.py.
 
 meta:
+  # 1.2 (2026-09-21, methodology 0.14): one new class decision,
+  # cov01-documented-gap (owner decision 2026-09-21: of the 0.14 workflow, only a
+  # documented gap runs automatically; hard stops and new model specifications
+  # wait for the owner). Every earlier entry carries over unchanged.
   # 1.1 (2026-09-19, methodology 0.12): one new class decision,
   # ref05-borrowed-pool-accepted, for the pressure-screen reference method. Every
   # earlier entry carries over unchanged. ref02-accept-best-available is legacy:
   # it can only match under the easi-eci method, which the pressure screen
   # replaced, and it stays so the published pilots still replay.
-  policy_version: "1.1"
+  policy_version: "1.2"
   # Re-affirmed unchanged under 0.9 (2026-08-27): the governance-capture release
   # moved no threshold and added only advisory machinery, so every entry's
   # conditions and rationale templates carry over as approved.
@@ -45,7 +49,7 @@ meta:
   # re-affirmed unchanged under 0.11-provisional: v0.11 moved the function
   # coverage gate, a publish rule rather than a review-queue class decision.
   # Accepting a flagged curve stays an owner-only decision, recorded per run.
-  methodology_version: "0.13-provisional"
+  methodology_version: "0.14-provisional"
   approved_on: "2026-08-22"
   authority: "Owner class decisions at the DEEP project gates (2026-08-21), promoted to standing decisions; confirmed per region at the end review before promote."
   rationale_origin: "standing_policy"
@@ -171,6 +175,26 @@ entries:
       level or coarser, so the transfer risk is {transfer_risk}. The curve
       publishes with its source geography, its usable sample and the transfer
       note, and carries the borrowed-reference confidence cap.
+
+  - id: cov01-documented-gap
+    rule_id: COV-01
+    trigger: function_unassessed
+    enabled: true
+    approved_under: "0.14-provisional"
+    approved_on: "2026-09-21"
+    match:
+      blockers_documented: {eq: true}
+      n_candidates: {gte: 1}
+    action: accept
+    side_effect: coverage_exception
+    asserts: [n_candidates]
+    rationale: >-
+      Documented gap recorded under standing decision {policy_id} (policy
+      {policy_version}): every candidate metric of this function
+      ({candidates_text}) was refused by every source of the reference hierarchy,
+      each for the reason its record states, and the function's justification
+      carries those blockers. No curve was forced, and the ecosystem condition
+      index is stated as an interval.
 
   # ---- policy-enableable, default off: the owner opts in per run on the record ----
   # Legacy (easi-eci reference method only). Under the pressure screen reference

@@ -261,7 +261,7 @@ fish_NAT_INVNTAX,Number of native invertivores taxa,Number of native invertivore
 fish_NAT_INVPIND,% native individuals as invertivores,% native individuals as...,% native individuals as invertivores,,Fish,NAT_INVPIND,2324,epa_metadata
 fish_NAT_INVPTAX,% native taxa as invertivores,% native taxa as invertivores,% native taxa as invertivores,,Fish,NAT_INVPTAX,2324,epa_metadata
 fish_NAT_LITHNTAX,Number of native simple lithophils taxa,Number of native simple lithophils...,Number of native simple lithophils taxa,,Fish,NAT_LITHNTAX,2324,epa_metadata
-fish_NAT_LITHPIND,% native individuals as simple lithophils,% native individuals as simple...,% native individuals as simple lithophils,,Fish,NAT_LITHPIND,2324,epa_metadata
+fish_NAT_LITHPIND,Simple lithophil fish individuals,Simple lithophil fish individuals,"The share of native fish individuals that spawn on clean gravel and cobble without building a nest (simple lithophils), as a percent of all native individuals in the sample.",%,Fish,NAT_LITHPIND,2324,curated
 fish_NAT_LITHPTAX,% native taxa as simple lithophils,% native taxa as simple lithophils,% native taxa as simple lithophils,,Fish,NAT_LITHPTAX,2324,epa_metadata
 fish_NAT_LOTNTAX,Number of native lotic taxa,Number of native lotic taxa,Number of native lotic taxa,,Fish,NAT_LOTNTAX,2324,epa_metadata
 fish_NAT_LOTPIND,% native individuals as lotic,% native individuals as lotic,% native individuals as lotic,,Fish,NAT_LOTPIND,2324,epa_metadata
@@ -283,7 +283,7 @@ fish_NAT_NTOLINVPIND,% native non-tolerant invertivore individuals based on TOLE
 fish_NAT_NTOLINVPTAX,% native non-tolerant invertivore taxa based on TOLERANCE_NRSA,% native non-tolerant invertivore...,% native non-tolerant invertivore taxa based on TOLERANCE_NRSA,,Fish,NAT_NTOLINVPTAX,2324,epa_metadata
 fish_NAT_NTOLNTAX,Native non-tolerant fish taxa richness,Native non-tolerant fish taxa...,"The number of distinct native fish taxa that are not classed tolerant in NRSA's tolerance assignment. Total richness can hold steady under disturbance because tolerant species replace intolerant ones, so this counts only the taxa that do not tolerate it.",,Fish,NAT_NTOLNTAX,2324,curated
 fish_NAT_NTOLPIND,% native non-tolerant individuals based on TOLERANCE_NRSA,% native non-tolerant individuals...,% native non-tolerant individuals based on TOLERANCE_NRSA,,Fish,NAT_NTOLPIND,2324,epa_metadata
-fish_NAT_NTOLPTAX,% native non-tolerant taxa based on TOLERANCE_NRSA,% native non-tolerant taxa based...,% native non-tolerant taxa based on TOLERANCE_NRSA,,Fish,NAT_NTOLPTAX,2324,epa_metadata
+fish_NAT_NTOLPTAX,Native non-tolerant fish taxa,Native non-tolerant fish taxa,"The share of native fish taxa that are not classed tolerant in NRSA's tolerance assignment, as a percent of all native taxa in the sample.",%,Fish,NAT_NTOLPTAX,2324,curated
 fish_NAT_OMNINTAX,No. native omnivore taxa,No. native omnivore taxa,No. native omnivore taxa,,Fish,NAT_OMNINTAX,2324,epa_metadata
 fish_NAT_OMNIPIND,% native individuals as omnivore,% native individuals as omnivore,% native individuals as omnivore,,Fish,NAT_OMNIPIND,2324,epa_metadata
 fish_NAT_OMNIPTAX,% native taxa as omnivore,% native taxa as omnivore,% native taxa as omnivore,,Fish,NAT_OMNIPTAX,2324,epa_metadata
@@ -299,7 +299,7 @@ fish_NAT_SALMNTAX,No. native salmonid taxa,No. native salmonid taxa,No. native s
 fish_NAT_SALMPIND,% native individuals as salmonid,% native individuals as salmonid,% native individuals as salmonid,,Fish,NAT_SALMPIND,2324,epa_metadata
 fish_NAT_SALMPTAX,% native taxa as salmonid,% native taxa as salmonid,% native taxa as salmonid,,Fish,NAT_SALMPTAX,2324,epa_metadata
 fish_NAT_TOLRNTAX,No. distinct Tolerant native taxa based on TOLERANCE_NRSA,No. distinct Tolerant native taxa...,No. distinct Tolerant native taxa based on TOLERANCE_NRSA,,Fish,NAT_TOLRNTAX,2324,epa_metadata
-fish_NAT_TOLRPIND,% Tolerant native individuals based on TOLERANCE_NRSA,% Tolerant native individuals...,% Tolerant native individuals based on TOLERANCE_NRSA,,Fish,NAT_TOLRPIND,2324,epa_metadata
+fish_NAT_TOLRPIND,Tolerant native fish individuals,Tolerant native fish individuals,"The share of native fish individuals that belong to taxa NRSA classes as tolerant, as a percent of all native individuals in the sample.",%,Fish,NAT_TOLRPIND,2324,curated
 fish_NAT_TOLRPTAX,% Tolerant native taxa based on TOLERANCE_NRSA,% Tolerant native taxa based on...,% Tolerant native taxa based on TOLERANCE_NRSA,,Fish,NAT_TOLRPTAX,2324,epa_metadata
 fish_NAT_TOTLNIND,Total native individuals,Total native individuals,Total native individuals,,Fish,NAT_TOTLNIND,2324,epa_metadata
 fish_NAT_TOTLNTAX,Native fish taxa richness,Native fish taxa richness,Native fish taxa richness; higher is better.,,Fish,NAT_TOTLNTAX,2324,metric_map

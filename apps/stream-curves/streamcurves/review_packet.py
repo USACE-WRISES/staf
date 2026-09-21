@@ -246,7 +246,80 @@ def reference_block(result: dict) -> Optional[dict]:
                            for mk, rec in (result.get("strata_applied") or {}).items()},
         "scale_registry": result.get("scale_registry") or {},
         "value_selection": result.get("value_selection") or {},
+        # methodology 0.14: the one hierarchy
+        "hierarchy": hierarchy_block(result),
     }
+
+
+def hierarchy_block(result: dict) -> dict:
+    """Methodology 0.14 in front of the reviewer: the curves carried forward and
+    those rebuilt, the source each new curve came from, the metrics fill-to-two
+    left out, the documented gaps, and what waits for the owner."""
+    from . import model_registry as mreg
+    support = result.get("reference_support") or {}
+    carried = result.get("carried") or {}
+    sources = []
+    for mk, d in sorted(support.items()):
+        if mk in carried or str(d.get("status")) == "insufficient":
+            continue
+        sources.append({"metric": mk, "status": d.get("status"), "basis": d.get("basis"),
+                        "level": d.get("level"), "region_code": d.get("region_code"),
+                        "n_usable": d.get("n_usable"),
+                        "screen": (d.get("screen_detail") or {}).get("agriculture_limit"),
+                        "tried": [f"{x.get('option')}: {x.get('why')}"
+                                  for x in d.get("options_tried") or []
+                                  if x.get("why") and x.get("why") != "accepted"]})
+    gaps = [e for e in (result.get("coverage_exceptions") or [])
+            if "cov01" in str(e.get("policyEntry") or "")]
+    candidates = [a for a in result.get("ladder_attempts") or [] if a.get("candidate")]
+    return {"carried_from": result.get("carried_from") or {},
+            "carried": sorted(carried),
+            "rebuilt": {mk: v.get("why") for mk, v in (result.get("carry_rebuilt") or {}).items()},
+            "sources": sources,
+            "not_selected": {fid: sel.get("notSelected") for fid, sel in
+                             (result.get("portfolio_selection") or {}).items()
+                             if sel.get("notSelected")},
+            "documented_gaps": [{"functionId": g.get("functionId"),
+                                 "recordedBy": g.get("recordedBy")} for g in gaps],
+            "model_candidates_waiting": sorted({a.get("metric") for a in candidates}),
+            "registry_candidates": [e.get("metric") for e in mreg.candidates()]}
+
+
+def _hierarchy_section(h: dict) -> list[str]:
+    """Section 6f: the 0.14 hierarchy, in the reviewer's words."""
+    lines = ["## 6f. The reference hierarchy (methodology 0.14)", ""]
+    cf = h.get("carried_from") or {}
+    if cf.get("fromVersion"):
+        lines.append(f"{len(h.get('carried') or [])} published curves are carried forward "
+                     f"unchanged from version {cf.get('fromVersion')}.")
+        for mk, why in sorted((h.get("rebuilt") or {}).items()):
+            lines.append(f"- rebuilt **{mk}**: {why}")
+        lines.append("")
+    rows = [[s["metric"], s.get("status"), f"{s.get('level') or ''} {s.get('region_code') or ''}",
+             s.get("n_usable"), "" if s.get("screen") is None else f"{float(s['screen']):g}",
+             " | ".join(s.get("tried") or [])] for s in h.get("sources") or []]
+    if rows:
+        lines += _table(["metric", "source", "where", "n", "regional ag limit",
+                         "options refused before it"], rows)
+        lines.append("")
+    ns = h.get("not_selected") or {}
+    if ns:
+        lines += ["Supported, not selected (SELECT-04 fills each function to two):", ""]
+        for fid, items in sorted(ns.items()):
+            lines.append(f"- {fid}: " + ", ".join(
+                f"{x.get('metric')} ({x.get('source')}{', reserve' if x.get('reserve') else ''})"
+                for x in items))
+        lines.append("")
+    gaps = h.get("documented_gaps") or []
+    lines.append("Documented gaps recorded under cov01-documented-gap, pending your confirmation "
+                 "at promote: " + (", ".join(g["functionId"] for g in gaps) if gaps else "none")
+                 + ".")
+    waiting = h.get("model_candidates_waiting") or []
+    lines.append("Modeled specifications that passed the recovery test and wait for your "
+                 "approval before any build may use them: "
+                 + (", ".join(waiting) if waiting else "none for this ecoregion") + ".")
+    lines.append("")
+    return lines
 
 
 def _reference_sections(ref: dict) -> list[str]:
@@ -281,7 +354,7 @@ def _reference_sections(ref: dict) -> list[str]:
     lines.append("")
 
     borrowed = [r for r in built if str(r.get("status") or "").startswith("borrowed")]
-    lines += ["## 6a. Borrowed pools (each one is a review item)", ""]
+    lines += ["## 6a. Borrowed pools", ""]
     if borrowed:
         for r in borrowed:
             lines.append(f"- **{r['metric']}**: {r.get('transfer_note')} "
@@ -352,6 +425,8 @@ def _reference_sections(ref: dict) -> list[str]:
     else:
         lines.append("Not run (diagnostics were disabled).")
     lines.append("")
+    if ref.get("hierarchy"):
+        lines += _hierarchy_section(ref["hierarchy"])
     return lines
 
 
