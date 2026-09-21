@@ -1,0 +1,36 @@
+{
+  "assessmentId": "interior-plateau",
+  "assessmentName": "Interior Plateau reference assessment",
+  "version": 4,
+  "updatedAt": "2026-09-20T12:24:40Z",
+  "author": "gtmenichino",
+  "revisionNotes": "Methodology 0.12 rebuild: reference stations selected by the fixed pressure screen, and every curve fitted on a pool borrowed from the Level II or Level I ecoregion under the comparability check, with the source geography and transfer risk recorded on each. The five landscape pressure metrics score on the fixed criteria of the Screening tier.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "71",
+    "name": "Interior Plateau"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "StreamCurves reference-curve development",
+  "contentDigest": "sha256:f987077df681b36aa080901d24ae79f2b3c61d14ce488fefdfc13daa8091074b",
+  "supersedesVersion": 3,
+  "provenance": "present",
+  "portfolioApprovals": [
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    },
+    {
+      "functionId": "water-soil-quality",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    }
+  ]
+}

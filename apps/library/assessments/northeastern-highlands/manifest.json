@@ -9,8 +9,8 @@
   },
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
-  "latestVersion": 6,
+  "sourceCitation": "StreamCurves reference-curve development",
+  "latestVersion": 7,
   "versions": [
     {
       "version": 1,
@@ -59,6 +59,14 @@
       "revisionNotes": "Reference tier: least_disturbed (screening preset functional, method direct_engine). Retained 94 of 175 candidates.",
       "contentDigest": "sha256:cbed9c9fea159ed4d1a779c43cffa942857021ede4c2fb32d834575ab920e907",
       "supersedesVersion": 5
+    },
+    {
+      "version": 7,
+      "updatedAt": "2026-09-20T12:21:03Z",
+      "author": "gtmenichino",
+      "revisionNotes": "Methodology 0.12 rebuild: reference stations selected by the fixed pressure screen, pools assembled per metric on the Level III to Level I ladder, the five landscape pressure metrics scored on the fixed criteria of the Screening tier, and class curves applied where the national scale analysis supports a split. Three curves built but held back for missing data.",
+      "contentDigest": "sha256:9b81c83c765fc428e83267ba82c16153230c4bee088b561ca115c5725c1b57d4",
+      "supersedesVersion": 6
     }
   ]
 }

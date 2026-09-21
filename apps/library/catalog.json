@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-08T23:03:48Z",
+  "generatedAt": "2026-09-20T12:45:39Z",
   "assessments": [
     {
       "assessmentId": "ak-sqt-adapted",
@@ -22,7 +22,8 @@
       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "absent"
+      "provenanceState": "absent",
+      "calculatorState": "absent"
     },
     {
       "assessmentId": "co-sqt-adapted",
@@ -44,7 +45,8 @@
       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "absent"
+      "provenanceState": "absent",
+      "calculatorState": "absent"
     },
     {
       "assessmentId": "eastern-corn-belt-plains",
@@ -56,17 +58,18 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 5,
-      "latestUpdatedAt": "2026-09-08T23:03:41Z",
-      "latestPreliminary": 5,
+      "latestVersion": 6,
+      "latestUpdatedAt": "2026-09-20T12:45:39Z",
+      "latestPreliminary": 6,
       "latestCertified": 0,
       "latestDraft": 4,
-      "defaultVersion": 5,
+      "defaultVersion": 6,
       "defaultStatus": "preliminary",
-      "contentDigest": "sha256:5132d11345c66628f1ea0fcb16ff92cfda53175aae9d63c838c2dc2ef720492e",
+      "contentDigest": "sha256:bc2948a42062bb90030672afe31eb3271f563c790dee145c5cb8d7af8dfa42fd",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "present"
+      "provenanceState": "present",
+      "calculatorState": "present"
     },
     {
       "assessmentId": "interior-plateau",
@@ -78,17 +81,18 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 3,
-      "latestUpdatedAt": "2026-09-08T23:03:47Z",
-      "latestPreliminary": 3,
+      "latestVersion": 4,
+      "latestUpdatedAt": "2026-09-20T12:24:40Z",
+      "latestPreliminary": 4,
       "latestCertified": 0,
       "latestDraft": 2,
-      "defaultVersion": 3,
+      "defaultVersion": 4,
       "defaultStatus": "preliminary",
-      "contentDigest": "sha256:f708a8f6d0b24348f7d3d53424ae6528a0b38be35d0597f10f9937b4d71f6389",
+      "contentDigest": "sha256:f987077df681b36aa080901d24ae79f2b3c61d14ce488fefdfc13daa8091074b",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "present"
+      "provenanceState": "present",
+      "calculatorState": "present"
     },
     {
       "assessmentId": "mi-sqt-adapted",
@@ -110,7 +114,8 @@
       "contentDigest": "sha256:5d8e95677f0cf2bf4b18d1f089024b4fda8aefb21767fb89e2742ad819998e02",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "absent"
+      "provenanceState": "absent",
+      "calculatorState": "absent"
     },
     {
       "assessmentId": "mn-sqt-adapted",
@@ -132,7 +137,8 @@
       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "absent"
+      "provenanceState": "absent",
+      "calculatorState": "absent"
     },
     {
       "assessmentId": "nc-sqt-adapted",
@@ -154,7 +160,8 @@
       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "absent"
+      "provenanceState": "absent",
+      "calculatorState": "absent"
     },
     {
       "assessmentId": "northeastern-highlands",
@@ -166,17 +173,18 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 6,
-      "latestUpdatedAt": "2026-09-08T23:03:35Z",
-      "latestPreliminary": 6,
+      "latestVersion": 7,
+      "latestUpdatedAt": "2026-09-20T12:21:03Z",
+      "latestPreliminary": 7,
       "latestCertified": 0,
       "latestDraft": 5,
-      "defaultVersion": 6,
+      "defaultVersion": 7,
       "defaultStatus": "preliminary",
-      "contentDigest": "sha256:cbed9c9fea159ed4d1a779c43cffa942857021ede4c2fb32d834575ab920e907",
+      "contentDigest": "sha256:9b81c83c765fc428e83267ba82c16153230c4bee088b561ca115c5725c1b57d4",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "present"
+      "provenanceState": "present",
+      "calculatorState": "present"
     },
     {
       "assessmentId": "sc-sqt-adapted",
@@ -198,7 +206,8 @@
       "contentDigest": "sha256:91a19a28ca5e6bbbe1f35eefb5a06284a65b006ccddca6f905fe28e79a893f23",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "absent"
+      "provenanceState": "absent",
+      "calculatorState": "absent"
     },
     {
       "assessmentId": "wi-sqt-adapted",
@@ -220,7 +229,8 @@
       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "absent"
+      "provenanceState": "absent",
+      "calculatorState": "absent"
     },
     {
       "assessmentId": "wy-sqt-adapted",
@@ -242,7 +252,8 @@
       "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "absent"
+      "provenanceState": "absent",
+      "calculatorState": "absent"
     }
   ]
 }
