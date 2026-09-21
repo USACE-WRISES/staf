@@ -323,6 +323,12 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "valuePolicy": (result.get("value_selection") or {}).get("policy"),
             "easiMethodVersion": easi_method,
             "pool": result.get("reference_pool_summary"),
+            # REF-08/09/10: which rungs a curve could reach is decided by the
+            # committed verdicts, so the digest carries their identity. A run
+            # that reached no rung above the hierarchy adds nothing, which keeps
+            # every earlier digest reproducible.
+            "basisValidation": _basis_validation_record(),
+            "curvesByBasis": _curves_by_basis(result),
         }
 
     # Predictor source: recorded whenever the run declares one. The DERIVED
@@ -534,7 +540,55 @@ def digest_payload_from_manifest(manifest: dict) -> dict:
             "fixedCriteria": (ref.get("fixedCriteria") or {}).get("sha256"),
             "valuePolicy": ref.get("valuePolicy"),
         }
+        # Additive, like every key above it: a run whose curves all came from the
+        # ecoregion hierarchy records no basis evidence and its digest is
+        # unchanged, so the versions published under 0.12 still replay.
+        basis = ref.get("basisValidation")
+        if basis:
+            digest_payload["reference"]["basisValidation"] = basis
+        by_basis = ref.get("curvesByBasis") or {}
+        above = {k: v for k, v in by_basis.items() if k != "regional-reference"}
+        if above:
+            digest_payload["reference"]["curvesByBasis"] = dict(sorted(by_basis.items()))
     return digest_payload
+
+
+
+def _curves_by_basis(result: dict) -> dict:
+    """How many curves rest on each rung, counted from the pool decisions.
+
+    ``result["reference_method"]`` is the method NAME, not the bundle block, so
+    the count is taken from the support records themselves.
+    """
+    from . import curve_basis
+    from . import reference_pool as rp
+    out: dict = {}
+    for d in (result.get("reference_support") or {}).values():
+        if str((d or {}).get("status")) == rp.STATUS_INSUFFICIENT:
+            continue
+        basis = curve_basis.resolve((d or {}).get("basis"))
+        out[basis] = out.get(basis, 0) + 1
+    return dict(sorted(out.items()))
+
+
+def _basis_validation_record() -> dict:
+    """What the committed basis evidence says about itself.
+
+    The file's hash alone would change whenever a comment moved, so the digest
+    carries the pre-registration it was produced under and the verdicts that can
+    actually admit a rung. An absent file records nothing.
+    """
+    from . import basis_ladder
+    prov = basis_ladder.validation_provenance()
+    if not prov:
+        return {}
+    table = basis_ladder.load_validation()
+    admits = {mk: sorted(b for b, rec in by_basis.items()
+                         if str((rec or {}).get("verdict")) == "validated")
+              for mk, by_basis in table.items()}
+    return {"preregistration": prov.get("preregistration"),
+            "preregistrationSha256": prov.get("preregistration_sha256"),
+            "admits": {k: v for k, v in sorted(admits.items()) if v}}
 
 
 # --------------------------------------------------------------------------- #

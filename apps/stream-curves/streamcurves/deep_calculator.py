@@ -865,8 +865,24 @@ def units_of(metric: dict) -> str:
 
 def support_text(metric: dict) -> str:
     """One line on what the metric is scored against, for the Reference sheet."""
-    if str(metric.get("criteriaBasis") or "") == "fixed":
+    # A curve that rests on no station of this ecoregion says what it does rest
+    # on. The bundle carries the sentence, so the workbook and the app agree.
+    basis = str(metric.get("basis") or "")
+    sup_ = metric.get("referenceSupport") if isinstance(metric.get("referenceSupport"),
+                                                        dict) else {}
+    # a curve from a rung above the ecoregion hierarchy, including a published
+    # benchmark, which is marked fixed downstream but is regional, not universal
+    ladder = str(sup_.get("status") or "") in ("national", "modeled", "published")
+    if basis in ("national-reference", "modeled-reference", "published-benchmark") and (
+            ladder or str(metric.get("criteriaBasis") or "") != "fixed"):
+        stated = str(metric.get("basisStatement") or sup_.get("basisStatement") or "").strip()
+        if stated:
+            return stated
+    if str(metric.get("criteriaBasis") or "") == "fixed" and not ladder:
         return "Fixed criteria, the same in every region"
+    if ladder:
+        # never the station-pool sentence: its counts would describe a model fit
+        return str(metric.get("basisLabel") or sup_.get("basisLabel") or basis)
     sup = metric.get("referenceSupport")
     if isinstance(sup, dict) and sup.get("status"):
         if sup.get("status") == "local":

@@ -100,6 +100,7 @@ metric_family:
   phab_LWDeqVolM100: riparian
   phab_XFC_NAT: riparian
   chem_PTL: water_chemistry
+  chem_NTL: water_chemistry
   chem_NTL_DISS: water_chemistry
   chem_TURB: water_chemistry
   chem_CHLA: water_chemistry
@@ -111,6 +112,7 @@ metric_family:
   bent_TOTLNTAX: biology
   bent_TOLRPIND: biology
   fish_NAT_TOTLNTAX: biology
+  fish_NAT_NTOLNTAX: biology
   # landscape expectation metrics (scored against reference, never fixed criteria)
   pctwet2019ws: hydrology
   pctwdwet2019ws: hydrology

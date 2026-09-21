@@ -48,9 +48,9 @@ from streamcurves import pressure_evidence as pe       # noqa: E402
 
 NATURAL = ["drainage_area_sqkm", "nhd_slope", "tmean8110ws", "precip8110ws", "bfiws"]
 METRICS = ["bent_EPT_NTAX", "bent_HPRIME", "bent_TOLRPIND", "bent_TOTLNTAX",
-           "fish_NAT_TOTLNTAX", "chem_CHLA", "chem_COND", "chem_NTL_DISS", "chem_PH",
-           "chem_PTL", "chem_TURB"]
-TARGETS = {"55": METRICS, "71": ["bent_TOLRPIND", "bent_TOTLNTAX", "chem_NTL_DISS"]}
+           "fish_NAT_TOTLNTAX", "fish_NAT_NTOLNTAX", "chem_CHLA", "chem_COND",
+           "chem_NTL", "chem_PH", "chem_PTL", "chem_TURB"]
+TARGETS = {"55": METRICS, "71": ["bent_TOLRPIND", "bent_TOTLNTAX", "chem_NTL"]}
 #: Regime E's fixed specifications, chosen for what they are rather than by a
 #: result: the one that carries a local level, and its contrast without one.
 REGIME_E_SPECS = ("mixed_local", "linear")

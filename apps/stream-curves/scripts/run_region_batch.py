@@ -624,7 +624,11 @@ def cmd_stage_many(a) -> int:
                 no_screen=a.no_screen, no_streamcat=a.no_streamcat, maintainer=a.maintainer,
                 n_boot=a.n_boot, coverage_exceptions=a.coverage_exceptions, policy=a.policy,
                 enable_policy=list(a.enable_policy or []), max_iterations=a.max_iterations,
-                approve_portfolio=[], reviewer_decisions=None, finalize_metric=[], remove_metric=[],
+                # SELECT-01 approvals apply to every region staged in one call:
+                # a function that carries three metrics carries them everywhere,
+                # and without this stage-many could never stage such a region.
+                approve_portfolio=list(a.approve_portfolio or []),
+                reviewer_decisions=None, finalize_metric=[], remove_metric=[],
                 max_unresolved_share=a.max_unresolved_share, allow_unresolved=a.allow_unresolved,
                 nrsa_dataset=a.nrsa_dataset, nrsa_cycles=a.nrsa_cycles,
                 reference_frame=a.reference_frame, include_site=[],
@@ -812,6 +816,9 @@ def main(argv=None) -> int:
     m.add_argument("--coverage-exceptions", default=None)
     m.add_argument("--policy", default=None)
     m.add_argument("--enable-policy", action="append", default=[], metavar="ID")
+    m.add_argument("--approve-portfolio", action="append", default=[],
+                   metavar="FUNCTIONID=APPROVER[:NOTE]",
+                   help="SELECT-01 approval applied to every region in this call (see stage)")
     m.add_argument("--max-iterations", type=int, default=3)
     m.add_argument("--nrsa-dataset", default=nrsa_dataset.default_build_dataset_id(),
                    choices=nrsa_dataset.available_datasets(),

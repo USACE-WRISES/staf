@@ -82,9 +82,16 @@ metrics:
   bent_TOTLNTAX:   {higher_is_better: true,  metric_family: count, domain_min: 0,      source: pilot,  confidence: high,     note: "Total benthic taxa richness; higher is better."}
   bent_TOLRPIND:   {higher_is_better: false, metric_family: proportion, domain_min: 0, domain_max: 100, source: pilot,  confidence: high,     note: "Percent tolerant individuals; a higher share of pollution-tolerant taxa indicates worse condition."}
   fish_NAT_TOTLNTAX: {higher_is_better: true, metric_family: count, domain_min: 0,     source: expert, confidence: high,     note: "Native fish taxa richness; higher is better."}
+  fish_NAT_NTOLNTAX: {higher_is_better: true, metric_family: count, domain_min: 0,     source: expert, confidence: high,     note: "Native non-tolerant fish taxa richness (TOLERANCE_NRSA); higher is better. Total richness need not fall under disturbance, because tolerant species replace intolerant ones; this counts only the taxa that do not tolerate it."}
 
   # --- Physicochemistry ---
   chem_PTL:        {higher_is_better: false, metric_family: continuous, domain_min: 0, source: pilot,  confidence: high,     note: "Total phosphorus; higher indicates nutrient enrichment (worse)."}
+  chem_NTL:        {higher_is_better: false, metric_family: continuous, domain_min: 0, source: expert, confidence: high,     note: "Total nitrogen; higher indicates nutrient enrichment (worse). The total fraction, reported in every NRSA cycle, and the fraction published nitrogen criteria are written against."}
+  # Superseded by chem_NTL as the nutrient-cycling nitrogen metric (2026-09-21): dissolved
+  # nitrogen is reported in one NRSA cycle of three, which leaves 285 least-disturbed
+  # stations nationally against total nitrogen's 774, and it is the wrong fraction to
+  # compare with a published total-nitrogen criterion. The direction stays curated so
+  # older sessions still resolve.
   chem_NTL_DISS:   {higher_is_better: false, metric_family: continuous, domain_min: 0, source: pilot,  confidence: high,     note: "Dissolved nitrogen; higher indicates nutrient enrichment (worse)."}
   chem_TURB:       {higher_is_better: false, metric_family: continuous, domain_min: 0, source: pilot,  confidence: high,     note: "Turbidity; higher indicates more suspended sediment (worse)."}
   chem_CHLA:       {higher_is_better: false, metric_family: continuous, domain_min: 0, source: expert, confidence: high,     note: "Chlorophyll a; higher indicates algal enrichment/eutrophication (worse)."}

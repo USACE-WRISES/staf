@@ -177,6 +177,8 @@ def staged_run(tmp_path_factory):
          "--nrsa-dataset", "legacy-1819",
          "--no-screen", "--no-streamcat", "--n-boot", "20", "--maintainer", "tester",
          "--coverage-exceptions", str(exceptions),
+         # v0.13 added native non-tolerant fish richness, so Population support
+         # carries three metrics and SELECT-01 asks for a recorded approval.
          "--enable-policy", "curve07-thin-metric-finalized",
          "--enable-policy", "data03-thin-metric-finalized",
          "--enable-policy", "data06-insufficient-finalized"],

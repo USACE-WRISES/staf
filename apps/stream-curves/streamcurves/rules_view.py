@@ -88,8 +88,16 @@ RULE_THRESHOLD_PATHS: dict[str, list[str]] = {
     "REF-06": ["data_rules.exploratory_n_unstratified"],
     "REF-07": ["reference_screen.relaxed"],
     "CURVE-11": ["curve_rules.deep_index_bands"],
+    # methodology 0.13: the basis ladder above the ecoregion hierarchy
+    "REF-08": ["reference_pool.levels", "data_rules.exploratory_n_unstratified",
+               "confidence_rules.caps.national_reference"],
+    "REF-09": ["confidence_rules.caps.modeled_reference"],
+    "REF-10": ["confidence_rules.caps.published_benchmark"],
     "CONF-01": ["confidence_rules.components"],
     "CONF-02": ["confidence_rules.caps", "confidence_rules.deductions"],
+    "CONF-03": ["confidence_rules.caps.national_reference",
+                "confidence_rules.caps.modeled_reference",
+                "confidence_rules.caps.published_benchmark"],
     "SELECT-01": ["metric_portfolio.default_maximum_metrics_per_function"],
     "SELECT-02": ["metric_portfolio.metric_score_weights"],
 }

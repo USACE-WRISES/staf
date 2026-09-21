@@ -1,0 +1,482 @@
+# basis_validation.yaml -- GENERATED, do not hand-edit.
+#
+# The verdicts that admit a curve to rung REF-08 (national comparable donors) or
+# REF-09 (a fitted expectation). A build reads this file rather than re-scoring,
+# so what counts as validated is fixed before a build runs and is auditable
+# afterwards.
+#
+# Regenerate with:
+#   py -3.12 scripts/build_basis_validation.py --run <folder> --prereg <file>
+# Check with --check, which exits 1 on drift.
+#
+# Only a VALIDATED verdict admits a rung. Every other verdict on a gating basis
+# is recorded too, because a withheld metric has to say what the test found:
+# "tested and failed" and "too few regions to test" are different blockers.
+
+version: 1
+source: ../../notes/2026-07-23_StreamCurves_Methodology/basis_validation/2026-09-21/round_three
+preregistration: PREREGISTRATION_III.md
+preregistration_sha256: cfb2a60267048fe36b0deaa3a2e80a945d1d59d1f4b16d6c34c0f3716211d4c2
+gating_bases:
+- 1B_mixed_local
+- 3a_envelope
+- 3b_adjusted
+- 3c_matched
+metrics:
+  bent_EPT_NTAX:
+    1B_mixed_local:
+      verdict: unsupported
+      regime: E
+      n_cells: 4
+      err_iqr: 0.6214
+      net_opt: -0.2645
+      exceed_median: 0.075
+      contained: 1
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.55
+      net_opt: 0.0
+      exceed_median: 0.03
+      contained: 2
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4949
+      net_opt: -0.0741
+      exceed_median: 0.03
+      contained: 3
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5882
+      net_opt: 0.0
+      exceed_median: 0.05
+      contained: 2
+  bent_HPRIME:
+    1B_mixed_local:
+      verdict: validated
+      regime: E
+      n_cells: 4
+      err_iqr: 0.1082
+      net_opt: -0.0087
+      exceed_median: 0.645
+      contained: 4
+      transport:
+        measure: extrapolation_ok
+        better: min
+        bound: 0.0723
+        passing_min: 0.0723
+        passing_max: 0.6667
+        n_passing_cells: 4
+        targets:
+          '55': true
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4006
+      net_opt: 0.0
+      exceed_median: 0.18
+      contained: 8
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 19
+      err_iqr: 0.247
+      net_opt: 0.0314
+      exceed_median: 0.2
+      contained: 9
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3528
+      net_opt: 0.0571
+      exceed_median: 0.13
+      contained: 7
+  bent_TOLRPIND:
+    1B_mixed_local:
+      verdict: not evaluated
+      regime: E
+      n_cells: 2
+      err_iqr: 0.8696
+      exceed_median: 0.045
+      contained: 1
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 15
+      err_iqr: 0.5499
+      net_opt: 0.0976
+      exceed_median: 0.37
+      contained: 8
+    3b_adjusted:
+      verdict: unsupported
+      regime: all
+      n_cells: 15
+      err_iqr: 0.3829
+      net_opt: 0.1707
+      exceed_median: 0.37
+      contained: 6
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 15
+      err_iqr: 0.3825
+      net_opt: 0.1429
+      exceed_median: 0.45
+      contained: 7
+  bent_TOTLNTAX:
+    1B_mixed_local:
+      verdict: unsupported
+      regime: I
+      n_cells: 7
+      err_iqr: 0.6634
+      net_opt: -0.1765
+      exceed_median: 0.07
+      contained: 2
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 15
+      err_iqr: 0.6364
+      net_opt: 0.1096
+      exceed_median: 0.12
+      contained: 2
+    3b_adjusted:
+      verdict: unsupported
+      regime: all
+      n_cells: 15
+      err_iqr: 0.8737
+      net_opt: 0.1216
+      exceed_median: 0.07
+      contained: 2
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 15
+      err_iqr: 0.6373
+      net_opt: 0.2105
+      exceed_median: 0.12
+      contained: 3
+  chem_CHLA:
+    1B_mixed_local:
+      verdict: not evaluated
+      regime: E
+      n_cells: 3
+      err_iqr: 0.1068
+      exceed_median: 0.67
+      contained: 2
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3952
+      net_opt: -0.1103
+      exceed_median: 0.135
+      contained: 6
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3001
+      net_opt: 0.0595
+      exceed_median: 0.36
+      contained: 9
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3604
+      net_opt: -0.0741
+      exceed_median: 0.11
+      contained: 4
+  chem_COND:
+    1B_mixed_local:
+      verdict: unsupported
+      regime: I
+      n_cells: 9
+      err_iqr: 0.4053
+      net_opt: 0.0185
+      exceed_median: 0.1
+      contained: 3
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.5457
+      net_opt: 0.1263
+      exceed_median: 0.085
+      contained: 4
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 19
+      err_iqr: 1.033
+      net_opt: 0.1389
+      exceed_median: 0.02
+      contained: 3
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5121
+      net_opt: 0.2286
+      exceed_median: 0.02
+      contained: 1
+  chem_NTL:
+    1B_mixed_local:
+      verdict: unsupported
+      regime: E
+      n_cells: 4
+      err_iqr: 5.1717
+      net_opt: 0.2547
+      exceed_median: 0.025
+      contained: 0
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3695
+      net_opt: -0.0002
+      exceed_median: 0.06
+      contained: 2
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 19
+      err_iqr: 0.7557
+      net_opt: 0.2
+      exceed_median: 0.08
+      contained: 3
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.405
+      net_opt: 0.0727
+      exceed_median: 0.07
+      contained: 6
+  chem_PH:
+    1B_mixed_local:
+      verdict: unsupported
+      regime: I
+      n_cells: 9
+      err_iqr: 0.3238
+      net_opt: -0.0238
+      exceed_median: 0.05
+      contained: 4
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3256
+      net_opt: 0.0969
+      exceed_median: 0.125
+      contained: 3
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5611
+      net_opt: 0.1069
+      exceed_median: 0.15
+      contained: 5
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3414
+      net_opt: 0.1667
+      exceed_median: 0.12
+      contained: 2
+  chem_PTL:
+    1B_mixed_local:
+      verdict: promising
+      regime: E
+      n_cells: 4
+      err_iqr: 0.3271
+      net_opt: -0.1708
+      exceed_median: 0.24
+      contained: 0
+      transport:
+        measure: extrapolation_ok
+        better: min
+        bound: 0.25
+        passing_min: 0.25
+        passing_max: 0.6667
+        n_passing_cells: 3
+        targets:
+          '55': true
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3797
+      net_opt: -0.0087
+      exceed_median: 0.04
+      contained: 6
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4113
+      net_opt: -0.1146
+      exceed_median: 0.03
+      contained: 5
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3468
+      net_opt: -0.025
+      exceed_median: 0.13
+      contained: 8
+  chem_TURB:
+    1B_mixed_local:
+      verdict: validated
+      regime: E
+      n_cells: 4
+      err_iqr: 0.3611
+      net_opt: -0.1714
+      exceed_median: 0.1
+      contained: 3
+      transport:
+        measure: extrapolation_ok
+        better: min
+        bound: 0.0723
+        passing_min: 0.0723
+        passing_max: 0.3083
+        n_passing_cells: 3
+        targets:
+          '55': true
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.4155
+      net_opt: -0.0119
+      exceed_median: 0.125
+      contained: 4
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3539
+      net_opt: 0.0
+      exceed_median: 0.08
+      contained: 6
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3947
+      net_opt: 0.0467
+      exceed_median: 0.11
+      contained: 4
+  fish_NAT_NTOLNTAX:
+    1B_mixed_local:
+      verdict: unsupported
+      regime: E
+      n_cells: 4
+      err_iqr: 1.0602
+      net_opt: -0.1452
+      exceed_median: 0.245
+      contained: 0
+    3a_envelope:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3831
+      net_opt: 0.0
+      exceed_median: 0.42
+      contained: 8
+      transport:
+        measure: n_fit
+        better: min
+        bound: 23.0
+        passing_min: 23.0
+        passing_max: 303.0
+        n_passing_cells: 15
+        targets:
+          '55': false
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 19
+      err_iqr: 0.6587
+      net_opt: -0.1308
+      exceed_median: 0.13
+      contained: 3
+    3c_matched:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4046
+      net_opt: 0.0
+      exceed_median: 0.74
+      contained: 9
+      transport:
+        measure: distance_median
+        better: max
+        bound: 0.0708
+        passing_min: 0.0231
+        passing_max: 0.0708
+        n_passing_cells: 16
+        targets:
+          '55': true
+  fish_NAT_TOTLNTAX:
+    1B_mixed_local:
+      verdict: unsupported
+      regime: E
+      n_cells: 4
+      err_iqr: 1.4001
+      net_opt: -0.2695
+      exceed_median: 0.0
+      contained: 0
+    3a_envelope:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.6429
+      net_opt: 0.0
+      exceed_median: 1.0
+      contained: 5
+      transport:
+        measure: n_fit
+        better: min
+        bound: 43.0
+        passing_min: 43.0
+        passing_max: 363.0
+        n_passing_cells: 16
+        targets:
+          '55': false
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 19
+      err_iqr: 0.8893
+      net_opt: -0.1538
+      exceed_median: 0.19
+      contained: 1
+    3c_matched:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5
+      net_opt: 0.0
+      exceed_median: 1.0
+      contained: 8
+      transport:
+        measure: distance_median
+        better: max
+        bound: 0.0708
+        passing_min: 0.0231
+        passing_max: 0.0708
+        n_passing_cells: 16
+        targets:
+          '55': true

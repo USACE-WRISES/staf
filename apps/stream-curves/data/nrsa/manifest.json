@@ -34,8 +34,8 @@
       "sha256": "sha256:339af41b8bb676e2e94305623937649e96bf3449c8aac0f690dccae53301a177"
     },
     "metric_dictionary.csv": {
-      "bytes": 190559,
-      "sha256": "sha256:bd4f3fb39938b400d79ef2112ffd26692c3b79b184aac7d9143659b06a1a635b"
+      "bytes": 191171,
+      "sha256": "sha256:6294cd4c26b9fe9cdff5680f349bb58df31b2ce69c77f55a85eb635f8f5f526a"
     },
     "reference/cycle_comparison.csv": {
       "bytes": 698972,
@@ -85,6 +85,14 @@
       "bytes": 60311,
       "sha256": "sha256:dfa081a35bb1de3929e1c73f5ab23790c34cecfbf37ce4a13e5a5a9a230a7e72"
     },
+    "station_screen.meta.json": {
+      "bytes": 2929,
+      "sha256": "sha256:b5c4a99f625d314ebef6b966b729008d14f04754650acfb6dbb3fdbfff5d4a45"
+    },
+    "station_screen.parquet": {
+      "bytes": 671724,
+      "sha256": "sha256:d9954342f71a959da8d3c7ac74fd0fbb3620dae34f987cdd051cd42f0befefdc"
+    },
     "stations.geojson.gz": {
       "bytes": 79406,
       "sha256": "sha256:096ff02f98644776ac51a0bdd90d068a92acf5e93f76c8bb833c124c5ca8e460"
@@ -92,6 +100,10 @@
     "stations.parquet": {
       "bytes": 152639,
       "sha256": "sha256:c1288ba273c7c8c538e0b046cb058826d34cb1410627cbaa48d9f3a97c86b5f5"
+    },
+    "stream_order.csv": {
+      "bytes": 177304,
+      "sha256": "sha256:7816cc7b41837484ceea268e4f0daa109a37a62b7e46b615fdf247da7d85492b"
     },
     "value_origins.csv": {
       "bytes": 67228,
@@ -102,5 +114,5 @@
       "sha256": "sha256:d02331dc74c641a0e295a550f1e57ea145c7dc6368b9a768f9675b5735561396"
     }
   },
-  "totalBytes": 14531975
+  "totalBytes": 15384544
 }

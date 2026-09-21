@@ -137,8 +137,8 @@ chem_MAGNESIUM,Magnesium,Magnesium,Analyte value: magnesium,mg/L,Water chemistry
 chem_NITRATE_N,Nitrate,Nitrate,Analyte value: nitrate,mg N/L,Water chemistry,NITRATE_N_RESULT,2324,epa_metadata
 chem_NITRATE_NITRITE_N,Nitrate-nitrite,Nitrate-nitrite,Analyte value: nitrate-nitrite,mg N/L,Water chemistry,NITRATE_NITRITE_N_RESULT,2324,epa_metadata
 chem_NITRITE_N,Nitrite,Nitrite,Analyte value: nitrite,mg N/L,Water chemistry,NITRITE_N_RESULT,2324,epa_metadata
-chem_NTL,Total Nitrogen,Total Nitrogen,Total Nitrogen,mg N/L,Water chemistry,NTL_RESULT,2324,epa_metadata
-chem_NTL_DISS,Dissolved nitrogen,Dissolved nitrogen,Dissolved nitrogen; higher indicates nutrient enrichment (worse).,mg N/L,Water chemistry,NTL_DISS_RESULT,1819,metric_map
+chem_NTL,Total nitrogen,Total nitrogen,"Total nitrogen, the whole fraction rather than the dissolved part. Reported in every NRSA cycle, unlike dissolved nitrogen, which is reported in one of the three.",mg N/L,Water chemistry,NTL_RESULT,2324,curated
+chem_NTL_DISS,Dissolved Total Nitrogen,Dissolved Total Nitrogen,Dissolved nitrogen; higher indicates nutrient enrichment (worse).,mg N/L,Water chemistry,NTL_DISS_RESULT,1819,epa_metadata
 chem_PH,pH,pH,"pH degrades condition at BOTH extremes. Two-sided (optimum) curve: scored 1.0 across the reference interquartile core, falling in both tails.",std units,Water chemistry,PH_RESULT,2324,metric_map
 chem_PHEO,Pheophytin,Pheophytin,Analyte value: Pheophytin,,Water chemistry,PHEO_RESULT,1819,epa_metadata
 chem_POTASSIUM,Potassium,Potassium,Analyte value: potassium,mg/L,Water chemistry,POTASSIUM_RESULT,2324,epa_metadata
@@ -281,7 +281,7 @@ fish_NAT_NTOLCARNPTAX,% native non-tolerant carnivore taxa based on TOLERANCE_NR
 fish_NAT_NTOLINVNTAX,No. native non-tolerant invertivore taxa based on TOLERANCE_NRSA,No. native non-tolerant...,No. native non-tolerant invertivore taxa based on TOLERANCE_NRSA,,Fish,NAT_NTOLINVNTAX,2324,epa_metadata
 fish_NAT_NTOLINVPIND,% native non-tolerant invertivore individuals based on TOLERANCE_NRSA,% native non-tolerant invertivore...,% native non-tolerant invertivore individuals based on TOLERANCE_NRSA,,Fish,NAT_NTOLINVPIND,2324,epa_metadata
 fish_NAT_NTOLINVPTAX,% native non-tolerant invertivore taxa based on TOLERANCE_NRSA,% native non-tolerant invertivore...,% native non-tolerant invertivore taxa based on TOLERANCE_NRSA,,Fish,NAT_NTOLINVPTAX,2324,epa_metadata
-fish_NAT_NTOLNTAX,No. native non-tolerant taxa based on TOLERANCE_NRSA,No. native non-tolerant taxa based...,No. native non-tolerant taxa based on TOLERANCE_NRSA,,Fish,NAT_NTOLNTAX,2324,epa_metadata
+fish_NAT_NTOLNTAX,Native non-tolerant fish taxa richness,Native non-tolerant fish taxa...,"The number of distinct native fish taxa that are not classed tolerant in NRSA's tolerance assignment. Total richness can hold steady under disturbance because tolerant species replace intolerant ones, so this counts only the taxa that do not tolerate it.",,Fish,NAT_NTOLNTAX,2324,curated
 fish_NAT_NTOLPIND,% native non-tolerant individuals based on TOLERANCE_NRSA,% native non-tolerant individuals...,% native non-tolerant individuals based on TOLERANCE_NRSA,,Fish,NAT_NTOLPIND,2324,epa_metadata
 fish_NAT_NTOLPTAX,% native non-tolerant taxa based on TOLERANCE_NRSA,% native non-tolerant taxa based...,% native non-tolerant taxa based on TOLERANCE_NRSA,,Fish,NAT_NTOLPTAX,2324,epa_metadata
 fish_NAT_OMNINTAX,No. native omnivore taxa,No. native omnivore taxa,No. native omnivore taxa,,Fish,NAT_OMNINTAX,2324,epa_metadata
@@ -657,6 +657,7 @@ pcturblo2019,Developed low intensity,Developed low intensity,,%,Landscape,pcturb
 pcturbmd2019,Developed medium intensity,Developed medium intensity,,%,Landscape,pcturbmd2019,,streamcat
 pcturbop2019,Developed open space,Developed open space,,%,Landscape,pcturbop2019,,streamcat
 pctwdwet2019,Woody wetland,Woody wetland,Watershed woody wetland (%); wetlands store surface water and attenuate flow peaks.,%,Landscape,pctwdwet2019,,metric_map
+pctwet2019,Wetland,Wetland,"Watershed wetland (%), woody plus herbaceous, both classes required; wetlands store surface water and attenuate flow peaks. EASI scores Surface water storage on the same sum (method watershed-wetland-extent).",%,Landscape,pctwet2019,,metric_map
 perm,Soil permeability (cm/hr),Soil permeability (cm/hr),,,Landscape,perm,,streamcat
 phab_BFWD_RAT,Bankfull width:depth ratio,Bankfull width:depth ratio,Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.,,Physical habitat,BFWD_RAT,2324,metric_map
 phab_C1TM100,LWD in/above wet chan(#/100m-all sizes),LWD in/above wet chan(#/100m-all...,LWD in/above wet chan(#/100m-all sizes),,Physical habitat,C1TM100,2324,epa_metadata

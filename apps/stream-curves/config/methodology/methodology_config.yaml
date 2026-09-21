@@ -20,7 +20,7 @@
 #   4. Re-run the pilot regression fixtures before promoting any status.
 
 meta:
-  methodology_version: "0.12-provisional"
+  methodology_version: "0.13-provisional"
   threshold_status: "provisional"        # global default; rules may override
   date: "2026-09-19"
   calibration_note: >
@@ -442,6 +442,15 @@ confidence_rules:
     borrowed_reference_low_risk: 79
     borrowed_reference_moderate_risk: 59
     borrowed_reference_high_risk: 39
+    # v0.13 (CONF-03): by basis rather than by transfer risk, and applied on top
+    # of it. A curve that does not rest on least-disturbed stations of this
+    # ecoregion or a parent cannot read as high as one that does. A modelled
+    # expectation and a published criterion both sit at the same ceiling as
+    # best-available reference, because like it they are not an observation of
+    # this ecoregion's least-disturbed condition. Provisional.
+    national_reference: 79
+    modeled_reference: 59
+    published_benchmark: 59
   high_confidence_audit_rate: 0.10       # production drift audit: a PROCESS commitment (sample 10 percent of High-confidence curves for owner audit); not enforced in code
   # Review Priority = Impact x Uncertainty x Novelty (net-new; scales in methodology.md)
 

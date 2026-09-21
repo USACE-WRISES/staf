@@ -43,8 +43,8 @@ N_DRAWS, N_BOOT_TRUTH = 100, 300
 #: that would restore each.
 ECBP_FUNCTIONS = {
     "community-dynamics": ["bent_EPT_NTAX", "bent_HPRIME", "bent_TOLRPIND"],
-    "population-support": ["fish_NAT_TOTLNTAX", "bent_TOTLNTAX"],
-    "nutrient-cycling": ["chem_PTL", "chem_NTL_DISS"],
+    "population-support": ["fish_NAT_TOTLNTAX", "fish_NAT_NTOLNTAX", "bent_TOTLNTAX"],
+    "nutrient-cycling": ["chem_PTL", "chem_NTL", "chem_NTL_DISS"],
     "water-soil-quality": ["chem_COND", "chem_TURB", "chem_PH"]}
 
 _STATE: dict = {}
@@ -67,9 +67,18 @@ def _series(metric: str) -> pd.Series:
 
 
 def rescore_metric(metric: str, rows: pd.DataFrame, seed: int) -> list[dict]:
-    """A1 for round one's recorded anchors, cell by cell."""
+    """A1 for round one's recorded anchors, cell by cell.
+
+    A metric round one tested may since have left the portfolio (dissolved
+    nitrogen was replaced by total nitrogen in Pre-registration III). Its old
+    evidence is still readable, so the re-scoring says so and moves on rather
+    than failing the whole run.
+    """
     frame, l3 = _STATE["frame"], _STATE["l3"]
-    cfg = _STATE["mc"][metric]
+    cfg = _STATE["mc"].get(metric)
+    if cfg is None:
+        return [{"metric": metric, "l3": None, "basis": None,
+                 "info": "no longer a default-selected metric; round one evidence not re-scored"}]
     series = _series(metric)
     out = []
     for code, g in rows.groupby(rows["l3"].astype(str)):

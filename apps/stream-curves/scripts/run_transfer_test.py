@@ -47,10 +47,10 @@ from streamcurves import reference_pool as rp          # noqa: E402
 
 NATURAL = ["drainage_area_sqkm", "nhd_slope", "tmean8110ws", "precip8110ws", "bfiws"]
 METRICS = ["bent_EPT_NTAX", "bent_HPRIME", "bent_TOLRPIND", "bent_TOTLNTAX",
-           "fish_NAT_TOTLNTAX", "chem_CHLA", "chem_COND", "chem_NTL_DISS", "chem_PH",
-           "chem_PTL", "chem_TURB"]
+           "fish_NAT_TOTLNTAX", "fish_NAT_NTOLNTAX", "chem_CHLA", "chem_COND",
+           "chem_NTL", "chem_PH", "chem_PTL", "chem_TURB"]
 #: The two targets and the metrics each is missing.
-TARGETS = {"55": METRICS, "71": ["bent_TOLRPIND", "bent_TOTLNTAX", "chem_NTL_DISS"]}
+TARGETS = {"55": METRICS, "71": ["bent_TOLRPIND", "bent_TOTLNTAX", "chem_NTL"]}
 #: Fixed in Pre-registration II.
 N_BOOT_TRUTH, N_BOOT_POP, N_BOOT_MODEL, N_DRAWS, N_RESID = 300, 60, 20, 100, 200
 
