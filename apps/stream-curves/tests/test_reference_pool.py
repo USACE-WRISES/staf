@@ -265,3 +265,24 @@ def test_the_support_record_carries_what_deep_must_show():
     assert rec["screen"].startswith("least-disturbed-v1 (strict)")
     assert "lith_group" in rec["covariates"]
     assert "—" not in rec["transferNote"]
+
+
+def test_every_crosswalked_nrsa_metric_has_a_borrowing_family():
+    """A metric absent from reference_transfer.yaml's family map cannot borrow:
+    choose_pool stops at its own Level III, and the national donor searches of the
+    basis harness return empty before they look. Both happen silently.
+
+    That is how total nitrogen and native non-tolerant fish richness entered the
+    portfolio in methodology 0.13 without a family (2026-09-21): their national
+    donor tests reported zero donors in every cell and were read as "not
+    evaluated", and Interior Plateau's total nitrogen could not borrow from its
+    Level I parent the way total phosphorus does. Every NRSA metric the crosswalk
+    assigns to a function, selected or not, must say which family it borrows by.
+    """
+    from streamcurves import metric_map, regional_agent as ra
+    entries = metric_map.metric_map_entries()
+    nrsa = entries[(entries["source"] == "nrsa") & (entries["role"].isin(["metric", "both"]))]
+    directions = ra.load_directions()
+    missing = sorted(code for code in set(nrsa["code"])
+                     if code in directions and not rp.family_profile(code))
+    assert not missing, f"crosswalked NRSA metrics with no borrowing family: {missing}"

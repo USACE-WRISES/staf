@@ -29,6 +29,7 @@ from typing import Any, Iterable, Optional
 import numpy as np
 import pandas as pd
 
+from . import curve_basis
 from . import methodology
 from . import nrsa_dataset
 from . import reference_screen as rscreen
@@ -42,6 +43,14 @@ LEVEL_LABELS = {"l3": "Level III", "l2": "Level II", "l1": "Level I"}
 STATUS_LOCAL = "local"
 STATUS_INSUFFICIENT = "insufficient"
 STATUS_BY_LEVEL = {"l3": STATUS_LOCAL, "l2": "borrowed_l2", "l1": "borrowed_l1"}
+#: statuses for the rungs above the ecoregion hierarchy (REF-08/09/10). They are
+#: deliberately NOT "local": a modelled expectation and a published criterion
+#: rest on no station of the target ecoregion, and a count of local pools that
+#: included them would be the exact false claim this ladder exists to remove.
+STATUS_NATIONAL = "national"
+STATUS_MODELED = "modeled"
+STATUS_PUBLISHED = "published"
+LADDER_STATUSES = (STATUS_NATIONAL, STATUS_MODELED, STATUS_PUBLISHED)
 
 RISK_NONE, RISK_LOW, RISK_MODERATE, RISK_HIGH = "none", "low", "moderate", "high"
 RISK_UNASSESSED = "unassessed"
@@ -264,10 +273,15 @@ class PoolDecision:
     transfer_note: str = ""
     station_ids: tuple = ()
     levels_tried: list = field(default_factory=list)
+    #: which rung of the basis ladder produced this pool (REF-08/09/10). Every
+    #: pool this module chooses is a station pool, so it is always the regional
+    #: rung; the wider rungs are set by their own modules.
+    basis: str = curve_basis.REGIONAL
 
     def to_dict(self) -> dict:
         out = asdict(self)
         out["station_ids"] = list(self.station_ids)
+        out["basis_label"] = curve_basis.label_for(self.basis)
         return out
 
 
@@ -287,8 +301,10 @@ def _transfer_note(decision_level: str, region_name: Optional[str], region_code:
     matched = ", ".join(_COVARIATE_WORDS.get(c, c) for c in covariates)
     if lithology:
         matched += (", " if matched else "") + "surficial lithology"
-    text = (f"{n_usable} least-disturbed stations from {where}, {n_local} of them inside this "
-            f"ecoregion. Borrowed stations were matched to this ecoregion's streams on {matched}.")
+    inside = (f"{n_local} of them inside this ecoregion" if n_local
+              else "none of them inside this ecoregion")
+    text = (f"{n_usable} least-disturbed stations from {where}, {inside}. Borrowed stations "
+            f"were matched to this ecoregion's streams on {matched}.")
     if risk == RISK_LOW:
         text += (" The national scale analysis found this metric varies no more between Level III "
                  "ecoregions than at the level borrowed from, so the transfer risk is low.")
@@ -577,6 +593,7 @@ def reference_support_record(d, *, screen_tier: str = "strict") -> dict:
     if isinstance(d, PoolDecision):
         d = d.to_dict()
     level = d.get("level")
+    basis = curve_basis.resolve(d.get("basis"))
     return {
         "status": d.get("status"), "level": level,
         "levelLabel": LEVEL_LABELS.get(level or "", ""),
@@ -590,4 +607,7 @@ def reference_support_record(d, *, screen_tier: str = "strict") -> dict:
                       + (["lith_group"] if d.get("lith_groups") else []),
         "selfCoverage": d.get("self_coverage"), "supportedLevel": d.get("supported_level"),
         "transferRisk": d.get("transfer_risk"), "transferNote": d.get("transfer_note"),
+        "basis": basis, "basisLabel": curve_basis.label_for(basis),
+        "basisStatement": curve_basis.statement_for(basis),
+        "basisLimit": curve_basis.limit_for(basis),
     }

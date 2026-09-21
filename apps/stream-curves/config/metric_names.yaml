@@ -54,3 +54,25 @@ metrics:
   chem_ANC:
     display_name: "Acid neutralizing capacity"
     units: "uEQ/L"
+
+  # EPA's metadata name is the bare analyte, which reads inconsistently beside
+  # "Total phosphorus". The unit is already the nitrogen-as-N basis the
+  # published NRSA criteria are written against.
+  chem_NTL:
+    display_name: "Total nitrogen"
+    units: "mg N/L"
+    description: >-
+      Total nitrogen, the whole fraction rather than the dissolved part.
+      Reported in every NRSA cycle, unlike dissolved nitrogen, which is
+      reported in one of the three.
+
+  # ── Fish ────────────────────────────────────────────────────────────────────
+  # EPA's metadata name is "No. native non-tolerant taxa based on
+  # TOLERANCE_NRSA", which buries the metric behind a column reference.
+  fish_NAT_NTOLNTAX:
+    display_name: "Native non-tolerant fish taxa richness"
+    description: >-
+      The number of distinct native fish taxa that are not classed tolerant in
+      NRSA's tolerance assignment. Total richness can hold steady under
+      disturbance because tolerant species replace intolerant ones, so this
+      counts only the taxa that do not tolerate it.

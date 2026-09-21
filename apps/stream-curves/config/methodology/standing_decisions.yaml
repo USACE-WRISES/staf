@@ -45,7 +45,7 @@ meta:
   # re-affirmed unchanged under 0.11-provisional: v0.11 moved the function
   # coverage gate, a publish rule rather than a review-queue class decision.
   # Accepting a flagged curve stays an owner-only decision, recorded per run.
-  methodology_version: "0.12-provisional"
+  methodology_version: "0.13-provisional"
   approved_on: "2026-08-22"
   authority: "Owner class decisions at the DEEP project gates (2026-08-21), promoted to standing decisions; confirmed per region at the end review before promote."
   rationale_origin: "standing_policy"

@@ -165,7 +165,7 @@ functions:
   - discipline: Physicochemistry
     function: Nutrient cycling
     metrics:
-      - {code: chem_NTL_DISS,     source: nrsa,         label: "Dissolved nitrogen (mg N/L)",  default_selected: true,  role: metric}
+      - {code: chem_NTL,          source: nrsa,         label: "Total nitrogen (mg N/L)",      default_selected: true,  role: metric}
       - {code: chem_PTL,          source: nrsa,         label: "Total phosphorus (ug/L)",      default_selected: true,  role: metric}
 
   - discipline: Physicochemistry
@@ -187,6 +187,15 @@ functions:
     metrics:
       - {code: fish_NAT_TOTLNTAX, source: nrsa,         label: "Native fish taxa richness",    default_selected: true,  role: metric}
       - {code: bent_TOTLNTAX,     source: nrsa,         label: "Benthic total taxa richness",  default_selected: true,  role: metric}
+      # Tested under Pre-registration III and NOT taken into the portfolio
+      # (owner decision 2026-09-21). Mapped and labelled so the crosswalk
+      # records where it belongs; default_selected false keeps Population
+      # support at two metrics and raises no SELECT-01 approval. Its best
+      # result is promising on matched national donors (accurate in 16 of 19
+      # evaluation regions, contained in 9 of 19 against the 13 required), so
+      # under the validated-only rule it would score nothing at the Eastern
+      # Corn Belt Plains either way.
+      - {code: fish_NAT_NTOLNTAX, source: nrsa,         label: "Native non-tolerant fish taxa richness", default_selected: false, role: metric}
 
   - discipline: Biology
     function: Community dynamics

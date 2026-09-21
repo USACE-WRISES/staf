@@ -725,7 +725,12 @@ def build_deep_assessment_bundle(
         for key in ("referenceN", "sampleDisposition", "metricRole", "curveCaveats",
                     "confidenceLabel", "confidenceTotal", "referenceRange",
                     "criteriaBasis", "criteriaSource", "referenceSupport",
-                    "localComparison", "stratifier", "discrimination"):
+                    "localComparison", "stratifier", "discrimination",
+                    # which rung of the basis ladder the curve rests on, and the
+                    # sentence a reader is owed about it (REF-08/09/10)
+                    "basis", "basisLabel", "basisStatement", "basisLimit",
+                    # PB-5: a published benchmark's own provenance
+                    "publishedBenchmark"):
             if key in annotations and annotations[key] is not None:
                 base_entry[key] = annotations[key]
 
@@ -880,7 +885,12 @@ def build_deep_assessment_bundle(
     reference_method = meta.get("referenceMethod")
     if reference_method:
         bundle["referenceMethod"] = reference_method
-    withheld = meta.get("insufficientReferenceSupport")
+    # A metric is never both scored and withheld: a record whose metric made it
+    # into a scoring block (a reviewer finalized it on republish) is stale.
+    scored_ids = {m.get("metricId") for fn in bundle.get("metricsByFunction") or []
+                  for m in fn.get("metrics") or []}
+    withheld = [w for w in meta.get("insufficientReferenceSupport") or []
+                if w.get("metricId") not in scored_ids]
     if withheld:
         bundle["insufficientReferenceSupport"] = withheld
     # Predictor-source provenance (train/serve pairing): which source computed

@@ -31,8 +31,13 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Optional
 
+import re
+
 import pandas as pd
 
+from . import basis_ladder
+from . import curve_basis
+from . import published_benchmark
 from . import curve_stability, curves, easi_screening, field_methods, fixed_criteria
 from . import metric_map
 from . import methodology, nrsa, nrsa_dataset, run_state, staf_library
@@ -206,7 +211,11 @@ def reference_annotations(evidence: dict, metrics) -> dict[str, dict]:
     applied = evidence.get("strata_applied") or {}
     out: dict[str, dict] = {}
     for mk in metrics:
-        ann: dict = {"criteriaBasis": "reference"}
+        rec0 = support.get(mk)
+        basis = curve_basis.resolve(
+            (rec0 or {}).get("basis") if isinstance(rec0, dict) else getattr(rec0, "basis", None))
+        ann: dict = {"criteriaBasis": "reference", "basis": basis,
+                     "basisLabel": curve_basis.label_for(basis)}
         caveats: list[str] = []
         d = support.get(mk)
         if d:
@@ -248,6 +257,10 @@ def fixed_annotations(fixed_keys) -> dict[str, dict]:
             caveats.append("EASI lists the criteria for this metric as provisional, so the "
                            "breakpoints may be revised.")
         out[mk] = {"criteriaBasis": fixed_criteria.CRITERIA_BASIS,
+                   "basis": curve_basis.PUBLISHED,
+                   "basisLabel": curve_basis.label_for(curve_basis.PUBLISHED),
+                   "basisStatement": curve_basis.statement_for(curve_basis.PUBLISHED),
+                   "basisLimit": curve_basis.limit_for(curve_basis.PUBLISHED),
                    "criteriaSource": fixed_criteria.criteria_source(e),
                    "metricRole": fixed_criteria.METRIC_ROLE,
                    "confidenceLabel": fixed_criteria.CONFIDENCE_LABEL,
@@ -259,33 +272,136 @@ def fixed_annotations(fixed_keys) -> dict[str, dict]:
     return out
 
 
+def _functions_of(metric: str) -> list[dict]:
+    """Every function the metric informs, as the bundle would have placed it."""
+    from . import regional_agent as ra
+    functions: list[dict] = []
+    for f in metric_map.metric_map_functions_for(metric):
+        fid = ra._canonical_function_id(f.get("function_name"))
+        if fid and fid not in [x["functionId"] for x in functions]:
+            functions.append({"functionId": fid, "functionName": f.get("function_name")})
+    return functions
+
+
 def withheld_metrics(evidence: dict) -> list[dict]:
     """The bundle's ``insufficientReferenceSupport`` list (REF-06): every metric
     withheld because no defensible reference pool exists, with the function it
     would have scored and what was tried."""
-    from . import regional_agent as ra
     out = []
     for mk, item in sorted((evidence.get("insufficient_support") or {}).items()):
         cfg = item.get("config") or {}
         d = item.get("decision") or {}
-        # every function the metric informs, as the bundle would have placed it
-        functions: list[dict] = []
-        for f in metric_map.metric_map_functions_for(mk):
-            fid = ra._canonical_function_id(f.get("function_name"))
-            if fid and fid not in [x["functionId"] for x in functions]:
-                functions.append({"functionId": fid, "functionName": f.get("function_name")})
+        functions = _functions_of(mk)
         out.append({
             "metricId": "spring-" + deep_slug(mk), "metricKey": mk,
             "metricName": cfg.get("display_name") or mk, "units": cfg.get("units") or "",
             "functions": functions,
             "functionId": functions[0]["functionId"] if functions else None,
             "reason": "insufficient-reference-support",
-            "statement": ("Insufficient reference support. Too few comparable least-disturbed "
-                          "stations carry this metric in this ecoregion or in its Level II and "
-                          "Level I parents, so no curve was built and the metric is not scored."),
+            "statement": _withheld_statement(evidence, mk),
             "levelsTried": d.get("levels_tried") or [],
+            "rungsTried": [{"rung": a.get("rung"), "why": a.get("why"),
+                            **({"condition": a["condition"]} if a.get("condition") else {})}
+                           for a in (evidence.get("ladder_attempts") or [])
+                           if a.get("metric") == mk and a.get("rung")],
         })
     return out
+
+
+def _withheld_statement(evidence: dict, metric: str) -> str:
+    """Why this metric is not scored, naming every rung that refused it.
+
+    "Unassessed" with no reason is what the coverage gate exists to stop, so a
+    withheld metric states the hierarchy AND the three rungs above it.
+    """
+    base = ("Insufficient reference support. Too few comparable least-disturbed stations carry "
+            "this metric in this ecoregion or in its Level II and Level I parents.")
+    tried = [a for a in (evidence.get("ladder_attempts") or [])
+             if a.get("metric") == metric and a.get("rung")]
+    if not tried:
+        return base + " No curve was built and the metric is not scored."
+    # Reader-facing: each refusal as its own sentence under the basis name a DEEP
+    # reader sees on a card, never the rule code (REF-08) or the fitness code (PB-1).
+    parts = []
+    for a in tried:
+        why = re.sub(r"^PB-\d+\s+", "", str(a.get("why") or "").strip())
+        if why and not why.endswith("."):
+            why += "."
+        parts.append(f"{RUNG_LABELS.get(a['rung'], a['rung'])}: {why}")
+    return (base + " No other basis supports it either. " + " ".join(parts)
+            + " No curve was built and the metric is not scored.")
+
+
+#: The reason a built curve is held for a reviewer, in words a DEEP reader can
+#: act on. DATA-03 is worded from the measured fraction instead (see
+#: :func:`held_for_review`), and no entry names a rule code.
+HELD_REASONS = {
+    run_state.CURVE_STATUS_DEGENERATE: ("its lower quartile sits at or below zero, so the "
+                                        "curve falls back to a default shape"),
+    run_state.CURVE_STATUS_SHAPE_CONFLICT: ("its shape conflicts with the response expected "
+                                            "of the metric"),
+    run_state.CURVE_STATUS_STRAT_REVIEW: "its stratification needs review",
+    run_state.CURVE_STATUS_MULTI_CROSSING: "it crosses a scoring threshold more than twice",
+    run_state.CURVE_STATUS_INSUFFICIENT: "a stratum holds fewer than 5 reference observations",
+    run_state.CURVE_STATUS_UNMAPPED: "it is not assigned to a STAF function",
+    run_state.CURVE_STATUS_ERROR: "the build raised an error",
+}
+HELD_FOR_REVIEW = "held-for-review"
+
+
+def held_for_review(evidence: dict, curve_review: dict, *, scored) -> list[dict]:
+    """A withheld record for every curve that was built and is still held for a
+    reviewer, so a metric the region measures is never missing from the bundle
+    without a reason.
+
+    Only a curve still pending is recorded. A finalized curve is scored, a removed
+    one carries its reviewer's decision in the provenance, and a metric with no
+    defensible pool already has its own record. This states the review as it
+    stands and decides nothing: the owner can still finalize or remove the curve.
+    """
+    scored = set(scored or ())
+    skip = scored | set(evidence.get("insufficient_support") or {}) | set(
+        evidence.get("ladder_metrics") or {})
+    config = evidence.get("metric_config") or {}
+    missingness = evidence.get("missingness") or {}
+    rows = evidence.get("curve_rows") or {}
+    review_at = float(methodology.threshold("data_rules.max_missingness_review"))
+    out = []
+    for mk in sorted(curve_review or {}):
+        entry = curve_review.get(mk) or {}
+        if mk in skip or mk not in rows or not run_state.needs_review(entry):
+            continue
+        status = str(entry.get("status") or "")
+        frac = (missingness.get(mk) or {}).get("missing_fraction")
+        if status == run_state.CURVE_STATUS_DATA_REVIEW and isinstance(frac, (int, float)):
+            n = int(evidence.get("n_retained") or 0)
+            pool = f"this ecoregion's {n} least-disturbed stations" if n else "the reference pool"
+            why = (f"{frac:.0%} of {pool} have no value for this metric, above the "
+                   f"{review_at:.0%} at which a curve needs a reviewer before it is used, and "
+                   f"no reviewer has cleared it yet.")
+        else:
+            reason = HELD_REASONS.get(status, "it needs a reviewer's decision")
+            why = (f"The curve built for this metric needs a reviewer before it is used, "
+                   f"because {reason}, and no reviewer has cleared it yet.")
+        cfg = config.get(mk) or {}
+        functions = _functions_of(mk)
+        out.append({
+            "metricId": "spring-" + deep_slug(mk), "metricKey": mk,
+            "metricName": cfg.get("display_name") or mk, "units": cfg.get("units") or "",
+            "functions": functions,
+            "functionId": functions[0]["functionId"] if functions else None,
+            "reason": HELD_FOR_REVIEW,
+            "statement": ("Held for review. " + why + " The curve is not published and the "
+                          "metric is not scored."),
+            "curveStatus": status or None,
+        })
+    return out
+
+
+#: the basis label a reader sees for each rung above the hierarchy
+RUNG_LABELS = {"REF-08": curve_basis.label_for(curve_basis.NATIONAL),
+               "REF-09": curve_basis.label_for(curve_basis.MODELED),
+               "REF-10": curve_basis.label_for(curve_basis.PUBLISHED)}
 
 
 def reference_method_block(evidence: dict) -> dict:
@@ -306,11 +422,56 @@ def reference_method_block(evidence: dict) -> dict:
             "nCurvesLocal": statuses.count(rp.STATUS_LOCAL),
             "nCurvesBorrowed": sum(1 for s in statuses if s.startswith("borrowed")),
             "nWithheld": statuses.count(rp.STATUS_INSUFFICIENT),
-            "statement": ("Reference curves are built from least-disturbed stations chosen by a "
-                          "fixed landscape-pressure screen. Where this ecoregion has too few, "
-                          "comparable stations of its Level II and then its Level I ecoregion "
-                          "are used, and a metric with no defensible pool is not scored. "
-                          "Landscape pressure metrics are scored on fixed criteria.")}
+            "curvesByBasis": _basis_counts(support),
+            "statement": _method_statement(support)}
+
+
+def _basis_counts(support: dict) -> dict:
+    """How many curves rest on each rung, so the bundle states its own mix."""
+    out: dict = {}
+    for d in support.values():
+        if str(d.get("status")) == rp.STATUS_INSUFFICIENT:
+            continue
+        basis = curve_basis.resolve(d.get("basis"))
+        out[basis] = out.get(basis, 0) + 1
+    return out
+
+
+def _method_statement(support: dict) -> str:
+    """What this assessment actually did, rather than what the method allows.
+
+    Interior Plateau holds three least-disturbed stations and the Eastern Corn
+    Belt Plains none, so a sentence that says their curves come from
+    least-disturbed stations of this ecoregion is untrue for them. The statement
+    is assembled from the curves that were built.
+    """
+    counts = _basis_counts(support)
+    local = sum(1 for d in support.values() if str(d.get("status")) == rp.STATUS_LOCAL)
+    borrowed = sum(1 for d in support.values()
+                   if str(d.get("status") or "").startswith("borrowed"))
+    parts = ["Reference condition is set by a fixed landscape-pressure screen, never by a score."]
+    if local:
+        parts.append(f"{local} {_curves(local)} fitted to least-disturbed stations of this "
+                     f"ecoregion.")
+    if borrowed:
+        parts.append(f"{borrowed} {'borrows' if borrowed == 1 else 'borrow'} comparable "
+                     f"least-disturbed stations from a parent ecoregion, stating the level and "
+                     f"the transfer risk.")
+    for basis in (curve_basis.NATIONAL, curve_basis.MODELED, curve_basis.PUBLISHED):
+        n = counts.get(basis, 0)
+        if not n:
+            continue
+        said = curve_basis.statement_for(basis)
+        parts.append(f"{n} {'carries' if n == 1 else 'carry'} the "
+                     f"{curve_basis.label_for(basis).lower()} label: "
+                     + said[0].lower() + said[1:])
+    parts.append("A metric that no basis supports is not scored, and the function it would "
+                 "have scored is reported as unassessed.")
+    return " ".join(parts)
+
+
+def _curves(n: int) -> str:
+    return "curve is" if n == 1 else "curves are"
 
 
 def revision_note(evidence: dict) -> str:
@@ -342,7 +503,15 @@ def support_frame(result: dict) -> pd.DataFrame:
         disc = discrimination.get(mk) or {}
         rows.append({
             "metric": mk, "display_name": cfg.get("display_name") or mk,
-            "criteria_basis": "reference", "status": d.get("status"),
+            # a published criterion is scored like the fixed criteria of
+            # CURVE-11, so the reviewer tables group it with them rather than
+            # with the curves fitted to a population
+            "criteria_basis": (fixed_criteria.CRITERIA_BASIS
+                               if curve_basis.resolve(d.get("basis")) == curve_basis.PUBLISHED
+                               else "reference"),
+            "basis": curve_basis.resolve(d.get("basis")),
+            "basis_label": curve_basis.label_for(curve_basis.resolve(d.get("basis"))),
+            "status": d.get("status"),
             "in_bundle": mk in intended,
             "level": rp.LEVEL_LABELS.get(d.get("level") or "", ""),
             "region_code": d.get("region_code"), "region_name": d.get("region_name"),
@@ -394,11 +563,26 @@ def coverage_exceptions_draft(result: dict, *, recorded_by: str = "") -> list[di
         out.append({
             "functionId": fid, "reason": "insufficient-reference-support",
             "justification": (
-                f"Every candidate metric for this function ({names}) was withheld because too "
-                "few comparable least-disturbed stations carry it in this ecoregion or in its "
-                "Level II and Level I parents. No curve was forced."),
+                f"Every candidate metric for this function ({names}) was withheld. Too few "
+                "comparable least-disturbed stations carry them in this ecoregion or in its "
+                "Level II and Level I parents, no national donor pool was shown to transfer "
+                "here, no modeled expectation passed validation, and no published criterion "
+                "applies to them. No curve was forced." + _blocker_detail(result, items)),
             "recordedBy": recorded_by, "recordedAt": None})
     return out
+
+
+def _blocker_detail(result: dict, items: list[dict]) -> str:
+    """The specific refusal for the published rung, where there is one.
+
+    A function that is unassessed has to name its blocker. The published rung is
+    the last one tried, so its reason is the one a reader most needs.
+    """
+    keys = {str(w.get("metricKey")) for w in items}
+    for a in (result.get("ladder_attempts") or []):
+        if a.get("rung") == "REF-10" and str(a.get("metric")) in keys and a.get("why"):
+            return " " + str(a["why"])
+    return ""
 
 
 def _with_fixed_mapping(mapping, fixed_keys: list[str]) -> pd.DataFrame:
@@ -417,7 +601,8 @@ def _with_fixed_mapping(mapping, fixed_keys: list[str]) -> pd.DataFrame:
     return pd.concat([base, extra], ignore_index=True)
 
 
-SESSION_ANNOTATION_KEYS = ("criteriaBasis", "referenceSupport", "localComparison",
+SESSION_ANNOTATION_KEYS = ("criteriaBasis", "basis", "basisLabel", "basisStatement",
+                           "basisLimit", "referenceSupport", "localComparison",
                            "stratifier", "discrimination", "methodContext")
 
 
@@ -430,15 +615,46 @@ def session_reference_build(result: dict) -> Optional[dict]:
         return None
     meta = result.get("meta") or {}
     fixed = sorted(result.get("fixed_metrics") or {})
+    ladder = set(result.get("ladder_metrics") or {})
     annotations = {
-        mk: {k: ann[k] for k in SESSION_ANNOTATION_KEYS if ann.get(k) is not None}
+        mk: ({k: v for k, v in ann.items() if v is not None} if mk in ladder else
+             {k: ann[k] for k in SESSION_ANNOTATION_KEYS if ann.get(k) is not None})
         for mk, ann in (meta.get("metricAnnotations") or {}).items() if mk not in fixed}
     return {"method": METHOD,
             "referenceMethod": meta.get("referenceMethod"),
             "insufficientReferenceSupport": list(meta.get("insufficientReferenceSupport") or []),
             "metricAnnotations": annotations,
             "fixedMetrics": fixed,
+            "ladderMetrics": ladder_session_rows(result),
             "referenceTier": result.get("reference_tier")}
+
+
+def ladder_session_rows(result: dict) -> dict:
+    """The curves a rung above the hierarchy produced, as the session stores them.
+
+    A fixed-criteria curve is rebuilt on republish from the vendored catalog,
+    which is deterministic. A modelled curve is not: rebuilding it would mean
+    refitting, and a refit is a new estimate rather than the one that was
+    published. So the session carries the points themselves, and a republish
+    restores exactly the curve that was built.
+    """
+    out: dict = {}
+    for mk, row in (result.get("ladder_metrics") or {}).items():
+        points = curves.normalize_reference_curve_points(row.get("curve_points"))
+        if not len(points):
+            continue
+        cfg = (result.get("ladder_config") or {}).get(mk) or {}
+        out[mk] = {
+            "displayName": row.get("display_name") or cfg.get("display_name") or mk,
+            "curveStatus": row.get("curve_status") or "complete",
+            "curveSource": row.get("curve_source") or "auto",
+            "nReference": row.get("n_reference"),
+            "stratum": row.get("stratum") or "",
+            "config": cfg,
+            "points": [{"x": float(r.metric_value), "y": float(r.index_score)}
+                       for r in points.itertuples(index=False)],
+        }
+    return out
 
 
 def fixed_function_ids(build: Optional[dict]) -> list[str]:
@@ -501,6 +717,10 @@ def apply_reference_build(build: Optional[dict], curve_rows: dict, mapping,
     rows = dict(curve_rows)
     config = dict(metric_config or {})
     annotations = dict(meta.get("metricAnnotations") or {})
+    # Ladder curves first: they are not in the pooled frame, so the interactive
+    # build never produced a row for them, and the annotation loop below matches
+    # on rows. Restored second, their annotations were silently dropped.
+    _restore_ladder_rows(build, rows, config)
     for mk, ann in (build.get("metricAnnotations") or {}).items():
         if mk in rows:
             annotations[mk] = {**(annotations.get(mk) or {}), **ann}
@@ -522,6 +742,26 @@ def apply_reference_build(build: Optional[dict], curve_rows: dict, mapping,
     if build.get("referenceTier") and not meta.get("referenceTier"):
         meta["referenceTier"] = build["referenceTier"]
     return rows, mapping, config
+
+
+def _restore_ladder_rows(build: dict, rows: dict, config: dict) -> None:
+    """Put back the curves a rung above the hierarchy produced, from the points
+    the session recorded. Mutates ``rows`` and ``config``."""
+    for mk, saved in (build.get("ladderMetrics") or {}).items():
+        pts = saved.get("points") or []
+        if mk in rows or not pts:
+            continue
+        rows[mk] = {
+            "metric": mk, "display_name": saved.get("displayName") or mk,
+            "stratum": saved.get("stratum") or "", "n_reference": saved.get("nReference"),
+            "curve_status": saved.get("curveStatus") or "complete",
+            "curve_source": saved.get("curveSource") or "auto",
+            "curve_points": pd.DataFrame(
+                [{"point_order": i + 1, "metric_value": float(q["x"]),
+                  "index_score": float(q["y"])} for i, q in enumerate(pts)]),
+        }
+        if saved.get("config"):
+            config[mk] = saved["config"]
 
 
 def portfolio_with_fixed(portfolio: list[dict], fixed_keys) -> list[dict]:
@@ -553,6 +793,50 @@ def portfolio_with_fixed(portfolio: list[dict], fixed_keys) -> list[dict]:
     return out
 
 
+def ladder_confidence(evidence: dict, ladder_config: dict) -> dict[str, dict]:
+    """CONF-01 and CONF-03 for the curves that came from a rung above the
+    ecoregion hierarchy.
+
+    ``regional_agent.assemble`` scores confidence by walking ``metric_config``,
+    and a ladder metric is deliberately not in it: it carries no station pool and
+    so cannot join the pooled frame, the redundancy matrix or the stratifier
+    screen. Without this it would publish with no confidence at all, and the
+    basis cap would never reach a reader.
+
+    A published criterion gets a label and no number, the convention the fixed
+    criteria already use: the six CONF-01 components all describe a curve fitted
+    to a sample, and someone else's threshold has none of them. A modelled curve
+    is fitted, so it is scored, and it is honest about what it lacks: a synthetic
+    population has no leave-one-site-out, so CURVE-02's cap applies.
+    """
+    from . import confidence as conf
+    support = evidence.get("reference_support") or {}
+    out: dict[str, dict] = {}
+    for mk in ladder_config:
+        d = support.get(mk) or {}
+        basis = curve_basis.resolve(d.get("basis"))
+        if basis == curve_basis.PUBLISHED:
+            out[mk] = {"label": curve_basis.label_for(basis), "total": None,
+                       "caps_applied": []}
+            continue
+        cfg = ladder_config.get(mk) or {}
+        got = conf.curve_confidence({
+            "basis": basis,
+            "transfer_risk": d.get("transfer_risk") or "none",
+            "sample_disposition": d.get("disposition"),
+            # a modelled population is drawn, not observed, so there is no
+            # leave-one-site-out to run and no stability credit to give
+            "loo": {"evaluable": False},
+            "direction_confidence": cfg.get("direction_confidence"),
+            "shape_ok": True, "mapped": True,
+            "units_present": bool(cfg.get("units")),
+            "reference_tier": evidence.get("tier", {}).get("reference_tier"),
+        })
+        out[mk] = {"label": got.get("label"), "total": got.get("total"),
+                   "caps_applied": got.get("caps_applied") or []}
+    return out
+
+
 def bundle_inputs(evidence: dict, meta: dict, intended_rows: dict,
                   metric_config: dict) -> tuple[dict, dict, pd.DataFrame]:
     """Fold what the pressure method adds into the exporter's inputs.
@@ -576,9 +860,61 @@ def bundle_inputs(evidence: dict, meta: dict, intended_rows: dict,
         merged["curveCaveats"] = caveats
         annotations[mk] = merged
 
+    # a ladder curve is a real NRSA metric with a real display name and units,
+    # so it joins the rows and the config, and its annotations come from its own
+    # pool decision like any other reference curve
+    ladder_rows = dict(evidence.get("ladder_metrics") or {})
+    ladder_config = dict(evidence.get("ladder_config") or {})
     fixed_rows = dict(evidence.get("fixed_metrics") or {})
     config = dict(metric_config)
     mapping = evidence["mapping_df"]
+    if ladder_rows:
+        rows.update(ladder_rows)
+        config.update({mk: ladder_config[mk] for mk in ladder_rows if mk in ladder_config})
+        ladder_conf = ladder_confidence(evidence, ladder_config)
+        for mk, extra in reference_annotations(evidence, list(ladder_rows)).items():
+            merged = dict(annotations.get(mk) or {})
+            caveats = list(merged.get("curveCaveats") or []) + list(
+                extra.pop("curveCaveats", []))
+            merged.update(extra)
+            basis = merged.get("basis")
+            limit = curve_basis.limit_for(basis)
+            if limit and limit not in caveats:
+                caveats.append(limit)
+            merged["curveCaveats"] = caveats
+            # the sentence rides at the metric, where a reader looks for it, as it
+            # does for the fixed criteria, and not only inside referenceSupport
+            merged["basisStatement"] = curve_basis.statement_for(basis)
+            merged["basisLimit"] = limit or ""
+
+            got = ladder_conf.get(mk) or {}
+            if got.get("label"):
+                merged["confidenceLabel"] = got["label"]
+            if got.get("total") is not None:
+                merged["confidenceTotal"] = got["total"]
+            if got.get("caps_applied"):
+                merged["confidenceCaps"] = got["caps_applied"]
+            if basis == curve_basis.PUBLISHED:
+                # A published criterion behaves like the fixed criteria of
+                # CURVE-11 everywhere downstream: no training population, so no
+                # train/serve pairing check, no domain-clamp warning and no
+                # reference tier. It differs only in carrying its own
+                # provenance and its own region.
+                merged["criteriaBasis"] = fixed_criteria.CRITERIA_BASIS
+                prov = published_benchmark.provenance(mk)
+                region = (ladder_rows.get(mk) or {}).get("benchmark_region")
+                if region:
+                    # PB-5: the criterion's bands, citations and provisional flag
+                    # travel with the curve, and the metric cites the criterion
+                    # rather than the regional analysis it did not come from
+                    merged["criteriaSource"] = published_benchmark.criteria_source(mk, region)
+                    merged["sourceCitation"] = published_benchmark.citation_line(mk, region)
+                    prov = {**prov, "region": str(region)}
+                else:
+                    merged["criteriaSource"] = (prov.get("benchmark")
+                                                or merged.get("criteriaSource"))
+                merged["publishedBenchmark"] = prov
+            annotations[mk] = merged
     if fixed_rows:
         rows.update(fixed_rows)
         fixed_config = fixed_criteria.metric_config_entries()
@@ -663,6 +999,16 @@ def census(l3_codes, *, max_stream_order: Optional[int] = None, protocols=None,
         name = ra.region_name_for(code) or rp._level_name(frame, "l3", code) or f"L3 {code}"
         pools = rp.build_pools(list(metric_config), values, frame, code,
                                scale_registry=registry, excluded=excluded)
+        # the same ladder the build walks, gates only: the census must not say a
+        # metric is withheld that the build will go on to score
+        short = [mk for mk, d in pools["decisions"].items()
+                 if d.status == rp.STATUS_INSUFFICIENT]
+        if short:
+            walked = basis_ladder.resolve(
+                sorted(short), frame=frame, values_wide=values, target_l3=code,
+                metric_config=metric_config, validation=basis_ladder.load_validation(),
+                region_name=name, fit=False)
+            pools["decisions"].update(walked["decisions"])
         statuses = [d.status for d in pools["decisions"].values()]
         regions.append({"l3": code, "region": name,
                         "n_frame": pools["target_n_frame"], "n_strict": pools["target_n_strict"],
@@ -670,6 +1016,9 @@ def census(l3_codes, *, max_stream_order: Optional[int] = None, protocols=None,
                         "n_local": statuses.count(rp.STATUS_LOCAL),
                         "n_borrowed_l2": statuses.count("borrowed_l2"),
                         "n_borrowed_l1": statuses.count("borrowed_l1"),
+                        "n_national": statuses.count(rp.STATUS_NATIONAL),
+                        "n_modeled": statuses.count(rp.STATUS_MODELED),
+                        "n_published": statuses.count(rp.STATUS_PUBLISHED),
                         "n_insufficient": statuses.count(rp.STATUS_INSUFFICIENT)})
         for mk, d in pools["decisions"].items():
             cfg = metric_config.get(mk) or {}
@@ -818,8 +1167,27 @@ def run_evidence(l3_code: str, name: str, *,
     decisions = pools["decisions"]
     insufficient = {mk: d for mk, d in decisions.items()
                     if d.status == rp.STATUS_INSUFFICIENT}
+
+    # --- REF-08/09/10: what to try once the ecoregion hierarchy runs out ---
+    # Every rung is gated on evidence fixed before it ran (config/basis_validation.yaml
+    # for the fitted and borrowed rungs, the vendored catalog for the published one),
+    # so nothing here is admitted by the build's own judgement.
+    ladder = basis_ladder.resolve(
+        sorted(insufficient), frame=frame, values_wide=values, target_l3=l3_code,
+        metric_config=metric_config, validation=basis_ladder.load_validation(),
+        region_name=name)
+    ladder_rows = ladder["curve_rows"]
+    for mk, d in ladder["decisions"].items():
+        decisions[mk] = d
+        insufficient.pop(mk, None)
+
     insufficient_config = {mk: metric_config[mk] for mk in insufficient}
     for mk in insufficient:                      # no curve, so it never reaches the engine
+        metric_config.pop(mk, None)
+    # a ladder metric rests on no station of this ecoregion, so it cannot ride in
+    # the pooled station frame; it follows the fixed-criteria path instead
+    ladder_config = {mk: metric_config[mk] for mk in ladder_rows if mk in metric_config}
+    for mk in ladder_rows:
         metric_config.pop(mk, None)
     data = pools["data"]
     if not len(metric_config) or not len(data):
@@ -830,13 +1198,21 @@ def run_evidence(l3_code: str, name: str, *,
           {"n_metrics": len(decisions), "n_insufficient": len(insufficient),
            "n_borrowed": sum(1 for d in decisions.values()
                              if d.status.startswith("borrowed")),
+           "n_ladder": len(ladder_rows),
            "n_pool_stations": int(len(data))})
     metric_cols = list(metric_config)
 
     # --- classification, redundancy, the advisory stratifier screen ---
-    column_functions = {c: metric_map.metric_map_function_label(c) for c in metric_cols}
-    mapping_df = staf_library.default_discipline_function_mapping(metric_cols, metric_config)
-    redundancy = ra.redundancy_matrix(data, metric_config, column_functions)
+    # A ladder metric is an ordinary NRSA metric that happens to get its curve
+    # from somewhere other than a station pool, so it belongs in the function
+    # mapping even though it is out of the pooled frame. Leaving it out made the
+    # exporter skip it for having no canonical function.
+    mapped_cols = metric_cols + [mk for mk in ladder_rows if mk not in metric_cols]
+    column_functions = {c: metric_map.metric_map_function_label(c) for c in mapped_cols}
+    mapping_df = staf_library.default_discipline_function_mapping(
+        mapped_cols, {**metric_config, **ladder_config})
+    redundancy = ra.redundancy_matrix(
+        data, metric_config, {c: column_functions[c] for c in metric_cols})
     data = ra.attach_stratifier_sources(data, values=values)
     strat = ra.run_stratifier_analysis(data, metric_config, predictor_config, on_event=on_event)
     data = strat["data"]
@@ -946,6 +1322,13 @@ def run_evidence(l3_code: str, name: str, *,
         "reference_pool_summary": {k: pools[k] for k in ("target_n_frame", "target_n_strict",
                                                          "target_n_relaxed")},
         "local_comparison": pools["local_comparison"],
+        # REF-08/09/10: curves that rest on something other than a station pool
+        # of this ecoregion or a parent. They follow the fixed-criteria path,
+        # because like a fixed criterion they cannot ride in the station frame.
+        "ladder_metrics": ladder_rows,
+        "ladder_config": ladder_config,
+        "ladder_attempts": ladder["attempts"],
+        "ladder_populations": ladder["populations"],
         "insufficient_support": {mk: {"decision": d.to_dict(),
                                       "config": insufficient_config.get(mk) or {}}
                                  for mk, d in insufficient.items()},

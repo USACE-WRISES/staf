@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+from . import curve_basis
 from . import methodology
 
 
@@ -152,6 +153,16 @@ def curve_confidence(evidence: dict) -> dict:
     if borrowed_cap and borrowed_cap in caps:
         total = min(total, float(caps[borrowed_cap]))
         applied.append(borrowed_cap)
+    # CONF-03 (methodology 0.13): a curve that does not rest on a pool of
+    # least-disturbed stations from this ecoregion or a parent cannot read as
+    # high as one that does. The cap is by basis and applies on top of the
+    # transfer-risk cap, never instead of it.
+    basis_cap = curve_basis.CAP_REASONS.get(
+        curve_basis.resolve(evidence.get("basis"),
+                            criteria_basis=evidence.get("criteria_basis")))
+    if basis_cap and basis_cap in caps:
+        total = min(total, float(caps[basis_cap]))
+        applied.append(basis_cap)
     if str(evidence.get("sample_disposition")) != "adequate":
         total = min(total, float(caps["sample_below_minimum"]))
         applied.append("sample_below_minimum")

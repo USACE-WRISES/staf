@@ -225,18 +225,58 @@ def test_a_complete_assessment_needs_no_restriction():
     assert dc.claim_restriction_text({}) == ""            # an older bundle says nothing
 
 
-def test_the_restriction_reaches_the_visible_sheet():
-    import io
+def _latest_incomplete_bundles():
+    """The latest published version of every assessment that leaves a function
+    unassessed. Read from the library rather than pinned to a version, so a new
+    publish cannot leave this test checking a superseded bundle."""
     import json
-    import openpyxl
     from pathlib import Path
+    root = Path(__file__).resolve().parents[2] / "library" / "assessments"
+    out = {}
+    for adir in sorted(p for p in root.glob("*") if p.is_dir()):
+        versions = sorted(int(v.name[1:]) for v in adir.glob("v*") if v.name[1:].isdigit())
+        if not versions:
+            continue
+        src = adir / f"v{versions[-1]}" / "assessment.deep.json"
+        if not src.exists():
+            continue
+        bundle = json.loads(src.read_text(encoding="utf-8"))
+        fc = bundle.get("functionCoverage") or {}
+        if fc.get("total") and fc.get("covered", 0) < fc["total"]:
+            out[f"{adir.name}@v{versions[-1]}"] = bundle
+    return out
+
+
+def test_the_restriction_reaches_the_visible_sheet():
+    import openpyxl
     from streamcurves import deep_calculator as dc
-    src = Path(__file__).resolve().parents[2] / "library" / "assessments" / \
-        "eastern-corn-belt-plains" / "v6" / "assessment.deep.json"
-    if not src.exists():                                   # library not present
-        return
-    bundle = json.loads(src.read_text(encoding="utf-8"))
-    ws = openpyxl.load_workbook(io.BytesIO(dc.build_calculator(bundle)))["DEEP Score"]
-    said = [c.value for row in ws.iter_rows() for c in row
-            if isinstance(c.value, str) and "not assessed" in c.value]
-    assert said, "the workbook's own sheet does not carry the restriction"
+    bundles = _latest_incomplete_bundles()
+    if not bundles:
+        pytest.skip("no published assessment leaves a function unassessed")
+    for key, bundle in bundles.items():
+        ws = openpyxl.load_workbook(io.BytesIO(dc.build_calculator(bundle)))["DEEP Score"]
+        said = [c.value for row in ws.iter_rows() for c in row
+                if isinstance(c.value, str) and "not assessed" in c.value]
+        assert said, f"{key}: the workbook's own sheet does not carry the restriction"
+
+
+
+def test_the_reference_sheet_says_what_a_ladder_curve_rests_on():
+    """The first 0.13 workbook read "3182 least-disturbed stations borrowed from
+    None ecoregion 55" for a modeled curve and "Fixed criteria, the same in every
+    region" for a regional nutrient benchmark, because the sentence rode only
+    inside referenceSupport and the benchmark is marked fixed downstream."""
+    from streamcurves import deep_calculator as dc
+    modeled = {"basis": "modeled-reference", "criteriaBasis": "reference",
+               "referenceSupport": {"status": "modeled", "nUsable": 3182,
+                                    "basisStatement": "Reference curve from a modeled expectation."}}
+    assert dc.support_text(modeled) == "Reference curve from a modeled expectation."
+    benchmark = {"basis": "published-benchmark", "criteriaBasis": "fixed",
+                 "referenceSupport": {"status": "published",
+                                      "basisStatement": "Scored against a published criterion."}}
+    assert dc.support_text(benchmark) == "Scored against a published criterion."
+    easi = {"basis": "published-benchmark", "criteriaBasis": "fixed"}
+    assert dc.support_text(easi) == "Fixed criteria, the same in every region"
+    bare = {"basis": "modeled-reference", "basisLabel": "Modeled reference",
+            "referenceSupport": {"status": "modeled", "nUsable": 3182}}
+    assert "borrowed" not in dc.support_text(bare)

@@ -273,7 +273,15 @@ def test_stage_many_hands_the_dataset_flags_to_each_stage():
     future hand-built namespace fails loudly instead."""
     text = _source("run_region_batch.py")
     start = text.index("argparse.Namespace(")
-    window = text[start:start + 900]
+    # the whole call, to its closing parenthesis: a fixed-length window went blind
+    # when another attribute (approve_portfolio) was added ahead of these two
+    depth, end = 0, len(text)
+    for i in range(start + len("argparse.Namespace"), len(text)):
+        depth += {"(": 1, ")": -1}.get(text[i], 0)
+        if depth == 0:
+            end = i + 1
+            break
+    window = text[start:end]
     assert "nrsa_dataset=" in window, "stage-many namespace drops nrsa_dataset"
     assert "nrsa_cycles=" in window, "stage-many namespace drops nrsa_cycles"
     assert 'getattr(a, "nrsa_dataset"' not in text, "the silent legacy fallback is back"

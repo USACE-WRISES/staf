@@ -14,10 +14,10 @@
 
 version: 1
 analysis_version: scale-1
-decided_on: '2026-09-19'
+decided_on: '2026-09-21'
 inputs: {dataset: multi-cycle-v1, referenceFrame: wadeable, screen: 'least-disturbed-v1 (strict), wadeable
     non-canal frame', stationScreenSha256: d9954342f71a959da8d3c7ac74fd0fbb3620dae34f987cdd051cd42f0befefdc,
-  valuePolicy: latest_non_null_index_visit, nInFrame: 3267, nReference: 770, nBoot: 200, seed: 7, methodologyVersion: 0.12-provisional}
+  valuePolicy: latest_non_null_index_visit, nInFrame: 3267, nReference: 770, nBoot: 200, seed: 7, methodologyVersion: 0.13-provisional}
 rule: {eta2: rank_adjusted, level_ratio: 0.8, national_floor: 0.02, tie: 0.02, split_incremental_min: 0.05,
   stratum_min_n: 15, flip_accept: 0.1, flip_exploratory: 0.2, min_group: 5, min_reference_n: 50, yardstick_max_auc_loss: 0.02}
 stratifiers:
@@ -212,28 +212,28 @@ metrics:
       required 0.05 with two classes of 15 or more.
     display_name: Specific conductivity
     family: water_chemistry
-  chem_NTL_DISS:
+  chem_NTL:
     status: decided
-    n_reference: 281
+    n_reference: 770
     supported_level: l2
     split: null
     eta2:
-      l3: {raw: 0.4265, adj: 0.3759, k: 18, n: 211, p: 0.0}
-      l2: {raw: 0.374, adj: 0.3479, k: 12, n: 276, p: 0.0}
-      l1: {raw: 0.275, adj: 0.259, k: 7, n: 278, p: 0.0}
-      nars9: {raw: 0.3559, adj: 0.3394, k: 8, n: 281, p: 0.0}
+      l3: {raw: 0.5265, adj: 0.4989, k: 40, n: 710, p: 0.0}
+      l2: {raw: 0.4215, adj: 0.4122, k: 13, n: 762, p: 0.0}
+      l1: {raw: 0.3478, adj: 0.3418, k: 8, n: 768, p: 0.0}
+      nars9: {raw: 0.3976, adj: 0.392, k: 8, n: 767, p: 0.0}
     incremental:
       NhdSlopeClass:
-        increment: -0.0113
-        combined: 0.3366
-        n_by_class: {ge_2: 141, 0.5_to_2: 81, lt_0.5: 59}
+        increment: 0.0154
+        combined: 0.4276
+        n_by_class: {ge_2: 346, 0.5_to_2: 224, lt_0.5: 200}
       NhdDrainageAreaClass:
-        increment: -0.0073
-        combined: 0.3406
-        n_by_class: {10_to_100: 128, le_10: 80, gt_100: 73}
-    decision_basis: Level III adjusted eta-squared 0.3759; supported level l2. No class split adds the
+        increment: 0.0084
+        combined: 0.4207
+        n_by_class: {10_to_100: 347, le_10: 215, gt_100: 208}
+    decision_basis: Level III adjusted eta-squared 0.4989; supported level l2. No class split adds the
       required 0.05 with two classes of 15 or more.
-    display_name: Dissolved nitrogen
+    display_name: Total nitrogen
     family: water_chemistry
   chem_PH:
     status: decided

@@ -2088,6 +2088,8 @@ def assemble(evidence: dict, *,
             "deferred_gradient": deferred_gradients.get(mk),
             # REF-05: how far a borrowed pool was stretched ("none" when local).
             "transfer_risk": (support.get(mk) or {}).get("transfer_risk"),
+            # CONF-03: which rung of the basis ladder produced the curve.
+            "basis": (support.get(mk) or {}).get("basis"),
         }
         confidence_map[mk] = conf.curve_confidence(ev)
         metric_scores[mk] = conf.metric_score(ev)
@@ -2156,6 +2158,12 @@ def assemble(evidence: dict, *,
         # here and nowhere earlier: they are never fitted, reviewed or ranked.
         intended_rows, export_config, export_mapping = pressure_evidence.bundle_inputs(
             evidence, meta, intended_rows, metric_config)
+        # A curve built and still held for a reviewer is not scored; the bundle
+        # says so instead of leaving the metric silently absent.
+        held = pressure_evidence.held_for_review(evidence, curve_review, scored=intended)
+        if held:
+            meta["insufficientReferenceSupport"] = (
+                list(meta.get("insufficientReferenceSupport") or []) + held)
     bundle = None
     bundle_error = None
     try:
@@ -2258,6 +2266,13 @@ def assemble(evidence: dict, *,
         "local_comparison": evidence.get("local_comparison") or {},
         "insufficient_support": evidence.get("insufficient_support") or {},
         "fixed_metrics": evidence.get("fixed_metrics") or {},
+        # methodology 0.13: curves from a rung above the ecoregion hierarchy
+        # (REF-08/09/10) and every rung that was tried. The session, the coverage
+        # draft and an interactive republish all read these from the result, so
+        # leaving them out silently dropped the ladder curves on a republish.
+        "ladder_metrics": evidence.get("ladder_metrics") or {},
+        "ladder_config": evidence.get("ladder_config") or {},
+        "ladder_attempts": evidence.get("ladder_attempts") or [],
         "discrimination": evidence.get("discrimination") or {},
         "stratum_rows": evidence.get("stratum_rows") or {},
         "strata_applied": evidence.get("strata_applied") or {},
