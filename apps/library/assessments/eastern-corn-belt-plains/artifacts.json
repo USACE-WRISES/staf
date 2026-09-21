@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "eastern-corn-belt-plains",
+  "history": [
+    {
+      "version": 6,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:2527d61e2e0f2885574f32f66a229e641c8da223f6a5776f025ae0feca3a18f5",
+      "bytes": 34931,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:bc2948a42062bb90030672afe31eb3271f563c790dee145c5cb8d7af8dfa42fd",
+      "builtAt": "2026-09-20T12:45:39Z",
+      "actor": "gtmenichino",
+      "note": "Built at publish."
+    }
+  ]
+}

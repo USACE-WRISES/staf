@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "calculators": {
+    "eastern-corn-belt-plains@v6": {
+      "file": "eastern-corn-belt-plains@v6.xlsx",
+      "sha256": "sha256:2527d61e2e0f2885574f32f66a229e641c8da223f6a5776f025ae0feca3a18f5",
+      "bytes": 34931,
+      "contentDigest": "sha256:bc2948a42062bb90030672afe31eb3271f563c790dee145c5cb8d7af8dfa42fd",
+      "generatorVersion": "1.0"
+    },
+    "interior-plateau@v4": {
+      "file": "interior-plateau@v4.xlsx",
+      "sha256": "sha256:ff9f700b1fa1d69a9e680242c61a68180df52e61ea2c7440f75ed71adb43cccb",
+      "bytes": 40286,
+      "contentDigest": "sha256:f987077df681b36aa080901d24ae79f2b3c61d14ce488fefdfc13daa8091074b",
+      "generatorVersion": "1.0"
+    },
+    "northeastern-highlands@v7": {
+      "file": "northeastern-highlands@v7.xlsx",
+      "sha256": "sha256:40b3e974ccd7b748a4f47f875492c03ff6e22f5d28e46894d3172c50d52defa6",
+      "bytes": 43705,
+      "contentDigest": "sha256:9b81c83c765fc428e83267ba82c16153230c4bee088b561ca115c5725c1b57d4",
+      "generatorVersion": "1.0"
+    }
+  },
+  "default": {
+    "eastern-corn-belt-plains": "eastern-corn-belt-plains.xlsx",
+    "interior-plateau": "interior-plateau.xlsx",
+    "northeastern-highlands": "northeastern-highlands.xlsx"
+  }
+}

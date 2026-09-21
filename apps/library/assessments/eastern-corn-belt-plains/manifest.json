@@ -9,8 +9,8 @@
   },
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-  "latestVersion": 5,
+  "sourceCitation": "StreamCurves reference-curve development",
+  "latestVersion": 6,
   "versions": [
     {
       "version": 1,
@@ -51,6 +51,14 @@
       "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 35 of 45 candidates.  REF-02 fallback: only 0 Functioning sites, below the exploratory floor of 10; included Functioning-at-Risk to reach 41. Mandatory review; confidence capped; reference tier = best_available.",
       "contentDigest": "sha256:5132d11345c66628f1ea0fcb16ff92cfda53175aae9d63c838c2dc2ef720492e",
       "supersedesVersion": 4
+    },
+    {
+      "version": 6,
+      "updatedAt": "2026-09-20T12:45:39Z",
+      "author": "gtmenichino",
+      "revisionNotes": "Methodology 0.12 rebuild: reference stations selected by the fixed pressure screen, pools assembled per metric on the Level III to Level I ladder, and the five landscape pressure metrics scored on the fixed criteria of the Screening tier. No candidate inside this ecoregion passes the screen, so all 16 reference curves are borrowed from a comparable Level II or Level I pool under the comparability check, with the source geography and transfer risk recorded on each. Sixteen curves cover 16 of the 20 STAF functions. The four remaining functions carry a documented gap for insufficient reference support rather than a forced curve. The fast-water habitat curve is marked for verification against field data before it carries weight in a decision.",
+      "contentDigest": "sha256:bc2948a42062bb90030672afe31eb3271f563c790dee145c5cb8d7af8dfa42fd",
+      "supersedesVersion": 5
     }
   ]
 }

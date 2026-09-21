@@ -1,0 +1,36 @@
+{
+  "assessmentId": "northeastern-highlands",
+  "assessmentName": "Northeastern Highlands reference assessment",
+  "version": 7,
+  "updatedAt": "2026-09-20T12:21:03Z",
+  "author": "gtmenichino",
+  "revisionNotes": "Methodology 0.12 rebuild: reference stations selected by the fixed pressure screen, pools assembled per metric on the Level III to Level I ladder, the five landscape pressure metrics scored on the fixed criteria of the Screening tier, and class curves applied where the national scale analysis supports a split. Three curves built but held back for missing data.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "58",
+    "name": "Northeastern Highlands"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "StreamCurves reference-curve development",
+  "contentDigest": "sha256:9b81c83c765fc428e83267ba82c16153230c4bee088b561ca115c5725c1b57d4",
+  "supersedesVersion": 6,
+  "provenance": "present",
+  "portfolioApprovals": [
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    },
+    {
+      "functionId": "water-soil-quality",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    }
+  ]
+}

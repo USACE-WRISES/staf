@@ -1,0 +1,31 @@
+{
+  "assessmentId": "eastern-corn-belt-plains",
+  "assessmentName": "Eastern Corn Belt Plains reference assessment",
+  "version": 6,
+  "updatedAt": "2026-09-20T12:45:39Z",
+  "author": "gtmenichino",
+  "revisionNotes": "Methodology 0.12 rebuild: reference stations selected by the fixed pressure screen, pools assembled per metric on the Level III to Level I ladder, and the five landscape pressure metrics scored on the fixed criteria of the Screening tier. No candidate inside this ecoregion passes the screen, so all 16 reference curves are borrowed from a comparable Level II or Level I pool under the comparability check, with the source geography and transfer risk recorded on each. Sixteen curves cover 16 of the 20 STAF functions. The four remaining functions carry a documented gap for insufficient reference support rather than a forced curve. The fast-water habitat curve is marked for verification against field data before it carries weight in a decision.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "55",
+    "name": "Eastern Corn Belt Plains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "StreamCurves reference-curve development",
+  "contentDigest": "sha256:bc2948a42062bb90030672afe31eb3271f563c790dee145c5cb8d7af8dfa42fd",
+  "supersedesVersion": 5,
+  "provenance": "present",
+  "portfolioApprovals": [
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    }
+  ]
+}

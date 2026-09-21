@@ -131,6 +131,23 @@ reference pool's observed span). They are inside `metricsByFunction`, so they ar
 `contentDigest`. DEEP shows them on the assessment card, in the metric information card,
 and as scoring advisories.
 
+## Reference support on the bundle (methodology 0.12)
+
+A bundle built under the pressure-screen method also carries, per metric, `criteriaBasis`
+(`reference` or `fixed`), `criteriaSource`, `referenceSupport` (status, level, source region,
+usable n, local n, covariates, transfer risk and note), `localComparison`, `stratifier` (the
+class variable, breaks and which classes have their own curve), `discrimination` and
+`methodContext`, and at the top level `referenceMethod` and `insufficientReferenceSupport`
+(withheld metrics, which have no curve and sit outside `metricsByFunction`). Older readers
+ignore all of it.
+
+## Artifacts
+
+`assessments/<id>/artifacts.json` is an append-only record of files generated from a published
+version. Today that is `vN/calculator.xlsx`, the Excel calculator built at publish, with its
+sha256, the generator version and the bundle's `contentDigest`. `meta.json` of a published
+version is never touched. The catalog reports `calculatorState` (present, stale or absent).
+
 ## Embedded `"library"` block on the bundle
 
 Each `assessment.deep.json` carries a top-level `"library"` block so version + provenance
@@ -179,7 +196,7 @@ Only `preliminary` and `certified` are DEEP-eligible; drafts never bake.
    (the version reads **Verified**), then **Certify** (displayed **Final**).
    Publishing, approving and certifying each re-bake DEEP's registry
    (`apps/deep/scripts/bake_library_into_deep.py`).
-4. Publisher commits `apps/library/**` and `apps/deep/data/**` and pushes; redeploy DEEP.
+4. Publisher commits `apps/library/**`, `apps/deep/data/**` and `apps/deep/www/calculators/**` and pushes; redeploy DEEP.
 
 Content never changes in place: edits are a new version. Status changes (`draft` to
 `preliminary`, certification, retiring) append to `status.json` without re-minting the

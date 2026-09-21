@@ -9,8 +9,8 @@
   },
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "USEPA NRSA (L3 ecoregion 71), StreamCurves Regional Analysis Agent",
-  "latestVersion": 3,
+  "sourceCitation": "StreamCurves reference-curve development",
+  "latestVersion": 4,
   "versions": [
     {
       "version": 1,
@@ -35,6 +35,14 @@
       "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 39 of 41 candidates.  REF-02 fallback: only 0 Functioning sites, below the exploratory floor of 10; included Functioning-at-Risk to reach 39. Mandatory review; confidence capped; reference tier = best_available.",
       "contentDigest": "sha256:f708a8f6d0b24348f7d3d53424ae6528a0b38be35d0597f10f9937b4d71f6389",
       "supersedesVersion": 2
+    },
+    {
+      "version": 4,
+      "updatedAt": "2026-09-20T12:24:40Z",
+      "author": "gtmenichino",
+      "revisionNotes": "Methodology 0.12 rebuild: reference stations selected by the fixed pressure screen, and every curve fitted on a pool borrowed from the Level II or Level I ecoregion under the comparability check, with the source geography and transfer risk recorded on each. The five landscape pressure metrics score on the fixed criteria of the Screening tier.",
+      "contentDigest": "sha256:f987077df681b36aa080901d24ae79f2b3c61d14ce488fefdfc13daa8091074b",
+      "supersedesVersion": 3
     }
   ]
 }
