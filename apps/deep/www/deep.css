@@ -295,6 +295,10 @@
 .deep-basis-tag.nlcd { color: #2c4f7a; background: #dce8f5; border-color: #bcd0e8; }
 .deep-basis-tag.threedep { color: #7a5b12; background: #fdf0d6; border-color: #f1dca6; }
 .deep-basis-tag.nid { color: #6a3f1d; background: #f6e9de; border-color: #e6cfba; }
+/* which basis a reference curve rests on (StreamCurves REF-08/09/10) */
+.deep-basis-tag.national { color: #1f4e8c; background: #e2ecf8; border-color: #c2d6ec; }
+.deep-basis-tag.modeled { color: #7a4a12; background: #fbeeda; border-color: #eed7ae; }
+.deep-basis-tag.published { color: #5b3f8a; background: #efe8f7; border-color: #d9cbea; }
 
 /* What a metric is scored against: fixed criteria, or a reference curve with the
    geography its stations came from. A borrowed pool reads in the caution tone. */

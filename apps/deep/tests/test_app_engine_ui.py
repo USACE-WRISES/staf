@@ -65,9 +65,13 @@ def test_copy_and_cache_bust():
     assert app._MISS_TEXT == ("No stream line within 150 ft of the click. "
                               "Zoom in and click a line.")
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert "deep.css?v=9" in src and "styles.css?v=20" in src
+    # v10: the curve-basis chip on the Scored against row (StreamCurves 0.13)
+    assert "deep.css?v=10" in src and "styles.css?v=20" in src
     # Source readiness has its own persistent row instead of sharing engine progress.
     assert '"Finding the nearest StreamCat reach…"' in src
     assert 'ui.output_ui("streamcat_lookup_status")' in src
     css = (Path(app.__file__).parent / "www" / "deep.css").read_text(encoding="utf-8")
     assert ".deep-basis-tag.engine" in css and ".deep-engine-line" in css
+    # a curve that does not rest on this ecoregion's own stations says so
+    for basis in ("national", "modeled", "published"):
+        assert f".deep-basis-tag.{basis}" in css, basis
