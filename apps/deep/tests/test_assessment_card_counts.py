@@ -41,20 +41,25 @@ def test_a_metric_on_three_functions_counts_once():
 
 
 def test_the_published_regions_announce_what_they_score():
-    """The three methodology 0.13 versions (2026-09-21): 30, 30 and 25 metrics.
-    Total nitrogen joined all three, and the Eastern Corn Belt Plains gained two
-    modeled curves and two published nutrient benchmarks."""
-    for aid, expected in (("northeastern-highlands", "30 metrics"),
-                          ("interior-plateau", "30 metrics"),
-                          ("eastern-corn-belt-plains", "25 metrics")):
+    """The versions DEEP serves after methodology 0.14 (2026-09-21). Northeastern
+    Highlands v9 scores 31, benthic total richness joining Population support once the
+    restored benthic records gave it a local pool. Interior Plateau v6 scores 29, with
+    chlorophyll a withheld after the 2013-14 values were corrected. The Eastern Corn Belt
+    Plains stays at v7 (25), and the Southeastern Plains v1 (25) is the first region
+    the workflow built on its own."""
+    for aid, expected in (("northeastern-highlands", "31 metrics"),
+                          ("interior-plateau", "29 metrics"),
+                          ("eastern-corn-belt-plains", "25 metrics"),
+                          ("southeastern-plains", "25 metrics")):
         counts = _facts(assessments.load_predefined(aid).raw)["counts"]
         assert counts.startswith(expected), (aid, counts)
 
 
 def test_a_documented_gap_is_still_named():
     """The coverage note is untouched by the counting change."""
-    counts = _facts(assessments.load_predefined("eastern-corn-belt-plains").raw)["counts"]
-    assert "19 of 20 functions" in counts and "(1 documented)" in counts
+    for aid in ("eastern-corn-belt-plains", "southeastern-plains"):
+        counts = _facts(assessments.load_predefined(aid).raw)["counts"]
+        assert "19 of 20 functions" in counts and "(1 documented)" in counts, (aid, counts)
 
 
 # --------------------------------------------------------------------------- #
@@ -85,7 +90,8 @@ def test_the_walk_covers_the_whole_framework():
     """Scoring blocks plus the unassessed ones equals the framework, so a reader
     meets twenty steps whichever assessment they open."""
     from deep import config, reference_support
-    for aid in ("northeastern-highlands", "interior-plateau", "eastern-corn-belt-plains"):
+    for aid in ("northeastern-highlands", "interior-plateau", "eastern-corn-belt-plains",
+                "southeastern-plains"):
         la = assessments.load_predefined(aid)
         n_blocks = len([fn for fn in la.metrics_by_function if fn.get("metrics")])
         assert n_blocks + len(reference_support.unassessed_functions(la)) == len(config.functions())
@@ -93,11 +99,12 @@ def test_the_walk_covers_the_whole_framework():
 
 
 def test_a_curve_held_for_review_is_named_in_the_bundle():
-    """Northeastern Highlands built curves for two benthic metrics that DATA-03
-    holds for a reviewer (64 percent of the region's reference stations have no
-    value). They used to vanish from the bundle without a trace (2026-09-21)."""
+    """Northeastern Highlands v8 built curves for two benthic metrics that DATA-03
+    held for a reviewer (64 percent of the region's reference stations had no
+    value). They used to vanish from the bundle without a trace (2026-09-21). The
+    version stays servable, so the hold is read from it by reference."""
     from deep import reference_support
-    la = assessments.load_predefined("northeastern-highlands")
+    la = assessments.load_ref("northeastern-highlands@v8")
     held = {w["metricKey"]: w for w in reference_support.withheld(la)
             if reference_support.is_held(w)}
     assert set(held) == {"bent_TOLRPIND", "bent_TOTLNTAX"}
@@ -106,3 +113,28 @@ def test_a_curve_held_for_review_is_named_in_the_bundle():
         assert "DATA-03" not in w["statement"]
     # held, not unassessed: their functions are scored by other metrics
     assert reference_support.unassessed_functions(la) == []
+
+
+def test_the_restored_records_released_the_held_curves():
+    """Methodology 0.14 restored the benthic cycles the archive had left empty, so
+    Northeastern Highlands v9 holds nothing and scores benthic total richness from a
+    local pool."""
+    from deep import reference_support
+    la = assessments.load_predefined("northeastern-highlands")
+    assert not [w for w in reference_support.withheld(la) if reference_support.is_held(w)]
+    scored = {m["metricId"] for fn in la.metrics_by_function for m in fn.get("metrics") or []}
+    assert "spring-bent-totlntax" in scored
+
+
+def test_a_workflow_gap_reaches_deep_under_the_owner():
+    """The Southeastern Plains v1 left Surface water storage unassessed under the
+    COV-01 standing decision. Promote rewrote the pending marker to the confirming
+    owner, so no pending text reaches DEEP."""
+    from deep import reference_support
+    la = assessments.load_predefined("southeastern-plains")
+    un = reference_support.unassessed_functions(la)
+    assert [u["functionName"] for u in un] == ["Surface water storage"]
+    ex = (la.raw.get("functionCoverage") or {}).get("exclusions") or []
+    assert [e["functionId"] for e in ex] == ["surface-water-storage"]
+    assert all(e.get("recordedBy") and "pending" not in str(e["recordedBy"]) for e in ex)
+
