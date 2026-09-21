@@ -390,6 +390,10 @@ def engine_gate_by_metric(assessment) -> dict[str, bool]:
     (2026-09-07). Ids the bundle does not describe are absent here and keep
     the bundle-level default. Accepts a :class:`LoadedAssessment` or a raw
     bundle dict.
+
+    A fixed-criteria metric (``criteriaBasis == "fixed"``, StreamCurves
+    methodology 0.12) always takes the engine value: its criteria are absolute,
+    fitted on no source's values, so the pairing rule has nothing to protect.
     """
     raw = getattr(assessment, "raw", None)
     if raw is None:
@@ -399,7 +403,8 @@ def engine_gate_by_metric(assessment) -> dict[str, bool]:
         for m in (fn or {}).get("metrics") or []:
             mid = (m or {}).get("metricId")
             if mid:
-                out[str(mid)] = str(m.get("predictorSource") or "streamcat") != "streamcat"
+                out[str(mid)] = (str(m.get("criteriaBasis") or "") == "fixed"
+                                 or str(m.get("predictorSource") or "streamcat") != "streamcat")
     return out
 
 

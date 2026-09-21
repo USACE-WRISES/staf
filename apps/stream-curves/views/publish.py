@@ -105,6 +105,15 @@ def _publish_block_reason() -> str | None:
     return reason
 
 
+def _portfolio_approval_text(pending: list[dict]) -> str:
+    """The sentence over the SELECT-01 checkbox, naming the functions and their counts."""
+    named = ", ".join(f"{p['functionName']} ({p['nMetrics']} metrics)" for p in pending)
+    verb = "carries" if len(pending) == 1 else "carry"
+    return (f"{named} {verb} more than the default maximum of two metrics. Rule SELECT-01 "
+            "publishes such a function only with a recorded human approval, and this "
+            "publish writes yours into the version's metadata.")
+
+
 def _origin_steer(state: AppState, origin: dict | None, has_doc: bool, built_by):
     """One line saying what this publish records, or the promote steer when the
     staged content is untouched (promote keeps the build's record verbatim)."""
@@ -249,6 +258,22 @@ def publish_server(input, output, session, state: AppState):
                     ),
                     class_="col-md-6",
                 ),
+                # The Excel calculator a published version will carry, built in
+                # memory from the curves as they stand, so it can be looked at
+                # before a version is minted.
+                ui.div(
+                    ui.download_button(
+                        "download_calculator",
+                        ui.TagList(fa("calculator"), " Preview calculator (.xlsx)"),
+                        class_="btn btn-outline-primary w-100",
+                    ),
+                    ui.tags.small(
+                        "The DEEP Excel calculator for these curves. Publishing builds "
+                        "the same workbook and records it with the version.",
+                        class_="text-muted d-block mt-1",
+                    ),
+                    class_="col-md-6",
+                ),
                 class_="row g-3",
             ),
             class_="pub-pane pub-pane-file pub-form",
@@ -354,6 +379,26 @@ def publish_server(input, output, session, state: AppState):
             steer = _origin_steer(state, origin, has_doc, built_by)
             if steer is not None:
                 body.append(steer)
+            # SELECT-01: the gate in library.publish_version refuses a function carrying
+            # more metrics than the portfolio maximum without a named approval. Ask for it
+            # here, where the publisher can see which functions and say so, instead of
+            # letting the click come back with the gate's error.
+            pending = ap.portfolio_approval_needed(state)
+            if pending:
+                body.append(ui.div(
+                    ui.tags.label("Portfolio approval", class_="form-label mb-0"),
+                    ui.div(
+                        _portfolio_approval_text(pending),
+                        class_="text-muted small mb-1",
+                    ),
+                    ui.input_checkbox(
+                        "pub_select01",
+                        f"I approve {'this set' if len(pending) == 1 else 'these sets'} "
+                        "as complementary, recorded under my name",
+                        value=False,
+                    ),
+                    class_="pub-select01 mb-2",
+                ))
         body.append(
             ui.input_action_button(
                 "publish_btn",
@@ -498,6 +543,27 @@ def publish_server(input, output, session, state: AppState):
         write_input_workbook(tables, buf)
         yield buf.getvalue()
 
+    @output(suspend_when_hidden=False)
+    @render.download(
+        filename=lambda: _sanitize_file_stem(
+            state.isolate_get("session_name"), state.isolate_get("upload_filename")
+        )
+        + "_DEEP_calculator_preview.xlsx"
+    )
+    def download_calculator():
+        """The calculator a publish would build, from the curves as they stand.
+        A preview: it carries no version and no content digest, so DEEP never
+        offers it as a published version's workbook."""
+        from streamcurves import deep_calculator
+        with reactive.isolate():
+            req(state.app_data_loaded())
+        try:
+            bundle = ap.build_bundle_from_state(state)
+        except ValueError as exc:
+            ui.notification_show(str(exc), type="warning", duration=8)
+            return
+        yield deep_calculator.build_calculator(bundle)
+
     # ── publish (preliminary; validation lives on the Validate stage) ─────────
     @reactive.effect
     @reactive.event(input.publish_btn)
@@ -573,11 +639,14 @@ def publish_server(input, output, session, state: AppState):
         snap = ap.run_snapshot(state)
         if snap.get("curve_review") and not rs.is_ready_to_publish(snap):
             unresolved = rs.flagged_metrics(snap.get("curve_review") or {})
+            # Naming the outstanding items beats the old fixed list of four: the
+            # checklist above the button already says which ones they are, and a
+            # refusal that repeats them is what sends the publisher back to it.
+            outstanding = [i["label"] for i in rs.readiness_checklist(snap) if not i["ok"]]
             ui.notification_show(
                 "Complete the publish checklist first: "
                 + (f"{len(unresolved)} flagged curve(s) still need review."
-                   if unresolved else "region, retained sites, enrichment, and in-scope "
-                   "curves must all be complete."),
+                   if unresolved else ", ".join(outstanding) + "."),
                 type="warning", duration=10)
             return
 
@@ -622,6 +691,34 @@ def publish_server(input, output, session, state: AppState):
             # very gate its own build already satisfied.
             if (origin or {}).get("portfolio_approvals"):
                 meta["portfolioApprovals"] = origin["portfolio_approvals"]
+            # The rest are this publisher's to give: the checkbox on the form is the
+            # recorded human approval SELECT-01 asks for, and the real bundle (not the
+            # page's quick count) names the functions it covers.
+            approved = {str(a.get("functionId"))
+                        for a in (meta.get("portfolioApprovals") or [])
+                        if a.get("functionId") and a.get("approvedBy")}
+            unapproved = [(fid, n) for fid, n in lib.functions_over_metric_limit(bundle)
+                          if fid not in approved]
+            if unapproved:
+                try:
+                    ticked = bool(input.pub_select01())
+                except Exception:  # noqa: BLE001 — the box is absent when nothing needs one
+                    ticked = False
+                if not ticked:
+                    state.run_stage_status.set(prev_stage_status)
+                    state.run_meta.set(prev_meta)
+                    ui.notification_show(
+                        "Approve the portfolio first: "
+                        + ", ".join(f"{fid} ({n} metrics)" for fid, n in unapproved)
+                        + " carry more than two metrics, so SELECT-01 needs the approval "
+                        "checkbox on this form ticked before publishing.",
+                        type="warning", duration=12)
+                    return
+                meta["portfolioApprovals"] = (meta.get("portfolioApprovals") or []) + [
+                    {"functionId": fid, "approvedBy": maintainer,
+                     "note": (f"Approved at interactive publish: {n} metrics kept as a "
+                              "complementary set after review in StreamCurves.")}
+                    for fid, n in unapproved]
             now_iso = datetime.now(timezone.utc).isoformat()
             if source_doc:
                 changes = ap.origin_changes(

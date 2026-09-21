@@ -238,6 +238,13 @@ class AppState:
     # Every build records what was enabled in its own manifest regardless.
     # Persisted; validated through rules_view.validate_selections on restore.
     rule_selections: reactive.Value = _rv_factory(list)
+    # ── reference statement of a pressure-screen build (methodology 0.12) ────
+    # {method, referenceMethod, insufficientReferenceSupport, metricAnnotations,
+    # fixedMetrics, referenceTier}, written by the regional build
+    # (pressure_evidence.session_reference_build). An interactive republish
+    # folds it back into the bundle so the fixed-criteria metrics, each curve's
+    # reference support and the withheld list survive. None = a legacy build.
+    reference_build: reactive.Value = _rv()
 
     # ── root navigation requests (stage banner -> shell) ────────────────────
     # nav_request: a nav_panel value to switch main_navbar to; wizard_step_request:
@@ -483,6 +490,7 @@ def reset_app_to_startup(state: AppState) -> None:
         state.assessment_source.set(None)
         state.source_provenance.set(None)
         state.rule_selections.set([])
+        state.reference_build.set(None)
         state.current_metric.set(state.startup_current_metric() or "perRiffle")
         state.app_data_loaded.set(False)
         state.app_reset_nonce.set((state.app_reset_nonce() or 0) + 1)

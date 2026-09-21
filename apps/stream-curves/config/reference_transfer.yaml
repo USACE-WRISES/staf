@@ -1,0 +1,132 @@
+# reference_transfer.yaml
+# When a region lacks enough least-disturbed stations of its own, a curve may
+# borrow reference stations from the parent ecoregion (Level III, then II, then
+# I). This file says which borrowed stations are ecologically comparable, metric
+# family by metric family. Rules REF-05 and REF-07, methodology 0.12, owner
+# decision 2026-09-19:
+#
+#   "Borrowed sites must represent comparable natural conditions, including
+#    stream size, slope, geology, and hydrologic setting. Geographic membership
+#    or low gradient alone is insufficient. Evaluate usable sample size and
+#    applicability separately for each metric."
+#
+# HOW COMPARABLE IS DECIDED
+#   The envelope is the target region's OWN in-frame stations, all of them and
+#   not only the reference ones. NRSA is a probability sample, so those stations
+#   describe the natural range of the region's streams, and natural setting does
+#   not depend on disturbance. For each covariate in a family's profile the
+#   envelope is the central share of that range (reference_pool.envelope_quantiles
+#   in methodology_config.yaml). A borrowed station must sit inside the envelope
+#   on EVERY covariate of the profile, and, where the family says lithology
+#   matters, its dominant surficial lithology must be one that is common in the
+#   target region. The region's own reference stations are always admitted.
+#
+# WHY THE PROFILES ARE SMALL
+#   A joint box on six covariates was measured and admits zero donors for
+#   Interior Plateau and for Eastern Corn Belt Plains, while holding only about
+#   half of each region's own stations. Two or three covariates chosen for what
+#   drives the metric family keep the rule honest and usable.
+#
+# Numeric thresholds live in config/methodology/methodology_config.yaml
+# (reference_pool.*) so the Rules page resolves them. This file holds the
+# structure: which covariates, which metrics.
+
+version: 1
+
+envelope:
+  basis: target_frame_stations
+  # skewed covariates are compared on a log10 scale
+  log10: [drainage_area_sqkm, nhd_slope, hydrlcondws]
+  # NHDPlus reports zero slope on flat reaches; the floor keeps log10 defined
+  slope_floor: 0.00001
+
+lithology:
+  # a watershed whose largest group is under this share is "mixed"
+  dominance_min_pct: 50
+  # a group counts as the target's own when it dominates at least this share of
+  # the target's in-frame stations; "mixed" is always admitted
+  target_share_min: 0.10
+
+families:
+  channel_form:
+    label: "Channel form and hydraulic geometry"
+    why: "Bankfull dimensions, pool depth, sinuosity and bank form scale with stream size and slope, and the material the channel is cut into."
+    covariates: [drainage_area_sqkm, nhd_slope]
+    lithology: true
+  substrate:
+    label: "Bed material and sediment"
+    why: "Particle size, fines, embeddedness and bed stability follow slope, stream size and the rock and deposits that supply the sediment."
+    covariates: [drainage_area_sqkm, nhd_slope]
+    lithology: true
+  water_chemistry:
+    label: "Water chemistry"
+    why: "Conductivity, pH, nutrients and turbidity in least-disturbed streams follow geology and how much of the flow is groundwater."
+    covariates: [bfiws, runoffws]
+    lithology: true
+  biology:
+    label: "Benthic and fish assemblages"
+    why: "Taxa richness and tolerance follow stream size, gradient and temperature."
+    covariates: [drainage_area_sqkm, nhd_slope, tmean8110ws]
+    lithology: false
+  riparian:
+    label: "Riparian cover, shade, wood and fish cover"
+    why: "Canopy, woody cover and wood loading follow stream size and the climate that sets the natural vegetation."
+    covariates: [drainage_area_sqkm, precip8110ws]
+    lithology: false
+  hydrology:
+    label: "Watershed storage and base flow"
+    why: "Natural wetland extent and base flow follow how permeable the watershed is and its climate."
+    # Two covariates, not three: with channel slope added the profile admitted
+    # under 80 percent of each pilot region's own stations (0.73 to 0.79), and
+    # reach slope is a weak stand-in for watershed relief anyway.
+    covariates: [hydrlcondws, precip8110ws]
+    lithology: true
+
+# One explicit entry per metric. No inference: a metric that is not listed here
+# cannot borrow, and its curve is local or it is not built.
+metric_family:
+  phab_BFWD_RAT: channel_form
+  phab_XBKF_H: channel_form
+  phab_XBKA: channel_form
+  phab_SINU: channel_form
+  phab_RP100_cm: channel_form
+  phab_PCT_FAST: channel_form
+  phab_PCT_SAFN: substrate
+  phab_XEMBED: substrate
+  phab_LSUB_DMM: substrate
+  phab_LRBS_use: substrate
+  phab_XCMGW: riparian
+  phab_XCDENMID: riparian
+  phab_LWDeqVolM100: riparian
+  phab_XFC_NAT: riparian
+  chem_PTL: water_chemistry
+  chem_NTL_DISS: water_chemistry
+  chem_TURB: water_chemistry
+  chem_CHLA: water_chemistry
+  chem_COND: water_chemistry
+  chem_DOC: water_chemistry
+  chem_PH: water_chemistry
+  bent_EPT_NTAX: biology
+  bent_HPRIME: biology
+  bent_TOTLNTAX: biology
+  bent_TOLRPIND: biology
+  fish_NAT_TOTLNTAX: biology
+  # landscape expectation metrics (scored against reference, never fixed criteria)
+  pctwet2019ws: hydrology
+  pctwdwet2019ws: hydrology
+  pcthbwet2019ws: hydrology
+  bfiws: hydrology
+
+# The region's own best-available stations, shown beside a curve as a labeled
+# comparison. Never a baseline, never a source of "Functioning" (rule REF-07).
+local_comparison:
+  label: "Local best-available comparison (not reference)"
+  definition: relaxed_screen_then_lowest_pressure_quartile
+  min_n: 10
+  pressure_variables: [pctimp2019ws, agriculture_ws, rddensws, dor, npdesdensws, mines_ws]
+
+# Only 80 of the 770 strict reference stations share a HUC12, so thinning to one
+# per HUC12 would shrink pools that are already small. HUC12 (HUC8 where a
+# HUC12 is unknown) is the cluster unit of the national bootstraps instead.
+huc12_thinning:
+  enabled: false

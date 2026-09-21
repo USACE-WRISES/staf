@@ -1,0 +1,267 @@
+# field_methods.yaml
+# How each metric of a regional detailed assessment is measured, in the words a
+# field crew needs. One entry per metric key. The text rides into the published
+# bundle as the metric's ``methodContext`` (streamcurves/field_methods.py,
+# deep_export), where DEEP prints it on the field worksheet, in the Field Forms
+# dialog and in the metric's hover card.
+#
+# The reference curves of these assessments are built from USEPA National Rivers
+# and Streams Assessment (NRSA) data, so a value is comparable with its curve only
+# when it is measured the NRSA way. Every field entry below restates the NRSA
+# wadeable protocol and was checked against the manual named under ``sources``.
+# Keep each ``method`` to a few plain sentences (the worksheet prints about 320
+# characters), no em dashes, and add a source for anything new before using it.
+
+version: 1
+
+sources:
+  nrsa-fom-wadeable-2023:
+    citation: >-
+      USEPA. 2023. National Rivers and Streams Assessment 2023/24. Field Operations
+      Manual, Wadeable. Version 1.0. EPA-841-B-22-006. U.S. Environmental Protection
+      Agency, Office of Water, Washington, DC.
+    url: https://www.epa.gov/system/files/documents/2023-06/NRSA%202324_FOM_Wadeable%20V1.0_0.pdf
+    checked: "2026-09-19"
+  nrsa-phab-calculations:
+    citation: >-
+      Kaufmann, P. R., P. Levine, E. G. Robison, C. Seeliger, and D. V. Peck. 1999.
+      Quantifying Physical Habitat in Wadeable Streams. EPA/620/R-99/003. U.S.
+      Environmental Protection Agency, Washington, DC.
+    checked: "2026-09-19"
+  staf-engines:
+    citation: STAF computation engines (StreamCat lookup engine and STAF site engine).
+    url: https://usace-wrises.github.io/staf/computation-engines/
+
+# The layout every physical habitat entry assumes, printed once on the worksheet.
+reach_layout: >-
+  Lay out a sampling reach 40 times the mean wetted width, centered on the site,
+  with 11 evenly spaced cross-section transects (A to K).
+
+metrics:
+  # ---- substrate ---------------------------------------------------------
+  phab_XEMBED:
+    where: 11 transects
+    method: >-
+      At five evenly spaced points across each of the 11 transects, estimate how
+      much of the particle under the point is buried in sand and finer sediment, in
+      percent. Record the 55 estimates. The value is their mean.
+    source: nrsa-fom-wadeable-2023
+  phab_PCT_SAFN:
+    where: 21 cross-sections
+    method: >-
+      Record the size class of the particle at five evenly spaced points across each
+      of the 11 transects and the 10 cross-sections midway between them (105
+      particles). The value is the percent of particles that are sand or finer.
+    source: nrsa-fom-wadeable-2023
+  phab_LSUB_DMM:
+    where: 21 cross-sections
+    method: >-
+      From the same 105-particle size class count as sand and fines. The value is
+      the base 10 logarithm of the geometric mean particle diameter in millimeters,
+      computed from the size classes with the NRSA physical habitat calculations.
+    source: nrsa-phab-calculations
+  phab_LRBS_use:
+    where: whole reach
+    method: >-
+      Computed, not read in the field. It is the base 10 logarithm of the ratio of
+      the geometric mean particle diameter to the largest diameter the bankfull flow
+      can move, from the particle count, reach slope, bankfull depth, wood tally and
+      residual pools, with the NRSA physical habitat calculations.
+    source: nrsa-phab-calculations
+  # ---- channel form --------------------------------------------------------
+  phab_XBKF_H:
+    where: 11 transects
+    method: >-
+      At each transect, measure the height of the bankfull elevation above the
+      present water surface in meters, with a rod at the water's edge and a
+      clinometer held level at bankfull. The value is the mean of the 11 heights.
+    source: nrsa-fom-wadeable-2023
+  phab_BFWD_RAT:
+    where: 11 transects
+    method: >-
+      At each transect, measure the bankfull width and the bankfull height above the
+      water surface, and the thalweg depth. The value is the mean bankfull width
+      divided by the mean bankfull depth (bankfull height plus thalweg depth).
+    source: nrsa-phab-calculations
+  phab_XBKA:
+    where: 11 transects, both banks
+    method: >-
+      At the left and the right bank of each transect, lay a pole about one meter
+      long against the bank and read its angle from horizontal with a clinometer, in
+      degrees. The value is the mean of the 22 readings.
+    source: nrsa-fom-wadeable-2023
+  phab_SINU:
+    where: whole reach
+    method: >-
+      Take a compass bearing (backsight) and the distance between each pair of
+      neighboring transects. The value is the channel length along those segments
+      divided by the straight line distance between the ends of the reach.
+    source: nrsa-phab-calculations
+  phab_RP100_cm:
+    where: thalweg profile
+    method: >-
+      Measure the thalweg depth at 10 or 15 evenly spaced stations between each pair
+      of transects (100 or 150 along the reach). The value is the mean residual pool
+      depth in centimeters, computed from that depth profile and the reach slope
+      with the NRSA physical habitat calculations.
+    source: nrsa-phab-calculations
+  phab_PCT_FAST:
+    where: thalweg profile
+    method: >-
+      At each thalweg station record the channel unit (falls, cascade, rapid,
+      riffle, glide, pool, dry). The value is the percent of stations in fast water
+      (falls, cascade, rapid or riffle).
+    source: nrsa-fom-wadeable-2023
+  phab_LWDeqVolM100:
+    where: between transects
+    method: >-
+      Between each pair of transects, tally every piece of wood at least 10 cm in
+      diameter and 1.5 m long in or above the bankfull channel, by length and
+      diameter class. The value is the wood volume per 100 m of channel, computed
+      from the tally classes.
+    source: nrsa-fom-wadeable-2023
+  # ---- cover and riparian --------------------------------------------------
+  phab_XFC_NAT:
+    where: 11 transects
+    method: >-
+      In the 10 m of channel centered on each transect, estimate the areal cover
+      class of each fish cover type on the form (wood, brush, overhanging
+      vegetation, undercut banks, boulders and the rest). The value is the summed
+      areal cover of the types that are not man-made, averaged over the transects.
+    source: nrsa-fom-wadeable-2023
+  phab_XCDENMID:
+    where: 11 transects, mid-channel
+    method: >-
+      At mid-channel on each transect, read a convex spherical densiometer facing
+      upstream, downstream, left and right, counting the covered points of 17. The
+      value is the mean of the 44 readings as a percent.
+    source: nrsa-fom-wadeable-2023
+  phab_XCMGW:
+    where: 11 transects, both banks
+    method: >-
+      In a 10 m by 10 m plot on each bank at each transect, estimate the areal cover
+      class of woody vegetation in the canopy, the understory and the ground layer.
+      The value is the summed woody cover of the three layers, averaged over the 22
+      plots, as a fraction.
+    source: nrsa-fom-wadeable-2023
+  # ---- water chemistry -------------------------------------------------------
+  chem_COND:
+    where: X-site, mid-channel
+    method: >-
+      Specific conductance in microsiemens per centimeter. NRSA reports the
+      laboratory value of a grab sample taken at mid-channel at the X-site (the
+      center of the reach). A calibrated multi-parameter meter reads the same
+      quantity in the stream at that point.
+    source: nrsa-fom-wadeable-2023
+  chem_PH:
+    where: X-site, mid-channel
+    method: >-
+      pH of the mid-channel grab sample from the X-site, as NRSA reports it. A
+      calibrated multi-parameter meter reads pH in the stream at the same point, at
+      0.5 m depth or mid-depth in shallow water.
+    source: nrsa-fom-wadeable-2023
+  chem_TURB:
+    where: X-site, mid-channel
+    method: >-
+      Turbidity in nephelometric turbidity units, laboratory analysis of the
+      mid-channel grab sample from the X-site. Sample before anyone walks the
+      channel upstream.
+    source: nrsa-fom-wadeable-2023
+  chem_PTL:
+    where: X-site, mid-channel
+    method: >-
+      Total phosphorus in micrograms per liter, laboratory analysis of the
+      mid-channel grab sample from the X-site, kept on ice.
+    source: nrsa-fom-wadeable-2023
+  chem_NTL_DISS:
+    where: X-site, mid-channel
+    method: >-
+      Dissolved nitrogen in milligrams per liter, laboratory analysis of the filtered
+      mid-channel grab sample from the X-site, kept on ice.
+    source: nrsa-fom-wadeable-2023
+  chem_CHLA:
+    where: X-site, mid-channel
+    method: >-
+      Chlorophyll a of the water column in micrograms per liter, from a 2 L grab
+      sample taken at mid-channel at the X-site in an amber bottle, filtered and
+      analyzed in a laboratory.
+    source: nrsa-fom-wadeable-2023
+  # ---- biology ---------------------------------------------------------------
+  bent_EPT_NTAX: &benthic
+    where: 11 transects
+    method: >-
+      Collect one D-frame net sample (500 micrometer mesh) one meter downstream of
+      each of the 11 transects at the assigned left, center or right station, and
+      composite them. A laboratory identifies a fixed count subsample. The value is
+      the number of mayfly, stonefly and caddisfly taxa.
+    source: nrsa-fom-wadeable-2023
+  bent_HPRIME:
+    <<: *benthic
+    method: >-
+      From the same 11-transect composite D-frame net sample (500 micrometer mesh)
+      and laboratory subsample. The value is the Shannon diversity of the taxa
+      counted.
+  bent_TOTLNTAX:
+    <<: *benthic
+    method: >-
+      From the same 11-transect composite D-frame net sample (500 micrometer mesh)
+      and laboratory subsample. The value is the total number of taxa.
+  bent_TOLRPIND:
+    <<: *benthic
+    method: >-
+      From the same 11-transect composite D-frame net sample (500 micrometer mesh)
+      and laboratory subsample. The value is the percent of individuals that belong
+      to pollution tolerant taxa.
+  fish_NAT_TOTLNTAX:
+    where: whole reach
+    method: >-
+      Electrofish the sampling reach in an upstream direction, working every habitat
+      between the transects, and identify and count every fish. The value is the
+      number of native taxa.
+    source: nrsa-fom-wadeable-2023
+  # ---- desktop metrics -------------------------------------------------------
+  bfiws:
+    where: desktop
+    method: >-
+      Base flow index of the watershed, the percent of streamflow that comes from
+      base flow (USGS base flow index grid). DEEP reads it from EPA StreamCat for the
+      reach. Nothing is measured in the field.
+    source: staf-engines
+  pctwet2019ws:
+    where: desktop
+    method: >-
+      Percent of the watershed in woody plus herbaceous wetland (NLCD 2019). DEEP
+      reads it from EPA StreamCat for the reach. Nothing is measured in the field.
+    source: staf-engines
+  pctimp2019ws:
+    where: desktop
+    method: >-
+      Percent of the watershed in impervious surface. DEEP computes it for the
+      delineated watershed. Nothing is measured in the field.
+    source: staf-engines
+  pctag2019ws:
+    where: desktop
+    method: >-
+      Percent of the watershed in cultivated crops plus hay and pasture. DEEP
+      computes it for the delineated watershed. Nothing is measured in the field.
+    source: staf-engines
+  rddensws:
+    where: desktop
+    method: >-
+      Road length per square kilometer of watershed. DEEP computes it for the
+      delineated watershed. Nothing is measured in the field.
+    source: staf-engines
+  dorws:
+    where: desktop
+    method: >-
+      Degree of regulation, the normal storage of upstream dams as a percent of mean
+      annual runoff. DEEP reads both from EPA StreamCat for the reach. Nothing is
+      measured in the field.
+    source: staf-engines
+  nid_dams_1mi:
+    where: desktop
+    method: >-
+      Number of dams in the USACE National Inventory of Dams within one mile of the
+      site. DEEP counts them. Note in the field any barrier the inventory does not
+      show.
+    source: staf-engines

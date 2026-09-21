@@ -205,6 +205,17 @@ def mirror_drift() -> list[str]:
     except Exception as exc:  # noqa: BLE001
         problems.append(f"could not compare the screening method version: {exc}")
 
+    # 4c. The reference screen method version mirrors run_state (v0.12).
+    try:
+        from . import run_state as _rs
+        declared = str(threshold("meta.reference_screen_method_version"))
+        if declared != _rs.REFERENCE_SCREEN_METHOD_VERSION:
+            problems.append(
+                f"meta.reference_screen_method_version ({declared!r}) differs from the "
+                f"engine's {_rs.REFERENCE_SCREEN_METHOD_VERSION!r}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the reference screen method version: {exc}")
+
     # 5. The DEEP scoring contract mirrors deep_export.
     try:
         from . import deep_export as _dx
@@ -223,6 +234,21 @@ def mirror_drift() -> list[str]:
                     f"contract ({engine_value!r}).")
     except Exception as exc:  # noqa: BLE001
         problems.append(f"could not compare the DEEP scoring contract: {exc}")
+
+    # 6. The reference screen mirrors the screen the vendored EASI built its
+    #    regional reference curves with (rule REF-04, v0.12).
+    try:
+        from . import reference_screen as _rscreen
+        problems += _rscreen.screen_drift()
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the reference screen: {exc}")
+
+    # 7. The fixed criteria mirror the vendored EASI scoring catalog (CURVE-11).
+    try:
+        from . import fixed_criteria as _fixed
+        problems += _fixed.criteria_drift()
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the fixed criteria: {exc}")
 
     return problems
 

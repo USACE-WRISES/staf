@@ -442,6 +442,105 @@ def version_status(assessment_id: str, version: int) -> str:
     return _status_map(slugify(assessment_id)).get(int(version), DEFAULT_STATUS)
 
 
+# --------------------------------------------------------------------------- #
+# Artifacts: files generated FROM a published version and recorded beside it
+# (the Excel calculator). Append-only, assessment-level, like status.json and
+# validation.json: a version's own files and its meta.json are never touched, so
+# adding or reissuing an artifact cannot re-mint a version or its fingerprint.
+# --------------------------------------------------------------------------- #
+ARTIFACTS_FILE = "artifacts.json"
+ARTIFACTS_SCHEMA_VERSION = 1
+CALCULATOR_KIND = "excel-calculator"
+#: The workbook's name inside a version folder. Kept here so the storage layer
+#: never imports the generator (and openpyxl) just to find a file;
+#: tests/test_library_artifacts.py keeps it equal to deep_calculator.FILE_NAME.
+CALCULATOR_FILE = "calculator.xlsx"
+
+
+def artifacts_path(assessment_id: str) -> Path:
+    return assessment_dir(assessment_id) / ARTIFACTS_FILE
+
+
+def read_artifacts(assessment_id: str) -> dict:
+    p = artifacts_path(assessment_id)
+    if not p.is_file():
+        return {"schemaVersion": ARTIFACTS_SCHEMA_VERSION, "assessmentId": assessment_id,
+                "history": []}
+    return _read_json(p)
+
+
+def version_artifact(assessment_id: str, version: int,
+                     kind: str = CALCULATOR_KIND) -> Optional[dict]:
+    """The current record of one artifact kind for a version (the last record
+    wins, so a reissue supersedes without erasing), or ``None``."""
+    found = None
+    for rec in read_artifacts(slugify(assessment_id)).get("history") or []:
+        try:
+            same = int(rec.get("version")) == int(version) and rec.get("kind") == kind
+        except (TypeError, ValueError):
+            same = False
+        if same:
+            found = rec
+    return found
+
+
+def calculator_path(assessment_id: str, version: int) -> Path:
+    return version_dir(slugify(assessment_id), version) / CALCULATOR_FILE
+
+
+def calculator_state(assessment_id: str, version: int) -> str:
+    """``present`` when the recorded workbook is on disk with the recorded hash
+    and was built from the version's own content, ``stale`` when a record exists
+    and the file or the digest no longer agrees, else ``absent``."""
+    rec = version_artifact(assessment_id, version)
+    if not rec:
+        return "absent"
+    path = calculator_path(assessment_id, version)
+    if not path.is_file():
+        return "stale"
+    import hashlib
+    sha = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+    if sha != rec.get("sha256"):
+        return "stale"
+    if rec.get("contentDigest") != version_content_digest(assessment_id, version):
+        return "stale"
+    return "present"
+
+
+def write_calculator(assessment_id: str, version: int, *, actor: str = "",
+                     note: Optional[str] = None, reissue: bool = False) -> Optional[dict]:
+    """Build the Excel calculator of a published version from its own bundle,
+    write it into the version folder, and append its record.
+
+    Idempotent: a version whose recorded workbook is present and current is left
+    alone unless ``reissue``. Returns the record written, or ``None`` when
+    nothing was done. Raises on a build error; :func:`publish_version` catches
+    that, because a workbook failure must never undo a publish.
+    """
+    from . import deep_calculator
+    assessment_id = slugify(assessment_id)
+    if not reissue and calculator_state(assessment_id, version) == "present":
+        return None
+    bundle = load_version_bundle(assessment_id, version)
+    data = deep_calculator.build_calculator(bundle)
+    path = calculator_path(assessment_id, version)
+    path.write_bytes(data)
+    record = {
+        "version": int(version), "kind": CALCULATOR_KIND, "file": path.name,
+        "sha256": deep_calculator.sha256_of(data), "bytes": len(data),
+        "generator": deep_calculator.GENERATOR,
+        "generatorVersion": deep_calculator.GENERATOR_VERSION,
+        "contentDigest": bundle.get("contentDigest"),
+        "builtAt": _now_iso(), "actor": actor or "", "note": note,
+    }
+    doc = read_artifacts(assessment_id)
+    doc["schemaVersion"] = ARTIFACTS_SCHEMA_VERSION
+    doc["assessmentId"] = assessment_id
+    doc["history"] = list(doc.get("history") or []) + [record]
+    _write_json(artifacts_path(assessment_id), doc)
+    return record
+
+
 def _append_status(
     assessment_id: str, version: int, status: str, actor: str, note: Optional[str]
 ) -> None:
@@ -706,6 +805,9 @@ def _regenerate_catalog() -> None:
                     "provenanceState": (
                         "present" if (default_vdir / PROVENANCE_FILE).is_file()
                         else "absent"),
+                    # present | stale | absent: whether the default version's
+                    # Excel calculator is on disk and built from its content
+                    "calculatorState": calculator_state(aid, int(default_v)),
                 }
             )
     _write_json(
@@ -716,6 +818,25 @@ def _regenerate_catalog() -> None:
             "assessments": entries,
         },
     )
+
+
+def functions_over_metric_limit(bundle: dict) -> list[tuple[str, int]]:
+    """``[(function id, metric count)]`` for every function a bundle carries more
+    metrics on than the portfolio maximum allows.
+
+    SELECT-01 asks for a recorded human approval of each, and the gate below refuses
+    a publish without one. Public so a caller preparing a publish (the Publish page,
+    the batch runner) names the same functions this gate will.
+    """
+    from . import methodology  # local: keep the storage layer import-light
+    max_per_fn = int(methodology.threshold(
+        "metric_portfolio.default_maximum_metrics_per_function"))
+    out = []
+    for block in bundle.get("metricsByFunction") or []:
+        n = len(block.get("metrics") or [])
+        if n > max_per_fn:
+            out.append((str(block.get("functionId") or ""), n))
+    return out
 
 
 def _require_portfolio_approval(assessment_id: str, bundle: dict, meta: dict) -> None:
@@ -729,12 +850,9 @@ def _require_portfolio_approval(assessment_id: str, bundle: dict, meta: dict) ->
     approvals = {str(a.get("functionId")): a
                  for a in (meta.get("portfolioApprovals") or [])
                  if a.get("functionId") and a.get("approvedBy")}
-    unapproved = []
-    for block in bundle.get("metricsByFunction") or []:
-        metrics = block.get("metrics") or []
-        fid = str(block.get("functionId") or "")
-        if len(metrics) > max_per_fn and fid not in approvals:
-            unapproved.append(f"{fid} ({len(metrics)} metrics)")
+    unapproved = [f"{fid} ({n} metrics)"
+                  for fid, n in functions_over_metric_limit(bundle)
+                  if fid not in approvals]
     if unapproved:
         raise ValueError(
             f"Refusing to publish '{assessment_id}': more than {max_per_fn} metrics "
@@ -931,6 +1049,20 @@ def publish_version(
         "Published as draft (automation output; not yet human-reviewed)."
         if status == "draft" else "Published new version.",
     )
+
+    # The Excel calculator of this version, generated from the bundle just
+    # written. Every publish path funnels through here (the interactive Publish
+    # page, the headless run, the batch promote), so this is the one place it is
+    # built. A workbook failure never blocks or undoes a publish: the version is
+    # already minted, the catalog reports the calculator as absent, and
+    # scripts/build_deep_calculators.py can build it later.
+    try:
+        write_calculator(assessment_id, new_version,
+                         actor=meta.get("author") or "publisher",
+                         note="Built at publish.")
+    except Exception as exc:  # noqa: BLE001 - never let the workbook fail a publish
+        logger.warning("Published %s v%d without an Excel calculator: %s",
+                       assessment_id, new_version, exc)
 
     _regenerate_catalog()
     logger.info("Published %s v%d to the assessment library.", assessment_id, new_version)

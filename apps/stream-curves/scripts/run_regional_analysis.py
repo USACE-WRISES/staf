@@ -27,10 +27,13 @@ if str(_APP_ROOT) not in sys.path:
 
 import pandas as pd  # noqa: E402
 
+from streamcurves import citation  # noqa: E402
 from streamcurves import curves  # noqa: E402
 from streamcurves import methodology  # noqa: E402
 from streamcurves import nrsa_dataset  # noqa: E402
+from streamcurves import pressure_evidence  # noqa: E402
 from streamcurves import provenance as pv  # noqa: E402
+from streamcurves import reference_screen  # noqa: E402
 from streamcurves import regional_agent as ra  # noqa: E402
 from streamcurves import run_state  # noqa: E402
 
@@ -319,13 +322,52 @@ def write_decision_log(result: dict, publish_info: dict | None, path: Path,
     path.write_text(json.dumps(log, indent=2, default=_json_default) + "\n", encoding="utf-8")
 
 
+def _pressure_reference_lines(result: dict) -> list[str]:
+    """The report's reference section under the pressure-screen method."""
+    block = (result.get("meta") or {}).get("referenceMethod") or {}
+    support = result.get("reference_support") or {}
+    borrowed = {mk: d for mk, d in support.items()
+                if str(d.get("status") or "").startswith("borrowed")}
+    withheld = sorted(result.get("insufficient_support") or {})
+    inverted = sorted(mk for mk, r in (result.get("discrimination") or {}).items()
+                      if r.get("verdict") == "inverted")
+    lines = [
+        "## Reference condition", "",
+        f"- Method: **fixed landscape-pressure screen** ({block.get('screenLabel')}), read "
+        "from the committed station table. The ECI is context only.",
+        f"- Candidates: {result['n_candidates']} NRSA stations of the ecoregion in the reference "
+        f"frame, {block.get('nInFrame')} of them on non-canal reaches. "
+        f"{block.get('nLocalReference')} pass the screen.",
+        f"- Reference curves: {block.get('nCurvesLocal')} on local stations, "
+        f"{block.get('nCurvesBorrowed')} on a pool borrowed from a parent ecoregion (REF-05).",
+        f"- Fixed-criteria metrics (CURVE-11): "
+        f"{', '.join(sorted(result.get('fixed_metrics') or {})) or 'none'}.",
+        f"- Withheld for insufficient reference support (REF-06): "
+        f"{', '.join(withheld) or 'none'}.",
+        f"- Values: the most recent non-null value per metric (DATA-11).",
+    ]
+    for mk, d in sorted(borrowed.items()):
+        lines.append(f"  - {mk}: {d.get('n_usable')} stations from "
+                     f"{d.get('level', '').upper()} {d.get('region_code')} "
+                     f"({d.get('region_name')}), transfer risk {d.get('transfer_risk')}.")
+    if inverted:
+        lines.append(f"- Curves that rank pressured stations above reference ones (CURVE-12, "
+                     f"review): {', '.join(inverted)}.")
+    lines += ["- Tables: reference_support.csv, reference_pool_ledger.csv"
+              + (", coverage_exceptions.draft.json" if withheld else "") + ".", ""]
+    return lines
+
+
 def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
     c = result["screening_counts"]
+    pressure = result.get("reference_method") == run_state.REFERENCE_METHOD_PRESSURE
     lines = [
         f"# Regional Analysis: {result['name']} (EPA L3-{result['l3_code']})", "",
-        f"Produced by the StreamCurves Regional Analysis Agent "
+        f"Produced by the {citation.PRODUCED_BY} "
         f"(methodology {methodology.methodology_version()}). "
         "Draft build for review; not certified.", "",
+    ]
+    lines += _pressure_reference_lines(result) if pressure else [
         "## Reference screening", "",
         f"- Candidates: {result['n_candidates']} NRSA sites in the ecoregion.",
         f"- Screening method: **{result['screening_method']}**"
@@ -341,8 +383,8 @@ def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
         f"exploratory {methodology.threshold('data_rules.exploratory_n_unstratified')}-"
         f"{methodology.threshold('data_rules.min_n_unstratified')}, "
         f"insufficient <{methodology.threshold('data_rules.insufficient_n_unstratified')})", "",
-        "## Data sources", "",
     ]
+    lines += ["## Data sources", ""]
     for rep in (result.get("source_reports") or []):
         status = str(rep.get("status") or "unknown")
         mark = "OK" if status == "ok" else status.upper()
@@ -418,8 +460,12 @@ def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
               "and the 0-100 confidence heuristic are within-pool diagnostics on "
               "development data. They are not out-of-sample evidence and not independent "
               "field validation, and nothing here claims validation.",
-              "- Compare against pilot_validation/NH58_benchmark.json: this run uses a REAL "
-              "reference screen, unlike the represented pilot."]
+              ("- The discrimination check (CURVE-12) uses stations of the same data set, so "
+               "it shows whether a curve separates pressured from reference stations here, "
+               "not how it will perform at a new site."
+               if pressure else
+               "- Compare against pilot_validation/NH58_benchmark.json: this run uses a REAL "
+               "reference screen, unlike the represented pilot.")]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -517,6 +563,19 @@ def write_outputs(result: dict, out_dir: Path, publish_info: dict | None,
     tier_eval = result.get("tier_evaluation") or []
     if tier_eval:
         pd.DataFrame(tier_eval).to_csv(out_dir / "tier_evaluation.csv", index=False)
+    if result.get("reference_method") == run_state.REFERENCE_METHOD_PRESSURE:
+        # Methodology 0.12: where every curve's reference stations came from,
+        # the station-level ledger behind it, and a draft of the coverage
+        # exceptions the withheld metrics leave for the owner to confirm.
+        pressure_evidence.support_frame(result).to_csv(
+            out_dir / "reference_support.csv", index=False)
+        ledger = result.get("reference_pool_ledger")
+        if ledger is not None and len(ledger):
+            pd.DataFrame(ledger).to_csv(out_dir / "reference_pool_ledger.csv", index=False)
+        draft = pressure_evidence.coverage_exceptions_draft(result)
+        if draft:
+            (out_dir / "coverage_exceptions.draft.json").write_text(
+                json.dumps(draft, indent=2) + "\n", encoding="utf-8")
     write_portfolio(result, out_dir / "compact_portfolio.md")
     if provenance_doc:
         (out_dir / "run_manifest.json").write_text(
@@ -538,7 +597,7 @@ def write_outputs(result: dict, out_dir: Path, publish_info: dict | None,
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description="StreamCurves Regional Analysis Agent")
+    ap = argparse.ArgumentParser(description="StreamCurves regional analysis, one ecoregion")
     ap.add_argument("--l3", required=True, help="EPA Level III ecoregion code, e.g. 58")
     ap.add_argument("--name", required=True, help="Ecoregion name, e.g. 'Northeastern Highlands'")
     ap.add_argument("--out", required=True, help="Output directory for the run artifacts")
@@ -603,7 +662,40 @@ def main(argv=None) -> int:
                          "for this run only (the per-region door the national registries "
                          "lack). The curve is still built and diagnosed so its evidence is "
                          "on the record. Repeatable; the maintainer name is the actor")
+    ap.add_argument("--reference-frame", default="wadeable",
+                    choices=nrsa_dataset.REFERENCE_FRAMES,
+                    help="the reference frame the candidate panel draws from (rule DATA-10). "
+                         "'wadeable' keeps stream order 1 to the governed maximum; 'all' drops "
+                         "the frame. The same flag the batch runner takes")
+    ap.add_argument("--include-site", action="append", default=[], metavar="SITE_ID=REASON",
+                    help="repeatable; readmit one station the reference frame would keep out, "
+                         "with a reason that joins the digest")
+    ap.add_argument("--exclude-site", action="append", default=[], metavar="SITE_ID=REASON",
+                    help="repeatable; take one screened site out of the retained pool, with a "
+                         "reason that joins the digest")
+    ap.add_argument("--reference-method", default=None, choices=run_state.REFERENCE_METHODS,
+                    help="how reference condition is defined. 'pressure-screen' (methodology "
+                         "0.12, the default on the pooled archive) reads the fixed landscape-"
+                         "pressure screen from the committed station table, borrows comparable "
+                         "stations from the Level II and Level I ecoregion where the region has "
+                         "too few, and scores pressure metrics on fixed criteria. 'easi-eci' is "
+                         "the legacy ECI gate (the default with --nrsa-dataset legacy-1819)")
     args = ap.parse_args(argv)
+    try:
+        reference_method = reference_screen.resolve_reference_method(
+            args.reference_method, args.nrsa_dataset)
+    except ValueError as exc:
+        ap.error(str(exc))
+
+    site_reasons = {"--include-site": {}, "--exclude-site": {}}
+    for flag, specs in (("--include-site", args.include_site),
+                        ("--exclude-site", args.exclude_site)):
+        for spec in specs:
+            sid, _, why = str(spec).partition("=")
+            if not sid.strip() or not why.strip():
+                ap.error(f"{flag} needs SITE_ID=REASON, got {spec!r}")
+            site_reasons[flag][sid.strip()] = why.strip()
+    frame_max_order, frame_protocols = nrsa_dataset.governed_frame(args.reference_frame)
 
     remove_metrics = {}
     for spec in args.remove_metric:
@@ -633,8 +725,8 @@ def main(argv=None) -> int:
     publish_root = Path(args.publish_root) if args.publish_root else out_dir / "library"
 
     started_at = datetime.now(timezone.utc).isoformat()
-    print(f"[agent] L3-{args.l3} ({args.name}); screen={args.screen} "
-          f"no_screen={args.no_screen}")
+    print(f"[agent] L3-{args.l3} ({args.name}); reference method {reference_method}; "
+          f"screen={args.screen} no_screen={args.no_screen}")
     coverage_exceptions = None
     if args.coverage_exceptions:
         coverage_exceptions = json.loads(
@@ -653,6 +745,10 @@ def main(argv=None) -> int:
                     remove_metrics=remove_metrics or None,
                     reviewer_decisions=decisions,
                     screen_retries=args.screen_retries, screen_retry_wait=args.screen_retry_wait,
+                    nrsa_max_stream_order=frame_max_order, nrsa_protocols=frame_protocols,
+                    nrsa_keep_sites=site_reasons["--include-site"] or None,
+                    exclude_sites=site_reasons["--exclude-site"] or None,
+                    reference_method=reference_method,
                     on_event=ra.event_narrator())
     print(f"[agent] retained {len(result['retained_site_ids'])} / {result['n_candidates']} "
           f"(tier {result['reference_tier']}, pool {result['reference_pool_disposition']}); "

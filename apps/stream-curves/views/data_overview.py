@@ -539,6 +539,9 @@ def data_overview_server(input, output, session, state: AppState):
         if dropped:
             logger.info("restore: dropped rule selections %s", dropped)
         state.rule_selections.set(kept)
+        # Absent in every session built before methodology 0.12 -> None, which
+        # reads as a legacy build (no fixed-criteria metrics to carry).
+        state.reference_build.set(fields.get("reference_build"))
         # Absent in a session written before gaps had to be justified -> no
         # exceptions, which is the honest reading of that file.
         state.function_coverage_exceptions.set(

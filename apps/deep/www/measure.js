@@ -110,7 +110,10 @@
   function updateWarn(metricEl, val) {
     var el = metricEl.querySelector(".deep-domain-warn");
     if (!el) return;
-    var msg = (val == null) ? null : domainWarning(pointsOf(metricEl), val);
+    // A fixed-criteria curve ends where the index reaches zero, so a value past its
+    // last point is scored as intended (mirrors deep/curves.metric_warning).
+    var fixed = metricEl.dataset.fixed === "1";
+    var msg = (val == null || fixed) ? null : domainWarning(pointsOf(metricEl), val);
     if (msg) { el.textContent = msg; el.hidden = false; }
     else { el.textContent = ""; el.hidden = true; }
   }
@@ -258,6 +261,9 @@
 
     var rep = e.target.closest("[data-report]");
     if (rep) { send("open_report_evt", {}); return; }
+    // The Field Forms dialog (the rail button; SFARI's pattern).
+    var ff = e.target.closest("[data-field-forms]");
+    if (ff) { send("field_forms_evt", {}); return; }
     // Prev / Next / jump. "Done" (Next on the last function) opens the report; every other
     // move also scrolls the panel back to the top of the new function.
     var nav = e.target.closest("[data-nav]");

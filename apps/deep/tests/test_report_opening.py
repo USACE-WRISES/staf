@@ -157,7 +157,8 @@ def test_function_navigation_or_another_dialog_cancels_preparing_report(event):
     ns = scope()
     ns["_open_report"]()
     ns["input"] = SimpleNamespace(nav_move=lambda: {"d": 1}, nav_jump=lambda: {"i": 1})
-    ns["_fns"] = lambda: [1, 2, 3]
+    # navigation walks the whole framework, scoring blocks plus the unassessed ones
+    ns["_walk_fns"] = lambda: [1, 2, 3]
     ns["ui"] = SimpleNamespace(**{**vars(app.ui), "modal_show": lambda modal: None})
     function(event, ns)()
     assert ns["_report_request"]() is None

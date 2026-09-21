@@ -12,14 +12,17 @@ import json
 import pandas as pd
 from shiny import reactive
 
+from streamcurves import easi_screening
 from streamcurves import provenance as pv
 from streamcurves import run_state as rs
 from streamcurves import session_io as sio
 from streamcurves.deep_export import (
     build_deep_assessment_bundle,
     deep_collect_curve_rows,
+    deep_read_staf_crosswalk,
     deep_slug,
     function_coverage_quick,
+    metrics_per_function_quick,
     uncovered_functions_from_mapping,
 )
 from views.state import AppState
@@ -64,10 +67,63 @@ def coverage_from_state(state: AppState) -> dict | None:
         completed = state.completed_metrics() or {}
         mapping = state.discipline_function_mapping()
         exceptions = state.function_coverage_exceptions() or []
+        reference_build = state.reference_build()
     try:
-        return function_coverage_quick(completed, mapping, exceptions)
+        return function_coverage_quick(
+            completed, mapping, exceptions,
+            always_covered=_fixed_function_ids(reference_build))
     except Exception:  # noqa: BLE001 - malformed exceptions are not a coverage verdict
         return None
+
+
+def _fixed_function_ids(reference_build) -> list[str]:
+    """Functions the fixed-criteria metrics of a pressure-screen build cover
+    (they join the bundle outside the editable mapping). Empty for a legacy
+    session, so nothing changes there."""
+    if not reference_build:
+        return []
+    from streamcurves import pressure_evidence as _pe
+    return _pe.fixed_function_ids(reference_build)
+
+
+def portfolio_approval_needed(state: AppState) -> list[dict]:
+    """Functions this session would publish more metrics on than the portfolio maximum
+    allows and that no recorded approval covers: ``[{functionId, functionName, nMetrics}]``.
+
+    SELECT-01 (``library.publish_version``) refuses a publish without a named approval of
+    each, which the batch runner takes as ``--approve-portfolio`` and an opened build
+    carries on its origin. The Publish page asks the publisher for the rest instead of
+    letting the click fail on a gate error, so this judges the same thing from the mapping
+    walk and the fixed-criteria metrics rather than building the bundle on every render.
+    The publish itself re-reads the real bundle (``library.functions_over_metric_limit``),
+    so a miscount here can only ask for an approval that turns out to be unnecessary.
+    """
+    from streamcurves import methodology
+    from streamcurves import pressure_evidence as _pe
+    with reactive.isolate():
+        completed = state.completed_metrics() or {}
+        curve_review = state.curve_review() or {}
+        mapping = state.discipline_function_mapping()
+        reference_build = state.reference_build()
+        origin = state.assessment_source() or {}
+    # the same scope rule the bundle is built under, or the page asks for an approval
+    # of a function whose third metric the review already took out
+    out_of_scope = {mk for mk, entry in curve_review.items() if not rs.is_in_scope(entry)}
+    counts = metrics_per_function_quick(
+        {mk: cm for mk, cm in completed.items() if mk not in out_of_scope}, mapping,
+        extra=_pe.fixed_metric_counts(reference_build) if reference_build else None)
+    if not counts:
+        return []
+    limit = int(methodology.threshold(
+        "metric_portfolio.default_maximum_metrics_per_function"))
+    approved = {str(a.get("functionId"))
+                for a in (origin.get("portfolio_approvals") or [])
+                if a.get("functionId") and a.get("approvedBy")}
+    names = {str(f.get("id")): f.get("name") or str(f.get("id"))
+             for f in deep_read_staf_crosswalk()}
+    return [{"functionId": fid, "functionName": names.get(fid, fid), "nMetrics": n}
+            for fid, n in sorted(counts.items())
+            if n > limit and fid not in approved]
 
 
 def run_snapshot(state: AppState) -> dict:
@@ -90,6 +146,8 @@ def run_snapshot(state: AppState) -> dict:
         validation_records = state.validation_records() or []
         origin = state.assessment_source() or {}
         screening_skipped = bool(state.screening_skipped())
+        screening_criteria = state.easi_screening_criteria()
+        reference_build = state.reference_build()
     kind = (region or {}).get("kind") if region else None
     n_candidates = int(meta.get("n_candidates") or 0)
     has_screening = sc is not None and not (hasattr(sc, "empty") and sc.empty)
@@ -107,7 +165,8 @@ def run_snapshot(state: AppState) -> dict:
     # the stage is blocked on the build anyway, not on unmapped functions.
     n_unmapped = (
         len(uncovered_functions_from_mapping(
-            mapping, metric_config, coverage_exceptions))
+            mapping, metric_config, coverage_exceptions,
+            always_covered=_fixed_function_ids(reference_build)))
         if metric_config
         else 0
     )
@@ -134,7 +193,15 @@ def run_snapshot(state: AppState) -> dict:
         # Skip only counts while no real screening table exists; running or
         # importing a screen supersedes the skip even if the flag lingers.
         "screening_skipped": screening_skipped and not has_screening,
+        # An all-sites screen retains everyone: fine for exploration, never a
+        # reference set the library accepts (rule REF-03).
+        "screening_publishable": easi_screening.screening_publishable(screening_criteria),
         "n_retained": n_retained,
+        # Curves fitted on a comparable pool of a parent ecoregion (REF-05). An
+        # ecoregion can retain none of its own candidates and still rest entirely on
+        # screened least-disturbed stations, so the readiness check counts these too.
+        "n_borrowed_curves": int(
+            ((reference_build or {}).get("referenceMethod") or {}).get("nCurvesBorrowed") or 0),
         # "attention" still means a build happened; it flags missing diagnostics,
         # not a missing dataset. Reading it as not-enriched would block stages 4
         # to 6 and show "Build a dataset first" over a complete dataset.
@@ -254,12 +321,23 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
     """
     with reactive.isolate():
         completed = state.completed_metrics() or {}
+        curve_review = state.curve_review() or {}
         mapping = state.discipline_function_mapping()
         metric_config = state.metric_config() or {}
         session_name = state.session_name()
         region = state.region_of_applicability()
         exceptions = state.function_coverage_exceptions() or []
         predictor_config = state.predictor_config() or {}
+        reference_build = state.reference_build()
+
+    # A curve a reviewer removed, or one still awaiting review, is not published.
+    # `completed_metrics` holds every built curve on purpose (regional_agent.session_fields
+    # keeps the flagged ones so a reviewer can see them), so scope has to be applied here
+    # the way the headless path applies it to `intended_rows` (regional_agent.assemble).
+    # Only a metric the review actually judged is dropped: a session with no curve_review
+    # at all (the Advanced path) publishes everything it holds, as it always did.
+    out_of_scope = {mk for mk, entry in curve_review.items() if not rs.is_in_scope(entry)}
+    completed = {mk: cm for mk, cm in completed.items() if mk not in out_of_scope}
 
     curve_rows = deep_collect_curve_rows(completed)
     if not curve_rows:
@@ -285,4 +363,10 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
             full_meta["stateName"] = region.get("name") or ""
     if meta:
         full_meta.update({k: v for k, v in meta.items() if v is not None})
+    # A pressure-screen build (methodology 0.12) keeps its reference statement
+    # through an interactive republish: the fixed-criteria metrics, each curve's
+    # reference support, the withheld list. A legacy session passes through.
+    from streamcurves import pressure_evidence as _pe
+    curve_rows, mapping, metric_config = _pe.apply_reference_build(
+        reference_build, curve_rows, mapping, metric_config, full_meta)
     return build_deep_assessment_bundle(curve_rows, mapping, metric_config, meta=full_meta)

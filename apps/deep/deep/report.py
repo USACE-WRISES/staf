@@ -18,7 +18,8 @@ import csv
 import io
 import json
 
-from . import assessments, curves, delineation, measure, reportmap, scoring, session
+from . import assessments, curves, delineation, measure, reference_support, reportmap
+from . import scoring, session
 
 
 def _mbf(assessment) -> list[dict]:
@@ -85,7 +86,8 @@ def _attr(assessment, obj_attr, dict_key, default=""):
 # --------------------------------------------------------------------------- #
 _BASIS_WORDS = (("site-engine", "STAF site engine (HR reach watershed)"),
                 ("streamcat", "StreamCat lookup engine (NHDPlus V2 basin)"),
-                ("nlcd", "NLCD (HR reach watershed polygon)"), ("3dep", "3DEP"))
+                ("nlcd", "NLCD (HR reach watershed polygon)"), ("3dep", "3DEP"),
+                ("nid", "USACE National Inventory of Dams"))
 
 
 def desktop_basis_label(measured) -> str:
@@ -174,8 +176,38 @@ def _rows(assessment, measured):
                 "predictor_source": _metric_predictor_source(m, assessment),
                 "advisory": advisory,
                 "reference_only": reference_only,
+                # StreamCurves methodology 0.12; both empty for an older bundle
+                "scored_against": reference_support.support_line(m),
+                "curve_set": curve_set_label(m, raw),
             }
             yield fn, m, val, idx, meta
+
+
+def curve_set_label(m: dict, raw: dict) -> str:
+    """The curve layer a stratified metric was scored on, with how it was
+    chosen: ``Steep (2 percent and above) (auto)`` or ``... (chosen)``. Empty
+    for a single-curve metric."""
+    strata = curves.curve_strata(m)
+    if len(strata) < 2:
+        return ""
+    chosen = (raw or {}).get("stratum")
+    if chosen is None:
+        chosen = m.get("activeStratum") or strata[0]
+    how = "auto" if (raw or {}).get("stratumAuto") else (
+        "chosen" if (raw or {}).get("stratum") is not None else "default")
+    return f"{reference_support.stratum_label(chosen, m)} ({how})"
+
+
+def withheld_rows(assessment) -> list[list[str]]:
+    """``[metric, functions, reason]`` per metric the assessment withholds for
+    insufficient reference support (empty for an older bundle)."""
+    out = []
+    for w in reference_support.withheld(assessment):
+        fns = ", ".join(str(f.get("functionName") or f.get("functionId"))
+                        for f in w.get("functions") or [])
+        out.append([str(w.get("metricName") or w.get("metricId") or ""), fns,
+                    str(w.get("statement") or "Insufficient reference support, not scored.")])
+    return out
 
 
 def _header_pairs(delin, assessment, sc, region=None, measured=None):
@@ -202,10 +234,12 @@ def _header_pairs(delin, assessment, sc, region=None, measured=None):
         ("Desktop values", desktop_basis_label(measured)),
         ("StreamCat reach", streamcat_reach_label(delin)),
         ("Ecosystem Condition Index", sc.get("ecosystemConditionIndex")),
-        # An export outlives the session, so the index's denominator travels with it:
-        # scoring correctly excludes uncovered functions from both numerator and
-        # denominator, which makes a partial-coverage ECI look directly comparable to
-        # a full-framework one unless the coverage is stated alongside it.
+        # An export outlives the session, so the claim travels with it rather than
+        # the bare number. Scoring excludes an unassessed function from numerator
+        # and denominator alike, which lands a partial assessment on the same 0 to 1
+        # scale as a complete one and reads as comparable when it is not, so where
+        # anything is unassessed the index is an interval and says so.
+        ("Condition claim", scoring.index_claim(sc)),
         ("STAF function coverage", _coverage_label(assessment)),
         ("Physical sub-index", si.get("physical")),
         ("Chemical sub-index", si.get("chemical")),
@@ -246,9 +280,11 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
     for k, v in _header_pairs(delin, assessment, sc, region, measured):
         w.writerow([k, v])
     w.writerow([])
+    # The last two columns were added for StreamCurves methodology 0.12 and sit
+    # at the end so every earlier column keeps its position.
     w.writerow(["Function", "Discipline", "Metric", "Measured value", "Curve (source)",
                 "Metric index (0-1)", "Note", "Origin", "Basis", "Source", "Engine value",
-                "Predictor source", "Scoring advisory"])
+                "Predictor source", "Scoring advisory", "Scored against", "Curve set"])
     for fn, m, val, idx, meta in _rows(assessment, measured):
         note = (measured.get(m["metricId"]) or {}).get("note", "")
         w.writerow([fn.get("functionName", ""), fn.get("discipline", ""),
@@ -257,7 +293,14 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
                     "" if idx is None else round(idx, 3), note,
                     meta["origin"], meta["basis"], meta["source"],
                     "yes" if meta["engine"] else "", meta["predictor_source"],
-                    meta["advisory"] or ""])
+                    meta["advisory"] or "", meta["scored_against"], meta["curve_set"]])
+    withheld = withheld_rows(assessment)
+    if withheld:
+        w.writerow([])
+        w.writerow(["Metrics withheld for insufficient reference support (not scored)"])
+        w.writerow(["Metric", "Functions", "Reason"])
+        for row in withheld:
+            w.writerow(row)
     w.writerow([])
     w.writerow(["Function", "Function score (0-15)", "Condition"])
     for name, s, cond in _function_rows(assessment, sc):
@@ -267,6 +310,7 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
     for k in ("physical", "chemical", "biological"):
         w.writerow([k.title(), sc.get("subIndices", {}).get(k)])
     w.writerow(["Ecosystem Condition Index", sc.get("ecosystemConditionIndex")])
+    w.writerow(["Condition claim", scoring.index_claim(sc)])
     w.writerow(["STAF function coverage", _coverage_label(assessment)])
     return out.getvalue()
 
@@ -288,6 +332,8 @@ def build_geojson(delin, assessment, sc, region=None, measured=None) -> str:
              "engine_values_withheld": withheld,
              "streamcat_reach": streamcat_reach_label(delin),
              "ecosystem_condition_index": sc.get("ecosystemConditionIndex"),
+             "ecosystem_condition_index_bounds": sc.get("ecosystemConditionIndexBounds"),
+             "condition_claim": scoring.index_claim(sc),
              "staf_function_coverage": _coverage_label(assessment)}
     for k, v in sc.get("subIndices", {}).items():
         props[f"subindex_{k}"] = v
@@ -371,7 +417,7 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
            ["Desktop values", desktop_basis_label(measured)],
            ["StreamCat reach", streamcat_reach_label(delin)],
            ["Content digest", digest or "(none)"],
-           ["Ecosystem Condition Index", f"{sc.get('ecosystemConditionIndex')}"],
+           ["Ecosystem Condition Index", scoring.index_claim(sc)],
            ["STAF function coverage", _coverage_label(assessment)]]
     if dl.get("watershed_area_sqkm") is not None:
         hdr.insert(7, ["HR reach watershed area", f"{dl.get('watershed_area_sqkm')} km2"])
@@ -403,16 +449,26 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
     story += [ft, Spacer(1, 10), Paragraph("Outcome sub-indices", styles["Heading3"])]
 
     si = sc.get("subIndices", {})
+    # "not assessed" rather than a blank cell: an outcome with no direct contributor
+    # is unmeasured, and a blank reads as an oversight.
+    cell = lambda v: "not assessed" if v is None else v          # noqa: E731
     sit = Table([["Physical", "Chemical", "Biological", "ECI"],
-                 [si.get("physical"), si.get("chemical"), si.get("biological"),
-                  sc.get("ecosystemConditionIndex")]], colWidths=[1.6 * inch] * 4)
+                 [cell(si.get("physical")), cell(si.get("chemical")),
+                  cell(si.get("biological")),
+                  cell(sc.get("ecosystemConditionIndex"))]], colWidths=[1.6 * inch] * 4)
     sit.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 9), ("GRID", (0, 0), (-1, -1), 0.3, grid),
                              ("BACKGROUND", (0, 0), (-1, 0), head_bg)]))
     story += [sit, Spacer(1, 10), Paragraph("Metric measurements & curve indices", styles["Heading3"])]
 
     mdata = [["Function", "Metric", "Value", "Index", "Source", "Curve (source)"]]
     advisories = []
+    support_rows: dict[str, list] = {}
     for fn, m, val, idx, meta in _rows(assessment, measured):
+        if meta["scored_against"] and m["metricId"] not in support_rows:
+            support_rows[m["metricId"]] = [
+                Paragraph(m.get("metricName", m["metricId"]), small),
+                Paragraph(meta["scored_against"], small),
+                Paragraph(meta["curve_set"], small)]
         idx_txt = "ref. only" if meta["reference_only"] else ("" if idx is None else f"{idx:.2f}")
         mdata.append([Paragraph(fn.get("functionName", ""), small),
                       Paragraph(m.get("metricName", m["metricId"]), small),
@@ -433,6 +489,36 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
         story += [Paragraph("Scoring advisories", styles["Heading4"])]
         story += [Paragraph(a, small) for a in advisories]
         story += [Spacer(1, 6)]
+    # What each metric is scored against, and what the assessment withholds
+    # (bundles built under StreamCurves methodology 0.12; absent otherwise).
+    light = colors.HexColor("#e5e8ee")
+    if support_rows:
+        statement = reference_support.reference_method_statement(assessment)
+        story += [Paragraph("Reference support", styles["Heading3"])]
+        if statement:
+            story += [Paragraph(statement, small), Spacer(1, 4)]
+        st_tbl = Table([["Metric", "Scored against", "Curve set"]] + list(support_rows.values()),
+                       colWidths=[1.8 * inch, 3.75 * inch, 1.5 * inch], repeatRows=1)
+        st_tbl.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 7),
+                                    ("GRID", (0, 0), (-1, -1), 0.3, light),
+                                    ("BACKGROUND", (0, 0), (-1, 0), head_bg),
+                                    ("VALIGN", (0, 0), (-1, -1), "TOP")]))
+        story += [st_tbl, Spacer(1, 8)]
+    withheld = withheld_rows(assessment)
+    if withheld:
+        story += [Paragraph("Metrics withheld for insufficient reference support",
+                            styles["Heading3"]),
+                  Paragraph("These metrics have no curve and are not scored. No defensible pool "
+                            "of least-disturbed stations exists for them in this ecoregion or "
+                            "its parent ecoregions.", small), Spacer(1, 4)]
+        wt = Table([["Metric", "Functions"]]
+                   + [[Paragraph(r[0], small), Paragraph(r[1], small)] for r in withheld],
+                   colWidths=[3.0 * inch, 4.05 * inch], repeatRows=1)
+        wt.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 7),
+                                ("GRID", (0, 0), (-1, -1), 0.3, light),
+                                ("BACKGROUND", (0, 0), (-1, 0), head_bg),
+                                ("VALIGN", (0, 0), (-1, -1), "TOP")]))
+        story += [wt, Spacer(1, 8)]
     story += [Paragraph("Scores are computed automatically from the assessment's reference curves. "
                         "Confirm state/region applicability of the curve source.", styles["Italic"])]
 
@@ -481,75 +567,172 @@ def _desktop_entries(assessment, measured) -> dict:
 
 def build_field_forms_pdf(assessment, ref: str = "", *, measured=None,
                           delineation=None) -> bytes:
-    """Print-ready field packet: every metric in the assessment with a write-in
-    Value / Notes cell, grouped by function. Desktop-computed values (``measured``)
-    are printed in the Value cell with their source in Notes so the crew sees
-    what the desk already answered; a site line names the delineated reach.
+    """The field worksheet for the loaded assessment: every metric grouped by
+    function in the SFARI form's layout, with a write-in Value and Index cell.
+    Desktop-computed values (``measured``) are printed in the Value cell with
+    ``DESKTOP: <source>`` under the metric so the crew sees what the desk already
+    answered, and a site line names the delineated reach.
 
-    PLACEHOLDER: generated locally from the bundle's metric list so field crews have
-    something to carry today. Replace with the StreamCurves-authored field-form PDF
-    shipped inside the published bundle (a future bundle key) once that exists.
+    Generated on the fly by :mod:`deep.field_form`, so it is always in step with
+    the assessment and version that is loaded. This function keeps the call
+    shape the app and the exports have always used.
     """
+    from . import field_form
+    return field_form.build_field_form_pdf(
+        assessment, ref, measured=measured, delineation=delineation,
+        desktop_entries=_desktop_entries(assessment, measured))
+
+
+# --------------------------------------------------------------------------- #
+# The metrics list of the Field Forms dialog and its PDF
+# --------------------------------------------------------------------------- #
+STATUS_AVAILABLE = "Available"
+STATUS_PENDING = "Pending"
+STATUS_UNAVAILABLE = "Unavailable"
+STATUS_REFERENCE_ONLY = "Reference only"
+STATUS_FIELD = "Measure in the field"
+STATUS_ENTERED = "Entered"
+STATUS_NA = "Not applicable"
+STATUS_WITHHELD = "Not scored"
+
+
+def metric_rows(assessment, measured, *, computing: bool = False,
+                desktop_ids=None) -> list[dict]:
+    """One row per metric of the assessment, for the dialog table and the
+    metrics PDF: ``{discipline, function, metric, units, code, method, status,
+    value, source}``.
+
+    Status: **Available** (the desk answered it), **Pending** (a desk metric
+    while the pull is still running), **Unavailable** (a desk metric no source
+    answered), **Reference only** (an engine value the pairing rule keeps out of
+    the score), **Measure in the field**, **Entered** (the assessor typed it),
+    and **Not scored** for a metric the assessment withholds.
+    """
+    from . import field_form
+    if desktop_ids is None:
+        desktop_ids = field_form._desktop_ids()
+    measured = measured or {}
+    rows: list[dict] = []
+    seen: set = set()
+    for fn, m, val, _idx, meta in _rows(assessment, measured):
+        mid = m["metricId"]
+        code = field_form.measure_code(m, desktop_ids)
+        raw = measured.get(mid) or {}
+        if val not in (None, ""):
+            if meta.get("reference_only"):
+                status = STATUS_REFERENCE_ONLY
+            elif meta.get("origin") == "desktop":
+                status = STATUS_AVAILABLE
+            else:
+                status = STATUS_ENTERED
+        elif raw.get("na"):
+            status = STATUS_NA
+        elif code == "D":
+            status = STATUS_PENDING if computing else STATUS_UNAVAILABLE
+        else:
+            status = STATUS_FIELD
+        rows.append({
+            "discipline": fn.get("discipline", ""), "function": fn.get("functionName", ""),
+            "metricId": mid, "metric": m.get("metricName", mid),
+            "units": field_form.units_of(m), "code": code,
+            "method": field_form.method_text(m), "status": status,
+            "value": "" if val in (None, "") else str(val),
+            "source": meta.get("source") or "",
+            "scored_against": meta.get("scored_against") or "",
+            "repeat": mid in seen})
+        seen.add(mid)
+    for w in reference_support.withheld(assessment):
+        fns = ", ".join(str(f.get("functionName") or f.get("functionId"))
+                        for f in w.get("functions") or [])
+        rows.append({"discipline": "", "function": fns,
+                     "metricId": w.get("metricId"), "metric": w.get("metricName") or "",
+                     "units": w.get("units") or "", "code": "", "method": "",
+                     "status": STATUS_WITHHELD, "value": "",
+                     "source": "Insufficient reference support",
+                     "scored_against": "", "repeat": False})
+    return rows
+
+
+def metric_status_counts(rows: list[dict]) -> dict[str, int]:
+    """Counts by status over distinct metrics (a metric that serves several
+    functions is counted once)."""
+    out: dict[str, int] = {}
+    for r in rows:
+        if r.get("repeat"):
+            continue
+        out[r["status"]] = out.get(r["status"], 0) + 1
+    return out
+
+
+def metrics_filename(assessment) -> str:
+    aid = _attr(assessment, "assessment_id", "assessmentId") or "assessment"
+    return f"deep-metrics-{aid}.pdf"
+
+
+def build_metrics_pdf(assessment, ref: str = "", *, measured=None, delineation=None) -> bytes:
+    """The metrics list as a PDF: the site, every metric of the assessment with
+    how it is measured, its status, the value the desk answered and its source.
+    The second download of the Field Forms dialog."""
+    from xml.sax.saxutils import escape
+
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import inch
     from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-    buf = io.BytesIO()
-    doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=0.6 * inch, bottomMargin=0.6 * inch,
-                            leftMargin=0.6 * inch, rightMargin=0.6 * inch, title="DEEP Field Forms")
-    styles = getSampleStyleSheet()
-    small = ParagraphStyle("small", parent=styles["BodyText"], fontSize=8, leading=10)
-    tiny = ParagraphStyle("tiny", parent=styles["BodyText"], fontSize=7, leading=8.5)
-    grid = colors.HexColor("#c3ccda")
+    from . import field_form
+    safe = field_form.to_print_safe
+    base = getSampleStyleSheet()
+    small = ParagraphStyle("m_small", parent=base["BodyText"], fontSize=7, leading=8.4)
+    dim = ParagraphStyle("m_dim", parent=small, textColor=colors.HexColor("#66708a"))
+    ital = ParagraphStyle("m_it", parent=small, fontName="Helvetica-Oblique",
+                          textColor=colors.HexColor("#66708a"))
     head_bg = colors.HexColor("#eef2f8")
 
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=0.6 * inch, bottomMargin=0.6 * inch,
+                            leftMargin=0.6 * inch, rightMargin=0.6 * inch,
+                            title="DEEP Metrics", invariant=1)
     name = _attr(assessment, "assessment_name", "assessmentName") or "Detailed assessment"
-    cite = _attr(assessment, "source_citation", "sourceCitation")
-    sub = "  ·  ".join([p for p in (ref, cite) if p])
-    story = [Paragraph("DEEP Field Forms", styles["Title"]),
-             Paragraph(name, styles["Heading2"])]
-    if sub:
-        story.append(Paragraph(sub, styles["Italic"]))
     dl = (delineation or {}).get("delineation") or {}
+    story = [Paragraph("DEEP Metrics", base["Title"]),
+             Paragraph(escape(safe(name + (f"  ({ref})" if ref else ""))), base["Heading2"])]
     if dl:
-        reach_id = (f"NHDPlusID {dl.get('nhdplus_id')}" if dl.get("network") == "nhdplus-hr"
-                    and dl.get("nhdplus_id") else f"COMID {dl.get('comid')}")
-        site_line = (f"Site: {dl.get('gnis_name') or '(unnamed reach)'}  ·  {reach_id}  ·  "
-                     f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}  ·  "
-                     f"{dl.get('drainage_area_sqkm')} km2  ·  "
-                     f"{watershed_basis_label(delineation)}")
-        story.append(Paragraph(site_line, small))
-    story += [Paragraph("Record each metric's measured value in the field, then enter the values in "
-                        "DEEP to compute the reference-curve scores. Values already answered from "
-                        "the desk are printed with their source.", small), Spacer(1, 8)]
-
-    desktop = _desktop_entries(assessment, measured)
-    any_fn = False
-    for fn in _mbf(assessment):
-        any_fn = True
-        disc = fn.get("discipline", "")
-        head = fn.get("functionName", fn.get("functionId", ""))
-        if disc:
-            head = f"{head}  ({disc})"
-        story.append(Paragraph(head, styles["Heading3"]))
-        data = [["Metric", "Units / measure", "Value", "Notes"]]
-        for m in fn.get("metrics", []):
-            val_txt, note_txt = desktop.get(m.get("metricId"), ("", ""))
-            data.append([Paragraph(m.get("metricName", m.get("metricId", "")), small),
-                         Paragraph(m.get("xLabel", ""), small),
-                         Paragraph(val_txt, small) if val_txt else "",
-                         Paragraph(note_txt, tiny) if note_txt else ""])
-        t = Table(data, colWidths=[2.3 * inch, 1.9 * inch, 1.0 * inch, 2.1 * inch],
-                  rowHeights=[0.28 * inch] + [0.4 * inch] * (len(data) - 1), repeatRows=1)
-        t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 8),
-                               ("GRID", (0, 0), (-1, -1), 0.4, grid),
-                               ("BACKGROUND", (0, 0), (-1, 0), head_bg),
-                               ("VALIGN", (0, 0), (-1, -1), "TOP")]))
+        hdr = [["Stream", safe(dl.get("gnis_name") or "(unnamed reach)")],
+               ["Coordinates", f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}"],
+               ["COMID / HUC8", f"{dl.get('comid')} / {dl.get('huc8')}"],
+               ["Drainage area", f"{dl.get('drainage_area_sqkm')} km2"],
+               ["Reach length", f"{dl.get('reach_length_ft')} ft"],
+               ["Watershed basis", safe(watershed_basis_label(delineation))],
+               ["StreamCat reach", safe(streamcat_reach_label(delineation))]]
+        t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
+        t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 9),
+                               ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#d5deea")),
+                               ("BACKGROUND", (0, 0), (0, -1), head_bg)]))
         story += [t, Spacer(1, 10)]
 
-    if not any_fn:
-        story.append(Paragraph("This assessment has no metrics defined.", small))
+    data = [["Function", "Metric", "F / D", "How it is measured", "Status", "Value", "Source"]]
+    for r in metric_rows(assessment, measured):
+        metric = escape(safe(r["metric"])) + (f" ({escape(safe(r['units']))})" if r["units"] else "")
+        is_value = r["status"] in (STATUS_AVAILABLE, STATUS_REFERENCE_ONLY, STATUS_ENTERED)
+        data.append([Paragraph(escape(safe(r["function"])), dim), Paragraph(metric, small),
+                     r["code"], Paragraph(escape(safe(r["method"])), small),
+                     Paragraph(escape(r["status"]), small if is_value else ital),
+                     Paragraph(escape(safe(r["value"])), small),
+                     Paragraph(escape(safe(r["source"])), small)])
+    mt = Table(data, colWidths=[1.15 * inch, 1.35 * inch, 0.4 * inch, 1.95 * inch,
+                                0.85 * inch, 0.6 * inch, 1.0 * inch], repeatRows=1)
+    mt.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 7),
+                            ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e5e8ee")),
+                            ("BACKGROUND", (0, 0), (-1, 0), head_bg),
+                            ("VALIGN", (0, 0), (-1, -1), "TOP")]))
+    story += [mt, Spacer(1, 8),
+              Paragraph("F is measured in the field and D is answered from the desk. Available: "
+                        "the value was pulled and is printed on the field worksheet. Unavailable: "
+                        "no source answered, so measure or estimate it on site. Reference only: "
+                        "the value is shown and kept out of the score, because the curve was "
+                        "fitted on another data source. Not scored: the assessment withholds the "
+                        "metric for insufficient reference support.", dim)]
     doc.build(story)
     return buf.getvalue()

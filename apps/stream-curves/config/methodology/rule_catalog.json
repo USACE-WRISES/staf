@@ -1,8 +1,8 @@
 {
  "meta": {
-  "methodology_version": "0.11-provisional",
-  "date": "2026-09-08",
-  "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses were untouched. v0.5 (2026-08-21) promotes REF-02's threshold status to calibrated on the Eastern Corn Belt Plains pilot evidence (owner decision), values unchanged. v0.6 (2026-08-21) is the adversarial-review release: REF-02 and the DATA sample floors (DATA-04 to DATA-08) return to provisional because the pilots mechanism-verified the implementation without calibrating the values (calibrated is reserved for external evidence); REF-02's automatic trigger fires only below the DATA-05 exploratory floor; CURVE-02 is renamed Leave-one-site-out stability and the confidence vocabulary drops out-of-sample (the component is resampling_stability, the cap no_stability_evidence); CONF-02 gains a mandatory_review_open cap of 79 and a deferred_gradient deduction of 10; the seed clamps to declared physical domains, signed scales are declared, and a two-sided curve may declare a flat low tail. No numeric threshold value moved. v0.7 (2026-08-22) adds standing decisions: the owner's class decisions from the two pilots (standing_decisions.yaml) may be applied per item by a batch run to a staged version, with the owner's end review before any canonical publish; SELECT-01 records count the bundle's metric blocks as well as the compact portfolio. No threshold value or status changed. v0.8 (2026-08-23) adds a second NRSA data source. Runs may now draw candidates from a multi-cycle archive pooling the 2013-14, 2018-19 and 2023-24 surveys instead of the bundled 2018-19 snapshot, under a most-recent-visit policy: each distinct station contributes one row, taken from the newest cycle that carries the metrics the run needs, with every excluded station recorded in a ledger. The default is unchanged, so a run that does not ask for the archive reproduces its inputs digest exactly. The digest itself now carries the dataset id, its cycles and the policy, because two runs over one ecoregion on different data must not share a digest. No threshold value or status changed. 2026-08-27: the unused standing_policy value is removed from override_permission_values (no rule ever used it; the standing-decision linkage is the standing_decision_ids cross-links instead). No rule, threshold value or status changed. v0.9 (2026-08-27) is the governance-capture release, driven by a reproducibility audit of the published versions: config keys that read as governance but were never loaded now either govern (metric_portfolio.default_maximum_metrics_per_function, stratifier_rules.min_group_size_current, the reference_tiers ladder, and stratifier_rules.screening_significance_alpha, renamed from group_difference_fdr_q which mislabeled the acting raw-p cut as a BH q) or are marked declarative in the config comments; the curve engine's hard floor, its single family name, and the screening alpha join the mirror check; golden-master tests pin the curve seed geometry, the confidence assembly formulas, and the screening cuts, recorded as CURVE-10; CURVE-09 implements the measurement-precision floor proposed at v0.6, advisory only, with per-metric floors in config (pH 0.2 su provisional); the redundancy view now honors the low-n and binary-coarseness guards on the RED-01 flag everywhere it is consumed; a partially failed StreamCat fetch reports status partial (refused by batch, gated interactively) instead of ok, and is never cached; the screening cache is keyed to its candidate panel and refetches when stale; the bootstrap depth joins the inputs digest under absence semantics (the canonical 1000 adds no key, so published digests reproduce) and both entry points default to 1000; the mandatory-review rule list and the uncovered-hard-stop trigger list are single-sourced. No published threshold value moved. v0.10 (2026-09-07) is the reference-frame and screening-provenance release. Three changes, all owner decisions. (1) The reference panel is framed on stream order (reference_panel.max_stream_order, new rule DATA-10): wadeable means NHDPlus V2 Strahler order 1 to 5, read from the order cached for every station COMID, with the NRSA sampling protocol deciding only where an order cannot be resolved. Framing on the protocol instead was measured and rejected: it drops 57 of 301 in-frame stations across the three pilots, because a stream of order 1 to 5 is often sampled under the boatable protocol. The frame joins the inputs digest under absence semantics, so every version published before it reproduces. (2) The EASI reference screen keys on each NRSA site's own archive COMID, the reach the crew sampled, instead of re-snapping the coordinate; a candidate without one still routes under the streamcat-legacy pin. The pin and the COMID mode now join the digest under absence semantics, because neither reproduces anything published (surrogate routing reached the vendored engine after every published version was screened) and both decide pool membership. The screening cache is keyed on the screening method version, the pin and the COMID mode, and screening_method_version moves to easi-batch-2. (3) Surface water storage is scored on one combined wetland metric (pctwet2019 = woody + herbaceous, both classes required), the sum EASI has always scored, closing review item ECO-15; the two class metrics stay pickable and keep their DEEP adapters. No threshold value moved and no rule's threshold_status changed. v0.11 (2026-09-08) changes one publish rule, on the owner's decision. A function counts as covered when its metric carries a curve DEEP can interpolate, not when the curve's status word reads complete. The two agree for every curve fitted from a real quartile spread and differ only for the IQR seed's three-point fallback (curve_status degenerate_q25), which has points, scores, and passes its own geometric validation, yet was dropped from the bundle and left its function reported as an uncovered gap. A curve with no points (degenerate_curve) is still dropped and still covers nothing. The flag survives: the curve stays open in StreamCurves' review until a reviewer finalizes it by name, the bundle stamps curveStatus on the metric entry, and the reason travels to the scorer as a caveat. New rule SELECT-03. Occasioned by Interior Plateau, whose wadeable reference pool carries almost no mapped wetland (11 of 38 retained sites exactly zero, median 0.05 percent of watershed area), so Surface water storage can only be a fallback curve there. No threshold value moved and no rule's threshold_status changed.",
+  "methodology_version": "0.12-provisional",
+  "date": "2026-09-19",
+  "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses were untouched. v0.5 (2026-08-21) promotes REF-02's threshold status to calibrated on the Eastern Corn Belt Plains pilot evidence (owner decision), values unchanged. v0.6 (2026-08-21) is the adversarial-review release: REF-02 and the DATA sample floors (DATA-04 to DATA-08) return to provisional because the pilots mechanism-verified the implementation without calibrating the values (calibrated is reserved for external evidence); REF-02's automatic trigger fires only below the DATA-05 exploratory floor; CURVE-02 is renamed Leave-one-site-out stability and the confidence vocabulary drops out-of-sample (the component is resampling_stability, the cap no_stability_evidence); CONF-02 gains a mandatory_review_open cap of 79 and a deferred_gradient deduction of 10; the seed clamps to declared physical domains, signed scales are declared, and a two-sided curve may declare a flat low tail. No numeric threshold value moved. v0.7 (2026-08-22) adds standing decisions: the owner's class decisions from the two pilots (standing_decisions.yaml) may be applied per item by a batch run to a staged version, with the owner's end review before any canonical publish; SELECT-01 records count the bundle's metric blocks as well as the compact portfolio. No threshold value or status changed. v0.8 (2026-08-23) adds a second NRSA data source. Runs may now draw candidates from a multi-cycle archive pooling the 2013-14, 2018-19 and 2023-24 surveys instead of the bundled 2018-19 snapshot, under a most-recent-visit policy: each distinct station contributes one row, taken from the newest cycle that carries the metrics the run needs, with every excluded station recorded in a ledger. The default is unchanged, so a run that does not ask for the archive reproduces its inputs digest exactly. The digest itself now carries the dataset id, its cycles and the policy, because two runs over one ecoregion on different data must not share a digest. No threshold value or status changed. 2026-08-27: the unused standing_policy value is removed from override_permission_values (no rule ever used it; the standing-decision linkage is the standing_decision_ids cross-links instead). No rule, threshold value or status changed. v0.9 (2026-08-27) is the governance-capture release, driven by a reproducibility audit of the published versions: config keys that read as governance but were never loaded now either govern (metric_portfolio.default_maximum_metrics_per_function, stratifier_rules.min_group_size_current, the reference_tiers ladder, and stratifier_rules.screening_significance_alpha, renamed from group_difference_fdr_q which mislabeled the acting raw-p cut as a BH q) or are marked declarative in the config comments; the curve engine's hard floor, its single family name, and the screening alpha join the mirror check; golden-master tests pin the curve seed geometry, the confidence assembly formulas, and the screening cuts, recorded as CURVE-10; CURVE-09 implements the measurement-precision floor proposed at v0.6, advisory only, with per-metric floors in config (pH 0.2 su provisional); the redundancy view now honors the low-n and binary-coarseness guards on the RED-01 flag everywhere it is consumed; a partially failed StreamCat fetch reports status partial (refused by batch, gated interactively) instead of ok, and is never cached; the screening cache is keyed to its candidate panel and refetches when stale; the bootstrap depth joins the inputs digest under absence semantics (the canonical 1000 adds no key, so published digests reproduce) and both entry points default to 1000; the mandatory-review rule list and the uncovered-hard-stop trigger list are single-sourced. No published threshold value moved. v0.10 (2026-09-07) is the reference-frame and screening-provenance release. Three changes, all owner decisions. (1) The reference panel is framed on stream order (reference_panel.max_stream_order, new rule DATA-10): wadeable means NHDPlus V2 Strahler order 1 to 5, read from the order cached for every station COMID, with the NRSA sampling protocol deciding only where an order cannot be resolved. Framing on the protocol instead was measured and rejected: it drops 57 of 301 in-frame stations across the three pilots, because a stream of order 1 to 5 is often sampled under the boatable protocol. The frame joins the inputs digest under absence semantics, so every version published before it reproduces. (2) The EASI reference screen keys on each NRSA site's own archive COMID, the reach the crew sampled, instead of re-snapping the coordinate; a candidate without one still routes under the streamcat-legacy pin. The pin and the COMID mode now join the digest under absence semantics, because neither reproduces anything published (surrogate routing reached the vendored engine after every published version was screened) and both decide pool membership. The screening cache is keyed on the screening method version, the pin and the COMID mode, and screening_method_version moves to easi-batch-2. (3) Surface water storage is scored on one combined wetland metric (pctwet2019 = woody + herbaceous, both classes required), the sum EASI has always scored, closing review item ECO-15; the two class metrics stay pickable and keep their DEEP adapters. No threshold value moved and no rule's threshold_status changed. v0.11 (2026-09-08) changes one publish rule, on the owner's decision. A function counts as covered when its metric carries a curve DEEP can interpolate, not when the curve's status word reads complete. The two agree for every curve fitted from a real quartile spread and differ only for the IQR seed's three-point fallback (curve_status degenerate_q25), which has points, scores, and passes its own geometric validation, yet was dropped from the bundle and left its function reported as an uncovered gap. A curve with no points (degenerate_curve) is still dropped and still covers nothing. The flag survives: the curve stays open in StreamCurves' review until a reviewer finalizes it by name, the bundle stamps curveStatus on the metric entry, and the reason travels to the scorer as a caveat. New rule SELECT-03. Occasioned by Interior Plateau, whose wadeable reference pool carries almost no mapped wetland (11 of 38 retained sites exactly zero, median 0.05 percent of watershed area), so Surface water storage can only be a fallback curve there. No threshold value moved and no rule's threshold_status changed. v0.12 (2026-09-19) is the reference-definition release, five owner decisions taken from what the EASI rework of September 2026 showed. A reference station is one whose watershed passes EASI's fixed desktop pressure screen inside the wadeable non-canal frame (REF-04), read from a committed station table, so the EASI condition index no longer gates reference membership and a build needs no live service. Where a Level III ecoregion holds too few reference stations for a metric, the pool widens to the Level II and then the Level I parent, holding the screen fixed and admitting only stations comparable in natural setting, metric by metric (REF-05); where no level supports a metric there is no curve and nothing is scored (REF-06); the region's own best-available stations appear only as a labeled comparison (REF-07). REF-01, REF-02 and REF-03 now describe the legacy easi-eci method only and are kept so published provenance still replays. Landscape pressure metrics are scored on EASI's fixed criteria, identical in every region (CURVE-11). Scale and class splits are decided once, nationally, in a registry every build reads (STRAT-10). Each curve is checked for whether its index separates reference from pressured stations (CURVE-12, advisory). A station sampled in several survey cycles contributes its most recent non-null value per metric (DATA-11). STRAT-09's test text now says what the code does (the raw Kruskal-Wallis p). The curve engine and every numeric floor are unchanged.",
   "status_legend": {
    "threshold_status": {
     "provisional": "Operating default, not yet calibrated. Never describe as validated.",
@@ -234,6 +234,25 @@
    },
    "confidence_effect": "none",
    "override_permission": "maintainer"
+  },
+  {
+   "id": "DATA-11",
+   "family": "DATA",
+   "name": "Value selection across survey cycles",
+   "purpose": "A station sampled in more than one survey cycle contributes one value per metric, without losing a metric its newest cycle did not measure.",
+   "test": "per metric, the most recent cycle's index-visit value that is not null",
+   "threshold": "n/a",
+   "threshold_status": "approved",
+   "implementation_status": "implemented",
+   "maps_to": "nrsa_dataset.latest_values (policy latest_non_null_index_visit)",
+   "note": "v0.12 (2026-09-19). Before it a revisited station took its newest cycle whole, so a metric that cycle did not measure went missing instead of reading the older cycle: dissolved nitrogen and two benthic metrics had 42 usable stations in the Northeastern Highlands where 71 carry a value. The cycle each value came from is ledgered per metric. EASI's national analysis reads the archive the same way.",
+   "outcomes": {
+    "pass": "n/a",
+    "review": "n/a",
+    "fail": "n/a"
+   },
+   "confidence_effect": "none",
+   "override_permission": "none"
   },
   {
    "id": "RED-01",
@@ -536,7 +555,7 @@
    "family": "STRAT",
    "name": "Group-difference test",
    "purpose": "Supporting evidence that curves differ by group.",
-   "test": "FDR-adjusted q <= 0.05",
+   "test": "raw Kruskal-Wallis p <= stratifier_rules.screening_significance_alpha; the Benjamini-Hochberg adjusted pairwise p values ride as supporting evidence",
    "threshold": "<= 0.05",
    "threshold_status": "provisional",
    "implementation_status": "implemented",
@@ -551,6 +570,25 @@
    "standing_decision_ids": [
     "strat09-defer-floors"
    ]
+  },
+  {
+   "id": "STRAT-10",
+   "family": "STRAT",
+   "name": "National scale and stratifier registry",
+   "purpose": "Decide once, nationally, the ecoregion level each metric's reference values vary at and whether a slope or drainage-area split deserves its own curves, so a regional build does not rediscover it on thirty stations.",
+   "test": "bias-adjusted rank eta-squared by Level III, II and I; supported level = the coarsest of Level II and Level I keeping 0.8 of the Level III value (national below 0.02); a class split needs an adjusted increment of 0.05, two classes of 15 or more, a resampling flip rate of 0.10 or less (0.20 exploratory), and no loss of agreement with EPA's reference designation",
+   "threshold": "level ratio 0.8; national floor 0.02; split increment 0.05; stratum n 15; flip 0.10 / 0.20; AUC loss 0.02",
+   "threshold_status": "provisional",
+   "implementation_status": "implemented",
+   "maps_to": "streamcurves/scale_analysis.py; scripts/run_national_scale_analysis.py; config/metric_scale_registry.yaml",
+   "note": "v0.12 (2026-09-19). EASI's pre-registered rule, run on 2.65 million reaches there and on a few hundred reference stations here, which is why decisions read the adjusted eta-squared (H-(k-1))/(n-k): the plain H/(n-1) grows with the number of groups at this sample size. Classes are declared constants read from NHDPlus by COMID (slope 0.5 and 2 percent, drainage area 10 and 100 km2), the variables DEEP has at scoring time. A regional build applies a registry split only where its own pool holds two classes of 15 or more. The advisory STRAT-00 screen and its registry are unchanged.",
+   "outcomes": {
+    "pass": "level and split recorded in the registry",
+    "review": "exploratory split (flip rate 0.10 to 0.20)",
+    "fail": "metric stays at Level III, unsplit"
+   },
+   "confidence_effect": "sets the transfer risk of a borrowed pool (REF-05)",
+   "override_permission": "maintainer"
   },
   {
    "id": "CURVE-01",
@@ -767,6 +805,44 @@
    "note": "v0.9 (2026-08-27), owner capture decision: the geometry stays code rather than config, because thirty seed coordinates in YAML would invite unreviewed tuning; the golden masters make any change loud, and the methodology version (embedded in the run seed) pins which geometry produced a run."
   },
   {
+   "id": "CURVE-11",
+   "family": "CURVE",
+   "name": "Fixed criteria for pressure metrics",
+   "purpose": "Score a landscape pressure metric on cited absolute criteria, identical in every region, instead of a regional reference curve that restates the reference screen.",
+   "test": "EASI's bands for the same quantity, drawn as one continuous curve through index 0.69 at the Good/Fair boundary and 0.39 at the Fair/Poor boundary, 1.0 at zero pressure, zero where the line through the two boundaries reaches it",
+   "threshold": "impervious 10 / 25 percent; agriculture (crop plus hay) 30 / 50 percent; road density 1 / 3 km per km2; degree of regulation 2 / 15 percent; mapped dams within one mile 0 / 1 / 2",
+   "threshold_status": "provisional",
+   "implementation_status": "implemented",
+   "maps_to": "streamcurves/fixed_criteria.py; config/fixed_criteria.yaml (generated by scripts/build_fixed_criteria.py, mirror-checked against the vendored EASI catalog)",
+   "note": "v0.12 (2026-09-19, owner decision). The published regional curves scored 0.03 percent cropland as zero in the Northeastern Highlands and 85 percent row crops as Functioning in the Eastern Corn Belt Plains, while EASI rated the same watersheds the other way: the least-disturbed stations are by definition the ones without the pressure. Each anchor sits on the boundary when the worse class owns the boundary value in EASI and half a reporting step toward the worse side when the better class owns it, so a boundary value lands in the same class in both tiers under DEEP's <= rule. A fixed metric carries no reference sample and no sample-based confidence. Wetland cover and base flow index are expectation metrics and keep reference curves: under fixed bands every least-disturbed Interior Plateau station would rate Poor on wetland cover. Threshold status follows EASI's own provisional labels.",
+   "outcomes": {
+    "pass": "metric scored on the fixed curve",
+    "review": "n/a",
+    "fail": "n/a"
+   },
+   "confidence_effect": "label Fixed criteria; no 0 to 100 score",
+   "override_permission": "none"
+  },
+  {
+   "id": "CURVE-12",
+   "family": "CURVE",
+   "name": "Discrimination check",
+   "purpose": "Show whether a curve's index separates least-disturbed from pressured stations, which no within-pool diagnostic can.",
+   "test": "area under the ROC curve of the index, the pool's reference stations (scored leave-one-out) against in-frame stations of the same geography that fail the relaxed screen; EPA's 2013-14 R against Im where five or more of each carry the metric",
+   "threshold": "discriminates >= 0.65; weak >= 0.55; inverted < 0.45",
+   "threshold_status": "provisional",
+   "implementation_status": "implemented",
+   "maps_to": "streamcurves/discrimination.py",
+   "note": "v0.12 (2026-09-19). Advisory: a weak or absent separation informs the portfolio choice and the report, an inverted one goes to review. Stations that are not reference check a curve here and never fit one.",
+   "outcomes": {
+    "pass": "discriminates",
+    "review": "inverted",
+    "fail": "recorded as weak or none (advisory)"
+   },
+   "confidence_effect": "none (advisory)",
+   "override_permission": "human_review"
+  },
+  {
    "id": "REF-01",
    "family": "REF",
    "name": "Primary reference tier (least-disturbed)",
@@ -782,7 +858,9 @@
     "fail": "excluded from reference pool"
    },
    "confidence_effect": "no cap; least-disturbed reference can score High",
-   "override_permission": "human_review"
+   "override_permission": "human_review",
+   "scope": "legacy reference method (easi-eci)",
+   "note": "Legacy since v0.12 (2026-09-19): governs the easi-eci reference method only, kept so provenance published before v0.12 still replays. The default method is the pressure screen (REF-04 to REF-07), which never relaxes reference quality."
   },
   {
    "id": "REF-02",
@@ -794,7 +872,7 @@
    "threshold_status": "provisional",
    "implementation_status": "implemented",
    "maps_to": "regional_agent.choose_reference_tier (pool trigger at REF_FALLBACK_FLOOR = DATA-05 floor) + tier_evaluation_table (per-metric trigger and exploratory band) + deep_export referenceTier stamp + confidence cap via CONF-02",
-   "note": "Mechanism-verified v0.5 on the Eastern Corn Belt Plains pilot (2026-08-21, owner decision): zero Functioning sites among 18 candidates fired the fallback exactly as designed, every curve published double-capped at Low with the tier stamped. v0.6 (adversarial review): the status returned to provisional because a correct mechanical execution verifies the implementation, not the 0.39 cutoff (ECO-16, STAT-7), and the automatic trigger moved from the DATA-04 auto floor to the DATA-05 exploratory floor so a 10-to-19 pool is no longer both publishable at tier and fallback-eligible (STAT-8). Reconciles with the revision plan by being explicit, reviewed, provenance-stamped, and human-authorized, never silent.",
+   "note": "Mechanism-verified v0.5 on the Eastern Corn Belt Plains pilot (2026-08-21, owner decision): zero Functioning sites among 18 candidates fired the fallback exactly as designed, every curve published double-capped at Low with the tier stamped. v0.6 (adversarial review): the status returned to provisional because a correct mechanical execution verifies the implementation, not the 0.39 cutoff (ECO-16, STAT-7), and the automatic trigger moved from the DATA-04 auto floor to the DATA-05 exploratory floor so a 10-to-19 pool is no longer both publishable at tier and fallback-eligible (STAT-8). Reconciles with the revision plan by being explicit, reviewed, provenance-stamped, and human-authorized, never silent. Legacy since v0.12 (2026-09-19): governs the easi-eci reference method only, kept so provenance published before v0.12 still replays. The default method is the pressure screen (REF-04 to REF-07), which never relaxes reference quality.",
    "outcomes": {
     "pass": "n/a (never auto-passes)",
     "review": "MANDATORY human review of every affected curve",
@@ -805,7 +883,8 @@
    "verification": "mechanism_verified_v0.5",
    "standing_decision_ids_optional": [
     "ref02-accept-best-available"
-   ]
+   ],
+   "scope": "legacy reference method (easi-eci)"
   },
   {
    "id": "REF-03",
@@ -823,6 +902,87 @@
     "fail": "block: all_sites is not a reference pool"
    },
    "confidence_effect": "hard-stop below floor",
+   "override_permission": "none",
+   "scope": "legacy reference method (easi-eci)",
+   "note": "Legacy since v0.12 (2026-09-19): governs the easi-eci reference method only, kept so provenance published before v0.12 still replays. The default method is the pressure screen (REF-04 to REF-07), which never relaxes reference quality."
+  },
+  {
+   "id": "REF-04",
+   "family": "REF",
+   "name": "Reference screen (fixed desktop pressure screen)",
+   "purpose": "Define a least-disturbed reference station by low landscape pressure, the way EASI defines a reference reach, and never by a condition score.",
+   "test": "every condition of least-disturbed-v1 (strict) holds for the watershed at the station's archive COMID, inside the wadeable (DATA-10) non-canal frame; a variable with no value fails its rule",
+   "threshold": "impervious <= 1 percent; agriculture (crop plus hay) <= 10 percent; road density <= 2 km per km2; degree of regulation < 2 percent; no mapped dams; no permitted discharges; no mines",
+   "threshold_status": "provisional",
+   "implementation_status": "implemented",
+   "maps_to": "streamcurves/reference_screen.py; data/nrsa/station_screen.parquet (built by scripts/nrsa/build_station_screen.py); methodology_config reference_screen, mirror-checked against _vendor/easi/data/reference-curves.json",
+   "note": "v0.12 (2026-09-19, owner decision). Replaces the EASI condition index as the reference gate. The index changes whenever EASI's criteria do (eight of twenty functions were re-rated on 2026-09-15 under an unchanged preset, and the screening cache did not notice), it reads the landscape variables that later receive curves, and it costs a live run per site. The screen is evaluated once for all 4,378 archive stations and committed, so a build is offline. Measured: 66 of 175 in-frame Northeastern Highlands stations pass, 3 of 41 in the Interior Plateau, 0 of 44 in the Eastern Corn Belt Plains, 770 nationally. Never a percentile rule. EPA's own 2013-14 reference designation is too sparse to define a pool (7 in-frame R stations in the Northeastern Highlands) and serves as a yardstick (CURVE-12, STRAT-10).",
+   "outcomes": {
+    "pass": "station is a reference station",
+    "review": "n/a",
+    "fail": "excluded from every reference pool, with the failing variables"
+   },
+   "confidence_effect": "none",
+   "override_permission": "maintainer"
+  },
+  {
+   "id": "REF-05",
+   "family": "REF",
+   "name": "Comparable borrowing from the parent ecoregion",
+   "purpose": "Where a Level III ecoregion holds too few reference stations for a metric, use the narrowest parent level that supports it, admitting only stations whose natural setting is comparable, and say how far the pool was stretched.",
+   "test": "per metric, the narrowest of Level III, II, I whose usable n (strict, in frame, comparable, with a value) reaches DATA-04, else the narrowest reaching DATA-05; a borrowed station sits inside the central 95 percent of the target region's own in-frame stations on every covariate of the metric family's profile, and its dominant lithology is one common in the target where the family says so",
+   "threshold": "envelope quantiles 0.025 to 0.975; profile self-coverage >= 0.80; transfer risk from STRAT-10",
+   "threshold_status": "provisional",
+   "implementation_status": "implemented",
+   "maps_to": "streamcurves/reference_pool.py; config/reference_transfer.yaml; methodology_config reference_pool",
+   "note": "v0.12 (2026-09-19, owner decision): geographic membership or low gradient alone is insufficient; stream size, slope, geology and hydrologic setting must be comparable, and usable sample size and applicability are judged for each metric. Profiles hold at most three covariates plus a lithology set, because a joint box on six covariates was measured and admits no donor at all for the Interior Plateau or the Eastern Corn Belt Plains. The region's own reference stations are always admitted. Borrowing is the norm, not the exception: at a floor of 20 only 10 Level III ecoregions are self-sufficient, 51 need Level II and 17 need Level I. Every curve records its source geography, screen, usable n and a plain transfer note, and DEEP shows them. Every borrowed pool is a review item. The standing policy accepts one at low transfer risk with an adequate sample and a covered profile; a moderate, high or unassessed risk is the owner's call.",
+   "outcomes": {
+    "pass": "local pool",
+    "review": "every borrowed pool (the standing policy may accept a low-risk one)",
+    "fail": "see REF-06"
+   },
+   "confidence_effect": "cap 79 at low transfer risk, 59 at moderate or unassessed, 39 at high",
+   "override_permission": "human_review",
+   "standing_decision_ids": [
+    "ref05-borrowed-pool-accepted"
+   ]
+  },
+  {
+   "id": "REF-06",
+   "family": "REF",
+   "name": "Insufficient reference support",
+   "purpose": "Refuse to force a score where no defensible reference pool exists.",
+   "test": "no level of the ladder reaches the DATA-05 floor of usable comparable reference stations for the metric",
+   "threshold": "usable n < 10 at every level",
+   "threshold_status": "approved",
+   "implementation_status": "implemented",
+   "maps_to": "reference_pool.choose_pool (status insufficient); deep_export insufficientReferenceSupport; coverage exception reason insufficient-reference-support",
+   "note": "v0.12 (2026-09-19, owner decision). No curve is built, the metric is listed in the bundle as withheld with its support record, DEEP shows it as not scored, and a function left without a metric needs a documented coverage exception. Reference quality is never relaxed to reach a sample size.",
+   "outcomes": {
+    "pass": "n/a",
+    "review": "n/a",
+    "fail": "no curve; metric reported as insufficient reference support"
+   },
+   "confidence_effect": "n/a (no curve)",
+   "override_permission": "none"
+  },
+  {
+   "id": "REF-07",
+   "family": "REF",
+   "name": "Local best-available comparison",
+   "purpose": "Show how a site compares with the better streams of its own region without letting them define reference.",
+   "test": "the region's in-frame stations passing the relaxed screen, or, where fewer than 10 do, the quarter of them with the lowest landscape pressure; reported as n and quartiles beside the curve",
+   "threshold": "relaxed screen; minimum 10 stations",
+   "threshold_status": "provisional",
+   "implementation_status": "implemented",
+   "maps_to": "reference_pool.local_comparison; config/reference_transfer.yaml local_comparison",
+   "note": "v0.12 (2026-09-19, owner decision). Labeled \"Local best-available comparison (not reference)\" wherever it appears. It never enters a pool, a curve, a confidence value or a Functioning call.",
+   "outcomes": {
+    "pass": "comparison shown",
+    "review": "n/a",
+    "fail": "no comparison (too few values)"
+   },
+   "confidence_effect": "none",
    "override_permission": "none"
   },
   {

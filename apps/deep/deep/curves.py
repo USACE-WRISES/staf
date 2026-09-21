@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Iterable, Optional, Sequence, Union
 
-from . import config, scoring
+from . import config, reference_support, scoring
 from .models import FunctionResult, MeasuredValue
 
 
@@ -132,8 +132,15 @@ _ENGINE_PAIRING_MODES = ("refuse", "label")
 
 
 def _mismatched_pairing(measured: Optional[MeasuredValue], metric_spec: dict) -> bool:
-    """An engine-computed value meeting a curve fitted on StreamCat predictors."""
+    """An engine-computed value meeting a curve fitted on StreamCat predictors.
+
+    A fixed-criteria metric (``criteriaBasis == "fixed"``) is never mismatched:
+    its criteria are absolute and were fitted on no source's values, so the
+    HR reach watershed value is simply the better measurement of the site.
+    """
     if measured is None or not getattr(measured, "engine", False):
+        return False
+    if str((metric_spec or {}).get("criteriaBasis") or "") == "fixed":
         return False
     spec_ps = str((metric_spec or {}).get("predictorSource") or "streamcat")
     return spec_ps == "streamcat"
@@ -250,8 +257,11 @@ def metric_warning(measured: Optional[MeasuredValue], metric_spec: dict) -> Opti
         # The value is excluded from scoring; the advisory is the whole story.
         return pairing
     points = active_points(metric_spec, getattr(measured, "stratum", None))
+    # A fixed-criteria curve ends where the index reaches zero, so a value past
+    # its last point is scored as intended, not clamped for want of data.
+    fixed = str((metric_spec or {}).get("criteriaBasis") or "") == "fixed"
     parts = [engine_approximation_advisory(measured, metric_spec),
-             domain_warning(points, float(measured.value)),
+             None if fixed else domain_warning(points, float(measured.value)),
              reference_range_advisory(metric_spec, float(measured.value)),
              sample_advisory(metric_spec)]
     parts = [p for p in parts if p]
@@ -325,4 +335,10 @@ def score_site(assessment, measured: MeasuredInput) -> tuple[dict, dict[str, Fun
         )
         if score is not None:
             function_scores[fid] = score
-    return scoring.score_assessment(function_scores), function_results
+    # Functions the assessment has no basis to score at all. Distinct from a
+    # function that scored nothing at THIS site, which is Not Applicable and
+    # correctly leaves the denominator. These are unknowns, and they restrict the
+    # claim rather than shrinking the base it is taken over.
+    unassessed = [f["functionId"] for f in reference_support.unassessed_functions(assessment)]
+    return (scoring.score_assessment(function_scores, unassessed=unassessed),
+            function_results)

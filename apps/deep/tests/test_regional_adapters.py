@@ -115,7 +115,9 @@ def test_one_batched_streamcat_request_carries_every_name(monkeypatch):
     assert calls[0] == (5214461, list(computed._STREAMCAT_NAMES))
     assert set(computed._STREAMCAT_NAMES) == {
         "pctimp2019", "pctcrop2019", "pcthay2019", "pctwdwet2019", "pcthbwet2019",
-        "rddens", "damdens", "bfi", "rdcrs"}
+        "rddens", "damdens", "bfi", "rdcrs",
+        # degree of regulation reads these two (fixed criteria, 2026-09-19)
+        "damnrmstor", "runoff"}
     assert set(out) == set(EIGHT)
 
 
@@ -378,7 +380,12 @@ def test_every_regional_landscape_id_in_the_bundles_has_an_adapter():
     # engine-sourced regions promoted on 2026-09-08 carry it, so the set is now
     # complete rather than short by one.
     assert found <= computed.computable_ids()
-    assert found == set(NINE)
+    # Two more ids since 2026-09-20: methodology 0.12 scores the five landscape
+    # pressure metrics on fixed criteria in every region (CURVE-11), which brought
+    # degree of regulation and total agricultural cover into the three rebuilt
+    # bundles. Both had adapters already, so only the roster moved. They stay out
+    # of NINE because the compute fixtures above carry no values for them.
+    assert found == set(NINE) | {"spring-dorws", "spring-pctag2019ws"}
 
 
 # --------------------------------------------------------------------------- #

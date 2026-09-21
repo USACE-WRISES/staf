@@ -155,6 +155,9 @@ FUNCTION_EXCLUSION_REASONS = (
     "direction-unresolved",       # a metric exists but its ecological direction is under review
     "consolidated-into",          # folded into another function (set consolidatedInto)
     "deferred-to-other-tier",     # assessed at screening/rapid instead
+    # REF-06 (methodology 0.12): every candidate metric was withheld because no
+    # defensible reference pool exists at any level of the ecoregion hierarchy.
+    "insufficient-reference-support",
 )
 
 _MIN_JUSTIFICATION_CHARS = 20
@@ -269,8 +272,8 @@ def _mapping_cell_blank(v: Any) -> bool:
     return str(v).strip() == ""
 
 
-def uncovered_functions_from_mapping(mapping, metric_config,
-                                     exceptions=None) -> list[tuple[str, str]]:
+def uncovered_functions_from_mapping(mapping, metric_config, exceptions=None, *,
+                                     always_covered=None) -> list[tuple[str, str]]:
     """[(function_id, function_name)] with no assigned metric and no documented
     exception, judged from the discipline-function mapping alone.
 
@@ -280,11 +283,15 @@ def uncovered_functions_from_mapping(mapping, metric_config,
     status can show the shortfall while there is still time to fix it. Rows
     whose metric_key is not in ``metric_config`` do not count as coverage -- a
     mapping entry for a metric that carries no data covers nothing.
+    ``always_covered`` names function ids covered outside the mapping: the
+    fixed-criteria metrics of a pressure-screen build (methodology 0.12), whose
+    function assignments are part of the criterion and never sit in the
+    editable mapping.
     """
     metric_config = metric_config or {}
     crosswalk = deep_read_staf_crosswalk()
     lookup = deep_function_lookup(crosswalk)
-    covered: set[str] = set()
+    covered: set[str] = {str(f) for f in (always_covered or [])}
     if mapping is not None and len(mapping) > 0:
         for _, r in mapping.iterrows():
             mk, label = r.get("metric_key"), r.get("function_label")
@@ -327,7 +334,8 @@ def _completed_metric_candidates_status(cm) -> tuple[bool, bool]:
     return has_candidates, False
 
 
-def function_coverage_quick(completed_metrics, mapping, exceptions=None) -> Optional[dict]:
+def function_coverage_quick(completed_metrics, mapping, exceptions=None, *,
+                            always_covered=None) -> Optional[dict]:
     """``functionCoverage`` as the full bundle would report it, judged from
     curve presence and the mapping walk alone; no bundle build, so the workflow
     strip's snapshot can afford it on every render.
@@ -347,6 +355,27 @@ def function_coverage_quick(completed_metrics, mapping, exceptions=None) -> Opti
     The divergence this once carried is gone (2026-09-08): points are parsed
     here too, so a row whose points fail extraction reads uncovered in both.
     The publish gate (library.publish_version) still judges the real bundle.
+
+    ``always_covered``: function ids the fixed-criteria metrics of a
+    pressure-screen build cover (they join the bundle outside the mapping).
+    """
+    any_candidates, walked = _quick_function_walk(completed_metrics, mapping)
+    covered: set[str] = {str(f) for f in (always_covered or [])}
+    for _mk, fids in walked:
+        covered.update(fids)
+    if not any_candidates:
+        return None
+    return function_coverage(
+        [{"functionId": fid, "metrics": [True]} for fid in covered],
+        deep_read_staf_crosswalk(), exceptions)
+
+
+def _quick_function_walk(completed_metrics, mapping) -> tuple[bool, list[tuple[str, list[str]]]]:
+    """``(any_candidates, [(metric_key, [function_id, ...]), ...])`` over the metrics
+    whose candidate rows carry points DEEP can interpolate.
+
+    The walk shared by :func:`function_coverage_quick` and
+    :func:`metrics_per_function_quick`, so what one counts the other covers.
     """
     lookup = deep_function_lookup(deep_read_staf_crosswalk())
     by_metric: dict[str, list[str]] = {}
@@ -355,7 +384,7 @@ def function_coverage_quick(completed_metrics, mapping, exceptions=None) -> Opti
             if not _mapping_cell_blank(mk) and not _mapping_cell_blank(lbl):
                 by_metric.setdefault(str(mk), []).append(str(lbl))
     any_candidates = False
-    covered: set[str] = set()
+    walked: list[tuple[str, list[str]]] = []
     for mk, cm in (completed_metrics or {}).items():
         if cm is None:
             continue
@@ -363,15 +392,32 @@ def function_coverage_quick(completed_metrics, mapping, exceptions=None) -> Opti
         any_candidates = any_candidates or has_candidates
         if not has_complete:
             continue
+        fids: list[str] = []
         for lbl in by_metric.get(str(mk), []):
             fn = deep_map_function(lbl, lookup)
-            if fn is not None:
-                covered.add(str(fn.get("id")))
-    if not any_candidates:
-        return None
-    return function_coverage(
-        [{"functionId": fid, "metrics": [True]} for fid in covered],
-        deep_read_staf_crosswalk(), exceptions)
+            if fn is not None and str(fn.get("id")) not in fids:
+                fids.append(str(fn.get("id")))
+        walked.append((str(mk), fids))
+    return any_candidates, walked
+
+
+def metrics_per_function_quick(completed_metrics, mapping, *, extra=None) -> dict[str, int]:
+    """How many metrics each STAF function would carry, judged from curve presence and
+    the mapping walk alone: the counting sibling of :func:`function_coverage_quick`, on
+    the same contract and with no bundle build.
+
+    ``extra``: counts for the metrics that join the bundle outside the editable mapping
+    (a pressure-screen build's fixed criteria). ``{}`` while nothing is built yet, which
+    reads as nothing to count. SELECT-01 is still judged on the real bundle at publish
+    time; this exists so the Publish page can ask for the approval that gate requires
+    instead of letting the click fail.
+    """
+    _any_candidates, walked = _quick_function_walk(completed_metrics, mapping)
+    counts: dict[str, int] = {str(fid): int(n) for fid, n in (extra or {}).items()}
+    for _mk, fids in walked:
+        for fid in fids:
+            counts[fid] = counts.get(fid, 0) + 1
+    return counts
 
 
 # ---- curve points -----------------------------------------------------------
@@ -617,18 +663,25 @@ def build_deep_assessment_bundle(
         stratum = deep_default(row.get("stratum"), "")
         stratum = "" if _is_na(stratum) else str(stratum)
 
+        annotations = (meta.get("metricAnnotations") or {}).get(mk) or {}
+        # A fixed-criteria metric (CURVE-11) cites its criterion, not the
+        # regional analysis: its curve is the same in every region.
+        entry_citation = annotations.get("sourceCitation") or meta.get("sourceCitation")
+
         # Function-independent metric payload. `discipline` and `assignmentOrigin`
         # are set per assigned function when the entry is pushed into a block below.
         base_entry: dict = {
             "metricId": "spring-" + deep_slug(mk),
             "metricName": display_name,
             "inputType": str(deep_default(cfg.get("metric_family"), "")),
-            "sourceCitation": meta.get("sourceCitation"),
+            "sourceCitation": entry_citation,
             "xLabel": f"{display_name} ({units})" if units != "" else display_name,
             "howToMeasure": str(deep_default(cfg.get("notes"), "")),
-            "methodContext": "",
+            # The field protocol text (where, how, what to record), when the
+            # build supplies one. DEEP falls back to howToMeasure.
+            "methodContext": str(deep_default(annotations.get("methodContext"), "")),
             "curve": {
-                "layerName": meta.get("sourceCitation"),
+                "layerName": entry_citation,
                 "stratification": stratum,
                 # "form" is additive metadata: DEEP's interp_curve reads only the
                 # points and is shape-agnostic, so an older reader ignores this and
@@ -662,9 +715,17 @@ def build_deep_assessment_bundle(
         # metricsByFunction, so they are part of the content digest, which is
         # correct because the same curve with a different caveat set is a
         # different published statement.
-        annotations = (meta.get("metricAnnotations") or {}).get(mk) or {}
+        #
+        # Methodology 0.12 adds the reference statement of each curve: whether
+        # the criteria are fixed or a regional reference curve (criteriaBasis,
+        # criteriaSource), where the reference stations came from and how far
+        # the pool was stretched (referenceSupport), the separately labeled
+        # local comparison (localComparison), the class split the curve layers
+        # follow (stratifier), and the discrimination check (discrimination).
         for key in ("referenceN", "sampleDisposition", "metricRole", "curveCaveats",
-                    "confidenceLabel", "confidenceTotal", "referenceRange"):
+                    "confidenceLabel", "confidenceTotal", "referenceRange",
+                    "criteriaBasis", "criteriaSource", "referenceSupport",
+                    "localComparison", "stratifier", "discrimination"):
             if key in annotations and annotations[key] is not None:
                 base_entry[key] = annotations[key]
 
@@ -807,7 +868,21 @@ def build_deep_assessment_bundle(
         bundle["referenceTier"] = tier
         for block in bundle.get("metricsByFunction") or []:
             for m in block.get("metrics") or []:
+                # A fixed-criteria metric (CURVE-11) has no reference pool, so
+                # it carries no reference tier.
+                if m.get("criteriaBasis") == "fixed":
+                    continue
                 m["referenceTier"] = tier
+    # Methodology 0.12: how reference condition was defined for this build, and
+    # the metrics withheld because no defensible reference pool exists (REF-06).
+    # Withheld metrics carry no curve, so they stay out of metricsByFunction and
+    # an older reader is unaffected. Both are absent on a legacy build.
+    reference_method = meta.get("referenceMethod")
+    if reference_method:
+        bundle["referenceMethod"] = reference_method
+    withheld = meta.get("insufficientReferenceSupport")
+    if withheld:
+        bundle["insufficientReferenceSupport"] = withheld
     # Predictor-source provenance (train/serve pairing): which source computed
     # the predictors of this build. Derived from the build, never user-chosen;
     # absent means the StreamCat default (DEEP treats a missing field as

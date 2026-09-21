@@ -47,6 +47,9 @@ from . import easi_screening, engine_names, overlap, sites, workbook
 # stratification-screening module so the two never look like the same thing.
 from . import screening as strat_screening
 from . import consistency, decision, effects, feasibility, methodology, stability, stratifiers
+# What a published bundle says produced it: plain words, one wording for every
+# entry point (owner rule 2026-09-19).
+from .citation import DEFAULT_AUTHOR, default_source_citation
 from .datasources.streamcat import streamcat_metrics
 
 logger = logging.getLogger("streamcurves")
@@ -488,7 +491,7 @@ def build_metric_config(columns: list[str], directions: dict) -> tuple[dict, lis
 
 
 def build_landscape_metric_config(
-    columns: list[str], directions: dict
+    columns: list[str], directions: dict, *, expectation_only: bool = False
 ) -> tuple[dict, list[dict]]:
     """``metric_config`` entries for the curated StreamCat response metrics present in
     the compiled data.
@@ -496,6 +499,12 @@ def build_landscape_metric_config(
     Data columns carry the area-of-interest suffix (``pctimp2019`` -> ``pctimp2019ws``);
     the config is keyed by the real column name so every downstream consumer
     (curve build, mapping, bundle export) works on the column it can actually find.
+
+    ``expectation_only`` (the pressure-screen reference method, rule CURVE-11)
+    leaves out every code the registry marks ``pressure: true``: a pressure is
+    scored on fixed criteria or not at all, never fitted. What remains (wetland
+    cover, base flow index) is an expectation metric, scored against reference
+    like a field metric.
     """
     scored, _ = select_landscape_codes(directions)
     by_base = _columns_by_base_code(columns)
@@ -504,6 +513,8 @@ def build_landscape_metric_config(
     for code in scored:
         column = by_base.get(code)
         d = directions.get(code) or {}
+        if expectation_only and d.get("pressure"):
+            continue
         label, units = _streamcat_label(code)
         if column is None:
             missing.append({"metric": code, "display_name": label,
@@ -528,8 +539,11 @@ def build_landscape_metric_config(
             # the reference pool's footprint, and the reference pool was itself
             # selected by a screening index that reads the same variables, so
             # they are stressor surrogates, not measured function (2026-08-21,
-            # review ECO-10 and STAT-1).
-            "metric_role": "stressor_surrogate",
+            # review ECO-10 and STAT-1). Under the pressure screen the pressures
+            # are gone from this config, and what is left is a natural-setting
+            # expectation the screen does not select on.
+            "metric_role": ("landscape_expectation" if expectation_only
+                            else "stressor_surrogate"),
             "caveat": d.get("caveat"),
             "notes": d.get("note", ""),
         }
@@ -967,6 +981,14 @@ def _screen_cache_verdict(cached: dict, candidate_rows: list[dict],
         return f"cache engine config echo {echo} is not {easi_screening.SCREENING_WATERSHED_ENGINE}"
     if cached.get("comid_mode") != comid_mode:
         return f"cache comid mode {cached.get('comid_mode') or 'unstamped'} is not {comid_mode}"
+    # The EASI build that wrote the cache (2026-09-19). The stamp was written
+    # since 2026-09-07 and never read, so a screen from before EASI's regional
+    # criteria (2026-09-15) would have been reused and stamped as current.
+    have_sha = cached.get("easi_vendor_sha")
+    want_sha = easi_screening.easi_vendor_identity().get("vendorSha")
+    if have_sha != want_sha:
+        return (f"cache EASI build {str(have_sha or 'unstamped')[:12]} is not the vendored "
+                f"{str(want_sha or 'unknown')[:12]}")
     want_comids = {str(r.get("site_id") or ""): easi_screening.candidate_comid(r)
                    for r in candidate_rows}
     n_diff = 0
@@ -1617,8 +1639,19 @@ def run_evidence(l3_code: str, name: str, *,
                  exclude_sites: Optional[dict] = None,
                  nrsa_max_stream_order: Optional[int] = None,
                  nrsa_protocols=None,
-                 nrsa_keep_sites: Optional[dict] = None) -> dict:
+                 nrsa_keep_sites: Optional[dict] = None,
+                 reference_method: str = run_state.REFERENCE_METHOD_EASI,
+                 scale_registry: Optional[dict] = None) -> dict:
     """The expensive, decision-free half of a regional run.
+
+    ``reference_method`` chooses how reference stations are defined. The
+    function default is the legacy ``easi-eci`` (the EASI condition screen with
+    the REF-01/02/03 ladder), so every caller and test written before
+    methodology 0.12 behaves as it did; the CLIs default to ``pressure-screen``
+    (the ``DEFAULT_DATASET_ID`` against ``default_build_dataset_id`` precedent).
+    Under ``pressure-screen`` the pass is :mod:`pressure_evidence`: a fixed
+    desktop pressure screen read from the committed station table, per-metric
+    pools that borrow only comparable stations, no live service at all.
 
     Screening, data assembly, the registries, redundancy, the stratifier
     analysis, the curves with their review classification, sample sizes, the
@@ -1630,6 +1663,19 @@ def run_evidence(l3_code: str, name: str, *,
     """
     # A headless run must not proceed under a config that misdescribes the engine.
     methodology.verify_mirrors(strict=True)
+    if reference_method not in run_state.REFERENCE_METHODS:
+        raise ValueError(f"unknown reference method {reference_method!r}; known: "
+                         f"{', '.join(run_state.REFERENCE_METHODS)}")
+    if reference_method == run_state.REFERENCE_METHOD_PRESSURE:
+        from . import pressure_evidence
+        return pressure_evidence.run_evidence(
+            l3_code, name, on_event=on_event, cache_dir=cache_dir,
+            diagnostics_n_boot=diagnostics_n_boot, diagnostics_enabled=diagnostics_enabled,
+            nrsa_dataset_id=(nrsa_dataset_id if nrsa_dataset_id != nrsa_dataset.DEFAULT_DATASET_ID
+                             else nrsa_dataset.default_build_dataset_id()),
+            nrsa_cycles=nrsa_cycles, exclude_sites=exclude_sites,
+            nrsa_max_stream_order=nrsa_max_stream_order, nrsa_protocols=nrsa_protocols,
+            nrsa_keep_sites=nrsa_keep_sites, scale_registry=scale_registry)
     directions = load_directions()
     protocols = tuple(nrsa_protocols) if nrsa_protocols else None
     candidates, panel_ledger = select_candidates_detailed(
@@ -1929,7 +1975,7 @@ def assemble(evidence: dict, *,
              source_citation: str = "",
              assessment_id: Optional[str] = None,
              assessment_name: Optional[str] = None,
-             author: str = "StreamCurves Regional Analysis Agent",
+             author: str = DEFAULT_AUTHOR,
              coverage_exceptions: Optional[list[dict]] = None,
              finalize_metrics: Optional[dict] = None,
              finalize_actor: str = "",
@@ -1984,6 +2030,12 @@ def assemble(evidence: dict, *,
     # CURVE-07 item by definition (it IS the recorded decision).
     for mk in list((finalize_metrics or {}).keys()) + list((remove_metrics or {}).keys()):
         adjudicated.add(("CURVE-07", mk))
+    # The pressure-screen method (methodology 0.12) adds two per-metric review
+    # items: a pool borrowed from a parent ecoregion (REF-05) and a curve whose
+    # index ranks pressured stations above reference ones (CURVE-12).
+    pressure = evidence.get("reference_method") == run_state.REFERENCE_METHOD_PRESSURE
+    support = evidence.get("reference_support") or {}
+    discrimination = evidence.get("discrimination") or {}
     mandatory_review: dict[str, dict] = {}
     for mk in metric_config:
         triggers = mandatory_review_triggers(
@@ -1992,6 +2044,11 @@ def assemble(evidence: dict, *,
             missingness_disposition=missingness.get(mk, {}).get("disposition"),
             diag=diagnostics.get(mk) or {},
             ref02_triggered=bool(tier.get("ref02_triggered")))
+        if pressure:
+            if str((support.get(mk) or {}).get("status") or "").startswith("borrowed"):
+                triggers.append(("REF-05", mk))
+            if (discrimination.get(mk) or {}).get("verdict") == "inverted":
+                triggers.append(("CURVE-12", mk))
         open_items = [t for t in triggers if t not in adjudicated]
         mandatory_review[mk] = {
             "triggers": [f"{r}:{sub}" for r, sub in triggers],
@@ -2029,12 +2086,18 @@ def assemble(evidence: dict, *,
             # 2026-08-21 honesty inputs (CONF-02 v0.6).
             "mandatory_review_open": bool((mandatory_review.get(mk) or {}).get("open")),
             "deferred_gradient": deferred_gradients.get(mk),
+            # REF-05: how far a borrowed pool was stretched ("none" when local).
+            "transfer_risk": (support.get(mk) or {}).get("transfer_risk"),
         }
         confidence_map[mk] = conf.curve_confidence(ev)
         metric_scores[mk] = conf.metric_score(ev)
 
     # --- Portfolio (SELECT-01) ---
     portfolio = compact_portfolio(intended, column_functions, metric_config)
+    if pressure:
+        from . import pressure_evidence
+        portfolio = pressure_evidence.portfolio_with_fixed(
+            portfolio, evidence.get("fixed_metrics"))
 
     # --- Review Priority (impact x uncertainty x novelty) for flagged metrics ---
     single_cover = {r.get("function") for r in portfolio
@@ -2055,16 +2118,20 @@ def assemble(evidence: dict, *,
     aid = assessment_id or library.slugify(name)
     a_name = assessment_name or f"{name} reference assessment"
     region = {"kind": "ecoregion", "code": str(l3_code), "name": name}
-    ref_note = (f"Reference tier: {tier['reference_tier']} "
-                f"(screening preset {screening.get('preset', screen_preset)}, method {method}). "
-                f"Retained {evidence['n_retained']} of {n_candidates} candidates.")
+    if pressure:
+        ref_note = pressure_evidence.revision_note(evidence)
+    else:
+        ref_note = (f"Reference tier: {tier['reference_tier']} "
+                    f"(screening preset {screening.get('preset', screen_preset)}, method {method}). "
+                    f"Retained {evidence['n_retained']} of {n_candidates} candidates.")
     meta = {
         "assessmentId": aid,
         "assessmentName": a_name,
         "region": region,
         "stateCode": "",
         "stateName": "",
-        "sourceCitation": source_citation or f"USEPA NRSA (L3 ecoregion {l3_code}), StreamCurves Regional Analysis Agent",
+        "sourceCitation": source_citation or default_source_citation(
+            l3_code, evidence.get("nrsa_dataset")),
         "applicability": name,
         "author": author,
         "revisionNotes": ref_note + ("  " + " ".join(tier.get("review_flags") or []) if tier.get("review_flags") else ""),
@@ -2082,11 +2149,18 @@ def assemble(evidence: dict, *,
         sample_sizes=sample_sizes, confidence_map=confidence_map,
         deferred_gradients=deferred_gradients)
     intended_rows = {mk: curve_rows[mk] for mk in intended if mk in curve_rows}
+    export_config, export_mapping = metric_config, evidence["mapping_df"]
+    if pressure:
+        # Reference support, class layers, the fixed-criteria metrics and the
+        # withheld list (methodology 0.12). The fixed metrics join the bundle
+        # here and nowhere earlier: they are never fitted, reviewed or ranked.
+        intended_rows, export_config, export_mapping = pressure_evidence.bundle_inputs(
+            evidence, meta, intended_rows, metric_config)
     bundle = None
     bundle_error = None
     try:
         bundle = deep_export.build_deep_assessment_bundle(
-            intended_rows, evidence["mapping_df"], metric_config, meta)
+            intended_rows, export_mapping, export_config, meta)
     except ValueError as exc:  # no complete mappable curve
         bundle_error = str(exc)
 
@@ -2174,6 +2248,21 @@ def assemble(evidence: dict, *,
         "bundle": bundle,
         "bundle_error": bundle_error,
         "screening_tables": screening.get("tables", {}),
+        # --- the reference method (methodology 0.12). A legacy run carries the
+        # method name and nothing else, so its manifest and digest are unchanged.
+        "reference_method": evidence.get("reference_method") or run_state.REFERENCE_METHOD_EASI,
+        "reference_screen": evidence.get("reference_screen"),
+        "reference_support": evidence.get("reference_support") or {},
+        "reference_pool_ledger": evidence.get("reference_pool_ledger"),
+        "reference_pool_summary": evidence.get("reference_pool_summary") or {},
+        "local_comparison": evidence.get("local_comparison") or {},
+        "insufficient_support": evidence.get("insufficient_support") or {},
+        "fixed_metrics": evidence.get("fixed_metrics") or {},
+        "discrimination": evidence.get("discrimination") or {},
+        "stratum_rows": evidence.get("stratum_rows") or {},
+        "strata_applied": evidence.get("strata_applied") or {},
+        "scale_registry": evidence.get("scale_registry"),
+        "value_selection": evidence.get("value_selection"),
     }
 
 
@@ -2184,7 +2273,7 @@ def run(l3_code: str, name: str, *,
         screen_retry_wait: float = 60.0,
         assessment_id: Optional[str] = None,
         assessment_name: Optional[str] = None,
-        author: str = "StreamCurves Regional Analysis Agent",
+        author: str = DEFAULT_AUTHOR,
         on_event: Optional[Callable] = None,
         do_screen: bool = True,
         use_streamcat: bool = True,
@@ -2197,12 +2286,28 @@ def run(l3_code: str, name: str, *,
         remove_metrics: Optional[dict] = None,
         reviewer_decisions: Optional[list] = None,
         nrsa_dataset_id: str = nrsa_dataset.DEFAULT_DATASET_ID,
-        nrsa_cycles=None) -> dict:
+        nrsa_cycles=None,
+        nrsa_max_stream_order: Optional[int] = None,
+        nrsa_protocols=None,
+        nrsa_keep_sites: Optional[dict] = None,
+        exclude_sites: Optional[dict] = None,
+        predictor_source: str = "streamcat",
+        engine_config: Optional[dict] = None,
+        reference_method: str = run_state.REFERENCE_METHOD_EASI,
+        scale_registry: Optional[dict] = None) -> dict:
     """Run the full regional analysis for one L3 ecoregion. Returns a structured result
     (no files written here; the CLI writes outputs and publishes).
 
+    ``reference_method`` chooses how reference condition is defined:
+    ``easi-eci`` (the legacy ECI gate, the default here so a replay reproduces
+    a published version) or ``pressure-screen`` (methodology 0.12, what the
+    CLIs default to).
+
     Since 2026-08-22 this is :func:`run_evidence` followed by :func:`assemble`,
-    with an unchanged signature and result.
+    with an unchanged result. The reference frame (rule DATA-10), the owner's
+    site inclusions and exclusions, and the predictor source pass straight
+    through to :func:`run_evidence` (2026-09-19): before that only the batch
+    runner could apply them, so a single run silently skipped the frame.
 
     ``remove_metrics`` (metric -> rationale) records a named reviewer decision
     that takes a built curve out of scope for this run only (the curve is still
@@ -2224,7 +2329,11 @@ def run(l3_code: str, name: str, *,
         do_screen=do_screen, use_streamcat=use_streamcat, cache_dir=cache_dir,
         diagnostics_n_boot=diagnostics_n_boot, diagnostics_enabled=diagnostics_enabled,
         nrsa_dataset_id=nrsa_dataset_id, nrsa_cycles=nrsa_cycles,
-        screen_retries=screen_retries, screen_retry_wait=screen_retry_wait)
+        screen_retries=screen_retries, screen_retry_wait=screen_retry_wait,
+        nrsa_max_stream_order=nrsa_max_stream_order, nrsa_protocols=nrsa_protocols,
+        nrsa_keep_sites=nrsa_keep_sites, exclude_sites=exclude_sites,
+        predictor_source=predictor_source, engine_config=engine_config,
+        reference_method=reference_method, scale_registry=scale_registry)
     return assemble(
         evidence, source_citation=source_citation, assessment_id=assessment_id,
         assessment_name=assessment_name, author=author,
@@ -2535,6 +2644,80 @@ def _completed_metric_entry(mk: str, row: dict) -> dict:
     }
 
 
+def _stratified_metric_entry(mk: str, row: dict, class_rows: list[dict],
+                             strat_key: str) -> dict:
+    """A ``completed_metrics`` entry for a metric a registry split applied to
+    (rule STRAT-10): the pooled curve plus one row per supported class.
+
+    The reopen contract is the unstratified one with two changes: the decision
+    and the signature say ``single`` with the stratifier's key, which is what
+    ``build_metric_phase4_signature`` recomputes from the session's
+    ``curve_stratification`` entry, and ``phase4_curve_rows`` holds several
+    rows. The pooled row (stratum "") comes first, so the exporter keeps it as
+    the default curve and the fallback for a class the pool could not support.
+    """
+    rows = [dict(row, stratum="")] + [dict(r) for r in class_rows]
+    frames = []
+    for r in rows:
+        frame = pd.DataFrame([{k: v for k, v in r.items() if k != "curve_points"}])
+        frame["curve_points"] = [r.get("curve_points")]
+        frames.append(frame)
+    phase4_rows = pd.concat(frames, ignore_index=True)
+    sizes = [int(r.get("n_reference")) for r in class_rows if r.get("n_reference") is not None]
+    strat_decision = pd.DataFrame([{
+        "metric": mk, "decision_type": "single", "selected_strat": strat_key,
+        "selected_p_value": None, "selected_n_groups": len(class_rows),
+        "selected_min_n": min(sizes) if sizes else None,
+        "runner_up_strat": None, "runner_up_p_value": None,
+        "needs_review": False, "review_reason": None,
+        "notes": "Class split adopted by the national scale analysis (STRAT-10).",
+    }])
+    base = {k: v for k, v in row.items() if k != "curve_points"}
+    return {
+        "stratified": True,
+        "strat_var": strat_key,
+        "strat_decision": strat_decision,
+        "reference_curve": {"curve_row": pd.DataFrame([base]),
+                            "curve_points": row.get("curve_points"), "curve_source": "auto"},
+        "phase4_curve_rows": phase4_rows,
+        "phase4_signature": {"data_fingerprint": None, "config_version": 0,
+                             "decision_type": "single", "selected_strat": strat_key},
+        "phase4_artifact_mode": "summary",
+    }
+
+
+def registry_strat_config(result: dict) -> dict:
+    """``strat_config`` entries for the registry splits this build applied, in
+    the shape ``stratifiers.strat_config_for`` writes, so the workspace knows
+    the class column behind each stratified metric. Empty when none applied."""
+    from .workbook import auto_pairwise_values
+    data = result.get("data")
+    out: dict[str, dict] = {}
+    for rec in (result.get("strata_applied") or {}).values():
+        spec = rec.get("spec") or {}
+        key, column = spec.get("key"), None
+        if not rec.get("applied") or not key or key in out:
+            continue
+        from . import scale_analysis
+        column = (scale_analysis.STRATIFIERS.get(key) or {}).get("column")
+        if not column or data is None or column not in data.columns:
+            continue
+        counts = data[column].value_counts(dropna=True)
+        levels = [lvl for lvl in spec.get("labels") or [] if int(counts.get(lvl, 0)) > 0]
+        out[key] = {
+            "display_name": {"NhdSlopeClass": "Channel slope class (NHDPlus)",
+                             "NhdDrainageAreaClass": "Drainage area class (NHDPlus)"}.get(key, key),
+            "type": "single", "is_custom_grouping": False,
+            "column_name": column, "source_column": spec.get("variable"),
+            "source_units": spec.get("units"), "levels": levels,
+            "pairwise_comparisons": auto_pairwise_values(levels),
+            "min_group_size": int(methodology.threshold("data_rules.min_n_stratum")),
+            "notes": f"{spec.get('source')}. Adopted by the national scale analysis "
+                     "(rule STRAT-10).",
+        }
+    return out
+
+
 def stage_status_for(result: dict) -> dict:
     """Derive the workflow-stage status from what the run actually did.
 
@@ -2583,6 +2766,42 @@ def session_fields(result: dict) -> dict:
     # (degenerate / exploratory) curves too.
     completed = {mk: _completed_metric_entry(mk, row)
                  for mk, row in (result.get("curve_rows") or {}).items()}
+    # Registry splits this build applied (rule STRAT-10): the entry carries the
+    # class rows, the metric allows the stratifier, and the stratifier is
+    # configured, so the workspace reopens the metric as stratified and current.
+    applied = {mk: rec for mk, rec in (result.get("strata_applied") or {}).items()
+               if rec.get("applied") and mk in completed
+               and (result.get("stratum_rows") or {}).get(mk)}
+    split_config = registry_strat_config(result) if applied else {}
+    applied = {mk: rec for mk, rec in applied.items() if rec.get("stratifier") in split_config}
+    metric_config = result["metric_config"]
+    if applied:
+        metric_config = copy.deepcopy(metric_config)
+        for mk, rec in applied.items():
+            completed[mk] = _stratified_metric_entry(
+                mk, result["curve_rows"][mk], result["stratum_rows"][mk], rec["stratifier"])
+            allowed = list(metric_config[mk].get("allowed_stratifications") or [])
+            if rec["stratifier"] not in allowed:
+                metric_config[mk]["allowed_stratifications"] = allowed + [rec["stratifier"]]
+    strat_config = {**(strat.get("strat_config") or {}), **split_config}
+    # The workspace reads a metric's cached decision BEFORE its
+    # curve_stratification entry, and the advisory screen cached "none" for
+    # every metric. A split metric's cached decision has to say "single" too, or
+    # its recomputed signature reads "none" and the stored curves go stale.
+    phase_cache = dict(strat.get("metric_phase_cache") or {})
+    for mk in applied:
+        phase_cache[mk] = {**(phase_cache.get(mk) or {}),
+                           "strat_decision_user": completed[mk]["strat_decision"]}
+    pressure = result.get("reference_method") == run_state.REFERENCE_METHOD_PRESSURE
+    reference_build = None
+    if pressure:
+        from . import pressure_evidence
+        reference_build = pressure_evidence.session_reference_build(result)
+        screen_note = ("Fixed landscape-pressure screen "
+                       f"({(result.get('reference_screen') or {}).get('label')}), read from the "
+                       "committed station table.")
+    else:
+        screen_note = "Real EASI reference screen."
     return {
         "app_data_loaded": True,
         # These two pair with every phase4_signature above; the restore-side
@@ -2601,7 +2820,7 @@ def session_fields(result: dict) -> dict:
         # --- STRAT-00 diagnostics (advisory) ---
         # Without these the Exploratory, Cross-Metric and Verification tabs of a
         # reopened assessment truthfully report that nothing was ever run.
-        "strat_config": strat.get("strat_config") or {},
+        "strat_config": strat_config,
         "all_layer1_results": strat.get("all_layer1_results") or {},
         "all_layer2_results": strat.get("all_layer2_results") or {},
         "phase1_candidates": strat.get("phase1_candidates") or {},
@@ -2609,13 +2828,16 @@ def session_fields(result: dict) -> dict:
         "cross_metric_consistency": strat.get("cross_metric_consistency"),
         "phase2_settings": strat.get("phase2_settings"),
         "phase3_verification": strat.get("phase3_verification") or {},
-        "metric_phase_cache": strat.get("metric_phase_cache") or {},
+        "metric_phase_cache": phase_cache,
         # Advisory mode, pinned. get_metric_curve_stratification falls back to the
         # phase-1 recommendation when a metric has no stored choice, which would
         # recompute a "single" phase4 signature, stop matching the stored "none"
         # one, and blank every curve in the assessment. The curves were built
         # unstratified; say so explicitly.
-        "curve_stratification": {mk: "none" for mk in completed},
+        # A metric a registry split applied to names its stratifier instead, which
+        # is what makes its stored "single" signature the current one.
+        "curve_stratification": {mk: (applied[mk]["stratifier"] if mk in applied else "none")
+                                 for mk in completed},
         # RED-01 evidence, computed on every run and previously discarded from the
         # session so only the run folder CSV kept it.
         "metric_redundancy": result.get("redundancy"),
@@ -2623,14 +2845,18 @@ def session_fields(result: dict) -> dict:
             "n_screened": result["screening_counts"].get("n_screened"),
             "n_retained": result["screening_counts"].get("n_retained"),
             "method": result["screening_method"],
-            "method_version": run_state.SCREENING_METHOD_VERSION,
+            "method_version": (run_state.REFERENCE_SCREEN_METHOD_VERSION if pressure
+                               else run_state.SCREENING_METHOD_VERSION),
             "reference_tier": result["reference_tier"],
-            "note": "; ".join(result.get("review_flags") or []) or "Real EASI reference screen.",
+            "note": "; ".join(result.get("review_flags") or []) or screen_note,
         },
+        # The reference statement of a pressure-screen build; None on a legacy
+        # run, which is how an older session reads too.
+        "reference_build": reference_build,
         "easi_screening_sites": screening.get("easi_screening_sites", []),
         "easi_screening_metrics": screening.get("easi_screening_metrics", []),
         "easi_screening_criteria": screening.get("easi_screening_criteria", {}),
-        "metric_config": result["metric_config"],
+        "metric_config": metric_config,
         "predictor_config": result.get("predictor_config") or {},
         # So a revision does not have to re-argue every documented gap.
         "function_coverage_exceptions": result.get("coverage_exceptions") or [],
@@ -2641,9 +2867,9 @@ def session_fields(result: dict) -> dict:
         # from the configs we just built (settings preserved, not defaulted).
         "input_metadata": workbook.tables_from_configs(
             result["data"],
-            result["metric_config"],
+            metric_config,
             result.get("predictor_config") or {},
-            strat.get("strat_config") or {},
+            strat_config,
         ),
         "column_functions": result["column_functions"],
         "discipline_function_mapping": result["discipline_function_mapping"],

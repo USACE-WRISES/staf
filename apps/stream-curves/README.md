@@ -107,6 +107,39 @@ percent either way on Interior Plateau, because roughly half of NRSA is boatable
 design. What pooling changes is the count: 31 wadeable sites instead of 12.
 `protocol` rides on the panel so a run can filter or stratify on it.
 
+### Reference method (methodology 0.12)
+
+Reference stations are picked by a fixed landscape-pressure screen, never by a score. The
+headless CLIs default to `--reference-method pressure-screen` on the pooled archive, and
+`easi-eci` stays the function-level default so every earlier version still replays.
+
+- `data/nrsa/station_screen.parquet` holds one row per station with the frame, the ecoregion
+  levels, the natural setting, the screen variables and the strict and relaxed outcomes.
+  Rebuild it with `scripts/nrsa/build_station_screen.py` (`--fast-path` reads the EASI national
+  store, `--verify` checks the pinned counts). A build reads it offline.
+- `config/methodology/methodology_config.yaml` `reference_screen:` mirrors the screen of the
+  vendored EASI `reference-curves.json`, and `config/fixed_criteria.yaml` is generated from the
+  vendored EASI scoring catalog. Both are drift-gated at startup, so never hand-edit them.
+  Regenerate after `vendor_easi_engine.py`.
+- `config/reference_transfer.yaml` names the covariates that make a borrowed station comparable,
+  one family per metric. Pools widen Level III, then II, then I, per metric, and a metric with
+  fewer than 10 usable stations is reported as insufficient reference support.
+- `config/metric_scale_registry.yaml` is written by `scripts/run_national_scale_analysis.py`
+  (`--check` verifies it). It decides the supported geographic level and the class splits.
+- `scripts/run_region_batch.py census --l3 58 --l3 71` reports reference support per metric
+  before anything is built. `stage` writes `reference_support.csv`, `reference_pool_ledger.csv`
+  and `coverage_exceptions.draft.json` beside the review packet.
+- `config/field_methods.yaml` holds the one-line field protocol of every metric. The exporter
+  writes it into the bundle as `methodContext`, and DEEP prints it on the field form.
+
+### Excel calculator
+
+`library.publish_version` builds `vN/calculator.xlsx` from the bundle it just wrote
+(`streamcurves/deep_calculator.py`) and appends a record to `assessments/<id>/artifacts.json`.
+A workbook failure never blocks a publish. `scripts/build_deep_calculators.py --all` backfills
+older versions (`--check` reports present, stale or absent). The Publish page offers the same
+workbook as a preview before minting.
+
 ### Metric names
 
 `data/nrsa_metric_catalog.csv` has a `label` column, but it is only the mnemonic,

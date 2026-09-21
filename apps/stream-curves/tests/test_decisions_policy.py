@@ -13,7 +13,9 @@ from streamcurves import provenance as pv
 
 DEFAULT_IDS = {"curve04-accept-with-flag", "data05-exploratory-pool-accepted",
                "red06-instability-is-noise", "strat09-defer-floors",
-               "select01-complementary-set"}
+               "select01-complementary-set",
+               # 1.1 (methodology 0.12): a low-risk borrowed reference pool
+               "ref05-borrowed-pool-accepted"}
 OPTIONAL_IDS = {"ref02-accept-best-available", "data03-thin-metric-finalized",
                 "data06-insufficient-finalized", "curve07-thin-metric-finalized"}
 
@@ -26,11 +28,11 @@ def policy():
 def test_policy_file_loads_and_validates(policy):
     assert dec.validate_policy(policy) == []
     assert policy["meta"]["sha256"].startswith("sha256:")
-    assert dec.policy_version(policy) == "1.0"
+    assert dec.policy_version(policy) == "1.1"
     assert policy["meta"]["methodology_version"] == methodology.methodology_version()
 
 
-def test_default_enabled_set_is_the_five_routine_classes(policy):
+def test_default_enabled_set_is_the_six_routine_classes(policy):
     enabled = {e["id"] for e in dec.enabled_entries(policy)}
     assert enabled == DEFAULT_IDS
     everything = {e["id"] for e in dec.enabled_entries(policy, sorted(OPTIONAL_IDS))}
@@ -50,6 +52,35 @@ def _doc(items, records=None, manifest=None):
             "reviewQueue": {"items": items, "counts": {"open": len(items)}}}
 
 
+def _borrowed(subject, **over):
+    evidence = {"level": "l2", "level_label": "Level II", "region_code": "8.3",
+                "region_name": "Southeastern USA Plains", "n_usable": 31, "n_local": 3,
+                "self_coverage": 0.91, "transfer_risk": "low"}
+    evidence.update(over)
+    return _queue_item("REF-05", subject, "borrowed_reference_pool", evidence, blocking=True)
+
+
+def test_ref05_accepts_only_a_low_risk_adequate_borrowed_pool(policy):
+    """Policy 1.1 (methodology 0.12): the owner sees every borrowed pool, and the
+    routine class (low transfer risk, an adequate sample, a profile that holds
+    the region's own streams) is the only one the policy settles."""
+    items = [_borrowed("chem_COND"),
+             _borrowed("phab_XBKF_H", transfer_risk="moderate"),
+             _borrowed("bent_EPT_NTAX", transfer_risk="unassessed"),
+             _borrowed("phab_SINU", n_usable=14),
+             _borrowed("chem_PH", self_coverage=0.61)]
+    res = dec.apply_policy(_doc(items), policy)
+    assert [d["subject"] for d in res.decisions] == ["chem_COND"]
+    d = res.decisions[0]
+    assert d["decision_class"] == "ref05-borrowed-pool-accepted" and d["action"] == "accept"
+    assert d["asserts"] == {"level": "l2", "transfer_risk": "low"}
+    assert "Level II 8.3 (Southeastern USA Plains)" in d["rationale"]
+    assert "31 comparable stations" in d["rationale"] and "3 of them inside" in d["rationale"]
+    assert "—" not in d["rationale"]
+    assert {u["item_id"] for u in res.uncovered} == {
+        "REF-05:phab_XBKF_H", "REF-05:bent_EPT_NTAX", "REF-05:phab_SINU", "REF-05:chem_PH"}
+
+
 def test_curve04_entry_matches_only_without_decision_flip(policy):
     ok = _queue_item("CURVE-04", "m1", "influential_site",
                      {"max_param_change_frac": 0.3, "max_param_change_iqr": 0.4,
@@ -61,7 +92,7 @@ def test_curve04_entry_matches_only_without_decision_flip(policy):
     assert [d["subject"] for d in res.decisions] == ["m1"]
     d = res.decisions[0]
     assert d["decision_class"] == "curve04-accept-with-flag"
-    assert d["rationale_origin"] == "standing_policy:1.0"
+    assert d["rationale_origin"] == "standing_policy:1.1"
     assert d["reviewer"].startswith("standing-policy:curve04-accept-with-flag")
     assert dec.PENDING_SUFFIX in d["reviewer"]
     assert d["asserts"] == {"decision_flip": False, "driver": "S1"}
@@ -143,7 +174,7 @@ def test_asserts_round_trip_through_apply_reviewer_decisions(policy):
     res = dec.apply_policy(doc, policy)
     out = pv.apply_reviewer_decisions(doc, res.decisions, default_reviewer="owner")
     assert out["records"][0]["reviewer_decision_class"] == "curve04-accept-with-flag"
-    assert out["records"][0]["reviewer_rationale_origin"] == "standing_policy:1.0"
+    assert out["records"][0]["reviewer_rationale_origin"] == "standing_policy:1.1"
     assert dec.PENDING_SUFFIX in out["records"][0]["reviewer"]
     assert out["reviewQueue"]["counts"]["open"] == 0
     assert dec.is_pending(out)
@@ -162,7 +193,7 @@ def test_confirm_decisions_replaces_the_pending_reviewer_and_keeps_the_origin(po
     confirmed = dec.confirm_decisions(res.decisions, reviewer="gtmenichino", date="2026-08-22")
     assert confirmed[0]["reviewer"] == "gtmenichino"
     assert confirmed[0]["confirmed_by"] == "gtmenichino"
-    assert confirmed[0]["rationale_origin"] == "standing_policy:1.0"
+    assert confirmed[0]["rationale_origin"] == "standing_policy:1.1"
     assert not dec.is_pending(confirmed)
     with pytest.raises(ValueError):
         dec.confirm_decisions(res.decisions, reviewer="", date="2026-08-22")

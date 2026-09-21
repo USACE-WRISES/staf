@@ -27,6 +27,15 @@ CURVE_METHOD_VERSION = "iqr-seed-2"
 # coordinate, the screening cache is keyed on this version, the engine pin
 # and the COMID mode, and both of those join the inputs digest.
 SCREENING_METHOD_VERSION = "easi-batch-2"
+# pressure-screen-1 (2026-09-19, methodology 0.12): reference membership is a
+# fixed desktop pressure screen read from the committed station table
+# (reference_screen.py, rule REF-04), with per-metric pools that borrow only
+# comparable stations from the parent ecoregion (reference_pool.py, REF-05).
+# The EASI condition screen above is the legacy method, kept for replay.
+REFERENCE_SCREEN_METHOD_VERSION = "pressure-screen-1"
+REFERENCE_METHOD_PRESSURE = "pressure-screen"
+REFERENCE_METHOD_EASI = "easi-eci"
+REFERENCE_METHODS = (REFERENCE_METHOD_PRESSURE, REFERENCE_METHOD_EASI)
 
 # --------------------------------------------------------------------------- #
 # The guided stages, in order (count them here, nowhere else).
@@ -1010,11 +1019,24 @@ def readiness_checklist(snapshot: dict) -> list[dict]:
             # A deliberate skip turns the stage green for exploration but never
             # satisfies this item: the library requires screened references.
             "label": (
-                "Reference screening complete with retained sites"
+                "Reference screening complete with reference support"
                 + (" (screening was skipped; run screening to publish to the library)"
                    if s.get("screening_skipped") else "")
+                + (" (the All sites option keeps every candidate; screen with a "
+                   "reference criterion to publish to the library)"
+                   if s.get("screening_publishable") is False else "")
             ),
-            "ok": bool(s.get("has_screening")) and int(s.get("n_retained") or 0) > 0,
+            # What the item asks is that the curves rest on screened least-disturbed
+            # stations, not that those stations sit inside the region. REF-05 fits a
+            # curve on a comparable Level II or Level I pool, and an ecoregion can
+            # retain none of its own candidates and still be entirely supported that
+            # way (the Eastern Corn Belt Plains retains 0 of 45). Requiring a local
+            # retention refused exactly the assessments borrowing exists for.
+            # An absent key reads as publishable: older snapshots predate it.
+            "ok": (bool(s.get("has_screening"))
+                   and (int(s.get("n_retained") or 0) > 0
+                        or int(s.get("n_borrowed_curves") or 0) > 0)
+                   and s.get("screening_publishable") is not False),
             # "rule": the catalog rule that governs the item, rendered as a chip
             # into the Rules page where a governing rule exists. Optional: the
             # coverage gate, for one, has no single catalog rule.
