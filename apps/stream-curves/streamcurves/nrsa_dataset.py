@@ -46,7 +46,23 @@ CYCLES_NEWEST_FIRST = ("2324", "1819", "1314")
 CYCLE_LABELS = {"1314": "NRSA 2013-14", "1819": "NRSA 2018-19", "2324": "NRSA 2023-24"}
 
 POLICY_MOST_RECENT = "most_recent_complete"
+# Rule DATA-11 (methodology 0.12): per metric, the most recent cycle's index
+# visit that actually carries a value (:func:`latest_values`). The policy above
+# takes a station's newest cycle whole, so a metric that cycle did not measure
+# goes missing instead of reading the older cycle.
+POLICY_LATEST_NON_NULL = "latest_non_null_index_visit"
+# ``POLICIES`` are the PANEL policies ``resolve_site_panel`` accepts. The value
+# policy is a separate choice, recorded beside it in the run manifest.
 POLICIES = (POLICY_MOST_RECENT,)
+VALUE_POLICIES = (POLICY_MOST_RECENT, POLICY_LATEST_NON_NULL)
+
+# Which visit of a station's cycle a curve reads: the lowest visit number, and
+# where two EPA sites of ONE cycle resolve to the same station (a probability
+# site and a hand-picked site on one reach share a UNIQUE_ID; five stations in
+# the archive), the lower site id. The site id used to be left to file order,
+# and the value join then returned both sites' rows. The explicit order picks
+# the same five sites file order did, so nothing published moves (2026-09-19).
+INDEX_VISIT_ORDER = ["station_key", "cycle", "visit_no", "site_id"]
 
 # the shape select_candidates already consumes, from data/nrsa_sites.csv
 PANEL_COLUMNS = [
@@ -184,6 +200,33 @@ def stream_orders() -> dict[int, float]:
         return out
     except Exception:  # noqa: BLE001 - a broken table means unknown, never a crash
         return {}
+
+
+REFERENCE_FRAMES = ("wadeable", "all")
+
+
+def governed_frame(choice: str = "wadeable") -> tuple[Optional[int], Optional[tuple[str, ...]]]:
+    """``(max_stream_order, protocol_fallback)`` for a ``--reference-frame`` choice.
+
+    ``all`` keeps every stream and adds no digest key. ``wadeable`` reads the
+    governed values (rule DATA-10), so the frame lives in methodology_config and
+    every entry point (the batch runner, the single-run CLI, the Region builder)
+    applies the same one. Before 2026-09-19 only the batch runner did.
+    """
+    if str(choice or "").strip().lower() == "all":
+        return None, None
+    max_order, protocols = 5, ("WADEABLE",)
+    try:
+        from . import methodology
+        got = methodology.threshold("reference_panel.max_stream_order")
+        if got:
+            max_order = int(got)
+        got = methodology.threshold("reference_panel.protocol_fallback")
+        if got:
+            protocols = tuple(str(p) for p in got)
+    except Exception:  # noqa: BLE001 - the governed value is the source, this is the floor
+        pass
+    return max_order, protocols
 
 
 def _apply_stream_frame(in_region: pd.DataFrame, *, max_stream_order: int,
@@ -343,7 +386,7 @@ def resolve_site_panel(
     keys = set(in_region["station_key"])
     visits = ds.visits[ds.visits["station_key"].isin(keys)]
     # the index visit is the one a curve should read
-    visits = (visits.sort_values(["station_key", "cycle", "visit_no"])
+    visits = (visits.sort_values(INDEX_VISIT_ORDER)
               .drop_duplicates(["station_key", "cycle"]))
 
     values = ds.values
@@ -509,13 +552,107 @@ def panel_values(
         keep = ["site_id"] + [m for m in wanted if m in values.columns]
         return values[keep].reset_index(drop=True)
 
-    merged = panel[["station_key", "source_cycle", "visit_no"]].merge(
-        ds.values,
-        left_on=["station_key", "source_cycle", "visit_no"],
-        right_on=["station_key", "cycle", "visit_no"],
-        how="left",
-    )
+    # Join on the picked EPA site as well as the visit: two sites of one cycle
+    # can share a station (INDEX_VISIT_ORDER), and without the site the join
+    # returned both rows for it. A panel built elsewhere without ``site_name``
+    # falls back to the visit key and keeps the same site the pick would.
+    left = ["station_key", "source_cycle", "visit_no"]
+    right = ["station_key", "cycle", "visit_no"]
+    values = ds.values
+    if "site_name" in panel.columns and "site_id" in values.columns:
+        left, right = left + ["site_name"], right + ["site_id"]
+    else:
+        values = (values.sort_values(INDEX_VISIT_ORDER)
+                  .drop_duplicates(["station_key", "cycle", "visit_no"]))
+    merged = panel[left].merge(values, left_on=left, right_on=right, how="left")
     wanted = list(metrics) if metrics else ds.metric_columns()
     keep = [m for m in wanted if m in merged.columns]
     out = merged[["station_key"] + keep].rename(columns={"station_key": "site_id"})
     return out.reset_index(drop=True)
+
+
+# --------------------------------------------------------------------------- #
+# rule DATA-11: the most recent non-null value per metric
+# --------------------------------------------------------------------------- #
+LATEST_LEDGER_COLUMNS = ["station_key", "metric", "source_cycle", "visit_no", "site_name"]
+
+
+def latest_values(
+    station_keys: Iterable[str],
+    *,
+    dataset: str | NrsaDataset = MULTI_CYCLE_DATASET_ID,
+    metrics: Optional[Sequence[str]] = None,
+    cycles: Sequence[str] = CYCLES_NEWEST_FIRST,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """One value per station per metric: the newest cycle that measured it.
+
+    For each station the index visit of every cycle is lined up newest first,
+    and each metric takes the first value that is not null. A station sampled
+    in 2023-24 without dissolved nitrogen therefore still contributes its
+    2018-19 dissolved nitrogen, which :func:`panel_values` (the newest cycle
+    taken whole) reports as missing. EASI's national analysis reads the archive
+    the same way.
+
+    Returns ``(values, ledger)``. ``values`` is keyed by ``site_id`` (the
+    station key), shaped like :func:`panel_values`. ``ledger`` has one row per
+    station and metric that received a value, naming the cycle, the visit and
+    the EPA site it came from, so a pooled curve can always say which survey
+    each of its values is from.
+
+    A legacy dataset has one cycle, so this is :func:`panel_values` for it.
+    """
+    ds = dataset if isinstance(dataset, NrsaDataset) else load_dataset(dataset)
+    keys = [str(k) for k in station_keys]
+    wanted = [m for m in (list(metrics) if metrics else ds.metric_columns())
+              if m in ds.values.columns]
+    empty_ledger = pd.DataFrame(columns=LATEST_LEDGER_COLUMNS)
+    if not keys:
+        return pd.DataFrame({"site_id": pd.Series([], dtype=object)}), empty_ledger
+
+    if not ds.is_multi_cycle:
+        values = ds.values.drop_duplicates("site_id")
+        values = values[values["site_id"].astype(str).isin(set(keys))]
+        out = values[["site_id"] + wanted].reset_index(drop=True)
+        return out, empty_ledger
+
+    rank = {c: i for i, c in enumerate(c for c in CYCLES_NEWEST_FIRST if c in set(cycles))}
+    visits = ds.visits[ds.visits["station_key"].astype(str).isin(set(keys))
+                       & ds.visits["cycle"].isin(rank)]
+    # one index visit per station per cycle, chosen by the same explicit order
+    # the panel uses
+    visits = (visits.sort_values(INDEX_VISIT_ORDER)
+              .drop_duplicates(["station_key", "cycle"]))
+    index_rows = visits[["station_key", "cycle", "visit_no", "site_id"]]
+    joined = index_rows.merge(ds.values[["station_key", "cycle", "visit_no", "site_id"] + wanted],
+                              on=["station_key", "cycle", "visit_no", "site_id"], how="left")
+    joined["_rank"] = joined["cycle"].map(rank)
+    joined = joined.sort_values(["station_key", "_rank"], kind="stable")
+
+    # GroupBy.first() takes the first NON-NULL value per column, which is the rule
+    wide = joined.groupby("station_key", sort=True)[wanted].first()
+    wide = wide.reindex(sorted(set(keys)))
+    out = wide.reset_index().rename(columns={"station_key": "site_id"})
+
+    parts = []
+    for metric in wanted:
+        have = joined[joined[metric].notna()].drop_duplicates("station_key")
+        if not len(have):
+            continue
+        parts.append(pd.DataFrame({
+            "station_key": have["station_key"].to_numpy(), "metric": metric,
+            "source_cycle": have["cycle"].to_numpy(), "visit_no": have["visit_no"].to_numpy(),
+            "site_name": have["site_id"].to_numpy()}))
+    ledger = (pd.concat(parts, ignore_index=True) if parts else empty_ledger)
+    return out, ledger
+
+
+def latest_values_summary(ledger: pd.DataFrame) -> dict:
+    """``{metric: {cycle: n}}`` for a run manifest: which survey each metric's
+    values came from."""
+    if ledger is None or not len(ledger):
+        return {}
+    counts = ledger.groupby(["metric", "source_cycle"]).size()
+    out: dict[str, dict[str, int]] = {}
+    for (metric, cycle), n in counts.items():
+        out.setdefault(str(metric), {})[str(cycle)] = int(n)
+    return out

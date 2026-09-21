@@ -573,7 +573,10 @@ def test_the_reasons_come_from_the_exporter():
     from streamcurves import deep_export
 
     assert rb.coverage_reasons() is deep_export.FUNCTION_EXCLUSION_REASONS
-    assert len(rb.coverage_reasons()) == 6
+    # seven since methodology 0.12: a function whose every candidate metric was
+    # withheld for insufficient reference support says so (rule REF-06)
+    assert len(rb.coverage_reasons()) == 7
+    assert "insufficient-reference-support" in rb.coverage_reasons()
 
 
 def test_a_valid_exception_passes_the_gates_own_validator():
@@ -657,11 +660,23 @@ def test_restage_args_recovers_the_run_record_and_adds_exactly_one_flag():
     # the frame is recovered, never defaulted: this manifest recorded no frame,
     # so the re-stage draws from every stream exactly as the original run did
     assert kw["reference_frame"] == "all"
-    kw = {k: v for k, v in kw.items() if k != "reference_frame"}
+    # the reference method likewise (methodology 0.12): this manifest carries no
+    # reference block, so it was a legacy ECI run and is rebuilt as one. Left to
+    # the default, a pooled-archive re-stage would switch to the pressure screen.
+    assert kw["reference_method"] == "easi-eci"
+    kw = {k: v for k, v in kw.items() if k not in ("reference_frame", "reference_method")}
     assert kw == {"l3_code": "52", "name": "Driftless Area", "n_boot": 1000,
                   "enable_policies": ["data03-thin-metric-finalized",
                                       rb.REF02_POLICY_ID],
                   "dataset_id": "multi-cycle-v1"}
+    pressure = {"inputs": {"nrsa_dataset": {"datasetId": "multi-cycle-v1"},
+                           "reference": {"method": "pressure-screen"}}}
+    assert rb.restage_args(_refused_packet(), pressure)["reference_method"] == "pressure-screen"
+    argv = rb.stage_command("52", "Driftless Area", "out", maintainer="t",
+                            reference_method="pressure-screen")
+    assert argv[argv.index("--reference-method") + 1] == "pressure-screen"
+    assert "--reference-method" not in rb.stage_command("52", "Driftless Area", "out",
+                                                        maintainer="t")
 
 
 def test_restage_args_falls_back_to_the_packet_and_the_legacy_dataset():

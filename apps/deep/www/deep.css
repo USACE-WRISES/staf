@@ -294,6 +294,22 @@
 .deep-basis-tag.streamcat { color: #5b3f8a; background: #efe8f7; border-color: #d9cbea; }
 .deep-basis-tag.nlcd { color: #2c4f7a; background: #dce8f5; border-color: #bcd0e8; }
 .deep-basis-tag.threedep { color: #7a5b12; background: #fdf0d6; border-color: #f1dca6; }
+.deep-basis-tag.nid { color: #6a3f1d; background: #f6e9de; border-color: #e6cfba; }
+
+/* What a metric is scored against: fixed criteria, or a reference curve with the
+   geography its stations came from. A borrowed pool reads in the caution tone. */
+.deep-support-row .deep-source-val { color: #33415c; }
+.deep-support-row.borrowed .deep-source-val { color: #8a5a00; }
+.deep-stratum-row { flex-wrap: wrap; }
+.deep-stratum-note { flex: 1 1 100%; font-size: 11px; color: #74809a; line-height: 1.4; }
+.deep-report-support { font-size: 11px; color: #45506a; margin-top: 2px; }
+
+/* A metric the assessment withholds: named, explained, no input and no index. */
+.deep-metric-withheld { background: #f7f8fb; border-style: dashed; }
+.deep-metric-withheld .sfari-metric-name { color: #74809a; }
+.deep-withheld-title { font-size: 12px; font-weight: 700; color: #8a5a00; margin: 2px 0 3px; }
+.deep-withheld-text { font-size: 12px; color: #5a6577; line-height: 1.45; }
+.deep-withheld-note { color: #8a5a00; }
 .deep-engine-line { font-size: 12px; color: #45506a; background: #f4f6fa; border: 1px solid #e2e6ee;
   border-radius: 6px; padding: 4px 8px; margin: 4px 0 6px; }
 .deep-engine-line.warn { background: #fff7e0; border-color: #e6c96b; color: #8a5a00; }

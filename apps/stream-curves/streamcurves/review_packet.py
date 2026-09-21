@@ -96,6 +96,14 @@ def curve_rows_for_packet(result: dict) -> list[dict]:
                          f"decision flip {'yes' if infl.get('decision_flip') else 'no'}")
         if mk in gradients:
             flags.append(f"deferred gradient on {gradients[mk].get('stratification')}")
+        # methodology 0.12: a borrowed pool and a backwards discrimination check
+        sup = (result.get("reference_support") or {}).get(mk) or {}
+        if str(sup.get("status") or "").startswith("borrowed"):
+            flags.append(f"pool borrowed from {str(sup.get('level') or '').upper()} "
+                         f"{sup.get('region_code')}, transfer risk {sup.get('transfer_risk')}")
+        disc = (result.get("discrimination") or {}).get(mk) or {}
+        if disc.get("verdict") == "inverted":
+            flags.append(f"discrimination inverted (AUC {disc.get('aucRefVsPressure')})")
         rows.append({
             "metric": mk,
             "display_name": mc.get("display_name"),
@@ -205,6 +213,148 @@ def diff_against_prior(result: dict, prior_bundle: Optional[dict]) -> Optional[d
             "band_changes": band_changes}
 
 
+def reference_block(result: dict) -> Optional[dict]:
+    """What the pressure-screen method (methodology 0.12) puts in front of the
+    reviewer: where every curve's reference stations came from, what was
+    withheld, the local comparison, the fixed criteria, and the discrimination
+    check. None on a legacy run."""
+    if result.get("reference_method") != run_state.REFERENCE_METHOD_PRESSURE:
+        return None
+    from . import fixed_criteria, pressure_evidence
+    support = pressure_evidence.support_frame(result)
+    support = support.astype(object).where(support.notna(), None)
+    fixed = []
+    for mk in sorted(result.get("fixed_metrics") or {}):
+        e = fixed_criteria.entry_for(mk)
+        fixed.append({"metric": mk, "display_name": e.get("display_name"),
+                      "units": e.get("units"), "functions": list(e.get("functions") or []),
+                      "criteria": " / ".join(f"{b['rating']} {b.get('label')}"
+                                             for b in e.get("bands") or []),
+                      "points": e.get("points"), "provisional": bool(e.get("provisional"))})
+    return {
+        "method": result.get("reference_method"),
+        "summary": (result.get("meta") or {}).get("referenceMethod") or {},
+        "screen": result.get("reference_screen") or {},
+        "pool_summary": result.get("reference_pool_summary") or {},
+        "support": support.to_dict("records"),
+        "withheld": pressure_evidence.withheld_metrics(result),
+        "coverage_exceptions_draft": pressure_evidence.coverage_exceptions_draft(result),
+        "local_comparison": result.get("local_comparison") or {},
+        "fixed": fixed,
+        "discrimination": result.get("discrimination") or {},
+        "strata_applied": {mk: {k: v for k, v in rec.items() if k != "spec"}
+                           for mk, rec in (result.get("strata_applied") or {}).items()},
+        "scale_registry": result.get("scale_registry") or {},
+        "value_selection": result.get("value_selection") or {},
+    }
+
+
+def _reference_sections(ref: dict) -> list[str]:
+    """Sections 6 to 6e of the packet under the pressure-screen method."""
+    from . import discrimination as dz
+    summary, pool = ref.get("summary") or {}, ref.get("pool_summary") or {}
+    registry = ref.get("scale_registry") or {}
+    lines = ["## 6. Reference support per metric (REF-04, REF-05)", "",
+             f"Reference stations pass the fixed landscape-pressure screen "
+             f"({summary.get('screenLabel')}). Of {pool.get('target_n_frame')} stations of this "
+             f"ecoregion in the frame, {pool.get('target_n_strict')} pass the strict screen and "
+             f"{pool.get('target_n_relaxed')} pass the relaxed one. Values are the most recent "
+             "non-null per metric (DATA-11).", ""]
+    if not registry.get("present"):
+        lines += ["No national scale registry was present, so the transfer risk of every "
+                  "borrowed pool reads unassessed and is capped as moderate.", ""]
+    built = [r for r in ref.get("support") or [] if r.get("criteria_basis") == "reference"
+             and r.get("status") != "insufficient"]
+    def _int(v):
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return ""
+
+    lines += _table(["metric", "pool", "level", "usable n", "local n", "disposition",
+                     "self-coverage", "risk", "split", "in bundle"],
+                    [[r["metric"], r["status"], f"{r.get('level') or ''} {r.get('region_code') or ''}",
+                      _int(r.get("n_usable")), _int(r.get("n_local")), r.get("disposition"),
+                      _fmt(r.get("self_coverage"), 2), r.get("transfer_risk"),
+                      "yes" if r.get("split_applied") else "", "yes" if r.get("in_bundle") else ""]
+                     for r in built])
+    lines.append("")
+
+    borrowed = [r for r in built if str(r.get("status") or "").startswith("borrowed")]
+    lines += ["## 6a. Borrowed pools (each one is a review item)", ""]
+    if borrowed:
+        for r in borrowed:
+            lines.append(f"- **{r['metric']}**: {r.get('transfer_note')} "
+                         f"Matched on {r.get('covariates') or 'no covariates'}"
+                         + (f" and lithology ({r.get('lithology')})" if r.get("lithology") else "")
+                         + ".")
+    else:
+        lines.append("None. Every curve uses this ecoregion's own reference stations.")
+    lines.append("")
+
+    lines += ["## 6b. Withheld for insufficient reference support (REF-06)", ""]
+    withheld = ref.get("withheld") or []
+    if withheld:
+        lines += _table(["metric", "functions", "levels tried"],
+                        [[w.get("metricKey"),
+                          ", ".join(f["functionName"] for f in w.get("functions") or []) or "(none)",
+                          "; ".join(f"{t.get('level')} {t.get('region_code')}: "
+                                    f"{t.get('n_usable')} usable"
+                                    for t in w.get("levelsTried") or [])]
+                         for w in withheld])
+        lines.append("")
+        if ref.get("coverage_exceptions_draft"):
+            lines += ["Functions left uncovered by these are drafted in "
+                      "`coverage_exceptions.draft.json`. Add your name as recordedBy, edit the "
+                      "justification, and pass the file back with --coverage-exceptions.", ""]
+    else:
+        lines += ["None.", ""]
+
+    lines += ["## 6c. Local best-available comparison (REF-07)", "",
+              "Shown in DEEP beside the curve as a labeled comparison. It never feeds a curve, a "
+              "confidence, or a Functioning band.", ""]
+    comps = ref.get("local_comparison") or {}
+    if comps:
+        lines += _table(["metric", "n", "Q25", "median", "Q75", "stations"],
+                        [[mk, c.get("n"), _fmt(c.get("q25")), _fmt(c.get("q50")),
+                          _fmt(c.get("q75")), c.get("definition")]
+                         for mk, c in sorted(comps.items())])
+    else:
+        lines.append("None available.")
+    lines.append("")
+
+    lines += ["## 6d. Fixed criteria (CURVE-11)", "",
+              "Landscape pressure metrics are scored on EASI's criteria, the same in every "
+              "region. They are never fitted and carry no sample confidence.", ""]
+    lines += _table(["metric", "functions", "criteria", "curve points"],
+                    [[f["metric"], ", ".join(f["functions"]), f["criteria"],
+                      " ".join(f"({p[0]:g}, {p[1]:g})" for p in f.get("points") or [])]
+                     for f in ref.get("fixed") or []])
+    lines.append("")
+
+    lines += ["## 6e. Discrimination check (CURVE-12, advisory)", "",
+              "Area under the curve between the pool's reference stations (scored leave one "
+              "out) and stations of the same geography that fail the relaxed screen. 0.5 is no "
+              "separation. Below 0.45 the curve ranks pressured stations higher, which is a "
+              "review item.", ""]
+    disc = ref.get("discrimination") or {}
+    if disc:
+        lines += _table(["metric", "AUC", "n reference", "n pressured", "EPA R vs Im", "verdict"],
+                        [[mk, _fmt(d.get("aucRefVsPressure"), 3), d.get("nRef"), d.get("nPressure"),
+                          _fmt(d.get("aucRvsIm"), 3), d.get("verdict")]
+                         for mk, d in sorted(disc.items(),
+                                             key=lambda kv: (kv[1].get("aucRefVsPressure") is None,
+                                                             kv[1].get("aucRefVsPressure") or 0))])
+        lines.append("")
+        for mk, d in sorted(disc.items()):
+            if d.get("verdict") == "inverted":
+                lines.append(f"- **{mk}**: {dz.sentence(d)}")
+    else:
+        lines.append("Not run (diagnostics were disabled).")
+    lines.append("")
+    return lines
+
+
 def build_packet(result: dict, doc: dict, policy_result: dict, *, policy_meta: dict,
                  enabled: list[str], staged: Optional[dict], promote_command: str,
                  prior_bundle: Optional[dict] = None, gallery: Optional[str] = None,
@@ -233,6 +383,8 @@ def build_packet(result: dict, doc: dict, policy_result: dict, *, policy_meta: d
                       "comids": result.get("screening_comids") or {},
                       "cache": result.get("screening_cache") or {}},
         "tier_evaluation": list(result.get("tier_evaluation") or []),
+        # the pressure-screen method's reference statement; None on a legacy run
+        "reference": reference_block(result),
         "policy": {"version": policy_meta.get("policy_version"), "sha256": policy_meta.get("sha256"),
                    "enabled": list(enabled or []), "applied_ids": policy_result.get("applied_ids") or []},
         "decisions_applied": policy_result.get("decisions") or [],
@@ -480,13 +632,17 @@ def packet_markdown(p: dict) -> str:
             lines.append(f"- {g['function']}: {', '.join(g['candidates']) or 'no candidate in the crosswalk'}")
         lines.append("")
 
-    lines += ["## 6. Per-metric reference tier evaluation (REF-02)", ""]
-    te = p.get("tier_evaluation") or []
-    if te:
-        lines += _table(["metric", "n functional", "n applied", "trigger", "note"],
-                        [[t.get("metric"), t.get("n_functional_pool"), t.get("n_applied_pool"),
-                          "yes" if t.get("ref02_metric_trigger") else "", t.get("note")] for t in te])
-    lines.append("")
+    if p.get("reference"):
+        lines += _reference_sections(p["reference"])
+    else:
+        lines += ["## 6. Per-metric reference tier evaluation (REF-02)", ""]
+        te = p.get("tier_evaluation") or []
+        if te:
+            lines += _table(["metric", "n functional", "n applied", "trigger", "note"],
+                            [[t.get("metric"), t.get("n_functional_pool"), t.get("n_applied_pool"),
+                              "yes" if t.get("ref02_metric_trigger") else "", t.get("note")]
+                             for t in te])
+        lines.append("")
 
     d = p.get("prior_version_diff")
     lines += ["## 7. Against the prior published version", ""]

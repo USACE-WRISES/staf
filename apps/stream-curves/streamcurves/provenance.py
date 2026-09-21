@@ -293,6 +293,38 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
         },
         "streamcat": (result.get("source_reports") or [None])[0],
     }
+    # The reference method (methodology 0.12). Recorded only for a
+    # pressure-screen run, so every manifest built under the legacy method reads
+    # as it always did. It names everything that decides pool membership and
+    # curve geometry there: the screen, the committed station table, the
+    # transfer profiles, the national scale registry, the fixed criteria, and
+    # the value policy. It JOINS the digest below.
+    if result.get("reference_method") == "pressure-screen":
+        from . import fixed_criteria, reference_pool
+        screen = result.get("reference_screen") or {}
+        registry = result.get("scale_registry") or {}
+        try:
+            from ._vendor.easi import national as _easi_national
+            easi_method = _easi_national.method_version()
+        except Exception:  # noqa: BLE001 - context only, never a build input
+            easi_method = None
+        inputs["reference"] = {
+            "method": "pressure-screen",
+            "methodVersion": run_state.REFERENCE_SCREEN_METHOD_VERSION,
+            "screenId": screen.get("id"), "screenTier": screen.get("tier"),
+            "frame": "wadeable (DATA-10), non-canal",
+            "stationScreen": {k: (screen.get("stationScreen") or {}).get(k)
+                              for k in ("path", "sha256", "rows", "source", "builtAt")},
+            "transferConfig": {"sha256": reference_pool.transfer_config_sha256()},
+            "scaleRegistry": {"sha256": registry.get("sha256"),
+                              "version": registry.get("version"),
+                              "analysisVersion": registry.get("analysis_version")},
+            "fixedCriteria": {"sha256": fixed_criteria.fixed_criteria_sha256()},
+            "valuePolicy": (result.get("value_selection") or {}).get("policy"),
+            "easiMethodVersion": easi_method,
+            "pool": result.get("reference_pool_summary"),
+        }
+
     # Predictor source: recorded whenever the run declares one. The DERIVED
     # value (from the predictor columns actually configured) is authoritative;
     # the requested flag rides beside it for the audit trail.
@@ -348,7 +380,11 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
         "inputs": inputs,
         "stratifiers": {
             "registryVersion": (result.get("stratifiers") or {}).get("registry_version"),
-            "mode": "advisory",
+            # "registry" once a national scale-registry split became real curves
+            # in this run (STRAT-10); the STRAT-00 screen itself stays advisory.
+            "mode": ("registry" if any(r.get("applied") for r in
+                                       (result.get("strata_applied") or {}).values())
+                     else "advisory"),
             "breakpointPolicy": (
                 "Pre-defined categories only. No data-derived binning, so STRAT-08 is "
                 "satisfied by construction."
@@ -482,6 +518,22 @@ def digest_payload_from_manifest(manifest: dict) -> dict:
         resourced = sorted(str(c) for c in (ps.get("resourced_metrics") or []))
         if resourced:
             digest_payload["predictor_source"]["resourced_metrics"] = resourced
+    # Same additive rule for the reference method (2026-09-19, methodology
+    # 0.12): a legacy run records no ``reference`` block and adds no key. Under
+    # the pressure screen the station table, the transfer profiles, the scale
+    # registry, the fixed criteria and the value policy all decide what a curve
+    # is, so every one of them is in the digest.
+    ref = inputs.get("reference")
+    if ref:
+        digest_payload["reference"] = {
+            "method": ref.get("method"), "methodVersion": ref.get("methodVersion"),
+            "screenId": ref.get("screenId"), "screenTier": ref.get("screenTier"),
+            "stationScreen": (ref.get("stationScreen") or {}).get("sha256"),
+            "transferConfig": (ref.get("transferConfig") or {}).get("sha256"),
+            "scaleRegistry": (ref.get("scaleRegistry") or {}).get("sha256"),
+            "fixedCriteria": (ref.get("fixedCriteria") or {}).get("sha256"),
+            "valuePolicy": ref.get("valuePolicy"),
+        }
     return digest_payload
 
 
@@ -536,6 +588,125 @@ def _record(run_id, region_code, rule_id, subject_kind, subject, *,
     }
 
 
+_LEVEL_LABELS = {"l3": "Level III", "l2": "Level II", "l1": "Level I"}
+
+
+def _pressure_records(result: dict, add) -> None:
+    """The records of the pressure-screen reference method (methodology 0.12):
+    REF-04 to REF-07, DATA-11, STRAT-10, CURVE-11 and CURVE-12. Derived from the
+    run's own output, like every other record."""
+    screen = result.get("reference_screen") or {}
+    counts = result.get("screening_counts") or {}
+    summary = result.get("reference_pool_summary") or {}
+    add("REF-04", "run", "reference_screen",
+        inputs={"screen": screen.get("id"), "tier": screen.get("tier"),
+                "stationScreenSha256": (screen.get("stationScreen") or {}).get("sha256")},
+        thresholds={"strict": methodology.threshold("reference_screen.strict")},
+        computed={"n_in_frame": summary.get("target_n_frame"),
+                  "n_reference": counts.get("n_retained"),
+                  "n_not_evaluable": counts.get("n_unresolved")},
+        verdict=VERDICT_PASS,
+        recommendation=("Reference membership is the fixed desktop pressure screen, read "
+                        "from the committed station table."))
+
+    # --- REF-05 / REF-06 / REF-07: one pool per metric ---
+    comparisons = result.get("local_comparison") or {}
+    for metric, d in (result.get("reference_support") or {}).items():
+        status = d.get("status")
+        computed = {
+            "status": status, "level": d.get("level"),
+            "level_label": _LEVEL_LABELS.get(d.get("level") or "", ""),
+            "region_code": d.get("region_code"), "region_name": d.get("region_name"),
+            "n_pool": d.get("n_pool"), "n_comparable": d.get("n_comparable"),
+            "n_usable": d.get("n_usable"), "n_local": d.get("n_local"),
+            "self_coverage": d.get("self_coverage"),
+            "supported_level": d.get("supported_level"),
+            "transfer_risk": d.get("transfer_risk"),
+            "covariates": d.get("covariates"), "lith_groups": d.get("lith_groups"),
+            "levels_tried": d.get("levels_tried"),
+        }
+        thresholds = {"adequate_n": methodology.threshold("data_rules.min_n_unstratified"),
+                      "exploratory_n": methodology.threshold(
+                          "data_rules.exploratory_n_unstratified"),
+                      "envelope_quantiles": methodology.threshold(
+                          "reference_pool.envelope_quantiles")}
+        if status == "insufficient":
+            add("REF-06", "metric", metric, thresholds=thresholds, computed=computed,
+                verdict=VERDICT_FAIL,
+                recommendation="Insufficient reference support: no curve is built and the "
+                               "metric is not scored. Reference quality is never relaxed "
+                               "to reach a sample size.")
+        elif status != "local":
+            add("REF-05", "metric", metric, thresholds=thresholds, computed=computed,
+                verdict=VERDICT_REVIEW, review_required=True,
+                review_triggers=["borrowed_reference_pool"],
+                recommendation=d.get("transfer_note"))
+        else:
+            add("REF-05", "metric", metric, thresholds=thresholds, computed=computed,
+                verdict=VERDICT_PASS,
+                recommendation="The ecoregion's own reference stations support this metric.")
+        comp = comparisons.get(metric)
+        if comp:
+            add("REF-07", "metric", metric,
+                computed={"n": comp.get("n"), "q25": comp.get("q25"), "q50": comp.get("q50"),
+                          "q75": comp.get("q75"), "definition": comp.get("definition")},
+                verdict=VERDICT_PASS,
+                recommendation="Shown as a labeled comparison. Never a baseline.")
+
+    # --- DATA-11: value selection across cycles ---
+    selection = result.get("value_selection") or {}
+    add("DATA-11", "run", "value_selection",
+        inputs={"policy": selection.get("policy")},
+        computed={"by_metric_cycle": selection.get("byMetricCycle")},
+        verdict=VERDICT_PASS)
+
+    # --- STRAT-10: the national registry, and what this pool could apply ---
+    registry = result.get("scale_registry") or {}
+    applied = result.get("strata_applied") or {}
+    add("STRAT-10", "run", "scale_registry",
+        inputs={"sha256": registry.get("sha256"), "version": registry.get("version"),
+                "analysis_version": registry.get("analysis_version")},
+        computed={"registry_present": bool(registry.get("present")),
+                  "metrics_with_a_registry_split": sorted(applied),
+                  "splits_applied": sorted(m for m, r in applied.items() if r.get("applied"))},
+        verdict=VERDICT_PASS if registry.get("present") else VERDICT_NOT_EVALUATED,
+        recommendation=(None if registry.get("present") else
+                        "No national scale registry is present, so every borrowed pool's "
+                        "transfer risk is unassessed."))
+    for metric, rec in applied.items():
+        add("STRAT-10", "metric", metric,
+            inputs={"stratifier": rec.get("stratifier")},
+            thresholds={"stratum_min_n": methodology.threshold("data_rules.min_n_stratum")},
+            computed={"n_by_class": rec.get("n_by_class"), "supported": rec.get("supported"),
+                      "applied": bool(rec.get("applied"))},
+            verdict=VERDICT_PASS if rec.get("applied") else VERDICT_NOT_APPLICABLE,
+            recommendation=(None if rec.get("applied") else
+                            "The registry supports a split, but this pool holds fewer than "
+                            "two classes at the stratum floor, so the curve stays pooled."))
+
+    # --- CURVE-11: fixed criteria ---
+    for metric in sorted(result.get("fixed_metrics") or {}):
+        add("CURVE-11", "metric", metric,
+            inputs={"criteria": "config/fixed_criteria.yaml"},
+            computed={"criteria_basis": "fixed"}, verdict=VERDICT_PASS,
+            recommendation="Scored on EASI's fixed criteria, identical in every region.")
+
+    # --- CURVE-12: discrimination (advisory) ---
+    for metric, rec in (result.get("discrimination") or {}).items():
+        verdict_word = rec.get("verdict")
+        inverted = verdict_word == "inverted"
+        add("CURVE-12", "metric", metric,
+            computed={"auc_ref_vs_pressure": rec.get("aucRefVsPressure"),
+                      "n_ref": rec.get("nRef"), "n_pressure": rec.get("nPressure"),
+                      "median_ref_index": rec.get("medianRefIndex"),
+                      "median_pressure_index": rec.get("medianPressureIndex"),
+                      "auc_r_vs_im": rec.get("aucRvsIm"), "verdict": verdict_word},
+            verdict=(VERDICT_REVIEW if inverted else
+                     VERDICT_NOT_EVALUATED if verdict_word == "not_evaluable" else VERDICT_PASS),
+            review_required=inverted,
+            review_triggers=["inverted_discrimination"] if inverted else [])
+
+
 def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]:
     """Every rule the run actually applied, derived from its own output."""
     run_id = manifest.get("inputsDigest", "")[:23]
@@ -545,18 +716,22 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
     def add(*args, **kwargs):
         records.append(_record(run_id, region_code, *args, timestamp=timestamp, **kwargs))
 
-    # --- REF: reference tier ladder ---
+    # --- REF: the reference definition ---
     tier = result.get("reference_tier")
     ref02 = bool(result.get("ref02_triggered"))
-    add("REF-01", "run", "reference_screen",
-        inputs={"preset": result.get("screening_method")},
-        thresholds={"ref_fallback_floor": methodology.threshold(
-            "data_rules.exploratory_n_unstratified"),
-                    "ref_fallback_floor_rule": "DATA-05"},
-        computed={"reference_tier": tier,
-                  "n_retained": (result.get("screening_counts") or {}).get("n_retained")},
-        verdict=VERDICT_REVIEW if ref02 else VERDICT_PASS)
-    if ref02:
+    pressure = result.get("reference_method") == "pressure-screen"
+    if pressure:
+        _pressure_records(result, add)
+    else:
+        add("REF-01", "run", "reference_screen",
+            inputs={"preset": result.get("screening_method")},
+            thresholds={"ref_fallback_floor": methodology.threshold(
+                "data_rules.exploratory_n_unstratified"),
+                        "ref_fallback_floor_rule": "DATA-05"},
+            computed={"reference_tier": tier,
+                      "n_retained": (result.get("screening_counts") or {}).get("n_retained")},
+            verdict=VERDICT_REVIEW if ref02 else VERDICT_PASS)
+    if ref02 and not pressure:
         add("REF-02", "run", "reference_screen",
             computed={"reference_tier": tier,
                       "review_flags": result.get("review_flags") or []},
@@ -966,6 +1141,17 @@ _TRIGGER_TIERS = {
         4, False,
         "Confidence is capped by rule. Accept the capped score, or address the "
         "capping condition first?"),
+    # Methodology 0.12 (REF-05, CURVE-12):
+    "borrowed_reference_pool": (
+        2, False,
+        "This ecoregion holds too few least-disturbed stations for the metric, so the "
+        "reference pool borrows comparable stations from a parent ecoregion. Accept the "
+        "borrowed pool with its transfer note, or leave the metric out for this region?"),
+    "inverted_discrimination": (
+        2, False,
+        "Pressured stations score higher than reference stations on this curve. Is the "
+        "curated direction wrong for this region, is stream size confounding it, or "
+        "should the metric be left out?"),
 }
 
 #: Triggers an automated run must never publish through while uncovered: the

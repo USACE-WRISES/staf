@@ -261,7 +261,11 @@ def test_reconcile_forces_rereview_on_fingerprint_change():
     assert new["history"][0]["fingerprint"] == "fp1"
 
 
-def test_removed_from_scope_is_not_published():
+def test_removed_from_scope_is_neither_in_scope_nor_pending():
+    # The name used to promise more than this: that such a curve does not publish.
+    # It does not, but the two paths that enforce it are tested where they live
+    # (tests/test_publish_honors_scope.py for the app, the agent's own reopen tests
+    # for the headless build). This one pins the predicate both of them read.
     entry = rs.apply_review_decision(
         rs.new_curve_review_entry(rs.CURVE_STATUS_INSUFFICIENT, [], "fp", {}),
         rs.DECISION_REMOVED,
@@ -458,6 +462,29 @@ def test_derive_stage_status_real_screening_outranks_the_skip():
     )
     assert out["candidate_screening"]["status"] == rs.STAGE_DONE
     assert "retained" in out["candidate_screening"]["detail"]
+
+
+def test_readiness_screening_item_accepts_a_wholly_borrowed_region():
+    """REF-05: an ecoregion can retain none of its own candidates and still rest
+    entirely on screened least-disturbed stations of its Level II or Level I
+    parent. The Eastern Corn Belt Plains retains 0 of 45, and its 16 curves are
+    all borrowed, so requiring a local retention refused the very assessments
+    borrowing exists for."""
+    snap = {"has_region": True, "has_screening": True, "n_retained": 0,
+            "n_borrowed_curves": 16, "enriched": True, "mapping_confirmed": True}
+    item = next(i for i in rs.readiness_checklist(snap) if i["key"] == "screening")
+    assert item["ok"] is True
+    # Nothing borrowed and nothing retained is still a run with no reference.
+    snap["n_borrowed_curves"] = 0
+    assert next(i for i in rs.readiness_checklist(snap)
+                if i["key"] == "screening")["ok"] is False
+
+
+def test_readiness_screening_item_needs_a_screen_even_when_curves_are_borrowed():
+    """Borrowed curves come from the same screen. No screen at all, no item."""
+    snap = {"has_region": True, "has_screening": False, "n_borrowed_curves": 16}
+    assert next(i for i in rs.readiness_checklist(snap)
+                if i["key"] == "screening")["ok"] is False
 
 
 def test_readiness_screening_item_stays_failing_when_skipped():

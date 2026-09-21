@@ -194,6 +194,9 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             # so the run's own argv says which stations it could draw from.
             reference_frame=(input.build_reference_frame()
                              or rb.REFERENCE_FRAME_DEFAULT),
+            # How reference condition is defined (methodology 0.12), explicit in
+            # the recorded argv like the frame and the dataset.
+            reference_method=(input.build_reference_method() or None),
             reviewer_decisions=decisions if decisions.exists() else None,
             coverage_exceptions=gaps if gaps.exists() else None)
         _launch(run_stage(argv, out_dir))
@@ -255,6 +258,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             # re-stage of an all-streams run came back framed
             predictor_source=kw.get("predictor_source"),
             reference_frame=kw.get("reference_frame"),
+            reference_method=kw.get("reference_method"),
             reviewer_decisions=decisions if decisions.exists() else None,
             coverage_exceptions=gaps if gaps.exists() else None)
         _launch(run_stage(argv, out_dir))
@@ -285,7 +289,23 @@ def region_builder_server(input, output, session, state: AppState, active=None):
 
     def _provenance():
         d = _active_dir()
-        return _read_json(d / "decision_provenance_log.json") if d else None
+        if not d:
+            return None
+        doc = _read_json(d / "decision_provenance_log.json")
+        if doc is None:
+            return None
+        # The log points at its manifest by name (``manifestRef``), which resolves
+        # inside the run folder and nowhere else. A published version has to carry
+        # the manifest itself, or its inputsDigest cannot be re-derived from it and
+        # the region, configs and inputs of the build are simply absent from the
+        # record (tests/test_screening_engine_pin.py checks exactly this). Promote
+        # inlines it the same way.
+        ref = doc.get("manifestRef")
+        if isinstance(ref, str) and ref and "manifest" not in doc:
+            manifest = _read_json(d / ref)
+            if manifest is not None:
+                doc["manifest"] = manifest
+        return doc
 
     @reactive.effect
     @reactive.event(input.save_decisions)
@@ -551,6 +571,20 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                           "protocol decides only where an order cannot be "
                           "resolved. Every stream is what the versions published "
                           "before methodology 0.10 drew from.")),
+                ui.column(3, ui.div(
+                    ui.input_select(
+                        ns("build_reference_method"), "Reference method",
+                        {"pressure-screen": "Pressure screen (default)",
+                         "easi-eci": "EASI condition index (legacy)"},
+                        selected="pressure-screen", width="100%"),
+                    title="How reference condition is defined. The pressure screen "
+                          "reads least-disturbed stations from the committed station "
+                          "table, borrows comparable stations from the Level II and "
+                          "then the Level I ecoregion where the region has too few, "
+                          "withholds a metric no pool supports, and scores landscape "
+                          "pressures on fixed criteria. The EASI condition index is "
+                          "the method the versions published before methodology 0.12 "
+                          "used, and it needs the legacy NRSA data.")),
                 ui.column(2, ui.div(
                     ui.input_select(
                         ns("build_predictor_source"), "Predictor source",
@@ -569,8 +603,9 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             ui.input_action_button(
                 ns("build_run"), ui.TagList(bi("magic"), " Build this region"),
                 class_="btn btn-primary"),
-            ui.tags.span(" Around 35 minutes. You can leave this page; the build keeps "
-                         "running.", class_="text-muted small ms-2"),
+            ui.tags.span(" About 10 minutes with the pressure screen, around 35 with the "
+                         "legacy method. You can leave this page. The build keeps running.",
+                         class_="text-muted small ms-2"),
             class_="rb-form card card-body mb-3",
         )
 

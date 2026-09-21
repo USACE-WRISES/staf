@@ -23,14 +23,24 @@
 # (watershed -> "ws", e.g. pctimp2019 -> pctimp2019ws); metric_map._code_candidates and
 # the lookup in this file both tolerate that suffix.
 #
+# PRESSURE (methodology 0.12, rule CURVE-11). `pressure: true` marks a variable whose
+# reference condition is its absence. Under the pressure-screen reference method such a
+# variable is never fitted: the least-disturbed stations are by definition the ones
+# without it, so a regional curve restates the reference screen (0.03 percent cropland
+# scored zero in the Northeastern Highlands). Where EASI rates the same quantity the
+# metric is scored on EASI's fixed criteria instead (config/fixed_criteria.yaml);
+# dam density and road crossings have no published criterion and are not scored.
+# Wetland cover and base flow index are EXPECTATION metrics and keep reference curves.
+# The legacy easi-eci method ignores the flag and fits every code as before.
+#
 # expected_shape and transformation: same optional fields as the NRSA file (see its
 # header). expected_shape derives from higher_is_better when absent and feeds the
 # CURVE-05 realized-shape check; transformation is curated documentation, default none.
 
 metrics:
   # --- Hydrology: Catchment hydrology ---
-  pctimp2019:   {higher_is_better: false, metric_family: proportion, domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology."}
-  pctcrop2019:  {higher_is_better: false, metric_family: proportion, domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed cultivated crops (%); row-crop conversion degrades infiltration, soil structure, and runoff timing."}
+  pctimp2019:   {pressure: true, higher_is_better: false, metric_family: proportion, domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology."}
+  pctcrop2019:  {pressure: true, higher_is_better: false, metric_family: proportion, domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed cultivated crops (%); row-crop conversion degrades infiltration, soil structure, and runoff timing."}
 
   # --- Hydrology: Surface water storage ---
   # One curve for wetland storage since 2026-09-07 (review item ECO-15): the
@@ -43,7 +53,7 @@ metrics:
 
   # --- Hydrology: Streamflow regime ---
   bfi:          {higher_is_better: true,  metric_family: continuous, caveat: "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded.", domain_min: 0, domain_max: 100, source: expert, confidence: moderate, note: "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it."}
-  damdens:      {higher_is_better: false, metric_family: continuous, domain_min: 0, source: expert, confidence: high,     note: "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network."}
+  damdens:      {pressure: true, higher_is_better: false, metric_family: continuous, domain_min: 0, source: expert, confidence: high,     note: "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network."}
 
   # --- Hydrology: Reach inflow ---
   # Reach inflow's published detailed metric is a field count of concentrated flow
@@ -53,10 +63,10 @@ metrics:
   # hydrology.py reach_inflow, bands Good <1, Fair 1-<3, Poor >=3 km/sq km). Held at
   # moderate confidence because it is a directional proxy, not an outfall count --
   # EASI carries it as provisional at confidence "L" for the same reason.
-  rddens:       {higher_is_better: false, metric_family: continuous, domain_min: 0, source: expert, confidence: moderate, note: "Watershed road density; roads concentrate and route runoff to the channel, so higher density means more concentrated inflow pressure. Directional proxy shared with the EASI screening metric; it does not count outfalls."}
+  rddens:       {pressure: true, higher_is_better: false, metric_family: continuous, domain_min: 0, source: expert, confidence: moderate, note: "Watershed road density; roads concentrate and route runoff to the channel, so higher density means more concentrated inflow pressure. Directional proxy shared with the EASI screening metric; it does not count outfalls."}
 
   # --- Biology: Watershed connectivity ---
-  rdcrs:        {higher_is_better: false, metric_family: continuous, caveat: "Units caution: enter the StreamCat API value as served. A crossing density computed by hand in crossings per square kilometer lands about 100 times above this curve.", domain_min: 0, source: expert, confidence: high,     note: "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage. UNITS CAUTION (2026-08-21): values as served by the EPA StreamCat API sit about two orders of magnitude below the classic StreamCat documentation of crossings per sq km (frame national median 0.0098 vs a documented distribution near 0.5 to 1.5). The frame and the live API agree with each other, so scoring is internally consistent, but a manually computed crossings-per-sq-km value will land far off-curve. Enter API-served values only, pending units reconciliation with EPA."}
+  rdcrs:        {pressure: true, higher_is_better: false, metric_family: continuous, caveat: "Units caution: enter the StreamCat API value as served. A crossing density computed by hand in crossings per square kilometer lands about 100 times above this curve.", domain_min: 0, source: expert, confidence: high,     note: "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage. UNITS CAUTION (2026-08-21): values as served by the EPA StreamCat API sit about two orders of magnitude below the classic StreamCat documentation of crossings per sq km (frame national median 0.0098 vs a documented distribution near 0.5 to 1.5). The frame and the live API agree with each other, so scoring is internally consistent, but a manually computed crossings-per-sq-km value will land far off-curve. Enter API-served values only, pending units reconciliation with EPA."}
 
   # --- Context / scaling variables: predictors, never scored ---
   # Reviewed 2026-07-24: mean annual runoff and precipitation describe where a site sits

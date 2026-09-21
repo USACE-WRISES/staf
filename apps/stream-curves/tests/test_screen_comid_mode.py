@@ -169,7 +169,8 @@ def _cache_doc(**over) -> dict:
                      {"site_id": "B", "input": {"comid": None}}],
            "screening_method_version": run_state.SCREENING_METHOD_VERSION,
            "screening_watershed_engine": es.SCREENING_WATERSHED_ENGINE,
-           "comid_mode": es.COMID_MODE_ARCHIVE_FIRST}
+           "comid_mode": es.COMID_MODE_ARCHIVE_FIRST,
+           "easi_vendor_sha": es.easi_vendor_identity()["vendorSha"]}
     doc.update(over)
     return doc
 
@@ -195,6 +196,12 @@ def test_a_matching_cache_is_reused():
     ({"config": {"watershed_engine": "auto"}}, ROWS, es.COMID_MODE_ARCHIVE_FIRST,
      "engine config echo auto"),
     ({}, ROWS, es.COMID_MODE_COORDINATE, "comid mode"),
+    # a screen written by another EASI build (the regional criteria of
+    # 2026-09-15 changed eight function ratings under an unchanged preset)
+    ({"easi_vendor_sha": "0" * 64}, ROWS, es.COMID_MODE_ARCHIVE_FIRST,
+     "cache EASI build 000000000000"),
+    ({"easi_vendor_sha": None}, ROWS, es.COMID_MODE_ARCHIVE_FIRST,
+     "cache EASI build unstamped"),
     ({"sites": [{"site_id": "A", "input": {"comid": None}},
                 {"site_id": "B", "input": {"comid": None}}]}, ROWS,
      es.COMID_MODE_ARCHIVE_FIRST, "archive COMIDs differ"),

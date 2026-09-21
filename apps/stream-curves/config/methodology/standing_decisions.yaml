@@ -30,7 +30,12 @@
 # tests/test_standing_decisions_replay.py.
 
 meta:
-  policy_version: "1.0"
+  # 1.1 (2026-09-19, methodology 0.12): one new class decision,
+  # ref05-borrowed-pool-accepted, for the pressure-screen reference method. Every
+  # earlier entry carries over unchanged. ref02-accept-best-available is legacy:
+  # it can only match under the easi-eci method, which the pressure screen
+  # replaced, and it stays so the published pilots still replay.
+  policy_version: "1.1"
   # Re-affirmed unchanged under 0.9 (2026-08-27): the governance-capture release
   # moved no threshold and added only advisory machinery, so every entry's
   # conditions and rationale templates carry over as approved.
@@ -40,7 +45,7 @@ meta:
   # re-affirmed unchanged under 0.11-provisional: v0.11 moved the function
   # coverage gate, a publish rule rather than a review-queue class decision.
   # Accepting a flagged curve stays an owner-only decision, recorded per run.
-  methodology_version: "0.11-provisional"
+  methodology_version: "0.12-provisional"
   approved_on: "2026-08-22"
   authority: "Owner class decisions at the DEEP project gates (2026-08-21), promoted to standing decisions; confirmed per region at the end review before promote."
   rationale_origin: "standing_policy"
@@ -144,7 +149,32 @@ entries:
       correlation {max_within_function_abs_spearman_text}). The approval is
       recorded in the publish metadata.
 
+  - id: ref05-borrowed-pool-accepted
+    rule_id: REF-05
+    trigger: borrowed_reference_pool
+    enabled: true
+    approved_under: "0.12-provisional"
+    approved_on: "2026-09-19"
+    match:
+      transfer_risk: {eq: low}
+      n_usable: {gte: "$methodology:data_rules.min_n_unstratified"}
+      self_coverage: {gte: "$methodology:reference_pool.min_self_coverage"}
+    action: accept
+    asserts: [level, transfer_risk]
+    rationale: >-
+      Borrowed reference pool accepted under standing decision {policy_id}
+      (policy {policy_version}). This ecoregion holds too few least-disturbed
+      stations for the metric, so the pool widened to {level_label}
+      {region_code} ({region_name}) with the pressure screen unchanged:
+      {n_usable} comparable stations carry a value, {n_local} of them inside
+      this ecoregion. The national scale analysis supports the metric at that
+      level or coarser, so the transfer risk is {transfer_risk}. The curve
+      publishes with its source geography, its usable sample and the transfer
+      note, and carries the borrowed-reference confidence cap.
+
   # ---- policy-enableable, default off: the owner opts in per run on the record ----
+  # Legacy (easi-eci reference method only). Under the pressure screen reference
+  # quality is never relaxed, so this entry cannot match a pressure-screen run.
   - id: ref02-accept-best-available
     rule_id: REF-02
     trigger: reference_tier_fallback

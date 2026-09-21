@@ -36,6 +36,7 @@ BASIS_SITE_ENGINE = "site-engine"
 BASIS_STREAMCAT = "streamcat"
 BASIS_NLCD = "nlcd"
 BASIS_3DEP = "3dep"
+BASIS_NID = "nid"
 
 
 @dataclass
@@ -161,7 +162,9 @@ def _nlcd_source(ctx: AnalysisContext, what: str) -> str:
 # Every StreamCat column an adapter reads, fetched in ONE batched request per
 # site (the keys come back aoi-suffixed, e.g. ``pctimp2019ws``).
 _STREAMCAT_NAMES = ["pctimp2019", "pctcrop2019", "pcthay2019", "pctwdwet2019",
-                    "pcthbwet2019", "rddens", "damdens", "bfi", "rdcrs"]
+                    "pcthbwet2019", "rddens", "damdens", "bfi", "rdcrs",
+                    # degree of regulation (fixed criteria, 2026-09-19)
+                    "damnrmstor", "runoff"]
 
 
 def _streamcat(ctx: AnalysisContext) -> dict:
@@ -365,6 +368,64 @@ def _herb_wetland(ctx):
                     engine_what="herbaceous wetland (HR reach watershed, NLCD 2021)",
                     sc_col="pcthbwet2019ws", sc_what="pcthbwet2019",
                     nlcd_key="herb_wetland_pct", nlcd_what="herbaceous wetland")
+
+
+# --------------------------------------------------------------------------- #
+# Adapters: the fixed-criteria pressure metrics StreamCurves methodology 0.12
+# added (the same quantities EASI scores, so both tiers read one number).
+# --------------------------------------------------------------------------- #
+@adapter("spring-pctag2019ws")
+def _agriculture(ctx):
+    """Agriculture, cultivated crops plus hay and pasture: the quantity EASI's
+    land-cover criterion is written on. Both classes are required, because a
+    missing class leaves the total unknown, never smaller."""
+    ev = _both(ctx, _engine_metric, ("cropPctWatershed", "hayPasturePctWatershed"))
+    if ev is not None:
+        return ComputedValue(round(ev, 2),
+                             f"{_engine_label(ctx)} agriculture, crops plus hay and pasture "
+                             "(HR reach watershed, NLCD 2021)",
+                             "H", engine=True, basis=BASIS_SITE_ENGINE)
+    sv = _both(ctx, lambda c, k: _streamcat(c).get(k), ("pctcrop2019ws", "pcthay2019ws"))
+    if sv is not None:
+        return ComputedValue(round(sv, 2),
+                             _streamcat_source(ctx, "pctcrop2019 plus pcthay2019"),
+                             "H", basis=BASIS_STREAMCAT)
+    nv = _as_float(_landcover(ctx).get("ag_pct"))
+    if nv is not None:
+        return ComputedValue(round(nv, 2), _nlcd_source(ctx, "agriculture"),
+                             "H", basis=BASIS_NLCD)
+    return None
+
+
+@adapter("spring-dorws")
+def _degree_of_regulation(ctx):
+    """Degree of regulation, percent of mean annual runoff held in upstream
+    reservoirs: EASI's formula on the same two StreamCat columns (normal dam
+    storage in m3 per km2 over runoff in mm, where one mm on one km2 is
+    1,000 m3). StreamCat only: the STAF site engine has no storage metric."""
+    sc = _streamcat(ctx)
+    storage, runoff = _as_float(sc.get("damnrmstorws")), _as_float(sc.get("runoffws"))
+    if storage is None or runoff is None or runoff <= 0:
+        return None
+    return ComputedValue(round(100.0 * storage / (1000.0 * runoff), 2),
+                         _streamcat_source(ctx, "damnrmstor over runoff"),
+                         "M", basis=BASIS_STREAMCAT)
+
+
+@adapter("spring-nid-dams-1mi")
+def _nid_dams(ctx):
+    """Mapped NID dams within one mile of the site (a geodesic radius, the query
+    EASI's nearby-dam metric makes). A count of zero is a real value. Proximity
+    only: it does not establish passability."""
+    if ctx.lat is None or ctx.lon is None:
+        return None
+    from ..datasources import nid_barriers
+    dams = nid_barriers.barriers_near(float(ctx.lat), float(ctx.lon), miles=1.0)
+    if dams is None:
+        return None
+    return ComputedValue(float(len(dams)),
+                         "USACE National Inventory of Dams, mapped dams within one mile "
+                         "of the site", "M", basis=BASIS_NID)
 
 
 # Densities keep four decimals: two would zero rdcrsws and most damdensws.

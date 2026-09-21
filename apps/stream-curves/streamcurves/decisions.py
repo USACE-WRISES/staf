@@ -140,7 +140,10 @@ def _sample_evidence() -> dict:
             "min_level_n", "level_counts", "tier", "n_metrics", "bundle_n_metrics",
             "metrics", "max_within_function_abs_spearman", "reference_tier", "n_retained",
             "curve_status", "domain_violations", "structure_stability", "shape_stability",
-            "spearman", "equals_default_portfolio")
+            "spearman", "equals_default_portfolio",
+            # REF-05 (v0.12): a borrowed reference pool
+            "transfer_risk", "n_usable", "n_local", "self_coverage", "level", "level_label",
+            "region_code", "region_name")
     return _derived({k: 0 for k in keys})
 
 

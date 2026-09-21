@@ -13,7 +13,7 @@ SRC = Path(pub.__file__).read_text(encoding="utf-8")
 #: Every id _publish reads (plus the buttons/downloads the page must emit).
 HANDLER_IDS = (
     "save_level", "pub_assessment", "pub_new_id", "pub_name",
-    "pub_citation", "pub_author", "pub_notes",
+    "pub_citation", "pub_author", "pub_notes", "pub_select01",
     "publish_btn", "draft_to_deep", "download_session", "download_workbook",
 )
 

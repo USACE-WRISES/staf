@@ -195,6 +195,25 @@ adversarial review):**
   `watershedBasis` inside the delineation block; the schema version is
   unchanged.
 
+## Field forms, metric list and Excel calculator
+
+**Get Field Forms** on the worksheet opens a dialog copied from SFARI: a **Metrics** tab (every
+metric of the chosen assessment with its status), a **Field forms preview** tab, and four
+downloads (field forms PDF, metrics PDF, completed workbook, blank workbook).
+
+- `deep/field_form.py` builds the field worksheet with reportlab from whatever bundle is loaded,
+  so it always matches the assessment and version in use. Protocol lines come from the bundle's
+  `methodContext`.
+- `deep/calculator.py` serves the workbook StreamCurves generated at publish. The bake step
+  copies it to `www/calculators/<id>@vN.xlsx` (and `<id>.xlsx` for the default version) with an
+  `index.json`. A workbook is served only when its `contentDigest` equals the loaded bundle's,
+  and the completed workbook is filled at zip level, so DEEP needs no spreadsheet library.
+  `DEEP_CALCULATOR_DIR` points a local DEEP at another folder.
+- `deep/reference_support.py` reads the bundle's `referenceSupport`, `criteriaBasis`,
+  `stratifier` and `insufficientReferenceSupport`. The worksheet shows a "Scored against" line
+  on every card, selects the curve set from the delineated slope or drainage area (marked
+  auto, user can override), and shows withheld metrics as disabled cards.
+
 ## Report preparation
 
 Report popups keep the current workspace visible while the mini map is prepared
@@ -252,6 +271,24 @@ Matches SFARI/EASI exactly so tiers are comparable: outcome weights
 `iOutcome = Σ(F·W)/Σ(15·W)`, ECI = mean of the three outcome sub-indices.
 (Not the 0.25 / 0–10 variant in `staf/docs/tiered-approach.md`;
 `config.validate()` guards against that drift.)
+
+**Coverage restricts the claim.** A function that does not apply leaves both
+numerator and denominator, which is correct NA handling. A function the
+assessment has no basis to score is a different thing: it is unknown, and
+because each sub-index is a *ratio*, dropping it would land a partial
+assessment on the same 0–1 scale as a complete one and read as comparable.
+Scoring the same site against a 20-function bundle and against one missing four
+functions moved the index from 0.68 to 0.87, across a band boundary, on
+coverage alone. So where anything is unassessed, `score_assessment` reports
+**no point index** and instead gives `ecosystemConditionIndexBounds`, the
+interval the index could occupy once those functions are allowed their full
+0–15 range, and names a condition band only when the interval stays inside one.
+An outcome with no *direct* contributor is reported as `None`, not 0.0, because
+0.1-weighted indirect signal from other disciplines is not a measurement of
+that outcome. `scoring.index_claim()` is that decision made once, and every
+export carries it. `...OverScored` keeps the old arithmetic for the Excel
+workbook's cells and the live entry progress; it is a running total, never a
+claim.
 
 ## Build & test
 

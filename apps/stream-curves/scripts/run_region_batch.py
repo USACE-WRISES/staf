@@ -61,8 +61,10 @@ from streamcurves import library as lib  # noqa: E402
 from streamcurves import methodology  # noqa: E402
 from streamcurves import nrsa_dataset  # noqa: E402
 from streamcurves import provenance as pv  # noqa: E402
+from streamcurves import reference_screen as rscreen  # noqa: E402
 from streamcurves import regional_agent as ra  # noqa: E402
 from streamcurves import review_packet as rp  # noqa: E402
+from streamcurves import run_state  # noqa: E402
 from streamcurves import session_io as sio  # noqa: E402
 
 try:
@@ -196,31 +198,13 @@ def _frame_max_order(choice: str):
     """The largest stream order the reference panel accepts. ``all`` keeps every
     stream (and adds no digest key); ``wadeable`` reads the governed value, so
     the frame lives in methodology_config, not in the CLI."""
-    if str(choice or "").lower() == "all":
-        return None
-    try:
-        from streamcurves import methodology
-        got = methodology.threshold("reference_panel.max_stream_order")
-        if got:
-            return int(got)
-    except Exception:  # noqa: BLE001 - the governed value is the source, this is the floor
-        pass
-    return 5
+    return nrsa_dataset.governed_frame(choice)[0]
 
 
 def _frame_protocols(choice: str):
     """The NRSA sampling protocols that stand in when a station's stream order
     cannot be resolved."""
-    if str(choice or "").lower() == "all":
-        return None
-    try:
-        from streamcurves import methodology
-        got = methodology.threshold("reference_panel.protocol_fallback")
-        if got:
-            return tuple(str(p) for p in got)
-    except Exception:  # noqa: BLE001
-        pass
-    return ("WADEABLE",)
+    return nrsa_dataset.governed_frame(choice)[1]
 
 
 def _engine_config(a) -> Optional[dict]:
@@ -251,8 +235,17 @@ def cmd_stage(a) -> int:
     enabled = list(a.enable_policy or [])
     dec.enabled_entries(policy, enabled)  # raises on an unknown id
     started = _now()
-    print(f"[batch] L3-{a.l3} ({a.name}); screen={a.screen} no_screen={a.no_screen}; "
-          f"policy {dec.policy_version(policy)} enabled+={enabled or 'none'}")
+    # A direct attribute read, like the dataset below: a Namespace that forgets
+    # the method must fail loudly, not run the other one.
+    try:
+        reference_method = rscreen.resolve_reference_method(a.reference_method, a.nrsa_dataset)
+    except ValueError as exc:
+        print(f"[batch] {exc}")
+        return 2
+    pressure = reference_method == run_state.REFERENCE_METHOD_PRESSURE
+    print(f"[batch] L3-{a.l3} ({a.name}); reference method {reference_method}; "
+          + ("" if pressure else f"screen={a.screen} no_screen={a.no_screen}; ")
+          + f"policy {dec.policy_version(policy)} enabled+={enabled or 'none'}")
 
     coverage_exceptions = None
     if a.coverage_exceptions:
@@ -282,10 +275,25 @@ def cmd_stage(a) -> int:
         screen_retries=a.screen_retries, screen_retry_wait=a.screen_retry_wait,
         engine_config=_engine_config(a),
         exclude_sites=_parse_kv(a.exclude_site, "--exclude-site") or None,
+        reference_method=reference_method,
         on_event=ra.event_narrator())
     print(f"[batch] evidence: {evidence['n_retained']} / {evidence['n_candidates']} retained "
           f"(tier {evidence['tier']['reference_tier']}, pool {evidence['reference_pool_disposition']}), "
           f"{len(evidence['curve_rows'])} curves built")
+    if pressure:
+        support = evidence.get("reference_support") or {}
+        by_status: dict[str, int] = {}
+        for d in support.values():
+            by_status[str(d.get("status"))] = by_status.get(str(d.get("status")), 0) + 1
+        print("[batch] reference support: "
+              + ", ".join(f"{k} {v}" for k, v in sorted(by_status.items()))
+              + f"; {len(evidence.get('fixed_metrics') or {})} fixed-criteria metrics")
+        for mk in sorted(evidence.get("insufficient_support") or {}):
+            print(f"[batch]   withheld (REF-06): {mk}")
+        not_evaluable = (evidence.get("screening_counts") or {}).get("n_unresolved") or 0
+        if not_evaluable:
+            print(f"[batch]   {not_evaluable} station(s) could not be screened (no station-table "
+                  "row or a missing screen variable); they are never reference")
     if evidence.get("nrsa_max_stream_order") is not None:
         summary = evidence.get("nrsa_panel_summary") or {}
         by_order = summary.get("byStreamOrder") or {}
@@ -312,8 +320,13 @@ def cmd_stage(a) -> int:
             print(f"[batch] site engine: {rep.get('n_ok', 0)}/{rep.get('n_sites', 0)} ok "
                   f"({rep.get('n_cached', 0)} from cache), recomputed "
                   f"{', '.join(rep.get('resourced_metrics') or []) or 'none'}")
-    level, msg = unresolved_check(evidence.get("screening_counts") or {},
-                                  max_share=a.max_unresolved_share, allow=a.allow_unresolved)
+    # The unresolved-share gate guards a LIVE screen against a service outage
+    # that leaves candidates without a verdict. The pressure screen reads a
+    # committed table, so a station without a verdict there is a fact of the
+    # data (reported above), not an outage to wait out.
+    level, msg = (None, None) if pressure else unresolved_check(
+        evidence.get("screening_counts") or {},
+        max_share=a.max_unresolved_share, allow=a.allow_unresolved)
     if level == "refuse":
         print(f"[batch] REFUSED: {msg}")
         return 2
@@ -619,6 +632,7 @@ def cmd_stage_many(a) -> int:
                 engine_snap_tolerance_ft=a.engine_snap_tolerance_ft,
                 engine_max_reaches=a.engine_max_reaches, engine_max_hops=a.engine_max_hops,
                 exclude_site=[],
+                reference_method=a.reference_method,
                 predictor_source=a.predictor_source)
             try:
                 row["exit"] = int(cmd_stage(ns))
@@ -643,6 +657,50 @@ def cmd_stage_many(a) -> int:
     jp, mp = write_batch_summary(rows, out_root)
     print(f"[batch-many] summary -> {mp}")
     return 0 if all(r.get("exit") == 0 for r in rows) else 1
+
+
+# --------------------------------------------------------------------------- #
+# census
+# --------------------------------------------------------------------------- #
+REFERENCE_METHOD_HELP = (
+    "how reference condition is defined. pressure-screen (methodology 0.12, the default on "
+    "the pooled archive) reads the fixed landscape-pressure screen from the committed "
+    "station table, borrows comparable stations from the Level II and then the Level I "
+    "ecoregion where the region has too few, withholds a metric no pool supports, and "
+    "scores pressure metrics on fixed criteria. easi-eci is the legacy ECI gate (the "
+    "default with --nrsa-dataset legacy-1819), which is what a replay of a published "
+    "version needs")
+
+
+def cmd_census(a) -> int:
+    """Reference support per region and metric (REF-04 to REF-06), before any
+    build. Offline and quick: it reads the committed station table and the
+    NRSA archive, fits nothing, and writes a table the owner reviews before
+    staging."""
+    from streamcurves import pressure_evidence as pe
+    out_dir = Path(a.out).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    frame_choice = getattr(a, "reference_frame", "wadeable")
+    result = pe.census(
+        [str(c).strip() for c in a.l3],
+        max_stream_order=_frame_max_order(frame_choice),
+        protocols=_frame_protocols(frame_choice),
+        keep_stations=_parse_kv(getattr(a, "include_site", None) or [], "--include-site") or None,
+        excluded=_parse_kv(getattr(a, "exclude_site", None) or [], "--exclude-site") or None)
+    csv_path = out_dir / "reference_support_census.csv"
+    md_path = out_dir / "reference_support_census.md"
+    result["table"].to_csv(csv_path, index=False)
+    md_path.write_text(pe.census_markdown(result), encoding="utf-8")
+    for r in result["regions"]:
+        print(f"[census] L3-{r['l3']} {r['region']}: {r['n_strict']} of {r['n_frame']} stations "
+              f"pass the screen; curves local {r['n_local']}, Level II {r['n_borrowed_l2']}, "
+              f"Level I {r['n_borrowed_l1']}, withheld {r['n_insufficient']}")
+    if not result.get("registry_present"):
+        print("[census] no national scale registry: every borrowed pool's transfer risk is "
+              "unassessed (run scripts/run_national_scale_analysis.py)")
+    print(f"[census] table -> {csv_path}")
+    print(f"[census] page  -> {md_path}")
+    return 0
 
 
 # --------------------------------------------------------------------------- #
@@ -736,6 +794,8 @@ def main(argv=None) -> int:
                    help="refuse to stage when more than this share of candidates is unresolved by the screen")
     s.add_argument("--allow-unresolved", action="store_true",
                    help="stage anyway on the record when the unresolved share is above the limit")
+    s.add_argument("--reference-method", default=None, choices=run_state.REFERENCE_METHODS,
+                   help=REFERENCE_METHOD_HELP)
     s.set_defaults(fn=cmd_stage)
 
     m = sub.add_parser("stage-many", help="stage several regions in sequence with a summary table; never promotes")
@@ -778,7 +838,19 @@ def main(argv=None) -> int:
     m.add_argument("--engine-max-hops", type=int, default=None)
     m.add_argument("--max-unresolved-share", type=float, default=0.10)
     m.add_argument("--allow-unresolved", action="store_true")
+    m.add_argument("--reference-method", default=None, choices=run_state.REFERENCE_METHODS,
+                   help=REFERENCE_METHOD_HELP)
     m.set_defaults(fn=cmd_stage_many)
+
+    c = sub.add_parser("census", help="reference support per region and metric, before any build "
+                                      "(pressure-screen method; seconds, offline)")
+    c.add_argument("--l3", action="append", required=True, metavar="CODE",
+                   help="an EPA Level III code (repeat)")
+    c.add_argument("--out", required=True, help="folder for reference_support_census.csv/.md")
+    c.add_argument("--reference-frame", default="wadeable", choices=("wadeable", "all"))
+    c.add_argument("--exclude-site", action="append", default=[], metavar="SITE_ID=REASON")
+    c.add_argument("--include-site", action="append", default=[], metavar="SITE_ID=REASON")
+    c.set_defaults(fn=cmd_census)
 
     p = sub.add_parser("promote", help="confirm the staged decisions and publish canonically")
     p.add_argument("--out", required=True)

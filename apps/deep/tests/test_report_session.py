@@ -27,7 +27,10 @@ def test_synthetic_bundle_loads_and_scores():
     assert len(la.metrics_by_function) == 5          # one function per discipline
     measured = measure.measured_from_state(_midpoint_state(la))
     sc, fres = curves.score_site(la, measured)
-    assert 0.0 <= sc["ecosystemConditionIndex"] <= 1.0
+    # Five functions of the framework's twenty, so the index is an interval.
+    assert sc["nUnassessed"] == 15 and sc["ecosystemConditionIndex"] is None
+    low, high = sc["ecosystemConditionIndexBounds"]
+    assert 0.0 <= low <= high <= 1.0
     assert all(not fr.na for fr in fres.values())     # every metric measured -> all scored
 
 

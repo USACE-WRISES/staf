@@ -53,9 +53,16 @@ def test_every_retained_sqt_loads_with_valid_curves():
 def test_score_site_end_to_end_full_coverage():
     la = assessments.from_bundle(_baked_by_id()["ak-sqt-adapted"])
     result, fresults = curves.score_site(la, _midpoint_measure(la))
-    assert 0.0 <= result["ecosystemConditionIndex"] <= 1.0
+    # "Full coverage" here means every metric measured, not all 20 STAF functions.
+    # This bundle covers fewer, so the index is the interval its unassessed
+    # functions leave open and no point claim is made (see test_scoring).
+    assert result["nUnassessed"] > 0
+    assert result["ecosystemConditionIndex"] is None
+    low, high = result["ecosystemConditionIndexBounds"]
+    assert 0.0 <= low <= high <= 1.0
     for key in config.OUTCOMES:
-        assert 0.0 <= result["subIndices"][key] <= 1.0
+        sub = result["subIndices"][key]
+        assert sub is None or 0.0 <= sub <= 1.0
     # We measured every metric, so every function the assessment covers is scored (none NA).
     # Coverage is the assessment's own function count, not a fixed 20.
     assert all(not fr.na for fr in fresults.values())

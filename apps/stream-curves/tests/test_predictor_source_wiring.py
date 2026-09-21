@@ -89,6 +89,10 @@ def test_stage_many_hands_the_flag_to_each_stage():
     # The hand-built stage-many Namespace ends with the flag; without it each
     # per-region stage would silently revert to the default.
     assert "predictor_source=a.predictor_source)" in text
+    # the reference method (methodology 0.12) rides the same Namespace, and the
+    # stage reads it as a direct attribute for the same reason
+    assert "reference_method=a.reference_method," in text
+    assert "rscreen.resolve_reference_method(a.reference_method, a.nrsa_dataset)" in text
 
 
 def test_stage_command_carries_and_omits_the_flag():

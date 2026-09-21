@@ -582,10 +582,14 @@ def discipline_map_server(input, output, session, state: AppState):
         strip's stage-4 status (assessment_publish.run_snapshot) can never
         disagree about what counts as a gap.
         """
+        # Functions a pressure-screen build covers with fixed-criteria metrics
+        # are not gaps, though those metrics never sit in the editable mapping.
+        from streamcurves import pressure_evidence as _pe
         return uncovered_functions_from_mapping(
             state.discipline_function_mapping(),
             state.metric_config(),
             state.function_coverage_exceptions(),
+            always_covered=_pe.fixed_function_ids(state.reference_build()),
         )
 
     @render.ui

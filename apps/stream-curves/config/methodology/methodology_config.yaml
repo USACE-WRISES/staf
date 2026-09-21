@@ -20,9 +20,9 @@
 #   4. Re-run the pilot regression fixtures before promoting any status.
 
 meta:
-  methodology_version: "0.11-provisional"
+  methodology_version: "0.12-provisional"
   threshold_status: "provisional"        # global default; rules may override
-  date: "2026-09-08"
+  date: "2026-09-19"
   calibration_note: >
     v0.3 recalibrated the DATA sample-size floors against the two pilots' REAL
     EASI-screened reference sizes (NH-58 = 33 Functioning sites; ECBP-55 = 0 Functioning,
@@ -114,12 +114,38 @@ meta:
     mapped wetland (11 of 38 retained sites exactly zero, median 0.05 percent of
     watershed area), so Surface water storage can only be a fallback curve there. No
     threshold value moved and no rule's threshold_status changed.
+    v0.12 (2026-09-19) is the reference-definition release, five owner decisions taken
+    from what the EASI rework of September 2026 showed. (1) A reference station is one
+    whose watershed passes EASI's fixed desktop pressure screen (least-disturbed-v1,
+    strict), inside the wadeable non-canal frame (new rule REF-04, the reference_screen
+    block, mirror-checked against the vendored EASI). The EASI condition index no longer
+    gates reference membership: it changes whenever EASI's criteria do, it reads the
+    landscape variables that later receive curves, and it costs a live run per site.
+    The screen is evaluated once for every archive station and committed
+    (data/nrsa/station_screen.parquet), so a build needs no live service. (2) Where a
+    Level III ecoregion holds too few reference stations for a metric, the pool widens
+    to the Level II and then the Level I parent, holding the screen fixed and admitting
+    only stations comparable in natural setting, metric by metric (REF-05). Where no
+    level supports a metric there is no curve and nothing is scored (REF-06). The
+    region's own best-available stations appear only as a labeled comparison (REF-07).
+    Reference quality is never relaxed to reach a sample size, so REF-01, REF-02 and
+    REF-03 now describe the legacy method only and are kept so published provenance
+    still replays. (3) Landscape pressure metrics are scored on EASI's fixed criteria,
+    identical in every region (CURVE-11, config/fixed_criteria.yaml, mirror-checked).
+    Wetland cover and base flow index are expectation metrics and keep reference curves.
+    (4) Scale and class splits are decided once, nationally, and recorded in a registry
+    every build reads (STRAT-10, config/metric_scale_registry.yaml). (5) Each curve is
+    checked for whether its index separates reference from pressured stations
+    (CURVE-12, advisory). Also new: DATA-11, the most recent non-null value per metric
+    across survey cycles, replacing the newest cycle taken whole. The curve engine and
+    every numeric floor are unchanged.
   authority: "STAF scientific team (human sign-off required for status promotion)"
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
   curve_engine: "apps/stream-curves/streamcurves/curves.py::build_reference_curve"
   curve_method_version: "iqr-seed-2"     # matches run_state.CURVE_METHOD_VERSION (mirror-checked)
   screening_method_version: "easi-batch-2"   # matches run_state.SCREENING_METHOD_VERSION (mirror-checked)
+  reference_screen_method_version: "pressure-screen-1"   # matches run_state.REFERENCE_SCREEN_METHOD_VERSION (mirror-checked)
 
 # --------------------------------------------------------------------------- #
 # Data adequacy (rule family DATA). Sample-size floors scale with the number of
@@ -250,6 +276,12 @@ curve_rules:
 # Reference-tier ladder (rule family REF). Encodes the user-authorized ECBP
 # fallback as an explicit, reviewed, provenance-stamped decision mapped onto the
 # EXISTING EASI presets in _vendor/easi/batch/qualify.py. No new screening code.
+#
+# LEGACY since v0.12 (2026-09-19). This block governs the easi-eci reference
+# method only: REF-01, REF-02 and REF-03. The default method is the pressure
+# screen below (REF-04 to REF-07), which never relaxes reference quality. The
+# block stays because every version published before v0.12 was built under it
+# and its provenance must still replay.
 # --------------------------------------------------------------------------- #
 reference_tiers:
   # Tier definitions map 1:1 onto qualify.PRESETS.
@@ -286,7 +318,65 @@ reference_tiers:
   never_relax_to_hit_count_when_adequate: true
 
 # --------------------------------------------------------------------------- #
-# The reference panel itself: which NRSA stations may enter a candidate pool at
+# The reference screen (rule REF-04, v0.12, owner decision 2026-09-19).
+#
+# This block MIRRORS the screen the vendored EASI built its regional reference
+# curves with (_vendor/easi/data/reference-curves.json -> provenance.screen),
+# so the Screening and Detailed tiers define reference the same way. It is
+# mirror-checked (methodology.mirror_drift -> reference_screen.screen_drift):
+# an edit here alone fails every headless run. To change the screen, change it
+# in EASI, re-vendor, and rebuild data/nrsa/station_screen.parquet.
+#
+# Variables are StreamCat watershed summaries at the station's archive COMID.
+# agriculture_ws is crop plus hay, dor is normalized dam storage over annual
+# runoff as a percent, mines_ws is mines plus coal mines. A variable with no
+# value fails its rule. Never a percentile rule: in a converted region a
+# "least-disturbed fifth" would make converted watersheds the reference.
+# --------------------------------------------------------------------------- #
+reference_screen:
+  id: "least-disturbed-v1"
+  road_density_cap: 2.0
+  strict:                                # REF-04: the reference definition
+    pctimp2019ws: ["<=", 1.0]
+    agriculture_ws: ["<=", 10.0]
+    rddensws: ["<=", 2.0]
+    dor: ["<", 2.0]
+    nabd_densws: ["==", 0.0]
+    npdesdensws: ["==", 0.0]
+    mines_ws: ["==", 0.0]
+  relaxed:                               # REF-07 only: the local comparison, never a pool
+    pctimp2019ws: ["<=", 3.0]
+    agriculture_ws: ["<=", 25.0]
+    rddensws: ["<=", 2.0]
+    dor: ["<", 5.0]
+    npdesdensws: ["==", 0.0]
+    mines_ws: ["==", 0.0]
+  frame:
+    fcode_class: ["!=", "canal"]
+    wadeable: ["==", true]
+
+# --------------------------------------------------------------------------- #
+# Reference pools (rules REF-05, REF-06, REF-07, v0.12). Which covariates make a
+# borrowed station comparable, metric family by metric family, lives in
+# config/reference_transfer.yaml. The numbers live here.
+# --------------------------------------------------------------------------- #
+reference_pool:
+  levels: ["l3", "l2", "l1"]             # Omernik Level III, then its Level II and Level I parents
+  # The narrowest level whose USABLE n (strict, in frame, comparable, with a
+  # value for this metric) reaches DATA-04. Failing that, the narrowest level
+  # reaching DATA-05, published as exploratory. Failing that, REF-06.
+  ladder_rule: "narrowest_adequate_else_narrowest_exploratory"
+  # A borrowed station must sit inside the central share of the target region's
+  # own in-frame stations on every covariate of the metric family's profile.
+  envelope_quantiles: [0.025, 0.975]
+  # Below this share of its own stations inside its own envelope, a profile is
+  # too tight to describe the region it was built from, and is flagged.
+  min_self_coverage: 0.80
+  # Widening past the level the national scale analysis supports for a metric
+  # is a transfer risk (REF-05). Moderate, high and unassessed risks are
+  # mandatory review. The caps live at confidence_rules.caps.
+  review_risks: ["moderate", "high", "unassessed"]
+
 # all, before any screening. v0.10 (2026-09-07, owner decision).
 # --------------------------------------------------------------------------- #
 reference_panel:
@@ -347,6 +437,11 @@ confidence_rules:
     unresolved_leakage_or_circularity: 39
     mandatory_review_open: 79            # v0.6: an unadjudicated mandatory-review trigger
                                          # cannot read as streamlined (High)
+    # v0.12 (REF-05): a curve fitted on a borrowed pool cannot read higher than
+    # its transfer risk allows. Provisional, like every cap here.
+    borrowed_reference_low_risk: 79
+    borrowed_reference_moderate_risk: 59
+    borrowed_reference_high_risk: 39
   high_confidence_audit_rate: 0.10       # production drift audit: a PROCESS commitment (sample 10 percent of High-confidence curves for owner audit); not enforced in code
   # Review Priority = Impact x Uncertainty x Novelty (net-new; scales in methodology.md)
 
@@ -377,10 +472,11 @@ standing_decisions:
   policy_file: "config/methodology/standing_decisions.yaml"
   pending_reviewer_marker: "(pending owner confirmation)"
   default_enabled: [curve04-accept-with-flag, data05-exploratory-pool-accepted,
-                    red06-instability-is-noise, strat09-defer-floors, select01-complementary-set]
+                    red06-instability-is-noise, strat09-defer-floors, select01-complementary-set,
+                    ref05-borrowed-pool-accepted]
   enable_per_run_only: [ref02-accept-best-available, data03-thin-metric-finalized,
                         data06-insufficient-finalized, curve07-thin-metric-finalized]
-  never_automated: "RED-01 keeper choice, CURVE-07 degenerate / shape_conflict / multi_crossing / insufficient_data, direction_unresolved, coverage gaps, portfolio sets off the crosswalk default, the final publish (promote)"
+  never_automated: "RED-01 keeper choice, CURVE-07 degenerate / shape_conflict / multi_crossing / insufficient_data, direction_unresolved, coverage gaps, portfolio sets off the crosswalk default, a borrowed reference pool at moderate, high or unassessed transfer risk (REF-05), an inverted discrimination check (CURVE-12), the final publish (promote)"
   end_review_required_before_promote: true
 
 # --------------------------------------------------------------------------- #

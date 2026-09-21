@@ -126,6 +126,10 @@ SESSION_FIELDS = [
     # Standing-decision opt-ins chosen on the Rules page (schema v2, additive);
     # validated through rules_view.validate_selections on restore.
     "rule_selections",
+    # The reference statement of a pressure-screen build (methodology 0.12,
+    # schema v2, additive): the fixed-criteria metrics, each curve's reference
+    # support, the withheld list. Absent reads as None, which is a legacy build.
+    "reference_build",
 ]
 
 ## Fields whose dict payloads may contain non-serializable cached objects

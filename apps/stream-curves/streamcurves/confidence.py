@@ -140,6 +140,18 @@ def curve_confidence(evidence: dict) -> dict:
     if str(evidence.get("reference_tier")) == "best_available":
         total = min(total, float(caps["best_available_reference"]))
         applied.append("best_available_reference")
+    # REF-05 (methodology 0.12): a curve fitted on a pool borrowed from a parent
+    # ecoregion cannot read higher than its transfer risk allows. An unassessed
+    # risk (no national scale decision for the metric) is held to the moderate
+    # cap. A local pool carries risk "none" and no cap.
+    risk = str(evidence.get("transfer_risk") or "none")
+    borrowed_cap = {"low": "borrowed_reference_low_risk",
+                    "moderate": "borrowed_reference_moderate_risk",
+                    "unassessed": "borrowed_reference_moderate_risk",
+                    "high": "borrowed_reference_high_risk"}.get(risk)
+    if borrowed_cap and borrowed_cap in caps:
+        total = min(total, float(caps[borrowed_cap]))
+        applied.append(borrowed_cap)
     if str(evidence.get("sample_disposition")) != "adequate":
         total = min(total, float(caps["sample_below_minimum"]))
         applied.append("sample_below_minimum")

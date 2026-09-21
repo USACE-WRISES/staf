@@ -34,6 +34,7 @@ from deep import (assessments, config, curves, delineation, measure,  # noqa: E4
 from deep import viewport  # noqa: E402
 from deep import comid_anchor, engine_prefill, hr_site, network_display  # noqa: E402
 from deep import reportmap  # noqa: E402
+from deep import calculator, field_form, reference_support  # noqa: E402
 from deep.datasources import flowlines  # noqa: E402
 from deep.datasources.geocode import geocode_address  # noqa: E402
 from deep.metrics import computed as _computed  # noqa: E402
@@ -194,12 +195,54 @@ _COMPUTED_IDS = _computed.computable_ids()
 # Small view helpers
 # --------------------------------------------------------------------------- #
 def _bar(label, value, color, *, vmax=1.0, fmt="{:.2f}", indent=False):
-    pct = max(0.0, min(100.0, (value / vmax) * 100)) if vmax else 0.0
+    # A None value is an absence, not a zero: draw an empty track and no number,
+    # because a 0-width red bar reads as the worst possible score.
+    pct = 0.0 if value is None else (max(0.0, min(100.0, (value / vmax) * 100)) if vmax else 0.0)
     cls = "easi-bar-row indent" if indent else "easi-bar-row"
     return ui.div(ui.div(label, class_="easi-bar-label"),
                   ui.div(ui.div(class_="easi-bar-fill", style=f"width:{pct:.0f}%;background:{color};"),
                          class_="easi-bar-track"),
-                  ui.div(fmt.format(value), class_="easi-bar-val"), class_=cls)
+                  ui.div("" if value is None else fmt.format(value), class_="easi-bar-val"),
+                  class_=cls)
+
+
+def _outcome_bar(label, value, *, indent=False):
+    """One outcome sub-index, or a marked absence.
+
+    An outcome with no direct contributor is unmeasured, not low. It used to
+    compute as 0.0 and render red, indistinguishable from a genuinely degraded
+    outcome.
+    """
+    if value is None:
+        return _bar(f"{label} (not assessed)", None, "#eef1f6", indent=indent)
+    return _bar(label, value, scoring.index_band_color(value), indent=indent)
+
+
+def _index_claim_block(sc):
+    """The Ecosystem Condition Index line, restricted to what the assessment supports.
+
+    A complete assessment shows the value and its band. A partial one shows the
+    interval the unassessed functions leave open, drawn as a span on the track, and
+    names a band only when that interval stays inside one.
+    """
+    eci = sc.get("ecosystemConditionIndex")
+    if eci is not None:
+        return _bar("Ecosystem Condition Index", eci, scoring.index_band_color(eci))
+    span = sc.get("ecosystemConditionIndexBounds") or [0.0, 1.0]
+    low, high = float(span[0]), float(span[1])
+    band = scoring.index_band_for_bounds(low, high)
+    fill = scoring.index_band_color(low) if band else "#cfd6e2"
+    return ui.TagList(
+        ui.div(ui.div("Ecosystem Condition Index", class_="easi-bar-label"),
+               ui.div(ui.div(class_="easi-bar-fill",
+                             style=f"margin-left:{low * 100:.0f}%;"
+                                   f"width:{max(1.0, (high - low) * 100):.0f}%;"
+                                   f"background:{fill};"),
+                      class_="easi-bar-track"),
+               ui.div(f"{low:.2f} to {high:.2f}", class_="easi-bar-val"),
+               class_="easi-bar-row"),
+        ui.div(scoring.index_claim(sc),
+               style="font-size:11px;color:#8a93a3;font-style:italic;margin-top:2px;"))
 
 
 def _chip(text, color):
@@ -384,7 +427,10 @@ def _session_ref(state: dict, raw: dict):
 def _assessment_facts(la, ref) -> dict:
     """The facts the Basin pane states about the assessment it resolved."""
     cov = assessments.coverage_of(la)
-    nmet = sum(len(fn.get("metrics", [])) for fn in la.metrics_by_function)
+    # Distinct metrics, not (function, metric) pairs: a metric serving three functions is
+    # one field measurement, and the summed count read as three metrics that do not exist.
+    nmet = len({m.get("metricId") for fn in la.metrics_by_function
+                for m in fn.get("metrics", [])})
     cov_note = ("" if cov["covered"] >= cov["total"]
                 else f" ({cov['excluded']} documented)" if cov["declared"]
                 else " (not declared)")
@@ -482,8 +528,15 @@ def _metric_tip_html(m) -> str:
     if not any_sec:
         parts.append('<div class="easi-tip-sub">Field collection guidance has not been '
                      'provided for this assessment yet.</div>')
+    # Fixed criteria or a reference curve, and where the reference stations came
+    # from (bundles built under StreamCurves methodology 0.12; silent otherwise).
+    support = reference_support.tip_lines(m)
+    if support:
+        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Scored against</span>'
+                     + "<br>".join(html.escape(s) for s in support) + "</div>")
     # What stands behind the curve (stamped by StreamCurves at publish).
     basis = []
+    fixed = reference_support.is_fixed(m)
     tier = _tier_label(m.get("referenceTier"))
     if tier:
         basis.append(f"Reference tier: {tier}")
@@ -492,12 +545,14 @@ def _metric_tip_html(m) -> str:
         basis.append("Landscape stressor surrogate (footprint comparison, not measured function)")
     elif role == "response":
         basis.append("Site-scale response measurement")
+    elif role == "landscape_expectation":
+        basis.append("Landscape setting the watershed is expected to have (reference curve)")
     n = m.get("referenceN")
     disp = str(m.get("sampleDisposition") or "").strip()
     if isinstance(n, (int, float)):
         basis.append(f"Reference sites: {int(n)}" + (f" ({disp})" if disp else ""))
     conf = m.get("confidenceLabel")
-    if conf:
+    if conf and not fixed:      # fixed criteria carry no sample-based confidence
         basis.append(f"Builder confidence: {html.escape(str(conf))} (a review-priority heuristic, not a probability)")
     if basis:
         parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Curve basis</span>'
@@ -513,7 +568,8 @@ def _metric_tip_html(m) -> str:
 _BASIS_TAG = {"site-engine": ("HR reach watershed", "deep-basis-tag engine"),
               "streamcat": ("StreamCat", "deep-basis-tag streamcat"),
               "nlcd": ("NLCD", "deep-basis-tag nlcd"),
-              "3dep": ("3DEP", "deep-basis-tag threedep")}
+              "3dep": ("3DEP", "deep-basis-tag threedep"),
+              "nid": ("NID", "deep-basis-tag nid")}
 
 
 def _basis_tag(rc):
@@ -649,6 +705,69 @@ def _source_line(m, rc):
     return " · ".join(parts)
 
 
+WITHHELD_TITLE = "Insufficient reference support, not scored"
+
+
+def _withheld_card(w):
+    """A metric the assessment withholds (StreamCurves rule REF-06): named, with
+    the reason, no input and no index. It never enters a function score."""
+    statement = str(w.get("statement") or
+                    "Too few comparable least-disturbed stations carry this metric, so no "
+                    "curve was built and the metric is not scored.")
+    # the card's own title already says it
+    statement = statement.removeprefix("Insufficient reference support.").strip()
+    units = str(w.get("units") or "").strip()
+    return ui.div(
+        ui.div(w.get("metricName") or w.get("metricId") or "",
+               (ui.span(units, class_="sfari-metric-scale") if units else None),
+               class_="sfari-metric-name"),
+        ui.div(WITHHELD_TITLE, class_="deep-withheld-title"),
+        ui.div(statement, class_="deep-withheld-text"),
+        {"data-metric-withheld": str(w.get("metricId") or "")},
+        class_="sfari-metric deep-metric-withheld")
+
+
+def _unassessed_panel(fn, la):
+    """The step for a function the assessment cannot score.
+
+    It used to be no step at all: the function was absent from the walk, and the
+    only trace was one line in the rail. A reader met nineteen or sixteen steps and
+    had to work out which were missing. Now the gap is where it belongs, says what
+    was considered and why it was withheld, and states what it costs the index.
+    """
+    name = fn.get("functionName") or fn.get("functionId")
+    detail = (fn.get("unassessed") or {}).get("metrics") or []
+    cards = [_withheld_card(w) for w in detail]
+    if not cards:
+        cards = [ui.div(ui.div("No metric is assigned to this function in this assessment.",
+                               class_="deep-withheld-text"),
+                        class_="sfari-metric deep-metric-withheld")]
+    return ui.div(
+        ui.div(ui.h3(name, class_="deep-fn-title"),
+               ui.span("Not assessed", class_="deep-fscore-band",
+                       style="background:#eef1f6;color:#6b7280;"),
+               class_="deep-fn-head"),
+        ui.div("This assessment has no defensible basis for scoring this function, so it "
+               "carries no score. It is not a low score. The Ecosystem Condition Index is "
+               "reported as an interval that allows for whatever this function would have "
+               "scored, and names a condition band only when that interval stays inside one.",
+               class_="sfari-coverage-note"),
+        *cards,
+        {"data-fn": fn.get("functionId"), "data-unassessed": "1"},
+        class_="deep-fn-panel deep-fn-unassessed")
+
+
+def _withheld_note(la):
+    """The rail note naming the functions this assessment scores nothing for
+    because every candidate metric was withheld, or None."""
+    fns = reference_support.withheld_only_functions(la)
+    if not fns:
+        return None
+    names = ", ".join(str(f.get("functionName") or f.get("functionId")) for f in fns)
+    return ui.div(f"Not scored for insufficient reference support: {names}.",
+                  class_="sfari-coverage-note deep-withheld-note")
+
+
 def _stepper(active):
     """Step navigator. Plain data-step anchors rather than Shiny action links, matching
     EASI and SFARI: www/measure.js delegates a click to one `step_nav` event, so the left
@@ -698,14 +817,14 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=19"),
-                    ui.tags.link(rel="stylesheet", href="deep.css?v=8"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=20"),
+                    ui.tags.link(rel="stylesheet", href="deep.css?v=9"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
                     ui.tags.script(src="report-ready.js?v=2", defer=""),
-                    ui.tags.script(src="measure.js?v=4", defer=""),
+                    ui.tags.script(src="measure.js?v=5", defer=""),
                     ui.tags.script(src="coverage.js?v=3", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
@@ -2116,6 +2235,39 @@ def server(input, output, session_):  # noqa: C901
         la = loaded_assessment()
         return la.metrics_by_function if la is not None else []
 
+    def _walk_fns():
+        """Every STAF function, in framework order, scoring blocks first.
+
+        A function this assessment cannot score used to be absent from the walk
+        entirely, so a reader met four fewer steps and had to infer why. It is now
+        a step of its own that says so. `_fns` stays the scoring list, because the
+        entry progress bar counts what a field crew can actually fill in.
+        """
+        la = loaded_assessment()
+        if la is None:
+            return []
+        # Framework order, not scoring blocks then leftovers: appending them put a
+        # second PHYSICOCHEMISTRY heading at the bottom of the rail, and a gap reads
+        # as a gap only when it sits where the function belongs.
+        scored_blocks = {fn.get("functionId"): fn for fn in la.metrics_by_function}
+        gaps = {f["functionId"]: f for f in reference_support.unassessed_functions(la)}
+        blocks = []
+        for f in config.functions():
+            fid = f.get("id")
+            if fid in scored_blocks:
+                blocks.append(scored_blocks[fid])
+            elif fid in gaps:
+                g = gaps[fid]
+                blocks.append({"functionId": fid, "functionName": g["functionName"],
+                               "discipline": g.get("discipline", ""), "metrics": [],
+                               "unassessed": g})
+        # Anything the bundle carries that the framework does not (an older or
+        # adapted bundle) keeps its place at the end rather than vanishing.
+        known = {b["functionId"] for b in blocks}
+        blocks.extend(fn for fn in la.metrics_by_function
+                      if fn.get("functionId") not in known)
+        return blocks
+
     @reactive.effect
     @reactive.event(input.measure_set)
     def _on_measure_set():
@@ -2163,9 +2315,39 @@ def server(input, output, session_):  # noqa: C901
             return
         mvs = dict(measured_values()); cur = dict(mvs.get(mid, {}))
         cur["stratum"] = ev.get("stratum")
+        cur["stratumAuto"] = False               # the assessor's choice stands from here on
         mvs[mid] = cur
         measured_values.set(mvs)
         compute_nonce.set(compute_nonce() + 1)   # re-render the panel with the chosen curve
+
+    @reactive.effect
+    def _seed_auto_strata():
+        """Preselect each stratified metric's curve set from the delineated
+        reach (its NHDPlus slope or drainage area, the variables the builder
+        classed the reference stations on). Written into the measured-value
+        state, so the worksheet, the live score, the report and a saved session
+        all read one choice. A choice the assessor made is never replaced."""
+        la = loaded_assessment(); d = delin()
+        if la is None or d is None:
+            return
+        auto = reference_support.auto_strata(la, d)
+        if not auto:
+            return
+        with reactive.isolate():
+            mvs = dict(measured_values())
+        changed = False
+        for mid, label in auto.items():
+            cur = dict(mvs.get(mid) or {})
+            if cur.get("stratumAuto") is False:
+                continue
+            if cur.get("stratum") != label or cur.get("stratumAuto") is not True:
+                cur["stratum"], cur["stratumAuto"] = label, True
+                mvs[mid] = cur
+                changed = True
+        if changed:
+            measured_values.set(mvs)
+            with reactive.isolate():
+                compute_nonce.set(compute_nonce() + 1)
 
     @reactive.effect
     @reactive.event(input.metric_photo_add)
@@ -2197,7 +2379,7 @@ def server(input, output, session_):  # noqa: C901
     def _nav_move():
         _cancel_report()
         d = int((input.nav_move() or {}).get("d", 0) or 0)
-        n = len(_fns())
+        n = len(_walk_fns())
         if n:
             current_fn.set(max(0, min(n - 1, current_fn() + d)))
 
@@ -2206,7 +2388,7 @@ def server(input, output, session_):  # noqa: C901
     def _nav_jump():
         _cancel_report()
         i = (input.nav_jump() or {}).get("i")
-        n = len(_fns())
+        n = len(_walk_fns())
         if i is not None and n:
             current_fn.set(max(0, min(n - 1, int(i))))
 
@@ -2303,9 +2485,14 @@ def server(input, output, session_):  # noqa: C901
             ui.div(
                 ui.div("DEEP · Assessment", class_="easi-pane-head"),
                 ui.div(_stepper(step), class_="sfari-nav-steps"),
-                ui.download_button("dl_field_forms", "Get Field Forms",
-                                   class_="sfari-btn sfari-nav-desktop",
-                                   title="Print-ready field packet listing every metric to measure"),
+                # A plain button, not a Shiny input: www/measure.js delegates the click
+                # to one field_forms_evt event (SFARI's pattern), so the dialog opens
+                # from wherever the rail is rendered.
+                ui.tags.button("Get Field Forms",
+                               {"data-field-forms": "1", "type": "button",
+                                "title": "The metrics of this assessment, the field worksheet "
+                                         "to print, and the Excel calculator"},
+                               class_="sfari-btn sfari-nav-desktop"),
                 ui.output_ui("engine_line_ws"),
                 ui.output_ui("streamcat_lookup_status_ws"),
                 ui.output_ui("fn_nav"),
@@ -2320,7 +2507,7 @@ def server(input, output, session_):  # noqa: C901
             return None
         cur = current_fn()
         _sc, fresults = scored()
-        fns = _fns()
+        fns = _walk_fns()
         items = []
         prev_disc = None
         for idx, fn in enumerate(fns):
@@ -2329,7 +2516,8 @@ def server(input, output, session_):  # noqa: C901
                 items.append(ui.div(disc, class_="sfari-nav-cat")); prev_disc = disc
             fr = fresults.get(fn["functionId"])
             dot = scoring.function_score_band_color(fr.score) if (fr and fr.score is not None) else "#dfe4ec"
-            cls = "sfari-nav-fn" + (" active" if idx == cur else "")
+            cls = ("sfari-nav-fn" + (" active" if idx == cur else "")
+                   + (" unassessed" if fn.get("unassessed") else ""))
             items.append(ui.div(ui.span(class_="sfari-nav-dot", style=f"background:{dot};"),
                                 ui.span(fn.get("functionName", "")),
                                 {"data-idx": str(idx)}, class_=cls))
@@ -2339,16 +2527,21 @@ def server(input, output, session_):  # noqa: C901
     def fn_panel():
         if current_step() not in (STEP_MEASURE, STEP_REPORT):
             return None
-        fns = _fns()
+        fns = _walk_fns()
         compute_nonce()  # re-render when desktop auto-compute fills values
         if not fns:
             return ui.div("No assessment loaded.", class_="sfari-nav-empty")
         idx = max(0, min(len(fns) - 1, current_fn()))
         fn = fns[idx]
         fid = fn["functionId"]
+        if fn.get("unassessed"):
+            with reactive.isolate():
+                return _unassessed_panel(fn, loaded_assessment())
         with reactive.isolate():
             mvs = measured_values()
             _sc, fresults = scored()
+            delineation_now = delin()
+            la_now = loaded_assessment()
         fr = fresults.get(fid)
         metric_blocks = []
         for m in fn.get("metrics", []):
@@ -2358,6 +2551,10 @@ def server(input, output, session_):  # noqa: C901
             strata = curves.curve_strata(m)
             cur_stratum = rc.get("stratum") or m.get("activeStratum") or (strata[0] if strata else None)
             points = curves.active_points(m, cur_stratum)
+            support_line = reference_support.support_line(m)
+            stratum_auto = bool(rc.get("stratumAuto"))
+            stratum_note = (reference_support.stratifier_note(m, delineation_now)
+                            if stratum_auto else "")
             midx = fr.metric_indices.get(mid) if fr else None
             mwarn = fr.metric_warnings.get(mid) if fr else None
             idx_txt = "—" if midx is None else f"{midx:.2f} · {scoring.index_band_label(midx)}"
@@ -2375,13 +2572,24 @@ def server(input, output, session_):  # noqa: C901
                         ui.span(src_line, class_="deep-source-val"),
                         class_="deep-source-row")
                  if src_line else None),
+                # What the value is scored against: fixed criteria, or a reference
+                # curve with the geography its stations came from.
+                (ui.div(ui.span("Scored against", class_="deep-source-key"),
+                        ui.span(support_line, class_="deep-source-val"),
+                        class_="deep-source-row deep-support-row"
+                               + (" borrowed" if reference_support.is_borrowed(m) else ""))
+                 if support_line else None),
                 (ui.div(
-                    ui.span("Stratum", class_="deep-stratum-label"),
+                    ui.span("Curve set", class_="deep-stratum-label"),
                     ui.tags.select(
                         {"data-mid-stratum": mid}, class_="deep-stratum-select",
-                        *[ui.tags.option(s, {"value": s,
-                                             **({"selected": "selected"} if s == cur_stratum else {})})
+                        *[ui.tags.option(
+                            reference_support.stratum_label(s, m)
+                            + (" (auto)" if stratum_auto and s == cur_stratum else ""),
+                            {"value": s,
+                             **({"selected": "selected"} if s == cur_stratum else {})})
                           for s in strata]),
+                    (ui.span(stratum_note, class_="deep-stratum-note") if stratum_note else None),
                     class_="deep-stratum-row")
                  if len(strata) > 1 else None),
                 ui.div(
@@ -2421,8 +2629,14 @@ def server(input, output, session_):  # noqa: C901
                                                 class_="sfari-photo"),
                                   class_="sfari-photo-btn"),
                     {"data-mid": mid}, class_="sfari-photos"),
-                {"data-metric": mid, "data-points": json.dumps(points)},
+                {"data-metric": mid, "data-points": json.dumps(points),
+                 **({"data-fixed": "1"} if reference_support.is_fixed(m) else {})},
                 class_="sfari-metric deep-metric"))
+
+        # Metrics of this function the assessment withholds: no defensible
+        # reference pool exists, so there is no curve and nothing to enter.
+        for w in reference_support.withheld_for_function(la_now, fid):
+            metric_blocks.append(_withheld_card(w))
 
         score = fr.score if fr else None
         if score is not None:
@@ -2510,16 +2724,24 @@ def server(input, output, session_):  # noqa: C901
         cov_caption = assessments.coverage_caption(cov)
         return ui.TagList(
             ui.h4("Live rollup"),
-            ui.div(ui.div(f"{eci:.2f}", class_="sfari-eci"),
-                   ui.div("Ecosystem Condition Index", class_="sfari-eci-lbl"), class_="sfari-eci-box"),
-            _bar("Physical", subs["physical"], scoring.index_band_color(subs["physical"])),
-            _bar("Chemical", subs["chemical"], scoring.index_band_color(subs["chemical"])),
-            _bar("Biological", subs["biological"], scoring.index_band_color(subs["biological"])),
+            # During entry the headline is a running total, not a claim, and it says
+            # so. It becomes a claim only once every outcome is measured.
+            ui.div(ui.div(f"{eci:.2f}" if eci is not None
+                          else f"{sc['ecosystemConditionIndexOverScored']:.2f}",
+                          class_="sfari-eci"),
+                   ui.div("Ecosystem Condition Index" if eci is not None else "Score so far",
+                          class_="sfari-eci-lbl"), class_="sfari-eci-box"),
+            (None if eci is not None else
+             ui.div(scoring.index_claim(sc), class_="sfari-coverage-note")),
+            _outcome_bar("Physical", subs["physical"]),
+            _outcome_bar("Chemical", subs["chemical"]),
+            _outcome_bar("Biological", subs["biological"]),
             ui.h4("Functional categories", style="margin-top:15px;"),
             ui.div(*chips, class_="sfari-cat-chips"),
             ui.div(ui.tags.span(style=f"width:{pct:.0f}%;"), class_="sfari-progress-bar"),
             ui.div(f"{n_scored} / {n_total} functions scored", class_="sfari-progress"),
             ui.div(cov_caption, class_="sfari-coverage-note") if cov_caption else None,
+            _withheld_note(loaded_assessment()),
             ui.tags.button("Open report", {"data-report": "1", "type": "button"},
                            class_="sfari-btn sfari-rollup-report" + (" primary" if report_primary else "")),
         )
@@ -2647,26 +2869,26 @@ def server(input, output, session_):  # noqa: C901
             style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;"
                   "margin-bottom:12px;")
 
-        subs = sc["subIndices"]; eci = sc["ecosystemConditionIndex"]
-        # The index is computed over the functions this assessment covers, which is
-        # correct NA handling -- but unmarked it reads as comparable to a full
-        # 20-function index. The caveat travels with the number, not somewhere else.
+        subs = sc["subIndices"]
+        # The index is computed over the functions this assessment covers. Unmarked
+        # it read as comparable to a full 20-function index, so the claim itself is
+        # restricted in _index_claim_block and the coverage of the bundle is stated
+        # under it.
         rcov = assessments.coverage_of(la) if la else None
         caveat = None
         if rcov and rcov["covered"] < rcov["total"]:
             excl = (f"{rcov['excluded']} documented as out of scope"
                     if rcov["declared"] else "coverage not declared")
             caveat = ui.div(
-                f"Index computed over the {rcov['covered']} of {rcov['total']} STAF "
-                f"functions this assessment covers ({excl}). Not directly comparable "
-                "to a full-framework index.",
+                f"This assessment covers {rcov['covered']} of {rcov['total']} STAF "
+                f"functions ({excl}).",
                 style="font-size:11px;color:#8a93a3;font-style:italic;margin-top:4px;")
         summary = ui.div(
-            _bar("Ecosystem Condition Index", eci, scoring.index_band_color(eci)),
+            _index_claim_block(sc),
             caveat,
-            _bar("Physical outcome", subs["physical"], scoring.index_band_color(subs["physical"]), indent=True),
-            _bar("Chemical outcome", subs["chemical"], scoring.index_band_color(subs["chemical"]), indent=True),
-            _bar("Biological outcome", subs["biological"], scoring.index_band_color(subs["biological"]), indent=True))
+            _outcome_bar("Physical outcome", subs["physical"], indent=True),
+            _outcome_bar("Chemical outcome", subs["chemical"], indent=True),
+            _outcome_bar("Biological outcome", subs["biological"], indent=True))
 
         fscores = sc.get("functionScores", {})
         fbars = []
@@ -2696,6 +2918,11 @@ def server(input, output, session_):  # noqa: C901
                 ui.tags.td(m.get("metricName", m["metricId"]),
                            (ui.div(*[ui.tags.img({"src": p.get("uri", "")}) for p in ph],
                                    class_="sfari-report-photos") if ph else None),
+                           (ui.div(meta["scored_against"]
+                                   + (f" · Curve set: {meta['curve_set']}"
+                                      if meta["curve_set"] else ""),
+                                   class_="deep-report-support")
+                            if meta["scored_against"] else None),
                            (ui.div(meta["advisory"], class_="deep-report-advisory")
                             if meta["advisory"] else None)),
                 ui.tags.td("—" if val in (None, "") else str(val)),
@@ -2710,6 +2937,23 @@ def server(input, output, session_):  # noqa: C901
                                      ui.tags.th("Curve source"))),
             ui.tags.tbody(*rows), class_="easi-tbl")
 
+        withheld_rows = report.withheld_rows(la)
+        withheld_block = None
+        if withheld_rows:
+            withheld_block = ui.TagList(
+                ui.h4("Metrics withheld for insufficient reference support",
+                      style="margin-top:14px;"),
+                ui.div("These metrics have no curve and are not scored. No defensible pool of "
+                       "least-disturbed stations exists for them in this ecoregion or its "
+                       "parent ecoregions.",
+                       style="font-size:11px;color:#8a93a3;margin-bottom:4px;"),
+                ui.tags.table(
+                    ui.tags.thead(ui.tags.tr(ui.tags.th("Metric"), ui.tags.th("Functions"))),
+                    ui.tags.tbody(*[ui.tags.tr(ui.tags.td(r[0]), ui.tags.td(r[1]))
+                                    for r in withheld_rows]),
+                    class_="easi-tbl"))
+        ref_statement = reference_support.reference_method_statement(la)
+
         body = ui.div(
             header,
             ui.h4("Outcome sub-indices & Ecosystem Condition Index", style="margin-top:4px;"),
@@ -2717,7 +2961,10 @@ def server(input, output, session_):  # noqa: C901
             ui.h4("Function scores (0–15)", style="margin-top:14px;"),
             ui.div(*fbars),
             ui.h4("Metric values & curve indices", style="margin-top:14px;"),
+            (ui.div(ref_statement, style="font-size:11px;color:#45506a;margin-bottom:6px;")
+             if ref_statement else None),
             table,
+            withheld_block,
             ui.div("Scores are computed automatically from the assessment's reference curves. "
                    "Confirm the curve source applies to your region/stream type.",
                    style="font-size:11px;color:#8a93a3;margin-top:10px;"),
@@ -2729,6 +2976,201 @@ def server(input, output, session_):  # noqa: C901
                           ui.download_button("dl_geojson", "GeoJSON", class_="btn-sm"),
                           ui.modal_button("Close"),
                           style="display:flex;gap:8px;align-items:center;"))
+
+    # ---- the Field Forms dialog (SFARI's shell, 2026-09-19) ----
+    # One modal, size xl. The shell is static: the site line, the tab strip with
+    # the downloads, and the Close button never re-render, so the open tab and
+    # the table's scroll position survive every update. Three outputs inside
+    # rebuild live: the status line (it owns the polling while the desktop
+    # compute runs), the metrics table, and the preview (the worksheet for the
+    # loaded assessment, served inline through a session route).
+    @reactive.effect
+    @reactive.event(input.field_forms_evt)
+    def _open_field_forms():
+        _cancel_report()
+        ui.modal_show(_field_forms_modal())
+
+    def _calculator_template():
+        """The Excel calculator published for the loaded version, or None."""
+        la = loaded_assessment()
+        if la is None:
+            return None
+        try:
+            return calculator.template_for(la)
+        except Exception:  # noqa: BLE001 - the dialog still opens without it
+            return None
+
+    def _field_forms_modal():
+        has_calc = _calculator_template() is not None
+        # Each download sits in its own div: Shiny's Bootstrap styles a bare
+        # ``.nav-pills > li > a`` as a nav link, and the wrapper keeps the anchors
+        # real buttons. The four buttons are equals.
+        downloads = [
+            ui.nav_control(ui.div(ui.download_button("dl_field_forms", "Field forms PDF",
+                                                     class_="btn-sm btn-primary"),
+                                  class_="ff-dl")),
+            ui.nav_control(ui.div(ui.download_button("dl_metrics_pdf", "Metrics PDF",
+                                                     class_="btn-sm btn-primary"),
+                                  class_="ff-dl")),
+        ]
+        if has_calc:
+            downloads += [
+                ui.nav_control(ui.div(ui.download_button("dl_calc_filled", "Completed workbook",
+                                                         class_="btn-sm btn-primary"),
+                                      class_="ff-dl")),
+                ui.nav_control(ui.div(ui.download_button("dl_calc_blank", "Blank workbook",
+                                                         class_="btn-sm btn-primary"),
+                                      class_="ff-dl")),
+            ]
+        return ui.modal(
+            ui.output_ui("ff_site"),
+            ui.navset_pill(
+                ui.nav_panel("Metrics",
+                             ui.output_ui("ff_status"),
+                             ui.div(ui.output_ui("ff_table"), class_="ff-table-wrap"),
+                             value="metrics"),
+                ui.nav_panel("Field forms preview", ui.output_ui("ff_preview"),
+                             value="preview"),
+                ui.nav_spacer(),
+                *downloads,
+                id="ff_tabs", selected="metrics"),
+            (None if has_calc else
+             ui.div("No Excel calculator is published for this version of the assessment.",
+                    class_="ff-site")),
+            title="Field Forms", easy_close=True, size="xl",
+            footer=ui.modal_button("Close"), class_="ff-modal-body")
+
+    _FF_BADGE = {
+        report.STATUS_AVAILABLE: "#d8ecd8;color:#1f6b32",
+        report.STATUS_ENTERED: "#d8ecd8;color:#1f6b32",
+        report.STATUS_PENDING: "#eef1f6;color:#5a6478",
+        report.STATUS_UNAVAILABLE: "#f3d9d9;color:#8a2d2d",
+        report.STATUS_REFERENCE_ONLY: "#e7ddf3;color:#5b3f8a",
+        report.STATUS_FIELD: "#dce8f5;color:#2c4f7a",
+        report.STATUS_NA: "#eef1f6;color:#5a6478",
+        report.STATUS_WITHHELD: "#fdf0d6;color:#7a5b12",
+    }
+
+    def _ff_computing() -> bool:
+        return compute_task.status() == "running"
+
+    # suspend_when_hidden=False on every dialog output: they bind while the
+    # modal is still hidden (Bootstrap's fade), and a suspended output never
+    # resumes here.
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def ff_site():
+        d = delin() or {}
+        dl = d.get("delineation") or {}
+        la = loaded_assessment()
+        name = la.assessment_name if la is not None else "No assessment loaded"
+        ref = selected_ref() or ""
+        head = name + (f" ({ref})" if ref else "")
+        if not dl:
+            return ui.div(f"{head} · Delineate a reach to print the site on the forms.",
+                          class_="ff-site")
+        parts = [head, dl.get("gnis_name") or "(unnamed stream)", field_form._reach_id(dl)]
+        coords = field_form._coords(dl)
+        if coords:
+            parts.append(coords)
+        if dl.get("reach_length_ft") not in (None, "", "None"):
+            try:
+                parts.append(f"{float(dl.get('reach_length_ft')):,.0f} ft")
+            except (TypeError, ValueError):
+                pass
+        return ui.div(" · ".join(p for p in parts if p), class_="ff-site")
+
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def ff_status():
+        la = loaded_assessment()
+        if la is None:
+            return ui.div("Load an assessment to list its metrics.", class_="ff-status")
+        computing = _ff_computing()
+        rows = report.metric_rows(la, measured_values(), computing=computing)
+        counts = report.metric_status_counts(rows)
+        n = sum(counts.values())
+        n_desk = sum(1 for r in rows if not r["repeat"] and r["code"] == "D")
+        if computing:
+            reactive.invalidate_later(1.0)
+            text = ("Preparing field forms… computing the desktop metrics "
+                    "(STAF site engine, StreamCat lookup, 3DEP).")
+        elif not (delin() or {}).get("delineation"):
+            text = (f"{n} metrics in this assessment. {n_desk} can be answered from the desk "
+                    "once a reach is delineated.")
+        else:
+            avail = counts.get(report.STATUS_AVAILABLE, 0)
+            text = (f"{avail} of {n_desk} desktop metrics answered. "
+                    f"{counts.get(report.STATUS_FIELD, 0)} metrics are measured in the field.")
+        withheld = counts.get(report.STATUS_WITHHELD, 0)
+        if withheld:
+            text += (f" {withheld} metric" + ("" if withheld == 1 else "s")
+                     + " not scored for insufficient reference support.")
+        return ui.div(ui.span(text, {"role": "status", "aria-live": "polite"}),
+                      class_="ff-status")
+
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def ff_table():
+        la = loaded_assessment()
+        if la is None:
+            return None
+        with reactive.isolate():
+            computing = _ff_computing()
+        dim = "color:#8a93a3;font-size:11px;"
+        trs = []
+        for r in report.metric_rows(la, measured_values(), computing=computing):
+            badge = ui.span(r["status"], class_="ff-badge",
+                            style=f"background:{_FF_BADGE.get(r['status'], '#eef1f6;color:#5a6478')};")
+            value = (ui.tags.b(r["value"]) if r["value"]
+                     else ui.span("—", style="color:#8a93a3;"))
+            metric = r["metric"] + (f" ({r['units']})" if r["units"] else "")
+            trs.append(ui.tags.tr(
+                ui.tags.td(r["discipline"], style=dim),
+                ui.tags.td(r["function"], style=dim),
+                ui.tags.td(metric,
+                           (ui.span(r["scored_against"], class_="ff-src-sub")
+                            if r["scored_against"] else None)),
+                ui.tags.td(r["code"], style="font-size:11px;text-align:center;"),
+                ui.tags.td(r["method"], style="font-size:11px;color:#45506a;"),
+                ui.tags.td(badge, style="font-size:11px;"),
+                ui.tags.td(value, style="font-size:11px;color:#2f3a52;"),
+                ui.tags.td(r["source"], style="font-size:11px;")))
+        return ui.tags.table(
+            ui.tags.thead(ui.tags.tr(ui.tags.th("Discipline"), ui.tags.th("Function"),
+                                     ui.tags.th("Metric"), ui.tags.th("F / D"),
+                                     ui.tags.th("How it is measured"), ui.tags.th("Status"),
+                                     ui.tags.th("Value"), ui.tags.th("Source"))),
+            ui.tags.tbody(*trs), class_="easi-tbl ff-table", id="deep-field-form-metrics")
+
+    # The preview: the worksheet for the loaded assessment, served inline by a
+    # session route. The route runs outside any reactive context, so it reads
+    # the three values it needs under isolate().
+    def _ff_preview_route(request):
+        from starlette.responses import Response
+        with reactive.isolate():
+            la = loaded_assessment()
+            pdf = report.build_field_forms_pdf(la, ref=selected_ref() or "",
+                                               measured=measured_values(),
+                                               delineation=delin() or {})
+        return Response(pdf, media_type="application/pdf",
+                        headers={"Content-Disposition": "inline; filename=deep-field-forms.pdf",
+                                 "Cache-Control": "no-store"})
+
+    _ff_preview_url = session_.dynamic_route("field-forms-preview", _ff_preview_route)
+    _ff_preview_serial = {"n": 0}
+
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def ff_preview():
+        # Re-render (and so reload the frame) when what the worksheet prints changes.
+        loaded_assessment(); measured_values(); delin()
+        _ff_preview_serial["n"] += 1
+        sep = "&" if "?" in _ff_preview_url else "?"
+        return ui.div(
+            ui.tags.iframe({"src": f"{_ff_preview_url}{sep}v={_ff_preview_serial['n']}",
+                            "title": "Field forms preview"}, class_="ff-preview-frame"),
+            class_="ff-preview")
 
     # ---- exports + resumable session ----
     def _assessment_raw():
@@ -2768,6 +3210,28 @@ def server(input, output, session_):  # noqa: C901
     def dl_field_forms():
         yield report.build_field_forms_pdf(loaded_assessment(), ref=selected_ref() or "",
                                            measured=measured_values(), delineation=delin() or {})
+
+    @render.download(filename=lambda: report.metrics_filename(loaded_assessment()))
+    def dl_metrics_pdf():
+        yield report.build_metrics_pdf(loaded_assessment(), ref=selected_ref() or "",
+                                       measured=measured_values(), delineation=delin() or {})
+
+    # The Excel calculator of the loaded version: the blank byte for byte, and a
+    # copy with the worksheet's values typed in (it recalculates when Excel opens it).
+    @render.download(filename=lambda: calculator.blank_filename(loaded_assessment()))
+    def dl_calc_blank():
+        template = _calculator_template()
+        if template is None:
+            return
+        yield template
+
+    @render.download(filename=lambda: calculator.filled_filename(loaded_assessment(), delin()))
+    def dl_calc_filled():
+        template = _calculator_template()
+        if template is None:
+            return
+        yield calculator.build_filled(template, loaded_assessment(), measured_values(),
+                                      delin() or {})
 
     @reactive.effect
     @reactive.event(input.load_session)

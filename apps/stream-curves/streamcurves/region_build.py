@@ -21,7 +21,7 @@ from typing import Optional
 
 import pandas as pd
 
-from streamcurves import methodology, nrsa_dataset, provenance
+from streamcurves import citation, methodology, nrsa_dataset, provenance
 
 _APP_DIR = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _APP_DIR.parents[1]
@@ -164,6 +164,7 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
                   dataset_id: Optional[str] = None,
                   predictor_source: Optional[str] = None,
                   reference_frame: Optional[str] = None,
+                  reference_method: Optional[str] = None,
                   reviewer_decisions: Optional[Path | str] = None,
                   coverage_exceptions: Optional[Path | str] = None,
                   source_citation: str = "",
@@ -175,8 +176,8 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
     to write the canonical library and derives its staged root as ``<out>/library``.
     """
     out = Path(out_dir)
-    cite = source_citation or (
-        f"USEPA NRSA (L3 ecoregion {l3_code}), StreamCurves Regional Analysis Agent")
+    # One wording for every entry point (streamcurves/citation.py).
+    cite = source_citation or citation.default_source_citation(l3_code, dataset_id)
     argv = [
         # -u because the caller reads stdout through a pipe: Python block-buffers a
         # non-tty stdout, so without it the runner's narration sits in an 8 KB buffer
@@ -198,6 +199,11 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
     argv += ["--reference-frame", str(reference_frame or REFERENCE_FRAME_DEFAULT)]
     if predictor_source and predictor_source != "streamcat":
         argv += ["--predictor-source", str(predictor_source)]
+    # Explicit whenever the caller names one, so the recorded argv says how
+    # reference condition was defined (methodology 0.12). Left out, the runner
+    # resolves it from the data set: the pressure screen on the pooled archive.
+    if reference_method:
+        argv += ["--reference-method", str(reference_method)]
     if reviewer_decisions:
         argv += ["--reviewer-decisions", str(reviewer_decisions)]
     if coverage_exceptions:
@@ -330,6 +336,11 @@ def restage_args(packet: Optional[dict], manifest: Optional[dict]) -> dict:
     # come back framed (the trap predictor_source fell into), so read it off
     # the manifest rather than defaulting.
     out["reference_frame"] = frame_of_manifest(manifest)
+    # The reference method, for the same reason: a manifest carries a
+    # ``reference`` block only for a pressure-screen run (absence semantics), so
+    # a legacy run is rebuilt as the legacy run it was.
+    ref = (manifest.get("inputs") or {}).get("reference") or {}
+    out["reference_method"] = str(ref.get("method") or "easi-eci")
     return out
 
 

@@ -1,0 +1,144 @@
+{
+ "schemaVersion": 1,
+ "file": "station_screen.parquet",
+ "sha256": "d9954342f71a959da8d3c7ac74fd0fbb3620dae34f987cdd051cd42f0befefdc",
+ "rows": 4378,
+ "columns": {
+  "station_key": "str",
+  "comid": "Int64",
+  "comid_source": "str",
+  "l3": "str",
+  "l3_name": "object",
+  "l2": "str",
+  "l2_name": "str",
+  "l1": "str",
+  "l1_name": "str",
+  "nars9": "object",
+  "huc8": "str",
+  "huc12": "str",
+  "stream_order": "Int8",
+  "drainage_area_sqkm": "float64",
+  "nhd_slope": "float64",
+  "fcode": "Int32",
+  "fcode_class": "str",
+  "wadeable": "bool",
+  "slope_class": "str",
+  "da_class": "str",
+  "elevws": "float64",
+  "precip8110ws": "float64",
+  "tmean8110ws": "float64",
+  "runoffws": "float64",
+  "bfiws": "float64",
+  "hydrlcondws": "float64",
+  "kffactws": "float64",
+  "pctwdwet2019ws": "float64",
+  "pcthbwet2019ws": "float64",
+  "pctwet2019ws": "float64",
+  "lith_carbonate": "float32",
+  "lith_noncarb_resid": "float32",
+  "lith_igneous_volcanic": "float32",
+  "lith_colluvial": "float32",
+  "lith_glacial_till": "float32",
+  "lith_glacial_outwash_lake": "float32",
+  "lith_alluvium_coastal": "float32",
+  "lith_eolian": "float32",
+  "lith_other": "float32",
+  "lith_group": "str",
+  "lith_group_pct": "float32",
+  "pctimp2019ws": "float64",
+  "pctcrop2019ws": "float64",
+  "pcthay2019ws": "float64",
+  "agriculture_ws": "float64",
+  "rddensws": "float64",
+  "damnrmstorws": "float64",
+  "dor": "float64",
+  "nabd_densws": "float64",
+  "npdesdensws": "float64",
+  "minedensws": "float64",
+  "coalminedensws": "float64",
+  "mines_ws": "float64",
+  "screen_evaluable": "bool",
+  "pass_strict": "bool",
+  "pass_relaxed": "bool",
+  "fail_strict": "object",
+  "fail_relaxed": "object",
+  "rt_nrsa": "str",
+  "rt_nrsa_cycle": "object",
+  "eci_raw": "float64",
+  "source": "str",
+  "fetched_at": "str"
+ },
+ "screenId": "least-disturbed-v1",
+ "screen": {
+  "strict": {
+   "pctimp2019ws": [
+    "<=",
+    1.0
+   ],
+   "agriculture_ws": [
+    "<=",
+    10.0
+   ],
+   "rddensws": [
+    "<=",
+    2.0
+   ],
+   "dor": [
+    "<",
+    2.0
+   ],
+   "nabd_densws": [
+    "==",
+    0.0
+   ],
+   "npdesdensws": [
+    "==",
+    0.0
+   ],
+   "mines_ws": [
+    "==",
+    0.0
+   ]
+  },
+  "relaxed": {
+   "pctimp2019ws": [
+    "<=",
+    3.0
+   ],
+   "agriculture_ws": [
+    "<=",
+    25.0
+   ],
+   "rddensws": [
+    "<=",
+    2.0
+   ],
+   "dor": [
+    "<",
+    5.0
+   ],
+   "npdesdensws": [
+    "==",
+    0.0
+   ],
+   "mines_ws": [
+    "==",
+    0.0
+   ]
+  }
+ },
+ "easiMethodVersion": "b2e3033116e3",
+ "source": "easi-national-store",
+ "builtAt": "2026-09-20T01:00:39Z",
+ "summary": {
+  "rows": 4378,
+  "withComid": 4373,
+  "evaluable": 4267,
+  "inEasiFrame": 3190,
+  "strictInEasiFrame": 770,
+  "relaxedInEasiFrame": 1147,
+  "withLithology": 4267,
+  "withHuc12": 4275,
+  "withRtNrsa": 1836
+ }
+}

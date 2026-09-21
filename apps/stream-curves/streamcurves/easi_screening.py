@@ -43,6 +43,32 @@ SCREENING_PRESET_CHOICES: dict[str, str] = {
 }
 DEFAULT_SCREENING_PRESET = "functional"
 
+# ``all_sites`` retains every candidate, so it is offered for exploration and
+# never for publication (rule REF-03: the floor is Functioning-at-Risk or
+# better). The headless path already refuses it; this is the interactive half.
+EXPLORATION_ONLY_PRESETS = ("all_sites",)
+
+
+def screening_publishable(criteria_table: Optional[dict]) -> bool:
+    """False when the recorded qualification rule is an exploration-only preset.
+
+    ``criteria_table`` is the ``easi_screening_criteria`` snapshot. Its
+    ``criteria`` value echoes what the screen was asked for: a preset name or a
+    serialized rule. An absent or unrecognized rule reads as publishable, since
+    it cannot be shown to be the all-sites rule (an imported EASI batch carries
+    whatever rule its author chose).
+    """
+    crit = (criteria_table or {}).get("criteria")
+    if crit is None:
+        return True
+    if isinstance(crit, str):
+        return crit.strip() not in EXPLORATION_ONLY_PRESETS
+    try:
+        from streamcurves._vendor.easi.batch.qualify import PRESETS
+    except Exception:  # noqa: BLE001 - without the engine there is nothing to compare
+        return True
+    return all(crit != PRESETS.get(name) for name in EXPLORATION_ONLY_PRESETS)
+
 # The reference screen runs on the StreamCat lookup engine only. This is a
 # fixed policy, not a setting. Two parts:
 #
