@@ -28,7 +28,8 @@ BASIS_MODELED = "modeled-reference"
 BASIS_PUBLISHED = "published-benchmark"
 _BASIS_LABELS = {BASIS_REGIONAL: "Regional reference", BASIS_NATIONAL: "National reference",
                  BASIS_MODELED: "Modeled reference", BASIS_PUBLISHED: "Published benchmark"}
-_LEVEL_WORDS = {"l3": "Level III", "l2": "Level II", "l1": "Level I"}
+_LEVEL_WORDS = {"l3": "Level III", "l2": "Level II", "l1": "Level I",
+                "nars9": "NARS-9 region"}
 _RISK_WORDS = {"low": "low", "moderate": "moderate", "high": "high",
                "unassessed": "not yet assessed"}
 
@@ -111,16 +112,45 @@ def support_line(metric_spec: Optional[dict]) -> str:
     status = str(sup.get("status"))
     if status == "local":
         return f"Reference curve from {n} least-disturbed stations of this ecoregion"
-    level = _LEVEL_WORDS.get(str(sup.get("level") or ""), "a parent")
-    where = f"{level} ecoregion {sup.get('regionCode')}"
-    if sup.get("regionName"):
+    screen_txt = _screen_words(sup)
+    if status == "local_relaxed":
+        # StreamCurves methodology 0.14 (REF-11): this ecoregion's own streams,
+        # admitted under the documented regional screen
+        return (f"Reference curve from {n} least-disturbed streams of this ecoregion "
+                f"{screen_txt}".rstrip())
+    level_key = str(sup.get("level") or "")
+    level = _LEVEL_WORDS.get(level_key, "a parent")
+    where = (f"{level} {sup.get('regionCode')}" if level_key == "nars9"
+             else f"{level} ecoregion {sup.get('regionCode')}")
+    if sup.get("regionName") and level_key != "nars9":
         where += f" ({sup.get('regionName')})"
     local = sup.get("nLocal")
     local_txt = "" if local in (None, "") else f", {local} of them in this ecoregion"
     risk = _RISK_WORDS.get(str(sup.get("transferRisk") or ""), "")
     risk_txt = f". Transfer risk {risk}" if risk else ""
     return (f"Reference curve from {n} least-disturbed stations borrowed from {where}"
-            f"{local_txt}{risk_txt}")
+            f"{(' ' + screen_txt) if screen_txt else ''}{local_txt}{risk_txt}")
+
+
+def _screen_words(sup: dict) -> str:
+    """How a regional-screen pool was admitted (StreamCurves methodology 0.14), or
+    ``""`` for a pool of the strict screen."""
+    lim = sup.get("agricultureLimit")
+    if not sup.get("screenId") or lim is None:
+        return ""
+    try:
+        return f"under the regional screen (watershed agriculture at most {float(lim):g} percent)"
+    except (TypeError, ValueError):
+        return "under the regional screen"
+
+
+def carried_line(metric_spec: Optional[dict]) -> str:
+    """The version a carried-forward curve comes from (StreamCurves methodology
+    0.14), or ``""``."""
+    got = (metric_spec or {}).get("carriedForward")
+    if not isinstance(got, dict) or not got.get("fromVersion"):
+        return ""
+    return f"Carried forward unchanged from version {got.get('fromVersion')} of this assessment"
 
 
 def is_borrowed(metric_spec: Optional[dict]) -> bool:
@@ -169,6 +199,9 @@ def tip_lines(metric_spec: Optional[dict]) -> list[str]:
     line = support_line(m)
     if line:
         lines.append(line)
+    carried = carried_line(m)
+    if carried:
+        lines.append(carried)
     sup = m.get("referenceSupport") or {}
     if is_fixed(m) and not is_ladder(m):
         lines.extend(criteria_lines(m))
