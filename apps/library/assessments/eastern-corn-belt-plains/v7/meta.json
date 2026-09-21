@@ -1,0 +1,31 @@
+{
+  "assessmentId": "eastern-corn-belt-plains",
+  "assessmentName": "Eastern Corn Belt Plains reference assessment",
+  "version": 7,
+  "updatedAt": "2026-09-21T07:59:28Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 0 of 44 stations of this ecoregion pass. 0 reference curves use local stations, 16 borrow from a parent ecoregion, 5 metrics use fixed criteria, and 7 metrics are withheld for insufficient reference support.  No station of this ecoregion passes the reference screen, so every reference curve here borrows its reference stations from a parent ecoregion.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "55",
+    "name": "Eastern Corn Belt Plains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.13-provisional",
+  "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482",
+  "supersedesVersion": 6,
+  "provenance": "present",
+  "portfolioApprovals": [
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    }
+  ]
+}

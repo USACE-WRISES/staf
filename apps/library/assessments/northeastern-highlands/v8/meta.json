@@ -1,0 +1,36 @@
+{
+  "assessmentId": "northeastern-highlands",
+  "assessmentName": "Northeastern Highlands reference assessment",
+  "version": 8,
+  "updatedAt": "2026-09-21T07:23:37Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 66 of 175 stations of this ecoregion pass. 27 reference curves use local stations, 0 borrow from a parent ecoregion, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "58",
+    "name": "Northeastern Highlands"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+  "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6",
+  "supersedesVersion": 7,
+  "provenance": "present",
+  "portfolioApprovals": [
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    },
+    {
+      "functionId": "water-soil-quality",
+      "approvedBy": "gtmenichino",
+      "note": "Approved at interactive publish: 3 metrics kept as a complementary set after review in StreamCurves."
+    }
+  ]
+}

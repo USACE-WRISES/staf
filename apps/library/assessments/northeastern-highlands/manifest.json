@@ -9,8 +9,8 @@
   },
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "StreamCurves reference-curve development",
-  "latestVersion": 7,
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+  "latestVersion": 8,
   "versions": [
     {
       "version": 1,
@@ -67,6 +67,14 @@
       "revisionNotes": "Methodology 0.12 rebuild: reference stations selected by the fixed pressure screen, pools assembled per metric on the Level III to Level I ladder, the five landscape pressure metrics scored on the fixed criteria of the Screening tier, and class curves applied where the national scale analysis supports a split. Three curves built but held back for missing data.",
       "contentDigest": "sha256:9b81c83c765fc428e83267ba82c16153230c4bee088b561ca115c5725c1b57d4",
       "supersedesVersion": 6
+    },
+    {
+      "version": 8,
+      "updatedAt": "2026-09-21T07:23:37Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 66 of 175 stations of this ecoregion pass. 27 reference curves use local stations, 0 borrow from a parent ecoregion, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6",
+      "supersedesVersion": 7
     }
   ]
 }
