@@ -15,7 +15,9 @@ DEFAULT_IDS = {"curve04-accept-with-flag", "data05-exploratory-pool-accepted",
                "red06-instability-is-noise", "strat09-defer-floors",
                "select01-complementary-set",
                # 1.1 (methodology 0.12): a low-risk borrowed reference pool
-               "ref05-borrowed-pool-accepted"}
+               "ref05-borrowed-pool-accepted",
+               # 1.2 (methodology 0.14): a documented gap, pending the owner
+               "cov01-documented-gap"}
 OPTIONAL_IDS = {"ref02-accept-best-available", "data03-thin-metric-finalized",
                 "data06-insufficient-finalized", "curve07-thin-metric-finalized"}
 
@@ -28,11 +30,11 @@ def policy():
 def test_policy_file_loads_and_validates(policy):
     assert dec.validate_policy(policy) == []
     assert policy["meta"]["sha256"].startswith("sha256:")
-    assert dec.policy_version(policy) == "1.1"
+    assert dec.policy_version(policy) == "1.2"
     assert policy["meta"]["methodology_version"] == methodology.methodology_version()
 
 
-def test_default_enabled_set_is_the_six_routine_classes(policy):
+def test_default_enabled_set_is_the_seven_routine_classes(policy):
     enabled = {e["id"] for e in dec.enabled_entries(policy)}
     assert enabled == DEFAULT_IDS
     everything = {e["id"] for e in dec.enabled_entries(policy, sorted(OPTIONAL_IDS))}
@@ -92,7 +94,7 @@ def test_curve04_entry_matches_only_without_decision_flip(policy):
     assert [d["subject"] for d in res.decisions] == ["m1"]
     d = res.decisions[0]
     assert d["decision_class"] == "curve04-accept-with-flag"
-    assert d["rationale_origin"] == "standing_policy:1.1"
+    assert d["rationale_origin"] == "standing_policy:1.2"
     assert d["reviewer"].startswith("standing-policy:curve04-accept-with-flag")
     assert dec.PENDING_SUFFIX in d["reviewer"]
     assert d["asserts"] == {"decision_flip": False, "driver": "S1"}
@@ -174,7 +176,7 @@ def test_asserts_round_trip_through_apply_reviewer_decisions(policy):
     res = dec.apply_policy(doc, policy)
     out = pv.apply_reviewer_decisions(doc, res.decisions, default_reviewer="owner")
     assert out["records"][0]["reviewer_decision_class"] == "curve04-accept-with-flag"
-    assert out["records"][0]["reviewer_rationale_origin"] == "standing_policy:1.1"
+    assert out["records"][0]["reviewer_rationale_origin"] == "standing_policy:1.2"
     assert dec.PENDING_SUFFIX in out["records"][0]["reviewer"]
     assert out["reviewQueue"]["counts"]["open"] == 0
     assert dec.is_pending(out)
@@ -193,7 +195,7 @@ def test_confirm_decisions_replaces_the_pending_reviewer_and_keeps_the_origin(po
     confirmed = dec.confirm_decisions(res.decisions, reviewer="gtmenichino", date="2026-08-22")
     assert confirmed[0]["reviewer"] == "gtmenichino"
     assert confirmed[0]["confirmed_by"] == "gtmenichino"
-    assert confirmed[0]["rationale_origin"] == "standing_policy:1.1"
+    assert confirmed[0]["rationale_origin"] == "standing_policy:1.2"
     assert not dec.is_pending(confirmed)
     with pytest.raises(ValueError):
         dec.confirm_decisions(res.decisions, reviewer="", date="2026-08-22")

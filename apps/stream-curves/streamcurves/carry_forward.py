@@ -1,0 +1,260 @@
+"""Published curves are carried forward (methodology 0.14).
+
+A rebuild of an ecoregion that already has a published version keeps every
+curve that version scores: the same points, class layers, annotations, source
+and function placement. Only missing or newly developed curves walk the
+reference-source hierarchy, so a new methodology version fills gaps without
+silently moving what is already in use.
+
+One exception, decided from data rather than by hand: a curve is rebuilt when a
+value in its published pool is one the data verification corrected or removed.
+
+  - A pool curve (local or regional stations) carries its station values in the
+    published session. Each is checked against every value the verified archive
+    holds for that station in a compatible, protocol-valid survey
+    (``nrsa_dataset.valid_cycle_values``). A value no such survey holds was
+    wrong or incompatible, and one such value is enough to rebuild the curve.
+  - A national or modeled curve carries no station values of its own. It is
+    rebuilt when its metric is one whose archive values were corrected
+    (``nrsa_dataset.corrected_metrics``).
+  - A published criterion rests on no station and is never rebuilt for data.
+
+Values the verification added for stations that had none are not defects: they
+are information the preserved curve did not use, and the curve stays.
+
+Reads the canonical library only. Pure otherwise: no network, no file writes.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any, Optional
+
+import numpy as np
+import pandas as pd
+
+from . import curve_basis
+from . import nrsa_dataset as nd
+from .deep_export import deep_slug
+
+#: the bundle entry fields a carried curve keeps, which are exactly the fields
+#: the exporter reads from a metric's annotations
+ANNOTATION_KEYS = ("referenceN", "sampleDisposition", "metricRole", "curveCaveats",
+                   "confidenceLabel", "confidenceTotal", "referenceRange", "criteriaBasis",
+                   "criteriaSource", "referenceSupport", "localComparison", "stratifier",
+                   "discrimination", "basis", "basisLabel", "basisStatement", "basisLimit",
+                   "publishedBenchmark", "methodContext", "sourceCitation")
+#: camelCase bundle record -> the decision dict a run's reference support holds
+_SUPPORT_FIELDS = {"status": "status", "level": "level", "regionCode": "region_code",
+                   "regionName": "region_name", "nPool": "n_pool",
+                   "nComparable": "n_comparable", "nUsable": "n_usable", "nLocal": "n_local",
+                   "nHuc12": "n_huc12", "disposition": "disposition", "family": "family",
+                   "selfCoverage": "self_coverage", "supportedLevel": "supported_level",
+                   "transferRisk": "transfer_risk", "transferNote": "transfer_note",
+                   "basis": "basis"}
+CURVE_SOURCE = "carried_forward"
+
+
+def _library_root(root: Optional[Path] = None) -> Path:
+    from . import library as lib
+    return Path(root) if root is not None else lib.canonical_root()
+
+
+def find_published(l3_code: str, *, root: Optional[Path] = None) -> Optional[tuple[str, int]]:
+    """``(assessment id, latest version)`` of the ecoregion's published
+    assessment in the canonical library, or None."""
+    base = _library_root(root) / "assessments"
+    if not base.is_dir():
+        return None
+    for mpath in sorted(base.glob("*/manifest.json")):
+        try:
+            man = json.loads(mpath.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        reg = man.get("region") or {}
+        ver = int(man.get("latestVersion") or 0)
+        if reg.get("kind") == "ecoregion" and str(reg.get("code")) == str(l3_code) and ver > 0:
+            return str(man.get("assessmentId") or mpath.parent.name), ver
+    return None
+
+
+def _points_frame(points: list[dict]) -> pd.DataFrame:
+    return pd.DataFrame([{"point_order": i + 1, "metric_value": float(p["x"]),
+                          "index_score": float(p["y"])} for i, p in enumerate(points or [])])
+
+
+def _decision_from_record(rec: dict, metric: str, version: int) -> dict:
+    out = {"metric": metric}
+    for k, v in _SUPPORT_FIELDS.items():
+        if k in (rec or {}):
+            out[v] = rec[k]
+    out["covariates"] = [c for c in (rec or {}).get("covariates") or [] if c != "lith_group"]
+    out["basis"] = curve_basis.resolve(out.get("basis"))
+    out["carried_from"] = int(version)
+    return out
+
+
+def _pool_defects(metric: str, pool: pd.Series) -> dict:
+    """How many of a published pool's station values the verified archive does
+    not hold in any compatible, protocol-valid survey of that station."""
+    pool = pd.to_numeric(pool, errors="coerce").dropna()
+    if not len(pool):
+        return {"checked": False, "n_pool": 0, "n_defective": 0}
+    valid = nd.valid_cycle_values(list(pool.index.astype(str)), metric)
+    if not len(valid):
+        # a landscape metric, not an NRSA field measurement: nothing to check
+        return {"checked": False, "n_pool": int(len(pool)), "n_defective": 0}
+    by_station = valid.groupby(valid["station_key"].astype(str))["value"].apply(
+        lambda s: s.to_numpy(dtype=float))
+    bad = 0
+    for station, value in pool.items():
+        held = by_station.get(str(station))
+        if held is None or not np.isclose(held, float(value), rtol=1e-6, atol=1e-9).any():
+            bad += 1
+    return {"checked": True, "n_pool": int(len(pool)), "n_defective": int(bad)}
+
+
+def prepare(l3_code: str, *, root: Optional[Path] = None) -> dict:
+    """What a rebuild of ``l3_code`` carries forward from its latest published
+    version, and what it rebuilds and why.
+
+    Returns ``{}`` when the ecoregion has no published version. Otherwise
+    ``assessmentId``, ``fromVersion``, ``contentDigest``, ``carried`` (metric ->
+    the curve row, config, annotations, mapping rows and reference support to
+    restore) and ``rebuilt`` (metric -> why it goes through the hierarchy).
+    """
+    from . import library as lib
+    from . import session_io as sio
+    found = find_published(l3_code, root=root)
+    if not found:
+        return {}
+    aid, ver = found
+    vdir = _library_root(root) / "assessments" / aid / f"v{ver}"
+    bundle = json.loads((vdir / lib.BUNDLE_FILE).read_text(encoding="utf-8"))
+    fields = sio.decode_session_fields(sio.load_session_payload(vdir / lib.SESSION_FILE))
+    build = fields.get("reference_build") or {}
+    out: dict[str, Any] = {"assessmentId": aid, "fromVersion": ver,
+                           "contentDigest": bundle.get("contentDigest"),
+                           "carried": {}, "rebuilt": {}}
+    if build.get("method") != "pressure-screen":
+        out["legacy"] = True
+        return out
+    config = dict(fields.get("metric_config") or {})
+    ladder = dict(build.get("ladderMetrics") or {})
+    fixed = set(build.get("fixedMetrics") or [])
+    data = fields.get("data")
+    keys = set(config) | set(ladder) | fixed
+    by_id = {"spring-" + deep_slug(k): k for k in keys}
+
+    blocks: dict[str, dict] = {}
+    functions: dict[str, list[dict]] = {}
+    for fn in bundle.get("metricsByFunction") or []:
+        for m in fn.get("metrics") or []:
+            mk = by_id.get(str(m.get("metricId")))
+            if mk is None or mk in fixed:
+                continue
+            blocks.setdefault(mk, m)
+            functions.setdefault(mk, []).append(
+                {"functionId": fn.get("functionId"), "functionName": fn.get("functionName"),
+                 "discipline": m.get("discipline") or fn.get("discipline")})
+
+    corrected = nd.corrected_metrics()
+    for mk, block in sorted(blocks.items()):
+        basis = curve_basis.resolve(block.get("basis"), criteria_basis=block.get("criteriaBasis"))
+        why = None
+        if mk in ladder:
+            if basis != curve_basis.PUBLISHED:
+                reason = nd.is_corrected(mk, corrected)
+                if reason:
+                    why = (f"The published {curve_basis.label_for(basis).lower()} rests on this "
+                           f"metric's archive values, which the data verification corrected "
+                           f"({reason}).")
+        elif isinstance(data, pd.DataFrame) and mk in data.columns:
+            key_col = "site_id" if "site_id" in data.columns else "station_key"
+            pool = pd.Series(pd.to_numeric(data[mk], errors="coerce").to_numpy(),
+                             index=data[key_col].astype(str)).dropna()
+            got = _pool_defects(mk, pool)
+            if got["n_defective"]:
+                why = (f"{got['n_defective']} of the {got['n_pool']} station values the "
+                       f"published curve was built on are not values the verified archive "
+                       f"holds for those stations in a compatible survey, so the curve is "
+                       f"rebuilt from corrected data.")
+                out["rebuilt"][mk] = {"why": why, **got}
+                continue
+        if why:
+            out["rebuilt"][mk] = {"why": why}
+            continue
+        curve = block.get("curve") or {}
+        row: dict[str, Any] = {
+            "metric": mk, "display_name": block.get("metricName") or mk,
+            "stratum": curve.get("stratification") or "",
+            "curve_status": block.get("curveStatus") or "complete",
+            "curve_source": CURVE_SOURCE, "n_reference": block.get("referenceN"),
+            "curve_points": _points_frame(curve.get("points") or [])}
+        layers = block.get("curveLayers") or []
+        if layers:
+            row["all_strata"] = [{"stratum": L.get("stratum") or "",
+                                  "curve_points": _points_frame(L.get("points") or [])}
+                                 for L in layers]
+        annotations = {k: block[k] for k in ANNOTATION_KEYS if k in block}
+        annotations["carriedForward"] = {"assessmentId": aid, "fromVersion": ver,
+                                         "contentDigest": bundle.get("contentDigest")}
+        cfg = dict(config.get(mk) or (ladder.get(mk) or {}).get("config") or {})
+        out["carried"][mk] = {
+            "row": row, "config": cfg, "annotations": annotations,
+            "mapping": [{"metric_key": mk, "discipline": f["discipline"],
+                         "function_label": f["functionName"]} for f in functions.get(mk, [])],
+            "functions": [f["functionId"] for f in functions.get(mk, [])],
+            "decision": _decision_from_record(block.get("referenceSupport") or
+                                              {"basis": basis}, mk, ver),
+            "basis": basis, "ladder": mk in ladder,
+        }
+    return out
+
+
+def mapping_rows(carried: dict) -> pd.DataFrame:
+    """The function assignments of the carried curves, exactly as published."""
+    rows = [r for c in (carried or {}).values() for r in c.get("mapping") or []]
+    return pd.DataFrame(rows, columns=["metric_key", "discipline", "function_label"])
+
+
+def session_rows(carried: dict) -> dict:
+    """What a session stores so an interactive republish restores the carried
+    curves exactly (the points are published facts, never refitted)."""
+    out = {}
+    for mk, c in (carried or {}).items():
+        row = c["row"]
+        pts = row["curve_points"]
+        out[mk] = {
+            "displayName": row.get("display_name") or mk,
+            "curveStatus": row.get("curve_status") or "complete",
+            "nReference": row.get("n_reference"), "stratum": row.get("stratum") or "",
+            "points": [{"x": float(r.metric_value), "y": float(r.index_score)}
+                       for r in pts.itertuples(index=False)],
+            "layers": [{"stratum": L["stratum"],
+                        "points": [{"x": float(r.metric_value), "y": float(r.index_score)}
+                                   for r in L["curve_points"].itertuples(index=False)]}
+                       for L in row.get("all_strata") or []],
+            "config": c.get("config") or {}, "annotations": c.get("annotations") or {},
+            "mapping": c.get("mapping") or [], "decision": c.get("decision") or {},
+        }
+    return out
+
+
+def restore_rows(saved: dict) -> dict:
+    """The inverse of :func:`session_rows`: ``{metric: carried entry}``."""
+    out = {}
+    for mk, s in (saved or {}).items():
+        row = {"metric": mk, "display_name": s.get("displayName") or mk,
+               "stratum": s.get("stratum") or "", "curve_status": s.get("curveStatus") or "complete",
+               "curve_source": CURVE_SOURCE, "n_reference": s.get("nReference"),
+               "curve_points": _points_frame(s.get("points") or [])}
+        if s.get("layers"):
+            row["all_strata"] = [{"stratum": L.get("stratum") or "",
+                                  "curve_points": _points_frame(L.get("points") or [])}
+                                 for L in s["layers"]]
+        out[mk] = {"row": row, "config": s.get("config") or {},
+                   "annotations": s.get("annotations") or {},
+                   "mapping": s.get("mapping") or [], "decision": s.get("decision") or {}}
+    return out

@@ -187,15 +187,18 @@ functions:
     metrics:
       - {code: fish_NAT_TOTLNTAX, source: nrsa,         label: "Native fish taxa richness",    default_selected: true,  role: metric}
       - {code: bent_TOTLNTAX,     source: nrsa,         label: "Benthic total taxa richness",  default_selected: true,  role: metric}
-      # Tested under Pre-registration III and NOT taken into the portfolio
-      # (owner decision 2026-09-21). Mapped and labelled so the crosswalk
-      # records where it belongs; default_selected false keeps Population
-      # support at two metrics and raises no SELECT-01 approval. Its best
-      # result is promising on matched national donors (accurate in 16 of 19
-      # evaluation regions, contained in 9 of 19 against the 13 required), so
-      # under the validated-only rule it would score nothing at the Eastern
-      # Corn Belt Plains either way.
-      - {code: fish_NAT_NTOLNTAX, source: nrsa,         label: "Native non-tolerant fish taxa richness", default_selected: false, role: metric}
+      # Reserve candidates (methodology 0.14, SELECT-04, owner decision
+      # 2026-09-21): evaluated in every build but entering a portfolio only
+      # where Population support would otherwise be unassessed, so a region
+      # that already scores the function keeps its portfolio. The non-tolerant
+      # richness count was kept out of the portfolio on 2026-09-21 (owner
+      # decision); the three proportions cancel the species-pool difference
+      # between regions that a richness count carries (the matched-donor check
+      # of 2026-09-21).
+      - {code: fish_NAT_NTOLNTAX, source: nrsa,         label: "Native non-tolerant fish taxa richness", default_selected: false, reserve: true, role: metric}
+      - {code: fish_NAT_NTOLPTAX, source: nrsa,         label: "Native non-tolerant fish taxa (%)", default_selected: false, reserve: true, role: metric}
+      - {code: fish_NAT_TOLRPIND, source: nrsa,         label: "Tolerant native fish individuals (%)", default_selected: false, reserve: true, role: metric}
+      - {code: fish_NAT_LITHPIND, source: nrsa,         label: "Simple lithophil fish individuals (%)", default_selected: false, reserve: true, role: metric}
 
   - discipline: Biology
     function: Community dynamics

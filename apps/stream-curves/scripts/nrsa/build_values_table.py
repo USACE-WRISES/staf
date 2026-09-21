@@ -67,6 +67,22 @@ COUNT_TABLES = {
 }
 
 
+#: A biological metric resolves only in its own assemblage's files. EPA's benthic
+#: and fish metric files share twelve column names (TOTLNTAX, TOLRPIND, WTD_TV and
+#: others), and 2013-14 and 2023-24 list the benthic file first, so without this
+#: the fish keys resolved to benthic columns: those cycles' fish values were
+#: benthic numbers and the benthic keys were left empty (found 2026-09-21).
+CATEGORY_DATASETS = {
+    "Benthic macroinvertebrates": ("BENTHIC_",),
+    "Fish": ("FISH_",),
+    # 2013-14 lists the periphyton chlorophyll file before the water-column one,
+    # so chem_CHLA read attached-algae chlorophyll for that cycle and water-column
+    # chlorophyll for the other two, a different measurement (EPA marks the
+    # 2013-14 CHLA_RESULT "not comparable across cycles").
+    "Water chemistry": ("WATER_", "FIELD_CHEMISTRY"),
+}
+
+
 def load_lock() -> dict:
     path = OUT_DIR / "sources.lock.json"
     if not path.exists():
@@ -111,8 +127,11 @@ def build_crosswalk(catalog: pd.DataFrame, files: dict) -> pd.DataFrame:
 
     rows = []
     for _, metric in catalog.iterrows():
+        allowed = CATEGORY_DATASETS.get(str(metric["category"]))
         for cycle in CYCLES:
             for dataset in SOURCE_PRIORITY[cycle]:
+                if allowed and not dataset.startswith(allowed):
+                    continue
                 available = headers.get((cycle, dataset))
                 if not available:
                     continue
@@ -124,7 +143,15 @@ def build_crosswalk(catalog: pd.DataFrame, files: dict) -> pd.DataFrame:
                         "category": metric["category"],
                     })
                     break
-    return pd.DataFrame(rows)
+    out = pd.DataFrame(rows)
+    # build_values renames by source column, so a column two keys claim would
+    # silently feed only the last of them
+    shared = out[out.duplicated(["cycle", "dataset_id", "source_column"], keep=False)]
+    if len(shared):
+        raise SystemExit("metric keys share a source column: "
+                         + "; ".join(f"{r.cycle} {r.dataset_id}.{r.source_column} "
+                                     f"<- {r.metric_key}" for r in shared.itertuples()))
+    return out
 
 
 def build_values(catalog: pd.DataFrame, crosswalk: pd.DataFrame, files: dict,

@@ -9,15 +9,29 @@
 #   py -3.12 scripts/build_basis_validation.py --run <folder> --prereg <file>
 # Check with --check, which exits 1 on drift.
 #
-# Only a VALIDATED verdict admits a rung. Every other verdict on a gating basis
-# is recorded too, because a withheld metric has to say what the test found:
-# "tested and failed" and "too few regions to test" are different blockers.
+# Methodology 0.14 (ACC-05, ACC-06): a source is accepted on a verdict of
+# validated or promising over at least 4 evaluation regions, which is the
+# `acceptance` block's `accepted`. Exact anchor recovery rides beside it as a
+# diagnostic. Every other verdict is recorded too, because a withheld metric has
+# to say what the test found: "tested and failed" and "too few regions to test"
+# are different blockers. `families` pools every metric of a family.
 
-version: 1
-source: ../../notes/2026-07-23_StreamCurves_Methodology/basis_validation/2026-09-21/round_three
-preregistration: PREREGISTRATION_III.md
-preregistration_sha256: cfb2a60267048fe36b0deaa3a2e80a945d1d59d1f4b16d6c34c0f3716211d4c2
+version: 2
+source: ../../notes/2026-07-23_StreamCurves_Methodology/basis_validation/2026-09-21/round_four
+preregistration: PREREGISTRATION_IV.md
+preregistration_sha256: 8f2865cd2f7ff4a11ba8a7bb0edb371c9fa75a14d782e6f70d27d73586486947
+runs:
+- run: ../../notes/2026-07-23_StreamCurves_Methodology/basis_validation/2026-09-21/round_three
+  preregistration: PREREGISTRATION_III.md
+  preregistration_sha256: cfb2a60267048fe36b0deaa3a2e80a945d1d59d1f4b16d6c34c0f3716211d4c2
+- run: ../../notes/2026-07-23_StreamCurves_Methodology/basis_validation/2026-09-21/round_four
+  preregistration: PREREGISTRATION_IV.md
+  preregistration_sha256: 8f2865cd2f7ff4a11ba8a7bb0edb371c9fa75a14d782e6f70d27d73586486947
 gating_bases:
+- 2r_l3
+- 2r_l2
+- 2r_nars9
+- 2r_l1
 - 1B_mixed_local
 - 3a_envelope
 - 3b_adjusted
@@ -25,21 +39,103 @@ gating_bases:
 metrics:
   bent_EPT_NTAX:
     1B_mixed_local:
-      verdict: unsupported
+      verdict: unsupported by data coverage
       regime: E
       n_cells: 4
-      err_iqr: 0.6214
-      net_opt: -0.2645
-      exceed_median: 0.075
-      contained: 1
+      err_iqr: 0.602
+      net_opt: -0.1199
+      exceed_median: 0.065
+      a1_share: 0.5
+      c1_share: 0.0
+      c3_share: 0.25
+      contained: 0
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.4028
+      net_opt: 0.0519
+      exceed_median: 0.125
+      a1_share: 0.5
+      c1_share: 0.1667
+      contained: 3
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1667
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.366
+      net_opt: 0.0143
+      exceed_median: 0.105
+      a1_share: 0.5
+      c1_share: 0.2222
+      contained: 4
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2222
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.3375
+      net_opt: 0.0
+      exceed_median: 0.07
+      a1_share: 0.4286
+      c1_share: 0.2857
+      contained: 2
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2857
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3333
+      net_opt: 0.0361
+      exceed_median: 0.08
+      a1_share: 0.4737
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
     3a_envelope:
       verdict: unsupported
       regime: all
       n_cells: 19
-      err_iqr: 0.55
-      net_opt: 0.0
-      exceed_median: 0.03
-      contained: 2
+      err_iqr: 0.4444
+      net_opt: 0.1091
+      exceed_median: 0.05
+      a1_share: 0.3684
+      c1_share: 0.2105
+      contained: 4
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2105
+        accepted: false
     3b_adjusted:
       verdict: unsupported by data coverage
       regime: all
@@ -47,41 +143,148 @@ metrics:
       err_iqr: 0.4949
       net_opt: -0.0741
       exceed_median: 0.03
+      a1_share: 0.3158
+      c1_share: 0.1579
+      c3_share: 0.6316
       contained: 3
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.1579
+        coverage: false
+        accepted: false
     3c_matched:
       verdict: unsupported
       regime: all
       n_cells: 19
-      err_iqr: 0.5882
-      net_opt: 0.0
-      exceed_median: 0.05
-      contained: 2
+      err_iqr: 0.4444
+      net_opt: -0.0843
+      exceed_median: 0.06
+      a1_share: 0.4211
+      c1_share: 0.3158
+      contained: 6
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3158
+        accepted: false
   bent_HPRIME:
     1B_mixed_local:
-      verdict: validated
-      regime: E
-      n_cells: 4
-      err_iqr: 0.1082
-      net_opt: -0.0087
-      exceed_median: 0.645
-      contained: 4
+      verdict: promising
+      regime: I
+      n_cells: 19
+      err_iqr: 0.1801
+      net_opt: 0.0
+      exceed_median: 0.4
+      a1_share: 0.7895
+      c1_share: 0.5789
+      c3_share: 0.7895
+      contained: 11
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5789
+        coverage: true
+        accepted: true
       transport:
         measure: extrapolation_ok
         better: min
-        bound: 0.0723
-        passing_min: 0.0723
-        passing_max: 0.6667
-        n_passing_cells: 4
+        bound: 0.0
+        passing_min: 0.0
+        passing_max: 0.9032
+        n_passing_cells: 15
         targets:
           '55': true
-    3a_envelope:
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2959
+      net_opt: 0.0299
+      exceed_median: 0.25
+      a1_share: 0.6111
+      c1_share: 0.5
+      contained: 9
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2765
+      net_opt: -0.0425
+      exceed_median: 0.26
+      a1_share: 0.5556
+      c1_share: 0.5
+      contained: 9
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.2008
+      net_opt: -0.0822
+      exceed_median: 0.18
+      a1_share: 0.5714
+      c1_share: 0.5714
+      contained: 4
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5714
+        accepted: false
+    2r_nars9:
       verdict: unsupported
       regime: all
       n_cells: 19
-      err_iqr: 0.4006
-      net_opt: 0.0
-      exceed_median: 0.18
-      contained: 8
+      err_iqr: 0.26
+      net_opt: 0.0323
+      exceed_median: 0.37
+      a1_share: 0.5263
+      c1_share: 0.6316
+      contained: 12
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6316
+        accepted: false
+    3a_envelope:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2398
+      net_opt: 0.0347
+      exceed_median: 0.21
+      a1_share: 0.6842
+      c1_share: 0.5789
+      contained: 11
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5789
+        accepted: true
+      transport:
+        measure: n_fit
+        better: min
+        bound: 19.0
+        passing_min: 19.0
+        passing_max: 169.0
+        n_passing_cells: 13
     3b_adjusted:
       verdict: unsupported by data coverage
       regime: all
@@ -89,31 +292,132 @@ metrics:
       err_iqr: 0.247
       net_opt: 0.0314
       exceed_median: 0.2
+      a1_share: 0.6316
+      c1_share: 0.4737
+      c3_share: 0.6316
       contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4737
+        coverage: false
+        accepted: false
     3c_matched:
       verdict: unsupported
       regime: all
       n_cells: 19
-      err_iqr: 0.3528
-      net_opt: 0.0571
-      exceed_median: 0.13
-      contained: 7
+      err_iqr: 0.236
+      net_opt: -0.0173
+      exceed_median: 0.37
+      a1_share: 0.5789
+      c1_share: 0.4737
+      contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4737
+        accepted: false
   bent_TOLRPIND:
     1B_mixed_local:
-      verdict: not evaluated
+      verdict: unsupported by data coverage
       regime: E
-      n_cells: 2
-      err_iqr: 0.8696
-      exceed_median: 0.045
+      n_cells: 4
+      err_iqr: 0.7135
+      net_opt: 0.1635
+      exceed_median: 0.035
+      a1_share: 0.25
+      c1_share: 0.25
+      c3_share: 0.25
       contained: 1
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.25
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.5562
+      net_opt: 0.1724
+      exceed_median: 0.055
+      a1_share: 0.3889
+      c1_share: 0.2778
+      contained: 5
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2778
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.5081
+      net_opt: 0.1412
+      exceed_median: 0.05
+      a1_share: 0.3889
+      c1_share: 0.2222
+      contained: 4
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2222
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.6801
+      net_opt: 0.0349
+      exceed_median: 0.04
+      a1_share: 0.4286
+      c1_share: 0.2857
+      contained: 2
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2857
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5434
+      net_opt: 0.0756
+      exceed_median: 0.05
+      a1_share: 0.4211
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3684
+        accepted: false
     3a_envelope:
       verdict: unsupported
       regime: all
-      n_cells: 15
-      err_iqr: 0.5499
-      net_opt: 0.0976
-      exceed_median: 0.37
-      contained: 8
+      n_cells: 19
+      err_iqr: 0.4618
+      net_opt: 0.1111
+      exceed_median: 0.09
+      a1_share: 0.4737
+      c1_share: 0.2105
+      contained: 4
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2105
+        accepted: false
     3b_adjusted:
       verdict: unsupported
       regime: all
@@ -121,32 +425,139 @@ metrics:
       err_iqr: 0.3829
       net_opt: 0.1707
       exceed_median: 0.37
+      a1_share: 0.7333
+      c1_share: 0.4
+      c3_share: 0.6667
       contained: 6
+      acceptance:
+        n_cells: 15
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4
+        coverage: true
+        accepted: false
     3c_matched:
       verdict: unsupported
       regime: all
-      n_cells: 15
-      err_iqr: 0.3825
-      net_opt: 0.1429
-      exceed_median: 0.45
-      contained: 7
+      n_cells: 19
+      err_iqr: 0.4312
+      net_opt: 0.0488
+      exceed_median: 0.09
+      a1_share: 0.4211
+      c1_share: 0.3158
+      contained: 6
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3158
+        accepted: false
   bent_TOTLNTAX:
     1B_mixed_local:
-      verdict: unsupported
-      regime: I
-      n_cells: 7
-      err_iqr: 0.6634
-      net_opt: -0.1765
-      exceed_median: 0.07
-      contained: 2
-    3a_envelope:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 0.2712
+      net_opt: -0.0689
+      exceed_median: 0.14
+      a1_share: 0.5
+      c1_share: 0.75
+      c3_share: 0.25
+      contained: 3
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.75
+        coverage: false
+        accepted: false
+    2r_l1:
       verdict: unsupported
       regime: all
-      n_cells: 15
-      err_iqr: 0.6364
-      net_opt: 0.1096
-      exceed_median: 0.12
-      contained: 2
+      n_cells: 18
+      err_iqr: 0.3107
+      net_opt: 0.0806
+      exceed_median: 0.185
+      a1_share: 0.6111
+      c1_share: 0.2778
+      contained: 5
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2778
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2915
+      net_opt: 0.0484
+      exceed_median: 0.08
+      a1_share: 0.5
+      c1_share: 0.3889
+      contained: 7
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3889
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.2451
+      net_opt: -0.1096
+      exceed_median: 0.01
+      a1_share: 0.4286
+      c1_share: 0.4286
+      contained: 3
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4286
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2188
+      net_opt: 0.0769
+      exceed_median: 0.15
+      a1_share: 0.6316
+      c1_share: 0.4737
+      contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4737
+        accepted: false
+    3a_envelope:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2097
+      net_opt: 0.044
+      exceed_median: 0.32
+      a1_share: 0.7368
+      c1_share: 0.4737
+      contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4737
+        accepted: true
+      transport:
+        measure: n_fit
+        better: min
+        bound: 19.0
+        passing_min: 19.0
+        passing_max: 169.0
+        n_passing_cells: 14
     3b_adjusted:
       verdict: unsupported
       regime: all
@@ -154,31 +565,254 @@ metrics:
       err_iqr: 0.8737
       net_opt: 0.1216
       exceed_median: 0.07
+      a1_share: 0.4667
+      c1_share: 0.1333
+      c3_share: 0.6667
       contained: 2
+      acceptance:
+        n_cells: 15
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1333
+        coverage: true
+        accepted: false
     3c_matched:
       verdict: unsupported
       regime: all
-      n_cells: 15
-      err_iqr: 0.6373
-      net_opt: 0.2105
-      exceed_median: 0.12
-      contained: 3
-  chem_CHLA:
+      n_cells: 19
+      err_iqr: 0.2547
+      net_opt: -0.0482
+      exceed_median: 0.14
+      a1_share: 0.6316
+      c1_share: 0.4211
+      contained: 8
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4211
+        accepted: false
+  bfiws:
     1B_mixed_local:
-      verdict: not evaluated
-      regime: E
-      n_cells: 3
-      err_iqr: 0.1068
-      exceed_median: 0.67
-      contained: 2
-    3a_envelope:
+      verdict: validated
+      regime: I
+      n_cells: 19
+      err_iqr: 0.1262
+      net_opt: 0.0
+      exceed_median: 0.48
+      a1_share: 0.8947
+      c1_share: 0.7895
+      c3_share: 0.7895
+      contained: 15
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.7895
+        coverage: true
+        accepted: true
+      transport:
+        measure: extrapolation_ok
+        better: min
+        bound: 0.0
+        passing_min: 0.0
+        passing_max: 0.9032
+        n_passing_cells: 17
+    2r_l1:
       verdict: unsupported
       regime: all
       n_cells: 18
-      err_iqr: 0.3952
-      net_opt: -0.1103
-      exceed_median: 0.135
-      contained: 6
+      err_iqr: 0.7173
+      net_opt: 0.0641
+      exceed_median: 0.065
+      a1_share: 0.4444
+      c1_share: 0.0556
+      contained: 1
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.0556
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.7489
+      net_opt: 0.0641
+      exceed_median: 0.06
+      a1_share: 0.4444
+      c1_share: 0.0
+      contained: 0
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.0
+        accepted: false
+    2r_l3:
+      verdict: promising
+      regime: all
+      n_cells: 7
+      err_iqr: 0.349
+      net_opt: 0.0339
+      exceed_median: 0.24
+      a1_share: 0.8571
+      c1_share: 0.1429
+      contained: 1
+      acceptance:
+        n_cells: 7
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.1429
+        accepted: true
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.8043
+      net_opt: 0.1071
+      exceed_median: 0.05
+      a1_share: 0.2632
+      c1_share: 0.1053
+      contained: 2
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1053
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.8054
+      net_opt: 0.0128
+      exceed_median: 0.04
+      a1_share: 0.3684
+      c1_share: 0.0526
+      contained: 1
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0526
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.8305
+      net_opt: 0.1111
+      exceed_median: 0.04
+      a1_share: 0.3684
+      c1_share: 0.0
+      contained: 0
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.0
+        accepted: false
+  chem_CHLA:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 0.4945
+      net_opt: 0.011
+      exceed_median: 0.115
+      a1_share: 0.5
+      c1_share: 0.25
+      c3_share: 0.25
+      contained: 1
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.25
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.5694
+      net_opt: 0.184
+      exceed_median: 0.11
+      a1_share: 0.5
+      c1_share: 0.2778
+      contained: 5
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2778
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 17
+      err_iqr: 0.5736
+      net_opt: 0.1681
+      exceed_median: 0.16
+      a1_share: 0.5294
+      c1_share: 0.2941
+      contained: 5
+      acceptance:
+        n_cells: 17
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2941
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.535
+      net_opt: 0.28
+      exceed_median: 0.13
+      a1_share: 0.5714
+      c1_share: 0.1429
+      contained: 1
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1429
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.585
+      net_opt: 0.1933
+      exceed_median: 0.07
+      a1_share: 0.4737
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5508
+      net_opt: 0.0238
+      exceed_median: 0.07
+      a1_share: 0.4737
+      c1_share: 0.2105
+      contained: 4
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2105
+        accepted: false
     3b_adjusted:
       verdict: unsupported by data coverage
       regime: all
@@ -186,32 +820,132 @@ metrics:
       err_iqr: 0.3001
       net_opt: 0.0595
       exceed_median: 0.36
+      a1_share: 0.6316
+      c1_share: 0.4737
+      c3_share: 0.6316
       contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4737
+        coverage: false
+        accepted: false
     3c_matched:
       verdict: unsupported
       regime: all
       n_cells: 19
-      err_iqr: 0.3604
-      net_opt: -0.0741
-      exceed_median: 0.11
-      contained: 4
+      err_iqr: 0.3595
+      net_opt: -0.0233
+      exceed_median: 0.18
+      a1_share: 0.5263
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
   chem_COND:
     1B_mixed_local:
-      verdict: unsupported
-      regime: I
-      n_cells: 9
-      err_iqr: 0.4053
-      net_opt: 0.0185
-      exceed_median: 0.1
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 0.6045
+      net_opt: 0.1468
+      exceed_median: 0.15
+      a1_share: 0.75
+      c1_share: 0.75
+      c3_share: 0.25
       contained: 3
-    3a_envelope:
+      acceptance:
+        n_cells: 4
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.75
+        coverage: false
+        accepted: false
+    2r_l1:
       verdict: unsupported
       regime: all
       n_cells: 18
-      err_iqr: 0.5457
-      net_opt: 0.1263
-      exceed_median: 0.085
+      err_iqr: 0.7661
+      net_opt: 0.2453
+      exceed_median: 0.025
+      a1_share: 0.2778
+      c1_share: 0.0556
+      contained: 1
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.0556
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 17
+      err_iqr: 0.7712
+      net_opt: 0.2466
+      exceed_median: 0.02
+      a1_share: 0.2941
+      c1_share: 0.1176
+      contained: 2
+      acceptance:
+        n_cells: 17
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1176
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 1.2079
+      net_opt: 0.3257
+      exceed_median: 0.02
+      a1_share: 0.2857
+      c1_share: 0.1429
+      contained: 1
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1429
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.7212
+      net_opt: 0.2534
+      exceed_median: 0.02
+      a1_share: 0.2632
+      c1_share: 0.0526
+      contained: 1
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.0526
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5856
+      net_opt: 0.1636
+      exceed_median: 0.15
+      a1_share: 0.5789
+      c1_share: 0.2105
       contained: 4
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2105
+        accepted: false
     3b_adjusted:
       verdict: unsupported by data coverage
       regime: all
@@ -219,32 +953,132 @@ metrics:
       err_iqr: 1.033
       net_opt: 0.1389
       exceed_median: 0.02
+      a1_share: 0.4211
+      c1_share: 0.1579
+      c3_share: 0.6316
       contained: 3
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1579
+        coverage: false
+        accepted: false
     3c_matched:
       verdict: unsupported
       regime: all
       n_cells: 19
-      err_iqr: 0.5121
-      net_opt: 0.2286
-      exceed_median: 0.02
-      contained: 1
+      err_iqr: 0.521
+      net_opt: 0.1935
+      exceed_median: 0.06
+      a1_share: 0.3684
+      c1_share: 0.1579
+      contained: 3
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1579
+        accepted: false
   chem_NTL:
     1B_mixed_local:
-      verdict: unsupported
+      verdict: unsupported by data coverage
       regime: E
       n_cells: 4
-      err_iqr: 5.1717
-      net_opt: 0.2547
-      exceed_median: 0.025
+      err_iqr: 3.3473
+      net_opt: 0.0837
+      exceed_median: 0.03
+      a1_share: 0.25
+      c1_share: 0.0
+      c3_share: 0.25
       contained: 0
-    3a_envelope:
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.0
+        coverage: false
+        accepted: false
+    2r_l1:
       verdict: unsupported
       regime: all
       n_cells: 18
-      err_iqr: 0.3695
-      net_opt: -0.0002
-      exceed_median: 0.06
+      err_iqr: 0.3817
+      net_opt: 0.1665
+      exceed_median: 0.07
+      a1_share: 0.3889
+      c1_share: 0.3333
+      contained: 6
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3333
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 17
+      err_iqr: 0.3655
+      net_opt: 0.069
+      exceed_median: 0.17
+      a1_share: 0.5294
+      c1_share: 0.5294
+      contained: 9
+      acceptance:
+        n_cells: 17
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.5294
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.6753
+      net_opt: 0.2778
+      exceed_median: 0.08
+      a1_share: 0.2857
+      c1_share: 0.0
+      contained: 0
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.0
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3781
+      net_opt: 0.1395
+      exceed_median: 0.07
+      a1_share: 0.4737
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4765
+      net_opt: 0.012
+      exceed_median: 0.07
+      a1_share: 0.3158
+      c1_share: 0.1053
       contained: 2
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.1053
+        accepted: false
     3b_adjusted:
       verdict: unsupported by data coverage
       regime: all
@@ -252,32 +1086,132 @@ metrics:
       err_iqr: 0.7557
       net_opt: 0.2
       exceed_median: 0.08
+      a1_share: 0.4211
+      c1_share: 0.1579
+      c3_share: 0.6316
       contained: 3
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1579
+        coverage: false
+        accepted: false
     3c_matched:
       verdict: unsupported
       regime: all
       n_cells: 19
-      err_iqr: 0.405
-      net_opt: 0.0727
+      err_iqr: 0.3813
+      net_opt: 0.0
       exceed_median: 0.07
+      a1_share: 0.4737
+      c1_share: 0.3158
       contained: 6
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3158
+        accepted: false
   chem_PH:
     1B_mixed_local:
-      verdict: unsupported
-      regime: I
-      n_cells: 9
-      err_iqr: 0.3238
-      net_opt: -0.0238
-      exceed_median: 0.05
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 0.9618
+      net_opt: -0.0304
+      exceed_median: 0.01
+      a1_share: 0.0
+      c1_share: 0.0
+      c3_share: 0.25
+      contained: 0
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3661
+      net_opt: 0.0285
+      exceed_median: 0.17
+      a1_share: 0.7222
+      c1_share: 0.2778
+      contained: 5
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2778
+        accepted: true
+    2r_l2:
+      verdict: promising
+      regime: all
+      n_cells: 17
+      err_iqr: 0.3237
+      net_opt: 0.0
+      exceed_median: 0.16
+      a1_share: 0.7059
+      c1_share: 0.2353
       contained: 4
+      acceptance:
+        n_cells: 17
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2353
+        accepted: true
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.4749
+      net_opt: 0.0588
+      exceed_median: 0.02
+      a1_share: 0.2857
+      c1_share: 0.4286
+      contained: 3
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4286
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3656
+      net_opt: 0.0168
+      exceed_median: 0.11
+      a1_share: 0.5789
+      c1_share: 0.2105
+      contained: 4
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2105
+        accepted: false
     3a_envelope:
       verdict: unsupported
       regime: all
-      n_cells: 18
-      err_iqr: 0.3256
-      net_opt: 0.0969
-      exceed_median: 0.125
-      contained: 3
+      n_cells: 19
+      err_iqr: 0.3125
+      net_opt: 0.1154
+      exceed_median: 0.19
+      a1_share: 0.6842
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
     3b_adjusted:
       verdict: unsupported by data coverage
       regime: all
@@ -285,41 +1219,132 @@ metrics:
       err_iqr: 0.5611
       net_opt: 0.1069
       exceed_median: 0.15
+      a1_share: 0.5263
+      c1_share: 0.2632
+      c3_share: 0.6316
       contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2632
+        coverage: false
+        accepted: false
     3c_matched:
       verdict: unsupported
       regime: all
       n_cells: 19
-      err_iqr: 0.3414
-      net_opt: 0.1667
-      exceed_median: 0.12
-      contained: 2
+      err_iqr: 0.3552
+      net_opt: 0.1154
+      exceed_median: 0.11
+      a1_share: 0.5263
+      c1_share: 0.1579
+      contained: 3
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1579
+        accepted: false
   chem_PTL:
     1B_mixed_local:
-      verdict: promising
+      verdict: unsupported by data coverage
       regime: E
       n_cells: 4
-      err_iqr: 0.3271
-      net_opt: -0.1708
-      exceed_median: 0.24
-      contained: 0
-      transport:
-        measure: extrapolation_ok
-        better: min
-        bound: 0.25
-        passing_min: 0.25
-        passing_max: 0.6667
-        n_passing_cells: 3
-        targets:
-          '55': true
-    3a_envelope:
+      err_iqr: 0.3482
+      net_opt: -0.065
+      exceed_median: 0.43
+      a1_share: 0.75
+      c1_share: 0.5
+      c3_share: 0.25
+      contained: 2
+      acceptance:
+        n_cells: 4
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5
+        coverage: false
+        accepted: false
+    2r_l1:
       verdict: unsupported
       regime: all
       n_cells: 18
-      err_iqr: 0.3797
-      net_opt: -0.0087
-      exceed_median: 0.04
-      contained: 6
+      err_iqr: 0.309
+      net_opt: 0.0516
+      exceed_median: 0.285
+      a1_share: 0.7222
+      c1_share: 0.5
+      contained: 9
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.5
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 17
+      err_iqr: 0.2474
+      net_opt: 0.0115
+      exceed_median: 0.24
+      a1_share: 0.6471
+      c1_share: 0.6471
+      contained: 11
+      acceptance:
+        n_cells: 17
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6471
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.2225
+      net_opt: 0.2185
+      exceed_median: 0.33
+      a1_share: 0.7143
+      c1_share: 0.5714
+      contained: 4
+      acceptance:
+        n_cells: 7
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.5714
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3304
+      net_opt: 0.0843
+      exceed_median: 0.14
+      a1_share: 0.5263
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3684
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3908
+      net_opt: -0.0182
+      exceed_median: 0.09
+      a1_share: 0.4737
+      c1_share: 0.2105
+      contained: 4
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2105
+        accepted: false
     3b_adjusted:
       verdict: unsupported by data coverage
       regime: all
@@ -327,41 +1352,132 @@ metrics:
       err_iqr: 0.4113
       net_opt: -0.1146
       exceed_median: 0.03
+      a1_share: 0.3684
+      c1_share: 0.2632
+      c3_share: 0.6316
       contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2632
+        coverage: false
+        accepted: false
     3c_matched:
       verdict: unsupported
       regime: all
       n_cells: 19
       err_iqr: 0.3468
-      net_opt: -0.025
-      exceed_median: 0.13
-      contained: 8
+      net_opt: 0.0182
+      exceed_median: 0.08
+      a1_share: 0.4211
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3684
+        accepted: false
   chem_TURB:
     1B_mixed_local:
-      verdict: validated
+      verdict: unsupported by data coverage
       regime: E
       n_cells: 4
-      err_iqr: 0.3611
-      net_opt: -0.1714
-      exceed_median: 0.1
+      err_iqr: 0.4177
+      net_opt: -0.2812
+      exceed_median: 0.06
+      a1_share: 0.25
+      c1_share: 0.75
+      c3_share: 0.5
       contained: 3
-      transport:
-        measure: extrapolation_ok
-        better: min
-        bound: 0.0723
-        passing_min: 0.0723
-        passing_max: 0.3083
-        n_passing_cells: 3
-        targets:
-          '55': true
-    3a_envelope:
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.75
+        coverage: false
+        accepted: false
+    2r_l1:
       verdict: unsupported
       regime: all
       n_cells: 18
-      err_iqr: 0.4155
-      net_opt: -0.0119
-      exceed_median: 0.125
-      contained: 4
+      err_iqr: 0.2801
+      net_opt: 0.036
+      exceed_median: 0.15
+      a1_share: 0.6111
+      c1_share: 0.2778
+      contained: 5
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2778
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 17
+      err_iqr: 0.3281
+      net_opt: 0.0117
+      exceed_median: 0.13
+      a1_share: 0.6471
+      c1_share: 0.3529
+      contained: 6
+      acceptance:
+        n_cells: 17
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3529
+        accepted: false
+    2r_l3:
+      verdict: promising
+      regime: all
+      n_cells: 7
+      err_iqr: 0.4036
+      net_opt: 0.0
+      exceed_median: 0.35
+      a1_share: 0.7143
+      c1_share: 0.4286
+      contained: 3
+      acceptance:
+        n_cells: 7
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4286
+        accepted: true
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3076
+      net_opt: 0.0312
+      exceed_median: 0.15
+      a1_share: 0.5789
+      c1_share: 0.3158
+      contained: 6
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3158
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3756
+      net_opt: 0.0
+      exceed_median: 0.15
+      a1_share: 0.5789
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
     3b_adjusted:
       verdict: unsupported by data coverage
       regime: all
@@ -369,41 +1485,254 @@ metrics:
       err_iqr: 0.3539
       net_opt: 0.0
       exceed_median: 0.08
+      a1_share: 0.4737
+      c1_share: 0.3158
+      c3_share: 0.6316
       contained: 6
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3158
+        coverage: false
+        accepted: false
     3c_matched:
       verdict: unsupported
       regime: all
       n_cells: 19
-      err_iqr: 0.3947
-      net_opt: 0.0467
-      exceed_median: 0.11
-      contained: 4
-  fish_NAT_NTOLNTAX:
+      err_iqr: 0.3696
+      net_opt: 0.0588
+      exceed_median: 0.1
+      a1_share: 0.5263
+      c1_share: 0.3158
+      contained: 6
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3158
+        accepted: false
+  fish_NAT_LITHPIND:
     1B_mixed_local:
-      verdict: unsupported
+      verdict: unsupported by data coverage
       regime: E
       n_cells: 4
-      err_iqr: 1.0602
-      net_opt: -0.1452
-      exceed_median: 0.245
+      err_iqr: 0.5016
+      net_opt: -0.0244
+      exceed_median: 0.005
+      a1_share: 0.0
+      c1_share: 0.0
+      c3_share: 0.25
       contained: 0
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2053
+      net_opt: 0.0
+      exceed_median: 0.345
+      a1_share: 0.7222
+      c1_share: 0.5556
+      contained: 10
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5556
+        accepted: true
+    2r_l2:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.1604
+      net_opt: 0.0
+      exceed_median: 0.46
+      a1_share: 0.8333
+      c1_share: 0.5556
+      contained: 10
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5556
+        accepted: true
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 6
+      err_iqr: 0.2102
+      net_opt: 0.1878
+      exceed_median: 0.105
+      a1_share: 0.5
+      c1_share: 0.1667
+      contained: 1
+      acceptance:
+        n_cells: 6
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1667
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2243
+      net_opt: 0.0
+      exceed_median: 0.34
+      a1_share: 0.6316
+      c1_share: 0.5263
+      contained: 10
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5263
+        accepted: false
     3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.1934
+      net_opt: 0.0
+      exceed_median: 0.24
+      a1_share: 0.6316
+      c1_share: 0.6316
+      contained: 12
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6316
+        accepted: false
+    3c_matched:
       verdict: promising
       regime: all
       n_cells: 19
-      err_iqr: 0.3831
+      err_iqr: 0.1897
       net_opt: 0.0
-      exceed_median: 0.42
-      contained: 8
+      exceed_median: 0.17
+      a1_share: 0.6842
+      c1_share: 0.4737
+      contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4737
+        accepted: true
       transport:
-        measure: n_fit
-        better: min
-        bound: 23.0
-        passing_min: 23.0
-        passing_max: 303.0
-        n_passing_cells: 15
-        targets:
-          '55': false
+        measure: distance_median
+        better: max
+        bound: 0.1043
+        passing_min: 0.0311
+        passing_max: 0.1043
+        n_passing_cells: 13
+  fish_NAT_NTOLNTAX:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 1.1127
+      net_opt: -0.1894
+      exceed_median: 0.04
+      a1_share: 0.25
+      c1_share: 0.25
+      c3_share: 0.25
+      contained: 1
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.25
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.4167
+      net_opt: 0.0
+      exceed_median: 0.545
+      a1_share: 0.7778
+      c1_share: 0.5556
+      contained: 10
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5556
+        accepted: true
+    2r_l2:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3333
+      net_opt: -0.0312
+      exceed_median: 0.335
+      a1_share: 0.7222
+      c1_share: 0.5
+      contained: 9
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5
+        accepted: true
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 6
+      err_iqr: 0.75
+      net_opt: -0.1467
+      exceed_median: 0.01
+      a1_share: 0.3333
+      c1_share: 0.0
+      contained: 0
+      acceptance:
+        n_cells: 6
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5
+      net_opt: -0.0952
+      exceed_median: 0.13
+      a1_share: 0.5789
+      c1_share: 0.4211
+      contained: 8
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4211
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3452
+      net_opt: 0.0
+      exceed_median: 0.18
+      a1_share: 0.6316
+      c1_share: 0.6842
+      contained: 13
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6842
+        accepted: false
     3b_adjusted:
       verdict: unsupported by data coverage
       regime: all
@@ -411,50 +1740,376 @@ metrics:
       err_iqr: 0.6587
       net_opt: -0.1308
       exceed_median: 0.13
+      a1_share: 0.5789
+      c1_share: 0.1579
+      c3_share: 0.6316
       contained: 3
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.1579
+        coverage: false
+        accepted: false
     3c_matched:
-      verdict: promising
+      verdict: unsupported
       regime: all
       n_cells: 19
-      err_iqr: 0.4046
+      err_iqr: 0.5
       net_opt: 0.0
-      exceed_median: 0.74
-      contained: 9
-      transport:
-        measure: distance_median
-        better: max
-        bound: 0.0708
-        passing_min: 0.0231
-        passing_max: 0.0708
-        n_passing_cells: 16
-        targets:
-          '55': true
-  fish_NAT_TOTLNTAX:
+      exceed_median: 0.3
+      a1_share: 0.6316
+      c1_share: 0.6316
+      contained: 12
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6316
+        accepted: false
+  fish_NAT_NTOLPTAX:
     1B_mixed_local:
-      verdict: unsupported
+      verdict: unsupported by data coverage
       regime: E
       n_cells: 4
-      err_iqr: 1.4001
-      net_opt: -0.2695
-      exceed_median: 0.0
-      contained: 0
-    3a_envelope:
+      err_iqr: 0.2728
+      net_opt: 0.2102
+      exceed_median: 0.035
+      a1_share: 0.25
+      c1_share: 0.25
+      c3_share: 0.25
+      contained: 1
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.25
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: validated
+      regime: all
+      n_cells: 18
+      err_iqr: 0.1207
+      net_opt: 0.0
+      exceed_median: 0.685
+      a1_share: 0.8889
+      c1_share: 0.7778
+      contained: 14
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.7778
+        accepted: true
+    2r_l2:
+      verdict: validated
+      regime: all
+      n_cells: 18
+      err_iqr: 0.1064
+      net_opt: 0.0
+      exceed_median: 0.72
+      a1_share: 0.8333
+      c1_share: 0.8333
+      contained: 15
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.8333
+        accepted: true
+    2r_l3:
       verdict: promising
       regime: all
+      n_cells: 6
+      err_iqr: 0.2519
+      net_opt: -0.0032
+      exceed_median: 0.485
+      a1_share: 0.6667
+      c1_share: 0.5
+      contained: 3
+      acceptance:
+        n_cells: 6
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5
+        accepted: true
+    2r_nars9:
+      verdict: validated
+      regime: all
       n_cells: 19
-      err_iqr: 0.6429
+      err_iqr: 0.1036
       net_opt: 0.0
-      exceed_median: 1.0
-      contained: 5
+      exceed_median: 0.57
+      a1_share: 0.8421
+      c1_share: 0.7368
+      contained: 14
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.7368
+        accepted: true
+    3a_envelope:
+      verdict: validated
+      regime: all
+      n_cells: 18
+      err_iqr: 0.1981
+      net_opt: 0.0
+      exceed_median: 0.645
+      a1_share: 0.8889
+      c1_share: 0.6667
+      contained: 12
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6667
+        accepted: true
       transport:
         measure: n_fit
         better: min
-        bound: 43.0
-        passing_min: 43.0
-        passing_max: 363.0
+        bound: 27.0
+        passing_min: 27.0
+        passing_max: 148.0
         n_passing_cells: 16
-        targets:
-          '55': false
+    3c_matched:
+      verdict: validated
+      regime: all
+      n_cells: 15
+      err_iqr: 0.2776
+      net_opt: 0.0323
+      exceed_median: 0.49
+      a1_share: 0.8
+      c1_share: 0.7333
+      contained: 11
+      acceptance:
+        n_cells: 15
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.7333
+        accepted: true
+      transport:
+        measure: distance_median
+        better: max
+        bound: 0.077
+        passing_min: 0.0373
+        passing_max: 0.077
+        n_passing_cells: 12
+  fish_NAT_TOLRPIND:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 0.3258
+      net_opt: -0.0381
+      exceed_median: 0.115
+      a1_share: 0.5
+      c1_share: 0.0
+      c3_share: 0.25
+      contained: 0
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 9
+      err_iqr: 0.2391
+      net_opt: 0.1379
+      exceed_median: 0.34
+      a1_share: 0.6667
+      c1_share: 0.4444
+      contained: 4
+      acceptance:
+        n_cells: 9
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4444
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 9
+      err_iqr: 0.2586
+      net_opt: 0.1379
+      exceed_median: 0.18
+      a1_share: 0.5556
+      c1_share: 0.3333
+      contained: 3
+      acceptance:
+        n_cells: 9
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3333
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 6
+      err_iqr: 0.226
+      net_opt: -0.0218
+      exceed_median: 0.0
+      a1_share: 0.3333
+      c1_share: 0.3333
+      contained: 2
+      acceptance:
+        n_cells: 6
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3333
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 9
+      err_iqr: 0.233
+      net_opt: 0.1935
+      exceed_median: 0.13
+      a1_share: 0.5556
+      c1_share: 0.3333
+      contained: 3
+      acceptance:
+        n_cells: 9
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3333
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 9
+      err_iqr: 0.2261
+      net_opt: 0.1032
+      exceed_median: 0.08
+      a1_share: 0.4444
+      c1_share: 0.5556
+      contained: 5
+      acceptance:
+        n_cells: 9
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.5556
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 9
+      err_iqr: 0.3166
+      net_opt: 0.1032
+      exceed_median: 0.13
+      a1_share: 0.5556
+      c1_share: 0.4444
+      contained: 4
+      acceptance:
+        n_cells: 9
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4444
+        accepted: false
+  fish_NAT_TOTLNTAX:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 1.0656
+      net_opt: -0.2523
+      exceed_median: 0.05
+      a1_share: 0.25
+      c1_share: 0.0
+      c3_share: 0.25
+      contained: 0
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.5588
+      net_opt: -0.0984
+      exceed_median: 0.385
+      a1_share: 0.6111
+      c1_share: 0.4444
+      contained: 8
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4444
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.5294
+      net_opt: -0.1016
+      exceed_median: 0.175
+      a1_share: 0.6111
+      c1_share: 0.3889
+      contained: 7
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3889
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 6
+      err_iqr: 0.6438
+      net_opt: -0.2479
+      exceed_median: 0.005
+      a1_share: 0.3333
+      c1_share: 0.0
+      contained: 0
+      acceptance:
+        n_cells: 6
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0
+        accepted: false
+    2r_nars9:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5588
+      net_opt: -0.1
+      exceed_median: 0.17
+      a1_share: 0.6842
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3684
+        accepted: true
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3571
+      net_opt: -0.1034
+      exceed_median: 0.29
+      a1_share: 0.6316
+      c1_share: 0.5789
+      contained: 11
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5789
+        accepted: false
     3b_adjusted:
       verdict: unsupported by data coverage
       regime: all
@@ -462,21 +2117,2566 @@ metrics:
       err_iqr: 0.8893
       net_opt: -0.1538
       exceed_median: 0.19
+      a1_share: 0.5789
+      c1_share: 0.0526
+      c3_share: 0.6316
       contained: 1
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0526
+        coverage: false
+        accepted: false
     3c_matched:
-      verdict: promising
+      verdict: unsupported
       regime: all
       n_cells: 19
       err_iqr: 0.5
       net_opt: 0.0
-      exceed_median: 1.0
+      exceed_median: 0.27
+      a1_share: 0.6316
+      c1_share: 0.4211
       contained: 8
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4211
+        accepted: false
+  pctwet2019ws:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 1.5035
+      net_opt: -0.1616
+      exceed_median: 0.09
+      a1_share: 0.5
+      c1_share: 0.0
+      c3_share: 0.25
+      contained: 0
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.691
+      net_opt: 0.0
+      exceed_median: 0.155
+      a1_share: 0.5556
+      c1_share: 0.1111
+      contained: 2
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.1111
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.6138
+      net_opt: 0.0
+      exceed_median: 0.155
+      a1_share: 0.5556
+      c1_share: 0.1667
+      contained: 3
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.1667
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.2515
+      net_opt: 0.0069
+      exceed_median: 0.18
+      a1_share: 0.5714
+      c1_share: 0.2857
+      contained: 2
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2857
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.6268
+      net_opt: 0.0
+      exceed_median: 0.08
+      a1_share: 0.4737
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.7683
+      net_opt: 0.0968
+      exceed_median: 0.11
+      a1_share: 0.5263
+      c1_share: 0.2105
+      contained: 4
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2105
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.7659
+      net_opt: -0.0286
+      exceed_median: 0.07
+      a1_share: 0.4737
+      c1_share: 0.0526
+      contained: 1
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0526
+        accepted: false
+  phab_BFWD_RAT:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 0.8215
+      net_opt: 0.2636
+      exceed_median: 0.17
+      a1_share: 0.5
+      c1_share: 0.25
+      c3_share: 0.25
+      contained: 1
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.25
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3848
+      net_opt: 0.1149
+      exceed_median: 0.27
+      a1_share: 0.6667
+      c1_share: 0.3333
+      contained: 6
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3333
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.4004
+      net_opt: 0.16
+      exceed_median: 0.305
+      a1_share: 0.6667
+      c1_share: 0.2222
+      contained: 4
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2222
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.5149
+      net_opt: 0.1437
+      exceed_median: 0.05
+      a1_share: 0.4286
+      c1_share: 0.2857
+      contained: 2
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2857
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4086
+      net_opt: 0.0769
+      exceed_median: 0.23
+      a1_share: 0.6316
+      c1_share: 0.2105
+      contained: 4
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2105
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4346
+      net_opt: 0.1605
+      exceed_median: 0.27
+      a1_share: 0.6842
+      c1_share: 0.2105
+      contained: 4
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2105
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4628
+      net_opt: 0.0862
+      exceed_median: 0.15
+      a1_share: 0.6316
+      c1_share: 0.1579
+      contained: 3
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1579
+        accepted: false
+  phab_LRBS_use:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 0.3869
+      net_opt: -0.229
+      exceed_median: 0.11
+      a1_share: 0.75
+      c1_share: 0.25
+      c3_share: 0.25
+      contained: 1
+      acceptance:
+        n_cells: 4
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.25
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3425
+      net_opt: -0.0551
+      exceed_median: 0.185
+      a1_share: 0.7222
+      c1_share: 0.3333
+      contained: 6
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3333
+        accepted: true
+    2r_l2:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3123
+      net_opt: -0.045
+      exceed_median: 0.205
+      a1_share: 0.6667
+      c1_share: 0.2778
+      contained: 5
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2778
+        accepted: true
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.2759
+      net_opt: -0.3681
+      exceed_median: 0.06
+      a1_share: 0.2857
+      c1_share: 0.1429
+      contained: 1
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.1429
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3419
+      net_opt: -0.0465
+      exceed_median: 0.14
+      a1_share: 0.6316
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4182
+      net_opt: 0.0
+      exceed_median: 0.14
+      a1_share: 0.5789
+      c1_share: 0.2105
+      contained: 4
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2105
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5561
+      net_opt: 0.0
+      exceed_median: 0.11
+      a1_share: 0.5263
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
+  phab_LSUB_DMM:
+    1B_mixed_local:
+      verdict: promising
+      regime: I
+      n_cells: 19
+      err_iqr: 0.4988
+      net_opt: 0.0
+      exceed_median: 0.24
+      a1_share: 0.6842
+      c1_share: 0.3684
+      c3_share: 0.7895
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3684
+        coverage: true
+        accepted: true
+      transport:
+        measure: extrapolation_ok
+        better: min
+        bound: 0.0
+        passing_min: 0.0
+        passing_max: 0.9032
+        n_passing_cells: 13
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.5185
+      net_opt: 0.0503
+      exceed_median: 0.045
+      a1_share: 0.4444
+      c1_share: 0.2222
+      contained: 4
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2222
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3943
+      net_opt: -0.0017
+      exceed_median: 0.17
+      a1_share: 0.6111
+      c1_share: 0.3889
+      contained: 7
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3889
+        accepted: false
+    2r_l3:
+      verdict: promising
+      regime: all
+      n_cells: 7
+      err_iqr: 0.3505
+      net_opt: -0.0342
+      exceed_median: 0.46
+      a1_share: 0.7143
+      c1_share: 0.4286
+      contained: 3
+      acceptance:
+        n_cells: 7
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4286
+        accepted: true
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3994
+      net_opt: 0.0645
+      exceed_median: 0.15
+      a1_share: 0.5789
+      c1_share: 0.4211
+      contained: 8
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4211
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.7955
+      net_opt: 0.0741
+      exceed_median: 0.13
+      a1_share: 0.5263
+      c1_share: 0.1053
+      contained: 2
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1053
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.7096
+      net_opt: 0.0645
+      exceed_median: 0.15
+      a1_share: 0.5789
+      c1_share: 0.1053
+      contained: 2
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1053
+        accepted: false
+  phab_LWDeqVolM100:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 1.4672
+      net_opt: -0.2696
+      exceed_median: 0.15
+      a1_share: 0.5
+      c1_share: 0.0
+      c3_share: 0.25
+      contained: 0
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3539
+      net_opt: 0.0676
+      exceed_median: 0.39
+      a1_share: 0.8333
+      c1_share: 0.6111
+      contained: 11
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.6111
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3809
+      net_opt: 0.0606
+      exceed_median: 0.31
+      a1_share: 0.7778
+      c1_share: 0.6111
+      contained: 11
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.6111
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 6
+      err_iqr: 0.4827
+      net_opt: -0.1849
+      exceed_median: 0.07
+      a1_share: 0.3333
+      c1_share: 0.3333
+      contained: 2
+      acceptance:
+        n_cells: 6
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3333
+        accepted: false
+    2r_nars9:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2991
+      net_opt: 0.04
+      exceed_median: 0.23
+      a1_share: 0.7895
+      c1_share: 0.5789
+      contained: 11
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5789
+        accepted: true
+    3a_envelope:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4348
+      net_opt: 0.04
+      exceed_median: 0.27
+      a1_share: 0.7368
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3684
+        accepted: true
+      transport:
+        measure: n_fit
+        better: min
+        bound: 98.0
+        passing_min: 98.0
+        passing_max: 464.0
+        n_passing_cells: 14
+    3c_matched:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5119
+      net_opt: 0.04
+      exceed_median: 0.22
+      a1_share: 0.7368
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3684
+        accepted: true
       transport:
         measure: distance_median
         better: max
-        bound: 0.0708
-        passing_min: 0.0231
-        passing_max: 0.0708
+        bound: 0.0548
+        passing_min: 0.009
+        passing_max: 0.0548
+        n_passing_cells: 14
+  phab_PCT_FAST:
+    1B_mixed_local:
+      verdict: promising
+      regime: I
+      n_cells: 19
+      err_iqr: 0.3347
+      net_opt: 0.0
+      exceed_median: 0.25
+      a1_share: 0.7895
+      c1_share: 0.1579
+      c3_share: 0.7895
+      contained: 3
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.1579
+        coverage: true
+        accepted: true
+      transport:
+        measure: extrapolation_ok
+        better: min
+        bound: 0.1636
+        passing_min: 0.1636
+        passing_max: 0.7097
+        n_passing_cells: 15
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2548
+      net_opt: 0.0594
+      exceed_median: 0.18
+      a1_share: 0.6111
+      c1_share: 0.1667
+      contained: 3
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1667
+        accepted: false
+    2r_l2:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.1689
+      net_opt: 0.0399
+      exceed_median: 0.34
+      a1_share: 0.6667
+      c1_share: 0.3333
+      contained: 6
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3333
+        accepted: true
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.225
+      net_opt: 0.069
+      exceed_median: 0.24
+      a1_share: 0.7143
+      c1_share: 0.5714
+      contained: 4
+      acceptance:
+        n_cells: 7
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.5714
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2201
+      net_opt: 0.0741
+      exceed_median: 0.21
+      a1_share: 0.6316
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4173
+      net_opt: 0.1605
+      exceed_median: 0.08
+      a1_share: 0.4737
+      c1_share: 0.0526
+      contained: 1
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.0526
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2299
+      net_opt: 0.0889
+      exceed_median: 0.2
+      a1_share: 0.5263
+      c1_share: 0.3158
+      contained: 6
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3158
+        accepted: false
+  phab_PCT_SAFN:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 0.4813
+      net_opt: -0.132
+      exceed_median: 0.245
+      a1_share: 0.5
+      c1_share: 0.75
+      c3_share: 0.25
+      contained: 3
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.75
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.6002
+      net_opt: 0.0173
+      exceed_median: 0.125
+      a1_share: 0.5
+      c1_share: 0.2222
+      contained: 4
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2222
+        accepted: false
+    2r_l2:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.355
+      net_opt: 0.0
+      exceed_median: 0.245
+      a1_share: 0.6667
+      c1_share: 0.3889
+      contained: 7
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3889
+        accepted: true
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.1836
+      net_opt: 0.0692
+      exceed_median: 0.34
+      a1_share: 0.8571
+      c1_share: 0.5714
+      contained: 4
+      acceptance:
+        n_cells: 7
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.5714
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3595
+      net_opt: 0.0513
+      exceed_median: 0.17
+      a1_share: 0.5263
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3684
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.7653
+      net_opt: 0.1111
+      exceed_median: 0.08
+      a1_share: 0.4737
+      c1_share: 0.1579
+      contained: 3
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1579
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.6833
+      net_opt: 0.0753
+      exceed_median: 0.17
+      a1_share: 0.5263
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
+  phab_RP100_cm:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 1.4112
+      net_opt: -0.2434
+      exceed_median: 0.0
+      a1_share: 0.25
+      c1_share: 0.0
+      c3_share: 0.5
+      contained: 0
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2969
+      net_opt: -0.0588
+      exceed_median: 0.35
+      a1_share: 0.6111
+      c1_share: 0.6111
+      contained: 11
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6111
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2969
+      net_opt: -0.0537
+      exceed_median: 0.36
+      a1_share: 0.6111
+      c1_share: 0.5556
+      contained: 10
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5556
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 6
+      err_iqr: 0.4254
+      net_opt: -0.152
+      exceed_median: 0.025
+      a1_share: 0.1667
+      c1_share: 0.3333
+      contained: 2
+      acceptance:
+        n_cells: 6
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3333
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4163
+      net_opt: -0.0769
+      exceed_median: 0.13
+      a1_share: 0.5789
+      c1_share: 0.4737
+      contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4737
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4134
+      net_opt: 0.0
+      exceed_median: 0.26
+      a1_share: 0.6316
+      c1_share: 0.4737
+      contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4737
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4641
+      net_opt: -0.0667
+      exceed_median: 0.16
+      a1_share: 0.6316
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3684
+        accepted: false
+  phab_SINU:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 0.3436
+      net_opt: -0.0751
+      exceed_median: 0.605
+      a1_share: 0.75
+      c1_share: 0.5
+      c3_share: 0.25
+      contained: 2
+      acceptance:
+        n_cells: 4
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3397
+      net_opt: -0.0029
+      exceed_median: 0.365
+      a1_share: 0.7222
+      c1_share: 0.5
+      contained: 9
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5
+        accepted: true
+    2r_l2:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2185
+      net_opt: -0.0793
+      exceed_median: 0.37
+      a1_share: 0.8333
+      c1_share: 0.6111
+      contained: 11
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6111
+        accepted: true
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.1453
+      net_opt: -0.1196
+      exceed_median: 0.13
+      a1_share: 0.5714
+      c1_share: 0.7143
+      contained: 5
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.7143
+        accepted: false
+    2r_nars9:
+      verdict: validated
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2601
+      net_opt: -0.087
+      exceed_median: 0.39
+      a1_share: 0.8421
+      c1_share: 0.6842
+      contained: 13
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6842
+        accepted: true
+    3a_envelope:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3006
+      net_opt: -0.0476
+      exceed_median: 0.39
+      a1_share: 0.7895
+      c1_share: 0.3158
+      contained: 6
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3158
+        accepted: true
+      transport:
+        measure: n_fit
+        better: min
+        bound: 80.0
+        passing_min: 80.0
+        passing_max: 454.0
+        n_passing_cells: 15
+    3c_matched:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.353
+      net_opt: -0.0357
+      exceed_median: 0.39
+      a1_share: 0.6842
+      c1_share: 0.4737
+      contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4737
+        accepted: true
+      transport:
+        measure: distance_median
+        better: max
+        bound: 0.0656
+        passing_min: 0.0081
+        passing_max: 0.0656
+        n_passing_cells: 13
+  phab_XBKA:
+    1B_mixed_local:
+      verdict: validated
+      regime: I
+      n_cells: 19
+      err_iqr: 0.1818
+      net_opt: 0.0
+      exceed_median: 0.29
+      a1_share: 0.7895
+      c1_share: 0.6842
+      c3_share: 0.6842
+      contained: 13
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6842
+        coverage: true
+        accepted: true
+      transport:
+        measure: extrapolation_ok
+        better: min
+        bound: 0.0924
+        passing_min: 0.0924
+        passing_max: 0.8065
+        n_passing_cells: 15
+    2r_l1:
+      verdict: validated
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2029
+      net_opt: 0.0147
+      exceed_median: 0.435
+      a1_share: 0.7778
+      c1_share: 0.7222
+      contained: 13
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.7222
+        accepted: true
+    2r_l2:
+      verdict: validated
+      regime: all
+      n_cells: 18
+      err_iqr: 0.1615
+      net_opt: 0.0
+      exceed_median: 0.29
+      a1_share: 0.7778
+      c1_share: 0.6667
+      contained: 12
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6667
+        accepted: true
+    2r_l3:
+      verdict: promising
+      regime: all
+      n_cells: 7
+      err_iqr: 0.2573
+      net_opt: -0.0676
+      exceed_median: 0.32
+      a1_share: 0.8571
+      c1_share: 0.5714
+      contained: 4
+      acceptance:
+        n_cells: 7
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5714
+        accepted: true
+    2r_nars9:
+      verdict: validated
+      regime: all
+      n_cells: 19
+      err_iqr: 0.18
+      net_opt: 0.0
+      exceed_median: 0.41
+      a1_share: 0.8421
+      c1_share: 0.6842
+      contained: 13
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6842
+        accepted: true
+    3a_envelope:
+      verdict: validated
+      regime: all
+      n_cells: 19
+      err_iqr: 0.198
+      net_opt: 0.0
+      exceed_median: 0.41
+      a1_share: 0.8421
+      c1_share: 0.7368
+      contained: 14
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.7368
+        accepted: true
+      transport:
+        measure: n_fit
+        better: min
+        bound: 80.0
+        passing_min: 80.0
+        passing_max: 421.0
         n_passing_cells: 16
-        targets:
-          '55': true
+    3c_matched:
+      verdict: promising
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2211
+      net_opt: 0.0
+      exceed_median: 0.66
+      a1_share: 0.6842
+      c1_share: 0.4737
+      contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4737
+        accepted: true
+      transport:
+        measure: distance_median
+        better: max
+        bound: 0.0656
+        passing_min: 0.0081
+        passing_max: 0.0656
+        n_passing_cells: 13
+  phab_XBKF_H:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 0.9608
+      net_opt: 0.2832
+      exceed_median: 0.15
+      a1_share: 0.5
+      c1_share: 0.0
+      c3_share: 0.25
+      contained: 0
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.0
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3751
+      net_opt: 0.0442
+      exceed_median: 0.175
+      a1_share: 0.5556
+      c1_share: 0.3889
+      contained: 7
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3889
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3598
+      net_opt: 0.0354
+      exceed_median: 0.17
+      a1_share: 0.5556
+      c1_share: 0.3889
+      contained: 7
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3889
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.4368
+      net_opt: 0.1512
+      exceed_median: 0.04
+      a1_share: 0.2857
+      c1_share: 0.2857
+      contained: 2
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2857
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2712
+      net_opt: 0.1154
+      exceed_median: 0.13
+      a1_share: 0.6316
+      c1_share: 0.3158
+      contained: 6
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3158
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3864
+      net_opt: 0.1
+      exceed_median: 0.1
+      a1_share: 0.5789
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3684
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.4533
+      net_opt: 0.1
+      exceed_median: 0.09
+      a1_share: 0.4737
+      c1_share: 0.4737
+      contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4737
+        accepted: false
+  phab_XCDENMID:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 3.4088
+      net_opt: 0.3779
+      exceed_median: 0.045
+      a1_share: 0.25
+      c1_share: 0.0
+      c3_share: 0.25
+      contained: 0
+      acceptance:
+        n_cells: 4
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.0
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3809
+      net_opt: 0.1431
+      exceed_median: 0.105
+      a1_share: 0.5556
+      c1_share: 0.3889
+      contained: 7
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3889
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3376
+      net_opt: 0.1676
+      exceed_median: 0.11
+      a1_share: 0.5556
+      c1_share: 0.3889
+      contained: 7
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3889
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.4077
+      net_opt: 0.1163
+      exceed_median: 0.32
+      a1_share: 0.7143
+      c1_share: 0.1429
+      contained: 1
+      acceptance:
+        n_cells: 7
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1429
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2785
+      net_opt: 0.1613
+      exceed_median: 0.16
+      a1_share: 0.5789
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3684
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3562
+      net_opt: 0.1471
+      exceed_median: 0.11
+      a1_share: 0.5789
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.3312
+      net_opt: 0.2
+      exceed_median: 0.08
+      a1_share: 0.4737
+      c1_share: 0.2632
+      contained: 5
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false
+  phab_XCMGW:
+    1B_mixed_local:
+      verdict: promising
+      regime: I
+      n_cells: 19
+      err_iqr: 0.2201
+      net_opt: 0.0
+      exceed_median: 0.32
+      a1_share: 0.7895
+      c1_share: 0.6316
+      c3_share: 0.7895
+      contained: 12
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.6316
+        coverage: true
+        accepted: true
+      transport:
+        measure: extrapolation_ok
+        better: min
+        bound: 0.0
+        passing_min: 0.0
+        passing_max: 0.9032
+        n_passing_cells: 15
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.3054
+      net_opt: 0.0857
+      exceed_median: 0.09
+      a1_share: 0.5
+      c1_share: 0.5556
+      contained: 10
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.5556
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2809
+      net_opt: 0.0977
+      exceed_median: 0.09
+      a1_share: 0.5
+      c1_share: 0.5
+      contained: 9
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.5
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.2385
+      net_opt: 0.0943
+      exceed_median: 0.11
+      a1_share: 0.5714
+      c1_share: 0.4286
+      contained: 3
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4286
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2131
+      net_opt: 0.0571
+      exceed_median: 0.2
+      a1_share: 0.6316
+      c1_share: 0.5789
+      contained: 11
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.5789
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2975
+      net_opt: 0.0545
+      exceed_median: 0.23
+      a1_share: 0.6316
+      c1_share: 0.4211
+      contained: 8
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4211
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2991
+      net_opt: 0.0541
+      exceed_median: 0.2
+      a1_share: 0.6316
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3684
+        accepted: false
+  phab_XEMBED:
+    1B_mixed_local:
+      verdict: promising
+      regime: I
+      n_cells: 19
+      err_iqr: 0.2702
+      net_opt: 0.0405
+      exceed_median: 0.32
+      a1_share: 0.7895
+      c1_share: 0.4211
+      c3_share: 0.6842
+      contained: 8
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4211
+        coverage: true
+        accepted: true
+      transport:
+        measure: extrapolation_ok
+        better: min
+        bound: 0.0
+        passing_min: 0.0
+        passing_max: 0.8065
+        n_passing_cells: 15
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.4776
+      net_opt: 0.0837
+      exceed_median: 0.125
+      a1_share: 0.7222
+      c1_share: 0.3333
+      contained: 6
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3333
+        accepted: false
+    2r_l2:
+      verdict: promising
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2099
+      net_opt: 0.0406
+      exceed_median: 0.32
+      a1_share: 0.8889
+      c1_share: 0.5556
+      contained: 10
+      acceptance:
+        n_cells: 18
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5556
+        accepted: true
+    2r_l3:
+      verdict: validated
+      regime: all
+      n_cells: 7
+      err_iqr: 0.0952
+      net_opt: 0.0405
+      exceed_median: 0.53
+      a1_share: 0.8571
+      c1_share: 0.7143
+      contained: 5
+      acceptance:
+        n_cells: 7
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.7143
+        accepted: true
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.1999
+      net_opt: 0.069
+      exceed_median: 0.24
+      a1_share: 0.7895
+      c1_share: 0.4737
+      contained: 9
+      acceptance:
+        n_cells: 19
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4737
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.67
+      net_opt: 0.0667
+      exceed_median: 0.2
+      a1_share: 0.6316
+      c1_share: 0.1579
+      contained: 3
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1579
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.5197
+      net_opt: 0.0667
+      exceed_median: 0.2
+      a1_share: 0.6316
+      c1_share: 0.1579
+      contained: 3
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1579
+        accepted: false
+  phab_XFC_NAT:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 4
+      err_iqr: 0.282
+      net_opt: 0.1077
+      exceed_median: 0.52
+      a1_share: 0.75
+      c1_share: 0.75
+      c3_share: 0.25
+      contained: 3
+      acceptance:
+        n_cells: 4
+        classification_error: true
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.75
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2123
+      net_opt: 0.1386
+      exceed_median: 0.155
+      a1_share: 0.6111
+      c1_share: 0.4444
+      contained: 8
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4444
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 18
+      err_iqr: 0.2348
+      net_opt: 0.1396
+      exceed_median: 0.18
+      a1_share: 0.6111
+      c1_share: 0.3889
+      contained: 7
+      acceptance:
+        n_cells: 18
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3889
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 7
+      err_iqr: 0.2803
+      net_opt: 0.0254
+      exceed_median: 0.69
+      a1_share: 0.5714
+      c1_share: 0.5714
+      contained: 4
+      acceptance:
+        n_cells: 7
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5714
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2416
+      net_opt: 0.1712
+      exceed_median: 0.14
+      a1_share: 0.6316
+      c1_share: 0.3684
+      contained: 7
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3684
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2192
+      net_opt: 0.1029
+      exceed_median: 0.35
+      a1_share: 0.5789
+      c1_share: 0.5263
+      contained: 10
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.5263
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 19
+      err_iqr: 0.2742
+      net_opt: 0.1778
+      exceed_median: 0.11
+      a1_share: 0.5263
+      c1_share: 0.4211
+      contained: 8
+      acceptance:
+        n_cells: 19
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4211
+        accepted: false
+families:
+  biology:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 36
+      err_iqr: 0.3866
+      net_opt: -0.0299
+      exceed_median: 0.07
+      a1_share: 0.3889
+      c1_share: 0.2778
+      c3_share: 0.25
+      contained: 10
+      acceptance:
+        n_cells: 36
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2778
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 153
+      err_iqr: 0.3333
+      net_opt: 0.0
+      exceed_median: 0.25
+      a1_share: 0.6405
+      c1_share: 0.4444
+      contained: 68
+      acceptance:
+        n_cells: 153
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4444
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 153
+      err_iqr: 0.3333
+      net_opt: 0.0
+      exceed_median: 0.21
+      a1_share: 0.6144
+      c1_share: 0.4444
+      contained: 68
+      acceptance:
+        n_cells: 153
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4444
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 58
+      err_iqr: 0.3563
+      net_opt: -0.0442
+      exceed_median: 0.07
+      a1_share: 0.4483
+      c1_share: 0.2931
+      contained: 17
+      acceptance:
+        n_cells: 58
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2931
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 161
+      err_iqr: 0.3333
+      net_opt: 0.0
+      exceed_median: 0.2
+      a1_share: 0.5963
+      c1_share: 0.4658
+      contained: 75
+      acceptance:
+        n_cells: 161
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4658
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 160
+      err_iqr: 0.2806
+      net_opt: 0.0
+      exceed_median: 0.195
+      a1_share: 0.6188
+      c1_share: 0.5062
+      contained: 81
+      acceptance:
+        n_cells: 160
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.5062
+        accepted: false
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 106
+      err_iqr: 0.5856
+      net_opt: -0.0757
+      exceed_median: 0.12
+      a1_share: 0.5472
+      c1_share: 0.2264
+      c3_share: 0.6415
+      contained: 24
+      acceptance:
+        n_cells: 106
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2264
+        coverage: false
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 157
+      err_iqr: 0.3558
+      net_opt: 0.0
+      exceed_median: 0.17
+      a1_share: 0.5924
+      c1_share: 0.465
+      contained: 73
+      acceptance:
+        n_cells: 157
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.465
+        accepted: false
+  channel_form:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 24
+      err_iqr: 0.5073
+      net_opt: -0.0365
+      exceed_median: 0.245
+      a1_share: 0.5833
+      c1_share: 0.2083
+      c3_share: 0.2917
+      contained: 5
+      acceptance:
+        n_cells: 24
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2083
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 108
+      err_iqr: 0.3018
+      net_opt: 0.0351
+      exceed_median: 0.285
+      a1_share: 0.6574
+      c1_share: 0.4537
+      contained: 49
+      acceptance:
+        n_cells: 108
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4537
+        accepted: false
+    2r_l2:
+      verdict: promising
+      regime: all
+      n_cells: 108
+      err_iqr: 0.2671
+      net_opt: 0.0268
+      exceed_median: 0.29
+      a1_share: 0.6852
+      c1_share: 0.463
+      contained: 50
+      acceptance:
+        n_cells: 108
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.463
+        accepted: true
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 41
+      err_iqr: 0.3009
+      net_opt: -0.0625
+      exceed_median: 0.13
+      a1_share: 0.5122
+      c1_share: 0.4634
+      contained: 19
+      acceptance:
+        n_cells: 41
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4634
+        accepted: false
+    2r_nars9:
+      verdict: promising
+      regime: all
+      n_cells: 114
+      err_iqr: 0.277
+      net_opt: 0.026
+      exceed_median: 0.255
+      a1_share: 0.693
+      c1_share: 0.4386
+      contained: 50
+      acceptance:
+        n_cells: 114
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4386
+        accepted: true
+    3a_envelope:
+      verdict: promising
+      regime: all
+      n_cells: 114
+      err_iqr: 0.3242
+      net_opt: 0.0083
+      exceed_median: 0.265
+      a1_share: 0.6667
+      c1_share: 0.3596
+      contained: 41
+      acceptance:
+        n_cells: 114
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3596
+        accepted: true
+      transport:
+        measure: n_fit
+        better: min
+        bound: 69.0
+        passing_min: 69.0
+        passing_max: 494.0
+        n_passing_cells: 76
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 114
+      err_iqr: 0.3081
+      net_opt: 0.0231
+      exceed_median: 0.245
+      a1_share: 0.6053
+      c1_share: 0.3772
+      contained: 43
+      acceptance:
+        n_cells: 114
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.3772
+        accepted: false
+  hydrology:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 8
+      err_iqr: 0.6443
+      net_opt: 0.0714
+      exceed_median: 0.185
+      a1_share: 0.625
+      c1_share: 0.25
+      c3_share: 0.25
+      contained: 2
+      acceptance:
+        n_cells: 8
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.25
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 36
+      err_iqr: 0.7101
+      net_opt: 0.0447
+      exceed_median: 0.1
+      a1_share: 0.5
+      c1_share: 0.0833
+      contained: 3
+      acceptance:
+        n_cells: 36
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0833
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 36
+      err_iqr: 0.6905
+      net_opt: 0.0447
+      exceed_median: 0.1
+      a1_share: 0.5
+      c1_share: 0.0833
+      contained: 3
+      acceptance:
+        n_cells: 36
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0833
+        accepted: false
+    2r_l3:
+      verdict: promising
+      regime: all
+      n_cells: 14
+      err_iqr: 0.2844
+      net_opt: 0.0204
+      exceed_median: 0.235
+      a1_share: 0.7143
+      c1_share: 0.2143
+      contained: 3
+      acceptance:
+        n_cells: 14
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2143
+        accepted: true
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 38
+      err_iqr: 0.7421
+      net_opt: 0.0447
+      exceed_median: 0.055
+      a1_share: 0.3684
+      c1_share: 0.1842
+      contained: 7
+      acceptance:
+        n_cells: 38
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.1842
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 38
+      err_iqr: 0.8054
+      net_opt: 0.0394
+      exceed_median: 0.06
+      a1_share: 0.4474
+      c1_share: 0.1316
+      contained: 5
+      acceptance:
+        n_cells: 38
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.1316
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 38
+      err_iqr: 0.8305
+      net_opt: 0.0331
+      exceed_median: 0.05
+      a1_share: 0.4211
+      c1_share: 0.0263
+      contained: 1
+      acceptance:
+        n_cells: 38
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.0263
+        accepted: false
+  riparian:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 16
+      err_iqr: 0.8291
+      net_opt: 0.044
+      exceed_median: 0.245
+      a1_share: 0.5625
+      c1_share: 0.375
+      c3_share: 0.25
+      contained: 6
+      acceptance:
+        n_cells: 16
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.375
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 72
+      err_iqr: 0.2924
+      net_opt: 0.1127
+      exceed_median: 0.175
+      a1_share: 0.625
+      c1_share: 0.5
+      contained: 36
+      acceptance:
+        n_cells: 72
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.5
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 72
+      err_iqr: 0.2862
+      net_opt: 0.1034
+      exceed_median: 0.17
+      a1_share: 0.6111
+      c1_share: 0.4722
+      contained: 34
+      acceptance:
+        n_cells: 72
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4722
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 27
+      err_iqr: 0.3203
+      net_opt: 0.0745
+      exceed_median: 0.14
+      a1_share: 0.5556
+      c1_share: 0.3704
+      contained: 10
+      acceptance:
+        n_cells: 27
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3704
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 76
+      err_iqr: 0.2637
+      net_opt: 0.115
+      exceed_median: 0.19
+      a1_share: 0.6579
+      c1_share: 0.4737
+      contained: 36
+      acceptance:
+        n_cells: 76
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.4737
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 76
+      err_iqr: 0.308
+      net_opt: 0.0683
+      exceed_median: 0.225
+      a1_share: 0.6316
+      c1_share: 0.3947
+      contained: 30
+      acceptance:
+        n_cells: 76
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3947
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 76
+      err_iqr: 0.3286
+      net_opt: 0.1502
+      exceed_median: 0.145
+      a1_share: 0.5921
+      c1_share: 0.3553
+      contained: 27
+      acceptance:
+        n_cells: 76
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3553
+        accepted: false
+  substrate:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 16
+      err_iqr: 0.5342
+      net_opt: -0.2027
+      exceed_median: 0.16
+      a1_share: 0.75
+      c1_share: 0.4375
+      c3_share: 0.25
+      contained: 7
+      acceptance:
+        n_cells: 16
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4375
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 72
+      err_iqr: 0.4464
+      net_opt: 0.0227
+      exceed_median: 0.125
+      a1_share: 0.5972
+      c1_share: 0.2778
+      contained: 20
+      acceptance:
+        n_cells: 72
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.2778
+        accepted: false
+    2r_l2:
+      verdict: promising
+      regime: all
+      n_cells: 72
+      err_iqr: 0.3104
+      net_opt: 0.0
+      exceed_median: 0.205
+      a1_share: 0.7083
+      c1_share: 0.4028
+      contained: 29
+      acceptance:
+        n_cells: 72
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4028
+        accepted: true
+    2r_l3:
+      verdict: promising
+      regime: all
+      n_cells: 28
+      err_iqr: 0.2303
+      net_opt: 0.0319
+      exceed_median: 0.245
+      a1_share: 0.6786
+      c1_share: 0.4643
+      contained: 13
+      acceptance:
+        n_cells: 28
+        classification_error: true
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.4643
+        accepted: true
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 76
+      err_iqr: 0.348
+      net_opt: 0.0542
+      exceed_median: 0.19
+      a1_share: 0.6316
+      c1_share: 0.3816
+      contained: 29
+      acceptance:
+        n_cells: 76
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3816
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 76
+      err_iqr: 0.6582
+      net_opt: 0.0656
+      exceed_median: 0.135
+      a1_share: 0.5526
+      c1_share: 0.1579
+      contained: 12
+      acceptance:
+        n_cells: 76
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1579
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 76
+      err_iqr: 0.5599
+      net_opt: 0.0537
+      exceed_median: 0.15
+      a1_share: 0.5658
+      c1_share: 0.1974
+      contained: 15
+      acceptance:
+        n_cells: 76
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.1974
+        accepted: false
+  water_chemistry:
+    1B_mixed_local:
+      verdict: unsupported by data coverage
+      regime: E
+      n_cells: 24
+      err_iqr: 0.5679
+      net_opt: 0.0145
+      exceed_median: 0.07
+      a1_share: 0.4167
+      c1_share: 0.375
+      c3_share: 0.2917
+      contained: 9
+      acceptance:
+        n_cells: 24
+        classification_error: false
+        directional_bias: true
+        anchor_recovery_diagnostic: 0.375
+        coverage: false
+        accepted: false
+    2r_l1:
+      verdict: unsupported
+      regime: all
+      n_cells: 108
+      err_iqr: 0.4039
+      net_opt: 0.106
+      exceed_median: 0.13
+      a1_share: 0.537
+      c1_share: 0.287
+      contained: 31
+      acceptance:
+        n_cells: 108
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.287
+        accepted: false
+    2r_l2:
+      verdict: unsupported
+      regime: all
+      n_cells: 102
+      err_iqr: 0.3755
+      net_opt: 0.0668
+      exceed_median: 0.14
+      a1_share: 0.5588
+      c1_share: 0.3627
+      contained: 37
+      acceptance:
+        n_cells: 102
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.3627
+        accepted: false
+    2r_l3:
+      verdict: unsupported
+      regime: all
+      n_cells: 42
+      err_iqr: 0.5326
+      net_opt: 0.2243
+      exceed_median: 0.08
+      a1_share: 0.4762
+      c1_share: 0.2857
+      contained: 12
+      acceptance:
+        n_cells: 42
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2857
+        accepted: false
+    2r_nars9:
+      verdict: unsupported
+      regime: all
+      n_cells: 114
+      err_iqr: 0.4397
+      net_opt: 0.1127
+      exceed_median: 0.09
+      a1_share: 0.4825
+      c1_share: 0.2456
+      contained: 28
+      acceptance:
+        n_cells: 114
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2456
+        accepted: false
+    3a_envelope:
+      verdict: unsupported
+      regime: all
+      n_cells: 114
+      err_iqr: 0.4333
+      net_opt: 0.0605
+      exceed_median: 0.125
+      a1_share: 0.5175
+      c1_share: 0.2105
+      contained: 24
+      acceptance:
+        n_cells: 114
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2105
+        accepted: false
+    3b_adjusted:
+      verdict: unsupported by data coverage
+      regime: all
+      n_cells: 114
+      err_iqr: 0.505
+      net_opt: 0.1058
+      exceed_median: 0.085
+      a1_share: 0.4737
+      c1_share: 0.2719
+      c3_share: 0.6316
+      contained: 31
+      acceptance:
+        n_cells: 114
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2719
+        coverage: false
+        accepted: false
+    3c_matched:
+      verdict: unsupported
+      regime: all
+      n_cells: 114
+      err_iqr: 0.3845
+      net_opt: 0.0628
+      exceed_median: 0.08
+      a1_share: 0.4737
+      c1_share: 0.2632
+      contained: 30
+      acceptance:
+        n_cells: 114
+        classification_error: false
+        directional_bias: false
+        anchor_recovery_diagnostic: 0.2632
+        accepted: false

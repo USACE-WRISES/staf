@@ -30,6 +30,7 @@ Pure: catalog and frame in, records out. No network, no file writes.
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
@@ -41,47 +42,108 @@ from . import reference_pool as rp
 #: NRSA reports nutrients in mg/L. chem_PTL is stored in ug/L, chem_NTL in mg N/L.
 MG_TO_UG = 1000.0
 
-#: What each candidate benchmark is, stated once so PB-1 to PB-4 are checked
-#: against a declaration rather than against a guess at call time.
-#:
-#: ``fraction`` is the discriminating field: NRSA Table 7-1 is written for the
-#: TOTAL fraction of both nutrients, so it matches ``chem_NTL`` and ``chem_PTL``
-#: and does not match ``chem_NTL_DISS``, whatever their names suggest.
+#: The verified catalog (REF-14, methodology 0.14). Every criterion a build may
+#: score against is declared there with the fields PB-1 to PB-5 read, so the
+#: conditions are checked against a declaration rather than against a guess at
+#: call time. The build looks the catalog up and never searches: nothing is
+#: fetched at build time, and a metric with no entry is a recorded gap.
+CATALOG_PATH_NAME = "published_benchmarks.yaml"
 CATALOG_METHOD = "regional-nutrient-condition"
-REGISTRY: dict[str, dict] = {
-    "chem_PTL": {
-        "input_key": "tp", "analyte": "total phosphorus", "fraction": "total",
-        "benchmark_units": "mg/L", "metric_units": "ug/L", "unit_factor": MG_TO_UG,
-        "resolution": 0.1, "region_key": "nars9", "purpose": "condition-assessment",
-    },
-    "chem_NTL": {
-        "input_key": "tn", "analyte": "total nitrogen", "fraction": "total",
-        "benchmark_units": "mg/L", "metric_units": "mg N/L", "unit_factor": 1.0,
-        "resolution": 0.001, "region_key": "nars9", "purpose": "condition-assessment",
-    },
-}
 
-#: What a refusal says for a metric no published criterion covers at all.
-NO_CRITERION = "The published criteria STAF draws on include none for this metric."
 
-#: Metrics a reader might expect to find here and the reason they are not.
-#: Recorded so a negative is a finding rather than an omission. Each string is
-#: read on a DEEP card, so it names no code, file or constant.
-REFUSED: dict[str, str] = {
-    "chem_NTL_DISS": ("NRSA Table 7-1 is written for total nitrogen. Dissolved nitrogen is a "
-                      "different fraction, so the criterion does not measure it and no conversion would "
-                      "be defensible."),
-    "chem_COND": ("The published criteria STAF draws on include no regional criterion for "
-                  "conductivity."),
-    "chem_PH": "The published criteria STAF draws on include no regional criterion for pH.",
-    "chem_TURB": ("The published criteria STAF draws on include no regional criterion for "
-                  "turbidity."),
-    "fish_NAT_TOTLNTAX": ("Every published biological criterion in the STAF assessment library "
-                          "is scored on a state-specific field index (Michigan Procedure 51, "
-                          "the Carolina IBI scores, the Wisconsin and Minnesota IBIs), none of "
-                          "which can be computed from NRSA data, so none measures the same "
-                          "quantity as this metric."),
-}
+def catalog_path() -> Path:
+    from .paths import CONFIG_DIR
+    return CONFIG_DIR / CATALOG_PATH_NAME
+
+
+@lru_cache(maxsize=4)
+def _load_catalog(path_text: str) -> dict:
+    from .config import read_yaml
+    doc = read_yaml(Path(path_text)) or {}
+    return {"version": doc.get("version"), "precedence": list(doc.get("precedence") or []),
+            "geography_rank": dict(doc.get("geography_rank") or
+                                   {"l3": 0, "nars9": 1, "national": 2}),
+            "entries": [dict(e) for e in doc.get("entries") or []],
+            "refusals": [dict(r) for r in doc.get("refusals") or []],
+            "no_entry": str(doc.get("no_entry") or
+                            "The published criteria STAF draws on include none for this metric.")}
+
+
+def load_catalog(path: Optional[Path] = None) -> dict:
+    """The verified catalog, as declared in config."""
+    return _load_catalog(str(path or catalog_path()))
+
+
+def catalog_sha256(path: Optional[Path] = None) -> str:
+    import hashlib
+    return "sha256:" + hashlib.sha256(Path(path or catalog_path()).read_bytes()).hexdigest()
+
+
+def _spec(entry: dict) -> dict:
+    """One catalog entry in the shape the fitness conditions read."""
+    units = entry.get("units") or {}
+    src = entry.get("thresholds_source") or {}
+    return {"id": entry.get("id"), "input_key": src.get("input"),
+            "method": src.get("method") or CATALOG_METHOD,
+            "analyte": entry.get("analyte"), "fraction": entry.get("fraction"),
+            "benchmark_units": units.get("benchmark"), "metric_units": units.get("metric"),
+            "unit_factor": float(units.get("factor") or 1.0),
+            "resolution": float(entry.get("resolution") or 0.001),
+            "region_key": (entry.get("geography") or {}).get("kind") or "nars9",
+            "purpose": entry.get("purpose"), "edition": str(entry.get("edition") or ""),
+            "thresholds": dict(entry.get("thresholds") or {}),
+            "sampling": entry.get("sampling"), "stream_types": entry.get("stream_types")}
+
+
+def entries_for(metric: str) -> list[dict]:
+    """Every catalog entry declared for exactly this metric (PB-1: the metric code
+    carries its fraction, so an exact code match is an exact metric and fraction)."""
+    return [_spec(e) for e in load_catalog()["entries"] if str(e.get("metric")) == metric]
+
+
+def lookup(metric: str, *, target_l3: Optional[str] = None,
+           region: Optional[str] = None) -> Optional[dict]:
+    """The entry that serves ``metric`` at a target, by the catalog's precedence:
+    the exact metric and fraction, then the most specific geography that covers
+    the target, then the newest edition. None when the catalog holds none."""
+    cands = entries_for(metric)
+    if not cands:
+        return None
+    rank = load_catalog()["geography_rank"]
+
+    def covers(spec: dict) -> bool:
+        kind = spec["region_key"]
+        if kind == "national":
+            return True
+        if kind == "l3":
+            return target_l3 is not None and str(target_l3) in spec["thresholds"]
+        return region is None or str(region) in spec["thresholds"]
+
+    usable = [s for s in cands if covers(s)] or cands
+    usable.sort(key=lambda s: (int(rank.get(s["region_key"], 9)), s["edition"]), reverse=False)
+    best_rank = int(rank.get(usable[0]["region_key"], 9))
+    tier = [s for s in usable if int(rank.get(s["region_key"], 9)) == best_rank]
+    return max(tier, key=lambda s: s["edition"])
+
+
+#: Kept as names because the report and the tests read them. Built from the catalog.
+REGISTRY: dict[str, dict] = {}
+for _e in load_catalog()["entries"]:
+    REGISTRY.setdefault(str(_e.get("metric")), _spec(_e))
+NO_CRITERION = load_catalog()["no_entry"]
+
+
+def _refusals() -> list[dict]:
+    return load_catalog()["refusals"]
+
+
+#: A refusal that holds wherever the metric is assessed, by metric.
+REFUSED: dict[str, str] = {}
+for _r in _refusals():
+    if _r.get("applies_where"):
+        continue
+    for _m in _r.get("metrics") or []:
+        REFUSED.setdefault(str(_m), " ".join(str(_r.get("why") or "").split()))
 
 #: Why Ohio EPA's ecoregional biocriteria, the nearest thing to a Population
 #: support criterion for the Eastern Corn Belt Plains, are not admissible.
@@ -111,29 +173,31 @@ OHIO_BIOCRITERIA = {
                   "contains about half of it."),
     "verdict": "unsuitable",
 }
-REFUSED["fish_NAT_NTOLNTAX"] = REFUSED["fish_NAT_TOTLNTAX"]
-REFUSED["bent_TOTLNTAX"] = REFUSED["fish_NAT_TOTLNTAX"]
 
+_OHIO = next((r for r in _refusals() if r.get("id") == "ohio-epa-biocriteria"), {})
 #: The Ohio finding as one self-contained passage for a withheld metric's card.
 #: The check was made for the Eastern Corn Belt Plains and its geography ground
-#: (half the stations in Indiana) is true only there, so it is appended for that
-#: ecoregion alone: in the Interior Plateau it would state a false fact.
-OHIO_FINDING = ("Ohio EPA's ecoregional biocriteria, the nearest published criterion for this "
-                "ecoregion, were checked on 2026-09-21 and are not usable either. They set "
-                "thresholds on composite indices rather than on taxa richness, those indices "
-                "are computed under Ohio's own field protocol and are not carried by the NRSA "
-                "archive, and they are Ohio water quality standards while half this "
-                "ecoregion's stations lie in Indiana.")
-OHIO_FINDING_TARGETS = frozenset({"55"})
-BIOLOGICAL_REFUSALS = frozenset({"fish_NAT_TOTLNTAX", "fish_NAT_NTOLNTAX", "bent_TOTLNTAX"})
+#: (half the stations in Indiana) is true only there, so the catalog limits it to
+#: that ecoregion: in the Interior Plateau it would state a false fact.
+OHIO_FINDING = " ".join(str(_OHIO.get("why") or "").split())
+OHIO_FINDING_TARGETS = frozenset(str(x) for x in ((_OHIO.get("applies_where") or {})
+                                                  .get("l3") or []))
+BIOLOGICAL_REFUSALS = frozenset(str(m) for m in _OHIO.get("metrics") or [])
 
 
 def refusal(metric: str, target_l3: Optional[str] = None) -> str:
-    """Why no published criterion serves ``metric`` in ``target_l3``, in words."""
-    why = REFUSED.get(metric, NO_CRITERION)
-    if metric in BIOLOGICAL_REFUSALS and str(target_l3) in OHIO_FINDING_TARGETS:
-        why += " " + OHIO_FINDING
-    return why
+    """Why no published criterion serves ``metric`` in ``target_l3``, in words: the
+    catalog's refusals that hold there, or its no-entry sentence."""
+    parts: list[str] = []
+    for r in _refusals():
+        if metric not in [str(m) for m in r.get("metrics") or []]:
+            continue
+        where = r.get("applies_where") or {}
+        if where and str(target_l3) not in {str(x) for x in where.get("l3") or []}:
+            continue
+        parts.append(" ".join(str(r.get("why") or "").split()))
+    return " ".join(parts) if parts else NO_CRITERION
+
 
 PB_CONDITIONS = ("PB-1", "PB-2", "PB-3", "PB-4", "PB-5")
 
@@ -148,7 +212,7 @@ def _input_of(metric: str) -> Optional[dict]:
     spec = REGISTRY.get(metric)
     if not spec:
         return None
-    method = fc._method(_catalog(), CATALOG_METHOD)
+    method = fc._method(_catalog(), spec.get("method") or CATALOG_METHOD)
     return next((i for i in method.get("inputs") or []
                  if i.get("key") == spec["input_key"]), None)
 

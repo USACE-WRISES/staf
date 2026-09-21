@@ -69,7 +69,8 @@ STATEMENTS = {
                "national pool, because this ecoregion and its parents hold too few of their own."),
     MODELED: ("Reference curve from a modeled expectation. The response to landscape pressure "
               "is estimated nationally and this ecoregion's own level is added, because the "
-              "ecoregion holds no stream clean enough to observe reference condition directly."),
+              "ecoregion holds too few streams clean enough to observe reference condition "
+              "directly."),
     PUBLISHED: ("Scored against a published criterion rather than against stations from this "
                 "ecoregion. The criterion carries its own definition of reference, which need "
                 "not match this assessment's."),

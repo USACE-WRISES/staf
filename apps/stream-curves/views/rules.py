@@ -41,9 +41,10 @@ from views.uihelpers import guard
 #: badges because they change what the rule means.
 _STATUS_DOT = {"approved": "rules-dot-approved", "calibrated": "rules-dot-calibrated"}
 _IMPL_BADGE = {"partial": "text-bg-warning",
-               "not_yet_implemented": "text-bg-danger"}
+               "not_yet_implemented": "text-bg-danger",
+               "superseded": "text-bg-secondary"}
 _IMPL_LABEL = {"implemented": "implemented", "partial": "partial",
-               "not_yet_implemented": "not implemented"}
+               "not_yet_implemented": "not implemented", "superseded": "superseded"}
 
 #: Reviewer-facing labels for the opt-in checkboxes (id -> (label, detail)).
 _OPTIONAL_COPY = {pid: (label, detail) for pid, label, detail in rb.OPTIONAL_POLICIES}

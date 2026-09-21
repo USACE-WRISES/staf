@@ -116,6 +116,9 @@ def modeled_population(metric: str, *, frame: pd.DataFrame, values: pd.Series,
         "metric": metric, "l3": code, "spec": spec, "transform": kind,
         "n_train": 0, "n_local_train": int((l3 == code).sum() and len(
             region[~region["pass_strict"].astype(bool)])),
+        # the ecoregion's own reference stations, so the note never says there are
+        # none when a few pass the screen and no pool built on them was accepted
+        "n_strict_target": int(region["pass_strict"].astype(bool).sum()) if len(region) else 0,
         "n_target": int(len(region)), "blup": None, "values": None, "anchors": None,
         "interval": None, "extrapolation_ok": None, "gap": {},
     }
@@ -199,7 +202,15 @@ def pool_decision(metric: str, population: dict, *, family: Optional[str] = None
     blup = population.get("blup")
     level = ("" if blup is None else
              f" This ecoregion's own level was estimated from {n_local:,} of its stations.")
-    note = (f"No stream in this ecoregion is clean enough to observe reference condition. The "
+    n_strict = int(population.get("n_strict_target") or 0)
+    if n_strict:
+        opener = (f"Only {n_strict} of this ecoregion's stations "
+                  f"{'passes' if n_strict == 1 else 'pass'} the reference screen, too few to "
+                  f"observe reference condition, and no station pool passed the acceptance "
+                  f"criteria.")
+    else:
+        opener = "No stream in this ecoregion is clean enough to observe reference condition."
+    note = (f"{opener} The "
             f"response to landscape pressure was fitted across {n_train:,} stations nationally "
             f"and evaluated at the median pressure of the national reference streams."
             f"{level}{reach}")

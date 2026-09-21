@@ -42,7 +42,7 @@ POLICY_PATH = CONFIG_DIR / "methodology" / "standing_decisions.yaml"
 PENDING_SUFFIX = "(pending owner confirmation)"
 ALLOWED_ACTIONS = ("accept", "accept_with_conditions", "modify", "reject",
                    "request_additional_analysis")
-SIDE_EFFECTS = ("portfolio_approval", "finalize_metric")
+SIDE_EFFECTS = ("portfolio_approval", "finalize_metric", "coverage_exception")
 _OPS = ("eq", "ne", "lt", "lte", "gt", "gte", "in")
 
 
@@ -141,6 +141,9 @@ def _sample_evidence() -> dict:
             "metrics", "max_within_function_abs_spearman", "reference_tier", "n_retained",
             "curve_status", "domain_violations", "structure_stability", "shape_stability",
             "spearman", "equals_default_portfolio",
+            # COV-01 (v0.14): a function no source supports
+            "function_id", "candidates", "candidates_text", "n_candidates",
+            "blockers_documented",
             # REF-05 (v0.12): a borrowed reference pool
             "transfer_risk", "n_usable", "n_local", "self_coverage", "level", "level_label",
             "region_code", "region_name")
@@ -395,12 +398,15 @@ class PolicyResult:
     remove_metrics: dict[str, str] = field(default_factory=dict)
     portfolio_approvals: list[dict] = field(default_factory=list)
     applied_ids: list[str] = field(default_factory=list)
+    #: COV-01 (v0.14): documented-gap exceptions, recorded pending owner confirmation
+    coverage_exceptions: list[dict] = field(default_factory=list)
 
     def as_dict(self) -> dict:
         return {"decisions": self.decisions, "uncovered": self.uncovered,
                 "hard_stops": self.hard_stops, "finalize_metrics": self.finalize_metrics,
                 "remove_metrics": self.remove_metrics,
                 "portfolio_approvals": self.portfolio_approvals,
+                "coverage_exceptions": self.coverage_exceptions,
                 "applied_ids": self.applied_ids}
 
 
@@ -479,7 +485,29 @@ def apply_policy(doc: dict, policy: dict, *, bundle: Optional[dict] = None,
                 "approvedBy": pending_reviewer(eid, policy),
                 "note": f"standing decision {eid} (policy {version}): {rationale}",
             })
+        elif effect == "coverage_exception":
+            out.coverage_exceptions.append(
+                _coverage_exception(str(item.get("subject")), result,
+                                    recorded_by=pending_reviewer(eid, policy),
+                                    fallback=rationale))
     return out
+
+
+def _coverage_exception(function_id: str, result: Optional[dict], *, recorded_by: str,
+                        fallback: str) -> dict:
+    """The documented-gap exception COV-01 records for one function: the
+    workflow's own justification, naming each source's blocker, under the
+    pending reviewer the owner confirms at promote."""
+    from . import methodology as _m
+    from . import pressure_evidence as pe
+    drafts = {d["functionId"]: d for d in
+              (pe.coverage_exceptions_draft(result, recorded_by=recorded_by) if result else [])}
+    got = drafts.get(function_id) or {
+        "functionId": function_id,
+        "reason": _m.threshold("coverage.documented_gap_reason",
+                               "insufficient-reference-support"),
+        "justification": fallback, "recordedBy": recorded_by, "recordedAt": None}
+    return {**got, "recordedBy": recorded_by, "policyEntry": "cov01-documented-gap"}
 
 
 def confirm_decisions(decisions: list[dict], *, reviewer: str, date: str) -> list[dict]:

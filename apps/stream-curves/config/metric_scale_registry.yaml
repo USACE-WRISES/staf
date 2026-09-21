@@ -17,7 +17,7 @@ analysis_version: scale-1
 decided_on: '2026-09-21'
 inputs: {dataset: multi-cycle-v1, referenceFrame: wadeable, screen: 'least-disturbed-v1 (strict), wadeable
     non-canal frame', stationScreenSha256: d9954342f71a959da8d3c7ac74fd0fbb3620dae34f987cdd051cd42f0befefdc,
-  valuePolicy: latest_non_null_index_visit, nInFrame: 3267, nReference: 770, nBoot: 200, seed: 7, methodologyVersion: 0.13-provisional}
+  valuePolicy: latest_non_null_index_visit, nInFrame: 3267, nReference: 770, nBoot: 200, seed: 7, methodologyVersion: 0.14-provisional}
 rule: {eta2: rank_adjusted, level_ratio: 0.8, national_floor: 0.02, tie: 0.02, split_incremental_min: 0.05,
   stratum_min_n: 15, flip_accept: 0.1, flip_exploratory: 0.2, min_group: 5, min_reference_n: 50, yardstick_max_auc_loss: 0.02}
 stratifiers:
@@ -90,56 +90,47 @@ metrics:
     family: biology
   bent_TOLRPIND:
     status: decided
-    n_reference: 293
-    supported_level: l2
+    n_reference: 768
+    supported_level: l3
     split: null
     eta2:
-      l3: {raw: 0.2267, adj: 0.1577, k: 19, n: 221, p: 7.9e-05}
-      l2: {raw: 0.1874, adj: 0.155, k: 12, n: 288, p: 0.0}
-      l1: {raw: 0.0588, adj: 0.0388, k: 7, n: 290, p: 0.009326}
-      nars9: {raw: 0.1501, adj: 0.1293, k: 8, n: 293, p: 0.0}
+      l3: {raw: 0.2693, adj: 0.2266, k: 40, n: 708, p: 0.0}
+      l2: {raw: 0.1507, adj: 0.1371, k: 13, n: 760, p: 0.0}
+      l1: {raw: 0.0609, adj: 0.0522, k: 8, n: 766, p: 0.0}
+      nars9: {raw: 0.0983, adj: 0.09, k: 8, n: 765, p: 0.0}
     incremental:
       NhdSlopeClass:
-        increment: 0.0657
-        combined: 0.2207
-        n_by_class: {ge_2: 143, 0.5_to_2: 82, lt_0.5: 68}
+        increment: 0.0488
+        combined: 0.2755
+        n_by_class: {ge_2: 346, 0.5_to_2: 223, lt_0.5: 199}
       NhdDrainageAreaClass:
-        increment: 0.0049
-        combined: 0.1599
-        n_by_class: {10_to_100: 136, le_10: 81, gt_100: 76}
-    split_evaluated: NhdSlopeClass
-    stability:
-      worst_flip_mean: 0.0924
-      verdict: accept
-      by_class:
-        0.5_to_2: {flip_mean: 0.0828, flip_p90: 0.1938, n_boot_valid: 200, n_eval: 243, verdict: not_evaluable}
-        ge_2: {flip_mean: 0.0393, flip_p90: 0.0985, n_boot_valid: 200, n_eval: 203, verdict: not_evaluable}
-        lt_0.5: {flip_mean: 0.0924, flip_p90: 0.1738, n_boot_valid: 200, n_eval: 852, verdict: not_evaluable}
-    yardstick: {auc_unsplit: 0.6882, auc_split: 0.659, verdict: split_lowers_agreement}
-    decision_basis: Level III adjusted eta-squared 0.1577; supported level l2. NhdSlopeClass adds 0.0657
-      but was not adopted (stability accept, yardstick lower).
+        increment: 0.0014
+        combined: 0.228
+        n_by_class: {10_to_100: 346, le_10: 214, gt_100: 208}
+    decision_basis: Level III adjusted eta-squared 0.2266; supported level l3. No class split adds the
+      required 0.05 with two classes of 15 or more.
     display_name: Tolerant individuals (%) ~ HBI
     family: biology
   bent_TOTLNTAX:
     status: decided
-    n_reference: 293
+    n_reference: 768
     supported_level: l3
     split: null
     eta2:
-      l3: {raw: 0.3946, adj: 0.3407, k: 19, n: 221, p: 0.0}
-      l2: {raw: 0.1755, adj: 0.1426, k: 12, n: 288, p: 1.0e-06}
-      l1: {raw: 0.1114, adj: 0.0925, k: 7, n: 290, p: 1.5e-05}
-      nars9: {raw: 0.1542, adj: 0.1334, k: 8, n: 293, p: 0.0}
+      l3: {raw: 0.2738, adj: 0.2314, k: 40, n: 708, p: 0.0}
+      l2: {raw: 0.1318, adj: 0.1178, k: 13, n: 760, p: 0.0}
+      l1: {raw: 0.0908, adj: 0.0824, k: 8, n: 766, p: 0.0}
+      nars9: {raw: 0.1031, adj: 0.0948, k: 8, n: 765, p: 0.0}
     incremental:
       NhdSlopeClass:
-        increment: -0.0196
-        combined: 0.3211
-        n_by_class: {ge_2: 143, 0.5_to_2: 82, lt_0.5: 68}
+        increment: 0.0159
+        combined: 0.2473
+        n_by_class: {ge_2: 346, 0.5_to_2: 223, lt_0.5: 199}
       NhdDrainageAreaClass:
-        increment: -0.0887
-        combined: 0.252
-        n_by_class: {10_to_100: 136, le_10: 81, gt_100: 76}
-    decision_basis: Level III adjusted eta-squared 0.3407; supported level l3. No class split adds the
+        increment: 0.0089
+        combined: 0.2403
+        n_by_class: {10_to_100: 346, le_10: 214, gt_100: 208}
+    decision_basis: Level III adjusted eta-squared 0.2314; supported level l3. No class split adds the
       required 0.05 with two classes of 15 or more.
     display_name: Benthic total taxa richness
     family: biology
@@ -168,25 +159,34 @@ metrics:
     family: hydrology
   chem_CHLA:
     status: decided
-    n_reference: 765
+    n_reference: 764
     supported_level: l3
     split: null
     eta2:
-      l3: {raw: 0.2504, adj: 0.2066, k: 40, n: 707, p: 0.0}
-      l2: {raw: 0.1676, adj: 0.1542, k: 13, n: 757, p: 0.0}
-      l1: {raw: 0.1217, adj: 0.1135, k: 8, n: 763, p: 0.0}
-      nars9: {raw: 0.1472, adj: 0.1393, k: 8, n: 762, p: 0.0}
+      l3: {raw: 0.3177, adj: 0.2777, k: 40, n: 706, p: 0.0}
+      l2: {raw: 0.2123, adj: 0.1996, k: 13, n: 756, p: 0.0}
+      l1: {raw: 0.1427, adj: 0.1347, k: 8, n: 762, p: 0.0}
+      nars9: {raw: 0.1963, adj: 0.1888, k: 8, n: 761, p: 0.0}
     incremental:
       NhdSlopeClass:
-        increment: 0.037
-        combined: 0.2436
-        n_by_class: {ge_2: 344, 0.5_to_2: 223, lt_0.5: 198}
+        increment: 0.0677
+        combined: 0.3455
+        n_by_class: {ge_2: 343, 0.5_to_2: 223, lt_0.5: 198}
       NhdDrainageAreaClass:
-        increment: 0.0062
-        combined: 0.2128
-        n_by_class: {10_to_100: 344, le_10: 213, gt_100: 208}
-    decision_basis: Level III adjusted eta-squared 0.2066; supported level l3. No class split adds the
-      required 0.05 with two classes of 15 or more.
+        increment: 0.0048
+        combined: 0.2826
+        n_by_class: {10_to_100: 343, le_10: 213, gt_100: 208}
+    split_evaluated: NhdSlopeClass
+    stability:
+      worst_flip_mean: 0.0583
+      verdict: accept
+      by_class:
+        0.5_to_2: {flip_mean: 0.0583, flip_p90: 0.1307, n_boot_valid: 200, n_eval: 681, verdict: not_evaluable}
+        ge_2: {flip_mean: 0.0365, flip_p90: 0.069, n_boot_valid: 200, n_eval: 481, verdict: not_evaluable}
+        lt_0.5: {flip_mean: 0.0432, flip_p90: 0.092, n_boot_valid: 200, n_eval: 2010, verdict: not_evaluable}
+    yardstick: {auc_unsplit: 0.6701, auc_split: 0.6492, verdict: split_lowers_agreement}
+    decision_basis: Level III adjusted eta-squared 0.2777; supported level l3. NhdSlopeClass adds 0.0677
+      but was not adopted (stability accept, yardstick lower).
     display_name: Chlorophyll a
     family: water_chemistry
   chem_COND:
@@ -304,37 +304,169 @@ metrics:
       required 0.05 with two classes of 15 or more.
     display_name: Turbidity
     family: water_chemistry
-  fish_NAT_TOTLNTAX:
+  fish_NAT_LITHPIND:
     status: decided
-    n_reference: 613
+    n_reference: 612
+    supported_level: l3
+    split: NhdSlopeClass
+    eta2:
+      l3: {raw: 0.1758, adj: 0.1211, k: 35, n: 547, p: 0.0}
+      l2: {raw: 0.1088, adj: 0.0922, k: 12, n: 602, p: 0.0}
+      l1: {raw: 0.0524, adj: 0.043, k: 7, n: 608, p: 1.8e-05}
+      nars9: {raw: 0.0668, adj: 0.0559, k: 8, n: 609, p: 1.0e-06}
+    incremental:
+      NhdSlopeClass:
+        increment: 0.0809
+        combined: 0.202
+        n_by_class: {ge_2: 272, 0.5_to_2: 182, lt_0.5: 158}
+      NhdDrainageAreaClass:
+        increment: 0.0443
+        combined: 0.1654
+        n_by_class: {10_to_100: 300, le_10: 163, gt_100: 149}
+    split_evaluated: NhdSlopeClass
+    stability:
+      worst_flip_mean: 0.0529
+      verdict: accept
+      by_class:
+        0.5_to_2: {flip_mean: 0.0367, flip_p90: 0.039, n_boot_valid: 200, n_eval: 590, verdict: not_evaluable}
+        ge_2: {flip_mean: 0.0001, flip_p90: 0.0, n_boot_valid: 200, n_eval: 385, verdict: not_evaluable}
+        lt_0.5: {flip_mean: 0.0529, flip_p90: 0.1099, n_boot_valid: 200, n_eval: 1750, verdict: not_evaluable}
+    yardstick: {auc_unsplit: 0.5519, auc_split: 0.5506, verdict: ok}
+    split_status: accept
+    decision_basis: Level III adjusted eta-squared 0.1211; supported level l3. NhdSlopeClass adds 0.0809
+      of adjusted eta-squared, resampling flip rate 0.0529 (accept).
+    display_name: Simple lithophil fish individuals
+    family: biology
+  fish_NAT_NTOLNTAX:
+    status: decided
+    n_reference: 612
+    supported_level: l3
+    split: NhdSlopeClass
+    eta2:
+      l3: {raw: 0.4323, adj: 0.3946, k: 35, n: 547, p: 0.0}
+      l2: {raw: 0.3189, adj: 0.3063, k: 12, n: 602, p: 0.0}
+      l1: {raw: 0.2803, adj: 0.2731, k: 7, n: 608, p: 0.0}
+      nars9: {raw: 0.2704, adj: 0.2619, k: 8, n: 609, p: 0.0}
+    incremental:
+      NhdSlopeClass:
+        increment: 0.1588
+        combined: 0.5534
+        n_by_class: {ge_2: 272, 0.5_to_2: 182, lt_0.5: 158}
+      NhdDrainageAreaClass:
+        increment: 0.0823
+        combined: 0.4769
+        n_by_class: {10_to_100: 300, le_10: 163, gt_100: 149}
+    split_evaluated: NhdSlopeClass
+    stability:
+      worst_flip_mean: 0.154
+      verdict: exploratory
+      by_class:
+        0.5_to_2: {flip_mean: 0.0182, flip_p90: 0.1254, n_boot_valid: 200, n_eval: 590, verdict: not_evaluable}
+        ge_2: {flip_mean: 0.154, flip_p90: 0.2961, n_boot_valid: 200, n_eval: 385, verdict: not_evaluable}
+        lt_0.5: {flip_mean: 0.0274, flip_p90: 0.0869, n_boot_valid: 200, n_eval: 1750, verdict: not_evaluable}
+    yardstick: {auc_unsplit: 0.5098, auc_split: 0.5287, verdict: ok}
+    split_status: exploratory
+    decision_basis: Level III adjusted eta-squared 0.3946; supported level l3. NhdSlopeClass adds 0.1588
+      of adjusted eta-squared, resampling flip rate 0.154 (exploratory).
+    display_name: Native non-tolerant fish taxa richness
+    family: biology
+  fish_NAT_NTOLPTAX:
+    status: decided
+    n_reference: 612
+    supported_level: l3
+    split: NhdDrainageAreaClass
+    eta2:
+      l3: {raw: 0.1716, adj: 0.1166, k: 35, n: 547, p: 0.0}
+      l2: {raw: 0.0868, adj: 0.0697, k: 12, n: 602, p: 0.0}
+      l1: {raw: 0.0466, adj: 0.0371, k: 7, n: 608, p: 8.3e-05}
+      nars9: {raw: 0.0454, adj: 0.0343, k: 8, n: 609, p: 0.000261}
+    incremental:
+      NhdSlopeClass:
+        increment: 0.0743
+        combined: 0.1909
+        n_by_class: {ge_2: 272, 0.5_to_2: 182, lt_0.5: 158}
+      NhdDrainageAreaClass:
+        increment: 0.091
+        combined: 0.2075
+        n_by_class: {10_to_100: 300, le_10: 163, gt_100: 149}
+    split_evaluated: NhdDrainageAreaClass
+    stability:
+      worst_flip_mean: 0.0801
+      verdict: accept
+      by_class:
+        10_to_100: {flip_mean: 0.0545, flip_p90: 0.4758, n_boot_valid: 200, n_eval: 929, verdict: not_evaluable}
+        gt_100: {flip_mean: 0.0801, flip_p90: 0.1804, n_boot_valid: 200, n_eval: 1347, verdict: not_evaluable}
+        le_10: {flip_mean: 0.0119, flip_p90: 0.0, n_boot_valid: 200, n_eval: 450, verdict: not_evaluable}
+    yardstick: {auc_unsplit: 0.6354, auc_split: 0.6409, verdict: ok}
+    split_status: accept
+    decision_basis: Level III adjusted eta-squared 0.1166; supported level l3. NhdDrainageAreaClass adds
+      0.091 of adjusted eta-squared, resampling flip rate 0.0801 (accept).
+    display_name: Native non-tolerant fish taxa
+    family: biology
+  fish_NAT_TOLRPIND:
+    status: decided
+    n_reference: 612
     supported_level: l2
     split: NhdSlopeClass
     eta2:
-      l3: {raw: 0.5056, adj: 0.4728, k: 35, n: 548, p: 0.0}
-      l2: {raw: 0.3928, adj: 0.3815, k: 12, n: 603, p: 0.0}
-      l1: {raw: 0.3466, adj: 0.3401, k: 7, n: 609, p: 0.0}
-      nars9: {raw: 0.3516, adj: 0.3441, k: 8, n: 610, p: 0.0}
+      l3: {raw: 0.5816, adj: 0.5538, k: 35, n: 547, p: 0.0}
+      l2: {raw: 0.4849, adj: 0.4753, k: 12, n: 602, p: 0.0}
+      l1: {raw: 0.4367, adj: 0.4311, k: 7, n: 608, p: 0.0}
+      nars9: {raw: 0.4881, adj: 0.4821, k: 8, n: 609, p: 0.0}
     incremental:
       NhdSlopeClass:
-        increment: 0.1718
-        combined: 0.5532
-        n_by_class: {ge_2: 272, 0.5_to_2: 183, lt_0.5: 158}
+        increment: 0.099
+        combined: 0.5743
+        n_by_class: {ge_2: 272, 0.5_to_2: 182, lt_0.5: 158}
       NhdDrainageAreaClass:
-        increment: 0.1384
-        combined: 0.5199
-        n_by_class: {10_to_100: 300, le_10: 164, gt_100: 149}
+        increment: 0.0553
+        combined: 0.5306
+        n_by_class: {10_to_100: 300, le_10: 163, gt_100: 149}
     split_evaluated: NhdSlopeClass
     stability:
-      worst_flip_mean: 0.045
+      worst_flip_mean: 0.1078
+      verdict: exploratory
+      by_class:
+        0.5_to_2: {flip_mean: 0.1078, flip_p90: 0.2375, n_boot_valid: 200, n_eval: 590, verdict: not_evaluable}
+        ge_2: {flip_mean: 0.0, flip_p90: 0.0, n_boot_valid: 200, n_eval: 385, verdict: not_evaluable}
+        lt_0.5: {flip_mean: 0.0486, flip_p90: 0.1074, n_boot_valid: 200, n_eval: 1750, verdict: not_evaluable}
+    yardstick: {auc_unsplit: 0.6408, auc_split: 0.6492, verdict: ok}
+    split_status: exploratory
+    decision_basis: Level III adjusted eta-squared 0.5538; supported level l2. NhdSlopeClass adds 0.099
+      of adjusted eta-squared, resampling flip rate 0.1078 (exploratory).
+    display_name: Tolerant native fish individuals
+    family: biology
+  fish_NAT_TOTLNTAX:
+    status: decided
+    n_reference: 612
+    supported_level: l2
+    split: NhdSlopeClass
+    eta2:
+      l3: {raw: 0.5044, adj: 0.4715, k: 35, n: 547, p: 0.0}
+      l2: {raw: 0.3912, adj: 0.3799, k: 12, n: 602, p: 0.0}
+      l1: {raw: 0.3446, adj: 0.338, k: 7, n: 608, p: 0.0}
+      nars9: {raw: 0.3488, adj: 0.3412, k: 8, n: 609, p: 0.0}
+    incremental:
+      NhdSlopeClass:
+        increment: 0.172
+        combined: 0.5519
+        n_by_class: {ge_2: 272, 0.5_to_2: 182, lt_0.5: 158}
+      NhdDrainageAreaClass:
+        increment: 0.1407
+        combined: 0.5206
+        n_by_class: {10_to_100: 300, le_10: 163, gt_100: 149}
+    split_evaluated: NhdSlopeClass
+    stability:
+      worst_flip_mean: 0.0456
       verdict: accept
       by_class:
-        0.5_to_2: {flip_mean: 0.045, flip_p90: 0.0948, n_boot_valid: 200, n_eval: 591, verdict: not_evaluable}
-        ge_2: {flip_mean: 0.0285, flip_p90: 0.0285, n_boot_valid: 200, n_eval: 386, verdict: not_evaluable}
-        lt_0.5: {flip_mean: 0.0267, flip_p90: 0.1102, n_boot_valid: 200, n_eval: 1752, verdict: not_evaluable}
-    yardstick: {auc_unsplit: 0.4517, auc_split: 0.4407, verdict: ok}
+        0.5_to_2: {flip_mean: 0.0456, flip_p90: 0.0949, n_boot_valid: 200, n_eval: 590, verdict: not_evaluable}
+        ge_2: {flip_mean: 0.0224, flip_p90: 0.0, n_boot_valid: 200, n_eval: 385, verdict: not_evaluable}
+        lt_0.5: {flip_mean: 0.0271, flip_p90: 0.1097, n_boot_valid: 200, n_eval: 1750, verdict: not_evaluable}
+    yardstick: {auc_unsplit: 0.4555, auc_split: 0.4446, verdict: ok}
     split_status: accept
-    decision_basis: Level III adjusted eta-squared 0.4728; supported level l2. NhdSlopeClass adds 0.1718
-      of adjusted eta-squared, resampling flip rate 0.045 (accept).
+    decision_basis: Level III adjusted eta-squared 0.4715; supported level l2. NhdSlopeClass adds 0.172
+      of adjusted eta-squared, resampling flip rate 0.0456 (accept).
     display_name: Native fish taxa richness
     family: biology
   pctwet2019ws:
@@ -461,24 +593,24 @@ metrics:
     family: substrate
   phab_LWDeqVolM100:
     status: decided
-    n_reference: 764
+    n_reference: 558
     supported_level: l3
     split: null
     eta2:
-      l3: {raw: 0.3137, adj: 0.2734, k: 40, n: 704, p: 0.0}
-      l2: {raw: 0.191, adj: 0.1779, k: 13, n: 756, p: 0.0}
-      l1: {raw: 0.1877, adj: 0.1801, k: 8, n: 762, p: 0.0}
-      nars9: {raw: 0.1579, adj: 0.1501, k: 8, n: 761, p: 0.0}
+      l3: {raw: 0.3071, adj: 0.263, k: 30, n: 486, p: 0.0}
+      l2: {raw: 0.1765, adj: 0.1583, k: 13, n: 555, p: 0.0}
+      l1: {raw: 0.1685, adj: 0.1579, k: 8, n: 557, p: 0.0}
+      nars9: {raw: 0.1348, adj: 0.1238, k: 8, n: 558, p: 0.0}
     incremental:
       NhdSlopeClass:
-        increment: 0.0364
-        combined: 0.3098
-        n_by_class: {ge_2: 344, 0.5_to_2: 223, lt_0.5: 197}
+        increment: 0.0306
+        combined: 0.2936
+        n_by_class: {ge_2: 263, 0.5_to_2: 151, lt_0.5: 144}
       NhdDrainageAreaClass:
-        increment: 0.0332
-        combined: 0.3066
-        n_by_class: {10_to_100: 344, le_10: 215, gt_100: 205}
-    decision_basis: Level III adjusted eta-squared 0.2734; supported level l3. No class split adds the
+        increment: -0.0015
+        combined: 0.2615
+        n_by_class: {10_to_100: 258, le_10: 165, gt_100: 135}
+    decision_basis: Level III adjusted eta-squared 0.263; supported level l3. No class split adds the
       required 0.05 with two classes of 15 or more.
     display_name: Large wood volume
     family: riparian

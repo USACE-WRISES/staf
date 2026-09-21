@@ -61,26 +61,48 @@ MICHIGAN_TP_METRIC = "nutrient-cycling-total-phosphorus"
 MICHIGAN_ECBP_LAYER = "Huron Erie Lake Plains & Eastern Corn Belt Plains"
 
 
-def national_reference(frame: pd.DataFrame, *, exclude_l3: Optional[str] = None) -> pd.DataFrame:
-    """Every in-frame station that passes the strict screen, less one region."""
+def national_reference(frame: pd.DataFrame, *, exclude_l3: Optional[str] = None,
+                       fauna_groups: Optional[list] = None) -> pd.DataFrame:
+    """Every in-frame station that passes the strict screen, less one region, and
+    inside the given faunal provinces when there are any (v0.14, REF-12)."""
     ref = frame[frame["pass_strict"].astype(bool)]
     if exclude_l3 is not None:
         ref = ref[ref["l3"].astype(str) != str(exclude_l3)]
+    if fauna_groups:
+        ref = ref[rp.fauna_mask(ref, fauna_groups).to_numpy()]
     return ref
+
+
+def national_donors_for(metric: str, target_rows: pd.DataFrame, frame: pd.DataFrame, *,
+                        exclude_l3: Optional[str] = None) -> pd.DataFrame:
+    """The national donor pool of one metric for one target: the strict national
+    pool less the target, kept to the target's faunal provinces when the metric's
+    family compares assemblages. The distance-matched check of 2026-09-21 found
+    donors matched on size, slope and temperature alone carrying a third of the
+    target's native species, which is what the faunal rule prevents."""
+    profile = rp.family_profile(metric) or {}
+    groups = rp.fauna_groups_of(target_rows) if profile.get("fauna") else []
+    return national_reference(frame, exclude_l3=exclude_l3, fauna_groups=groups)
 
 
 # --------------------------------------------------------------------------- #
 # 3a: round one's envelope donors, and what keeps donors out
 # --------------------------------------------------------------------------- #
 def envelope_donors(metric: str, target_rows: pd.DataFrame, donors_frame: pd.DataFrame,
-                    values: pd.Series) -> tuple[pd.DataFrame, pd.Series]:
+                    values: pd.Series, *, spans: Optional[dict] = None
+                    ) -> tuple[pd.DataFrame, pd.Series]:
     """Round one's Option 3: donors inside the target's comparability envelope for
-    the metric's family, with a value for the metric. ``(donor rows, values)``."""
+    the metric's family, with a value for the metric. ``(donor rows, values)``.
+
+    ``spans`` (the covariates' national spans) widens the envelope as v0.14 does
+    for every pool (REF-12); without it the envelope is round one's."""
     profile = rp.family_profile(metric)
     empty = (donors_frame.iloc[0:0], pd.Series(dtype=float))
     if not profile:
         return empty
     env = rp.envelope_for(target_rows, profile.get("covariates") or [])
+    if spans:
+        env = rp.widen_envelope(env, spans, rp.hierarchy_settings()["widen"])
     liths = rp.target_lith_groups(target_rows)
     ok, _ = rp.comparable_mask(donors_frame, env, liths,
                                use_lithology=bool(profile.get("lithology")))
