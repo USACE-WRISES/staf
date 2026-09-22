@@ -298,6 +298,33 @@ def test_promote_refuses_scope_changing_overrides(staged_run, tmp_path):
     assert not (target / "assessments" / "eastern-corn-belt-plains").exists()
 
 
+def test_promote_refuses_a_run_whose_curve_decisions_changed(staged_run, tmp_path):
+    """REF-15: a decision recorded beside the run after it was staged is not in the
+    staged version, so promote refuses it rather than publish without it."""
+    from streamcurves import owner_curves as oc
+    out, _ = staged_run
+    decision = oc.new_decision("chem_TURB", oc.REMOVE, recorded_by="owner",
+                               rationale="Recorded after the stage, so not in it.")
+    oc.save(out, decision)
+    try:
+        target = tmp_path / "promoted-moved"
+        (target / "assessments").mkdir(parents=True)
+        env = dict(os.environ)
+        env.pop("STAF_LIBRARY_ROOT", None)
+        proc = subprocess.run(
+            [sys.executable, str(SCRIPT), "promote", "--out", str(out), "--maintainer",
+             "owner", "--publish-root", str(target)],
+            capture_output=True, text=True, env=env, timeout=300)
+        assert proc.returncode != 0
+        assert "curve decisions changed" in (proc.stdout + proc.stderr)
+        assert not (target / "assessments" / "eastern-corn-belt-plains").exists()
+        # undone, the record matches the run again (an emptied file holds none)
+        oc.undo(out, decision["id"])
+        assert not oc.decisions_changed([], oc.load(out))
+    finally:
+        (out / oc.DECISIONS_FILE).unlink(missing_ok=True)
+
+
 def test_confirm_doc_turns_an_owner_draft_origin_into_owner_approved():
     """An owner-drafted entry staged ahead of the end review carries
     ``ai_drafted_pending_owner_approval``; the confirmation at promote renames it

@@ -117,6 +117,27 @@ def _portfolio_approval_text(pending: list[dict]) -> str:
             "publish writes yours into the version's metadata.")
 
 
+def _waiting_note(state: AppState):
+    """The sources the build refused that the owner accepted and no build has
+    computed yet (REF-15): they apply nothing to this version, and the version's
+    record marks them as waiting (``owner_curves.summary``)."""
+    from streamcurves import metric_names
+    with reactive.isolate():
+        waiting = oc.pending(state.owner_curve_decisions() or [])
+    if not waiting:
+        return None
+    n = len(waiting)
+    names = "; ".join(f"{metric_names.display_name_for(mk, None) or mk}, "
+                      f"{(d.get('source') or {}).get('title')}"
+                      for mk, d in sorted(waiting.items()))
+    return ui.div(
+        f"{n} curve decision{'' if n == 1 else 's'} wait{'s' if n == 1 else ''} for a build "
+        f"and do{'es' if n == 1 else ''} not apply to this version: {names}. Build the region "
+        "again in the Region builder to compute "
+        f"{'it' if n == 1 else 'them'}.",
+        class_="text-muted small mb-2 pub-waiting")
+
+
 def _origin_steer(state: AppState, origin: dict | None, has_doc: bool, built_by):
     """One line saying what this publish records, or the promote steer when the
     staged content is untouched (promote keeps the build's record verbatim)."""
@@ -397,6 +418,11 @@ def publish_server(input, output, session, state: AppState):
                         "pub_confirm_pending", "I confirm them under my name", value=False),
                     class_="pub-confirm-pending mb-2",
                 ))
+            # REF-15: a source the build refused that no build has computed yet
+            # applies nothing to this version; say so before it is published
+            waiting = _waiting_note(state)
+            if waiting:
+                body.append(waiting)
             pending = ap.portfolio_approval_needed(state)
             if pending:
                 body.append(ui.div(
@@ -710,8 +736,11 @@ def publish_server(input, output, session, state: AppState):
                           exceptions, curve_decisions)},
             )
             full_payload = ap.session_payload_from_state(state)
+            # the session keeps its own gaps; one recorded with a curve decision
+            # that no longer stands does not ride along (REF-15)
             full_payload["fields"]["function_coverage_exceptions"] = sio.encode_value(
-                exceptions, path="$.function_coverage_exceptions")
+                oc.live_exceptions(exceptions, curve_decisions),
+                path="$.function_coverage_exceptions")
             # Every published version carries a provenance document. When the
             # assessment came from an agent build, the build's own document is
             # carried through with an appended interactive-revision entry, and

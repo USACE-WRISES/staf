@@ -549,6 +549,20 @@ def _confirm_doc(doc: dict, *, reviewer: str, date: str, overrides: dict) -> tup
         raise SystemExit(str(exc)) from exc
 
 
+def _decisions_file(out_dir: Path, argv) -> Path:
+    """The curve decisions file a stage read (its recorded ``--curve-decisions``),
+    else the region's own record beside the run, where the workspace records the
+    owner's decisions (REF-15)."""
+    argv = [str(x) for x in argv or []]
+    if "--curve-decisions" in argv and argv.index("--curve-decisions") + 1 < len(argv):
+        p = Path(argv[argv.index("--curve-decisions") + 1])
+        if p.is_absolute():
+            return p
+        repo = _APP_ROOT.parent.parent
+        return next((b / p for b in (Path.cwd(), repo) if (b / p).exists()), repo / p)
+    return out_dir / oc.DECISIONS_FILE
+
+
 def cmd_promote(a) -> int:
     out_dir = Path(a.out).resolve()
     staged_root = _staged_root(out_dir)
@@ -582,6 +596,14 @@ def cmd_promote(a) -> int:
         raise SystemExit("the staged version was produced under a different "
                          f"{', '.join(drift)}; re-stage with: {promote_command(out_dir, a.maintainer)}"
                          .replace(" promote ", " stage "))
+    # nor the owner's curve decisions (REF-15): one recorded or undone after the
+    # stage is not in the staged version, which would publish without it, or with it
+    fields_ = session.get("fields") if isinstance(session.get("fields"), dict) else session
+    now_decisions = oc.load_file(_decisions_file(out_dir, (man.get("agent") or {}).get("argv")))
+    if oc.decisions_changed(fields_.get("owner_curve_decisions") or [], now_decisions):
+        raise SystemExit("the region's curve decisions changed after this run was staged, so "
+                         "the staged version does not apply them; build the region again, "
+                         "then promote.")
 
     date = a.date or _now()
     overrides = {}

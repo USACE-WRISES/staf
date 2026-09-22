@@ -374,3 +374,127 @@ def test_the_form_asks_for_the_gap_a_decision_would_leave():
     use = str(sp.decision_form("fish_X", "Fish", oc.INCLUDE, ["population-support"], [],
                                ns=lambda x: x, others=[]))
     assert "Use in Population support" in use and "would have no curve left" not in use
+
+
+# --------------------------------------------------------------------------- #
+# the record through undo, reopen and publish (review of 2026-09-22)
+# --------------------------------------------------------------------------- #
+def _refused_request(metric="bent_EPT_NTAX", function="community-dynamics"):
+    from streamcurves import owner_sources as osrc
+    return _decision(metric, oc.SOURCE, functions=[function],
+                     source={"kind": osrc.REFUSED, "title": "Level I pool (8)",
+                             "ref": {"rule": "REF-11", "option": "regional_l1"},
+                             "citation": None})
+
+
+def test_a_reopened_session_takes_the_regions_record():
+    kept = _decision("chem_TURB", oc.REMOVE)
+    undone = _decision("chem_NTL", oc.UNMAP, functions=["nutrient-cycling"])
+    flag = oc.from_removals({"chem_COND": WHY}, recorded_by="owner", keys={"chem_COND"})[0]
+    got, withdrawn = oc.restore([kept, undone, flag], [kept])
+    # undone since the build: it does not apply; a --remove-metric removal never
+    # lives in the file and stays
+    assert {d["id"] for d in got} == {kept["id"], flag["id"]}
+    assert [d["id"] for d in withdrawn] == [undone["id"]]
+    # a region that keeps no record leaves the session's decisions standing
+    got, withdrawn = oc.restore([kept, undone], None)
+    assert {d["id"] for d in got} == {kept["id"], undone["id"]} and withdrawn == []
+
+
+def test_the_standing_record_tells_none_from_an_emptied_one(tmp_path):
+    assert oc.standing(tmp_path) is None
+    d = _decision("chem_TURB", oc.REMOVE)
+    oc.save(tmp_path, d)
+    assert [x["id"] for x in oc.standing(tmp_path)] == [d["id"]]
+    oc.undo(tmp_path, d["id"])
+    assert oc.standing(tmp_path) == []
+    assert oc.load_file(tmp_path / oc.DECISIONS_FILE) == []
+    assert oc.load_file(tmp_path / "absent.json") == []
+
+
+def test_a_workspace_save_starts_from_the_published_decisions(tmp_path, monkeypatch):
+    published = _decision("chem_TURB", oc.REMOVE)
+    monkeypatch.setattr(rb, "published_curve_decisions", lambda code: [published])
+    assert [d["id"] for d in rb.standing_decisions(tmp_path, "55")] == [published["id"]]
+    # once written (even emptied), the region's record is never seeded again
+    oc.undo(tmp_path, published["id"])
+    assert rb.standing_decisions(tmp_path, "55") == []
+    for name in ("source_panel.py", "source_dialog.py"):
+        src = (APP / "views" / name).read_text(encoding="utf-8")
+        assert "standing_decisions(" in src, name
+
+
+def test_a_refused_source_the_last_build_could_not_compute_is_not_waiting():
+    req = _refused_request()
+    failed = {**req, "source": {**req["source"],
+                                "failedAtBuild": "2 usable stations, below the floor of 5."}}
+    got = oc.combine([failed], [req])
+    assert oc.pending(got) == {}
+    assert oc.stale(got, {}, built=())[0][1].startswith("Nothing could be built")
+    computed = {**req, "source": {**req["source"], "curve": {
+        "points": [{"x": 0.0, "y": 0.0}, {"x": 10.0, "y": 1.0}]}}}
+    assert oc.source_curve(oc.combine([computed], [req])[0])["points"]
+    # a request on its own waits, and its record says so
+    assert list(oc.pending([req])) == ["bent_EPT_NTAX"]
+    assert oc.summary(req)["source"]["waitsForBuild"] is True
+    assert "waitsForBuild" not in oc.summary(failed)["source"]
+    assert "waitsForBuild" not in oc.summary(computed)["source"]
+
+
+def test_a_gap_goes_with_its_decision_and_outlives_one_that_replaces_it():
+    gap = {"functionId": "carbon-processing", "justification": WHY}
+    unmap = _decision("phab_XCMGW", oc.UNMAP, functions=["carbon-processing"],
+                      coverage_exceptions=[gap])
+    policy_gap = {"functionId": "low-flow-baseflow-dynamics", "justification": WHY,
+                  "reason": "insufficient-reference-support", "decision": "cov01-documented-gap"}
+    base = oc.coverage_exceptions([unmap]) + [policy_gap]
+    # undone: the decision's gap goes with it, the policy's stays
+    assert [e["functionId"] for e in oc.live_exceptions(base, [])] == [
+        "low-flow-baseflow-dynamics"]
+    assert [e["functionId"] for e in oc.with_exceptions(base, [])] == [
+        "low-flow-baseflow-dynamics"]
+    assert len(oc.with_exceptions(base, [unmap])) == 2
+    # removing the curve afterwards keeps the reason for the function the unmap emptied
+    remove = _decision("phab_XCMGW", oc.REMOVE)
+    merged = oc.merge([unmap], remove)
+    assert [d["id"] for d in merged] == [remove["id"]]
+    assert [g["functionId"] for g in merged[-1]["coverageExceptions"]] == ["carbon-processing"]
+    # a source placed in that function needs no gap there
+    from streamcurves import owner_sources as osrc
+    chosen = _decision("phab_XCMGW", oc.SOURCE, functions=["carbon-processing"],
+                       source={"kind": osrc.ENTERED, "title": "T", "citation": None,
+                               "ref": {"method": osrc.BREAKPOINTS},
+                               "curve": {"points": [{"x": 0.0, "y": 0.0},
+                                                    {"x": 100.0, "y": 1.0}]}})
+    assert not oc.merge([unmap], chosen)[-1]["coverageExceptions"]
+
+
+def test_a_flag_removal_carries_no_build_time():
+    d = oc.from_removals({"chem_TURB": WHY}, recorded_by="owner", keys={"chem_TURB"})[0]
+    assert d["recordedAt"] == "" and d["id"].startswith(oc.FLAG_PREFIX)
+    assert _decision("chem_TURB", oc.REMOVE)["recordedAt"]
+
+
+def test_what_the_owner_requested_is_compared_never_what_a_build_computed():
+    req = _refused_request()
+    computed = {**req, "source": {**req["source"], "failed": [{"check": "ACC-05/06"}],
+                                  "curve": {"points": [{"x": 0, "y": 0}, {"x": 1, "y": 1}]}}}
+    assert oc.requests([req]) == oc.requests([computed])
+    assert not oc.decisions_changed([computed], [req])
+    # recorded or withdrawn after the stage: the staged run no longer matches
+    other = _decision("chem_TURB", oc.REMOVE)
+    assert oc.decisions_changed([computed], [req, other])
+    assert oc.decisions_changed([computed], [])
+    assert not oc.decisions_changed([], [])
+    # a --remove-metric removal the build merged in replaces the file's decision on
+    # that metric, exactly as the build merged it
+    unmap = _decision("chem_TURB", oc.UNMAP, functions=["water-soil-quality"])
+    flag = oc.from_removals({"chem_TURB": WHY}, recorded_by="owner", keys={"chem_TURB"})[0]
+    staged = oc.merge([unmap], flag)
+    assert not oc.decisions_changed(staged, [unmap])
+
+
+def test_step_6_says_what_waits_for_a_build():
+    src = (APP / "views" / "publish.py").read_text(encoding="utf-8")
+    assert "_waiting_note(state)" in src and "oc.live_exceptions(exceptions" in src
+    assert "wait{'s' if n == 1 else ''} for a build" in src
