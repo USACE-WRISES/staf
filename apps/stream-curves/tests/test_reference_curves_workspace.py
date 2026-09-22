@@ -160,7 +160,18 @@ def test_the_workspace_draws_every_curve_it_did_not_fit_read_only(version):
     assert {t["metric"] for t in tiles} == set(pe.reference_keys(build))
     ids = {"spring-" + dx.deep_slug(t["metric"]) for t in tiles if t["in_scope"] is not False}
     assert ids <= set(_entries(bundle))
+    rows = pe.reference_rows(build, mapping, built=built)
     for t in tiles:
+        ann = rows[t["metric"]]["annotations"]
+        stated = ann.get("referenceN")
+        if stated is None:
+            stated = (ann.get("referenceSupport") or {}).get("nUsable")
+        if t["source_kind"] in ("published_benchmark", "fixed") \
+                or ann.get("basis") == "published-benchmark":
+            assert t["reference_n"] is None, t["metric"]      # a criterion has no sample
+        elif stated is not None:
+            # the count the bundle states, never a raw count off the session row
+            assert t["reference_n"] == float(stated), t["metric"]
         assert t["read_only"] and t["badge"] and cs_status(t) == t["status_text"]
         assert t.get("function_name"), t["metric"]
         html = _unescape(str(cg.tile_ui(t, channel_id="ch")))

@@ -1128,8 +1128,7 @@ def summary_page_server(input, output, session, state: AppState):
                                               str(t.get("function_name") or ""),
                                               str(t.get("metric")))):
             metric = str(t.get("metric") or "")
-            strata = t.get("strata") or []
-            n_ref = (strata[0] or {}).get("n_reference") if strata else None
+            n_ref = t.get("reference_n")
             lo, hi = t.get("reference_range") or (None, None)
             fns = [t.get("function_name")] + list(t.get("also_functions") or [])
             action = None
