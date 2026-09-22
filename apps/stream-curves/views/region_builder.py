@@ -281,6 +281,16 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             gaps = ", ".join(str(g.get("functionId")) for g in d.get("coverageExceptions") or [])
             src = d.get("source") or {}
             why_stale = stale.get(str(d.get("id")))
+            if src.get("kind") == "refused_source" and not why_stale:
+                # the region's record holds the request; the staged version what
+                # its build computed
+                built_copy = next((x for x in (staged or {}).get("decisions") or []
+                                   if x.get("id") == d.get("id")), {})
+                done = ((built_copy.get("source") or {}).get("curve") or {}).get("points")
+                failed = (built_copy.get("source") or {}).get("failedAtBuild")
+                src = {**src, "title": f"{src.get('title')}, "
+                       + ("not built: " + str(failed) if failed else
+                          "computed by the last build" if done else "waits for the next build")}
             rows.append(ui.tags.tr(
                 ui.tags.td(ui.tags.code(str(d.get("metric")))),
                 ui.tags.td(oc.ACTION_LABELS.get(d.get("action"), str(d.get("action")))

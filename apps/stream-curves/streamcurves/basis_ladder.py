@@ -106,25 +106,10 @@ def try_national(metric: str, *, frame: pd.DataFrame, values: pd.Series, target_
     entry = entry or {}
     reasons: list[str] = []
     for option in _national_options():
-        if option == "3c_matched":
-            matches = bt.gower_matches(metric, target, donors, values)
-            summary = bt.matched_summary(matches)
-            n = int(summary["n_distinct"])
-            vals = (matches["value"].reset_index(drop=True) if len(matches)
-                    else pd.Series(dtype=float))
-            measure = summary.get("distance_median")
-            ids = (frame.loc[matches["donor_ix"].unique(), "station_key"].astype(str)
-                   if len(matches) else pd.Series(dtype=str))
-            n_huc12 = int(frame.loc[matches["donor_ix"].unique(), "huc12"].nunique()) \
-                if len(matches) and "huc12" in frame.columns else 0
-        else:
-            spans = rp.national_spans(frame, profile.get("covariates") or [])
-            rows, vals = bt.envelope_donors(metric, target, donors, values, spans=spans)
-            vals = vals.reset_index(drop=True)
-            n = int(len(vals))
-            measure = n
-            ids = rows["station_key"].astype(str) if "station_key" in rows else pd.Series(dtype=str)
-            n_huc12 = int(rows["huc12"].nunique()) if "huc12" in rows else 0
+        got = _national_option(metric, option, target=target, donors=donors, frame=frame,
+                               values=values, profile=profile)
+        n, vals, measure = got["n"], got["values"], got["measure"]
+        ids, n_huc12 = got["ids"], got["n_huc12"]
         head = (f"{n} matched national donors" if option == "3c_matched" else
                 f"{n} national donors inside the comparability envelope")
         ok, why = acceptance.sample_ok(n)
@@ -170,6 +155,33 @@ def try_national(metric: str, *, frame: pd.DataFrame, values: pd.Series, target_
         return out
     out["why"] = " ".join(reasons)
     return out
+
+
+def _national_option(metric: str, option: str, *, target: pd.DataFrame,
+                     donors: pd.DataFrame, frame: pd.DataFrame, values: pd.Series,
+                     profile: dict) -> dict:
+    """One national option's donors for the target: ``{n, values, ids, n_huc12,
+    measure}``, ``n`` counting distinct donors."""
+    if option == "3c_matched":
+        matches = bt.gower_matches(metric, target, donors, values)
+        summary = bt.matched_summary(matches)
+        n = int(summary["n_distinct"])
+        vals = (matches["value"].reset_index(drop=True) if len(matches)
+                else pd.Series(dtype=float))
+        measure = summary.get("distance_median")
+        ids = (frame.loc[matches["donor_ix"].unique(), "station_key"].astype(str)
+               if len(matches) else pd.Series(dtype=str))
+        n_huc12 = int(frame.loc[matches["donor_ix"].unique(), "huc12"].nunique()) \
+            if len(matches) and "huc12" in frame.columns else 0
+    else:
+        spans = rp.national_spans(frame, profile.get("covariates") or [])
+        rows, vals = bt.envelope_donors(metric, target, donors, values, spans=spans)
+        vals = vals.reset_index(drop=True)
+        n = int(len(vals))
+        measure = n
+        ids = rows["station_key"].astype(str) if "station_key" in rows else pd.Series(dtype=str)
+        n_huc12 = int(rows["huc12"].nunique()) if "huc12" in rows else 0
+    return {"n": n, "values": vals, "ids": ids, "n_huc12": n_huc12, "measure": measure}
 
 
 # --------------------------------------------------------------------------- #
@@ -348,6 +360,135 @@ def resolve(metrics: Iterable[str], *, frame: pd.DataFrame, values_wide: pd.Data
         curve_rows[mk] = row
     return {"decisions": decisions, "curve_rows": curve_rows,
             "populations": populations, "attempts": attempts}
+
+
+# --------------------------------------------------------------------------- #
+# a source the build refused, which the owner accepted (REF-15)
+# --------------------------------------------------------------------------- #
+#: the fewest distinct stations or donors a forced source may build a curve on
+MIN_FORCED_N = 5
+#: the rules a station pool is chosen under: the local reference, the regional pools
+POOL_RULES = ("REF-04", "REF-11")
+
+
+def force_source(metric: str, ref: dict, *, frame: pd.DataFrame, values_wide: pd.DataFrame,
+                 target_l3: str, config: dict, validation: Optional[dict] = None,
+                 region_name: Optional[str] = None, seed: Optional[int] = None,
+                 scale_registry: Optional[dict] = None, excluded: Optional[dict] = None,
+                 registry: Optional[dict] = None) -> dict:
+    """The curve of a source the build refused, because the owner accepted it with
+    a recorded rationale (REF-15).
+
+    ``ref`` names the source: ``{"rule", "option"}``, a station pool option under
+    REF-04 or REF-11 (``local``, ``regional_l2``, ...), a national option under
+    REF-12 (``3c_matched``, ``3a_envelope``), the model registry's specification
+    under REF-13 or the catalog's criterion under REF-14. Every check the source
+    faces still runs and is recorded in ``failed``; none may refuse it. Returns
+    ``{rule, option, row, decision, failed, why}``. ``row`` is None when not even
+    a curve can be built (fewer than :data:`MIN_FORCED_N` stations, no
+    specification, no criterion), and ``why`` says so: the decision then fails at
+    the build and the metric keeps what the build gave it."""
+    mk, rule = str(metric), str((ref or {}).get("rule") or "")
+    option = str((ref or {}).get("option") or "")
+    out: dict[str, Any] = {"rule": rule, "option": option, "row": None, "decision": None,
+                           "failed": [], "why": ""}
+    wide = (values_wide.set_index(values_wide["site_id"].astype(str))
+            if "site_id" in values_wide.columns else values_wide)
+    if mk not in wide.columns:
+        return {**out, "why": "The values archive carries no column for this metric."}
+    by_station = pd.to_numeric(wide[mk], errors="coerce")
+    series = pd.Series(frame["station_key"].astype(str).map(by_station).to_numpy(),
+                       index=frame.index)
+    family = rp.family_of(mk)
+    target = frame[frame["l3"].astype(str) == str(target_l3)]
+    if rule in POOL_RULES:
+        option = option or "local"
+        settings = {**rp.floors(), "exploratory": MIN_FORCED_N}
+        reg = (scale_registry or {}).get("metrics") or {}
+        decision, _ledger = rp.choose_pool(mk, by_station, frame, target_l3,
+                                           profile=rp.family_profile(mk), scale_entry=reg.get(mk),
+                                           excluded=excluded, settings=settings, accept=None,
+                                           only_option=option)
+        if decision.status == rp.STATUS_INSUFFICIENT:
+            why = next((str(x.get("why")) for x in decision.options_tried or [] if x.get("why")),
+                       "no station qualifies")
+            return {**out, "option": option,
+                    "why": f"The pool could not be formed here: {_lower(why)}"}
+        vals = by_station.reindex(list(decision.station_ids)).dropna().reset_index(drop=True)
+        failed = acceptance.all_checks(mk, option, vals, config, validation, family=family)
+        row = _row_from_values(mk, vals, {mk: config})
+    elif rule == RULE_NATIONAL:
+        profile = rp.family_profile(mk) or {}
+        donors = bt.national_donors_for(mk, target, frame, exclude_l3=target_l3)
+        got = _national_option(mk, option, target=target, donors=donors, frame=frame,
+                               values=series, profile=profile)
+        if got["n"] < MIN_FORCED_N:
+            return {**out, "why": (f"{got['n']} national donors, fewer than the "
+                                   f"{MIN_FORCED_N} a curve needs.")}
+        failed = acceptance.all_checks(mk, option, got["values"], config, validation,
+                                       family=family, measure=got["measure"])
+        row = _row_from_values(mk, got["values"], {mk: config})
+        words = acceptance.OPTION_WORDS.get(option, option)
+        decision = _decision(
+            mk, status=rp.STATUS_NATIONAL, basis=curve_basis.NATIONAL, region_code="national",
+            region_name="National least-disturbed pool", n_pool=len(donors), n_usable=got["n"],
+            station_ids=sorted(set(got["ids"])), n_huc12=got["n_huc12"],
+            note=(f"{got['n']} least-disturbed stations from the national pool, as "
+                  f"{words}, none inside this ecoregion. The build refused this source and "
+                  f"the owner accepted it."),
+            risk=rp.RISK_HIGH, tried=[{"option": option, "n": got["n"], "accepted": False,
+                                       "forced": True}],
+            detail={"option": option, "forced": True,
+                    "measure": None if got["measure"] is None else float(got["measure"])})
+    elif rule == RULE_MODELED:
+        reg = registry if registry is not None else mreg.load()
+        entry = mreg.entry_for(mk, reg)
+        if entry is None:
+            return {**out, "why": "The model registry holds no specification for this metric."}
+        failed = []
+        if entry.get("status") != mreg.APPROVED:
+            failed.append({"check": "REF-13", "pass": False,
+                           "why": "The specification waits for the owner's approval."})
+        app = mreg.applicability(entry, frame=frame, values=series, target_l3=target_l3,
+                                 registry=reg)
+        if not app["ok"]:
+            failed.append({"check": "ACC-03", "pass": False, "why": str(app["why"])})
+        got = mreg.run(entry, frame=frame, values=series, target_l3=target_l3, registry=reg,
+                       seed=seed)
+        pop = got["population"]
+        if pop.get("values") is None or not len(pop["values"]) or not pop.get("anchors"):
+            return {**out, "failed": failed,
+                    "why": "The model could not be fitted or produced no usable expectation."}
+        row = _row_from_values(mk, pop["values"], {mk: config})
+        decision = replace(mr.pool_decision(mk, pop, family=family, region_name=region_name),
+                           screen_detail={"procedure": entry.get("procedure"),
+                                          "coverage": app.get("coverage"), "forced": True})
+    elif rule == RULE_PUBLISHED:
+        region, _share = pb.majority_region(target, "nars9")
+        spec = pb.lookup(mk, target_l3=str(target_l3), region=region)
+        if spec is None:
+            return {**out, "why": pb.refusal(mk, str(target_l3))}
+        fit = pb.fitness(mk, frame=target, target_l3=str(target_l3))
+        failed = [{"check": k, "pass": False, "why": v["why"]}
+                  for k, v in (fit.get("conditions") or {}).items() if not v["pass"]]
+        region = fit.get("region") or region
+        pts = pb.curve_points(mk, region) if region else None
+        if not pts:
+            return {**out, "failed": failed,
+                    "why": f"The criterion has no bands for NARS-9 region {region}."}
+        row = _row_from_points(mk, pts, config)
+        if row is not None:
+            row["benchmark_region"] = region
+        decision = pb.pool_decision(mk, region, region_code=str(target_l3),
+                                    region_name=region_name, family=family)
+    else:
+        return {**out, "why": f"The build cannot compute a source under {rule or 'no rule'}."}
+    if row is None:
+        return {**out, "option": option, "failed": failed,
+                "why": "The source was computed but the engine built no curve from it."}
+    return {**out, "option": option, "row": row,
+            "decision": decision.to_dict() if hasattr(decision, "to_dict") else decision,
+            "failed": [f for f in failed if not f.get("pass")]}
 
 
 def _row_from_values(metric: str, values: Any, metric_config: dict) -> Optional[dict]:

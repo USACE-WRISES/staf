@@ -132,6 +132,42 @@ headless CLIs default to `--reference-method pressure-screen` on the pooled arch
 - `config/field_methods.yaml` holds the one-line field protocol of every metric. The exporter
   writes it into the bundle as `methodContext`, and DEEP prints it on the field form.
 
+### Curve sources and the owner's decisions (REF-15)
+
+Every curve a version scores that the build did not fit (carried forward, from the national,
+modeled or published rung, or a fixed criterion) opens a panel from the Gallery, the Table's
+"Curves from other sources" card or its chip in Function mapping. The panel names the specific
+source, the rule that chose it, the sources the build tried before it, the limits and the
+breakpoints.
+
+The owner can overrule the build on any of those curves, with a rationale of at least 20
+characters recorded under their name (`owner_decisions.min_rationale`):
+
+- **Remove** a curve from the assessment, or **take it out of a function**. A decision that
+  leaves a function with no curve asks why, and records that as the function's documented gap.
+- **Use** a fitted curve the two-per-function rule left out of a function.
+- **Choose a source** (Add a source in Function mapping or on the Table card, Change source in
+  the panel): a criterion of the verified catalog that passes REF-14's fitness conditions for
+  the ecoregion, a curve of an earlier version of this assessment, another STAF assessment's
+  curve for the same metric (taken without a comparability check), a curve entered by two
+  thresholds or point by point (cited, or on professional judgment), or a source the build
+  refused, which the next build computes on its own stations or donors
+  (`basis_ladder.force_source`) with every failed check recorded.
+
+A fixed criterion can be removed or taken out of a function, never given another source, and a
+curve built here is edited in its analysis. A decision applies at once in the workspace, rides in
+the session, and lives in the region's `curve_decisions.json` in its run folder
+(`notes/DEEP_Working/analysis/runs/l3-<code>/`), which the Region builder passes to every build
+(`stage --curve-decisions`). A region with no such file takes its latest published version's
+decisions first. Nothing refills a function automatically: to use another curve, choose it.
+
+A build applies the decisions through the same transform the workspace runs
+(`owner_curves.apply_to_inputs`), after SELECT-04, and never carries a chosen curve forward from
+a published version: the decision puts it back, or, once withdrawn, does not. The bundle states
+each choice (`ownerDecision`, `borrowedFrom` and `ownerException` on the curve,
+`ownerCurveDecisions` at the top), and the provenance carries one REF-15 record per decision,
+naming the rule it overrides. The refused sources a build computes join its inputs digest.
+
 ### Excel calculator
 
 `library.publish_version` builds `vN/calculator.xlsx` from the bundle it just wrote

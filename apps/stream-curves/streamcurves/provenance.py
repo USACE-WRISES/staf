@@ -330,6 +330,11 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "basisValidation": _basis_validation_record(),
             "curvesByBasis": _curves_by_basis(result),
         }
+        # REF-15: the refused sources the owner accepted change what the build
+        # computes, so they join the digest; a run with none adds no key
+        if result.get("forced_sources"):
+            inputs["reference"]["forcedSources"] = dict(sorted(
+                (str(k), dict(v)) for k, v in result["forced_sources"].items()))
 
     # Predictor source: recorded whenever the run declares one. The DERIVED
     # value (from the predictor columns actually configured) is authoritative;
@@ -552,6 +557,8 @@ def digest_payload_from_manifest(manifest: dict) -> dict:
         above = {k: v for k, v in by_basis.items() if k != "regional-reference"}
         if above:
             digest_payload["reference"]["curvesByBasis"] = dict(sorted(by_basis.items()))
+        if ref.get("forcedSources"):
+            digest_payload["reference"]["forcedSources"] = ref["forcedSources"]
     return digest_payload
 
 
@@ -756,6 +763,7 @@ def _hierarchy_records(result: dict, add) -> None:
                     "coverageExceptions": [g.get("functionId") for g in
                                            d.get("coverageExceptions") or []]}
         chosen = ""
+        verdict = VERDICT_PASS
         if action == owner_curves.SOURCE:
             src = d.get("source") or {}
             computed.update({"outcome": owner_sources.outcome_of(src),
@@ -764,14 +772,33 @@ def _hierarchy_records(result: dict, add) -> None:
                              "overrides": _overridden_rule(result, str(d.get("metric")))})
             chosen = (f" Source: {src.get('title')}, "
                       f"{str(src.get('citation') or '') or owner_sources.JUDGMENT.lower()}.")
+            if src.get("kind") == owner_sources.REFUSED:
+                computed["failedChecks"] = list(src.get("failed") or [])
+                if src.get("failedAtBuild"):
+                    # nothing could be built from the source: the metric keeps what
+                    # the build gave it, and the record says why
+                    computed["failedAtBuild"] = src["failedAtBuild"]
+                    verdict = VERDICT_FAIL
+                    chosen += f" Not applied: {src['failedAtBuild']}"
         add(owner_curves.RULE, "owner_decision", str(d.get("id")),
             inputs=owner_curves.summary(d),
             thresholds={"min_rationale": owner_curves.min_rationale()},
             computed={k: v for k, v in computed.items() if v is not None},
-            verdict=VERDICT_PASS,
+            verdict=verdict,
             recommendation=(f"{owner_curves.ACTION_LABELS.get(action, action)}"
                             f"{(' (' + fns + ')') if fns else ''}: {d.get('metric')}, by "
                             f"{d.get('recordedBy')}. {d.get('rationale')}{chosen}"))
+
+
+def _owner_chosen(result: dict) -> dict:
+    """``{metric: source title}`` of the curves the owner's decisions put in this
+    version (REF-15): a chosen source that holds a curve."""
+    out = {}
+    for d in result.get("curve_decisions") or []:
+        src = d.get("source") or {}
+        if d.get("action") == "source" and len((src.get("curve") or {}).get("points") or []) >= 2:
+            out[str(d.get("metric"))] = str(src.get("title") or "a source the owner chose")
+    return out
 
 
 def _overridden_rule(result: dict, metric: str) -> Optional[str]:
@@ -842,11 +869,16 @@ def _pressure_records(result: dict, add) -> None:
                                 f"{d.get('carried_from')}; its reference support was decided "
                                 f"there."))
         elif status == "insufficient":
+            chosen = _owner_chosen(result).get(str(metric))
             add("REF-06", "metric", metric, thresholds=thresholds, computed=computed,
                 verdict=VERDICT_FAIL,
-                recommendation="Insufficient reference support: no source in the hierarchy "
-                               "passed acceptance, so no curve is built and the metric is "
-                               "not scored. No curve is forced.")
+                recommendation=(
+                    "Insufficient reference support: no source in the hierarchy passed "
+                    "acceptance, so the build builds no curve. The owner chose a source for "
+                    f"it under REF-15 ({chosen}), recorded on its own." if chosen else
+                    "Insufficient reference support: no source in the hierarchy "
+                    "passed acceptance, so no curve is built and the metric is "
+                    "not scored. No curve is forced."))
         elif basis in ("national-reference", "modeled-reference", "published-benchmark"):
             rule = {"national-reference": "REF-12", "modeled-reference": "REF-13",
                     "published-benchmark": "REF-14"}[basis]

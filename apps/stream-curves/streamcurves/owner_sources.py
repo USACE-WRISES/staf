@@ -614,26 +614,143 @@ def library_options(metric: str, *, region_code: str, current=None) -> list[dict
     return mine + others
 
 
-def refused_options(metric: str, *, build: Optional[Mapping] = None) -> list[dict]:
-    """The sources the build tried for a withheld metric and refused, each with its
-    reason, from the session's withheld list."""
+#: the rule a station pool option is chosen under
+POOL_OPTION_RULES = {"local": "REF-04"}
+REFUSAL_NOTE = ("The next build of this region computes this curve from the source, records "
+                "every check it fails, and scores it as your exception. Until then the metric "
+                "scores as the build left it.")
+
+
+def _pool_title(option: str, code: Any) -> str:
+    """A station pool option in words: the local reference, this ecoregion under
+    the regional screen, or a wider pool with its region's code."""
+    from . import acceptance
+    wider = option not in ("local", "regional_l3") and code not in (None, "")
+    return acceptance.option_label(option) + (f" ({code})" if wider else "")
+
+
+def _refused(rule: str, option: str, *, title: str, n: Optional[int], why: str,
+             forcible: bool, why_not: str = "") -> dict:
+    from . import basis_ladder
+    enough = n is None or int(n) >= basis_ladder.MIN_FORCED_N
+    opt = _option(REFUSED, f"{REFUSED}:{rule}:{option}", title=title,
+                  detail=(f"{int(n):,} stations. " if n is not None else "")
+                  + f"Refused by the build under {rule}.",
+                  ref={"rule": rule, "option": option, "refusal": why},
+                  available=bool(forcible and enough),
+                  why_not=(why_not or (why if forcible and enough else
+                                       f"Too few stations to build a curve from ({n})."
+                                       if forcible else why)))
+    opt["refusal"] = why
+    return opt
+
+
+def refused_options(metric: str, *, build: Optional[Mapping] = None,
+                    provenance: Optional[Mapping] = None) -> list[dict]:
+    """The sources the build tried for the metric and refused, each with its
+    reason: the station pools and the national options the provenance names, a
+    modeled specification that waits for approval or lies outside its limits,
+    and a catalog criterion that failed a fitness condition. The owner may accept
+    one (REF-15); its curve is computed at the next build. A source that holds
+    nothing to build from (no criterion, too few stations) is listed as not
+    available."""
     from . import curve_sources as csrc
-    out = []
+    from . import reference_pool as rp_
+    mk = str(metric)
+    records = [r for r in (provenance or {}).get("records") or []
+               if str(r.get("subject")) == mk and r.get("subject_kind", "metric") == "metric"]
+    by_rule = {str(r.get("rule_id")): r for r in records}
+    out: list[dict] = []
+    pools = ((by_rule.get("REF-06") or {}).get("computed") or {}).get("options_tried") or []
+    for x in pools:
+        option = str(x.get("option") or "")
+        rule = POOL_OPTION_RULES.get(option, "REF-11")
+        out.append(_refused(rule, option, title=_pool_title(option, x.get("region_code")),
+                            n=x.get("n_usable"), why=str(x.get("why") or ""), forcible=True))
+    rungs = []
     for w in (build or {}).get("insufficientReferenceSupport") or []:
-        if str(w.get("metricKey")) != str(metric):
+        if str(w.get("metricKey")) == mk:
+            rungs = list(w.get("rungsTried") or [])
+    for rule in ("REF-12", "REF-13", "REF-14"):
+        rec = by_rule.get(rule)
+        if rec is not None and rec.get("verdict") == "pass":
             continue
-        for r in w.get("rungsTried") or []:
-            rule = str(r.get("rung") or "")
-            out.append(_option(REFUSED, f"{REFUSED}:{rule}",
-                               title=csrc.RUNG_NAMES.get(rule, rule),
-                               detail=f"Refused by the build under {rule}", available=False,
-                               ref={"rule": rule, "condition": r.get("condition")},
-                               why_not=str(r.get("why") or "").strip()))
+        computed = (rec or {}).get("computed") or {}
+        why = str(computed.get("why") or next((r.get("why") for r in rungs
+                                               if r.get("rung") == rule), "") or "")
+        if rec is None and not any(r.get("rung") == rule for r in rungs):
+            continue
+        name = csrc.RUNG_NAMES.get(rule, rule)
+        if rule == "REF-12":
+            options = computed.get("options") or [{"option": o, "n": None}
+                                                  for o in csrc.NATIONAL_OPTIONS]
+            for o in options:
+                option = str(o.get("option") or "")
+                out.append(_refused(rule, option,
+                                    title=f"{name}, {csrc.NATIONAL_OPTIONS.get(option, option).lower()}",
+                                    n=o.get("n"), why=str(o.get("why") or why), forcible=True))
+        elif rule == "REF-13":
+            # a specification waiting for approval, or one outside its limits, can
+            # be run; a metric the registry holds nothing for cannot
+            out.append(_refused(rule, "modeled", title=name, n=None, why=why,
+                                forcible=bool(why) and "no approved specification" not in why))
+        else:
+            condition = computed.get("condition") or next(
+                (r.get("condition") for r in rungs if r.get("rung") == rule), None)
+            no_entry = list(condition or []) == ["catalog", "no entry"]
+            out.append(_refused(rule, "catalog", title=name, n=None, why=why,
+                                forcible=not no_entry))
     return out
 
 
+def forced_annotations(metric: str, got: Mapping) -> dict:
+    """What a bundle states beside a refused source the owner accepted: what the
+    curve rests on, exactly as the build computed it, and every check it failed."""
+    from . import reference_pool as rp_
+    d = dict(got.get("decision") or {})
+    basis = curve_basis.resolve(d.get("basis"))
+    failed = [f for f in got.get("failed") or [] if not f.get("pass")]
+    checks = "; ".join(f"{f.get('check')}: {str(f.get('why') or '').rstrip('.')}"
+                       for f in failed) or "no check recorded"
+    caveat = (f"The build refused this source ({checks}). The owner accepted it with a "
+              "recorded rationale.")
+    limit = curve_basis.limit_for(basis)
+    ann = {"basis": basis,
+           "basisLabel": f"{curve_basis.label_for(basis) or 'Reference curve'}, accepted by the owner",
+           "basisStatement": curve_basis.statement_for(basis), "basisLimit": caveat,
+           "referenceSupport": rp_.reference_support_record(d),
+           "curveCaveats": [caveat] + ([limit] if limit else []),
+           "ownerException": {"rule": got.get("rule"), "option": got.get("option"),
+                              "failed": [dict(f) for f in failed]}}
+    if basis == curve_basis.PUBLISHED:
+        region = (got.get("row") or {}).get("benchmark_region")
+        ann["criteriaBasis"] = fixed_criteria.CRITERIA_BASIS
+        if region:
+            ann["criteriaSource"] = pb.criteria_source(metric, region)
+            ann["sourceCitation"] = pb.citation_line(metric, region)
+            ann["publishedBenchmark"] = {**pb.provenance(metric), "region": str(region)}
+    method_text = field_methods.method_context(metric)
+    if method_text:
+        ann["methodContext"] = method_text
+    return ann
+
+
+def forced_curve(metric: str, got: Mapping) -> dict:
+    """A refused source's computed curve in the shape a decision holds it."""
+    row = got.get("row") or {}
+    frame = curves.normalize_reference_curve_points(row.get("curve_points"))
+    config = dict(got.get("config") or {})
+    return {"displayName": config.get("display_name") or str(metric), "curveStatus": "complete",
+            "nReference": row.get("n_reference"), "stratum": str(row.get("stratum") or ""),
+            "points": [{"x": float(r.metric_value), "y": float(r.index_score)}
+                       for r in frame.itertuples(index=False)],
+            "layers": [], "config": config,
+            "annotations": forced_annotations(metric, got)}
+
+
 def pool_for(metric: str, *, region_code: str, region_name: Optional[str] = None,
-             build: Optional[Mapping] = None, current=None) -> list[dict]:
+             build: Optional[Mapping] = None, provenance: Optional[Mapping] = None,
+             current=None) -> list[dict]:
     """Every source the owner can choose for the metric, in the order the dialog
     lists them, the ones not available here last with their reason."""
     opts: list[dict] = []
@@ -642,7 +759,7 @@ def pool_for(metric: str, *, region_code: str, region_name: Optional[str] = None
                                 and _pts(cat["points"]) == _pts(current)):
         opts.append(cat)
     opts.extend(library_options(metric, region_code=region_code, current=current))
-    opts.extend(refused_options(metric, build=build))
+    opts.extend(refused_options(metric, build=build, provenance=provenance))
     return [o for o in opts if o["available"]] + [o for o in opts if not o["available"]]
 
 
@@ -654,6 +771,9 @@ def decision_source(metric: str, option: Mapping, *, config: Mapping) -> dict:
     and the curve itself in the shape a carried curve rides in."""
     config = dict(config or {})
     kind = str(option.get("kind"))
+    if kind == REFUSED:
+        return {"kind": kind, "ref": dict(option.get("ref") or {}),
+                "title": str(option.get("title") or ""), "citation": None}
     return {"kind": kind, "ref": dict(option.get("ref") or {}),
             "title": str(option.get("title") or ""),
             "citation": str(option.get("citation") or "") or None,
@@ -677,5 +797,6 @@ __all__ = [
     "fmt", "two_sided", "threshold_bands", "threshold_points", "parse_points",
     "breakpoint_points", "entered_annotations", "entered_option", "catalog_annotations",
     "catalog_option", "borrowed_annotations", "earlier_annotations", "library_options",
-    "refused_options", "pool_for", "decision_source",
+    "refused_options", "pool_for", "decision_source", "REFUSAL_NOTE", "forced_annotations",
+    "forced_curve",
 ]

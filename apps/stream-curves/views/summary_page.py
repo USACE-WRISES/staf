@@ -1043,6 +1043,27 @@ def summary_page_server(input, output, session, state: AppState):
             built = state.completed_metrics() or {}
         return cg.reference_tiles_for(build, mapping, built=built, decisions=decisions)
 
+    def _waiting_for_build():
+        """The refused sources the owner accepted that no build has computed yet."""
+        from streamcurves import metric_names as _mn
+        from streamcurves import owner_curves as _oc
+        waiting = _oc.pending(state.owner_curve_decisions() or [])
+        if not waiting:
+            return None
+        return ui.div(
+            ui.tags.strong("Waiting for a build: "),
+            *[ui.tags.span(f"{_mn.display_name_for(mk, None) or mk} "
+                           f"({(d.get('source') or {}).get('title')}) ",
+                           ui.tags.button(fa("rotate-left"), " Undo", type="button",
+                                          class_="btn btn-link btn-sm p-0",
+                                          onclick=sp.undo_onclick(d.get("id"))),
+                           class_="me-3")
+              for mk, d in sorted(waiting.items())],
+            ui.div("The next build of this region computes each one and records every check "
+                   "it fails. Build the region again in the Region builder.",
+                   class_="text-muted"),
+            class_="alert alert-secondary py-2 small mb-0 mt-2")
+
     @render.ui
     def reference_table():
         tiles = _reference_tiles()
@@ -1115,7 +1136,8 @@ def summary_page_server(input, output, session, state: AppState):
                     "Curve", "Metric", "Functions", "Source", "n reference",
                     "Reference range", "Confidence", "")])),
                 ui.tags.tbody(*body),
-                class_="table table-sm align-middle summary-reference-table")),
+                class_="table table-sm align-middle summary-reference-table"),
+                _waiting_for_build()),
             class_="summary-shell mt-3",
         )
 

@@ -750,7 +750,9 @@ def build_deep_assessment_bundle(
                     # REF-15: the owner's decisions on where this curve scores,
                     # the owner's choice of its source, and the assessment a
                     # curve taken from another one comes from
-                    "ownerDecisions", "ownerDecision", "borrowedFrom"):
+                    "ownerDecisions", "ownerDecision", "borrowedFrom",
+                    # and the checks a refused source the owner accepted failed
+                    "ownerException"):
             if key in annotations and annotations[key] is not None:
                 base_entry[key] = annotations[key]
 
