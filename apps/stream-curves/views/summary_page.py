@@ -29,6 +29,7 @@ from streamcurves import curve_svg as cs
 from streamcurves import region_build as rb
 from streamcurves import run_state as rs
 from views import curve_gallery as cg
+from views import source_panel as sp
 from views import state as st
 from views import summary_state as ss
 from views.curve_plots import build_overlay_curve_plot, build_reference_curve_plot
@@ -1138,32 +1139,38 @@ def summary_page_server(input, output, session, state: AppState):
                     (fa("rotate-left") if pending else fa("trash-can")),
                     " Undo" if pending else " Remove",
                     type="button", class_="btn btn-link btn-sm p-0",
-                    onclick=cg.setinput_onclick(
+                    onclick="event.stopPropagation();" + cg.setinput_onclick(
                         channel, {"metric": metric,
                                   "action": "undo_remove" if pending else "remove_carried"}),
                     title=("Undo the pending removal" if pending
                            else "Remove this carried curve at the next build"))
+            status = (t.get("status_text") if t.get("status_text") != t.get("badge") else None)
             body.append(ui.tags.tr(
                 ui.tags.td(ui.HTML(cs.tile_svg(t, w=150, h=90))),
                 ui.tags.td(ui.tags.div(str(t.get("display_name") or metric)),
                            ui.tags.code(metric, class_="small")),
                 ui.tags.td(", ".join(str(f) for f in fns if f) or "Unmapped"),
-                ui.tags.td(cs.status_label(t)),
+                ui.tags.td(sp.kind_badge(t.get("source_kind"), t.get("badge")),
+                           ui.tags.div(str(t.get("source_title") or ""),
+                                       class_="small text-muted summary-reference-source"),
+                           ui.tags.div(status, class_="small fw-semibold") if status else None),
                 ui.tags.td("" if n_ref is None else cs.fmt_num(n_ref)),
                 ui.tags.td("" if lo is None or hi is None
                            else f"{cs.fmt_num(lo)} to {cs.fmt_num(hi)}"),
                 ui.tags.td(str(t.get("confidence_label") or "")),
                 ui.tags.td(action),
+                class_="summary-reference-row", role="button", tabindex="0",
+                title=f"See where {t.get('display_name') or metric} comes from",
+                onclick=sp.open_onclick(metric), onkeydown=sp.open_onkeydown(),
             ))
         n = len(tiles)
         return ui.card(
             ui.card_header(
                 ui.tags.strong("Curves from other sources"),
                 ui.tags.div(
-                    f"{n} curve{'' if n == 1 else 's'} this version scores that this session "
-                    "did not fit: carried forward from the published version, taken from a "
-                    "national, modeled or published source, or a fixed criterion. They are "
-                    "read-only here. A carried curve can be removed at the next build.",
+                    f"{n} curve{'' if n == 1 else 's'} this version scores that this build "
+                    "did not fit. Click a row to see where it comes from and why the build "
+                    "chose it.",
                     class_="text-muted small")),
             ui.card_body(ui.tags.table(
                 ui.tags.thead(ui.tags.tr(*[ui.tags.th(h) for h in (
@@ -1207,8 +1214,10 @@ def summary_page_server(input, output, session, state: AppState):
                 metric, (snap or {}).get("curve_rows"),
                 metric_entry=mc.get(metric), review_entry=review.get(metric),
                 function_label=functions.get(metric)))
-        # every function a metric serves, primary first, from the confirmed mapping
-        rows = cg.assign_functions(rows, mapping)
+        # every function a metric serves, primary first, from the confirmed mapping,
+        # each placement read against the portfolio (a curve left out of a function
+        # reads "Not selected here" there)
+        rows = cg.mark_not_selected(cg.assign_functions(rows, mapping), state.reference_build())
         # and every curve the version scores that the session did not fit, read-only
         rows += _reference_tiles()
         return cg.gallery_ui(

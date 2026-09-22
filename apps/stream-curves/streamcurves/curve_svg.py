@@ -291,7 +291,8 @@ OVERLAY_COLOR = "#8031a7"
 
 def tile_svg(tile: Mapping, *, w: int = 240, h: int = 150,
              band_breaks: tuple[float, float] = DEEP_INDEX_BANDS,
-             overlay: Optional[Sequence[tuple[float, float]]] = None) -> str:
+             overlay: Optional[Sequence[tuple[float, float]]] = None,
+             x_label: Optional[str] = None, point_labels: bool = False) -> str:
     """The thumbnail: band rects split at ``band_breaks``, two dashed break
     lines, the reference range shaded, one polyline per stratum (dash patterns
     cycle; every line dotted and red when the metric is out of scope), the seed
@@ -303,9 +304,13 @@ def tile_svg(tile: Mapping, *, w: int = 240, h: int = 150,
     curves (the Validate stage's field-data markers); x clamps into the plotted
     range so an out-of-range value pins at the edge instead of leaving the
     plot. ``overlay=None`` output is byte-identical to before the parameter
-    existed."""
+    existed.
+
+    ``point_labels`` writes the value of every breakpoint under the axis in
+    place of the two end ticks, and ``x_label`` names the axis (the source
+    panel's larger drawing); neither changes the default output."""
     lo_b, hi_b = float(band_breaks[0]), float(band_breaks[1])
-    ml, mr, mt, mb = 30, 8, 8, 18
+    ml, mr, mt, mb = 30, 8, 8, (30 if (x_label or point_labels) else 18)
     x0, x1 = ml, w - mr
     y1, y0 = h - mb, mt
     metric = str(tile.get("metric") or "")
@@ -358,9 +363,26 @@ def tile_svg(tile: Mapping, *, w: int = 240, h: int = 150,
     for yv in (0.0, lo_b, hi_b, 1.0):
         parts.append(f'<text class="curve-tile-tick" x="{x0 - 3:.1f}" y="{sy(yv) + 2.5:.1f}" text-anchor="end" '
                      f'font-size="7" fill="{TICK_COLOR}">{fmt_num(yv)}</text>')
-    for xv, anchor in ((xmin, "start"), (xmax, "end")):
-        parts.append(f'<text class="curve-tile-tick" x="{sx(xv):.1f}" y="{y1 + 10:.1f}" text-anchor="{anchor}" '
-                     f'font-size="7" fill="{TICK_COLOR}">{html.escape(fmt_num(xv))}</text>')
+    if point_labels and strata:
+        # every breakpoint of the first curve, skipping one that would overlap
+        # the label before it
+        last = None
+        for xv in sorted({x for x, _ in strata[0]["points"]}):
+            xp = sx(xv)
+            if last is not None and xp - last < 16:
+                continue
+            last = xp
+            parts.append(f'<text class="curve-tile-tick curve-tile-point-label" x="{xp:.1f}" '
+                         f'y="{y1 + 10:.1f}" text-anchor="middle" font-size="7" '
+                         f'fill="{TICK_COLOR}">{html.escape(fmt_num(xv))}</text>')
+    else:
+        for xv, anchor in ((xmin, "start"), (xmax, "end")):
+            parts.append(f'<text class="curve-tile-tick" x="{sx(xv):.1f}" y="{y1 + 10:.1f}" text-anchor="{anchor}" '
+                         f'font-size="7" fill="{TICK_COLOR}">{html.escape(fmt_num(xv))}</text>')
+    if x_label:
+        parts.append(f'<text class="curve-tile-axis-label" x="{(x0 + x1) / 2:.1f}" y="{h - 3:.1f}" '
+                     f'text-anchor="middle" font-size="7.5" fill="{TICK_COLOR}">'
+                     f'{html.escape(str(x_label))}</text>')
     # the curves
     color = OUT_OF_SCOPE_COLOR if in_scope is False else LINE_COLOR
     for i, s in enumerate(strata):
@@ -447,6 +469,8 @@ def tile_state_classes(tile: Mapping) -> list[str]:
         # carried forward, from a rung above the hierarchy, or a fixed criterion:
         # never reviewed here, so never "unreviewed"
         classes.append("is-reference")
+        if tile.get("source_kind"):
+            classes.append("src-" + re.sub(r"[^a-z0-9]+", "-", str(tile["source_kind"]).lower()))
         if tile.get("pending_removal"):
             classes.append("is-removal-pending")
     if decision == run_state.DECISION_REMOVED or tile.get("in_scope") is False:
@@ -469,7 +493,7 @@ def tile_title(tile: Mapping) -> str:
                 str(tile.get("status_text") or tile.get("badge") or ""),
                 str(tile.get("basis_label") or ""),
                 (f"Confidence {tile['confidence_label']}" if tile.get("confidence_label") else ""),
-                "Read-only here: the build did not fit this curve"]
+                "Click to see where this curve comes from"]
         return ". ".join(b for b in bits if b)
     bits = [str(tile.get("display_name") or tile.get("metric") or "")]
     bits.append(DECISION_LABELS.get(tile.get("decision"), str(tile.get("decision"))))
