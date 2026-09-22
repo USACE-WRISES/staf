@@ -34,8 +34,9 @@ from streamcurves.staf_library import (
     staf_functions_by_discipline,
     staf_metric_library_entries,
 )
-from streamcurves import metric_names
+from streamcurves import curve_sources as _src
 from streamcurves import pressure_evidence as _pe
+from views import source_panel as _sp
 from views.state import AppState
 from views.uihelpers import guard
 from views.theme import fa
@@ -488,11 +489,16 @@ def discipline_map_server(input, output, session, state: AppState):
         active = active_function()
         by_disc = staf_functions_by_discipline()
         # The curves this version scores that the session did not fit (carried
-        # forward, from a rung above the hierarchy, fixed criteria): locked chips
-        # under the functions the bundle places them in, never editable here.
+        # forward, from a rung above the hierarchy, fixed criteria): source chips
+        # under the functions the bundle places them in. A click opens where the
+        # curve comes from.
         with reactive.isolate():
             built = state.completed_metrics() or {}
-        reference = _pe.reference_rows(state.reference_build(), mapping, built=built)
+        build = state.reference_build()
+        reference = _pe.reference_rows(build, mapping, built=built)
+        # (metric, function id) pairs the portfolio left out: a fitted metric
+        # still sits in the mapping there, but the version does not score it
+        not_selected = _pe.not_selected_pairs(build)
         reference_by_fn: dict[str, list[str]] = {}
         for rk, entry in reference.items():
             for fid in entry["functions"]:
@@ -520,9 +526,13 @@ def discipline_map_server(input, output, session, state: AppState):
             label = workbench_metric_label(mk, metric_config, lib_by_id)
             u = int(usage_v.get(mk, 1) or 1)
             payload = f"{mk}{WORKBENCH_SEP}{fn}"
+            left_out = (mk, str(_pe.canonical_function_id(fn) or "")) in not_selected
             return ui.tags.span(
                 ui.tags.span(label, class_="wb-chip-label"),
                 ui.tags.span("no data", class_="wb-chip-tag") if nodata else None,
+                (ui.tags.span(_src.kind_label("not_selected"), class_="wb-chip-tag",
+                              title=_src.kind_sentence("not_selected"))
+                 if left_out else None),
                 (
                     ui.tags.span(
                         f"×{u}", class_="wb-usage", title=f"Used in {u} functions"
@@ -540,21 +550,22 @@ def discipline_map_server(input, output, session, state: AppState):
                         f"'{js_str(payload)}',{{priority:'event'}})"
                     ),
                 ),
-                class_="wb-chip " + ("wb-chip-nodata" if nodata else "wb-chip-data"),
+                class_="wb-chip " + ("wb-chip-nodata" if nodata else "wb-chip-data")
+                + (" wb-chip-not-selected" if left_out else ""),
             )
 
-        def locked_chip(mk: str):
+        def source_chip(mk: str):
             entry = reference[mk]
-            name = (entry.get("config") or {}).get("display_name")
-            if metric_names.is_placeholder_name(name, mk):
-                name = metric_names.display_name_for(mk, name)
+            kind = entry.get("kind")
+            icon = _src.kind_icon(kind)
             return ui.tags.span(
-                fa("lock"),
-                ui.tags.span(str(name or mk), class_="wb-chip-label"),
+                fa(icon) if icon else None,
+                ui.tags.span(_sp.display_name(mk, entry), class_="wb-chip-label"),
                 ui.tags.span(str(entry.get("label") or ""), class_="wb-chip-tag"),
-                class_="wb-chip wb-chip-data wb-chip-locked",
-                title=(f"{entry.get('label')}. Read-only here: the build did not fit this "
-                       "curve, so its function is part of the version."),
+                class_=f"wb-chip wb-chip-data wb-chip-source {_sp.kind_class(kind)}",
+                role="button", tabindex="0",
+                title=f"{entry.get('label')}. Click to see where this curve comes from.",
+                onclick=_sp.open_onclick(mk), onkeydown=_sp.open_onkeydown(),
             )
 
         def fn_cell(fn: str):
@@ -579,12 +590,12 @@ def discipline_map_server(input, output, session, state: AppState):
             )
 
         def metrics_cell(fn: str):
-            # a reference curve's own rows show as its locked chip instead
+            # a reference curve's own rows show as its source chip instead
             keys = [k for k in metrics_for_fn(fn) if k not in reference]
             if hide_nodata:
                 keys = [k for k in keys if workbench_has_data(k, metric_config)]
             chips = [make_chip(k, fn) for k in keys]
-            chips += [locked_chip(rk)
+            chips += [source_chip(rk)
                       for rk in reference_by_fn.get(_pe.canonical_function_id(fn) or "", [])]
             if not chips:
                 chips = [ui.tags.span("—", class_="wb-empty text-muted")]

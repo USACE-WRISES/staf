@@ -14,8 +14,10 @@ from typing import Any, Iterable, Mapping, Optional
 import pandas as pd
 from shiny import reactive, ui
 
+from streamcurves import curve_sources as src
 from streamcurves import curve_svg as cs
 from streamcurves import run_state as rs
+from views import source_panel as sp
 from views import summary_state as ss
 from views.state import AppState
 from views.theme import bi, fa
@@ -70,6 +72,7 @@ def reference_tiles_for(build, mapping, *, built=(), pending=()) -> list[dict]:
     tiles, placement = [], []
     for mk, entry in pe.reference_rows(build, mapping, built=built).items():
         tile = cs.reference_tile(mk, entry)
+        tile["source_title"] = src.source_title(mk, entry, build=build)
         if entry["kind"] == "carried":
             tile["removable"] = True
             if mk in pending:
@@ -78,6 +81,29 @@ def reference_tiles_for(build, mapping, *, built=(), pending=()) -> list[dict]:
         tiles.append(tile)
         placement.extend(entry["mapping"])
     return cs.assign_functions(tiles, placement)
+
+
+def mark_not_selected(tiles: Iterable[dict], build) -> list[dict]:
+    """Set ``not_selected_fids`` on every tile the session fitted: the functions
+    SELECT-04 left it out of (``pressure_evidence.not_selected_pairs``). The
+    gallery reads each placement against it, so a curve drawn under a function
+    it does not score reads "Not selected here"."""
+    from streamcurves import pressure_evidence as pe
+    by_metric: dict[str, set] = {}
+    for m, fid in pe.not_selected_pairs(build):
+        by_metric.setdefault(str(m), set()).add(str(fid))
+    out = []
+    for t in tiles:
+        if not t.get("read_only"):
+            t["not_selected_fids"] = sorted(by_metric.get(str(t.get("metric") or ""), ()))
+        out.append(t)
+    return out
+
+
+def not_selected_here(row: Mapping, here) -> bool:
+    """The tile placed under function ``here`` (a function id) is a curve the
+    portfolio left out of that function."""
+    return here is not None and str(here) in {str(f) for f in row.get("not_selected_fids") or ()}
 
 
 def reference_tiles(state: AppState, *, pending=()) -> list[dict]:
@@ -101,6 +127,7 @@ def gallery_rows(state: AppState, metrics: Optional[Iterable[str]] = None, *,
         review = state.curve_review() or {}
         functions = state.column_functions() or {}
         mapping = state.discipline_function_mapping()
+        build = state.reference_build()
     keys = list(metrics) if metrics is not None else ss.eligible_summary_metrics(mc)
     reference = set()
     if include_reference:
@@ -117,7 +144,7 @@ def gallery_rows(state: AppState, metrics: Optional[Iterable[str]] = None, *,
             rows = None
         out.append(tile_row(m, rows, metric_entry=mc.get(m), review_entry=review.get(m),
                             function_label=functions.get(m)))
-    out = assign_functions(out, mapping)
+    out = mark_not_selected(assign_functions(out, mapping), build)
     if include_reference:
         wanted = set(metrics) if metrics is not None else None
         out += [t for t in reference_tiles(state)
@@ -212,6 +239,12 @@ def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
                                  title=("Also informs: " + ", ".join(also)) if also else None)
         dom_id = cs.tile_dom_id(metric)
         classes = ["curve-tile", *cs.tile_state_classes(row)]
+    status = cs.status_label(row)
+    title = cs.tile_title(row)
+    if not_selected_here(row, under if cross else row.get("function_id")):
+        status = src.kind_label("not_selected")
+        classes.append("is-not-selected")
+        title = f"{status}. {src.kind_sentence('not_selected')} {title}"
     return ui.div(
         head_note,
         ui.div(
@@ -224,14 +257,14 @@ def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
                 ui.tags.span(metric, class_="curve-tile-code"),
                 class_="curve-tile-id",
             ),
-            ui.tags.span(cs.status_label(row), class_="curve-tile-status"),
+            ui.tags.span(status, class_="curve-tile-status"),
             class_="curve-tile-head",
         ),
         ui.HTML(cs.tile_svg(row, w=w, h=h, band_breaks=band_breaks)),
         ui.div(foot_left, ui.div(*right, class_="curve-tile-foot-right"), class_="curve-tile-foot"),
         id=dom_id,
         class_=" ".join(classes),
-        role="button", tabindex="0", title=cs.tile_title(row), data_metric=metric,
+        role="button", tabindex="0", title=title, data_metric=metric,
         data_role="cross" if cross else "primary",
         onclick=open_click,
         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}",
@@ -241,10 +274,10 @@ def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
 def reference_tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
                       band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS,
                       cross: Mapping | None = None, under: Any = None):
-    """A curve the session did not fit, drawn read-only: no analysis to open and
-    nothing to recompute. The status pill names its source. A carried curve's
-    primary tile carries the one action the owner has on it: remove it at the
-    next build, or undo that."""
+    """A curve the session did not fit: no analysis to open and nothing to
+    recompute, so a click opens its source panel instead. The status pill names
+    the source with its icon. A carried curve's primary tile carries the one
+    action the owner has on it: remove it at the next build, or undo that."""
     metric = str(row.get("metric") or "")
     right = []
     n_strata = len(row.get("strata") or [])
@@ -292,7 +325,7 @@ def reference_tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int 
                 ui.tags.span(metric, class_="curve-tile-code"),
                 class_="curve-tile-id",
             ),
-            ui.tags.span(cs.status_label(row), class_="curve-tile-status"),
+            ui.tags.span(_source_status(row), class_="curve-tile-status"),
             class_="curve-tile-head",
         ),
         ui.HTML(cs.tile_svg(row, w=w, h=h, band_breaks=band_breaks)),
@@ -300,9 +333,18 @@ def reference_tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int 
                class_="curve-tile-foot"),
         id=dom_id,
         class_=" ".join(classes),
-        title=cs.tile_title(row), data_metric=metric,
+        role="button", tabindex="0", title=cs.tile_title(row), data_metric=metric,
         data_role="cross" if cross else "primary",
+        onclick=sp.open_onclick(metric),
+        onkeydown=sp.open_onkeydown(),
     )
+
+
+def _source_status(row: Mapping):
+    """The status pill of a curve from another source: its kind's icon and label."""
+    icon = src.kind_icon(row.get("source_kind"))
+    return ui.TagList(fa(icon) if icon and row.get("status_text") == row.get("badge") else None,
+                      cs.status_label(row))
 
 
 def function_header_ui(fn: Mapping):
@@ -388,6 +430,7 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
             **({"disabled": "disabled"} if recompute_all_disabled else {})))
     actions.append(ui.input_radio_buttons(
         filter_input_id, None, GALLERY_FILTERS, selected=mode, inline=True))
+    actions.append(sources_popover(rows))
     toolbar = ui.div(
         counts,
         ui.div(*actions, class_="curve-gallery-actions"),
@@ -409,18 +452,50 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
         f"{cs.fmt_num(band_breaks[0])} and {cs.fmt_num(band_breaks[1])}. Dotted red curve: not in "
         "scope. Orange marker: needs review. A curve that informs more than one function appears "
         "under each of them; the dashed copies are cross-listed and name the function the curve "
-        "lives under. Click a tile to open its analysis. A tile with a blue edge was not built "
-        "here: carried forward from the published version, taken from a national, modeled or "
-        "published source, or a fixed criterion. Those are read-only, and a carried curve can "
-        "be removed at the next build.",
+        "lives under. Click a curve built here to open its analysis. A tile with a colored edge "
+        "comes from another source: click it to see where it comes from and why.",
         class_="text-muted small curve-gallery-legend",
     )
     return ui.div(toolbar, grid, legend, class_="curve-gallery-wrap")
+
+
+def sources_popover(rows: Iterable[Mapping]):
+    """The toolbar's "About sources": every kind of curve on the page, how many
+    there are and what each rests on."""
+    rows = list(rows)
+    counts = src.kind_counts(rows)
+    left_out = {str(r.get("metric")) for r in rows if r.get("not_selected_fids")}
+    # a fitted curve left out of every function it is drawn under is not used at
+    # all, so it counts as not selected rather than as built here
+    unused = {str(r.get("metric")) for r in rows
+              if not r.get("read_only") and r.get("not_selected_fids")
+              and {str(f) for f in [r.get("function_id")] + [x.get("id") for x in
+                                                              r.get("also_function_refs") or []]
+                   if f} <= {str(f) for f in r["not_selected_fids"]}}
+    if unused and counts.get("built"):
+        counts["built"] -= len(unused)
+        if not counts["built"]:
+            counts.pop("built")
+    if left_out:
+        counts["not_selected"] = len(left_out)
+    items = [ui.tags.li(
+        ui.div(sp.kind_badge(kind), ui.tags.span(str(n), class_="source-legend-n"),
+               class_="source-legend-head"),
+        ui.div(src.kind_sentence(kind), class_="source-legend-sentence"))
+        for kind, n in counts.items()]
+    return ui.popover(
+        ui.tags.button(fa("circle-info"), " About sources", type="button",
+                       class_="btn btn-sm btn-outline-secondary curve-gallery-sources"),
+        ui.tags.ul(*items, class_="source-legend"),
+        ui.div("Click a curve from another source to see where it comes from.",
+               class_="text-muted small"),
+        title="Where these curves come from", placement="bottom",
+        options={"customClass": "source-legend-popover"})
 
 
 __all__ = [
     "REVIEW_STATUS_LABELS", "DECISION_LABELS", "GALLERY_FILTERS", "DEFAULT_SECTION",
     "curves_sections", "tile_row", "assign_functions", "gallery_rows", "filter_rows",
     "setinput_onclick", "tile_ui", "function_header_ui", "section_ui", "gallery_counts",
-    "gallery_ui",
+    "gallery_ui", "mark_not_selected", "not_selected_here", "sources_popover",
 ]

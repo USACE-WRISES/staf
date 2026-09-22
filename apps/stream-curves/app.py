@@ -48,6 +48,7 @@ from views.analysis_workspace import analysis_workspace_server, analysis_workspa
 from views.cross_section import cross_section_server, cross_section_ui
 from views.nrsa_explorer import nrsa_explorer_server, nrsa_explorer_ui
 from views.region_builder import region_builder_server, region_builder_ui
+from views.source_panel import PANEL_ID as SOURCE_PANEL_ID, source_panel_server
 from views.rules import rules_server, rules_ui
 from views.validate_page import validate_server, validate_ui
 from views.data_overview import data_overview_server, data_overview_ui
@@ -278,6 +279,9 @@ def server(input, output, session):
                     active=lambda: state.current_tab() == "validate")
     publish_server("publish", state)
     summary_export_server("summary_export", state)
+    # where a curve from another source comes from: opened by gallery tiles,
+    # the Table and the mapping chips through one input
+    source_panel_server(SOURCE_PANEL_ID, state)
 
     # Standalone phase workspace instances (app.R:246-249); the analysis
     # workspace hosts its own nested copies.
