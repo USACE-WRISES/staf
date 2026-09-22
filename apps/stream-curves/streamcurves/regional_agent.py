@@ -2048,11 +2048,12 @@ def assemble(evidence: dict, *,
     owner_removed = owner_curves.removed(owner_decisions)
     removed_carried = {mk: d.get("rationale") for mk, d in owner_removed.items()
                        if mk in (evidence.get("carried") or {})}
-    # a carried curve the owner gave another source no longer scores as carried
+    # a carried curve the owner gave another source no longer scores as carried;
+    # a refused source that holds no curve yet replaces nothing
     replaced_carried = {mk: d.get("rationale")
-                        for mk, d in owner_curves.sourced(owner_decisions).items()
-                        if mk in (evidence.get("carried") or {}) and mk not in owner_removed
-                        and owner_curves.applies(mk, built=curve_review)}
+                        for mk, d in owner_curves.chosen(owner_decisions,
+                                                         built=curve_review).items()
+                        if mk in (evidence.get("carried") or {})}
     # Recorded reviewer finalizations (``finalize_metrics``: metric -> note).
     # A flagged curve publishes only through exactly this: a named human
     # decision with a rationale, stamped on the review entry. The agent never

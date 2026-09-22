@@ -417,6 +417,12 @@ def _chosen(acts: dict, built=()) -> dict:
             and len(source_curve(d).get("points") or []) >= 2}
 
 
+def chosen(decisions: Iterable[Mapping], *, built=()) -> dict:
+    """``{metric: decision}`` of the source decisions that put a curve in this
+    version: not removed, not on a metric the build fitted, holding a curve."""
+    return _chosen(_by_action(decisions), built)
+
+
 def forced_sources(decisions: Iterable[Mapping]) -> dict:
     """``{metric: {"rule", "option"}}`` of the refused sources the owner accepted:
     what a build computes for them (``basis_ladder.force_source``)."""
@@ -532,6 +538,21 @@ def _placed(mapping, chosen: dict):
     return pd.concat([base, extra], ignore_index=True)
 
 
+def _placed_pairs(mapping, selection: Optional[Mapping]) -> set:
+    """``{(metric, function id)}`` the mapping places and the portfolio keeps."""
+    from . import pressure_evidence as pe
+    if not isinstance(mapping, pd.DataFrame) or not len(mapping) \
+            or "metric_key" not in mapping.columns or "function_label" not in mapping.columns:
+        return set()
+    dropped = pe.not_selected_pairs({"portfolioSelection": dict(selection or {})})
+    out = set()
+    for mk, label in zip(mapping["metric_key"].astype(str), mapping["function_label"]):
+        fid = pe.canonical_function_id(label)
+        if fid and (mk, fid) not in dropped:
+            out.add((mk, fid))
+    return out
+
+
 def _with_chosen(rows: dict, mapping, config: dict, meta: dict, chosen: dict):
     """Put each chosen curve in the exporter's inputs, in place of whatever the
     build gave the metric: its points and layers, config and annotations, placed
@@ -572,12 +593,19 @@ def apply_to_inputs(rows: dict, mapping, config: dict, meta: dict,
     from . import pressure_evidence as pe
     decisions = list(decisions or [])
     acts = _by_action(decisions)
-    gone = set(acts[REMOVE])
-    chosen = _chosen(acts, built)
-    if chosen:
-        rows, mapping, config = _with_chosen(rows, mapping, config, meta, chosen)
-    selection = effective_selection(meta.get("portfolioSelection"),
-                                    list(chosen.values()) + acts[UNMAP] + acts[INCLUDE])
+    # a removal never takes out a curve the build fitted: that curve is the
+    # review's to take out of scope, and stale() names the removal
+    gone = set(acts[REMOVE]) - {str(k) for k in built or ()}
+    picked = _chosen(acts, built)
+    if picked:
+        rows, mapping, config = _with_chosen(rows, mapping, config, meta, picked)
+    base_selection = meta.get("portfolioSelection")
+    # the pairs an include or an unmap can change: SELECT-04's own left-out pairs,
+    # and the pairs the mapping places once the chosen curves are in
+    left_out = _left_out({"portfolioSelection": base_selection})
+    placed = _placed_pairs(mapping, effective_selection(base_selection, list(picked.values())))
+    selection = effective_selection(base_selection,
+                                    list(picked.values()) + acts[UNMAP] + acts[INCLUDE])
     rows = {mk: r for mk, r in rows.items() if str(mk) not in gone}
     if isinstance(mapping, pd.DataFrame) and len(mapping) and "metric_key" in mapping.columns:
         mapping = mapping[~mapping["metric_key"].astype(str).isin(gone)]
@@ -587,11 +615,15 @@ def apply_to_inputs(rows: dict, mapping, config: dict, meta: dict,
         meta["portfolioSelection"] = selection
     if decisions:
         meta["ownerCurveDecisions"] = [summary(d) for d in decisions]
-        # a curve still scoring states the owner's decisions on where it scores
+        # a curve still scoring states the owner's decisions on where it scores,
+        # each one that changed a pair here (a stale one is named by stale())
         annotations = meta.setdefault("metricAnnotations", {})
         for d in acts[UNMAP] + acts[INCLUDE]:
             mk = str(d.get("metric"))
             if mk not in rows:
+                continue
+            pairs = left_out if d.get("action") == INCLUDE else placed
+            if not any((mk, str(f)) in pairs for f in d.get("functions") or []):
                 continue
             ann = dict(annotations.get(mk) or {})
             ann["ownerDecisions"] = [x for x in ann.get("ownerDecisions") or []
@@ -715,6 +747,9 @@ def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
         mk = str(d.get("metric"))
         if d.get("action") == SOURCE and mk in built:
             out.append((dict(d), "This build fits the metric itself, so its own curve scores."))
+        elif d.get("action") == REMOVE and mk in built:
+            out.append((dict(d), "This build fits the metric itself, so the removal does not "
+                                 "apply."))
         elif d.get("action") == SOURCE and (d.get("source") or {}).get("failedAtBuild"):
             out.append((dict(d), "Nothing could be built from the source: "
                         + str((d.get("source") or {}).get("failedAtBuild"))))
@@ -733,7 +768,7 @@ __all__ = [
     "ACTIONS", "GAP_REASON", "ACTION_LABELS", "FLAG_PREFIX", "min_rationale", "new_decision",
     "check", "validate", "load", "path_of", "standing", "load_file", "seed", "supersedes",
     "merge", "save", "undo", "combine", "restore", "from_removals", "effective_selection",
-    "applies", "sourced", "source_curve", "decision_annotation", "effective_build",
+    "applies", "sourced", "chosen", "source_curve", "decision_annotation", "effective_build",
     "apply_to_inputs", "summary", "requests", "decisions_changed", "removed",
     "decisions_for", "coverage_exceptions", "live_exceptions", "with_exceptions", "stale",
     "forced_sources", "pending", "with_forced",
