@@ -656,6 +656,64 @@ SESSION_ANNOTATION_KEYS = ("criteriaBasis", "basis", "basisLabel", "basisStateme
                            "basisLimit", "referenceSupport", "localComparison",
                            "stratifier", "discrimination", "methodContext")
 
+#: What the headless build writes on a curve it fitted and an interactive
+#: republish cannot recompute (``regional_agent.metric_annotations``): the
+#: reference sample, its disposition and range, the metric's role, the caveats
+#: and the confidence. Kept with the curve they describe, so a republish of an
+#: untouched curve states them again and a curve someone changed does not.
+FITTED_ANNOTATION_KEYS = ("referenceN", "sampleDisposition", "metricRole", "curveCaveats",
+                          "confidenceLabel", "confidenceTotal", "referenceRange")
+
+
+def _curve_signature(entry: dict) -> dict:
+    """What identifies a bundle entry's curve: its points and its class layers."""
+    return {"points": (entry.get("curve") or {}).get("points"),
+            "layers": entry.get("curveLayers")}
+
+
+def fitted_annotations_of(bundle: Optional[dict], metrics) -> dict:
+    """``{metric: {"curve": signature, <FITTED_ANNOTATION_KEYS>}}`` for ``metrics``
+    (the curves the build fitted) from a built bundle."""
+    from .deep_export import deep_slug
+    ids = {"spring-" + deep_slug(str(mk)): str(mk) for mk in metrics or ()}
+    out: dict = {}
+    for blk in (bundle or {}).get("metricsByFunction") or []:
+        for m in blk.get("metrics") or []:
+            mk = ids.get(str(m.get("metricId")))
+            if mk is None or mk in out:
+                continue
+            kept = {k: m[k] for k in FITTED_ANNOTATION_KEYS if m.get(k) is not None}
+            if kept:
+                out[mk] = {"curve": _curve_signature(m), **kept}
+    return out
+
+
+def carry_fitted_annotations(bundle: dict, stored: Optional[dict], *, metrics=None) -> list[str]:
+    """Put the annotations of :data:`FITTED_ANNOTATION_KEYS` back on every entry
+    of ``bundle`` whose curve is exactly the one ``stored`` describes
+    (:func:`fitted_annotations_of` of the build that fitted it). ``metrics``, when
+    given, limits it to those curves (the ones whose review is unchanged). A key
+    the entry already states is kept. Returns the metrics carried."""
+    from .deep_export import deep_slug
+    stored = stored or {}
+    ids = {"spring-" + deep_slug(str(mk)): str(mk) for mk in stored
+           if metrics is None or str(mk) in {str(x) for x in metrics}}
+    carried: list[str] = []
+    for blk in (bundle or {}).get("metricsByFunction") or []:
+        for m in blk.get("metrics") or []:
+            mk = ids.get(str(m.get("metricId")))
+            if mk is None:
+                continue
+            saved = stored[mk] or {}
+            if _curve_signature(m) != saved.get("curve"):
+                continue
+            for k in FITTED_ANNOTATION_KEYS:
+                if saved.get(k) is not None and m.get(k) is None:
+                    m[k] = saved[k]
+            if mk not in carried:
+                carried.append(mk)
+    return carried
+
 
 def session_reference_build(result: dict) -> Optional[dict]:
     """The session's ``reference_build`` field: what an interactive republish
@@ -674,6 +732,11 @@ def session_reference_build(result: dict) -> Optional[dict]:
     carried = result.get("carried") or {}
     for mk in carried:
         annotations.pop(mk, None)
+    # what only the build can say about the curves it fitted, kept with the
+    # curve it describes (FITTED_ANNOTATION_KEYS)
+    fitted = [mk for mk in (result.get("curve_review") or {})
+              if mk not in ladder and mk not in carried and mk not in fixed]
+    fitted_annotations = fitted_annotations_of(result.get("bundle"), fitted)
     out = {"method": METHOD,
            "referenceMethod": meta.get("referenceMethod"),
            "insufficientReferenceSupport": list(meta.get("insufficientReferenceSupport") or []),
@@ -687,6 +750,8 @@ def session_reference_build(result: dict) -> Optional[dict]:
         out["carriedFrom"] = dict(result.get("carried_from") or {})
     if meta.get("portfolioSelection"):
         out["portfolioSelection"] = meta["portfolioSelection"]
+    if fitted_annotations:
+        out["fittedAnnotations"] = fitted_annotations
     return out
 
 
@@ -795,6 +860,13 @@ def reference_keys(build: Optional[dict]) -> list[str]:
     return keys
 
 
+def fixed_in_order(keys) -> tuple:
+    """The fixed-criteria metrics of ``keys`` in the criteria's own order, the order
+    a build places them in (the session stores the keys sorted)."""
+    wanted = {str(k) for k in keys or ()}
+    return tuple(mk for mk in fixed_criteria.metric_keys() if mk in wanted)
+
+
 def not_selected_pairs(build: Optional[dict]) -> set:
     """``{(metric, function id)}`` SELECT-04 recorded as supported, not selected:
     the pairs the bundle leaves out (:func:`_apply_selection`)."""
@@ -879,7 +951,8 @@ def reference_mapping_rows(build: Optional[dict], mapping=None, *, built=()) -> 
     dropped = not_selected_pairs(build)
     ladder = {str(mk): s for mk, s in (build.get("ladderMetrics") or {}).items()
               if (s or {}).get("points") and str(mk) not in built}
-    session_rows = _session_mapping_rows(mapping, set(ladder))
+    carried_keys = {str(mk) for mk in (build.get("carriedMetrics") or {})}
+    session_rows = _session_mapping_rows(mapping, set(ladder) | carried_keys)
     annotations = build.get("metricAnnotations") or {}
     placed: dict[str, dict] = {}
     for mk, saved in ladder.items():
@@ -888,9 +961,12 @@ def reference_mapping_rows(build: Optional[dict], mapping=None, *, built=()) -> 
     for mk, saved in (build.get("carriedMetrics") or {}).items():
         if str(mk) in placed or str(mk) in built:
             continue
+        # the session's rows when it has them, as the republish places it
+        rows_here = session_rows.get(str(mk))
         placed[str(mk)] = {"kind": "carried",
-                           "mapping": [dict(r) for r in (saved or {}).get("mapping") or []]}
-    fixed = tuple(str(mk) for mk in (build.get("fixedMetrics") or []) if fixed_criteria.is_fixed(mk))
+                           "mapping": (list(rows_here) if rows_here else
+                                       [dict(r) for r in (saved or {}).get("mapping") or []])}
+    fixed = fixed_in_order(build.get("fixedMetrics"))
     if fixed:
         rows = _fixed_mapping_of(fixed)
         for mk in fixed:
@@ -1029,22 +1105,29 @@ def apply_reference_build(build: Optional[dict], curve_rows: dict, mapping,
     for mk, ann in (build.get("metricAnnotations") or {}).items():
         if mk in rows:
             annotations[mk] = {**(annotations.get(mk) or {}), **ann}
-    # methodology 0.14: carried-forward curves, restored from their published points
+    # methodology 0.14: carried-forward curves, restored from their published points.
+    # They are placed by the session's own mapping rows, which are the rows the
+    # build published them under, in the build's order; the placement stored with
+    # the curve stands in only for one the session has no row for (an open before
+    # 2026-09-21 deleted them).
     carried = carry_forward.restore_rows(build.get("carriedMetrics") or {})
     if carried:
         _add_carried(carried, rows, config, annotations)
-        extra = carry_forward.mapping_rows(carried)
+        placed = _session_mapping_rows(mapping, set(carried))
+        extra = carry_forward.mapping_rows(
+            {mk: c for mk, c in carried.items() if mk not in placed})
         if len(extra):
             base = mapping if isinstance(mapping, pd.DataFrame) else pd.DataFrame(
                 columns=["metric_key", "discipline", "function_label", "sort_order"])
             if len(base) and "metric_key" in base.columns:
-                base = base[~base["metric_key"].astype(str).isin(list(carried))]
+                base = base[~base["metric_key"].astype(str).isin(
+                    [mk for mk in carried if mk not in placed])]
             order = (pd.to_numeric(base["sort_order"], errors="coerce")
                      if "sort_order" in base.columns else pd.Series(dtype="float64"))
             start = int(order.max()) if order.notna().any() else 0
             extra = extra.assign(sort_order=range(start + 1, start + 1 + len(extra)))
             mapping = pd.concat([base, extra], ignore_index=True)
-    fixed = [mk for mk in (build.get("fixedMetrics") or []) if fixed_criteria.is_fixed(mk)]
+    fixed = list(fixed_in_order(build.get("fixedMetrics")))
     if fixed:
         fixed_config = fixed_criteria.metric_config_entries()
         for mk in fixed:

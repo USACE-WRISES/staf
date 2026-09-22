@@ -6,13 +6,16 @@ export screen (Finalize / Test in DEEP) and the Publish page can't drift.
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import json
+from pathlib import Path
 
 import pandas as pd
 from shiny import reactive
 
 from streamcurves import easi_screening
+from streamcurves import library as lib
 from streamcurves import provenance as pv
 from streamcurves import run_state as rs
 from streamcurves import session_io as sio
@@ -100,6 +103,38 @@ def _not_selected(reference_build) -> set:
         return set()
     from streamcurves import pressure_evidence as _pe
     return _pe.not_selected_pairs(reference_build)
+
+
+def pending_standing_decisions(state: AppState) -> dict:
+    """What an opened build's standing decisions left for the owner to confirm:
+    ``{"approvals": [...], "exceptions": [...]}`` (SELECT-01 approvals and COV-01
+    documented gaps whose recorder is still the pending marker). Promote confirms
+    them under the promoting owner; the workspace publish does the same."""
+    from streamcurves import decisions as _dec
+    with reactive.isolate():
+        origin = state.assessment_source() or {}
+        exceptions = state.function_coverage_exceptions() or []
+    return {"approvals": _dec.pending_approvals(origin.get("portfolio_approvals")),
+            "exceptions": _dec.pending_exceptions(exceptions)}
+
+
+def pending_decisions_text(pending: dict) -> str:
+    """The sentence over the confirmation checkbox."""
+    names = {str(f.get("id")): f.get("name") or str(f.get("id"))
+             for f in deep_read_staf_crosswalk()}
+    parts = []
+    if pending.get("approvals"):
+        fns = ", ".join(names.get(str(a.get("functionId")), str(a.get("functionId")))
+                        for a in pending["approvals"])
+        parts.append(f"the portfolio approval of {fns}")
+    if pending.get("exceptions"):
+        fns = ", ".join(names.get(str(e.get("functionId")), str(e.get("functionId")))
+                        for e in pending["exceptions"])
+        n = len(pending["exceptions"])
+        parts.append(f"{n} documented gap{'' if n == 1 else 's'} ({fns})")
+    return ("The build's standing decisions left " + " and ".join(parts) + " for the owner "
+            "to confirm. Publishing records them under your name, as the Region builder's "
+            "publish does.")
 
 
 def portfolio_approval_needed(state: AppState) -> list[dict]:
@@ -340,6 +375,56 @@ def session_payload_from_state(state: AppState) -> dict:
     return sio.dump_session_fields(fields, session_name=session_name)
 
 
+@functools.lru_cache(maxsize=8)
+def _bundle_at(path: str, mtime: float) -> dict | None:
+    # cached by path and modification time: the publish page asks on every render
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def origin_bundle(origin: dict | None) -> dict | None:
+    """The bundle the opened assessment was loaded from: the staged build's, or
+    the library version's. None when there is none on this machine."""
+    origin = origin or {}
+    path = None
+    if origin.get("kind") == "staged" and origin.get("staged_path"):
+        path = Path(origin["staged_path"]) / lib.BUNDLE_FILE
+    elif origin.get("kind") == "library" and origin.get("library_id") and origin.get("version"):
+        try:
+            path = lib.version_dir(origin["library_id"], int(origin["version"])) / lib.BUNDLE_FILE
+        except Exception:  # noqa: BLE001 - an unreadable library is no origin
+            path = None
+    if path is None or not path.is_file():
+        return None
+    return _bundle_at(str(path), path.stat().st_mtime)
+
+
+def unchanged_reviews(state: AppState) -> set | None:
+    """Metrics whose review entry is exactly what it was when the assessment was
+    opened, or None when the opening recorded no baseline (nothing to compare)."""
+    with reactive.isolate():
+        origin = state.assessment_source() or {}
+        curve_review = state.curve_review() or {}
+    base = (origin.get("baselines") or {}).get("curve_fingerprints")
+    if not isinstance(base, dict):
+        return None
+    return {str(m) for m, entry in curve_review.items() if base.get(str(m)) == _digest16(entry)}
+
+
+def fitted_annotation_source(state: AppState, reference_build, fitted) -> dict:
+    """Where the fitted curves' build-only annotations come from: the session,
+    else the bundle the assessment was opened from."""
+    stored = (reference_build or {}).get("fittedAnnotations")
+    if stored:
+        return dict(stored)
+    with reactive.isolate():
+        origin = state.assessment_source()
+    from streamcurves import pressure_evidence as _pe
+    return _pe.fitted_annotations_of(origin_bundle(origin), fitted)
+
+
 def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
     """Build the DEEP bundle from the finalized curves in state.
 
@@ -366,6 +451,10 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
     # at all (the Advanced path) publishes everything it holds, as it always did.
     out_of_scope = {mk for mk, entry in curve_review.items() if not rs.is_in_scope(entry)}
     completed = {mk: cm for mk, cm in completed.items() if mk not in out_of_scope}
+    if curve_review:
+        # in the order the build exports them (run_state.intended_metrics_for_publish
+        # sorts), so an untouched republish is the same content, entry for entry
+        completed = {mk: completed[mk] for mk in sorted(completed)}
 
     curve_rows = deep_collect_curve_rows(completed)
 
@@ -399,4 +488,11 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
             "No finalized reference curves in this session. Complete at least one "
             "metric's Phase 4 curve first."
         )
-    return build_deep_assessment_bundle(curve_rows, mapping, metric_config, meta=full_meta)
+    bundle = build_deep_assessment_bundle(curve_rows, mapping, metric_config, meta=full_meta)
+    # What only the build could say about the curves it fitted (the reference
+    # sample, the caveats, the confidence) rides again on every curve that is
+    # still exactly the one it describes and whose review nobody changed.
+    stored = fitted_annotation_source(state, reference_build, completed)
+    if stored:
+        _pe.carry_fitted_annotations(bundle, stored, metrics=unchanged_reviews(state))
+    return bundle

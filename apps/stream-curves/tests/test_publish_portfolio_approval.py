@@ -145,7 +145,7 @@ def test_the_handler_judges_the_real_bundle_and_records_the_publisher():
 
 def test_an_unticked_box_refuses_before_anything_is_written():
     """The refusal restores the stage stamp the handler set, like the failure path."""
-    handler = SRC[SRC.index("if unapproved:"):SRC.index("now_iso = ")]
+    handler = SRC[SRC.index("if unapproved:"):SRC.index("if source_doc:")]
     assert "state.run_stage_status.set(prev_stage_status)" in handler
     assert "return" in handler
 

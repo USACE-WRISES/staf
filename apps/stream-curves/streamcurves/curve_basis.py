@@ -80,8 +80,9 @@ STATEMENTS = {
 LIMITS = {
     NATIONAL: ("The donor stations lie outside this ecoregion and its parents, matched on natural "
                "setting rather than drawn from it."),
-    MODELED: ("No stream in this ecoregion is clean enough to observe the reference condition, so "
-              "the expectation is an extrapolation and not a measurement."),
+    MODELED: ("Too few streams in this ecoregion are clean enough to observe the reference "
+              "condition directly, so the expectation is an extrapolation and not a "
+              "measurement."),
     PUBLISHED: ("A published criterion is not an estimate of this ecoregion's reference condition "
                 "and may disagree with a reference curve where one exists."),
 }

@@ -221,7 +221,8 @@ def test_the_publish_meta_inherits_the_origin_approvals():
 
     text = (Path(__file__).resolve().parents[1] / "views" / "publish.py").read_text(
         encoding="utf-8")
-    assert 'meta["portfolioApprovals"] = origin["portfolio_approvals"]' in text
+    # a copy, so confirming a pending approver never writes back into the origin
+    assert 'meta["portfolioApprovals"] = copy.deepcopy(origin["portfolio_approvals"])' in text
 
 
 def test_the_publish_form_rerenders_when_a_different_session_is_opened():
