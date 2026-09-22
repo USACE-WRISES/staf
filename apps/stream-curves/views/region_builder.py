@@ -259,9 +259,15 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         oc.undo(folder, did)
         with reactive.isolate():
             current = list(state.owner_curve_decisions() or [])
+            gaps = list(state.function_coverage_exceptions() or [])
             n = decisions_nonce() or 0
         if any(d.get("id") == did for d in current):
-            state.owner_curve_decisions.set([d for d in current if d.get("id") != did])
+            remaining = [d for d in current if d.get("id") != did]
+            state.owner_curve_decisions.set(remaining)
+            # a gap recorded with the decision goes with it
+            kept = oc.live_exceptions(gaps, remaining)
+            if kept != gaps:
+                state.function_coverage_exceptions.set(kept)
         decisions_nonce.set(n + 1)
 
     def _decisions_block():
@@ -553,6 +559,19 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         state.session_restore_nonce.set(nonce + 1)
 
     # ── publish ──────────────────────────────────────────────────────────────
+    def _decisions_moved() -> Optional[str]:
+        """Why the staged run cannot be published as it stands: the region's curve
+        decisions changed after it was staged (REF-15), so it would publish without
+        the new ones, or with one the owner undid. Promote refuses it too."""
+        folder = _active_dir()
+        staged = _staged_build(_session_path())
+        if folder is None or not staged:
+            return None
+        if oc.decisions_changed(staged["decisions"], oc.load(folder)):
+            return ("Your curve decisions changed after this run was staged. Build it again "
+                    "so the version applies them.")
+        return None
+
     def _publish_block():
         """The Publish control, or the sentence that explains why there is none.
 
@@ -567,7 +586,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                 "Not staged, so there is nothing to publish yet. Answer what is left "
                 "above and build this region again.",
                 class_="text-muted small mt-3")
-        blocked = lib.publish_gate_reason(_maintainer())
+        blocked = lib.publish_gate_reason(_maintainer()) or _decisions_moved()
         return ui.div(
             ui.input_action_button(
                 ns("publish_run"), ui.TagList(bi("file-earmark-arrow-up"),
@@ -588,7 +607,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         packet = _packet() or {}
         if not (packet.get("staged") or {}).get("path"):
             return
-        blocked = lib.publish_gate_reason(_maintainer())
+        blocked = lib.publish_gate_reason(_maintainer()) or _decisions_moved()
         if blocked:
             ui.notification_show(blocked, type="warning", duration=10)
             return

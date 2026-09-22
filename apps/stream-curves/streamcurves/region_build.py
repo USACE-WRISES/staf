@@ -258,16 +258,24 @@ def published_curve_decisions(l3_code) -> list[dict]:
     return [dict(d) for d in fields.get("owner_curve_decisions") or [] if isinstance(d, dict)]
 
 
-def curve_decisions_path(run_dir, l3_code) -> Optional[Path]:
-    """The region's curve decisions file for a build (REF-15), or None when it holds
-    none. A region that has never recorded a decision here takes its latest
-    published version's first, so a checkout without the (gitignored) run folder
-    builds with the owner's choices rather than silently without them."""
+def standing_decisions(run_dir, l3_code) -> list[dict]:
+    """The region's standing curve decisions (REF-15). A region that has never
+    recorded a decision here takes its latest published version's first, so a
+    checkout without the (gitignored) run folder keeps the owner's choices: every
+    build and every workspace save or undo starts from this."""
     from streamcurves import owner_curves as oc
     folder = Path(run_dir)
-    if not (folder / oc.DECISIONS_FILE).exists():
+    if oc.standing(folder) is None:
         oc.seed(folder, published_curve_decisions(l3_code))
-    return oc.path_of(folder)
+    return oc.load(folder)
+
+
+def curve_decisions_path(run_dir, l3_code) -> Optional[Path]:
+    """The region's curve decisions file for a build (REF-15), or None when it holds
+    none (:func:`standing_decisions` seeds it first)."""
+    from streamcurves import owner_curves as oc
+    standing_decisions(run_dir, l3_code)
+    return oc.path_of(Path(run_dir))
 
 
 def published_metric_ids(l3_code) -> Optional[set]:

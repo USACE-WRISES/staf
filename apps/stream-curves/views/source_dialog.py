@@ -522,6 +522,8 @@ def source_dialog_server(input, output, session, state: AppState):
                                        recorded_by=sp.maintainer(), functions=functions,
                                        source=osrc.decision_source(metric, opt, config=config))
             oc.validate(decision, build=view["build"], built=view["built"], decisions=current)
+            # the region's record starts from its published decisions (seeded once)
+            rb.standing_decisions(run_dir, (region or {}).get("code"))
             oc.save(run_dir, decision)
         except ValueError as exc:
             ui.notification_show(str(exc), type="warning", duration=8)

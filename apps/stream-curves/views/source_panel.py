@@ -372,6 +372,13 @@ def source_panel_server(input, output, session, state: AppState):
         with reactive.isolate():
             return rb.region_run_dir(state.region_of_applicability())
 
+    def _standing(run_dir) -> None:
+        """Seed the region's record from its published version before the first
+        save or undo here, so the published decisions reach the next build."""
+        with reactive.isolate():
+            code = (state.region_of_applicability() or {}).get("code")
+        rb.standing_decisions(run_dir, code)
+
     @reactive.effect
     @reactive.event(input.act)
     @guard("start the curve decision")
@@ -432,6 +439,7 @@ def source_panel_server(input, output, session, state: AppState):
                                        recorded_by=maintainer(), functions=p["functions"],
                                        coverage_exceptions=gaps)
             oc.validate(decision, build=build, built=built, decisions=current)
+            _standing(run_dir)
             oc.save(run_dir, decision)
         except ValueError as exc:
             ui.notification_show(str(exc), type="warning", duration=8)
@@ -453,8 +461,17 @@ def source_panel_server(input, output, session, state: AppState):
             return
         with reactive.isolate():
             current = list(state.owner_curve_decisions() or [])
-        oc.undo(_region_dir(), did)
-        state.owner_curve_decisions.set([d for d in current if d.get("id") != did])
+            gaps = list(state.function_coverage_exceptions() or [])
+        run_dir = _region_dir()
+        if run_dir is not None:
+            _standing(run_dir)
+        oc.undo(run_dir, did)
+        remaining = [d for d in current if d.get("id") != did]
+        state.owner_curve_decisions.set(remaining)
+        # a gap recorded with the decision goes with it
+        kept = oc.live_exceptions(gaps, remaining)
+        if kept != gaps:
+            state.function_coverage_exceptions.set(kept)
         ui.modal_remove()
         ui.notification_show("Undone. The curve reads as the build made it.",
                              type="message", duration=5)

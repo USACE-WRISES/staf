@@ -544,13 +544,14 @@ def data_overview_server(input, output, session, state: AppState):
         # Absent in every session built before methodology 0.12 -> None, which
         # reads as a legacy build (no fixed-criteria metrics to carry).
         state.reference_build.set(fields.get("reference_build"))
-        # The owner's curve decisions (REF-15): the session's own, with the region's
-        # standing ones on top, so a decision saved while this session was closed
-        # applies here as it will to the next build.
+        # The owner's curve decisions (REF-15): the region's record, when it keeps
+        # one, is the standing record, so a decision saved while this session was
+        # closed applies here as it will to the next build, and one undone since
+        # does not; the session's copy still carries what its build computed.
         session_decisions = list(fields.get("owner_curve_decisions") or [])
-        region_decisions = (oc.load(rb.region_run_dir(fields.get("region_of_applicability")))
-                            if fields.get("reference_build") else [])
-        decisions = oc.combine(session_decisions, region_decisions)
+        region_dir = (rb.region_run_dir(fields.get("region_of_applicability"))
+                      if fields.get("reference_build") else None)
+        decisions, withdrawn = oc.restore(session_decisions, oc.standing(region_dir))
         state.owner_curve_decisions.set(decisions)
         added = len({d["id"] for d in decisions} - {d.get("id") for d in session_decisions})
         if added:
@@ -558,10 +559,18 @@ def data_overview_server(input, output, session, state: AppState):
                 f"{added} curve decision{'' if added == 1 else 's'} saved for this region "
                 f"{'is' if added == 1 else 'are'} applied here, as {'it' if added == 1 else 'they'}"
                 " will be to the next build.", type="message", duration=8)
+        if withdrawn:
+            n = len(withdrawn)
+            ui.notification_show(
+                f"{n} curve decision{'' if n == 1 else 's'} this session applied "
+                f"{'was' if n == 1 else 'were'} undone for this region since, so "
+                f"{'it does' if n == 1 else 'they do'} not apply here.",
+                type="message", duration=10)
         # Absent in a session written before gaps had to be justified -> no
-        # exceptions, which is the honest reading of that file.
+        # exceptions, which is the honest reading of that file. A gap recorded with
+        # a curve decision that no longer stands goes with it.
         state.function_coverage_exceptions.set(
-            fields.get("function_coverage_exceptions") or []
+            oc.live_exceptions(fields.get("function_coverage_exceptions") or [], decisions)
         )
 
         mapping = fields.get("discipline_function_mapping")

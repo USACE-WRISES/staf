@@ -47,6 +47,9 @@ ACTIONS = (REMOVE, UNMAP, INCLUDE, SOURCE)
 GAP_REASON = "insufficient-reference-support"
 ACTION_LABELS = {REMOVE: "Removed from the assessment", UNMAP: "Removed from a function",
                  INCLUDE: "Used in a function", SOURCE: "Source chosen by the owner"}
+#: the id prefix of a removal a build makes from ``--remove-metric``: it lives in
+#: that build's session and never in the region's file
+FLAG_PREFIX = "cd-flag-"
 
 
 def min_rationale() -> int:
@@ -80,7 +83,9 @@ def new_decision(metric: str, action: str, *, rationale: str, recorded_by: str,
                                  "justification": _clean(g.get("justification"))}
                                 for g in coverage_exceptions or ()],
          "rationale": _clean(rationale), "recordedBy": str(recorded_by or "").strip(),
-         "recordedAt": recorded_at or _now()}
+         # an explicit value, even an empty one, is kept: a --remove-metric removal
+         # carries none, so two builds given the same flags record the same decision
+         "recordedAt": _now() if recorded_at is None else str(recorded_at)}
     check(d)
     return d
 
@@ -204,6 +209,24 @@ def path_of(run_dir) -> Optional[Path]:
     return Path(run_dir) / DECISIONS_FILE if items else None
 
 
+def standing(run_dir) -> Optional[list[dict]]:
+    """The region's standing record: its decisions when it keeps a file, even one
+    the owner emptied, and None when it has never recorded any here."""
+    if run_dir is None:
+        return None
+    folder = Path(run_dir)
+    if not ((folder / DECISIONS_FILE).exists() or (folder / LEGACY_REMOVALS_FILE).exists()):
+        return None
+    return load(folder)
+
+
+def load_file(path) -> list[dict]:
+    """The decisions of one decisions file (``stage --curve-decisions``), or ``[]``."""
+    doc = _read_json(Path(path)) if path is not None else None
+    items = doc.get("decisions") if isinstance(doc, dict) else None
+    return [dict(d) for d in items or [] if isinstance(d, dict) and d.get("id")]
+
+
 def seed(run_dir, decisions: Iterable[Mapping]) -> list[dict]:
     """The region's decisions, first written from ``decisions`` (the ones its latest
     published version recorded) when the region has never recorded any: a
@@ -234,10 +257,25 @@ def supersedes(new: Mapping, old: Mapping) -> bool:
 
 
 def merge(items: Iterable[dict], decision: Mapping) -> list[dict]:
-    """``items`` with ``decision`` added last, replacing what it supersedes."""
-    kept = [dict(d) for d in items or [] if d.get("id") != decision.get("id")
-            and not supersedes(decision, d)]
-    return kept + [dict(decision)]
+    """``items`` with ``decision`` added last, replacing what it supersedes. A gap
+    the owner documented with a replaced decision stays documented unless the new
+    decision names that function: removing a curve after taking it out of a
+    function keeps the reason given for the function that was emptied."""
+    items = [dict(d) for d in items or []]
+    others = [d for d in items if d.get("id") != decision.get("id")]
+    replaced = [d for d in others if supersedes(decision, d)]
+    new = dict(decision)
+    named = ({str(f) for f in new.get("functions") or []}
+             | {str(g.get("functionId")) for g in new.get("coverageExceptions") or []})
+    inherited = []
+    for d in replaced:
+        for g in d.get("coverageExceptions") or []:
+            if str(g.get("functionId")) not in named:
+                named.add(str(g.get("functionId")))
+                inherited.append(dict(g))
+    if inherited:
+        new["coverageExceptions"] = list(new.get("coverageExceptions") or []) + inherited
+    return [d for d in others if not supersedes(decision, d)] + [new]
 
 
 def save(run_dir, decision: Mapping) -> list[dict]:
@@ -255,20 +293,45 @@ def undo(run_dir, decision_id: str) -> list[dict]:
     return items
 
 
+def _computed(d: Mapping) -> bool:
+    """A refused source a build has computed, or found it could not compute."""
+    src = (d or {}).get("source") or {}
+    return bool(source_curve(d).get("points") or src.get("failedAtBuild"))
+
+
 def combine(session: Iterable[dict], region: Iterable[dict]) -> list[dict]:
     """The session's decisions with the region's standing ones applied on top. A
-    refused source the region's record holds as a request keeps the curve the
-    session's build computed for it."""
+    refused source the region's record holds as a request keeps what the
+    session's build made of it: the curve it computed, or why it could not."""
     out: list[dict] = []
     for d in list(session or []) + list(region or []):
         if not (isinstance(d, dict) and d.get("id")):
             continue
         prior = next((x for x in out if x.get("id") == d.get("id")), None)
-        if prior is not None and not source_curve(d).get("points") \
-                and source_curve(prior).get("points"):
+        if prior is not None and not _computed(d) and _computed(prior):
             d = {**d, "source": dict(prior.get("source") or {})}
         out = merge(out, d)
     return out
+
+
+def restore(session: Iterable[dict],
+            region: Optional[Iterable[dict]]) -> tuple[list[dict], list[dict]]:
+    """``(decisions, withdrawn)`` of a session reopened in the workspace. The
+    region's record, when it keeps one (:func:`standing`), is the standing record:
+    a decision the session holds and the record no longer does was withdrawn
+    since, so it does not apply. A removal a build made from ``--remove-metric``
+    never lives in the record and stays. The session's copy still supplies what
+    its build computed for a refused source. With no record at all (a checkout
+    without the region's run folder), the session's decisions stand."""
+    session = [dict(d) for d in session or [] if isinstance(d, Mapping) and d.get("id")]
+    if region is None:
+        return session, []
+    region = [dict(d) for d in region if isinstance(d, Mapping) and d.get("id")]
+    ids = {d["id"] for d in region}
+    withdrawn = [d for d in session
+                 if d["id"] not in ids and not str(d["id"]).startswith(FLAG_PREFIX)]
+    gone = {d["id"] for d in withdrawn}
+    return combine([d for d in session if d["id"] not in gone], region), withdrawn
 
 
 def from_removals(remove_metrics: Optional[Mapping], *, recorded_by: str,
@@ -283,7 +346,7 @@ def from_removals(remove_metrics: Optional[Mapping], *, recorded_by: str,
             continue
         digest = hashlib.sha1(f"{mk}|{_clean(why)}".encode("utf-8")).hexdigest()[:10]
         out.append(new_decision(mk, REMOVE, rationale=why, recorded_by=recorded_by,
-                                recorded_at="", decision_id=f"cd-flag-{digest}"))
+                                recorded_at="", decision_id=f"{FLAG_PREFIX}{digest}"))
     return out
 
 
@@ -547,9 +610,51 @@ def summary(d: Mapping) -> dict:
         out["source"] = {k: src.get(k) for k in ("kind", "ref", "title", "citation", "failed",
                                                   "failedAtBuild")
                          if src.get(k) is not None}
+        from . import owner_sources
+        if src.get("kind") == owner_sources.REFUSED and not _computed(d):
+            # a request no build has computed yet applies nothing, and says so
+            out["source"]["waitsForBuild"] = True
     if d.get("coverageExceptions"):
         out["coverageExceptions"] = [dict(g) for g in d["coverageExceptions"]]
     return out
+
+
+def requests(decisions: Iterable[Mapping]) -> list[str]:
+    """What the owner recorded in each decision, one canonical string each,
+    sorted: the id, metric, action, functions, source (kind, ref, title,
+    citation), documented gaps, rationale and owner, never what a build computed.
+    A removal a build made from ``--remove-metric`` is the build's, not the
+    region's, and is left out."""
+    out = []
+    for d in decisions or []:
+        if not isinstance(d, Mapping) or not d.get("id") \
+                or str(d["id"]).startswith(FLAG_PREFIX):
+            continue
+        src = {k: v for k, v in (d.get("source") or {}).items()
+               if k in ("kind", "ref", "title", "citation")}
+        out.append(json.dumps({
+            "id": d.get("id"), "metric": d.get("metric"), "action": d.get("action"),
+            "functions": [str(f) for f in d.get("functions") or []], "source": src or None,
+            "coverageExceptions": [{"functionId": str(g.get("functionId")),
+                                    "justification": _clean(g.get("justification"))}
+                                   for g in d.get("coverageExceptions") or []],
+            "rationale": _clean(d.get("rationale")), "recordedBy": d.get("recordedBy")},
+            sort_keys=True, default=str))
+    return sorted(out)
+
+
+def decisions_changed(staged: Iterable[Mapping], now: Iterable[Mapping]) -> bool:
+    """The region's decisions (``now``) are no longer the ones a staged run was
+    built with (``staged``): one was recorded or withdrawn after the stage, so
+    the staged version would publish without it, or with it. The build's own
+    ``--remove-metric`` removals are merged into ``now`` first, as the build
+    merged them (``regional_agent.owner_decisions_for``)."""
+    staged = [dict(d) for d in staged or [] if isinstance(d, Mapping)]
+    expected = [dict(d) for d in now or [] if isinstance(d, Mapping)]
+    for d in staged:
+        if str(d.get("id") or "").startswith(FLAG_PREFIX):
+            expected = merge(expected, d)
+    return requests(staged) != requests(expected)
 
 
 def removed(decisions: Iterable[Mapping]) -> dict:
@@ -574,12 +679,25 @@ def coverage_exceptions(decisions: Iterable[Mapping]) -> list[dict]:
     return out
 
 
+def live_exceptions(base: Iterable[dict], decisions: Iterable[Mapping]) -> list[dict]:
+    """``base`` without the gaps of an owner's decision that no longer stands: a gap
+    recorded with a decision (its ``decision`` id) goes when the decision goes,
+    however it reached the session (a build writes them into its documented
+    gaps)."""
+    live = {str(d.get("id")) for d in decisions or [] if isinstance(d, Mapping)}
+    return [dict(e) for e in base or []
+            if not (str(e.get("decision") or "").startswith("cd-")
+                    and str(e.get("decision")) not in live)]
+
+
 def with_exceptions(base: Iterable[dict], decisions: Iterable[Mapping]) -> list[dict]:
     """The session's documented gaps with the gaps of the owner's decisions on top
-    (one per function)."""
+    (one per function), less the gaps of decisions that no longer stand."""
+    decisions = list(decisions or [])
     owner = coverage_exceptions(decisions)
     mine = {str(e.get("functionId")) for e in owner}
-    return [dict(e) for e in base or [] if str(e.get("functionId")) not in mine] + owner
+    return [e for e in live_exceptions(base, decisions)
+            if str(e.get("functionId")) not in mine] + owner
 
 
 def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
@@ -612,10 +730,11 @@ def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
 
 __all__ = [
     "RULE", "DECISIONS_FILE", "LEGACY_REMOVALS_FILE", "REMOVE", "UNMAP", "INCLUDE", "SOURCE",
-    "ACTIONS", "GAP_REASON", "ACTION_LABELS", "min_rationale", "new_decision", "check",
-    "validate", "load", "path_of", "seed", "supersedes", "merge", "save", "undo", "combine",
-    "from_removals", "effective_selection", "applies", "sourced", "source_curve",
-    "decision_annotation", "effective_build", "apply_to_inputs", "summary", "removed",
-    "decisions_for", "coverage_exceptions", "with_exceptions", "stale", "forced_sources",
-    "pending", "with_forced",
+    "ACTIONS", "GAP_REASON", "ACTION_LABELS", "FLAG_PREFIX", "min_rationale", "new_decision",
+    "check", "validate", "load", "path_of", "standing", "load_file", "seed", "supersedes",
+    "merge", "save", "undo", "combine", "restore", "from_removals", "effective_selection",
+    "applies", "sourced", "source_curve", "decision_annotation", "effective_build",
+    "apply_to_inputs", "summary", "requests", "decisions_changed", "removed",
+    "decisions_for", "coverage_exceptions", "live_exceptions", "with_exceptions", "stale",
+    "forced_sources", "pending", "with_forced",
 ]
