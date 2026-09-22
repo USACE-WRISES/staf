@@ -65,25 +65,41 @@ def coverage_from_state(state: AppState) -> dict | None:
     """
     with reactive.isolate():
         completed = state.completed_metrics() or {}
+        curve_review = state.curve_review() or {}
         mapping = state.discipline_function_mapping()
         exceptions = state.function_coverage_exceptions() or []
         reference_build = state.reference_build()
+    # the scope rule build_bundle_from_state applies, so a curve the review took
+    # out covers nothing here either
+    in_scope = {mk: cm for mk, cm in completed.items()
+                if mk not in curve_review or rs.is_in_scope(curve_review[mk])}
     try:
         return function_coverage_quick(
-            completed, mapping, exceptions,
-            always_covered=_fixed_function_ids(reference_build))
+            in_scope, mapping, exceptions,
+            always_covered=_reference_function_ids(reference_build, mapping, completed),
+            exclude_pairs=_not_selected(reference_build))
     except Exception:  # noqa: BLE001 - malformed exceptions are not a coverage verdict
         return None
 
 
-def _fixed_function_ids(reference_build) -> list[str]:
-    """Functions the fixed-criteria metrics of a pressure-screen build cover
-    (they join the bundle outside the editable mapping). Empty for a legacy
-    session, so nothing changes there."""
+def _reference_function_ids(reference_build, mapping, built) -> list[str]:
+    """Functions covered by the curves a pressure-screen build scores without
+    the session having fitted them: fixed criteria, carried-forward curves and
+    the curves from a rung above the hierarchy. They join the bundle outside
+    the session's own fits (pressure_evidence.apply_reference_build). Empty for
+    a legacy session, so nothing changes there."""
     if not reference_build:
         return []
     from streamcurves import pressure_evidence as _pe
-    return _pe.fixed_function_ids(reference_build)
+    return _pe.reference_function_ids(reference_build, mapping, built=built or ())
+
+
+def _not_selected(reference_build) -> set:
+    """SELECT-04's supported-not-selected pairs, which the bundle leaves out."""
+    if not reference_build:
+        return set()
+    from streamcurves import pressure_evidence as _pe
+    return _pe.not_selected_pairs(reference_build)
 
 
 def portfolio_approval_needed(state: AppState) -> list[dict]:
@@ -111,7 +127,9 @@ def portfolio_approval_needed(state: AppState) -> list[dict]:
     out_of_scope = {mk for mk, entry in curve_review.items() if not rs.is_in_scope(entry)}
     counts = metrics_per_function_quick(
         {mk: cm for mk, cm in completed.items() if mk not in out_of_scope}, mapping,
-        extra=_pe.fixed_metric_counts(reference_build) if reference_build else None)
+        extra=(_pe.reference_metric_counts(reference_build, mapping, built=completed)
+               if reference_build else None),
+        exclude_pairs=_not_selected(reference_build))
     if not counts:
         return []
     limit = int(methodology.threshold(
@@ -148,6 +166,7 @@ def run_snapshot(state: AppState) -> dict:
         screening_skipped = bool(state.screening_skipped())
         screening_criteria = state.easi_screening_criteria()
         reference_build = state.reference_build()
+        completed = state.completed_metrics() or {}
     kind = (region or {}).get("kind") if region else None
     n_candidates = int(meta.get("n_candidates") or 0)
     has_screening = sc is not None and not (hasattr(sc, "empty") and sc.empty)
@@ -166,7 +185,8 @@ def run_snapshot(state: AppState) -> dict:
     n_unmapped = (
         len(uncovered_functions_from_mapping(
             mapping, metric_config, coverage_exceptions,
-            always_covered=_fixed_function_ids(reference_build)))
+            always_covered=_reference_function_ids(reference_build, mapping, completed),
+            exclude_pairs=_not_selected(reference_build)))
         if metric_config
         else 0
     )
@@ -182,6 +202,9 @@ def run_snapshot(state: AppState) -> dict:
     if sum(1 for df in layer1.values() if _has_rows(df)) >= 2 and not _has_rows(ranking):
         n_missing_diagnostics += 1
 
+    from streamcurves import pressure_evidence as _pe
+    reference_text = _pe.reference_summary_text(
+        _pe.reference_summary(reference_build, built=completed))
     return {
         "has_region": region is not None and kind not in (None, "none"),
         "region_is_ecoregion": kind == "ecoregion",
@@ -208,7 +231,12 @@ def run_snapshot(state: AppState) -> dict:
         "enriched": bool(data is not None and enr.get("status") in ("done", "attention")),
         "n_enriched": int(enr.get("n_enriched") or 0),
         "curve_review": curve_review,
-        "published": bool(pub.get("status") == "done"),
+        # A staged run's session records its staged publish into the run's own
+        # library; opened from the Region builder it is not published anywhere.
+        "published": bool(pub.get("status") == "done")
+                     and origin.get("kind") not in ("staged", "run"),
+        # the curves this version scores that the session did not fit
+        "reference_text": reference_text,
         "published_label": pub.get("label"),
         "coverage": coverage_from_state(state),
         "mapping_confirmed": mapping_confirmed,
@@ -340,11 +368,6 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
     completed = {mk: cm for mk, cm in completed.items() if mk not in out_of_scope}
 
     curve_rows = deep_collect_curve_rows(completed)
-    if not curve_rows:
-        raise ValueError(
-            "No finalized reference curves in this session. Complete at least one "
-            "metric's Phase 4 curve first."
-        )
 
     from streamcurves import site_engine_source as _ses
     full_meta: dict = {
@@ -369,4 +392,11 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
     from streamcurves import pressure_evidence as _pe
     curve_rows, mapping, metric_config = _pe.apply_reference_build(
         reference_build, curve_rows, mapping, metric_config, full_meta)
+    # judged after the reference build is folded in: a version whose in-scope
+    # curves are all carried forward (or fixed) publishes too
+    if not curve_rows:
+        raise ValueError(
+            "No finalized reference curves in this session. Complete at least one "
+            "metric's Phase 4 curve first."
+        )
     return build_deep_assessment_bundle(curve_rows, mapping, metric_config, meta=full_meta)

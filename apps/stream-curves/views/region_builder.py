@@ -32,6 +32,7 @@ from streamcurves import library as lib
 from streamcurves import methodology
 from streamcurves import engine_names
 from streamcurves import nrsa_dataset, region_build as rb
+from streamcurves import pressure_evidence as pe
 from streamcurves import rules_view
 from streamcurves import session_io as sio
 from streamcurves import regional_agent as ra
@@ -48,7 +49,32 @@ from views.uihelpers import (
 
 #: Working folder for runs. notes/ is gitignored, which is where the pilots' runs
 #: live, so a build leaves nothing in the tracked tree until it is promoted.
-DEFAULT_OUT_ROOT = rb.repo_root() / "notes" / "DEEP_Working" / "analysis" / "runs"
+DEFAULT_OUT_ROOT = rb.default_runs_root()
+
+#: (session path, mtime) -> the reference summary of that staged session, so the
+#: run panel does not re-read a megabyte of JSON on every repaint
+_SUMMARY_CACHE: dict = {}
+
+
+def _staged_reference_summary(session_path) -> dict:
+    """What the staged session scores without having fitted it
+    (``pressure_evidence.reference_summary``), read from its file."""
+    if session_path is None:
+        return {}
+    path = Path(session_path)
+    try:
+        key = (str(path), path.stat().st_mtime_ns)
+    except OSError:
+        return {}
+    if key not in _SUMMARY_CACHE:
+        try:
+            doc = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+        fields = doc.get("fields") if isinstance(doc.get("fields"), dict) else doc
+        _SUMMARY_CACHE.clear()
+        _SUMMARY_CACHE[key] = pe.reference_summary((fields or {}).get("reference_build"))
+    return _SUMMARY_CACHE[key]
 
 _TASK_KEY = "region_build"
 
@@ -179,6 +205,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         out_dir = rb.run_folder(out_root(), code)
         decisions = out_dir / "owner_decisions.json"
         gaps = out_dir / "coverage_exceptions.json"
+        removals = _removal_inputs(out_dir, code)
         argv = rb.stage_command(
             code, name, out_dir,
             maintainer=_maintainer() or "unknown",
@@ -198,8 +225,55 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             # the recorded argv like the frame and the dataset.
             reference_method=(input.build_reference_method() or None),
             reviewer_decisions=decisions if decisions.exists() else None,
-            coverage_exceptions=gaps if gaps.exists() else None)
+            coverage_exceptions=gaps if gaps.exists() else None,
+            remove_metrics=removals or None)
         _launch(run_stage(argv, out_dir))
+
+    def _removal_inputs(out_dir, code) -> dict:
+        """The owner's pending removals of carried curves, as the build's
+        ``--remove-metric`` inputs. One whose metric the latest published version
+        no longer scores has nothing left to remove, so it is dropped."""
+        keep, stale = rb.removal_inputs(rb.load_removals(out_dir),
+                                        rb.published_metric_ids(code))
+        for mk in stale:
+            rb.clear_removal(out_dir, mk)
+        if stale:
+            ui.notification_show(
+                "Dropped the pending removal of " + ", ".join(stale)
+                + ": the published version no longer scores it.",
+                type="message", duration=8)
+        return keep
+
+    @reactive.effect
+    @reactive.event(input.undo_removal)
+    @guard("undo the removal")
+    def _undo_removal():
+        metric = input.undo_removal()
+        folder = _active_dir()
+        if not metric or folder is None:
+            return
+        rb.clear_removal(folder, str(metric))
+        with reactive.isolate():
+            n = state.reference_removals_nonce() or 0
+        state.reference_removals_nonce.set(n + 1)
+
+    def _removals_block():
+        folder = _active_dir()
+        items = rb.load_removals(folder) if folder else []
+        if not items:
+            return None
+        return ui.div(
+            ui.tags.strong("Carried curves removed at the next build"),
+            ui.tags.ul(*[ui.tags.li(
+                ui.tags.code(str(it.get("metric"))), " ", str(it.get("rationale") or ""),
+                ui.tags.span(f" ({it.get('recordedBy')}, {str(it.get('recordedAt') or '')[:10]})",
+                             class_="text-muted"),
+                ui.tags.button(
+                    "Undo", type="button", class_="btn btn-link btn-sm p-0 ms-2",
+                    onclick=(f"Shiny.setInputValue('{ns('undo_removal')}',"
+                             f"{json.dumps(str(it.get('metric')))},{{priority:'event'}})")))
+                for it in items], class_="mb-0"),
+            class_="alert alert-secondary py-2 small")
 
     @reactive.effect
     def _poll():
@@ -247,6 +321,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         out_dir = Path(run_folder)
         decisions = out_dir / "owner_decisions.json"
         gaps = out_dir / "coverage_exceptions.json"
+        removals = _removal_inputs(out_dir, kw["l3_code"])
         argv = rb.stage_command(
             kw["l3_code"], kw["name"], out_dir,
             maintainer=_maintainer() or "unknown",
@@ -260,7 +335,8 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             reference_frame=kw.get("reference_frame"),
             reference_method=kw.get("reference_method"),
             reviewer_decisions=decisions if decisions.exists() else None,
-            coverage_exceptions=gaps if gaps.exists() else None)
+            coverage_exceptions=gaps if gaps.exists() else None,
+            remove_metrics=removals or None)
         _launch(run_stage(argv, out_dir))
 
     # ── answering an open item ───────────────────────────────────────────────
@@ -683,6 +759,8 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         # run_dir() was already set when the build started.
         finished()
         running()
+        # ...on the owner's removals, saved here or on the Reference curves page...
+        state.reference_removals_nonce()
         # ...and on the selection, so switching region shows that region's run.
         try:
             input.build_region()
@@ -704,7 +782,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             ("Screened", f'{screening.get("n_candidates")} candidates, '
                          f'{screening.get("n_retained")} retained '
                          f'({screening.get("pool_disposition") or "?"})'),
-            ("Curves", str(len(packet.get("curves") or []))),
+            ("Curves", _curves_fact(packet)),
             ("Functions", f'{cov.get("covered")} of {cov.get("total")}'),
             ("Staged",
              f'v{staged.get("version")} at {staged.get("path")}' if staged
@@ -727,10 +805,19 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                 ns("open_staged"), ui.TagList(bi("folder2-open"),
                                               " Open this assessment in StreamCurves"),
                 class_="btn btn-outline-primary btn-sm mb-3"),
+            _removals_block(),
             _open_items(packet),
             _publish_block(),
             class_="rb-packet card card-body",
         )
+
+    def _curves_fact(packet) -> str:
+        """The curves the staged version scores: those this run fitted, and the
+        ones it carries or takes from elsewhere (read from the staged session, so
+        a run staged before this count existed shows it too)."""
+        built = len(packet.get("curves") or [])
+        extra = pe.reference_summary_text(_staged_reference_summary(_session_path()))
+        return f"{built} built here" + (f", {extra}" if extra else "")
 
     def _gap_cards(packet):
         """One card per undocumented STAF function.

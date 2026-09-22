@@ -187,7 +187,14 @@ def validate_server(input, output, session, state: AppState, active=None):
         finfo = input.field_csv()
         req(finfo)
         with reactive.isolate():
-            mc = state.metric_config() or {}
+            mc = dict(state.metric_config() or {})
+            # every curve the version scores, including the ones the session did
+            # not fit (carried forward, from a rung above the hierarchy, fixed)
+            from streamcurves import pressure_evidence as pe
+            for rk, entry in pe.reference_rows(
+                    state.reference_build(), state.discipline_function_mapping(),
+                    built=state.completed_metrics() or {}).items():
+                mc.setdefault(rk, entry.get("config") or {})
         try:
             df = pd.read_csv(finfo[0]["datapath"])
             parsed.set({**parse_field_data(df, mc),
@@ -207,7 +214,7 @@ def validate_server(input, output, session, state: AppState, active=None):
                 + (f" Unmatched: {', '.join(data['unmatched'][:8])}."
                    if data["unmatched"] else ""),
                 class_="alert alert-warning py-2 small mt-2")
-        rows = cg.gallery_rows(state, metrics=sorted(data["values"]))
+        rows = cg.gallery_rows(state, metrics=sorted(data["values"]), include_reference=True)
         bands = cs.DEEP_INDEX_BANDS
         tiles = []
         for row in rows:

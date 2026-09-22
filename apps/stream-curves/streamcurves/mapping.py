@@ -296,11 +296,19 @@ def function_label_owner_discipline(mapping, function_label):
     return hits["discipline"].iloc[0]
 
 
-def realign_discipline_function_mapping(mapping, metric_keys) -> dict:
+def realign_discipline_function_mapping(mapping, metric_keys, keep_keys=()) -> dict:
     """Drop rows for absent metrics; add blank-scaffold rows for missing ones.
     Preserves user assignments, ``lib:`` rows, and empty buckets verbatim
-    (R lines 293-329). Returns ``{"mapping", "added", "dropped"}``."""
+    (R lines 293-329). Returns ``{"mapping", "added", "dropped"}``.
+
+    ``keep_keys``: metrics that are scored without sitting in the workbook (a
+    pressure-screen build's carried-forward and ladder curves,
+    ``pressure_evidence.reference_keys``). Their rows are kept rather than
+    dropped, and no scaffold is added for them. A mapping with nothing to add or
+    drop comes back unchanged, row order and ``sort_order`` included, so opening
+    a session never reads as a mapping edit."""
     keys = _clean_keys(metric_keys)
+    keep = {str(k) for k in (keep_keys or ())}
     if mapping is None or not isinstance(mapping, pd.DataFrame) or len(mapping) == 0:
         return {
             "mapping": blank_function_mapping_scaffold(keys),
@@ -317,10 +325,12 @@ def realign_discipline_function_mapping(mapping, metric_keys) -> dict:
 
     existing_keys = existing_named["metric_key"].tolist()
     keyset = set(keys)
-    dropped = [k for k in dict.fromkeys(existing_keys) if k not in keyset]
-    kept = existing_named[existing_named["metric_key"].isin(keyset)]
+    dropped = [k for k in dict.fromkeys(existing_keys) if k not in keyset and str(k) not in keep]
+    kept = existing_named[existing_named["metric_key"].isin(keyset | keep)]
     kept_keys = set(kept["metric_key"].tolist())
     missing_keys = [k for k in keys if k not in kept_keys]
+    if not dropped and not missing_keys and all(c in mapping.columns for c in MAPPING_COLUMNS):
+        return {"mapping": mapping, "added": [], "dropped": []}
 
     frames = [kept]
     if missing_keys:

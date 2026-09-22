@@ -78,7 +78,8 @@ def test_filter_rows_modes():
     assert [r["metric"] for r in cg.filter_rows(rows, "flagged")] == ["b"]
     assert [r["metric"] for r in cg.filter_rows(rows, "out_of_scope")] == ["c"]
     assert [r["metric"] for r in cg.filter_rows(rows, "stratified")] == ["d"]
-    assert cg.gallery_counts(rows) == {"n": 4, "flagged": 1, "out_of_scope": 1, "stratified": 1}
+    assert cg.gallery_counts(rows) == {"n": 4, "flagged": 1, "out_of_scope": 1, "stratified": 1,
+                                       "not_built": 0}
 
 
 def test_tile_onclick_targets_the_channel_and_escapes_quotes():

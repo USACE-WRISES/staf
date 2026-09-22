@@ -1174,6 +1174,14 @@
 .curve-tile.is-removed .curve-tile-status { background: #d9534f; color: #fff; }
 .curve-tile.is-finalized .curve-tile-status { background: #27ae60; color: #fff; }
 .curve-tile.is-not-run .curve-tile-svg { opacity: 0.6; }
+/* a curve the session did not fit: carried forward, from a rung above the hierarchy,
+   or a fixed criterion. Read-only in the workspace. */
+.curve-tile.is-reference { border-left: 4px solid #5b7a99; background: #fbfcfd; }
+.curve-tile.is-reference .curve-tile-status { background: #5b7a99; color: #fff; }
+.curve-tile.is-removal-pending { opacity: 0.72; }
+.curve-tile.is-removal-pending .curve-tile-status { background: #d9534f; color: #fff; }
+.curve-tile-remove.btn { padding: 0 0.3rem; font-size: 0.75rem; line-height: 1.4; color: #6c757d; }
+.curve-tile-remove.btn:hover { color: #d9534f; }
 .curve-tile-band.band-good { fill: var(--band-good, #c8d9f2); }
 .curve-tile-band.band-fair { fill: var(--band-fair, #f5e7a6); }
 .curve-tile-band.band-poor { fill: var(--band-poor, #f5b5b5); }
@@ -1447,6 +1455,9 @@ table.workbook-grid-table.dataTable tbody tr.selected td {
 }
 .wb-chip.wb-chip-data { background: #eaf4ec; border-color: #b7d9be; }
 .wb-chip.wb-chip-nodata { background: #f8f9fa; border-style: dashed; color: #868e96; }
+/* a curve the session did not fit, placed by the version itself: never editable here */
+.wb-chip.wb-chip-locked { background: #eef3f8; border-color: #b9c9da; padding-right: 0.5rem; }
+.wb-chip.wb-chip-locked svg { width: 0.7em; height: 0.7em; margin-right: 0.25rem; fill: #5b7a99; }
 .wb-chip .wb-chip-tag {
   font-size: 0.62rem;
   text-transform: uppercase;

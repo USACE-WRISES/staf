@@ -273,7 +273,8 @@ def _mapping_cell_blank(v: Any) -> bool:
 
 
 def uncovered_functions_from_mapping(mapping, metric_config, exceptions=None, *,
-                                     always_covered=None) -> list[tuple[str, str]]:
+                                     always_covered=None,
+                                     exclude_pairs=None) -> list[tuple[str, str]]:
     """[(function_id, function_name)] with no assigned metric and no documented
     exception, judged from the discipline-function mapping alone.
 
@@ -284,11 +285,14 @@ def uncovered_functions_from_mapping(mapping, metric_config, exceptions=None, *,
     whose metric_key is not in ``metric_config`` do not count as coverage -- a
     mapping entry for a metric that carries no data covers nothing.
     ``always_covered`` names function ids covered outside the mapping: the
-    fixed-criteria metrics of a pressure-screen build (methodology 0.12), whose
-    function assignments are part of the criterion and never sit in the
-    editable mapping.
+    curves a pressure-screen build scores without fitting them in the session
+    (fixed criteria, carried-forward curves, curves from a rung above the
+    hierarchy; ``pressure_evidence.reference_function_ids``), which never sit in
+    ``metric_config``. ``exclude_pairs``: ``(metric, function id)`` pairs the
+    bundle leaves out (SELECT-04's supported, not selected).
     """
     metric_config = metric_config or {}
+    exclude = set(exclude_pairs or ())
     crosswalk = deep_read_staf_crosswalk()
     lookup = deep_function_lookup(crosswalk)
     covered: set[str] = {str(f) for f in (always_covered or [])}
@@ -300,7 +304,7 @@ def uncovered_functions_from_mapping(mapping, metric_config, exceptions=None, *,
             if str(mk) not in metric_config:
                 continue
             fn = deep_map_function(label, lookup)
-            if fn is not None:
+            if fn is not None and (str(mk), str(fn.get("id"))) not in exclude:
                 covered.add(str(fn.get("id")))
     excused = {str(e.get("functionId")) for e in (exceptions or [])}
     return [(str(f.get("id")), str(f.get("name"))) for f in crosswalk
@@ -335,7 +339,7 @@ def _completed_metric_candidates_status(cm) -> tuple[bool, bool]:
 
 
 def function_coverage_quick(completed_metrics, mapping, exceptions=None, *,
-                            always_covered=None) -> Optional[dict]:
+                            always_covered=None, exclude_pairs=None) -> Optional[dict]:
     """``functionCoverage`` as the full bundle would report it, judged from
     curve presence and the mapping walk alone; no bundle build, so the workflow
     strip's snapshot can afford it on every render.
@@ -356,10 +360,13 @@ def function_coverage_quick(completed_metrics, mapping, exceptions=None, *,
     here too, so a row whose points fail extraction reads uncovered in both.
     The publish gate (library.publish_version) still judges the real bundle.
 
-    ``always_covered``: function ids the fixed-criteria metrics of a
-    pressure-screen build cover (they join the bundle outside the mapping).
+    ``always_covered``: function ids covered by the curves that join the
+    bundle outside the session's own fits (fixed criteria, carried-forward and
+    ladder curves; ``pressure_evidence.reference_function_ids``).
+    ``exclude_pairs``: ``(metric, function id)`` pairs the bundle leaves out.
     """
-    any_candidates, walked = _quick_function_walk(completed_metrics, mapping)
+    any_candidates, walked = _quick_function_walk(completed_metrics, mapping,
+                                                  exclude_pairs=exclude_pairs)
     covered: set[str] = {str(f) for f in (always_covered or [])}
     for _mk, fids in walked:
         covered.update(fids)
@@ -370,7 +377,8 @@ def function_coverage_quick(completed_metrics, mapping, exceptions=None, *,
         deep_read_staf_crosswalk(), exceptions)
 
 
-def _quick_function_walk(completed_metrics, mapping) -> tuple[bool, list[tuple[str, list[str]]]]:
+def _quick_function_walk(completed_metrics, mapping, *,
+                         exclude_pairs=None) -> tuple[bool, list[tuple[str, list[str]]]]:
     """``(any_candidates, [(metric_key, [function_id, ...]), ...])`` over the metrics
     whose candidate rows carry points DEEP can interpolate.
 
@@ -378,6 +386,7 @@ def _quick_function_walk(completed_metrics, mapping) -> tuple[bool, list[tuple[s
     :func:`metrics_per_function_quick`, so what one counts the other covers.
     """
     lookup = deep_function_lookup(deep_read_staf_crosswalk())
+    exclude = set(exclude_pairs or ())
     by_metric: dict[str, list[str]] = {}
     if isinstance(mapping, pd.DataFrame) and len(mapping) > 0:
         for mk, lbl in zip(mapping.get("metric_key"), mapping.get("function_label")):
@@ -395,24 +404,29 @@ def _quick_function_walk(completed_metrics, mapping) -> tuple[bool, list[tuple[s
         fids: list[str] = []
         for lbl in by_metric.get(str(mk), []):
             fn = deep_map_function(lbl, lookup)
-            if fn is not None and str(fn.get("id")) not in fids:
+            if fn is not None and str(fn.get("id")) not in fids \
+                    and (str(mk), str(fn.get("id"))) not in exclude:
                 fids.append(str(fn.get("id")))
         walked.append((str(mk), fids))
     return any_candidates, walked
 
 
-def metrics_per_function_quick(completed_metrics, mapping, *, extra=None) -> dict[str, int]:
+def metrics_per_function_quick(completed_metrics, mapping, *, extra=None,
+                               exclude_pairs=None) -> dict[str, int]:
     """How many metrics each STAF function would carry, judged from curve presence and
     the mapping walk alone: the counting sibling of :func:`function_coverage_quick`, on
     the same contract and with no bundle build.
 
-    ``extra``: counts for the metrics that join the bundle outside the editable mapping
-    (a pressure-screen build's fixed criteria). ``{}`` while nothing is built yet, which
+    ``extra``: counts for the metrics that join the bundle outside the session's own fits
+    (a pressure-screen build's fixed criteria, carried-forward and ladder curves;
+    ``pressure_evidence.reference_metric_counts``). ``exclude_pairs``: ``(metric,
+    function id)`` pairs the bundle leaves out. ``{}`` while nothing is built yet, which
     reads as nothing to count. SELECT-01 is still judged on the real bundle at publish
     time; this exists so the Publish page can ask for the approval that gate requires
     instead of letting the click fail.
     """
-    _any_candidates, walked = _quick_function_walk(completed_metrics, mapping)
+    _any_candidates, walked = _quick_function_walk(completed_metrics, mapping,
+                                                   exclude_pairs=exclude_pairs)
     counts: dict[str, int] = {str(fid): int(n) for fid, n in (extra or {}).items()}
     for _mk, fids in walked:
         for fid in fids:

@@ -719,10 +719,17 @@ def _hierarchy_records(result: dict, add) -> None:
                     "contentDigest": carried.get("contentDigest")},
             computed={"n_carried": len(result.get("carried") or {}),
                       "rebuilt": {k: v.get("why") for k, v in
-                                  (result.get("carry_rebuilt") or {}).items()}},
+                                  (result.get("carry_rebuilt") or {}).items()},
+                      **({"removed": dict(result["removed_carried"]),
+                          "removed_by": result.get("removed_carried_by")}
+                         if result.get("removed_carried") else {})},
             verdict=VERDICT_PASS,
             recommendation=("Published curves are carried forward unchanged; a curve whose "
-                            "pool held a value the data verification corrected is rebuilt."))
+                            "pool held a value the data verification corrected is rebuilt"
+                            + ("; the owner removed "
+                               + ", ".join(sorted(result.get("removed_carried") or {}))
+                               + " from this version." if result.get("removed_carried")
+                               else ".")))
 
 
 def _pressure_records(result: dict, add) -> None:

@@ -491,12 +491,14 @@ def derive_stage_status(
     elif flagged:
         out["curve_review"] = {
             "status": STAGE_ATTENTION,
-            "detail": f"{len(flagged)} curve(s) need review; {len(intended)} in scope.",
+            "detail": f"{len(flagged)} curve(s) need review; {len(intended)} in scope."
+                      + (f" Plus {s['reference_text']}." if s.get("reference_text") else ""),
         }
     else:
         out["curve_review"] = {
             "status": STAGE_DONE,
-            "detail": f"{len(intended)} curve(s) in scope.",
+            "detail": f"{len(intended)} curve(s) in scope."
+                      + (f" Plus {s['reference_text']}." if s.get("reference_text") else ""),
         }
 
     # 6 - Preliminary package & publish

@@ -1977,6 +1977,31 @@ def run_evidence(l3_code: str, name: str, *,
     }
 
 
+def without_removed_carried(evidence: dict, remove_metrics: Optional[dict], *,
+                            curve_review: dict, actor: str) -> tuple[dict, dict]:
+    """``(evidence, removed)``: the evidence without the carried-forward curves the
+    owner removed, and those removals (metric -> rationale).
+
+    Methodology 0.14, owner decision 2026-09-21. A carried curve was never fitted
+    in this build, so it has no review entry to stamp: it leaves the carried set
+    (and its reference support) of one assembly. The evidence passed in is not
+    mutated, so it can be assembled again with another decision set. A removal
+    naming a curve the build did fit is left to the review-entry path, which also
+    raises on an unknown key."""
+    carried = (evidence or {}).get("carried") or {}
+    removed = {mk: note for mk, note in (remove_metrics or {}).items()
+               if mk in carried and mk not in (curve_review or {})}
+    if not removed:
+        return evidence, {}
+    if not actor:
+        raise ValueError("remove_metrics requires a named finalize_actor")
+    out = {**evidence,
+           "carried": {k: v for k, v in carried.items() if k not in removed},
+           "reference_support": {k: v for k, v in (evidence.get("reference_support") or {}).items()
+                                 if k not in removed}}
+    return out, removed
+
+
 def assemble(evidence: dict, *,
              source_citation: str = "",
              assessment_id: Optional[str] = None,
@@ -2007,6 +2032,8 @@ def assemble(evidence: dict, *,
     redundancy, deferred_gradients = evidence["redundancy"], evidence["deferred_gradients"]
 
     curve_review = copy.deepcopy(evidence["curve_review"])
+    evidence, removed_carried = without_removed_carried(
+        evidence, remove_metrics, curve_review=curve_review, actor=finalize_actor)
     # Recorded reviewer finalizations (``finalize_metrics``: metric -> note).
     # A flagged curve publishes only through exactly this: a named human
     # decision with a rationale, stamped on the review entry. The agent never
@@ -2020,6 +2047,8 @@ def assemble(evidence: dict, *,
         curve_review[mk] = run_state.apply_review_decision(
             entry, run_state.DECISION_FINALIZED, note=note, actor=finalize_actor)
     for mk, note in (remove_metrics or {}).items():
+        if mk in removed_carried:
+            continue
         entry = curve_review.get(mk)
         if entry is None:
             raise ValueError(f"--remove-metric names unknown metric {mk!r}")
@@ -2268,6 +2297,8 @@ def assemble(evidence: dict, *,
         "deferred_gradients": deferred_gradients,
         "mandatory_review": mandatory_review,
         "removed_metrics": dict(remove_metrics or {}),
+        "removed_carried": dict(removed_carried),
+        "removed_carried_by": finalize_actor if removed_carried else None,
         "finalized_metrics": dict(finalize_metrics or {}),
         "redundancy": redundancy,
         "stratifiers": evidence["stratifiers"],

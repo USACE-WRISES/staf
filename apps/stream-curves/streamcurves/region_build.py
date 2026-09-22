@@ -15,13 +15,16 @@ app shells out to the same script the pilots were built with.
 """
 from __future__ import annotations
 
+import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 
 from streamcurves import citation, methodology, nrsa_dataset, provenance
+from streamcurves.deep_export import deep_slug
 
 _APP_DIR = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _APP_DIR.parents[1]
@@ -167,6 +170,7 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
                   reference_method: Optional[str] = None,
                   reviewer_decisions: Optional[Path | str] = None,
                   coverage_exceptions: Optional[Path | str] = None,
+                  remove_metrics: Optional[dict] = None,
                   source_citation: str = "",
                   python: Optional[str] = None) -> list[str]:
     """The argv for one staged build.
@@ -210,7 +214,109 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
         # The documented gaps ride in as an input, so the next build stages cleanly
         # rather than being patched afterwards in the app.
         argv += ["--coverage-exceptions", str(coverage_exceptions)]
+    for mk, why in sorted((remove_metrics or {}).items()):
+        # An owner's removal of a carried curve is a build input too, so the staged
+        # version and its record carry the decision (methodology 0.14).
+        argv += ["--remove-metric", f"{mk}={why}"]
     return argv
+
+
+# --------------------------------------------------------------------------- #
+# The owner's removals of carried curves (methodology 0.14)
+# --------------------------------------------------------------------------- #
+REMOVALS_FILE = "owner_removals.json"
+MIN_REMOVAL_RATIONALE = 20
+
+
+def default_runs_root() -> Path:
+    """Where the app's region runs live. notes/ is gitignored, so a build leaves
+    nothing in the tracked tree until it is promoted."""
+    return _REPO_ROOT / "notes" / "DEEP_Working" / "analysis" / "runs"
+
+
+def load_removals(run_dir) -> list[dict]:
+    """The owner's pending removals of carried curves, applied at the region's
+    next build: ``[{metric, rationale, recordedBy, recordedAt}]``."""
+    if run_dir is None:
+        return []
+    try:
+        data = json.loads((Path(run_dir) / REMOVALS_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    if not isinstance(data, list):
+        return []
+    return [d for d in data if isinstance(d, dict) and d.get("metric")]
+
+
+def _write_removals(run_dir, items: list[dict]) -> None:
+    folder = Path(run_dir)
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / REMOVALS_FILE
+    if items:
+        path.write_text(json.dumps(items, indent=1) + "\n", encoding="utf-8")
+    elif path.exists():
+        path.unlink()
+
+
+def save_removal(run_dir, metric: str, rationale: str, *, recorded_by: str,
+                 recorded_at: Optional[str] = None) -> list[dict]:
+    """Record the owner's decision to remove a carried curve at the next build.
+    Raises ValueError without a named owner or a rationale of at least
+    :data:`MIN_REMOVAL_RATIONALE` characters."""
+    why = " ".join(str(rationale or "").split())
+    if len(why) < MIN_REMOVAL_RATIONALE:
+        raise ValueError(f"A removal needs a rationale of at least {MIN_REMOVAL_RATIONALE} "
+                         "characters.")
+    who = str(recorded_by or "").strip()
+    if not who:
+        raise ValueError("A removal needs a named owner. Set STAF_LIBRARY_MAINTAINER.")
+    items = [d for d in load_removals(run_dir) if d.get("metric") != metric]
+    items.append({"metric": str(metric), "rationale": why, "recordedBy": who,
+                  "recordedAt": recorded_at or datetime.now(timezone.utc).isoformat(
+                      timespec="seconds")})
+    _write_removals(run_dir, items)
+    return items
+
+
+def clear_removal(run_dir, metric: str) -> list[dict]:
+    """Undo a pending removal."""
+    items = [d for d in load_removals(run_dir) if d.get("metric") != metric]
+    _write_removals(run_dir, items)
+    return items
+
+
+def published_metric_ids(l3_code) -> Optional[set]:
+    """Metric ids the region's latest published version scores, or None when the
+    region has no published version."""
+    from streamcurves import carry_forward as cf
+    from streamcurves import library as lib
+    found = cf.find_published(str(l3_code))
+    if not found:
+        return None
+    aid, ver = found
+    try:
+        bundle = json.loads((lib.canonical_root() / "assessments" / aid / f"v{ver}"
+                             / lib.BUNDLE_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return {str(m.get("metricId")) for b in bundle.get("metricsByFunction") or []
+            for m in b.get("metrics") or []}
+
+
+def removal_inputs(removals, scored_ids=None) -> tuple[dict, list[str]]:
+    """``({metric: rationale}, [stale metric, ...])``: the removals a build takes
+    as ``--remove-metric``, and the ones whose metric the region's latest
+    published version no longer scores (``scored_ids``, from
+    :func:`published_metric_ids`; None passes every removal)."""
+    keep: dict[str, str] = {}
+    stale: list[str] = []
+    for d in removals or []:
+        mk = str(d.get("metric"))
+        if scored_ids is not None and ("spring-" + deep_slug(mk)) not in scored_ids:
+            stale.append(mk)
+            continue
+        keep[mk] = str(d.get("rationale") or "")
+    return keep, stale
 
 
 def frame_counts(sites: pd.DataFrame, l3_code: str, *,

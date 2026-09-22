@@ -765,6 +765,250 @@ def _function_ids_of(fixed: tuple) -> tuple:
     return tuple(out)
 
 
+# --------------------------------------------------------------------------- #
+# The curves a session scores that its own build did not fit
+# --------------------------------------------------------------------------- #
+#: How each kind of curve reads in the workspace, which shows them read-only.
+REFERENCE_KIND_LABELS = {
+    "national": curve_basis.label_for(curve_basis.NATIONAL),
+    "modeled": curve_basis.label_for(curve_basis.MODELED),
+    "published_benchmark": curve_basis.label_for(curve_basis.PUBLISHED),
+    "fixed": "Fixed criterion",
+}
+
+
+def reference_keys(build: Optional[dict]) -> list[str]:
+    """Every metric a pressure-screen session scores that its own build did not
+    fit: the curves a rung above the hierarchy produced, the curves carried
+    forward from the published version, and the fixed criteria. None of them
+    sits in ``metric_config``, so nothing that walks the workbook sees them.
+    Empty for a legacy session."""
+    if not build or build.get("method") != METHOD:
+        return []
+    keys: list[str] = []
+    for mk in list(build.get("ladderMetrics") or {}) + list(build.get("carriedMetrics") or {}):
+        if str(mk) not in keys:
+            keys.append(str(mk))
+    for mk in build.get("fixedMetrics") or []:
+        if fixed_criteria.is_fixed(mk) and str(mk) not in keys:
+            keys.append(str(mk))
+    return keys
+
+
+def not_selected_pairs(build: Optional[dict]) -> set:
+    """``{(metric, function id)}`` SELECT-04 recorded as supported, not selected:
+    the pairs the bundle leaves out (:func:`_apply_selection`)."""
+    selection = (build or {}).get("portfolioSelection") or {}
+    return {(str(x.get("metric")), str(fid)) for fid, sel in selection.items()
+            for x in (sel or {}).get("notSelected") or []}
+
+
+@lru_cache(maxsize=512)
+def _function_id_for(label: str) -> Optional[str]:
+    # cached: the workflow strip places every reference curve on each render
+    from . import regional_agent as ra
+    return ra._canonical_function_id(label)
+
+
+def _row_function_id(row) -> Optional[str]:
+    label = (row or {}).get("function_label")
+    return _function_id_for(str(label)) if isinstance(label, str) and label.strip() else None
+
+
+def _ids_of(rows) -> list[str]:
+    out: list[str] = []
+    for r in rows or []:
+        fid = _row_function_id(r)
+        if fid and fid not in out:
+            out.append(fid)
+    return out
+
+
+def _session_mapping_rows(mapping, keys) -> dict[str, list[dict]]:
+    """``{metric: [mapping row, ...]}`` for ``keys`` from the session's mapping, in
+    ``sort_order``, so a metric's primary function comes first."""
+    out: dict[str, list[dict]] = {}
+    if not keys or not isinstance(mapping, pd.DataFrame) or not len(mapping) \
+            or "metric_key" not in mapping.columns or "function_label" not in mapping.columns:
+        return out
+    m = mapping
+    if "sort_order" in m.columns:
+        m = m.assign(_order=pd.to_numeric(m["sort_order"], errors="coerce")).sort_values(
+            "_order", kind="stable")
+    disc = (m["discipline"] if "discipline" in m.columns
+            else pd.Series([None] * len(m), index=m.index))
+    for mk, d, label in zip(m["metric_key"], disc, m["function_label"]):
+        if not isinstance(mk, str) or mk not in keys:
+            continue
+        if not isinstance(label, str) or not label.strip():
+            continue
+        out.setdefault(mk, []).append({"metric_key": mk, "discipline": d,
+                                       "function_label": label})
+    return out
+
+
+@lru_cache(maxsize=8)
+def _fixed_mapping_of(fixed: tuple) -> tuple:
+    # cached like _function_ids_of: the criteria's own assignments, as row tuples
+    rows = fixed_criteria.mapping_rows(list(fixed)).to_dict("records")
+    return tuple((str(r.get("metric_key")), r.get("discipline"), r.get("function_label"))
+                 for r in rows)
+
+
+def _ladder_kind(saved: dict, annotation: Optional[dict]) -> str:
+    basis = curve_basis.resolve((annotation or {}).get("basis"),
+                                criteria_basis=(annotation or {}).get("criteriaBasis"))
+    if basis == curve_basis.PUBLISHED or saved.get("curveSource") == "published_benchmark":
+        return "published_benchmark"
+    return "modeled" if basis == curve_basis.MODELED else "national"
+
+
+def reference_mapping_rows(build: Optional[dict], mapping=None, *, built=()) -> dict[str, dict]:
+    """``{metric: {kind, mapping, functions}}`` for every curve the session scores
+    without having fitted it, placed exactly as :func:`apply_reference_build`
+    places it in the bundle: a curve a rung above the hierarchy by the
+    session's own mapping rows, a carried curve by its published placement, a
+    fixed criterion by the criterion. SELECT-04's not-selected pairs come out.
+
+    Cheap, with no curve row built, so the quick coverage and counts can ask on
+    every render. ``built``: metrics the session fitted itself, which win over a
+    ladder or carried curve of the same key, as they do in the republish."""
+    if not build or build.get("method") != METHOD:
+        return {}
+    built = {str(k) for k in built or ()}
+    dropped = not_selected_pairs(build)
+    ladder = {str(mk): s for mk, s in (build.get("ladderMetrics") or {}).items()
+              if (s or {}).get("points") and str(mk) not in built}
+    session_rows = _session_mapping_rows(mapping, set(ladder))
+    annotations = build.get("metricAnnotations") or {}
+    placed: dict[str, dict] = {}
+    for mk, saved in ladder.items():
+        placed[mk] = {"kind": _ladder_kind(saved, annotations.get(mk)),
+                      "mapping": list(session_rows.get(mk) or [])}
+    for mk, saved in (build.get("carriedMetrics") or {}).items():
+        if str(mk) in placed or str(mk) in built:
+            continue
+        placed[str(mk)] = {"kind": "carried",
+                           "mapping": [dict(r) for r in (saved or {}).get("mapping") or []]}
+    fixed = tuple(str(mk) for mk in (build.get("fixedMetrics") or []) if fixed_criteria.is_fixed(mk))
+    if fixed:
+        rows = _fixed_mapping_of(fixed)
+        for mk in fixed:
+            placed[mk] = {"kind": "fixed",
+                          "mapping": [{"metric_key": k, "discipline": d, "function_label": f}
+                                      for k, d, f in rows if k == mk]}
+    for mk, entry in placed.items():
+        entry["mapping"] = [r for r in entry["mapping"]
+                            if (mk, str(_row_function_id(r))) not in dropped]
+        entry["functions"] = _ids_of(entry["mapping"])
+    return placed
+
+
+def canonical_function_id(label) -> Optional[str]:
+    """The canonical STAF function id of a function label, or None."""
+    text = "" if label is None else str(label).strip()
+    return _function_id_for(text) if text else None
+
+
+def reference_summary(build: Optional[dict], *, built=()) -> dict:
+    """``{kind: n}`` of the curves a session scores without having fitted them,
+    plus ``fromVersion`` for the carried ones. Empty for a legacy session."""
+    out: dict = {}
+    for entry in reference_mapping_rows(build, None, built=built).values():
+        out[entry["kind"]] = out.get(entry["kind"], 0) + 1
+    if out.get("carried"):
+        out["fromVersion"] = ((build or {}).get("carriedFrom") or {}).get("fromVersion")
+    return out
+
+
+def reference_summary_text(summary: Optional[dict]) -> str:
+    """"19 carried from v7, 2 modeled and 5 fixed criteria", or empty."""
+    s = summary or {}
+    parts = []
+    if s.get("carried"):
+        ver = s.get("fromVersion")
+        parts.append(f"{s['carried']} carried from v{ver}" if ver else f"{s['carried']} carried forward")
+    for kind, word in (("national", "national"), ("modeled", "modeled"),
+                       ("published_benchmark", "published benchmark")):
+        if s.get(kind):
+            parts.append(f"{s[kind]} {word}")
+    if s.get("fixed"):
+        parts.append(f"{s['fixed']} fixed criteri{'on' if s['fixed'] == 1 else 'a'}")
+    if len(parts) > 1:
+        return ", ".join(parts[:-1]) + " and " + parts[-1]
+    return parts[0] if parts else ""
+
+
+def reference_function_ids(build: Optional[dict], mapping=None, *, built=()) -> list[str]:
+    """Function ids the curves of :func:`reference_mapping_rows` cover: the
+    ``always_covered`` of every quick coverage view, so an opened session
+    reports the functions its bundle covers."""
+    out: list[str] = []
+    for entry in reference_mapping_rows(build, mapping, built=built).values():
+        for fid in entry["functions"]:
+            if fid not in out:
+                out.append(fid)
+    return out
+
+
+def reference_metric_counts(build: Optional[dict], mapping=None, *, built=()) -> dict:
+    """How many of those curves each function carries, ``{function id: n}``: the
+    ``extra`` of the quick SELECT-01 count."""
+    counts: dict[str, int] = {}
+    for entry in reference_mapping_rows(build, mapping, built=built).values():
+        for fid in entry["functions"]:
+            counts[fid] = counts.get(fid, 0) + 1
+    return counts
+
+
+def reference_rows(build: Optional[dict], mapping=None, *, built=()) -> dict[str, dict]:
+    """Every curve of :func:`reference_mapping_rows`, rehydrated with the
+    constructors the republish uses: :func:`_ladder_row`,
+    ``carry_forward.restore_rows`` and ``fixed_criteria.curve_row``.
+
+    Each entry: ``row`` (a curve row with ``curve_points``), ``config``,
+    ``annotations``, ``mapping`` (the rows that place it), ``functions``,
+    ``kind`` (carried, national, modeled, published_benchmark, fixed),
+    ``label`` ("Carried from v7", "National reference", ...), ``basis`` and
+    ``in_bundle`` (false for a curve SELECT-04 left in no function). The
+    workspace draws these read-only."""
+    placed = reference_mapping_rows(build, mapping, built=built)
+    if not placed:
+        return {}
+    ladder = build.get("ladderMetrics") or {}
+    annotations = build.get("metricAnnotations") or {}
+    carried = carry_forward.restore_rows(
+        {mk: s for mk, s in (build.get("carriedMetrics") or {}).items()
+         if (placed.get(str(mk)) or {}).get("kind") == "carried"})
+    from_version = (build.get("carriedFrom") or {}).get("fromVersion")
+    fixed = [mk for mk, p in placed.items() if p["kind"] == "fixed"]
+    fixed_config = fixed_criteria.metric_config_entries() if fixed else {}
+    fixed_ann = fixed_annotations(fixed) if fixed else {}
+    out: dict[str, dict] = {}
+    for mk, p in placed.items():
+        kind = p["kind"]
+        if kind == "carried":
+            c = carried[mk]
+            row, config, ann = c["row"], dict(c["config"]), dict(c["annotations"])
+            label = f"Carried from v{from_version}" if from_version else "Carried forward"
+        elif kind == "fixed":
+            row = fixed_criteria.curve_row(mk)
+            config, ann = dict(fixed_config.get(mk) or {}), dict(fixed_ann.get(mk) or {})
+            label = REFERENCE_KIND_LABELS["fixed"]
+        else:
+            saved = ladder[mk]
+            row, config = _ladder_row(mk, saved), dict(saved.get("config") or {})
+            ann = dict(annotations.get(mk) or {})
+            label = REFERENCE_KIND_LABELS[kind]
+        out[mk] = {"row": row, "config": config, "annotations": ann,
+                   "mapping": list(p["mapping"]), "functions": list(p["functions"]),
+                   "kind": kind, "label": label,
+                   "basis": curve_basis.resolve(ann.get("basis"),
+                                                criteria_basis=ann.get("criteriaBasis")),
+                   "in_bundle": bool(p["functions"])}
+    return out
+
+
 def apply_reference_build(build: Optional[dict], curve_rows: dict, mapping,
                           metric_config: dict, meta: dict) -> tuple[dict, object, dict]:
     """Fold a session's ``reference_build`` into an interactive bundle build.
@@ -851,20 +1095,27 @@ def _restore_ladder_rows(build: dict, rows: dict, config: dict) -> None:
     """Put back the curves a rung above the hierarchy produced, from the points
     the session recorded. Mutates ``rows`` and ``config``."""
     for mk, saved in (build.get("ladderMetrics") or {}).items():
-        pts = saved.get("points") or []
-        if mk in rows or not pts:
+        if mk in rows or not (saved.get("points") or []):
             continue
-        rows[mk] = {
-            "metric": mk, "display_name": saved.get("displayName") or mk,
-            "stratum": saved.get("stratum") or "", "n_reference": saved.get("nReference"),
-            "curve_status": saved.get("curveStatus") or "complete",
-            "curve_source": saved.get("curveSource") or "auto",
-            "curve_points": pd.DataFrame(
-                [{"point_order": i + 1, "metric_value": float(q["x"]),
-                  "index_score": float(q["y"])} for i, q in enumerate(pts)]),
-        }
+        rows[mk] = _ladder_row(mk, saved)
         if saved.get("config"):
             config[mk] = saved["config"]
+
+
+def _ladder_row(mk: str, saved: dict) -> dict:
+    """A curve a rung above the hierarchy produced, as a curve row from the points
+    the session recorded: the one constructor the republish
+    (:func:`_restore_ladder_rows`) and the workspace (:func:`reference_rows`) share."""
+    pts = saved.get("points") or []
+    return {
+        "metric": mk, "display_name": saved.get("displayName") or mk,
+        "stratum": saved.get("stratum") or "", "n_reference": saved.get("nReference"),
+        "curve_status": saved.get("curveStatus") or "complete",
+        "curve_source": saved.get("curveSource") or "auto",
+        "curve_points": pd.DataFrame(
+            [{"point_order": i + 1, "metric_value": float(q["x"]),
+              "index_score": float(q["y"])} for i, q in enumerate(pts)]),
+    }
 
 
 def portfolio_with_fixed(portfolio: list[dict], fixed_keys) -> list[dict]:
@@ -1644,6 +1895,9 @@ def run_evidence(l3_code: str, name: str, *,
         "carried_from": {k: prior.get(k) for k in ("assessmentId", "fromVersion",
                                                    "contentDigest") if prior.get(k)},
         "carry_rebuilt": dict(prior.get("rebuilt") or {}),
+        # the published version's SELECT-01 approvals, which carry when their
+        # function's metric set is carried unchanged (carry_forward.carried_approvals)
+        "carried_approvals": list(prior.get("approvals") or []),
         "insufficient_support": {mk: {"decision": d.to_dict(),
                                       "config": insufficient_config.get(mk) or {}}
                                  for mk, d in insufficient.items()},

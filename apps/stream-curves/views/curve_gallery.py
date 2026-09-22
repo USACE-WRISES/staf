@@ -28,6 +28,7 @@ GALLERY_FILTERS = {
     "flagged": "Flagged",
     "out_of_scope": "Not in scope",
     "stratified": "Stratified",
+    "not_built": "Not built here",
 }
 DEFAULT_SECTION = "gallery"
 TILE_W, TILE_H = 240, 150
@@ -58,26 +59,70 @@ def assign_functions(rows: Iterable[Mapping], mapping: Any = None) -> list[dict]
     return cs.assign_functions(rows, mapping)
 
 
-def gallery_rows(state: AppState, metrics: Optional[Iterable[str]] = None) -> list[dict]:
+def reference_tiles_for(build, mapping, *, built=(), pending=()) -> list[dict]:
+    """Read-only tiles for every curve a session scores without having fitted it
+    (``pressure_evidence.reference_rows``): carried forward, from a rung above
+    the hierarchy, or a fixed criterion, each placed in the functions the bundle
+    places it in. A carried curve can be removed at the next build; ``pending``
+    names the ones already marked for removal."""
+    from streamcurves import pressure_evidence as pe
+    pending = {str(m) for m in pending or ()}
+    tiles, placement = [], []
+    for mk, entry in pe.reference_rows(build, mapping, built=built).items():
+        tile = cs.reference_tile(mk, entry)
+        if entry["kind"] == "carried":
+            tile["removable"] = True
+            if mk in pending:
+                tile["pending_removal"] = True
+                tile["status_text"] = "Removal pending"
+        tiles.append(tile)
+        placement.extend(entry["mapping"])
+    return cs.assign_functions(tiles, placement)
+
+
+def reference_tiles(state: AppState, *, pending=()) -> list[dict]:
+    """Headless :func:`reference_tiles_for` from the state."""
+    with reactive.isolate():
+        build = state.reference_build()
+        mapping = state.discipline_function_mapping()
+        built = state.completed_metrics() or {}
+    return reference_tiles_for(build, mapping, built=built, pending=pending)
+
+
+def gallery_rows(state: AppState, metrics: Optional[Iterable[str]] = None, *,
+                 include_reference: bool = False) -> list[dict]:
     """Headless path: every eligible metric's tile straight from the state, in
     the table's order, with its discipline and functions assigned. The page
     itself reads its row snapshots instead so the gallery invalidates exactly
-    when a table row does."""
+    when a table row does. ``include_reference`` adds the read-only tiles of the
+    curves the session did not fit (restricted to ``metrics`` when given)."""
     with reactive.isolate():
         mc = state.metric_config() or {}
         review = state.curve_review() or {}
         functions = state.column_functions() or {}
         mapping = state.discipline_function_mapping()
     keys = list(metrics) if metrics is not None else ss.eligible_summary_metrics(mc)
+    reference = set()
+    if include_reference:
+        from streamcurves import pressure_evidence as pe
+        with reactive.isolate():
+            reference = set(pe.reference_keys(state.reference_build())) - set(mc)
     out = []
     for m in keys:
+        if m in reference:
+            continue
         try:
             rows = ss.get_metric_curve_rows(state, m)
         except (KeyError, TypeError, ValueError):
             rows = None
         out.append(tile_row(m, rows, metric_entry=mc.get(m), review_entry=review.get(m),
                             function_label=functions.get(m)))
-    return assign_functions(out, mapping)
+    out = assign_functions(out, mapping)
+    if include_reference:
+        wanted = set(metrics) if metrics is not None else None
+        out += [t for t in reference_tiles(state)
+                if wanted is None or t.get("metric") in wanted]
+    return out
 
 
 def filter_rows(rows: Iterable[Mapping], mode: str) -> list[dict]:
@@ -88,6 +133,8 @@ def filter_rows(rows: Iterable[Mapping], mode: str) -> list[dict]:
         return [r for r in rows if r.get("in_scope") is False]
     if mode == "stratified":
         return [r for r in rows if len(r.get("strata") or []) > 1]
+    if mode == "not_built":
+        return [r for r in rows if r.get("read_only")]
     return rows
 
 
@@ -123,6 +170,9 @@ def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
     copy placed under the function ``under``: dashed, marked "also under" the
     function it lives under with a link back to the primary tile, and with an
     id of its own so the two never collide."""
+    if row.get("read_only"):
+        return reference_tile_ui(row, channel_id=channel_id, w=w, h=h,
+                                 band_breaks=band_breaks, cross=cross, under=under)
     metric = str(row.get("metric") or "")
     open_click = setinput_onclick(channel_id, {"metric": metric, "action": "open"})
     table_click = "event.stopPropagation();" + setinput_onclick(
@@ -188,6 +238,73 @@ def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
     )
 
 
+def reference_tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
+                      band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS,
+                      cross: Mapping | None = None, under: Any = None):
+    """A curve the session did not fit, drawn read-only: no analysis to open and
+    nothing to recompute. The status pill names its source. A carried curve's
+    primary tile carries the one action the owner has on it: remove it at the
+    next build, or undo that."""
+    metric = str(row.get("metric") or "")
+    right = []
+    n_strata = len(row.get("strata") or [])
+    if n_strata > 1:
+        right.append(ui.tags.span(f"{n_strata} strata", class_="curve-tile-strata"))
+    if cross is None and row.get("removable"):
+        pending = bool(row.get("pending_removal"))
+        action = "undo_remove" if pending else "remove_carried"
+        right.append(ui.tags.button(
+            fa("rotate-left") if pending else fa("trash-can"),
+            type="button", class_="btn btn-link btn-sm curve-tile-remove",
+            onclick="event.stopPropagation();" + setinput_onclick(
+                channel_id, {"metric": metric, "action": action}),
+            title=("Undo the pending removal" if pending
+                   else "Remove this carried curve at the next build")))
+    also = [str(f) for f in (row.get("also_functions") or []) if f]
+    if cross:
+        primary = str(cross.get("primary_function_name") or "its primary function")
+        head_note = ui.div(
+            "also under ",
+            ui.tags.a(primary, href="#", class_="curve-gallery-fn-link",
+                      onclick=_scroll_to(cs.tile_dom_id(metric)),
+                      title="Go to this curve's primary tile"),
+            class_="curve-tile-cross")
+        foot_left = ui.tags.span("cross-listed", class_="curve-tile-also",
+                                 title=f"This curve lives under {primary}")
+        dom_id = cs.cross_dom_id(metric, under if under is not None else primary)
+        classes = ["curve-tile", *cs.tile_state_classes(row), "is-cross-listed"]
+    else:
+        head_note = None
+        foot_left = ui.tags.span(("also: " + ", ".join(also)) if also else "",
+                                 class_="curve-tile-also",
+                                 title=("Also informs: " + ", ".join(also)) if also else None)
+        dom_id = cs.tile_dom_id(metric)
+        classes = ["curve-tile", *cs.tile_state_classes(row)]
+    return ui.div(
+        head_note,
+        ui.div(
+            ui.div(
+                ui.tags.span(
+                    str(row.get("short_name") or row.get("display_name") or metric),
+                    class_="curve-tile-name",
+                    title=str(row.get("display_name") or metric),
+                ),
+                ui.tags.span(metric, class_="curve-tile-code"),
+                class_="curve-tile-id",
+            ),
+            ui.tags.span(cs.status_label(row), class_="curve-tile-status"),
+            class_="curve-tile-head",
+        ),
+        ui.HTML(cs.tile_svg(row, w=w, h=h, band_breaks=band_breaks)),
+        ui.div(foot_left, ui.div(*right, class_="curve-tile-foot-right"),
+               class_="curve-tile-foot"),
+        id=dom_id,
+        class_=" ".join(classes),
+        title=cs.tile_title(row), data_metric=metric,
+        data_role="cross" if cross else "primary",
+    )
+
+
 def function_header_ui(fn: Mapping):
     """The full-width row above a function's tiles: its name, the number of
     curves that serve it, and how many of those are cross-listed from another
@@ -241,6 +358,7 @@ def gallery_counts(rows: Iterable[Mapping]) -> dict:
         "flagged": sum(1 for r in rows if r.get("needs_review")),
         "out_of_scope": sum(1 for r in rows if r.get("in_scope") is False),
         "stratified": sum(1 for r in rows if len(r.get("strata") or []) > 1),
+        "not_built": sum(1 for r in rows if r.get("read_only")),
     }
 
 
@@ -256,7 +374,9 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
     mode = filter_mode if filter_mode in GALLERY_FILTERS else "all"
     counts = ui.div(
         ui.tags.strong(f"{c['n']} curve" + ("" if c["n"] == 1 else "s")),
-        ui.tags.span(f", {c['flagged']} flagged, {c['out_of_scope']} not in scope", class_="text-muted"),
+        ui.tags.span(f", {c['flagged']} flagged, {c['out_of_scope']} not in scope"
+                     + (f", {c['not_built']} not built here" if c["not_built"] else ""),
+                     class_="text-muted"),
         class_="curve-gallery-counts",
     )
     actions = []
@@ -289,7 +409,10 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
         f"{cs.fmt_num(band_breaks[0])} and {cs.fmt_num(band_breaks[1])}. Dotted red curve: not in "
         "scope. Orange marker: needs review. A curve that informs more than one function appears "
         "under each of them; the dashed copies are cross-listed and name the function the curve "
-        "lives under. Click a tile to open its analysis.",
+        "lives under. Click a tile to open its analysis. A tile with a blue edge was not built "
+        "here: carried forward from the published version, taken from a national, modeled or "
+        "published source, or a fixed criterion. Those are read-only, and a carried curve can "
+        "be removed at the next build.",
         class_="text-muted small curve-gallery-legend",
     )
     return ui.div(toolbar, grid, legend, class_="curve-gallery-wrap")
