@@ -61,8 +61,10 @@ def session_view(state: AppState) -> dict:
         mc = state.metric_config() or {}
         region = state.region_of_applicability() or {}
         effective = ap.effective_reference_build(state)
+        provenance = state.source_provenance()
     return {"build": build, "decisions": decisions, "mapping": mapping, "built": set(built),
             "metric_config": mc, "region": region, "effective": effective,
+            "provenance": provenance,
             "entries": pe.reference_rows(effective, mapping, built=built),
             "not_selected": pe.not_selected_pairs(effective),
             "withheld": {str(w.get("metricKey")) for w in
@@ -151,6 +153,7 @@ def pool(metric: str, view: Mapping) -> list[dict]:
     # the refusals are the build's own, so they are read from the build's record
     return osrc.pool_for(metric, region_code=str(region.get("code") or ""),
                          region_name=region.get("name"), build=view["build"],
+                         provenance=view.get("provenance"),
                          current=current_points(metric, view))
 
 
@@ -186,10 +189,16 @@ def sources_list(options: list[dict], *, ns, selected: Optional[str] = None):
     unavailable = [o for o in options if not o["available"]]
     choices: dict = {}
     for o in available:
-        choices[o["key"]] = option_label(o)
+        if o["kind"] != osrc.REFUSED:
+            choices[o["key"]] = option_label(o)
     choices[ENTERED_KEY] = option_label({"title": "Enter a curve",
                                          "detail": "Two thresholds, or breakpoints point by point, "
                                                    "cited or on professional judgment"})
+    # a source the build refused, last: the owner's exception, computed at the
+    # next build with every check it fails recorded
+    for o in available:
+        if o["kind"] == osrc.REFUSED:
+            choices[o["key"]] = option_label(o)
     first = selected if selected in choices else next(iter(choices))
     parts = [ui.input_radio_buttons(ns("choice"), None, choices=choices, selected=first,
                                     width="100%")]
@@ -205,8 +214,22 @@ def sources_list(options: list[dict], *, ns, selected: Optional[str] = None):
     return ui.div(*parts, class_="source-dialog-sources")
 
 
+def refused_detail(opt: Mapping):
+    """A source the build refused: what the build found, and what accepting it does."""
+    facts = [("Source", opt.get("title")), ("What it is", opt.get("detail")),
+             ("The build found", opt.get("refusal"))]
+    return ui.div(
+        ui.tags.dl(*[t for label, value in facts if value
+                     for t in (ui.tags.dt(label), ui.tags.dd(str(value)))],
+                   class_="source-panel-facts"),
+        ui.div(fa("clock-rotate-left"), " ", osrc.REFUSAL_NOTE,
+               class_="source-dialog-preview-note mt-2"))
+
+
 def option_detail(metric: str, opt: Mapping, config: Mapping):
     """The chosen option's curve and what it states."""
+    if opt.get("kind") == osrc.REFUSED:
+        return refused_detail(opt)
     facts = [("Source", opt.get("title")), ("What it is", opt.get("detail")),
              ("Citation", opt.get("citation"))]
     ann = opt.get("annotations") or {}
@@ -506,6 +529,12 @@ def source_dialog_server(input, output, session, state: AppState):
         state.owner_curve_decisions.set(oc.merge(current, decision))
         ctx.set(None)
         ui.modal_remove()
+        if opt["kind"] == osrc.REFUSED:
+            ui.notification_show(
+                f"Saved: {opt['title']} for {metric_name(metric, view)}. The next build of this "
+                "region computes it; build the region again in the Region builder.",
+                type="message", duration=9)
+            return
         ui.notification_show(
             f"Saved: {metric_name(metric, view)} now scores against {opt['title']}. It applies "
             "here now and to every later build of this region.", type="message", duration=7)
@@ -514,5 +543,5 @@ def source_dialog_server(input, output, session, state: AppState):
 __all__ = ["DIALOG_ID", "OPEN_INPUT", "ENTERED_KEY", "open_onclick", "session_view",
            "metric_name", "metric_state", "function_metrics", "not_sourceable_note",
            "scoring_functions", "current_points", "pool", "preview_svg", "option_label",
-           "sources_list", "option_detail", "entered_form", "dialog_modal",
+           "sources_list", "refused_detail", "option_detail", "entered_form", "dialog_modal",
            "source_dialog_server"]

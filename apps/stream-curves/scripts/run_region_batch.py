@@ -311,6 +311,8 @@ def cmd_stage(a) -> int:
         engine_config=_engine_config(a),
         exclude_sites=_parse_kv(a.exclude_site, "--exclude-site") or None,
         reference_method=reference_method,
+        # REF-15: the refused sources the owner accepted, computed in this pass
+        force=oc.forced_sources(curve_decisions) or None,
         on_event=ra.event_narrator())
     print(f"[batch] evidence: {evidence['n_retained']} / {evidence['n_candidates']} retained "
           f"(tier {evidence['tier']['reference_tier']}, pool {evidence['reference_pool_disposition']}), "

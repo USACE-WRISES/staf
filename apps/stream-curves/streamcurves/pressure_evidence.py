@@ -608,9 +608,18 @@ def coverage_exceptions_draft(result: dict, *, recorded_by: str = "") -> list[di
         for f in w.get("functions") or []:
             if f["functionId"] in missing:
                 by_fn.setdefault(f["functionId"], []).append(w)
+    # a refused source the owner accepted that nothing could be built from (REF-15)
+    unbuilt = {str(d.get("metric")): d.get("source") or {}
+               for d in result.get("curve_decisions") or []
+               if (d.get("source") or {}).get("failedAtBuild")}
     out = []
     for fid, items in sorted(by_fn.items()):
         names = ", ".join(sorted(str(w.get("metricName")) for w in items))
+        owner = " ".join(
+            f"The owner accepted {unbuilt[str(w.get('metricKey'))].get('title')} for "
+            f"{w.get('metricName')}, and nothing could be built from it: "
+            f"{unbuilt[str(w.get('metricKey'))].get('failedAtBuild')}"
+            for w in items if str(w.get("metricKey")) in unbuilt)
         out.append({
             "functionId": fid, "reason": "insufficient-reference-support",
             "justification": (
@@ -618,7 +627,8 @@ def coverage_exceptions_draft(result: dict, *, recorded_by: str = "") -> list[di
                 "pool from this ecoregion or a wider region under the regional screen passed "
                 "acceptance, no comparable national reference passed, no approved modeled "
                 "reference applies here, and the verified catalog holds no applicable "
-                "published criterion. No curve was forced." + _blocker_detail(result, items)),
+                "published criterion. No curve was forced." + _blocker_detail(result, items)
+                + (" " + owner if owner else "")),
             "recordedBy": recorded_by, "recordedAt": None})
     return out
 
@@ -1626,6 +1636,34 @@ CENSUS_COLUMNS = ["l3", "region", "metric", "display_name", "family", "status", 
                   "supported_level", "transfer_risk", "zero_inflated", "q25"]
 
 
+def forced_sources(force: Optional[dict], *, metric_config: dict, carried: dict,
+                   insufficient: dict, ladder_rows: dict, frame: pd.DataFrame,
+                   values: pd.DataFrame, l3_code: str, name: str,
+                   validation: Optional[dict], registry: Optional[dict],
+                   excluded: Optional[dict]) -> dict:
+    """``{metric: basis_ladder.force_source(...)}`` for each refused source the
+    owner accepted. A metric this build fits keeps its own curve: a choice never
+    replaces one, so it is not computed and says why."""
+    out: dict = {}
+    for mk, ref in sorted((force or {}).items()):
+        fitted = mk in metric_config and mk not in insufficient and mk not in ladder_rows
+        if fitted:
+            out[mk] = {"rule": (ref or {}).get("rule"), "option": (ref or {}).get("option"),
+                       "row": None, "decision": None, "failed": [],
+                       "why": "This build fits the metric itself, so its own curve scores."}
+            continue
+        config = dict(metric_config.get(mk) or (carried.get(mk) or {}).get("config") or {})
+        if not config:
+            from . import owner_sources
+            config = owner_sources.agent_config(mk)
+        out[mk] = basis_ladder.force_source(
+            mk, ref, frame=frame, values_wide=values, target_l3=l3_code, config=config,
+            validation=validation, region_name=name, scale_registry=registry,
+            excluded=excluded)
+        out[mk]["config"] = config
+    return out
+
+
 def census(l3_codes, *, max_stream_order: Optional[int] = None, protocols=None,
            keep_stations: Optional[dict] = None, excluded: Optional[dict] = None,
            scale_registry: Optional[dict] = None) -> dict:
@@ -1754,13 +1792,20 @@ def run_evidence(l3_code: str, name: str, *,
                  nrsa_protocols=None,
                  nrsa_keep_sites: Optional[dict] = None,
                  scale_registry: Optional[dict] = None,
-                 carry: Any = True) -> dict:
+                 carry: Any = True,
+                 force: Optional[dict] = None) -> dict:
     """The decision-free half of a regional run under the pressure screen.
 
     ``carry`` (methodology 0.14): True carries forward every curve the
     ecoregion's latest published version scores unless its data were found
     defective (``carry_forward.prepare``); a prepared dict is used as given;
-    False or None builds every curve afresh."""
+    False or None builds every curve afresh.
+
+    ``force`` (REF-15): ``{metric: {"rule", "option"}}``, the sources the build
+    refuses that the owner accepted (``owner_curves.forced_sources``). Each is
+    computed beside the build's own choices, which it never changes, with every
+    check it fails recorded (``basis_ladder.force_source``); the owner's
+    decision puts it in the bundle at assembly."""
     from . import regional_agent as ra
 
     dataset_id = nrsa_dataset_id or nrsa_dataset.MULTI_CYCLE_DATASET_ID
@@ -1868,6 +1913,13 @@ def run_evidence(l3_code: str, name: str, *,
         decisions[mk] = d
         insufficient.pop(mk, None)
 
+    # REF-15: the refused sources the owner accepted, each computed on its own
+    # stations or donors, never through the pooled frame, so the run seed and
+    # every curve the build fits stay as they are
+    forced = forced_sources(force, metric_config=metric_config, carried=carried,
+                            insufficient=insufficient, ladder_rows=ladder_rows, frame=frame,
+                            values=values, l3_code=l3_code, name=name, validation=validation,
+                            registry=registry, excluded=exclude_sites)
     insufficient_config = {mk: metric_config[mk] for mk in insufficient}
     for mk in insufficient:                      # no curve, so it never reaches the engine
         metric_config.pop(mk, None)
@@ -2031,6 +2083,10 @@ def run_evidence(l3_code: str, name: str, *,
         "insufficient_support": {mk: {"decision": d.to_dict(),
                                       "config": insufficient_config.get(mk) or {}}
                                  for mk, d in insufficient.items()},
+        # REF-15: the refused sources the owner accepted, computed; the requests
+        # ride in the manifest so the inputs digest names them
+        "forced_metrics": forced,
+        "forced_sources": {mk: dict(ref) for mk, ref in sorted((force or {}).items())},
         "fixed_metrics": fixed_metrics,
         "discrimination": discrimination,
         "stratum_rows": stratum_rows, "strata_applied": strata_applied,

@@ -1647,7 +1647,8 @@ def run_evidence(l3_code: str, name: str, *,
                  nrsa_keep_sites: Optional[dict] = None,
                  reference_method: str = run_state.REFERENCE_METHOD_EASI,
                  scale_registry: Optional[dict] = None,
-                 carry: Any = True) -> dict:
+                 carry: Any = True,
+                 force: Optional[dict] = None) -> dict:
     """The expensive, decision-free half of a regional run.
 
     ``reference_method`` chooses how reference stations are defined. The
@@ -1681,7 +1682,8 @@ def run_evidence(l3_code: str, name: str, *,
                              else nrsa_dataset.default_build_dataset_id()),
             nrsa_cycles=nrsa_cycles, exclude_sites=exclude_sites,
             nrsa_max_stream_order=nrsa_max_stream_order, nrsa_protocols=nrsa_protocols,
-            nrsa_keep_sites=nrsa_keep_sites, scale_registry=scale_registry, carry=carry)
+            nrsa_keep_sites=nrsa_keep_sites, scale_registry=scale_registry, carry=carry,
+            force=force)
     directions = load_directions()
     protocols = tuple(nrsa_protocols) if nrsa_protocols else None
     candidates, panel_ledger = select_candidates_detailed(
@@ -2040,6 +2042,9 @@ def assemble(evidence: dict, *,
         evidence, curve_decisions, remove_metrics, curve_review=curve_review,
         actor=finalize_actor)
     from . import owner_curves
+    # a refused source the owner accepted takes the curve this build computed
+    owner_decisions = owner_curves.with_forced(owner_decisions,
+                                               evidence.get("forced_metrics") or {})
     owner_removed = owner_curves.removed(owner_decisions)
     removed_carried = {mk: d.get("rationale") for mk, d in owner_removed.items()
                        if mk in (evidence.get("carried") or {})}
@@ -2331,6 +2336,7 @@ def assemble(evidence: dict, *,
         # REF-15: the owner's decisions this assembly applied, and the portfolio
         # SELECT-04 chose before them (what the session stores, so they can be undone)
         "curve_decisions": [dict(d) for d in owner_decisions],
+        "forced_sources": dict(evidence.get("forced_sources") or {}),
         "base_portfolio_selection": base_selection,
         "base_metric_annotations": base_annotations,
         "base_withheld": base_withheld,

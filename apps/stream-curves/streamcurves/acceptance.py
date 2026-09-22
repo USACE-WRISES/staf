@@ -218,6 +218,30 @@ def pool_acceptor(metric: str, entry: dict, validation: Optional[dict], *,
     return accept
 
 
+def all_checks(metric: str, option: str, values: Any, entry: dict,
+               validation: Optional[dict], *, family: Optional[str] = None,
+               measure: Optional[float] = None, st: Optional[dict] = None) -> list[dict]:
+    """Every acceptance criterion a source option faces, each run to its verdict
+    rather than stopping at the first refusal: ``[{check, pass, why}]``. For a
+    source the owner accepted over the build's refusal (REF-15), so the record
+    names every check it fails."""
+    st = st or settings()
+    vals = pd.to_numeric(pd.Series(values), errors="coerce").dropna()
+    out: list[dict] = []
+    ok, why = sample_ok(len(vals), st)
+    out.append({"check": "ACC-01", "pass": ok, "why": why})
+    ok, why, _ = stability(vals, entry, st)
+    out.append({"check": "ACC-04", "pass": ok,
+                "why": "" if ok else f"The pool is not stable, since {why}."})
+    if option != "local":
+        ok, why = evidence(metric, option, validation, family=family, st=st)
+        out.append({"check": "ACC-05/06", "pass": ok, "why": why})
+    if option in ("3c_matched", "3a_envelope"):
+        ok, why = transport_ok(metric, option, validation, family=family, measure=measure, st=st)
+        out.append({"check": "ACC-03", "pass": ok, "why": why})
+    return out
+
+
 def acceptance_record(verdict: dict, st: Optional[dict] = None) -> dict:
     """The ``acceptance`` block a verdict row carries in basis_validation.yaml:
     each criterion's result beside the containment diagnostic."""

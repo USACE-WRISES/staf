@@ -256,11 +256,18 @@ def undo(run_dir, decision_id: str) -> list[dict]:
 
 
 def combine(session: Iterable[dict], region: Iterable[dict]) -> list[dict]:
-    """The session's decisions with the region's standing ones applied on top."""
+    """The session's decisions with the region's standing ones applied on top. A
+    refused source the region's record holds as a request keeps the curve the
+    session's build computed for it."""
     out: list[dict] = []
     for d in list(session or []) + list(region or []):
-        if isinstance(d, dict) and d.get("id"):
-            out = merge(out, d)
+        if not (isinstance(d, dict) and d.get("id")):
+            continue
+        prior = next((x for x in out if x.get("id") == d.get("id")), None)
+        if prior is not None and not source_curve(d).get("points") \
+                and source_curve(prior).get("points"):
+            d = {**d, "source": dict(prior.get("source") or {})}
+        out = merge(out, d)
     return out
 
 
@@ -340,8 +347,55 @@ def sourced(decisions: Iterable[Mapping]) -> dict:
 
 
 def _chosen(acts: dict, built=()) -> dict:
+    """The source decisions that put a curve in: a refused source the owner
+    accepted has one only once a build has computed it."""
     return {mk: d for mk, d in acts[SOURCE].items()
-            if mk not in acts[REMOVE] and applies(mk, built=built)}
+            if mk not in acts[REMOVE] and applies(mk, built=built)
+            and len(source_curve(d).get("points") or []) >= 2}
+
+
+def forced_sources(decisions: Iterable[Mapping]) -> dict:
+    """``{metric: {"rule", "option"}}`` of the refused sources the owner accepted:
+    what a build computes for them (``basis_ladder.force_source``)."""
+    from . import owner_sources
+    out = {}
+    for mk, d in _by_action(decisions)[SOURCE].items():
+        src = d.get("source") or {}
+        if src.get("kind") == owner_sources.REFUSED:
+            ref = src.get("ref") or {}
+            out[mk] = {"rule": ref.get("rule"), "option": ref.get("option")}
+    return out
+
+
+def pending(decisions: Iterable[Mapping]) -> dict:
+    """``{metric: decision}`` of the refused sources the owner accepted that no
+    build has computed yet: they wait for the next build of the region."""
+    from . import owner_sources
+    return {mk: d for mk, d in _by_action(decisions)[SOURCE].items()
+            if (d.get("source") or {}).get("kind") == owner_sources.REFUSED
+            and not source_curve(d).get("points")
+            and not (d.get("source") or {}).get("failedAtBuild")}
+
+
+def with_forced(decisions: Iterable[Mapping], forced: Mapping) -> list[dict]:
+    """The decisions with each accepted refusal holding what its build computed:
+    the curve and the checks it failed, or why nothing could be built."""
+    from . import owner_sources
+    out = []
+    for d in decisions or []:
+        src = (d or {}).get("source") or {}
+        got = forced.get(str(d.get("metric"))) if src.get("kind") == owner_sources.REFUSED else None
+        if got is None:
+            out.append(dict(d))
+            continue
+        filled = {k: v for k, v in src.items() if k not in ("curve", "failed", "failedAtBuild")}
+        if got.get("row") is not None:
+            filled["curve"] = owner_sources.forced_curve(str(d["metric"]), got)
+            filled["failed"] = [dict(f) for f in got.get("failed") or []]
+        else:
+            filled["failedAtBuild"] = str(got.get("why") or "Nothing could be built.")
+        out.append({**dict(d), "source": filled})
+    return out
 
 
 def source_curve(d: Mapping) -> dict:
@@ -490,7 +544,8 @@ def summary(d: Mapping) -> dict:
            "recordedBy": d.get("recordedBy"), "recordedAt": d.get("recordedAt")}
     src = d.get("source") or {}
     if src:
-        out["source"] = {k: src.get(k) for k in ("kind", "ref", "title", "citation")
+        out["source"] = {k: src.get(k) for k in ("kind", "ref", "title", "citation", "failed",
+                                                  "failedAtBuild")
                          if src.get(k) is not None}
     if d.get("coverageExceptions"):
         out["coverageExceptions"] = [dict(g) for g in d["coverageExceptions"]]
@@ -542,6 +597,9 @@ def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
         mk = str(d.get("metric"))
         if d.get("action") == SOURCE and mk in built:
             out.append((dict(d), "This build fits the metric itself, so its own curve scores."))
+        elif d.get("action") == SOURCE and (d.get("source") or {}).get("failedAtBuild"):
+            out.append((dict(d), "Nothing could be built from the source: "
+                        + str((d.get("source") or {}).get("failedAtBuild"))))
         elif d.get("action") == SOURCE and fixed_criteria.is_fixed(mk):
             out.append((dict(d), "A fixed criterion cannot take another source."))
         elif d.get("action") in (REMOVE, UNMAP) and mk not in known:
@@ -558,5 +616,6 @@ __all__ = [
     "validate", "load", "path_of", "seed", "supersedes", "merge", "save", "undo", "combine",
     "from_removals", "effective_selection", "applies", "sourced", "source_curve",
     "decision_annotation", "effective_build", "apply_to_inputs", "summary", "removed",
-    "decisions_for", "coverage_exceptions", "with_exceptions", "stale",
+    "decisions_for", "coverage_exceptions", "with_exceptions", "stale", "forced_sources",
+    "pending", "with_forced",
 ]

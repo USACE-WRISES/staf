@@ -208,9 +208,19 @@ def test_a_borrowed_curve_keeps_a_published_criterions_record_and_no_pool_record
 
 def test_the_refusals_are_listed_with_their_reasons():
     _state, _bundle, fields = _opened("interior-plateau/v6")
-    opts = osrc.refused_options("chem_CHLA", build=fields["reference_build"])
-    assert [o["ref"]["rule"] for o in opts] == ["REF-12", "REF-13", "REF-14"]
-    assert all(not o["available"] and o["why_not"] for o in opts)
+    build = fields["reference_build"]
+    opts = osrc.refused_options("chem_CHLA", build=build)
+    # the two national options can be computed at a build; a metric the registry
+    # and the catalog hold nothing for cannot
+    assert [(o["ref"]["rule"], o["available"]) for o in opts] == [
+        ("REF-12", True), ("REF-12", True), ("REF-13", False), ("REF-14", False)]
+    assert all(o["why_not"] for o in opts)
+    # the provenance names every station pool the build tried, with its count
+    pools = osrc.refused_options("chem_CHLA", build=build,
+                                 provenance=lib.load_version_provenance("interior-plateau", 6))
+    assert pools[0]["key"] == "refused_source:REF-04:local" and not pools[0]["available"]
+    assert any(o["key"].startswith("refused_source:REF-11:") and o["available"]
+               for o in pools)
 
 
 # --------------------------------------------------------------------------- #
