@@ -10,7 +10,9 @@ why:
 - ``unmap``: the curve stops scoring the functions named and keeps the rest;
 - ``include``: a curve the build fitted, but the two-per-function rule left out
   of a function, scores that function;
-- ``source``: the metric's curve comes from a source the owner chose.
+- ``source``: the metric's curve comes from a source the owner chose
+  (``owner_sources``). The source is resolved when it is chosen, so the
+  decision holds the curve itself, and the curve scores the functions it names.
 
 A decision is a standing decision of its region. It applies at once in the
 workspace, rides in the session, and every later build of the region applies it
@@ -94,8 +96,16 @@ def check(d: Mapping) -> None:
         raise ValueError(f"Give a rationale of at least {need} characters.")
     if not str(d.get("recordedBy") or "").strip():
         raise ValueError("A curve decision needs a named owner. Set STAF_LIBRARY_MAINTAINER.")
-    if d["action"] in (UNMAP, INCLUDE) and not d.get("functions"):
+    if d["action"] in (UNMAP, INCLUDE, SOURCE) and not d.get("functions"):
         raise ValueError("Name the function.")
+    if d["action"] == SOURCE:
+        from . import owner_sources
+        src = d.get("source") or {}
+        if src.get("kind") not in owner_sources.SOURCE_KINDS:
+            raise ValueError("Choose where the curve comes from.")
+        if src.get("kind") != owner_sources.REFUSED and \
+                len((src.get("curve") or {}).get("points") or []) < 2:
+            raise ValueError("The chosen source has no curve.")
     for gap in d.get("coverageExceptions") or []:
         if len(_clean(gap.get("justification"))) < need:
             raise ValueError(f"Say why the function is left unassessed, in at least {need} "
@@ -109,10 +119,12 @@ def _left_out(build: Optional[Mapping]) -> set:
             for x in (sel or {}).get("notSelected") or [] if not x.get("owner")}
 
 
-def validate(d: Mapping, *, build: Optional[Mapping], built: Iterable[str] = ()) -> None:
+def validate(d: Mapping, *, build: Optional[Mapping], built: Iterable[str] = (),
+             decisions: Iterable[Mapping] = ()) -> None:
     """Raise ValueError when the open session cannot take the decision. ``build``
     is the session's reference build as the build wrote it; ``built``, the metrics
-    the session fitted."""
+    the session fitted; ``decisions``, the ones it already holds (a curve the
+    owner chose can be removed or taken out of a function too)."""
     from . import pressure_evidence as pe
     check(d)
     mk, action = str(d["metric"]), d["action"]
@@ -127,7 +139,7 @@ def validate(d: Mapping, *, build: Optional[Mapping], built: Iterable[str] = ())
         if mk in built:
             raise ValueError("This curve was built here. Take it out of a function in Function "
                              "mapping, or out of scope in its review.")
-        if mk not in set(pe.reference_keys(build)):
+        if mk not in set(pe.reference_keys(build)) | set(sourced(decisions)):
             raise ValueError(f"{mk} is not a curve from another source in this version.")
     if action == INCLUDE:
         missing = [f for f in d.get("functions") or [] if (mk, str(f)) not in _left_out(build)]
@@ -146,14 +158,12 @@ def _read_json(path: Path) -> Any:
 
 
 def _write(run_dir, items: list[dict]) -> None:
+    """Write the region's decisions. A file the owner emptied stays, holding none,
+    so a build never seeds it again from a published version (:func:`seed`)."""
     folder = Path(run_dir)
     folder.mkdir(parents=True, exist_ok=True)
-    path = folder / DECISIONS_FILE
-    if items:
-        path.write_text(json.dumps({"schema": 1, "decisions": items}, indent=1) + "\n",
-                        encoding="utf-8")
-    elif path.exists():
-        path.unlink()
+    (folder / DECISIONS_FILE).write_text(
+        json.dumps({"schema": 1, "decisions": items}, indent=1) + "\n", encoding="utf-8")
 
 
 def _migrate(folder: Path) -> None:
@@ -190,19 +200,36 @@ def path_of(run_dir) -> Optional[Path]:
     """The region's decisions file when it holds any decision, else None."""
     if run_dir is None:
         return None
-    load(run_dir)                          # folds a legacy removals file in first
-    path = Path(run_dir) / DECISIONS_FILE
-    return path if path.exists() else None
+    items = load(run_dir)                  # folds a legacy removals file in first
+    return Path(run_dir) / DECISIONS_FILE if items else None
+
+
+def seed(run_dir, decisions: Iterable[Mapping]) -> list[dict]:
+    """The region's decisions, first written from ``decisions`` (the ones its latest
+    published version recorded) when the region has never recorded any: a
+    checkout without the region's run folder keeps the owner's choices."""
+    if run_dir is None:
+        return []
+    folder = Path(run_dir)
+    if (folder / DECISIONS_FILE).exists() or (folder / LEGACY_REMOVALS_FILE).exists():
+        return load(folder)
+    items = [dict(d) for d in decisions or [] if isinstance(d, Mapping) and d.get("id")]
+    if items:
+        _write(folder, items)
+    return items
 
 
 def supersedes(new: Mapping, old: Mapping) -> bool:
     """A new decision replaces an older one about the same curve: removing it, or
     choosing its source, replaces everything else about it; taking it out of a
-    function, or putting it in, replaces an older decision on that function."""
+    function, or putting it in, replaces an older decision on that function and
+    keeps a chosen source."""
     if str(new.get("metric")) != str(old.get("metric")):
         return False
     if new.get("action") in (REMOVE, SOURCE) or old.get("action") == REMOVE:
         return True
+    if old.get("action") == SOURCE:
+        return False
     return bool(set(new.get("functions") or []) & set(old.get("functions") or []))
 
 
@@ -272,11 +299,19 @@ def _by_action(decisions: Iterable[Mapping]) -> dict:
 def effective_selection(selection: Optional[Mapping], decisions: Iterable[Mapping]) -> dict:
     """SELECT-04's record with the owner's decisions on it: an ``include`` takes its
     pair out of ``notSelected`` (and names it in ``ownerIncluded``); an ``unmap``
-    adds its pair to ``notSelected``, marked as the owner's."""
+    adds its pair to ``notSelected``, marked as the owner's; a ``source`` takes the
+    pairs of the functions it names out, since the owner placed the curve there.
+    Pass a source before the unmaps that narrow it."""
     out = copy.deepcopy(dict(selection or {}))
     for d in decisions or []:
         mk = str(d.get("metric"))
         for fid in d.get("functions") or []:
+            if d.get("action") == SOURCE:
+                sel = out.get(str(fid))
+                if sel and sel.get("notSelected"):
+                    sel["notSelected"] = [x for x in sel["notSelected"]
+                                          if str(x.get("metric")) != mk]
+                continue
             sel = out.setdefault(str(fid), {"kept": [], "selected": [], "notSelected": []})
             sel["notSelected"] = list(sel.get("notSelected") or [])
             if d.get("action") == INCLUDE:
@@ -292,10 +327,45 @@ def effective_selection(selection: Optional[Mapping], decisions: Iterable[Mappin
     return out
 
 
-def effective_build(build: Optional[Mapping], decisions: Iterable[Mapping]) -> Optional[dict]:
+def applies(metric: str, *, built=()) -> bool:
+    """A chosen source applies to the metric: the build did not fit it, and it is
+    not a fixed criterion. A curve built here always wins over a choice."""
+    mk = str(metric)
+    return mk not in {str(k) for k in built or ()} and not fixed_criteria.is_fixed(mk)
+
+
+def sourced(decisions: Iterable[Mapping]) -> dict:
+    """``{metric: decision}`` of the curves whose source the owner chose."""
+    return dict(_by_action(decisions)[SOURCE])
+
+
+def _chosen(acts: dict, built=()) -> dict:
+    return {mk: d for mk, d in acts[SOURCE].items()
+            if mk not in acts[REMOVE] and applies(mk, built=built)}
+
+
+def source_curve(d: Mapping) -> dict:
+    """The curve a SOURCE decision holds, in the shape a carried curve rides in."""
+    return dict(((d or {}).get("source") or {}).get("curve") or {})
+
+
+def decision_annotation(d: Mapping) -> dict:
+    """The ``ownerDecision`` block a chosen curve carries in the bundle: the choice,
+    who made it, when and why (a decision or its :func:`summary`)."""
+    src = (d or {}).get("source") or {}
+    out = {"id": d.get("id"), "kind": src.get("kind"), "title": src.get("title"),
+           "citation": src.get("citation"), "rationale": d.get("rationale"),
+           "recordedBy": d.get("recordedBy"), "recordedAt": d.get("recordedAt")}
+    return {k: v for k, v in out.items() if v not in (None, "")}
+
+
+def effective_build(build: Optional[Mapping], decisions: Iterable[Mapping], *,
+                    built=()) -> Optional[dict]:
     """The session's reference build with the owner's decisions applied, in the
     shape every reader of ``reference_build`` already understands: a removed curve
-    is gone, an unmapped pair and an included one are in the portfolio record."""
+    is gone, an unmapped pair and an included one are in the portfolio record, and
+    a chosen curve sits in ``ownerMetrics`` in place of the build's. ``built``:
+    the metrics the session fitted, which no choice replaces."""
     if not build:
         return build
     decisions = list(decisions or [])
@@ -304,31 +374,93 @@ def effective_build(build: Optional[Mapping], decisions: Iterable[Mapping]) -> O
     out = copy.deepcopy(dict(build))
     acts = _by_action(decisions)
     gone = set(acts[REMOVE])
+    chosen = _chosen(acts, built)
     for key in ("ladderMetrics", "carriedMetrics"):
         if out.get(key):
-            out[key] = {mk: v for mk, v in out[key].items() if str(mk) not in gone}
+            out[key] = {mk: v for mk, v in out[key].items()
+                        if str(mk) not in gone and str(mk) not in chosen}
     if out.get("fixedMetrics"):
         out["fixedMetrics"] = [mk for mk in out["fixedMetrics"] if str(mk) not in gone]
+    if chosen:
+        out["ownerMetrics"] = {mk: {"decision": summary(d), "curve": source_curve(d),
+                                    "functions": list(d.get("functions") or [])}
+                               for mk, d in chosen.items()}
+        out["insufficientReferenceSupport"] = [
+            w for w in out.get("insufficientReferenceSupport") or []
+            if str(w.get("metricKey")) not in chosen]
     out["portfolioSelection"] = effective_selection(
-        out.get("portfolioSelection"), acts[UNMAP] + acts[INCLUDE])
+        out.get("portfolioSelection"), list(chosen.values()) + acts[UNMAP] + acts[INCLUDE])
     out["ownerDecisions"] = [summary(d) for d in decisions]
     return out
 
 
+def _placed(mapping, chosen: dict):
+    """The mapping with each chosen curve placed in exactly the functions its
+    decision names, after every other row."""
+    from . import owner_sources
+    base = mapping if isinstance(mapping, pd.DataFrame) else pd.DataFrame(
+        columns=["metric_key", "discipline", "function_label", "sort_order"])
+    if len(base) and "metric_key" in base.columns:
+        base = base[~base["metric_key"].astype(str).isin(set(chosen))]
+    extra = pd.DataFrame(
+        [r for mk, d in chosen.items()
+         for r in owner_sources.mapping_rows_for(mk, d.get("functions") or [])],
+        columns=["metric_key", "discipline", "function_label"])
+    if not len(extra):
+        return base
+    order = (pd.to_numeric(base["sort_order"], errors="coerce")
+             if "sort_order" in base.columns else pd.Series(dtype="float64"))
+    start = int(order.max()) if order.notna().any() else 0
+    extra = extra.assign(sort_order=range(start + 1, start + 1 + len(extra)))
+    return pd.concat([base, extra], ignore_index=True)
+
+
+def _with_chosen(rows: dict, mapping, config: dict, meta: dict, chosen: dict):
+    """Put each chosen curve in the exporter's inputs, in place of whatever the
+    build gave the metric: its points and layers, config and annotations, placed
+    by its decision, and out of the withheld list."""
+    from . import carry_forward, owner_sources
+    rows, config = dict(rows), dict(config or {})
+    restored = carry_forward.restore_rows({mk: source_curve(d) for mk, d in chosen.items()})
+    annotations = meta.setdefault("metricAnnotations", {})
+    for mk, d in chosen.items():
+        c = restored[mk]
+        row = dict(c["row"])
+        row["curve_source"] = owner_sources.CURVE_SOURCE
+        rows[mk] = row
+        if c.get("config"):
+            config[mk] = dict(c["config"])
+        ann = dict(c.get("annotations") or {})
+        ann["ownerDecision"] = decision_annotation(d)
+        annotations[mk] = ann
+    withheld = meta.get("insufficientReferenceSupport")
+    if withheld:
+        meta["insufficientReferenceSupport"] = [w for w in withheld
+                                                if str(w.get("metricKey")) not in chosen]
+    return rows, _placed(mapping, chosen), config
+
+
 def apply_to_inputs(rows: dict, mapping, config: dict, meta: dict,
-                    decisions: Iterable[Mapping], *, keep=()) -> tuple[dict, Any, dict]:
+                    decisions: Iterable[Mapping], *, keep=(),
+                    built=()) -> tuple[dict, Any, dict]:
     """The one transform both paths run on the exporter's inputs BEFORE SELECT-04's
     drop (``pressure_evidence.bundle_inputs`` in a build, ``apply_reference_build``
     with ``apply_selection=False`` in the workspace), with the build's portfolio
-    record in ``meta["portfolioSelection"]``: SELECT-04's drop under the owner's
-    decisions, then the removals. ``keep`` are the fixed criteria, kept by the
-    drop as SELECT-04 keeps them. Returns ``(rows, mapping, config)`` and records
-    the effective portfolio and the decisions in ``meta``."""
+    record in ``meta["portfolioSelection"]``: the owner's chosen curves in place
+    of the build's, SELECT-04's drop under the owner's decisions, then the
+    removals. ``keep`` are the fixed criteria, kept by the drop as SELECT-04 keeps
+    them; ``built``, the metrics the build fitted, which no choice replaces.
+    Returns ``(rows, mapping, config)`` and records the effective portfolio and
+    the decisions in ``meta``."""
     from . import pressure_evidence as pe
     decisions = list(decisions or [])
     acts = _by_action(decisions)
     gone = set(acts[REMOVE])
-    selection = effective_selection(meta.get("portfolioSelection"), acts[UNMAP] + acts[INCLUDE])
+    chosen = _chosen(acts, built)
+    if chosen:
+        rows, mapping, config = _with_chosen(rows, mapping, config, meta, chosen)
+    selection = effective_selection(meta.get("portfolioSelection"),
+                                    list(chosen.values()) + acts[UNMAP] + acts[INCLUDE])
     rows = {mk: r for mk, r in rows.items() if str(mk) not in gone}
     if isinstance(mapping, pd.DataFrame) and len(mapping) and "metric_key" in mapping.columns:
         mapping = mapping[~mapping["metric_key"].astype(str).isin(gone)]
@@ -398,14 +530,21 @@ def with_exceptions(base: Iterable[dict], decisions: Iterable[Mapping]) -> list[
 def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
           built=()) -> list[tuple[dict, str]]:
     """``[(decision, why)]`` for decisions the session cannot apply: the curve is not
-    in this version, or an included curve is no longer one the build left out."""
+    in this version, an included curve is no longer one the build left out, or
+    the build now fits a curve the owner chose a source for."""
     from . import pressure_evidence as pe
-    known = set(pe.reference_keys(build)) | {str(k) for k in built or ()}
+    built = {str(k) for k in built or ()}
+    decisions = list(decisions or [])
+    known = set(pe.reference_keys(build)) | built | set(sourced(decisions))
     left_out = _left_out(build)
     out = []
-    for d in decisions or []:
+    for d in decisions:
         mk = str(d.get("metric"))
-        if d.get("action") in (REMOVE, UNMAP) and mk not in known:
+        if d.get("action") == SOURCE and mk in built:
+            out.append((dict(d), "This build fits the metric itself, so its own curve scores."))
+        elif d.get("action") == SOURCE and fixed_criteria.is_fixed(mk):
+            out.append((dict(d), "A fixed criterion cannot take another source."))
+        elif d.get("action") in (REMOVE, UNMAP) and mk not in known:
             out.append((dict(d), "This version has no curve for the metric."))
         elif d.get("action") == INCLUDE and not all(
                 (mk, str(f)) in left_out for f in d.get("functions") or []):
@@ -416,7 +555,8 @@ def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
 __all__ = [
     "RULE", "DECISIONS_FILE", "LEGACY_REMOVALS_FILE", "REMOVE", "UNMAP", "INCLUDE", "SOURCE",
     "ACTIONS", "GAP_REASON", "ACTION_LABELS", "min_rationale", "new_decision", "check",
-    "validate", "load", "path_of", "supersedes", "merge", "save", "undo", "combine",
-    "from_removals", "effective_selection", "effective_build", "apply_to_inputs", "summary",
-    "removed", "decisions_for", "coverage_exceptions", "with_exceptions", "stale",
+    "validate", "load", "path_of", "seed", "supersedes", "merge", "save", "undo", "combine",
+    "from_removals", "effective_selection", "applies", "sourced", "source_curve",
+    "decision_annotation", "effective_build", "apply_to_inputs", "summary", "removed",
+    "decisions_for", "coverage_exceptions", "with_exceptions", "stale",
 ]

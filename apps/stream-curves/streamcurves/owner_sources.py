@@ -1,0 +1,681 @@
+"""The sources an owner can choose for a curve (REF-15, owner decision 2026-09-22).
+
+The build chooses where every curve comes from (the reference-source hierarchy,
+REF-04 to REF-14). For a metric the build did not fit itself, the owner may
+choose instead:
+
+- ``catalog``: a criterion of the verified catalog (REF-14), when it is fit for
+  this ecoregion by the catalog's five conditions;
+- ``earlier_version``: the curve an earlier version of this assessment scored;
+- ``other_assessment``: the curve another STAF assessment scores for the same
+  metric, taken without a comparability check;
+- ``entered``: thresholds or breakpoints the owner enters, with a citation or on
+  professional judgment;
+- ``refused_source``: a source the build tried and refused.
+
+A choice is resolved when it is made, so a decision states exactly the curve it
+puts in the version: its points and class layers, its config and the
+annotations the bundle carries, in the shape a carried curve rides in
+(``carry_forward.session_rows``).
+
+Reads the canonical library and the station table; writes nothing. Every string
+is user-visible, so none carries an em dash.
+"""
+from __future__ import annotations
+
+import math
+import re
+from functools import lru_cache
+from typing import Any, Iterable, Mapping, Optional
+
+import pandas as pd
+
+from . import curve_basis, curves, field_methods, fixed_criteria, metric_map
+from . import published_benchmark as pb
+from . import reference_pool as rp
+
+CATALOG, EARLIER, OTHER, REFUSED, ENTERED = (
+    "catalog", "earlier_version", "other_assessment", "refused_source", "entered")
+SOURCE_KINDS = (CATALOG, EARLIER, OTHER, REFUSED, ENTERED)
+#: how a chosen source reads in the workspace (``curve_sources.KINDS``)
+DISPLAY_KIND = {CATALOG: "published_benchmark", EARLIER: "carried", OTHER: "borrowed",
+                REFUSED: "owner_exception", ENTERED: "owner_entered"}
+#: the heading each source is listed under in the source dialog
+GROUP_LABELS = {CATALOG: "Verified catalog", EARLIER: "Earlier version of this assessment",
+                OTHER: "Another assessment", REFUSED: "Refused by the build",
+                ENTERED: "Enter a curve"}
+#: REF-15's outcome word for a source decision (rule_catalog.json)
+OUTCOMES = {CATALOG: "catalog", EARLIER: "earlier_version", OTHER: "borrowed",
+            REFUSED: "refused_accepted"}
+THRESHOLDS, BREAKPOINTS = "thresholds", "breakpoints"
+#: the ``curve_source`` of a chosen curve's row
+CURVE_SOURCE = "owner"
+#: the versions another assessment offers: the ones DEEP accepts for new work
+ELIGIBLE_STATUSES = ("preliminary", "certified")
+#: at most this many earlier curves of this assessment are offered
+MAX_EARLIER = 3
+#: the index a count criterion anchors at (only read for counts; kept for the
+#: fixed criteria's construction, which takes it)
+RATING_INDEX = {"Good": 0.85, "Fair": 0.545, "Poor": 0.195}
+
+ENTERED_LABEL = curve_basis.label_for(curve_basis.OWNER)
+ENTERED_STATEMENT = {
+    THRESHOLDS: ("Scored against thresholds this assessment's owner entered, rather than "
+                 "against reference stations."),
+    BREAKPOINTS: ("Scored against a curve this assessment's owner entered point by point, "
+                  "rather than against reference stations."),
+}
+ENTERED_LIMIT = curve_basis.limit_for(curve_basis.OWNER)
+JUDGMENT = "Professional judgment"
+BORROWED_LIMIT = ("The curve was built for another assessment and was not tested for "
+                  "comparability with this ecoregion.")
+#: what a borrowed curve keeps of its bundle entry: what describes the curve
+#: itself. The other assessment's reference sample, range, confidence and
+#: caveats describe that assessment's streams, so they stay behind.
+BORROWED_KEEP = ("stratifier", "metricRole", "methodContext", "criteriaBasis",
+                 "criteriaSource", "publishedBenchmark")
+
+
+def outcome_of(source: Optional[Mapping]) -> str:
+    """REF-15's outcome word for a chosen source."""
+    src = source or {}
+    kind = str(src.get("kind") or "")
+    if kind == ENTERED:
+        return "entered_cited" if str(src.get("citation") or "").strip() else "entered_judgment"
+    return OUTCOMES.get(kind, kind)
+
+
+def label_for(source: Optional[Mapping]) -> str:
+    """The badge a chosen curve carries in the workspace."""
+    src = source or {}
+    kind, ref = str(src.get("kind") or ""), src.get("ref") or {}
+    if kind == ENTERED:
+        return ENTERED_LABEL
+    if kind == CATALOG:
+        return curve_basis.label_for(curve_basis.PUBLISHED)
+    if kind == EARLIER:
+        return f"From v{ref['version']}" if ref.get("version") else "From an earlier version"
+    if kind == OTHER:
+        return f"From {ref.get('regionName') or 'another assessment'}"
+    return "Owner exception"
+
+
+# --------------------------------------------------------------------------- #
+# the metric's config and functions
+# --------------------------------------------------------------------------- #
+@lru_cache(maxsize=1)
+def _directions() -> tuple:
+    from . import regional_agent as ra
+    return ra.load_directions(), ra.load_landscape_directions()
+
+
+def agent_config(metric: str) -> dict:
+    """The metric's config as a build makes it (``regional_agent``), or ``{}`` for
+    a metric a pressure build never scores (a pressure or a predictor)."""
+    from . import regional_agent as ra
+    mk = str(metric)
+    directions, landscape = _directions()
+    cfg, _ = ra.build_metric_config([mk], directions, include_reserve=True)
+    if mk in cfg:
+        return dict(cfg[mk])
+    cfg, _ = ra.build_landscape_metric_config([mk], landscape, expectation_only=True)
+    return dict(cfg.get(mk) or {})
+
+
+def config_for(metric: str, *, metric_config: Optional[Mapping] = None,
+               build: Optional[Mapping] = None) -> dict:
+    """The config a chosen curve carries: the session's own, the one a curve from
+    another source rode in with, else the one a build would give the metric."""
+    mk = str(metric)
+    cfg = (metric_config or {}).get(mk)
+    if cfg:
+        return dict(cfg)
+    b = build or {}
+    for key in ("ownerMetrics", "ladderMetrics", "carriedMetrics"):
+        saved = (b.get(key) or {}).get(mk) or {}
+        got = saved.get("config") or (saved.get("curve") or {}).get("config")
+        if got:
+            return dict(got)
+    return agent_config(mk)
+
+
+def sourceable(metric: str, *, built=()) -> Optional[str]:
+    """Why the owner cannot choose a source for the metric, or None when they can."""
+    mk = str(metric)
+    if mk in {str(k) for k in built or ()}:
+        return "Built here. Edit its curve in its analysis instead."
+    if fixed_criteria.is_fixed(mk):
+        return ("A fixed criterion, scored the same way in every region. It can be removed "
+                "or taken out of a function, not given another source.")
+    return None
+
+
+def function_candidates(function_id: str) -> list[str]:
+    """The metrics the STAF crosswalk offers for a function, as session keys (a
+    StreamCat code by its watershed column)."""
+    from . import regional_agent as ra
+    out: list[str] = []
+    for r in metric_map.metric_map_entries().itertuples(index=False):
+        if ra._canonical_function_id(r.function_name) != str(function_id):
+            continue
+        key = (str(r.code) if r.source == "nrsa" else
+               f"{r.code}ws" if r.source == "streamcat" else None)
+        if key and key not in out:
+            out.append(key)
+    return out
+
+
+def crosswalk_functions(metric: str) -> list[str]:
+    """The function ids the crosswalk places the metric in, primary first."""
+    from . import regional_agent as ra
+    out: list[str] = []
+    for f in metric_map.metric_map_functions_for(str(metric)):
+        fid = ra._canonical_function_id(f.get("function_name"))
+        if fid and fid not in out:
+            out.append(fid)
+    return out
+
+
+@lru_cache(maxsize=1)
+def _functions_by_id() -> dict:
+    from .staf_library import staf_function_meta
+    meta = staf_function_meta()
+    return {str(i): (str(d), str(n))
+            for i, n, d in zip(meta["id"], meta["name"], meta["discipline"])}
+
+
+def function_name(function_id: str) -> str:
+    return _functions_by_id().get(str(function_id), ("", str(function_id)))[1]
+
+
+def mapping_rows_for(metric: str, function_ids: Iterable[str]) -> list[dict]:
+    """The mapping rows that place a chosen curve in the functions named."""
+    by_id = _functions_by_id()
+    return [{"metric_key": str(metric), "discipline": by_id[str(f)][0],
+             "function_label": by_id[str(f)][1]}
+            for f in function_ids or () if str(f) in by_id]
+
+
+# --------------------------------------------------------------------------- #
+# a curve the owner enters
+# --------------------------------------------------------------------------- #
+def _num(v: Any) -> Optional[float]:
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    return None if math.isnan(f) or math.isinf(f) else f
+
+
+def fmt(x: Any) -> str:
+    """A threshold as the owner would write it (25, 0.05, 1.2e-05)."""
+    return f"{float(x):.6g}"
+
+
+def _domain(config: Mapping) -> tuple[Optional[float], Optional[float]]:
+    return _num(config.get("domain_min")), _num(config.get("domain_max"))
+
+
+def two_sided(config: Mapping) -> bool:
+    """The metric has an optimum rather than a better direction, so only a curve
+    entered point by point can express it."""
+    return (config.get("higher_is_better") is None
+            or str(config.get("curve_form") or "") == curves.CURVE_FORM_OPTIMUM)
+
+
+def threshold_bands(good: float, poor: float, higher_is_better: bool,
+                    units: str = "") -> tuple[list[dict], list[dict]]:
+    """``(bands, labels)``: the three classes two thresholds make, in the shape the
+    fixed criteria's anchors read, and as the criterion's band labels. The
+    threshold itself belongs to the better class ("Good at or above 25")."""
+    u = f" {units}" if units else ""
+    if higher_is_better:
+        bands = [{"rating": "Good", "min": good, "minInclusive": True},
+                 {"rating": "Fair", "min": poor, "minInclusive": True, "max": good,
+                  "maxInclusive": False},
+                 {"rating": "Poor", "max": poor, "maxInclusive": False}]
+        labels = [{"rating": "Good", "label": f"\u2265{fmt(good)}{u}"},
+                  {"rating": "Fair", "label": f"\u2265{fmt(poor)} to <{fmt(good)}{u}"},
+                  {"rating": "Poor", "label": f"<{fmt(poor)}{u}"}]
+    else:
+        bands = [{"rating": "Good", "max": good, "maxInclusive": True},
+                 {"rating": "Fair", "min": good, "minInclusive": False, "max": poor,
+                  "maxInclusive": True},
+                 {"rating": "Poor", "min": poor, "minInclusive": False}]
+        labels = [{"rating": "Good", "label": f"\u2264{fmt(good)}{u}"},
+                  {"rating": "Fair", "label": f">{fmt(good)} to \u2264{fmt(poor)}{u}"},
+                  {"rating": "Poor", "label": f">{fmt(poor)}{u}"}]
+    return bands, labels
+
+
+def threshold_points(good: Any, poor: Any,
+                     config: Mapping) -> tuple[list[dict], list[str], list[dict]]:
+    """``(points, errors, band labels)`` of the curve two thresholds make, by the
+    construction every fixed and published criterion uses (CURVE-11): the Good
+    threshold scores 0.69, the Poor one 0.39, and the line through them runs to
+    0 and 1 inside the metric's range."""
+    g, p = _num(good), _num(poor)
+    if g is None or p is None:
+        return [], ["Enter both thresholds as numbers."], []
+    if config.get("higher_is_better") is None:
+        return [], ["This metric has an optimum, so enter its curve point by point."], []
+    hib = bool(config.get("higher_is_better"))
+    if g == p:
+        return [], ["The two thresholds must differ."], []
+    if hib and g < p:
+        return [], ["Higher is better for this metric, so the Good threshold must be above "
+                    "the Poor one."], []
+    if not hib and g > p:
+        return [], ["Lower is better for this metric, so the Good threshold must be below "
+                    "the Poor one."], []
+    lo, hi = _domain(config)
+    if any((lo is not None and v < lo) or (hi is not None and v > hi) for v in (g, p)):
+        span = (f"{fmt(lo) if lo is not None else 'no minimum'} to "
+                f"{fmt(hi) if hi is not None else 'no maximum'}")
+        return [], [f"Both thresholds must lie inside the metric's range ({span})."], []
+    bands, labels = threshold_bands(g, p, hib, str(config.get("units") or ""))
+    # a resolution far below the thresholds' spacing, so the threshold itself
+    # scores in its better class and nothing else moves
+    anchors = fixed_criteria._anchors(bands, abs(g - p) * 1e-6)
+    raw = fixed_criteria._points({**anchors, "domain": [lo, hi]}, RATING_INDEX)
+    points = [{"x": float(x), "y": float(y)} for x, y in raw]
+    got = curves.validate_reference_curve_points(points, hib, curves.curve_form_of(config),
+                                                 domain=(lo, hi))
+    if not got["valid"]:
+        return [], ["These thresholds make no valid curve in this metric's range. Enter the "
+                    "curve point by point instead."], []
+    return points, [], labels
+
+
+_POINT_LINE = re.compile(r"^\s*([-+0-9.eE]+)\s*[,;\t ]\s*([-+0-9.eE]+)\s*$")
+
+
+def parse_points(text: str) -> tuple[list[dict], list[str]]:
+    """``value, score`` per line (a comma, semicolon, tab or space between) as
+    points, and the lines that could not be read."""
+    points, bad = [], []
+    for i, line in enumerate(str(text or "").splitlines(), start=1):
+        if not line.strip():
+            continue
+        m = _POINT_LINE.match(line)
+        x, y = (_num(m.group(1)), _num(m.group(2))) if m else (None, None)
+        if x is None or y is None:
+            bad.append(f"Line {i} is not a value and a score: {line.strip()}")
+            continue
+        points.append({"x": x, "y": y})
+    return points, bad
+
+
+def breakpoint_points(text: str, config: Mapping) -> tuple[list[dict], list[str]]:
+    """``(points, errors)`` of a curve entered point by point, checked by the same
+    rules as a curve drawn in an analysis (``curves.validate_reference_curve_points``)."""
+    points, errors = parse_points(text)
+    if errors:
+        return [], errors
+    if len(points) < 2:
+        return [], ["Enter at least two points, one per line: value, score."]
+    got = curves.validate_reference_curve_points(
+        points, config.get("higher_is_better"), curves.curve_form_of(config),
+        domain=_domain(config))
+    if not got["valid"]:
+        return [], list(got["errors"])
+    return [{"x": float(r.metric_value), "y": float(r.index_score)}
+            for r in got["points"].itertuples(index=False)], []
+
+
+def entered_annotations(metric: str, *, method: str, title: str, citation: str = "",
+                        config: Optional[Mapping] = None,
+                        bands: Optional[list] = None) -> dict:
+    """What a bundle states beside an owner-entered curve. It rests on no reference
+    stations, so it states no reference support, sample or confidence."""
+    config = config or {}
+    cite = " ".join(str(citation or "").split())
+    source = {"title": " ".join(str(title or "").split()) or ENTERED_LABEL,
+              "bands": list(bands or []),
+              "citations": [{"key": "owner", "text": cite}] if cite else [],
+              "provisional": False, "limitations": [ENTERED_LIMIT]}
+    ann = {"basis": curve_basis.OWNER, "basisLabel": ENTERED_LABEL,
+           "basisStatement": ENTERED_STATEMENT[method], "basisLimit": ENTERED_LIMIT,
+           "curveCaveats": [ENTERED_LIMIT], "criteriaSource": source,
+           "sourceCitation": cite or f"{JUDGMENT} of the assessment's owner"}
+    if config.get("metric_role"):
+        ann["metricRole"] = config["metric_role"]
+    method_text = field_methods.method_context(metric)
+    if method_text:
+        ann["methodContext"] = method_text
+    return ann
+
+
+def entered_option(metric: str, *, method: str, config: Mapping, title: str,
+                   citation: str = "", good: Any = None, poor: Any = None,
+                   points_text: str = "") -> dict:
+    """The owner's own curve as an option; ``errors`` names what is wrong with it."""
+    if method == THRESHOLDS:
+        points, errors, labels = threshold_points(good, poor, config)
+    else:
+        points, errors = breakpoint_points(points_text, config)
+        labels = []
+    name = " ".join(str(title or "").split())
+    if not name:
+        errors = list(errors) + ["Give the curve a title, such as the criterion it states."]
+    cite = " ".join(str(citation or "").split())
+    ref: dict = {"method": method}
+    if method == THRESHOLDS and not errors:
+        ref.update({"good": float(good), "poor": float(poor),
+                    "higherIsBetter": bool(config.get("higher_is_better"))})
+    opt = _option(ENTERED, f"{ENTERED}:{method}", title=name or ENTERED_LABEL,
+                  detail=("Two thresholds" if method == THRESHOLDS else "Entered point by point")
+                  + (", cited" if cite else f", {JUDGMENT.lower()}"),
+                  points=points, ref=ref, citation=cite)
+    opt["errors"] = list(errors)
+    if not errors:
+        opt["annotations"] = entered_annotations(metric, method=method, title=name,
+                                                 citation=cite, config=config, bands=labels)
+    return opt
+
+
+# --------------------------------------------------------------------------- #
+# the sources the pool offers
+# --------------------------------------------------------------------------- #
+def _option(kind: str, key: str, *, title: str, detail: str = "", points=None, layers=None,
+            annotations=None, ref=None, citation: str = "", available: bool = True,
+            why_not: str = "", n_reference=None, stratum: str = "") -> dict:
+    return {"kind": kind, "key": key, "group": GROUP_LABELS[kind], "title": title,
+            "detail": detail, "available": bool(available), "why_not": why_not,
+            "points": list(points or []), "layers": list(layers or []),
+            "annotations": dict(annotations or {}), "ref": dict(ref or {}),
+            "citation": " ".join(str(citation or "").split()),
+            "n_reference": n_reference, "stratum": stratum, "errors": []}
+
+
+def _target_stations(region_code: str) -> pd.DataFrame:
+    from . import reference_screen as rscreen
+    table = rscreen.load_station_screen()
+    return table[table["l3"].astype(str) == str(region_code)]
+
+
+def catalog_annotations(metric: str, region: str, *, region_code: str,
+                        region_name: Optional[str] = None) -> dict:
+    """What a bundle states beside a catalog criterion: what a build states when
+    REF-14 admits it (``pressure_evidence.bundle_inputs``), without the confidence
+    only the build's own ranking computes."""
+    d = pb.pool_decision(metric, region, region_code=str(region_code),
+                         region_name=region_name, family=rp.family_of(metric))
+    basis = curve_basis.PUBLISHED
+    limit = curve_basis.limit_for(basis)
+    ann = {"criteriaBasis": fixed_criteria.CRITERIA_BASIS, "basis": basis,
+           "basisLabel": curve_basis.label_for(basis),
+           "basisStatement": curve_basis.statement_for(basis), "basisLimit": limit,
+           "referenceSupport": rp.reference_support_record(d), "curveCaveats": [limit],
+           "criteriaSource": pb.criteria_source(metric, region),
+           "sourceCitation": pb.citation_line(metric, region),
+           "publishedBenchmark": {**pb.provenance(metric), "region": str(region)}}
+    method_text = field_methods.method_context(metric)
+    if method_text:
+        ann["methodContext"] = method_text
+    return ann
+
+
+def catalog_option(metric: str, *, region_code: str,
+                   region_name: Optional[str] = None) -> Optional[dict]:
+    """The verified catalog's criterion for the metric at this ecoregion, or None
+    when the catalog holds none. Offered when it passes REF-14's five conditions
+    here, and otherwise listed with the conditions it fails."""
+    mk = str(metric)
+    if not pb.entries_for(mk):
+        return None
+    got = pb.fitness(mk, frame=_target_stations(region_code), target_l3=str(region_code))
+    region = got.get("region")
+    title = (pb.criteria_source(mk, region).get("title") if region
+             else str(got.get("benchmark") or "Published criterion"))
+    spec = pb.lookup(mk, target_l3=str(region_code), region=region) or {}
+    ref = {"entry": spec.get("id"), "region": region, "edition": spec.get("edition")}
+    key = f"{CATALOG}:{spec.get('id')}"
+    if not got.get("admissible"):
+        failed = [v["why"] for v in (got.get("conditions") or {}).values() if not v["pass"]]
+        return _option(CATALOG, key, title=title, detail="Verified catalog", ref=ref,
+                       available=False,
+                       why_not=" ".join(failed) or "The fitness test refused this criterion.")
+    return _option(CATALOG, key, title=title,
+                   detail=f"Verified catalog, fit for NARS-9 region {region}",
+                   points=pb.curve_points(mk, region) or [], ref=ref,
+                   citation=pb.citation_line(mk, region),
+                   annotations=catalog_annotations(mk, region, region_code=region_code,
+                                                   region_name=region_name))
+
+
+@lru_cache(maxsize=128)
+def _bundle_entry(assessment_id: str, version: int, metric_id: str) -> Optional[dict]:
+    """The first bundle entry of ``metric_id`` in a published version, with the
+    bundle's content digest, or None."""
+    from . import library as lib
+    try:
+        bundle = lib.load_version_bundle(assessment_id, int(version)) or {}
+    except (OSError, ValueError, TypeError):
+        return None
+    for block in bundle.get("metricsByFunction") or []:
+        for m in block.get("metrics") or []:
+            if str(m.get("metricId")) == metric_id:
+                return {"entry": dict(m), "contentDigest": bundle.get("contentDigest")}
+    return None
+
+
+def _versions(assessment_id: str) -> list[int]:
+    from . import library as lib
+    out = []
+    for v in (lib.read_manifest(assessment_id) or {}).get("versions") or []:
+        try:
+            out.append(int(v.get("version")))
+        except (TypeError, ValueError):
+            continue
+    return sorted(set(out), reverse=True)
+
+
+def _pts(points) -> tuple:
+    return tuple((round(float(p["x"]), 9), round(float(p["y"]), 9)) for p in points or [])
+
+
+def _signature(entry: Mapping) -> tuple:
+    return (_pts((entry.get("curve") or {}).get("points")),
+            tuple((str(L.get("stratum") or ""), _pts(L.get("points")))
+                  for L in entry.get("curveLayers") or []))
+
+
+def _curve_parts(entry: Mapping) -> tuple[list, list, str]:
+    curve = entry.get("curve") or {}
+    points = [{"x": float(p["x"]), "y": float(p["y"])} for p in curve.get("points") or []]
+    layers = [{"stratum": str(L.get("stratum") or ""),
+               "points": [{"x": float(p["x"]), "y": float(p["y"])}
+                          for p in L.get("points") or []]}
+              for L in entry.get("curveLayers") or []]
+    return points, layers, str(curve.get("stratification") or "")
+
+
+def _basis_words(entry: Mapping) -> str:
+    """A bundle entry's source in a few words: its basis and what it rests on."""
+    basis = curve_basis.resolve(entry.get("basis"), criteria_basis=entry.get("criteriaBasis"))
+    label = str(entry.get("basisLabel") or curve_basis.label_for(basis) or "Reference curve")
+    sup = entry.get("referenceSupport") or {}
+    if basis in (curve_basis.PUBLISHED, curve_basis.OWNER) \
+            or entry.get("criteriaBasis") == fixed_criteria.CRITERIA_BASIS:
+        return label
+    if basis == curve_basis.MODELED:
+        n = _num(sup.get("nUsable"))
+        return label + (f", fitted on {int(n):,} stations nationally" if n else "")
+    if basis == curve_basis.NATIONAL:
+        n = _num(sup.get("nUsable"))
+        return label + (f", {int(n):,} national donor stations" if n else "")
+    n = _num(entry["referenceN"] if entry.get("referenceN") is not None else sup.get("nUsable"))
+    return label + (f", {int(n):,} reference stations" if n else "")
+
+
+def borrowed_annotations(entry: Mapping, *, assessment_id: str, name: str, version: int,
+                         region: Mapping, content_digest: Optional[str]) -> dict:
+    """What a bundle states beside a curve taken from another assessment: what the
+    curve is, where it comes from, and that nobody tested it here."""
+    basis = curve_basis.resolve(entry.get("basis"), criteria_basis=entry.get("criteriaBasis"))
+    ann = {k: entry[k] for k in BORROWED_KEEP if entry.get(k) is not None}
+    sup = entry.get("referenceSupport") or {}
+    if str(sup.get("status") or "") == rp.STATUS_PUBLISHED:
+        # a published criterion states no station of anywhere, so its record is
+        # as true here, and DEEP reads a criterion by it
+        ann["referenceSupport"] = dict(sup)
+    where = str(region.get("name") or region.get("code") or "another region")
+    own = curve_basis.limit_for(basis)
+    ann.update({
+        "basis": basis,
+        "basisLabel": f"{curve_basis.label_for(basis) or 'Reference curve'}, from {where}",
+        "basisStatement": (f"Curve of another STAF assessment, {name} (version {version}), "
+                           f"chosen by this assessment's owner. It rests on that assessment's "
+                           f"source for {where}, not on stations of this ecoregion."),
+        "basisLimit": BORROWED_LIMIT,
+        "curveCaveats": [BORROWED_LIMIT] + ([own] if own else []),
+        "sourceCitation": f"{name}, version {version} (STAF assessment library)",
+        "borrowedFrom": {"assessmentId": assessment_id, "assessmentName": name,
+                         "version": int(version), "regionCode": region.get("code"),
+                         "regionName": region.get("name"), "contentDigest": content_digest,
+                         "basis": basis, "basisLabel": entry.get("basisLabel"),
+                         "referenceN": entry.get("referenceN")}})
+    return ann
+
+
+def earlier_annotations(entry: Mapping, *, assessment_id: str, version: int,
+                        content_digest: Optional[str]) -> dict:
+    """An earlier version's curve states what it stated when it was published, as a
+    carried curve does (``carry_forward.ANNOTATION_KEYS``)."""
+    from . import carry_forward as cf
+    ann = {k: entry[k] for k in cf.ANNOTATION_KEYS if k in entry}
+    ann["carriedForward"] = {"assessmentId": assessment_id, "fromVersion": int(version),
+                             "contentDigest": content_digest}
+    return ann
+
+
+def library_options(metric: str, *, region_code: str, current=None) -> list[dict]:
+    """The curves the canonical library holds for the metric: this assessment's
+    earlier versions (newest first, each distinct curve once, at most
+    :data:`MAX_EARLIER`), then every other ecoregion assessment's latest version
+    DEEP accepts. ``current``: the points the metric scores now, not offered again."""
+    from . import library as lib
+    from .deep_export import deep_slug
+    mid = "spring-" + deep_slug(str(metric))
+    now = _pts(current)
+    mine: list[dict] = []
+    others: list[dict] = []
+    try:
+        listed = lib.list_assessments()
+    except (OSError, ValueError):
+        return []
+    for a in listed:
+        reg = a.get("region") or {}
+        if reg.get("kind") != "ecoregion":
+            continue
+        aid = str(a.get("assessmentId") or "")
+        name = str(a.get("assessmentName") or aid)
+        is_mine = str(reg.get("code")) == str(region_code)
+        seen: set = set()
+        for v in _versions(aid):
+            status = lib.version_status(aid, v)
+            if not is_mine and status not in ELIGIBLE_STATUSES:
+                continue
+            got = _bundle_entry(aid, v, mid)
+            if got is None:
+                continue
+            entry, digest = got["entry"], got["contentDigest"]
+            sig = _signature(entry)
+            if sig in seen or (now and sig[0] == now):
+                continue
+            seen.add(sig)
+            points, layers, stratum = _curve_parts(entry)
+            if len(points) < 2:
+                continue
+            words = f"{_basis_words(entry)} ({lib.status_label(status)})"
+            if is_mine:
+                mine.append(_option(
+                    EARLIER, f"{EARLIER}:{aid}:v{v}", title=f"Version {v} of this assessment",
+                    detail=words, points=points, layers=layers, stratum=stratum,
+                    ref={"assessmentId": aid, "version": v, "contentDigest": digest},
+                    citation=str(entry.get("sourceCitation") or ""),
+                    n_reference=entry.get("referenceN"),
+                    annotations=earlier_annotations(entry, assessment_id=aid, version=v,
+                                                    content_digest=digest)))
+                if len(mine) >= MAX_EARLIER:
+                    break
+            else:
+                others.append(_option(
+                    OTHER, f"{OTHER}:{aid}:v{v}", title=f"{name}, version {v}",
+                    detail=words, points=points, layers=layers, stratum=stratum,
+                    ref={"assessmentId": aid, "version": v, "contentDigest": digest,
+                         "regionCode": reg.get("code"), "regionName": reg.get("name")},
+                    citation=f"{name}, version {v} (STAF assessment library)",
+                    annotations=borrowed_annotations(entry, assessment_id=aid, name=name,
+                                                     version=v, region=reg,
+                                                     content_digest=digest)))
+                break
+    return mine + others
+
+
+def refused_options(metric: str, *, build: Optional[Mapping] = None) -> list[dict]:
+    """The sources the build tried for a withheld metric and refused, each with its
+    reason, from the session's withheld list."""
+    from . import curve_sources as csrc
+    out = []
+    for w in (build or {}).get("insufficientReferenceSupport") or []:
+        if str(w.get("metricKey")) != str(metric):
+            continue
+        for r in w.get("rungsTried") or []:
+            rule = str(r.get("rung") or "")
+            out.append(_option(REFUSED, f"{REFUSED}:{rule}",
+                               title=csrc.RUNG_NAMES.get(rule, rule),
+                               detail=f"Refused by the build under {rule}", available=False,
+                               ref={"rule": rule, "condition": r.get("condition")},
+                               why_not=str(r.get("why") or "").strip()))
+    return out
+
+
+def pool_for(metric: str, *, region_code: str, region_name: Optional[str] = None,
+             build: Optional[Mapping] = None, current=None) -> list[dict]:
+    """Every source the owner can choose for the metric, in the order the dialog
+    lists them, the ones not available here last with their reason."""
+    opts: list[dict] = []
+    cat = catalog_option(metric, region_code=region_code, region_name=region_name)
+    if cat is not None and not (current and cat["available"]
+                                and _pts(cat["points"]) == _pts(current)):
+        opts.append(cat)
+    opts.extend(library_options(metric, region_code=region_code, current=current))
+    opts.extend(refused_options(metric, build=build))
+    return [o for o in opts if o["available"]] + [o for o in opts if not o["available"]]
+
+
+# --------------------------------------------------------------------------- #
+# the decision's source
+# --------------------------------------------------------------------------- #
+def decision_source(metric: str, option: Mapping, *, config: Mapping) -> dict:
+    """The ``source`` a SOURCE decision records for a chosen option: what it is,
+    and the curve itself in the shape a carried curve rides in."""
+    config = dict(config or {})
+    kind = str(option.get("kind"))
+    return {"kind": kind, "ref": dict(option.get("ref") or {}),
+            "title": str(option.get("title") or ""),
+            "citation": str(option.get("citation") or "") or None,
+            "curve": {"displayName": config.get("display_name") or str(metric),
+                      "curveStatus": "complete",
+                      "nReference": option.get("n_reference") if kind == EARLIER else None,
+                      "stratum": str(option.get("stratum") or ""),
+                      "points": [{"x": float(p["x"]), "y": float(p["y"])}
+                                 for p in option.get("points") or []],
+                      "layers": [dict(L) for L in option.get("layers") or []],
+                      "config": config,
+                      "annotations": dict(option.get("annotations") or {})}}
+
+
+__all__ = [
+    "CATALOG", "EARLIER", "OTHER", "REFUSED", "ENTERED", "SOURCE_KINDS", "DISPLAY_KIND",
+    "GROUP_LABELS", "OUTCOMES", "THRESHOLDS", "BREAKPOINTS", "CURVE_SOURCE",
+    "ELIGIBLE_STATUSES", "ENTERED_LABEL", "ENTERED_LIMIT", "BORROWED_LIMIT", "JUDGMENT",
+    "outcome_of", "label_for", "agent_config", "config_for", "sourceable",
+    "function_candidates", "crosswalk_functions", "function_name", "mapping_rows_for",
+    "fmt", "two_sided", "threshold_bands", "threshold_points", "parse_points",
+    "breakpoint_points", "entered_annotations", "entered_option", "catalog_annotations",
+    "catalog_option", "borrowed_annotations", "earlier_annotations", "library_options",
+    "refused_options", "pool_for", "decision_source",
+]

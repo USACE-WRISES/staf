@@ -287,7 +287,8 @@ def hierarchy_block(result: dict) -> dict:
             "confidence": ann.get("confidenceLabel")})
     from . import owner_curves
     return {"carried_from": result.get("carried_from") or {},
-            "carried": sorted(set(carried) - set(result.get("removed_carried") or {})),
+            "carried": sorted(set(carried) - set(result.get("removed_carried") or {})
+                              - set(result.get("replaced_carried") or {})),
             "curve_decisions": [owner_curves.summary(d)
                                 for d in result.get("curve_decisions") or []],
             "carried_curves": carried_curves,
@@ -337,12 +338,18 @@ def _hierarchy_section(h: dict) -> list[str]:
         from . import owner_curves
         lines += ["Curve decisions of the owner (REF-15), applied after SELECT-04 with "
                   "nothing refilled:", ""]
+        from . import owner_sources
         for d in decisions:
             fns = ", ".join(str(f) for f in d.get("functions") or [])
             gaps = ", ".join(str(g.get("functionId")) for g in d.get("coverageExceptions") or [])
+            src = d.get("source") or {}
+            chosen = (f" Source: {src.get('title')} "
+                      f"({owner_sources.GROUP_LABELS.get(src.get('kind'), src.get('kind'))}), "
+                      f"{src.get('citation') or owner_sources.JUDGMENT.lower()}."
+                      if src else "")
             lines.append(f"- {owner_curves.ACTION_LABELS.get(d.get('action'), d.get('action'))}"
                          f"{(' (' + fns + ')') if fns else ''}: **{d.get('metric')}**, by "
-                         f"{d.get('recordedBy')}. {d.get('rationale')}"
+                         f"{d.get('recordedBy')}. {d.get('rationale')}{chosen}"
                          + (f" Documented gap: {gaps}." if gaps else ""))
         lines.append("")
     ns = h.get("not_selected") or {}

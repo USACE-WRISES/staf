@@ -108,8 +108,14 @@ def test_a_session_cannot_take_a_decision_on_a_curve_it_built_or_does_not_hold()
         oc.validate(_decision(fitted, oc.REMOVE), build=build, built=built)
     with pytest.raises(ValueError, match="not a curve from another source"):
         oc.validate(_decision("no_such_metric", oc.REMOVE), build=build, built=built)
+    from streamcurves import owner_sources as osrc
+    cfg = osrc.agent_config("chem_PTL")
+    entered = osrc.entered_option("pctimp2019ws", method=osrc.BREAKPOINTS, config=cfg,
+                                  title="T", points_text="0, 1\n20, 0.7\n60, 0.3\n120, 0")
     with pytest.raises(ValueError, match="CURVE-11"):
-        oc.validate(_decision("pctimp2019ws", oc.SOURCE), build=build, built=built)
+        oc.validate(_decision("pctimp2019ws", oc.SOURCE, functions=["catchment-hydrology"],
+                              source=osrc.decision_source("pctimp2019ws", entered, config=cfg)),
+                    build=build, built=built)
     with pytest.raises(ValueError, match="left out"):
         oc.validate(_decision(fitted, oc.INCLUDE, functions=["population-support"]),
                     build=build, built=built)
@@ -129,7 +135,8 @@ def test_the_region_keeps_its_decisions_and_one_supersedes_another(tmp_path):
     assert [d["id"] for d in oc.save(tmp_path, gone)] == [gone["id"]]
     assert oc.path_of(tmp_path) == tmp_path / oc.DECISIONS_FILE
     assert oc.undo(tmp_path, gone["id"]) == []
-    assert not (tmp_path / oc.DECISIONS_FILE).exists() and oc.path_of(tmp_path) is None
+    # an emptied record stays, holding none, so a build never seeds it again
+    assert (tmp_path / oc.DECISIONS_FILE).exists() and oc.path_of(tmp_path) is None
 
 
 def test_the_removals_of_2026_09_21_are_folded_in(tmp_path):

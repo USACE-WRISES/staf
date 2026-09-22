@@ -49,6 +49,7 @@ from views.cross_section import cross_section_server, cross_section_ui
 from views.nrsa_explorer import nrsa_explorer_server, nrsa_explorer_ui
 from views.region_builder import region_builder_server, region_builder_ui
 from views.source_panel import PANEL_ID as SOURCE_PANEL_ID, source_panel_server
+from views.source_dialog import DIALOG_ID as SOURCE_DIALOG_ID, source_dialog_server
 from views.rules import rules_server, rules_ui
 from views.validate_page import validate_server, validate_ui
 from views.data_overview import data_overview_server, data_overview_ui
@@ -282,6 +283,9 @@ def server(input, output, session):
     # where a curve from another source comes from: opened by gallery tiles,
     # the Table and the mapping chips through one input
     source_panel_server(SOURCE_PANEL_ID, state)
+    # and where the owner chooses one (REF-15): the panel, the Table and the
+    # mapping open it through one input too
+    source_dialog_server(SOURCE_DIALOG_ID, state)
 
     # Standalone phase workspace instances (app.R:246-249); the analysis
     # workspace hosts its own nested copies.

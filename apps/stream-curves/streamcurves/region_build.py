@@ -240,6 +240,36 @@ def region_run_dir(region) -> Optional[Path]:
     return run_folder(default_runs_root(), str(region["code"]))
 
 
+def published_curve_decisions(l3_code) -> list[dict]:
+    """The owner's curve decisions (REF-15) the region's latest published version
+    recorded in its session, or ``[]``."""
+    from streamcurves import carry_forward as cf
+    from streamcurves import library as lib
+    from streamcurves import session_io as sio
+    found = cf.find_published(str(l3_code))
+    if not found:
+        return []
+    aid, ver = found
+    path = lib.canonical_root() / "assessments" / aid / f"v{ver}" / lib.SESSION_FILE
+    try:
+        fields = sio.decode_session_fields(sio.load_session_payload(path))
+    except (OSError, ValueError, KeyError):
+        return []
+    return [dict(d) for d in fields.get("owner_curve_decisions") or [] if isinstance(d, dict)]
+
+
+def curve_decisions_path(run_dir, l3_code) -> Optional[Path]:
+    """The region's curve decisions file for a build (REF-15), or None when it holds
+    none. A region that has never recorded a decision here takes its latest
+    published version's first, so a checkout without the (gitignored) run folder
+    builds with the owner's choices rather than silently without them."""
+    from streamcurves import owner_curves as oc
+    folder = Path(run_dir)
+    if not (folder / oc.DECISIONS_FILE).exists():
+        oc.seed(folder, published_curve_decisions(l3_code))
+    return oc.path_of(folder)
+
+
 def published_metric_ids(l3_code) -> Optional[set]:
     """Metric ids the region's latest published version scores, or None when the
     region has no published version."""

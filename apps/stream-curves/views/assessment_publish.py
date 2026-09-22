@@ -58,7 +58,8 @@ def effective_reference_build(state: AppState):
     """The session's reference build with the owner's curve decisions applied
     (REF-15): what the workspace shows, counts and publishes. Reads reactively."""
     from streamcurves import owner_curves as oc
-    return oc.effective_build(state.reference_build(), state.owner_curve_decisions() or [])
+    return oc.effective_build(state.reference_build(), state.owner_curve_decisions() or [],
+                              built=state.completed_metrics() or {})
 
 
 def effective_coverage_exceptions(state: AppState) -> list:
@@ -458,6 +459,8 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
         predictor_config = state.predictor_config() or {}
         reference_build = state.reference_build()
         curve_decisions = list(state.owner_curve_decisions() or [])
+    # every curve the session fitted, in scope or not: no chosen source replaces one
+    built = set(completed)
 
     # A curve a reviewer removed, or one still awaiting review, is not published.
     # `completed_metrics` holds every built curve on purpose (regional_agent.session_fields
@@ -504,7 +507,7 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
             apply_selection=False)
         curve_rows, mapping, metric_config = _oc.apply_to_inputs(
             curve_rows, mapping, metric_config, full_meta, curve_decisions,
-            keep=_pe.fixed_in_order(reference_build.get("fixedMetrics")))
+            keep=_pe.fixed_in_order(reference_build.get("fixedMetrics")), built=built)
     else:
         curve_rows, mapping, metric_config = _pe.apply_reference_build(
             reference_build, curve_rows, mapping, metric_config, full_meta)

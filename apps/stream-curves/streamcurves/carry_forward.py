@@ -22,6 +22,11 @@ value in its published pool is one the data verification corrected or removed.
 Values the verification added for stations that had none are not defects: they
 are information the preserved curve did not use, and the curve stays.
 
+A curve the owner chose (REF-15, an entry carrying ``ownerDecision``) is never
+carried: the region's curve decisions are its standing record, so the next build
+walks the metric like any other and the decision puts the owner's curve back,
+or, once the owner has withdrawn it, does not.
+
 Reads the canonical library only. Pure otherwise: no network, no file writes.
 """
 
@@ -155,7 +160,7 @@ def prepare(l3_code: str, *, root: Optional[Path] = None) -> dict:
     for fn in bundle.get("metricsByFunction") or []:
         for m in fn.get("metrics") or []:
             mk = by_id.get(str(m.get("metricId")))
-            if mk is None or mk in fixed:
+            if mk is None or mk in fixed or m.get("ownerDecision"):
                 continue
             blocks.setdefault(mk, m)
             functions.setdefault(mk, []).append(

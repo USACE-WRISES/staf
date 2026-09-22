@@ -36,6 +36,7 @@ from streamcurves.staf_library import (
 )
 from streamcurves import curve_sources as _src
 from streamcurves import pressure_evidence as _pe
+from streamcurves import region_build as _rb
 from views import assessment_publish as _ap
 from views import source_panel as _sp
 from views.state import AppState
@@ -364,10 +365,24 @@ def discipline_map_server(input, output, session, state: AppState):
                 " on a function, then add metrics from below.",
                 class_="workbench-active-hint small text-muted mb-2",
             )
+        # a pressure-screen assessment of an ecoregion can take a curve from another
+        # source for the function (REF-15)
+        add_source = None
+        build = state.reference_build()
+        fid = _pe.canonical_function_id(fn)
+        if fid and build and build.get("method") == _pe.METHOD and _rb.region_run_dir(
+                state.region_of_applicability()) is not None:
+            from views import source_dialog as _sd
+            add_source = ui.tags.button(
+                fa("circle-plus"), " Add a source", type="button",
+                class_="btn btn-sm btn-outline-primary ms-auto",
+                title=f"Choose where a curve for {fn} comes from",
+                onclick=_sd.open_onclick(function=fid, stop=False))
         return ui.div(
             ui.tags.span("Adding to ", class_="small text-muted"),
             ui.tags.span(fn, class_="badge bg-primary"),
-            class_="workbench-active-bar mb-2",
+            add_source,
+            class_="workbench-active-bar mb-2 d-flex align-items-center gap-2",
         )
 
     # ---- add / remove assignments -------------------------------------------
@@ -581,6 +596,8 @@ def discipline_map_server(input, output, session, state: AppState):
                 fa(icon) if icon else None,
                 ui.tags.span(_sp.display_name(mk, entry), class_="wb-chip-label"),
                 ui.tags.span(str(entry.get("label") or ""), class_="wb-chip-tag"),
+                (ui.tags.span("chosen by the owner", class_="wb-chip-tag")
+                 if entry.get("owner") else None),
                 ui.tags.button(ui.HTML("&times;"), type="button", class_="wb-chip-x",
                                title="Remove from this function (recorded as your decision)",
                                onclick=_sp.act_onclick(mk, "unmap", [fid])),
@@ -688,6 +705,20 @@ def discipline_map_server(input, output, session, state: AppState):
             exclude_pairs=_pe.not_selected_pairs(build),
         )
 
+    def _can_add_source() -> bool:
+        build = state.reference_build()
+        return bool(build and build.get("method") == _pe.METHOD and _rb.region_run_dir(
+            state.region_of_applicability()) is not None)
+
+    def _add_source_button(gaps):
+        """Choose a source for the first function with no metric (REF-15)."""
+        if not gaps or not _can_add_source():
+            return None
+        from views import source_dialog as _sd
+        return ui.tags.button(fa("circle-plus"), " Add a source", type="button",
+                              class_="btn btn-outline-primary btn-sm ms-auto",
+                              onclick=_sd.open_onclick(function=gaps[0][0], stop=False))
+
     @render.ui
     def uncovered_panel():
         if state.metric_config() is None or not state.metric_config():
@@ -702,9 +733,11 @@ def discipline_map_server(input, output, session, state: AppState):
                 ui.tags.strong(
                     f"{n} STAF function{'' if n == 1 else 's'} with no metric"
                 ),
+                _add_source_button(gaps),
                 ui.input_action_button(
                     ns("open_coverage_exception"), "Document a gap",
-                    class_="btn btn-outline-secondary btn-sm ms-auto",
+                    class_="btn btn-outline-secondary btn-sm"
+                    + ("" if _can_add_source() else " ms-auto"),
                 ),
                 class_="d-flex align-items-center gap-2 mb-1",
             ),

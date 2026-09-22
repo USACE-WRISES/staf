@@ -868,6 +868,13 @@ def support_text(metric: dict) -> str:
     # A curve that rests on no station of this ecoregion says what it does rest
     # on. The bundle carries the sentence, so the workbook and the app agree.
     basis = str(metric.get("basis") or "")
+    if basis == "owner-entered" or isinstance(metric.get("borrowedFrom"), dict):
+        # a curve the owner entered or took from another assessment (REF-15)
+        who = (metric.get("ownerDecision") or {}).get("recordedBy") \
+            if isinstance(metric.get("ownerDecision"), dict) else None
+        stated = str(metric.get("basisStatement") or metric.get("basisLabel")
+                     or "Owner-entered curve").strip()
+        return stated + (f" Chosen by {who}." if who else "")
     sup_ = metric.get("referenceSupport") if isinstance(metric.get("referenceSupport"),
                                                         dict) else {}
     # a curve from a rung above the ecoregion hierarchy, including a published

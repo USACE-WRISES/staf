@@ -2043,6 +2043,11 @@ def assemble(evidence: dict, *,
     owner_removed = owner_curves.removed(owner_decisions)
     removed_carried = {mk: d.get("rationale") for mk, d in owner_removed.items()
                        if mk in (evidence.get("carried") or {})}
+    # a carried curve the owner gave another source no longer scores as carried
+    replaced_carried = {mk: d.get("rationale")
+                        for mk, d in owner_curves.sourced(owner_decisions).items()
+                        if mk in (evidence.get("carried") or {}) and mk not in owner_removed
+                        and owner_curves.applies(mk, built=curve_review)}
     # Recorded reviewer finalizations (``finalize_metrics``: metric -> note).
     # A flagged curve publishes only through exactly this: a named human
     # decision with a rationale, stamped on the review entry. The agent never
@@ -2221,10 +2226,14 @@ def assemble(evidence: dict, *,
         intended_rows, export_mapping = pressure_evidence.select_portfolio(
             evidence, intended_rows, export_mapping, export_config, metric_scores, meta)
         base_selection = copy.deepcopy(meta.get("portfolioSelection") or {})
+        # the build's own statements, which the session keeps beside the owner's
+        # decisions so a withdrawn decision gives the build's curve back as it was
+        base_annotations = copy.deepcopy(meta.get("metricAnnotations") or {})
+        base_withheld = copy.deepcopy(meta.get("insufficientReferenceSupport") or [])
         if owner_decisions:
             intended_rows, export_mapping, export_config = owner_curves.apply_to_inputs(
                 before_rows, before_mapping, export_config, meta, owner_decisions,
-                keep=set(evidence.get("fixed_metrics") or {}))
+                keep=set(evidence.get("fixed_metrics") or {}), built=set(curve_review))
         # and the portfolio counts what the bundle publishes
         portfolio = pressure_evidence.portfolio_from_mapping(
             portfolio, intended_rows, export_mapping)
@@ -2232,6 +2241,7 @@ def assemble(evidence: dict, *,
     else:
         moot = []
         base_selection = {}
+        base_annotations = base_withheld = None
     bundle = None
     bundle_error = None
     try:
@@ -2322,6 +2332,9 @@ def assemble(evidence: dict, *,
         # SELECT-04 chose before them (what the session stores, so they can be undone)
         "curve_decisions": [dict(d) for d in owner_decisions],
         "base_portfolio_selection": base_selection,
+        "base_metric_annotations": base_annotations,
+        "base_withheld": base_withheld,
+        "replaced_carried": dict(replaced_carried),
         "finalized_metrics": dict(finalize_metrics or {}),
         "redundancy": redundancy,
         "stratifiers": evidence["stratifiers"],

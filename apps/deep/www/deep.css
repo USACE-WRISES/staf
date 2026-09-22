@@ -299,6 +299,9 @@
 .deep-basis-tag.national { color: #1f4e8c; background: #e2ecf8; border-color: #c2d6ec; }
 .deep-basis-tag.modeled { color: #7a4a12; background: #fbeeda; border-color: #eed7ae; }
 .deep-basis-tag.published { color: #5b3f8a; background: #efe8f7; border-color: #d9cbea; }
+/* a curve the assessment's owner chose (StreamCurves REF-15) */
+.deep-basis-tag.owner { color: #7a4d0b; background: #fdf3e1; border-color: #f0d9a8; }
+.deep-basis-tag.borrowed { color: #5c4f23; background: #f3f0e3; border-color: #ded6b6; }
 
 /* What a metric is scored against: fixed criteria, or a reference curve with the
    geography its stations came from. A borrowed pool reads in the caution tone. */

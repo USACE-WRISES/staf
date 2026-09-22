@@ -202,6 +202,8 @@ def panel_body(metric: str, entry: Mapping, *, provenance: Optional[Mapping] = N
     chosen = src.chosen_by(metric, entry)
     if chosen:
         rows.append(("Chosen by", chosen))
+    if entry.get("owner"):
+        rows.append(("Why", str(entry["owner"].get("rationale") or "")))
     facts = ui.tags.dl(*[t for label, value in rows
                          for t in (ui.tags.dt(label), ui.tags.dd(value))],
                        class_="source-panel-facts")
@@ -227,14 +229,38 @@ def panel_body(metric: str, entry: Mapping, *, provenance: Optional[Mapping] = N
     return ui.div(*[p for p in parts if p is not None], class_="source-panel")
 
 
+def build_has_curve(metric: str, build: Optional[Mapping]) -> bool:
+    """The build itself gave the metric a curve (carried, or from a source after
+    the station pools), which a removal takes out and an undone choice gives back."""
+    b = build or {}
+    return str(metric) in (b.get("ladderMetrics") or {}) or str(metric) in (
+        b.get("carriedMetrics") or {})
+
+
 def panel_modal(metric: str, entry: Mapping, *, provenance: Optional[Mapping] = None,
                 build: Optional[Mapping] = None, decisions=()):
+    from views import source_dialog as sd
     removed = oc.removed(decisions).get(str(metric))
+    owner = entry.get("owner")
     footer = [ui.modal_button("Close")]
-    if not removed:
+    if not removed and entry.get("kind") != "fixed":
+        footer.insert(0, ui.tags.button(
+            fa("right-left"), " Change source", type="button",
+            class_="btn btn-outline-primary",
+            onclick=sd.open_onclick(metric=metric, stop=False)))
+    if owner:
+        footer.insert(0, ui.tags.button(
+            fa("rotate-left"), " Undo this choice", type="button",
+            class_="btn btn-outline-secondary",
+            title=("The build's own curve for this metric returns" if build_has_curve(
+                metric, build) else "The metric goes back to being withheld"),
+            onclick=undo_onclick(owner.get("id"), stop=False)))
+    if not removed and (not owner or build_has_curve(metric, build)):
         footer.insert(0, ui.tags.button(
             fa("trash-can"), " Remove from assessment", type="button",
             class_="btn btn-outline-danger me-auto", onclick=act_onclick(metric, oc.REMOVE)))
+    elif owner:
+        footer[0].attrs["class"] = footer[0].attrs["class"] + " me-auto"
     return ui.modal(
         panel_body(metric, entry, provenance=provenance, build=build, decisions=decisions),
         title=panel_title(metric, entry),
@@ -250,7 +276,7 @@ def entry_for(state: AppState, metric: str) -> Optional[dict]:
         decisions = state.owner_curve_decisions() or []
         mapping = state.discipline_function_mapping()
         built = state.completed_metrics() or {}
-    effective = oc.effective_build(build, decisions)
+    effective = oc.effective_build(build, decisions, built=built)
     entry = pe.reference_rows(effective, mapping, built=built).get(str(metric))
     if entry is None and str(metric) in oc.removed(decisions):
         entry = pe.reference_rows(build, mapping, built=built).get(str(metric))
@@ -272,7 +298,7 @@ def function_counts(state: AppState) -> dict:
 
 
 def decision_form(metric: str, name: str, action: str, functions: list, emptied: list,
-                  *, ns, others: list):
+                  *, ns, others: list, chosen: bool = False):
     """The one form behind every decision: what it does, why, and the gap it would
     leave. Back returns to the panel."""
     names = function_names_by_id()
@@ -281,7 +307,8 @@ def decision_form(metric: str, name: str, action: str, functions: list, emptied:
         title = f"Remove {name} from this assessment"
         what = (f"{name} stops scoring {fn_text or 'any function'}. Every later build of this "
                 "region leaves it out too, and nothing takes its place unless you choose a "
-                "curve.")
+                "curve." + (" This also withdraws your choice of its source."
+                            if chosen else ""))
         verb, cls = "Remove", "btn btn-danger"
     elif action == oc.UNMAP:
         title = f"Remove {name} from {fn_text}"
@@ -373,9 +400,12 @@ def source_panel_server(input, output, session, state: AppState):
         pending.set({"metric": metric, "action": action,
                      "functions": functions if action != oc.REMOVE else [],
                      "emptied": emptied})
+        with reactive.isolate():
+            chosen = metric in oc.sourced(state.owner_curve_decisions() or [])
         ui.modal_show(decision_form(metric, name, action, affected or functions, emptied,
                                     ns=session.ns,
-                                    others=[f for f in placed if f not in functions]))
+                                    others=[f for f in placed if f not in functions],
+                                    chosen=chosen))
 
     @reactive.effect
     @reactive.event(input.dec_confirm)
@@ -401,7 +431,7 @@ def source_panel_server(input, output, session, state: AppState):
                                        rationale=input.dec_rationale() or "",
                                        recorded_by=maintainer(), functions=p["functions"],
                                        coverage_exceptions=gaps)
-            oc.validate(decision, build=build, built=built)
+            oc.validate(decision, build=build, built=built, decisions=current)
             oc.save(run_dir, decision)
         except ValueError as exc:
             ui.notification_show(str(exc), type="warning", duration=8)
@@ -432,6 +462,7 @@ def source_panel_server(input, output, session, state: AppState):
 
 __all__ = ["PANEL_ID", "OPEN_INPUT", "ACT_INPUT", "UNDO_INPUT", "open_onclick",
            "open_onkeydown", "act_onclick", "undo_onclick", "maintainer", "kind_class",
+           "build_has_curve",
            "kind_badge", "display_name", "function_names", "panel_title", "panel_body",
            "panel_modal", "entry_for", "function_counts", "decision_form",
            "source_panel_server"]

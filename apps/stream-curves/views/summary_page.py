@@ -1061,6 +1061,11 @@ def summary_page_server(input, output, session, state: AppState):
                     fa("rotate-left"), " Undo", type="button", class_="btn btn-link btn-sm p-0",
                     onclick=sp.undo_onclick(t["removed_decision"]),
                     title="Undo the removal")
+            elif t.get("owner_decision"):
+                action = ui.tags.button(
+                    fa("rotate-left"), " Undo", type="button", class_="btn btn-link btn-sm p-0",
+                    onclick=sp.undo_onclick(t["owner_decision"]),
+                    title="Undo this choice: the build's own choice for this metric returns")
             else:
                 action = ui.tags.button(
                     fa("trash-can"), " Remove", type="button",
@@ -1089,14 +1094,21 @@ def summary_page_server(input, output, session, state: AppState):
                 onclick=sp.open_onclick(metric), onkeydown=sp.open_onkeydown(),
             ))
         n = len(tiles)
+        from views import source_dialog as sd
         return ui.card(
             ui.card_header(
-                ui.tags.strong("Curves from other sources"),
+                ui.div(
+                    ui.tags.strong("Curves from other sources"),
+                    ui.tags.button(fa("circle-plus"), " Add a source", type="button",
+                                   class_="btn btn-sm btn-outline-primary ms-auto",
+                                   onclick=sd.open_onclick(stop=False),
+                                   title="Choose a source for a function's metric"),
+                    class_="d-flex align-items-center gap-2"),
                 ui.tags.div(
                     f"{n} curve{'' if n == 1 else 's'} this version scores that this build "
-                    "did not fit. Click a row to see where it comes from and why the build "
-                    "chose it. A removal applies at once and to every later build of this "
-                    "region.",
+                    "did not fit. Click a row to see where it comes from and why it was "
+                    "chosen. A removal or a new source applies at once and to every later "
+                    "build of this region.",
                     class_="text-muted small")),
             ui.card_body(ui.tags.table(
                 ui.tags.thead(ui.tags.tr(*[ui.tags.th(h) for h in (

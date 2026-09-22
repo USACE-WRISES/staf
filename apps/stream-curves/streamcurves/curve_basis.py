@@ -12,7 +12,8 @@ Belt Plains holds none, so for those two regions the assumed sentence was simply
 untrue.
 
 This module names the four bases, orders them, labels them, and says what each
-one may claim and how much confidence it may carry.
+one may claim and how much confidence it may carry. A fifth, the owner-entered
+basis (REF-15), stands outside the ladder: nothing ranks it.
 
 Tokens are immutable. They ride in bundles, digests, manifests and the rule
 catalog, so they are never renamed; the display labels may change freely
@@ -36,11 +37,18 @@ PUBLISHED = "published-benchmark"
 ORDER = (REGIONAL, NATIONAL, MODELED, PUBLISHED)
 ALL = frozenset(ORDER)
 
+#: a curve the assessment's owner entered, on a citation or on professional
+#: judgment (REF-15, owner decision 2026-09-22). Not a rung of the ladder:
+#: nothing ranks it and it claims no reference condition.
+OWNER = "owner-entered"
+KNOWN = ALL | {OWNER}
+
 LABELS = {
     REGIONAL: "Regional reference",
     NATIONAL: "National reference",
     MODELED: "Modeled reference",
     PUBLISHED: "Published benchmark",
+    OWNER: "Owner-entered",
 }
 
 #: CONF-02 caps keyed by basis (CONF-03). None means this basis imposes no cap
@@ -74,6 +82,8 @@ STATEMENTS = {
     PUBLISHED: ("Scored against a published criterion rather than against stations from this "
                 "ecoregion. The criterion carries its own definition of reference, which need "
                 "not match this assessment's."),
+    OWNER: ("Scored against a curve this assessment's owner entered, on a cited source or "
+            "on professional judgment, rather than against reference stations."),
 }
 
 #: what a basis does NOT claim, carried beside the statement where it matters
@@ -85,6 +95,8 @@ LIMITS = {
               "measurement."),
     PUBLISHED: ("A published criterion is not an estimate of this ecoregion's reference condition "
                 "and may disagree with a reference curve where one exists."),
+    OWNER: ("An owner-entered curve is not an estimate of this ecoregion's reference condition. "
+            "It rests on the source and the rationale the owner recorded."),
 }
 
 
@@ -128,4 +140,4 @@ def from_legacy(criteria_basis: Optional[str]) -> str:
 def resolve(basis: Optional[str] = None, *, criteria_basis: Optional[str] = None) -> str:
     """The basis to use, preferring an explicit one and falling back to legacy."""
     key = str(basis or "")
-    return key if key in ALL else from_legacy(criteria_basis)
+    return key if key in KNOWN else from_legacy(criteria_basis)
