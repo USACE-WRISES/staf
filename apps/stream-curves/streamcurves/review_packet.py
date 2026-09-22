@@ -275,6 +275,8 @@ def hierarchy_block(result: dict) -> dict:
     from . import curve_basis
     carried_curves = []
     for mk, c in sorted(carried.items()):
+        if mk in (result.get("removed_carried") or {}):
+            continue                      # listed as removed by the owner instead
         ann = c.get("annotations") or {}
         basis = curve_basis.resolve(ann.get("basis"), criteria_basis=ann.get("criteriaBasis"))
         carried_curves.append({
@@ -283,15 +285,21 @@ def hierarchy_block(result: dict) -> dict:
             "basis": curve_basis.label_for(basis),
             "n": (c.get("row") or {}).get("n_reference"),
             "confidence": ann.get("confidenceLabel")})
+    from . import owner_curves
     return {"carried_from": result.get("carried_from") or {},
-            "carried": sorted(carried),
+            "carried": sorted(set(carried) - set(result.get("removed_carried") or {})),
+            "curve_decisions": [owner_curves.summary(d)
+                                for d in result.get("curve_decisions") or []],
             "carried_curves": carried_curves,
             "removed_carried": dict(result.get("removed_carried") or {}),
             "rebuilt": {mk: v.get("why") for mk, v in (result.get("carry_rebuilt") or {}).items()},
             "sources": sources,
-            "not_selected": {fid: sel.get("notSelected") for fid, sel in
-                             (result.get("portfolio_selection") or {}).items()
-                             if sel.get("notSelected")},
+            # SELECT-04's own choice; the owner's decisions are listed on their own
+            "not_selected": {fid: [x for x in sel.get("notSelected") or [] if not x.get("owner")]
+                             for fid, sel in (result.get("base_portfolio_selection")
+                                              if "base_portfolio_selection" in result
+                                              else result.get("portfolio_selection") or {}).items()
+                             if [x for x in sel.get("notSelected") or [] if not x.get("owner")]},
             "documented_gaps": [{"functionId": g.get("functionId"),
                                  "recordedBy": g.get("recordedBy")} for g in gaps],
             "model_candidates_waiting": sorted({a.get("metric") for a in candidates}),
@@ -323,6 +331,19 @@ def _hierarchy_section(h: dict) -> list[str]:
     if rows:
         lines += _table(["metric", "source", "where", "n", "regional ag limit",
                          "options refused before it"], rows)
+        lines.append("")
+    decisions = h.get("curve_decisions") or []
+    if decisions:
+        from . import owner_curves
+        lines += ["Curve decisions of the owner (REF-15), applied after SELECT-04 with "
+                  "nothing refilled:", ""]
+        for d in decisions:
+            fns = ", ".join(str(f) for f in d.get("functions") or [])
+            gaps = ", ".join(str(g.get("functionId")) for g in d.get("coverageExceptions") or [])
+            lines.append(f"- {owner_curves.ACTION_LABELS.get(d.get('action'), d.get('action'))}"
+                         f"{(' (' + fns + ')') if fns else ''}: **{d.get('metric')}**, by "
+                         f"{d.get('recordedBy')}. {d.get('rationale')}"
+                         + (f" Documented gap: {gaps}." if gaps else ""))
         lines.append("")
     ns = h.get("not_selected") or {}
     if ns:

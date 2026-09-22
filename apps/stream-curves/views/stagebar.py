@@ -119,6 +119,7 @@ def stagebar_server(input, output, session, state: AppState):
         state.discipline_function_mapping()
         state.discipline_function_mapping_confirmed()
         state.function_coverage_exceptions()
+        state.owner_curve_decisions()
         state.metric_config()
         # Stratifier diagnostics: they drive the enrichment_build attention state.
         state.strat_config()

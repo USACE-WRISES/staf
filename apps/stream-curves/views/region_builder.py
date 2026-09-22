@@ -32,6 +32,7 @@ from streamcurves import library as lib
 from streamcurves import methodology
 from streamcurves import engine_names
 from streamcurves import nrsa_dataset, region_build as rb
+from streamcurves import owner_curves as oc
 from streamcurves import pressure_evidence as pe
 from streamcurves import rules_view
 from streamcurves import session_io as sio
@@ -73,7 +74,9 @@ def _staged_reference_summary(session_path) -> dict:
             return {}
         fields = doc.get("fields") if isinstance(doc.get("fields"), dict) else doc
         _SUMMARY_CACHE.clear()
-        _SUMMARY_CACHE[key] = pe.reference_summary((fields or {}).get("reference_build"))
+        # under the curve decisions the staged version carries (REF-15)
+        _SUMMARY_CACHE[key] = pe.reference_summary(oc.effective_build(
+            (fields or {}).get("reference_build"), (fields or {}).get("owner_curve_decisions")))
     return _SUMMARY_CACHE[key]
 
 _TASK_KEY = "region_build"
@@ -205,7 +208,6 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         out_dir = rb.run_folder(out_root(), code)
         decisions = out_dir / "owner_decisions.json"
         gaps = out_dir / "coverage_exceptions.json"
-        removals = _removal_inputs(out_dir, code)
         argv = rb.stage_command(
             code, name, out_dir,
             maintainer=_maintainer() or "unknown",
@@ -226,53 +228,56 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             reference_method=(input.build_reference_method() or None),
             reviewer_decisions=decisions if decisions.exists() else None,
             coverage_exceptions=gaps if gaps.exists() else None,
-            remove_metrics=removals or None)
+            # the owner's standing curve decisions (REF-15)
+            curve_decisions=oc.path_of(out_dir))
         _launch(run_stage(argv, out_dir))
 
-    def _removal_inputs(out_dir, code) -> dict:
-        """The owner's pending removals of carried curves, as the build's
-        ``--remove-metric`` inputs. One whose metric the latest published version
-        no longer scores has nothing left to remove, so it is dropped."""
-        keep, stale = rb.removal_inputs(rb.load_removals(out_dir),
-                                        rb.published_metric_ids(code))
-        for mk in stale:
-            rb.clear_removal(out_dir, mk)
-        if stale:
-            ui.notification_show(
-                "Dropped the pending removal of " + ", ".join(stale)
-                + ": the published version no longer scores it.",
-                type="message", duration=8)
-        return keep
+    # repaints the decisions block when one is undone here for another session
+    decisions_nonce = reactive.value(0)
 
     @reactive.effect
-    @reactive.event(input.undo_removal)
-    @guard("undo the removal")
-    def _undo_removal():
-        metric = input.undo_removal()
+    @reactive.event(input.undo_decision)
+    @guard("undo the curve decision")
+    def _undo_decision():
+        did = str(input.undo_decision() or "")
         folder = _active_dir()
-        if not metric or folder is None:
+        if not did or folder is None:
             return
-        rb.clear_removal(folder, str(metric))
+        oc.undo(folder, did)
         with reactive.isolate():
-            n = state.reference_removals_nonce() or 0
-        state.reference_removals_nonce.set(n + 1)
+            current = list(state.owner_curve_decisions() or [])
+            n = decisions_nonce() or 0
+        if any(d.get("id") == did for d in current):
+            state.owner_curve_decisions.set([d for d in current if d.get("id") != did])
+        decisions_nonce.set(n + 1)
 
-    def _removals_block():
+    def _decisions_block():
+        """The region's standing curve decisions (REF-15), each with its undo."""
         folder = _active_dir()
-        items = rb.load_removals(folder) if folder else []
+        items = oc.load(folder) if folder else []
         if not items:
             return None
+        rows = []
+        for d in items:
+            fns = ", ".join(str(f) for f in d.get("functions") or [])
+            gaps = ", ".join(str(g.get("functionId")) for g in d.get("coverageExceptions") or [])
+            rows.append(ui.tags.tr(
+                ui.tags.td(ui.tags.code(str(d.get("metric")))),
+                ui.tags.td(oc.ACTION_LABELS.get(d.get("action"), str(d.get("action")))
+                           + (f" ({fns})" if fns else "")
+                           + (f"; documented gap: {gaps}" if gaps else "")),
+                ui.tags.td(str(d.get("rationale") or "")),
+                ui.tags.td(f"{d.get('recordedBy')}, {str(d.get('recordedAt') or '')[:10]}",
+                           class_="text-muted text-nowrap"),
+                ui.tags.td(ui.tags.button(
+                    "Undo", type="button", class_="btn btn-link btn-sm p-0",
+                    onclick=(f"Shiny.setInputValue('{ns('undo_decision')}',"
+                             f"{json.dumps(str(d.get('id')))},{{priority:'event'}})")))))
         return ui.div(
-            ui.tags.strong("Carried curves removed at the next build"),
-            ui.tags.ul(*[ui.tags.li(
-                ui.tags.code(str(it.get("metric"))), " ", str(it.get("rationale") or ""),
-                ui.tags.span(f" ({it.get('recordedBy')}, {str(it.get('recordedAt') or '')[:10]})",
-                             class_="text-muted"),
-                ui.tags.button(
-                    "Undo", type="button", class_="btn btn-link btn-sm p-0 ms-2",
-                    onclick=(f"Shiny.setInputValue('{ns('undo_removal')}',"
-                             f"{json.dumps(str(it.get('metric')))},{{priority:'event'}})")))
-                for it in items], class_="mb-0"),
+            ui.tags.strong("Curve decisions for this region"),
+            ui.div("Applied in the workspace as soon as they are saved, and by every build of "
+                   "this region.", class_="text-muted mb-1"),
+            ui.tags.table(ui.tags.tbody(*rows), class_="table table-sm mb-0 rb-decisions"),
             class_="alert alert-secondary py-2 small")
 
     @reactive.effect
@@ -321,7 +326,6 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         out_dir = Path(run_folder)
         decisions = out_dir / "owner_decisions.json"
         gaps = out_dir / "coverage_exceptions.json"
-        removals = _removal_inputs(out_dir, kw["l3_code"])
         argv = rb.stage_command(
             kw["l3_code"], kw["name"], out_dir,
             maintainer=_maintainer() or "unknown",
@@ -336,7 +340,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             reference_method=kw.get("reference_method"),
             reviewer_decisions=decisions if decisions.exists() else None,
             coverage_exceptions=gaps if gaps.exists() else None,
-            remove_metrics=removals or None)
+            curve_decisions=oc.path_of(out_dir))
         _launch(run_stage(argv, out_dir))
 
     # ── answering an open item ───────────────────────────────────────────────
@@ -759,8 +763,9 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         # run_dir() was already set when the build started.
         finished()
         running()
-        # ...on the owner's removals, saved here or on the Reference curves page...
-        state.reference_removals_nonce()
+        # ...on the owner's curve decisions, saved here or on the workspace pages...
+        state.owner_curve_decisions()
+        decisions_nonce()
         # ...and on the selection, so switching region shows that region's run.
         try:
             input.build_region()
@@ -805,7 +810,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                 ns("open_staged"), ui.TagList(bi("folder2-open"),
                                               " Open this assessment in StreamCurves"),
                 class_="btn btn-outline-primary btn-sm mb-3"),
-            _removals_block(),
+            _decisions_block(),
             _open_items(packet),
             _publish_block(),
             class_="rb-packet card card-body",

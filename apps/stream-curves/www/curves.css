@@ -1255,6 +1255,31 @@
   .source-trail li { grid-template-columns: 1fr; gap: 0.2rem; }
 }
 
+/* the owner's decisions (REF-15): a removed curve stays, dimmed, with its undo */
+.curve-tile.is-owner-removed { border-style: dashed; background: #fafafa; }
+.curve-tile.is-owner-removed .curve-tile-svg { opacity: 0.4; }
+.curve-tile.is-owner-removed .curve-tile-status { background: #6c757d; color: #fff; }
+.summary-reference-row.is-owner-removed > td { opacity: 0.55; }
+.summary-reference-row.is-owner-removed > td:last-child { opacity: 1; }
+.curve-tile-use.btn { padding: 0 0.3rem; font-size: 0.72rem; line-height: 1.4; color: #1c7ed6; }
+.curve-tile.is-owner-included { border-left: 4px solid #a86b12; }
+.curve-tile.is-owner-included .curve-tile-status { background: #fdf3e1; color: #7a4d0b; }
+.curve-tile-use.btn svg { width: 0.8em; height: 0.8em; fill: currentColor; }
+.source-fn-chip { display: inline-flex; align-items: center; gap: 0.3rem; }
+.source-fn-chip.is-owner-removed { text-decoration: line-through; color: #6c757d;
+  background: #f1f3f5; }
+.source-fn-x { border: 0; background: transparent; padding: 0 0.1rem; color: #8a93a3;
+  line-height: 1; }
+.source-fn-x:hover { color: #d9534f; }
+.source-fn-x svg { width: 0.75em; height: 0.75em; fill: currentColor; }
+.source-panel-removed { margin-bottom: 0.9rem; }
+.source-decision-gap { border: 1px solid #f0c36d; background: #fffaf0; border-radius: 0.4rem;
+  padding: 0.5rem 0.6rem; margin-top: 0.5rem; }
+.wb-chip .wb-chip-use { border: 0; background: transparent; color: #1c7ed6; font-size: 0.7rem;
+  padding: 0 0.2rem; }
+.wb-chip .wb-chip-use svg { width: 0.75em; height: 0.75em; fill: currentColor; }
+.rb-decisions td { vertical-align: top; }
+
 /* the gallery's "About sources" */
 .curve-gallery-sources.btn { font-size: 0.78rem; padding: 0.14rem 0.55rem; }
 .curve-gallery-sources.btn svg { width: 0.85em; height: 0.85em; fill: currentColor; }

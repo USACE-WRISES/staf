@@ -748,8 +748,11 @@ def session_reference_build(result: dict) -> Optional[dict]:
         # the published points themselves, so a republish restores them exactly
         out["carriedMetrics"] = carry_forward.session_rows(carried)
         out["carriedFrom"] = dict(result.get("carried_from") or {})
-    if meta.get("portfolioSelection"):
-        out["portfolioSelection"] = meta["portfolioSelection"]
+    # the build's own portfolio: the owner's decisions ride beside it
+    # (owner_curve_decisions), so the session can undo them
+    selection = result.get("base_portfolio_selection", meta.get("portfolioSelection"))
+    if selection:
+        out["portfolioSelection"] = selection
     if fitted_annotations:
         out["fittedAnnotations"] = fitted_annotations
     return out
@@ -1086,7 +1089,8 @@ def reference_rows(build: Optional[dict], mapping=None, *, built=()) -> dict[str
 
 
 def apply_reference_build(build: Optional[dict], curve_rows: dict, mapping,
-                          metric_config: dict, meta: dict) -> tuple[dict, object, dict]:
+                          metric_config: dict, meta: dict, *,
+                          apply_selection: bool = True) -> tuple[dict, object, dict]:
     """Fold a session's ``reference_build`` into an interactive bundle build.
 
     Returns ``(curve_rows, mapping, metric_config)`` with the fixed-criteria
@@ -1138,8 +1142,11 @@ def apply_reference_build(build: Optional[dict], curve_rows: dict, mapping,
     # SELECT-04: the curves the build recorded as supported, not selected stay
     # out of the functions it left them out of, so a republish scores what the
     # build published
-    rows, mapping = _apply_selection(build.get("portfolioSelection") or {}, rows, mapping,
-                                     keep=set(fixed))
+    # (apply_selection=False leaves the drop to owner_curves.apply_to_inputs, which
+    # applies it under the owner's decisions exactly as a build does)
+    if apply_selection:
+        rows, mapping = _apply_selection(build.get("portfolioSelection") or {}, rows, mapping,
+                                         keep=set(fixed))
     if build.get("portfolioSelection"):
         meta["portfolioSelection"] = build["portfolioSelection"]
     meta["metricAnnotations"] = annotations

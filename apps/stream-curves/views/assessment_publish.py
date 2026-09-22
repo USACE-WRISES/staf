@@ -54,6 +54,21 @@ def region_label(region: dict | None) -> str:
     return str(name)
 
 
+def effective_reference_build(state: AppState):
+    """The session's reference build with the owner's curve decisions applied
+    (REF-15): what the workspace shows, counts and publishes. Reads reactively."""
+    from streamcurves import owner_curves as oc
+    return oc.effective_build(state.reference_build(), state.owner_curve_decisions() or [])
+
+
+def effective_coverage_exceptions(state: AppState) -> list:
+    """The session's documented gaps with the gaps the owner's decisions carry.
+    Reads reactively."""
+    from streamcurves import owner_curves as oc
+    return oc.with_exceptions(state.function_coverage_exceptions() or [],
+                              state.owner_curve_decisions() or [])
+
+
 def coverage_from_state(state: AppState) -> dict | None:
     """STAF function coverage the current session would publish, or None while
     there is nothing to judge yet.
@@ -70,8 +85,8 @@ def coverage_from_state(state: AppState) -> dict | None:
         completed = state.completed_metrics() or {}
         curve_review = state.curve_review() or {}
         mapping = state.discipline_function_mapping()
-        exceptions = state.function_coverage_exceptions() or []
-        reference_build = state.reference_build()
+        exceptions = effective_coverage_exceptions(state)
+        reference_build = effective_reference_build(state)
     # the scope rule build_bundle_from_state applies, so a curve the review took
     # out covers nothing here either
     in_scope = {mk: cm for mk, cm in completed.items()
@@ -155,7 +170,7 @@ def portfolio_approval_needed(state: AppState) -> list[dict]:
         completed = state.completed_metrics() or {}
         curve_review = state.curve_review() or {}
         mapping = state.discipline_function_mapping()
-        reference_build = state.reference_build()
+        reference_build = effective_reference_build(state)
         origin = state.assessment_source() or {}
     # the same scope rule the bundle is built under, or the page asks for an approval
     # of a function whose third metric the review already took out
@@ -193,14 +208,14 @@ def run_snapshot(state: AppState) -> dict:
         mapping = state.discipline_function_mapping()
         metric_config = state.metric_config() or {}
         mapping_confirmed = bool(state.discipline_function_mapping_confirmed())
-        coverage_exceptions = state.function_coverage_exceptions() or []
+        coverage_exceptions = effective_coverage_exceptions(state)
         layer1 = state.all_layer1_results() or {}
         ranking = state.phase2_ranking()
         validation_records = state.validation_records() or []
         origin = state.assessment_source() or {}
         screening_skipped = bool(state.screening_skipped())
         screening_criteria = state.easi_screening_criteria()
-        reference_build = state.reference_build()
+        reference_build = effective_reference_build(state)
         completed = state.completed_metrics() or {}
     kind = (region or {}).get("kind") if region else None
     n_candidates = int(meta.get("n_candidates") or 0)
@@ -439,9 +454,10 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
         metric_config = state.metric_config() or {}
         session_name = state.session_name()
         region = state.region_of_applicability()
-        exceptions = state.function_coverage_exceptions() or []
+        exceptions = effective_coverage_exceptions(state)
         predictor_config = state.predictor_config() or {}
         reference_build = state.reference_build()
+        curve_decisions = list(state.owner_curve_decisions() or [])
 
     # A curve a reviewer removed, or one still awaiting review, is not published.
     # `completed_metrics` holds every built curve on purpose (regional_agent.session_fields
@@ -478,9 +494,20 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
     # A pressure-screen build (methodology 0.12) keeps its reference statement
     # through an interactive republish: the fixed-criteria metrics, each curve's
     # reference support, the withheld list. A legacy session passes through.
+    from streamcurves import owner_curves as _oc
     from streamcurves import pressure_evidence as _pe
-    curve_rows, mapping, metric_config = _pe.apply_reference_build(
-        reference_build, curve_rows, mapping, metric_config, full_meta)
+    if reference_build and reference_build.get("method") == _pe.METHOD:
+        # SELECT-04's drop and the owner's curve decisions (REF-15), through the one
+        # transform a build runs, so the workspace publishes what a build would
+        curve_rows, mapping, metric_config = _pe.apply_reference_build(
+            reference_build, curve_rows, mapping, metric_config, full_meta,
+            apply_selection=False)
+        curve_rows, mapping, metric_config = _oc.apply_to_inputs(
+            curve_rows, mapping, metric_config, full_meta, curve_decisions,
+            keep=_pe.fixed_in_order(reference_build.get("fixedMetrics")))
+    else:
+        curve_rows, mapping, metric_config = _pe.apply_reference_build(
+            reference_build, curve_rows, mapping, metric_config, full_meta)
     # judged after the reference build is folded in: a version whose in-scope
     # curves are all carried forward (or fixed) publishes too
     if not curve_rows:

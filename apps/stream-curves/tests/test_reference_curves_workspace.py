@@ -176,8 +176,9 @@ def test_the_workspace_draws_every_curve_it_did_not_fit_read_only(version):
         assert t.get("function_name"), t["metric"]
         html = _unescape(str(cg.tile_ui(t, channel_id="ch")))
         assert '"action": "open"' not in html and "curve-tile-recompute" not in html
-        assert ("remove_carried" in html) == bool(t.get("removable"))
-        assert ("curve-tile-remove" in html) == (t["source_kind"] == "carried")
+        # every curve from another source can be removed, as the owner's decision
+        assert t.get("removable") and "curve-tile-remove" in html
+        assert '"action": "remove"' in html
 
 
 def cs_status(tile) -> str:
@@ -189,15 +190,19 @@ def _unescape(html: str) -> str:
     return html.replace("&apos;", "'").replace("&quot;", '"')
 
 
-def test_a_pending_removal_shows_on_the_tile():
+def test_a_removed_curve_stays_on_the_page_with_its_undo():
+    from streamcurves import owner_curves as oc
     _bundle, fields = _load("interior-plateau/v6")
     build = fields["reference_build"]
     mk = sorted(build["carriedMetrics"])[0]
+    d = oc.new_decision(mk, oc.REMOVE, rationale="The carried curve rests on a pool we "
+                        "no longer trust.", recorded_by="owner")
     tiles = {t["metric"]: t for t in cg.reference_tiles_for(
-        build, fields["discipline_function_mapping"], pending=[mk])}
-    assert tiles[mk]["pending_removal"] and tiles[mk]["status_text"] == "Removal pending"
+        build, fields["discipline_function_mapping"], decisions=[d])}
+    assert tiles[mk]["removed_decision"] == d["id"]
+    assert tiles[mk]["status_text"] == "Removed by the owner"
     html = _unescape(str(cg.tile_ui(tiles[mk], channel_id="ch")))
-    assert "undo_remove" in html and "is-removal-pending" in html
+    assert "source_panel-undo" in html and "is-owner-removed" in html
 
 
 def test_the_counts_read_as_one_sentence():
@@ -233,53 +238,31 @@ def test_a_reset_of_the_mapping_keeps_the_reference_rows():
 
 
 # --------------------------------------------------------------------------- #
-# Removing a carried curve (owner decision 2026-09-21)
+# Removing a curve the build did not fit (owner decisions 2026-09-21 and REF-15)
 # --------------------------------------------------------------------------- #
-def test_removals_are_saved_loaded_and_undone(tmp_path):
-    with pytest.raises(ValueError, match="at least"):
-        rb.save_removal(tmp_path, "bfiws", "too short", recorded_by="owner")
-    with pytest.raises(ValueError, match="named owner"):
-        rb.save_removal(tmp_path, "bfiws", "x" * rb.MIN_REMOVAL_RATIONALE, recorded_by="")
-    rb.save_removal(tmp_path, "bfiws", "The carried curve rests on a pool we no longer trust.",
-                    recorded_by="owner", recorded_at="2026-09-21T12:00:00+00:00")
-    rb.save_removal(tmp_path, "chem_PH", "A second removal, recorded for the next build.",
-                    recorded_by="owner")
-    got = rb.load_removals(tmp_path)
-    assert [d["metric"] for d in got] == ["bfiws", "chem_PH"]
-    assert got[0] == {"metric": "bfiws", "recordedBy": "owner",
-                      "rationale": "The carried curve rests on a pool we no longer trust.",
-                      "recordedAt": "2026-09-21T12:00:00+00:00"}
-    rb.clear_removal(tmp_path, "bfiws")
-    rb.clear_removal(tmp_path, "chem_PH")
-    assert rb.load_removals(tmp_path) == []
-    assert not (tmp_path / rb.REMOVALS_FILE).exists()
-
-
-def test_a_removal_is_a_build_input_until_the_curve_is_gone(tmp_path):
+def test_a_removal_flag_still_reaches_the_build(tmp_path):
     argv = rb.stage_command("55", "Eastern Corn Belt Plains", tmp_path, maintainer="owner",
                             remove_metrics={"bfiws": "why it goes"})
     i = argv.index("--remove-metric")
     assert argv[i + 1] == "bfiws=why it goes"
-    keep, stale = rb.removal_inputs(
-        [{"metric": "bfiws", "rationale": "why"}, {"metric": "gone", "rationale": "old"}],
-        {"spring-bfiws", "spring-other"})
-    assert keep == {"bfiws": "why"} and stale == ["gone"]
-    assert rb.removal_inputs([{"metric": "gone", "rationale": "old"}], None) == ({"gone": "old"}, [])
 
 
-def test_assemble_takes_a_carried_curve_out_on_the_owners_removal():
+def test_a_removal_flag_naming_a_curve_the_build_did_not_fit_is_a_curve_decision():
+    from streamcurves import owner_curves as oc
     from streamcurves import regional_agent as ra
     evidence = {"carried": {"bfiws": {"row": {}}, "chem_PH": {"row": {}}},
-                "reference_support": {"bfiws": {"status": "carried"}, "x": {}}}
-    out, removed = ra.without_removed_carried(evidence, {"bfiws": "why", "built_one": "n"},
-                                              curve_review={"built_one": {}}, actor="owner")
-    assert removed == {"bfiws": "why"}
-    assert set(out["carried"]) == {"chem_PH"} and set(out["reference_support"]) == {"x"}
-    assert set(evidence["carried"]) == {"bfiws", "chem_PH"}      # the evidence is not mutated
+                "ladder_metrics": {"chem_TURB": {}}, "fixed_metrics": {"pctimp2019ws": {}}}
+    why = "The carried curve rests on a pool we no longer trust."
+    got = ra.owner_decisions_for(evidence, None, {"bfiws": why, "built_one": "n"},
+                                 curve_review={"built_one": {}}, actor="owner")
+    assert [(d["metric"], d["action"], d["recordedBy"]) for d in got] == [
+        ("bfiws", oc.REMOVE, "owner")]
+    # the fitted curve stays on the review path; the evidence is not touched
+    assert set(evidence["carried"]) == {"bfiws", "chem_PH"}
     with pytest.raises(ValueError, match="named finalize_actor"):
-        ra.without_removed_carried(evidence, {"bfiws": "why"}, curve_review={}, actor="")
-    same, none = ra.without_removed_carried(evidence, None, curve_review={}, actor="")
-    assert same is evidence and none == {}
+        ra.owner_decisions_for(evidence, None, {"bfiws": why}, curve_review={}, actor="")
+    assert ra.owner_decisions_for(evidence, None, None, curve_review={}, actor="") == []
+    assert ra.reference_keys_of(evidence) == {"bfiws", "chem_PH", "chem_TURB", "pctimp2019ws"}
 
 
 # --------------------------------------------------------------------------- #

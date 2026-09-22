@@ -25,6 +25,7 @@ from shiny import module, reactive, render, req, ui
 from streamcurves import curve_svg as cs
 from streamcurves import curves as scurves
 from streamcurves import library as lib
+from views import assessment_publish as _ap
 from views import curve_gallery as cg
 from views.state import AppState
 from views.theme import bi
@@ -192,7 +193,7 @@ def validate_server(input, output, session, state: AppState, active=None):
             # not fit (carried forward, from a rung above the hierarchy, fixed)
             from streamcurves import pressure_evidence as pe
             for rk, entry in pe.reference_rows(
-                    state.reference_build(), state.discipline_function_mapping(),
+                    _ap.effective_reference_build(state), state.discipline_function_mapping(),
                     built=state.completed_metrics() or {}).items():
                 mc.setdefault(rk, entry.get("config") or {})
         try:

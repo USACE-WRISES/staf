@@ -26,6 +26,8 @@ from shiny import module, reactive, render, req, ui
 
 from streamcurves import library as lib
 from streamcurves import overlap
+from streamcurves import owner_curves as oc
+from streamcurves import region_build as rb
 from streamcurves import rules_view
 from streamcurves import run_state as rs
 from streamcurves import session_io as sio
@@ -542,6 +544,20 @@ def data_overview_server(input, output, session, state: AppState):
         # Absent in every session built before methodology 0.12 -> None, which
         # reads as a legacy build (no fixed-criteria metrics to carry).
         state.reference_build.set(fields.get("reference_build"))
+        # The owner's curve decisions (REF-15): the session's own, with the region's
+        # standing ones on top, so a decision saved while this session was closed
+        # applies here as it will to the next build.
+        session_decisions = list(fields.get("owner_curve_decisions") or [])
+        region_decisions = (oc.load(rb.region_run_dir(fields.get("region_of_applicability")))
+                            if fields.get("reference_build") else [])
+        decisions = oc.combine(session_decisions, region_decisions)
+        state.owner_curve_decisions.set(decisions)
+        added = len({d["id"] for d in decisions} - {d.get("id") for d in session_decisions})
+        if added:
+            ui.notification_show(
+                f"{added} curve decision{'' if added == 1 else 's'} saved for this region "
+                f"{'is' if added == 1 else 'are'} applied here, as {'it' if added == 1 else 'they'}"
+                " will be to the next build.", type="message", duration=8)
         # Absent in a session written before gaps had to be justified -> no
         # exceptions, which is the honest reading of that file.
         state.function_coverage_exceptions.set(

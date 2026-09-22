@@ -471,8 +471,8 @@ def tile_state_classes(tile: Mapping) -> list[str]:
         classes.append("is-reference")
         if tile.get("source_kind"):
             classes.append("src-" + re.sub(r"[^a-z0-9]+", "-", str(tile["source_kind"]).lower()))
-        if tile.get("pending_removal"):
-            classes.append("is-removal-pending")
+        if tile.get("removed_decision"):
+            classes.append("is-owner-removed")
     if decision == run_state.DECISION_REMOVED or tile.get("in_scope") is False:
         classes.append("is-removed")
     elif decision == run_state.DECISION_FINALIZED:

@@ -88,6 +88,7 @@ RULE_THRESHOLD_PATHS: dict[str, list[str]] = {
                "confidence_rules.caps.borrowed_reference_moderate_risk",
                "confidence_rules.caps.borrowed_reference_high_risk"],
     "REF-06": ["data_rules.exploratory_n_unstratified"],
+    "REF-15": ["owner_decisions.min_rationale"],
     "REF-07": ["reference_screen.relaxed"],
     "CURVE-11": ["curve_rules.deep_index_bands"],
     # methodology 0.13: the basis ladder above the ecoregion hierarchy

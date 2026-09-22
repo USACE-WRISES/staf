@@ -583,6 +583,20 @@ coverage:
   standing_decision: cov01-documented-gap
 
 # --------------------------------------------------------------------------- #
+# The owner's curve decisions (REF-15, owner decision 2026-09-22). On the curves a
+# build did not fit, the owner may remove a curve, take it out of a function, or
+# put back a fitted curve SELECT-04 left out. Every decision names its owner and
+# gives a rationale of at least min_rationale characters. It is a standing
+# decision of the region (decisions_file in the region's run folder): it applies
+# at once in the workspace and to every later build, and nothing refills a
+# function after it. A decision that leaves a function with no curve carries the
+# documented gap for it.
+# --------------------------------------------------------------------------- #
+owner_decisions:
+  min_rationale: 20
+  decisions_file: "curve_decisions.json"
+
+# --------------------------------------------------------------------------- #
 # Standing decisions (v0.7). The owner's class decisions a batch run may apply
 # per item without a per-item human decision, with the end review before any
 # canonical publish. The policy file is fingerprinted into every batch manifest.

@@ -1977,29 +1977,30 @@ def run_evidence(l3_code: str, name: str, *,
     }
 
 
-def without_removed_carried(evidence: dict, remove_metrics: Optional[dict], *,
-                            curve_review: dict, actor: str) -> tuple[dict, dict]:
-    """``(evidence, removed)``: the evidence without the carried-forward curves the
-    owner removed, and those removals (metric -> rationale).
+def reference_keys_of(evidence: dict) -> set:
+    """The curves of a pressure build that it did not fit: carried forward, from a
+    source after the station pools, and the fixed criteria."""
+    return (set((evidence or {}).get("carried") or {})
+            | set((evidence or {}).get("ladder_metrics") or {})
+            | set((evidence or {}).get("fixed_metrics") or {}))
 
-    Methodology 0.14, owner decision 2026-09-21. A carried curve was never fitted
-    in this build, so it has no review entry to stamp: it leaves the carried set
-    (and its reference support) of one assembly. The evidence passed in is not
-    mutated, so it can be assembled again with another decision set. A removal
-    naming a curve the build did fit is left to the review-entry path, which also
-    raises on an unknown key."""
-    carried = (evidence or {}).get("carried") or {}
-    removed = {mk: note for mk, note in (remove_metrics or {}).items()
-               if mk in carried and mk not in (curve_review or {})}
-    if not removed:
-        return evidence, {}
-    if not actor:
+
+def owner_decisions_for(evidence: dict, curve_decisions: Optional[list],
+                        remove_metrics: Optional[dict], *, curve_review: dict,
+                        actor: str) -> list[dict]:
+    """The owner's decisions an assembly applies (REF-15): the ones given, plus a
+    ``--remove-metric`` naming a curve the build did not fit, as a remove
+    decision. A removal naming a curve the build fitted stays on the review
+    path, which raises on an unknown key."""
+    from . import owner_curves
+    keys = reference_keys_of(evidence) - set(curve_review or {})
+    flagged = {mk: note for mk, note in (remove_metrics or {}).items() if mk in keys}
+    if flagged and not actor:
         raise ValueError("remove_metrics requires a named finalize_actor")
-    out = {**evidence,
-           "carried": {k: v for k, v in carried.items() if k not in removed},
-           "reference_support": {k: v for k, v in (evidence.get("reference_support") or {}).items()
-                                 if k not in removed}}
-    return out, removed
+    out = list(curve_decisions or [])
+    for d in owner_curves.from_removals(flagged, recorded_by=actor, keys=keys):
+        out = owner_curves.merge(out, d)
+    return out
 
 
 def assemble(evidence: dict, *,
@@ -2011,7 +2012,8 @@ def assemble(evidence: dict, *,
              finalize_metrics: Optional[dict] = None,
              finalize_actor: str = "",
              remove_metrics: Optional[dict] = None,
-             reviewer_decisions: Optional[list] = None) -> dict:
+             reviewer_decisions: Optional[list] = None,
+             curve_decisions: Optional[list] = None) -> dict:
     """The decision-dependent tail of a run, from one evidence dict (seconds).
 
     Reviewer finalizations and removals are stamped on a COPY of the evidence's
@@ -2032,8 +2034,15 @@ def assemble(evidence: dict, *,
     redundancy, deferred_gradients = evidence["redundancy"], evidence["deferred_gradients"]
 
     curve_review = copy.deepcopy(evidence["curve_review"])
-    evidence, removed_carried = without_removed_carried(
-        evidence, remove_metrics, curve_review=curve_review, actor=finalize_actor)
+    # REF-15: the owner's decisions on the curves the build did not fit, applied
+    # after SELECT-04 below; a --remove-metric naming one of them is one too
+    owner_decisions = owner_decisions_for(
+        evidence, curve_decisions, remove_metrics, curve_review=curve_review,
+        actor=finalize_actor)
+    from . import owner_curves
+    owner_removed = owner_curves.removed(owner_decisions)
+    removed_carried = {mk: d.get("rationale") for mk, d in owner_removed.items()
+                       if mk in (evidence.get("carried") or {})}
     # Recorded reviewer finalizations (``finalize_metrics``: metric -> note).
     # A flagged curve publishes only through exactly this: a named human
     # decision with a rationale, stamped on the review entry. The agent never
@@ -2047,7 +2056,7 @@ def assemble(evidence: dict, *,
         curve_review[mk] = run_state.apply_review_decision(
             entry, run_state.DECISION_FINALIZED, note=note, actor=finalize_actor)
     for mk, note in (remove_metrics or {}).items():
-        if mk in removed_carried:
+        if mk in owner_removed:
             continue
         entry = curve_review.get(mk)
         if entry is None:
@@ -2206,15 +2215,23 @@ def assemble(evidence: dict, *,
         if held:
             meta["insufficientReferenceSupport"] = (
                 list(meta.get("insufficientReferenceSupport") or []) + held)
-        # SELECT-04: fill each function to two, the rest supported, not selected
+        # SELECT-04: fill each function to two, the rest supported, not selected;
+        # then the owner's decisions (REF-15) on what it chose, with nothing refilled
+        before_rows, before_mapping = dict(intended_rows), export_mapping
         intended_rows, export_mapping = pressure_evidence.select_portfolio(
             evidence, intended_rows, export_mapping, export_config, metric_scores, meta)
+        base_selection = copy.deepcopy(meta.get("portfolioSelection") or {})
+        if owner_decisions:
+            intended_rows, export_mapping, export_config = owner_curves.apply_to_inputs(
+                before_rows, before_mapping, export_config, meta, owner_decisions,
+                keep=set(evidence.get("fixed_metrics") or {}))
         # and the portfolio counts what the bundle publishes
         portfolio = pressure_evidence.portfolio_from_mapping(
             portfolio, intended_rows, export_mapping)
         moot = pressure_evidence.moot_reserves(metric_config, intended_rows, export_mapping)
     else:
         moot = []
+        base_selection = {}
     bundle = None
     bundle_error = None
     try:
@@ -2298,7 +2315,13 @@ def assemble(evidence: dict, *,
         "mandatory_review": mandatory_review,
         "removed_metrics": dict(remove_metrics or {}),
         "removed_carried": dict(removed_carried),
-        "removed_carried_by": finalize_actor if removed_carried else None,
+        "removed_carried_by": (", ".join(sorted({str(owner_removed[mk].get("recordedBy"))
+                                                  for mk in removed_carried}))
+                               if removed_carried else None),
+        # REF-15: the owner's decisions this assembly applied, and the portfolio
+        # SELECT-04 chose before them (what the session stores, so they can be undone)
+        "curve_decisions": [dict(d) for d in owner_decisions],
+        "base_portfolio_selection": base_selection,
         "finalized_metrics": dict(finalize_metrics or {}),
         "redundancy": redundancy,
         "stratifiers": evidence["stratifiers"],
@@ -2928,6 +2951,8 @@ def session_fields(result: dict) -> dict:
         # The reference statement of a pressure-screen build; None on a legacy
         # run, which is how an older session reads too.
         "reference_build": reference_build,
+        # the owner's curve decisions the build applied over it (REF-15)
+        "owner_curve_decisions": [dict(d) for d in result.get("curve_decisions") or []],
         "easi_screening_sites": screening.get("easi_screening_sites", []),
         "easi_screening_metrics": screening.get("easi_screening_metrics", []),
         "easi_screening_criteria": screening.get("easi_screening_criteria", {}),
