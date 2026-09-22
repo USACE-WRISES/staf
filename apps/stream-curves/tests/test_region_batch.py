@@ -325,6 +325,60 @@ def test_promote_refuses_a_run_whose_curve_decisions_changed(staged_run, tmp_pat
         (out / oc.DECISIONS_FILE).unlink(missing_ok=True)
 
 
+def test_a_curve07_answer_publishes_or_drops_the_curve(evidence):
+    """The item asks "Accept this curve as preliminary, adjust it, or drop the
+    metric?" (2026-09-22). An answer used to close the item and leave the curve held
+    and unscored; accepting now publishes it, rejecting drops it, and a finalization
+    or removal by flag closes the item on its own."""
+    from streamcurves import run_state
+    mod = _batch_module()
+    review = evidence["curve_review"]
+    flagged = sorted(mk for mk, e in review.items()
+                     if (e or {}).get("status") not in (None, run_state.CURVE_STATUS_AUTO_OK))
+    if len(flagged) < 2:
+        pytest.skip("this offline build flags fewer than two curves")
+    keep, drop = flagged[0], flagged[1]
+    why = "Publishes as preliminary, marked for verification against field data."
+    answers = mod._without_outcome_asserts([
+        {"rule_id": "CURVE-07", "subject": keep, "action": "accept_with_conditions",
+         "rationale": why, "asserts": {"reviewer_decision": "pending", "curve_status": "x"}},
+        {"rule_id": "CURVE-07", "subject": drop, "action": "reject",
+         "rationale": "Dropped: the curve cannot be defended for this region."},
+        {"rule_id": "CURVE-07", "subject": "not_fitted_here", "action": "accept",
+         "rationale": "An answer left from an earlier build."},
+        {"rule_id": "CURVE-06", "subject": keep, "action": "accept", "rationale": "Other rule."}])
+    assert answers[0]["asserts"] == {"curve_status": "x"}
+    finalize, remove = mod.curve07_answers(answers, fitted=review)
+    assert finalize == {keep: why} and list(remove) == [drop]
+
+    result = ra.assemble(evidence, finalize_metrics=finalize, remove_metrics=remove,
+                         finalize_actor="owner")
+    intended = run_state.intended_metrics_for_publish(result["curve_review"])
+    assert keep in intended and drop not in intended
+    manifest = pv.build_run_manifest(result, argv=[], started_at="t0", finished_at="t1")
+    doc = pv.build_provenance(result, manifest, timestamp="t0")
+
+    def status(mk):
+        return next(i for i in doc["reviewQueue"]["items"]
+                    if i["item_id"] == f"CURVE-07:{mk}")["status"]
+    # the decision alone leaves both items open: what kept ECBP v7's stop listed
+    assert status(keep) == status(drop) == "open"
+    closing = mod.curve07_resolutions(result["curve_review"], finalize, remove, [],
+                                      reviewer="owner")
+    assert [(d["subject"], d["action"]) for d in closing] == [
+        (keep, "accept_with_conditions"), (drop, "reject")]
+    # an item the owner answered is closed by the answer, not twice
+    assert mod.curve07_resolutions(result["curve_review"], finalize, remove, answers,
+                                   reviewer="owner") == []
+    doc = pv.apply_reviewer_decisions(doc, closing, default_reviewer="owner")
+    assert status(keep) == status(drop) == "resolved"
+    assert not doc.get("reviewerDecisionsUnmatched")
+    # and the stage wires both: answers into the finalizations, closings into the record
+    src = SCRIPT.read_text(encoding="utf-8")
+    assert "curve07_answers(\n        owner_decisions, fitted=" in src
+    assert "answers = owner_decisions + resolutions + policy_decisions" in src
+
+
 def test_confirm_doc_turns_an_owner_draft_origin_into_owner_approved():
     """An owner-drafted entry staged ahead of the end review carries
     ``ai_drafted_pending_owner_approval``; the confirmation at promote renames it

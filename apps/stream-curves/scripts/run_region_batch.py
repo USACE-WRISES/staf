@@ -243,6 +243,66 @@ def _engine_config(a) -> Optional[dict]:
     return cfg or None
 
 
+#: The answers to a CURVE-07 item ("Accept this curve as preliminary, adjust it, or
+#: drop the metric?") that decide the curve (2026-09-22).
+CURVE07_PUBLISH = ("accept", "accept_with_conditions")
+CURVE07_DROP = ("reject",)
+
+
+def curve07_answers(decisions, *, fitted) -> tuple[dict, dict]:
+    """``(finalize, remove)``, each ``{metric: rationale}``, from the owner's
+    answers to CURVE-07 items. An answer used to close the item and nothing more,
+    so the curve stayed held and unscored whatever the answer said. Accepting now
+    publishes the curve as preliminary, exactly as ``--finalize-metric`` does, and
+    rejecting drops the metric, as ``--remove-metric`` does. ``fitted`` is what
+    this build reviews: an answer for a metric it no longer fits changes nothing."""
+    fitted = {str(k) for k in fitted or ()}
+    finalize: dict[str, str] = {}
+    remove: dict[str, str] = {}
+    for d in decisions or []:
+        mk = str(d.get("subject"))
+        if str(d.get("rule_id")) != "CURVE-07" or mk not in fitted:
+            continue
+        action = str(d.get("action") or "").strip()
+        note = str(d.get("rationale") or "").strip()
+        if action in CURVE07_PUBLISH:
+            finalize[mk] = note
+        elif action in CURVE07_DROP:
+            remove[mk] = note
+    return finalize, remove
+
+
+def curve07_resolutions(curve_review, finalize, remove, answered, *, reviewer: str,
+                        date: Optional[str] = None) -> list[dict]:
+    """The reviewer decision that closes the CURVE-07 item of each flagged curve
+    the owner finalized or removed without answering the item itself
+    (``--finalize-metric``, ``--remove-metric``). The finalization or the removal
+    is the decision, so the curve is no longer listed as a hard stop, and its
+    record names who decided and why."""
+    have = {(str(d.get("rule_id")), str(d.get("subject"))) for d in answered or []}
+    decided = ([(mk, note, "accept_with_conditions") for mk, note in (finalize or {}).items()]
+               + [(mk, note, "reject") for mk, note in (remove or {}).items()])
+    out = []
+    for mk, note, action in decided:
+        status = ((curve_review or {}).get(mk) or {}).get("status")
+        if ("CURVE-07", str(mk)) in have or status in (None, run_state.CURVE_STATUS_AUTO_OK):
+            continue
+        out.append({"rule_id": "CURVE-07", "subject": str(mk), "action": action,
+                    "rationale": str(note or "").strip(), "reviewer": reviewer, "date": date,
+                    "rationale_origin": "owner_written"})
+    return out
+
+
+def _without_outcome_asserts(decisions: list[dict]) -> list[dict]:
+    """A CURVE-07 answer never asserts the curve's review decision: the answer sets
+    it, so the build it feeds records a different value from the run it was written
+    against, and the consistency check would refuse the whole run."""
+    for d in decisions or []:
+        if str(d.get("rule_id")) == "CURVE-07" and isinstance(d.get("asserts"), dict):
+            d["asserts"] = {k: v for k, v in d["asserts"].items() if k != "reviewer_decision"}
+    return decisions
+
+
 def cmd_stage(a) -> int:
     out_dir = Path(a.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -385,6 +445,25 @@ def cmd_stage(a) -> int:
               "Re-run when the service is up; a batch run never accepts that gap.")
         return 2
 
+    # A CURVE-07 answer does what its question asks (curve07_answers): accepting the
+    # curve publishes it, rejecting it drops the metric. A flag names the same thing
+    # and wins over an answer; a metric both published and dropped is refused.
+    owner_decisions = _without_outcome_asserts(owner_decisions)
+    answer_finalize, answer_remove = curve07_answers(
+        owner_decisions, fitted=(evidence.get("curve_review") or {}))
+    both = ((set(answer_finalize) | set(owner_finalize))
+            & (set(answer_remove) | set(owner_remove)))
+    if both:
+        print(f"[batch] REFUSED: {', '.join(sorted(both))} is both published and dropped "
+              "by the owner's answers and flags")
+        return 2
+    for mk in sorted(answer_finalize):
+        print(f"[batch] CURVE-07 answer: {mk} publishes as preliminary")
+    for mk in sorted(answer_remove):
+        print(f"[batch] CURVE-07 answer: {mk} is dropped")
+    owner_finalize = {**answer_finalize, **owner_finalize}
+    owner_remove = {**answer_remove, **owner_remove}
+
     # 2. assemble, apply the policy, and repeat until the queue stops changing
     policy_decisions: list[dict] = []
     policy_finalize: dict[str, str] = {}
@@ -421,8 +500,13 @@ def cmd_stage(a) -> int:
         manifest = pv.build_run_manifest(result, argv=list(sys.argv[1:]),
                                          started_at=started, finished_at=_now())
         doc = pv.build_provenance(result, manifest, timestamp=started)
-        if owner_decisions or policy_decisions:
-            doc = pv.apply_reviewer_decisions(doc, owner_decisions + policy_decisions,
+        # a curve the owner finalized or removed by flag closes its own CURVE-07 item
+        resolutions = curve07_resolutions(
+            result.get("curve_review") or {}, owner_finalize, owner_remove,
+            owner_decisions + policy_decisions, reviewer=a.maintainer, date=started)
+        answers = owner_decisions + resolutions + policy_decisions
+        if answers:
+            doc = pv.apply_reviewer_decisions(doc, answers,
                                               default_reviewer=a.maintainer, default_date=started)
         pr = dec.apply_policy(doc, policy, result=result, enabled=enabled, date=started)
         have = {(d["rule_id"], d["subject"]) for d in policy_decisions}

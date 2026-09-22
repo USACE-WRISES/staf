@@ -1466,6 +1466,34 @@ def deferred_gradient_candidates(strat_evidence) -> dict[str, dict]:
     return out
 
 
+def fallback_caveat(points=None) -> str:
+    """What a curve built on the fallback seed (the pool's lower quartile at or
+    below zero, ``curves.build_reference_curve``) states beside its score. On a
+    metric whose declared floor is zero, the seed's (0, 0.70) anchor sits on that
+    floor and clamping keeps only the (0, 0) anchor there, so the curve DEEP
+    scores is a straight line from 0 at zero to 1 at the pool's upper quartile.
+    The caveat says so rather than naming the three-point seed it was built from
+    (2026-09-22); without its points it keeps the general wording."""
+    xs: list[float] = []
+    try:
+        if points is not None and len(points):
+            frame = points if isinstance(points, pd.DataFrame) else pd.DataFrame(list(points))
+            xs = [float(x) for x in frame["metric_value"]]
+    except Exception:  # noqa: BLE001 - no readable points: the general wording
+        xs = []
+    if len(xs) == 2 and all(math.isfinite(x) for x in xs):
+        start = "zero" if xs[0] == 0 else f"{xs[0]:.4g}"
+        return ("The reference pool's lower quartile for this metric is zero: at least a "
+                "quarter of the pool has a value of zero, so the curve has no fitted lower "
+                f"anchor. It rises in a straight line from 0 at {start} to 1 at "
+                f"{xs[1]:.4g}, the pool's upper quartile. Read the band as a coarse sort, "
+                "not a measurement.")
+    return ("The reference pool's lower quartile for this metric is at or below zero, so "
+            "the curve is a three-point fallback rather than a fitted shape: the bands turn "
+            "on very small differences and should be read as a coarse sort, not a "
+            "measurement.")
+
+
 def metric_annotations(*, intended, curve_rows, metric_config, sample_sizes,
                        confidence_map, deferred_gradients) -> dict[str, dict]:
     """The per-metric annotations the DEEP bundle carries beside each curve
@@ -1508,11 +1536,7 @@ def metric_annotations(*, intended, curve_rows, metric_config, sample_sizes,
         # status word, so the status has to travel as prose beside the number.
         status = str(row.get("curve_status") or "complete")
         if status == "degenerate_q25":
-            caveats.append(
-                "The reference pool's lower quartile for this metric is at or below "
-                "zero, so the curve is a three-point fallback rather than a fitted "
-                "shape: the bands turn on very small differences and should be read "
-                "as a coarse sort, not a measurement.")
+            caveats.append(fallback_caveat(row.get("curve_points")))
         elif status != "complete":
             caveats.append(
                 f"The curve fit flagged this metric ({status}): read the condition "

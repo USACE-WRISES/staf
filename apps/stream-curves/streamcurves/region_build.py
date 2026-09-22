@@ -53,6 +53,42 @@ OPTIONAL_POLICIES = [
 REVIEWER_ACTIONS = ["accept", "accept_with_conditions", "modify", "reject",
                     "request_additional_analysis"]
 
+#: A CURVE-07 item asks "Accept this curve as preliminary, adjust it, or drop the
+#: metric?", and the build does what the answer says (run_region_batch.curve07_answers):
+#: the choices name the outcome. Adjusting a curve happens in StreamCurves itself, so
+#: the two answers that change no curve are not offered here.
+CURVE07_ACTIONS = {
+    "accept": "accept: publish the curve as preliminary",
+    "accept_with_conditions": ("accept with conditions: publish as preliminary, "
+                               "conditions in the rationale"),
+    "reject": "reject: drop the metric",
+}
+
+#: Computed fields an answer decides rather than relies on, never asserted.
+OUTCOME_FIELDS = ("reviewer_decision",)
+
+
+def action_choices(rule_id: Optional[str]) -> dict:
+    """The Decision select's choices for one queue item, value -> label."""
+    if str(rule_id or "") == "CURVE-07":
+        return dict(CURVE07_ACTIONS)
+    return {a: a.replace("_", " ") for a in REVIEWER_ACTIONS}
+
+
+def merge_answers(existing: Optional[list], new: list, *, key) -> list:
+    """The region's saved answers with ``new`` on top, one per ``key``. A build
+    resolves the items it answered, so the form shows only what is still open;
+    replacing the file with those alone would lose every earlier answer."""
+    out = [dict(d) for d in existing or [] if isinstance(d, dict)]
+    for d in new or []:
+        k = key(d)
+        at = next((i for i, x in enumerate(out) if key(x) == k), None)
+        if at is None:
+            out.append(dict(d))
+        else:
+            out[at] = dict(d)
+    return out
+
 #: The two NRSA datasets, said in terms of what you get rather than by their ids.
 #: Pooling is easy to misread as "three cycles of measurements": it is not. EPA
 #: renames every site each cycle and only 11 stations appear in all three, so the
@@ -551,7 +587,9 @@ def build_decision(doc: dict, item: dict, action: str, rationale: str, *,
     evidence = item.get("evidence") or {}
     # Only fields the record actually computes can be asserted; anything else is
     # refused by decision_consistency_problems as "the record does not compute".
-    asserts = {k: computed[k] for k in evidence if k in computed}
+    # Never the curve's review decision: an answer to CURVE-07 sets it, so the
+    # build the answer feeds records another value than the run it was read from.
+    asserts = {k: computed[k] for k in evidence if k in computed and k not in OUTCOME_FIELDS}
     return {
         "rule_id": rule_id,
         "subject": subject,

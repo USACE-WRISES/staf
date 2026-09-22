@@ -602,6 +602,20 @@ class TestBuildReferenceCurve:
         assert row["at_risk_ranges_display"].iloc[0] == "0.00"
         assert row["not_functioning_ranges_display"].iloc[0] == "0.00"
 
+    def test_degenerate_q25_on_a_floored_metric_is_a_straight_line(self):
+        """With the floor declared at zero, as the direction registries declare it
+        for counts, volumes and percentages, the (0, 0.70) anchor sits on the floor
+        and clamping keeps only the outermost (0, 0). The curve DEEP scores is then
+        a straight line from 0 at zero to 1 at Q75, which is what the fallback
+        caveat states (regional_agent.fallback_caveat, 2026-09-22)."""
+        mc = {"epi": {**MC["epi"], "domain_min": 0.0}}
+        data = data_frame(epi_sub=[0.0, 0.0, 0.0, 5.0, 5.0, 5.0, 5.0])  # q25 = 0
+        res = rc.build_reference_curve(data, "epi", mc)
+        pts = res["curve_points"]
+        assert res["curve_row"]["curve_status"].iloc[0] == "degenerate_q25"
+        assert pts["metric_value"].tolist() == [0.0, 5.0]
+        assert pts["index_score"].tolist() == [0.0, 1.0]
+
     def test_degenerate_q25_with_all_inf_values(self):
         # 5 non-NA values pass the n>=5 gate, but no finite values -> NaN q25
         data = data_frame(epi_sub=np.full(5, np.inf))

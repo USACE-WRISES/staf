@@ -126,6 +126,28 @@ def test_the_scorer_is_told_why_the_curve_is_a_fallback():
     assert any("lower quartile" in c and "coarse sort" in c for c in caveats)
 
 
+def test_a_two_point_fallback_says_it_is_a_straight_line():
+    """On a metric whose floor is zero the fallback's (0, 0.70) anchor sits on the
+    floor and clamping drops it, so the curve DEEP scores rises in a straight line
+    from 0 at zero to 1 at the upper quartile. The caveat says that rather than
+    "three-point" (2026-09-22)."""
+    pts = pd.DataFrame({"point_order": [1, 2], "metric_value": [0.0, 35.583],
+                        "index_score": [0.0, 1.0]})
+    text = regional_agent.fallback_caveat(pts)
+    assert "straight line from 0 at zero to 1 at 35.58" in text
+    assert "three-point" not in text
+    assert "lower quartile" in text and "coarse sort" in text
+    rows = {WETLAND: {"curve_status": "degenerate_q25", "n_reference": 56,
+                      "curve_points": pts}}
+    caveats = regional_agent.metric_annotations(
+        intended=[WETLAND], curve_rows=rows, metric_config={WETLAND: {}},
+        sample_sizes={WETLAND: {"disposition": "adequate"}},
+        confidence_map={}, deferred_gradients={})[WETLAND]["curveCaveats"]
+    assert text in caveats
+    # a curve that keeps its three points (no declared floor) keeps the seed's wording
+    assert "three-point" in regional_agent.fallback_caveat(_row(WETLAND, "x")["curve_points"])
+
+
 def test_an_unflagged_curve_gains_no_caveat():
     assert _annotations("complete")["curveCaveats"] == []
 
