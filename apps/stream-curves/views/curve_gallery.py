@@ -70,12 +70,17 @@ def reference_tiles_for(build, mapping, *, built=(), decisions=()) -> list[dict]
     from streamcurves import owner_curves as oc
     from streamcurves import pressure_evidence as pe
     decisions = list(decisions or [])
-    effective = oc.effective_build(build, decisions)
+    effective = oc.effective_build(build, decisions, built=built)
     tiles, placement = [], []
     for mk, entry in pe.reference_rows(effective, mapping, built=built).items():
         tile = cs.reference_tile(mk, entry)
         tile["source_title"] = src.source_title(mk, entry, build=effective)
         tile["removable"] = True
+        if entry.get("owner"):
+            # a curve the owner chose: its undo gives the build's choice back
+            tile["owner_decision"] = entry["owner"].get("id")
+            tile["owner_note"] = (f"Chosen by {entry['owner'].get('recordedBy')}: "
+                                  f"{entry['owner'].get('rationale')}")
         tiles.append(tile)
         placement.extend(entry["mapping"])
     removed = oc.removed(decisions)
@@ -155,7 +160,8 @@ def gallery_rows(state: AppState, metrics: Optional[Iterable[str]] = None, *,
         functions = state.column_functions() or {}
         mapping = state.discipline_function_mapping()
         from streamcurves import owner_curves as oc
-        build = oc.effective_build(state.reference_build(), state.owner_curve_decisions() or [])
+        build = oc.effective_build(state.reference_build(), state.owner_curve_decisions() or [],
+                                   built=state.completed_metrics() or {})
     keys = list(metrics) if metrics is not None else ss.eligible_summary_metrics(mc)
     reference = set()
     if include_reference:
@@ -330,6 +336,11 @@ def reference_tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int 
             fa("rotate-left"), type="button", class_="btn btn-link btn-sm curve-tile-remove",
             onclick=sp.undo_onclick(row["removed_decision"]),
             title="Undo the removal"))
+    elif cross is None and row.get("owner_decision"):
+        right.append(ui.tags.button(
+            fa("rotate-left"), type="button", class_="btn btn-link btn-sm curve-tile-remove",
+            onclick=sp.undo_onclick(row["owner_decision"]),
+            title="Undo this choice: the build's own choice for this metric returns"))
     elif cross is None and row.get("removable"):
         right.append(ui.tags.button(
             fa("trash-can"), type="button", class_="btn btn-link btn-sm curve-tile-remove",
@@ -375,8 +386,9 @@ def reference_tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int 
                class_="curve-tile-foot"),
         id=dom_id,
         class_=" ".join(classes),
-        role="button", tabindex="0", title=cs.tile_title(row), data_metric=metric,
-        data_role="cross" if cross else "primary",
+        role="button", tabindex="0",
+        title=cs.tile_title(row) + (f". {row['owner_note']}" if row.get("owner_note") else ""),
+        data_metric=metric, data_role="cross" if cross else "primary",
         onclick=sp.open_onclick(metric),
         onkeydown=sp.open_onkeydown(),
     )

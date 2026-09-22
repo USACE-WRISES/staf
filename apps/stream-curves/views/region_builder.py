@@ -24,6 +24,7 @@ import asyncio
 import json
 import os
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from shiny import module, reactive, render, ui
@@ -39,7 +40,7 @@ from streamcurves import session_io as sio
 from streamcurves import regional_agent as ra
 from views import state as st
 from views.state import AppState
-from views.theme import bi
+from views.theme import bi, fa
 from views.uihelpers import (
     _rules_goto_onclick,
     guard,
@@ -52,32 +53,43 @@ from views.uihelpers import (
 #: live, so a build leaves nothing in the tracked tree until it is promoted.
 DEFAULT_OUT_ROOT = rb.default_runs_root()
 
-#: (session path, mtime) -> the reference summary of that staged session, so the
-#: run panel does not re-read a megabyte of JSON on every repaint
+#: (session path, mtime) -> what the run panel reads of that staged session, so
+#: it does not re-read a megabyte of JSON on every repaint
 _SUMMARY_CACHE: dict = {}
 
 
-def _staged_reference_summary(session_path) -> dict:
-    """What the staged session scores without having fitted it
-    (``pressure_evidence.reference_summary``), read from its file."""
+def _staged_build(session_path) -> Optional[dict]:
+    """``{build, built, decisions}`` of a staged session: its reference build, the
+    metrics it fitted and the curve decisions it carries, read from its file."""
     if session_path is None:
-        return {}
+        return None
     path = Path(session_path)
     try:
         key = (str(path), path.stat().st_mtime_ns)
     except OSError:
-        return {}
+        return None
     if key not in _SUMMARY_CACHE:
         try:
             doc = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
-            return {}
-        fields = doc.get("fields") if isinstance(doc.get("fields"), dict) else doc
+            return None
+        fields = (doc.get("fields") if isinstance(doc.get("fields"), dict) else doc) or {}
         _SUMMARY_CACHE.clear()
-        # under the curve decisions the staged version carries (REF-15)
-        _SUMMARY_CACHE[key] = pe.reference_summary(oc.effective_build(
-            (fields or {}).get("reference_build"), (fields or {}).get("owner_curve_decisions")))
+        _SUMMARY_CACHE[key] = {"build": fields.get("reference_build"),
+                               "built": set(fields.get("completed_metrics") or {}),
+                               "decisions": list(fields.get("owner_curve_decisions") or [])}
     return _SUMMARY_CACHE[key]
+
+
+def _staged_reference_summary(session_path) -> dict:
+    """What the staged session scores without having fitted it
+    (``pressure_evidence.reference_summary``), under the curve decisions the
+    staged version carries (REF-15)."""
+    got = _staged_build(session_path)
+    if not got or not got["build"]:
+        return {}
+    return pe.reference_summary(oc.effective_build(got["build"], got["decisions"],
+                                                   built=got["built"]), built=got["built"])
 
 _TASK_KEY = "region_build"
 
@@ -228,8 +240,9 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             reference_method=(input.build_reference_method() or None),
             reviewer_decisions=decisions if decisions.exists() else None,
             coverage_exceptions=gaps if gaps.exists() else None,
-            # the owner's standing curve decisions (REF-15)
-            curve_decisions=oc.path_of(out_dir))
+            # the owner's standing curve decisions (REF-15), seeded from the
+            # published version when the region has recorded none here
+            curve_decisions=rb.curve_decisions_path(out_dir, code))
         _launch(run_stage(argv, out_dir))
 
     # repaints the decisions block when one is undone here for another session
@@ -257,15 +270,25 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         items = oc.load(folder) if folder else []
         if not items:
             return None
+        # a decision the staged version could not apply, with why
+        staged = _staged_build(_session_path())
+        stale = ({str(d.get("id")): why for d, why in
+                  oc.stale(items, staged["build"], built=staged["built"])}
+                 if staged and staged["build"] else {})
         rows = []
         for d in items:
             fns = ", ".join(str(f) for f in d.get("functions") or [])
             gaps = ", ".join(str(g.get("functionId")) for g in d.get("coverageExceptions") or [])
+            src = d.get("source") or {}
+            why_stale = stale.get(str(d.get("id")))
             rows.append(ui.tags.tr(
                 ui.tags.td(ui.tags.code(str(d.get("metric")))),
                 ui.tags.td(oc.ACTION_LABELS.get(d.get("action"), str(d.get("action")))
                            + (f" ({fns})" if fns else "")
-                           + (f"; documented gap: {gaps}" if gaps else "")),
+                           + (f": {src.get('title')}" if src.get("title") else "")
+                           + (f"; documented gap: {gaps}" if gaps else ""),
+                           ui.div(fa("triangle-exclamation"), " Not applied: ", why_stale,
+                                  class_="text-warning-emphasis") if why_stale else None),
                 ui.tags.td(str(d.get("rationale") or "")),
                 ui.tags.td(f"{d.get('recordedBy')}, {str(d.get('recordedAt') or '')[:10]}",
                            class_="text-muted text-nowrap"),
@@ -340,7 +363,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             reference_method=kw.get("reference_method"),
             reviewer_decisions=decisions if decisions.exists() else None,
             coverage_exceptions=gaps if gaps.exists() else None,
-            curve_decisions=oc.path_of(out_dir))
+            curve_decisions=rb.curve_decisions_path(out_dir, kw["l3_code"]))
         _launch(run_stage(argv, out_dir))
 
     # ── answering an open item ───────────────────────────────────────────────

@@ -747,8 +747,10 @@ def build_deep_assessment_bundle(
                     "publishedBenchmark",
                     # methodology 0.14: the version a carried-forward curve comes from
                     "carriedForward",
-                    # REF-15: the owner's decisions on where this curve scores
-                    "ownerDecisions"):
+                    # REF-15: the owner's decisions on where this curve scores,
+                    # the owner's choice of its source, and the assessment a
+                    # curve taken from another one comes from
+                    "ownerDecisions", "ownerDecision", "borrowedFrom"):
             if key in annotations and annotations[key] is not None:
                 base_entry[key] = annotations[key]
 

@@ -725,10 +725,17 @@ def session_reference_build(result: dict) -> Optional[dict]:
     meta = result.get("meta") or {}
     fixed = sorted(result.get("fixed_metrics") or {})
     ladder = set(result.get("ladder_metrics") or {})
+    # what the build itself stated, before the owner's decisions (REF-15) changed
+    # the bundle: the session keeps the decisions beside it, so they can be undone
+    stated = (result["base_metric_annotations"]
+              if result.get("base_metric_annotations") is not None
+              else meta.get("metricAnnotations") or {})
+    withheld = (result["base_withheld"] if result.get("base_withheld") is not None
+                else meta.get("insufficientReferenceSupport") or [])
     annotations = {
         mk: ({k: v for k, v in ann.items() if v is not None} if mk in ladder else
              {k: ann[k] for k in SESSION_ANNOTATION_KEYS if ann.get(k) is not None})
-        for mk, ann in (meta.get("metricAnnotations") or {}).items() if mk not in fixed}
+        for mk, ann in stated.items() if mk not in fixed}
     carried = result.get("carried") or {}
     for mk in carried:
         annotations.pop(mk, None)
@@ -739,7 +746,7 @@ def session_reference_build(result: dict) -> Optional[dict]:
     fitted_annotations = fitted_annotations_of(result.get("bundle"), fitted)
     out = {"method": METHOD,
            "referenceMethod": meta.get("referenceMethod"),
-           "insufficientReferenceSupport": list(meta.get("insufficientReferenceSupport") or []),
+           "insufficientReferenceSupport": list(withheld),
            "metricAnnotations": annotations,
            "fixedMetrics": fixed,
            "ladderMetrics": ladder_session_rows(result),
@@ -848,13 +855,15 @@ REFERENCE_KIND_LABELS = {
 def reference_keys(build: Optional[dict]) -> list[str]:
     """Every metric a pressure-screen session scores that its own build did not
     fit: the curves a rung above the hierarchy produced, the curves carried
-    forward from the published version, and the fixed criteria. None of them
+    forward from the published version, the curves the owner chose (REF-15,
+    ``ownerMetrics`` of an effective build) and the fixed criteria. None of them
     sits in ``metric_config``, so nothing that walks the workbook sees them.
     Empty for a legacy session."""
     if not build or build.get("method") != METHOD:
         return []
     keys: list[str] = []
-    for mk in list(build.get("ladderMetrics") or {}) + list(build.get("carriedMetrics") or {}):
+    for mk in (list(build.get("ladderMetrics") or {}) + list(build.get("carriedMetrics") or {})
+               + list(build.get("ownerMetrics") or {})):
         if str(mk) not in keys:
             keys.append(str(mk))
     for mk in build.get("fixedMetrics") or []:
@@ -969,6 +978,18 @@ def reference_mapping_rows(build: Optional[dict], mapping=None, *, built=()) -> 
         placed[str(mk)] = {"kind": "carried",
                            "mapping": (list(rows_here) if rows_here else
                                        [dict(r) for r in (saved or {}).get("mapping") or []])}
+    # REF-15: a curve the owner chose, placed in the functions its decision names
+    owner = build.get("ownerMetrics") or {}
+    if owner:
+        from . import owner_sources
+        for mk, saved in owner.items():
+            if str(mk) in placed or str(mk) in built:
+                continue
+            src = ((saved or {}).get("decision") or {}).get("source") or {}
+            placed[str(mk)] = {
+                "kind": owner_sources.DISPLAY_KIND.get(str(src.get("kind")), "owner_entered"),
+                "owner": True,
+                "mapping": owner_sources.mapping_rows_for(mk, (saved or {}).get("functions"))}
     fixed = fixed_in_order(build.get("fixedMetrics"))
     if fixed:
         rows = _fixed_mapping_of(fixed)
@@ -991,10 +1012,12 @@ def canonical_function_id(label) -> Optional[str]:
 
 def reference_summary(build: Optional[dict], *, built=()) -> dict:
     """``{kind: n}`` of the curves a session scores without having fitted them,
-    plus ``fromVersion`` for the carried ones. Empty for a legacy session."""
+    plus ``fromVersion`` for the carried ones. The curves the owner chose count
+    under ``owner``. Empty for a legacy session."""
     out: dict = {}
     for entry in reference_mapping_rows(build, None, built=built).values():
-        out[entry["kind"]] = out.get(entry["kind"], 0) + 1
+        kind = "owner" if entry.get("owner") else entry["kind"]
+        out[kind] = out.get(kind, 0) + 1
     if out.get("carried"):
         out["fromVersion"] = ((build or {}).get("carriedFrom") or {}).get("fromVersion")
     return out
@@ -1013,6 +1036,8 @@ def reference_summary_text(summary: Optional[dict]) -> str:
             parts.append(f"{s[kind]} {word}")
     if s.get("fixed"):
         parts.append(f"{s['fixed']} fixed criteri{'on' if s['fixed'] == 1 else 'a'}")
+    if s.get("owner"):
+        parts.append(f"{s['owner']} chosen by the owner")
     if len(parts) > 1:
         return ", ".join(parts[:-1]) + " and " + parts[-1]
     return parts[0] if parts else ""
@@ -1047,10 +1072,12 @@ def reference_rows(build: Optional[dict], mapping=None, *, built=()) -> dict[str
 
     Each entry: ``row`` (a curve row with ``curve_points``), ``config``,
     ``annotations``, ``mapping`` (the rows that place it), ``functions``,
-    ``kind`` (carried, national, modeled, published_benchmark, fixed),
+    ``kind`` (carried, national, modeled, published_benchmark, fixed, and for a
+    curve the owner chose also owner_entered, borrowed and owner_exception),
     ``label`` ("Carried from v7", "National reference", ...), ``basis`` and
-    ``in_bundle`` (false for a curve SELECT-04 left in no function). The
-    workspace draws these read-only."""
+    ``in_bundle`` (false for a curve SELECT-04 left in no function). A curve the
+    owner chose also carries ``owner``, the decision's summary. The workspace
+    draws these read-only."""
     placed = reference_mapping_rows(build, mapping, built=built)
     if not placed:
         return {}
@@ -1064,9 +1091,20 @@ def reference_rows(build: Optional[dict], mapping=None, *, built=()) -> dict[str
     fixed_config = fixed_criteria.metric_config_entries() if fixed else {}
     fixed_ann = fixed_annotations(fixed) if fixed else {}
     out: dict[str, dict] = {}
+    owner = build.get("ownerMetrics") or {}
     for mk, p in placed.items():
         kind = p["kind"]
-        if kind == "carried":
+        decision = None
+        if p.get("owner"):
+            from . import owner_curves, owner_sources
+            saved = owner.get(mk) or {}
+            decision = dict(saved.get("decision") or {})
+            c = carry_forward.restore_rows({mk: saved.get("curve") or {}})[mk]
+            row, config, ann = dict(c["row"]), dict(c["config"]), dict(c["annotations"])
+            row["curve_source"] = owner_sources.CURVE_SOURCE
+            ann["ownerDecision"] = owner_curves.decision_annotation(decision)
+            label = owner_sources.label_for(decision.get("source"))
+        elif kind == "carried":
             c = carried[mk]
             row, config, ann = c["row"], dict(c["config"]), dict(c["annotations"])
             label = f"Carried from v{from_version}" if from_version else "Carried forward"
@@ -1085,6 +1123,8 @@ def reference_rows(build: Optional[dict], mapping=None, *, built=()) -> dict[str
                    "basis": curve_basis.resolve(ann.get("basis"),
                                                 criteria_basis=ann.get("criteriaBasis")),
                    "in_bundle": bool(p["functions"])}
+        if decision is not None:
+            out[mk]["owner"] = decision
     return out
 
 

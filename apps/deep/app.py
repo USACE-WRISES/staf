@@ -579,12 +579,16 @@ _CURVE_BASIS_TAG = {
     reference_support.BASIS_NATIONAL: ("National reference", "deep-basis-tag national"),
     reference_support.BASIS_MODELED: ("Modeled reference", "deep-basis-tag modeled"),
     reference_support.BASIS_PUBLISHED: ("Published benchmark", "deep-basis-tag published"),
+    reference_support.BASIS_OWNER: ("Owner-entered", "deep-basis-tag owner"),
 }
 
 
 def _curve_basis_tag(m):
     """``(label, css class)`` for a curve that does not rest on this
-    ecoregion's own stations, or None."""
+    ecoregion's own stations, or None. A curve taken from another assessment
+    (StreamCurves REF-15) says so, whatever its basis there."""
+    if reference_support.borrowed_from(m):
+        return ("From another assessment", "deep-basis-tag borrowed")
     return _CURVE_BASIS_TAG.get(reference_support.basis_of(m))
 
 
@@ -843,7 +847,7 @@ def staf_topnav():
 
 app_ui = ui.page_fillable(
     ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=20"),
-                    ui.tags.link(rel="stylesheet", href="deep.css?v=10"),
+                    ui.tags.link(rel="stylesheet", href="deep.css?v=11"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),

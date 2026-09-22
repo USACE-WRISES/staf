@@ -26,8 +26,12 @@ BASIS_REGIONAL = "regional-reference"
 BASIS_NATIONAL = "national-reference"
 BASIS_MODELED = "modeled-reference"
 BASIS_PUBLISHED = "published-benchmark"
+#: a curve the assessment's owner entered (StreamCurves REF-15): not a rung of
+#: the ladder, and it claims no reference condition
+BASIS_OWNER = "owner-entered"
 _BASIS_LABELS = {BASIS_REGIONAL: "Regional reference", BASIS_NATIONAL: "National reference",
-                 BASIS_MODELED: "Modeled reference", BASIS_PUBLISHED: "Published benchmark"}
+                 BASIS_MODELED: "Modeled reference", BASIS_PUBLISHED: "Published benchmark",
+                 BASIS_OWNER: "Owner-entered"}
 _LEVEL_WORDS = {"l3": "Level III", "l2": "Level II", "l1": "Level I",
                 "nars9": "NARS-9 region"}
 _RISK_WORDS = {"low": "low", "moderate": "moderate", "high": "high",
@@ -94,10 +98,37 @@ def basis_text(metric_spec: Optional[dict], key: str) -> str:
     return str(m.get(key) or _support(m).get(key) or "").strip()
 
 
+def owner_choice(metric_spec: Optional[dict]) -> dict:
+    """The owner's choice of the curve's source (StreamCurves REF-15), or ``{}``."""
+    got = (metric_spec or {}).get("ownerDecision")
+    return got if isinstance(got, dict) else {}
+
+
+def borrowed_from(metric_spec: Optional[dict]) -> dict:
+    """The assessment a curve was taken from (StreamCurves REF-15), or ``{}``."""
+    got = (metric_spec or {}).get("borrowedFrom")
+    return got if isinstance(got, dict) else {}
+
+
+def owner_line(metric_spec: Optional[dict]) -> str:
+    """Who chose the curve's source, when and why, or ``""``."""
+    d = owner_choice(metric_spec)
+    if not d:
+        return ""
+    who = str(d.get("recordedBy") or "the assessment's owner")
+    on = str(d.get("recordedAt") or "")[:10]
+    why = str(d.get("rationale") or "").strip()
+    return f"Source chosen by {who}{(' on ' + on) if on else ''}" + (f": {why}" if why else "")
+
+
 def support_line(metric_spec: Optional[dict]) -> str:
     """One plain line saying what the metric is scored against, or ``""`` for a
     bundle that does not say."""
     m = metric_spec or {}
+    if basis_of(m) == BASIS_OWNER or borrowed_from(m):
+        # a curve the owner entered, or took from another assessment, states its
+        # own sentence and never the station-pool one
+        return basis_text(m, "basisStatement") or f"{basis_label(m)}."
     if is_fixed(m) and not is_ladder(m):
         return "Fixed criteria, the same in every region"
     basis = basis_of(m)
@@ -202,7 +233,22 @@ def tip_lines(metric_spec: Optional[dict]) -> list[str]:
     carried = carried_line(m)
     if carried:
         lines.append(carried)
+    owner = owner_line(m)
+    if owner:
+        lines.append(owner)
+    src = borrowed_from(m)
+    if src:
+        lines.append(f"From {src.get('assessmentName') or src.get('assessmentId')}, version "
+                     f"{src.get('version')}")
     sup = m.get("referenceSupport") or {}
+    if basis_of(m) == BASIS_OWNER:
+        crit = m.get("criteriaSource")
+        if isinstance(crit, dict) and crit.get("title"):
+            lines.append(f"Criterion: {crit.get('title')}")
+        lines.extend(criteria_lines(m))
+        if not (isinstance(crit, dict) and crit.get("citations")):
+            lines.append("Source: professional judgment")
+        return lines
     if is_fixed(m) and not is_ladder(m):
         lines.extend(criteria_lines(m))
         return lines

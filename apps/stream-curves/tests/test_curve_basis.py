@@ -14,7 +14,15 @@ def test_every_basis_has_a_label_a_statement_and_a_place_on_the_ladder():
         assert cb.label_for(basis), basis
         assert cb.statement_for(basis), basis
         assert cb.rank(basis) < len(cb.ORDER)
-    assert len(set(cb.LABELS.values())) == len(cb.ORDER)
+    assert len(set(cb.LABELS.values())) == len(cb.LABELS) == len(cb.ORDER) + 1
+
+
+def test_an_owner_entered_curve_has_its_own_words_and_no_place_on_the_ladder():
+    assert cb.OWNER not in cb.ORDER and cb.rank(cb.OWNER) == len(cb.ORDER)
+    assert cb.label_for(cb.OWNER) == "Owner-entered"
+    assert cb.statement_for(cb.OWNER) and cb.limit_for(cb.OWNER)
+    assert cb.cap_for(cb.OWNER) is None
+    assert cb.resolve(cb.OWNER, criteria_basis="fixed") == cb.OWNER
 
 
 def test_the_ladder_runs_from_the_regions_own_stations_to_someone_elses_criterion():

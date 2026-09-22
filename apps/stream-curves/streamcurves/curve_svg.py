@@ -473,6 +473,8 @@ def tile_state_classes(tile: Mapping) -> list[str]:
             classes.append("src-" + re.sub(r"[^a-z0-9]+", "-", str(tile["source_kind"]).lower()))
         if tile.get("removed_decision"):
             classes.append("is-owner-removed")
+        if tile.get("owner_decision"):
+            classes.append("is-owner-chosen")
     if decision == run_state.DECISION_REMOVED or tile.get("in_scope") is False:
         classes.append("is-removed")
     elif decision == run_state.DECISION_FINALIZED:
@@ -489,9 +491,10 @@ def tile_state_classes(tile: Mapping) -> list[str]:
 def tile_title(tile: Mapping) -> str:
     """The hover text: display name, decision, the first flag."""
     if tile.get("read_only"):
-        bits = [str(tile.get("display_name") or tile.get("metric") or ""),
-                str(tile.get("status_text") or tile.get("badge") or ""),
-                str(tile.get("basis_label") or ""),
+        status = str(tile.get("status_text") or tile.get("badge") or "")
+        basis = str(tile.get("basis_label") or "")
+        bits = [str(tile.get("display_name") or tile.get("metric") or ""), status,
+                basis if basis != status else "",
                 (f"Confidence {tile['confidence_label']}" if tile.get("confidence_label") else ""),
                 "Click to see where this curve comes from"]
         return ". ".join(b for b in bits if b)

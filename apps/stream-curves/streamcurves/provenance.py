@@ -727,9 +727,13 @@ def _hierarchy_records(result: dict, add) -> None:
             inputs={"assessmentId": carried.get("assessmentId"),
                     "fromVersion": carried.get("fromVersion"),
                     "contentDigest": carried.get("contentDigest")},
-            # the curves this version scores: the carried set less the owner's removals
+            # the curves this version scores: the carried set less the owner's
+            # removals and the curves the owner gave another source
             computed={"n_carried": len(set(result.get("carried") or {})
-                                       - set(result.get("removed_carried") or {})),
+                                       - set(result.get("removed_carried") or {})
+                                       - set(result.get("replaced_carried") or {})),
+                      **({"replaced": dict(result["replaced_carried"])}
+                         if result.get("replaced_carried") else {}),
                       "rebuilt": {k: v.get("why") for k, v in
                                   (result.get("carry_rebuilt") or {}).items()},
                       **({"removed": dict(result["removed_carried"]),
@@ -743,21 +747,43 @@ def _hierarchy_records(result: dict, add) -> None:
                                + " from this version." if result.get("removed_carried")
                                else ".")))
     # REF-15: one record per decision of the owner on the curves the build did not fit
-    from . import owner_curves
+    from . import owner_curves, owner_sources
     for d in result.get("curve_decisions") or []:
         action = str(d.get("action") or "")
         fns = ", ".join(str(f) for f in d.get("functions") or [])
+        computed = {"metric": d.get("metric"), "action": action,
+                    "functions": list(d.get("functions") or []),
+                    "coverageExceptions": [g.get("functionId") for g in
+                                           d.get("coverageExceptions") or []]}
+        chosen = ""
+        if action == owner_curves.SOURCE:
+            src = d.get("source") or {}
+            computed.update({"outcome": owner_sources.outcome_of(src),
+                             "source": {k: src.get(k) for k in ("kind", "title", "citation")
+                                        if src.get(k)},
+                             "overrides": _overridden_rule(result, str(d.get("metric")))})
+            chosen = (f" Source: {src.get('title')}, "
+                      f"{str(src.get('citation') or '') or owner_sources.JUDGMENT.lower()}.")
         add(owner_curves.RULE, "owner_decision", str(d.get("id")),
             inputs=owner_curves.summary(d),
             thresholds={"min_rationale": owner_curves.min_rationale()},
-            computed={"metric": d.get("metric"), "action": action,
-                      "functions": list(d.get("functions") or []),
-                      "coverageExceptions": [g.get("functionId") for g in
-                                             d.get("coverageExceptions") or []]},
+            computed={k: v for k, v in computed.items() if v is not None},
             verdict=VERDICT_PASS,
             recommendation=(f"{owner_curves.ACTION_LABELS.get(action, action)}"
                             f"{(' (' + fns + ')') if fns else ''}: {d.get('metric')}, by "
-                            f"{d.get('recordedBy')}. {d.get('rationale')}"))
+                            f"{d.get('recordedBy')}. {d.get('rationale')}{chosen}"))
+
+
+def _overridden_rule(result: dict, metric: str) -> Optional[str]:
+    """The rule under which the build gave the metric what the owner replaced: a
+    carried curve (REF-05), a withheld metric (REF-06), or a curve from a source
+    after the station pools (REF-12 to REF-14)."""
+    if metric in (result.get("carried") or {}):
+        return "REF-05"
+    if metric in (result.get("insufficient_support") or {}):
+        return "REF-06"
+    status = str(((result.get("reference_support") or {}).get(metric) or {}).get("status") or "")
+    return {"national": "REF-12", "modeled": "REF-13", "published": "REF-14"}.get(status)
 
 
 def _pressure_records(result: dict, add) -> None:

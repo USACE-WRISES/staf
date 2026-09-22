@@ -43,13 +43,24 @@ KINDS: dict[str, dict] = {
     "fixed": {
         "label": "Fixed criterion", "icon": "ruler",
         "sentence": "Scored on cited thresholds that apply the same way in every region."},
+    "owner_entered": {
+        "label": curve_basis.label_for(curve_basis.OWNER), "icon": "user-pen",
+        "sentence": ("Thresholds or breakpoints the owner entered, on a cited source or on "
+                     "professional judgment.")},
+    "borrowed": {
+        "label": "From another assessment", "icon": "arrow-right-arrow-left",
+        "sentence": ("Another STAF assessment's curve for the same metric, chosen by the owner "
+                     "without a comparability check.")},
+    "owner_exception": {
+        "label": "Owner exception", "icon": "scale-balanced",
+        "sentence": "A source the build refused, which the owner accepted with a rationale."},
     "not_selected": {
         "label": "Not selected here", "icon": "circle-minus",
         "sentence": ("Fitted in this build, but the two-per-function rule left it out of "
                      "this function.")},
 }
 KIND_ORDER = ("built", "carried", "national", "modeled", "published_benchmark", "fixed",
-              "not_selected")
+              "owner_entered", "borrowed", "owner_exception", "not_selected")
 
 #: the rule under which the build chose each kind of curve
 KIND_RULES = {"carried": "REF-05", "national": "REF-12", "modeled": "REF-13",
@@ -188,6 +199,9 @@ def source_title(metric: str, entry: Mapping, *, build: Optional[Mapping] = None
     pool or model."""
     kind = (entry or {}).get("kind")
     ann, sup = _ann(entry), _support(entry)
+    owner = (entry or {}).get("owner")
+    if owner and (owner.get("source") or {}).get("title"):
+        return str(owner["source"]["title"])
     if kind == "carried":
         ver = from_version_of(entry, build)
         return f"Version {ver} of this assessment" if ver else "An earlier version of this assessment"
@@ -222,6 +236,11 @@ def source_facts(metric: str, entry: Mapping, *, provenance: Optional[Mapping] =
         if value not in (None, "", [], ()):
             facts.append((label, str(value)))
 
+    owner = (entry or {}).get("owner")
+    if owner:
+        facts.extend(_owner_facts(metric, entry, owner))
+        if kind not in ("published_benchmark", "carried"):
+            return facts
     if kind in CRITERION_KINDS:
         src = ann.get("criteriaSource") or {}
         add("Criterion", source_title(metric, entry, build=build))
@@ -292,7 +311,9 @@ def source_facts(metric: str, entry: Mapping, *, provenance: Optional[Mapping] =
     criterion = kind in CRITERION_KINDS or (
         kind == "carried" and curve_basis.resolve(ann.get("basis"), criteria_basis=ann.get(
             "criteriaBasis")) == curve_basis.PUBLISHED)
-    if criterion:
+    if owner and not criterion:
+        add("Confidence", "Not scored: the owner chose this curve")
+    elif criterion:
         add("Confidence", "Not scored: a criterion rests on no reference sample")
     elif label:
         total = _num(ann.get("confidenceTotal"))
@@ -304,8 +325,52 @@ def source_facts(metric: str, entry: Mapping, *, provenance: Optional[Mapping] =
     return facts
 
 
+def _date(text: Any) -> str:
+    return str(text or "")[:10]
+
+
+def _owner_facts(metric: str, entry: Mapping, owner: Mapping) -> list[tuple[str, str]]:
+    """What the owner's choice states: the source, what the curve is and where it
+    comes from. Why the owner chose it follows "Chosen by" in the panel."""
+    src = owner.get("source") or {}
+    kind, ref = str(src.get("kind") or ""), src.get("ref") or {}
+    ann = _ann(entry)
+    out: list[tuple[str, str]] = []
+
+    def add(label: str, value: Any) -> None:
+        if value not in (None, "", [], ()):
+            out.append((label, str(value)))
+
+    if kind in ("entered", "refused_source"):
+        add("Source", src.get("title"))
+    if kind == "entered":
+        add("Curve", "Two thresholds" if ref.get("method") == "thresholds"
+            else "Entered point by point")
+        bands = (ann.get("criteriaSource") or {}).get("bands") or []
+        add("Thresholds", "; ".join(f"{b.get('rating')} {b.get('label')}" for b in bands
+                                    if b.get("rating") and b.get("label")))
+        add("Citation", src.get("citation") or "None. Entered on professional judgment.")
+    elif kind == "other_assessment":
+        bf = ann.get("borrowedFrom") or {}
+        add("From", f"{bf.get('assessmentName') or ref.get('assessmentId')}, version "
+            f"{bf.get('version') or ref.get('version')}")
+        add("Original source", bf.get("basisLabel") or curve_basis.label_for(bf.get("basis")))
+        n = _count(bf.get("referenceN"))
+        add("Its reference stations", f"{n}, of {bf.get('regionName') or 'that region'}"
+            if n else None)
+    elif kind == "catalog":
+        add("Catalog entry", str(ref.get("entry") or "")
+            + (f", edition {ref['edition']}" if ref.get("edition") else ""))
+    return out
+
+
 def chosen_by(metric: str, entry: Mapping) -> str:
     """Who put the curve in this version, and under which rule."""
+    owner = (entry or {}).get("owner")
+    if owner:
+        who = str(owner.get("recordedBy") or "The owner")
+        on = _date(owner.get("recordedAt"))
+        return f"{who}{(' on ' + on) if on else ''}, under REF-15 ({rule_name('REF-15') or 'Owner curve decision'})"
     rule = KIND_RULES.get(str((entry or {}).get("kind") or ""))
     if not rule:
         return ""
@@ -332,6 +397,8 @@ def build_trail(metric: str, entry: Mapping, *, provenance: Optional[Mapping] = 
     ``[{step, verdict, why}]``. Empty when the opened version carries no
     provenance, or for a fixed criterion, which is not chosen from a list."""
     kind = str((entry or {}).get("kind") or "")
+    if (entry or {}).get("owner"):
+        return _owner_trail(metric, entry, build=build)
     if kind == "carried":
         ver = from_version_of(entry, build)
         return [{"step": f"Version {ver}" if ver else "Earlier version", "verdict": USED,
@@ -358,6 +425,48 @@ def build_trail(metric: str, entry: Mapping, *, provenance: Optional[Mapping] = 
     if not any(s["verdict"] == USED for s in trail):
         return []
     return trail
+
+
+REPLACED = "Replaced"
+
+
+def _owner_trail(metric: str, entry: Mapping, *, build: Optional[Mapping]) -> list[dict]:
+    """What the build did with the metric, then the owner's choice. ``build`` is the
+    session's reference build as the build wrote it."""
+    b = build or {}
+    mk = str(metric)
+    owner = entry.get("owner") or {}
+    steps: list[dict] = []
+    withheld = next((w for w in b.get("insufficientReferenceSupport") or []
+                     if str(w.get("metricKey")) == mk), None)
+    if withheld is not None:
+        steps.append({"step": "Station pools", "verdict": REFUSED,
+                      "why": ("No pool of least-disturbed stations, from this ecoregion or a "
+                              "wider region, passed the acceptance checks.")})
+        for r in withheld.get("rungsTried") or []:
+            rule = str(r.get("rung") or "")
+            steps.append({"step": RUNG_NAMES.get(rule, rule), "verdict": REFUSED,
+                          "why": str(r.get("why") or "")})
+    elif mk in (b.get("carriedMetrics") or {}):
+        ver = (b.get("carriedFrom") or {}).get("fromVersion")
+        steps.append({"step": f"Version {ver}" if ver else "Earlier version",
+                      "verdict": REPLACED,
+                      "why": "The build carried this version's curve forward. The owner chose "
+                             "another source."})
+    elif mk in (b.get("ladderMetrics") or {}):
+        ann = (b.get("metricAnnotations") or {}).get(mk) or {}
+        basis = curve_basis.resolve(ann.get("basis"), criteria_basis=ann.get("criteriaBasis"))
+        rule = {curve_basis.NATIONAL: "REF-12", curve_basis.MODELED: "REF-13",
+                curve_basis.PUBLISHED: "REF-14"}.get(basis)
+        steps.append({"step": curve_basis.label_for(basis) or "Another source",
+                      "verdict": REPLACED,
+                      "why": ("The build's choice" + (f", under {rule}" if rule else "")
+                              + ". The owner chose another source.")})
+    from . import owner_sources
+    source = owner.get("source") or {}
+    steps.append({"step": "The owner", "verdict": USED,
+                  "why": f"{owner_sources.label_for(source)}: {source.get('title') or ''}".strip()})
+    return steps
 
 
 def breakpoints(entry: Mapping) -> list[tuple[float, float]]:
@@ -395,7 +504,8 @@ def kind_counts(tiles: Iterable[Mapping]) -> dict[str, int]:
 
 __all__ = [
     "KINDS", "KIND_ORDER", "KIND_RULES", "LADDER_RULES", "RUNG_NAMES", "NATIONAL_OPTIONS",
-    "USED", "REFUSED", "NOT_TRIED", "kind_meta", "kind_label", "kind_icon", "kind_sentence",
+    "USED", "REFUSED", "NOT_TRIED", "REPLACED", "kind_meta", "kind_label", "kind_icon",
+    "kind_sentence",
     "rule_name", "from_version_of", "units_of", "source_title", "source_facts", "chosen_by",
     "build_trail", "breakpoints", "limits", "kind_counts",
 ]

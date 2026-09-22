@@ -541,6 +541,45 @@ def test_a_regional_benchmark_is_not_called_the_same_in_every_region():
     assert "Good <=88.6 ug/L" in tip and "Sources: NRSA 2018-19 TSD" in tip
 
 
+OWNER_ENTERED = {
+    "basis": "owner-entered", "basisLabel": "Owner-entered",
+    "basisStatement": "Scored against thresholds this assessment's owner entered.",
+    "criteriaSource": {"title": "Owner thresholds",
+                       "bands": [{"rating": "Good", "label": ">=0.6 frac"},
+                                 {"rating": "Poor", "label": "<0.3 frac"}],
+                       "citations": []},
+    "ownerDecision": {"kind": "entered", "recordedBy": "owner",
+                      "recordedAt": "2026-09-22T12:00:00+00:00",
+                      "rationale": "Nothing else measures it here."}}
+
+
+def test_an_owner_entered_curve_states_its_own_basis_and_who_chose_it():
+    assert rs.basis_of(OWNER_ENTERED) == rs.BASIS_OWNER
+    assert rs.basis_label(OWNER_ENTERED) == "Owner-entered"
+    assert rs.support_line(OWNER_ENTERED) == OWNER_ENTERED["basisStatement"]
+    tip = rs.tip_lines(OWNER_ENTERED)
+    assert "Source chosen by owner on 2026-09-22: Nothing else measures it here." in tip
+    assert "Criterion: Owner thresholds" in tip and "Good >=0.6 frac" in tip
+    assert "Source: professional judgment" in tip
+    assert not any("stations" in t for t in tip)
+    cited = dict(OWNER_ENTERED, criteriaSource=dict(
+        OWNER_ENTERED["criteriaSource"], citations=[{"key": "owner", "text": "State rule 7"}]))
+    assert "Sources: State rule 7" in rs.tip_lines(cited)
+    assert "Source: professional judgment" not in rs.tip_lines(cited)
+
+
+def test_a_curve_from_another_assessment_never_claims_this_ecoregions_stations():
+    borrowed = {"basis": "regional-reference", "criteriaBasis": "reference",
+                "basisStatement": "Curve of another STAF assessment, chosen by the owner.",
+                "borrowedFrom": {"assessmentName": "Interior Plateau", "version": 6},
+                "ownerDecision": {"recordedBy": "owner", "rationale": "Closest match."}}
+    assert rs.support_line(borrowed) == borrowed["basisStatement"]
+    tip = rs.tip_lines(borrowed)
+    assert "From Interior Plateau, version 6" in tip
+    assert "Source chosen by owner: Closest match." in tip
+    assert not any("stations of this ecoregion" in t for t in tip)
+
+
 def test_a_ladder_curve_with_no_sentence_still_names_its_basis():
     bare = {"basis": "modeled-reference", "referenceSupport": {"status": "modeled", "nUsable": 9}}
     assert rs.support_line(bare) == "Modeled reference."
