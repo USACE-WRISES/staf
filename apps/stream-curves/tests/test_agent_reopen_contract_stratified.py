@@ -43,11 +43,13 @@ SPLIT = {"phab_XEMBED": "NhdSlopeClass", "phab_XBKF_H": "NhdDrainageAreaClass"}
 @pytest.fixture(scope="module")
 def result() -> dict:
     max_order, protocols = nrsa_dataset.governed_frame("wadeable")
+    # A fresh build, as the curves it splits must be fitted here: NEH v9 carries
+    # both forward (methodology 0.14), and carry-forward is tested on its own.
     evidence = ra.run_evidence(
         "58", "Northeastern Highlands", reference_method=run_state.REFERENCE_METHOD_PRESSURE,
         nrsa_dataset_id=nrsa_dataset.MULTI_CYCLE_DATASET_ID,
         nrsa_max_stream_order=max_order, nrsa_protocols=protocols,
-        diagnostics_enabled=False, scale_registry=REGISTRY)
+        diagnostics_enabled=False, scale_registry=REGISTRY, carry=False)
     applied = {mk for mk, rec in evidence["strata_applied"].items() if rec["applied"]}
     if applied != set(SPLIT):
         pytest.skip(f"the pool supports a split for {sorted(applied)} only")
