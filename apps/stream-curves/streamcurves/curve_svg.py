@@ -250,6 +250,17 @@ def reference_tile(metric: str, entry: Mapping) -> dict:
                            else "Supported, not selected")
     tile["basis_label"] = ann.get("basisLabel")
     tile["confidence_label"] = ann.get("confidenceLabel")
+    # the count the bundle states: the reference sample of a pool curve, the
+    # stations a national or modeled curve rests on; none for a criterion
+    n = ann.get("referenceN")
+    if n is None:
+        n = (ann.get("referenceSupport") or {}).get("nUsable")
+    if n is None and entry.get("kind") in ("carried", "national"):
+        n = row.get("n_reference")
+    if entry.get("kind") in ("published_benchmark", "fixed") or \
+            ann.get("basis") == "published-benchmark":
+        n = None
+    tile["reference_n"] = _num(n)
     return tile
 
 
