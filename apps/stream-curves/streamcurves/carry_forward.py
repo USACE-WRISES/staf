@@ -22,6 +22,14 @@ value in its published pool is one the data verification corrected or removed.
 Values the verification added for stations that had none are not defects: they
 are information the preserved curve did not use, and the curve stays.
 
+A curve the published version itself carried forward is a curve it scores, and
+is carried again. It keeps the ``carriedForward`` naming the version that built
+it (REF-05 records that its reference support was decided there), and it is
+judged where it was built: a pool curve's station values are read from that
+version's session. When that version cannot be read, the curve is judged as a
+national or modeled curve is, by whether its metric's archive values were
+corrected.
+
 A curve the owner chose (REF-15, an entry carrying ``ownerDecision``) is never
 carried: the region's curve decisions are its standing record, so the next build
 walks the metric like any other and the decision puts the owner's curve back,
@@ -120,6 +128,61 @@ def _pool_defects(metric: str, pool: pd.Series) -> dict:
     return {"checked": True, "n_pool": int(len(pool)), "n_defective": int(bad)}
 
 
+def _session_pool(session_data: Any, metric: str) -> Optional[pd.Series]:
+    """A metric's station values in a session's data (its pool), or None."""
+    if not isinstance(session_data, pd.DataFrame) or metric not in session_data.columns:
+        return None
+    key_col = "site_id" if "site_id" in session_data.columns else "station_key"
+    return pd.Series(pd.to_numeric(session_data[metric], errors="coerce").to_numpy(),
+                     index=session_data[key_col].astype(str)).dropna()
+
+
+def _origin_data(origin: dict, cache: dict, *, root: Optional[Path] = None) -> Any:
+    """The session data of the version a carried curve was built in (its
+    ``carriedForward``), read once per version; None when it cannot be read."""
+    from . import library as lib
+    from . import session_io as sio
+    try:
+        key = (str(origin.get("assessmentId") or ""), int(origin.get("fromVersion")))
+    except (TypeError, ValueError):
+        return None
+    if key not in cache:
+        vdir = _library_root(root) / "assessments" / key[0] / f"v{key[1]}"
+        try:
+            cache[key] = sio.decode_session_fields(
+                sio.load_session_payload(vdir / lib.SESSION_FILE)).get("data")
+        except (OSError, ValueError, KeyError, TypeError):
+            cache[key] = None
+    return cache[key]
+
+
+def _recarried_why(metric: str, block: dict, basis: str, corrected, cache: dict, *,
+                   root: Optional[Path] = None) -> Optional[dict]:
+    """Why a curve the published version itself carried forward is rebuilt, judged
+    where it was built, or None when it carries again."""
+    origin = block.get("carriedForward") if isinstance(block.get("carriedForward"), dict) else {}
+    was = origin.get("fromVersion")
+    if basis == curve_basis.PUBLISHED:
+        return None
+    pool = (None if basis in (curve_basis.NATIONAL, curve_basis.MODELED)
+            else _session_pool(_origin_data(origin, cache, root=root), metric))
+    if pool is None:
+        # a national or modeled curve, or a pool the version that built it no
+        # longer shows here: judged by whether the metric's values were corrected
+        reason = nd.is_corrected(metric, corrected)
+        if not reason:
+            return None
+        return {"why": (f"The curve carried from version {was} rests on this metric's archive "
+                        f"values, which the data verification corrected ({reason}).")}
+    got = _pool_defects(metric, pool)
+    if not got["n_defective"]:
+        return None
+    return {"why": (f"{got['n_defective']} of the {got['n_pool']} station values the curve was "
+                    f"built on in version {was} are not values the verified archive holds for "
+                    f"those stations in a compatible survey, so the curve is rebuilt from "
+                    f"corrected data."), **got}
+
+
 def prepare(l3_code: str, *, root: Optional[Path] = None) -> dict:
     """What a rebuild of ``l3_code`` carries forward from its latest published
     version, and what it rebuilds and why.
@@ -151,9 +214,13 @@ def prepare(l3_code: str, *, root: Optional[Path] = None) -> dict:
     config = dict(fields.get("metric_config") or {})
     ladder = dict(build.get("ladderMetrics") or {})
     fixed = set(build.get("fixedMetrics") or [])
+    # the curves the version itself carried forward are curves it scores too
+    recarried = {mk: c for mk, c in (build.get("carriedMetrics") or {}).items()
+                 if mk not in config and mk not in ladder}
     data = fields.get("data")
-    keys = set(config) | set(ladder) | fixed
+    keys = set(config) | set(ladder) | fixed | set(recarried)
     by_id = {"spring-" + deep_slug(k): k for k in keys}
+    origins: dict = {}
 
     blocks: dict[str, dict] = {}
     functions: dict[str, list[dict]] = {}
@@ -178,6 +245,11 @@ def prepare(l3_code: str, *, root: Optional[Path] = None) -> dict:
                     why = (f"The published {curve_basis.label_for(basis).lower()} rests on this "
                            f"metric's archive values, which the data verification corrected "
                            f"({reason}).")
+        elif mk in recarried:
+            got = _recarried_why(mk, block, basis, corrected, origins, root=root)
+            if got:
+                out["rebuilt"][mk] = got
+                continue
         elif isinstance(data, pd.DataFrame) and mk in data.columns:
             key_col = "site_id" if "site_id" in data.columns else "station_key"
             pool = pd.Series(pd.to_numeric(data[mk], errors="coerce").to_numpy(),
@@ -206,16 +278,24 @@ def prepare(l3_code: str, *, root: Optional[Path] = None) -> dict:
                                   "curve_points": _points_frame(L.get("points") or [])}
                                  for L in layers]
         annotations = {k: block[k] for k in ANNOTATION_KEYS if k in block}
-        annotations["carriedForward"] = {"assessmentId": aid, "fromVersion": ver,
-                                         "contentDigest": bundle.get("contentDigest")}
-        cfg = dict(config.get(mk) or (ladder.get(mk) or {}).get("config") or {})
+        origin = block.get("carriedForward")
+        if mk in recarried and isinstance(origin, dict) and origin.get("fromVersion"):
+            # carried again: it still names the version that built it
+            annotations["carriedForward"] = dict(origin)
+            built_in = int(origin["fromVersion"])
+        else:
+            annotations["carriedForward"] = {"assessmentId": aid, "fromVersion": ver,
+                                             "contentDigest": bundle.get("contentDigest")}
+            built_in = ver
+        cfg = dict(config.get(mk) or (ladder.get(mk) or {}).get("config")
+                   or (recarried.get(mk) or {}).get("config") or {})
         out["carried"][mk] = {
             "row": row, "config": cfg, "annotations": annotations,
             "mapping": [{"metric_key": mk, "discipline": f["discipline"],
                          "function_label": f["functionName"]} for f in functions.get(mk, [])],
             "functions": [f["functionId"] for f in functions.get(mk, [])],
             "decision": _decision_from_record(block.get("referenceSupport") or
-                                              {"basis": basis}, mk, ver),
+                                              {"basis": basis}, mk, built_in),
             "basis": basis, "ladder": mk in ladder,
         }
     return out
