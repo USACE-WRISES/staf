@@ -468,3 +468,110 @@ def test_the_new_kinds_have_icons_and_sentences_without_em_dashes():
         faicons.icon_svg(meta["icon"])
     for text in (osrc.ENTERED_LIMIT, osrc.BORROWED_LIMIT, *osrc.ENTERED_STATEMENT.values()):
         assert EM_DASH not in text
+
+
+# --------------------------------------------------------------------------- #
+# review of 2026-09-22: what the dialog offers and what a chosen curve states
+# --------------------------------------------------------------------------- #
+def test_thresholds_on_a_metric_with_no_lower_bound_run_on_below_zero():
+    log_scale = {"higher_is_better": True, "units": "log10 mm", "display_name": "Substrate"}
+    pts, errors, _labels = osrc.threshold_points(2.0, 0.5, log_scale)
+    assert not errors and pts[0]["y"] == 0.0 and pts[0]["x"] < 0
+
+    def score(x):
+        for a, b in zip(pts, pts[1:]):
+            if a["x"] <= x <= b["x"]:
+                return a["y"] + (b["y"] - a["y"]) * (x - a["x"]) / (b["x"] - a["x"])
+    # the line itself is unchanged where the fixed criteria draw it: 0.29 at zero,
+    # and it now runs on down to 0 instead of holding every lower value at 0.29
+    assert score(0.0) == pytest.approx(0.29, abs=0.01) and score(-1.0) < 0.29
+    pts, errors, _labels = osrc.threshold_points(1.0, -1.0, log_scale)
+    assert not errors and pts[0]["x"] < -1.0
+    # a metric that starts at zero keeps the fixed criteria's shape
+    fines = {"higher_is_better": False, "units": "percent", "domain_min": 0, "domain_max": 100}
+    pts, errors, _labels = osrc.threshold_points(10, 30, fines)
+    assert not errors and (pts[0]["x"], pts[0]["y"]) == (0.0, 1.0)
+    chla = {"higher_is_better": False, "units": "ug/L"}
+    pts, errors, _labels = osrc.threshold_points(5, 20, chla)
+    assert not errors and (pts[0]["x"], pts[0]["y"]) == (0.0, 1.0)
+    pts, errors, _labels = osrc.threshold_points(-2.0, 1.0, {"higher_is_better": False})
+    assert not errors and pts[0]["y"] == 1.0 and pts[0]["x"] < -2.0
+
+
+def test_a_point_by_point_curve_against_the_metrics_direction_is_said():
+    hib = {"higher_is_better": True}
+    falling = [{"x": 0.0, "y": 1.0}, {"x": 40.0, "y": 0.0}]
+    rising = [{"x": 0.0, "y": 0.0}, {"x": 40.0, "y": 1.0}]
+    assert "higher is better" in osrc.direction_warning(falling, hib)
+    assert "lower is better" in osrc.direction_warning(rising, {"higher_is_better": False})
+    assert osrc.direction_warning(rising, hib) is None
+    assert osrc.direction_warning(falling, {"higher_is_better": False}) is None
+    assert osrc.direction_warning(falling, {"higher_is_better": None}) is None
+
+
+def test_another_assessment_offers_its_latest_eligible_version_only():
+    for metric in ("chem_CHLA", "bent_TOLRPIND"):
+        for o in osrc.library_options(metric, region_code="27"):
+            if o["kind"] != osrc.OTHER:
+                continue
+            aid = o["ref"]["assessmentId"]
+            eligible = [v for v in osrc._versions(aid)
+                        if lib.version_status(aid, v) in osrc.ELIGIBLE_STATUSES]
+            assert o["ref"]["version"] == eligible[0], (metric, aid, o["ref"]["version"])
+
+
+def test_a_pool_the_build_could_not_form_is_not_offered():
+    prov = {"records": [{"rule_id": "REF-06", "subject": "chem_CHLA", "subject_kind": "metric",
+                         "verdict": "fail", "computed": {"options_tried": [
+                             {"option": "regional_l2", "why": "The target has no Level II region."},
+                             {"option": "regional_l1", "n_usable": 40, "region_code": "9",
+                              "why": "The recovery test refused it."}]}}]}
+    opts = {o["ref"]["option"]: o for o in osrc.refused_options("chem_CHLA", provenance=prov)}
+    assert not opts["regional_l2"]["available"]
+    assert opts["regional_l2"]["why_not"] == "The target has no Level II region."
+    assert opts["regional_l1"]["available"]
+
+
+def test_a_borrowed_curve_does_not_speak_for_this_ecoregion():
+    entry = {"basis": "modeled-reference", "basisLabel": "Modeled reference",
+             "referenceSupport": {"status": "modeled", "nUsable": 3150}}
+    ann = osrc.borrowed_annotations(entry, assessment_id="eastern-corn-belt-plains",
+                                    name="Eastern Corn Belt Plains", version=7,
+                                    region={"code": "55", "name": "Eastern Corn Belt Plains"},
+                                    content_digest=None)
+    assert "not on stations of this ecoregion" not in ann["basisStatement"]
+    assert ann["curveCaveats"][1].startswith("In Eastern Corn Belt Plains: too few streams")
+    assert "referenceSupport" not in ann
+
+
+def test_an_owners_curve_carries_no_reference_tier_and_an_exception_says_so():
+    state, bundle, fields = _opened("interior-plateau/v6")
+    build = fields["reference_build"]
+    cfg = osrc.config_for("chem_CHLA", metric_config=fields["metric_config"], build=build)
+    opt = osrc.entered_option("chem_CHLA", method=osrc.THRESHOLDS, config=cfg,
+                              title="Chlorophyll by judgment", good=5, poor=20)
+    state.owner_curve_decisions.set([_source_decision("chem_CHLA", opt, cfg,
+                                                      ["light-thermal-regime"])])
+    rebuilt = _republish(state, bundle)
+    entry = _entries(rebuilt, "chem_CHLA")[0][1]
+    assert "referenceTier" not in entry
+    if rebuilt.get("referenceTier"):
+        assert any(m.get("referenceTier") for b in rebuilt["metricsByFunction"]
+                   for m in b["metrics"] if m.get("metricId") != entry["metricId"])
+    from streamcurves import deep_calculator as dc
+    caveat = "The build refused this source (ACC-05/06: the recovery test refused it)."
+    text = dc.support_text({"referenceSupport": {"status": "borrowed_l1", "nUsable": 40,
+                                                 "level": "l1", "regionCode": "9"},
+                            "ownerException": {"rule": "REF-11"}, "basisLimit": caveat})
+    assert text.startswith("40 least-disturbed stations") and text.endswith(caveat)
+
+
+def test_the_dialog_names_a_place_as_it_is_written():
+    view = {"built": set(), "not_selected": set(), "withheld": set(),
+            "entries": {"bent_HPRIME": {"label": "From Interior Plateau", "kind": "borrowed",
+                                        "owner": {"id": "cd-1"}, "functions": []},
+                        "bent_EPT_NTAX": {"label": "Owner exception", "kind": "owner_exception",
+                                          "owner": {"id": "cd-2"}, "functions": []}}}
+    assert sd.metric_state("bent_HPRIME", None, view)[0] == (
+        "from Interior Plateau, chosen by the owner")
+    assert sd.metric_state("bent_EPT_NTAX", None, view)[0] == "owner exception"

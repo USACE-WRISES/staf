@@ -1052,8 +1052,8 @@ def summary_page_server(input, output, session, state: AppState):
             return None
         return ui.div(
             ui.tags.strong("Waiting for a build: "),
-            *[ui.tags.span(f"{_mn.display_name_for(mk, None) or mk} "
-                           f"({(d.get('source') or {}).get('title')}) ",
+            *[ui.tags.span(f"{_mn.display_name_for(mk, None) or mk}: "
+                           f"{(d.get('source') or {}).get('title')} ",
                            ui.tags.button(fa("rotate-left"), " Undo", type="button",
                                           class_="btn btn-link btn-sm p-0",
                                           onclick=sp.undo_onclick(d.get("id"))),
@@ -1086,7 +1086,7 @@ def summary_page_server(input, output, session, state: AppState):
                 action = ui.tags.button(
                     fa("rotate-left"), " Undo", type="button", class_="btn btn-link btn-sm p-0",
                     onclick=sp.undo_onclick(t["owner_decision"]),
-                    title="Undo this choice: the build's own choice for this metric returns")
+                    title="Undo this choice: the metric scores as the build left it")
             else:
                 action = ui.tags.button(
                     fa("trash-can"), " Remove", type="button",

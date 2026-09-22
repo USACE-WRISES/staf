@@ -896,8 +896,11 @@ def build_deep_assessment_bundle(
         for block in bundle.get("metricsByFunction") or []:
             for m in block.get("metrics") or []:
                 # A fixed-criteria metric (CURVE-11) has no reference pool, so
-                # it carries no reference tier.
-                if m.get("criteriaBasis") == "fixed":
+                # it carries no reference tier; nor does a curve the owner entered
+                # or took from another assessment (REF-15), whose reference, if
+                # any, is not this build's
+                if m.get("criteriaBasis") == "fixed" or m.get("basis") == "owner-entered" \
+                        or isinstance(m.get("borrowedFrom"), dict):
                     continue
                 m["referenceTier"] = tier
     # Methodology 0.12: how reference condition was defined for this build, and

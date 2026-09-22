@@ -864,7 +864,18 @@ def units_of(metric: dict) -> str:
 
 
 def support_text(metric: dict) -> str:
-    """One line on what the metric is scored against, for the Reference sheet."""
+    """One line on what the metric is scored against, for the Reference sheet. A
+    source the build refused and the owner accepted (REF-15) adds the checks it
+    failed, which the bundle states as its limit."""
+    text = _support_text(metric)
+    exception = metric.get("ownerException")
+    limit = str(metric.get("basisLimit") or "").strip()
+    if isinstance(exception, dict) and limit:
+        text = (text.rstrip(". ") + ". " + limit) if text else limit
+    return text
+
+
+def _support_text(metric: dict) -> str:
     # A curve that rests on no station of this ecoregion says what it does rest
     # on. The bundle carries the sentence, so the workbook and the app agree.
     basis = str(metric.get("basis") or "")

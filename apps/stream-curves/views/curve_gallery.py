@@ -340,7 +340,7 @@ def reference_tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int 
         right.append(ui.tags.button(
             fa("rotate-left"), type="button", class_="btn btn-link btn-sm curve-tile-remove",
             onclick=sp.undo_onclick(row["owner_decision"]),
-            title="Undo this choice: the build's own choice for this metric returns"))
+            title="Undo this choice: the metric scores as the build left it"))
     elif cross is None and row.get("removable"):
         right.append(ui.tags.button(
             fa("trash-can"), type="button", class_="btn btn-link btn-sm curve-tile-remove",
