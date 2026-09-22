@@ -127,7 +127,7 @@ def _waiting_note(state: AppState):
     if not waiting:
         return None
     n = len(waiting)
-    names = "; ".join(f"{metric_names.display_name_for(mk, None) or mk}, "
+    names = "; ".join(f"{metric_names.display_name_for(mk, None) or mk}: "
                       f"{(d.get('source') or {}).get('title')}"
                       for mk, d in sorted(waiting.items()))
     return ui.div(
@@ -419,10 +419,10 @@ def publish_server(input, output, session, state: AppState):
                     class_="pub-confirm-pending mb-2",
                 ))
             # REF-15: a source the build refused that no build has computed yet
-            # applies nothing to this version; say so before it is published
-            waiting = _waiting_note(state)
-            if waiting:
-                body.append(waiting)
+            # applies nothing to this version; say so before it is published (its
+            # own output, so a decision taken elsewhere updates it without
+            # re-rendering the form)
+            body.append(ui.output_ui("publish_waiting"))
             pending = ap.portfolio_approval_needed(state)
             if pending:
                 body.append(ui.div(
@@ -499,6 +499,11 @@ def publish_server(input, output, session, state: AppState):
     # hidden at first render; without it the output never resumes when the tab
     # is shown (matches the pattern in views/regional_curve.py).
     @output(suspend_when_hidden=False)
+    @render.ui
+    def publish_waiting():
+        state.owner_curve_decisions()           # re-render when a decision changes
+        return _waiting_note(state)
+
     @render.ui
     def publish_body():
         refresh()

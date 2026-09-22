@@ -1279,6 +1279,9 @@
   padding: 0 0.2rem; }
 .wb-chip .wb-chip-use svg { width: 0.75em; height: 0.75em; fill: currentColor; }
 .rb-decisions td { vertical-align: top; }
+/* the table sits in a secondary alert, whose white text it would otherwise take
+   onto its own white cells */
+.table.rb-decisions > tbody > tr > td { color: var(--bs-body-color, #212529); }
 
 /* the gallery's "About sources" */
 .curve-gallery-sources.btn { font-size: 0.78rem; padding: 0.14rem 0.55rem; }
