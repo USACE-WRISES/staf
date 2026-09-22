@@ -15,7 +15,9 @@ the web.
 
 from __future__ import annotations
 
+import copy
 import io
+import json
 import logging
 import os
 import tempfile
@@ -383,6 +385,16 @@ def publish_server(input, output, session, state: AppState):
             # more metrics than the portfolio maximum without a named approval. Ask for it
             # here, where the publisher can see which functions and say so, instead of
             # letting the click come back with the gate's error.
+            standing = ap.pending_standing_decisions(state)
+            if standing["approvals"] or standing["exceptions"]:
+                body.append(ui.div(
+                    ui.tags.label("Standing decisions to confirm", class_="form-label mb-0"),
+                    ui.div(ap.pending_decisions_text(standing),
+                           class_="text-muted small mb-1"),
+                    ui.input_checkbox(
+                        "pub_confirm_pending", "I confirm them under my name", value=False),
+                    class_="pub-confirm-pending mb-2",
+                ))
             pending = ap.portfolio_approval_needed(state)
             if pending:
                 body.append(ui.div(
@@ -665,12 +677,37 @@ def publish_server(input, output, session, state: AppState):
         state.run_stage_status.set(stamped)
         state.run_meta.set(rs.touch_run_meta(prev_meta))
 
+        # Standing decisions the build left pending (SELECT-01 approvals, COV-01
+        # documented gaps) are the publisher's to confirm, by name, before they ride
+        # into the version, exactly as promote confirms them.
+        now_iso = datetime.now(timezone.utc).isoformat()
+        standing = ap.pending_standing_decisions(state)
+        with reactive.isolate():
+            exceptions = copy.deepcopy(list(state.function_coverage_exceptions() or []))
+        if standing["approvals"] or standing["exceptions"]:
+            try:
+                ticked = bool(input.pub_confirm_pending())
+            except Exception:  # noqa: BLE001 - the box is absent when nothing is pending
+                ticked = False
+            if not ticked:
+                state.run_stage_status.set(prev_stage_status)
+                state.run_meta.set(prev_meta)
+                ui.notification_show(
+                    "Confirm the standing decisions first: tick the confirmation box on "
+                    "this form. " + ap.pending_decisions_text(standing),
+                    type="warning", duration=12)
+                return
+            dec.confirm_exceptions(exceptions, maintainer=maintainer, date=now_iso)
+
         try:
             bundle = ap.build_bundle_from_state(
                 state,
-                meta={"assessmentName": name, "sourceCitation": meta["sourceCitation"]},
+                meta={"assessmentName": name, "sourceCitation": meta["sourceCitation"],
+                      "functionCoverageExceptions": exceptions},
             )
             full_payload = ap.session_payload_from_state(state)
+            full_payload["fields"]["function_coverage_exceptions"] = sio.encode_value(
+                exceptions, path="$.function_coverage_exceptions")
             # Every published version carries a provenance document. When the
             # assessment came from an agent build, the build's own document is
             # carried through with an appended interactive-revision entry, and
@@ -690,7 +727,9 @@ def publish_server(input, output, session, state: AppState):
             # agent build with a >2-metric function would be refused by the
             # very gate its own build already satisfied.
             if (origin or {}).get("portfolio_approvals"):
-                meta["portfolioApprovals"] = origin["portfolio_approvals"]
+                meta["portfolioApprovals"] = copy.deepcopy(origin["portfolio_approvals"])
+                dec.confirm_approvals(meta["portfolioApprovals"], maintainer=maintainer,
+                                      date=now_iso)
             # The rest are this publisher's to give: the checkbox on the form is the
             # recorded human approval SELECT-01 asks for, and the real bundle (not the
             # page's quick count) names the functions it covers.
@@ -719,7 +758,6 @@ def publish_server(input, output, session, state: AppState):
                      "note": (f"Approved at interactive publish: {n} metrics kept as a "
                               "complementary set after review in StreamCurves.")}
                     for fid, n in unapproved]
-            now_iso = datetime.now(timezone.utc).isoformat()
             if source_doc:
                 changes = ap.origin_changes(
                     state, origin, content_digest=lib.content_digest(bundle))
@@ -735,6 +773,13 @@ def publish_server(input, output, session, state: AppState):
                 provenance_doc = pv.build_interactive_provenance(
                     bundle, curve_review, region=region_now,
                     publisher=_maintainer_name(), session_name=session_name)
+            # promote's last check: nothing still marked pending rides into the
+            # version the owner confirms
+            if dec.is_pending(json.dumps({"bundle": bundle.get("functionCoverage"),
+                                          "approvals": meta.get("portfolioApprovals")},
+                                         default=str)):
+                raise ValueError("a standing decision is still marked pending owner "
+                                 "confirmation.")
             version = lib.publish_version(aid, meta, full_payload, bundle,
                                           provenance=provenance_doc)
         except Exception as e:  # noqa: BLE001
@@ -743,6 +788,8 @@ def publish_server(input, output, session, state: AppState):
             logger.exception("library publish failed")
             ui.notification_show(f"Publish failed: {e}", type="error", duration=10)
             return
+        if standing["exceptions"]:
+            state.function_coverage_exceptions.set(exceptions)
         if version != expected_version:
             with reactive.isolate():
                 ss = dict(state.run_stage_status() or {})

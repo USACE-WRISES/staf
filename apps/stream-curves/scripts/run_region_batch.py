@@ -131,10 +131,7 @@ def _confirm_approvals(meta: dict, *, maintainer: str, date: str) -> list[dict]:
     any approval that does not resolve to that owner: a canonical version
     carries one approving person, the one who said go."""
     approvals = meta.get("portfolioApprovals") or []
-    for ap in approvals:
-        if dec.PENDING_SUFFIX in str(ap.get("approvedBy") or ""):
-            ap["approvedBy"] = maintainer
-            ap["confirmedAt"] = date
+    dec.confirm_approvals(approvals, maintainer=maintainer, date=date)
     strangers = [str(ap.get("functionId")) for ap in approvals
                  if str(ap.get("approvedBy") or "").strip() != maintainer]
     if strangers:
@@ -156,12 +153,7 @@ def _confirm_coverage_exceptions(bundle: dict, session: dict, doc: dict, *,
 
     def fix(entries):
         nonlocal n
-        for e in entries or []:
-            if isinstance(e, dict) and dec.PENDING_SUFFIX in str(e.get("recordedBy") or ""):
-                e["recordedBy"] = maintainer
-                e["recordedAt"] = date
-                e["confirmedBy"] = maintainer
-                n += 1
+        n += dec.confirm_exceptions(entries, maintainer=maintainer, date=date)
 
     fix(((bundle.get("functionCoverage") or {}).get("exclusions")))
     fields = session.get("fields") if isinstance(session.get("fields"), dict) else session

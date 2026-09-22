@@ -560,6 +560,43 @@ def pending_locations(doc) -> list[str]:
     return found
 
 
+def pending_approvals(approvals) -> list[dict]:
+    """The SELECT-01 approvals a standing decision recorded for the owner to confirm."""
+    return [a for a in approvals or [] if PENDING_SUFFIX in str((a or {}).get("approvedBy") or "")]
+
+
+def pending_exceptions(entries) -> list[dict]:
+    """The COV-01 documented gaps a standing decision recorded for the owner to confirm."""
+    return [e for e in entries or []
+            if isinstance(e, dict) and PENDING_SUFFIX in str(e.get("recordedBy") or "")]
+
+
+def confirm_approvals(approvals, *, maintainer: str, date: str) -> int:
+    """Rewrite every pending approver in ``approvals`` (in place) to the confirming
+    owner. Returns how many were confirmed. Promote and the workspace publish
+    both confirm this way; promote also refuses any approval by someone else."""
+    n = 0
+    for ap in approvals or []:
+        if PENDING_SUFFIX in str((ap or {}).get("approvedBy") or ""):
+            ap["approvedBy"] = maintainer
+            ap["confirmedAt"] = date
+            n += 1
+    return n
+
+
+def confirm_exceptions(entries, *, maintainer: str, date: str) -> int:
+    """Put the confirming owner's name on every pending documented gap (in place).
+    Returns how many were confirmed."""
+    n = 0
+    for e in entries or []:
+        if isinstance(e, dict) and PENDING_SUFFIX in str(e.get("recordedBy") or ""):
+            e["recordedBy"] = maintainer
+            e["recordedAt"] = date
+            e["confirmedBy"] = maintainer
+            n += 1
+    return n
+
+
 def is_pending(text_or_doc) -> bool:
     """Whether a provenance document (or any JSON text) still carries a
     pending-confirmation reviewer. A document is walked so the recorded

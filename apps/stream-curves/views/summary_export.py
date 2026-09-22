@@ -32,7 +32,7 @@ from streamcurves.science_report import build_science_support_html
 from views import assessment_publish as ap
 from views import summary_state as sst
 from views.state import AppState
-from views.theme import bi
+from views.theme import bi, fa
 
 logger = logging.getLogger("streamcurves")
 
@@ -200,7 +200,7 @@ def summary_export_server(input, output, session, state: AppState):
         if not confirmed:
             parts.append(
                 ui.div(
-                    bi("exclamation-triangle-fill"),
+                    fa("triangle-exclamation"),
                     " The Discipline → Function → Metric mapping must be reviewed and "
                     "saved (and cover every summary metric) before exports unlock. "
                     "Open Refine & map in the workflow strip, then Function mapping.",
