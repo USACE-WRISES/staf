@@ -313,6 +313,9 @@ def cmd_stage(a) -> int:
         reference_method=reference_method,
         # REF-15: the refused sources the owner accepted, computed in this pass
         force=oc.forced_sources(curve_decisions) or None,
+        # and "your choice stands": what the owner removed or re-sourced stays
+        # out of this build's own fit
+        hold=oc.held_metrics(curve_decisions) or None,
         on_event=ra.event_narrator())
     print(f"[batch] evidence: {evidence['n_retained']} / {evidence['n_candidates']} retained "
           f"(tier {evidence['tier']['reference_tier']}, pool {evidence['reference_pool_disposition']}), "

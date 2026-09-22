@@ -179,3 +179,28 @@ def test_step_6_confirms_pending_decisions_by_name_and_refuses_a_marker_left_ove
     assert "a standing decision is still marked pending owner" in src
     batch = (APP / "scripts" / "run_region_batch.py").read_text(encoding="utf-8")
     assert "dec.confirm_approvals(approvals" in batch and "dec.confirm_exceptions(entries" in batch
+
+
+def test_a_fitted_curve_left_in_no_function_keeps_what_the_build_stated():
+    """A fitted curve SELECT-04 left in no function has no bundle entry, so its
+    build-only keys ride in the session without a signature. An owner's include
+    (REF-15) published from the workspace states them while the curve's review is
+    unchanged, as the build that applies the include does (review of 2026-09-22)."""
+    from streamcurves.deep_export import deep_slug
+    stated = {"referenceN": 21, "sampleDisposition": "adequate", "metricRole": "response",
+              "curveCaveats": ["A caveat."], "confidenceLabel": "Moderate",
+              "confidenceTotal": 7, "referenceRange": [0.0, 1.0]}
+    result = {"reference_method": pe.METHOD, "meta": {}, "fixed_metrics": {},
+              "ladder_metrics": {}, "base_metric_annotations": {"fish_X": dict(stated)},
+              "curve_review": {"fish_X": {}}, "bundle": {"metricsByFunction": []}}
+    build = pe.session_reference_build(result)
+    assert build["fittedAnnotations"]["fish_X"] == {"curve": None, **stated}
+    entry = {"metricId": "spring-" + deep_slug("fish_X"),
+             "curve": {"points": [{"x": 0.0, "y": 0.0}, {"x": 1.0, "y": 1.0}]}}
+    bundle = {"metricsByFunction": [{"functionId": "population-support", "metrics": [entry]}]}
+    # nothing vouches for a curve with no signature unless its review is unchanged
+    assert pe.carry_fitted_annotations(bundle, build["fittedAnnotations"]) == []
+    assert "confidenceLabel" not in entry
+    assert pe.carry_fitted_annotations(bundle, build["fittedAnnotations"],
+                                       metrics=["fish_X"]) == ["fish_X"]
+    assert {k: entry[k] for k in stated} == stated

@@ -423,6 +423,14 @@ def chosen(decisions: Iterable[Mapping], *, built=()) -> dict:
     return _chosen(_by_action(decisions), built)
 
 
+def held_metrics(decisions: Iterable[Mapping]) -> list[str]:
+    """The metrics a build keeps out of its own fit (owner decision 2026-09-22,
+    "your choice stands"): every metric the owner removed or chose a source for,
+    until the decision is withdrawn (``pressure_evidence.run_evidence(hold=)``)."""
+    acts = _by_action(decisions)
+    return sorted(set(acts[REMOVE]) | set(acts[SOURCE]))
+
+
 def forced_sources(decisions: Iterable[Mapping]) -> dict:
     """``{metric: {"rule", "option"}}`` of the refused sources the owner accepted:
     what a build computes for them (``basis_ladder.force_source``)."""
@@ -746,10 +754,13 @@ def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
     for d in decisions:
         mk = str(d.get("metric"))
         if d.get("action") == SOURCE and mk in built:
-            out.append((dict(d), "This build fits the metric itself, so its own curve scores."))
+            out.append((dict(d), "This build fitted the metric before your choice could hold it "
+                                 "out of the fit, so its own curve scores. Build the region "
+                                 "again to apply the choice."))
         elif d.get("action") == REMOVE and mk in built:
-            out.append((dict(d), "This build fits the metric itself, so the removal does not "
-                                 "apply."))
+            out.append((dict(d), "This build fitted the metric before your removal could hold "
+                                 "it out of the fit, so the removal does not apply. Build the "
+                                 "region again to apply it."))
         elif d.get("action") == SOURCE and (d.get("source") or {}).get("failedAtBuild"):
             out.append((dict(d), "Nothing could be built from the source: "
                         + str((d.get("source") or {}).get("failedAtBuild"))))
@@ -771,5 +782,5 @@ __all__ = [
     "applies", "sourced", "chosen", "source_curve", "decision_annotation", "effective_build",
     "apply_to_inputs", "summary", "requests", "decisions_changed", "removed",
     "decisions_for", "coverage_exceptions", "live_exceptions", "with_exceptions", "stale",
-    "forced_sources", "pending", "with_forced",
+    "held_metrics", "forced_sources", "pending", "with_forced",
 ]
