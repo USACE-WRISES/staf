@@ -711,10 +711,16 @@ def test_a_rebuild_carries_every_published_curve_it_does_not_rebuild():
         assert got is not None, (fid, mid)
         strip = lambda b: {k: v for k, v in b.items() if k not in _PLACEMENT}
         assert strip(got) == strip(block), (fid, mid)
-        assert got["carriedForward"]["fromVersion"] == prior["fromVersion"]
+        # the version that built it: this one, or, for a curve this version itself
+        # carried, the one it came from (review of 2026-09-22)
+        assert got["carriedForward"] == prior["carried"][mk]["annotations"]["carriedForward"]
+        assert got["carriedForward"]["fromVersion"] <= prior["fromVersion"]
     # a rebuilt curve walks the hierarchy afresh, and every carried one keeps its record
     support = res["reference_support"]
-    assert all(support[mk].get("carried_from") == prior["fromVersion"] for mk in carried)
+    assert all(support[mk].get("carried_from")
+               == prior["carried"][mk]["annotations"]["carriedForward"]["fromVersion"]
+               for mk in carried)
+    assert len(carried) > 20, "v6 scores 22 curves it carried itself, and they carry again"
     for mk in prior["rebuilt"]:
         assert not support.get(mk, {}).get("carried_from")
 
