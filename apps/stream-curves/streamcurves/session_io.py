@@ -130,6 +130,10 @@ SESSION_FIELDS = [
     # schema v2, additive): the fixed-criteria metrics, each curve's reference
     # support, the withheld list. Absent reads as None, which is a legacy build.
     "reference_build",
+    # The owner's decisions on the curves the build did not fit (REF-15, schema
+    # v2, additive): applied over reference_build, which stays as the build wrote
+    # it so a decision can be undone. Absent reads as None, which is no decision.
+    "owner_curve_decisions",
 ]
 
 ## Fields whose dict payloads may contain non-serializable cached objects

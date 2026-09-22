@@ -19,15 +19,14 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 
 import pandas as pd
 from shiny import module, reactive, render, req, ui
 
 from streamcurves import curve_automation as ca
 from streamcurves import curve_svg as cs
-from streamcurves import region_build as rb
 from streamcurves import run_state as rs
+from views import assessment_publish as ap
 from views import curve_gallery as cg
 from views import source_panel as sp
 from views import state as st
@@ -172,7 +171,6 @@ def summary_page_server(input, output, session, state: AppState):
     pending_bulk_recompute = reactive.value(None)
     pending_row_recompute = reactive.value(None)
     pending_review = reactive.value(None)  # {"metric", "decision"} awaiting a rationale
-    pending_removal = reactive.value(None)  # a carried metric awaiting the owner's rationale
     review_queue_collapsed = reactive.value(False)  # session-scoped; default expanded
 
     @reactive.calc
@@ -1034,96 +1032,22 @@ def summary_page_server(input, output, session, state: AppState):
         )
 
     # ── curves the session did not fit (carried, other sources, fixed) ───────
-    def _maintainer() -> str:
-        """Same chain views/publish.py and the Region builder use."""
-        return (os.environ.get("STAF_LIBRARY_MAINTAINER")
-                or os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
-
-    def _run_dir():
-        """The Region builder's folder for this session's ecoregion, where the
-        owner's removals wait for the next build. None off an ecoregion."""
-        with reactive.isolate():
-            region = state.region_of_applicability() or {}
-        if region.get("kind") != "ecoregion" or not region.get("code"):
-            return None
-        return rb.run_folder(rb.default_runs_root(), str(region["code"]))
-
-    def _pending_removals() -> list[str]:
-        return [str(d.get("metric")) for d in rb.load_removals(_run_dir())]
-
     def _reference_tiles() -> list[dict]:
-        """Read-only tiles for every curve this version scores that the session
-        did not fit. Depends on the build, the mapping and the removal nonce."""
-        state.reference_removals_nonce()
+        """Tiles for every curve this version scores that the session did not fit,
+        with the owner's decisions on them (REF-15): a removed curve stays on the
+        page, dimmed, with its Undo."""
         build = state.reference_build()
+        decisions = state.owner_curve_decisions() or []
         mapping = state.discipline_function_mapping()
         with reactive.isolate():
             built = state.completed_metrics() or {}
-        return cg.reference_tiles_for(build, mapping, built=built,
-                                      pending=_pending_removals())
-
-    def _bump_removals() -> None:
-        with reactive.isolate():
-            n = state.reference_removals_nonce() or 0
-        state.reference_removals_nonce.set(n + 1)
-
-    def _carried_action(metric: str, action: str) -> None:
-        run_dir = _run_dir()
-        if run_dir is None:
-            ui.notification_show("Removing a carried curve needs an ecoregion assessment.",
-                                 type="warning", duration=6)
-            return
-        if action == "undo_remove":
-            rb.clear_removal(run_dir, metric)
-            _bump_removals()
-            ui.notification_show(f"The removal of {metric} is undone.", type="message",
-                                 duration=4)
-            return
-        pending_removal.set(metric)
-        ui.modal_show(ui.modal(
-            ui.p(f"Remove {metric} from the next build of this region?"),
-            ui.p("The published version keeps it. The next build in the Region builder "
-                 "leaves it out and records your decision and rationale on the version it "
-                 "stages.", class_="text-muted small"),
-            ui.input_text_area(
-                ns("carried_remove_note"),
-                f"Rationale (required, at least {rb.MIN_REMOVAL_RATIONALE} characters)",
-                rows=3, width="100%"),
-            title="Remove a carried curve",
-            footer=ui.TagList(
-                ui.modal_button("Cancel"),
-                ui.input_action_button(ns("carried_remove_confirm"),
-                                       "Remove at the next build",
-                                       class_="btn btn-danger")),
-            easy_close=True))
-
-    @reactive.effect
-    @reactive.event(input.carried_remove_confirm)
-    @guard("record the removal")
-    def _carried_remove_confirm():
-        metric = pending_removal()
-        run_dir = _run_dir()
-        if not metric or run_dir is None:
-            return
-        try:
-            rb.save_removal(run_dir, metric, input.carried_remove_note() or "",
-                            recorded_by=_maintainer())
-        except ValueError as exc:
-            ui.notification_show(str(exc), type="warning", duration=6)
-            return
-        pending_removal.set(None)
-        ui.modal_remove()
-        _bump_removals()
-        ui.notification_show(
-            f"Saved. Build this region again in the Region builder to leave {metric} out.",
-            type="message", duration=8)
+        return cg.reference_tiles_for(build, mapping, built=built, decisions=decisions)
 
     @render.ui
     def reference_table():
         tiles = _reference_tiles()
         if not tiles:
             return None
-        channel = ns("curve_gallery_action")
         body = []
         for t in sorted(tiles, key=lambda t: (int(t.get("function_order") or 999),
                                               str(t.get("function_name") or ""),
@@ -1132,18 +1056,17 @@ def summary_page_server(input, output, session, state: AppState):
             n_ref = t.get("reference_n")
             lo, hi = t.get("reference_range") or (None, None)
             fns = [t.get("function_name")] + list(t.get("also_functions") or [])
-            action = None
-            if t.get("removable"):
-                pending = bool(t.get("pending_removal"))
+            if t.get("removed_decision"):
                 action = ui.tags.button(
-                    (fa("rotate-left") if pending else fa("trash-can")),
-                    " Undo" if pending else " Remove",
-                    type="button", class_="btn btn-link btn-sm p-0",
-                    onclick="event.stopPropagation();" + cg.setinput_onclick(
-                        channel, {"metric": metric,
-                                  "action": "undo_remove" if pending else "remove_carried"}),
-                    title=("Undo the pending removal" if pending
-                           else "Remove this carried curve at the next build"))
+                    fa("rotate-left"), " Undo", type="button", class_="btn btn-link btn-sm p-0",
+                    onclick=sp.undo_onclick(t["removed_decision"]),
+                    title="Undo the removal")
+            else:
+                action = ui.tags.button(
+                    fa("trash-can"), " Remove", type="button",
+                    class_="btn btn-link btn-sm p-0 text-danger",
+                    onclick=sp.act_onclick(metric, "remove"),
+                    title="Remove this curve from the assessment")
             status = (t.get("status_text") if t.get("status_text") != t.get("badge") else None)
             body.append(ui.tags.tr(
                 ui.tags.td(ui.HTML(cs.tile_svg(t, w=150, h=90))),
@@ -1159,7 +1082,9 @@ def summary_page_server(input, output, session, state: AppState):
                            else f"{cs.fmt_num(lo)} to {cs.fmt_num(hi)}"),
                 ui.tags.td(str(t.get("confidence_label") or "")),
                 ui.tags.td(action),
-                class_="summary-reference-row", role="button", tabindex="0",
+                class_="summary-reference-row"
+                + (" is-owner-removed" if t.get("removed_decision") else ""),
+                role="button", tabindex="0",
                 title=f"See where {t.get('display_name') or metric} comes from",
                 onclick=sp.open_onclick(metric), onkeydown=sp.open_onkeydown(),
             ))
@@ -1170,7 +1095,8 @@ def summary_page_server(input, output, session, state: AppState):
                 ui.tags.div(
                     f"{n} curve{'' if n == 1 else 's'} this version scores that this build "
                     "did not fit. Click a row to see where it comes from and why the build "
-                    "chose it.",
+                    "chose it. A removal applies at once and to every later build of this "
+                    "region.",
                     class_="text-muted small")),
             ui.card_body(ui.tags.table(
                 ui.tags.thead(ui.tags.tr(*[ui.tags.th(h) for h in (
@@ -1217,7 +1143,8 @@ def summary_page_server(input, output, session, state: AppState):
         # every function a metric serves, primary first, from the confirmed mapping,
         # each placement read against the portfolio (a curve left out of a function
         # reads "Not selected here" there)
-        rows = cg.mark_not_selected(cg.assign_functions(rows, mapping), state.reference_build())
+        rows = cg.mark_not_selected(cg.assign_functions(rows, mapping),
+                                    ap.effective_reference_build(state))
         # and every curve the version scores that the session did not fit, read-only
         rows += _reference_tiles()
         return cg.gallery_ui(
@@ -1252,9 +1179,6 @@ def summary_page_server(input, output, session, state: AppState):
         payload = input.curve_gallery_action() or {}
         metric = payload.get("metric")
         action = payload.get("action")
-        if metric and action in ("remove_carried", "undo_remove"):
-            _carried_action(str(metric), action)
-            return
         if not metric or metric not in row_snapshot:
             return
         with reactive.isolate():

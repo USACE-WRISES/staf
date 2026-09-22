@@ -61,25 +61,37 @@ def assign_functions(rows: Iterable[Mapping], mapping: Any = None) -> list[dict]
     return cs.assign_functions(rows, mapping)
 
 
-def reference_tiles_for(build, mapping, *, built=(), pending=()) -> list[dict]:
-    """Read-only tiles for every curve a session scores without having fitted it
+def reference_tiles_for(build, mapping, *, built=(), decisions=()) -> list[dict]:
+    """Tiles for every curve a session scores without having fitted it
     (``pressure_evidence.reference_rows``): carried forward, from a rung above
     the hierarchy, or a fixed criterion, each placed in the functions the bundle
-    places it in. A carried curve can be removed at the next build; ``pending``
-    names the ones already marked for removal."""
+    places it in under the owner's decisions (REF-15). Each can be removed; a
+    removed one stays on the page, dimmed, with the decision to undo."""
+    from streamcurves import owner_curves as oc
     from streamcurves import pressure_evidence as pe
-    pending = {str(m) for m in pending or ()}
+    decisions = list(decisions or [])
+    effective = oc.effective_build(build, decisions)
     tiles, placement = [], []
-    for mk, entry in pe.reference_rows(build, mapping, built=built).items():
+    for mk, entry in pe.reference_rows(effective, mapping, built=built).items():
         tile = cs.reference_tile(mk, entry)
-        tile["source_title"] = src.source_title(mk, entry, build=build)
-        if entry["kind"] == "carried":
-            tile["removable"] = True
-            if mk in pending:
-                tile["pending_removal"] = True
-                tile["status_text"] = "Removal pending"
+        tile["source_title"] = src.source_title(mk, entry, build=effective)
+        tile["removable"] = True
         tiles.append(tile)
         placement.extend(entry["mapping"])
+    removed = oc.removed(decisions)
+    if removed:
+        base = pe.reference_rows(build, mapping, built=built)
+        for mk, d in removed.items():
+            entry = base.get(mk)
+            if entry is None:
+                continue
+            tile = cs.reference_tile(mk, entry)
+            tile["source_title"] = src.source_title(mk, entry, build=build)
+            tile["status_text"] = "Removed by the owner"
+            tile["removed_decision"] = d.get("id")
+            tile["in_scope"] = False
+            tiles.append(tile)
+            placement.extend(entry["mapping"])
     return cs.assign_functions(tiles, placement)
 
 
@@ -92,11 +104,25 @@ def mark_not_selected(tiles: Iterable[dict], build) -> list[dict]:
     by_metric: dict[str, set] = {}
     for m, fid in pe.not_selected_pairs(build):
         by_metric.setdefault(str(m), set()).add(str(fid))
+    included = owner_included(build)
     out = []
     for t in tiles:
         if not t.get("read_only"):
-            t["not_selected_fids"] = sorted(by_metric.get(str(t.get("metric") or ""), ()))
+            mk = str(t.get("metric") or "")
+            t["not_selected_fids"] = sorted(by_metric.get(mk, ()))
+            t["owner_included"] = dict(included.get(mk) or {})
         out.append(t)
+    return out
+
+
+def owner_included(build) -> dict:
+    """``{metric: {function id: decision id}}`` of the fitted curves the owner put
+    back into a function the portfolio left them out of (REF-15)."""
+    out: dict[str, dict] = {}
+    for d in (build or {}).get("ownerDecisions") or []:
+        if d.get("action") == "include":
+            for fid in d.get("functions") or []:
+                out.setdefault(str(d.get("metric")), {})[str(fid)] = d.get("id")
     return out
 
 
@@ -106,13 +132,14 @@ def not_selected_here(row: Mapping, here) -> bool:
     return here is not None and str(here) in {str(f) for f in row.get("not_selected_fids") or ()}
 
 
-def reference_tiles(state: AppState, *, pending=()) -> list[dict]:
+def reference_tiles(state: AppState) -> list[dict]:
     """Headless :func:`reference_tiles_for` from the state."""
     with reactive.isolate():
         build = state.reference_build()
         mapping = state.discipline_function_mapping()
         built = state.completed_metrics() or {}
-    return reference_tiles_for(build, mapping, built=built, pending=pending)
+        decisions = state.owner_curve_decisions() or []
+    return reference_tiles_for(build, mapping, built=built, decisions=decisions)
 
 
 def gallery_rows(state: AppState, metrics: Optional[Iterable[str]] = None, *,
@@ -127,7 +154,8 @@ def gallery_rows(state: AppState, metrics: Optional[Iterable[str]] = None, *,
         review = state.curve_review() or {}
         functions = state.column_functions() or {}
         mapping = state.discipline_function_mapping()
-        build = state.reference_build()
+        from streamcurves import owner_curves as oc
+        build = oc.effective_build(state.reference_build(), state.owner_curve_decisions() or [])
     keys = list(metrics) if metrics is not None else ss.eligible_summary_metrics(mc)
     reference = set()
     if include_reference:
@@ -241,10 +269,24 @@ def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
         classes = ["curve-tile", *cs.tile_state_classes(row)]
     status = cs.status_label(row)
     title = cs.tile_title(row)
-    if not_selected_here(row, under if cross else row.get("function_id")):
+    here = under if cross else row.get("function_id")
+    if not_selected_here(row, here):
         status = src.kind_label("not_selected")
         classes.append("is-not-selected")
         title = f"{status}. {src.kind_sentence('not_selected')} {title}"
+        right.insert(0, ui.tags.button(
+            fa("circle-plus"), " Use", type="button",
+            class_="btn btn-link btn-sm curve-tile-use",
+            onclick=sp.act_onclick(metric, "include", [here]),
+            title="Use this curve in this function (recorded as your decision)"))
+    elif str(here) in (row.get("owner_included") or {}):
+        status = "Used by the owner"
+        classes.append("is-owner-included")
+        title = f"{status}: the two-per-function rule left it out here. {title}"
+        right.insert(0, ui.tags.button(
+            fa("rotate-left"), type="button", class_="btn btn-link btn-sm curve-tile-remove",
+            onclick=sp.undo_onclick(row["owner_included"][str(here)]),
+            title="Undo: leave this curve out of this function again"))
     return ui.div(
         head_note,
         ui.div(
@@ -276,23 +318,23 @@ def reference_tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int 
                       cross: Mapping | None = None, under: Any = None):
     """A curve the session did not fit: no analysis to open and nothing to
     recompute, so a click opens its source panel instead. The status pill names
-    the source with its icon. A carried curve's primary tile carries the one
-    action the owner has on it: remove it at the next build, or undo that."""
+    the source with its icon. The primary tile carries the owner's action on it:
+    remove the curve, or undo a removal (REF-15)."""
     metric = str(row.get("metric") or "")
     right = []
     n_strata = len(row.get("strata") or [])
     if n_strata > 1:
         right.append(ui.tags.span(f"{n_strata} strata", class_="curve-tile-strata"))
-    if cross is None and row.get("removable"):
-        pending = bool(row.get("pending_removal"))
-        action = "undo_remove" if pending else "remove_carried"
+    if cross is None and row.get("removed_decision"):
         right.append(ui.tags.button(
-            fa("rotate-left") if pending else fa("trash-can"),
-            type="button", class_="btn btn-link btn-sm curve-tile-remove",
-            onclick="event.stopPropagation();" + setinput_onclick(
-                channel_id, {"metric": metric, "action": action}),
-            title=("Undo the pending removal" if pending
-                   else "Remove this carried curve at the next build")))
+            fa("rotate-left"), type="button", class_="btn btn-link btn-sm curve-tile-remove",
+            onclick=sp.undo_onclick(row["removed_decision"]),
+            title="Undo the removal"))
+    elif cross is None and row.get("removable"):
+        right.append(ui.tags.button(
+            fa("trash-can"), type="button", class_="btn btn-link btn-sm curve-tile-remove",
+            onclick=sp.act_onclick(metric, "remove"),
+            title="Remove this curve from the assessment"))
     also = [str(f) for f in (row.get("also_functions") or []) if f]
     if cross:
         primary = str(cross.get("primary_function_name") or "its primary function")
@@ -453,7 +495,9 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
         "scope. Orange marker: needs review. A curve that informs more than one function appears "
         "under each of them; the dashed copies are cross-listed and name the function the curve "
         "lives under. Click a curve built here to open its analysis. A tile with a colored edge "
-        "comes from another source: click it to see where it comes from and why.",
+        "comes from another source: click it to see where it comes from and why. Removing one, "
+        "or using a curve the build left out, is recorded as your decision and applies to "
+        "every later build of this region.",
         class_="text-muted small curve-gallery-legend",
     )
     return ui.div(toolbar, grid, legend, class_="curve-gallery-wrap")

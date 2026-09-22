@@ -56,7 +56,8 @@ _SCRIPTS = Path(__file__).resolve().parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
-from streamcurves import carry_forward as cf  # noqa: E402
+from streamcurves import carry_forward as cf
+from streamcurves import owner_curves as oc  # noqa: E402
 from streamcurves import decisions as dec  # noqa: E402
 from streamcurves import library as lib  # noqa: E402
 from streamcurves import methodology  # noqa: E402
@@ -276,6 +277,19 @@ def cmd_stage(a) -> int:
         owner_decisions = json.loads(Path(a.reviewer_decisions).read_text(encoding="utf-8"))
     owner_finalize = _parse_kv(a.finalize_metric, "--finalize-metric")
     owner_remove = _parse_kv(a.remove_metric, "--remove-metric")
+    # REF-15: the owner's standing decisions on the region's curves (the Region
+    # builder passes the region's curve_decisions.json), and the documented gaps
+    # the ones that empty a function carry
+    curve_decisions = []
+    if a.curve_decisions:
+        loaded = json.loads(Path(a.curve_decisions).read_text(encoding="utf-8"))
+        curve_decisions = list((loaded.get("decisions") if isinstance(loaded, dict)
+                                else loaded) or [])
+    decision_gaps = oc.coverage_exceptions(curve_decisions)
+    if decision_gaps:
+        gap_fids = {str(g.get("functionId")) for g in decision_gaps}
+        coverage_exceptions = [x for x in coverage_exceptions or []
+                               if str(x.get("functionId")) not in gap_fids] + decision_gaps
     owner_approvals = _parse_approvals(a.approve_portfolio)
 
     # 1. the expensive pass, once
@@ -388,7 +402,8 @@ def cmd_stage(a) -> int:
             finalize_metrics=finalize or None,
             finalize_actor=actor if finalize or owner_remove else "",
             remove_metrics=owner_remove or None,
-            reviewer_decisions=(owner_decisions + policy_decisions) or None)
+            reviewer_decisions=(owner_decisions + policy_decisions) or None,
+            curve_decisions=curve_decisions or None)
         result["standing_decisions"] = {
             "policyVersion": dec.policy_version(policy),
             "sha256": policy["meta"]["sha256"],
@@ -685,6 +700,7 @@ def cmd_stage_many(a) -> int:
                 # and without this stage-many could never stage such a region.
                 approve_portfolio=list(a.approve_portfolio or []),
                 reviewer_decisions=None, finalize_metric=[], remove_metric=[],
+                curve_decisions=None,
                 max_unresolved_share=a.max_unresolved_share, allow_unresolved=a.allow_unresolved,
                 nrsa_dataset=a.nrsa_dataset, nrsa_cycles=a.nrsa_cycles,
                 reference_frame=a.reference_frame, include_site=[],
@@ -802,6 +818,9 @@ def main(argv=None) -> int:
     s.add_argument("--reviewer-decisions", default=None)
     s.add_argument("--finalize-metric", action="append", default=[])
     s.add_argument("--remove-metric", action="append", default=[])
+    s.add_argument("--curve-decisions", default=None, metavar="FILE",
+                   help="the owner's curve decisions (REF-15): the curve_decisions.json the "
+                        "workspace keeps in the region's run folder, applied after SELECT-04")
     s.add_argument("--nrsa-dataset", default=nrsa_dataset.default_build_dataset_id(),
                    choices=nrsa_dataset.available_datasets(),
                    help="which NRSA data to read; the default is the pooled multi-cycle "

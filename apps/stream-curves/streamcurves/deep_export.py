@@ -746,7 +746,9 @@ def build_deep_assessment_bundle(
                     # PB-5: a published benchmark's own provenance
                     "publishedBenchmark",
                     # methodology 0.14: the version a carried-forward curve comes from
-                    "carriedForward"):
+                    "carriedForward",
+                    # REF-15: the owner's decisions on where this curve scores
+                    "ownerDecisions"):
             if key in annotations and annotations[key] is not None:
                 base_entry[key] = annotations[key]
 
@@ -909,6 +911,12 @@ def build_deep_assessment_bundle(
                 if w.get("metricId") not in scored_ids]
     if withheld:
         bundle["insufficientReferenceSupport"] = withheld
+    # REF-15: the owner's decisions on the curves the build did not fit (what was
+    # removed, taken out of a function or put back, by whom and why). Outside
+    # metricsByFunction, like the withheld list; absent when there are none.
+    owner = meta.get("ownerCurveDecisions")
+    if owner:
+        bundle["ownerCurveDecisions"] = owner
     # Predictor-source provenance (train/serve pairing): which source computed
     # the predictors of this build. Derived from the build, never user-chosen;
     # absent means the StreamCat default (DEEP treats a missing field as

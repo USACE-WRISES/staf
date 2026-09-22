@@ -29,6 +29,7 @@ from shiny import module, reactive, render, req, ui
 
 from streamcurves import decisions as dec
 from streamcurves import library as lib
+from streamcurves import owner_curves as oc
 from streamcurves import provenance as pv
 from streamcurves import run_state as rs
 from streamcurves import session_io as sio
@@ -180,6 +181,7 @@ def publish_server(input, output, session, state: AppState):
         state.discipline_function_mapping()
         state.discipline_function_mapping_confirmed()
         state.function_coverage_exceptions()
+        state.owner_curve_decisions()
         state.metric_config()
         # Stratifier diagnostics: they drive the enrichment_build attention state.
         state.strat_config()
@@ -684,6 +686,7 @@ def publish_server(input, output, session, state: AppState):
         standing = ap.pending_standing_decisions(state)
         with reactive.isolate():
             exceptions = copy.deepcopy(list(state.function_coverage_exceptions() or []))
+            curve_decisions = list(state.owner_curve_decisions() or [])
         if standing["approvals"] or standing["exceptions"]:
             try:
                 ticked = bool(input.pub_confirm_pending())
@@ -703,7 +706,8 @@ def publish_server(input, output, session, state: AppState):
             bundle = ap.build_bundle_from_state(
                 state,
                 meta={"assessmentName": name, "sourceCitation": meta["sourceCitation"],
-                      "functionCoverageExceptions": exceptions},
+                      "functionCoverageExceptions": oc.with_exceptions(
+                          exceptions, curve_decisions)},
             )
             full_payload = ap.session_payload_from_state(state)
             full_payload["fields"]["function_coverage_exceptions"] = sio.encode_value(

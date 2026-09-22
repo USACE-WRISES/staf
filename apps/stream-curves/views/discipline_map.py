@@ -36,6 +36,7 @@ from streamcurves.staf_library import (
 )
 from streamcurves import curve_sources as _src
 from streamcurves import pressure_evidence as _pe
+from views import assessment_publish as _ap
 from views import source_panel as _sp
 from views.state import AppState
 from views.uihelpers import guard
@@ -494,11 +495,15 @@ def discipline_map_server(input, output, session, state: AppState):
         # curve comes from.
         with reactive.isolate():
             built = state.completed_metrics() or {}
-        build = state.reference_build()
+        # under the owner's curve decisions (REF-15)
+        build = _ap.effective_reference_build(state)
         reference = _pe.reference_rows(build, mapping, built=built)
         # (metric, function id) pairs the portfolio left out: a fitted metric
         # still sits in the mapping there, but the version does not score it
         not_selected = _pe.not_selected_pairs(build)
+        # and the ones the owner put back (REF-15), each with its decision
+        from views.curve_gallery import owner_included
+        included = owner_included(build)
         reference_by_fn: dict[str, list[str]] = {}
         for rk, entry in reference.items():
             for fid in entry["functions"]:
@@ -526,13 +531,26 @@ def discipline_map_server(input, output, session, state: AppState):
             label = workbench_metric_label(mk, metric_config, lib_by_id)
             u = int(usage_v.get(mk, 1) or 1)
             payload = f"{mk}{WORKBENCH_SEP}{fn}"
-            left_out = (mk, str(_pe.canonical_function_id(fn) or "")) in not_selected
+            fid = str(_pe.canonical_function_id(fn) or "")
+            left_out = (mk, fid) in not_selected
             return ui.tags.span(
                 ui.tags.span(label, class_="wb-chip-label"),
                 ui.tags.span("no data", class_="wb-chip-tag") if nodata else None,
                 (ui.tags.span(_src.kind_label("not_selected"), class_="wb-chip-tag",
                               title=_src.kind_sentence("not_selected"))
                  if left_out else None),
+                (ui.tags.button(fa("circle-plus"), " Use", type="button",
+                                class_="wb-chip-use",
+                                title="Use this curve in this function (recorded as your "
+                                      "decision)",
+                                onclick=_sp.act_onclick(mk, "include", [fid]))
+                 if left_out else None),
+                (ui.tags.span("used by the owner", class_="wb-chip-tag")
+                 if fid in (included.get(mk) or {}) else None),
+                (ui.tags.button(fa("rotate-left"), type="button", class_="wb-chip-use",
+                                title="Undo: leave this curve out of this function again",
+                                onclick=_sp.undo_onclick(included[mk][fid]))
+                 if fid in (included.get(mk) or {}) else None),
                 (
                     ui.tags.span(
                         f"×{u}", class_="wb-usage", title=f"Used in {u} functions"
@@ -554,14 +572,18 @@ def discipline_map_server(input, output, session, state: AppState):
                 + (" wb-chip-not-selected" if left_out else ""),
             )
 
-        def source_chip(mk: str):
+        def source_chip(mk: str, fn: str):
             entry = reference[mk]
             kind = entry.get("kind")
             icon = _src.kind_icon(kind)
+            fid = str(_pe.canonical_function_id(fn) or "")
             return ui.tags.span(
                 fa(icon) if icon else None,
                 ui.tags.span(_sp.display_name(mk, entry), class_="wb-chip-label"),
                 ui.tags.span(str(entry.get("label") or ""), class_="wb-chip-tag"),
+                ui.tags.button(ui.HTML("&times;"), type="button", class_="wb-chip-x",
+                               title="Remove from this function (recorded as your decision)",
+                               onclick=_sp.act_onclick(mk, "unmap", [fid])),
                 class_=f"wb-chip wb-chip-data wb-chip-source {_sp.kind_class(kind)}",
                 role="button", tabindex="0",
                 title=f"{entry.get('label')}. Click to see where this curve comes from.",
@@ -595,7 +617,7 @@ def discipline_map_server(input, output, session, state: AppState):
             if hide_nodata:
                 keys = [k for k in keys if workbench_has_data(k, metric_config)]
             chips = [make_chip(k, fn) for k in keys]
-            chips += [source_chip(rk)
+            chips += [source_chip(rk, fn)
                       for rk in reference_by_fn.get(_pe.canonical_function_id(fn) or "", [])]
             if not chips:
                 chips = [ui.tags.span("—", class_="wb-empty text-muted")]
@@ -655,12 +677,12 @@ def discipline_map_server(input, output, session, state: AppState):
         # not fit (fixed criteria, carried-forward and ladder curves) are not
         # gaps, though none of those metrics sits in the workbook.
         from streamcurves import pressure_evidence as _pe
-        build = state.reference_build()
+        build = _ap.effective_reference_build(state)
         mapping = state.discipline_function_mapping()
         return uncovered_functions_from_mapping(
             mapping,
             state.metric_config(),
-            state.function_coverage_exceptions(),
+            _ap.effective_coverage_exceptions(state),
             always_covered=_pe.reference_function_ids(
                 build, mapping, built=state.completed_metrics() or {}),
             exclude_pairs=_pe.not_selected_pairs(build),

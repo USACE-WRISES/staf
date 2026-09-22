@@ -245,10 +245,10 @@ class AppState:
     # folds it back into the bundle so the fixed-criteria metrics, each curve's
     # reference support and the withheld list survive. None = a legacy build.
     reference_build: reactive.Value = _rv()
-    # Bumped when the owner saves or undoes the removal of a carried curve (a
-    # file in the region's run folder, read at the next build), so the gallery
-    # and the Region builder repaint. Transient: not in SESSION_FIELDS.
-    reference_removals_nonce: reactive.Value = _rv(0)
+    # The owner's decisions on the curves the build did not fit (REF-15), applied
+    # over reference_build by owner_curves.effective_build; the region's run
+    # folder keeps them too, so every later build applies them. Persisted.
+    owner_curve_decisions: reactive.Value = _rv_factory(list)
 
     # ── root navigation requests (stage banner -> shell) ────────────────────
     # nav_request: a nav_panel value to switch main_navbar to; wizard_step_request:
@@ -495,6 +495,7 @@ def reset_app_to_startup(state: AppState) -> None:
         state.source_provenance.set(None)
         state.rule_selections.set([])
         state.reference_build.set(None)
+        state.owner_curve_decisions.set([])
         state.current_metric.set(state.startup_current_metric() or "perRiffle")
         state.app_data_loaded.set(False)
         state.app_reset_nonce.set((state.app_reset_nonce() or 0) + 1)

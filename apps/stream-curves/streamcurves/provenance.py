@@ -402,6 +402,8 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             # reproducible from the manifest alone (2026-08-21).
             "finalizedMetrics": result.get("finalized_metrics") or {},
             "removedMetrics": result.get("removed_metrics") or {},
+            # the owner's curve decisions (REF-15), without curve data
+            "curveDecisions": [_owner_summary(d) for d in result.get("curve_decisions") or []],
             "deferredGradients": result.get("deferred_gradients") or {},
         },
         # The standing-decision policy a batch run applied (2026-08-22): its
@@ -605,6 +607,11 @@ def _row_value(row, key):
         return None
 
 
+def _owner_summary(d: dict) -> dict:
+    from . import owner_curves
+    return owner_curves.summary(d)
+
+
 def _record(run_id, region_code, rule_id, subject_kind, subject, *,
             inputs=None, thresholds=None, computed=None,
             verdict=VERDICT_PASS, recommendation=None,
@@ -693,7 +700,10 @@ def _hierarchy_records(result: dict, add) -> None:
             thresholds=_acceptance_thresholds(),
             computed={k: v for k, v in computed.items() if v is not None},
             verdict=VERDICT_FAIL, recommendation=a.get("why"))
-    for fid, sel in sorted((result.get("portfolio_selection") or {}).items()):
+    # SELECT-04's own choice; the owner's decisions on it have their REF-15 records
+    selection = (result.get("base_portfolio_selection")
+                 if "base_portfolio_selection" in result else result.get("portfolio_selection"))
+    for fid, sel in sorted((selection or {}).items()):
         add("SELECT-04", "function", fid,
             thresholds={"fill_to": methodology.threshold("metric_portfolio.fill_to", 2)},
             computed=sel, verdict=VERDICT_PASS,
@@ -717,7 +727,9 @@ def _hierarchy_records(result: dict, add) -> None:
             inputs={"assessmentId": carried.get("assessmentId"),
                     "fromVersion": carried.get("fromVersion"),
                     "contentDigest": carried.get("contentDigest")},
-            computed={"n_carried": len(result.get("carried") or {}),
+            # the curves this version scores: the carried set less the owner's removals
+            computed={"n_carried": len(set(result.get("carried") or {})
+                                       - set(result.get("removed_carried") or {})),
                       "rebuilt": {k: v.get("why") for k, v in
                                   (result.get("carry_rebuilt") or {}).items()},
                       **({"removed": dict(result["removed_carried"]),
@@ -730,6 +742,22 @@ def _hierarchy_records(result: dict, add) -> None:
                                + ", ".join(sorted(result.get("removed_carried") or {}))
                                + " from this version." if result.get("removed_carried")
                                else ".")))
+    # REF-15: one record per decision of the owner on the curves the build did not fit
+    from . import owner_curves
+    for d in result.get("curve_decisions") or []:
+        action = str(d.get("action") or "")
+        fns = ", ".join(str(f) for f in d.get("functions") or [])
+        add(owner_curves.RULE, "owner_decision", str(d.get("id")),
+            inputs=owner_curves.summary(d),
+            thresholds={"min_rationale": owner_curves.min_rationale()},
+            computed={"metric": d.get("metric"), "action": action,
+                      "functions": list(d.get("functions") or []),
+                      "coverageExceptions": [g.get("functionId") for g in
+                                             d.get("coverageExceptions") or []]},
+            verdict=VERDICT_PASS,
+            recommendation=(f"{owner_curves.ACTION_LABELS.get(action, action)}"
+                            f"{(' (' + fns + ')') if fns else ''}: {d.get('metric')}, by "
+                            f"{d.get('recordedBy')}. {d.get('rationale')}"))
 
 
 def _pressure_records(result: dict, add) -> None:
@@ -855,8 +883,12 @@ def _pressure_records(result: dict, add) -> None:
                             "The registry supports a split, but this pool holds fewer than "
                             "two classes at the stratum floor, so the curve stays pooled."))
 
-    # --- CURVE-11: fixed criteria ---
+    # --- CURVE-11: fixed criteria (the ones the owner kept, REF-15) ---
+    removed_by_owner = {str(d.get("metric")) for d in result.get("curve_decisions") or []
+                        if d.get("action") == "remove"}
     for metric in sorted(result.get("fixed_metrics") or {}):
+        if metric in removed_by_owner:
+            continue
         add("CURVE-11", "metric", metric,
             inputs={"criteria": "config/fixed_criteria.yaml"},
             computed={"criteria_basis": "fixed"}, verdict=VERDICT_PASS,
