@@ -590,3 +590,18 @@ def test_step_6_says_what_waits_for_a_build():
     src = (APP / "views" / "publish.py").read_text(encoding="utf-8")
     assert "_waiting_note(state)" in src and "oc.live_exceptions(exceptions" in src
     assert "wait{'s' if n == 1 else ''} for a build" in src
+    # its own output, reading the decisions, so a decision taken after the form
+    # rendered still shows (the form re-renders only for a new session)
+    assert 'ui.output_ui("publish_waiting")' in src
+    assert "def publish_waiting():\n        state.owner_curve_decisions()" in src
+    # the metric, then its source, as the summary page names them
+    from streamcurves import metric_names
+    from views import publish as pub
+    state = AppState.fresh()
+    state.owner_curve_decisions.set([_refused_request()])
+    name = metric_names.display_name_for("bent_EPT_NTAX", None) or "bent_EPT_NTAX"
+    words = str(pub._waiting_note(state))
+    assert (f"1 curve decision waits for a build and does not apply to this version: "
+            f"{name}: Level I pool (8). Build the region again") in words
+    state.owner_curve_decisions.set([])
+    assert pub._waiting_note(state) is None
