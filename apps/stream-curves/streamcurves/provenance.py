@@ -335,6 +335,10 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
         if result.get("forced_sources"):
             inputs["reference"]["forcedSources"] = dict(sorted(
                 (str(k), dict(v)) for k, v in result["forced_sources"].items()))
+        # and so do the metrics the owner's decisions hold out of the fit ("your
+        # choice stands"): they change what the build fits
+        if result.get("owner_hold"):
+            inputs["reference"]["heldByOwner"] = sorted(str(k) for k in result["owner_hold"])
 
     # Predictor source: recorded whenever the run declares one. The DERIVED
     # value (from the predictor columns actually configured) is authoritative;
@@ -559,6 +563,8 @@ def digest_payload_from_manifest(manifest: dict) -> dict:
             digest_payload["reference"]["curvesByBasis"] = dict(sorted(by_basis.items()))
         if ref.get("forcedSources"):
             digest_payload["reference"]["forcedSources"] = ref["forcedSources"]
+        if ref.get("heldByOwner"):
+            digest_payload["reference"]["heldByOwner"] = ref["heldByOwner"]
     return digest_payload
 
 
@@ -780,6 +786,18 @@ def _hierarchy_records(result: dict, add) -> None:
                     computed["failedAtBuild"] = src["failedAtBuild"]
                     verdict = VERDICT_FAIL
                     chosen += f" Not applied: {src['failedAtBuild']}"
+        held = (result.get("held_by_owner") or {}).get(str(d.get("metric")))
+        if held and action in (owner_curves.SOURCE, owner_curves.REMOVE):
+            # "your choice stands": the build kept the metric out of its own fit,
+            # though a station pool would have supported a curve
+            from . import pressure_evidence as _pe
+            summary = _pe.held_summary(held.get("decision") or {})
+            computed["heldFromFit"] = summary
+            if action == owner_curves.REMOVE:
+                computed["overrides"] = _overridden_rule(result, str(d.get("metric")))
+            chosen += (f" The station pools could support a fitted curve for it "
+                       f"({_pe.held_words(summary)}); the decision holds it out of the build "
+                       "until the owner withdraws it.")
         add(owner_curves.RULE, "owner_decision", str(d.get("id")),
             inputs=owner_curves.summary(d),
             thresholds={"min_rationale": owner_curves.min_rationale()},
@@ -803,10 +821,15 @@ def _owner_chosen(result: dict) -> dict:
 
 def _overridden_rule(result: dict, metric: str) -> Optional[str]:
     """The rule under which the build gave the metric what the owner replaced: a
-    carried curve (REF-05), a withheld metric (REF-06), or a curve from a source
-    after the station pools (REF-12 to REF-14)."""
+    carried curve (REF-05), a withheld metric (REF-06), a curve from a source
+    after the station pools (REF-12 to REF-14), or a station pool the decision
+    held out of the fit (REF-04 for the local reference, REF-11 otherwise)."""
     if metric in (result.get("carried") or {}):
         return "REF-05"
+    held = (result.get("held_by_owner") or {}).get(metric)
+    if held:
+        status = str(((held or {}).get("decision") or {}).get("status") or "")
+        return "REF-04" if status.startswith("local") else "REF-11"
     if metric in (result.get("insufficient_support") or {}):
         return "REF-06"
     status = str(((result.get("reference_support") or {}).get(metric) or {}).get("status") or "")

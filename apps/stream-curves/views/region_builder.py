@@ -281,12 +281,21 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         stale = ({str(d.get("id")): why for d, why in
                   oc.stale(items, staged["build"], built=staged["built"])}
                  if staged and staged["build"] else {})
+        # "your choice stands": what the staged build held out of its fit though a
+        # station pool would have supported it
+        held = ((staged or {}).get("build") or {}).get("ownerHeld") or {}
         rows = []
         for d in items:
             fns = ", ".join(str(f) for f in d.get("functions") or [])
             gaps = ", ".join(str(g.get("functionId")) for g in d.get("coverageExceptions") or [])
             src = d.get("source") or {}
             why_stale = stale.get(str(d.get("id")))
+            held_note = None
+            if not why_stale and str(d.get("metric")) in held:
+                held_note = ui.div(
+                    "Held out of the build: ", pe.held_words(held[str(d.get("metric"))]),
+                    " could support a fitted curve. Undo to let the next build fit it.",
+                    class_="text-muted")
             if src.get("kind") == "refused_source" and not why_stale:
                 # the region's record holds the request; the staged version what
                 # its build computed
@@ -304,7 +313,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                            + (f": {src.get('title')}" if src.get("title") else "")
                            + (f"; documented gap: {gaps}" if gaps else ""),
                            ui.div(fa("triangle-exclamation"), " Not applied: ", why_stale,
-                                  class_="text-warning-emphasis") if why_stale else None),
+                                  class_="text-warning-emphasis") if why_stale else held_note),
                 ui.tags.td(str(d.get("rationale") or "")),
                 ui.tags.td(f"{d.get('recordedBy')}, {str(d.get('recordedAt') or '')[:10]}",
                            class_="text-muted text-nowrap"),

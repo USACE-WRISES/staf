@@ -513,7 +513,7 @@ def test_a_removal_never_takes_out_a_curve_the_build_fitted():
     state.owner_curve_decisions.set([d])
     assert lib.content_digest(_republish(state, bundle)) == bundle["contentDigest"]
     why = oc.stale([d], fields["reference_build"], built=fields["completed_metrics"])
-    assert why and why[0][1].endswith("the removal does not apply.")
+    assert why and "the removal does not apply" in why[0][1]
 
 
 def test_a_stale_include_states_nothing_on_the_curve():
@@ -568,6 +568,22 @@ def test_the_packet_says_what_the_build_made_of_a_refused_source():
                      (req, "Waits for the next build.")):
         text = "\n".join(rpk._hierarchy_section({"curve_decisions": [oc.summary(d)]}))
         assert words in text, (words, text)
+
+
+def test_a_build_holds_what_the_owner_removed_or_resourced():
+    """"Your choice stands" (owner decision 2026-09-22): the stage holds every
+    metric with a standing removal or source out of its own fit."""
+    src = (APP / "scripts" / "run_region_batch.py").read_text(encoding="utf-8")
+    assert "hold=oc.held_metrics(curve_decisions) or None" in src
+    removed = _decision("chem_TURB", oc.REMOVE)
+    unmap = _decision("chem_NTL", oc.UNMAP, functions=["nutrient-cycling"])
+    assert oc.held_metrics([removed, unmap, _refused_request()]) == ["bent_EPT_NTAX",
+                                                                     "chem_TURB"]
+    assert pe.held_words({"status": "local", "nUsable": 12}) == (
+        "this ecoregion's own reference, 12 stations")
+    assert pe.held_words({"status": "borrowed_l2", "level": "l2", "regionCode": "8.3",
+                          "regionName": "Ozark", "nUsable": 34}) == (
+        "the Level II 8.3 pool (Ozark), 34 stations")
 
 
 def test_step_6_says_what_waits_for_a_build():

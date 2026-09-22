@@ -31,9 +31,10 @@ national or modeled curve is, by whether its metric's archive values were
 corrected.
 
 A curve the owner chose (REF-15, an entry carrying ``ownerDecision``) is never
-carried: the region's curve decisions are its standing record, so the next build
-walks the metric like any other and the decision puts the owner's curve back,
-or, once the owner has withdrawn it, does not.
+carried: the region's curve decisions are its standing record. While the
+decision stands the next build keeps the metric out of its own fit ("your choice
+stands") and the decision puts the owner's curve back; once the owner has
+withdrawn it, the metric walks the hierarchy like any other.
 
 Reads the canonical library only. Pure otherwise: no network, no file writes.
 """

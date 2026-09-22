@@ -274,8 +274,9 @@ def test_a_choice_on_a_curve_the_build_now_fits_is_stale():
     d = _source_decision("chem_PTL", osrc.catalog_option("chem_PTL", region_code="27"), cfg,
                          ["nutrient-cycling"])
     build = {"method": pe.METHOD}
-    assert [why for _d, why in oc.stale([d], build, built={"chem_PTL"})] == [
-        "This build fits the metric itself, so its own curve scores."]
+    # a session built before the choice could hold the metric out of the fit
+    [why] = [why for _d, why in oc.stale([d], build, built={"chem_PTL"})]
+    assert "its own curve scores" in why and "Build the region again" in why
     assert oc.stale([d], build, built=set()) == []
     assert oc.effective_build(build, [d], built={"chem_PTL"}).get("ownerMetrics") is None
 

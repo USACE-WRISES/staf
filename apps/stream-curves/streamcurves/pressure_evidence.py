@@ -703,7 +703,11 @@ def carry_fitted_annotations(bundle: dict, stored: Optional[dict], *, metrics=No
     of ``bundle`` whose curve is exactly the one ``stored`` describes
     (:func:`fitted_annotations_of` of the build that fitted it). ``metrics``, when
     given, limits it to those curves (the ones whose review is unchanged). A key
-    the entry already states is kept. Returns the metrics carried."""
+    the entry already states is kept. Returns the metrics carried.
+
+    A curve the build left in no function (SELECT-04) had no entry to take a
+    signature from, so it is stored without one: its unchanged review, which
+    only ``metrics`` can vouch for, is what lets an owner's include restore it."""
     from .deep_export import deep_slug
     stored = stored or {}
     ids = {"spring-" + deep_slug(str(mk)): str(mk) for mk in stored
@@ -715,7 +719,10 @@ def carry_fitted_annotations(bundle: dict, stored: Optional[dict], *, metrics=No
             if mk is None:
                 continue
             saved = stored[mk] or {}
-            if _curve_signature(m) != saved.get("curve"):
+            if saved.get("curve") is None:
+                if metrics is None:
+                    continue
+            elif _curve_signature(m) != saved.get("curve"):
                 continue
             for k in FITTED_ANNOTATION_KEYS:
                 if saved.get(k) is not None and m.get(k) is None:
@@ -754,6 +761,14 @@ def session_reference_build(result: dict) -> Optional[dict]:
     fitted = [mk for mk in (result.get("curve_review") or {})
               if mk not in ladder and mk not in carried and mk not in fixed]
     fitted_annotations = fitted_annotations_of(result.get("bundle"), fitted)
+    # a fitted curve SELECT-04 left in no function has no bundle entry; what the
+    # build stated for it is kept too, so an owner's include (REF-15) published
+    # from the workspace states what the build would
+    for mk in fitted:
+        ann = stated.get(mk) or {}
+        kept = {k: ann[k] for k in FITTED_ANNOTATION_KEYS if ann.get(k) is not None}
+        if mk not in fitted_annotations and kept:
+            fitted_annotations[mk] = {"curve": None, **kept}
     out = {"method": METHOD,
            "referenceMethod": meta.get("referenceMethod"),
            "insufficientReferenceSupport": list(withheld),
@@ -772,7 +787,35 @@ def session_reference_build(result: dict) -> Optional[dict]:
         out["portfolioSelection"] = selection
     if fitted_annotations:
         out["fittedAnnotations"] = fitted_annotations
+    held = result.get("held_by_owner") or {}
+    if held:
+        # the metrics the owner's decisions held out of the fit whose station pool
+        # would have supported a curve (REF-15): what an undo says it gives back
+        out["ownerHeld"] = {mk: held_summary((h or {}).get("decision") or {})
+                            for mk, h in sorted(held.items())}
     return out
+
+
+def held_summary(decision: dict) -> dict:
+    """What a held metric's station pool was, in the session's shape."""
+    return {"status": decision.get("status"), "level": decision.get("level"),
+            "regionCode": decision.get("region_code"), "regionName": decision.get("region_name"),
+            "nUsable": decision.get("n_usable")}
+
+
+def held_words(held: Optional[dict]) -> str:
+    """A held metric's pool in words: "this ecoregion's own reference, 12 stations"
+    or "the Level II 8.3 pool (Ozark, Ouachita-Appalachian Forests), 34 stations"."""
+    h = held or {}
+    n = h.get("nUsable")
+    count = f", {int(n)} stations" if isinstance(n, (int, float)) else ""
+    if str(h.get("status") or "").startswith("local"):
+        return f"this ecoregion's own reference{count}"
+    level = {"l2": "Level II", "l1": "Level I", "l3": "Level III",
+             "nars9": "NARS-9"}.get(str(h.get("level") or ""), "")
+    where = " ".join(x for x in (level, str(h.get("regionCode") or "")) if x)
+    name = f" ({h['regionName']})" if h.get("regionName") else ""
+    return (f"the {where} pool" if where else "a regional pool") + f"{name}{count}"
 
 
 def ladder_session_rows(result: dict) -> dict:
@@ -1801,7 +1844,8 @@ def run_evidence(l3_code: str, name: str, *,
                  nrsa_keep_sites: Optional[dict] = None,
                  scale_registry: Optional[dict] = None,
                  carry: Any = True,
-                 force: Optional[dict] = None) -> dict:
+                 force: Optional[dict] = None,
+                 hold: Optional[list] = None) -> dict:
     """The decision-free half of a regional run under the pressure screen.
 
     ``carry`` (methodology 0.14): True carries forward every curve the
@@ -1813,7 +1857,15 @@ def run_evidence(l3_code: str, name: str, *,
     refuses that the owner accepted (``owner_curves.forced_sources``). Each is
     computed beside the build's own choices, which it never changes, with every
     check it fails recorded (``basis_ladder.force_source``); the owner's
-    decision puts it in the bundle at assembly."""
+    decision puts it in the bundle at assembly.
+
+    ``hold`` (REF-15, owner decision 2026-09-22, "your choice stands"): the
+    metrics the owner removed or chose a source for (``owner_curves.held_metrics``).
+    The build keeps each out of its own fit until the decision is withdrawn: its
+    station pools are still judged, apart, so a pool that would support a curve is
+    recorded (``held_by_owner``) and one that would not walks the ladder as any
+    withheld metric does, but no held station joins the pooled frame and no
+    curve is fitted for it."""
     from . import regional_agent as ra
 
     dataset_id = nrsa_dataset_id or nrsa_dataset.MULTI_CYCLE_DATASET_ID
@@ -1902,9 +1954,28 @@ def run_evidence(l3_code: str, name: str, *,
         return acceptance.pool_acceptor(mk, metric_config.get(mk) or {}, validation,
                                         family=rp.family_of(mk))
 
-    pools = rp.build_pools(list(metric_config), values, frame, l3_code,
-                           scale_registry=registry, excluded=exclude_sites,
+    # REF-15, "your choice stands": a metric the owner removed or chose a source
+    # for stays out of the build's own fit while the decision stands
+    held = sorted(str(mk) for mk in (hold or ()) if str(mk) in metric_config)
+    pools = rp.build_pools([mk for mk in metric_config if mk not in held], values, frame,
+                           l3_code, scale_registry=registry, excluded=exclude_sites,
                            accept_for=accept_for)
+    held_by_owner: dict = {}
+    if held:
+        # judged apart: the pooled frame, and so the run seed, never sees them
+        side = rp.build_pools(held, values, frame, l3_code, scale_registry=registry,
+                              excluded=exclude_sites, accept_for=accept_for)
+        pools["ledger"] = pd.concat([pools["ledger"], side["ledger"]], ignore_index=True)
+        pools["local_comparison"].update(side["local_comparison"])
+        for mk, d in side["decisions"].items():
+            if d.status == rp.STATUS_INSUFFICIENT:
+                pools["decisions"][mk] = d          # walks the ladder as withheld does
+            else:
+                held_by_owner[mk] = {"decision": d.to_dict(),
+                                     "config": dict(metric_config.get(mk) or {})}
+        for mk in held_by_owner:
+            metric_config.pop(mk, None)            # never fitted, never mapped by the build
+        _emit(on_event, "owner_hold", {"n_held": len(held), "n_supported": len(held_by_owner)})
     decisions = pools["decisions"]
     insufficient = {mk: d for mk, d in decisions.items()
                     if d.status == rp.STATUS_INSUFFICIENT}
@@ -2095,6 +2166,11 @@ def run_evidence(l3_code: str, name: str, *,
         # ride in the manifest so the inputs digest names them
         "forced_metrics": forced,
         "forced_sources": {mk: dict(ref) for mk, ref in sorted((force or {}).items())},
+        # REF-15, "your choice stands": the metrics the owner's decisions held out
+        # of the fit (the request, which the inputs digest names), and the ones a
+        # station pool would have supported
+        "owner_hold": sorted(str(mk) for mk in (hold or ())),
+        "held_by_owner": held_by_owner,
         "fixed_metrics": fixed_metrics,
         "discrimination": discrimination,
         "stratum_rows": stratum_rows, "strata_applied": strata_applied,

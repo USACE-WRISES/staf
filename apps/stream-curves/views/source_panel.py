@@ -462,6 +462,8 @@ def source_panel_server(input, output, session, state: AppState):
         with reactive.isolate():
             current = list(state.owner_curve_decisions() or [])
             gaps = list(state.function_coverage_exceptions() or [])
+            held = (state.reference_build() or {}).get("ownerHeld") or {}
+        undone = next((d for d in current if d.get("id") == did), {})
         run_dir = _region_dir()
         if run_dir is not None:
             _standing(run_dir)
@@ -473,6 +475,13 @@ def source_panel_server(input, output, session, state: AppState):
         if kept != gaps:
             state.function_coverage_exceptions.set(kept)
         ui.modal_remove()
+        if str(undone.get("metric")) in held:
+            # "your choice stands": this build kept the metric out of its fit
+            ui.notification_show(
+                "Undone. This build held the metric out of its fit for your decision, so it "
+                "has no curve here now. Build the region again to fit it.",
+                type="message", duration=9)
+            return
         ui.notification_show("Undone. The curve reads as the build made it.",
                              type="message", duration=5)
 

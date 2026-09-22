@@ -1648,7 +1648,8 @@ def run_evidence(l3_code: str, name: str, *,
                  reference_method: str = run_state.REFERENCE_METHOD_EASI,
                  scale_registry: Optional[dict] = None,
                  carry: Any = True,
-                 force: Optional[dict] = None) -> dict:
+                 force: Optional[dict] = None,
+                 hold: Optional[list] = None) -> dict:
     """The expensive, decision-free half of a regional run.
 
     ``reference_method`` chooses how reference stations are defined. The
@@ -1683,7 +1684,7 @@ def run_evidence(l3_code: str, name: str, *,
             nrsa_cycles=nrsa_cycles, exclude_sites=exclude_sites,
             nrsa_max_stream_order=nrsa_max_stream_order, nrsa_protocols=nrsa_protocols,
             nrsa_keep_sites=nrsa_keep_sites, scale_registry=scale_registry, carry=carry,
-            force=force)
+            force=force, hold=hold)
     directions = load_directions()
     protocols = tuple(nrsa_protocols) if nrsa_protocols else None
     candidates, panel_ledger = select_candidates_detailed(
@@ -2338,6 +2339,10 @@ def assemble(evidence: dict, *,
         # SELECT-04 chose before them (what the session stores, so they can be undone)
         "curve_decisions": [dict(d) for d in owner_decisions],
         "forced_sources": dict(evidence.get("forced_sources") or {}),
+        # the metrics the owner's decisions held out of this build's own fit
+        # ("your choice stands"): the request, and the ones a pool supported
+        "owner_hold": list(evidence.get("owner_hold") or []),
+        "held_by_owner": dict(evidence.get("held_by_owner") or {}),
         "base_portfolio_selection": base_selection,
         "base_metric_annotations": base_annotations,
         "base_withheld": base_withheld,

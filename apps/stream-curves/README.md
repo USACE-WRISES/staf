@@ -168,6 +168,29 @@ each choice (`ownerDecision`, `borrowedFrom` and `ownerException` on the curve,
 `ownerCurveDecisions` at the top), and the provenance carries one REF-15 record per decision,
 naming the rule it overrides. The refused sources a build computes join its inputs digest.
 
+**Your choice stands** (owner decision, 2026-09-22). A decision to remove a curve or to choose its
+source holds its metric out of the build's own fit until the owner withdraws it
+(`run_evidence(hold=)`, from `owner_curves.held_metrics`). The build still judges the metric's
+station pools, apart from the pooled frame, so the run seed never moves for it. A pool that would
+support a curve is recorded (`held_by_owner`, the REF-15 record's `heldFromFit`), and the Region
+builder says "Held out of the build". A pool that would not makes the metric walk the other rungs,
+as any withheld metric does. A held metric takes no slot in SELECT-04's plan, and the hold joins
+the inputs digest (`heldByOwner`).
+
+The region's file is the standing record everywhere:
+
+- Reopening a session drops a decision undone since.
+- A workspace save or undo seeds the file from the published version first.
+- A gap documented with a decision goes with it.
+
+A staged run publishes the decisions it was built with. When the region's decisions changed after
+the stage, promote refuses the run and the Region builder disables Publish: build the region again.
+Step 6 lists the refused sources that still wait for a build.
+
+A rebuild also carries the curves its published version itself carried forward. Each still names
+the version that built it and is checked against that version's station values
+(`carry_forward.prepare`).
+
 ### Excel calculator
 
 `library.publish_version` builds `vN/calculator.xlsx` from the bundle it just wrote

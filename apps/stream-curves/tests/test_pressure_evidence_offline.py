@@ -778,3 +778,61 @@ def test_a_build_applies_the_owners_curve_decisions(evidence):
     assert len([r for r in doc["records"] if r["rule_id"] == "REF-15"]) == 3
     section = "\n".join(review_packet._hierarchy_section(review_packet.hierarchy_block(res)))
     assert "Curve decisions of the owner (REF-15)" in section and withheld in section
+
+
+def _points(row) -> list:
+    return pd.DataFrame(row["curve_points"])[["metric_value", "index_score"]].round(9) \
+        .values.tolist()
+
+
+def test_the_owners_choice_holds_its_metric_out_of_the_fit(evidence):
+    """REF-15, owner decision 2026-09-22 ("your choice stands"): a metric the owner
+    removed or chose a source for stays out of the build's own fit though a station
+    pool would support it. The record says so, and the request joins the digest."""
+    from streamcurves import owner_curves as oc
+    from streamcurves import owner_sources as osrc
+    plain = evidence["55"]
+    plain_res = ra.assemble(plain)
+    fitted = next(mk for mk in sorted(plain["curve_rows"])
+                  if any(mid == "spring-" + deep_export.deep_slug(mk)
+                         for (_f, mid) in _blocks_by_function(plain_res["bundle"])))
+    mid = "spring-" + deep_export.deep_slug(fitted)
+    fn = next(f for (f, m) in _blocks_by_function(plain_res["bundle"]) if m == mid)
+    held_ev = _evidence("55", hold=[fitted])
+    assert fitted not in held_ev["curve_rows"] and fitted not in held_ev["metric_config"]
+    assert fitted not in held_ev["data"].columns
+    pool = held_ev["held_by_owner"][fitted]["decision"]
+    assert pool["status"] != rp.STATUS_INSUFFICIENT and pool["n_usable"]
+    # every other curve the build fits is the plain build's
+    for mk, row in plain["curve_rows"].items():
+        if mk != fitted:
+            assert _points(held_ev["curve_rows"][mk]) == _points(row), mk
+    why = "A reason long enough to be recorded."
+    cfg = dict(plain["metric_config"][fitted])
+    entered = {"kind": osrc.ENTERED, "title": "Owner thresholds", "citation": None,
+               "ref": {"method": osrc.BREAKPOINTS},
+               "curve": {"displayName": fitted, "points": [{"x": 0.0, "y": 0.0},
+                                                          {"x": 10.0, "y": 1.0}],
+                         "config": cfg, "annotations": osrc.entered_annotations(
+                             fitted, method=osrc.BREAKPOINTS, title="Owner thresholds",
+                             config=cfg)}}
+    chosen = oc.new_decision(fitted, oc.SOURCE, functions=[fn], source=entered, rationale=why,
+                             recorded_by="owner")
+    res = ra.assemble(held_ev, curve_decisions=[chosen])
+    got = _blocks_by_function(res["bundle"])[(fn, mid)]
+    assert got["basis"] == "owner-entered" and got["ownerDecision"]["recordedBy"] == "owner"
+    manifest = pv.build_run_manifest(res, started_at="a", finished_at="a")
+    assert manifest["inputs"]["reference"]["heldByOwner"] == [fitted]
+    [rec] = [r for r in pv.build_provenance(res, manifest, timestamp="a")["records"]
+             if r["rule_id"] == "REF-15"]
+    assert rec["computed"]["heldFromFit"]["nUsable"] == pool["n_usable"]
+    assert rec["computed"]["overrides"] in ("REF-04", "REF-11")
+    assert "holds it out of the build" in rec["recommendation"]
+    assert pe.session_reference_build(res)["ownerHeld"][fitted]["nUsable"] == pool["n_usable"]
+    # a removal leaves it out, and a build with no decision names no hold
+    removed = oc.new_decision(fitted, oc.REMOVE, rationale=why, recorded_by="owner")
+    res2 = ra.assemble(held_ev, curve_decisions=[removed])
+    assert not any(m == mid for (_f, m) in _blocks_by_function(res2["bundle"]))
+    plain_manifest = pv.build_run_manifest(plain_res, started_at="a", finished_at="a")
+    assert "heldByOwner" not in plain_manifest["inputs"]["reference"]
+    assert oc.held_metrics([chosen, removed]) == [fitted]
