@@ -34,6 +34,8 @@ from streamcurves.staf_library import (
     staf_functions_by_discipline,
     staf_metric_library_entries,
 )
+from streamcurves import metric_names
+from streamcurves import pressure_evidence as _pe
 from views.state import AppState
 from views.uihelpers import guard
 from views.theme import fa
@@ -87,6 +89,29 @@ def workbench_has_data(mk, metric_config: dict) -> bool:
         return False
     mk = str(mk)
     return not mk.startswith("lib:") and mk in (metric_config or {})
+
+
+def with_reference_rows(new_mapping, old_mapping, keys) -> pd.DataFrame:
+    """``new_mapping`` with the rows ``old_mapping`` holds for ``keys`` put back.
+
+    ``keys`` are the curves a pressure-screen build scores without fitting them
+    in the session (``pressure_evidence.reference_keys``). A curve from a rung
+    above the hierarchy is placed by nothing but these rows, so a reset or a
+    clear of the editable mapping must not drop them."""
+    keys = {str(k) for k in keys or ()}
+    if not keys or not isinstance(old_mapping, pd.DataFrame) or not len(old_mapping) \
+            or "metric_key" not in old_mapping.columns:
+        return new_mapping
+    keep = old_mapping[old_mapping["metric_key"].astype(str).isin(keys)]
+    if not len(keep):
+        return new_mapping
+    base = new_mapping if isinstance(new_mapping, pd.DataFrame) else keep.iloc[0:0]
+    if len(base) and "metric_key" in base.columns:
+        base = base[~base["metric_key"].astype(str).isin(keys)]
+    out = pd.concat([base, keep], ignore_index=True)
+    if "sort_order" in out.columns:
+        out["sort_order"] = range(1, len(out) + 1)
+    return out
 
 
 def update_mapping(state: AppState, mutate_fn) -> pd.DataFrame:
@@ -264,7 +289,10 @@ def discipline_map_server(input, output, session, state: AppState):
                 f"Could not load STAF defaults: {e}", type="error", duration=8
             )
             return
-        state.discipline_function_mapping.set(dm)
+        with reactive.isolate():
+            old = state.discipline_function_mapping()
+            keys = _pe.reference_keys(state.reference_build())
+        state.discipline_function_mapping.set(with_reference_rows(dm, old, keys))
         state.discipline_function_mapping_confirmed.set(False)
         active_function.set(None)
         ui.notification_show(
@@ -282,8 +310,10 @@ def discipline_map_server(input, output, session, state: AppState):
         no rows to show as unassigned."""
         with reactive.isolate():
             metric_config = state.metric_config() or {}
-        state.discipline_function_mapping.set(
-            blank_function_mapping_scaffold(list(metric_config.keys())))
+            old = state.discipline_function_mapping()
+            keys = _pe.reference_keys(state.reference_build())
+        state.discipline_function_mapping.set(with_reference_rows(
+            blank_function_mapping_scaffold(list(metric_config.keys())), old, keys))
         state.discipline_function_mapping_confirmed.set(False)
         active_function.set(None)
         ui.notification_show(
@@ -299,9 +329,11 @@ def discipline_map_server(input, output, session, state: AppState):
     def _reset_workbook():
         with reactive.isolate():
             startup = state.startup_discipline_function_mapping()
+            old = state.discipline_function_mapping()
+            keys = _pe.reference_keys(state.reference_build())
         if startup is None or len(startup) == 0:
             return
-        state.discipline_function_mapping.set(startup)
+        state.discipline_function_mapping.set(with_reference_rows(startup, old, keys))
         state.discipline_function_mapping_confirmed.set(False)
         active_function.set(None)
         ui.notification_show(
@@ -455,6 +487,16 @@ def discipline_map_server(input, output, session, state: AppState):
         hide_nodata = bool(input.hide_nodata())
         active = active_function()
         by_disc = staf_functions_by_discipline()
+        # The curves this version scores that the session did not fit (carried
+        # forward, from a rung above the hierarchy, fixed criteria): locked chips
+        # under the functions the bundle places them in, never editable here.
+        with reactive.isolate():
+            built = state.completed_metrics() or {}
+        reference = _pe.reference_rows(state.reference_build(), mapping, built=built)
+        reference_by_fn: dict[str, list[str]] = {}
+        for rk, entry in reference.items():
+            for fid in entry["functions"]:
+                reference_by_fn.setdefault(fid, []).append(rk)
 
         def metrics_for_fn(fn: str) -> list[str]:
             if mapping is None or len(mapping) == 0:
@@ -501,6 +543,20 @@ def discipline_map_server(input, output, session, state: AppState):
                 class_="wb-chip " + ("wb-chip-nodata" if nodata else "wb-chip-data"),
             )
 
+        def locked_chip(mk: str):
+            entry = reference[mk]
+            name = (entry.get("config") or {}).get("display_name")
+            if metric_names.is_placeholder_name(name, mk):
+                name = metric_names.display_name_for(mk, name)
+            return ui.tags.span(
+                fa("lock"),
+                ui.tags.span(str(name or mk), class_="wb-chip-label"),
+                ui.tags.span(str(entry.get("label") or ""), class_="wb-chip-tag"),
+                class_="wb-chip wb-chip-data wb-chip-locked",
+                title=(f"{entry.get('label')}. Read-only here: the build did not fit this "
+                       "curve, so its function is part of the version."),
+            )
+
         def fn_cell(fn: str):
             is_active = active is not None and active == fn
             add_btn = ui.tags.button(
@@ -523,13 +579,15 @@ def discipline_map_server(input, output, session, state: AppState):
             )
 
         def metrics_cell(fn: str):
-            keys = metrics_for_fn(fn)
+            # a reference curve's own rows show as its locked chip instead
+            keys = [k for k in metrics_for_fn(fn) if k not in reference]
             if hide_nodata:
                 keys = [k for k in keys if workbench_has_data(k, metric_config)]
-            if not keys:
+            chips = [make_chip(k, fn) for k in keys]
+            chips += [locked_chip(rk)
+                      for rk in reference_by_fn.get(_pe.canonical_function_id(fn) or "", [])]
+            if not chips:
                 chips = [ui.tags.span("—", class_="wb-empty text-muted")]
-            else:
-                chips = [make_chip(k, fn) for k in keys]
             return ui.tags.td(*chips, class_="wb-metrics")
 
         return render_wb_table(by_disc, fn_cell=fn_cell, metrics_cell=metrics_cell)
@@ -582,14 +640,19 @@ def discipline_map_server(input, output, session, state: AppState):
         strip's stage-4 status (assessment_publish.run_snapshot) can never
         disagree about what counts as a gap.
         """
-        # Functions a pressure-screen build covers with fixed-criteria metrics
-        # are not gaps, though those metrics never sit in the editable mapping.
+        # Functions a pressure-screen build covers with curves the session did
+        # not fit (fixed criteria, carried-forward and ladder curves) are not
+        # gaps, though none of those metrics sits in the workbook.
         from streamcurves import pressure_evidence as _pe
+        build = state.reference_build()
+        mapping = state.discipline_function_mapping()
         return uncovered_functions_from_mapping(
-            state.discipline_function_mapping(),
+            mapping,
             state.metric_config(),
             state.function_coverage_exceptions(),
-            always_covered=_pe.fixed_function_ids(state.reference_build()),
+            always_covered=_pe.reference_function_ids(
+                build, mapping, built=state.completed_metrics() or {}),
+            exclude_pairs=_pe.not_selected_pairs(build),
         )
 
     @render.ui

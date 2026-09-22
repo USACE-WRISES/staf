@@ -245,6 +245,10 @@ class AppState:
     # folds it back into the bundle so the fixed-criteria metrics, each curve's
     # reference support and the withheld list survive. None = a legacy build.
     reference_build: reactive.Value = _rv()
+    # Bumped when the owner saves or undoes the removal of a carried curve (a
+    # file in the region's run folder, read at the next build), so the gallery
+    # and the Region builder repaint. Transient: not in SESSION_FIELDS.
+    reference_removals_nonce: reactive.Value = _rv(0)
 
     # ── root navigation requests (stage banner -> shell) ────────────────────
     # nav_request: a nav_panel value to switch main_navbar to; wizard_step_request:

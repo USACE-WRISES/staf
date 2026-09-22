@@ -272,8 +272,21 @@ def hierarchy_block(result: dict) -> dict:
     gaps = [e for e in (result.get("coverage_exceptions") or [])
             if "cov01" in str(e.get("policyEntry") or "")]
     candidates = [a for a in result.get("ladder_attempts") or [] if a.get("candidate")]
+    from . import curve_basis
+    carried_curves = []
+    for mk, c in sorted(carried.items()):
+        ann = c.get("annotations") or {}
+        basis = curve_basis.resolve(ann.get("basis"), criteria_basis=ann.get("criteriaBasis"))
+        carried_curves.append({
+            "metric": mk,
+            "functions": [m.get("function_label") for m in c.get("mapping") or []],
+            "basis": curve_basis.label_for(basis),
+            "n": (c.get("row") or {}).get("n_reference"),
+            "confidence": ann.get("confidenceLabel")})
     return {"carried_from": result.get("carried_from") or {},
             "carried": sorted(carried),
+            "carried_curves": carried_curves,
+            "removed_carried": dict(result.get("removed_carried") or {}),
             "rebuilt": {mk: v.get("why") for mk, v in (result.get("carry_rebuilt") or {}).items()},
             "sources": sources,
             "not_selected": {fid: sel.get("notSelected") for fid, sel in
@@ -294,7 +307,16 @@ def _hierarchy_section(h: dict) -> list[str]:
                      f"unchanged from version {cf.get('fromVersion')}.")
         for mk, why in sorted((h.get("rebuilt") or {}).items()):
             lines.append(f"- rebuilt **{mk}**: {why}")
+        for mk, why in sorted((h.get("removed_carried") or {}).items()):
+            lines.append(f"- removed by the owner **{mk}**: {why}")
         lines.append("")
+        cc = h.get("carried_curves") or []
+        if cc:
+            lines += _table(["carried metric", "functions", "basis", "n", "confidence"],
+                            [[c["metric"], "; ".join(str(f) for f in c.get("functions") or []),
+                              c.get("basis") or "", "" if c.get("n") is None else c["n"],
+                              c.get("confidence") or ""] for c in cc])
+            lines.append("")
     rows = [[s["metric"], s.get("status"), f"{s.get('level') or ''} {s.get('region_code') or ''}",
              s.get("n_usable"), "" if s.get("screen") is None else f"{float(s['screen']):g}",
              " | ".join(s.get("tried") or [])] for s in h.get("sources") or []]
@@ -772,7 +794,29 @@ def packet_tiles(result: dict) -> list[dict]:
         tile["badge"] = r.get("confidence_label")
         tiles.append(tile)
     # the run's own mapping carries every function a metric serves, primary first
-    return curve_svg.assign_functions(tiles, result.get("discipline_function_mapping"))
+    tiles = curve_svg.assign_functions(tiles, result.get("discipline_function_mapping"))
+    carried = _carried_tiles(result)
+    if carried:
+        # a carried curve keeps its published placement, not the run's default one
+        tiles += curve_svg.assign_functions(
+            carried, [r for c in (result.get("carried") or {}).values()
+                      for r in c.get("mapping") or []])
+    return tiles
+
+
+def _carried_label(result: dict) -> str:
+    ver = (result.get("carried_from") or {}).get("fromVersion")
+    return f"Carried from v{ver}" if ver else "Carried forward"
+
+
+def _carried_tiles(result: dict) -> list[dict]:
+    """The curves carried forward unchanged, as read-only tiles."""
+    label = _carried_label(result)
+    return [curve_svg.reference_tile(mk, {"row": c.get("row"), "config": c.get("config"),
+                                          "annotations": c.get("annotations"),
+                                          "kind": "carried", "label": label,
+                                          "in_bundle": True})
+            for mk, c in sorted((result.get("carried") or {}).items())]
 
 
 def write_curve_gallery_html(result: dict, path: Path | str) -> Optional[Path]:
@@ -799,17 +843,24 @@ def write_curve_gallery(result: dict, path: Path | str) -> Optional[Path]:
         logger.warning("curve gallery skipped: %s", exc)
         return None
     rows = curve_rows_for_packet(result)
-    if not rows:
+    items = [(r, (result.get("curve_rows") or {}).get(r["metric"]) or {}, False) for r in rows]
+    label = _carried_label(result)
+    for mk, c in sorted((result.get("carried") or {}).items()):
+        rng = (c.get("annotations") or {}).get("referenceRange") or [None, None]
+        items.append(({"metric": mk, "reference_min": _num(rng[0]) if len(rng) > 1 else None,
+                       "reference_max": _num(rng[1]) if len(rng) > 1 else None,
+                       "in_scope": True, "confidence_label": label.lower(), "flags": []},
+                      c.get("row") or {}, True))
+    if not items:
         return None
-    n = len(rows)
+    n = len(items)
     ncol = 5
     nrow = math.ceil(n / ncol)
     fig, axes = plt.subplots(nrow, ncol, figsize=(3.2 * ncol, 2.6 * nrow), squeeze=False)
     for ax in axes.flat:
         ax.set_visible(False)
-    for ax, r in zip(axes.flat, rows):
+    for ax, (r, row, is_carried) in zip(axes.flat, items):
         ax.set_visible(True)
-        row = result["curve_rows"].get(r["metric"]) or {}
         pts = curves.deep_points_from_row(row) if hasattr(curves, "deep_points_from_row") else None
         if pts is None:
             from . import deep_export
@@ -821,7 +872,8 @@ def write_curve_gallery(result: dict, path: Path | str) -> Optional[Path]:
         for y in (0.39, 0.69):
             ax.axhline(y, color="#999999", lw=0.6, ls="--")
         style = "-" if r["in_scope"] else ":"
-        ax.plot(xs, ys, style, color="#1f4e79" if r["in_scope"] else "#b04040", lw=1.4, marker="o", ms=2.5)
+        color = "#5b7a99" if is_carried else ("#1f4e79" if r["in_scope"] else "#b04040")
+        ax.plot(xs, ys, style, color=color, lw=1.4, marker="o", ms=2.5)
         title = f"{r['metric']} ({r['confidence_label'] or '?'})"
         if r["flags"]:
             title += " *"

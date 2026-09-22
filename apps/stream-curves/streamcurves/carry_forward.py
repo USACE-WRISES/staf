@@ -122,7 +122,9 @@ def prepare(l3_code: str, *, root: Optional[Path] = None) -> dict:
     Returns ``{}`` when the ecoregion has no published version. Otherwise
     ``assessmentId``, ``fromVersion``, ``contentDigest``, ``carried`` (metric ->
     the curve row, config, annotations, mapping rows and reference support to
-    restore) and ``rebuilt`` (metric -> why it goes through the hierarchy).
+    restore), ``rebuilt`` (metric -> why it goes through the hierarchy) and
+    ``approvals`` (the version's SELECT-01 approvals, each with the signature of
+    the function block it approved, for :func:`carried_approvals`).
     """
     from . import library as lib
     from . import session_io as sio
@@ -136,7 +138,8 @@ def prepare(l3_code: str, *, root: Optional[Path] = None) -> dict:
     build = fields.get("reference_build") or {}
     out: dict[str, Any] = {"assessmentId": aid, "fromVersion": ver,
                            "contentDigest": bundle.get("contentDigest"),
-                           "carried": {}, "rebuilt": {}}
+                           "carried": {}, "rebuilt": {},
+                           "approvals": _prior_approvals(vdir, bundle)}
     if build.get("method") != "pressure-screen":
         out["legacy"] = True
         return out
@@ -210,6 +213,79 @@ def prepare(l3_code: str, *, root: Optional[Path] = None) -> dict:
                                               {"basis": basis}, mk, ver),
             "basis": basis, "ladder": mk in ladder,
         }
+    return out
+
+
+def _round_points(points) -> list[list[float]]:
+    return [[round(float(p["x"]), 9), round(float(p["y"]), 9)] for p in points or []]
+
+
+def block_signature(block: Optional[dict]) -> dict:
+    """``{metricId: {points, layers}}`` of one function block of a bundle: the
+    exact metric set, and the curve of each, that a SELECT-01 approval of that
+    function approved."""
+    out: dict[str, dict] = {}
+    for m in (block or {}).get("metrics") or []:
+        curve = m.get("curve") or {}
+        out[str(m.get("metricId"))] = {
+            "points": _round_points(curve.get("points")),
+            "layers": [[str(L.get("stratum") or ""), _round_points(L.get("points"))]
+                       for L in m.get("curveLayers") or []],
+        }
+    return out
+
+
+def _prior_approvals(vdir: Path, bundle: dict) -> list[dict]:
+    """The published version's SELECT-01 approvals, each with the signature of the
+    block it approved. A pending marker never carries: only an approval a named
+    owner confirmed."""
+    from . import decisions as dec
+    from . import library as lib
+    try:
+        meta = json.loads((vdir / lib.META_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    blocks = {str(b.get("functionId")): b for b in bundle.get("metricsByFunction") or []}
+    out = []
+    for ap in meta.get("portfolioApprovals") or []:
+        fid = str(ap.get("functionId") or "")
+        who = str(ap.get("approvedBy") or "").strip()
+        if not fid or not who or dec.PENDING_SUFFIX in who or fid not in blocks:
+            continue
+        out.append({"functionId": fid, "approvedBy": who, "note": str(ap.get("note") or ""),
+                    "metrics": block_signature(blocks[fid])})
+    return out
+
+
+def carried_approvals(prior_approvals, bundle: Optional[dict], carried, fixed=(), *,
+                      have=(), from_version=None) -> list[dict]:
+    """The prior version's SELECT-01 approvals that stand in this build (owner
+    decision, 2026-09-21): an approval carries when the function's metrics here
+    are exactly the set it approved, each with the same curve, and every one is
+    carried forward unchanged or a fixed criterion. It keeps its recorded
+    approver, and its note says it carried. Any change to the set needs a new
+    approval, and one the owner gave for this build (``have``) wins."""
+    if not prior_approvals or not bundle:
+        return []
+    ok_ids = {"spring-" + deep_slug(k) for k in list(carried or {}) + list(fixed or [])}
+    blocks = {str(b.get("functionId")): b for b in bundle.get("metricsByFunction") or []}
+    have = {str(f) for f in have or ()}
+    out = []
+    for ap in prior_approvals:
+        fid = str(ap.get("functionId") or "")
+        if not fid or fid in have or fid not in blocks:
+            continue
+        now = block_signature(blocks[fid])
+        if not now or now != ap.get("metrics") or not set(now) <= ok_ids:
+            continue
+        note = (f"Carried from v{from_version} with its approved metric set unchanged."
+                if from_version else "Carried forward with its approved metric set unchanged.")
+        if ap.get("note"):
+            note += " " + str(ap["note"])
+        entry = {"functionId": fid, "approvedBy": ap["approvedBy"], "note": note}
+        if from_version:
+            entry["carriedFrom"] = int(from_version)
+        out.append(entry)
     return out
 
 

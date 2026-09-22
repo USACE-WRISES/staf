@@ -56,6 +56,7 @@ _SCRIPTS = Path(__file__).resolve().parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
+from streamcurves import carry_forward as cf  # noqa: E402
 from streamcurves import decisions as dec  # noqa: E402
 from streamcurves import library as lib  # noqa: E402
 from streamcurves import methodology  # noqa: E402
@@ -450,6 +451,20 @@ def cmd_stage(a) -> int:
         print("[batch] assessment -> assessment.streamcurves.json")
     except Exception as exc:  # noqa: BLE001 - a report is still worth writing
         print(f"[batch] could not write the session file: {exc}")
+
+    # A SELECT-01 approval carries with its unchanged metric set (methodology
+    # 0.14, owner decision 2026-09-21): a rebuild keeps the owner's decision for a
+    # function whose metrics are all carried unchanged, and any change to the set
+    # needs a new approval. An approval passed for this build wins.
+    carried_ok = cf.carried_approvals(
+        evidence.get("carried_approvals") or [], result.get("bundle"),
+        result.get("carried") or {}, result.get("fixed_metrics") or {},
+        have=[str(x.get("functionId")) for x in approvals],
+        from_version=(evidence.get("carried_from") or {}).get("fromVersion"))
+    if carried_ok:
+        approvals.extend(carried_ok)
+        print(f"[batch] {len(carried_ok)} portfolio approval(s) carried with an unchanged "
+              f"metric set: {', '.join(x['functionId'] for x in carried_ok)}")
 
     # 4. the staged publish
     publish_info = None

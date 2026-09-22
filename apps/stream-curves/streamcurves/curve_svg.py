@@ -224,6 +224,35 @@ def tile_from_curve_rows(metric: str, rows: Iterable[Mapping] | None, *,
     }
 
 
+def reference_tile(metric: str, entry: Mapping) -> dict:
+    """A read-only tile for a curve the session scores without having fitted it
+    (``pressure_evidence.reference_rows``): carried forward from the published
+    version, from a rung above the hierarchy, or a fixed criterion. Its status
+    pill names where it comes from, and a curve SELECT-04 left in no function
+    draws as not in scope."""
+    row = dict(entry.get("row") or {})
+    rows = [row] + [{"stratum": L.get("stratum"), "curve_points": L.get("curve_points"),
+                     "curve_status": row.get("curve_status"),
+                     "curve_source": row.get("curve_source")}
+                    for L in row.get("all_strata") or []]
+    tile = tile_from_curve_rows(metric, rows, metric_entry=entry.get("config"),
+                                in_scope=bool(entry.get("in_bundle", True)))
+    ann = dict(entry.get("annotations") or {})
+    rng = ann.get("referenceRange")
+    if isinstance(rng, (list, tuple)) and len(rng) == 2:
+        lo, hi = _num(rng[0]), _num(rng[1])
+        if lo is not None and hi is not None:
+            tile["reference_range"] = (lo, hi)
+    tile["read_only"] = True
+    tile["source_kind"] = entry.get("kind")
+    tile["badge"] = entry.get("label")
+    tile["status_text"] = (entry.get("label") if entry.get("in_bundle", True)
+                           else "Supported, not selected")
+    tile["basis_label"] = ann.get("basisLabel")
+    tile["confidence_label"] = ann.get("confidenceLabel")
+    return tile
+
+
 # --------------------------------------------------------------------------- #
 # The thumbnail
 # --------------------------------------------------------------------------- #
@@ -392,6 +421,8 @@ h1 { font-size: 1.1rem; margin: 0 0 .25rem; }
 .curve-tile.is-cross-listed { border-style: dashed; background: #fbfcfe; }
 .curve-tile-cross { font-size: .66rem; color: #6c757d; margin-bottom: .15rem; }
 .curve-tile-cross a { color: #1c7ed6; text-decoration: none; }
+.curve-tile.is-reference { border-left: 4px solid #5b7a99; background: #fbfcfd; }
+.is-reference .curve-tile-status { background: #5b7a99; color: #fff; }
 """
 
 
@@ -401,11 +432,17 @@ def tile_state_classes(tile: Mapping) -> list[str]:
     if tile.get("needs_review"):
         classes.append("is-flagged")
     decision = tile.get("decision")
+    if tile.get("read_only"):
+        # carried forward, from a rung above the hierarchy, or a fixed criterion:
+        # never reviewed here, so never "unreviewed"
+        classes.append("is-reference")
+        if tile.get("pending_removal"):
+            classes.append("is-removal-pending")
     if decision == run_state.DECISION_REMOVED or tile.get("in_scope") is False:
         classes.append("is-removed")
     elif decision == run_state.DECISION_FINALIZED:
         classes.append("is-finalized")
-    elif decision is None:
+    elif decision is None and not tile.get("read_only"):
         classes.append("is-unreviewed")
     if not any(s.get("points") for s in (tile.get("strata") or [])):
         classes.append("is-not-run")
@@ -416,6 +453,13 @@ def tile_state_classes(tile: Mapping) -> list[str]:
 
 def tile_title(tile: Mapping) -> str:
     """The hover text: display name, decision, the first flag."""
+    if tile.get("read_only"):
+        bits = [str(tile.get("display_name") or tile.get("metric") or ""),
+                str(tile.get("status_text") or tile.get("badge") or ""),
+                str(tile.get("basis_label") or ""),
+                (f"Confidence {tile['confidence_label']}" if tile.get("confidence_label") else ""),
+                "Read-only here: the build did not fit this curve"]
+        return ". ".join(b for b in bits if b)
     bits = [str(tile.get("display_name") or tile.get("metric") or "")]
     bits.append(DECISION_LABELS.get(tile.get("decision"), str(tile.get("decision"))))
     flags = tile.get("flags") or []
@@ -425,6 +469,8 @@ def tile_title(tile: Mapping) -> str:
 
 
 def status_label(tile: Mapping) -> str:
+    if tile.get("status_text"):
+        return str(tile["status_text"])
     status = tile.get("review_status")
     if status:
         return STATUS_LABELS.get(status, str(status))

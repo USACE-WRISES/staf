@@ -37,6 +37,7 @@ except Exception:  # noqa: BLE001
 import logging
 
 from streamcurves import methodology
+from streamcurves import pressure_evidence
 from streamcurves import run_state as rs
 from streamcurves.mapping import realign_discipline_function_mapping
 from streamcurves.paths import WWW_DIR
@@ -297,7 +298,11 @@ def server(input, output, session):
         metric_keys = list(metric_config.keys())
         with reactive.isolate():
             current = state.discipline_function_mapping()
-        realigned = realign_discipline_function_mapping(current, metric_keys)
+            # Curves a pressure-screen build scores without fitting them here
+            # (carried forward, from a rung above the hierarchy) never sit in the
+            # workbook, and their rows are what places them in the bundle.
+            keep = pressure_evidence.reference_keys(state.reference_build())
+        realigned = realign_discipline_function_mapping(current, metric_keys, keep)
         if realigned["added"] or realigned["dropped"]:
             state.discipline_function_mapping_confirmed.set(False)
             if realigned["dropped"]:
