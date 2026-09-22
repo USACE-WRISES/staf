@@ -494,6 +494,82 @@ def test_what_the_owner_requested_is_compared_never_what_a_build_computed():
     assert not oc.decisions_changed(staged, [unmap])
 
 
+def _scored_fitted(fields, bundle):
+    """A metric the session fitted that scores a function, and that function."""
+    from streamcurves.deep_export import deep_slug
+    for mk in sorted(fields["completed_metrics"]):
+        mid = "spring-" + deep_slug(mk)
+        for b in bundle["metricsByFunction"]:
+            if any(m["metricId"] == mid for m in b.get("metrics") or []):
+                return mk, b["functionId"]
+    raise AssertionError("no fitted metric scores a function")
+
+
+def test_a_removal_never_takes_out_a_curve_the_build_fitted():
+    state, bundle, fields = _opened("eastern-corn-belt-plains/v7")
+    fitted, _fid = _scored_fitted(fields, bundle)
+    # recorded while the metric was carried; a later build fitted it
+    d = _decision(fitted, oc.REMOVE)
+    state.owner_curve_decisions.set([d])
+    assert lib.content_digest(_republish(state, bundle)) == bundle["contentDigest"]
+    why = oc.stale([d], fields["reference_build"], built=fields["completed_metrics"])
+    assert why and why[0][1].endswith("the removal does not apply.")
+
+
+def test_a_stale_include_states_nothing_on_the_curve():
+    state, bundle, fields = _opened("eastern-corn-belt-plains/v7")
+    fitted, fid = _scored_fitted(fields, bundle)
+    d = _decision(fitted, oc.INCLUDE, functions=[fid])     # it already scores there
+    state.owner_curve_decisions.set([d])
+    rebuilt = _republish(state, bundle)
+    assert lib.content_digest(rebuilt) == bundle["contentDigest"]
+    assert all(not m.get("ownerDecisions") for b in rebuilt["metricsByFunction"]
+               for m in b.get("metrics") or [])
+    assert oc.stale([d], fields["reference_build"], built=fields["completed_metrics"])
+
+
+def test_the_sample_floor_of_a_forced_source_counts_distinct_donors():
+    from streamcurves import acceptance
+    matched = acceptance.all_checks("chem_PTL", "3c_matched", [1.0 + i % 3 for i in range(12)],
+                                    {}, {}, n=3)
+    assert not next(c for c in matched if c["check"] == "ACC-01")["pass"]
+    pool = acceptance.all_checks("chem_PTL", "local", [float(i) for i in range(12)], {}, {})
+    assert next(c for c in pool if c["check"] == "ACC-01")["pass"]
+
+
+def test_one_request_that_fails_never_stops_the_build(monkeypatch):
+    from streamcurves import basis_ladder
+
+    def boom(*_a, **_k):
+        raise RuntimeError("no such option")
+    monkeypatch.setattr(basis_ladder, "force_source", boom)
+    got = pe.forced_sources({"chem_CHLA": {"rule": "REF-11", "option": "regional_l2"}},
+                            metric_config={"chem_CHLA": {"display_name": "Chlorophyll"}},
+                            carried={}, insufficient={"chem_CHLA": None}, ladder_rows={},
+                            frame=pd.DataFrame(), values=pd.DataFrame(), l3_code="27",
+                            name="Central Great Plains", validation=None, registry=None,
+                            excluded=None)
+    assert got["chem_CHLA"]["row"] is None and "could not compute" in got["chem_CHLA"]["why"]
+    req = _refused_request("chem_CHLA", "light-thermal-regime")
+    filled = oc.with_forced([req], got)[0]
+    assert "could not compute" in filled["source"]["failedAtBuild"]
+    assert oc.chosen([filled]) == {} and oc.chosen([req]) == {}
+
+
+def test_the_packet_says_what_the_build_made_of_a_refused_source():
+    from streamcurves import review_packet as rpk
+    req = _refused_request()
+    failed = {**req, "source": {**req["source"], "failedAtBuild": "2 usable stations."}}
+    computed = {**req, "id": "cd-computed", "source": {**req["source"], "failed": [
+        {"check": "ACC-05/06", "pass": False, "why": "The recovery test refused it."}],
+        "curve": {"points": [{"x": 0.0, "y": 0.0}, {"x": 1.0, "y": 1.0}]}}}
+    for d, words in ((failed, "Not applied: 2 usable stations."),
+                     (computed, "Failed checks: ACC-05/06, The recovery test refused it."),
+                     (req, "Waits for the next build.")):
+        text = "\n".join(rpk._hierarchy_section({"curve_decisions": [oc.summary(d)]}))
+        assert words in text, (words, text)
+
+
 def test_step_6_says_what_waits_for_a_build():
     src = (APP / "views" / "publish.py").read_text(encoding="utf-8")
     assert "_waiting_note(state)" in src and "oc.live_exceptions(exceptions" in src

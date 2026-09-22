@@ -717,3 +717,58 @@ def test_a_rebuild_carries_every_published_curve_it_does_not_rebuild():
     assert all(support[mk].get("carried_from") == prior["fromVersion"] for mk in carried)
     for mk in prior["rebuilt"]:
         assert not support.get(mk, {}).get("carried_from")
+
+
+# --------------------------------------------------------------------------- #
+# REF-15: a build applies the owner's curve decisions, end to end
+# --------------------------------------------------------------------------- #
+def test_a_build_applies_the_owners_curve_decisions(evidence):
+    from streamcurves import owner_curves as oc
+    from streamcurves import owner_sources as osrc
+    ev = evidence["55"]
+    plain = ra.assemble(ev)
+    before = _blocks_by_function(plain["bundle"])
+    why = "A reason long enough to be recorded."
+    ladder = sorted(ev["ladder_metrics"])[0]
+    fixed = next(mk for mk in sorted(FIXED)
+                 if sum(1 for (_f, mid) in before
+                        if mid == "spring-" + deep_export.deep_slug(mk)) > 1)
+    fixed_mid = "spring-" + deep_export.deep_slug(fixed)
+    fixed_fn = sorted(f for (f, mid) in before if mid == fixed_mid)[-1]
+    withheld = sorted(ev["insufficient_support"])[0]
+    cfg = osrc.agent_config(withheld)
+    entered = {"kind": osrc.ENTERED, "title": "Owner thresholds", "citation": None,
+               "ref": {"method": osrc.BREAKPOINTS},
+               "curve": {"displayName": withheld, "points": [{"x": 0.0, "y": 0.0},
+                                                            {"x": 10.0, "y": 1.0}],
+                         "config": cfg, "annotations": osrc.entered_annotations(
+                             withheld, method=osrc.BREAKPOINTS, title="Owner thresholds",
+                             config=cfg)}}
+    fn = osrc.crosswalk_functions(withheld)[0]
+    decisions = [
+        oc.new_decision(ladder, oc.REMOVE, rationale=why, recorded_by="owner"),
+        oc.new_decision(fixed, oc.UNMAP, functions=[fixed_fn], rationale=why,
+                        recorded_by="owner"),
+        oc.new_decision(withheld, oc.SOURCE, functions=[fn], source=entered, rationale=why,
+                        recorded_by="owner")]
+    res = ra.assemble(ev, curve_decisions=decisions)
+    after = _blocks_by_function(res["bundle"])
+    ladder_mid = "spring-" + deep_export.deep_slug(ladder)
+    assert not any(mid == ladder_mid for (_f, mid) in after)
+    assert (fixed_fn, fixed_mid) not in after
+    assert any(mid == fixed_mid for (_f, mid) in after)
+    got = after[(fn, "spring-" + deep_export.deep_slug(withheld))]
+    assert got["ownerDecision"]["recordedBy"] == "owner" and got["basis"] == "owner-entered"
+    assert withheld not in {str(w.get("metricKey")) for w in
+                            res["bundle"].get("insufficientReferenceSupport") or []}
+    # nothing else moves: every other entry is the plain build's
+    touched = {ladder_mid, fixed_mid, "spring-" + deep_export.deep_slug(withheld)}
+    assert {k: v for k, v in before.items() if k[1] not in touched} == \
+        {k: v for k, v in after.items() if k[1] not in touched}
+    assert len(res["bundle"]["ownerCurveDecisions"]) == 3
+    # the record: one REF-15 record per decision, and the packet section
+    manifest = pv.build_run_manifest(res, started_at="a", finished_at="a")
+    doc = pv.build_provenance(res, manifest, timestamp="a")
+    assert len([r for r in doc["records"] if r["rule_id"] == "REF-15"]) == 3
+    section = "\n".join(review_packet._hierarchy_section(review_packet.hierarchy_block(res)))
+    assert "Curve decisions of the owner (REF-15)" in section and withheld in section

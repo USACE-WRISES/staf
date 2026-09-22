@@ -347,6 +347,17 @@ def _hierarchy_section(h: dict) -> list[str]:
                       f"({owner_sources.GROUP_LABELS.get(src.get('kind'), src.get('kind'))}), "
                       f"{src.get('citation') or owner_sources.JUDGMENT.lower()}."
                       if src else "")
+            if src.get("kind") == owner_sources.REFUSED:
+                # what the build made of the refused source the owner accepted
+                if src.get("failedAtBuild"):
+                    chosen += f" Not applied: {src['failedAtBuild']}"
+                elif src.get("waitsForBuild"):
+                    chosen += " Waits for the next build."
+                else:
+                    checks = "; ".join(f"{f.get('check')}, {str(f.get('why') or '').rstrip('.')}"
+                                       for f in src.get("failed") or [])
+                    chosen += (f" Failed checks: {checks}." if checks
+                               else " It passed every check.")
             lines.append(f"- {owner_curves.ACTION_LABELS.get(d.get('action'), d.get('action'))}"
                          f"{(' (' + fns + ')') if fns else ''}: **{d.get('metric')}**, by "
                          f"{d.get('recordedBy')}. {d.get('rationale')}{chosen}"

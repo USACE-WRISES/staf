@@ -1653,13 +1653,21 @@ def forced_sources(force: Optional[dict], *, metric_config: dict, carried: dict,
                        "why": "This build fits the metric itself, so its own curve scores."}
             continue
         config = dict(metric_config.get(mk) or (carried.get(mk) or {}).get("config") or {})
-        if not config:
-            from . import owner_sources
-            config = owner_sources.agent_config(mk)
-        out[mk] = basis_ladder.force_source(
-            mk, ref, frame=frame, values_wide=values, target_l3=l3_code, config=config,
-            validation=validation, region_name=name, scale_registry=registry,
-            excluded=excluded)
+        try:
+            if not config:
+                from . import owner_sources
+                config = owner_sources.agent_config(mk)
+            out[mk] = basis_ladder.force_source(
+                mk, ref, frame=frame, values_wide=values, target_l3=l3_code, config=config,
+                validation=validation, region_name=name, scale_registry=registry,
+                excluded=excluded)
+        except Exception as exc:  # noqa: BLE001 - one owner request never stops a build
+            import logging
+            logging.getLogger("streamcurves").exception(
+                "REF-15: the refused source the owner accepted for %s could not be computed", mk)
+            out[mk] = {"rule": (ref or {}).get("rule"), "option": (ref or {}).get("option"),
+                       "row": None, "decision": None, "failed": [],
+                       "why": f"The build could not compute the source ({exc})."}
         out[mk]["config"] = config
     return out
 

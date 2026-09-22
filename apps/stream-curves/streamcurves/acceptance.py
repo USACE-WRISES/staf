@@ -220,15 +220,18 @@ def pool_acceptor(metric: str, entry: dict, validation: Optional[dict], *,
 
 def all_checks(metric: str, option: str, values: Any, entry: dict,
                validation: Optional[dict], *, family: Optional[str] = None,
-               measure: Optional[float] = None, st: Optional[dict] = None) -> list[dict]:
+               measure: Optional[float] = None, st: Optional[dict] = None,
+               n: Optional[int] = None) -> list[dict]:
     """Every acceptance criterion a source option faces, each run to its verdict
     rather than stopping at the first refusal: ``[{check, pass, why}]``. For a
     source the owner accepted over the build's refusal (REF-15), so the record
-    names every check it fails."""
+    names every check it fails. ``n``: the independent stations or donors the
+    sample floor counts, where ``values`` repeat a donor (matched donors are
+    drawn per target stream); the values themselves otherwise."""
     st = st or settings()
     vals = pd.to_numeric(pd.Series(values), errors="coerce").dropna()
     out: list[dict] = []
-    ok, why = sample_ok(len(vals), st)
+    ok, why = sample_ok(len(vals) if n is None else int(n), st)
     out.append({"check": "ACC-01", "pass": ok, "why": why})
     ok, why, _ = stability(vals, entry, st)
     out.append({"check": "ACC-04", "pass": ok,

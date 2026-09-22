@@ -425,8 +425,10 @@ def force_source(metric: str, ref: dict, *, frame: pd.DataFrame, values_wide: pd
         if got["n"] < MIN_FORCED_N:
             return {**out, "why": (f"{got['n']} national donors, fewer than the "
                                    f"{MIN_FORCED_N} a curve needs.")}
+        # the floor counts distinct donors, as try_national does: matched donors
+        # repeat, drawn per target stream
         failed = acceptance.all_checks(mk, option, got["values"], config, validation,
-                                       family=family, measure=got["measure"])
+                                       family=family, measure=got["measure"], n=got["n"])
         row = _row_from_values(mk, got["values"], {mk: config})
         words = acceptance.OPTION_WORDS.get(option, option)
         decision = _decision(
