@@ -277,7 +277,8 @@ def threshold_points(good: Any, poor: Any,
     # a resolution far below the thresholds' spacing, so the threshold itself
     # scores in its better class and nothing else moves
     anchors = fixed_criteria._anchors(bands, abs(g - p) * 1e-6)
-    raw = fixed_criteria._points({**anchors, "domain": [lo, hi]}, RATING_INDEX)
+    floor = lo if lo is not None else _open_floor(anchors, hib)
+    raw = fixed_criteria._points({**anchors, "domain": [floor, hi]}, RATING_INDEX)
     points = [{"x": float(x), "y": float(y)} for x, y in raw]
     got = curves.validate_reference_curve_points(points, hib, curves.curve_form_of(config),
                                                  domain=(lo, hi))
@@ -285,6 +286,37 @@ def threshold_points(good: Any, poor: Any,
         return [], ["These thresholds make no valid curve in this metric's range. Enter the "
                     "curve point by point instead."], []
     return points, [], labels
+
+
+def _open_floor(anchors: Mapping, higher_is_better: bool) -> Optional[float]:
+    """Where a two-threshold curve begins on a metric that declares no lower bound
+    (a log-scaled measure can run below zero), or None to begin at zero as the
+    fixed criteria do. Higher is better: the line runs on below zero to where it
+    reaches 0, so no value below the thresholds is held at a score between the
+    classes. Lower is better: only thresholds below zero move the start, to where
+    the line reaches 1."""
+    lo_idx, hi_idx = fixed_criteria._index_bands()
+    x1, x2 = float(anchors["anchor_good_fair"]), float(anchors["anchor_fair_poor"])
+    slope = (lo_idx - hi_idx) / (x2 - x1)
+    if higher_is_better:
+        x_zero = x2 - lo_idx / slope
+        return x_zero if x_zero < 0 else None
+    return x1 + (1.0 - hi_idx) / slope if x1 < 0 else None
+
+
+def direction_warning(points, config: Mapping) -> Optional[str]:
+    """A curve entered point by point that runs against the metric's direction:
+    allowed, since the owner may know better, but said before it is saved."""
+    if two_sided(config) or len(points or []) < 2:
+        return None
+    ys = [float(p["y"]) for p in sorted(points, key=lambda p: float(p["x"]))]
+    if config.get("higher_is_better") and ys[-1] < ys[0]:
+        return ("These points score the metric lower as it rises, but higher is better for "
+                "this metric.")
+    if not config.get("higher_is_better") and ys[-1] > ys[0]:
+        return ("These points score the metric higher as it rises, but lower is better for "
+                "this metric.")
+    return None
 
 
 _POINT_LINE = re.compile(r"^\s*([-+0-9.eE]+)\s*[,;\t ]\s*([-+0-9.eE]+)\s*$")
@@ -522,12 +554,14 @@ def borrowed_annotations(entry: Mapping, *, assessment_id: str, name: str, versi
         ann["referenceSupport"] = dict(sup)
     where = str(region.get("name") or region.get("code") or "another region")
     own = curve_basis.limit_for(basis)
+    # the source's own limit describes the source's streams, not this ecoregion's
+    own = f"In {where}: {own[:1].lower()}{own[1:]}" if own else ""
     ann.update({
         "basis": basis,
         "basisLabel": f"{curve_basis.label_for(basis) or 'Reference curve'}, from {where}",
         "basisStatement": (f"Curve of another STAF assessment, {name} (version {version}), "
                            f"chosen by this assessment's owner. It rests on that assessment's "
-                           f"source for {where}, not on stations of this ecoregion."),
+                           f"source for {where}."),
         "basisLimit": BORROWED_LIMIT,
         "curveCaveats": [BORROWED_LIMIT] + ([own] if own else []),
         "sourceCitation": f"{name}, version {version} (STAF assessment library)",
@@ -578,16 +612,19 @@ def library_options(metric: str, *, region_code: str, current=None) -> list[dict
             if not is_mine and status not in ELIGIBLE_STATUSES:
                 continue
             got = _bundle_entry(aid, v, mid)
-            if got is None:
-                continue
-            entry, digest = got["entry"], got["contentDigest"]
-            sig = _signature(entry)
-            if sig in seen or (now and sig[0] == now):
-                continue
+            entry = (got or {}).get("entry")
+            sig = _signature(entry) if entry else None
+            points, layers, stratum = _curve_parts(entry) if entry else ([], [], "")
+            usable = (entry is not None and len(points) >= 2 and sig not in seen
+                      and not (now and sig[0] == now))
+            if not usable:
+                if is_mine:
+                    continue
+                # another assessment offers its latest eligible version only: an
+                # older one it has since replaced is not its curve any more
+                break
             seen.add(sig)
-            points, layers, stratum = _curve_parts(entry)
-            if len(points) < 2:
-                continue
+            digest = got["contentDigest"]
             words = f"{_basis_words(entry)} ({lib.status_label(status)})"
             if is_mine:
                 mine.append(_option(
@@ -665,8 +702,13 @@ def refused_options(metric: str, *, build: Optional[Mapping] = None,
     for x in pools:
         option = str(x.get("option") or "")
         rule = POOL_OPTION_RULES.get(option, "REF-11")
+        # a pool the build could not even form (no region at that level) counted
+        # no station, so there is nothing to compute from
+        counted = x.get("n_usable") is not None
+        why = str(x.get("why") or "")
         out.append(_refused(rule, option, title=_pool_title(option, x.get("region_code")),
-                            n=x.get("n_usable"), why=str(x.get("why") or ""), forcible=True))
+                            n=x.get("n_usable"), why=why, forcible=counted,
+                            why_not="" if counted else (why or "The build formed no pool here.")))
     rungs = []
     for w in (build or {}).get("insufficientReferenceSupport") or []:
         if str(w.get("metricKey")) == mk:
@@ -794,7 +836,8 @@ __all__ = [
     "ELIGIBLE_STATUSES", "ENTERED_LABEL", "ENTERED_LIMIT", "BORROWED_LIMIT", "JUDGMENT",
     "outcome_of", "label_for", "agent_config", "config_for", "sourceable",
     "function_candidates", "crosswalk_functions", "function_name", "mapping_rows_for",
-    "fmt", "two_sided", "threshold_bands", "threshold_points", "parse_points",
+    "fmt", "two_sided", "threshold_bands", "threshold_points", "direction_warning",
+    "parse_points",
     "breakpoint_points", "entered_annotations", "entered_option", "catalog_annotations",
     "catalog_option", "borrowed_annotations", "earlier_annotations", "library_options",
     "refused_options", "pool_for", "decision_source", "REFUSAL_NOTE", "forced_annotations",

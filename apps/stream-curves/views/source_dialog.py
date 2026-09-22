@@ -91,8 +91,10 @@ def metric_state(metric: str, function_id: Optional[str], view: Mapping) -> tupl
     entry = view["entries"].get(mk)
     if entry:
         here = bool(function_id) and str(function_id) in (entry.get("functions") or [])
-        label = str(entry.get("label") or src.kind_label(entry.get("kind"))).lower()
-        if entry.get("owner") and entry.get("kind") != "owner_entered":
+        label = str(entry.get("label") or src.kind_label(entry.get("kind")))
+        # lower-case the label's first word only, so a place keeps its name
+        label = label[:1].lower() + label[1:]
+        if entry.get("owner") and entry.get("kind") not in ("owner_entered", "owner_exception"):
             label = f"{label}, chosen by the owner"
         return (f"{label}, scores this function" if here else label), True
     if mk in view["withheld"]:
@@ -332,6 +334,13 @@ def source_dialog_server(input, output, session, state: AppState):
     ctx = reactive.value(None)
     cache: dict = {}
 
+    def _choices(fid: str) -> dict:
+        """The metrics the function offers, cached for the dialog's life."""
+        key = ("function", fid)
+        if key not in cache:
+            cache[key] = dict(function_metrics(fid, ctx()["view"]))
+        return cache[key]
+
     def _metric() -> Optional[str]:
         c = ctx()
         if not c:
@@ -339,9 +348,13 @@ def source_dialog_server(input, output, session, state: AppState):
         if c.get("metric"):
             return c["metric"]
         try:
-            return str(input.metric() or "") or None
+            picked = str(input.metric() or "") or None
         except Exception:  # noqa: BLE001 - the select is not rendered yet
             return None
+        # a select no longer on screen keeps its last value: only a metric the
+        # chosen function offers now counts, so nothing is saved into the wrong one
+        fid = _function()
+        return picked if picked and fid and picked in _choices(fid) else None
 
     def _function() -> Optional[str]:
         c = ctx()
@@ -422,13 +435,15 @@ def source_dialog_server(input, output, session, state: AppState):
         fid = _function()
         if not fid:
             return None
-        choices = function_metrics(fid, c["view"])
+        choices = _choices(fid)
         note = not_sourceable_note(fid, c["view"])
         if not choices:
-            return ui.div("Every candidate metric for this function is built here or is a "
-                          "fixed criterion.", class_="alert alert-secondary py-2 small")
+            return ui.div("No metric of this function can take a source here. "
+                          + (note or "Its candidates in the crosswalk are not scored as "
+                                     "curves in STAF."),
+                          class_="alert alert-secondary py-2 small")
         return ui.div(
-            ui.input_select(ns("metric"), "Metric", dict(choices), width="100%"),
+            ui.input_select(ns("metric"), "Metric", choices, width="100%"),
             ui.div(note, class_="text-muted small mb-2") if note else None)
 
     @render.ui
@@ -472,8 +487,12 @@ def source_dialog_server(input, output, session, state: AppState):
         if errors or not opt["points"]:
             return ui.div(*[ui.div(e) for e in errors] or ["The curve appears here."],
                           class_="source-dialog-preview-note")
-        return ui.div(ui.HTML(preview_svg(metric, opt["points"], _config(metric))),
-                      class_="source-panel-curve source-dialog-preview")
+        warning = osrc.direction_warning(opt["points"], _config(metric))
+        return ui.div(ui.div(ui.HTML(preview_svg(metric, opt["points"], _config(metric))),
+                             class_="source-panel-curve source-dialog-preview"),
+                      ui.div(fa("triangle-exclamation"), " ", warning,
+                             class_="source-dialog-preview-note text-warning-emphasis")
+                      if warning else None)
 
     @render.ui
     def scores():
