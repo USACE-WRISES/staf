@@ -254,6 +254,61 @@ def test_evidence_fields_the_record_does_not_compute_are_dropped():
     assert rb.decision_problems(DOC, d) == []
 
 
+# A CURVE-07 item as the staged Northern Lakes and Forests run records it.
+CURVE07_COMPUTED = {"curve_status": "degenerate",
+                    "reasons": ["Non-positive or non-finite Q25 produced a fallback curve."],
+                    "domain_min": 0.0, "domain_max": 100.0, "domain_violations": 0,
+                    "reviewer_decision": "pending"}
+CURVE07_DOC = {"records": [{"rule_id": "CURVE-07", "subject": "phab_PCT_FAST",
+                            "computed": dict(CURVE07_COMPUTED)}]}
+CURVE07_ITEM = {"rule_id": "CURVE-07", "subject": "phab_PCT_FAST",
+                "evidence": dict(CURVE07_COMPUTED), "blocking": False,
+                "question": "Accept this curve as preliminary, adjust it, or drop the metric?"}
+
+
+def test_an_answer_never_asserts_the_decision_it_makes():
+    """Answering CURVE-07 publishes or drops the curve, so the build the answer
+    feeds records another reviewer_decision than "pending"; asserting it would
+    refuse that whole run."""
+    d = rb.build_decision(CURVE07_DOC, CURVE07_ITEM, "accept_with_conditions",
+                          "Publishes as preliminary, marked for field verification.",
+                          reviewer="me")
+    assert "reviewer_decision" not in d["asserts"]
+    assert d["asserts"]["curve_status"] == "degenerate"
+    assert rb.decision_problems(CURVE07_DOC, d) == []
+
+
+def test_a_curve07_item_offers_the_outcomes_its_question_names():
+    choices = rb.action_choices("CURVE-07")
+    assert set(choices) == {"accept", "accept_with_conditions", "reject"}
+    assert "publish the curve" in choices["accept"]
+    assert "drop the metric" in choices["reject"]
+    # every other rule keeps the reviewer's five answers
+    assert set(rb.action_choices("CURVE-04")) == set(rb.REVIEWER_ACTIONS)
+    assert set(rb.action_choices(None)) == set(rb.REVIEWER_ACTIONS)
+    src = (Path(__file__).resolve().parents[1] / "views" / "region_builder.py").read_text(
+        encoding="utf-8")
+    assert 'rb.action_choices(item.get("rule_id"))' in src
+
+
+def test_saving_keeps_the_answers_an_earlier_build_resolved():
+    """A build resolves what it was answered, so the form shows only what is still
+    open; saving must add to the region's answers, not replace them."""
+    def key(d):
+        return d.get("rule_id"), str(d.get("subject"))
+    old = [{"rule_id": "CURVE-07", "subject": "phab_PCT_FAST", "action": "accept"},
+           {"rule_id": "CURVE-06", "subject": "phab_PCT_FAST", "action": "accept"}]
+    new = [{"rule_id": "CURVE-06", "subject": "phab_PCT_FAST", "action": "reject"},
+           {"rule_id": "CURVE-12", "subject": "bfiws", "action": "accept"}]
+    merged = rb.merge_answers(old, new, key=key)
+    assert [(d["rule_id"], d["action"]) for d in merged] == [
+        ("CURVE-07", "accept"), ("CURVE-06", "reject"), ("CURVE-12", "accept")]
+    assert rb.merge_answers(None, new, key=key) == new
+    src = (Path(__file__).resolve().parents[1] / "views" / "region_builder.py").read_text(
+        encoding="utf-8")
+    assert src.count("rb.merge_answers(_read_json(path)") == 2
+
+
 # --------------------------------------------------------------------------- #
 # Against the one real batch run in the repo
 # --------------------------------------------------------------------------- #

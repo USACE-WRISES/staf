@@ -486,13 +486,19 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             return
         out = _active_dir()
         saved = []
+        # merged into what the region already holds: a build resolves the items it
+        # answered, so the form lists only what is still open
         if decisions:
-            (out / "owner_decisions.json").write_text(
-                json.dumps(decisions, indent=1) + "\n", encoding="utf-8")
+            path = out / "owner_decisions.json"
+            merged = rb.merge_answers(_read_json(path), decisions,
+                                      key=lambda d: (d.get("rule_id"), str(d.get("subject"))))
+            path.write_text(json.dumps(merged, indent=1) + "\n", encoding="utf-8")
             saved.append(f"{len(decisions)} decision(s)")
         if gaps:
-            (out / "coverage_exceptions.json").write_text(
-                json.dumps(gaps, indent=1) + "\n", encoding="utf-8")
+            path = out / "coverage_exceptions.json"
+            merged = rb.merge_answers(_read_json(path), gaps,
+                                      key=lambda g: str(g.get("functionId")))
+            path.write_text(json.dumps(merged, indent=1) + "\n", encoding="utf-8")
             saved.append(f"{len(gaps)} coverage exception(s)")
         ui.notification_show(
             "Saved " + " and ".join(saved) + ". Build this region again to fold them in.",
@@ -954,8 +960,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                     ui.tags.pre(json.dumps(ev, indent=1, default=str),
                                 class_="rb-log")),
                 ui.input_select(ns(f"act_{i}"), "Decision",
-                                {"": "(unanswered)",
-                                 **{a: a.replace("_", " ") for a in rb.REVIEWER_ACTIONS}}),
+                                {"": "(unanswered)", **rb.action_choices(item.get("rule_id"))}),
                 ui.input_text_area(ns(f"why_{i}"), "Rationale (required)", rows=3,
                                    width="100%"),
                 class_="rb-item border rounded p-2 mb-2"))
