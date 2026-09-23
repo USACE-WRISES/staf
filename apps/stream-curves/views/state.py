@@ -249,6 +249,10 @@ class AppState:
     # over reference_build by owner_curves.effective_build; the region's run
     # folder keeps them too, so every later build applies them. Persisted.
     owner_curve_decisions: reactive.Value = _rv_factory(list)
+    # The candidate register's own part: curves added for comparison and the
+    # reasons a person gave for not selecting one (candidates.SESSION_FIELD).
+    # None reads as an empty register. Persisted.
+    candidate_register: reactive.Value = _rv()
 
     # ── root navigation requests (stage banner -> shell) ────────────────────
     # nav_request: a nav_panel value to switch main_navbar to; wizard_step_request:
@@ -535,6 +539,7 @@ def reset_app_to_startup(state: AppState) -> None:
         state.rule_selections.set([])
         state.reference_build.set(None)
         state.owner_curve_decisions.set([])
+        state.candidate_register.set(None)
         state.wizard_draft.set(None)
         state.assessment_type.set("deep")
         state.easi_project.set(None)

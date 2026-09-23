@@ -143,29 +143,72 @@ def imported_register(project, *, decided_at: str) -> dict:
             "scope": "the operational method of each function at import"}
 
 
+def function_basis(project, function_id: str) -> str:
+    """The current analytical content of one function's method."""
+    curves = project.curves()
+    for fid, m, meta, cwa in _function_rows(project):
+        if fid == function_id:
+            return basis_digest(m, curves, meta, cwa)
+    raise ValueError(f"no function {function_id!r} in this method")
+
+
+def _status_of(decision: Optional[dict], candidate: dict) -> str:
+    """A candidate's status for a function from its latest decision there."""
+    if candidate.get("supersededBy"):
+        return "superseded"
+    if candidate.get("buildStatus") == "failed":
+        return "failed"
+    if (candidate.get("eligibility") or {}).get("status") == "excluded":
+        return "excluded"
+    if decision is None:
+        return "not_evaluated"
+    return "selected" if decision.get("decision") == "selected" else "eligible_not_selected"
+
+
 def status_rows(project) -> list[dict]:
-    """One row per function: its selected candidate, alternatives and review flags."""
+    """One row per function: its selected candidate, every candidate considered with its
+    status (the shared vocabulary of ``streamcurves.candidates``) and review flags."""
     curves = project.curves()
     current = {fid: basis_digest(m, curves, meta, cwa) for fid, m, meta, cwa in _function_rows(project)}
-    by_fn: dict[str, list] = {}
     cands = {c["candidateKey"]: c for c in (project.register or {}).get("candidates", [])}
+    by_fn: dict[str, list] = {}
     for d in (project.register or {}).get("decisions", []):
         by_fn.setdefault(d["functionId"], []).append(d)
     out = []
     for fid, method, meta, _ in _function_rows(project):
         decs = by_fn.get(fid, [])
-        selected = [d for d in decs if d.get("decision") == "selected"]
-        latest = selected[-1] if selected else None
-        needs_review = bool(latest and latest.get("basisDigest") != current[fid])
+        latest: dict[str, dict] = {}
+        for d in decs:
+            latest[d["candidateKey"]] = d
+        keys = list(dict.fromkeys([d["candidateKey"] for d in decs] +
+                                  [k for k, c in cands.items()
+                                   if (c.get("identity") or {}).get("functionId") == fid]))
+        rows = []
+        for k in keys:
+            c = cands.get(k)
+            if c is None:
+                continue
+            d = latest.get(k)
+            rows.append({"candidateKey": k, "candidate": c, "decision": d,
+                         "status": _status_of(d, c)})
+        chosen = [r for r in rows if r["status"] == "selected"]
+        # the most recent selection wins if two ever read as selected
+        chosen.sort(key=lambda r: decs.index(r["decision"]))
+        sel = chosen[-1] if chosen else None
+        dec = sel["decision"] if sel else None
+        needs_review = bool(dec and dec.get("basisDigest") != current[fid])
         out.append({"functionId": fid, "functionName": meta.get("functionName") or fid,
                     "method": method.get("title") or method["methodKey"],
                     "methodKey": method["methodKey"],
-                    "selectedCandidate": latest and latest["candidateKey"],
-                    "decidedBy": latest and latest.get("decidedBy"),
-                    "who": latest and latest.get("who"),
+                    "selectedCandidate": sel and sel["candidateKey"],
+                    "decisionId": dec and dec.get("decisionId"),
+                    "basis": current[fid],
+                    "decidedBy": dec and dec.get("decidedBy"),
+                    "who": dec and dec.get("who"),
                     "needsReview": needs_review,
-                    "alternatives": sum(1 for d in decs if d.get("decision") != "selected"),
-                    "candidates": [cands[d["candidateKey"]] for d in decs if d["candidateKey"] in cands]})
+                    "alternatives": sum(1 for r in rows if r["status"] != "selected"),
+                    "rows": rows,
+                    "candidates": [r["candidate"] for r in rows]})
     return out
 
 
@@ -215,3 +258,79 @@ def confirm_selection(project, function_id: str, *, by: str, reason: str, at: st
 def needs_review(project) -> list[dict]:
     """The functions whose selected method changed after it was decided."""
     return [r for r in status_rows(project) if r["needsReview"]]
+
+
+# --------------------------------------------------------------------------- #
+# a published state SQT curve considered for an EASI function
+# --------------------------------------------------------------------------- #
+FIELD_VS_DESKTOP = ("Field protocol against desktop estimate: the SQT curve scores a value measured "
+                    "in the field by the SQT's protocol, and EASI estimates this function from desktop "
+                    "data. It is kept for comparison and is never substituted without a reviewed "
+                    "method change.")
+
+
+def add_sqt_candidate(project, record: dict, function_id: str, *, by: str, at: str,
+                      reason: str = FIELD_VS_DESKTOP):
+    """A new project whose register holds a state SQT curve considered for an EASI function,
+    with its disposition: an SQT curve is a field measurement, an EASI proxy a desktop
+    estimate, so the candidate is excluded for that reason and the person who added it is
+    recorded. The method files never change."""
+    from .. import sqt_registry as sqt
+    from ..candidates import curve_basis_digest
+    who = str(by or "").strip()
+    if not who:
+        raise ValueError("adding a candidate needs the name of the person adding it")
+    fids = {r["functionId"] for r in status_rows(project)}
+    if function_id not in fids:
+        raise ValueError(f"no function {function_id!r} in this method")
+    frozen = sqt.frozen_copy(record)
+    identity = {"assessmentType": "easi", "subject": {"kind": "sqt-metric", "id": frozen.get("key")},
+                "functionId": function_id, "sourceKind": "sqt",
+                "sourceRef": {"registryKey": frozen.get("key"), "state": frozen.get("state"),
+                              "edition": frozen.get("edition"),
+                              "fingerprint": frozen["frozen"]["contentFingerprint"]},
+                "applicability": {"geography": {"kind": "state", "code": frozen.get("state")}}}
+    pts = [(float(p["x"]), float(p["y"])) for p in frozen.get("normalizedPoints") or []]
+    key = candidate_key(identity)
+    new = project.copy()
+    reg = new.register
+    if any(c.get("candidateKey") == key for c in reg.get("candidates", [])):
+        raise ValueError("that SQT curve is already considered for this function")
+    reg.setdefault("candidates", []).append({
+        "candidateKey": key, "identity": identity,
+        "basisDigest": curve_basis_digest([{"label": frozen.get("stratumName"), "points": pts}]),
+        "methodVersion": None, "dataFingerprint": None, "purpose": "operational", "campaign": None,
+        "buildStatus": "built", "supersededBy": None,
+        "label": f"{frozen.get('originalMetricName')} ({frozen.get('state')} SQT, {frozen.get('stratumName')})",
+        "eligibility": {"status": "excluded", "reasons": [reason], "checks": []},
+        "limitations": [str((frozen.get("verification") or {}).get("status") or "")],
+        "definition": {"points": [{"x": x, "y": y} for x, y in pts], "units": frozen.get("units"),
+                       "direction": frozen.get("direction")},
+        "record": frozen, "addedBy": who, "addedAt": at})
+    reg.setdefault("decisions", []).append({
+        "decisionId": f"dec-{key[5:]}-1", "candidateKey": key, "functionId": function_id,
+        "decision": "not_selected", "rule": "field-vs-desktop", "reason": reason,
+        "decidedBy": "person", "who": who, "when": at, "basisDigest": None, "supersedes": None})
+    new.history.append({"action": "add_sqt_candidate", "at": at, "by": who, "kind": "register",
+                        "reason": reason, "target": {"functionId": function_id, "candidateKey": key}})
+    return new
+
+
+def export_rows(project) -> list[dict]:
+    """One flat record per candidate and function (the shape of
+    ``streamcurves.candidates.export_rows``): what it is, its status, the decision, who and
+    why. No method content."""
+    out = []
+    for r in status_rows(project):
+        for x in r["rows"]:
+            c, d = x["candidate"], x["decision"] or {}
+            ident = c.get("identity") or {}
+            out.append({"functionId": r["functionId"], "function": r["functionName"],
+                        "candidateKey": x["candidateKey"], "candidate": c.get("label"),
+                        "subject": (ident.get("subject") or {}).get("id"),
+                        "sourceKind": ident.get("sourceKind"), "status": x["status"],
+                        "rule": d.get("rule"), "decidedBy": d.get("decidedBy"), "who": d.get("who"),
+                        "when": d.get("when"), "reason": d.get("reason"),
+                        "basisDigest": c.get("basisDigest"),
+                        "needsReview": bool(x["status"] == "selected" and r["needsReview"])})
+    return sorted(out, key=lambda x: (x["functionId"], x["candidateKey"]))

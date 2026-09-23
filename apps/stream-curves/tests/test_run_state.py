@@ -655,9 +655,10 @@ def test_redundancy_is_a_refine_map_section():
     assert keys.index("redundancy") == keys.index("mapping") + 1
 
 
-def test_curve_review_sections_are_gallery_then_table():
-    # The Reference Curves page lands on the gallery and keeps the table beside it.
-    assert [v for v, _ in rs.STAGE_SECTIONS["curve_review"]] == ["gallery", "table"]
+def test_curve_review_sections_are_gallery_then_table_then_final_selection():
+    # The Reference Curves page lands on the gallery, keeps the table beside it, and
+    # ends with the candidate register (views/final_selection.py).
+    assert [v for v, _ in rs.STAGE_SECTIONS["curve_review"]] == ["gallery", "table", "final"]
     assert rs.stage_landing("curve_review") == ("curves", None)
 
 

@@ -37,6 +37,7 @@ from streamcurves import session_io as sio
 from streamcurves import workspace as ws
 from streamcurves.workbook import write_input_workbook
 from views import assessment_publish as ap
+from views import final_selection as fs
 from views.data_overview import _default_session_name, _sanitize_file_stem
 from views.state import AppState
 from views.theme import bi, fa
@@ -819,6 +820,11 @@ def publish_server(input, output, session, state: AppState):
                                          default=str)):
                 raise ValueError("a standing decision is still marked pending owner "
                                  "confirmation.")
+            # the candidate register: what was considered for each function and why,
+            # beside the bundle and never in it
+            register_doc = fs.register_export(state)
+            if register_doc and isinstance(provenance_doc, dict):
+                provenance_doc = {**provenance_doc, "candidateRegister": register_doc}
             version = lib.publish_version(aid, meta, full_payload, bundle,
                                           provenance=provenance_doc, status=status)
         except Exception as e:  # noqa: BLE001

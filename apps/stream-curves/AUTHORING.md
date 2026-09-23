@@ -308,47 +308,100 @@ reproducibility, coverage, archive), never their bytes; its Development data sta
 downloads, imports and views them, and refits the curves from them. DEEP's development data,
 the in-app NRSA archive, is described and verified the same way on the NRSA explorer page.
 
-## Candidates and final selection (*planned*)
+## Candidates and final selection
 
-One vocabulary for every alternative considered, in DEEP and EASI:
+One vocabulary for every alternative considered, in DEEP and EASI (`streamcurves/candidates.py`):
 
 ```json
 {
   "candidateKey": "cand-<sha12>",
   "identity": {"assessmentType": "deep", "subject": {"kind": "metric", "id": "..."},
-               "functionId": "...", "sourceKind": "fitted", "sourceRef": {},
-               "applicability": {"geography": {"kind": "ecoregion", "code": "50"}, "strata": {}}},
-  "basisDigest": "sha256:...", "methodVersion": "...", "dataFingerprint": "...",
-  "purpose": "operational", "campaign": null,
-  "buildStatus": "built", "supersededBy": null,
-  "definition": {}, "evidence": {}, "limitations": [],
+               "sourceKind": "fitted", "sourceRef": {},
+               "applicability": {"geography": {"kind": "ecoregion", "code": "50"}}},
+  "basisDigest": "sha256:...", "purpose": "operational", "campaign": null,
+  "buildStatus": "built", "supersededBy": null, "label": "...",
+  "definition": {}, "limitations": [],
   "eligibility": {"status": "eligible", "reasons": [], "checks": []}
 }
 ```
 
 - `candidateKey` hashes the identity only (what the candidate is), so a refit keeps its key and its
-  history; `basisDigest` hashes the analytical content (points, bands, operators, anchors, weights,
-  never captions or caveat text) and changes with every refit or analytical edit.
+  history; `basisDigest` hashes the analytical content (DEEP: every stratum's points at 12
+  significant digits and the direction; EASI: `register.basis_digest`, the catalog entry's
+  analytical fields, the curve sets it reads, anchors and CWA weights) and never captions, badges
+  or caveat text. A DEEP curve can serve several functions, so its identity names none and each
+  decision names its function; an EASI method entry serves one function, so its identity carries
+  `functionId`.
 - `sourceKind`: `fitted`, `carried`, `national`, `modeled`, `published_benchmark`, `fixed`, `sqt`,
-  `owner_entered`, `borrowed`, `earlier_version`, `imported_alternative`. A candidate is an
-  alternative definition for a function; a fallback route inside one selected method (EASI's
-  national curve, a CHEM fallback) is part of that method, never a separate candidate.
-- `buildStatus` (`built`, `failed`, `not_run`) and `supersededBy` record build failures and
-  supersession; `purpose: evaluation` marks a fold fit that can never be selected.
+  `owner_entered`, `borrowed`, `earlier_version`, `imported_alternative`. A fallback route inside
+  one selected method (EASI's national curve) is part of that method, never a candidate.
+- Status per candidate and function: `selected`, `eligible_not_selected`, `excluded` (or
+  unsupported), `not_evaluated`, `failed`, `superseded`. Decisions carry `rule`, `reason`,
+  `decidedBy` (`automated`, `imported`, `person`), `who`, `when` and the `basisDigest` decided on;
+  one whose basis no longer matches reads "Look again" and stays in the history.
 
-Decisions are per candidate, function and applicability: `decision` (`selected`,
-`not_selected`), `reason`, `rule`, `decidedBy` (`automated`, `imported`, `person`), who, when and
-the `basisDigest` decided on. The displayed status is one of selected, eligible but not selected,
-excluded or unsupported, not evaluated, failed to build, superseded. A decision whose
-`basisDigest` no longer matches is flagged for re-review and kept in the history.
+**DEEP** (`deep_register`) is a projection over records the session already keeps, read from the
+gallery's own tiles so the two views never disagree: SELECT-04's `portfolioSelection` (selected,
+or supported and not selected with the source and score), REF-06's withheld list (excluded, with
+the statement), CURVE-07 (a curve held for review reads not evaluated, one taken out of scope
+excluded), carried, ladder and fixed curves, and the owner's REF-15 decisions (who, when, why). It
+writes nothing; REF-15 stays the only writer of what a version scores. On all seven latest
+published versions the register's selected pairs equal the bundle's `metricsByFunction`. What the
+register adds rides in the session field `candidate_register`: curves added for comparison (a
+state SQT curve) and the reason a person gave for not selecting one. The Reference Curves page's
+third section, **Select final curves**, lists the 20 functions with their selected curves, gaps
+and unresolved items; each opens to the alternatives considered with status, reason and who
+decided, "Use in this function" and "Undo" (REF-15's own form), "Record why not", and a compare
+panel for up to three curves. An interactive publish writes the register's export
+(`candidateRegister`) into the version's provenance.
 
-For DEEP the register is derived from existing records (SELECT-04 `portfolioSelection`,
-basis-ladder refusals, CURVE-07 holds, carried metrics, REF-15 decisions) and REF-15 stays the only
-writer; selecting an SQT curve over a curve fitted here extends REF-15 behind a methodology flag
-that is off in the canonical configuration, and every published DEEP version must replay with an
-unchanged content digest. For EASI the register and decisions live in the project package. The
-register rides in projects, sessions and provenance, never in a DEEP bundle or an EASI method
-package. Missing historical decisions are stated as missing; history starts at import.
+**EASI** keeps its register in the project (`easi/register.json`). `easi_method/alternatives.py`
+imports the 2026-09-15 controlled study (verified by its completion record, sha256 97a24b44..., and
+each candidate's catalog and curve hashes): a candidate only where an alternative's definition
+differs from the method's. Alternative 2 differs nowhere; Alternatives 1, 3 and 4 differ in low
+flow, light and thermal regime, carbon processing and habitat provision; the legacy criteria
+(an evaluator asset, read from the vendored copy) in eight functions. Each carries its definition,
+so the register is complete without the study folder, and its reason quotes the study (whose rule
+recommended Alternative 1) and the owner's adoption of Alternative 2 on 2026-09-16 (commit 02f39a8);
+history before the import is stated as missing. The Final selection stage (**Select final
+methods**) compares up to three definitions curve family by curve family and, in a draft revision,
+adopts one: every function reading a curve family it rewrites moves with it (the woody curves
+serve light and thermal regime and habitat provision), the replaced method stays as eligible, not
+selected, and adopting the method the draft started from restores its exact bytes. Published EASI
+versions carry the register export in their provenance, never in the method package.
+
+### Published state SQT curves
+
+`data/sqt/registry.json` (built by `scripts/build_sqt_registry.py`, read by
+`streamcurves/sqt_registry.py`; see `data/sqt/README.md`) holds one record per state, metric and
+stratum from the metric library's raw bins, compared with the `*-sqt-adapted` library assessments
+and with any original on disk: 386 records, 346 eligible; 53 verified and 30 partly verified
+against the MN v2.0 list and the WI curves sheet in `data/templates`; defects (a placeholder, swapped
+columns, a mislabelled stratum, two-sided curves cut to one limb) make a record ineligible and stay
+as issues. Owner-supplied originals go in `D:\Data\staf-authoring\sqt-originals\<STATE>\` with a
+`sources.json`; they are cited and fingerprinted, never redistributed.
+
+A curve is added to a DEEP session from the section's picker (search by metric text, state,
+verification, eligibility), which shows ten explicit applicability checks (construct, protocol,
+units, direction, score scale, geography, stream type, source limits, extrapolation, eligibility).
+`candidates.sqt_candidate` freezes the record into the candidate; a failed check excludes it with the
+reason. SQT bands (0.30, 0.70) differ from DEEP's (0.39, 0.69): a selected SQT curve keeps the
+published index, is labelled "State SQT" on the published-criterion basis, and states the banding
+difference; no conversion is applied. For an EASI function an SQT curve is a field measurement
+against EASI's desktop estimate, so `register.add_sqt_candidate` records it excluded for that
+reason, never a silent substitution.
+
+### The REF-15 extension (off until adopted)
+
+Selecting a state SQT curve, or any chosen curve in place of one this build fitted, extends REF-15
+behind `owner_decisions.alternatives_over_fitted`, **false** in the canonical configuration (the
+methodology config and the REF-15 rule text say so). With it on, a `source` decision may be of kind
+`sqt` and may name the fitted curves it `replaces` in the functions it names; each replaced curve
+stays built and is recorded as supported, not selected, under the decision, and SELECT-04 and the
+reference-source hierarchy keep their order. With it off, such a decision is refused when made and,
+if a session already holds one, applies nothing and says so (`owner_curves.stale`); published
+versions republish unchanged. The bundle carries the owner's decision summary (never `replaces`)
+and the chosen curve; it never names a replaced or unselected candidate.
 
 ## Compatibility rules
 

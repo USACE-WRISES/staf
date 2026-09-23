@@ -33,6 +33,7 @@ from pathlib import Path
 
 from shiny import module, reactive, render, ui
 
+from streamcurves import candidates as cands_mod
 from streamcurves import curve_svg
 from streamcurves import evidence_store as evs
 from streamcurves import library as lib
@@ -40,6 +41,7 @@ from streamcurves import prefs
 from streamcurves import run_state as rs
 from streamcurves import workspace as ws
 from streamcurves.easi_method import edit
+from streamcurves.easi_method import alternatives as alts
 from streamcurves.easi_method import evaluate
 from streamcurves.easi_method import evidence as ev
 from streamcurves.easi_method import io as eio
@@ -277,6 +279,13 @@ def describe(h: dict, names: dict | None = None) -> str:
         return "the start of this revision"
     if a == "import":
         return "the import"
+    if a == "adopt_candidate":
+        fns = [names.get(f, f) for f in t.get("functions") or []]
+        return (", ".join(fns) or "a function") + ": another method selected"
+    if a == "import_alternatives":
+        return "the study's alternatives, imported for comparison"
+    if a == "add_sqt_candidate":
+        return f"{names.get(t.get('functionId'), t.get('functionId'))}: a state SQT curve considered"
     return str(a or "change")
 
 
@@ -1113,37 +1122,238 @@ def easi_page_server(input, output, session, state: AppState):
                  class_="easi-note mt-0"),
             reg_table)
 
-    # ── 4. Final selection ────────────────────────────────────────────────────
+    # ── 4. Final selection: select final methods ─────────────────────────────
+    _cmp = reactive.value([])            # candidate keys compared side by side (up to 3)
+    _open_fns: set = set()               # functions whose row is open, kept across re-renders
+
+    def _alt_source(c) -> str:
+        ref = (c.get("identity") or {}).get("sourceRef") or {}
+        if ref.get("alternative"):
+            return ref["alternative"].replace("alternative-", "Alternative ")
+        if ref.get("criteriaSet") == "legacy":
+            return "Legacy criteria"
+        if (c.get("identity") or {}).get("sourceKind") == "sqt":
+            return f"{ref.get('state')} SQT"
+        return "This method"
+
+    def _alt_tiles(p, c):
+        """One thumbnail per curve family the candidate reads, every stratum overlaid."""
+        try:
+            d = alts.definition_of(p, c)
+        except Exception:  # noqa: BLE001 - an SQT candidate carries points, not a method
+            d = {"curveSets": {}}
+        out = []
+        for name, s in (d.get("curveSets") or {}).items():
+            strata = [{"label": k, "points": [(float(x), float(y)) for x, y in (v or {}).get("points") or []]}
+                      for k, v in sorted((s.get("curves") or {}).items())]
+            out.append(ui.div(ui.div(f"{name} ({s.get('stratifier')}, {len(strata)} curves)", class_="easi-muted"),
+                              ui.HTML(curve_svg.tile_svg({"metric": name, "display_name": name, "strata": strata,
+                                                   "reference_range": (None, None), "domain": None},
+                                                  w=260, h=150))))
+        pts = ((c.get("definition") or {}).get("points") or [])
+        if not out and pts:
+            out.append(ui.HTML(curve_svg.tile_svg({"metric": "sqt", "display_name": c.get("label"),
+                                            "strata": [{"label": None, "points": [(q["x"], q["y"]) for q in pts]}],
+                                            "reference_range": (None, None), "domain": None}, w=260, h=150)))
+        if not out:
+            m = (d.get("method") or {})
+            out.append(ui.div(f"{m.get('title') or m.get('methodKey') or ''}: scored by "
+                              f"{OPERATOR_LABELS.get(m.get('operator'), m.get('operator') or 'its criteria')}, "
+                              "no reference curve.", class_="easi-muted"))
+        return out
+
     def _selection_stage(p):
         rows = reg.status_rows(p)
-        body = []
-        for i, r in enumerate(rows):
-            status = (ui.span("Needs your confirmation", class_="sc-tag is-attention")
-                      if r["needsReview"] else ui.span("Selected", class_="sc-tag is-selected"))
-            action = None
-            if r["needsReview"]:
-                action = ui.tags.button("Confirm…", type="button", class_="btn btn-outline-primary btn-sm",
-                                        onclick=_evt(ns("confirm_open"), i=i))
-            body.append(ui.tags.tr(
-                ui.tags.td(ui.div(r["functionName"], class_="easi-strong")),
-                ui.tags.td(r["method"]),
-                ui.tags.td(r.get("who") if r["decidedBy"] == "person" and r.get("who")
-                           else DECIDED_LABELS.get(r["decidedBy"], r["decidedBy"] or "")),
-                ui.tags.td(status), ui.tags.td(action, class_="easi-right")))
+        studies = (p.register or {}).get("studies") or []
+        cands = {c["candidateKey"]: c for c in (p.register or {}).get("candidates", [])}
+        with reactive.isolate():
+            opened = set(_open_fns)
+        cmp_keys = [k for k in _cmp() if k in cands]
         n_pending = sum(1 for r in rows if r["needsReview"])
         lead = (f"{n_pending} function" + (" changed" if n_pending == 1 else "s changed")
                 + " after its method was selected. Review the consequences, then confirm each "
                   "one with a reason." if n_pending else
-                "Every function has its selected method. A change to a function's curve or "
-                "criteria asks for your confirmation here.")
-        return ui.TagList(
-            ui.p(lead, class_="easi-note mt-0"),
-            ui.tags.table(ui.tags.thead(ui.tags.tr(ui.tags.th("Function"), ui.tags.th("Selected method"),
-                                                   ui.tags.th("Decided by"), ui.tags.th("Status"),
-                                                   ui.tags.th(""))),
-                          ui.tags.tbody(*body), class_="table table-sm easi-table"),
-            ui.p("Alternatives considered for a function are listed with it once they are "
-                 "recorded in the project.", class_="easi-note"))
+                "Every function has its selected method. Open a function to see the alternatives "
+                "considered for it.")
+        parts = [ui.p(lead, class_="easi-note mt-0")]
+        for s in studies:
+            parts.append(ui.div(
+                fa("book-open"), f" Alternatives from the {s['id']} study (receipt "
+                f"{str(s.get('completionSha256') or '')[:8]}). Its rule recommended "
+                f"{str(s.get('recommendation') or 'no alternative').replace('alternative-', 'Alternative ')}; "
+                f"the owner adopted {str(s.get('adopted') or '').replace('alternative-', 'Alternative ')} "
+                f"on {(s.get('adoption') or {}).get('date')}.", class_="fs-note"))
+        if not studies and alts.STUDY_DIR.is_dir() and p.is_revision():
+            parts.append(ui.div(
+                _btn(ns("alt_import"), ui.TagList(fa("download"), " Import the 2026-09-15 study alternatives"),
+                     "btn btn-outline-secondary btn-sm"), class_="easi-tools"))
+        if cmp_keys:
+            cols = []
+            for k in cmp_keys:
+                c = cands[k]
+                cols.append(ui.div(ui.div(c.get("label") or "", class_="fs-cmp-title"),
+                                   ui.div(_alt_source(c), class_="easi-muted"), *_alt_tiles(p, c),
+                                   class_="fs-cmp-col"))
+            parts.append(ui.div(ui.div(ui.tags.strong("Compare"),
+                                       ui.tags.span(f"{len(cols)} of 3", class_="fs-count"),
+                                       _btn(ns("alt_cmp_clear"), "Stop comparing", "btn btn-link btn-sm"),
+                                       class_="fs-cmp-head"),
+                                ui.div(*cols, class_="fs-cmp-cols"), class_="fs-compare"))
+        items = []
+        for i, r in enumerate(rows):
+            selected = cands.get(r["selectedCandidate"]) if r["selectedCandidate"] else None
+            others = [x for x in r["rows"] if x["candidateKey"] != r["selectedCandidate"]]
+            flags = []
+            if r["needsReview"]:
+                flags.append(ui.span("Needs your confirmation", class_="sc-tag is-attention"))
+            summary = ui.tags.summary(
+                ui.div(ui.tags.span(r["functionName"], class_="fs-fn-name"),
+                       ui.tags.span(r["method"], class_="fs-fn-disc"), class_="fs-fn-head"),
+                ui.div(ui.tags.span(ui.tags.span(_alt_source(selected) if selected else "Nothing selected",
+                                                 class_="fs-chip-name"),
+                                    ui.tags.span(r.get("who") if r["decidedBy"] == "person" and r.get("who")
+                                                 else DECIDED_LABELS.get(r["decidedBy"], r["decidedBy"] or ""),
+                                                 class_="fs-chip-kind"), class_="fs-chip"),
+                       class_="fs-chips"),
+                ui.div(ui.tags.span(f"{len(others)} considered" if others else "No alternatives",
+                                    class_="fs-count"), *flags, class_="fs-fn-meta"),
+                class_="fs-fn-summary")
+            trs = []
+            for j, x in enumerate(r["rows"]):
+                c, d = x["candidate"], x["decision"] or {}
+                on = x["candidateKey"] in cmp_keys
+                acts = [ui.tags.button(ui.TagList(fa("check" if on else "table-columns"),
+                                                  " Comparing" if on else " Compare"), type="button",
+                                       class_="btn btn-sm " + ("btn-primary" if on else "btn-outline-secondary"),
+                                       onclick=_evt(ns("alt_cmp"), i=i, j=j),
+                                       **{"aria-pressed": "true" if on else "false"})]
+                if x["status"] == "eligible_not_selected" and p.is_revision() \
+                        and (c.get("identity") or {}).get("sourceKind") == "imported_alternative":
+                    acts.append(ui.tags.button(ui.TagList(fa("circle-check"), " Select"), type="button",
+                                               class_="btn btn-sm btn-outline-primary",
+                                               onclick=_evt(ns("alt_select"), i=i, j=j)))
+                if x["status"] == "selected" and r["needsReview"]:
+                    acts.append(ui.tags.button("Confirm…", type="button", class_="btn btn-sm btn-outline-primary",
+                                               onclick=_evt(ns("confirm_open"), i=i)))
+                trs.append(ui.tags.tr(
+                    ui.tags.td(ui.div(_alt_source(c), class_="fs-name"),
+                               ui.div(c.get("label") or "", class_="fs-kind")),
+                    ui.tags.td(ui.tags.span(cands_mod.STATUS_LABELS.get(x["status"], x["status"]),
+                                            class_="fs-status " + {"selected": "is-selected",
+                                                                   "excluded": "is-excluded"}.get(x["status"], "is-eligible"))),
+                    ui.tags.td(ui.div(d.get("reason") or "", class_="fs-reason")),
+                    ui.tags.td(", ".join(v for v in ((d.get("who") if d.get("decidedBy") == "person" else
+                                                      DECIDED_LABELS.get(d.get("decidedBy"), d.get("decidedBy") or "")),
+                                                     str(d.get("when") or "")[:10]) if v), class_="fs-who"),
+                    ui.tags.td(ui.div(*acts, class_="fs-actions"))))
+            body = ui.tags.table(ui.tags.thead(ui.tags.tr(ui.tags.th("Method"), ui.tags.th("Status"),
+                                                          ui.tags.th("Why"), ui.tags.th("Decided"),
+                                                          ui.tags.th(""))),
+                                 ui.tags.tbody(*trs), class_="table table-sm fs-table")
+            toggle = (f"Shiny.setInputValue('{ns('alt_open')}',{{i:{i},open:this.open}},{{priority:'event'}})")
+            attrs = {"open": ""} if r["functionId"] in opened else {}
+            items.append(ui.tags.details(summary, ui.div(body, class_="fs-fn-body"),
+                                         class_="fs-fn" + (" is-gap" if r["needsReview"] else ""),
+                                         ontoggle=toggle, **attrs))
+        parts.append(ui.div(*items, class_="fs-functions"))
+        return ui.TagList(*parts)
+
+    def _alt_at(p, payload):
+        rows = reg.status_rows(p)
+        i, j = int(payload.get("i", -1)), int(payload.get("j", -1))
+        if not 0 <= i < len(rows) or not 0 <= j < len(rows[i]["rows"]):
+            return None, None
+        return rows[i], rows[i]["rows"][j]
+
+    @reactive.effect
+    @reactive.event(input.alt_open)
+    @guard("track the open functions")
+    def _alt_open():
+        p = _get()
+        rows = reg.status_rows(p) if p is not None else []
+        v = input.alt_open() or {}
+        i = int(v.get("i", -1))
+        if 0 <= i < len(rows):
+            (_open_fns.add if v.get("open") else _open_fns.discard)(rows[i]["functionId"])
+
+    @reactive.effect
+    @reactive.event(input.alt_cmp)
+    @guard("compare the methods")
+    def _alt_cmp():
+        p = _get()
+        r, x = _alt_at(p, input.alt_cmp() or {})
+        if x is None:
+            return
+        _open_fns.add(r["functionId"])
+        cur = list(_cmp())
+        k = x["candidateKey"]
+        if k in cur:
+            cur.remove(k)
+        elif len(cur) >= 3:
+            ui.notification_show("Compare at most 3 at a time. Stop comparing one first.",
+                                 type="warning", duration=5)
+            return
+        else:
+            cur.append(k)
+        _cmp.set(cur)
+
+    @reactive.effect
+    @reactive.event(input.alt_cmp_clear)
+    @guard("stop comparing")
+    def _alt_cmp_clear():
+        _cmp.set([])
+
+    @reactive.effect
+    @reactive.event(input.alt_select)
+    @guard("open the selection")
+    def _alt_select_open():
+        p = _get()
+        r, x = _alt_at(p, input.alt_select() or {})
+        if x is None:
+            return
+        moves = alts.affected(p, x["candidateKey"])
+        names = {row["functionId"]: row["functionName"] for row in reg.status_rows(p)}
+        _target.update(kind="alt_select", key=x["candidateKey"])
+        _open_fns.add(r["functionId"])
+        _modal(f"Select for {r['functionName']}",
+               ui.p(f"{r['functionName']} takes {_alt_source(x['candidate'])}'s definition in this draft."
+                    + (" These functions read the same curves and move with it: "
+                       + ", ".join(names.get(m["functionId"], m["functionId"]) for m in moves[1:]) + "."
+                       if len(moves) > 1 else ""), class_="mb-2"),
+               ui.p("Its curves and criteria replace the draft's for these functions; the method it "
+                    "replaces stays in the register as eligible, not selected. Selecting the method this "
+                    "draft started from puts every byte of it back.", class_="easi-note"),
+               ui.input_text(ns("who"), "Your name", value=person(), width="100%"),
+               _reason_input(label="Reason (recorded with the decision)", placeholder="Why this method"),
+               apply_id="alt_select_apply", apply_label="Select", size="m")
+
+    @reactive.effect
+    @reactive.event(input.alt_select_apply)
+    @guard("select the method")
+    def _alt_select_apply():
+        p = _get()
+        if _target.get("kind") != "alt_select":
+            return
+        try:
+            new = alts.adopt(p, str(_target.get("key")), by=str(input.who() or ""),
+                             reason=str(input.reason() or ""), at=_now())
+        except (ValueError, alts.AlternativeError) as exc:
+            _modal_err.set(str(exc))
+            return
+        ui.modal_remove()
+        _apply(new, "Selected. Preview the consequences before you publish.")
+
+    @reactive.effect
+    @reactive.event(input.alt_import)
+    @guard("import the study alternatives")
+    def _alt_import():
+        p = _get()
+        try:
+            new = alts.import_alternatives(p, alts.STUDY_DIR, imported_by=person(), at=_now())
+        except (OSError, ValueError, alts.AlternativeError) as exc:
+            ui.notification_show(str(exc), type="warning", duration=8)
+            return
+        _apply(new, "Imported the study's alternatives. Nothing the method scores changed.")
 
     # ── 5. Review and publish ─────────────────────────────────────────────────
     def _preview_button(p):
