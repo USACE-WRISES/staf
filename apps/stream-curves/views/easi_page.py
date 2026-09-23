@@ -26,18 +26,22 @@ from __future__ import annotations
 
 import asyncio
 import datetime as _dt
+import json
 import logging
 import os
+from pathlib import Path
 
 from shiny import module, reactive, render, ui
 
 from streamcurves import curve_svg
+from streamcurves import evidence_store as evs
 from streamcurves import library as lib
 from streamcurves import prefs
 from streamcurves import run_state as rs
 from streamcurves import workspace as ws
 from streamcurves.easi_method import edit
 from streamcurves.easi_method import evaluate
+from streamcurves.easi_method import evidence as ev
 from streamcurves.easi_method import io as eio
 from streamcurves.easi_method import register as reg
 from streamcurves.easi_method import stages as es
@@ -274,6 +278,49 @@ def describe(h: dict, names: dict | None = None) -> str:
     if a == "import":
         return "the import"
     return str(a or "change")
+
+
+def covers(coverage: dict) -> str:
+    """One line for what a package covers."""
+    c = coverage or {}
+    parts = []
+    for key, noun in (("memberRows", "member rows"), ("reaches", "reaches"), ("fits", "fits"),
+                      ("operationalCurves", "operational curves")):
+        if isinstance(c.get(key), int):
+            parts.append(f"{c[key]:,} {noun}")
+    if isinstance(c.get("studyReceipts"), list):
+        parts.append(f"{len(c['studyReceipts'])} study receipts")
+    if c.get("build"):
+        parts.append(f"build {str(c['build'])[:8]}")
+    return ", ".join(parts)
+
+
+def check_lines(checks: dict) -> list[str]:
+    """A package's recorded checks in words (an unknown check stays as its JSON)."""
+    out = []
+    for key, c in (checks or {}).items():
+        if key == "eromMonthsReproduceStoredCv" and isinstance(c, dict):
+            out.append(f"The 12 monthly EROM flows reproduce the stored flow CV of "
+                       f"{c.get('identicalAtStoredPrecision', 0):,} of {c.get('comparable', 0):,} "
+                       f"members exactly at its stored precision ({c.get('storedType')}); "
+                       f"missing values agree: {'yes' if c.get('nullsAgree') else 'no'}.")
+        elif key == "panelsRegenerateMembers" and isinstance(c, dict):
+            out.append(f"Drawing the panels again from this package gives "
+                       f"{'the same' if c.get('identical') else 'different'} "
+                       f"{c.get('memberRows', 0):,} member rows ({c.get('seconds')} s).")
+        else:
+            out.append(f"{key}: {json.dumps(c, sort_keys=True)}")
+    return out
+
+
+def size_text(n) -> str:
+    n = int(n or 0)
+    return f"{n / 1e6:,.1f} MB" if n >= 100_000 else f"{n / 1e3:,.0f} KB"
+
+
+def evidence_base() -> str:
+    """Where packages are fetched from (a folder or an https base); empty when unset."""
+    return os.environ.get("STREAMCURVES_EVIDENCE_BASE_URL", "").strip()
 
 
 def easi_view(state: AppState) -> dict | None:
@@ -551,20 +598,397 @@ def easi_page_server(input, output, session, state: AppState):
             ("Curve engine", short(prov.get("curveEngineSha256"))),
             ("Fit registry", short((prov.get("registry") or {}).get("sha256"))),
         ])
-        packages = p.evidence or []
-        if packages:
-            ev = ui.tags.ul(*[ui.tags.li(f"{e.get('name') or e.get('id')}: {e.get('role') or ''}")
-                              for e in packages], class_="easi-list")
-        else:
-            ev = ui.div(fa("box-open"), ui.span(" No development data packages are attached to "
-                                               "this project."), class_="easi-empty")
         return ui.TagList(
             ui.p("The reference curves record how their reference sites were chosen and fit. "
                  "Least-disturbed sites pass every criterion of the strict screen; strata "
                  "with too few fall back to the relaxed screen.", class_="easi-note mt-0"),
             ui.div(facts, class_="easi-card"),
             ui.div("Screen criteria", class_="sc-sec"), crit,
-            ui.div("Development data packages", class_="sc-sec"), ev)
+            ui.div("Development data packages", class_="sc-sec"),
+            ui.output_ui(ns("packages")),
+            ui.output_ui(ns("refit_box")))
+
+    # ── development data packages ───────────────────────────────────────────────
+    _store_tick = reactive.value(0)
+    _jobs: dict = {"busy": None}
+    _refit = reactive.value(None)
+
+    def _installed() -> list[dict]:
+        _store_tick()
+        try:
+            return evs.installed()
+        except Exception:  # noqa: BLE001 - an unreadable store lists nothing
+            return []
+
+    @render.ui
+    def packages():
+        p = state.easi_project()
+        if p is None:
+            return None
+        inst = _installed()
+        refs = list(p.evidence or [])
+        rows = []
+        for i, ref in enumerate(refs):
+            st = ev.status(ref, inst)
+            if st == "installed":
+                here = ui.span(fa("circle-check"), " Verified", class_="easi-ok")
+                action = ui.tags.button("View", type="button", class_="btn btn-outline-secondary btn-sm",
+                                        onclick=_evt(ns("pkg_view"), i=i))
+            else:
+                here = ui.span("Not on this computer" if st == "missing" else "Another version here",
+                               class_="easi-muted")
+                action = (ui.tags.button("Download", type="button", class_="btn btn-outline-primary btn-sm",
+                                         onclick=_evt(ns("pkg_download"), i=i))
+                          if ref.get("archive") and evidence_base() else None)
+            roles = ", ".join(ev.ROLE_LABELS.get(r, r) for r in ref.get("roles") or [])
+            repro = ref.get("reproducibility") or ""
+            rows.append(ui.tags.tr(
+                ui.tags.td(ui.div(ref.get("title") or ref["packageId"], class_="easi-strong"),
+                           ui.div(f"{ref['packageId']}, {ref.get('version')}", class_="easi-muted")),
+                ui.tags.td(roles),
+                ui.tags.td(ev.REPRODUCIBILITY_LABELS.get(repro, repro),
+                           title=ev.REPRODUCIBILITY_HELP.get(repro, "")),
+                ui.tags.td(covers(ref.get("coverage"))),
+                ui.tags.td(size_text(ref.get("bytes")), class_="easi-right easi-nowrap"),
+                ui.tags.td(here, class_="easi-nowrap"),
+                ui.tags.td(action, ui.tags.button("Remove", type="button", class_="btn btn-link btn-sm",
+                                                  title="Stop naming this package in the project",
+                                                  onclick=_evt(ns("pkg_detach"), i=i)),
+                           class_="easi-right easi-nowrap")))
+        attached = {r["packageId"] for r in refs}
+        spare = [r for r in inst if r["packageId"].startswith("easi-") and r["packageId"] not in attached]
+        if rows:
+            table = ui.tags.table(
+                ui.tags.thead(ui.tags.tr(ui.tags.th("Package"), ui.tags.th("Role"),
+                                         ui.tags.th("Reproducible"), ui.tags.th("Covers"),
+                                         ui.tags.th("Size", class_="easi-right"),
+                                         ui.tags.th("Here"), ui.tags.th(""))),
+                ui.tags.tbody(*rows), class_="table table-sm easi-table")
+        else:
+            table = ui.div(fa("box-open"), ui.span(" This project names no development data "
+                                                   "packages yet."), class_="easi-empty")
+        tools = [ui.tags.button(ui.TagList(fa("file-import"), " Import a package"), type="button",
+                                class_="btn btn-outline-secondary btn-sm",
+                                onclick=_evt(ns("pkg_import")))]
+        if spare:
+            tools.append(ui.tags.button(ui.TagList(fa("link"), f" Attach {len(spare)} from this computer"),
+                                        type="button", class_="btn btn-outline-secondary btn-sm",
+                                        onclick=_evt(ns("pkg_attach_all"))))
+        busy = _jobs.get("busy")
+        return ui.TagList(table, ui.div(*tools, ui.span(busy, class_="easi-running") if busy else None,
+                                        class_="easi-tools"))
+
+    def _ref_at(i):
+        p = _get()
+        refs = list((p.evidence if p else None) or [])
+        return (p, refs[i]) if 0 <= i < len(refs) else (p, None)
+
+    @reactive.effect
+    @reactive.event(input.pkg_detach)
+    @guard("remove the package reference")
+    def _pkg_detach():
+        p, ref = _ref_at(int((input.pkg_detach() or {}).get("i", -1)))
+        if ref is None:
+            return
+        _apply(ev.detach(p, ref["packageId"], by=person() or "author"),
+               f"The project no longer names {ref.get('title') or ref['packageId']}.")
+
+    @reactive.effect
+    @reactive.event(input.pkg_attach_all)
+    @guard("attach the packages")
+    def _pkg_attach_all():
+        p = _get()
+        if p is None:
+            return
+        new = p
+        for rec in _installed():
+            if rec["packageId"].startswith("easi-") and rec["packageId"] not in {
+                    e["packageId"] for e in new.evidence}:
+                new = ev.attach(new, ev.reference(rec["manifest"], package_digest=evs.package_digest(
+                    rec["manifest"])), by=person() or "author")
+        if new is not p:
+            _apply(new, "Attached the packages on this computer.")
+
+    @reactive.effect
+    @reactive.event(input.pkg_import)
+    @guard("open the import")
+    def _pkg_import():
+        _target.update(kind="import")
+        _modal("Import a development data package",
+               ui.p("A package is a .evidence.zip file or its unpacked folder. It is checked file "
+                    "by file before the project names it.", class_="mb-2"),
+               ui.input_text(ns("pkg_path"), "Package file or folder", width="100%",
+                             placeholder=r"D:\Data\evidence\easi-dev-members-....evidence.zip"),
+               apply_id="pkg_import_apply", apply_label="Import", size="m")
+
+    @reactive.effect
+    @reactive.event(input.pkg_import_apply)
+    @guard("import the package")
+    def _pkg_import_apply():
+        raw = str(input.pkg_path() or "").strip().strip('"')
+        if not raw:
+            _modal_err.set("enter the path of a package file or folder")
+            return
+        path = Path(raw)
+        if not path.exists():
+            _modal_err.set("nothing is at that path")
+            return
+        ui.modal_remove()
+        _launch(_run_install(path))
+
+    async def _run_install(path: Path, *, fetch: dict | None = None):
+        label = path.name if fetch is None else fetch["name"]
+        _jobs["busy"] = f" Checking {label}..."
+        _store_tick.set(_store_tick() + 1)
+        await st.task_flush()
+        try:
+            with st.busy(state):
+                if fetch is not None:
+                    path = await asyncio.to_thread(evs.download, evidence_base(), fetch["name"],
+                                                   sha256=fetch["sha256"], size=int(fetch["bytes"]))
+                archive = None
+                if path.is_file():
+                    target = await asyncio.to_thread(evs.install_zip, path)
+                    archive = {"name": path.name, "sha256": await asyncio.to_thread(evs.sha_file, path),
+                               "bytes": path.stat().st_size}
+                else:
+                    target = await asyncio.to_thread(evs.install_folder, path)
+                doc = evs.read_manifest(target)
+            with reactive.isolate():
+                p = state.easi_project()
+            if p is not None:
+                old = next((e for e in p.evidence if e.get("packageId") == doc["packageId"]), None)
+                ref = ev.reference(doc, archive=archive or (old or {}).get("archive"),
+                                   package_digest=evs.package_digest(doc))
+                new = ev.attach(p, ref, by=person() or "author")
+                if new is not p:
+                    with reactive.isolate():
+                        _apply(new, f"The project names {doc.get('title') or doc['packageId']}.")
+                else:
+                    ui.notification_show(f"{doc.get('title') or doc['packageId']} is verified on this "
+                                         "computer.", type="message", duration=5)
+        except evs.EvidenceError as exc:
+            ui.notification_show(f"The package was not imported: {exc}", type="error", duration=10)
+        finally:
+            _jobs["busy"] = None
+            _store_tick.set(_store_tick() + 1)
+            await st.task_flush()
+
+    @reactive.effect
+    @reactive.event(input.pkg_download)
+    @guard("download the package")
+    def _pkg_download():
+        p, ref = _ref_at(int((input.pkg_download() or {}).get("i", -1)))
+        if ref is None or not ref.get("archive") or _jobs.get("busy"):
+            return
+        _launch(_run_install(Path(ref["archive"]["name"]), fetch=ref["archive"]))
+
+    # the package viewer
+    _viewing: dict = {"folder": None, "files": []}
+
+    @reactive.effect
+    @reactive.event(input.pkg_view)
+    @guard("open the package")
+    def _pkg_view():
+        p, ref = _ref_at(int((input.pkg_view() or {}).get("i", -1)))
+        if ref is None:
+            return
+        folder = evs.find(ref["packageId"], ref.get("dataDigest"))
+        if folder is None:
+            return
+        doc = evs.read_manifest(folder)
+        tables = [rel for rel, rec in doc["files"].items() if rel.endswith((".parquet", ".csv"))]
+        _viewing.update(folder=folder, files=tables)
+        files = ui.tags.table(
+            ui.tags.thead(ui.tags.tr(ui.tags.th("File"), ui.tags.th("Rows", class_="easi-right"),
+                                     ui.tags.th("Columns", class_="easi-right"),
+                                     ui.tags.th("Size", class_="easi-right"))),
+            ui.tags.tbody(*[ui.tags.tr(ui.tags.td(ui.tags.code(rel.split("/", 1)[-1])),
+                                       ui.tags.td(f"{rec['rows']:,}" if isinstance(rec.get("rows"), int) else "",
+                                                  class_="easi-right"),
+                                       ui.tags.td(str(len(rec.get("columns") or [])) if rec.get("columns")
+                                                  else "", class_="easi-right"),
+                                       ui.tags.td(size_text(rec["bytes"]), class_="easi-right"))
+                            for rel, rec in sorted(doc["files"].items())]),
+            class_="table table-sm easi-table")
+        repro = doc.get("reproducibility") or ""
+        facts = _facts([
+            ("Version", doc.get("version")),
+            ("Role", ", ".join(ev.ROLE_LABELS.get(r, r) for r in doc.get("roles") or [])),
+            ("Reproducible", f"{ev.REPRODUCIBILITY_LABELS.get(repro, repro)}: "
+                             f"{ev.REPRODUCIBILITY_HELP.get(repro, '')}" if repro else None),
+            ("Covers", covers(doc.get("coverage"))),
+            ("Data digest", short(doc["dataDigest"])),
+            ("Shared as", (doc.get("redistribution") or {}).get("status")),
+        ])
+        lists = []
+        for key, title in (("limitations", "Limitations"), ("unavailable", "Not in this package")):
+            items = doc.get(key) or []
+            if items:
+                lists.append(ui.div(title, class_="sc-sec"))
+                lists.append(ui.tags.ul(*[ui.tags.li(i if isinstance(i, str) else
+                                                     f"{i.get('item')}: {i.get('why')}. {i.get('remedy') or ''}")
+                                          for i in items], class_="easi-list"))
+        checks = doc.get("checks") or {}
+        preview = None
+        if tables:
+            preview = ui.TagList(
+                ui.div("Data", class_="sc-sec"),
+                ui.div(ui.input_select(ns("pkg_table"), None,
+                                       {t: t.split("/", 1)[-1] for t in tables}, width="320px"),
+                       ui.download_button(ns("pkg_csv"), ui.TagList(fa("file-csv"), " Export as CSV"),
+                                          class_="btn btn-outline-secondary btn-sm"),
+                       class_="easi-tools"),
+                ui.output_ui(ns("pkg_preview")))
+        ui.modal_show(ui.modal(
+            ui.p(doc.get("description") or "", class_="mb-2"), facts,
+            ui.div("Checks", class_="sc-sec") if checks else None,
+            ui.tags.ul(*[ui.tags.li(x) for x in check_lines(checks)], class_="easi-list")
+            if checks else None,
+            *lists, ui.div("Files", class_="sc-sec"), files, preview,
+            title=doc.get("title") or doc["packageId"], size="xl", easy_close=True,
+            footer=ui.modal_button("Close", class_="btn btn-outline-secondary")))
+
+    def _table_path():
+        try:
+            rel = input.pkg_table()
+        except Exception:  # noqa: BLE001 - no viewer open
+            return None
+        folder = _viewing.get("folder")
+        if not folder or rel not in _viewing.get("files", []):
+            return None
+        return Path(folder) / rel
+
+    @render.ui
+    def pkg_preview():
+        path = _table_path()
+        if path is None:
+            return None
+        import pyarrow.parquet as pq
+        if path.suffix == ".parquet":
+            pf = pq.ParquetFile(path)
+            cols = pf.schema_arrow.names
+            head = pf.read_row_group(0, columns=cols[:14]).slice(0, 15).to_pylist()
+            n = pf.metadata.num_rows
+        else:
+            import csv
+            with path.open(encoding="utf-8") as fh:
+                reader = csv.DictReader(fh)
+                cols = reader.fieldnames or []
+                head = [dict(r) for _, r in zip(range(15), reader)]
+            n = None
+        shown = cols[:14]
+
+        def cell(v):
+            if isinstance(v, float):
+                return "" if v != v else f"{v:.6g}"
+            return "" if v is None else str(v)
+
+        return ui.TagList(
+            ui.div(f"First {len(head)} of {n:,} rows" if n is not None else f"First {len(head)} rows",
+                   (f", {len(shown)} of {len(cols)} columns" if len(cols) > len(shown) else ""),
+                   class_="easi-muted mb-1"),
+            ui.div(ui.tags.table(ui.tags.thead(ui.tags.tr(*[ui.tags.th(c) for c in shown])),
+                                 ui.tags.tbody(*[ui.tags.tr(*[ui.tags.td(cell(r.get(c))) for c in shown])
+                                                 for r in head]),
+                                 class_="table table-sm easi-table easi-preview"),
+                   class_="easi-scroll"))
+
+    @render.download(filename=lambda: (_table_path() or Path("table.csv")).stem + ".csv")
+    def pkg_csv():
+        path = _table_path()
+        if path is None:
+            return
+        import pyarrow.csv as pacsv
+        import pyarrow.parquet as pq
+        import io as _io
+        if path.suffix == ".csv":
+            yield path.read_bytes()
+            return
+        pf = pq.ParquetFile(path)
+        for i in range(pf.num_row_groups):
+            buf = _io.BytesIO()
+            pacsv.write_csv(pf.read_row_group(i), buf,
+                            write_options=pacsv.WriteOptions(include_header=(i == 0)))
+            yield buf.getvalue()
+
+    # refitting the operational curves from the packages
+    @render.ui
+    def refit_box():
+        p = state.easi_project()
+        if p is None:
+            return None
+        inst = _installed()
+        need = {r["packageId"]: r for r in (p.evidence or []) if r["packageId"] in ("easi-dev-members",
+                                                                                  "easi-dev-fits")}
+        ready = len(need) == 2 and all(ev.status(r, inst) == "installed" for r in need.values())
+        if not ready:
+            return None
+        res = _refit()
+        body = [ui.p("Refit the 34 curves from the member values in these packages, with the "
+                     "recipe that produced them, and compare the fits with this project's curves.",
+                     class_="mb-2")]
+        if res and res.get("packageDigest") == p.package_digest:
+            cmp_ = res["curves"]
+            if cmp_["allIdentical"]:
+                body.append(ui.div(fa("circle-check"), f" All {cmp_['curves']} curves are exactly their "
+                                   f"fits ({res['seconds']} s).", class_="easi-ok mb-2"))
+            else:
+                body.append(ui.div(f"{cmp_['identical']} of {cmp_['curves']} curves are exactly their "
+                                   f"fits ({res['seconds']} s).", class_="mb-1"))
+                body.append(ui.tags.ul(*[ui.tags.li(
+                    f"{d['curve']}: " + ", ".join(
+                        f"{k} differs by {v:.6g}" if isinstance(v, (int, float)) else f"{k} differs"
+                        for k, v in d["diffs"].items()))
+                    for d in cmp_["differing"]] + [ui.tags.li(f"{m}: no usable fit") for m in cmp_["missing"]],
+                    class_="easi-list mb-2"))
+        body.append(ui.span(fa("spinner"), " Refitting...", class_="easi-running") if _jobs.get("refit")
+                    else ui.tags.button(ui.TagList(fa("rotate"), " Refit the curves"), type="button",
+                                        class_="btn btn-outline-primary btn-sm",
+                                        onclick=_evt(ns("refit_run"))))
+        return ui.TagList(ui.div("Refit", class_="sc-sec"), ui.div(*body, class_="easi-card"))
+
+    @reactive.effect
+    @reactive.event(input.refit_run)
+    @guard("refit the curves")
+    def _refit_run():
+        p = _get()
+        if p is None or _jobs.get("refit"):
+            return
+        _launch(_run_refit(p))
+
+    async def _run_refit(p):
+        from streamcurves.easi_method import refit as rf
+        _jobs["refit"] = True
+        _store_tick.set(_store_tick() + 1)
+        await st.task_flush()
+        try:
+            with st.busy(state):
+                members_dir = evs.find("easi-dev-members",
+                                       next(e["dataDigest"] for e in p.evidence
+                                            if e["packageId"] == "easi-dev-members"))
+
+                def work():
+                    import time as _time
+                    t0 = _time.perf_counter()
+                    members, values, panels = rf.load_members(members_dir)
+                    rows = rf.fit_registry(members, values, panels, quantities=(
+                        "natural_wsrp100", "woody_wsrp100", "q_cv_monthly", "er_median"))
+                    curves = rf.operational_curves(rows, members, values, panels)
+                    return {"curves": rf.compare_curves(curves, p.curves()),
+                            "seconds": round(_time.perf_counter() - t0, 1),
+                            "packageDigest": p.package_digest}
+
+                res = await asyncio.to_thread(work)
+            with reactive.isolate():
+                _refit.set(res)
+        except Exception as exc:  # noqa: BLE001 - the task says what happened
+            logger.exception("EASI refit failed")
+            ui.notification_show(f"The refit could not run: {exc}", type="error", duration=10)
+        finally:
+            _jobs["refit"] = False
+            _store_tick.set(_store_tick() + 1)
+            await st.task_flush()
 
     # ── 3. Curves and criteria ──────────────────────────────────────────────────
     def _changes_strip(p):

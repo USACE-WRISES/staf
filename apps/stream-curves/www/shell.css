@@ -554,5 +554,14 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-head); }
   background: var(--sc-warn-soft); border-radius: var(--r-2); color: var(--sc-warn); font-size: var(--fs-2); }
 .easi-running { color: var(--sc-accent); font-size: var(--fs-2); }
 .easi-running svg { height: 1em; width: auto; fill: currentColor; animation: sc-spin 1s linear infinite; }
+.easi-ok { color: var(--sc-ok); }
+.easi-ok svg { height: 1em; width: auto; fill: currentColor; vertical-align: -.125em; }
+.easi-nowrap { white-space: nowrap; }
+.easi-tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin: 6px 0 10px; }
+.easi-tools .form-group, .easi-tools .shiny-input-container { margin-bottom: 0; }
+.easi-scroll { overflow-x: auto; max-width: 100%; }
+.easi-preview td, .easi-preview th { white-space: nowrap; font-size: var(--fs-1); }
+.easi-pre { font-size: var(--fs-1); background: var(--sc-surface-soft); border: 1px solid var(--sc-rule);
+  border-radius: var(--r-1); padding: 8px 10px; max-height: 200px; overflow: auto; }
 /* faicons writes margin-left:auto inline, which a flex row turns into a push to the right */
 .easi-page svg.fa, .easi-modal-err svg.fa, .easi-problems svg.fa { margin-left: 0 !important; }
