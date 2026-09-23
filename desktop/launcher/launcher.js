@@ -1,6 +1,7 @@
-// STAF Desktop launcher page. Vanilla JS, same idiom as the site's widgets.
-// Protocol: the shell pushes full snapshots (card grid) plus setup/update events; we render from
-// scratch on every snapshot. Outbound commands: { type, appId? } — see LauncherProtocol.cs.
+// StreamCurves Desktop launcher page. Shown while the shell sets up the payload or starts the
+// app; once the app server answers, the shell navigates this same WebView2 to the app itself,
+// so this page has no card grid, just setup / starting / error states.
+// Outbound commands: { type } (see LauncherProtocol.cs). Update notices are native (shell banner).
 (function () {
   "use strict";
 
@@ -8,19 +9,17 @@
   if (!host) {
     document.body.insertAdjacentHTML(
       "afterbegin",
-      '<p style="padding:1rem;color:#c0392b">This page only works inside STAF Desktop.</p>');
+      '<p style="padding:1rem;color:#c0392b">This page only works inside StreamCurves Desktop.</p>');
     return;
   }
 
-  function send(type, appId) {
-    host.postMessage(JSON.stringify(appId ? { type: type, appId: appId } : { type: type }));
+  function send(type) {
+    host.postMessage(JSON.stringify({ type: type }));
   }
 
-  var grid = document.getElementById("apps-grid");
-  var advancedSection = document.getElementById("advanced-tools");
-  var advancedList = document.getElementById("advanced-list");
-  var footerMode = document.getElementById("footer-mode");
-  var appsView = document.getElementById("apps-view");
+  var startingView = document.getElementById("starting-view");
+  var startingMessage = document.getElementById("starting-message");
+  var startingDetail = document.getElementById("starting-detail");
   var setupView = document.getElementById("setup-view");
   var setupMessage = document.getElementById("setup-message");
   var setupBar = document.getElementById("setup-bar");
@@ -28,167 +27,21 @@
   var setupDetail = document.getElementById("setup-detail");
   var setupActions = document.getElementById("setup-actions");
   var setupRetry = document.getElementById("setup-retry");
-  var updateChip = document.getElementById("update-chip");
-  var updateText = document.getElementById("update-text");
-  var updateInstall = document.getElementById("update-install");
+  var footerMode = document.getElementById("footer-mode");
 
-  var STATUS_LABEL = {
-    stopped: "Not running",
-    starting: "Starting…",
-    running: "Running",
-    stopping: "Stopping…",
-    crashed: "Stopped unexpectedly",
-  };
-
-  // ── Card grid ──────────────────────────────────────────────────────────
-
-  // Status dot + label. Shared by the assessment cards and the advanced rows.
-  function buildStatus(app) {
-    var status = document.createElement("div");
-    status.className = "app-status";
-    var dot = document.createElement("span");
-    dot.className = "status-dot " + app.status;
-    var statusText = document.createElement("span");
-    statusText.className = "status-detail";
-    statusText.textContent = STATUS_LABEL[app.status] || app.status;
-    if (app.detail && (app.status === "crashed" || app.status === "starting")) {
-      statusText.textContent += " · " + app.detail;
-      statusText.title = app.detail;
-    }
-    status.appendChild(dot);
-    status.appendChild(statusText);
-    return status;
+  function show(view) {
+    startingView.hidden = view !== "starting";
+    setupView.hidden = view !== "setup";
   }
 
-  // Launch/Open button plus Cancel and web link. Shared by cards and advanced rows.
-  function buildActions(app) {
-    var actions = document.createElement("div");
-    actions.className = "card-actions";
-
-    var launch = document.createElement("button");
-    launch.type = "button";
-    launch.className = "btn btn-primary";
-    if (app.status === "running") {
-      launch.textContent = "Open " + app.name;
-    } else if (app.status === "starting" || app.status === "stopping") {
-      launch.textContent = app.status === "starting" ? "Starting…" : "Stopping…";
-      launch.disabled = true;
-    } else {
-      launch.textContent = "Launch " + app.name;
-    }
-    launch.addEventListener("click", function () { send("launch", app.id); });
-
-    actions.appendChild(launch);
-
-    // Closing an app's window already stops its server, so there is no Stop button.
-    // The one exception: while a start is still in flight there is no window yet to close,
-    // so offer a Cancel until the app is up.
-    if (app.status === "starting") {
-      var cancel = document.createElement("button");
-      cancel.type = "button";
-      cancel.className = "btn btn-secondary";
-      cancel.textContent = "Cancel";
-      cancel.addEventListener("click", function () { send("stop", app.id); });
-      actions.appendChild(cancel);
-    }
-
-    if (app.webUrl) {
-      var web = document.createElement("a");
-      web.href = "#";
-      web.className = "card-weblink";
-      web.textContent = "Web app ↗";
-      web.title = "Open the hosted version in your browser: " + app.webUrl;
-      web.addEventListener("click", function (e) {
-        e.preventDefault();
-        send("openWeb", app.id);
-      });
-      actions.appendChild(web);
-    }
-
-    return actions;
+  function showStarting(msg) {
+    show("starting");
+    startingMessage.textContent = msg.message || "Starting…";
+    startingDetail.textContent = msg.detail || "";
   }
-
-  function buildCard(app) {
-    var card = document.createElement("div");
-    card.className = "apps-hub-card";
-    card.dataset.app = app.id;
-
-    var head = document.createElement("div");
-    head.className = "apps-hub-card-head";
-    var h3 = document.createElement("h3");
-    h3.textContent = app.name;
-    var badge = document.createElement("span");
-    badge.className = "tier-badge tier-" + app.tierNum;
-    badge.textContent = "Tier " + app.tierNum + " · " + app.tier;
-    head.appendChild(h3);
-    head.appendChild(badge);
-
-    var fullname = document.createElement("p");
-    fullname.className = "apps-hub-fullname";
-    fullname.textContent = app.fullName;
-
-    var desc = document.createElement("p");
-    desc.className = "apps-hub-desc";
-    desc.textContent = app.description;
-
-    card.appendChild(head);
-    card.appendChild(fullname);
-    card.appendChild(desc);
-    card.appendChild(buildStatus(app));
-    card.appendChild(buildActions(app));
-    return card;
-  }
-
-  // Compact row for builder apps (stream-curves): name and full name only, no tier badge
-  // or description, with the same status and launch controls as a card.
-  function buildAdvancedRow(app) {
-    var row = document.createElement("div");
-    row.className = "advanced-row";
-    row.dataset.app = app.id;
-
-    var ident = document.createElement("div");
-    ident.className = "advanced-row-ident";
-    var name = document.createElement("span");
-    name.className = "advanced-row-name";
-    name.textContent = app.name;
-    var full = document.createElement("span");
-    full.className = "advanced-row-fullname";
-    full.textContent = app.fullName;
-    ident.appendChild(name);
-    ident.appendChild(full);
-
-    row.appendChild(ident);
-    row.appendChild(buildStatus(app));
-    row.appendChild(buildActions(app));
-    return row;
-  }
-
-  function renderSnapshot(snapshot) {
-    var advanced = []; // builder apps render as compact rows below the cards
-    grid.textContent = "";
-    snapshot.apps.forEach(function (app) {
-      if (app.id === "curves") {
-        advanced.push(app);
-        return;
-      }
-      grid.appendChild(buildCard(app));
-    });
-
-    advancedList.textContent = "";
-    advanced.forEach(function (app) { advancedList.appendChild(buildAdvancedRow(app)); });
-    advancedSection.hidden = advanced.length === 0;
-
-    footerMode.textContent =
-      "STAF Desktop " + snapshot.shell.version +
-      (snapshot.shell.mode === "dev" ? "  ·  dev mode (repo .venv)" : "") +
-      "  ·  data: " + snapshot.shell.dataRoot;
-  }
-
-  // ── First-run setup view ───────────────────────────────────────────────
 
   function showSetup(msg) {
-    appsView.hidden = true;
-    setupView.hidden = false;
+    show("setup");
     setupView.classList.remove("error");
     setupMessage.textContent = msg.message || "";
     setupDetail.textContent = msg.detail || "";
@@ -202,8 +55,7 @@
   }
 
   function showSetupError(msg) {
-    appsView.hidden = true;
-    setupView.hidden = false;
+    show("setup");
     setupView.classList.add("error");
     setupMessage.textContent = msg.message || "Setup failed.";
     setupDetail.textContent = "";
@@ -212,41 +64,20 @@
     setupRetry.hidden = msg.canRetry === false;
   }
 
-  function hideSetup() {
-    setupView.hidden = true;
-    setupView.classList.remove("error");
-    appsView.hidden = false;
-  }
-
-  // ── Footer update chip ─────────────────────────────────────────────────
-
-  var updateChipTimer = null;
-  var chipAction = "applyUpdate"; // which command the chip button sends (payload vs shell update)
-
-  function showUpdateChip(text, opts) {
-    if (!text) { return; } // a chip with no words helps nobody
-    opts = opts || {};
-    if (updateChipTimer) { clearTimeout(updateChipTimer); updateChipTimer = null; }
-    if (opts.action) { chipAction = opts.action; }
-    updateChip.hidden = false;
-    updateChip.classList.toggle("error", !!opts.error);
-    updateText.textContent = text;
-    updateInstall.hidden = !!opts.hideButton;
-    updateInstall.disabled = !!opts.disableButton;
-    updateInstall.textContent = opts.buttonLabel || "Install";
-    if (opts.autoHideMs) {
-      updateChipTimer = setTimeout(function () { updateChip.hidden = true; }, opts.autoHideMs);
-    }
-  }
-
-  // ── Shell → page ───────────────────────────────────────────────────────
+  // -- Shell -> page -------------------------------------------------------
 
   host.addEventListener("message", function (event) {
     var msg = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
     if (!msg || !msg.type) { return; }
     switch (msg.type) {
-      case "snapshot":
-        renderSnapshot(msg);
+      case "info":
+        footerMode.textContent =
+          "StreamCurves Desktop " + msg.version +
+          (msg.mode === "dev" ? "  ·  dev mode (repo .venv)" : "") +
+          "  ·  data: " + msg.dataRoot;
+        break;
+      case "starting":
+        showStarting(msg);
         break;
       case "setup":
         showSetup(msg);
@@ -254,46 +85,21 @@
       case "setupError":
         showSetupError(msg);
         break;
-      case "setupDone":
-        hideSetup();
-        break;
-      case "updateAvailable":
-        showUpdateChip(msg.message, { action: "applyUpdate" });
-        break;
-      case "shellUpdateAvailable":
-        showUpdateChip(msg.message, { action: "applyShellUpdate", buttonLabel: "Restart & update" });
-        break;
-      case "updateProgress":
-        showUpdateChip(msg.message + (typeof msg.percent === "number" && msg.percent >= 0 ? " (" + msg.percent + "%)" : ""),
-          { disableButton: true, buttonLabel: "Installing…" });
-        break;
-      case "updateDone":
-        showUpdateChip(msg.message, { hideButton: true, autoHideMs: 10000 });
-        break;
-      case "updateError":
-        showUpdateChip(msg.message, { error: true, buttonLabel: "Retry" });
-        break;
     }
   });
 
-  // ── Page → shell ───────────────────────────────────────────────────────
+  // -- Page -> shell -------------------------------------------------------
 
-  document.getElementById("open-website").addEventListener("click", function () {
-    send("openWebsite");
-  });
   document.getElementById("open-logs").addEventListener("click", function (e) {
     e.preventDefault();
     send("openLogsFolder");
   });
   setupRetry.addEventListener("click", function () {
-    showSetup({ message: "Retrying…", percent: -1 });
+    showStarting({ message: "Retrying…" });
     send("setupRetry");
   });
   document.getElementById("setup-from-file").addEventListener("click", function () {
     send("installFromFile");
-  });
-  updateInstall.addEventListener("click", function () {
-    send(chipAction);
   });
 
   send("ready");

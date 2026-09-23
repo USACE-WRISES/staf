@@ -4,22 +4,29 @@
   <meta charset="utf-8">
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' data:;">
-  <title>STAF Desktop</title>
+  <title>StreamCurves Desktop</title>
   <link rel="stylesheet" href="launcher.css">
 </head>
 <body>
-  <header class="shell-header">
-    <div>
-      <h1>STAF Desktop</h1>
-      <p class="tagline">Stream Tiered Assessment Framework. Apps run on this computer; data services (USGS/EPA) require an internet connection.</p>
-    </div>
-    <button id="open-website" class="btn btn-secondary" type="button" title="Open the STAF website in your browser">STAF website ↗</button>
-  </header>
-
   <main>
-    <!-- First-run payload setup (driven by the shell's payload manager) -->
-    <section id="setup-view" class="setup-view" hidden>
-      <h2>Setting up STAF Desktop</h2>
+    <!-- The tile, not a white glyph: this page's ground is #f6f8fb. Local file only;
+         the CSP is default-src 'none' with img-src 'self', so nothing external loads. -->
+    <div class="brand">
+      <img class="brand-mark" src="streamcurves-icon-64.png" alt="" width="64" height="64">
+      <h1>StreamCurves</h1>
+      <p class="tagline">Reference &amp; Regional Curve Development</p>
+    </div>
+
+    <!-- App is being launched (the normal path: this page shows only briefly) -->
+    <section id="starting-view" class="panel">
+      <div class="spinner" aria-hidden="true"></div>
+      <p id="starting-message">Preparing…</p>
+      <p id="starting-detail" class="muted"></p>
+    </section>
+
+    <!-- First-run payload setup / update install (driven by the shell's payload manager) -->
+    <section id="setup-view" class="panel" hidden>
+      <h2>Setting up StreamCurves Desktop</h2>
       <p id="setup-message">Preparing…</p>
       <div class="progress" id="setup-progress"><div id="setup-bar" class="progress-bar" style="width: 0%"></div></div>
       <p id="setup-detail" class="muted"></p>
@@ -28,25 +35,11 @@
         <button id="setup-from-file" class="btn btn-secondary" type="button" title="Install from an offline bundle folder">Install from file…</button>
       </div>
     </section>
-
-    <section id="apps-view">
-      <div id="apps-grid" class="apps-hub-grid" aria-live="polite"></div>
-      <div id="advanced-tools" class="advanced-tools" hidden>
-        <h2 class="advanced-tools-title">Advanced tools</h2>
-        <div id="advanced-list" aria-live="polite"></div>
-      </div>
-    </section>
   </main>
 
   <footer class="shell-footer">
     <span id="footer-mode" class="muted"></span>
-    <span class="footer-actions">
-      <span id="update-chip" class="update-chip" hidden>
-        <span id="update-text"></span>
-        <button id="update-install" class="btn btn-primary btn-small" type="button">Install</button>
-      </span>
-      <a href="#" id="open-logs">Logs</a>
-    </span>
+    <a href="#" id="open-logs">Logs</a>
   </footer>
 
   <script src="launcher.js"></script>

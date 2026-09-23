@@ -1,26 +1,41 @@
-# Builds the apps payload: the four app trees + generated desktop-manifest.json.
+# Builds the StreamCurves apps payload: the app tree, the assessment library beside it, and a
+# generated desktop-manifest.json.
 #
-# Staging comes from GIT-TRACKED content only (git archive) - apps/easi contains confidential,
-# gitignored material on developer disks (docs/, scripts/.mmw_api_key) that must never enter a
-# public release asset. Untracked-but-required runtime content is then added back explicitly
-# (allowlist below: easi/www/figures).
+# Staging comes from GIT-TRACKED content only (git archive of HEAD): a checkout carries
+# gitignored material (workspaces, caches, local keys) that must never enter a public release
+# asset, and uncommitted edits are not part of a release either. Two trees ship, as SIBLINGS
+# at the zip root, because the app resolves its library as ..\library (streamcurves/library.py):
+#   stream-curves\   apps/stream-curves minus tests\ and brand\ (development-only)
+#   library\         apps/library (the published assessment library)
+#
+# Output: <OutDir>\streamcurves-<AppsVersion>.zip + .sha256, AppsVersion = apps-YYYY.MM.DD-<sha>.
 [CmdletBinding()]
 param(
-    [string]$RepoRoot = (Join-Path $PSScriptRoot '..\..'),
-    [string]$OutDir = (Join-Path $PSScriptRoot '..\build\release'),
-    [string]$WorkDir = (Join-Path $PSScriptRoot '..\build\apps-work'),
+    [string]$RepoRoot,   # default: the checkout this script sits in
+    [string]$OutDir,     # default: desktop\build\release
+    [string]$WorkDir,    # default: desktop\build\apps-work
     [Parameter(Mandatory)][string]$EnvVersion,
     [string]$AppsVersion,
-    [string]$PythonExe,   # local: a python with pyyaml (repo .venv works)
-    [string]$UvExe        # CI: use `uv run --with pyyaml` instead of PythonExe
+    [string]$PythonExe = 'python'   # any python 3 - the manifest generator is stdlib-only
 )
 $ErrorActionPreference = 'Stop'
+# Defaults resolve here, not in param(): Windows PowerShell 5.1 leaves $PSScriptRoot empty
+# while binding an advanced script's param() defaults under `powershell -File`.
+if (-not $RepoRoot) { $RepoRoot = Join-Path $PSScriptRoot '..\..' }
+if (-not $OutDir) { $OutDir = Join-Path $PSScriptRoot '..\build\release' }
+if (-not $WorkDir) { $WorkDir = Join-Path $PSScriptRoot '..\build\apps-work' }
 $RepoRoot = [IO.Path]::GetFullPath($RepoRoot)
 $OutDir = [IO.Path]::GetFullPath($OutDir)
 $WorkDir = [IO.Path]::GetFullPath($WorkDir)
 
-# Untracked paths (relative to apps/) that the apps need at runtime and are safe to publish.
-$untrackedAllowlist = @('easi\www\figures')
+# Pathspecs relative to the apps/ tree (the archive is taken from HEAD:apps, so the zip root
+# holds stream-curves/ and library/ directly).
+$pathspecs = @(
+    'stream-curves',
+    'library',
+    ':(exclude)stream-curves/tests',
+    ':(exclude)stream-curves/brand'
+)
 
 Push-Location $RepoRoot
 try {
@@ -36,45 +51,34 @@ try {
     New-Item -ItemType Directory -Force $stage | Out-Null
 
     # -- 1. Stage tracked content only --
-    Write-Host '[apps] staging tracked apps/ content via git archive...'
+    Write-Host '[apps] staging tracked stream-curves + library content via git archive...'
     $tarPath = Join-Path $WorkDir 'apps.tar'
-    git archive --format=tar -o $tarPath 'HEAD:apps'
+    git archive --format=tar -o $tarPath 'HEAD:apps' -- @pathspecs
     if ($LASTEXITCODE -ne 0) { throw "git archive failed ($LASTEXITCODE)" }
     tar -xf $tarPath -C $stage
     if ($LASTEXITCODE -ne 0) { throw "tar extract failed ($LASTEXITCODE)" }
+    Remove-Item $tarPath -Force
 
-    # -- 2. Allowlisted untracked extras --
-    foreach ($rel in $untrackedAllowlist) {
-        $src = Join-Path $RepoRoot "apps\$rel"
-        if (Test-Path $src) {
-            $dest = Join-Path $stage $rel
-            New-Item -ItemType Directory -Force (Split-Path $dest) | Out-Null
-            Copy-Item $src $dest -Recurse -Force
-            Write-Host "[apps] added untracked runtime content: $rel"
-        } else {
-            Write-Warning "[apps] allowlisted path missing on disk: $rel"
-        }
+    # The layout the shell and the app depend on: fail the build, not the install.
+    foreach ($required in @('stream-curves\app.py', 'library\catalog.json')) {
+        if (-not (Test-Path (Join-Path $stage $required))) { throw "staged payload is missing $required" }
+    }
+    foreach ($excluded in @('stream-curves\tests', 'stream-curves\brand')) {
+        if (Test-Path (Join-Path $stage $excluded)) { throw "staged payload must not contain $excluded" }
     }
 
-    # -- 3. Generate desktop-manifest.json from docs/_data/apps.yml --
+    # -- 2. Generate desktop-manifest.json (fixed single-app entry; stdlib-only) --
     $genScript = Join-Path $PSScriptRoot 'gen_desktop_manifest.py'
     $manifestOut = Join-Path $stage 'desktop-manifest.json'
-    $genArgs = @($genScript, '--repo-root', $RepoRoot, '--apps-version', $AppsVersion,
-                 '--env-version', $EnvVersion, '--commit', $commit, '--out', $manifestOut)
-    if ($UvExe) {
-        & $UvExe run --with pyyaml -- python @genArgs
-    } elseif ($PythonExe) {
-        & $PythonExe @genArgs
-    } else {
-        throw 'Pass -PythonExe (with pyyaml) or -UvExe'
-    }
+    & $PythonExe $genScript --apps-version $AppsVersion --env-version $EnvVersion `
+        --commit $commit --out $manifestOut
     if ($LASTEXITCODE -ne 0) { throw "manifest generation failed ($LASTEXITCODE)" }
 
-    # -- 4. Zip (root = easi/ sfari/ deep/ stream-curves/ desktop-manifest.json) + sha256 --
+    # -- 3. Zip (root = stream-curves\ library\ desktop-manifest.json) + sha256 --
     New-Item -ItemType Directory -Force $OutDir | Out-Null
-    $zipPath = Join-Path $OutDir "staf-$AppsVersion.zip"
+    $zipPath = Join-Path $OutDir "streamcurves-$AppsVersion.zip"
     Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
-    tar -a -c -f $zipPath -C $stage '*'
+    tar -a -c -f $zipPath -C $stage stream-curves library desktop-manifest.json
     if ($LASTEXITCODE -ne 0) { throw "zip failed ($LASTEXITCODE)" }
     $zipHash = (Get-FileHash $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
     Set-Content -Encoding ascii "$zipPath.sha256" $zipHash

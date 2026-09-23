@@ -1,10 +1,11 @@
-"""Verify desktop/payload/env.lock still agrees with the four apps' requirement pins.
+"""Verify desktop/payload/env.lock still agrees with StreamCurves' requirement pins.
 
-The apps pin exact versions (pkg==x.y.z). env.lock additionally freezes transitive deps at
+The app pins exact versions (pkg==x.y.z). env.lock additionally freezes transitive deps at
 whatever resolved when it was generated - that part legitimately drifts and is only refreshed
 when a developer re-locks. What must NEVER drift silently is a direct pin: if any
-apps/*/requirements.txt pin differs from env.lock, the desktop payload would ship different
-versions than the web apps run. This check is deterministic (no network, no resolution).
+apps/stream-curves/requirements.txt pin differs from env.lock, the desktop payload would ship
+different versions than the web app runs. This check is deterministic (no network, no
+resolution) and stdlib-only.
 
 Exit 0 = consistent; exit 1 with a report otherwise.
 """
@@ -15,9 +16,6 @@ import sys
 from pathlib import Path
 
 REQUIREMENT_FILES = [
-    "apps/easi/requirements.txt",
-    "apps/sfari/requirements.txt",
-    "apps/deep/requirements.txt",
     "apps/stream-curves/requirements.txt",
 ]
 
@@ -54,12 +52,11 @@ def main() -> int:
                 problems.append(f"{rel}: {name}=={version} but env.lock has {locked}")
 
     if problems:
-        print("env.lock is OUT OF SYNC with the app requirement pins:")
+        print("env.lock is OUT OF SYNC with the StreamCurves requirement pins:")
         for problem in problems:
             print("  -", problem)
-        print("\nRegenerate and commit it:")
-        print("  uv pip compile apps/easi/requirements.txt apps/sfari/requirements.txt "
-              "apps/deep/requirements.txt apps/stream-curves/requirements.txt "
+        print("\nRegenerate and commit it (from the repo root):")
+        print("  uv pip compile apps/stream-curves/requirements.txt "
               "--python-version 3.12 --python-platform windows --no-header -o desktop/payload/env.lock")
         return 1
 
