@@ -26,16 +26,20 @@ def test_the_rules_tool_is_in_every_strip_vocabulary():
     assert "rules" in rs.TOOLS_WITHOUT_DATA, "the page reads configs, never the project"
 
 
-def test_the_stagebar_declares_the_chip_and_a_guarded_handler():
+def test_the_rules_tool_has_a_jump_target_and_the_dispatcher_is_guarded():
+    """The Project panel lists every tool as a data-jump row; one guarded
+    dispatcher routes "tool:<key>" targets (views/stagebar.py)."""
+    from views import stagebar
+    assert stagebar.TOOL_TARGETS["rules"] == "tool:rules"
     text = _source("views/stagebar.py")
-    assert '"rules": "tool_rules"' in text
-    assert re.search(r"@reactive\.event\(input\.tool_rules\)\s*\n\s*@guard", text), \
-        "the tool_rules handler is missing or unguarded"
+    assert re.search(r"@reactive\.event\(input\.jump\)\s*\n\s*@guard", text), \
+        "the jump dispatcher is missing or unguarded"
+    assert 'kind == "tool" and key in TOOL_TARGETS' in text
 
 
 def test_every_tool_icon_is_vendored_so_bi_cannot_raise():
-    text = _source("views/stagebar.py")
-    m = re.search(r"_TOOL_ICON = \{(.*?)\}", text, re.S)
+    text = _source("views/project_panel.py")
+    m = re.search(r"TOOL_ICON = \{(.*?)\}", text, re.S)
     icons = dict(re.findall(r'"(\w+)":\s*"([\w-]+)"', m.group(1)))
     assert set(icons) == set(rs.TOOL_KEYS)
     vendored = json.loads(_source("www/vendor/bs-icons.json"))

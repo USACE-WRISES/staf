@@ -8,7 +8,6 @@ by convention — same as EASI/SFARI/DEEP.
 from __future__ import annotations
 
 import json
-import os
 from functools import lru_cache
 
 from shiny import ui
@@ -16,32 +15,30 @@ from shiny import ui
 from streamcurves.paths import WWW_DIR
 
 # --------------------------------------------------------------------------- #
-# Theme — port of app/helpers/theme.R:
-#   bs_theme(version=5, bootswatch="flatly", primary="#2c3e50",
-#            success="#27ae60", warning="#f39c12", danger="#e74c3c",
-#            info="#3498db", "font-size-base"="0.9rem")
-# ui.Theme compiles Sass at first launch (cached); needs shiny[theme].
+# Theme: HYPE Desktop's look (the StreamCurves Desktop redesign, 2026-09-23).
+# Plain Bootstrap with the shared navy accent and HYPE's status families
+# (www/shell.css holds the same values as design tokens); the R app's flatly
+# theme is retired. ui.Theme compiles Sass at first launch (cached); needs
+# shiny[theme].
 # --------------------------------------------------------------------------- #
 
 
 def build_app_theme():
     try:
         return (
-            ui.Theme(preset="flatly")
+            ui.Theme(preset="shiny")
             .add_defaults(
-                primary="#2c3e50",
-                success="#27ae60",
-                warning="#f39c12",
-                danger="#e74c3c",
-                info="#3498db",
+                primary="#2f4b7c",
+                success="#1a7f37",
+                warning="#9a6700",
+                danger="#b42318",
+                info="#2f4b7c",
             )
-            .add_defaults(**{"font-size-base": "0.9rem"})
+            .add_defaults(**{"font-size-base": "0.875rem"})
         )
     except Exception:
-        # Fallback: shinyswatch preset; color/font overrides live in curves.css.
-        import shinyswatch
-
-        return shinyswatch.theme.flatly
+        # No Sass compiler: Bootstrap's defaults, with shell.css carrying the look.
+        return None
 
 
 app_theme = build_app_theme()
@@ -95,24 +92,16 @@ def versioned_www_asset(asset_name: str) -> str:
 
 
 # --------------------------------------------------------------------------- #
-# Cross-app URLs. The "home" entry is the STAF link in the navbar (app.py); it
-# used to have a dedicated banner strip below the navbar, which cost ~28px of
-# height for one link -- EASI/SFARI/DEEP have always carried the same link
-# inline in their header, so this now matches them.
-#
-# The rest of the dict is not the link's: the library view deep-links into DEEP
-# from it, it is the in-app half of the URL mirror (see README), and the desktop
-# shell rewrites all entries via STAF_LINKS_OVERRIDES -- which views/publish.py
-# also reads as its "am I running on the desktop" flag.
+# Cross-app URLs: the in-app half of the URL mirror (docs/_data/apps.yml is the
+# other; see README). About links "home" and "deep", and the Assessment library
+# opens preliminary and final versions in DEEP from "deep". StreamCurves itself
+# ships as StreamCurves Desktop, so "curves" is its latest release page.
 # --------------------------------------------------------------------------- #
 
 STAF_LINKS = {
     "home": "https://usace-wrises.github.io/staf/",
     "easi": "https://gtmenichino-easi.share.connect.posit.cloud/",
     "sfari": "https://gtmenichino-sfari.share.connect.posit.cloud/",
-    "curves": "https://gtmenichino-stream-curves.share.connect.posit.cloud/",
+    "curves": "https://github.com/USACE-WRISES/staf/releases/latest",
     "deep": "https://gtmenichino-deep.share.connect.posit.cloud/",
 }
-_staf_links_overrides = os.environ.get("STAF_LINKS_OVERRIDES")
-if _staf_links_overrides:  # desktop shell rewrites cross-app links; absent on web deploys
-    STAF_LINKS.update(json.loads(_staf_links_overrides))

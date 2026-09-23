@@ -384,7 +384,7 @@ def source_dialog_server(input, output, session, state: AppState):
         metric, function_id = str(p.get("metric") or ""), str(p.get("function") or "")
         with reactive.isolate():
             region = state.region_of_applicability()
-        if rb.region_run_dir(region) is None:
+        if not rb.is_ecoregion(region):
             ui.notification_show("A curve's source is chosen for an ecoregion assessment.",
                                  type="warning", duration=6)
             return
@@ -541,9 +541,12 @@ def source_dialog_server(input, output, session, state: AppState):
                                        recorded_by=sp.maintainer(), functions=functions,
                                        source=osrc.decision_source(metric, opt, config=config))
             oc.validate(decision, build=view["build"], built=view["built"], decisions=current)
-            # the region's record starts from its published decisions (seeded once)
-            rb.standing_decisions(run_dir, (region or {}).get("code"))
-            oc.save(run_dir, decision)
+            if run_dir is not None:
+                # the region's record starts from its published decisions (seeded once);
+                # an installed copy has no region record and keeps the choice in the
+                # project's session only
+                rb.standing_decisions(run_dir, (region or {}).get("code"))
+                oc.save(run_dir, decision)
         except ValueError as exc:
             ui.notification_show(str(exc), type="warning", duration=8)
             return
@@ -558,7 +561,9 @@ def source_dialog_server(input, output, session, state: AppState):
             return
         ui.notification_show(
             f"Saved: {metric_name(metric, view)} now scores against {opt['title']}. It applies "
-            "here now and to every later build of this region.", type="message", duration=7)
+            + ("here now and to every later build of this region." if run_dir is not None
+               else "in this project; the maintainer records it for the region when they "
+                    "publish your revision."), type="message", duration=7)
 
 
 __all__ = ["DIALOG_ID", "OPEN_INPUT", "ENTERED_KEY", "open_onclick", "session_view",

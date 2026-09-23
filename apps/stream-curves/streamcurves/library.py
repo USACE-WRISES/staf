@@ -129,7 +129,17 @@ def exists() -> bool:
 
 def writable() -> bool:
     """True when the library exists and files can be created under it — the gate for
-    publishing (local/desktop) vs. share-with-publisher (cloud)."""
+    publishing (local/desktop) vs. share-with-publisher (cloud).
+
+    Never True in an installed desktop copy: its library is the snapshot the app payload
+    ships (read-only by design, replaced on every update), and the payload folder under
+    %LOCALAPPDATA% is user-writable, so write permission alone would let a publish land
+    there and vanish with the next update. An inherited STAF_LIBRARY_ROOT does not change
+    that; the shell strips it for installed launches too.
+    """
+    from .desktop_env import is_installed_copy
+    if is_installed_copy():
+        return False
     root = library_root()
     return root.is_dir() and os.access(root, os.W_OK)
 
