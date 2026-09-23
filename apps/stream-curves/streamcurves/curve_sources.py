@@ -59,8 +59,13 @@ KINDS: dict[str, dict] = {
         "sentence": ("Fitted in this build, but the two-per-function rule left it out of "
                      "this function.")},
 }
+KINDS["sqt"] = {
+    "label": "State SQT", "icon": "landmark",
+    "sentence": ("A curve published in a state Stream Quantification Tool, chosen by the owner "
+                 "with its verification status and applicability checks, and scored on DEEP's "
+                 "bands.")}
 KIND_ORDER = ("built", "carried", "national", "modeled", "published_benchmark", "fixed",
-              "owner_entered", "borrowed", "owner_exception", "not_selected")
+              "owner_entered", "borrowed", "sqt", "owner_exception", "not_selected")
 
 #: the rule under which the build chose each kind of curve
 KIND_RULES = {"carried": "REF-05", "national": "REF-12", "modeled": "REF-13",

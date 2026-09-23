@@ -263,7 +263,10 @@ def publish(project: EasiProject, *, author: str, revision_notes: str = "", stat
     provenance = {"kind": "easi-method", "methodId": project.meta.get("methodId"),
                   "identity": ident, "lineage": project.meta.get("lineage"),
                   "history": project.history, "publishedBy": author,
-                  "consequences": consequences}
+                  "consequences": consequences,
+                  # what was considered for each function and why: beside the package, never in it
+                  "candidateRegister": {"schema": 1, "rows": reg.export_rows(project),
+                                        "studies": (project.register or {}).get("studies") or []}}
     meta = {"assessmentName": ASSESSMENT_NAME, "region": dict(REGION), "author": author,
             "revisionNotes": revision_notes}
     return lib.publish_easi_version(assessment_id, meta, envelope=pkg.envelope, files=pkg.files,

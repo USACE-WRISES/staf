@@ -8,6 +8,11 @@ and the promotion receipt names how the files became operational. Nothing is wri
 
     python apps/stream-curves/scripts/import_easi_method.py --out <Name>.streamcurves
         [--by NAME] [--version 1] [--release-tag easi-v1.0.0 --release-date 2026-09-16]
+        [--evidence <evidence folder>] [--alternatives <2026-09-15 study folder>]
+
+``--alternatives`` adds the controlled study's alternatives (and the legacy criteria) to the
+project's register as considered candidates, verified against the study's receipts; the
+method files never change.
 """
 from __future__ import annotations
 
@@ -25,6 +30,7 @@ from streamcurves import easi_env  # noqa: E402
 
 easi_env.sanitize()
 
+from streamcurves.easi_method import alternatives as alts  # noqa: E402
 from streamcurves.easi_method import io as eio  # noqa: E402
 
 EASI = REPO / "apps" / "easi"
@@ -40,6 +46,8 @@ def main(argv=None) -> int:
     ap.add_argument("--release-date", default=None)
     ap.add_argument("--evidence", type=Path, default=None,
                     help="an evidence export folder (index.json): the project names its packages")
+    ap.add_argument("--alternatives", type=Path, default=None,
+                    help="the 2026-09-15 controlled alternatives study folder")
     a = ap.parse_args(argv)
     if eio.easi_source(REPO) is None:
         raise SystemExit("apps/easi is not in this checkout; importing needs the EASI source")
@@ -47,6 +55,8 @@ def main(argv=None) -> int:
         REPO, imported_by=a.by or "maintainer", version=a.version,
         release=({"tag": a.release_tag, "date": a.release_date} if a.release_tag else None),
         evidence_dir=a.evidence)
+    if a.alternatives is not None:
+        project = alts.import_alternatives(project, a.alternatives, imported_by=a.by or "maintainer")
     path = eio.write_project(project, Path(a.out), name=a.name)
     ident = project.identity()
     print(f"imported method {ident['methodVersion']} (package {ident['packageDigest'][7:19]}) "
