@@ -51,10 +51,11 @@ def test_every_declared_wizard_step_is_reachable():
 def test_navigation_refuses_while_a_recompute_is_running():
     """Navigating mid-flush is what wedges the session."""
     src = _src("stagebar.py")
+    refuse = src[src.index("def _refuse_while_busy"):src.index("def _go(stage_key")]
+    assert "tasks_running" in refuse
+    assert "Still working" in refuse
     go = src[src.index("def _go(stage_key"):src.index("@reactive.effect", src.index("def _go(stage_key"))]
-    assert "tasks_running" in go
-    assert "Still working" in go
-    assert "return" in go
+    assert "if _refuse_while_busy():" in go and "return" in go
 
 
 def test_a_blocked_stage_is_still_reachable():
@@ -159,15 +160,20 @@ def test_no_input_built_inside_the_mapping_server_has_a_bare_id():
     assert _bare_ids_inside_server("discipline_map.py", "discipline_map_server") == []
 
 
-def test_every_stage_key_has_a_click_input_a_handler_and_a_short_label():
-    """Adding a stage without its chip wiring crashes the strip render, and a
-    chip without a handler renders and does nothing."""
+def test_every_stage_key_has_a_jump_target_the_dispatcher_routes_and_a_short_label():
+    """Adding a stage without its target crashes the strip render, and a target the
+    dispatcher does not route renders a chip that does nothing. Chips and panel rows
+    post to ONE input: separate action links for the same targets would put
+    duplicate input ids on the page."""
+    from views import stagebar
+    assert set(stagebar.STAGE_TARGETS) == set(rs.STAGE_KEYS)
+    assert set(stagebar.TOOL_TARGETS) == set(rs.TOOL_KEYS)
     src = _src("stagebar.py")
-    m = re.search(r"_CLICK = \{(.*?)\}", src, re.S)
-    click = dict(re.findall(r'"([\w-]+)":\s*"(\w+)"', m.group(1)))
-    assert set(click) == set(rs.STAGE_KEYS)
-    for input_id in click.values():
-        assert f"input.{input_id}" in src, f"no handler listens on {input_id}"
+    dispatch = src[src.index("def _jump():"):]
+    for kind in ('kind == "stage"', 'kind == "substep"', 'kind == "section"',
+                 'kind == "tool"', 'target == "project"'):
+        assert kind in dispatch, f"the dispatcher does not route {kind}"
+    assert "input_action_link" not in src, "a chip or row grew its own input id"
     assert set(rs.STAGE_SHORT) == set(rs.STAGE_KEYS)
     assert set(rs.TOOL_TITLES) == set(rs.TOOL_KEYS)
 
@@ -206,30 +212,25 @@ def test_a_non_stage_job_gets_a_readable_busy_label():
     through STAGE_LABELS and the toast would read its raw key."""
     src = _src("stagebar.py")
     assert '"region_build": "a region build"' in src
-    go = src[src.index("def _go(stage_key"):src.index("@reactive.effect", src.index("def _go(stage_key"))]
-    assert "_TASK_LABELS.get(k)" in go
+    refuse = src[src.index("def _refuse_while_busy"):src.index("def _go(stage_key")]
+    assert "_TASK_LABELS.get(k)" in refuse
 
 
-def test_the_tools_fold_into_one_menu_and_substeps_anchor_to_their_stage():
-    """The strip's second-line contract: the five tools collapse into a single
-    Bootstrap dropdown (same ids, so the guarded handlers keep firing), the
-    toggle glyph is vendored so bi() cannot raise, and the sub-step chips hang
-    absolutely from their stage group over the band the subrow's min-height
-    reserves -- the anchored-under-their-pill + stable-height pairing."""
-    import json
-
+def test_the_strip_is_one_row_and_the_panel_carries_the_steps_and_tools():
+    """HYPE's shape: the strip is one row of chips (no second row, no Tools menu);
+    the Project panel lists the current stage's steps and the tools. Both render
+    from one shared snapshot calc and post through one data-jump input, which
+    www/shell.js routes."""
     src = _src("stagebar.py")
-    assert '"data-bs-toggle": "dropdown"' in src
-    assert 'class_="dropdown-menu dropdown-menu-end"' in src
-    assert 'class_="stage-tools dropdown"' in src
-    icon = re.search(r'_TOOLS_MENU_ICON = "([\w-]+)"', src).group(1)
-    vendored = json.loads(io.open(
-        _VIEWS.parent / "www" / "vendor" / "bs-icons.json", encoding="utf-8").read())
-    assert icon in vendored, f"Tools toggle icon {icon!r} is not vendored"
-
-    css = io.open(_VIEWS.parent / "www" / "curves.css", encoding="utf-8").read()
-    substeps = css[css.index(".stage-substeps {"):]
-    substeps = substeps[:substeps.index("}")]
-    assert "position: absolute" in substeps and "top: 100%" in substeps
-    subrow = css[css.index(".stage-bar-subrow {"):]
-    assert "min-height" in subrow[:subrow.index("}")]
+    assert "@reactive.calc" in src and "def _view()" in src
+    assert src.count("_view()") >= 3, "the strip and the panel share the snapshot"
+    assert "stage-bar-subrow" not in src and "dropdown" not in src
+    assert '"data-jump-to": ns("jump")' in src
+    panel = _src("project_panel.py")
+    assert '"data-jump": target' in panel and 'rs.STAGE_SUBSTEPS' in panel
+    assert "rs.TOOL_KEYS" in panel
+    js = io.open(_VIEWS.parent / "www" / "shell.js", encoding="utf-8").read()
+    assert 'closest("[data-jump]")' in js and 'closest("[data-jump-to]")' in js
+    css = io.open(_VIEWS.parent / "www" / "shell.css", encoding="utf-8").read()
+    for state in ("st-done", "st-running", "st-attention", "st-locked", "active"):
+        assert f".sc-stage.{state}" in css, f"the strip has no {state} state"

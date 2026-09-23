@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="StreamCurves">
+  <defs><linearGradient id="tile" x1="0" y1="0" x2=".38" y2="1">
+      <stop offset="0" stop-color="#41669f"/><stop offset="1" stop-color="#1e3255"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".15"/>
+      <stop offset=".52" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient></defs>
+  <rect width="256" height="256" rx="56" fill="url(#tile)"/><rect width="256" height="256" rx="56" fill="url(#sheen)"/>
+  <path d="M 50 46 L 50 206 L 214 206" fill="none" stroke="#ffffff" stroke-opacity="0.38" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 64 186 C 126 186 146 72 208 72" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round"/>
+  <circle cx="148.4" cy="112.1" r="19" fill="#ff9500"/>
+</svg>

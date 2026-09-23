@@ -8,6 +8,10 @@ evidence for the human's judgement, not a statistical acceptance test: scored
 points on the curve tiles, one concordance line each, and the decision form.
 A record can be written without an upload (checks made outside the app count).
 
+Writing to the library (a validation record, Approve as Preliminary, Certify as Final) is
+the maintainer's (streamcurves.workspace.can_publish); anyone can load field data and see
+how it scores on the curves.
+
 Reuses the stage-5 tile pipeline (curve_gallery.gallery_rows ->
 curve_svg.tile_svg with the overlay parameter) and the library's append-only
 validation record (add_validation_record / set_version_validation /
@@ -25,6 +29,7 @@ from shiny import module, reactive, render, req, ui
 from streamcurves import curve_svg as cs
 from streamcurves import curves as scurves
 from streamcurves import library as lib
+from streamcurves import workspace as ws
 from views import assessment_publish as _ap
 from views import curve_gallery as cg
 from views.state import AppState
@@ -47,6 +52,15 @@ def _maintainer() -> str:
     """Same chain views/publish.py and the Region builder use."""
     return (os.environ.get("STAF_LIBRARY_MAINTAINER")
             or os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
+
+
+def _can_write() -> bool:
+    """The maintainer, in a checkout that publishes, with a writable library and a name."""
+    return ws.can_publish() and lib.writable() and bool(_maintainer())
+
+
+_MAINTAINER_NOTE = ("Recording validation, approving and certifying are done by the STAF "
+                    "maintainer from the library's own copy.")
 
 
 def parse_field_data(df: pd.DataFrame, metric_config: dict) -> dict:
@@ -119,6 +133,19 @@ def validate_server(input, output, session, state: AppState, active=None):
             return None
         return str(origin["library_id"]), int(origin.get("version") or 0)
 
+    def _status(aid: str, ver: int) -> str:
+        """The version's lifecycle status: the library's record, else (a copy of a version
+        newer than the library this app ships) the status its project file recorded."""
+        manifest = lib.read_manifest(aid) or {}
+        if any(int(v.get("version") or 0) == int(ver) for v in manifest.get("versions") or []):
+            return lib.version_status(aid, ver)
+        with reactive.isolate():
+            origin = (state.project_meta() or {}).get("origin") or {}
+        if (lib.slugify(origin.get("assessmentId") or "") == lib.slugify(aid)
+                and int(origin.get("version") or 0) == int(ver) and origin.get("status")):
+            return str(origin["status"])
+        return lib.version_status(aid, ver)
+
     @render.ui
     def validate_page():
         if active is not None and not active():
@@ -134,13 +161,14 @@ def validate_server(input, output, session, state: AppState, active=None):
                 icon="database")
         aid, ver = target
         name = (lib.read_manifest(aid) or {}).get("assessmentName") or aid
-        status = lib.version_status(aid, ver)
+        status = _status(aid, ver)
         val_state = lib.version_validation_state(aid, ver)
         with reactive.isolate():
             n_records = len(state.validation_records() or [])
         writable = lib.writable()
         maintainer = _maintainer()
-        blocked = (None if (writable and maintainer)
+        blocked = (None if _can_write()
+                   else _MAINTAINER_NOTE if not ws.can_publish()
                    else ("The library is read-only here." if not writable
                          else "No maintainer name is available for the audit trail."))
         return ui.div(
@@ -264,9 +292,8 @@ def validate_server(input, output, session, state: AppState, active=None):
             return
         aid, ver = target
         maintainer = _maintainer()
-        if not lib.writable() or not maintainer:
-            ui.notification_show("The library is not writable here.",
-                                 type="warning", duration=6)
+        if not _can_write():
+            ui.notification_show(_MAINTAINER_NOTE, type="warning", duration=6)
             return
         with reactive.isolate():
             data = parsed()
@@ -317,12 +344,11 @@ def validate_server(input, output, session, state: AppState, active=None):
         if target is None:
             return None
         aid, ver = target
-        if lib.version_status(aid, ver) != "draft":
+        if _status(aid, ver) != "draft":
             return None
-        if not (lib.writable() and _maintainer()):
-            return ui.div("This is a Draft from an automated build. Approving it "
-                          "needs a writable library and a maintainer name.",
-                          class_="text-muted small mt-2")
+        if not _can_write():
+            return ui.div("This is a Draft: DEEP does not run it until the maintainer "
+                          "approves it as Preliminary.", class_="text-muted small mt-2")
         return ui.div(
             ui.div("This is a Draft from an automated build. Approving records "
                    "your review and makes it a Preliminary version DEEP can use.",
@@ -359,6 +385,8 @@ def validate_server(input, output, session, state: AppState, active=None):
         if target is None:
             return
         aid, ver = target
+        if not _can_write():
+            return
         maintainer = _maintainer()
         lib.set_version_status(aid, ver, "preliminary", maintainer,
                                note="Reviewed in StreamCurves; approved as preliminary.")
@@ -374,9 +402,11 @@ def validate_server(input, output, session, state: AppState, active=None):
         aid, ver = target
         if lib.version_validation_state(aid, ver) != "validated":
             return None
-        if lib.version_status(aid, ver) == "certified":
+        if _status(aid, ver) == "certified":
             return ui.div("This version is certified (shown as Final).",
                           class_="text-success small mt-2")
+        if not _can_write():
+            return None
         return ui.div(
             ui.input_action_button(
                 ns("certify"), "Certify this version (Final)",
@@ -410,6 +440,8 @@ def validate_server(input, output, session, state: AppState, active=None):
         if target is None:
             return
         aid, ver = target
+        if not _can_write():
+            return
         maintainer = _maintainer()
         lib.set_version_status(aid, ver, "certified", maintainer,
                                note="Certified after field-data validation.")

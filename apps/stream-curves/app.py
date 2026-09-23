@@ -1,9 +1,11 @@
-"""StreamCurves — Reference & Regional Curve Development (Python Shiny).
+"""StreamCurves: Reference & Regional Curve Development (Python Shiny).
 
-Port of the R app's entry point (``app/app.R``): navbar shell, theme, STAF
-cross-app nav, and the Help/About modal. View modules mount here as they are
-ported (see ``views/``); the heavy lifting lives in the pure ``streamcurves``
-package.
+The app's shell, laid out like HYPE Desktop: a navy header (brand, version, the open project;
+Projects / Save / Save As... / About / Help), the one-row stage strip, the Project panel at the
+left and the page to its right, the only scroll container. Pages are the panels of a hidden
+navset (``main_navbar``), switched by the strip, the panel and the pages themselves through
+ui.update_navset. Projects, the start page and the dialogs live in views/project.py; the heavy
+lifting lives in the pure ``streamcurves`` package.
 """
 
 from __future__ import annotations
@@ -38,11 +40,9 @@ import logging
 
 from streamcurves import methodology
 from streamcurves import pressure_evidence
-from streamcurves import run_state as rs
 from streamcurves.mapping import realign_discipline_function_mapping
 from streamcurves.paths import WWW_DIR
 from streamcurves.staf_library import default_discipline_function_mapping
-from views import state as st
 from views import summary_state as sst
 from views.analysis_workspace import analysis_workspace_server, analysis_workspace_ui
 from views.cross_section import cross_section_server, cross_section_ui
@@ -53,7 +53,7 @@ from views.source_dialog import DIALOG_ID as SOURCE_DIALOG_ID, source_dialog_ser
 from views.rules import rules_server, rules_ui
 from views.validate_page import validate_server, validate_ui
 from views.data_overview import data_overview_server, data_overview_ui
-from views.stagebar import stagebar_server, stagebar_ui
+from views.stagebar import project_panel_ui, stagebar_server, stagebar_ui
 from views.publish import publish_server, publish_ui
 from views.phase1 import phase1_server, phase1_ui
 from views.phase2 import phase2_server, phase2_ui
@@ -63,7 +63,10 @@ from views.regional_curve import regional_curve_server, regional_curve_ui
 from views.state import AppState
 from views.summary_export import summary_export_server, summary_export_ui
 from views.summary_page import summary_page_server, summary_page_ui
-from views.theme import STAF_LINKS, app_theme, bi, fa, versioned_www_asset
+from views.theme import app_theme, versioned_www_asset
+from views import project as proj
+# Re-exported: the Help dialog's content (tests/test_stagebar_nav reads it here).
+from views.help import app_help_content  # noqa: F401
 from views.uihelpers import RULES_GOTO_INPUT, WORKFLOW_GOTO_INPUT
 from views.workspace_modal import register_workspace_modal
 
@@ -77,182 +80,62 @@ methodology.verify_mirrors(strict=False)
 
 
 # --------------------------------------------------------------------------- #
-# Help / About modal content — port of app_help_content() (app/app.R:26-58).
+# The page. Every page is a panel of the hidden navset; nav values are the strip's
+# vocabulary (run_state: stage landings and TOOL_KEYS), unchanged from the navbar days.
 # --------------------------------------------------------------------------- #
+_PANELS = [
+    ui.nav_panel("Data & Setup", ui.div(data_overview_ui("data_overview"), class_="mt-3"),
+                 value="data"),
+    ui.nav_panel("Reference Curves", ui.div(summary_page_ui("summary"), class_="mt-3"),
+                 value="curves"),
+    ui.nav_panel("Publish", ui.div(publish_ui("publish"), class_="mt-3"), value="publish"),
+    ui.nav_panel("Validate", ui.div(validate_ui("validate"), class_="mt-3"), value="validate"),
+    # the tools (run_state.TOOL_KEYS): keep these nav values in sync with TOOL_KEYS
+    ui.nav_panel("Regional Curves", ui.div(regional_curve_ui("regional"), class_="mt-3"),
+                 value="regional"),
+    ui.nav_panel("Cross-Sections", ui.div(cross_section_ui("xsec"), class_="mt-3"),
+                 value="xsec"),
+    ui.nav_panel("NRSA Explorer", ui.div(nrsa_explorer_ui("nrsa"), class_="mt-3"),
+                 value="nrsa"),
+    ui.nav_panel("Region Builder", ui.div(region_builder_ui("build"), class_="mt-3"),
+                 value="build"),
+    ui.nav_panel("Rules", ui.div(rules_ui("rules"), class_="mt-3"), value="rules"),
+]
 
-
-def app_help_content():
-    # Derived from the strip's own vocabulary (run_state), so adding a stage or
-    # a tool updates this modal for free instead of leaving it stale.
-    stages = ui.tags.ul(
-        *[ui.tags.li(ui.tags.strong(f"{i}. {rs.STAGE_SHORT[k]}"),
-                     f": {rs.STAGE_HELP[k]}")
-          for i, k in enumerate(rs.STAGE_KEYS, start=1)],
-        class_="mb-2",
-    )
-    tools = ui.tags.ul(
-        *[ui.tags.li(ui.tags.strong(rs.TOOL_LABELS[k]), f": {rs.TOOL_TITLES[k]}")
-          for k in rs.TOOL_KEYS],
-        class_="mb-2",
-    )
-    return ui.TagList(
-        ui.tags.p(
-            "StreamCurves develops ",
-            ui.tags.strong("reference and regional curves"),
-            " for stream metrics from published monitoring data and your own "
-            "measurements.",
-        ),
-        ui.tags.h6("Workflow", class_="fw-bold mt-3 mb-1"),
-        ui.tags.p(
-            "Follow the numbered strip at the top; each stage is a page.",
-            class_="text-muted mb-1",
-        ),
-        stages,
-        ui.tags.h6("Tools", class_="fw-bold mt-3 mb-1"),
-        tools,
-        ui.tags.p(
-            ui.tags.strong("New / Open / Save"),
-            " (top right): start a project, resume a saved one or a library "
-            "assessment, and save or publish your work.",
-            class_="text-muted mb-2",
-        ),
-        ui.tags.p(
-            ui.tags.strong("Data sources"),
-            ": NRSA field and lab data, USGS StreamStats, Model My Watershed, "
-            "USGS 3DEP/NLDI, and two watershed engines. The StreamCat lookup "
-            "engine (EPA StreamCat by NHDPlus V2 reach) is the default predictor "
-            "source. The STAF site engine computes HR reach watershed values at the "
-            "training sites and is the one selectable alternative, chosen in the "
-            "region builder. Every build records which engine it used, and the "
-            "EASI screening is pinned to the StreamCat lookup engine.",
-            class_="mb-0",
-        ),
-    )
-
-
-app_ui = ui.page_navbar(
-    # The navset is a page container, not navigation: every tab header is hidden
-    # in curves.css and the workflow strip (views/stagebar.py) does the switching
-    # via ui.update_navset. What is left in the top bar is the brand plus the
-    # header actions below -- the header shape EASI, SFARI and DEEP all use.
-    ui.nav_panel(
-        "Data & Setup",
-        ui.div(data_overview_ui("data_overview"), class_="mt-3"),
-        value="data",
-        icon=bi("database"),
+app_ui = ui.page_fillable(
+    ui.head_content(
+        # Declared rather than left to the browser's implicit /favicon.ico request, which
+        # carries no version and is cached hard.
+        ui.tags.link(rel="icon", href=versioned_www_asset("favicon.ico"), type="image/x-icon"),
+        ui.tags.link(rel="stylesheet", href=versioned_www_asset("styles.css")),
+        ui.tags.link(rel="stylesheet", href=versioned_www_asset("curves.css")),
+        ui.tags.link(rel="stylesheet", href=versioned_www_asset("shell.css")),
+        ui.tags.script(src=versioned_www_asset("curves.js")),
+        ui.tags.script(src=versioned_www_asset("shell.js")),
+        # Removes modals Bootstrap re-parents to <body> when two shows overlap (a dead copy
+        # on top of the live one makes the app look frozen; see the file's header).
+        ui.tags.script(src=versioned_www_asset("modal_guard.js")),
+        # The desktop shell bridge (native pickers, window title); nothing in a browser.
+        ui.tags.script(src=versioned_www_asset("desktop_bridge.js")),
     ),
-    ui.nav_panel(
-        "Reference Curves",
-        ui.div(summary_page_ui("summary"), class_="mt-3"),
-        value="curves",
-        icon=bi("table"),
-    ),
-    ui.nav_panel(
-        "Publish",
-        ui.div(publish_ui("publish"), class_="mt-3"),
-        value="publish",
-        icon=bi("file-earmark-arrow-up"),
-    ),
-    ui.nav_panel(
-        "Validate",
-        ui.div(validate_ui("validate"), class_="mt-3"),
-        value="validate",
-        icon=bi("graph-up"),
-    ),
-    # Side analyses (run_state.TOOL_KEYS). They need the built dataset but are not
-    # stages, so the strip renders them as unnumbered chips past a divider rather
-    # than as steps 6 and 7 -- keep these nav values in sync with TOOL_KEYS.
-    ui.nav_panel(
-        "Regional Curves",
-        ui.div(regional_curve_ui("regional"), class_="mt-3"),
-        value="regional",
-        icon=bi("bezier2"),
-    ),
-    ui.nav_panel(
-        "Cross-Sections",
-        ui.div(cross_section_ui("xsec"), class_="mt-3"),
-        value="xsec",
-        icon=bi("graph-down"),
-    ),
-    ui.nav_panel(
-        "NRSA Explorer",
-        ui.div(nrsa_explorer_ui("nrsa"), class_="mt-3"),
-        value="nrsa",
-        icon=bi("globe-americas"),
-    ),
-    ui.nav_panel(
-        "Region Builder",
-        ui.div(region_builder_ui("build"), class_="mt-3"),
-        value="build",
-        icon=bi("magic"),
-    ),
-    ui.nav_panel(
-        "Rules",
-        ui.div(rules_ui("rules"), class_="mt-3"),
-        value="rules",
-        icon=bi("ui-checks"),
-    ),
-    ui.nav_spacer(),
-    # Header actions (mirrors the SFARI/DEEP New / Open / Save idiom; the
-    # divider before Help is a border-left, not a glyph).
-    ui.nav_control(
-        ui.input_action_link(
-            "nav_new",
-            ui.TagList(bi("plus-circle-fill"), " New"),
-            class_="nav-link app-hdr-link",
-        )
-    ),
-    ui.nav_control(
-        ui.input_action_link(
-            "nav_open",
-            ui.TagList(bi("folder2-open"), " Open"),
-            class_="nav-link app-hdr-link",
-        )
-    ),
-    ui.nav_control(
-        ui.input_action_link(
-            "nav_save",
-            ui.TagList(fa("floppy-disk"), " Save"),
-            class_="nav-link app-hdr-link",
-        )
-    ),
-    # The divider sits here so it separates the file actions from the two meta
-    # links. target=_blank keeps an unsaved session from being replaced by the
-    # docs site, and is the path the desktop shell turns into "focus launcher"
-    # (STAF_LINKS["home"] is rewritten to staf-desktop://home there).
-    ui.nav_control(
-        ui.tags.a(
-            "STAF",
-            href=STAF_LINKS["home"],
-            target="_blank",
-            rel="noopener",
-            class_="nav-link app-hdr-link app-hdr-divider",
-        )
-    ),
-    ui.nav_control(
-        ui.input_action_link(
-            "app_help",
-            ui.TagList(bi("question-circle"), " Help"),
-            class_="nav-link app-help-link",
-        )
-    ),
-    id="main_navbar",
-    selected="data",
-    title="StreamCurves",
-    window_title="StreamCurves - Reference & Regional Curve Development",
-    theme=app_theme,
-    header=ui.TagList(
-        ui.head_content(
-            ui.tags.link(rel="stylesheet", href=versioned_www_asset("styles.css")),
-            ui.tags.link(rel="stylesheet", href=versioned_www_asset("curves.css")),
-            ui.tags.script(src=versioned_www_asset("curves.js")),
-        ),
+    # Static ipywidget/ipyleaflet deps (see views/widget_deps.py): renders nothing visible;
+    # its dependencies hoist into <head>.
+    (static_ipywidget_dependencies() if _HAS_WIDGETS else None),
+    ui.div(
+        ui.div(proj.header_left_ui(), ui.div(class_="sc-header-center"),
+               proj.header_nav_ui(), class_="sc-header"),
         stagebar_ui("stagebar"),
-        # Static ipywidget/ipyleaflet deps (see views/widget_deps.py) — the
-        # TagList renders nothing visible; its dependencies hoist into <head>.
-        (static_ipywidget_dependencies() if _HAS_WIDGETS else None),
-    ),
-    fillable=False,
+        ui.div(
+            project_panel_ui("stagebar"),
+            ui.div(ui.navset_hidden(*_PANELS, id="main_navbar", selected="data"),
+                   class_="sc-content"),
+            class_="sc-body"),
+        class_="sc-shell"),
+    proj.boot_veil_ui(),
+    title="StreamCurves",
+    padding=0,
+    gap=0,
+    theme=app_theme,
 )
 
 
@@ -260,6 +143,8 @@ def server(input, output, session):
     state = AppState.fresh()
 
     stagebar_server("stagebar", state)
+    # Projects: the start page, New/Open/Save/Save As, autosave, the gallery, dialogs.
+    proj.project_server(input, output, session, state)
     data_overview_server("data_overview", state)
     summary_page_server("summary", state)
     regional_curve_server("regional", state)
@@ -385,72 +270,6 @@ def server(input, output, session):
     @reactive.effect
     def _mirror_current_tab():
         state.current_tab.set(input.main_navbar())
-
-    # ── header actions: New / Open / Save ────────────────────────────────────
-    def _do_new():
-        st.reset_app_to_startup(state)
-        with reactive.isolate():
-            state.nav_request.set("data")
-            state.nav_request_nonce.set((state.nav_request_nonce() or 0) + 1)
-            state.wizard_step_request.set(1)
-            state.wizard_step_nonce.set((state.wizard_step_nonce() or 0) + 1)
-
-    @reactive.effect
-    @reactive.event(input.nav_new)
-    def _nav_new():
-        with reactive.isolate():
-            loaded = bool(state.app_data_loaded())
-        if not loaded:
-            _do_new()
-            return
-        ui.modal_show(
-            ui.modal(
-                "Start a new project? Unsaved changes are lost. Save first "
-                "(top right) to keep the current one.",
-                title="Start a new project?",
-                easy_close=True,
-                footer=ui.TagList(
-                    ui.modal_button("Cancel"),
-                    ui.input_action_button(
-                        "nav_new_confirm", "Clear and start new", class_="btn btn-danger"
-                    ),
-                ),
-            )
-        )
-
-    @reactive.effect
-    @reactive.event(input.nav_new_confirm)
-    def _nav_new_confirm():
-        ui.modal_remove()
-        _do_new()
-
-    @reactive.effect
-    @reactive.event(input.nav_open)
-    def _nav_open():
-        with reactive.isolate():
-            state.open_dialog_nonce.set((state.open_dialog_nonce() or 0) + 1)
-
-    @reactive.effect
-    @reactive.event(input.nav_save)
-    def _nav_save():
-        # Save is the Publish page: save-to-file downloads, or publish to the
-        # library as Preliminary (Draft is automation output; Final = certified).
-        with reactive.isolate():
-            state.nav_request.set("publish")
-            state.nav_request_nonce.set((state.nav_request_nonce() or 0) + 1)
-
-    @reactive.effect
-    @reactive.event(input.app_help)
-    def _show_help():
-        ui.modal_show(
-            ui.modal(
-                app_help_content(),
-                title=ui.TagList(bi("info-circle"), " About StreamCurves"),
-                easy_close=True,
-                footer=ui.modal_button("Close"),
-                size="m",
-            )
-        )
 
     # ── workspace modal: real artifact backfills (app.R:366-392, 895-919) ───
     def _prepare_phase1(state_, metric, progress):

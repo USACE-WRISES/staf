@@ -134,6 +134,11 @@ SESSION_FIELDS = [
     # v2, additive): applied over reference_build, which stays as the build wrote
     # it so a decision can be undone. Absent reads as None, which is no decision.
     "owner_curve_decisions",
+    # The Region & data wizard's unbuilt work (schema v2, additive): picks, the
+    # compiled table and column roles before Build dataset, so a project closed
+    # mid-wizard reopens where it was. None once the dataset is built, and absent
+    # (None) in every session written before projects were files.
+    "wizard_draft",
 ]
 
 ## Fields whose dict payloads may contain non-serializable cached objects
