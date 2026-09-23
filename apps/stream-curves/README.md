@@ -191,6 +191,29 @@ A rebuild also carries the curves its published version itself carried forward. 
 the version that built it and is checked against that version's station values
 (`carry_forward.prepare`).
 
+### Answering a flagged curve (CURVE-07)
+
+A curve the build fitted but could not approve on its own is held and unscored until a reviewer
+decides. Examples are a fallback seed, missing data over DATA-03, or a failed shape check. The
+packet lists it as a CURVE-07 hard stop: "Accept this curve as preliminary, adjust it, or drop the
+metric?" Nothing refuses a publish over it, and while it is held its function is scored by the
+other metrics.
+
+In the Region builder (Tools, Region builder, Items left for you) each answer names its outcome:
+
+- **accept**, or **accept with conditions**, publishes the curve as preliminary at the next build,
+  exactly as `stage --finalize-metric METRIC=RATIONALE` does;
+- **reject** drops the metric, as `--remove-metric` does.
+
+To adjust the curve instead, open the assessment in StreamCurves. Answers are saved to the run
+folder's `owner_decisions.json`, where a save adds to the answers already there, and every later
+build applies them. A curve finalized or removed by flag closes its own item, so it is no longer
+listed as a hard stop.
+
+A fallback curve has at least a quarter of its reference pool at zero. On a metric whose floor is
+zero, it is a straight line from 0 at zero to 1 at the pool's upper quartile, so the median
+reference station rates Not functioning on it. Its caveat says so.
+
 ### Excel calculator
 
 `library.publish_version` builds `vN/calculator.xlsx` from the bundle it just wrote
