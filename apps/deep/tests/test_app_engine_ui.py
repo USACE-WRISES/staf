@@ -67,7 +67,7 @@ def test_copy_and_cache_bust():
     src = Path(app.__file__).read_text(encoding="utf-8")
     # v10: the curve-basis chip on the Scored against row (StreamCurves 0.13)
     # v11: the owner-entered and borrowed chips (StreamCurves REF-15)
-    assert "deep.css?v=11" in src and "styles.css?v=20" in src
+    assert "deep.css?v=11" in src and "styles.css?v=21" in src
     # Source readiness has its own persistent row instead of sharing engine progress.
     assert '"Finding the nearest StreamCat reach…"' in src
     assert 'ui.output_ui("streamcat_lookup_status")' in src

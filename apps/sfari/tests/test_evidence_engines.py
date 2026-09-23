@@ -221,8 +221,14 @@ def test_reach_cross_section_metrics_read_the_engine():
     assert "entrenchment ratio 2.40" in pk.value_text
     cr = evidence.ev_concentrated_inputs(c)
     assert cr.origin == "engine" and cr.value == 0.24 and "3 road-stream crossing(s)" in cr.value_text
+    # NWI did not answer (None) is not the same fact as NWI answered with no wetland.
     lat = evidence.ev_lateral_inundation(_ctx(engine=OK, nwi=None))
-    assert lat.origin == "engine" and lat.value == 2.4 and "no NWI wetland feature" in lat.value_text
+    assert lat.origin == "engine" and lat.value == 2.4 and "NWI did not answer" in lat.value_text
+    assert "no NWI wetland feature" not in lat.value_text
+    none_near = evidence.ev_lateral_inundation(_ctx(engine=OK, nwi={"count": 0, "acres": 0.0}))
+    assert "no NWI wetland feature near the reach" in none_near.value_text
+    unanswered = evidence.ev_lateral_inundation(_ctx(engine=FAILED, nwi=None))
+    assert unanswered.status == "unavailable" and unanswered.note.startswith("NWI did not answer.")
     with_nwi = evidence.ev_lateral_inundation(_ctx(engine=OK, nwi={"count": 2, "acres": 3.1}))
     assert with_nwi.origin == "pull" and "entrenchment ratio 2.40" in with_nwi.value_text
     assert evidence.ev_overbank_frequency(_ctx(engine=FAILED)).status == "unavailable"

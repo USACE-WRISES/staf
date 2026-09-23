@@ -8,9 +8,11 @@ V2 reach is scored by the StreamCat lookup engine and draws dark blue, the
 rest is answered by the STAF site engine and draws cyan. V2 geometry farther
 than the tolerance from any HR line still draws dark blue, so nothing
 clickable disappears. The distance is the click rule's own (planar EPSG:5070
-in feet, see ``flowlines.nearest_point_on_lines``). Pure functions, no
-Shiny; ``fetch_streams`` takes injectable fetchers so the split is tested
-offline.
+in feet, see ``flowlines.nearest_point_on_lines``). When the HR service does
+not answer, or truncates the box, nothing is drawn: the coarse V2 lines are
+never a stand-in for the HR network, and the app's legend says why. Pure
+functions, no Shiny; ``fetch_streams`` takes injectable fetchers so the split
+is tested offline.
 """
 from __future__ import annotations
 
@@ -32,8 +34,8 @@ from .datasources.flowlines import CRS_ALBERS, CRS_WGS84, FT_PER_M
 #: boundary lands within half a step (25 ft) of the true crossing.
 SAMPLE_FT = 50.0
 #: Feature property carrying the classification: "v2" (HR stretch within the
-#: tolerance of a V2 reach, or raw V2 when HR is unavailable), "hr" (answered
-#: by the STAF site engine), "v2-orphan" (V2 geometry with no HR line nearby).
+#: tolerance of a V2 reach), "hr" (answered by the STAF site engine),
+#: "v2-orphan" (V2 geometry with no HR line nearby).
 COVER_PROP = "cover"
 #: Above this many HR samples the spacing doubles (still a 50 ft error).
 MAX_SAMPLES = 150_000
@@ -43,6 +45,16 @@ _TO_ALBERS = Transformer.from_crs(CRS_WGS84, CRS_ALBERS, always_xy=True)
 _TO_WGS84 = Transformer.from_crs(CRS_ALBERS, CRS_WGS84, always_xy=True)
 
 Fetcher = Callable[[float, float, float, float], Optional[dict]]
+#: The HR fetch answers ``(status, fc)``: ok, empty, truncated, too-large or failed.
+HrFetcher = Callable[[float, float, float, float], tuple[str, Optional[dict]]]
+
+
+class _NotKept(Exception):
+    """Carries a display the cache must not keep (see ``_default_display``)."""
+
+    def __init__(self, display: dict):
+        super().__init__(display.get("mode"))
+        self.display = display
 
 
 def _empty() -> dict:
@@ -228,64 +240,95 @@ def _tagged(fc: dict, cover: str) -> dict:
     return {"type": "FeatureCollection", "features": feats}
 
 
-def build_display(v2_fc: Optional[dict], hr_fc: Optional[dict], tol_ft: float = 150.0) -> dict:
+def build_display(v2_fc: Optional[dict], hr_fc: Optional[dict], tol_ft: float = 150.0,
+                  *, hr_status: Optional[str] = None) -> dict:
     """``{"mode", "covered", "uncovered"}`` for the two map layers.
 
-    ``mode`` is ``segmented`` (both networks present), ``v2-only`` (the HR
-    fetch failed or hit its record cap, the raw V2 lines draw covered),
+    ``hr_status`` is the HR fetch's status (None: ``hr_fc`` is an answer).
+    ``mode`` is ``hr-unavailable`` (the HR service did not answer) or
+    ``hr-truncated`` (too many HR lines for the box, or a box over the size
+    cap), both drawing nothing; otherwise ``segmented`` (the split; V2 lines
+    in a box with no HR line draw as ``v2-orphan``, as the split tags them),
     ``hr-only`` (no V2 lines, everything draws cyan) or ``empty``."""
+    if hr_status == "failed":
+        return {"mode": "hr-unavailable", "covered": _empty(), "uncovered": _empty()}
+    if hr_status in ("truncated", "too-large"):
+        return {"mode": "hr-truncated", "covered": _empty(), "uncovered": _empty()}
     has_v2 = bool(v2_fc and v2_fc.get("features"))
     has_hr = bool(hr_fc and hr_fc.get("features"))
     if has_v2 and has_hr:
         covered, uncovered = split_by_coverage(hr_fc, v2_fc, tol_ft)
         return {"mode": "segmented", "covered": covered, "uncovered": uncovered}
     if has_v2:
-        return {"mode": "v2-only", "covered": _tagged(v2_fc, "v2"), "uncovered": _empty()}
+        return {"mode": "segmented", "covered": _tagged(v2_fc, "v2-orphan"),
+                "uncovered": _empty()}
     if has_hr:
         return {"mode": "hr-only", "covered": _empty(), "uncovered": _tagged(hr_fc, "hr")}
     return {"mode": "empty", "covered": _empty(), "uncovered": _empty()}
 
 
-def _fetch_pair(bbox: tuple, fetch_v2: Fetcher, fetch_hr: Fetcher):
-    """Both network fetches side by side (they do not depend on each other)."""
+def _hr_for_display(west: float, south: float, east: float, north: float
+                    ) -> tuple[str, Optional[dict]]:
+    """The map's HR fetch: ``(status, fc)`` under the fast-fail policy."""
+    from .datasources import nhd_hr
+    return nhd_hr.hr_flowlines_in_bbox_status(west, south, east, north, fast_fail=True)
+
+
+def _fetch_pair(bbox: tuple, fetch_v2: Fetcher, fetch_hr: HrFetcher):
+    """Both network fetches side by side (they do not depend on each other):
+    ``(v2_fc, (hr_status, hr_fc))``."""
     with ThreadPoolExecutor(max_workers=2) as pool:
         v2_future = pool.submit(fetch_v2, *bbox)
         hr_future = pool.submit(fetch_hr, *bbox)
         return v2_future.result(), hr_future.result()
 
 
-def _assemble(bbox: tuple, v2_fc: Optional[dict], hr_fc: Optional[dict], tol_ft: float) -> dict:
-    disp = build_display(v2_fc, hr_fc, tol_ft)
+def _assemble(bbox: tuple, v2_fc: Optional[dict], hr_status: str, hr_fc: Optional[dict],
+              tol_ft: float) -> dict:
+    disp = build_display(v2_fc, hr_fc, tol_ft, hr_status=hr_status)
     return {"bbox": tuple(bbox),
             "v2": v2_fc if v2_fc and v2_fc.get("features") else None,
-            "hr": hr_fc if hr_fc and hr_fc.get("features") else None, **disp}
+            "hr": hr_fc if hr_status == "ok" and hr_fc and hr_fc.get("features") else None,
+            "hrStatus": hr_status, **disp}
 
 
 @functools.lru_cache(maxsize=32)
 def _default_display(west: float, south: float, east: float, north: float,
                      tol_ft: float) -> dict:
-    from .datasources import flowlines, nhd_hr
+    """The display for a box with the default fetchers. Only a ``segmented``
+    result is kept: it needs both networks answered, and the split is the one
+    costly step. Any other result raises ``_NotKept`` (the cache never stores
+    it) and is rebuilt next time from the datasource caches, where an answered
+    half is a hit and a failed half is asked again."""
+    from .datasources import flowlines
     bbox = (west, south, east, north)
-    v2_fc, hr_fc = _fetch_pair(bbox, flowlines.flowlines_in_bbox, nhd_hr.hr_flowlines_in_bbox)
-    return _assemble(bbox, v2_fc, hr_fc, tol_ft)
+    v2_fc, (hr_status, hr_fc) = _fetch_pair(bbox, flowlines.flowlines_in_bbox, _hr_for_display)
+    display = _assemble(bbox, v2_fc, hr_status, hr_fc, tol_ft)
+    if display["mode"] != "segmented":
+        raise _NotKept(display)
+    return display
 
 
 def fetch_streams(bbox: tuple, *, tol_ft: float = 150.0, fetch_v2: Optional[Fetcher] = None,
-                  fetch_hr: Optional[Fetcher] = None) -> dict:
+                  fetch_hr: Optional[HrFetcher] = None) -> dict:
     """The map's stream layers for ``bbox`` (west, south, east, north).
 
-    Returns ``{"bbox", "v2", "hr", "mode", "covered", "uncovered"}`` where
-    ``v2`` and ``hr`` are the raw FeatureCollections (or None) the click rule
-    keeps using. With the default fetchers the result is cached on the bbox,
-    so a pan back into a fetched box never re-splits; injected fetchers
-    (tests) bypass the cache."""
+    Returns ``{"bbox", "v2", "hr", "hrStatus", "mode", "covered", "uncovered"}``
+    where ``v2`` and ``hr`` are the raw FeatureCollections (or None) the click
+    rule keeps using and ``hrStatus`` is the HR fetch's status. ``fetch_hr``
+    answers ``(status, fc)``. With the default fetchers a split result is
+    cached on the bbox, so a pan back into a fetched box never re-splits;
+    injected fetchers (tests) bypass the cache."""
     bbox = tuple(float(b) for b in bbox)
     if fetch_v2 is None and fetch_hr is None:
-        return _default_display(*bbox, float(tol_ft))
-    from .datasources import flowlines, nhd_hr
-    v2_fc, hr_fc = _fetch_pair(bbox, fetch_v2 or flowlines.flowlines_in_bbox,
-                               fetch_hr or nhd_hr.hr_flowlines_in_bbox)
-    return _assemble(bbox, v2_fc, hr_fc, tol_ft)
+        try:
+            return _default_display(*bbox, float(tol_ft))
+        except _NotKept as not_kept:
+            return not_kept.display
+    from .datasources import flowlines
+    v2_fc, (hr_status, hr_fc) = _fetch_pair(bbox, fetch_v2 or flowlines.flowlines_in_bbox,
+                                            fetch_hr or _hr_for_display)
+    return _assemble(bbox, v2_fc, hr_status, hr_fc, tol_ft)
 
 
 def feature_by_id(fc: Optional[dict], prop: str, value) -> Optional[dict]:
@@ -306,11 +349,12 @@ def feature_by_id(fc: Optional[dict], prop: str, value) -> Optional[dict]:
     return None
 
 
-@functools.lru_cache(maxsize=128)
 def v2_reach_feature(comid: int) -> Optional[dict]:
     """The NHDPlus V2 reach's feature (attributes and geometry) from the USGS
     fabric API, for the scored-reach highlight when the reach lies outside the
-    viewport's V2 fetch (a routed click). None when unknown or unanswered."""
+    viewport's V2 fetch (a routed click). None when unknown or unanswered.
+    ``fabric.feature_by_comid`` memoizes answered features; an unanswered
+    request is asked again."""
     try:
         from .datasources import fabric
         feat = fabric.feature_by_comid(int(comid))

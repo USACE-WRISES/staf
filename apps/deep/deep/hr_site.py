@@ -34,32 +34,57 @@ def hr_records_to_geojson(records: list[dict]) -> Optional[dict]:
     return {"type": "FeatureCollection", "features": feats} if feats else None
 
 
-def hr_flowlines_fc(west: float, south: float, east: float, north: float
-                    ) -> Optional[dict]:
-    """HR flowlines for the view bbox (the engine client caches the bbox)."""
+def hr_flowlines_status(west: float, south: float, east: float, north: float
+                        ) -> tuple[str, Optional[dict]]:
+    """``(status, FeatureCollection | None)`` for the view bbox under the map's
+    fast-fail policy: ``ok``, ``empty``, ``truncated``, ``too-large`` or
+    ``failed`` (no answer, or no engine here). The engine client caches only
+    answers, so a failed box is asked again next time."""
     if not hr_available():
-        return None
+        return "failed", None
     try:
         _anchor, hr = _engine()
-        return hr_records_to_geojson(hr.flowlines_in_bbox(west, south, east, north))
+        status, records = hr.flowlines_in_bbox_status(west, south, east, north,
+                                                      fast_fail=True)
     except Exception:  # noqa: BLE001
-        return None
+        return "failed", None
+    if status != "ok":
+        return status, None
+    fc = hr_records_to_geojson(records)
+    return ("ok", fc) if fc else ("empty", None)
+
+
+def snap_status(lat: float, lon: float
+                ) -> tuple[str, Optional[tuple[float, float, float, Optional[int]]]]:
+    """``(status, hit)`` for a pick: the HR probe box's status under the map's
+    fast-fail policy and the nearest HR line, ``(snap_lat, snap_lon, dist_ft,
+    nhdplusid)`` or None. ``failed`` (no answer, or no engine here) is never
+    the same fact as "no stream nearby". The math is ``anchor.hr_snap``'s,
+    which the engine's own anchoring keeps using."""
+    if not hr_available():
+        return "failed", None
+    try:
+        anchor, hr = _engine()
+        d = HR_PROBE_HALF_DEG
+        status, records = hr.flowlines_in_bbox_status(lon - d, lat - d, lon + d, lat + d,
+                                                      fast_fail=True)
+        if status != "ok":
+            return status, None
+        return status, anchor.nearest_point_on_records(records, lat, lon)
+    except Exception:  # noqa: BLE001
+        return "failed", None
 
 
 def snap_hr(lat: float, lon: float
             ) -> Optional[tuple[float, float, float, Optional[int]]]:
     """Nearest HR flowline: ``(snap_lat, snap_lon, dist_ft, nhdplusid)`` or None."""
-    if not hr_available():
-        return None
-    try:
-        anchor, _hr = _engine()
-        return anchor.hr_snap(lat, lon, half_deg=HR_PROBE_HALF_DEG)
-    except Exception:  # noqa: BLE001
-        return None
+    return snap_status(lat, lon)[1]
 
 
 def snap_point(lat: float, lon: float) -> dict:
     """The click or typed point snapped to the NHD (worker-thread helper for
     the app): ``{"hit": (snap_lat, snap_lon, dist_ft, nhdplusid) | None,
-    "lat", "lon"}``."""
-    return {"hit": snap_hr(lat, lon), "lat": lat, "lon": lon}
+    "lat", "lon", "hrStatus"}``; the app says the service failed, not "no
+    stream", when ``hrStatus`` is ``failed``."""
+    status, hit = snap_status(lat, lon)
+    return {"hit": hit, "lat": lat, "lon": lon, "hrStatus": status}

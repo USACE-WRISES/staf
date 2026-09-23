@@ -2,6 +2,8 @@
 
 Sums NWI wetland polygon area within a small bbox around the reach point (a
 screening proxy for wetland/floodplain storage and lateral floodplain features).
+The service is the USFWS Wetlands Mapper layer hosted by USGS WIM (the old
+www.fws.gov/wetlands address answers 404 since at least 2026-09-23).
 Best-effort and light (attribute-only query, no geometry); returns None on any
 failure so the StreamCat watershed-wetland % stays the primary evidence.
 """
@@ -11,7 +13,12 @@ from typing import Optional
 
 import requests
 
-_URL = "https://www.fws.gov/wetlands/arcgis/rest/services/Wetlands/MapServer/0/query"
+_URL = ("https://fwspublicservices.wim.usgs.gov/wetlandsmapservice/rest/services/"
+        "Wetlands/MapServer/0/query")
+# The layer joins the NWI code table, so its fields come back table-qualified;
+# the bare names are read as a fallback.
+_ACRES = "Wetlands.ACRES"
+_TYPE = "Wetlands.WETLAND_TYPE"
 
 
 def wetlands_near(lat: float, lon: float, deg: float = 0.02,
@@ -23,7 +30,7 @@ def wetlands_near(lat: float, lon: float, deg: float = 0.02,
     """
     env = f"{lon-deg:.5f},{lat-deg:.5f},{lon+deg:.5f},{lat+deg:.5f}"
     params = {"geometry": env, "geometryType": "esriGeometryEnvelope", "inSR": "4326",
-              "spatialRel": "esriSpatialRelIntersects", "outFields": "ACRES,WETLAND_TYPE",
+              "spatialRel": "esriSpatialRelIntersects", "outFields": f"{_ACRES},{_TYPE}",
               "returnGeometry": "false", "f": "json"}
     try:
         r = requests.get(_URL, params=params, timeout=timeout)
@@ -37,10 +44,10 @@ def wetlands_near(lat: float, lon: float, deg: float = 0.02,
     for f in feats:
         a = f.get("attributes", {})
         try:
-            acres += float(a.get("ACRES") or 0.0)
+            acres += float(a.get(_ACRES, a.get("ACRES")) or 0.0)
         except (TypeError, ValueError):
             pass
-        t = a.get("WETLAND_TYPE")
+        t = a.get(_TYPE, a.get("WETLAND_TYPE"))
         if t:
             types[t] = types.get(t, 0) + 1
     return {"acres": round(acres, 1), "count": len(feats), "types": types}

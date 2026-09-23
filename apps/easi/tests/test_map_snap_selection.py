@@ -55,6 +55,7 @@ def _scope(*, v2_fc=V2_FC, hr_fc=HR_FC, v2_hit=V2, hr_hit=HR, pending=None):
         point=Value(), pending=Value(copy.deepcopy(pending)), scored=Value(),
         lookup=Value({"status": "idle"}), stage=Value(""), numeric={}, buttons=[],
         notifications=[], routes=[], fetches=[], layers={"marker": None, "scored": None},
+        outages=[], hr_kwargs=[],
         map=SimpleNamespace(layers=[], center=CLICK, zoom=15))
 
     def add_layer(key, layer):
@@ -75,6 +76,11 @@ def _scope(*, v2_fc=V2_FC, hr_fc=HR_FC, v2_hit=V2, hr_hit=HR, pending=None):
         state.fetches.append(("hr", args))
         return HR_FC
 
+    def fetch_hr_status(*args, **kwargs):
+        state.fetches.append(("hr", args))
+        state.hr_kwargs.append(kwargs)
+        return "ok", HR_FC
+
     namespace = {
         "math": math, "isfinite": math.isfinite, "routing": routing,
         "SNAP_TOL_FT": 150.0, "_map_pick": {"generation": 5},
@@ -88,7 +94,9 @@ def _scope(*, v2_fc=V2_FC, hr_fc=HR_FC, v2_hit=V2, hr_hit=HR, pending=None):
         "source_geometry_task": Task(), "click_snap_task": Task(), "coord_snap_task": Task(),
         "delineate_task": Task(), "_analysis_runs": {},
         "clicked": Value(CLICK), "flow_geojson": Value(v2_fc), "hr_geojson": Value(hr_fc),
-        "streams_mode": Value("segmented"),
+        "streams_mode": Value("segmented"), "streams_down": Value(False),
+        "_STREAMS_DOWN_TEXT": "The stream service is down",
+        "_pick_outage": lambda: state.outages.append(True),
         "_stream_layers": SimpleNamespace(flow=SimpleNamespace(data=V2_FC)),
         "current_step": lambda: "identify", "STEP_IDENTIFY": "identify",
         "_clear_route_state": lambda: None, "_invalidate_analysis": lambda: None,
@@ -98,6 +106,7 @@ def _scope(*, v2_fc=V2_FC, hr_fc=HR_FC, v2_hit=V2, hr_hit=HR, pending=None):
         "flowlines": SimpleNamespace(flowlines_in_bbox=fetch_v2,
                                      nearest_point_on_lines=lambda *args: v2_hit),
         "nhd_hr": SimpleNamespace(hr_flowlines_in_bbox=fetch_hr,
+                                  hr_flowlines_in_bbox_status=fetch_hr_status,
                                   nearest_point_on_hr_lines=lambda *args: hr_hit),
         "network_display": SimpleNamespace(feature_by_id=lambda *args: FEATURE),
         "ui": SimpleNamespace(
@@ -193,6 +202,7 @@ def test_worker_fetches_both_networks_even_when_v2_hit_succeeds():
     state, scope = _scope()
     result = _function("easi", "_snap_both", scope)(*CLICK)
     assert {item[0] for item in state.fetches} == {"v2", "hr"}
+    assert state.hr_kwargs == [{"fast_fail": True}]      # the map's one-attempt policy
     assert {key: result[key] for key in ("hit", "hitFeature", "hrHit", "lat", "lon")} == {
         "hit": V2, "hitFeature": FEATURE, "hrHit": HR, "lat": CLICK[0], "lon": CLICK[1]}
 
@@ -295,7 +305,7 @@ def test_direct_pending_anchor_keeps_direct_labels_and_legend():
     legend_scope = {**scope, "_HAS_MAP": True, "app_mode": lambda: "single",
         "source_geometry": lambda: (True, False), "zoomed_in": lambda: True,
         "streams_mode": lambda: "both", "coverage_enabled": lambda: False,
-        "streams_visible": lambda: True,
+        "streams_visible": lambda: True, "streams_down": lambda: False,
         "_legend_ui": lambda *args, **kwargs: legend_calls.append((args, kwargs))}
     _function("easi", "stream_legend", legend_scope)()
     assert legend_calls[-1][0][4] is False
@@ -328,8 +338,9 @@ def test_delineation_receives_hr_point_v2_comid_and_direct_anchor(monkeypatch):
     assert result[1]["ctx_inputs"]["comid"] == V2[3]
 
 
-def _geometric_scope(*, hr_y=0, v2_y=20, click_y=50):
-    """Parallel real lines defined in metres, transformed to the map's CRS."""
+def _geometric_scope(*, hr_y=0, v2_y=20, click_y=50, hr_status=None):
+    """Parallel real lines defined in metres, transformed to the map's CRS.
+    ``hr_status`` is the worker's HR answer (default: ok with a line, else empty)."""
     from easi import network_display
     from easi.datasources import flowlines, nhd_hr
 
@@ -345,14 +356,17 @@ def _geometric_scope(*, hr_y=0, v2_y=20, click_y=50):
 
     v2 = line(v2_y, {"comid": V2[3]})
     hr = line(hr_y, {"nhdplusid": HR[3]}) if hr_y is not None else None
+    if hr_status is None:
+        hr_status = "ok" if hr is not None else "empty"
     lon, lat = point(0, click_y)
-    display = network_display.build_display(v2, hr, tol_ft=150)
+    display = network_display.build_display(v2, hr, tol_ft=150, hr_status=hr_status)
     state, scope = _scope(v2_fc=v2, hr_fc=hr)
     scope.update(network_display=network_display,
         flowlines=SimpleNamespace(nearest_point_on_lines=flowlines.nearest_point_on_lines,
                                   flowlines_in_bbox=lambda *args: v2),
         nhd_hr=SimpleNamespace(nearest_point_on_hr_lines=nhd_hr.nearest_point_on_hr_lines,
-                               hr_flowlines_in_bbox=lambda *args: hr),
+                               hr_flowlines_in_bbox=lambda *args: hr,
+                               hr_flowlines_in_bbox_status=lambda *args, **k: (hr_status, hr)),
         _stream_layers=SimpleNamespace(flow=SimpleNamespace(data=display["covered"])),
         streams_mode=Value(display["mode"]))
     scope["clicked"].set((lat, lon))
@@ -361,7 +375,8 @@ def _geometric_scope(*, hr_y=0, v2_y=20, click_y=50):
     hit = flowlines.nearest_point_on_lines(v2, lat, lon)
     hr_hit = nhd_hr.nearest_point_on_hr_lines(hr, lat, lon)
     result = {"hit": hit, "hrHit": hr_hit, "hitFeature": v2["features"][0],
-              "lat": lat, "lon": lon, "display": display, "hrAvailable": hr is not None}
+              "lat": lat, "lon": lon, "display": display,
+              "hrAvailable": hr_status != "failed"}
     return state, scope, result
 
 
@@ -384,13 +399,13 @@ def test_hidden_offset_v2_line_cannot_supply_a_site_pin(path):
     assert not scope["_source_ready"]()
 
 
-@pytest.mark.parametrize("hr_y,mode", [(0, "segmented"), (None, "v2-only")])
-def test_visible_v2_orphan_and_v2_only_fallback_remain_selectable(hr_y, mode):
+@pytest.mark.parametrize("hr_y", [0, None])
+def test_visible_v2_orphans_remain_selectable(hr_y):
+    # hr_y None: HR answered with no line in the box, so every V2 stretch is an orphan.
     state, scope, result = _geometric_scope(hr_y=hr_y, v2_y=100, click_y=100)
-    assert result["display"]["mode"] == mode
-    if hr_y is not None:
-        assert any(feature["properties"]["cover"] == "v2-orphan"
-                   for feature in result["display"]["covered"]["features"])
+    assert result["display"]["mode"] == "segmented"
+    assert any(feature["properties"]["cover"] == "v2-orphan"
+               for feature in result["display"]["covered"]["features"])
     scope["click_snap_task"].payload = (5, result)
     _function("easi", "_apply_click_snap", scope)()
     assert state.point()[:2] == pytest.approx(result["hit"][:2])
@@ -399,11 +414,31 @@ def test_visible_v2_orphan_and_v2_only_fallback_remain_selectable(hr_y, mode):
     assert not state.pending().get("selectedSite")
 
 
+@pytest.mark.parametrize("task,handler", [("click_snap_task", "_apply_click_snap"),
+                                          ("coord_snap_task", "_apply_coord_snap")])
+def test_hr_outage_offers_no_v2_pick(task, handler):
+    # The worker's HR fetch failed. The V2 line right under the click is never a
+    # stand-in for the HR network: no pin, and the pick trips the breaker (the
+    # notice and Try again) instead of reading as "no stream nearby".
+    state, scope, result = _geometric_scope(hr_y=None, v2_y=100, click_y=100,
+                                            hr_status="failed")
+    assert result["display"]["mode"] == "hr-unavailable" and result["hit"][2] < 1
+    scope[task].payload = (5, result)
+    _function("easi", handler, scope)()
+    assert state.point() is None and state.layers["marker"] is None
+    assert state.outages == [True] and state.lookup()["status"] == "idle"
+    assert not state.notifications                       # never the miss text
+    assert not scope["_source_ready"]()
+
+
+EMPTY_FC = {"type": "FeatureCollection", "features": []}
+
+
 def test_worker_hr_outage_keeps_valid_cached_hr_site():
     state, scope, result = _geometric_scope(click_y=0)
     expected_hr = result["hrHit"]
     worker = {**result, "hrHit": None, "hrAvailable": False,
-              "display": {"mode": "v2-only", "covered": scope["flow_geojson"]()}}
+              "display": {"mode": "hr-unavailable", "covered": EMPTY_FC}}
     scope["coord_snap_task"].payload = (5, worker)
     _function("easi", "_apply_coord_snap", scope)()
     assert state.point()[:3] == pytest.approx(expected_hr[:3])
@@ -414,9 +449,9 @@ def test_worker_hr_outage_keeps_valid_cached_hr_site():
 def test_worker_hr_outage_cannot_reinterpret_hidden_v2_as_visible_fallback():
     state, scope, result = _geometric_scope()
     worker = {**result, "hrHit": None, "hrAvailable": False,
-              "display": {"mode": "v2-only", "covered": scope["flow_geojson"]()}}
+              "display": {"mode": "hr-unavailable", "covered": EMPTY_FC}}
     scope["click_snap_task"].payload = (5, worker)
     _function("easi", "_apply_click_snap", scope)()
     assert state.point() is None and state.layers["marker"] is None
-    assert state.lookup()["status"] == "failed" and state.lookup()["snap_error"] is True
+    assert state.outages == [True] and state.lookup()["status"] == "idle"
     assert not scope["_source_ready"]()

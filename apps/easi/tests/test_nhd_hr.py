@@ -140,6 +140,76 @@ def test_bbox_exceeded_returns_none(monkeypatch):
                                          "exceededTransferLimit": True})
     nhd_hr._fetch_bbox.cache_clear()
     assert nhd_hr.hr_flowlines_in_bbox(-83.03, 40.08, -83.00, 40.11) is None
+    assert nhd_hr.hr_flowlines_in_bbox_status(-83.03, 40.08, -83.00, 40.11) == ("truncated", None)
+
+
+BOX = (-83.03, 40.08, -83.00, 40.11)
+
+
+def test_bbox_status_asks_again_after_a_failure_and_keeps_answers(monkeypatch):
+    answers = [None, {"type": "FeatureCollection", "features": [_feat()]}]
+    calls = []
+
+    def fake_request(params, timeout, retries=1, *, fast_fail=False):
+        calls.append(fast_fail)
+        return answers.pop(0)
+    monkeypatch.setattr(nhd_hr, "_request", fake_request)
+    nhd_hr._fetch_bbox.cache_clear()
+    try:
+        assert nhd_hr.hr_flowlines_in_bbox_status(*BOX) == ("failed", None)
+        status, fc = nhd_hr.hr_flowlines_in_bbox_status(*BOX)
+        assert status == "ok" and fc["features"][0]["properties"] == {"nhdplusid": 24000800021917}
+        assert nhd_hr.hr_flowlines_in_bbox(*BOX) == fc
+        assert calls == [False, False]            # the answer came from the cache
+        assert nhd_hr.hr_flowlines_in_bbox_status(-84.0, 40.0, -83.0, 41.0) == ("too-large", None)
+    finally:
+        nhd_hr._fetch_bbox.cache_clear()
+
+
+def test_bbox_status_empty_is_an_answer(monkeypatch):
+    calls = []
+    monkeypatch.setattr(nhd_hr, "_request", lambda *a, **k: calls.append(1) or
+                        {"type": "FeatureCollection", "features": []})
+    nhd_hr._fetch_bbox.cache_clear()
+    try:
+        assert nhd_hr.hr_flowlines_in_bbox_status(*BOX) == ("empty", None)
+        assert nhd_hr.hr_flowlines_in_bbox_status(*BOX) == ("empty", None)
+        assert calls == [1]
+    finally:
+        nhd_hr._fetch_bbox.cache_clear()
+
+
+def test_the_map_fetch_never_retries_a_timeout(monkeypatch):
+    timeouts = []
+
+    def slow(url, *, params, timeout):
+        timeouts.append(timeout)
+        raise nhd_hr.requests.exceptions.ReadTimeout("slow")
+    monkeypatch.setattr(nhd_hr.requests, "get", slow)
+    monkeypatch.setattr(nhd_hr.time, "sleep", lambda s: None)
+    nhd_hr._fetch_bbox.cache_clear()
+    try:
+        assert nhd_hr.hr_flowlines_in_bbox_status(*BOX, fast_fail=True) == ("failed", None)
+        assert timeouts == [nhd_hr._DISPLAY_TIMEOUT_S]
+        timeouts.clear()
+        assert nhd_hr.hr_flowlines_in_bbox(*BOX) is None      # the default policy retries
+        assert len(timeouts) == 2
+    finally:
+        nhd_hr._fetch_bbox.cache_clear()
+
+
+def test_the_map_fetch_retries_a_quick_failure_once(monkeypatch):
+    payload = {"type": "FeatureCollection", "features": [_feat()]}
+    replies = [SimpleNamespace(status_code=502),
+               SimpleNamespace(status_code=200, json=lambda: payload)]
+    monkeypatch.setattr(nhd_hr.requests, "get", lambda url, *, params, timeout: replies.pop(0))
+    monkeypatch.setattr(nhd_hr.time, "sleep", lambda s: None)
+    nhd_hr._fetch_bbox.cache_clear()
+    try:
+        assert nhd_hr.hr_flowlines_in_bbox_status(*BOX, fast_fail=True)[0] == "ok"
+        assert replies == []
+    finally:
+        nhd_hr._fetch_bbox.cache_clear()
 
 
 def test_hr_attrs_matches_flowline_attrs_shape(monkeypatch):

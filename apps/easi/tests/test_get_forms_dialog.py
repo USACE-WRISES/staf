@@ -118,4 +118,4 @@ def test_the_stylesheet_pins_the_header_and_the_layout():
     ):
         assert rule in CSS, rule
     assert ".ff-preview" not in CSS                     # EASI has no preview tab
-    assert 'href="styles.css?v=61"' in SRC              # bumped with the CSS
+    assert 'href="styles.css?v=62"' in SRC              # bumped with the CSS

@@ -19,7 +19,9 @@ service stores ids as float64; they are converted with ``int(round(...))``,
 which the probe asserts is stable (all observed ids sit below 2^53).
 
 Like the other datasources: never raises — every helper returns ``None`` (or a
-dict with an error note) on failure, and results are cached in-process.
+dict with an error note) on failure, and results are cached in-process. A
+request the service never answered is not a result: it is asked again next
+time, so an outage does not outlive itself in the cache.
 """
 from __future__ import annotations
 
@@ -40,15 +42,27 @@ _ID_FIELD = "nhdplusid"
 _ATTR_FIELDS = ("nhdplusid", "gnis_name", "reachcode", "lengthkm", "totdasqkm",
                 "slope", "fcode", "ftype", "streamorde", "hydroseq",
                 "uphydroseq", "dnhydroseq", "vpuid", "innetwork")
+# The map's stream fetch (``fast_fail``): one attempt of this length, and no
+# second attempt after a timeout or any failure slower than _FAST_FAIL_S, so a
+# struggling service is not asked twice while the user waits. A quick failure
+# (a 502, a reset connection) still gets its retry.
+_DISPLAY_TIMEOUT_S = 20.0
+_FAST_FAIL_S = 5.0
 
 
-def _request(params: dict, timeout: float, retries: int = 1) -> Optional[dict]:
+class _Unanswered(Exception):
+    """The service did not answer: never a cached result."""
+
+
+def _request(params: dict, timeout: float, retries: int = 1, *,
+             fast_fail: bool = False) -> Optional[dict]:
     """GET against the HR query endpoint with light retry. Never raises.
 
     Failures are reported to the batch retry side channel (a no-op outside a
     batch run) so the scheduler can classify a partial result as transient.
     """
     for attempt in range(retries + 1):
+        started = time.monotonic()
         try:
             r = requests.get(HR_QUERY_URL, params=params, timeout=timeout)
             if r.status_code == 200:
@@ -59,8 +73,14 @@ def _request(params: dict, timeout: float, retries: int = 1) -> Optional[dict]:
                 diagnostics.record_response("NHDPlus HR", 500)
             else:
                 diagnostics.record_response("NHDPlus HR", r.status_code)
+        except requests.exceptions.Timeout as exc:
+            diagnostics.record_exception("NHDPlus HR", exc)
+            if fast_fail:
+                return None
         except Exception as exc:  # noqa: BLE001 - resilience by design
             diagnostics.record_exception("NHDPlus HR", exc)
+        if fast_fail and time.monotonic() - started > _FAST_FAIL_S:
+            return None
         time.sleep(0.5 * (attempt + 1))
     return None
 
@@ -90,8 +110,11 @@ def _round_bbox(west, south, east, north, ndigits=3):
 
 
 @functools.lru_cache(maxsize=64)
-def _fetch_bbox(west: float, south: float, east: float, north: float) -> Optional[dict]:
-    """Cached HR flowline pull for a (rounded) bbox -> id-only GeoJSON."""
+def _fetch_bbox(west: float, south: float, east: float, north: float,
+                fast_fail: bool = False) -> tuple[str, Optional[dict]]:
+    """Cached HR flowline pull for a (rounded) bbox -> ``(status, id-only
+    GeoJSON)``. Always called positionally (the cache key). An unanswered
+    request raises ``_Unanswered``, which the cache never stores."""
     # Preserve stream bends and coordinate precision for display and snapping,
     # matching the shared HR client used by SFARI and DEEP.
     data = _request({
@@ -100,11 +123,14 @@ def _fetch_bbox(west: float, south: float, east: float, north: float) -> Optiona
         "spatialRel": "esriSpatialRelIntersects",
         "where": "innetwork=1",
         "outFields": _ID_FIELD, "returnGeometry": "true",
-        "outSR": "4326", "f": "geojson"}, timeout=20.0)
-    if data is None or _exceeded(data):
+        "outSR": "4326", "f": "geojson"}, timeout=_DISPLAY_TIMEOUT_S,
+        fast_fail=fast_fail)
+    if data is None:
+        raise _Unanswered
+    if _exceeded(data):
         # A truncated layer would silently hide streams; better to draw nothing
         # (the HR raster overlay still shows the network) than a partial lie.
-        return None
+        return "truncated", None
     feats = []
     for f in data.get("features") or []:
         geom = f.get("geometry")
@@ -113,7 +139,28 @@ def _fetch_bbox(west: float, south: float, east: float, north: float) -> Optiona
             continue
         feats.append({"type": "Feature", "properties": {"nhdplusid": nid},
                       "geometry": geom})
-    return {"type": "FeatureCollection", "features": feats} if feats else None
+    if not feats:
+        return "empty", None
+    return "ok", {"type": "FeatureCollection", "features": feats}
+
+
+def hr_flowlines_in_bbox_status(west: float, south: float, east: float, north: float,
+                                *, max_area_deg2: float = 0.02, fast_fail: bool = False
+                                ) -> tuple[str, Optional[dict]]:
+    """``(status, FeatureCollection | None)`` for a bbox. Status is ``ok``,
+    ``empty``, ``truncated`` (the service hit its record cap), ``too-large``
+    (over ``max_area_deg2``, never asked) or ``failed`` (no answer; asked again
+    on the next call). ``fast_fail`` is the map's policy (_DISPLAY_TIMEOUT_S)."""
+    west, east = min(west, east), max(west, east)
+    south, north = min(south, north), max(south, north)
+    if west == east or south == north:
+        return "empty", None
+    if (east - west) * (north - south) > max_area_deg2:
+        return "too-large", None
+    try:
+        return _fetch_bbox(*_round_bbox(west, south, east, north), fast_fail)
+    except _Unanswered:
+        return "failed", None
 
 
 def hr_flowlines_in_bbox(west: float, south: float, east: float, north: float,
@@ -124,13 +171,8 @@ def hr_flowlines_in_bbox(west: float, south: float, east: float, north: float,
     the service truncated the result. Cached on the rounded bbox so pan jitter
     reuses the last result. Mirrors ``flowlines.flowlines_in_bbox``.
     """
-    west, east = min(west, east), max(west, east)
-    south, north = min(south, north), max(south, north)
-    if west == east or south == north:
-        return None
-    if (east - west) * (north - south) > max_area_deg2:
-        return None
-    return _fetch_bbox(*_round_bbox(west, south, east, north))
+    return hr_flowlines_in_bbox_status(west, south, east, north,
+                                       max_area_deg2=max_area_deg2)[1]
 
 
 def parse_feature(feature: Optional[dict]) -> Optional[dict]:

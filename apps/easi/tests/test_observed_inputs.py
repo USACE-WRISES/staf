@@ -164,7 +164,7 @@ def test_the_client_posts_each_entry():
     assert 'send("observed_set", { mid: el.getAttribute("data-mid"), key: el.getAttribute("data-key"),' in JS
     assert 'document.addEventListener("change", function (e) {\n    if (!isObserved(e.target)) return;' in JS
     assert 'if (!isObserved(el) || el.tagName === "SELECT") return;' in JS          # typed text is debounced
-    assert 'src="worksheet.js?v=10"' in SRC and 'href="styles.css?v=61"' in SRC
+    assert 'src="worksheet.js?v=10"' in SRC and 'href="styles.css?v=62"' in SRC
     for rule in (".easi-obs {", ".easi-obs-in {", ".easi-obs-hint.applied", ".easi-rate-sel[disabled]"):
         assert rule in CSS, rule
 

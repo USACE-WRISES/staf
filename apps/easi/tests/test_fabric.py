@@ -99,6 +99,30 @@ def test_flowlines_fetch_builds_the_layer_from_fabric(monkeypatch):
     flowlines._fetch.cache_clear()
 
 
+def test_flowlines_ask_again_after_a_failure_and_keep_an_empty_answer(monkeypatch):
+    answers = [None, [_feat()]]
+    calls = []
+
+    def fake(*a, **k):
+        calls.append(1)
+        return answers.pop(0)
+    monkeypatch.setattr(fabric, "features_in_bbox", fake)
+    flowlines._fetch.cache_clear()
+    try:
+        box = (-83.06, 40.30, -83.05, 40.32)
+        assert flowlines.flowlines_in_bbox(*box) is None           # unanswered: not kept
+        assert len(flowlines.flowlines_in_bbox(*box)["features"]) == 1
+        assert len(flowlines.flowlines_in_bbox(*box)["features"]) == 1
+        assert len(calls) == 2
+        monkeypatch.setattr(fabric, "features_in_bbox", lambda *a, **k: calls.append(1) or [])
+        other = (-83.16, 40.30, -83.15, 40.32)
+        assert flowlines.flowlines_in_bbox(*other) is None         # answered with no line
+        assert flowlines.flowlines_in_bbox(*other) is None
+        assert len(calls) == 3
+    finally:
+        flowlines._fetch.cache_clear()
+
+
 def test_flowline_attrs_reads_fabric(monkeypatch):
     monkeypatch.setattr(fabric, "feature_by_comid", lambda comid, **k: _feat())
     out = delineation.flowline_attrs(5214461)

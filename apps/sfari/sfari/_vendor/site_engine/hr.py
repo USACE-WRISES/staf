@@ -9,7 +9,8 @@ that when the EASI source tree is present.
 
 Style contract shared with the STAF datasources: helpers never raise; they
 return ``None`` (or empty lists) on failure, and callers degrade with recorded
-reasons. Results are cached in-process where re-use is likely.
+reasons. Results are cached in-process where re-use is likely; a request the
+service never answered is not a result, so it is asked again next time.
 
 Query shapes (0.2.1): the upstream walk asks the spatial index for the
 flowlines touching the frontier's endpoints (``parents_by_node``, one POST per
@@ -49,19 +50,35 @@ _GEOM_CHUNK = 100
 # snapping distance, in meters, that joins coincident network nodes.
 _NODE_CHUNK = 400
 _NODE_DISTANCE_M = 5.0
+# The map's stream fetch (``fast_fail``): one attempt of this length, and no
+# second attempt after a timeout or any failure slower than _FAST_FAIL_S, so a
+# struggling service is not asked twice while the user waits. A quick failure
+# (a 502, a reset connection) still gets its retry.
+_DISPLAY_TIMEOUT_S = 20.0
+_FAST_FAIL_S = 5.0
 
 
-def _request(url: str, params: dict, timeout: float, retries: int = 1
-             ) -> Optional[dict]:
+class _Unanswered(Exception):
+    """The service did not answer: never a cached result."""
+
+
+def _request(url: str, params: dict, timeout: float, retries: int = 1,
+             *, fast_fail: bool = False) -> Optional[dict]:
     for attempt in range(retries + 1):
+        started = time.monotonic()
         try:
             r = requests.get(url, params=params, timeout=timeout)
             if r.status_code == 200:
                 data = r.json()
                 if isinstance(data, dict) and "error" not in data:
                     return data
+        except requests.exceptions.Timeout:
+            if fast_fail:
+                return None
         except Exception:  # noqa: BLE001 - resilience by design
             pass
+        if fast_fail and time.monotonic() - started > _FAST_FAIL_S:
+            return None
         time.sleep(0.5 * (attempt + 1))
     return None
 
@@ -156,31 +173,52 @@ def _round_bbox(west, south, east, north, ndigits=3):
 
 
 @functools.lru_cache(maxsize=32)
-def _fetch_bbox(west: float, south: float, east: float, north: float
-                ) -> Optional[tuple]:
+def _fetch_bbox(west: float, south: float, east: float, north: float,
+                fast_fail: bool = False) -> tuple[str, tuple]:
+    """``(status, records)`` for a rounded bbox. Always called positionally
+    (the cache key). An unanswered request raises ``_Unanswered``, which the
+    cache never stores, so only answers (ok, empty, truncated) are kept."""
     data = _request(FLOWLINE_QUERY_URL, {
         "geometry": f"{west},{south},{east},{north}",
         "geometryType": "esriGeometryEnvelope", "inSR": "4326",
         "spatialRel": "esriSpatialRelIntersects", "where": "innetwork=1",
         "outFields": ",".join(_ATTR_FIELDS), "returnGeometry": "true",
-        "outSR": "4326", "f": "geojson"}, timeout=30.0)
-    if data is None or _exceeded(data):
-        return None
+        "outSR": "4326", "f": "geojson"},
+        timeout=_DISPLAY_TIMEOUT_S if fast_fail else 30.0, fast_fail=fast_fail)
+    if data is None:
+        raise _Unanswered
+    if _exceeded(data):
+        return "truncated", ()
     recs = [parse_feature(f) for f in data.get("features") or []]
-    return tuple(r for r in recs if r and r.get("geometry")) or None
+    recs = tuple(r for r in recs if r and r.get("geometry"))
+    return ("ok", recs) if recs else ("empty", ())
+
+
+def flowlines_in_bbox_status(west: float, south: float, east: float, north: float,
+                             *, max_area_deg2: float = 0.02, fast_fail: bool = False
+                             ) -> tuple[str, list[dict]]:
+    """``(status, records)`` for a bbox. Status is ``ok``, ``empty``,
+    ``truncated`` (the service hit its record cap), ``too-large`` (over
+    ``max_area_deg2``, never asked) or ``failed`` (no answer; asked again on
+    the next call). ``fast_fail`` is the map's policy (see _DISPLAY_TIMEOUT_S)."""
+    west, east = min(west, east), max(west, east)
+    south, north = min(south, north), max(south, north)
+    if west == east or south == north:
+        return "empty", []
+    if (east - west) * (north - south) > max_area_deg2:
+        return "too-large", []
+    try:
+        status, recs = _fetch_bbox(*_round_bbox(west, south, east, north), fast_fail)
+    except _Unanswered:
+        return "failed", []
+    return status, list(recs)
 
 
 def flowlines_in_bbox(west: float, south: float, east: float, north: float,
                       *, max_area_deg2: float = 0.02) -> list[dict]:
     """Parsed HR flowline records (attrs + geometry) for a bbox; [] on failure."""
-    west, east = min(west, east), max(west, east)
-    south, north = min(south, north), max(south, north)
-    if west == east or south == north:
-        return []
-    if (east - west) * (north - south) > max_area_deg2:
-        return []
-    recs = _fetch_bbox(*_round_bbox(west, south, east, north))
-    return list(recs) if recs else []
+    return flowlines_in_bbox_status(west, south, east, north,
+                                    max_area_deg2=max_area_deg2)[1]
 
 
 def flowline_by_id(nhdplusid: int, timeout: float = 30.0) -> Optional[dict]:

@@ -128,6 +128,7 @@ def test_new_selection_and_clear_invalidate_before_state_changes(app_name, event
             "click": "_handle_click", "coordinates": "_coords_entered"}[event]
     handler = _function(app_name, name, {
         "_map_pick": state, "current_step": lambda: "identify", "STEP_IDENTIFY": "identify",
+        "streams_down": lambda: False,
         "clicked": _stop, "_clear_route_state": _stop, "_remove_layer": _stop,
         "_invalidate_selection": _stop, "_begin_pick": _stop,
         "_MAP": Map(), "input": SimpleNamespace(coords_entered=lambda: {"lat": 40, "lon": -83}),
@@ -135,6 +136,31 @@ def test_new_selection_and_clear_invalidate_before_state_changes(app_name, event
     with pytest.raises(StateMutation):
         handler()
     assert state["generation"] == 8
+
+
+@pytest.mark.parametrize("app_name", ["easi", "sfari", "deep"])
+@pytest.mark.parametrize("event", ["click", "coordinates"])
+def test_streams_down_refuses_a_pick_without_touching_state(app_name, event):
+    # The HR service did not answer: a pick shows one notice (one id, so repeated
+    # clicks never stack) and changes nothing.
+    state = {"generation": 7}
+    notices = []
+
+    class Map:
+        def __setattr__(self, name, value):
+            _stop()
+    name = {"click": "_handle_click", "coordinates": "_coords_entered"}[event]
+    handler = _function(app_name, name, {
+        "_map_pick": state, "current_step": lambda: "identify", "STEP_IDENTIFY": "identify",
+        "streams_down": lambda: True, "_STREAMS_DOWN_TEXT": "down",
+        "clicked": _stop, "_clear_route_state": _stop, "_remove_layer": _stop,
+        "_invalidate_selection": _stop, "_begin_pick": _stop, "_invalidate_analysis": _stop,
+        "_MAP": Map(), "input": SimpleNamespace(coords_entered=lambda: {"lat": 40, "lon": -83}),
+        "ui": SimpleNamespace(notification_show=lambda *a, **k: notices.append((a, k))),
+    })
+    handler()
+    assert state["generation"] == 7
+    assert notices == [(("down",), {"type": "warning", "duration": 5, "id": "streams_down"})]
 
 
 @pytest.mark.parametrize("app_name", ["sfari", "deep"])

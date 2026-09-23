@@ -31,14 +31,16 @@ def test_hr_records_to_geojson_keeps_only_geometries():
 
 def test_hr_layer_is_absent_without_the_engine(monkeypatch):
     monkeypatch.setattr(hr_site, "hr_available", lambda: False)
-    assert hr_site.hr_flowlines_fc(-83.1, 40.3, -83.0, 40.4) is None
+    assert hr_site.hr_flowlines_status(-83.1, 40.3, -83.0, 40.4) == ("failed", None)
     assert hr_site.snap_hr(40.3, -83.0) is None
 
 
 def test_every_click_snaps_to_the_hr_line(monkeypatch):
-    monkeypatch.setattr(hr_site, "snap_hr", lambda lat, lon: (lat, lon, 3.0, 750012345))
+    monkeypatch.setattr(hr_site, "snap_status",
+                        lambda lat, lon: ("ok", (lat, lon, 3.0, 750012345)))
     res = hr_site.snap_point(40.31, -83.05)
-    assert res == {"hit": (40.31, -83.05, 3.0, 750012345), "lat": 40.31, "lon": -83.05}
+    assert res == {"hit": (40.31, -83.05, 3.0, 750012345), "lat": 40.31, "lon": -83.05,
+                   "hrStatus": "ok"}
     # the V2 network is never consulted for the pick; the StreamCat reach is
     # comid_anchor's job, in the background (2026-09-07)
     for gone in ("snap_both", "route_from_hr", "v2_anchor", "anchor_label", "declined",
@@ -53,7 +55,59 @@ def test_snap_never_raises(monkeypatch):
         raise RuntimeError("service down")
     monkeypatch.setattr(hr_site, "_engine", boom)
     assert hr_site.snap_hr(40.31, -83.05) is None
-    assert hr_site.hr_flowlines_fc(-83.1, 40.3, -83.0, 40.4) is None
+    assert hr_site.snap_point(40.31, -83.05)["hrStatus"] == "failed"
+    assert hr_site.hr_flowlines_status(-83.1, 40.3, -83.0, 40.4) == ("failed", None)
+
+
+class _StatusHR:
+    """The engine client's status channel, recording the policy it was asked with."""
+
+    def __init__(self, status, records):
+        self.status, self.records, self.asked = status, records, []
+
+    def flowlines_in_bbox_status(self, w, s, e, n, *, fast_fail=False):
+        self.asked.append(fast_fail)
+        return self.status, self.records
+
+
+def test_the_map_fetch_uses_the_fast_fail_policy_and_passes_statuses_through(monkeypatch):
+    line = {"nhdplusid": 1, "geometry": {"type": "LineString", "coordinates": [[0, 0], [1, 1]]}}
+    monkeypatch.setattr(hr_site, "hr_available", lambda: True)
+    for status, records, expected in (
+            ("ok", [line], "ok"), ("ok", [{"nhdplusid": 2, "geometry": None}], "empty"),
+            ("empty", [], "empty"), ("truncated", [], "truncated"),
+            ("too-large", [], "too-large"), ("failed", [], "failed")):
+        engine = _StatusHR(status, records)
+        monkeypatch.setattr(hr_site, "_engine", lambda engine=engine: (None, engine))
+        got, fc = hr_site.hr_flowlines_status(-83.1, 40.3, -83.0, 40.4)
+        assert got == expected and engine.asked == [True]
+        assert (fc is not None) == (expected == "ok")
+    assert not hasattr(hr_site, "hr_flowlines_fc")
+
+
+class _NearestAnchor:
+    """The engine's anchor module: the nearest-line math only."""
+
+    @staticmethod
+    def nearest_point_on_records(records, lat, lon):
+        return (40.31125, -83.05615, 12.0, 750012345) if records else None
+
+
+def test_a_pick_reports_whether_the_hr_service_answered(monkeypatch):
+    # "failed" (no answer) is never the same fact as "no stream nearby" (2026-09-23).
+    line = {"nhdplusid": 1, "geometry": {"type": "LineString", "coordinates": [[0, 0], [1, 1]]}}
+    monkeypatch.setattr(hr_site, "hr_available", lambda: True)
+    for status, records, expected in (
+            ("ok", [line], ("ok", (40.31125, -83.05615, 12.0, 750012345))),
+            ("empty", [], ("empty", None)), ("truncated", [], ("truncated", None)),
+            ("failed", [], ("failed", None))):
+        engine = _StatusHR(status, records)
+        monkeypatch.setattr(hr_site, "_engine", lambda engine=engine: (_NearestAnchor, engine))
+        assert hr_site.snap_status(40.31, -83.05) == expected
+        res = hr_site.snap_point(40.31, -83.05)
+        assert res["hrStatus"] == expected[0] and res["hit"] == expected[1]
+        assert hr_site.snap_hr(40.31, -83.05) == expected[1]
+        assert engine.asked == [True, True, True]     # one attempt each, like the map
 
 
 def test_delineate_from_engine_shape():

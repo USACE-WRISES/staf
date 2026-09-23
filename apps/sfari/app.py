@@ -115,12 +115,21 @@ class _StreamMapLayers:
 
 USGS_TOPO_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
 USGS_IMAGERY_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
-USGS_HYDRO_URL = "https://hydro.nationalmap.gov/arcgis/rest/services/USGSHydroCached/MapServer/tile/{z}/{y}/{x}"
+USGS_HYDRO_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSHydroCached/MapServer/tile/{z}/{y}/{x}"
 USGS_ATTR = "USGS The National Map"
 FLOW_ZOOM = 14          # NHD vectors appear at/above this zoom
 SNAP_TOL_FT = 150.0     # click must land within this distance of a flowline
 _MISS_TEXT = (f"No stream line within {int(SNAP_TOL_FT)} ft of the click. "
               "Zoom in and click a line.")
+_STREAMS_DOWN_TEXT = ("The USGS stream service is not responding. "
+                      "Use the refresh button in the map legend.")
+# The legend's Try again button: a clockwise arrow drawn here (the app ships
+# no icon font), colored by the button's text color.
+_RETRY_ICON = ui.HTML(
+    '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">'
+    '<path d="M12.33 5.5A5 5 0 1 1 8 3" fill="none" stroke="currentColor" '
+    'stroke-width="1.6" stroke-linecap="round"/>'
+    '<path d="M7.6 1.2 10.4 3 7.6 4.8z" fill="currentColor"/></svg>')
 
 
 def _fmt_km2(value) -> str:
@@ -458,8 +467,11 @@ def _engine_line_ui(es: dict, running: bool, prog: dict):
 
 
 def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
-               streams_visible=True, source_visible=False, route_visible=False):
-    """A compact map key; source details appear only with the optional coverage view."""
+               streams_visible=True, source_visible=False, route_visible=False,
+               unavailable=False):
+    """A compact map key; source details appear only with the optional coverage view.
+    ``unavailable`` (the stream service did not answer) replaces the stream rows
+    with a short notice and the Try again button, at any zoom."""
     if step not in (STEP_IDENTIFY, STEP_BASIN):
         return None
 
@@ -477,19 +489,32 @@ def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
                       class_="easi-legend-row")
 
     rows = [ui.div("Map legend", class_="easi-legend-title")]
-    if streams_visible:
+    if unavailable:
+        # The USGS HR service did not answer: no stream lines are drawn, and
+        # nothing is asked again until the user presses Try again.
+        rows.append(ui.div(
+            ui.div(ui.div("Streams unavailable", class_="easi-legend-label"),
+                   ui.div("The USGS stream service is not responding. Try again later.",
+                          class_="easi-legend-note")),
+            ui.input_action_button("retry_streams", None, icon=_RETRY_ICON,
+                                   class_="easi-legend-retry", title="Try again",
+                                   **{"aria-label": "Try again"}),
+            class_="easi-legend-alert"))
+    elif streams_visible:
         if coverage:
             rows.extend([row(FLOWLINE_STYLE["color"], "StreamCat reaches"),
                          row(HR_FLOWLINE_STYLE["color"], "Other streams")])
         else:
             rows.append(row(FLOWLINE_STYLE["color"], "Streams"))
     note = None
-    if not streams_visible:
+    if unavailable:
+        pass
+    elif not streams_visible:
         note = "Streams are hidden"
     elif not zoomed:
         note = "Zoom in to see streams"
-    elif mode == "v2-only":
-        note = "Fine streams unavailable here. Zoom in."
+    elif mode == "hr-truncated":
+        note = "Too many streams to show here. Zoom in."
     elif mode == "hr-only" and coverage:
         note = "StreamCat coverage unavailable here."
     elif mode == "empty":
@@ -517,7 +542,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=25"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=26"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -602,6 +627,8 @@ def server(input, output, session):
     hr_geojson = reactive.value(None)      # NHDPlus HR flowlines in the viewport | None
     flow_geojson = reactive.value(None)    # NHDPlus V2 flowlines in the viewport | None
     streams_mode = reactive.value(None)    # network_display mode of the drawn layers | None
+    streams_down = reactive.value(False)   # the HR service did not answer: no stream fetch
+    #                                        until the legend's Try again
     zoomed_in = reactive.value(False)      # zoom >= FLOW_ZOOM (the legend reads this, not the view)
     site_anchor = reactive.value(None)     # the StreamCat reach classification of the point | None
     evidence_reach = reactive.value(None)  # {"comid", "name"} of the glowing V2 reach | None
@@ -750,12 +777,15 @@ def server(input, output, session):
             import time
             bbox = view_bbox()
             changed = last_view_change()
+            down = streams_down()
             if bbox is None:
                 with reactive.isolate():
                     fetched_bbox.set(None)
                     _stream_layers.clear_streams()
                     flow_geojson.set(None); hr_geojson.set(None)
                     streams_mode.set(None)
+                return
+            if down:                                # the service is down: ask only on Try again
                 return
             elapsed = time.monotonic() - changed
             if elapsed < 0.5:
@@ -764,7 +794,12 @@ def server(input, output, session):
             with reactive.isolate():
                 # Fetch only when the viewport left the box last fetched: a pan
                 # inside the margin or a zoom in keeps the lines it already has.
-                if not viewport.needs_fetch(view_bounds(), fetched_bbox()):
+                # A truncated box drew nothing, so a zoom in (a smaller box)
+                # asks again.
+                fetched = fetched_bbox()
+                refine = (streams_mode() == "hr-truncated" and fetched is not None
+                          and viewport.area_deg2(bbox) < viewport.area_deg2(fetched))
+                if not (viewport.needs_fetch(view_bounds(), fetched) or refine):
                     return
                 fetched_bbox.set(bbox)
             streams_task(bbox)
@@ -776,6 +811,22 @@ def server(input, output, session):
             return await anyio.to_thread.run_sync(
                 lambda: network_display.fetch_streams(bbox, tol_ft=SNAP_TOL_FT))
 
+        def _streams_outage():
+            """The HR service did not answer (a map fetch or a pick): draw nothing,
+            drop any queued box, and ask again only on the legend's Try again."""
+            streams_task.cancel()
+            _stream_layers.clear_streams()
+            flow_geojson.set(None); hr_geojson.set(None)
+            streams_mode.set("hr-unavailable")
+            streams_down.set(True)
+
+        def _pick_outage():
+            """A pick's HR request went unanswered: the state of a failed map fetch,
+            and a notice that points at Try again, never the miss text."""
+            _streams_outage()
+            ui.notification_show(_STREAMS_DOWN_TEXT, type="warning", duration=5,
+                                 id="streams_down")
+
         @reactive.effect
         def _apply_streams():
             try:
@@ -783,6 +834,9 @@ def server(input, output, session):
             except Exception:
                 return
             with reactive.isolate():
+                if res.get("mode") == "hr-unavailable":
+                    _streams_outage()               # whatever box asked
+                    return
                 fetched = fetched_bbox()
                 if fetched is None or tuple(res.get("bbox") or ()) != tuple(fetched):
                     return                          # torn down or a stale box
@@ -792,11 +846,25 @@ def server(input, output, session):
                 if streams_mode() != res.get("mode"):
                     streams_mode.set(res.get("mode"))
 
+        @reactive.effect
+        @reactive.event(input.retry_streams)
+        def _retry_streams():
+            # The legend's Try again: ask once more, for the box in view.
+            if not streams_down():
+                return      # a second press while the retry runs changes nothing
+            fetched_bbox.set(None)
+            streams_down.set(False)
+
         # ---- click -> snap or reject (only during the identify step) ----
         @reactive.effect
         @reactive.event(clicked)
         def _handle_click():
             if current_step() != STEP_IDENTIFY:
+                return
+            if streams_down():
+                # No stream lines to pick from, and no snap that could finish.
+                ui.notification_show(_STREAMS_DOWN_TEXT, type="warning", duration=5,
+                                     id="streams_down")
                 return
             _map_pick["generation"] += 1
             lat, lon = clicked()
@@ -861,6 +929,12 @@ def server(input, output, session):
                 _lookup_state("failed", detail=res.get("detail"))
                 return
             _lookup_state("idle")
+            if res.get("hrStatus") == "failed":
+                # The HR service did not answer: not a miss (2026-09-23).
+                _remove_layer("marker")
+                snapped_point.set(None)
+                _pick_outage()
+                return
             if from_coords:
                 _remove_layer("marker")
                 snapped_point.set(None)
@@ -1043,6 +1117,10 @@ def server(input, output, session):
             if not (24.0 <= lat <= 50.0 and -125.0 <= lon <= -66.0):
                 ui.notification_show("Coordinates must be within the continental "
                                      "United States.", type="warning", duration=5)
+                return
+            if streams_down():
+                ui.notification_show(_STREAMS_DOWN_TEXT, type="warning", duration=5,
+                                     id="streams_down")
                 return
             _map_pick["generation"] += 1
             _invalidate_selection()
@@ -1579,7 +1657,7 @@ def server(input, output, session):
         return _legend_ui(current_step(), zoomed_in(), streams_mode(), evidence_reach(),
                           comid_anchor.is_routed(site_anchor()), coverage=coverage_enabled(),
                           streams_visible=streams_visible(), source_visible=glow,
-                          route_visible=route)
+                          route_visible=route, unavailable=streams_down())
 
     @render.ui
     def readout():
@@ -1605,7 +1683,8 @@ def server(input, output, session):
     @render.ui
     def cursor_style():
         z, _c = _view()
-        picking = (current_step() == STEP_IDENTIFY and z is not None and z >= FLOW_ZOOM)
+        picking = (current_step() == STEP_IDENTIFY and z is not None and z >= FLOW_ZOOM
+                   and not streams_down())     # no crosshair while nothing can be picked
         if not picking:
             return None
         return ui.tags.style(
