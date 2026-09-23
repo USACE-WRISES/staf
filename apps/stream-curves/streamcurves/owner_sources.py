@@ -601,7 +601,7 @@ def library_options(metric: str, *, region_code: str, current=None) -> list[dict
         return []
     for a in listed:
         reg = a.get("region") or {}
-        if reg.get("kind") != "ecoregion":
+        if reg.get("kind") != "ecoregion" or lib.entry_type(a) != "deep":
             continue
         aid = str(a.get("assessmentId") or "")
         name = str(a.get("assessmentName") or aid)

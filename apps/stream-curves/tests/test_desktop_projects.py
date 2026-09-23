@@ -296,7 +296,7 @@ def test_a_catalog_parses_newest_first_and_skips_bad_rows():
     assert e.version(1).in_deep
     assert e.version().assets["pack"].size == 3
     with pytest.raises(ValueError, match="newer"):
-        gallery.parse_catalog(json.dumps(_catalog(schema=2)))
+        gallery.parse_catalog(json.dumps(_catalog(schema=gallery.CATALOG_SCHEMA_V2 + 1)))
 
 
 def test_the_library_builds_the_same_catalog_the_release_publishes():

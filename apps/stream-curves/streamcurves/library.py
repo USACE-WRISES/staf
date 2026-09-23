@@ -52,6 +52,19 @@ STATUS_FILE = "status.json"
 VALIDATION_FILE = "validation.json"
 PROVENANCE_FILE = "provenance.json"
 
+#: Assessment types (``assessmentType`` in a manifest and its catalog entry). Absent means
+#: ``deep``, so every manifest, catalog entry, pack and bundle written before typed entries
+#: keeps its meaning; a DEEP entry never gains the key.
+ASSESSMENT_TYPES = ("deep", "easi")
+#: An EASI method version: the envelope and the eight method files byte for byte (the
+#: package EASI loads, see ``_vendor/easi/method_package.py``), the calculator generated
+#: from exactly those files when there is one, the authoring record and the preview cases.
+EASI_ENVELOPE = "method.json"
+EASI_METHOD_DIR = "method"
+EASI_CALCULATOR_DIR = "calculator"
+EASI_PROJECT_FILE = "project.easi.json"
+EASI_CASES_FILE = "cases.json"
+
 VALIDATION_UNVALIDATED = "unvalidated"
 VALIDATION_VALIDATED = "validated"
 VALIDATION_STATES = (VALIDATION_UNVALIDATED, VALIDATION_VALIDATED)
@@ -365,11 +378,28 @@ def version_dir(assessment_id: str, version: int) -> Path:
     return assessment_dir(assessment_id) / f"v{int(version)}"
 
 
+def entry_type(entry: Optional[dict]) -> str:
+    """The type of a manifest or catalog entry: ``deep`` unless it says otherwise."""
+    return str((entry or {}).get("assessmentType") or "deep")
+
+
+def assessment_type(assessment_id: str) -> str:
+    return entry_type(read_manifest(assessment_id))
+
+
+def is_deep(assessment_id: str) -> bool:
+    return assessment_type(assessment_id) == "deep"
+
+
 def latest_version(assessment_id: str) -> int:
     return int((read_manifest(assessment_id) or {}).get("latestVersion") or 0)
 
 
 def load_version_bundle(assessment_id: str, version: int) -> dict:
+    atype = assessment_type(assessment_id)
+    if atype != "deep":
+        raise ValueError(f"{assessment_id} is an {atype.upper()} method version, not a DEEP "
+                         "assessment; it has no DEEP bundle")
     return _read_json(version_dir(assessment_id, version) / BUNDLE_FILE)
 
 
@@ -792,8 +822,15 @@ def _regenerate_catalog() -> None:
             default_v = latest_cert or latest_prelim or latest
             vmap = _validation_state_map(aid)
             default_vdir = sub / f"v{int(default_v)}"
+            atype = entry_type(m)
+            typed = {"assessmentType": atype} if atype != "deep" else {}
+            if atype == "easi":
+                typed["methodVersion"] = next(
+                    (v.get("methodVersion") for v in versions
+                     if int(v.get("version") or 0) == int(default_v)), None)
             entries.append(
                 {
+                    **typed,
                     "assessmentId": m.get("assessmentId"),
                     "assessmentName": m.get("assessmentName"),
                     "region": m.get("region"),
@@ -817,7 +854,8 @@ def _regenerate_catalog() -> None:
                         else "absent"),
                     # present | stale | absent: whether the default version's
                     # Excel calculator is on disk and built from its content
-                    "calculatorState": calculator_state(aid, int(default_v)),
+                    "calculatorState": (easi_calculator_state(aid, int(default_v))
+                                        if atype == "easi" else calculator_state(aid, int(default_v))),
                 }
             )
     _write_json(
@@ -1076,6 +1114,172 @@ def publish_version(
 
     _regenerate_catalog()
     logger.info("Published %s v%d to the assessment library.", assessment_id, new_version)
+    return new_version
+
+
+# --------------------------------------------------------------------------- #
+# EASI method versions
+# --------------------------------------------------------------------------- #
+def _mp():
+    from ._vendor.easi import method_package
+    return method_package
+
+
+def easi_version_files(assessment_id: str, version: int) -> dict:
+    """One EASI method version as stored: ``envelope``, ``files`` (name -> bytes),
+    ``calculator`` ((name, bytes) or None), ``project`` (the authoring record) and
+    ``cases`` (the preview case set or None)."""
+    vdir = version_dir(assessment_id, version)
+    mp = _mp()
+    envelope = _read_json(vdir / EASI_ENVELOPE)
+    files = {n: (vdir / EASI_METHOD_DIR / n).read_bytes() for n in mp.METHOD_FILES}
+    calculator = None
+    cdir = vdir / EASI_CALCULATOR_DIR
+    if cdir.is_dir():
+        found = sorted(cdir.glob("*.xlsx"))
+        if found:
+            calculator = (found[0].name, found[0].read_bytes())
+    project = _read_json(vdir / EASI_PROJECT_FILE) if (vdir / EASI_PROJECT_FILE).is_file() else None
+    cases = _read_json(vdir / EASI_CASES_FILE) if (vdir / EASI_CASES_FILE).is_file() else None
+    return {"envelope": envelope, "files": files, "calculator": calculator,
+            "project": project, "cases": cases}
+
+
+def easi_package_bytes(assessment_id: str, version: int) -> bytes:
+    """The version's method package (deterministic zip), verified before it is returned."""
+    mp = _mp()
+    got = easi_version_files(assessment_id, version)
+    pkg = mp.MethodPackage(envelope=got["envelope"], files=got["files"], calculator=got["calculator"])
+    blob = mp.to_zip(pkg)
+    mp.read_package(blob)
+    return blob
+
+
+def easi_calculator_state(assessment_id: str, version: int) -> str:
+    """present | stale | absent for an EASI version's calculator (named by its envelope)."""
+    vdir = version_dir(assessment_id, version)
+    try:
+        env = _read_json(vdir / EASI_ENVELOPE)
+    except (OSError, ValueError):
+        return "absent"
+    rec = env.get("calculator") or {}
+    if not rec:
+        return "absent"
+    p = vdir / EASI_CALCULATOR_DIR / str(rec.get("name") or "")
+    if not p.is_file():
+        return "absent"
+    return "present" if hashlib.sha256(p.read_bytes()).hexdigest() == rec.get("sha256") else "stale"
+
+
+def publish_easi_version(
+    assessment_id: str,
+    meta: dict,
+    *,
+    envelope: dict,
+    files: dict,
+    calculator=None,
+    project: Optional[dict] = None,
+    cases: Optional[dict] = None,
+    provenance: Optional[dict] = None,
+    status: str = "draft",
+) -> int:
+    """Write a new EASI method version and return its number.
+
+    The version is exactly the method package ``envelope`` + ``files`` (+ ``calculator``)
+    describes, checked the way EASI checks it before use (entry names, sizes, sha256, the
+    evaluator capabilities it needs, cross-file consistency, the recorded method version),
+    so nothing EASI would refuse is ever published. ``project`` is the authoring record
+    (register, decisions, lineage, notes, history) and ``cases`` the preview case set; they
+    ride beside the method and never inside it. No DEEP gate, bundle, calculator or bake
+    applies: DEEP never reads an EASI method.
+    """
+    if not writable():
+        raise RuntimeError(f"Assessment library is not writable at {library_root()}.")
+    assessment_id = slugify(assessment_id)
+    if not assessment_id:
+        raise ValueError("assessment_id is empty after slugify")
+    status = str(status or "").strip().lower()
+    if status not in PUBLISH_STATUSES:
+        raise ValueError(f"A fresh publish may seed only {', '.join(PUBLISH_STATUSES)}; got {status!r}.")
+    existing = read_manifest(assessment_id)
+    if existing is not None and entry_type(existing) != "easi":
+        raise ValueError(f"{assessment_id} is a {entry_type(existing).upper()} assessment; an EASI "
+                         "method version cannot be added to it")
+    mp = _mp()
+    pkg = mp.read_package(mp.to_zip(mp.MethodPackage(envelope=envelope, files=dict(files),
+                                                      calculator=calculator)))
+    ident = mp.check_identity(pkg)
+    digest = pkg.digest
+    manifest = existing or {
+        "schemaVersion": MANIFEST_SCHEMA_VERSION,
+        "assessmentId": assessment_id,
+        "assessmentType": "easi",
+        "assessmentName": meta.get("assessmentName") or assessment_id,
+        "region": meta.get("region"),
+        "stateCode": "",
+        "stateName": "",
+        "sourceCitation": meta.get("sourceCitation", ""),
+        "latestVersion": 0,
+        "versions": [],
+    }
+    prior = [v for v in manifest.get("versions") or [] if v.get("contentDigest") == digest]
+    if prior:
+        raise ValueError(f"{assessment_id} v{prior[-1].get('version')} already holds exactly this "
+                         "method; publish a revision that changes it")
+    prior_version = int(manifest.get("latestVersion") or 0)
+    new_version = prior_version + 1
+    if int(envelope.get("version") or 0) != new_version:
+        raise ValueError(f"the method package is version {envelope.get('version')}, but the library's "
+                         f"next {assessment_id} version is {new_version}")
+    supersedes_version = prior_version if prior_version >= 1 else None
+    updated_at = _now_iso()
+    vdir = version_dir(assessment_id, new_version)
+    (vdir / EASI_METHOD_DIR).mkdir(parents=True, exist_ok=True)
+    for name, blob in pkg.files.items():
+        (vdir / EASI_METHOD_DIR / name).write_bytes(blob)
+    if pkg.calculator is not None:
+        (vdir / EASI_CALCULATOR_DIR).mkdir(parents=True, exist_ok=True)
+        (vdir / EASI_CALCULATOR_DIR / pkg.calculator[0]).write_bytes(pkg.calculator[1])
+    (vdir / EASI_ENVELOPE).write_bytes(
+        (json.dumps(pkg.envelope, indent=1, sort_keys=True) + "\n").encode("utf-8"))
+    if project is not None:
+        _write_json(vdir / EASI_PROJECT_FILE, project)
+    if cases is not None:
+        _write_json(vdir / EASI_CASES_FILE, cases)
+    if provenance:
+        _write_json(vdir / PROVENANCE_FILE, {**provenance, "version": new_version,
+                                             "updatedAt": updated_at, "contentDigest": digest})
+    _write_json(vdir / META_FILE, {
+        "assessmentId": assessment_id,
+        "assessmentType": "easi",
+        "assessmentName": meta.get("assessmentName") or manifest.get("assessmentName"),
+        "version": new_version,
+        "updatedAt": updated_at,
+        "author": meta.get("author", ""),
+        "revisionNotes": meta.get("revisionNotes", ""),
+        "region": meta.get("region") or manifest.get("region"),
+        "contentDigest": digest,
+        "methodVersion": ident["methodVersion"],
+        "evaluatorDigest": pkg.identity.get("evaluatorDigest"),
+        "supersedesVersion": supersedes_version,
+        "provenance": "present" if provenance else "absent",
+    })
+    manifest["schemaVersion"] = MANIFEST_SCHEMA_VERSION
+    manifest["assessmentType"] = "easi"
+    manifest["assessmentName"] = meta.get("assessmentName") or manifest.get("assessmentName")
+    if meta.get("region") is not None:
+        manifest["region"] = meta["region"]
+    manifest["latestVersion"] = new_version
+    manifest["versions"] = list(manifest.get("versions") or []) + [{
+        "version": new_version, "updatedAt": updated_at, "author": meta.get("author", ""),
+        "revisionNotes": meta.get("revisionNotes", ""), "contentDigest": digest,
+        "methodVersion": ident["methodVersion"], "supersedesVersion": supersedes_version}]
+    _write_json(manifest_path(assessment_id), manifest)
+    _append_status(assessment_id, new_version, status, meta.get("author") or "publisher",
+                   "Published as draft." if status == "draft" else "Published new version.")
+    _regenerate_catalog()
+    logger.info("Published EASI method %s v%d (method %s).", assessment_id, new_version,
+                ident["methodVersion"])
     return new_version
 
 

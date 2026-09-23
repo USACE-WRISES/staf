@@ -86,6 +86,8 @@ def find_published(l3_code: str, *, root: Optional[Path] = None) -> Optional[tup
             man = json.loads(mpath.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
+        if str(man.get("assessmentType") or "deep") != "deep":
+            continue                    # an EASI method is never an ecoregion's DEEP assessment
         reg = man.get("region") or {}
         ver = int(man.get("latestVersion") or 0)
         if reg.get("kind") == "ecoregion" and str(reg.get("code")) == str(l3_code) and ver > 0:
