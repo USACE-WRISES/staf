@@ -1,0 +1,57 @@
+# Publishes the STAF assessment library (apps/library) as the rolling GitHub PRERELEASE
+# `library`: library.json (the catalog) plus immutable per-version assets (the pack users open
+# in StreamCurves Desktop, the DEEP bundle, the Excel calculator). StreamCurves Desktop's
+# gallery and DEEP's remote library read it; see apps/stream-curves/scripts/library_release.py.
+#
+# HARD RULE: `library` is ALWAYS a prerelease, so releases/latest stays the StreamCurves Desktop
+# installer. The release is created once and then only gains assets; library.json is uploaded
+# last with --clobber, so a client never reads a catalog naming an asset still in flight.
+#
+# WHEN IT RUNS. Every push to main that changes the library (the maintainer's publish, approve
+# or certify, committed and pushed), or by hand. Asset names carry a content hash, so a rerun
+# uploads nothing new and a status change rewrites only the catalog.
+name: library-release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/library/**'
+      - 'apps/stream-curves/scripts/library_release.py'
+      - 'apps/stream-curves/streamcurves/gallery.py'
+      - 'apps/stream-curves/streamcurves/project_file.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: library-release
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # The builder needs the library reader and the session codec only (pandas, numpy); the
+      # pins follow apps/stream-curves/requirements.txt.
+      - name: Install the builder's dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pandas==3.0.3" "numpy==2.4.6" "requests==2.34.2"
+
+      - name: Build the library release
+        run: python apps/stream-curves/scripts/library_release.py build --out build/library --commit ${{ github.sha }}
+
+      - name: Upload new assets, then the catalog
+        run: python apps/stream-curves/scripts/library_release.py upload --dir build/library --repo ${{ github.repository }} --commit ${{ github.sha }}
