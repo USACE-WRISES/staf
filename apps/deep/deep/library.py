@@ -1,15 +1,18 @@
 """Read the shared STAF assessment library (DEEP side).
 
-DEEP consumes the *latest* version of each published assessment. Two sources feed
-the picker, resolved in :func:`deep.config.assessments`:
+DEEP consumes the *latest* version of each published assessment. Three sources feed
+the picker, merged by ref in :func:`deep.config._registry_records` (a later one wins):
 
 - the baked registry ``data/deep-assessments.json`` (what ships to the cloud, produced
-  by ``scripts/build_deep_data.py``), and
+  by ``scripts/bake_library_into_deep.py``),
+- the remote library release (:mod:`deep.remote_library`), which brings versions
+  published after the deploy, and
 - when reachable (local dev / desktop), the live ``apps/library/`` folder, merged on top
   so newly published versions show up without re-baking.
 
 On the cloud the library folder is absent, so :func:`latest_bundles` returns ``[]`` and
-only the baked registry is used. See ``apps/library/README.md`` for the format.
+the baked registry and the remote library are used. See ``apps/library/README.md`` for
+the format.
 """
 
 from __future__ import annotations

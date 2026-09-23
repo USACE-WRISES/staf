@@ -195,6 +195,43 @@ adversarial review):**
   `watershedBasis` inside the delineation block; the schema version is
   unchanged.
 
+## Where DEEP gets its assessments
+
+`deep/config.py:_registry_records` merges three sources by `assessmentRef` (`id@vN`), and a
+later source wins a ref:
+
+1. **The baked registry**: `data/deep-assessments.json` and `www/calculators/`, written by
+   `scripts/bake_library_into_deep.py` and shipped with every deploy. It stays the offline
+   fallback: with the other two absent, DEEP serves exactly what was baked.
+2. **The remote library** (`deep/remote_library.py`): the rolling `library` prerelease on
+   USACE-WRISES/staf. DEEP reads its catalog `library.json` (schema 1) and downloads each
+   Preliminary or Final version's `<id>-v<N>.deep.json` and optional
+   `<id>-v<N>-calculator.xlsx`, so a version published after the deploy reaches a running DEEP
+   without a redeploy. A version the catalog lists with any other status (draft, under review,
+   revised, retired) is dropped from the baked records too.
+3. **The local library** `apps/library/`, in dev and desktop runs where the folder is present.
+   It always wins, and the remote catalog never drops one of its versions.
+
+The remote library never makes a page wait. The first lookup loads the last good catalog and its
+assets from the disk cache, with no network. A background thread refreshes once the snapshot is
+older than the TTL, one refresh at a time, and downloads only the assets the cache lacks, each
+checked against the catalog's size and sha256. Any failure (a 404 while a publish replaces
+`library.json`, a network error, a checksum mismatch) keeps the last good snapshot and is
+retried a minute later. A catalog whose schema is newer than 1 is never used. One lookup does
+wait: a ref DEEP does not know (an `?assessment=id@N` link to a version published minutes ago)
+starts a refresh, at most once every 30 seconds, and waits up to 10 seconds for it.
+
+A remote-only version gets the calculator published beside it in the release, under the rule a
+baked one follows: the workbook's content digest must equal the loaded bundle's. A baked workbook
+for the same content comes first.
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `DEEP_REMOTE_LIBRARY` | on | `0`, `false` or `off` turns the remote library off (the test suite does; so can an offline dev run) |
+| `DEEP_LIBRARY_URL` | `https://github.com/USACE-WRISES/staf/releases/download/library/` | an http(s) base ending in `/`, or a local folder holding the same files |
+| `DEEP_LIBRARY_TTL_S` | `600` | seconds between refreshes |
+| `DEEP_CACHE_DIR` | `<temp>/deep_remote_library` | the disk cache: the last good `library.json` and the verified assets |
+
 ## Field forms, metric list and Excel calculator
 
 **Get Field Forms** on the worksheet opens a dialog copied from SFARI: a **Metrics** tab (every
