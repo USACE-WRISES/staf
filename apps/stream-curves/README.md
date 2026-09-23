@@ -244,6 +244,25 @@ session saved before the dictionary existed, and a published assessment that mus
 never be edited, both still read as names. A name someone typed is never
 overwritten.
 
+### EASI method projects
+
+StreamCurves also authors EASI's screening method (`streamcurves/easi_method`, contracts in
+`AUTHORING.md`). An EASI project is a format-2 project file holding the eight method files EASI
+scores with, byte for byte, and the authoring record around them (lineage, candidate register,
+decisions, notes, the preview case set, history).
+
+```powershell
+# a maintainer checkout: import EASI's current method, then export the package EASI loads
+.venv\Scripts\python.exe apps\stream-curves\scripts\import_easi_method.py --out "<folder>\EASI screening method.streamcurves" --by <name>
+.venv\Scripts\python.exe apps\stream-curves\scripts\export_easi_method.py "<folder>\EASI screening method.streamcurves" --out <method.zip>
+```
+
+The unchanged import exports to method `b2e3033116e3` byte for byte. Any method version is
+scored only in a worker process (`easi_method.evaluate`): this app's own copy of EASI feeds DEEP
+authoring (CURVE-11 criteria, the reference screen, the calculator's CWA mapping), so the app and
+the DEEP build scripts clear `EASI_METHOD_PACKAGE`, `EASI_DATA_DIR` and `EASI_CRITERIA_SET` at
+start (`streamcurves/easi_env.py`).
+
 ## Develop (Windows)
 
 ```powershell

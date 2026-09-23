@@ -105,7 +105,7 @@ def test_a_project_from_a_newer_app_asks_for_an_update(tmp_path):
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as zf:
         zf.writestr(pf.PROJECT_JSON, json.dumps({"format": pf.FORMAT,
-                                                 "format_version": pf.FORMAT_VERSION + 1}))
+                                                 "format_version": pf.FORMAT_VERSION_MAX + 1}))
         zf.writestr(pf.SESSION_NAME, _session_text())
     with pytest.raises(pf.ProjectFileError, match="newer StreamCurves"):
         pf.read_project(buf.getvalue())
