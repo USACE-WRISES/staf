@@ -28,6 +28,44 @@ def _ordered_rows(rep: dict) -> list[dict]:
     return sorted(rows, key=lambda r: (order.get(r["discipline"], 99), r["functionName"]))
 
 
+def scoring_method(result: dict | None = None) -> dict:
+    """The method this process scores with: its name, digest and, when a method package
+    is active, the package's id, version and status (``easi.method_package``). A live
+    result also names the evidence-acquisition code it was gathered with; a precomputed
+    national result was gathered by the builder and names its build instead."""
+    from . import method_package as mp
+    try:
+        ident = mp.active_identity()
+    except Exception:  # noqa: BLE001 - an export never fails over its label
+        return {}
+    out = {"method_version": ident.get("methodVersion"),
+           "alternative_id": ident.get("alternativeId"),
+           "alternative_name": ident.get("alternativeName"),
+           "criteria_set": ident.get("criteriaSet")}
+    live = not ((result or {}).get("report") or {}).get("precomputed")
+    if result is not None and live and ident.get("acquisitionDigest"):
+        out["acquisition_digest"] = ident["acquisitionDigest"]
+    if ident.get("source") == "package":
+        out["package"] = {"method_id": ident.get("methodId"), "version": ident.get("version"),
+                          "status": ident.get("status"), "label": ident.get("label"),
+                          "package_digest": ident.get("packageDigest")}
+    return out
+
+
+def scoring_method_text(method: dict | None = None) -> str:
+    """One line naming the scoring method, e.g. 'Alternative 2: NARS-9 references
+    (method b2e3033116e3)'."""
+    m = scoring_method() if method is None else method
+    if not m:
+        return ""
+    name = m.get("alternative_name") or "EASI screening method"
+    text = f"{name} (method {m.get('method_version')})"
+    pkg = m.get("package")
+    if pkg:
+        text += f", method package {pkg.get('method_id')} v{pkg.get('version')} ({pkg.get('status')})"
+    return text
+
+
 def _summary_pairs(result: dict) -> list[tuple[str, str]]:
     d, rep = result["delineation"], result["report"]
     sub = rep["subIndices"]
@@ -58,6 +96,9 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
             ("build_id", "National dataset build"),
             ("method_version", "National execution method"))
           if (rep.get("precomputed") or {}).get(key)],
+        ("Scoring method", scoring_method_text()),
+        *([("Evidence acquisition code", method.get("acquisition_digest"))]
+          if (method := scoring_method(result)).get("acquisition_digest") else []),
         ("Ecosystem Condition Index", shown(rep.get("ecosystemConditionIndex"))),
         ("Physical sub-index", shown(sub.get("physical"))),
         ("Chemical sub-index", shown(sub.get("chemical"))),
@@ -217,6 +258,9 @@ def build_geojson(result: dict) -> str:
     anchor = result.get("siteAnchor") or {}
     if anchor.get("anchorKind") == "hrSurrogate":
         summary["site_anchor"] = anchor
+    method = scoring_method(result)
+    if method:
+        summary["scoring_method"] = method
     if rep.get("precomputed"):
         summary["national_dataset"] = {key: rep["precomputed"].get(key) for key in
             ("alternative_id", "build_id", "method_version", "criteria_set", "vintage", "tier")
@@ -410,6 +454,9 @@ def build_pdf(result: dict) -> bytes:
     pt = f"{lat:.4f}, {lon:.4f}" if lat is not None and lon is not None else "—"
     meta = f"Analysis point {pt} · Reach {d.get('reach_length_ft')} ft upstream"
     story.append(Paragraph(meta, styles["Normal"]))
+    method_line = scoring_method_text()
+    if method_line:
+        story.append(Paragraph(f"Scoring method: {method_line}", styles["Normal"]))
     story.append(Spacer(1, 8))
     anchor = result.get("siteAnchor") or {}
     # Routine provenance belongs with the ending source details. Degradations
