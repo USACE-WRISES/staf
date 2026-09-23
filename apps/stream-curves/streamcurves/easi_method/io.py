@@ -170,3 +170,54 @@ def read_project(source):
         return proj, EasiProject.from_parts(proj.parts)
     except ValueError as exc:
         raise pf.ProjectFileError(f"This EASI project is damaged ({exc}).") from exc
+
+
+ASSESSMENT_ID = "easi-screening"
+ASSESSMENT_NAME = "EASI screening method"
+
+
+def publish(project: EasiProject, *, author: str, revision_notes: str = "", status: str = "draft",
+            assessment_id: str = ASSESSMENT_ID) -> int:
+    """Publish ``project`` as the next version of the library's EASI method (maintainer).
+
+    The library receives the method package exactly as EASI would load it, the authoring
+    record beside it (register, decisions, lineage, notes, history) and the preview cases.
+    Returns the new version number. The project's own version must be that number."""
+    from .. import library as lib
+    pkg = consumer_package(project, status=status)
+    doc = json.loads(project.to_parts()["easi/package.json"].decode("utf-8"))
+    ident = project.identity()
+    provenance = {"kind": "easi-method", "methodId": project.meta.get("methodId"),
+                  "identity": ident, "lineage": project.meta.get("lineage"),
+                  "history": project.history, "publishedBy": author}
+    meta = {"assessmentName": ASSESSMENT_NAME, "region": dict(REGION), "author": author,
+            "revisionNotes": revision_notes}
+    return lib.publish_easi_version(assessment_id, meta, envelope=pkg.envelope, files=pkg.files,
+                                    calculator=pkg.calculator, project=doc, cases=project.cases,
+                                    provenance=provenance, status=status)
+
+
+def open_version(assessment_id: str, version: int) -> EasiProject:
+    """A published EASI method version as a project: its files byte for byte, its
+    authoring record, and the version itself recorded as the origin."""
+    from .. import library as lib
+    got = lib.easi_version_files(assessment_id, version)
+    doc = got["project"] or {}
+    status = lib.version_status(assessment_id, version)
+    project = EasiProject(meta=dict(doc.get("meta") or {}), files=dict(got["files"]),
+                          calculator=got["calculator"],
+                          register=doc.get("register") or {"candidates": [], "decisions": []},
+                          evidence=doc.get("evidence") or [], recipes=doc.get("recipes") or {},
+                          notes=doc.get("notes") or {}, history=doc.get("history") or [],
+                          cases=got["cases"])
+    ident = project.identity()
+    project.meta["version"] = int(version)
+    project.meta["status"] = status
+    if got["calculator"] is not None:
+        project.meta["calculatorFor"] = ident["packageDigest"]
+    lineage = dict(project.meta.get("lineage") or {})
+    lineage["origin"] = {"kind": "library", "assessmentId": assessment_id, "version": int(version),
+                         "status": status, "scoringIdentity": json.loads(
+                             got["files"]["scoring-identity.json"].decode("utf-8")), **ident}
+    project.meta["lineage"] = lineage
+    return project

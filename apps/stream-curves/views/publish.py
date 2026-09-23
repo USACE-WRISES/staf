@@ -169,7 +169,8 @@ def publish_server(input, output, session, state: AppState):
     def _assessments() -> list[dict]:
         refresh()
         try:
-            return lib.list_assessments()
+            # the DEEP publish page publishes DEEP assessments only (an EASI method has its own)
+            return [a for a in lib.list_assessments() if lib.entry_type(a) == "deep"]
         except Exception:  # noqa: BLE001
             logger.exception("publish: reading catalog failed")
             return []

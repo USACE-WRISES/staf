@@ -1,7 +1,8 @@
 # STAF Assessment Library
 
-Canonical, version-controlled home for **completed detailed STAF assessments** — the
-reference-curve sets built in **StreamCurves** and consumed by **DEEP**.
+Canonical, version-controlled home for **completed STAF assessment methods** built in
+**StreamCurves**: the detailed assessments (reference-curve sets) **DEEP** runs and, typed
+`easi`, the screening method **EASI** runs (see [Assessment types](#assessment-types)).
 
 This folder is the *contract*, not shared code. StreamCurves and DEEP each carry their own
 small reader/writer that follows the format below (the same "mirror the format, don't share the
@@ -47,6 +48,37 @@ apps/library/
 
 `<assessment-id>` is a stable kebab-case slug (e.g. `eastern-corn-belt-plains`). It never
 changes across versions; it is the identity DEEP keys on.
+
+## Assessment types
+
+Every assessment has a type in its `manifest.json` (and its `catalog.json` entry):
+`assessmentType`. **Absent means `deep`**: every assessment published before typed entries is a
+DEEP detailed assessment, and a DEEP entry never gains the key.
+
+`easi` is EASI's screening method: one national method (region `{kind: "national", code:
+"CONUS"}`) with its NARS-9 and slope-class strata inside it, never regional copies. Its versions
+hold the method package EASI loads, not a DEEP bundle:
+
+```
+assessments/easi-screening/
+  manifest.json          # assessmentType "easi"; versions carry contentDigest (the packageDigest) and methodVersion
+  status.json            # the same lifecycle as DEEP
+  v1/
+    method.json          # the package envelope: identity (methodVersion, packageDigest, evaluatorDigest), requires
+    method/<file>        # the eight method files, byte for byte (`-text` in .gitattributes)
+    calculator/<file>    # the EASI calculator generated from exactly these files (when present)
+    project.easi.json    # the authoring record: lineage, candidate register, decisions, notes, history
+    cases.json           # the preview case set StreamCurves scores a draft on
+    meta.json, provenance.json
+```
+
+Readers keep to their type: DEEP's readers and bake skip every entry whose type is not `deep`;
+StreamCurves' DEEP paths (carry-forward, other-assessment sources, the DEEP publish page, the
+calculator backfill, the rules scorecard) do too; `library.load_version_bundle` refuses an EASI
+id. EASI versions are published by `library.publish_easi_version` (through
+`streamcurves/easi_method/io.publish`), which checks the package the way EASI does before
+anything is written; no DEEP gate, calculator or bake applies to them. Contracts:
+`apps/stream-curves/AUTHORING.md`.
 
 ## `catalog.json`
 
@@ -210,3 +242,18 @@ Content never changes in place: edits are a new version. Status changes (`draft`
 `preliminary`, certification, retiring) append to `status.json` without re-minting the
 version or its digest; `set_version_status` remains available from Python for scripted
 actions such as retiring a version.
+
+## The release feeds
+
+`library-release` publishes two catalogs on the `library` prerelease:
+
+| Feed | Schema | Lists | Read by |
+|---|---|---|---|
+| `library.json` | 1 (frozen) | DEEP assessments only, exactly as before typed entries | StreamCurves Desktop 1.0.0, DEEP |
+| `library-v2.json` | 2 | every assessment, each entry typed (`"type": "deep"` or `"easi"`) | StreamCurves from the authoring foundation on |
+
+A current StreamCurves reads `library-v2.json` and falls back to `library.json`. An EASI version
+contributes a `-p2-` pack (a format-2 project that 1.0.0 refuses with "update the app") and its
+method package (`<id>-v<N>-<sha8>.easi-method.zip`), never a DEEP bundle. `check`, `upload` and
+`prune` work on the union of both catalogs, and both catalogs upload last, `library.json` at the
+very end.

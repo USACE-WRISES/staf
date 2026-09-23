@@ -31,3 +31,6 @@ apps/stream-curves/data/nrsa_metric_catalog.csv -text whitespace=cr-at-eol
 # Fingerprinted with CRLF line endings into the published run manifests (configs[]), so a
 # rebuild anywhere reaches the recorded inputsDigest.
 apps/stream-curves/config/national_stratifier_registry.yaml -text whitespace=cr-at-eol
+# EASI method versions in the assessment library: the method files are the exact bytes EASI
+# scores with and its method digest hashes (two of them are recorded with CRLF).
+apps/library/assessments/*/v*/method/* -text
