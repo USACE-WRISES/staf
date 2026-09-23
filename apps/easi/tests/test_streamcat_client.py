@@ -64,3 +64,27 @@ def test_primary_failure_preserves_the_query_on_the_mirror(monkeypatch, aoi, par
     assert streamcat.metrics_by_comid(1, ["model"], aoi=aoi) == {"comid": 1.0, "model": None}
     expected = {"name": "model", parameter: aoi, "comid": "1"}
     assert calls == [(streamcat._PRIMARY, expected), (streamcat._MIRROR, expected)]
+
+
+def test_an_unanswered_request_is_asked_again_and_an_answer_is_kept(monkeypatch):
+    answers = [None, None, {"items": [{"COMID": 7, "PCTIMP2019WS": 3}]}, None]
+    calls = []
+
+    def request(url, params, timeout):
+        calls.append(url)
+        return answers.pop(0)
+
+    monkeypatch.setattr(streamcat, "_request", request)
+    assert streamcat.metrics_by_comid(7, ["pctimp2019"]) == {}          # both hosts silent
+    assert streamcat.metrics_by_comid(7, ["pctimp2019"]) == {"comid": 7.0, "pctimp2019ws": 3.0}
+    assert streamcat.metrics_by_comid(7, ["pctimp2019"]) == {"comid": 7.0, "pctimp2019ws": 3.0}
+    assert calls == [streamcat._PRIMARY, streamcat._MIRROR, streamcat._PRIMARY]
+
+
+def test_an_answer_with_no_row_is_kept(monkeypatch):
+    calls = []
+    monkeypatch.setattr(streamcat, "_request",
+                        lambda url, params, timeout: calls.append(url) or {"items": []})
+    assert streamcat.metrics_by_comid(8, ["pctimp2019"]) == {}
+    assert streamcat.metrics_by_comid(8, ["pctimp2019"]) == {}
+    assert calls == [streamcat._PRIMARY]

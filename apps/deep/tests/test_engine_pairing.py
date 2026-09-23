@@ -351,8 +351,12 @@ def test_streamcat_values_are_labeled_by_the_anchor_at_any_ratio(monkeypatch):
 
     def fake_sc(comid, names, aoi="watershed", timeout=25.0):
         return {"pctimp2019ws": 7.0}
-    monkeypatch.setitem(sys.modules, "deep.datasources.streamcat",
-                        types.SimpleNamespace(metrics_by_comid=fake_sc))
+    fake_module = types.SimpleNamespace(metrics_by_comid=fake_sc)
+    monkeypatch.setitem(sys.modules, "deep.datasources.streamcat", fake_module)
+    # ``from ..datasources import streamcat`` reads the package attribute first,
+    # which exists once any test imported the real module (test_fetch_caches).
+    import deep.datasources as datasources_pkg
+    monkeypatch.setattr(datasources_pkg, "streamcat", fake_module, raising=False)
     hr_only = {"anchorKind": "hrSurrogate",
                "scoredReach": {"comid": 5214461, "gnisName": "Sugar Run"},
                "routing": {"routedDistanceFt": 1240.0, "daRatio": 1.8, "declined": False}}

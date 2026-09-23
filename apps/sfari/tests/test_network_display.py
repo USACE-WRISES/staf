@@ -86,17 +86,27 @@ def test_empty_and_missing_inputs():
     assert nd.split_by_coverage(_fc(), _fc(), TOL) == (nd._empty(), nd._empty())
     assert nd.split_by_coverage(None, None, TOL) == (nd._empty(), nd._empty())
     hr = _fc(_line([[-83.05, 40.31], [-83.04, 40.31]], nhdplusid=15))
-    v2_only = nd.build_display(V2, None, TOL)
-    assert v2_only["mode"] == "v2-only"
-    assert v2_only["covered"]["features"][0]["properties"] == {"comid": 1, "gnis_name": "Sugar Run",
-                                                              "cover": "v2"}
-    assert v2_only["uncovered"]["features"] == []
+    # HR answered with no line in the box: every V2 stretch is an orphan, as the
+    # split itself would tag it, so it stays drawn and clickable.
+    no_hr = nd.build_display(V2, None, TOL, hr_status="empty")
+    assert no_hr["mode"] == "segmented" and no_hr["uncovered"]["features"] == []
+    assert no_hr["covered"]["features"][0]["properties"] == {"comid": 1, "gnis_name": "Sugar Run",
+                                                            "cover": "v2-orphan"}
     hr_only = nd.build_display(None, hr, TOL)
     assert hr_only["mode"] == "hr-only" and hr_only["covered"]["features"] == []
     assert hr_only["uncovered"]["features"][0]["properties"] == {"nhdplusid": 15, "cover": "hr"}
     empty = nd.build_display(None, None, TOL)
     assert empty == {"mode": "empty", "covered": nd._empty(), "uncovered": nd._empty()}
     assert nd.build_display(V2, hr, TOL)["mode"] == "segmented"
+
+
+@pytest.mark.parametrize("status,mode", [("failed", "hr-unavailable"),
+                                         ("truncated", "hr-truncated"),
+                                         ("too-large", "hr-truncated")])
+def test_an_unanswered_or_truncated_hr_fetch_draws_nothing(status, mode):
+    # The coarse V2 lines are never a stand-in for the HR network.
+    assert nd.build_display(V2, None, TOL, hr_status=status) == {
+        "mode": mode, "covered": nd._empty(), "uncovered": nd._empty()}
 
 
 def test_multipart_hr_feature_is_exploded_and_each_part_classified():
@@ -117,9 +127,12 @@ def test_output_is_deterministic():
     assert a == b
 
 
-def test_fetch_streams_runs_both_fetchers_once_and_falls_back():
+BOX = (-83.06, 40.29, -83.03, 40.31)
+HR_NEAR = _fc(_line([[-83.05, 40.30 + LAT_60FT], [-83.04, 40.30 + LAT_60FT]], nhdplusid=11))
+
+
+def test_fetch_streams_runs_both_fetchers_once():
     calls = {"v2": 0, "hr": 0}
-    hr = _fc(_line([[-83.05, 40.30 + LAT_60FT], [-83.04, 40.30 + LAT_60FT]], nhdplusid=11))
 
     def fv2(w, s, e, n):
         calls["v2"] += 1
@@ -127,17 +140,45 @@ def test_fetch_streams_runs_both_fetchers_once_and_falls_back():
 
     def fhr(w, s, e, n):
         calls["hr"] += 1
-        return hr
-    res = nd.fetch_streams((-83.06, 40.29, -83.03, 40.31), tol_ft=TOL, fetch_v2=fv2, fetch_hr=fhr)
+        return "ok", HR_NEAR
+    res = nd.fetch_streams(BOX, tol_ft=TOL, fetch_v2=fv2, fetch_hr=fhr)
     assert calls == {"v2": 1, "hr": 1}
-    assert res["bbox"] == (-83.06, 40.29, -83.03, 40.31)
-    assert res["v2"] is V2 and res["hr"] is hr and res["mode"] == "segmented"
+    assert res["bbox"] == BOX
+    assert res["v2"] is V2 and res["hr"] is HR_NEAR and res["hrStatus"] == "ok"
+    assert res["mode"] == "segmented"
     assert res["covered"]["features"] and res["uncovered"]["features"] == []
 
-    res = nd.fetch_streams((-83.06, 40.29, -83.03, 40.31), tol_ft=TOL, fetch_v2=fv2,
-                           fetch_hr=lambda *a: None)
-    assert res["mode"] == "v2-only" and res["hr"] is None
-    assert res["covered"]["features"][0]["properties"]["cover"] == "v2"
+
+def test_fetch_streams_draws_nothing_when_the_hr_service_fails():
+    res = nd.fetch_streams(BOX, tol_ft=TOL, fetch_v2=lambda *a: V2,
+                           fetch_hr=lambda *a: ("failed", None))
+    assert res["mode"] == "hr-unavailable" and res["hrStatus"] == "failed"
+    assert res["v2"] is V2 and res["hr"] is None      # V2 still feeds the source lookups
+    assert res["covered"]["features"] == [] and res["uncovered"]["features"] == []
+
+
+def test_the_display_cache_keeps_only_a_split(monkeypatch):
+    from sfari.datasources import flowlines
+    calls = {"v2": 0, "hr": 0}
+    answers = [("failed", None)]
+
+    def fv2(*a, **k):
+        calls["v2"] += 1
+        return V2
+
+    def fhr(*a, **k):
+        calls["hr"] += 1
+        return answers.pop(0) if answers else ("ok", HR_NEAR)
+    monkeypatch.setattr(flowlines, "flowlines_in_bbox", fv2)
+    monkeypatch.setattr(nd, "_hr_for_display", fhr)
+    nd._default_display.cache_clear()
+    try:
+        assert nd.fetch_streams(BOX, tol_ft=TOL)["mode"] == "hr-unavailable"
+        assert nd.fetch_streams(BOX, tol_ft=TOL)["mode"] == "segmented"    # asked again
+        assert nd.fetch_streams(BOX, tol_ft=TOL)["mode"] == "segmented"    # kept
+        assert calls == {"v2": 2, "hr": 2}
+    finally:
+        nd._default_display.cache_clear()
 
 
 def test_feature_by_id():
@@ -149,18 +190,20 @@ def test_feature_by_id():
     assert nd.feature_by_id(fc, "comid", None) is None
 
 
-def test_v2_reach_feature_is_none_when_the_service_fails(monkeypatch):
+def test_v2_reach_feature_asks_again_after_a_failure(monkeypatch):
     from sfari.datasources import fabric
-    monkeypatch.setattr(fabric, "feature_by_comid", lambda comid, **k: None)
-    nd.v2_reach_feature.cache_clear()
-    assert nd.v2_reach_feature(123) is None
-    monkeypatch.setattr(fabric, "feature_by_comid", lambda comid, **k: {})
-    nd.v2_reach_feature.cache_clear()
-    assert nd.v2_reach_feature(124) is None
     feat = _line([[-83.05, 40.30], [-83.04, 40.30]], comid=125)
-    monkeypatch.setattr(fabric, "feature_by_comid", lambda comid, **k: feat)
-    nd.v2_reach_feature.cache_clear()
-    assert nd.v2_reach_feature(125) is feat
+    answers = [None, {}, feat]
+    calls = []
+
+    def fake(comid, **k):
+        calls.append(comid)
+        return answers.pop(0)
+    monkeypatch.setattr(fabric, "feature_by_comid", fake)
+    assert nd.v2_reach_feature(125) is None        # unanswered
+    assert nd.v2_reach_feature(125) is None        # an unknown COMID
+    assert nd.v2_reach_feature(125) is feat        # asked again, and answered
+    assert calls == [125, 125, 125]
 
 
 @pytest.mark.parametrize("spacing", [nd.SAMPLE_FT, 2 * nd.SAMPLE_FT])

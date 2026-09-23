@@ -767,10 +767,13 @@ def ev_lateral_inundation(ctx):
     w = ctx.extras.get("nwi")
     er = _eng(ctx, "entrenchmentRatio")
     if not w or not w.get("count"):
+        # None: the NWI service did not answer; a zero count: no wetland nearby.
+        nwi_text = ("NWI did not answer" if w is None
+                    else "no NWI wetland feature near the reach")
         if er is not None:
             e = _engine_entry(ctx, mid, round(float(er), 2),
                               f"entrenchment ratio {float(er):.2f} (reach median, 3DEP "
-                              "sections); no NWI wetland feature near the reach",
+                              f"sections); {nwi_text}",
                               f"ER {float(er):.2f} (reach)",
                               _xs_note(ctx) + " Inspect NWI and the 3DEP hillshade for "
                               "floodplain features.")
@@ -779,7 +782,8 @@ def ev_lateral_inundation(ctx):
             return e
         return EvidenceResult(mid, status="unavailable", source="USFWS NWI / 3DEP",
                               source_url="https://www.fws.gov/program/national-wetlands-inventory/wetlands-mapper",
-                              note="Inspect NWI + 3DEP hillshade for floodplain features.")
+                              note=("NWI did not answer. " if w is None else "")
+                              + "Inspect NWI + 3DEP hillshade for floodplain features.")
     txt = f"{w['count']} NWI wetland feature(s), {w['acres']} ac near the reach"
     if er is not None:
         txt += f" · entrenchment ratio {float(er):.2f} (reach median, 3DEP sections)"

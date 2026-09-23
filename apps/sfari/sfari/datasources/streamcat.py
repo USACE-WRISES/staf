@@ -4,7 +4,8 @@ Workhorse for ~12 EASI metrics. Primary host api.epa.gov; legacy mirror
 java.epa.gov is tried on failure. Both can be intermittently unavailable, so
 this client retries with backoff and NEVER raises to the caller — it returns a
 dict (possibly empty) and metric adapters fall back (e.g. to NLCD) when a value
-is missing. Results are cached in-process by (comid, names, aoi).
+is missing. Results are cached in-process by (comid, names, aoi); a request
+neither host answered is not cached, so the next assessment asks again.
 
 Verified field naming: metric base names carry an NLCD-year suffix and an
 area-of-interest suffix, e.g. name='pctimp2019' & areaOfInterest='watershed'
@@ -37,6 +38,10 @@ def _request(url: str, params: dict, timeout: float, retries: int = 2) -> dict |
     return None
 
 
+class _Unanswered(Exception):
+    """Neither StreamCat host answered: never a cached result."""
+
+
 @lru_cache(maxsize=256)
 def _fetch(comid: int, names: tuple[str, ...], aoi: str, timeout: float) -> tuple:
     """Cached low-level fetch -> tuple of (col, value) pairs (hashable)."""
@@ -44,6 +49,8 @@ def _fetch(comid: int, names: tuple[str, ...], aoi: str, timeout: float) -> tupl
     data = _request(_PRIMARY, params, timeout)
     if data is None:
         data = _request(_MIRROR, params, timeout)
+    if data is None:
+        raise _Unanswered
     if not data:
         return tuple()
     # Response shape: {"items": [ {comid, <metric cols...>}, ... ]} (api.epa.gov)
@@ -63,7 +70,10 @@ def metrics_by_comid(comid: int, base_names: list[str], aoi: str = "watershed",
     """
     if comid is None or not base_names:
         return {}
-    pairs = _fetch(int(comid), tuple(sorted(base_names)), aoi, timeout)
+    try:
+        pairs = _fetch(int(comid), tuple(sorted(base_names)), aoi, timeout)
+    except _Unanswered:
+        return {}
     out: dict[str, float] = {}
     for k, v in pairs:
         try:

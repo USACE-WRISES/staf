@@ -26,6 +26,10 @@ def _round_bbox(west, south, east, north, ndigits=3):
             round(east, ndigits), round(north, ndigits))
 
 
+class _Unanswered(Exception):
+    """The fabric API did not answer: never a cached result."""
+
+
 @functools.lru_cache(maxsize=64)
 def _fetch(west: float, south: float, east: float, north: float) -> Optional[dict]:
     """Cached NHDPlus V2 flowline pull for a (rounded) bbox -> GeoJSON with
@@ -34,8 +38,10 @@ def _fetch(west: float, south: float, east: float, north: float) -> Optional[dic
     try:
         from . import fabric
         found = fabric.features_in_bbox(west, south, east, north)
-    except Exception:  # noqa: BLE001 - network / version guard
-        return None
+    except Exception as exc:  # noqa: BLE001 - network / version guard
+        raise _Unanswered from exc
+    if found is None:
+        raise _Unanswered
     if not found:
         return None
     feats = []
@@ -73,7 +79,10 @@ def flowlines_in_bbox(west: float, south: float, east: float, north: float,
         return None
     if (east - west) * (north - south) > max_area_deg2:
         return None
-    return _fetch(*_round_bbox(west, south, east, north))
+    try:
+        return _fetch(*_round_bbox(west, south, east, north))
+    except _Unanswered:
+        return None
 
 
 def nearest_point_on_lines(geojson: Optional[dict], lat: float, lon: float,

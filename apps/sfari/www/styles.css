@@ -983,6 +983,16 @@ summary.sfari-rep-sum { font-family: var(--font-head); font-weight: 600;
   border: 1px solid #caa700; }
 .easi-legend-label { font-weight: 600; }
 .easi-legend-sub, .easi-legend-note { color: #6b7480; }
+/* The stream service did not answer: a short notice and the Try again button. */
+.easi-legend-alert { display: flex; align-items: flex-start; gap: 8px; max-width: 220px; }
+.btn.easi-legend-retry { flex: none; display: inline-flex; align-items: center;
+  justify-content: center; width: 24px; height: 24px; padding: 0; line-height: 1;
+  border-radius: 5px; color: var(--easi-accent); background: #fff;
+  border: 1px solid var(--card-border); }
+.btn.easi-legend-retry:hover { color: #fff; background: var(--easi-accent);
+  border-color: var(--easi-accent); }
+.btn.easi-legend-retry:focus-visible { outline: 2px solid #1f6feb; outline-offset: 2px; }
+.easi-legend-retry svg { display: block; }
 
 /* evidence provenance badges: which engine or service produced the value */
 .sfari-ev-tag.engine { color: #1f6b32; background: #e3f3e6; border-color: #bfe0c6; }

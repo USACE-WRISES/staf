@@ -98,4 +98,4 @@ def test_the_dialog_styles_are_sfaris():
 
 
 def test_the_cache_bust_versions_moved_with_the_assets():
-    assert 'href="styles.css?v=20"' in SRC and 'src="measure.js?v=5"' in SRC
+    assert 'href="styles.css?v=21"' in SRC and 'src="measure.js?v=5"' in SRC

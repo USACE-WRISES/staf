@@ -57,11 +57,26 @@ def test_native_streams_visibility_hides_all_stream_and_source_legend_rows():
 
 def test_notes_follow_zoom_and_fetch_state():
     assert "Zoom in to see streams" in _html(zoomed=False, mode=None)
-    assert "Fine streams unavailable here. Zoom in." in _html(mode="v2-only")
+    assert "Too many streams to show here. Zoom in." in _html(mode="hr-truncated")
+    assert "easi-legend-note" not in _html(mode="hr-unavailable")   # a retry in flight
     assert "easi-legend-note" not in _html(mode="hr-only")
     assert "StreamCat coverage unavailable here." in _html(mode="hr-only", coverage=True)
     assert "No streams in view." in _html(mode="empty")
     assert "easi-legend-note" not in _html(mode=None)
+
+
+def test_an_unavailable_stream_service_says_so_with_one_try_again_button():
+    html = _html(mode="hr-unavailable", unavailable=True)
+    assert "Streams unavailable" in html and "easi-legend-alert" in html
+    assert "The USGS stream service is not responding. Try again later." in html
+    assert html.count("<button") == 1 and 'id="retry_streams"' in html
+    assert 'aria-label="Try again"' in html and 'title="Try again"' in html
+    assert ">Streams<" not in html and "\u2014" not in html
+    # Shown wherever the map is, since the pick notice points to it.
+    for kwargs in ({"zoomed": False}, {"streams_visible": False}, {"step": "basin"}):
+        assert "Streams unavailable" in _html(unavailable=True, **kwargs)
+    assert "<button" not in _html() and "<button" not in _html(mode="hr-truncated")
+    assert "\u2014" not in app._STREAMS_DOWN_TEXT
 
 
 def test_basin_keeps_the_actual_assessment_reach_and_watershed():
@@ -91,6 +106,9 @@ def test_dock_bridge_and_assets_are_wired():
     assert ".easi-legend-panel.leaflet-control" in css
     assert ".staf-coverage-toggle:focus-visible" in css
     assert ".easi-legend-sw-dashed" in css
+    assert ".easi-legend-alert" in css and ".btn.easi-legend-retry" in css
+    assert ".btn.easi-legend-retry:focus-visible" in css
+    assert "Fine streams unavailable" not in src
 
 
 @pytest.fixture
