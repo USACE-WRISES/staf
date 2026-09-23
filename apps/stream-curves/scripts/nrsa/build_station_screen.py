@@ -463,7 +463,9 @@ def write_table(table: pd.DataFrame, *, source: str, extra: Optional[dict] = Non
         "summary": summarize(table),
         **(extra or {}),
     }
-    META_PATH.write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
+    # CRLF on every platform: the archive manifest records the meta file's CRLF bytes and
+    # .gitattributes pins them (-text).
+    META_PATH.write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8", newline="\r\n")
     return meta
 
 

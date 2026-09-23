@@ -370,8 +370,8 @@ def discipline_map_server(input, output, session, state: AppState):
         add_source = None
         build = state.reference_build()
         fid = _pe.canonical_function_id(fn)
-        if fid and build and build.get("method") == _pe.METHOD and _rb.region_run_dir(
-                state.region_of_applicability()) is not None:
+        if fid and build and build.get("method") == _pe.METHOD and _rb.is_ecoregion(
+                state.region_of_applicability()):
             from views import source_dialog as _sd
             add_source = ui.tags.button(
                 fa("circle-plus"), " Add a source", type="button",
@@ -707,8 +707,8 @@ def discipline_map_server(input, output, session, state: AppState):
 
     def _can_add_source() -> bool:
         build = state.reference_build()
-        return bool(build and build.get("method") == _pe.METHOD and _rb.region_run_dir(
-            state.region_of_applicability()) is not None)
+        return bool(build and build.get("method") == _pe.METHOD and _rb.is_ecoregion(
+            state.region_of_applicability()))
 
     def _add_source_button(gaps):
         """Choose a source for the first function with no metric (REF-15)."""

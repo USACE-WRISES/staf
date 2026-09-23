@@ -64,12 +64,14 @@ def main() -> int:
     manifest: dict = {"modules": {}, "data": {}}
     DEST.mkdir(parents=True, exist_ok=True)
     (DEST / "data").mkdir(exist_ok=True)
-    (DEST / "__init__.py").write_text(INIT, encoding="utf-8")
-    (DEST / "config.py").write_text(CONFIG_SHIM, encoding="utf-8")
+    # LF on every platform: the vendor scripts copy these files byte for byte and record
+    # their digests in VENDOR_INFO.json, which every checkout compares against LF files.
+    (DEST / "__init__.py").write_text(INIT, encoding="utf-8", newline="\n")
+    (DEST / "config.py").write_text(CONFIG_SHIM, encoding="utf-8", newline="\n")
     for name, src in MODULES.items():
         raw = src.read_text(encoding="utf-8")
         out = transform(name, raw)
-        (DEST / name).write_text(out, encoding="utf-8")
+        (DEST / name).write_text(out, encoding="utf-8", newline="\n")
         manifest["modules"][name] = {
             "source": str(src.relative_to(REPO)).replace("\\", "/"),
             "source_sha": _sha(raw.encode("utf-8")),
@@ -82,7 +84,7 @@ def main() -> int:
             "sha": _sha(src.read_bytes()),
         }
     (DEST / "EXTRACTS_INFO.json").write_text(
-        json.dumps(manifest, indent=1, sort_keys=True), encoding="utf-8")
+        json.dumps(manifest, indent=1, sort_keys=True), encoding="utf-8", newline="\n")
     print(f"synced {len(MODULES)} modules + {len(DATA_FILES)} data files "
           f"-> {DEST.relative_to(REPO)}")
     return 0

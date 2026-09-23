@@ -400,10 +400,35 @@ def _bundle_at(path: str, mtime: float) -> dict | None:
         return None
 
 
+#: Library bundles a project file carried in its origin/ folder, by (id, version). A project
+#: downloaded from the gallery can start from a version newer than the library this copy
+#: ships, so its own copy of the bundle is the one to read. Versions are immutable, so one
+#: process-wide table serves every session.
+_PROJECT_ORIGIN_BUNDLES: dict[tuple[str, int], dict] = {}
+
+
+def register_origin_bundle(library_id: str | None, version, bundle: dict | None) -> None:
+    """Record the bundle a project file carries for its origin version."""
+    try:
+        if library_id and version and isinstance(bundle, dict):
+            _PROJECT_ORIGIN_BUNDLES[(lib.slugify(library_id), int(version))] = bundle
+    except (TypeError, ValueError):
+        pass
+
+
 def origin_bundle(origin: dict | None) -> dict | None:
-    """The bundle the opened assessment was loaded from: the staged build's, or
-    the library version's. None when there is none on this machine."""
+    """The bundle the opened assessment was loaded from: the staged build's, the
+    project file's own copy, or the library version's. None when there is none on this
+    machine."""
     origin = origin or {}
+    if origin.get("kind") == "library" and origin.get("library_id") and origin.get("version"):
+        try:
+            carried = _PROJECT_ORIGIN_BUNDLES.get((lib.slugify(origin["library_id"]),
+                                                   int(origin["version"])))
+        except (TypeError, ValueError):
+            carried = None
+        if carried is not None:
+            return carried
     path = None
     if origin.get("kind") == "staged" and origin.get("staged_path"):
         path = Path(origin["staged_path"]) / lib.BUNDLE_FILE

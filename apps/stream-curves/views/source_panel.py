@@ -68,8 +68,11 @@ def undo_onclick(decision_id: str, *, stop: bool = True) -> str:
 
 
 def maintainer() -> str:
-    """Who records a decision: the same chain the publish and the builds use."""
-    return (os.environ.get("STAF_LIBRARY_MAINTAINER")
+    """Who records a decision: the same chain the publish and the builds use, with the
+    "Prepared by" name a reviewer gave their project before the account name (an installed
+    copy never carries STAF_LIBRARY_MAINTAINER)."""
+    from streamcurves import prefs
+    return (os.environ.get("STAF_LIBRARY_MAINTAINER") or str(prefs.get(prefs.PREPARED_BY) or "")
             or os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
 
 
@@ -388,7 +391,9 @@ def source_panel_server(input, output, session, state: AppState):
         functions = [str(f) for f in p.get("functions") or []]
         if not metric or action not in (oc.REMOVE, oc.UNMAP, oc.INCLUDE):
             return
-        if _region_dir() is None:
+        with reactive.isolate():
+            ecoregion = rb.is_ecoregion(state.region_of_applicability())
+        if not ecoregion:
             ui.notification_show("Curve decisions are recorded for an ecoregion assessment.",
                                  type="warning", duration=6)
             return
@@ -419,8 +424,8 @@ def source_panel_server(input, output, session, state: AppState):
     @guard("record the curve decision")
     def _confirm():
         p = pending()
-        run_dir = _region_dir()
-        if not p or run_dir is None:
+        run_dir = _region_dir()      # None in an installed copy: the session keeps it
+        if not p:
             return
         gaps = []
         for i, fid in enumerate(p["emptied"]):
@@ -439,8 +444,9 @@ def source_panel_server(input, output, session, state: AppState):
                                        recorded_by=maintainer(), functions=p["functions"],
                                        coverage_exceptions=gaps)
             oc.validate(decision, build=build, built=built, decisions=current)
-            _standing(run_dir)
-            oc.save(run_dir, decision)
+            if run_dir is not None:
+                _standing(run_dir)
+                oc.save(run_dir, decision)
         except ValueError as exc:
             ui.notification_show(str(exc), type="warning", duration=8)
             return
@@ -449,7 +455,10 @@ def source_panel_server(input, output, session, state: AppState):
         ui.modal_remove()
         ui.notification_show(
             f"Saved: {oc.ACTION_LABELS[decision['action']].lower()}, {decision['metric']}. "
-            "It applies here now and to every later build of this region.",
+            + ("It applies here now and to every later build of this region."
+               if run_dir is not None else
+               "It applies in this project; the maintainer records it for the region when "
+               "they publish your revision."),
             type="message", duration=6)
 
     @reactive.effect

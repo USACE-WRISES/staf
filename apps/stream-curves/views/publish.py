@@ -1,16 +1,18 @@
-"""Publish page — save the open project to a file, or publish it into the
-shared STAF assessment library as a Preliminary version (an interactive publish
-IS the human review; automation publishes Drafts through the Region builder).
+"""Publish page: publish the open project into the STAF assessment library, or, in any copy
+that does not publish, save a copy for the maintainer who does.
 
-Replaces the old Library tab: browsing and opening moved to the header Open
-dialog (views/data_overview.py). Lifecycle after publishing lives on the
-Validate stage: a published version is validated there against field data and
-certified in place, so this page carries no validation form of its own.
+Who publishes: the maintainer, from a STAF checkout with STAF_LIBRARY_PUBLISH=1
+(streamcurves.workspace "maintainer" mode). There the page is the publish form: the
+assessment defaults to the one the project started from, the version is published as a
+Draft (kept out of DEEP) or Preliminary (a version DEEP runs once DEEP carries it), and
+the Validate stage moves it on (Approve as Preliminary, then Certify as Final). Anywhere
+else, including every installed copy, the page says the maintainer publishes and offers
+the project file to send them.
 
-See apps/library/README.md for the on-disk format. Reading the catalog works
-anywhere the folder is reachable; publishing is a local/desktop action (writable
-folder) and degrades to "save a project file and send it to the publisher" on
-the web.
+Exports for anyone: the workbook, the DEEP calculator preview and the DEEP bundle (to try
+in DEEP by upload). Saving the project itself is Save / Save As in the header.
+
+See apps/library/README.md for the on-disk format.
 """
 
 from __future__ import annotations
@@ -20,10 +22,8 @@ import io
 import json
 import logging
 import os
-import tempfile
 from datetime import date, datetime, timezone
 from pathlib import Path
-from urllib.parse import quote
 
 from shiny import module, reactive, render, req, ui
 
@@ -31,46 +31,35 @@ from streamcurves import decisions as dec
 from streamcurves import library as lib
 from streamcurves import owner_curves as oc
 from streamcurves import provenance as pv
+from streamcurves import region_build as rb
 from streamcurves import run_state as rs
 from streamcurves import session_io as sio
-from streamcurves.deep_export import write_deep_assessment_bundle
+from streamcurves import workspace as ws
 from streamcurves.workbook import write_input_workbook
 from views import assessment_publish as ap
 from views.data_overview import _default_session_name, _sanitize_file_stem
 from views.state import AppState
-from views.theme import STAF_LINKS, bi, fa
+from views.theme import bi, fa
 from views.uihelpers import _goto_onclick, guard, not_ready_panel, rule_chip
 
 logger = logging.getLogger("streamcurves")
 
 _NEW = "__new__"
 
-# Save-level values: "file" downloads the project to the user's computer,
-# "library" publishes a Preliminary version. ("Draft" is NOT a save level: it
-# is the library lifecycle status automation output carries; renamed 2026-08-27
-# so the two never collide on this page.)
-def _level_choices() -> dict:
-    """Two-line labels for the save-level segmented control. Still a plain
-    input_radio_buttons under the hood (id, value protocol, level_style
-    toggler all unchanged); .pub-seg CSS renders the options as cards."""
+
+def _status_choices() -> dict:
+    """The status a new version is published with. Draft is the default: a maintainer
+    publishing a reviewer's revision reviews it before DEEP runs it."""
     return {
-        "file": ui.TagList(
-            ui.tags.span("Save to file", class_="pub-seg-title"),
-            ui.tags.span("Download the project to your computer",
-                         class_="pub-seg-caption"),
+        "draft": ui.TagList(
+            ui.tags.span("Draft", class_="pub-seg-title"),
+            ui.tags.span("For review; DEEP does not run it", class_="pub-seg-caption"),
         ),
-        "library": ui.TagList(
-            ui.tags.span("Publish to library", class_="pub-seg-title"),
-            ui.tags.span("Add a version to the shared assessment library",
-                         class_="pub-seg-caption"),
+        "preliminary": ui.TagList(
+            ui.tags.span("Preliminary", class_="pub-seg-title"),
+            ui.tags.span("DEEP runs it once DEEP carries it", class_="pub-seg-caption"),
         ),
     }
-
-
-def _is_desktop() -> bool:
-    """The desktop shell injects STAF_LINKS_OVERRIDES (cross-app links become
-    staf-desktop:// URIs). Absent on the web deploys."""
-    return bool(os.environ.get("STAF_LINKS_OVERRIDES"))
 
 
 def _maintainer_name() -> str:
@@ -176,7 +165,6 @@ def publish_ui():
 @module.server
 def publish_server(input, output, session, state: AppState):
     refresh = reactive.value(0)
-    draft_handoff_url = reactive.value(None)  # set after a desktop draft is staged
 
     def _assessments() -> list[dict]:
         refresh()
@@ -241,81 +229,60 @@ def publish_server(input, output, session, state: AppState):
             class_="publish-checklist border rounded p-2 mb-3",
         )
 
-    # ── save-level pane visibility (CSS, so form inputs keep their values) ────
-    @render.ui
-    def level_style():
-        lvl = "file"
-        try:
-            lvl = input.save_level() or "file"
-        except Exception:  # noqa: BLE001 — radio not bound yet
-            pass
-        css = ".pub-pane {display: none;} "
-        if lvl == "file":
-            css += ".pub-pane-file {display: block;}"
-        else:
-            css += ".pub-pane-publish {display: block;}"
-        return ui.tags.style(css)
+    def _exports_card():
+        """What anyone can take away: the workbook, the calculator preview and the DEEP
+        bundle. The project itself is Save / Save As in the header."""
+        def item(output_id, label, icon, note):
+            return ui.div(
+                ui.download_button(output_id, ui.TagList(fa(icon), f" {label}"),
+                                   class_="btn btn-outline-primary w-100"),
+                ui.tags.small(note, class_="text-muted d-block mt-1"),
+                class_="col-md-4")
+        return ui.card(
+            ui.card_header(ui.TagList(bi("file-earmark-arrow-up"), " Exports")),
+            ui.card_body(ui.div(
+                item("download_workbook", "Workbook (.xlsx)", "file-excel",
+                     "Data and setup sheets for Excel. Reopening rebuilds the analysis."),
+                item("download_calculator", "Calculator preview (.xlsx)", "calculator",
+                     "The DEEP Excel calculator for these curves, as they stand."),
+                item("download_deep_bundle", "DEEP bundle (.deep.json)", "file-arrow-down",
+                     "Load it in DEEP (Detailed assessment, upload) to try the curves."),
+                class_="row g-3")),
+            class_="mb-3 publish-card")
 
-    def _file_pane():
+    def _share_pane():
+        """Every copy that does not publish: the maintainer does, from the project file."""
+        with reactive.isolate():
+            path = state.project_file()
+        where = (ui.div(ui.tags.strong("Your project file: "), ui.tags.code(str(path)),
+                        class_="small mb-2")
+                 if path else
+                 ui.div("This project is not saved yet: use Save As in the header first.",
+                        class_="small mb-2"))
+        hint = None
+        if ws.is_checkout() and not ws.can_publish():
+            hint = ui.div("To publish from this checkout, start StreamCurves with "
+                          "STAF_LIBRARY_PUBLISH=1 and STAF_LIBRARY_MAINTAINER set.",
+                          class_="text-muted small mt-2")
         return ui.div(
-            ui.div(
-                ui.div(
-                    ui.download_button(
-                        "download_session",
-                        ui.TagList(fa("floppy-disk"), " Project (.json)"),
-                        class_="btn btn-primary w-100",
-                    ),
-                    ui.tags.small(
-                        "Full session. Reopen and continue where you left off.",
-                        class_="text-muted d-block mt-1",
-                    ),
-                    class_="col-md-6",
-                ),
-                ui.div(
-                    ui.download_button(
-                        "download_workbook",
-                        ui.TagList(fa("file-excel"), " Workbook (.xlsx)"),
-                        class_="btn btn-outline-primary w-100",
-                    ),
-                    ui.tags.small(
-                        "Data and setup sheets for Excel. Reopening rebuilds the analysis.",
-                        class_="text-muted d-block mt-1",
-                    ),
-                    class_="col-md-6",
-                ),
-                # The Excel calculator a published version will carry, built in
-                # memory from the curves as they stand, so it can be looked at
-                # before a version is minted.
-                ui.div(
-                    ui.download_button(
-                        "download_calculator",
-                        ui.TagList(fa("calculator"), " Preview calculator (.xlsx)"),
-                        class_="btn btn-outline-primary w-100",
-                    ),
-                    ui.tags.small(
-                        "The DEEP Excel calculator for these curves. Publishing builds "
-                        "the same workbook and records it with the version.",
-                        class_="text-muted d-block mt-1",
-                    ),
-                    class_="col-md-6",
-                ),
-                class_="row g-3",
-            ),
-            class_="pub-pane pub-pane-file pub-form",
-        )
+            ui.p("Assessments are published to the STAF assessment library by its "
+                 "maintainer. To contribute this revision, send them your project file; "
+                 "they open it, review it and publish the next version.", class_="mb-2"),
+            where,
+            ui.download_button("download_project_copy",
+                               ui.TagList(fa("floppy-disk"), " Save a copy for the maintainer"),
+                               class_="btn btn-primary"),
+            hint,
+            class_="pub-form")
 
     def _publish_pane(session_name: str, region: dict | None):
+        if not ws.can_publish():
+            return _share_pane()
         if not lib.writable():
             return ui.div(
-                ui.div(
-                    bi("info-circle"),
-                    " Publishing writes to the version-controlled library, which is "
-                    "a local or desktop action. On the hosted app, choose Save to "
-                    "file and send the project to whoever maintains the library.",
-                    class_="alert alert-info mb-0",
-                ),
-                class_="pub-pane pub-pane-publish pub-form",
-            )
+                bi("info-circle"),
+                " The library is read-only here, so this copy cannot publish.",
+                class_="alert alert-info mb-0")
 
         existing = {
             a["assessmentId"]: a.get("assessmentName") or a["assessmentId"]
@@ -323,6 +290,16 @@ def publish_server(input, output, session, state: AppState):
         }
         target_choices = dict(existing)
         target_choices[_NEW] = "New assessment..."
+        # A project that started from a library version publishes that assessment's next
+        # version by default (the reviewer round trip); a new build defaults to new.
+        with reactive.isolate():
+            origin_now = state.assessment_source() or {}
+        origin_id = (lib.slugify(origin_now["library_id"])
+                     if origin_now.get("kind") in ("library", "staged")
+                     and origin_now.get("library_id") else None)
+        selected = origin_id if origin_id in existing else _NEW
+        if selected != _NEW:
+            session_name = existing[selected]
 
         body = [
             ui.div(
@@ -331,7 +308,7 @@ def publish_server(input, output, session, state: AppState):
                         "pub_assessment",
                         "Assessment",
                         choices=target_choices,
-                        selected=_NEW,
+                        selected=selected,
                     ),
                     class_="col-md-6",
                 ),
@@ -344,6 +321,12 @@ def publish_server(input, output, session, state: AppState):
             # Only rendered when the target is a new assessment; the field is inert
             # when updating one, and its old label carried that as a parenthetical.
             ui.output_ui("new_id_field"),
+            ui.output_ui("origin_note"),
+            ui.div(
+                ui.input_radio_buttons("pub_status", "Publish as",
+                                       choices=_status_choices(), selected="draft",
+                                       inline=True),
+                class_="pub-seg"),
             ui.div(
                 ui.tags.label("Region of applicability", class_="form-label mb-0"),
                 ui.div(ap.region_label(region), class_="text-muted small"),
@@ -368,26 +351,6 @@ def publish_server(input, output, session, state: AppState):
                 id="pub_optional", open=False, class_="mb-2",
             ),
         ]
-        if _is_desktop():
-            body.append(
-                ui.div(
-                    ui.hr(class_="mt-2 mb-2"),
-                    ui.tags.label("Test before publishing", class_="form-label mb-1"),
-                    ui.div(
-                        "Open the current work in DEEP to try scoring before committing a "
-                        "version.",
-                        class_="text-muted small mb-2",
-                    ),
-                    ui.input_action_button(
-                        "draft_to_deep",
-                        ui.TagList(bi("arrow-right-circle"), " Preview in DEEP"),
-                        class_="btn btn-outline-primary btn-sm",
-                    ),
-                    ui.output_ui("draft_deep_link"),
-                    ui.hr(class_="mt-2 mb-2"),
-                    class_="mt-2",
-                )
-            )
         # The button carries the blocked state. Previously it stayed enabled and
         # green while an alert explained the env var, so the only way to find out
         # was to fill the form and read a warning toast. The gate reads env vars
@@ -529,26 +492,41 @@ def publish_server(input, output, session, state: AppState):
         return ui.TagList(
             ui.card(
                 ui.card_header(
-                    ui.TagList(bi("file-earmark-arrow-up"), " Save or publish: ",
+                    ui.TagList(bi("file-earmark-arrow-up"), " Publish: ",
                                ui.tags.strong(session_name))
                 ),
                 ui.card_body(
-                    ui.output_ui("publish_checklist"),
-                    ui.div(
-                        ui.input_radio_buttons(
-                            "save_level", "How do you want to save this work?",
-                            choices=_level_choices(),
-                            selected="file",
-                        ),
-                        class_="pub-seg",
-                    ),
-                    ui.output_ui("level_style"),
-                    _file_pane(),
+                    ui.output_ui("publish_checklist") if ws.can_publish() else None,
                     _publish_pane(session_name, region),
                 ),
                 class_="mb-3 publish-card",
             ),
+            _exports_card(),
         )
+
+    @render.ui
+    def origin_note():
+        """Say which version a revision starts from, and warn when the library has moved on
+        since (a reviewer's copy of v7 published over a v9 library)."""
+        try:
+            target = input.pub_assessment()
+        except Exception:  # noqa: BLE001 - not bound yet
+            return None
+        origin = state.assessment_source() or {}
+        if target in (None, _NEW) or origin.get("kind") != "library":
+            return None
+        if lib.slugify(origin.get("library_id") or "") != target:
+            return None
+        latest = int((lib.read_manifest(target) or {}).get("latestVersion") or 0)
+        started = int(origin.get("version") or 0)
+        if started and latest > started:
+            return ui.div(
+                f"This project started from v{started}; the library is now at v{latest}. "
+                f"Publishing makes v{latest + 1} from this project's content, so check what "
+                f"v{started + 1} to v{latest} changed first.",
+                class_="alert alert-warning py-2 small")
+        return ui.div(f"This project started from v{started}; publishing makes "
+                      f"v{latest + 1}.", class_="text-muted small mb-2")
 
     # ── File downloads (moved from the Data & Setup Save modal) ──────────────
     # suspend_when_hidden=False: the Publish panel may never have been shown
@@ -559,18 +537,33 @@ def publish_server(input, output, session, state: AppState):
         filename=lambda: _sanitize_file_stem(
             state.isolate_get("session_name"), state.isolate_get("upload_filename")
         )
-        + sio.SESSION_SUFFIX
+        + ".deep.json"
     )
-    def download_session():
+    def download_deep_bundle():
+        """The DEEP bundle of the curves as they stand, to try in DEEP by upload. No
+        version and no library record: DEEP treats it as an uploaded assessment."""
         with reactive.isolate():
             req(state.app_data_loaded())
-            session_name = _default_session_name(
-                state.session_name(), state.upload_filename()
-            )
-            state.session_name.set(session_name)
-            fields = {name: state.get(name) for name in sio.SESSION_FIELDS}
-        payload = sio.dump_session_fields(fields, session_name=session_name)
-        yield sio.dumps_session(payload).encode("utf-8")
+        try:
+            bundle = ap.build_bundle_from_state(state)
+        except ValueError as exc:
+            ui.notification_show(str(exc), type="warning", duration=8)
+            return
+        yield json.dumps(bundle, indent=1, ensure_ascii=False).encode("utf-8")
+
+    @output(suspend_when_hidden=False)
+    @render.download(
+        filename=lambda: Path(state.isolate_get("project_file") or "project.streamcurves").name
+    )
+    def download_project_copy():
+        """The project file, saved first, for a reviewer to send to the maintainer."""
+        with reactive.isolate():
+            path = state.project_file()
+        req(path)
+        saver = state.hooks.get("before_replace")
+        if saver is not None:
+            saver()                   # the parting save: the copy carries the latest work
+        yield Path(path).read_bytes()
 
     @output(suspend_when_hidden=False)
     @render.download(
@@ -622,14 +615,14 @@ def publish_server(input, output, session, state: AppState):
             )
             return
 
-        level = input.save_level() or "library"
-        if level == "file":
-            ui.notification_show(
-                "'Save to file' downloads the project instead: use the download "
-                "buttons above.",
-                type="warning", duration=6,
-            )
+        if not ws.can_publish():
+            ui.notification_show("The maintainer publishes: save a copy for them instead.",
+                                 type="warning", duration=8)
             return
+        status = input.pub_status() or "draft"
+        if status not in lib.PUBLISH_STATUSES:
+            status = "draft"
+        status_word = lib.status_label(status)
         target = input.pub_assessment()
         if target == _NEW:
             aid = lib.slugify(_new_id_value() or input.pub_name() or "")
@@ -667,12 +660,18 @@ def publish_server(input, output, session, state: AppState):
 
         region = ap.region_from_state(state)
         name = input.pub_name() or aid
+        # who prepared the revision (a reviewer's name from their project), in the notes
+        with reactive.isolate():
+            prepared_by = str((state.project_meta() or {}).get("prepared_by") or "").strip()
+        notes = input.pub_notes() or ""
+        if prepared_by and prepared_by.lower() not in notes.lower():
+            notes = (notes.rstrip() + " " if notes.strip() else "") + f"Prepared by {prepared_by}."
         meta = {
             "assessmentName": name,
             "region": region,
             "sourceCitation": input.pub_citation() or ap.DEFAULT_SOURCE_CITATION,
             "author": input.pub_author() or maintainer,
-            "revisionNotes": input.pub_notes() or "",
+            "revisionNotes": notes,
         }
         if region and region.get("kind") == "state":
             meta["stateCode"] = region.get("code") or ""
@@ -706,7 +705,8 @@ def publish_server(input, output, session, state: AppState):
             prev_meta = state.run_meta()
         stamped = dict(prev_stage_status)
         stamped["publish"] = {"status": "done",
-                              "label": f"Published {name} v{expected_version}."}
+                              "label": f"Published {name} v{expected_version} "
+                                       f"({status_word})."}
         state.run_stage_status.set(stamped)
         state.run_meta.set(rs.touch_run_meta(prev_meta))
 
@@ -819,7 +819,7 @@ def publish_server(input, output, session, state: AppState):
                 raise ValueError("a standing decision is still marked pending owner "
                                  "confirmation.")
             version = lib.publish_version(aid, meta, full_payload, bundle,
-                                          provenance=provenance_doc)
+                                          provenance=provenance_doc, status=status)
         except Exception as e:  # noqa: BLE001
             state.run_stage_status.set(prev_stage_status)
             state.run_meta.set(prev_meta)
@@ -831,7 +831,8 @@ def publish_server(input, output, session, state: AppState):
         if version != expected_version:
             with reactive.isolate():
                 ss = dict(state.run_stage_status() or {})
-            ss["publish"] = {"status": "done", "label": f"Published {name} v{version}."}
+            ss["publish"] = {"status": "done",
+                             "label": f"Published {name} v{version} ({status_word})."}
             state.run_stage_status.set(ss)
 
         # The published version becomes the new origin: Validate targets it
@@ -853,22 +854,24 @@ def publish_server(input, output, session, state: AppState):
             logger.exception("publish: origin re-establish failed")
 
         refresh.set(refresh() + 1)
+        _record_decisions_for_region()
 
         # Fold the new latest into DEEP's baked registry so the cloud DEEP ships it.
         # Validation and certification live on the Validate stage now.
         baked_ok, baked_msg = lib.rebake_deep()
+        deep_line = ("DEEP runs it once DEEP is redeployed." if status == "preliminary"
+                     else "Drafts stay out of DEEP until approved on the Validate stage.")
         if baked_ok:
             ui.notification_show(
-                f"Published {name} v{version} as a Preliminary version, and updated "
-                "DEEP's registry. Commit apps/library and apps/deep/data, then "
-                "redeploy DEEP. Validate it with field data in the Validate stage "
-                "when ready.",
+                f"Published {name} v{version} as a {status_word} version. {deep_line} "
+                "Commit apps/library and apps/deep/data and push; the library release "
+                "refreshes for everyone after the push.",
                 type="message",
-                duration=10,
+                duration=12,
             )
         else:
             ui.notification_show(
-                f"Published {name} v{version} as a Preliminary version. DEEP registry "
+                f"Published {name} v{version} as a {status_word} version. DEEP registry "
                 f"not auto-updated ({baked_msg}). Run "
                 "apps/deep/scripts/bake_library_into_deep.py, then commit "
                 "apps/library and apps/deep/data.",
@@ -876,43 +879,28 @@ def publish_server(input, output, session, state: AppState):
                 duration=12,
             )
 
-    # ── desktop-only: stage a preview bundle and hand it to DEEP (?handoff=) ──
-    @reactive.effect
-    @reactive.event(input.draft_to_deep)
-    def _prepare_draft_handoff():
+    def _record_decisions_for_region():
+        """A reviewer's project can carry curve decisions (REF-15) the region's record
+        does not hold; publishing their revision records them for the region, so the next
+        build applies them too. Disclosure-level: a failure never undoes the publish."""
+        with reactive.isolate():
+            region = state.region_of_applicability()
+            decisions = list(state.owner_curve_decisions() or [])
+        run_dir = rb.region_run_dir(region)
+        if run_dir is None or not decisions:
+            return
         try:
-            bundle = ap.build_bundle_from_state(state)
-        except ValueError as e:  # no finalized curves yet
-            ui.notification_show(str(e), type="warning", duration=8)
-            return
-        except Exception as e:  # noqa: BLE001
-            ui.notification_show(f"Could not build the preview: {e}", type="error", duration=8)
-            return
-        handoff_dir = Path(tempfile.gettempdir()) / "staf-handoff"
-        try:
-            handoff_dir.mkdir(parents=True, exist_ok=True)
-            path = handoff_dir / "preview.deep.json"
-            write_deep_assessment_bundle(bundle, path)
-        except Exception as e:  # noqa: BLE001
-            ui.notification_show(f"Could not stage the preview: {e}", type="error", duration=8)
-            return
-        deep_base = (STAF_LINKS.get("deep") or "").rstrip("/")
-        draft_handoff_url.set(f"{deep_base}/?handoff={quote(str(path))}")
-        ui.notification_show(
-            "Preview staged. Click 'Open preview in DEEP' to load it.",
-            type="message", duration=6
-        )
-
-    @output(suspend_when_hidden=False)
-    @render.ui
-    def draft_deep_link():
-        url = draft_handoff_url()
-        if not url:
-            return None
-        return ui.tags.a(
-            ui.TagList(bi("arrow-right-circle"), " Open preview in DEEP"),
-            href=url,
-            target="_blank",
-            rel="noopener",
-            class_="btn btn-primary btn-sm d-inline-block mt-2",
-        )
+            held = {d.get("id") for d in rb.standing_decisions(run_dir, (region or {}).get("code"))}
+            added = 0
+            for d in decisions:
+                if d.get("id") in held or str(d.get("id") or "").startswith(oc.FLAG_PREFIX):
+                    continue
+                oc.save(run_dir, d)
+                added += 1
+            if added:
+                ui.notification_show(
+                    f"{added} curve decision{'' if added == 1 else 's'} from this project "
+                    f"{'is' if added == 1 else 'are'} now recorded for the region.",
+                    type="message", duration=8)
+        except Exception:  # noqa: BLE001
+            logger.exception("publish: recording curve decisions for the region failed")

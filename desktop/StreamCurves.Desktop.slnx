@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/StreamCurves.Desktop.Core/StreamCurves.Desktop.Core.csproj" />
+    <Project Path="src/StreamCurves.Desktop/StreamCurves.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/StreamCurves.Desktop.Core.Tests/StreamCurves.Desktop.Core.Tests.csproj" />
+  </Folder>
+</Solution>

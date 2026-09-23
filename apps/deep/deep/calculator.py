@@ -9,6 +9,11 @@ set in use, and the site block. The workbook recalculates on open, so a
 completed copy shows the application's own indices, function scores and
 Ecosystem Condition Index.
 
+A version DEEP has from the remote library release (``deep/remote_library.py``)
+and not from the bake gets the calculator published beside its bundle
+(``<id>-v<N>-calculator-<sha8>.xlsx``), which the refresh downloads and checks
+against the catalog's sha256.
+
 A workbook is offered only when its recorded content digest equals the loaded
 bundle's. A calculator built for another version of the curves is never handed
 out as this one's.
@@ -112,21 +117,45 @@ def assessment_ref(assessment) -> Optional[str]:
 def template_for(assessment, directory: Optional[Path] = None) -> Optional[bytes]:
     """The blank calculator of the loaded version, or ``None``.
 
-    ``None`` when no workbook is shipped for the version, when the index does
-    not record it, or when its recorded content digest differs from the loaded
-    bundle's (the curves moved and the workbook did not)."""
+    The baked workbook comes first. When none is shipped for the version, the
+    index does not record it, or its recorded content digest differs from the
+    loaded bundle's (the curves moved and the workbook did not), a version that
+    arrived through the remote library gets the calculator published with it in
+    the release, under the same rule (:func:`_remote_template`). ``None`` when
+    neither has one."""
     directory = Path(directory or os.environ.get(_ENV_DIR) or CALCULATOR_DIR)
     ref = assessment_ref(assessment)
     if not ref:
         return None
-    record = _index(str(directory)).get(ref)
-    if not isinstance(record, dict) or not record.get("file"):
-        return None
     digest = _raw(assessment).get("contentDigest")
-    if not digest or record.get("contentDigest") != digest:
+    if not digest:
         return None
-    path = directory / str(record["file"])
-    return _read(str(path)) if path.is_file() else None
+    record = _index(str(directory)).get(ref)
+    if isinstance(record, dict) and record.get("file") and record.get("contentDigest") == digest:
+        path = directory / str(record["file"])
+        if path.is_file():
+            return _read(str(path))
+    return _remote_template(ref, digest)
+
+
+def _remote_template(ref: str, digest: str) -> Optional[bytes]:
+    """The remote library's cached calculator for ``ref``, only when the release
+    records it for the loaded bundle's content digest; else ``None``."""
+    aid, sep, version = ref.rpartition("@v")
+    if not sep or not aid:
+        return None
+    try:
+        from . import remote_library  # local import: the release is optional
+
+        path = remote_library.calculator_path(aid, int(version), digest)
+    except Exception:  # noqa: BLE001 - a missing workbook never breaks the dialog
+        return None
+    if path is None:
+        return None
+    try:
+        return _read(str(path))
+    except OSError:
+        return None
 
 
 def blank_filename(assessment) -> str:

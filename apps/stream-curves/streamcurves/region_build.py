@@ -267,11 +267,26 @@ def default_runs_root() -> Path:
     return _REPO_ROOT / "notes" / "DEEP_Working" / "analysis" / "runs"
 
 
+def is_ecoregion(region) -> bool:
+    """A Level III ecoregion session: the kind of assessment curve sources (REF-15) apply to,
+    in any copy (an installed copy keeps the choices in the project's session)."""
+    region = region or {}
+    return region.get("kind") == "ecoregion" and bool(region.get("code"))
+
+
 def region_run_dir(region) -> Optional[Path]:
     """The run folder of an ecoregion session (where the region's standing curve
-    decisions live), or None for any other region."""
+    decisions live), or None for any other region.
+
+    None in an installed desktop copy: there the runs root would resolve inside the app
+    payload (pruned on update and shared by every project of the region), so a curve
+    decision stays with the project's own session instead (owner_curves.standing(None)
+    reads as "no region file, the session stands")."""
+    from .desktop_env import is_installed_copy
     region = region or {}
     if region.get("kind") != "ecoregion" or not region.get("code"):
+        return None
+    if is_installed_copy():
         return None
     return run_folder(default_runs_root(), str(region["code"]))
 
