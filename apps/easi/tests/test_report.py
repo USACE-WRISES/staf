@@ -153,3 +153,20 @@ def test_xs_reach_sentence_says_at_least_for_a_capped_median():
     s = report._xs_reach_sentence({"candidates": cands, "selected": 0, "default": 0})
     assert "bank-height ratio at least 2.00 (1.20 to at least 2.00)" in s
     assert "≥" not in s                                  # the PDF's standard fonts
+
+
+def test_exports_name_the_scoring_method_and_the_live_acquisition_code():
+    result = _result()
+    csv = report.build_csv(result).decode("utf-8-sig")
+    assert "Scoring method,Alternative 2: NARS-9 references (method b2e3033116e3)" in csv
+    assert "Evidence acquisition code,sha256:" in csv
+    props = json.loads(report.build_geojson(result))["features"][0]["properties"]
+    assert props["scoring_method"]["method_version"] == "b2e3033116e3"
+    assert props["scoring_method"]["alternative_id"] == "alternative-2"
+    assert props["scoring_method"]["acquisition_digest"].startswith("sha256:")
+    assert "package" not in props["scoring_method"]
+    # a precomputed national result was gathered by the builder: it names its build instead
+    result["report"]["precomputed"] = {"method_version": "b2e3033116e3", "build_id": "b"}
+    props = json.loads(report.build_geojson(result))["features"][0]["properties"]
+    assert "acquisition_digest" not in props["scoring_method"]
+    assert "Evidence acquisition code" not in report.build_csv(result).decode("utf-8-sig")

@@ -588,6 +588,35 @@ the intended cells. Regenerate the case set with `EASI_WRITE_GOLDEN=1` on
 rebuild the workbook with `python scripts/build_calculator.py` (the test fails if
 the committed file differs from a fresh build).
 
+## Method packages
+
+StreamCurves authors EASI's method as a **method package** (`easi/method_package.py`):
+the eight method files byte for byte (`screening-methods.json`, `reference-curves.json`,
+`easi-metrics.json`, `cwa-mapping.json`, `functions.json`, `ecoregion-crosswalk.json`,
+`scoring-identity.json`, `nars-ecoregions-9.geojson.gz`), an envelope `method.json`
+naming the method, its version and its identities, and optionally the calculator
+generated from exactly those files.
+
+- `EASI_METHOD_PACKAGE=<zip or folder>` scores with a package. It is verified (entry
+  names, sizes, sha256, the evaluator capabilities it needs, cross-file consistency,
+  the method version it records for this evaluator) and materialized into a
+  content-addressed data folder before `easi.config` reads its data (`EASI_METHOD_CACHE`
+  sets where; default the temp folder). A package that fails any check stops the app at
+  startup; nothing is partly applied. Unset, the built-in `data/` method runs, which is
+  the rollback.
+- One method per process. `method_package.activate()` switches inside a process for
+  tests and single-method workers.
+- Get Forms and the report footer offer the calculator only when it was generated from
+  the active method's files.
+- CSV, GeoJSON and PDF exports name the scoring method (and, for a live result, the
+  evidence-acquisition code identity: adapters, geometry, routing, the site engine and
+  the bundled assets that sit outside `method_version`).
+- `scripts/export_preview_cases.py` writes the calculator case set with complete records;
+  StreamCurves scores it with any method version to preview a draft.
+
+The method digest (`method_version()`) is unchanged by all of this: the package code
+lives outside the files it hashes.
+
 ## Methodology & references
 
 - **STAF — Stream Type Assessment Framework**: the screening method EASI automates
