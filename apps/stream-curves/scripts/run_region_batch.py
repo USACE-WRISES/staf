@@ -14,9 +14,13 @@ end-review packet, then a zero-recompute promote after the owner's review.
     replay   apply the policy to published versions offline and report whether
              it reproduces their recorded decisions.
     stage-many
-             stage several Level III codes in sequence with the same flags
-             (names from the NRSA site table), one run folder each under
-             --out-root, and write batch_summary.md; never promotes.
+             stage several Level III codes with the same flags (names from the
+             NRSA site table), one run folder each under --out-root, and write
+             batch_summary.md; never promotes. --workers N stages N regions at
+             once, each in its own process with its own caches and thread caps;
+             a region whose stage_complete.json names the same inputs (flags,
+             methodology, data, decision files, code) is not staged again, so an
+             interrupted batch resumes by running the same command.
 
 A stage refuses when the screen left more than --max-unresolved-share of the
 candidates unresolved (a service outage shrinks the pool without excluding
@@ -787,12 +791,172 @@ def write_batch_summary(rows: list[dict], out_root: Path | str) -> tuple[Path, P
     return jp, mp
 
 
+STAGE_COMPLETE = "stage_complete.json"
+#: The stage flags stage-many passes to every region (the Namespace cmd_stage reads).
+_STAGE_MANY_FLAGS = ("screen", "no_screen", "no_streamcat", "maintainer", "n_boot",
+                     "coverage_exceptions", "policy", "enable_policy", "max_iterations",
+                     "approve_portfolio", "max_unresolved_share", "allow_unresolved", "nrsa_dataset",
+                     "nrsa_cycles", "reference_frame", "screen_retries", "screen_retry_wait",
+                     "engine_snap_tolerance_ft", "engine_max_reaches", "engine_max_hops",
+                     "reference_method", "predictor_source")
+
+
+def code_fingerprint() -> str:
+    """SHA-256 over the app's code and configuration (streamcurves/, scripts/, config/), by
+    relative path and raw bytes: a stage records it at its start and its end."""
+    root = _APP_ROOT
+    h = hashlib.sha256()
+    for sub_dir, patterns in (("streamcurves", ("*.py", "*.json", "*.yaml")), ("scripts", ("*.py",)),
+                              ("config", ("*.yaml", "*.json", "*.csv"))):
+        for pattern in patterns:
+            for p in sorted((root / sub_dir).rglob(pattern)):
+                if "__pycache__" in p.parts:
+                    continue
+                h.update(str(p.relative_to(root)).replace("\\", "/").encode("utf-8"))
+                h.update(b"\0")
+                h.update(p.read_bytes())
+                h.update(b"\0")
+    return h.hexdigest()
+
+
+def _file_sha(path) -> Optional[str]:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest() if path and Path(path).is_file() else None
+
+
+def region_inputs(args: dict) -> dict:
+    """Everything a region's stage depends on, beside the region itself."""
+    policy = dec.load_policy(args.get("policy"))
+    ds = nrsa_dataset.dataset_manifest_digest(args.get("nrsa_dataset")) \
+        if hasattr(nrsa_dataset, "dataset_manifest_digest") else None
+    return {"flags": {k: args.get(k) for k in _STAGE_MANY_FLAGS},
+            "methodology": methodology.config_fingerprints(),
+            "policy": {"version": dec.policy_version(policy),
+                       "sha256": _file_sha(policy["meta"]["path"])},
+            "coverageExceptions": _file_sha(args.get("coverage_exceptions")),
+            "nrsaManifest": ds or _file_sha(_APP_ROOT / "data" / "nrsa" / "manifest.json"),
+            "legacyNrsa": {n: _file_sha(_APP_ROOT / "data" / n)
+                           for n in ("nrsa_metrics.parquet", "nrsa_sites.csv")},
+            "stationScreen": _file_sha(_APP_ROOT / "data" / "nrsa" / "station_screen.parquet"),
+            "code": code_fingerprint()}
+
+
+def stage_job(spec: dict, out_dir) -> dict:
+    """A job target (streamcurves.jobs): stage one region in this process, then record what
+    it was staged from in its run folder (``stage_complete.json``, written only when the stage
+    succeeded and the code did not change while it ran)."""
+    args = dict(spec["args"])
+    region_dir = Path(args["out"])
+    region_dir.mkdir(parents=True, exist_ok=True)
+    (region_dir / STAGE_COMPLETE).unlink(missing_ok=True)
+    started, code_start = _now(), code_fingerprint()
+    exit_code = int(cmd_stage(argparse.Namespace(**args)))
+    code_end = code_fingerprint()
+    if exit_code != 0:
+        raise SystemExit(exit_code)
+    if code_end != code_start:
+        raise SystemExit("the code changed while this region was staged; stage it again")
+    outputs = {}
+    for rel in ("review_packet.json", "run_manifest.json", "standing_decisions_applied.json"):
+        p = region_dir / rel
+        if p.is_file():
+            outputs[rel] = _file_sha(p)
+    library = region_dir / "library"
+    if library.is_dir():
+        for p in sorted(library.rglob("*")):
+            if p.is_file():
+                outputs[str(p.relative_to(region_dir)).replace("\\", "/")] = _file_sha(p)
+    rec = {"l3": args["l3"], "name": args["name"], "inputsDigest": spec["inputsDigest"],
+           "code": {"start": code_start, "end": code_end}, "startedAt": started,
+           "finishedAt": _now(), "outputs": outputs}
+    tmp = region_dir / (STAGE_COMPLETE + ".part")
+    tmp.write_text(json.dumps(rec, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    os.replace(tmp, region_dir / STAGE_COMPLETE)
+    return {"l3": args["l3"], "exit": 0}
+
+
+def _region_row(code: str, name: Optional[str], out_dir: Path) -> dict:
+    row: dict = {"l3": code, "name": name, "out": str(out_dir), "exit": None, "error": None}
+    packet_path = out_dir / "review_packet.json"
+    if packet_path.is_file():
+        p = json.loads(packet_path.read_text(encoding="utf-8"))
+        scr = p.get("screening") or {}
+        row.update(candidates=scr.get("n_candidates"), retained=scr.get("n_retained"),
+                   tier=p.get("reference_tier"), curves=len(p.get("curves") or []),
+                   decisions=len(p.get("decisions_applied") or []),
+                   open_items=len(p.get("open_items") or []),
+                   hard_stops=len(p.get("hard_stops") or []),
+                   staged_version=(p.get("staged") or {}).get("version"))
+    return row
+
+
+def _stage_many_parallel(a, out_root: Path, regions: list[tuple[str, Optional[str], Path]]) -> int:
+    from streamcurves import jobs as jb
+    base = {k: getattr(a, k) for k in _STAGE_MANY_FLAGS}
+    base["enable_policy"] = list(base.get("enable_policy") or [])
+    base["approve_portfolio"] = list(base.get("approve_portfolio") or [])
+    inputs = region_inputs(base)
+    todo, rows = [], {}
+    for code, name, out_dir in regions:
+        if not name:
+            rows[code] = {"l3": code, "name": None, "out": str(out_dir), "exit": 1,
+                          "error": f"no NRSA candidate sites for L3 ecoregion {code}"}
+            continue
+        args = {**base, "l3": code, "name": name, "out": str(out_dir), "source_citation": "",
+                "reviewer_decisions": None, "finalize_metric": [], "remove_metric": [],
+                "curve_decisions": None, "include_site": [], "exclude_site": []}
+        digest = hashlib.sha256(json.dumps({"region": code, "name": name, "inputs": inputs},
+                                           sort_keys=True, default=str).encode("utf-8")).hexdigest()
+        job = jb.Job(kind="python", target="run_region_batch:stage_job",
+                     spec={"task": "stage-region", "l3": code, "inputsDigest": digest, "args": args},
+                     env={"PYTHONPATH": str(_SCRIPTS) + os.pathsep + str(_APP_ROOT),
+                          "HYRIVER_CACHE_NAME": str(out_dir / "hyriver_cache.sqlite")},
+                     label=f"L3-{code} {name}")
+        # a region staged from other inputs, or whose folder lost its record, stages again
+        done = out_dir / STAGE_COMPLETE
+        rec = json.loads(done.read_text(encoding="utf-8")) if done.is_file() else None
+        if rec is None or rec.get("inputsDigest") != digest:
+            (out_root / ".campaign" / "jobs" / job.id / "complete.json").unlink(missing_ok=True)
+        todo.append((code, name, out_dir, job))
+    t0 = time.monotonic()
+    summary = jb.run([t[3] for t in todo], out_root / ".campaign", workers=a.workers,
+                     meta={"task": "stage-many", "inputs": inputs},
+                     on_event=lambda e: print(f"[batch-many] {e['label']}: {e['event']}", flush=True))
+    for code, name, out_dir, job in todo:
+        row = _region_row(code, name, out_dir)
+        state = summary["jobs"].get(job.id, {}).get("state")
+        row["exit"] = 0 if state in ("completed", "skipped") else 1
+        if state == "skipped":
+            row["error"] = "already staged from the same inputs"
+        elif state not in ("completed",):
+            failed = out_root / ".campaign" / "jobs" / job.id / "failed.json"
+            row["error"] = (json.loads(failed.read_text(encoding="utf-8")).get("tail", "")[-300:]
+                            if failed.is_file() else state)
+        row["seconds"] = summary["jobs"].get(job.id, {}).get("seconds")
+        log = out_root / ".campaign" / "jobs" / job.id / "log.txt"
+        if log.is_file() and state == "completed":
+            shutil.copyfile(log, out_dir / "stage.log")
+        rows[code] = row
+    ordered = [rows[c] for c, _, _ in regions]
+    jp, mp = write_batch_summary(ordered, out_root)
+    print(f"[batch-many] {len(regions)} region(s) in {time.monotonic() - t0:.0f} s with "
+          f"{a.workers} worker(s); summary -> {mp}")
+    return 0 if all(r.get("exit") == 0 for r in ordered) else 1
+
+
 def cmd_stage_many(a) -> int:
-    """Stage several regions one after another with the same flags, one run
-    folder each under ``--out-root``, and a summary table. Never promotes."""
+    """Stage several regions with the same flags, one run folder each under ``--out-root``,
+    and a summary table; ``--workers`` above 1 stages that many at once. Never promotes."""
     out_root = Path(a.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
     names = _parse_kv(a.name, "--name")
+    if int(getattr(a, "workers", 1) or 1) > 1:
+        regions = []
+        for code in a.l3:
+            code = str(code).strip()
+            name = names.get(code) or ra.region_name_for(code)
+            slug = lib.slugify(name) if name else f"l3-{code}"
+            regions.append((code, name, out_root / f"l3-{code}-{slug}"))
+        return _stage_many_parallel(a, out_root, regions)
     rows: list[dict] = []
     for code in a.l3:
         code = str(code).strip()
@@ -1036,6 +1200,10 @@ def main(argv=None) -> int:
     m.add_argument("--allow-unresolved", action="store_true")
     m.add_argument("--reference-method", default=None, choices=run_state.REFERENCE_METHODS,
                    help=REFERENCE_METHOD_HELP)
+    m.add_argument("--workers", type=int, default=1,
+                   help="regions staged at once, each in its own process (1: one after another "
+                        "in this process, as before). Keep it low when the screen calls live "
+                        "services")
     m.set_defaults(fn=cmd_stage_many)
 
     c = sub.add_parser("census", help="reference support per region and metric, before any build "

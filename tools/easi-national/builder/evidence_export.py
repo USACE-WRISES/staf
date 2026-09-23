@@ -21,6 +21,9 @@ Packages (``evidence.json`` + ``data/`` per package, and a deterministic zip of 
 - ``easi-dev-universe`` (development, refittable): every NHDPlus V2 reach in the landscape
   table's own order with the columns the panels step reads, so the screens and the seeded
   thinning regenerate the same members;
+- ``easi-dev-universe-values`` (development, refittable; optional): every reach's fit input for
+  every fitted quantity, so exploration can redraw panels under another screen or strata and
+  fit them (``--package easi-dev-universe-values``);
 - ``easi-eval-refs`` (evaluation, reviewable): the controlled alternatives study's receipts and
   field summary, and the NRSA archive StreamCurves ships;
 - ``easi-operational-ref`` (operational, reviewable): the identity of the national dataset
@@ -493,6 +496,47 @@ def export_universe(root, out: Path, producer: dict, *, check: bool = True) -> d
         producer=producer)
 
 
+def export_universe_values(root, out: Path, producer: dict, universe_digest: str | None) -> dict:
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    from builder.analysis import curves
+    from builder.analysis.values import landscape_path
+    pkg = Package(out, "easi-dev-universe-values")
+    comids = np.asarray(pq.read_table(landscape_path(root), columns=["comid"]).column("comid")
+                        .to_numpy(), dtype=np.int64)
+    cols = {"comid": comids}
+    dictionary, missing = {}, []
+    for q in curves.QUANTITIES.values():
+        values = curves._quantity_values(root, q, comids)
+        if values is None:
+            missing.append({"item": f"quantity {q.key}", "why": f"column {q.column!r} is not in the "
+                                                                "snapshot", "remedy": "none needed"})
+            continue
+        cols[q.key] = values.astype(np.float32) if q.source == "landscape" else values
+        dictionary[q.key] = {"definition": q.label or q.key, "source": f"{q.source}.{q.column}",
+                             "storedAs": "float32 (the landscape's own precision)"
+                             if q.source == "landscape" else "float64"}
+    table = pa.table(cols)
+    pkg.parquet(table, "universe_values.parquet", order="the landscape table's row order")
+    return pkg.finish(
+        title="EASI reference universe values",
+        description="Every reach's fit input for every fitted quantity, in the universe's row "
+                    "order: with easi-dev-universe, panels drawn under another screen, strata or "
+                    "thinning can be fit.",
+        roles=["development"], reproducibility="refittable",
+        coverage={"reaches": table.num_rows, "quantities": sorted(dictionary)},
+        dictionary=dictionary,
+        sources=[{"id": "baseline-snapshot", "path": "analysis/landscape.parquet, analysis/values.parquet",
+                  "citation": "EASI national builder, 2026-09-15 regional baseline"}],
+        recipe={"fitRecipe": "apps/stream-curves/streamcurves/easi_method/fit_recipe.py"},
+        dependsOn=([{"packageId": "easi-dev-universe", "dataDigest": universe_digest}]
+                   if universe_digest else []),
+        redistribution={"status": "public-derived", "notes": ""},
+        limitations=["Landscape quantities keep the landscape's float32 precision, exactly the "
+                     "values the fits read."],
+        unavailable=missing, producer=producer)
+
+
 def export_eval_refs(out: Path, producer: dict) -> dict:
     pkg = Package(out, "easi-eval-refs")
     refs = []
@@ -594,6 +638,12 @@ def main(argv=None) -> int:
             members = json.loads((out / "easi-dev-members" / "evidence.json").read_text(encoding="utf-8"))
         results["easi-dev-fits"] = export_fits(root, out, records, producer, members["dataDigest"])
         print(json.dumps(results["easi-dev-fits"]), flush=True)
+    if "easi-dev-universe-values" in wanted:
+        if universe is None and (out / "easi-dev-universe" / "evidence.json").is_file():
+            universe = json.loads((out / "easi-dev-universe" / "evidence.json").read_text(encoding="utf-8"))
+        results["easi-dev-universe-values"] = export_universe_values(
+            root, out, producer, universe and universe["dataDigest"])
+        print(json.dumps(results["easi-dev-universe-values"]), flush=True)
     if "easi-eval-refs" in wanted:
         results["easi-eval-refs"] = export_eval_refs(out, producer)
         print(json.dumps(results["easi-eval-refs"]), flush=True)
