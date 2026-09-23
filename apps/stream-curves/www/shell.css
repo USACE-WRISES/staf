@@ -454,3 +454,105 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-head); }
   border: 3px solid var(--sc-accent-soft); border-top-color: var(--sc-accent);
   animation: sc-spin .8s linear infinite; }
 .sc-boot-msg { color: var(--sc-text-muted); font-size: var(--fs-1); }
+
+/* ============ 12. EASI method projects (views/easi_page.py) ============ */
+.sc-stagebar-kind { flex: none; font-size: var(--fs-0); font-weight: 600; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--sc-accent); background: var(--sc-accent-soft);
+  border: 1px solid var(--sc-accent-border); border-radius: 999px; padding: 2px 9px; }
+.sc-tag.is-changed { background: var(--sc-warn-soft); border-color: var(--sc-warn-border); color: var(--sc-warn); }
+.sc-tag.is-attention { background: var(--sc-warn-soft); border-color: var(--sc-warn-border); color: var(--sc-warn); font-weight: 600; }
+.sc-tag.is-selected { background: var(--sc-ok-soft); border-color: var(--sc-ok-border); color: var(--sc-ok); }
+.easi-page { max-width: 1280px; }
+.easi-head { padding: 4px 0 12px; border-bottom: 1px solid var(--sc-rule); margin-bottom: 14px; }
+.easi-head-row { display: flex; align-items: flex-start; gap: var(--sp-3); }
+.easi-head-text { flex: 1 1 auto; min-width: 0; }
+.easi-title { font: 600 var(--fs-5)/1.2 var(--font-head); color: var(--sc-text-strong); margin: 0; }
+.easi-sub { color: var(--sc-text-muted); font-size: var(--fs-2); margin-top: 2px; }
+.easi-head-actions { display: flex; gap: var(--sp-2); flex: none; align-items: center; }
+.easi-page .btn svg { height: 1em; width: auto; vertical-align: -.125em; fill: currentColor; }
+.easi-ids { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.easi-id { display: inline-flex; align-items: center; border: 1px solid var(--sc-border);
+  border-radius: var(--r-1); overflow: hidden; font-size: var(--fs-1); }
+.easi-id-k { padding: 2px 7px; background: var(--sc-surface-soft); color: var(--sc-text-muted);
+  border-right: 1px solid var(--sc-border); }
+.easi-id-v { padding: 2px 7px; font-family: var(--font-mono); color: var(--sc-text-strong); }
+.easi-banner { display: flex; align-items: center; gap: var(--sp-3); margin-top: 12px;
+  padding: 10px 12px; border: 1px solid var(--sc-accent-border); background: var(--sc-accent-soft);
+  border-radius: var(--r-2); }
+.easi-banner-text { flex: 1 1 auto; font-size: var(--fs-2); color: var(--sc-text); }
+.easi-stage-title { font: 600 var(--fs-4)/1.2 var(--font-head); color: var(--sc-text-strong); margin: 0 0 10px; }
+.easi-card { border: 1px solid var(--sc-border); border-radius: var(--r-2); padding: 12px 14px;
+  background: #fff; margin-bottom: 10px; font-size: var(--fs-2); }
+.easi-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 16px;
+  margin: 0; font-size: var(--fs-2); }
+.easi-facts dt { font-weight: 500; color: var(--sc-text-muted); }
+.easi-facts dd { margin: 0; color: var(--sc-text-strong); }
+.easi-note { font-size: var(--fs-1); color: var(--sc-text-muted); max-width: 900px; }
+.easi-muted { color: var(--sc-text-muted); font-size: var(--fs-1); }
+.easi-strong { font-weight: 600; color: var(--sc-text-strong); }
+.easi-table { font-size: var(--fs-2); }
+.easi-table th { font-size: var(--fs-0); font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--sc-text-muted); border-bottom-width: 1px; }
+.easi-table td { vertical-align: top; }
+.easi-table-narrow { max-width: 720px; }
+.easi-num { color: var(--sc-text-faint); width: 2.2em; }
+.easi-center { text-align: center; }
+.easi-right { text-align: right; }
+.easi-list { margin: 0; padding-left: 1.1rem; }
+.easi-list li { margin: 2px 0; }
+.easi-empty { display: flex; align-items: center; gap: 8px; color: var(--sc-text-muted);
+  padding: 14px; border: 1px dashed var(--sc-border); border-radius: var(--r-2); font-size: var(--fs-2); }
+.easi-empty svg { height: 1.2em; width: auto; fill: currentColor; }
+.easi-sec-row { display: flex; align-items: center; gap: var(--sp-3); margin: 6px 0 4px; }
+.easi-sec-title { font: 600 var(--fs-3)/1.2 var(--font-head); color: var(--sc-text-strong); }
+.easi-sec-row .btn, .easi-sec-row .easi-running { margin-left: auto; }
+.easi-changes { border: 1px solid var(--sc-warn-border); background: var(--sc-warn-soft);
+  border-radius: var(--r-2); padding: 10px 14px; margin-bottom: 14px; font-size: var(--fs-2); }
+.easi-changes-h { font-weight: 600; color: var(--sc-warn); margin-bottom: 4px; }
+.easi-family { margin: 14px 0 6px; }
+.easi-family-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px;
+  padding: 6px 10px; border-left: 4px solid var(--sc-accent); background: var(--sc-surface-soft);
+  border-radius: 0 var(--r-1) var(--r-1) 0; margin-bottom: 8px; }
+.easi-family-name { font-weight: 600; color: var(--sc-text-strong); font-size: var(--fs-3); }
+.easi-family-users { margin-left: auto; font-size: var(--fs-1); color: var(--sc-accent); }
+.easi-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.easi-tile { display: flex; flex-direction: column; gap: 2px; text-align: left; background: #fff;
+  border: 1px solid var(--sc-border); border-radius: var(--r-1); padding: 6px 8px 5px; cursor: pointer; }
+.easi-tile:hover { border-color: var(--sc-accent-border); box-shadow: var(--shadow-1); }
+.easi-tile:focus-visible { outline: none; box-shadow: var(--sc-focus); }
+.easi-tile.is-changed { border-left: 4px solid var(--sc-warn); }
+.easi-tile-head { display: flex; justify-content: space-between; gap: 6px; }
+.easi-tile-name { font-weight: 600; font-size: var(--fs-1); color: var(--sc-text-strong); }
+.easi-tile-code { font-family: var(--font-mono); font-size: var(--fs-0); color: var(--sc-text-faint); }
+.easi-tile .curve-tile-svg { width: 100%; height: auto; display: block; }
+.easi-tile-foot { display: flex; justify-content: space-between; gap: 6px; font-size: var(--fs-0);
+  color: var(--sc-text-muted); }
+.easi-tile-tags { display: flex; gap: 4px; }
+.easi-bands { display: flex; flex-wrap: wrap; align-items: stretch; gap: 0; }
+.easi-band { display: inline-flex; flex-direction: column; justify-content: center; padding: 3px 10px;
+  min-width: 84px; font-size: var(--fs-1); line-height: 1.25; border-radius: var(--r-1); }
+.easi-band.is-good { background: #dde8f7; }
+.easi-band.is-fair { background: #f8efc6; }
+.easi-band.is-poor { background: #f7d0d0; }
+.easi-band-r { font-weight: 600; color: var(--sc-text-strong); }
+.easi-band-l { color: var(--sc-text-muted); font-size: var(--fs-0); }
+.easi-edge { align-self: center; margin: 0 3px; padding: 1px 6px; border-radius: 999px;
+  border: 1px solid var(--sc-border); background: #fff; font-family: var(--font-mono);
+  font-size: var(--fs-0); color: var(--sc-text-strong); }
+.easi-edge.is-editable, .easi-pair.is-editable { cursor: pointer; border-color: var(--sc-accent-border);
+  color: var(--sc-accent); }
+.easi-edge.is-editable:hover, .easi-pair.is-editable:hover { background: var(--sc-accent-soft); }
+.easi-pair { font-family: var(--font-mono); font-size: var(--fs-1); border: 1px solid transparent;
+  border-radius: var(--r-1); background: transparent; padding: 1px 6px; }
+.easi-pair-inputs { display: flex; gap: var(--sp-3); }
+.easi-curve-big { border: 1px solid var(--sc-rule); border-radius: var(--r-1); padding: 6px; margin-bottom: 10px; }
+.easi-curve-big svg { width: 100%; height: auto; display: block; }
+.easi-modal-err { margin-top: 8px; color: var(--sc-err); background: var(--sc-err-soft);
+  border: 1px solid var(--sc-err-border); border-radius: var(--r-1); padding: 6px 10px; font-size: var(--fs-2); }
+.easi-modal-err svg, .easi-problems svg { height: 1em; width: auto; fill: currentColor; vertical-align: -.125em; }
+.easi-problems { margin-bottom: 8px; padding: 8px 12px; border: 1px solid var(--sc-warn-border);
+  background: var(--sc-warn-soft); border-radius: var(--r-2); color: var(--sc-warn); font-size: var(--fs-2); }
+.easi-running { color: var(--sc-accent); font-size: var(--fs-2); }
+.easi-running svg { height: 1em; width: auto; fill: currentColor; animation: sc-spin 1s linear infinite; }
+/* faicons writes margin-left:auto inline, which a flex row turns into a push to the right */
+.easi-page svg.fa, .easi-modal-err svg.fa, .easi-problems svg.fa { margin-left: 0 !important; }

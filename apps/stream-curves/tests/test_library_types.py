@@ -18,7 +18,7 @@ import pytest
 
 from streamcurves import carry_forward as cf
 from streamcurves import gallery, library as lib, project_file as pf
-from streamcurves.easi_method import edit, io as eio
+from streamcurves.easi_method import edit, io as eio, register as reg
 
 APP = Path(__file__).resolve().parents[1]
 VENDORED_DATA = APP / "streamcurves" / "_vendor" / "easi" / "data"
@@ -90,6 +90,8 @@ def test_a_revision_is_the_next_version_and_an_unchanged_one_is_refused(project,
                                                   "kind": "library", "version": 1}
     draft = edit.set_band_edge(eio.fork(reopened, by="tester"), "road-density-inflow-pressure",
                                None, 0, 1.5, by="tester", reason="experimental test edit")
+    draft = reg.confirm_selection(draft, "reach-inflow", by="tester", reason="reviewed",
+                                  at="2026-09-23T00:00:00Z")
     assert eio.publish(draft, author="tester") == 2
     entry = lib.read_catalog()["assessments"][0]
     assert entry["latestVersion"] == 2 and entry["methodVersion"] != RELEASE_METHOD
@@ -137,14 +139,19 @@ def test_library_json_is_unchanged_by_an_easi_method_and_v2_lists_it(typed_libra
     v2 = json.loads((typed_out / gallery.CATALOG_NAME_V2).read_text(encoding="utf-8"))
     types = {a["id"]: a["type"] for a in v2["assessments"]}
     assert types["easi-screening"] == "easi" and types["northeastern-highlands"] == "deep"
-    easi_assets = next(a for a in v2["assessments"] if a["id"] == "easi-screening")["versions"][0]["assets"]
+    easi_v1 = next(a for a in v2["assessments"] if a["id"] == "easi-screening")["versions"][0]
+    easi_assets = easi_v1["assets"]
     assert set(easi_assets) == {"pack", "method"} and "-p2-" in easi_assets["pack"]["name"]
+    assert easi_v1["methodVersion"] == RELEASE_METHOD
+    assert not any("methodVersion" in v for a in v2["assessments"] if a["type"] == "deep"
+                   for v in a["versions"])
     keep = rel.all_names(typed_out)
     assert easi_assets["method"]["name"] in keep and easi_assets["pack"]["name"] in keep
     # the new reader lists the EASI method in its own group; DEEP never runs it
     entries = gallery.parse_catalog((typed_out / gallery.CATALOG_NAME_V2).read_text(encoding="utf-8"))
     easi = next(e for e in entries if e.id == "easi-screening")
     assert easi.type == "easi" and easi.group == "EASI screening methods"
+    assert easi.versions[0].method_version == RELEASE_METHOD
     assert not any(v.in_deep for v in easi.versions)
 
 

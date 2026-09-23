@@ -278,6 +278,21 @@ class AppState:
     # file's project.json, beside the session.
     project_file: reactive.Value = _rv()
     project_meta: reactive.Value = _rv()
+    # What the open project authors: "deep" (reference curves for a DEEP assessment, every
+    # field above and below) or "easi" (an EASI screening method: the fields below, with the
+    # DEEP fields at their startup values). Set only by the project controller
+    # (views/project.py) when a project opens or is created. Transient: the project file
+    # records its own type.
+    assessment_type: reactive.Value = _rv("deep")
+    # The open EASI method project (streamcurves.easi_method.model.EasiProject), replaced
+    # whole on every edit (never mutated in place); easi_undo holds the projects it replaced,
+    # newest last. easi_stage is the EASI strip's current stage; easi_preview the last
+    # consequences preview (it names the package digest it scored). All transient: the
+    # project file holds the project itself.
+    easi_project: reactive.Value = _rv()
+    easi_undo: reactive.Value = _rv_factory(list)
+    easi_stage: reactive.Value = _rv("method")
+    easi_preview: reactive.Value = _rv()
     # Long work in progress (a compile, a screening run, a curve build): autosave
     # waits for zero so it never records a job half done. st.busy(state) is the
     # only writer. Transient.
@@ -521,6 +536,11 @@ def reset_app_to_startup(state: AppState) -> None:
         state.reference_build.set(None)
         state.owner_curve_decisions.set([])
         state.wizard_draft.set(None)
+        state.assessment_type.set("deep")
+        state.easi_project.set(None)
+        state.easi_undo.set([])
+        state.easi_stage.set("method")
+        state.easi_preview.set(None)
         state.current_metric.set(state.startup_current_metric() or "perRiffle")
         state.app_data_loaded.set(False)
         state.app_reset_nonce.set((state.app_reset_nonce() or 0) + 1)
