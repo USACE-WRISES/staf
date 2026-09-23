@@ -1,0 +1,171 @@
+# Builds and publishes the StreamCurves Desktop payload (env + apps components) as a GitHub
+# PRERELEASE, then refreshes the rolling `streamcurves-current` prerelease whose
+# latest-desktop.json every installed StreamCurves Desktop polls.
+#
+# HARD RULE: streamcurves-payload-* releases and streamcurves-current are ALWAYS prereleases.
+# Only shell releases (tags streamcurves-v*) are normal releases: Velopack reads normal releases
+# only, and a normal payload release here would also pull the repository's "Latest" badge away
+# from an installer.
+#
+# WHEN IT RUNS. A streamcurves-v* tag ships a payload alongside the shell release; a routine app
+# update is `gh workflow run streamcurves-payload.yml` (or the Actions tab) from main. Minutes
+# later every installed shell's next update check offers the new apps zip. The env component
+# (python runtime + wheels) is rebuilt only when desktop/payload/{env.lock,pbs.lock,prune.txt}
+# change (content-hashed ENV_VERSION) or force_env_rebuild is ticked, and it must pass the
+# relocation smoke gate (StreamCurves boots from the relocated interpreter) before anything
+# publishes. Otherwise the previous manifest's env block is carried forward.
+name: streamcurves-payload
+
+on:
+  push:
+    tags: ['streamcurves-v*']
+  workflow_dispatch:
+    inputs:
+      force_env_rebuild:
+        description: Rebuild the env component even if ENV_VERSION is unchanged
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# Shared with streamcurves-shell: a streamcurves-v* tag fires both, and both rewrite
+# streamcurves-current's manifest, so they run one after the other (each re-downloads the
+# manifest when it starts).
+concurrency:
+  group: streamcurves-current
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  payload:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      # Deterministic: every DIRECT pin in apps/stream-curves/requirements.txt must appear
+      # identically in env.lock. (A full re-compile diff would fail spuriously as PyPI's
+      # transitive versions drift between lock time and tag time.)
+      - name: Lock consistency gate
+        run: uv run --no-project python desktop/scripts/check_lock_consistency.py .
+
+      - name: Compute versions and release tag
+        id: ver
+        shell: pwsh
+        run: |
+          $envLine = & desktop\scripts\build-env-payload.ps1 -VersionOnly | Select-String '^ENV_VERSION='
+          $envVersion = $envLine.ToString().Split('=')[1]
+          $shortSha = (git rev-parse --short HEAD).Trim()
+          $stamp = Get-Date -Format 'yyyy.MM.dd'
+          $appsVersion = "apps-$stamp-$shortSha"
+          # Always the payload's own prerelease tag, also when a streamcurves-v* tag fired this
+          # run: that tag's release belongs to the shell (a normal release).
+          $tag = "streamcurves-payload-$stamp-$shortSha"
+          "env_version=$envVersion" >> $env:GITHUB_OUTPUT
+          "apps_version=$appsVersion" >> $env:GITHUB_OUTPUT
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          Write-Host "ENV_VERSION=$envVersion APPS_VERSION=$appsVersion TAG=$tag"
+
+      - name: Fetch previous manifest (for env carry-over)
+        id: prev
+        shell: pwsh
+        run: |
+          # gh exits nonzero (without throwing) when the release doesn't exist: first run ever.
+          $found = 'false'
+          gh release download streamcurves-current --repo '${{ github.repository }}' --pattern latest-desktop.json --output previous-latest.json
+          if ($LASTEXITCODE -eq 0 -and (Test-Path previous-latest.json)) {
+            $found = 'true'
+          } else {
+            Write-Host 'no previous streamcurves-current manifest (first payload release)'
+          }
+          "found=$found" >> $env:GITHUB_OUTPUT
+          exit 0
+
+      - name: Decide whether the env component must be rebuilt
+        id: envplan
+        shell: pwsh
+        run: |
+          $needed = 'true'
+          if ('${{ steps.prev.outputs.found }}' -eq 'true' -and '${{ inputs.force_env_rebuild }}' -ne 'true') {
+            $previous = Get-Content previous-latest.json -Raw | ConvertFrom-Json
+            if ($previous.components.env.version -eq '${{ steps.ver.outputs.env_version }}') { $needed = 'false' }
+          }
+          "needed=$needed" >> $env:GITHUB_OUTPUT
+          Write-Host "env rebuild needed: $needed"
+
+      - name: Build env payload (relocation smoke gate inside)
+        if: steps.envplan.outputs.needed == 'true'
+        shell: pwsh
+        run: desktop\scripts\build-env-payload.ps1 -NoUvCache
+
+      - name: Build apps payload
+        shell: pwsh
+        run: desktop\scripts\build-apps-payload.ps1 -EnvVersion '${{ steps.ver.outputs.env_version }}' -AppsVersion '${{ steps.ver.outputs.apps_version }}' -PythonExe python
+
+      - name: Compose latest-desktop.json
+        shell: pwsh
+        run: |
+          # Every component URL sits under this repository's release downloads: installed shells
+          # only accept downloads under that prefix (StreamCurves.Desktop/Program.cs).
+          $base = 'https://github.com/${{ github.repository }}/releases/download/${{ steps.ver.outputs.tag }}'
+          $appsZip = 'streamcurves-${{ steps.ver.outputs.apps_version }}.zip'
+          $envZip = 'streamcurves-${{ steps.ver.outputs.env_version }}.zip'
+          $genArgs = @(
+            'desktop/scripts/gen_latest_manifest.py',
+            '--apps-zip', "desktop\build\release\$appsZip",
+            '--apps-version', '${{ steps.ver.outputs.apps_version }}',
+            '--apps-url', "$base/$appsZip",
+            '--out', 'latest-desktop.json'
+          )
+          # The previous manifest (when present) carries the shell block + minShellVersion
+          # forward; a freshly built env zip takes precedence over its env block.
+          if ('${{ steps.prev.outputs.found }}' -eq 'true') {
+            $genArgs += @('--carry-env-from', 'previous-latest.json')
+          }
+          if ('${{ steps.envplan.outputs.needed }}' -eq 'true') {
+            $genArgs += @(
+              '--env-zip', "desktop\build\release\$envZip",
+              '--env-version', '${{ steps.ver.outputs.env_version }}',
+              '--env-url', "$base/$envZip",
+              '--python', (Get-Content desktop\payload\pbs.lock -Raw | ConvertFrom-Json).pythonVersion
+            )
+          }
+          uv run --no-project python @genArgs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content latest-desktop.json
+
+      - name: Publish payload prerelease
+        shell: pwsh
+        run: |
+          $tag = '${{ steps.ver.outputs.tag }}'
+          $assets = @('desktop\build\release\streamcurves-${{ steps.ver.outputs.apps_version }}.zip')
+          if ('${{ steps.envplan.outputs.needed }}' -eq 'true') {
+            $assets += 'desktop\build\release\streamcurves-${{ steps.ver.outputs.env_version }}.zip'
+          }
+          # --prerelease is load-bearing: a normal release here would compete with the shell
+          # installers for "Latest" (see desktop/RELEASING.md). The tag lands on the commit the
+          # payload was built from.
+          gh release create $tag --repo '${{ github.repository }}' --prerelease `
+            --target '${{ github.sha }}' `
+            --title "StreamCurves Desktop payload $tag" `
+            --notes "Internal payload for StreamCurves Desktop (env: ${{ steps.ver.outputs.env_version }}, apps: ${{ steps.ver.outputs.apps_version }}). Install the app from the latest streamcurves-v* release instead." `
+            @assets
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Refresh rolling streamcurves-current manifest
+        shell: pwsh
+        run: |
+          gh release view streamcurves-current --repo '${{ github.repository }}' *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create streamcurves-current --repo '${{ github.repository }}' --prerelease `
+              --title 'streamcurves-current (rolling payload manifest)' `
+              --notes 'Machine-read by StreamCurves Desktop to discover payload updates. Not for humans - install the app from the latest streamcurves-v* release.'
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          gh release upload streamcurves-current --repo '${{ github.repository }}' latest-desktop.json --clobber
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
