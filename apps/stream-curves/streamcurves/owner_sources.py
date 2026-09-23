@@ -771,6 +771,11 @@ def forced_annotations(metric: str, got: Mapping) -> dict:
             ann["criteriaSource"] = pb.criteria_source(metric, region)
             ann["sourceCitation"] = pb.citation_line(metric, region)
             ann["publishedBenchmark"] = {**pb.provenance(metric), "region": str(region)}
+    else:
+        # a pool, the national donors or a model: the curve rests on stations as
+        # any fitted curve does and states its basis the same way, since DEEP
+        # prints a curve's station support only beside a stated basis
+        ann["criteriaBasis"] = "reference"
     method_text = field_methods.method_context(metric)
     if method_text:
         ann["methodContext"] = method_text

@@ -71,6 +71,7 @@ def test_a_refused_national_option_is_computed_on_its_donors(inputs):
     assert got["decision"]["status"] == "national" and got["decision"]["basis"] == cb.NATIONAL
     assert got["decision"]["screen_detail"]["forced"] is True
     assert any(f["check"] == "ACC-05/06" for f in got["failed"])
+    assert osrc.forced_annotations("phab_XCMGW", got)["criteriaBasis"] == "reference"
 
 
 def test_a_metric_the_catalog_holds_nothing_for_cannot_be_forced(inputs):
@@ -113,6 +114,9 @@ def test_the_decision_waits_then_holds_what_the_build_computed(inputs):
     ann = curve["annotations"]
     assert ann["ownerException"]["rule"] == "REF-11"
     assert ann["referenceSupport"]["status"] == "borrowed_l2"
+    # it rests on stations, and says so as every fitted curve does; DEEP prints a
+    # curve's station support only beside a stated basis
+    assert ann["criteriaBasis"] == "reference"
     assert "refused this source" in ann["curveCaveats"][0] and EM_DASH not in ann["curveCaveats"][0]
     assert oc.pending([filled]) == {}
     eff = oc.effective_build({"method": pe.METHOD}, [filled])
