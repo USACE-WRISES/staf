@@ -228,23 +228,27 @@ def test_a_complete_assessment_needs_no_restriction():
 def _latest_incomplete_bundles():
     """The latest published version of every assessment that leaves a function
     unassessed. Read from the library rather than pinned to a version, so a new
-    publish cannot leave this test checking a superseded bundle."""
+    publish cannot leave this test checking a superseded bundle. Once every latest
+    version covers all twenty functions (2026-09-22), the newest version of each
+    assessment that left one unassessed stands in, so the restriction stays tested."""
     import json
     from pathlib import Path
     root = Path(__file__).resolve().parents[2] / "library" / "assessments"
-    out = {}
+    latest, newest = {}, {}
     for adir in sorted(p for p in root.glob("*") if p.is_dir()):
         versions = sorted(int(v.name[1:]) for v in adir.glob("v*") if v.name[1:].isdigit())
-        if not versions:
-            continue
-        src = adir / f"v{versions[-1]}" / "assessment.deep.json"
-        if not src.exists():
-            continue
-        bundle = json.loads(src.read_text(encoding="utf-8"))
-        fc = bundle.get("functionCoverage") or {}
-        if fc.get("total") and fc.get("covered", 0) < fc["total"]:
-            out[f"{adir.name}@v{versions[-1]}"] = bundle
-    return out
+        for v in reversed(versions):
+            src = adir / f"v{v}" / "assessment.deep.json"
+            if not src.exists():
+                continue
+            bundle = json.loads(src.read_text(encoding="utf-8"))
+            fc = bundle.get("functionCoverage") or {}
+            if fc.get("total") and fc.get("covered", 0) < fc["total"]:
+                if v == versions[-1]:
+                    latest[f"{adir.name}@v{v}"] = bundle
+                newest[f"{adir.name}@v{v}"] = bundle
+                break
+    return latest or newest
 
 
 def test_the_restriction_reaches_the_visible_sheet():
