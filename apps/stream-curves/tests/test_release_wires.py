@@ -112,11 +112,25 @@ def test_every_release_the_payload_workflow_creates_is_a_prerelease():
 
 
 @needs_checkout
-def test_the_two_manifest_writers_run_one_after_the_other():
-    for name in ("streamcurves-shell.yml", "streamcurves-payload.yml"):
-        concurrency = _workflow(name)["concurrency"]
-        assert concurrency["group"] == "streamcurves-current", name
-        assert concurrency["cancel-in-progress"] is False, name
+def test_the_tag_workflows_never_cancel_each_other():
+    """GitHub keeps ONE pending run per concurrency group, so a group shared by the shell and the
+    payload let one tag's runs cancel each other (streamcurves-v1.0.0 lost its payload that way)."""
+    groups = [_workflow(n)["concurrency"] for n in ("streamcurves-shell.yml",
+                                                     "streamcurves-payload.yml")]
+    assert groups[0]["group"] != groups[1]["group"]
+    assert all(g["cancel-in-progress"] is False for g in groups)
+
+
+@needs_checkout
+def test_a_duplicate_tag_event_does_nothing():
+    """GitHub can deliver one tag push twice: a first job finds the release already published and
+    the main job does not run."""
+    for name, main, output in (("streamcurves-shell.yml", "shell", "published"),
+                               ("streamcurves-payload.yml", "payload", "duplicate")):
+        jobs = _workflow(name)["jobs"]
+        assert "check" in jobs and output in jobs["check"]["outputs"], name
+        assert jobs[main]["needs"] == "check", name
+        assert f"needs.check.outputs.{output}" in jobs[main]["if"], name
 
 
 @needs_checkout

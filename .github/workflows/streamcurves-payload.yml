@@ -29,18 +29,38 @@ on:
 permissions:
   contents: write
 
-# Shared with streamcurves-shell: a streamcurves-v* tag fires both, and both rewrite
-# streamcurves-current's manifest, so they run one after the other (each re-downloads the
-# manifest when it starts).
+# Its own group, never shared with streamcurves-shell: GitHub keeps only ONE pending run per
+# group, so a shared group let one tag's runs cancel each other. Runs of this workflow still go
+# one at a time, and each re-downloads the manifest when it starts.
 concurrency:
-  group: streamcurves-current
+  group: streamcurves-payload
   cancel-in-progress: false
 
 env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
+  # GitHub can deliver one tag push twice (it did for streamcurves-v1.0.0). On a push, a payload
+  # already published for this commit means this run is the duplicate, and it does nothing.
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      duplicate: ${{ steps.probe.outputs.duplicate }}
+    steps:
+      - id: probe
+        name: Is a payload for this commit already published?
+        run: |
+          short="${GITHUB_SHA::7}"
+          if [ "$GITHUB_EVENT_NAME" = "push" ] && gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName --jq '.[].tagName' | grep -q -- "^streamcurves-payload-[0-9.]*-${short}"; then
+            echo "duplicate=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::a payload for $short is already published; this run is a duplicate and does nothing."
+          else
+            echo "duplicate=false" >> "$GITHUB_OUTPUT"
+          fi
+
   payload:
+    needs: check
+    if: needs.check.outputs.duplicate != 'true'
     runs-on: windows-latest
     timeout-minutes: 60
     steps:

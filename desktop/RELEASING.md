@@ -17,8 +17,12 @@ repository carries.
 
 Workflows: `.github/workflows/streamcurves-shell.yml` (shell) and
 `.github/workflows/streamcurves-payload.yml` (payload + manifest). Both run on a
-`streamcurves-v*` tag and share the `streamcurves-current` concurrency group, so they run one
-after the other; each re-reads the manifest when it starts. `.github/workflows/library-release.yml`
+`streamcurves-v*` tag, each in its own concurrency group: GitHub keeps only one pending run per
+group, so a shared group let one tag's runs cancel each other (the v1.0.0 payload was lost that
+way and was run by hand). GitHub can also deliver one tag push twice; each workflow's first job
+then finds its release already published, and the duplicate does nothing. The shell's
+manifest stamp and the payload's manifest refresh may interleave; the shell block is
+informational (Velopack owns shell updates). `.github/workflows/library-release.yml`
 publishes the library stream on its own schedule.
 
 ## The rules
