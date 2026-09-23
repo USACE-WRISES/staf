@@ -72,7 +72,8 @@ def main() -> int:
                 "validCells": int(valid.size),
                 "meanOfValidCells": round(float(np.mean(valid)), 2),
             }
-    OUT_INFO.write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8")
+    # LF on every platform: vendored copies of this file are digested into VENDOR_INFO.json.
+    OUT_INFO.write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"wrote {OUT_TIF} ({OUT_TIF.stat().st_size:,} bytes) and {OUT_INFO.name}")
     return 0
 

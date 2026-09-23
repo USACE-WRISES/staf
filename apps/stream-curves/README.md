@@ -35,6 +35,9 @@ The app reads NRSA through `streamcurves.nrsa_dataset`, which knows two datasets
 two files. Every published assessment fingerprints them in its manifest
 (`provenance.build_inputs`), `tests/test_data_provenance.py` pins their sha256,
 and changing them would break the reproducibility of work already published.
+The CSVs were recorded with CRLF line endings, so `.gitattributes` pins their
+bytes (`-text`): every checkout, CI run and desktop payload hashes what was
+recorded.
 
 **`multi-cycle-v1`** is the archive under `data/nrsa/`, built from EPA's own
 public files for 2013-14, 2018-19 and 2023-24. It exists because EPA renames
@@ -67,6 +70,14 @@ cannot place on a reach.
 
 `fetch_nrsa_raw.py --verify` re-checks the live URLs against the lock without
 downloading, so an EPA republication is visible rather than silently absorbed.
+
+`data/nrsa/manifest.json` records every archive file's bytes, and every pooled
+run digests the manifest, so the writers state their line endings instead of
+taking Windows' default: the three files recorded as CRLF (`sources.lock.json`,
+`station_screen.meta.json`, `verification_report.md`) are pinned `-text` in
+`.gitattributes` and rewritten CRLF, and everything else is written LF.
+`tests/test_line_endings.py` fails when a fingerprinted or recorded text file
+turns CRLF in a checkout without a pin.
 The raw CSVs land in `notes/DEEP_Working/nrsa_raw/` and are never committed;
 `data/nrsa/` is, and the build fails if it exceeds 40 MB, because everything
 under `apps/` ships in the desktop payload.

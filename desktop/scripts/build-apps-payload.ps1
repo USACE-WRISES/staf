@@ -3,8 +3,13 @@
 #
 # Staging comes from GIT-TRACKED content only (git archive of HEAD): a checkout carries
 # gitignored material (workspaces, caches, local keys) that must never enter a public release
-# asset, and uncommitted edits are not part of a release either. Two trees ship, as SIBLINGS
-# at the zip root, because the app resolves its library as ..\library (streamcurves/library.py):
+# asset, and uncommitted edits are not part of a release either. The archive is taken from the
+# FULL tree so the root .gitattributes applies: text comes out LF and the -text pins keep their
+# recorded bytes, exactly as in any checkout. (A subtree archive, HEAD:apps, does not read the
+# root .gitattributes, so core.autocrlf would decide: CRLF on a Windows build machine, and the
+# app would then hash different bytes than the maintainer's checkout.) core.autocrlf=false
+# takes the machine's setting out of it. Two trees ship, as SIBLINGS at the zip root, because
+# the app resolves its library as ..\library (streamcurves/library.py):
 #   stream-curves\   apps/stream-curves minus tests\ and brand\ (development-only)
 #   library\         apps/library (the published assessment library)
 #
@@ -28,13 +33,13 @@ $RepoRoot = [IO.Path]::GetFullPath($RepoRoot)
 $OutDir = [IO.Path]::GetFullPath($OutDir)
 $WorkDir = [IO.Path]::GetFullPath($WorkDir)
 
-# Pathspecs relative to the apps/ tree (the archive is taken from HEAD:apps, so the zip root
-# holds stream-curves/ and library/ directly).
+# Pathspecs from the repository root; extraction strips the leading apps/ so the zip root
+# holds stream-curves/ and library/ directly.
 $pathspecs = @(
-    'stream-curves',
-    'library',
-    ':(exclude)stream-curves/tests',
-    ':(exclude)stream-curves/brand'
+    'apps/stream-curves',
+    'apps/library',
+    ':(exclude)apps/stream-curves/tests',
+    ':(exclude)apps/stream-curves/brand'
 )
 
 Push-Location $RepoRoot
@@ -53,9 +58,9 @@ try {
     # -- 1. Stage tracked content only --
     Write-Host '[apps] staging tracked stream-curves + library content via git archive...'
     $tarPath = Join-Path $WorkDir 'apps.tar'
-    git archive --format=tar -o $tarPath 'HEAD:apps' -- @pathspecs
+    git -c core.autocrlf=false archive --format=tar -o $tarPath HEAD -- @pathspecs
     if ($LASTEXITCODE -ne 0) { throw "git archive failed ($LASTEXITCODE)" }
-    tar -xf $tarPath -C $stage
+    tar -xf $tarPath -C $stage --strip-components=1
     if ($LASTEXITCODE -ne 0) { throw "tar extract failed ($LASTEXITCODE)" }
     Remove-Item $tarPath -Force
 
@@ -66,6 +71,10 @@ try {
     foreach ($excluded in @('stream-curves\tests', 'stream-curves\brand')) {
         if (Test-Path (Join-Path $stage $excluded)) { throw "staged payload must not contain $excluded" }
     }
+    # The bytes StreamCurves fingerprints must be the bytes the committed records describe
+    # (data/nrsa_provenance.json, data/nrsa/manifest.json), and the configs must be LF.
+    & $PythonExe (Join-Path $PSScriptRoot 'check_payload_records.py') --stage $stage
+    if ($LASTEXITCODE -ne 0) { throw "staged payload bytes differ from their records ($LASTEXITCODE)" }
 
     # -- 2. Generate desktop-manifest.json (fixed single-app entry; stdlib-only) --
     $genScript = Join-Path $PSScriptRoot 'gen_desktop_manifest.py'

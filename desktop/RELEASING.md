@@ -72,7 +72,13 @@ gh workflow run streamcurves-payload.yml --repo USACE-WRISES/staf
 (or Actions > streamcurves-payload > Run workflow, from `main`). The workflow checks the lock,
 builds the apps zip from the tracked tree (`git archive` of `apps/stream-curves` without
 `tests/` and `brand/`, plus `apps/library`), publishes the `streamcurves-payload-*`
-prerelease and refreshes `streamcurves-current`. On their next check (at start, then every
+prerelease and refreshes `streamcurves-current`. The archive is taken from the full tree with
+`core.autocrlf` off, so the root `.gitattributes` applies and the zip holds exactly a
+checkout's bytes: LF text, plus the CRLF files that `.gitattributes` pins because a record
+holds their bytes. `desktop/scripts/check_payload_records.py` then compares the staged files
+with `data/nrsa_provenance.json` and `data/nrsa/manifest.json` and fails the build on any
+difference. (A subtree archive, `HEAD:apps`, would skip the root `.gitattributes` and emit
+CRLF on a Windows runner.) On their next check (at start, then every
 4 hours) installed shells show the native banner "A StreamCurves app update is ready (31 MB).
 It installs in this window." with **Install update**.
 
