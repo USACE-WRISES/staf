@@ -847,19 +847,16 @@ def _stepper(active):
 # --------------------------------------------------------------------------- #
 # STAF top banner — a single link back to the STAF site; cross-links to the
 # other tier apps were removed to keep the banner minimal. STAF_LINKS still
-# carries every app URL: it is the in-app half of the URL mirror (see README)
-# and the desktop shell rewrites all entries via STAF_LINKS_OVERRIDES.
+# carries every app URL: it is the in-app half of the URL mirror (see README).
+# StreamCurves ships as StreamCurves Desktop, so "curves" is its latest release.
 # --------------------------------------------------------------------------- #
 STAF_LINKS = {
     "home":   "https://usace-wrises.github.io/staf/",
     "easi":   "https://gtmenichino-easi.share.connect.posit.cloud/",
     "sfari":  "https://gtmenichino-sfari.share.connect.posit.cloud/",
-    "curves": "https://gtmenichino-stream-curves.share.connect.posit.cloud/",
+    "curves": "https://github.com/USACE-WRISES/staf/releases/latest",
     "deep":   "https://gtmenichino-deep.share.connect.posit.cloud/",
 }
-_staf_links_overrides = os.environ.get("STAF_LINKS_OVERRIDES")
-if _staf_links_overrides:  # desktop shell rewrites cross-app links; absent on web deploys
-    STAF_LINKS.update(json.loads(_staf_links_overrides))
 
 
 def staf_topnav():
