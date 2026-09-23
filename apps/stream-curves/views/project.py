@@ -757,8 +757,11 @@ def project_server(input, output, session, state: AppState):
                              id="sc-open", duration=None, close_button=False)
         await st.task_flush()
         try:
-            project = await asyncio.to_thread(eio.import_from_checkout, ws.repo_root(),
-                                              imported_by=ep.person() or "maintainer")
+            evidence = os.environ.get("STAF_EVIDENCE_DIR", "").strip()
+            project = await asyncio.to_thread(
+                eio.import_from_checkout, ws.repo_root(), imported_by=ep.person() or "maintainer",
+                evidence_dir=Path(evidence) if evidence and (Path(evidence) / "index.json").is_file()
+                else None)
             await asyncio.to_thread(eio.write_project, project, target, name=target.stem,
                                     prepared_by=prefs.get(prefs.PREPARED_BY) or None)
         except Exception as e:  # noqa: BLE001 - say what happened, then offer the start page

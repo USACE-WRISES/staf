@@ -38,12 +38,15 @@ def main(argv=None) -> int:
     ap.add_argument("--name", default="EASI screening method")
     ap.add_argument("--release-tag", default=None)
     ap.add_argument("--release-date", default=None)
+    ap.add_argument("--evidence", type=Path, default=None,
+                    help="an evidence export folder (index.json): the project names its packages")
     a = ap.parse_args(argv)
     if eio.easi_source(REPO) is None:
         raise SystemExit("apps/easi is not in this checkout; importing needs the EASI source")
     project = eio.import_from_checkout(
         REPO, imported_by=a.by or "maintainer", version=a.version,
-        release=({"tag": a.release_tag, "date": a.release_date} if a.release_tag else None))
+        release=({"tag": a.release_tag, "date": a.release_date} if a.release_tag else None),
+        evidence_dir=a.evidence)
     path = eio.write_project(project, Path(a.out), name=a.name)
     ident = project.identity()
     print(f"imported method {ident['methodVersion']} (package {ident['packageDigest'][7:19]}) "

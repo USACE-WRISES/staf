@@ -17,7 +17,7 @@ others describe code that exists.
 | EASI method files in `apps/easi/data` | today: `apps/easi/scripts/promote_alternative_2.py`, `build_easi_metrics.py` (from `data/source/screening-metrics.tsv`, generated from the metric-library CSV) and `fetch_nars_ecoregions.py`; after adoption: the EASI exporter only | EASI, StreamCurves' vendored copy (`_vendor/easi`), the EASI calculator generator |
 | Library catalog and manifests | `library.publish_version` (DEEP) and `library.publish_easi_version` (EASI), maintainer checkout, `STAF_LIBRARY_PUBLISH=1` | StreamCurves, DEEP, `scripts/library_release.py` |
 | Release feeds `library.json` / `library-v2.json` | `scripts/library_release.py` (CI) | StreamCurves gallery, DEEP remote library |
-| Evidence packages (*planned*) | evidence producers (`tools/easi-national/builder/evidence_export.py`; the NRSA archive builder) | StreamCurves evidence store, refit and exploration |
+| Evidence packages | `tools/easi-national/builder/evidence_export.py` (EASI); the NRSA archive builder (DEEP, in-app) | StreamCurves evidence store (`streamcurves/evidence_store.py`), refit (`easi_method/refit.py`) and exploration |
 | SQT source registry (*planned*) | `scripts/build_sqt_registry.py` | StreamCurves source dialog and candidate register |
 
 A consumer never writes what it reads. After the owner adopts the authority flip, a producer that
@@ -69,9 +69,10 @@ Analytical identity is separate from packaging, review and lifecycle.
   delineation and routing, the vendored site engine and the evaluator assets
   (`physio_divisions.geojson`, `ecoregions_l3.geojson`, `nrsa-2018-19-evidence.json.gz`). Live
   reports and exports carry it beside `method_version`, because a live result depends on both.
-- **Evidence data digest** (*planned*): SHA-256 over the package's data files (name, bytes,
-  sha256); descriptive metadata has its own manifest digest, so rewording a description never
-  breaks a `dependsOn` reference.
+- **Evidence data digest**: SHA-256 over the canonical map of the package's data-file SHA-256s
+  (`dataDigest`); the package digest is the canonical manifest without its producer block, so
+  rewording a description never breaks a `dependsOn` reference and exporting the same data and
+  description again gives the same package digest.
 - **Candidate key and basis digest** (*planned*, see Candidates).
 - **Project id**: a UUID per project file (`project_meta`), unrelated to any analytical identity.
 
@@ -248,7 +249,7 @@ Rules:
   library also needs the canonical gate (`library.publish_gate_reason`), checked in
   `io.publish` itself.
 
-## Evidence (*planned*)
+## Evidence
 
 Three roles stay separate: **development** (fitting), **evaluation** (validation) and
 **operational** (site inputs). A curve's evidence names its role, and `dependsOn` names upstream
@@ -274,11 +275,38 @@ stays visible when agreement between the two is discussed.
 Reproducibility levels: **reviewable** (the values behind a curve can be inspected),
 **refittable** (the curve can be refit from preserved development evidence) and **regenerable**
 (the evidence can be rebuilt from original sources). A package declares its level and itemizes
-what is missing. The store downloads with resume into `.part` files, verifies size and SHA-256
-before a package is ready, extracts with path checks, accepts data file types only, and reuses
-verified packages offline. Hosting is decided at adoption; it uses content-named assets on an
-existing rolling prerelease (a release per package would push the installer out of Velopack's
-10-newest-releases window), and a rolling release URL is a location, never an identity.
+what is missing (`unavailable`, each with a remedy) and what was checked when it was made
+(`checks`). The store (`<data root>/evidence/<packageId>/<data digest 12>/`) downloads with
+resume into `.part` files, verifies size and SHA-256 before a package is ready, extracts into a
+staging folder with path checks (no absolute paths, `..` or links; `evidence.json` and data file
+types under `data/` only; nothing the manifest does not list), and reuses verified packages
+offline. Hosting is decided at adoption; it uses content-named assets on an existing rolling
+prerelease (a release per package would push the installer out of Velopack's 10-newest-releases
+window), and a rolling release URL is a location, never an identity. Until then
+`STREAMCURVES_EVIDENCE_BASE_URL` (a folder or an https base) names where archives are fetched.
+
+EASI's development evidence (the 34 operational curves and the whole curve registry behind
+them) ships as five packages exported from the frozen 2026-09-15 baseline:
+
+| Package | Role | Level | Holds |
+|---|---|---|---|
+| `easi-dev-universe` | development | refittable | every NHDPlus V2 reach in the landscape table's order with the strata, frame and screen columns: the panels step regenerates every level's members from it |
+| `easi-dev-members` | development | refittable | the panel members and panels verbatim, each member's fit input for every fitted quantity, the screen variables, the composite pressure and the 12 monthly EROM flows |
+| `easi-dev-fits` | development | reviewable | the curve registry and knots verbatim, the recipe and the map of the 34 operational curves |
+| `easi-eval-refs` | evaluation | reviewable | the alternatives study's receipts and field summary; the NRSA archive's manifest hash |
+| `easi-operational-ref` | operational | reviewable | the national dataset's build and method identity (hashes only) |
+
+The fit recipe is the builder's code, vendored verbatim into
+`streamcurves/easi_method/fit_recipe.py` by `scripts/vendor_fit_recipe.py` (screens, panel
+selection, quantities, fit wrapper, usability, rho, artifact rounding) with a drift gate;
+`easi_method/refit.py` groups members into fits as the builder does. Refitting from the
+installed packages with every developer path blocked reproduces all 2,752 registry fits and
+the 34 operational curves exactly, and the universe regenerates all 282,113 member rows
+(`scripts/refit_easi_curves.py --panels --block-dev-paths`). An EASI project names the packages
+it was developed from (`project.evidence`: package, version, data digest, roles,
+reproducibility, coverage, archive), never their bytes; its Development data stage shows them,
+downloads, imports and views them, and refits the curves from them. DEEP's development data,
+the in-app NRSA archive, is described and verified the same way on the NRSA explorer page.
 
 ## Candidates and final selection (*planned*)
 

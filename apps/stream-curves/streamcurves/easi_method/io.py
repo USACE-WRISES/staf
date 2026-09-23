@@ -104,19 +104,40 @@ def export_cases(easi_app: Path, *, timeout: float = 900.0) -> dict:
 
 
 def import_from_checkout(repo_root: Path, *, imported_by: str, version: int = 1,
-                         release: Optional[dict] = None) -> EasiProject:
+                         release: Optional[dict] = None,
+                         evidence_dir: Optional[Path] = None) -> EasiProject:
     """EASI's current method from a checkout's ``apps/easi``: the eight method files byte for
     byte, the preview cases EASI exports, the committed calculator (generated from exactly
-    these files) and the promotion receipt. Nothing is written to ``apps/easi``."""
+    these files) and the promotion receipt. Nothing is written to ``apps/easi``.
+    ``evidence_dir`` is an evidence export (``index.json`` and one folder per package): the
+    project then names those packages as its development data."""
     easi = easi_source(repo_root)
     if easi is None:
         raise RuntimeError("apps/easi is not in this checkout; importing needs the EASI source")
     calc = easi / "www" / "calculator" / "EASI_Calculator_1.0.xlsx"
-    return import_from_easi(easi / "data", imported_by=imported_by, version=version,
-                            cases=export_cases(easi),
-                            calculator=calc if calc.is_file() else None,
-                            promotion_receipt=easi / "data" / "source" / "alternative-2-promotion.json",
-                            release=release)
+    project = import_from_easi(easi / "data", imported_by=imported_by, version=version,
+                               cases=export_cases(easi),
+                               calculator=calc if calc.is_file() else None,
+                               promotion_receipt=easi / "data" / "source" / "alternative-2-promotion.json",
+                               release=release)
+    if evidence_dir is not None:
+        project.evidence = evidence_references(Path(evidence_dir))
+    return project
+
+
+def evidence_references(evidence_dir: Path) -> list[dict]:
+    """References to the packages of an evidence export, each with the archive it ships as."""
+    from .. import evidence_store as evs
+    from .evidence import reference
+    index = json.loads((evidence_dir / "index.json").read_text(encoding="utf-8"))
+    refs = []
+    for package_id, rec in sorted(index.items()):
+        doc = evs.read_manifest(evidence_dir / package_id)
+        if doc["dataDigest"] != rec.get("dataDigest"):
+            raise ValueError(f"{package_id}: the export's index and its manifest disagree")
+        archive = {"name": rec["zip"], "sha256": rec["zipSha256"], "bytes": int(rec["zipBytes"])}
+        refs.append(reference(doc, archive=archive, package_digest=evs.package_digest(doc)))
+    return refs
 
 
 def consumer_package(project: EasiProject, *, status: Optional[str] = None) -> mp.MethodPackage:
