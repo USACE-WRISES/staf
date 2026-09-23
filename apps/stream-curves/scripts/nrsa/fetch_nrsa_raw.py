@@ -151,7 +151,10 @@ def write_lock(lock: dict) -> None:
     lock["files"] = dict(sorted(lock["files"].items()))
     lock["updatedAt"] = _now()
     LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
-    LOCK_PATH.write_text(json.dumps(lock, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    # CRLF on every platform: the archive manifest records the lock's CRLF bytes and
+    # .gitattributes pins them (-text), so a rerun on any OS reproduces the recorded file.
+    LOCK_PATH.write_text(json.dumps(lock, indent=2, sort_keys=False) + "\n", encoding="utf-8",
+                         newline="\r\n")
 
 
 # --------------------------------------------------------------------------- #

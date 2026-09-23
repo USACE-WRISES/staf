@@ -146,6 +146,59 @@ def test_every_reader_looks_in_this_repository():
 
 
 # --------------------------------------------------------------------------- #
+# The apps payload carries the checkout's bytes
+# --------------------------------------------------------------------------- #
+def _payload_script_lines() -> list[str]:
+    text = (DESKTOP / "scripts" / "build-apps-payload.ps1").read_text(encoding="utf-8")
+    return [ln.strip() for ln in text.splitlines() if ln.strip() and not ln.strip().startswith("#")]
+
+
+@needs_checkout
+def test_the_payload_archive_honours_gitattributes():
+    """A subtree archive (HEAD:apps) skips the root .gitattributes, so core.autocrlf would decide
+    the line endings (CRLF on a Windows build machine) and the app would hash other bytes than
+    the maintainer's checkout. The full tree, with the machine's setting switched off, does not."""
+    lines = _payload_script_lines()
+    archive = [ln for ln in lines if ln.startswith("git ") and " archive " in ln]
+    assert len(archive) == 1, archive
+    assert "core.autocrlf=false" in archive[0]
+    assert " HEAD -- " in archive[0] and "HEAD:" not in archive[0]
+    assert any(ln.startswith("tar -xf") and "--strip-components=1" in ln for ln in lines)
+    assert any("check_payload_records.py" in ln for ln in lines)
+
+
+def _payload_records():
+    spec = importlib.util.spec_from_file_location(
+        "check_payload_records", DESKTOP / "scripts" / "check_payload_records.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+@needs_checkout
+def test_the_payload_check_refuses_bytes_that_differ_from_their_records(tmp_path):
+    mod = _payload_records()
+    data = tmp_path / "stream-curves" / "data"
+    (data / "nrsa").mkdir(parents=True)
+    body = b"a,b\r\n1,2\r\n"
+    (data / "sites.csv").write_bytes(body)
+    record = {"file": "sites.csv", "bytes": len(body),
+              "sha256": "sha256:" + hashlib.sha256(body).hexdigest()}
+    (data / "nrsa_provenance.json").write_text(json.dumps({"files": [record]}), encoding="utf-8")
+    (data / "nrsa" / "manifest.json").write_text(json.dumps({"files": {}}), encoding="utf-8")
+    config = tmp_path / "stream-curves" / "config"
+    config.mkdir()
+    (config / "metric_map.yaml").write_bytes(b"a: 1\n")
+    assert mod.check(tmp_path) == []
+
+    (data / "sites.csv").write_bytes(body.replace(b"\r\n", b"\n"))     # an LF copy of a CRLF record
+    assert any("sites.csv" in p for p in mod.check(tmp_path))
+    (data / "sites.csv").write_bytes(body)
+    (config / "metric_map.yaml").write_bytes(b"a: 1\r\n")               # the autocrlf leak
+    assert any("metric_map.yaml" in p for p in mod.check(tmp_path))
+
+
+# --------------------------------------------------------------------------- #
 # The library builder
 # --------------------------------------------------------------------------- #
 _PATTERNS = {
