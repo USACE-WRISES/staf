@@ -94,6 +94,7 @@ class Version:
     revision_notes: str | None
     assets: dict = field(default_factory=dict)       # kind -> Asset
     assessment_type: str = "deep"
+    method_version: str | None = None                # an EASI version: the identity EASI reports
 
     @property
     def in_deep(self) -> bool:
@@ -200,7 +201,8 @@ def version_from_library(aid: str, row: dict, *, assets: dict | None = None,
         content_digest=row.get("contentDigest") or lib.version_content_digest(aid, v),
         metrics=n_metrics, functions_covered=covered,
         revision_notes=(row.get("revisionNotes") or None),
-        assets=dict(assets or {}), assessment_type=assessment_type)
+        assets=dict(assets or {}), assessment_type=assessment_type,
+        method_version=(row.get("methodVersion") or None) if assessment_type == "easi" else None)
 
 
 def entries_from_library(*, assets_for: Callable[[str, int], dict] | None = None) -> list[Entry]:
@@ -311,6 +313,7 @@ def catalog_doc(entries: Iterable[Entry], *, source_commit: str | None = None,
                 "functionsCovered": v.functions_covered, "revisionNotes": v.revision_notes,
                 "assets": {k: ({"name": a.name, "size": a.size, "sha256": a.sha256}
                                if a is not None else None) for k, a in v.assets.items()},
+                **({"methodVersion": v.method_version} if e.type == "easi" else {}),
             } for v in e.versions],
         })
     return doc
@@ -369,7 +372,9 @@ def parse_catalog(text: str) -> list[Entry]:
                                        if isinstance(v.get("functionsCovered"), int) else None),
                     revision_notes=v.get("revisionNotes") or None,
                     assets={k: x for k, x in assets.items() if x is not None},
-                    assessment_type=atype))
+                    assessment_type=atype,
+                    method_version=(str(v.get("methodVersion")) if atype == "easi"
+                                    and v.get("methodVersion") else None)))
             if not versions:
                 continue
             versions.sort(key=lambda x: -x.version)

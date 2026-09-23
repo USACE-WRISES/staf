@@ -60,6 +60,7 @@ from views.source_dialog import DIALOG_ID as SOURCE_DIALOG_ID, source_dialog_ser
 from views.rules import rules_server, rules_ui
 from views.validate_page import validate_server, validate_ui
 from views.data_overview import data_overview_server, data_overview_ui
+from views.easi_page import easi_page_server, easi_page_ui
 from views.stagebar import project_panel_ui, stagebar_server, stagebar_ui
 from views.publish import publish_server, publish_ui
 from views.phase1 import phase1_server, phase1_ui
@@ -97,6 +98,8 @@ _PANELS = [
                  value="curves"),
     ui.nav_panel("Publish", ui.div(publish_ui("publish"), class_="mt-3"), value="publish"),
     ui.nav_panel("Validate", ui.div(validate_ui("validate"), class_="mt-3"), value="validate"),
+    # an EASI method project's page (its five stages switch state.easi_stage, not panels)
+    ui.nav_panel("EASI method", ui.div(easi_page_ui("easi"), class_="mt-3"), value="easi"),
     # the tools (run_state.TOOL_KEYS): keep these nav values in sync with TOOL_KEYS
     ui.nav_panel("Regional Curves", ui.div(regional_curve_ui("regional"), class_="mt-3"),
                  value="regional"),
@@ -171,6 +174,7 @@ def server(input, output, session):
     validate_server("validate", state,
                     active=lambda: state.current_tab() == "validate")
     publish_server("publish", state)
+    easi_page_server("easi", state)
     summary_export_server("summary_export", state)
     # where a curve from another source comes from: opened by gallery tiles,
     # the Table and the mapping chips through one input

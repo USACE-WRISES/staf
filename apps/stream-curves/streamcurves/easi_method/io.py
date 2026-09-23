@@ -83,6 +83,42 @@ def import_from_easi(data_dir: Path, *, imported_by: str, version: int = 1,
     return project
 
 
+def easi_source(repo_root: Path) -> Optional[Path]:
+    """``apps/easi`` in a checkout, or None when this copy has no EASI source."""
+    easi = Path(repo_root) / "apps" / "easi"
+    return easi if (easi / "data").is_dir() and (easi / "scripts" / "export_preview_cases.py").is_file()         else None
+
+
+def export_cases(easi_app: Path, *, timeout: float = 900.0) -> dict:
+    """The preview case set, written by EASI's own exporter in its own process."""
+    import subprocess
+    import sys
+    import tempfile
+    with tempfile.TemporaryDirectory(prefix="sc-easi-cases-") as tmp:
+        out = Path(tmp) / "cases.json"
+        proc = subprocess.run([sys.executable, "-B", "scripts/export_preview_cases.py", str(out)],
+                              cwd=str(easi_app), capture_output=True, text=True, timeout=timeout)
+        if proc.returncode != 0 or not out.is_file():
+            raise RuntimeError(f"EASI's preview case export failed: {(proc.stderr or '')[-1500:]}")
+        return json.loads(out.read_text(encoding="utf-8"))
+
+
+def import_from_checkout(repo_root: Path, *, imported_by: str, version: int = 1,
+                         release: Optional[dict] = None) -> EasiProject:
+    """EASI's current method from a checkout's ``apps/easi``: the eight method files byte for
+    byte, the preview cases EASI exports, the committed calculator (generated from exactly
+    these files) and the promotion receipt. Nothing is written to ``apps/easi``."""
+    easi = easi_source(repo_root)
+    if easi is None:
+        raise RuntimeError("apps/easi is not in this checkout; importing needs the EASI source")
+    calc = easi / "www" / "calculator" / "EASI_Calculator_1.0.xlsx"
+    return import_from_easi(easi / "data", imported_by=imported_by, version=version,
+                            cases=export_cases(easi),
+                            calculator=calc if calc.is_file() else None,
+                            promotion_receipt=easi / "data" / "source" / "alternative-2-promotion.json",
+                            release=release)
+
+
 def consumer_package(project: EasiProject, *, status: Optional[str] = None) -> mp.MethodPackage:
     """The method package EASI loads: the method files plus the envelope; a calculator
     only when it was generated from exactly these files."""
@@ -107,15 +143,19 @@ def export_zip(project: EasiProject, out: Optional[Path] = None, *,
     return blob, {**pkg.envelope["identity"], "zipSha256": sha(blob), "zipBytes": len(blob)}
 
 
-def fork(project: EasiProject, *, by: str, label: Optional[str] = None) -> EasiProject:
-    """A draft revision of ``project``: the next version number, the origin recorded (its
-    version, package and method identities), the register and notes carried, a fork record
-    at the head of its history. The origin is never modified."""
+def fork(project: EasiProject, *, by: str, label: Optional[str] = None,
+         version: Optional[int] = None) -> EasiProject:
+    """A draft revision of ``project``: the next version number (``version`` when the
+    library's next number is higher, as for a revision of an older version), the origin
+    recorded (its version, package and method identities), the register and notes carried,
+    a fork record at the head of its history. The origin is never modified."""
     new = project.copy()
+    new.base = {}                       # the fork's origin is exactly the files it starts from
     ident = project.identity()
     now = _now()
     base_version = int(project.meta.get("version") or 1)
-    new.meta["version"] = base_version + 1
+    new_version = max(base_version + 1, int(version or 0))
+    new.meta["version"] = new_version
     new.meta["status"] = "draft"
     new.meta["created"] = now
     new.meta["updated"] = now
@@ -131,7 +171,7 @@ def fork(project: EasiProject, *, by: str, label: Optional[str] = None) -> EasiP
     new.meta["lineage"] = lineage
     new.history = list(project.history) + [{
         "action": "fork", "at": now, "by": by, "kind": "lifecycle",
-        "detail": f"draft revision v{base_version + 1} of v{base_version} "
+        "detail": f"draft revision v{new_version} of v{base_version} "
                   f"(method {ident['methodVersion']})"}]
     return new
 
@@ -141,9 +181,10 @@ REGION = {"kind": "national", "code": "CONUS", "name": "Contiguous United States
 
 def write_project(project: EasiProject, path: Path, *, name: str, prepared_by: Optional[str] = None,
                   desktop_project: bool = True, origin: Optional[dict] = None,
-                  meta: Optional[dict] = None) -> Path:
+                  meta: Optional[dict] = None, origin_files: Optional[dict] = None) -> Path:
     """Write ``project`` as a StreamCurves project file (format 2, assessment type easi).
-    ``meta`` carries an existing project's identity (id, created) on a save."""
+    ``meta`` carries an existing project's identity (id, created) on a save;
+    ``origin_files`` the ``origin/`` files it was opened with (a library copy's records)."""
     from .. import project_file as pf
     from .. import project_meta as pm
     m = dict(meta or {})
@@ -157,7 +198,8 @@ def write_project(project: EasiProject, path: Path, *, name: str, prepared_by: O
     m["region"] = dict(REGION)
     text = pf.session_text_from_fields({}, session_name=name)
     return pf.write_project(path, meta=m, session_text=text, parts=project.to_parts(),
-                            assessment_type="easi", desktop_project=desktop_project)
+                            assessment_type="easi", desktop_project=desktop_project,
+                            origin=origin_files)
 
 
 def read_project(source):
@@ -177,19 +219,30 @@ ASSESSMENT_NAME = "EASI screening method"
 
 
 def publish(project: EasiProject, *, author: str, revision_notes: str = "", status: str = "draft",
-            assessment_id: str = ASSESSMENT_ID) -> int:
+            assessment_id: str = ASSESSMENT_ID, consequences: Optional[dict] = None) -> int:
     """Publish ``project`` as the next version of the library's EASI method (maintainer).
 
     The library receives the method package exactly as EASI would load it, the authoring
     record beside it (register, decisions, lineage, notes, history) and the preview cases.
-    Returns the new version number. The project's own version must be that number."""
+    ``consequences`` is the reviewed preview summary (``evaluate.preview``), kept in the
+    version's provenance. Returns the new version number. The project's own version must
+    be that number, and no changed function may still wait for its confirmation."""
     from .. import library as lib
+    if lib.is_canonical_root():
+        reason = lib.publish_gate_reason(author)
+        if reason:
+            raise RuntimeError(reason)
+    pending = reg.needs_review(project)
+    if pending:
+        names = ", ".join(r["functionName"] for r in pending)
+        raise ValueError(f"confirm the changed selections before publishing: {names}")
     pkg = consumer_package(project, status=status)
     doc = json.loads(project.to_parts()["easi/package.json"].decode("utf-8"))
     ident = project.identity()
     provenance = {"kind": "easi-method", "methodId": project.meta.get("methodId"),
                   "identity": ident, "lineage": project.meta.get("lineage"),
-                  "history": project.history, "publishedBy": author}
+                  "history": project.history, "publishedBy": author,
+                  "consequences": consequences}
     meta = {"assessmentName": ASSESSMENT_NAME, "region": dict(REGION), "author": author,
             "revisionNotes": revision_notes}
     return lib.publish_easi_version(assessment_id, meta, envelope=pkg.envelope, files=pkg.files,

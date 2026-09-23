@@ -99,7 +99,8 @@ def candidate_key(identity: dict) -> str:
 def _function_rows(project) -> list[tuple[str, dict, dict, dict]]:
     cat = project.catalog()
     metrics = {m["metricId"]: m for m in project.metrics().get("metrics", [])}
-    cwa = {r["id"]: r for r in json.loads(project.files["cwa-mapping.json"].decode("utf-8"))}
+    from .model import parsed
+    cwa = {r["id"]: r for r in parsed(project.files["cwa-mapping.json"])}
     rows = []
     for m in cat.get("methods", []):
         meta = metrics.get(m["metricId"], {})
@@ -161,7 +162,56 @@ def status_rows(project) -> list[dict]:
                     "methodKey": method["methodKey"],
                     "selectedCandidate": latest and latest["candidateKey"],
                     "decidedBy": latest and latest.get("decidedBy"),
+                    "who": latest and latest.get("who"),
                     "needsReview": needs_review,
                     "alternatives": sum(1 for d in decs if d.get("decision") != "selected"),
                     "candidates": [cands[d["candidateKey"]] for d in decs if d["candidateKey"] in cands]})
     return out
+
+
+def confirm_selection(project, function_id: str, *, by: str, reason: str, at: str):
+    """A person confirms, after an analytical change, that the function keeps its selected
+    method as it now stands. Returns a new project whose register records the decision
+    (``decidedBy: person``, the current ``basisDigest``, the decision it supersedes) and
+    whose selected candidate carries the current content; earlier decisions stay."""
+    reason = str(reason or "").strip()
+    who = str(by or "").strip()
+    if not reason:
+        raise ValueError("say why the selection stands (a short reason is recorded)")
+    if not who:
+        raise ValueError("a confirmation needs the name of the person making it")
+    rows = {r["functionId"]: r for r in status_rows(project)}
+    row = rows.get(function_id)
+    if row is None:
+        raise ValueError(f"no function {function_id!r} in this method")
+    if not row["selectedCandidate"]:
+        raise ValueError(f"{row['functionName']} has no selected method to confirm")
+    curves = project.curves()
+    current = next(basis_digest(m, curves, meta, cwa) for fid, m, meta, cwa in _function_rows(project)
+                   if fid == function_id)
+    new = project.copy()
+    reg = new.register
+    prior = [d for d in reg.get("decisions", []) if d.get("functionId") == function_id
+             and d.get("decision") == "selected"]
+    ident = project.identity()
+    cid = row["selectedCandidate"]
+    for c in reg.get("candidates", []):
+        if c.get("candidateKey") == cid:
+            c["basisDigest"] = current
+            c["methodVersion"] = ident["methodVersion"]
+            c["dataFingerprint"] = ident["packageDigest"]
+    n = sum(1 for d in reg.get("decisions", []) if d.get("candidateKey") == cid)
+    reg.setdefault("decisions", []).append({
+        "decisionId": f"dec-{cid[5:]}-{n + 1}", "candidateKey": cid, "functionId": function_id,
+        "decision": "selected", "rule": "confirmed-after-change", "reason": reason,
+        "decidedBy": "person", "who": who, "when": at, "basisDigest": current,
+        "supersedes": prior[-1]["decisionId"] if prior else None})
+    new.history.append({"action": "confirm_selection", "at": at, "by": who, "kind": "decision",
+                        "reason": reason, "target": {"functionId": function_id,
+                                                     "candidateKey": cid}})
+    return new
+
+
+def needs_review(project) -> list[dict]:
+    """The functions whose selected method changed after it was decided."""
+    return [r for r in status_rows(project) if r["needsReview"]]

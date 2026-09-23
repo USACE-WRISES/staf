@@ -113,3 +113,69 @@ def compare(base: dict, draft: dict) -> dict:
                          "max": max(eci) if eci else None,
                          "meanAbs": (sum(abs(x) for x in eci) / len(eci)) if eci else None},
             "identity": {"base": base.get("identity"), "draft": draft.get("identity")}}
+
+
+# --------------------------------------------------------------------------- #
+# the consequences preview: a draft against the version it came from
+# --------------------------------------------------------------------------- #
+def _cases_digest(cases: dict) -> str:
+    import hashlib
+    return hashlib.sha256(json.dumps(cases, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def _result_cache(package: mp.MethodPackage, cases_digest: str) -> Path:
+    import hashlib
+    key = hashlib.sha256(f"{package.digest}|{mp.evaluator_digest()}|{cases_digest}"
+                         .encode("utf-8")).hexdigest()[:24]
+    root = method_cache_root().parent / "easi-previews"
+    root.mkdir(parents=True, exist_ok=True)
+    return root / f"{key}.json"
+
+
+def run_cached(package: mp.MethodPackage, cases: dict, *, cases_digest: Optional[str] = None,
+               **kw) -> dict:
+    """``run_cases`` with the result kept on disk, keyed by package, evaluator and cases.
+    A cached result is used only when the identity it records is the one asked for."""
+    path = _result_cache(package, cases_digest or _cases_digest(cases))
+    if path.is_file():
+        try:
+            out = json.loads(path.read_text(encoding="utf-8"))
+            ident = out.get("identity") or {}
+            if ident.get("packageDigest") == package.digest and \
+                    ident.get("evaluatorDigest") == mp.evaluator_digest():
+                out["cached"] = True
+                return out
+        except (OSError, ValueError):
+            pass
+    out = run_cases(package, cases, **kw)
+    tmp = path.with_suffix(".part")
+    tmp.write_text(json.dumps(out, sort_keys=True, default=str), encoding="utf-8")
+    os.replace(tmp, path)
+    return out
+
+
+def preview(project: EasiProject, **kw) -> dict:
+    """The draft's consequences against its origin on the project's case set, both scored
+    in their own worker processes at once (the origin's result is reused from the cache).
+    The summary names the identities scored, never the raw results."""
+    from concurrent.futures import ThreadPoolExecutor
+    from .io import consumer_package
+    if not project.cases or not project.cases.get("cases"):
+        raise EvaluationError("this project has no preview cases")
+    if not project.origin_verified():
+        raise EvaluationError("the version this draft came from cannot be recovered exactly")
+    origin = project.copy()
+    origin.files = project.origin_files()
+    origin.base = {}
+    base_pkg, draft_pkg = consumer_package(origin), consumer_package(project)
+    digest = _cases_digest(project.cases)
+    t0 = time.perf_counter()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        fb = pool.submit(run_cached, base_pkg, project.cases, cases_digest=digest, **kw)
+        fd = pool.submit(run_cached, draft_pkg, project.cases, cases_digest=digest, **kw)
+        base, draft = fb.result(), fd.result()
+    out = compare(base, draft)
+    out.update({"packageDigest": project.package_digest, "originDigest": base_pkg.digest,
+                "casesDigest": digest, "seconds": round(time.perf_counter() - t0, 2),
+                "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
+    return out

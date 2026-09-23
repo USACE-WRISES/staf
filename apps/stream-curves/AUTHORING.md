@@ -13,9 +13,9 @@ others describe code that exists.
 |---|---|---|
 | DEEP bundle `assessment.deep.json` | StreamCurves publish (`library.publish_version`) | DEEP (baked registry, local merge, remote `library` release) |
 | DEEP calculator `calculator.xlsx` | `streamcurves/deep_calculator.py` at publish | DEEP (`www/calculators`), the `library` release |
-| EASI method package | StreamCurves EASI exporter (`streamcurves/easi_method`) | EASI (`EASI_METHOD_PACKAGE`), the `library` release (*planned*) |
+| EASI method package | StreamCurves EASI exporter (`streamcurves/easi_method`) | EASI (`EASI_METHOD_PACKAGE`), the `library` release |
 | EASI method files in `apps/easi/data` | today: `apps/easi/scripts/promote_alternative_2.py`, `build_easi_metrics.py` (from `data/source/screening-metrics.tsv`, generated from the metric-library CSV) and `fetch_nars_ecoregions.py`; after adoption: the EASI exporter only | EASI, StreamCurves' vendored copy (`_vendor/easi`), the EASI calculator generator |
-| Library catalog and manifests | `library.publish_version` (maintainer checkout, `STAF_LIBRARY_PUBLISH=1`) | StreamCurves, DEEP, `scripts/library_release.py` |
+| Library catalog and manifests | `library.publish_version` (DEEP) and `library.publish_easi_version` (EASI), maintainer checkout, `STAF_LIBRARY_PUBLISH=1` | StreamCurves, DEEP, `scripts/library_release.py` |
 | Release feeds `library.json` / `library-v2.json` | `scripts/library_release.py` (CI) | StreamCurves gallery, DEEP remote library |
 | Evidence packages (*planned*) | evidence producers (`tools/easi-national/builder/evidence_export.py`; the NRSA archive builder) | StreamCurves evidence store, refit and exploration |
 | SQT source registry (*planned*) | `scripts/build_sqt_registry.py` | StreamCurves source dialog and candidate register |
@@ -36,7 +36,7 @@ and changes the calculator's digest. None of them changes on this branch: new be
 `method_package.py`, `easi/__init__.py`, the report and app code. `tests/test_method_package.py`
 pins `method_version() == b2e3033116e3`; StreamCurves' tests pin its vendored copy the same way.
 
-## Assessment types (*planned*)
+## Assessment types
 
 Every library assessment has a type. Absence means `deep`, so every existing manifest, catalog
 entry, pack and bundle keeps its meaning.
@@ -179,16 +179,19 @@ re-vendoring with the drift gates, never through a package or an environment var
 A project is a zip `<Name>.streamcurves`: `project.json`, `session.streamcurves.json` and
 `origin/*` (`streamcurves/project_file.py`).
 
-*Planned:* the app reads formats 1 and 2 and writes the lowest format a project needs. Format 2
-adds `assessment_type` and, for EASI, the parts `easi/package.json` (lineage, candidate register,
-decisions, evidence references, recipes, notes), `easi/method/<file>`, `easi/calculator/<file>` and
-`easi/cases.json`; the session then holds interface state only. A DEEP project stays format 1
+The app reads formats 1 and 2 and writes the lowest format a project needs. Format 2 adds
+`assessment_type` and, for EASI, the parts `easi/package.json` (meta, lineage, candidate register,
+decisions, evidence references, recipes, notes, history), `easi/method/<file>`,
+`easi/calculator/<file>`, `easi/cases.json` and `easi/base/<file>` (the origin's bytes of each
+method file a draft changed, so the version it came from is recoverable from the project alone and
+checked against the origin's package digest); an EASI project's session is empty and its interface
+state (the current stage) rides in `project.json`. A DEEP project stays format 1
 unless it carries content an older app would drop (added SQT candidates, final-selection
 decisions). StreamCurves 1.0.0 refuses a format-2 file with "update the app" instead of opening it
 and dropping what it cannot read. Packs are named with the pack schema they hold (`-p1-`, `-p2-`),
 and every DEEP pack stays format 1.
 
-## Library feeds (*planned*)
+## Library feeds
 
 | Feed | Schema | Lists | Readers |
 |---|---|---|---|
@@ -202,6 +205,48 @@ change only when their bytes do (packs embed the app version). `check`, `upload`
 work on the union of both catalogs, and both catalogs upload last. EASI assets: the pack
 (`<id>-v<N>-p2-<sha8>.streamcurves`), the method package (`<id>-v<N>-<sha8>.easi-method.zip`) and
 evidence manifests.
+
+## EASI projects in StreamCurves
+
+An EASI project opens in the same shell as a DEEP project, with its own five stages in the strip
+and the Project panel (`streamcurves/easi_method/stages.py`, `views/easi_page.py`):
+
+1. **Method**: the identity EASI reports (method version, package digest, evaluator digest),
+   where the version came from, and the 20 functions with how each one scores.
+2. **Development data**: the reference screen the curves record, and the development data
+   packages the project carries.
+3. **Curves and criteria**: the 34 reference curves by family and stratum, every fixed band
+   and the regional nutrient edges.
+4. **Final selection**: the method selected for each function and who decided it.
+5. **Review and publish**: what changed from the origin, its consequences, the method package
+   download and, in a maintainer's checkout, publishing the next version.
+
+Rules:
+
+- Only a draft revision is edited. An import or an opened library version stays exactly as it
+  is; *Start vN* forks it (`io.fork`) into the next version, numbered after both the origin and
+  the library's latest. A fork records its origin (version, method version, package digest).
+- Supported edits (`easi_method.edit`): band edges and which side owns them, regional TN and TP
+  edges, curve knots, and display text. Every edit needs a reason and becomes one history record
+  and one undo step. A moved edge rewrites the two band labels and the plot annotation EASI shows
+  at that edge; a count scale has no shared edge and is refused. A changed curve's 0.39 and 0.69
+  crossings are recomputed and a curve that misses either break is refused. An edit returned to
+  the origin's values restores the origin's bytes exactly (labels and identity included), so an
+  undone experiment never leaves a changed method behind. No edit trail is written into a method
+  file: history and provenance carry it.
+- Operators, inputs, data routes, derivations, weights, anchors and the rollup are the
+  evaluator's (its digest is shown) and change only in EASI itself.
+- An analytical change flags its function in Final selection. A person confirms the selection
+  with a reason (`register.confirm_selection`, `decidedBy: person`), and the library refuses a
+  version with a flag still open.
+- The consequences preview scores the draft and its origin on the project's preview cases in
+  worker processes, never in the app's own EASI; results are cached by package, evaluator and
+  case set. The preview cases are EASI's calculator test cases (every band edge, curve crossing
+  and fallback route around one reach): they show which rules move, not how many real reaches
+  would. The reviewed summary is kept in the published version's provenance.
+- Publishing a revision needs a current preview in the app; publishing into the canonical
+  library also needs the canonical gate (`library.publish_gate_reason`), checked in
+  `io.publish` itself.
 
 ## Evidence (*planned*)
 

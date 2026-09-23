@@ -12,10 +12,16 @@ On disk it is a format-2 StreamCurves project (``project_file``) whose zip holds
     easi/method/<file>       the eight method files, exact bytes
     easi/calculator/<file>   optional calculator generated for these files
     easi/cases.json          the preview case set (inputs only)
+    easi/base/<file>         the origin's bytes of each method file this draft changed
+
+The origin (the version a draft was forked from, or the import) is always recoverable:
+the current files with the ``base`` bytes laid over them, checked against the origin's
+package digest in the lineage. Unchanged files are never stored twice.
 """
 from __future__ import annotations
 
 import copy
+import functools
 import hashlib
 import json
 from dataclasses import dataclass, field
@@ -27,12 +33,20 @@ PACKAGE_PART = "easi/package.json"
 METHOD_PREFIX = "easi/method/"
 CALCULATOR_PREFIX = "easi/calculator/"
 CASES_PART = "easi/cases.json"
+BASE_PREFIX = "easi/base/"
 PROJECT_SCHEMA = 1
 ASSESSMENT_TYPE = "easi"
 
 
 def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+@functools.lru_cache(maxsize=24)
+def parsed(blob: bytes):
+    """A method file's JSON, parsed once per content. Shared: read it, never change it
+    (the edit functions parse their own copy)."""
+    return json.loads(blob.decode("utf-8"))
 
 
 @dataclass
@@ -48,6 +62,8 @@ class EasiProject:
     notes: dict = field(default_factory=dict)
     history: list = field(default_factory=list)
     cases: Optional[dict] = None
+    #: The origin's bytes of each method file this project changed (name -> bytes).
+    base: dict = field(default_factory=dict)
 
     # identities --------------------------------------------------------------
     @property
@@ -65,22 +81,53 @@ class EasiProject:
         origin = (self.meta.get("lineage") or {}).get("origin") or {}
         return origin.get("packageDigest") == self.package_digest
 
+    def origin(self) -> dict:
+        return dict((self.meta.get("lineage") or {}).get("origin") or {})
+
+    def is_revision(self) -> bool:
+        """A draft revision (forked from a version): the only kind of project whose
+        method may be edited. An import or an opened library version is the method
+        as it was, kept unchanged."""
+        return self.origin().get("kind") == "revision"
+
+    def origin_files(self) -> dict[str, bytes]:
+        """The origin's method files: these files with the stored base bytes over them."""
+        return {**self.files, **self.base}
+
+    def origin_verified(self) -> bool:
+        """True when the recovered origin files are exactly the origin the lineage names."""
+        want = self.origin().get("packageDigest")
+        got = mp.package_digest({n: sha(b) for n, b in self.origin_files().items()})
+        return bool(want) and got == want
+
+    def set_file(self, name: str, blob: bytes) -> None:
+        """Replace one method file, keeping the origin's bytes the first time it changes
+        and forgetting them once the file is back to exactly its origin bytes."""
+        if name not in self.files:
+            raise KeyError(name)
+        if name not in self.base and self.files[name] != blob:
+            self.base[name] = self.files[name]
+        self.files[name] = blob
+        if self.base.get(name) == blob:
+            del self.base[name]
+
     def copy(self) -> "EasiProject":
         return EasiProject(meta=copy.deepcopy(self.meta), files=dict(self.files),
                            calculator=self.calculator, register=copy.deepcopy(self.register),
                            evidence=copy.deepcopy(self.evidence), recipes=copy.deepcopy(self.recipes),
                            notes=copy.deepcopy(self.notes), history=copy.deepcopy(self.history),
-                           cases=self.cases)
+                           cases=self.cases, base=dict(self.base))
 
     # catalog views -----------------------------------------------------------
+    # Read-only views, parsed once per content (see ``parsed``).
     def catalog(self) -> dict:
-        return json.loads(self.files["screening-methods.json"].decode("utf-8"))
+        return parsed(self.files["screening-methods.json"])
 
     def curves(self) -> dict:
-        return json.loads(self.files["reference-curves.json"].decode("utf-8"))
+        return parsed(self.files["reference-curves.json"])
 
     def metrics(self) -> dict:
-        return json.loads(self.files["easi-metrics.json"].decode("utf-8"))
+        return parsed(self.files["easi-metrics.json"])
 
     # parts ---------------------------------------------------------------------
     def to_parts(self) -> dict[str, bytes]:
@@ -89,7 +136,8 @@ class EasiProject:
                "recipes": self.recipes, "notes": self.notes, "history": self.history,
                "files": {n: {"bytes": len(b), "sha256": sha(b)} for n, b in sorted(self.files.items())},
                "calculator": ({"name": self.calculator[0], "bytes": len(self.calculator[1]),
-                               "sha256": sha(self.calculator[1])} if self.calculator else None)}
+                               "sha256": sha(self.calculator[1])} if self.calculator else None),
+               "base": {n: {"bytes": len(b), "sha256": sha(b)} for n, b in sorted(self.base.items())}}
         parts = {PACKAGE_PART: json.dumps(doc, indent=1, sort_keys=True).encode("utf-8") + b"\n"}
         for name, blob in self.files.items():
             parts[METHOD_PREFIX + name] = blob
@@ -97,6 +145,8 @@ class EasiProject:
             parts[CALCULATOR_PREFIX + self.calculator[0]] = self.calculator[1]
         if self.cases is not None:
             parts[CASES_PART] = json.dumps(self.cases, sort_keys=True).encode("utf-8")
+        for name, blob in self.base.items():
+            parts[BASE_PREFIX + name] = blob
         return parts
 
     @classmethod
@@ -124,7 +174,14 @@ class EasiProject:
             if blob is not None and sha(blob) == crec.get("sha256"):
                 calculator = (crec["name"], blob)
         cases = json.loads(parts[CASES_PART].decode("utf-8")) if CASES_PART in parts else None
+        base = {}
+        for name, rec in (doc.get("base") or {}).items():
+            blob = parts.get(BASE_PREFIX + name)
+            if name not in files or blob is None or sha(blob) != rec.get("sha256"):
+                raise ValueError(f"EASI project origin copy damaged or missing: {name}")
+            base[name] = blob
         return cls(meta=doc.get("meta") or {}, files=files, calculator=calculator,
                    register=doc.get("register") or {"candidates": [], "decisions": []},
                    evidence=doc.get("evidence") or [], recipes=doc.get("recipes") or {},
-                   notes=doc.get("notes") or {}, history=doc.get("history") or [], cases=cases)
+                   notes=doc.get("notes") or {}, history=doc.get("history") or [], cases=cases,
+                   base=base)

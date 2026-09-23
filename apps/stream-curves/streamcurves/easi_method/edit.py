@@ -13,8 +13,10 @@ development of EASI itself.
 """
 from __future__ import annotations
 
+import copy
 import datetime as _dt
 import json
+import re
 from typing import Any, Optional
 
 from .model import EasiProject
@@ -45,12 +47,26 @@ def _load(project: EasiProject, name: str):
     return json.loads(project.files[name].decode("utf-8"))
 
 
+def _origin(project: EasiProject, name: str):
+    """The origin's parsed copy of a method file (the version this draft came from)."""
+    return json.loads(project.origin_files()[name].decode("utf-8"))
+
+
+def _same(a, b) -> bool:
+    try:
+        return a is not None and b is not None and float(a) == float(b)
+    except (TypeError, ValueError):
+        return False
+
+
 def _with_file(project: EasiProject, name: str, obj, record: dict) -> EasiProject:
+    if not project.is_revision():
+        raise EditError("only a draft revision can be edited; start a revision of this version first")
     new = project.copy()
     blob = dump_like(project.files[name], obj)
     if blob == project.files[name]:
         raise EditError("the edit changes nothing")
-    new.files[name] = blob
+    new.set_file(name, blob)
     record = {"at": _now(), **record, "file": name}
     new.history.append(record)
     if record.get("kind") == "analytical":
@@ -71,6 +87,11 @@ def restamp_identity(project: EasiProject) -> None:
     origin = (lineage.get("origin") or {})
     if origin.get("packageDigest") == project.package_digest:
         return
+    if set(project.base) <= {"scoring-identity.json"}:
+        # every other file is back to its origin bytes: so is the identity
+        if "scoring-identity.json" in project.base:
+            project.set_file("scoring-identity.json", project.base["scoring-identity.json"])
+        return
     base = ((lineage.get("importedFrom") or {}).get("scoringIdentity")
             or origin.get("scoringIdentity") or {})
     ident["catalog_sha256"] = sha_hex(project.files["screening-methods.json"])
@@ -85,8 +106,7 @@ def restamp_identity(project: EasiProject) -> None:
                                       f"revision v{ver}")
     ident["derived_from"] = {k: base.get(k) for k in ("alternative_id", "catalog_sha256",
                                                         "curves_sha256") if base.get(k)}
-    blob = dump_like(raw, ident)
-    project.files["scoring-identity.json"] = blob
+    project.set_file("scoring-identity.json", dump_like(raw, ident))
 
 
 def sha_hex(data: bytes) -> str:
@@ -125,6 +145,62 @@ def _rule(method: dict, input_key: Optional[str]) -> dict:
     raise EditError(f"method {method.get('methodKey')!r} has no input {input_key!r}")
 
 
+# --------------------------------------------------------------------------- #
+# band labels: EASI shows them (criteria tooltips, worksheet), so they move with the edge
+# --------------------------------------------------------------------------- #
+_NUM = re.compile(r"(?<![\d.])\d+(?:\.\d+)?(?![\d.])")
+
+
+def _decimals(v: float) -> int:
+    for d in range(0, 7):
+        if abs(round(v, d) - v) < 1e-12:
+            return d
+    return 6
+
+
+def number_text(v, like: str = "") -> str:
+    """``v`` written with at least as many decimals as ``like`` and as many as it needs."""
+    d = max(len(like.split(".")[1]) if "." in like else 0, _decimals(float(v)))
+    return f"{float(v):.{d}f}"
+
+
+def replace_number(text: str, old, new) -> Optional[str]:
+    """``text`` with its first standalone number equal to ``old`` written as ``new`` in the
+    same style, or None when ``text`` names no such number."""
+    for m in _NUM.finditer(text or ""):
+        if float(m.group()) == float(old):
+            return text[:m.start()] + number_text(new, m.group()) + text[m.end():]
+    return None
+
+
+def label_suffix(label: str) -> str:
+    """What follows a label's last number: its units (" km/km\u00b2", "%", " recorded")."""
+    found = list(_NUM.finditer(label or ""))
+    return label[found[-1].end():] if found else ""
+
+
+def band_label(band: dict, suffix: str = "") -> str:
+    """A band's label from its bounds, in the catalog's style: "<1", "1-<3", ">1.3-\u22641.5",
+    "10-25%", "\u22653"."""
+    lo, hi = band.get("min"), band.get("max")
+    if lo is None:
+        return ("\u2264" if band.get("maxInclusive") else "<") + number_text(hi) + suffix
+    if hi is None:
+        return ("\u2265" if band.get("minInclusive") else ">") + number_text(lo) + suffix
+    left = ("" if band.get("minInclusive") else ">") + number_text(lo)
+    if band.get("minInclusive") and band.get("maxInclusive"):
+        right = number_text(hi)
+    else:
+        right = ("\u2264" if band.get("maxInclusive") else "<") + number_text(hi)
+    return f"{left}-{right}{suffix}"
+
+
+def _band_signature(bands: list[dict]) -> list[tuple]:
+    return [(b.get("rating"), b.get("min"), b.get("max"), bool(b.get("minInclusive")),
+             bool(b.get("maxInclusive")))
+            for b in sorted(bands, key=lambda b: float("-inf") if b.get("min") is None else b["min"])]
+
+
 def band_edges(bands: list[dict]) -> list[dict]:
     """The shared edges between consecutive bands, lowest first: value and owner."""
     ordered = sorted(bands, key=lambda b: (float("-inf") if b.get("min") is None else b["min"]))
@@ -149,16 +225,52 @@ def set_band_edge(project: EasiProject, method_key: str, input_key: Optional[str
     if not 0 <= edge < len(ordered) - 1:
         raise EditError(f"edge {edge} does not exist")
     lo, hi = ordered[edge], ordered[edge + 1]
+    if lo.get("max") is None or hi.get("min") is None or not _same(lo.get("max"), hi.get("min")):
+        raise EditError("these bands do not share an edge (a count scale); change them in EASI")
     before = {"value": lo.get("max"), "owner": "lower" if lo.get("maxInclusive") else "upper"}
     low_bound = lo.get("min")
     high_bound = hi.get("max")
     v = float(value)
     if (low_bound is not None and v <= low_bound) or (high_bound is not None and v >= high_bound):
         raise EditError("an edge must stay between its neighbours")
-    v = int(v) if v.is_integer() and isinstance(before["value"], int) else v
+    try:
+        o_rule = _rule(_method(_origin(project, "screening-methods.json"), method_key), input_key)
+        o_value = sorted(o_rule["bands"], key=lambda b: (float("-inf") if b.get("min") is None
+                                                         else b["min"]))[edge].get("max")
+    except (EditError, KeyError, IndexError, TypeError):
+        o_value = None
+    if _same(o_value, v):
+        v = o_value                      # the origin's own number, so a revert is exact
+    elif v.is_integer() and isinstance(before["value"], int):
+        v = int(v)
     own = owner or before["owner"]
     lo["max"], hi["min"] = v, v
     lo["maxInclusive"], hi["minInclusive"] = own == "lower", own == "upper"
+    for band in (lo, hi):
+        old_label = band.get("label")
+        if not old_label:
+            continue
+        moved = replace_number(old_label, before["value"], v) if own == before["owner"] else None
+        band["label"] = moved if moved is not None else band_label(band, label_suffix(old_label))
+    method = _method(cat, method_key)
+    plotted = (input_key is None or (not method.get("bands") and not method.get("curve") and next(
+        (i.get("key") for i in method.get("inputs") or [] if not i.get("contextOnly")), None) == input_key))
+    marks = method.get("breakpoints") or []
+    if plotted and edge < len(marks) and isinstance(marks[edge], dict) and marks[edge].get("label"):
+        moved = replace_number(marks[edge]["label"], before["value"], v)
+        if moved is not None:
+            marks[edge]["label"] = moved      # the plot's annotation at this edge
+    try:
+        o_method = _method(_origin(project, "screening-methods.json"), method_key)
+        o_rule = _rule(o_method, input_key)
+    except (EditError, KeyError, TypeError):
+        o_method = o_rule = None
+    if (o_rule is not None and isinstance(o_rule.get("bands"), list)
+            and _band_signature(o_rule["bands"]) == _band_signature(rule["bands"])):
+        # back to the origin's bands: its own labels and annotations, byte for byte
+        rule["bands"] = copy.deepcopy(o_rule["bands"])
+        if "breakpoints" in o_method:
+            method["breakpoints"] = copy.deepcopy(o_method["breakpoints"])
     return _with_file(project, "screening-methods.json", cat, {
         "action": "set_band_edge", "kind": "analytical", "by": by, "reason": reason,
         "target": {"methodKey": method_key, "input": input_key, "edge": edge},
@@ -175,7 +287,15 @@ def set_regional_edges(project: EasiProject, method_key: str, input_key: str, re
     if not float(good) < float(poor):
         raise EditError("the Good edge must be below the Poor edge")
     before = list(rb[region])
-    rb[region] = [float(good), float(poor)]
+    try:
+        o_pair = _rule(_method(_origin(project, "screening-methods.json"), method_key),
+                       input_key)["regionalBands"][region]
+    except (EditError, KeyError, TypeError):
+        o_pair = None
+    new_pair = [float(good), float(poor)]
+    if o_pair and len(o_pair) == 2 and all(_same(a, b) for a, b in zip(o_pair, new_pair)):
+        new_pair = list(o_pair)
+    rb[region] = new_pair
     return _with_file(project, "screening-methods.json", cat, {
         "action": "set_regional_edges", "kind": "analytical", "by": by, "reason": reason,
         "target": {"methodKey": method_key, "input": input_key, "region": region},
@@ -197,11 +317,20 @@ def set_curve_points(project: EasiProject, set_name: str, stratum: str, points: 
         raise EditError(f"no curve {set_name}/{stratum}")
     c = s["curves"][stratum]
     before = c.get("points")
-    c["points"] = pts
-    for key, t in (("x39", 0.39), ("x69", 0.69)):
-        if key in c:
-            c[key] = crossing(pts, t)
-    c.setdefault("edits", []).append({"by": by, "reason": reason, "previousPoints": before})
+    crossings = {key: crossing(pts, t) for key, t in (("x39", 0.39), ("x69", 0.69))}
+    missing = [k for k, v in crossings.items() if v is None]
+    if missing:
+        raise EditError("the curve must cross both condition breaks (0.39 and 0.69); EASI shows "
+                        "each curve's crossings with its bands")
+    o_curve = (((_origin(project, "reference-curves.json").get("sets") or {}).get(set_name) or {})
+               .get("curves") or {}).get(stratum)
+    if o_curve is not None and [[float(x), float(y)] for x, y in o_curve.get("points") or []] == pts:
+        s["curves"][stratum] = o_curve   # back to the origin's curve, byte for byte
+    else:
+        # The edit is recorded in the project's history and the version's provenance, never
+        # inside the method file EASI loads.
+        c["points"] = pts
+        c.update(crossings)
     return _with_file(project, "reference-curves.json", curves, {
         "action": "set_curve_points", "kind": "analytical", "by": by, "reason": reason,
         "target": {"set": set_name, "stratum": stratum}, "before": before, "after": pts})

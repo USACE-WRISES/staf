@@ -81,6 +81,8 @@ def test_unedited_files_reserialize_to_the_same_bytes(project):
 
 
 def _road_edit(project):
+    if not project.is_revision():
+        project = eio.fork(project, by="test")      # only a draft revision is editable
     cat = project.catalog()
     m = next(x for x in cat["methods"] if x["methodKey"] == "road-density-inflow-pressure")
     edges = edit.band_edges(m["bands"])
@@ -106,8 +108,8 @@ def test_an_analytical_edit_moves_only_its_function_and_flags_review(project):
 
 
 def test_a_display_edit_is_not_analytical(project):
-    draft = edit.set_text(project, "road-density-inflow-pressure", "title", "Road density",
-                          by="test", reason="wording")
+    draft = edit.set_text(eio.fork(project, by="test"), "road-density-inflow-pressure", "title",
+                          "Road density", by="test", reason="wording")
     d = edit.diff(project, draft)
     assert not d["analytical"] and d["methods"][0]["display"]
     assert not any(r["needsReview"] for r in reg.status_rows(draft))
