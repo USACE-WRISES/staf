@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "central-basin-and-range",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:2512084ccd039274a5e671b31e8f8a370e7ca7845574785233bbfeb580596813",
+      "bytes": 40112,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:632f70661f0e013ef7afb9e58bb9c7520c0b52b7bcf443ef434748b0d2fd5770",
+      "builtAt": "2026-09-23T01:39:39Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

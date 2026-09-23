@@ -198,6 +198,107 @@
       ]
     },
     {
+      "functionId": "surface-water-storage",
+      "functionName": "Surface water storage",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-pctwet2019ws",
+          "metricName": "Wetland",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 65), StreamCurves regional analysis, methodology 0.14-provisional",
+          "xLabel": "Wetland (%)",
+          "howToMeasure": "Watershed wetland (%), woody plus herbaceous, both classes required; wetlands store surface water and attenuate flow peaks. EASI scores Surface water storage on the same sum (method watershed-wetland-extent).",
+          "methodContext": "Percent of the watershed in woody plus herbaceous wetland (NLCD 2019). DEEP reads it from EPA StreamCat for the reach. Nothing is measured in the field.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 65), StreamCurves regional analysis, methodology 0.14-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 3.4071428571428575,
+                "y": 0.3
+              },
+              {
+                "x": 7.95,
+                "y": 0.7
+              },
+              {
+                "x": 12.5525,
+                "y": 1.0
+              },
+              {
+                "x": 13.933250000000001,
+                "y": 1.0
+              }
+            ]
+          },
+          "curveCaveats": [
+            "The build refused this source (ACC-04: The pool is not stable, since one station moves a quartile by 0.21 of the interquartile range, more than 0.20). The owner accepted it with a recorded rationale."
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "65",
+            "regionName": "Southeastern Plains",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 18,
+            "nComparable": 18,
+            "nUsable": 18,
+            "nLocal": 18,
+            "nHuc12": 18,
+            "disposition": "exploratory",
+            "family": "hydrology",
+            "covariates": [
+              "hydrlcondws",
+              "precip8110ws",
+              "lith_group"
+            ],
+            "selfCoverage": 0.824,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference, accepted by the owner",
+          "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+          "basisLimit": "The build refused this source (ACC-04: The pool is not stable, since one station moves a quartile by 0.21 of the interquartile range, more than 0.20). The owner accepted it with a recorded rationale.",
+          "ownerDecision": {
+            "id": "cd-5b7608b264",
+            "kind": "refused_source",
+            "title": "The local reference",
+            "rationale": "Owner exception of 2026-09-22: Southeastern Plains' own 18 least-disturbed stations failed only the stability check (0.21 against 0.20). Accepted so Surface water storage is assessed; the failed check is stated on the curve.",
+            "recordedBy": "gtmenichino",
+            "recordedAt": "2026-09-22T23:34:13+00:00"
+          },
+          "ownerException": {
+            "rule": "REF-04",
+            "option": "local",
+            "failed": [
+              {
+                "check": "ACC-04",
+                "pass": false,
+                "why": "The pool is not stable, since one station moves a quartile by 0.21 of the interquartile range, more than 0.20."
+              }
+            ]
+          },
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
       "functionId": "reach-inflow",
       "functionName": "Reach inflow",
       "discipline": "Hydrology",
@@ -388,6 +489,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -579,6 +685,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -692,6 +803,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -910,6 +1026,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -1014,6 +1135,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1112,6 +1238,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1232,6 +1363,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1336,6 +1472,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1446,6 +1587,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1602,6 +1748,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "curveLayers": [
             {
               "stratum": "",
@@ -1850,6 +2001,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -1958,6 +2114,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2056,6 +2217,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -2163,6 +2329,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2270,6 +2441,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2378,6 +2554,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2479,6 +2660,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2601,6 +2787,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2703,6 +2894,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2811,6 +3007,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2911,6 +3112,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3020,6 +3226,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3122,6 +3333,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3231,6 +3447,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3332,6 +3553,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "southeastern-plains",
+            "fromVersion": 1,
+            "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd"
+          },
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3423,11 +3649,12 @@
   "functionCoverage": {
     "framework": "staf-20",
     "total": 20,
-    "covered": 19,
-    "excluded": 1,
+    "covered": 20,
+    "excluded": 0,
     "missing": 0,
     "coveredFunctionIds": [
       "catchment-hydrology",
+      "surface-water-storage",
       "reach-inflow",
       "streamflow-regime",
       "low-flow-baseflow-dynamics",
@@ -3448,18 +3675,7 @@
       "watershed-connectivity"
     ],
     "missingFunctionIds": [],
-    "exclusions": [
-      {
-        "functionId": "surface-water-storage",
-        "functionName": "Surface water storage",
-        "discipline": "Hydrology",
-        "reason": "insufficient-reference-support",
-        "justification": "Every candidate metric for this function (Wetland) was withheld. No station pool from this ecoregion or a wider region under the regional screen passed acceptance, no comparable national reference passed, no approved modeled reference applies here, and the verified catalog holds no applicable published criterion. No curve was forced. The published criteria STAF draws on include none for this metric.",
-        "recordedBy": "gtmenichino",
-        "recordedAt": "2026-09-21T16:26:51.708530+00:00",
-        "confirmedBy": "gtmenichino"
-      }
-    ]
+    "exclusions": []
   },
   "scoringContract": {
     "method": "STAF detailed reference-curve scoring",
@@ -9600,12 +9816,12 @@
     "nCurvesLocal": 18,
     "nCurvesBorrowed": 3,
     "nCurvesRegionalScreen": 4,
-    "nCurvesCarried": 0,
+    "nCurvesCarried": 20,
     "nWithheld": 6,
     "curvesByBasis": {
       "regional-reference": 25
     },
-    "statement": "Reference condition is set by a fixed landscape-pressure screen, never by a score. 18 curves are fitted to least-disturbed stations of this ecoregion. 4 curves are fitted to this ecoregion's own streams under the documented regional screen, which relaxes agriculture only. 3 borrow comparable least-disturbed stations from a wider region, stating the region and the transfer risk. A metric that no basis supports is not scored, and the function it would have scored is reported as unassessed."
+    "statement": "Reference condition is set by a fixed landscape-pressure screen, never by a score. 18 curves are fitted to least-disturbed stations of this ecoregion. 4 curves are fitted to this ecoregion's own streams under the documented regional screen, which relaxes agriculture only. 3 borrow comparable least-disturbed stations from a wider region, stating the region and the transfer risk. 20 of these curves carried forward unchanged from version 1. A metric that no basis supports is not scored, and the function it would have scored is reported as unassessed."
   },
   "insufficientReferenceSupport": [
     {
@@ -9834,81 +10050,6 @@
       ]
     },
     {
-      "metricId": "spring-pctwet2019ws",
-      "metricKey": "pctwet2019ws",
-      "metricName": "Wetland",
-      "units": "%",
-      "functions": [
-        {
-          "functionId": "surface-water-storage",
-          "functionName": "Surface water storage"
-        }
-      ],
-      "functionId": "surface-water-storage",
-      "reason": "insufficient-reference-support",
-      "statement": "Insufficient reference support. No station pool, from this ecoregion's own least-disturbed streams or from a wider region under the regional screen, holds enough comparable stations with a value for this metric and passes acceptance. The local reference: The pool is not stable, since one station moves a quartile by 0.21 of the interquartile range, more than 0.20. This ecoregion under the regional screen: In the recovery test the source's class calls did not agree with reference often enough. The Level II pool (8.3): In the recovery test the source's class calls did not agree with reference often enough. The Level I pool (8): In the recovery test the source's class calls did not agree with reference often enough. The NARS-9 pool (CPL): In the recovery test the source's class calls did not agree with reference often enough. No other basis supports it either. National reference: 65 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 40 national donors inside the comparability envelope, but in the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. Modeled reference: The model registry holds no approved specification for this metric. Published benchmark: The published criteria STAF draws on include none for this metric. No curve was built and the metric is not scored.",
-      "levelsTried": [
-        {
-          "level": "l3",
-          "region_code": "65",
-          "n_pool": 18,
-          "n_comparable": 18,
-          "n_usable": 18,
-          "n_local": 18
-        },
-        {
-          "level": "l3",
-          "region_code": "65",
-          "n_pool": 40,
-          "n_comparable": 40,
-          "n_usable": 40,
-          "n_local": 40
-        },
-        {
-          "level": "l2",
-          "region_code": "8.3",
-          "n_pool": 109,
-          "n_comparable": 74,
-          "n_usable": 74,
-          "n_local": 40
-        },
-        {
-          "level": "l1",
-          "region_code": "8",
-          "n_pool": 295,
-          "n_comparable": 95,
-          "n_usable": 95,
-          "n_local": 40
-        },
-        {
-          "level": "nars9",
-          "region_code": "CPL",
-          "n_pool": 102,
-          "n_comparable": 92,
-          "n_usable": 92,
-          "n_local": 40
-        }
-      ],
-      "rungsTried": [
-        {
-          "rung": "REF-12",
-          "why": "65 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 40 national donors inside the comparability envelope, but in the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically."
-        },
-        {
-          "rung": "REF-13",
-          "why": "The model registry holds no approved specification for this metric."
-        },
-        {
-          "rung": "REF-14",
-          "why": "The published criteria STAF draws on include none for this metric.",
-          "condition": [
-            "catalog",
-            "no entry"
-          ]
-        }
-      ]
-    },
-    {
       "metricId": "spring-phab-rp100-cm",
       "metricKey": "phab_RP100_cm",
       "metricName": "Residual pool depth",
@@ -10063,22 +10204,51 @@
       ]
     }
   ],
-  "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd",
+  "ownerCurveDecisions": [
+    {
+      "id": "cd-5b7608b264",
+      "metric": "pctwet2019ws",
+      "action": "source",
+      "functions": [
+        "surface-water-storage"
+      ],
+      "rationale": "Owner exception of 2026-09-22: Southeastern Plains' own 18 least-disturbed stations failed only the stability check (0.21 against 0.20). Accepted so Surface water storage is assessed; the failed check is stated on the curve.",
+      "recordedBy": "gtmenichino",
+      "recordedAt": "2026-09-22T23:34:13+00:00",
+      "source": {
+        "kind": "refused_source",
+        "ref": {
+          "rule": "REF-04",
+          "option": "local",
+          "refusal": "The pool is not stable, since one station moves a quartile by 0.21 of the interquartile range, more than 0.20."
+        },
+        "title": "The local reference",
+        "failed": [
+          {
+            "check": "ACC-04",
+            "pass": false,
+            "why": "The pool is not stable, since one station moves a quartile by 0.21 of the interquartile range, more than 0.20."
+          }
+        ]
+      }
+    }
+  ],
+  "contentDigest": "sha256:fe2aca83722659416d0eccddf8e01ac668272363e995ca238259f7edf1971856",
   "library": {
     "libraryId": "southeastern-plains",
-    "version": 1,
-    "updatedAt": "2026-09-21T16:26:51Z",
+    "version": 2,
+    "updatedAt": "2026-09-23T01:39:43Z",
     "author": "StreamCurves regional analysis (STAF)",
-    "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 18 of 119 stations of this ecoregion pass. 18 reference curves use local stations, 3 borrow from a wider region, 5 metrics use fixed criteria, and 6 metrics are withheld for insufficient reference support.",
+    "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 18 of 119 stations of this ecoregion pass. 18 reference curves use local stations, 3 borrow from a wider region, 5 metrics use fixed criteria, and 6 metrics are withheld for insufficient reference support. 20 published curves are carried forward unchanged from version 1, and 0 were rebuilt because the data verification corrected values they rested on.",
     "region": {
       "kind": "ecoregion",
       "code": "65",
       "name": "Southeastern Plains"
     },
-    "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd",
-    "supersedesVersion": null
+    "contentDigest": "sha256:fe2aca83722659416d0eccddf8e01ac668272363e995ca238259f7edf1971856",
+    "supersedesVersion": 1
   },
-  "version": 1,
+  "version": 2,
   "lifecycle": "preliminary",
-  "assessmentRef": "southeastern-plains@v1"
+  "assessmentRef": "southeastern-plains@v2"
 }

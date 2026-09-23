@@ -5,7 +5,7 @@
   "assessmentName": "Eastern Corn Belt Plains reference assessment",
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.13-provisional",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.14-provisional",
   "applicability": "Eastern Corn Belt Plains",
   "metricsByFunction": [
     {
@@ -301,6 +301,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -496,6 +501,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -685,6 +695,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -795,6 +810,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -897,6 +917,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1112,6 +1137,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -1218,6 +1248,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1323,6 +1358,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1421,6 +1461,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1538,6 +1583,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1644,6 +1694,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -1749,6 +1804,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1860,6 +1920,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1982,6 +2047,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2080,6 +2150,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -2091,6 +2166,109 @@
       "functionName": "Bed composition and bedform dynamics",
       "discipline": "Geomorphology",
       "metrics": [
+        {
+          "metricId": "spring-phab-lwdeqvolm100",
+          "metricName": "Large wood volume",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.14-provisional",
+          "xLabel": "Large wood volume (m3/100m)",
+          "howToMeasure": "Large woody debris volume per 100 m; higher is better.",
+          "methodContext": "Between each pair of transects, tally every piece of wood at least 10 cm in diameter and 1.5 m long in or above the bankfull channel, by length and diameter class. The value is the wood volume per 100 m of channel, computed from the tally classes.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.14-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.17410714285714285,
+                "y": 0.3
+              },
+              {
+                "x": 0.40625,
+                "y": 0.7
+              },
+              {
+                "x": 4.4331666231155396,
+                "y": 1.0
+              },
+              {
+                "x": 5.641241610050201,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 23,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference stations for this curve were borrowed from NARS-9 region ecoregion TPL because this ecoregion has too few least-disturbed stations of its own. 23 stations passing the regional least-disturbed screen (watershed agriculture up to 77.37 percent, the 90th percentile at EPA's NRSA reference sites in NARS-9 region TPL, with the relaxed tier's other limits) from NARS-9 region TPL, 5 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, precipitation. The national scale analysis supports this metric at Level III, finer than the level borrowed from, so the transfer risk is high and the expectation may not represent local conditions."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 39.0,
+          "referenceRange": [
+            0.0,
+            56.19766616821289
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "borrowed_nars9",
+            "level": "nars9",
+            "levelLabel": "NARS-9 region",
+            "regionCode": "TPL",
+            "regionName": null,
+            "screen": "least-disturbed-regional-v1 (relaxed tier, watershed agriculture at most 77.37 percent, the 90th percentile at EPA's reference sites of the NARS-9 region)",
+            "screenId": "least-disturbed-regional-v1",
+            "agricultureLimit": 77.37,
+            "agricultureRule": "epa_reference_range",
+            "nPool": 83,
+            "nComparable": 43,
+            "nUsable": 23,
+            "nLocal": 5,
+            "nHuc12": 21,
+            "disposition": "adequate",
+            "family": "riparian",
+            "covariates": [
+              "drainage_area_sqkm",
+              "precip8110ws"
+            ],
+            "selfCoverage": 0.977,
+            "supportedLevel": "l3",
+            "transferRisk": "high",
+            "transferNote": "23 stations passing the regional least-disturbed screen (watershed agriculture up to 77.37 percent, the 90th percentile at EPA's NRSA reference sites in NARS-9 region TPL, with the relaxed tier's other limits) from NARS-9 region TPL, 5 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, precipitation. The national scale analysis supports this metric at Level III, finer than the level borrowed from, so the transfer risk is high and the expectation may not represent local conditions.",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "the quarter of this ecoregion's stations with the lowest landscape pressure (too few pass the relaxed screen)",
+            "n": 9,
+            "q25": 0.0,
+            "q50": 0.0640384629368782,
+            "q75": 0.36399999260902405
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.526,
+            "nRef": 23,
+            "nPressure": 276,
+            "medianRefIndex": 0.794,
+            "medianPressureIndex": 0.787,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 18,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
         {
           "metricId": "spring-phab-lsub-dmm",
           "metricName": "Substrate size",
@@ -2190,108 +2368,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "discipline": "Geomorphology",
-          "assignmentOrigin": "canonical",
-          "referenceTier": "least_disturbed"
-        },
-        {
-          "metricId": "spring-phab-lwdeqvolm100",
-          "metricName": "Large wood volume",
-          "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.13-provisional",
-          "xLabel": "Large wood volume (m3/100m)",
-          "howToMeasure": "Large woody debris volume per 100 m; higher is better.",
-          "methodContext": "Between each pair of transects, tally every piece of wood at least 10 cm in diameter and 1.5 m long in or above the bankfull channel, by length and diameter class. The value is the wood volume per 100 m of channel, computed from the tally classes.",
-          "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.13-provisional",
-            "stratification": "",
-            "form": "monotone",
-            "points": [
-              {
-                "x": 0.0,
-                "y": 0.0
-              },
-              {
-                "x": 0.06622835461582456,
-                "y": 0.3
-              },
-              {
-                "x": 0.15453282743692398,
-                "y": 0.7
-              },
-              {
-                "x": 3.242602586746216,
-                "y": 1.0
-              },
-              {
-                "x": 4.1690235145390035,
-                "y": 1.0
-              }
-            ]
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
           },
-          "referenceN": 14,
-          "sampleDisposition": "exploratory",
-          "metricRole": "response",
-          "curveCaveats": [
-            "Built from 14 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
-            "The reference stations for this curve were borrowed from Level I ecoregion 8 (Eastern Temperate Forests) because this ecoregion has too few least-disturbed stations of its own. 14 least-disturbed stations from Level I 8 (Eastern Temperate Forests), none of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, precipitation. The national scale analysis supports this metric at Level III, finer than the level borrowed from, so the transfer risk is high and the expectation may not represent local conditions.",
-            "In the discrimination check this curve scored pressured stations above reference stations (area under the curve 0.43), so the score may not track condition here. Read it with the other metrics of the function."
-          ],
-          "confidenceLabel": "Low",
-          "confidenceTotal": 39.0,
-          "referenceRange": [
-            0.0,
-            33.48249816894531
-          ],
-          "criteriaBasis": "reference",
-          "referenceSupport": {
-            "status": "borrowed_l1",
-            "level": "l1",
-            "levelLabel": "Level I",
-            "regionCode": "8",
-            "regionName": "Eastern Temperate Forests",
-            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
-            "nPool": 148,
-            "nComparable": 14,
-            "nUsable": 14,
-            "nLocal": 0,
-            "nHuc12": 13,
-            "disposition": "exploratory",
-            "family": "riparian",
-            "covariates": [
-              "drainage_area_sqkm",
-              "precip8110ws"
-            ],
-            "selfCoverage": 0.818,
-            "supportedLevel": "l3",
-            "transferRisk": "high",
-            "transferNote": "14 least-disturbed stations from Level I 8 (Eastern Temperate Forests), none of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, precipitation. The national scale analysis supports this metric at Level III, finer than the level borrowed from, so the transfer risk is high and the expectation may not represent local conditions.",
-            "basis": "regional-reference",
-            "basisLabel": "Regional reference",
-            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
-            "basisLimit": ""
-          },
-          "localComparison": {
-            "label": "Local best-available comparison (not reference)",
-            "definition": "the quarter of this ecoregion's stations with the lowest landscape pressure (too few pass the relaxed screen)",
-            "n": 11,
-            "q25": 0.0,
-            "q50": 0.0640384629368782,
-            "q75": 2.2516666650772095
-          },
-          "discrimination": {
-            "aucRefVsPressure": 0.426,
-            "nRef": 14,
-            "nPressure": 1113,
-            "medianRefIndex": 0.784,
-            "medianPressureIndex": 0.909,
-            "aucRvsIm": 0.535,
-            "nR": 36,
-            "nIm": 196,
-            "verdict": "inverted"
-          },
-          "basis": "regional-reference",
-          "basisLabel": "Regional reference",
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2390,6 +2471,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -2499,6 +2585,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2607,6 +2698,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2745,6 +2841,11 @@
             "unitConversion": "mg/L to mg N/L x1.0",
             "region": "TPL"
           },
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical"
         },
@@ -2875,6 +2976,11 @@
             "unitConversion": "mg/L to ug/L x1000.0",
             "region": "TPL"
           },
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical"
         }
@@ -2885,6 +2991,123 @@
       "functionName": "Water & soil quality",
       "discipline": "Physicochemistry",
       "metrics": [
+        {
+          "metricId": "spring-chem-ph",
+          "metricName": "pH",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.14-provisional",
+          "xLabel": "pH (Std. Units)",
+          "howToMeasure": "pH degrades condition at BOTH extremes. Two-sided (optimum) curve: scored 1.0 across the reference interquartile core, falling in both tails.",
+          "methodContext": "pH of the mid-channel grab sample from the X-site, as NRSA reports it. A calibrated multi-parameter meter reads pH in the stream at the same point, at 0.5 m depth or mid-depth in shallow water.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.14-provisional",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 6.682500720024109,
+                "y": 0.0
+              },
+              {
+                "x": 7.162500381469727,
+                "y": 0.3
+              },
+              {
+                "x": 7.474500161409378,
+                "y": 0.7
+              },
+              {
+                "x": 7.642500042915344,
+                "y": 1.0
+              },
+              {
+                "x": 8.122499704360962,
+                "y": 1.0
+              },
+              {
+                "x": 8.290499585866929,
+                "y": 0.7
+              },
+              {
+                "x": 8.60249936580658,
+                "y": 0.3
+              },
+              {
+                "x": 9.082499027252197,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 28,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "pH carries natural geology (calcareous or naturally acidic waters) as well as disturbance, and a two-sided core narrower than measurement precision is noise rather than condition.",
+            "The reference stations for this curve were borrowed from Level I ecoregion 8 (Eastern Temperate Forests) because this ecoregion has too few least-disturbed stations of its own. 28 stations passing the regional least-disturbed screen (watershed agriculture up to 77.37 percent, the 90th percentile at EPA's NRSA reference sites in NARS-9 region TPL, with the relaxed tier's other limits) from Level I 8 (Eastern Temperate Forests), 7 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on base flow index, runoff, surficial lithology. The national scale analysis supports this metric at Level II, finer than the level borrowed from, so the transfer risk is moderate and the expectation may not represent local conditions."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            6.449999809265137,
+            8.34000015258789
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "borrowed_l1",
+            "level": "l1",
+            "levelLabel": "Level I",
+            "regionCode": "8",
+            "regionName": "Eastern Temperate Forests",
+            "screen": "least-disturbed-regional-v1 (relaxed tier, watershed agriculture at most 77.37 percent, the 90th percentile at EPA's reference sites of the NARS-9 region)",
+            "screenId": "least-disturbed-regional-v1",
+            "agricultureLimit": 77.37,
+            "agricultureRule": "epa_reference_range",
+            "nPool": 509,
+            "nComparable": 28,
+            "nUsable": 28,
+            "nLocal": 7,
+            "nHuc12": 26,
+            "disposition": "adequate",
+            "family": "water_chemistry",
+            "covariates": [
+              "bfiws",
+              "runoffws",
+              "lith_group"
+            ],
+            "selfCoverage": 0.977,
+            "supportedLevel": "l2",
+            "transferRisk": "moderate",
+            "transferNote": "28 stations passing the regional least-disturbed screen (watershed agriculture up to 77.37 percent, the 90th percentile at EPA's NRSA reference sites in NARS-9 region TPL, with the relaxed tier's other limits) from Level I 8 (Eastern Temperate Forests), 7 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on base flow index, runoff, surficial lithology. The national scale analysis supports this metric at Level II, finer than the level borrowed from, so the transfer risk is moderate and the expectation may not represent local conditions.",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "the quarter of this ecoregion's stations with the lowest landscape pressure (too few pass the relaxed screen)",
+            "n": 11,
+            "q25": 7.900000095367432,
+            "q50": 8.170000076293945,
+            "q75": 8.300000190734863
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.579,
+            "nRef": 28,
+            "nPressure": 1112,
+            "medianRefIndex": 0.911,
+            "medianPressureIndex": 0.808,
+            "aucRvsIm": 0.344,
+            "nR": 31,
+            "nIm": 196,
+            "verdict": "weak"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
         {
           "metricId": "spring-chem-turb",
           "metricName": "Turbidity",
@@ -2962,6 +3185,11 @@
           "basisLabel": "Modeled reference",
           "basisStatement": "Reference curve from a modeled expectation. The response to landscape pressure is estimated nationally and this ecoregion's own level is added, because the ecoregion holds no stream clean enough to observe reference condition directly.",
           "basisLimit": "No stream in this ecoregion is clean enough to observe the reference condition, so the expectation is an extrapolation and not a measurement.",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3061,6 +3289,11 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3162,6 +3395,338 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "population-support",
+      "functionName": "Population support",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "spring-fish-nat-ntolntax",
+          "metricName": "Native non-tolerant fish taxa richness",
+          "inputType": "count",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.14-provisional",
+          "xLabel": "Native non-tolerant fish taxa richness",
+          "howToMeasure": "Native non-tolerant fish taxa richness (TOLERANCE_NRSA); higher is better. Total richness need not fall under disturbance, because tolerant species replace intolerant ones; this counts only the taxa that do not tolerate it.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.14-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 1.7142857142857142,
+                "y": 0.3
+              },
+              {
+                "x": 4.0,
+                "y": 0.7
+              },
+              {
+                "x": 11.0,
+                "y": 1.0
+              },
+              {
+                "x": 13.1,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 39,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference stations for this curve were borrowed from Level I ecoregion 8 (Eastern Temperate Forests) because this ecoregion has too few least-disturbed stations of its own. 39 stations passing the regional least-disturbed screen (watershed agriculture up to 77.37 percent, the 90th percentile at EPA's NRSA reference sites in NARS-9 region TPL, with the relaxed tier's other limits) from Level I 8 (Eastern Temperate Forests), 7 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, channel slope, air temperature. Every station drains to this ecoregion's faunal province. The national scale analysis supports this metric at Level III, finer than the level borrowed from, so the transfer risk is high and the expectation may not represent local conditions."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 39.0,
+          "referenceRange": [
+            0.0,
+            22.0
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "borrowed_l1",
+            "level": "l1",
+            "levelLabel": "Level I",
+            "regionCode": "8",
+            "regionName": "Eastern Temperate Forests",
+            "screen": "least-disturbed-regional-v1 (relaxed tier, watershed agriculture at most 77.37 percent, the 90th percentile at EPA's reference sites of the NARS-9 region)",
+            "screenId": "least-disturbed-regional-v1",
+            "agricultureLimit": 77.37,
+            "agricultureRule": "epa_reference_range",
+            "nPool": 509,
+            "nComparable": 40,
+            "nUsable": 39,
+            "nLocal": 7,
+            "nHuc12": 39,
+            "disposition": "adequate",
+            "family": "biology",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "tmean8110ws"
+            ],
+            "selfCoverage": 0.977,
+            "supportedLevel": "l3",
+            "transferRisk": "high",
+            "transferNote": "39 stations passing the regional least-disturbed screen (watershed agriculture up to 77.37 percent, the 90th percentile at EPA's NRSA reference sites in NARS-9 region TPL, with the relaxed tier's other limits) from Level I 8 (Eastern Temperate Forests), 7 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, channel slope, air temperature. Every station drains to this ecoregion's faunal province. The national scale analysis supports this metric at Level III, finer than the level borrowed from, so the transfer risk is high and the expectation may not represent local conditions.",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "the quarter of this ecoregion's stations with the lowest landscape pressure (too few pass the relaxed screen)",
+            "n": 11,
+            "q25": 4.5,
+            "q50": 5.0,
+            "q75": 9.5
+          },
+          "stratifier": {
+            "key": "NhdSlopeClass",
+            "variable": "nhd_slope",
+            "units": "m/m",
+            "source": "NHDPlus V2 flowline slope",
+            "breaks": [
+              0.005,
+              0.02
+            ],
+            "right": false,
+            "classes": [
+              {
+                "key": "lt_0.5",
+                "label": "Low gradient (under 0.5 percent)",
+                "hasCurve": true,
+                "n": 23
+              },
+              {
+                "key": "0.5_to_2",
+                "label": "Moderate gradient (0.5 to 2 percent)",
+                "hasCurve": true,
+                "n": 16
+              },
+              {
+                "key": "ge_2",
+                "label": "Steep (2 percent and above)",
+                "hasCurve": false,
+                "n": 0
+              }
+            ],
+            "registryVersion": 1,
+            "status": "exploratory"
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.526,
+            "nRef": 39,
+            "nPressure": 1014,
+            "medianRefIndex": 0.829,
+            "medianPressureIndex": 0.786,
+            "aucRvsIm": 0.747,
+            "nR": 34,
+            "nIm": 176,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "curveLayers": [
+            {
+              "stratum": "",
+              "points": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 1.7142857142857142,
+                  "y": 0.3
+                },
+                {
+                  "x": 4.0,
+                  "y": 0.7
+                },
+                {
+                  "x": 11.0,
+                  "y": 1.0
+                },
+                {
+                  "x": 13.1,
+                  "y": 1.0
+                }
+              ]
+            },
+            {
+              "stratum": "lt_0.5",
+              "points": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 2.5714285714285716,
+                  "y": 0.3
+                },
+                {
+                  "x": 6.0,
+                  "y": 0.7
+                },
+                {
+                  "x": 13.0,
+                  "y": 1.0
+                },
+                {
+                  "x": 15.1,
+                  "y": 1.0
+                }
+              ]
+            },
+            {
+              "stratum": "0.5_to_2",
+              "points": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 1.2857142857142858,
+                  "y": 0.3
+                },
+                {
+                  "x": 3.0,
+                  "y": 0.7
+                },
+                {
+                  "x": 7.5,
+                  "y": 1.0
+                },
+                {
+                  "x": 8.85,
+                  "y": 1.0
+                }
+              ]
+            }
+          ],
+          "activeStratum": "",
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-fish-nat-ntolptax",
+          "metricName": "Native non-tolerant fish taxa",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.14-provisional",
+          "xLabel": "Native non-tolerant fish taxa (%)",
+          "howToMeasure": "Percent of native fish taxa not classed tolerant (TOLERANCE_NRSA); higher is better. A proportion, so it does not carry the size of a region's species pool the way a richness count does.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 55), StreamCurves regional analysis, methodology 0.14-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 18.36857169015067,
+                "y": 0.3
+              },
+              {
+                "x": 42.86000061035156,
+                "y": 0.7
+              },
+              {
+                "x": 64.03499794006348,
+                "y": 1.0
+              },
+              {
+                "x": 70.38749713897705,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 14,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 14 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "The reference stations for this curve were borrowed from NARS-9 region ecoregion TPL because this ecoregion has too few least-disturbed stations of its own. 14 stations passing the regional least-disturbed screen (watershed agriculture up to 77.37 percent, the 90th percentile at EPA's NRSA reference sites in NARS-9 region TPL, with the relaxed tier's other limits) from NARS-9 region TPL, 7 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, channel slope, air temperature. Every station drains to this ecoregion's faunal province. The national scale analysis supports this metric at Level III, finer than the level borrowed from, so the transfer risk is high and the expectation may not represent local conditions."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 39.0,
+          "referenceRange": [
+            14.289999961853027,
+            71.43000030517578
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "borrowed_nars9",
+            "level": "nars9",
+            "levelLabel": "NARS-9 region",
+            "regionCode": "TPL",
+            "regionName": null,
+            "screen": "least-disturbed-regional-v1 (relaxed tier, watershed agriculture at most 77.37 percent, the 90th percentile at EPA's reference sites of the NARS-9 region)",
+            "screenId": "least-disturbed-regional-v1",
+            "agricultureLimit": 77.37,
+            "agricultureRule": "epa_reference_range",
+            "nPool": 83,
+            "nComparable": 15,
+            "nUsable": 14,
+            "nLocal": 7,
+            "nHuc12": 14,
+            "disposition": "exploratory",
+            "family": "biology",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "tmean8110ws"
+            ],
+            "selfCoverage": 0.977,
+            "supportedLevel": "l3",
+            "transferRisk": "high",
+            "transferNote": "14 stations passing the regional least-disturbed screen (watershed agriculture up to 77.37 percent, the 90th percentile at EPA's NRSA reference sites in NARS-9 region TPL, with the relaxed tier's other limits) from NARS-9 region TPL, 7 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, channel slope, air temperature. Every station drains to this ecoregion's faunal province. The national scale analysis supports this metric at Level III, finer than the level borrowed from, so the transfer risk is high and the expectation may not represent local conditions.",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "the quarter of this ecoregion's stations with the lowest landscape pressure (too few pass the relaxed screen)",
+            "n": 11,
+            "q25": 46.43000030517578,
+            "q50": 55.560001373291016,
+            "q75": 66.89999771118164
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.585,
+            "nRef": 14,
+            "nPressure": 347,
+            "medianRefIndex": 0.851,
+            "medianPressureIndex": 0.801,
+            "aucRvsIm": 0.732,
+            "nR": 6,
+            "nIm": 32,
+            "verdict": "weak"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3250,6 +3815,11 @@
           "basisLabel": "Modeled reference",
           "basisStatement": "Reference curve from a modeled expectation. The response to landscape pressure is estimated nationally and this ecoregion's own level is added, because the ecoregion holds no stream clean enough to observe reference condition directly.",
           "basisLimit": "No stream in this ecoregion is clean enough to observe the reference condition, so the expectation is an extrapolation and not a measurement.",
+          "carriedForward": {
+            "assessmentId": "eastern-corn-belt-plains",
+            "fromVersion": 7,
+            "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482"
+          },
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3341,8 +3911,8 @@
   "functionCoverage": {
     "framework": "staf-20",
     "total": 20,
-    "covered": 19,
-    "excluded": 1,
+    "covered": 20,
+    "excluded": 0,
     "missing": 0,
     "coveredFunctionIds": [
       "catchment-hydrology",
@@ -3362,21 +3932,12 @@
       "nutrient-cycling",
       "water-soil-quality",
       "habitat-provision",
+      "population-support",
       "community-dynamics",
       "watershed-connectivity"
     ],
     "missingFunctionIds": [],
-    "exclusions": [
-      {
-        "functionId": "population-support",
-        "functionName": "Population support",
-        "discipline": "Biology",
-        "reason": "insufficient-reference-support",
-        "justification": "Every candidate metric for this function was withheld. The scored candidates are benthic total taxa richness and native fish taxa richness, and native non-tolerant fish taxa richness was also tested under Pre-registration III. Too few comparable least-disturbed stations carry them in this ecoregion or in its Level II and Level I parents. On comparable national donors the strongest result was native non-tolerant fish taxa richness on distance-matched donors, which reached promising: its class calls agreed with reference in 16 of 19 evaluation regions with no systematic promotion, but its recovered thresholds fell inside the true answer's uncertainty in only 9 of 19, against the 13 required to validate. No modeled expectation passed validation under the extrapolation this ecoregion requires. Ohio EPA's ecoregional biocriteria, the nearest applicable published criterion, were checked on 2026-09-21 and are not usable here on three independent grounds. They set thresholds on composite indices (the fish Index of Biotic Integrity, the Modified Index of well-being, and the Invertebrate Community Index) rather than on taxa richness, so applying one to a richness count would compare different quantities. Those indices are computed under Ohio EPA's own field protocol against metric lines calibrated on Ohio reference sites, and the NRSA archive carries no index column and cannot derive one. They are Ohio water quality standards keyed to a per-waterbody use designation, while 26 of this ecoregion's 51 stations lie in Indiana. No suitable basis was found among the sources evaluated, which is not a finding that this function cannot be scored. No curve was forced and the function is reported as unassessed, so the ecosystem condition index is stated as an interval.",
-        "recordedBy": "gtmenichino",
-        "recordedAt": "2026-09-21T04:20:00+00:00"
-      }
-    ]
+    "exclusions": []
   },
   "scoringContract": {
     "method": "STAF detailed reference-curve scoring",
@@ -5377,14 +5938,16 @@
     "nCandidates": 45,
     "nInFrame": 44,
     "nCurvesLocal": 0,
-    "nCurvesBorrowed": 16,
+    "nCurvesBorrowed": 20,
+    "nCurvesRegionalScreen": 0,
+    "nCurvesCarried": 19,
     "nWithheld": 7,
     "curvesByBasis": {
+      "regional-reference": 20,
       "modeled-reference": 2,
-      "published-benchmark": 2,
-      "regional-reference": 16
+      "published-benchmark": 2
     },
-    "statement": "Reference condition is set by a fixed landscape-pressure screen, never by a score. 16 borrow comparable least-disturbed stations from a parent ecoregion, stating the level and the transfer risk. 2 carry the modeled reference label: reference curve from a modeled expectation. The response to landscape pressure is estimated nationally and this ecoregion's own level is added, because the ecoregion holds no stream clean enough to observe reference condition directly. 2 carry the published benchmark label: scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's. A metric that no basis supports is not scored, and the function it would have scored is reported as unassessed."
+    "statement": "Reference condition is set by a fixed landscape-pressure screen, never by a score. 20 borrow comparable least-disturbed stations from a wider region, stating the region and the transfer risk. 2 carry the modeled reference label: reference curve from a modeled expectation. The response to landscape pressure is estimated nationally and this ecoregion's own level is added, because the ecoregion holds too few streams clean enough to observe reference condition directly. 2 carry the published benchmark label: scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's. 19 of these curves carried forward unchanged from version 7. A metric that no basis supports is not scored, and the function it would have scored is reported as unassessed."
   },
   "insufficientReferenceSupport": [
     {
@@ -5400,7 +5963,7 @@
       ],
       "functionId": "community-dynamics",
       "reason": "insufficient-reference-support",
-      "statement": "Insufficient reference support. Too few comparable least-disturbed stations carry this metric in this ecoregion or in its Level II and Level I parents. No other basis supports it either. National reference: 17 comparable national donors carry this metric, but borrowed donors did not pass the recovery test for it, so they are not shown to transfer to this ecoregion. Modeled reference: The fitted expectation did not pass the recovery test for this metric. Published benchmark: The published criteria STAF draws on include none for this metric. No curve was built and the metric is not scored.",
+      "statement": "Insufficient reference support. No station pool, from this ecoregion's own least-disturbed streams or from a wider region under the regional screen, holds enough comparable stations with a value for this metric and passes acceptance. The local reference: 0 usable stations, below the floor of 10. This ecoregion under the regional screen: 7 usable stations, below the floor of 10. The Level II pool (8.2): 7 usable stations, below the floor of 10. The NARS-9 pool (TPL): The pool is not stable, since one station moves a quartile by 0.25 of the interquartile range, more than 0.20. The Level I pool (8): In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. No other basis supports it either. National reference: 30 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 4 national donors inside the comparability envelope, below the floor of 10. Modeled reference: The model registry holds no approved specification for this metric. Published benchmark: The published criteria STAF draws on include none for this metric. No curve was built and the metric is not scored.",
       "levelsTried": [
         {
           "level": "l3",
@@ -5411,35 +5974,54 @@
           "n_local": 0
         },
         {
+          "level": "l3",
+          "region_code": "55",
+          "n_pool": 7,
+          "n_comparable": 7,
+          "n_usable": 7,
+          "n_local": 7
+        },
+        {
           "level": "l2",
           "region_code": "8.2",
-          "n_pool": 0,
-          "n_comparable": 0,
-          "n_usable": 0,
-          "n_local": 0
+          "n_pool": 18,
+          "n_comparable": 7,
+          "n_usable": 7,
+          "n_local": 7
+        },
+        {
+          "level": "nars9",
+          "region_code": "TPL",
+          "n_pool": 83,
+          "n_comparable": 15,
+          "n_usable": 15,
+          "n_local": 7
         },
         {
           "level": "l1",
           "region_code": "8",
-          "n_pool": 148,
-          "n_comparable": 1,
-          "n_usable": 1,
-          "n_local": 0
+          "n_pool": 509,
+          "n_comparable": 40,
+          "n_usable": 40,
+          "n_local": 7
         }
       ],
       "rungsTried": [
         {
-          "rung": "REF-08",
-          "why": "17 comparable national donors carry this metric, but borrowed donors did not pass the recovery test for it, so they are not shown to transfer to this ecoregion."
+          "rung": "REF-12",
+          "why": "30 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 4 national donors inside the comparability envelope, below the floor of 10."
         },
         {
-          "rung": "REF-09",
-          "why": "The fitted expectation did not pass the recovery test for this metric."
+          "rung": "REF-13",
+          "why": "The model registry holds no approved specification for this metric."
         },
         {
-          "rung": "REF-10",
+          "rung": "REF-14",
           "why": "The published criteria STAF draws on include none for this metric.",
-          "condition": "PB-1"
+          "condition": [
+            "catalog",
+            "no entry"
+          ]
         }
       ]
     },
@@ -5456,7 +6038,7 @@
       ],
       "functionId": "community-dynamics",
       "reason": "insufficient-reference-support",
-      "statement": "Insufficient reference support. Too few comparable least-disturbed stations carry this metric in this ecoregion or in its Level II and Level I parents. No other basis supports it either. National reference: 6 comparable national donors carry this metric, below the floor of 10. Modeled reference: Only 2 evaluation regions could test a fitted expectation for this metric, fewer than the 4 the recovery test needs. Published benchmark: The published criteria STAF draws on include none for this metric. No curve was built and the metric is not scored.",
+      "statement": "Insufficient reference support. No station pool, from this ecoregion's own least-disturbed streams or from a wider region under the regional screen, holds enough comparable stations with a value for this metric and passes acceptance. The local reference: 0 usable stations, below the floor of 10. This ecoregion under the regional screen: 7 usable stations, below the floor of 10. The Level II pool (8.2): 7 usable stations, below the floor of 10. The NARS-9 pool (TPL): In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. The Level I pool (8): In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. No other basis supports it either. National reference: 30 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 4 national donors inside the comparability envelope, below the floor of 10. Modeled reference: The model registry holds no approved specification for this metric. Published benchmark: The published criteria STAF draws on include none for this metric. No curve was built and the metric is not scored.",
       "levelsTried": [
         {
           "level": "l3",
@@ -5467,35 +6049,54 @@
           "n_local": 0
         },
         {
+          "level": "l3",
+          "region_code": "55",
+          "n_pool": 7,
+          "n_comparable": 7,
+          "n_usable": 7,
+          "n_local": 7
+        },
+        {
           "level": "l2",
           "region_code": "8.2",
-          "n_pool": 0,
-          "n_comparable": 0,
-          "n_usable": 0,
-          "n_local": 0
+          "n_pool": 18,
+          "n_comparable": 7,
+          "n_usable": 7,
+          "n_local": 7
+        },
+        {
+          "level": "nars9",
+          "region_code": "TPL",
+          "n_pool": 83,
+          "n_comparable": 15,
+          "n_usable": 15,
+          "n_local": 7
         },
         {
           "level": "l1",
           "region_code": "8",
-          "n_pool": 148,
-          "n_comparable": 1,
-          "n_usable": 0,
-          "n_local": 0
+          "n_pool": 509,
+          "n_comparable": 40,
+          "n_usable": 40,
+          "n_local": 7
         }
       ],
       "rungsTried": [
         {
-          "rung": "REF-08",
-          "why": "6 comparable national donors carry this metric, below the floor of 10."
+          "rung": "REF-12",
+          "why": "30 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 4 national donors inside the comparability envelope, below the floor of 10."
         },
         {
-          "rung": "REF-09",
-          "why": "Only 2 evaluation regions could test a fitted expectation for this metric, fewer than the 4 the recovery test needs."
+          "rung": "REF-13",
+          "why": "The model registry holds no approved specification for this metric."
         },
         {
-          "rung": "REF-10",
+          "rung": "REF-14",
           "why": "The published criteria STAF draws on include none for this metric.",
-          "condition": "PB-1"
+          "condition": [
+            "catalog",
+            "no entry"
+          ]
         }
       ]
     },
@@ -5512,7 +6113,7 @@
       ],
       "functionId": "population-support",
       "reason": "insufficient-reference-support",
-      "statement": "Insufficient reference support. Too few comparable least-disturbed stations carry this metric in this ecoregion or in its Level II and Level I parents. No other basis supports it either. National reference: 6 comparable national donors carry this metric, below the floor of 10. Modeled reference: The fitted expectation did not pass the recovery test for this metric. Published benchmark: Every published biological criterion in the STAF assessment library is scored on a state-specific field index (Michigan Procedure 51, the Carolina IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed from NRSA data, so none measures the same quantity as this metric. Ohio EPA's ecoregional biocriteria, the nearest published criterion for this ecoregion, were checked on 2026-09-21 and are not usable either. They set thresholds on composite indices rather than on taxa richness, those indices are computed under Ohio's own field protocol and are not carried by the NRSA archive, and they are Ohio water quality standards while half this ecoregion's stations lie in Indiana. No curve was built and the metric is not scored.",
+      "statement": "Insufficient reference support. No station pool, from this ecoregion's own least-disturbed streams or from a wider region under the regional screen, holds enough comparable stations with a value for this metric and passes acceptance. The local reference: 0 usable stations, below the floor of 10. This ecoregion under the regional screen: 7 usable stations, below the floor of 10. The Level II pool (8.2): 7 usable stations, below the floor of 10. The NARS-9 pool (TPL): In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. The Level I pool (8): In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. No other basis supports it either. National reference: 30 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 4 national donors inside the comparability envelope, below the floor of 10. Modeled reference: The model registry holds no approved specification for this metric. Published benchmark: Every published biological criterion in the STAF assessment library is scored on a state-specific field index (Michigan Procedure 51, the Carolina IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed from NRSA data, so none measures the same quantity as this metric. Ohio EPA's ecoregional biocriteria, the nearest published criterion for this ecoregion, were checked on 2026-09-21 and are not usable either. They set thresholds on composite indices rather than on a single community metric such as this one, those indices are computed under Ohio's own field protocol and are not carried by the NRSA archive, and they are Ohio water quality standards while half this ecoregion's stations lie in Indiana. No curve was built and the metric is not scored.",
       "levelsTried": [
         {
           "level": "l3",
@@ -5523,35 +6124,54 @@
           "n_local": 0
         },
         {
+          "level": "l3",
+          "region_code": "55",
+          "n_pool": 7,
+          "n_comparable": 7,
+          "n_usable": 7,
+          "n_local": 7
+        },
+        {
           "level": "l2",
           "region_code": "8.2",
-          "n_pool": 0,
-          "n_comparable": 0,
-          "n_usable": 0,
-          "n_local": 0
+          "n_pool": 18,
+          "n_comparable": 7,
+          "n_usable": 7,
+          "n_local": 7
+        },
+        {
+          "level": "nars9",
+          "region_code": "TPL",
+          "n_pool": 83,
+          "n_comparable": 15,
+          "n_usable": 15,
+          "n_local": 7
         },
         {
           "level": "l1",
           "region_code": "8",
-          "n_pool": 148,
-          "n_comparable": 1,
-          "n_usable": 0,
-          "n_local": 0
+          "n_pool": 509,
+          "n_comparable": 40,
+          "n_usable": 40,
+          "n_local": 7
         }
       ],
       "rungsTried": [
         {
-          "rung": "REF-08",
-          "why": "6 comparable national donors carry this metric, below the floor of 10."
+          "rung": "REF-12",
+          "why": "30 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 4 national donors inside the comparability envelope, below the floor of 10."
         },
         {
-          "rung": "REF-09",
-          "why": "The fitted expectation did not pass the recovery test for this metric."
+          "rung": "REF-13",
+          "why": "The model registry holds no approved specification for this metric."
         },
         {
-          "rung": "REF-10",
-          "why": "Every published biological criterion in the STAF assessment library is scored on a state-specific field index (Michigan Procedure 51, the Carolina IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed from NRSA data, so none measures the same quantity as this metric. Ohio EPA's ecoregional biocriteria, the nearest published criterion for this ecoregion, were checked on 2026-09-21 and are not usable either. They set thresholds on composite indices rather than on taxa richness, those indices are computed under Ohio's own field protocol and are not carried by the NRSA archive, and they are Ohio water quality standards while half this ecoregion's stations lie in Indiana.",
-          "condition": "PB-1"
+          "rung": "REF-14",
+          "why": "Every published biological criterion in the STAF assessment library is scored on a state-specific field index (Michigan Procedure 51, the Carolina IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed from NRSA data, so none measures the same quantity as this metric. Ohio EPA's ecoregional biocriteria, the nearest published criterion for this ecoregion, were checked on 2026-09-21 and are not usable either. They set thresholds on composite indices rather than on a single community metric such as this one, those indices are computed under Ohio's own field protocol and are not carried by the NRSA archive, and they are Ohio water quality standards while half this ecoregion's stations lie in Indiana.",
+          "condition": [
+            "catalog",
+            "no entry"
+          ]
         }
       ]
     },
@@ -5568,7 +6188,7 @@
       ],
       "functionId": "light-thermal-regime",
       "reason": "insufficient-reference-support",
-      "statement": "Insufficient reference support. Too few comparable least-disturbed stations carry this metric in this ecoregion or in its Level II and Level I parents. No other basis supports it either. National reference: 1 comparable national donor carries this metric, below the floor of 10. Modeled reference: Only 3 evaluation regions could test a fitted expectation for this metric, fewer than the 4 the recovery test needs. Published benchmark: The published criteria STAF draws on include none for this metric. No curve was built and the metric is not scored.",
+      "statement": "Insufficient reference support. No station pool, from this ecoregion's own least-disturbed streams or from a wider region under the regional screen, holds enough comparable stations with a value for this metric and passes acceptance. The local reference: 0 usable stations, below the floor of 10. This ecoregion under the regional screen: 7 usable stations, below the floor of 10. The NARS-9 pool (TPL): In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. The Level II pool (8.2): 8 usable stations, below the floor of 10. The Level I pool (8): In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. No other basis supports it either. National reference: 13 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 7 national donors inside the comparability envelope, below the floor of 10. Modeled reference: The model registry holds no approved specification for this metric. Published benchmark: The published criteria STAF draws on include none for this metric. No curve was built and the metric is not scored.",
       "levelsTried": [
         {
           "level": "l3",
@@ -5579,35 +6199,54 @@
           "n_local": 0
         },
         {
+          "level": "l3",
+          "region_code": "55",
+          "n_pool": 7,
+          "n_comparable": 7,
+          "n_usable": 7,
+          "n_local": 7
+        },
+        {
+          "level": "nars9",
+          "region_code": "TPL",
+          "n_pool": 83,
+          "n_comparable": 10,
+          "n_usable": 10,
+          "n_local": 7
+        },
+        {
           "level": "l2",
           "region_code": "8.2",
-          "n_pool": 0,
-          "n_comparable": 0,
-          "n_usable": 0,
-          "n_local": 0
+          "n_pool": 18,
+          "n_comparable": 8,
+          "n_usable": 8,
+          "n_local": 7
         },
         {
           "level": "l1",
           "region_code": "8",
-          "n_pool": 148,
-          "n_comparable": 0,
-          "n_usable": 0,
-          "n_local": 0
+          "n_pool": 509,
+          "n_comparable": 28,
+          "n_usable": 27,
+          "n_local": 7
         }
       ],
       "rungsTried": [
         {
-          "rung": "REF-08",
-          "why": "1 comparable national donor carries this metric, below the floor of 10."
+          "rung": "REF-12",
+          "why": "13 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 7 national donors inside the comparability envelope, below the floor of 10."
         },
         {
-          "rung": "REF-09",
-          "why": "Only 3 evaluation regions could test a fitted expectation for this metric, fewer than the 4 the recovery test needs."
+          "rung": "REF-13",
+          "why": "The model registry holds no approved specification for this metric."
         },
         {
-          "rung": "REF-10",
+          "rung": "REF-14",
           "why": "The published criteria STAF draws on include none for this metric.",
-          "condition": "PB-1"
+          "condition": [
+            "catalog",
+            "no entry"
+          ]
         }
       ]
     },
@@ -5624,7 +6263,7 @@
       ],
       "functionId": "water-soil-quality",
       "reason": "insufficient-reference-support",
-      "statement": "Insufficient reference support. Too few comparable least-disturbed stations carry this metric in this ecoregion or in its Level II and Level I parents. No other basis supports it either. National reference: 1 comparable national donor carries this metric, below the floor of 10. Modeled reference: The fitted expectation did not pass the recovery test for this metric. Published benchmark: The published criteria STAF draws on include no regional criterion for conductivity. No curve was built and the metric is not scored.",
+      "statement": "Insufficient reference support. No station pool, from this ecoregion's own least-disturbed streams or from a wider region under the regional screen, holds enough comparable stations with a value for this metric and passes acceptance. The local reference: 0 usable stations, below the floor of 10. This ecoregion under the regional screen: 7 usable stations, below the floor of 10. The NARS-9 pool (TPL): In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. The Level II pool (8.2): 8 usable stations, below the floor of 10. The Level I pool (8): In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. No other basis supports it either. National reference: 13 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. 7 national donors inside the comparability envelope, below the floor of 10. Modeled reference: The model registry holds no approved specification for this metric. Published benchmark: The published criteria STAF draws on include no regional criterion for conductivity. No curve was built and the metric is not scored.",
       "levelsTried": [
         {
           "level": "l3",
@@ -5635,91 +6274,54 @@
           "n_local": 0
         },
         {
+          "level": "l3",
+          "region_code": "55",
+          "n_pool": 7,
+          "n_comparable": 7,
+          "n_usable": 7,
+          "n_local": 7
+        },
+        {
+          "level": "nars9",
+          "region_code": "TPL",
+          "n_pool": 83,
+          "n_comparable": 10,
+          "n_usable": 10,
+          "n_local": 7
+        },
+        {
           "level": "l2",
           "region_code": "8.2",
-          "n_pool": 0,
-          "n_comparable": 0,
-          "n_usable": 0,
-          "n_local": 0
+          "n_pool": 18,
+          "n_comparable": 8,
+          "n_usable": 8,
+          "n_local": 7
         },
         {
           "level": "l1",
           "region_code": "8",
-          "n_pool": 148,
-          "n_comparable": 0,
-          "n_usable": 0,
-          "n_local": 0
+          "n_pool": 509,
+          "n_comparable": 28,
+          "n_usable": 28,
+          "n_local": 7
         }
       ],
       "rungsTried": [
         {
-          "rung": "REF-08",
-          "why": "1 comparable national donor carries this metric, below the floor of 10."
+          "rung": "REF-12",
+          "why": "13 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. 7 national donors inside the comparability envelope, below the floor of 10."
         },
         {
-          "rung": "REF-09",
-          "why": "The fitted expectation did not pass the recovery test for this metric."
+          "rung": "REF-13",
+          "why": "The model registry holds no approved specification for this metric."
         },
         {
-          "rung": "REF-10",
+          "rung": "REF-14",
           "why": "The published criteria STAF draws on include no regional criterion for conductivity.",
-          "condition": "PB-1"
-        }
-      ]
-    },
-    {
-      "metricId": "spring-chem-ph",
-      "metricKey": "chem_PH",
-      "metricName": "pH",
-      "units": "Std. Units",
-      "functions": [
-        {
-          "functionId": "water-soil-quality",
-          "functionName": "Water and soil quality"
-        }
-      ],
-      "functionId": "water-soil-quality",
-      "reason": "insufficient-reference-support",
-      "statement": "Insufficient reference support. Too few comparable least-disturbed stations carry this metric in this ecoregion or in its Level II and Level I parents. No other basis supports it either. National reference: 1 comparable national donor carries this metric, below the floor of 10. Modeled reference: The fitted expectation did not pass the recovery test for this metric. Published benchmark: The published criteria STAF draws on include no regional criterion for pH. No curve was built and the metric is not scored.",
-      "levelsTried": [
-        {
-          "level": "l3",
-          "region_code": "55",
-          "n_pool": 0,
-          "n_comparable": 0,
-          "n_usable": 0,
-          "n_local": 0
-        },
-        {
-          "level": "l2",
-          "region_code": "8.2",
-          "n_pool": 0,
-          "n_comparable": 0,
-          "n_usable": 0,
-          "n_local": 0
-        },
-        {
-          "level": "l1",
-          "region_code": "8",
-          "n_pool": 148,
-          "n_comparable": 0,
-          "n_usable": 0,
-          "n_local": 0
-        }
-      ],
-      "rungsTried": [
-        {
-          "rung": "REF-08",
-          "why": "1 comparable national donor carries this metric, below the floor of 10."
-        },
-        {
-          "rung": "REF-09",
-          "why": "The fitted expectation did not pass the recovery test for this metric."
-        },
-        {
-          "rung": "REF-10",
-          "why": "The published criteria STAF draws on include no regional criterion for pH.",
-          "condition": "PB-1"
+          "condition": [
+            "catalog",
+            "no entry"
+          ]
         }
       ]
     },
@@ -5736,7 +6338,7 @@
       ],
       "functionId": "population-support",
       "reason": "insufficient-reference-support",
-      "statement": "Insufficient reference support. Too few comparable least-disturbed stations carry this metric in this ecoregion or in its Level II and Level I parents. No other basis supports it either. National reference: 12 comparable national donors carry this metric, and borrowed donors reached promising but not validated in the recovery test, so there is no demonstration that they transfer to this ecoregion. Modeled reference: The fitted expectation did not pass the recovery test for this metric. Published benchmark: Every published biological criterion in the STAF assessment library is scored on a state-specific field index (Michigan Procedure 51, the Carolina IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed from NRSA data, so none measures the same quantity as this metric. Ohio EPA's ecoregional biocriteria, the nearest published criterion for this ecoregion, were checked on 2026-09-21 and are not usable either. They set thresholds on composite indices rather than on taxa richness, those indices are computed under Ohio's own field protocol and are not carried by the NRSA archive, and they are Ohio water quality standards while half this ecoregion's stations lie in Indiana. No curve was built and the metric is not scored.",
+      "statement": "Insufficient reference support. No station pool, from this ecoregion's own least-disturbed streams or from a wider region under the regional screen, holds enough comparable stations with a value for this metric and passes acceptance. The local reference: 0 usable stations, below the floor of 10. This ecoregion under the regional screen: 7 usable stations, below the floor of 10. The Level II pool (8.2): 7 usable stations, below the floor of 10. The NARS-9 pool (TPL): The pool is not stable, since one station moves a quartile by 0.24 of the interquartile range, more than 0.20. The Level I pool (8): In the recovery test the source's class calls did not agree with reference often enough. No other basis supports it either. National reference: 29 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 4 national donors inside the comparability envelope, below the floor of 10. Modeled reference: The model registry holds no approved specification for this metric. Published benchmark: Every published biological criterion in the STAF assessment library is scored on a state-specific field index (Michigan Procedure 51, the Carolina IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed from NRSA data, so none measures the same quantity as this metric. Ohio EPA's ecoregional biocriteria, the nearest published criterion for this ecoregion, were checked on 2026-09-21 and are not usable either. They set thresholds on composite indices rather than on a single community metric such as this one, those indices are computed under Ohio's own field protocol and are not carried by the NRSA archive, and they are Ohio water quality standards while half this ecoregion's stations lie in Indiana. No curve was built and the metric is not scored.",
       "levelsTried": [
         {
           "level": "l3",
@@ -5747,55 +6349,74 @@
           "n_local": 0
         },
         {
+          "level": "l3",
+          "region_code": "55",
+          "n_pool": 7,
+          "n_comparable": 7,
+          "n_usable": 7,
+          "n_local": 7
+        },
+        {
           "level": "l2",
           "region_code": "8.2",
-          "n_pool": 0,
-          "n_comparable": 0,
-          "n_usable": 0,
-          "n_local": 0
+          "n_pool": 18,
+          "n_comparable": 7,
+          "n_usable": 7,
+          "n_local": 7
+        },
+        {
+          "level": "nars9",
+          "region_code": "TPL",
+          "n_pool": 83,
+          "n_comparable": 15,
+          "n_usable": 14,
+          "n_local": 7
         },
         {
           "level": "l1",
           "region_code": "8",
-          "n_pool": 148,
-          "n_comparable": 1,
-          "n_usable": 1,
-          "n_local": 0
+          "n_pool": 509,
+          "n_comparable": 40,
+          "n_usable": 39,
+          "n_local": 7
         }
       ],
       "rungsTried": [
         {
-          "rung": "REF-08",
-          "why": "12 comparable national donors carry this metric, and borrowed donors reached promising but not validated in the recovery test, so there is no demonstration that they transfer to this ecoregion."
+          "rung": "REF-12",
+          "why": "29 matched national donors, but in the recovery test the source's class calls did not agree with reference often enough. 4 national donors inside the comparability envelope, below the floor of 10."
         },
         {
-          "rung": "REF-09",
-          "why": "The fitted expectation did not pass the recovery test for this metric."
+          "rung": "REF-13",
+          "why": "The model registry holds no approved specification for this metric."
         },
         {
-          "rung": "REF-10",
-          "why": "Every published biological criterion in the STAF assessment library is scored on a state-specific field index (Michigan Procedure 51, the Carolina IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed from NRSA data, so none measures the same quantity as this metric. Ohio EPA's ecoregional biocriteria, the nearest published criterion for this ecoregion, were checked on 2026-09-21 and are not usable either. They set thresholds on composite indices rather than on taxa richness, those indices are computed under Ohio's own field protocol and are not carried by the NRSA archive, and they are Ohio water quality standards while half this ecoregion's stations lie in Indiana.",
-          "condition": "PB-1"
+          "rung": "REF-14",
+          "why": "Every published biological criterion in the STAF assessment library is scored on a state-specific field index (Michigan Procedure 51, the Carolina IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed from NRSA data, so none measures the same quantity as this metric. Ohio EPA's ecoregional biocriteria, the nearest published criterion for this ecoregion, were checked on 2026-09-21 and are not usable either. They set thresholds on composite indices rather than on a single community metric such as this one, those indices are computed under Ohio's own field protocol and are not carried by the NRSA archive, and they are Ohio water quality standards while half this ecoregion's stations lie in Indiana.",
+          "condition": [
+            "catalog",
+            "no entry"
+          ]
         }
       ]
     }
   ],
-  "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482",
+  "contentDigest": "sha256:2b9698cd3554ba99507d73f0a0e17f82561acdbc0d6fe5b31983ae6926e23f7f",
   "library": {
     "libraryId": "eastern-corn-belt-plains",
-    "version": 7,
-    "updatedAt": "2026-09-21T07:59:28Z",
+    "version": 8,
+    "updatedAt": "2026-09-23T01:39:24Z",
     "author": "StreamCurves regional analysis (STAF)",
-    "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 0 of 44 stations of this ecoregion pass. 0 reference curves use local stations, 16 borrow from a parent ecoregion, 5 metrics use fixed criteria, and 7 metrics are withheld for insufficient reference support.  No station of this ecoregion passes the reference screen, so every reference curve here borrows its reference stations from a parent ecoregion.",
+    "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 0 of 44 stations of this ecoregion pass. 0 reference curves use local stations, 20 borrow from a wider region, 5 metrics use fixed criteria, and 7 metrics are withheld for insufficient reference support. 19 published curves are carried forward unchanged from version 7, and 1 were rebuilt because the data verification corrected values they rested on.  No station of this ecoregion passes the reference screen, so every reference curve here borrows its reference stations from a parent ecoregion.",
     "region": {
       "kind": "ecoregion",
       "code": "55",
       "name": "Eastern Corn Belt Plains"
     },
-    "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482",
-    "supersedesVersion": 6
+    "contentDigest": "sha256:2b9698cd3554ba99507d73f0a0e17f82561acdbc0d6fe5b31983ae6926e23f7f",
+    "supersedesVersion": 7
   },
-  "version": 7,
+  "version": 8,
   "lifecycle": "preliminary",
-  "assessmentRef": "eastern-corn-belt-plains@v7"
+  "assessmentRef": "eastern-corn-belt-plains@v8"
 }

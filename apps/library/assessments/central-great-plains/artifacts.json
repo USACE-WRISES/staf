@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "central-great-plains",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:2336e0eefc2df67057d9ea1877c15429ac0765be5f8d7d90093bb2e6773991b9",
+      "bytes": 38444,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:a8d63f254bc0d56a5c1bee680104279a79f13f69b3a4d7c73c28e64948597a6f",
+      "builtAt": "2026-09-23T01:39:30Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "northern-lakes-and-forests",
+  "assessmentName": "Northern Lakes and Forests reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "50",
+    "name": "Northern Lakes and Forests"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 50), StreamCurves regional analysis, methodology 0.14-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-23T01:39:34Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 56 of 146 stations of this ecoregion pass. 30 reference curves use local stations, 1 borrow from a wider region, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:7d8d5bed086c24c7ac118c4008ca58ae2190f42e4209dca35415d0fa8e24277a",
+      "supersedesVersion": null
+    }
+  ]
+}
