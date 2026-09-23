@@ -39,7 +39,7 @@
   tier: Detailed
   tier_num: 3
   role: Builds new detailed assessments for DEEP
-  description: Builds the reference-curve assessments that DEEP runs. For assessment developers rather than day-to-day users.
-  url: https://gtmenichino-stream-curves.share.connect.posit.cloud/
+  description: Builds the reference-curve assessments that DEEP runs. For assessment developers rather than day-to-day users. A Windows desktop app (StreamCurves Desktop).
+  url: https://github.com/USACE-WRISES/staf/releases/latest
   status: live
-  advanced: true # builder app: not shown as a launch card or linked on the site; reachable via the /stream-curves redirect
+  advanced: true # builder app: not shown as a launch card or linked on the site; the /stream-curves redirect lands on the StreamCurves Desktop download (the latest release)
