@@ -10,8 +10,14 @@
 # default channel would pick up any other app's feed on that channel. StreamCurves keeps its
 # own channel; any future desktop app in this repository needs its own (desktop/RELEASING.md).
 #
-# The same streamcurves-v* tag also fires streamcurves-payload. Both rewrite the rolling
-# streamcurves-current manifest, so they share one concurrency group and run one after the other.
+# The same streamcurves-v* tag also fires streamcurves-payload. Each workflow has its own
+# concurrency group: GitHub keeps only ONE pending run per group, so a shared group let one
+# tag's runs cancel each other. Both touch the rolling streamcurves-current manifest; the shell
+# block this workflow stamps there is informational (Velopack owns shell updates), so the two
+# writes may interleave.
+#
+# DUPLICATE EVENTS. GitHub can deliver one tag push twice (it did for streamcurves-v1.0.0). The
+# `check` job finds the release already published and the duplicate does nothing.
 #
 # Release recipe: add the `## vX.Y.Z (YYYY-MM-DD)` section to apps/stream-curves/CHANGELOG.md,
 # set <Version> in desktop/src/StreamCurves.Desktop/StreamCurves.Desktop.csproj to X.Y.Z, then
@@ -26,14 +32,31 @@ permissions:
   contents: write
 
 concurrency:
-  group: streamcurves-current
+  group: streamcurves-shell-${{ github.ref }}
   cancel-in-progress: false
 
 env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.probe.outputs.published }}
+    steps:
+      - id: probe
+        name: Is this tag's release already published?
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' 2>/dev/null | grep -q -- '-Setup\.exe$'; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::$GITHUB_REF_NAME is already published; this run is a duplicate and does nothing."
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
   shell:
+    needs: check
+    if: needs.check.outputs.published != 'true'
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
