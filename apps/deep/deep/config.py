@@ -95,30 +95,76 @@ def _is_hidden(rec: dict) -> bool:
     return str(rec.get("assessmentId") or "").endswith(_HIDDEN_ID_SUFFIXES)
 
 
+def _remote_snapshot():
+    """The remote library's current snapshot (``deep/remote_library.py``), or None when
+    it is off, holds nothing, or fails. An in-memory read: a refresh never runs here."""
+    try:
+        from . import remote_library as _remote  # local import, like the library one
+
+        snap = _remote.snapshot()
+    except Exception:  # noqa: BLE001
+        return None
+    return snap if (snap.records or snap.ineligible_refs) else None
+
+
 def _registry_records() -> list[dict]:
-    """All (id, version) records, live-library-merged by ref (local/desktop only).
+    """All (id, version) records: the baked registry, the remote library release, and
+    (local/desktop only) the live library, merged by ref.
+
+    A later source wins a ref: local > remote > baked. A ref the remote catalog lists as
+    not eligible (a version since revised or retired) is dropped from the baked and remote
+    records, never from the live library's. Baked order comes first; refs new to the
+    registry are appended as they arrive (remote, then local). With no remote snapshot and
+    no live library this is exactly the baked registry.
 
     Hidden assessments (see ``_HIDDEN_ID_SUFFIXES``) are filtered from every path here so no
     downstream surface has to know about them.
     """
     baked = [_normalize_record(r) for r in assessments_doc().get("assessments", [])]
+    remote = _remote_snapshot()
     try:
         from . import library as _library  # local import avoids an import cycle
 
         extra = _library.all_eligible_bundles()
     except Exception:  # noqa: BLE001
         extra = []
-    if not extra:
+    if not extra and remote is None:
         return [r for r in baked if not _is_hidden(r)]
     order = [r["assessmentRef"] for r in baked]
+    seen = set(order)
     by_ref = {r["assessmentRef"]: r for r in baked}
-    for bundle in extra:
-        rec = _normalize_record(bundle)
-        ref = rec["assessmentRef"]
-        if ref not in by_ref:
-            order.append(ref)
-        by_ref[ref] = rec
+
+    def _merge(bundles) -> None:
+        for bundle in bundles:
+            rec = _normalize_record(bundle)
+            ref = rec["assessmentRef"]
+            if ref not in seen:
+                seen.add(ref)
+                order.append(ref)
+            by_ref[ref] = rec
+
+    if remote is not None:
+        _merge(remote.records)
+        for ref in remote.ineligible_refs:
+            by_ref.pop(ref, None)
+    _merge(extra)
     return [by_ref[ref] for ref in order if ref in by_ref and not _is_hidden(by_ref[ref])]
+
+
+#: How long a lookup of a ref DEEP does not know may wait for the remote library to
+#: catch up: a link to a version published after the last refresh, or opened while the
+#: first refresh after a start is still running. At most one refresh per 30 seconds.
+_REMOTE_CATCH_UP_S = 10.0
+
+
+def _remote_catch_up() -> bool:
+    """True when the remote library installed a newer snapshot while this waited."""
+    try:
+        from . import remote_library as _remote
+
+        return _remote.catch_up(_REMOTE_CATCH_UP_S)
+    except Exception:  # noqa: BLE001
+        return False
 
 
 def library_catalog() -> dict[str, dict]:
@@ -152,13 +198,18 @@ def assessments_by_ref() -> dict[str, dict]:
 
 def default_ref_for(assessment_id: str) -> str | None:
     cat = library_catalog().get(assessment_id)
+    if not cat and _remote_catch_up():
+        cat = library_catalog().get(assessment_id)
     if not cat:
         return None
     return f"{assessment_id}@v{cat['defaultVersion']}"
 
 
 def load_ref(ref: str) -> dict | None:
-    return assessments_by_ref().get(ref)
+    rec = assessments_by_ref().get(ref)
+    if rec is None and _remote_catch_up():
+        rec = assessments_by_ref().get(ref)
+    return rec
 
 
 def assessments() -> list[dict]:
