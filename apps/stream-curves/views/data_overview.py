@@ -1,22 +1,19 @@
 """Data & Setup tab — core port of app/modules/mod_data_overview.R.
 
-Covers the primary flows: the landing screen (Start New Project / Open
-Project), the xlsx workbook load pipeline (read → clean → derive → precheck →
-apply to state), JSON session save/restore (replacing the R app's .rds
-snapshots), and the opened-project workspace shell — header with Save
-Project / Save Workbook / Close Project plus the 3-step stepper (Workbook,
-Mapping, Pre-Run Validation). Step sections stay mounted and are shown/hidden
-via a reactive <style> tag (the R app used conditionalPanel).
-
-Deferred pieces of the R module (ported separately): the metadata editor
-tabs, the excel-like workbook grid, custom-grouping builder, site-mask
-manager, and the map-first import wizard (M7).
+Covers the Region & data wizard (the map-first import wizard), the opened
+project's workspace (Workbook, Function mapping, Metric redundancy, Pre-run
+validation; panels stay mounted and are shown or hidden by a reactive <style>
+tag, as the R app's conditionalPanel did), and the three ways state is loaded,
+kept as module-level functions so the project controller (views/project.py) and
+the Region builder share them: ``restore_session`` (a session payload),
+``apply_workbook_bundle`` (an xlsx workbook) and ``seed_origin`` (where an
+opened assessment came from). Opening, saving and closing projects live in the
+project controller and its start page.
 """
 
 from __future__ import annotations
 
 import hashlib
-import json
 import logging
 import re
 from datetime import date, datetime, timezone
@@ -24,7 +21,6 @@ from datetime import date, datetime, timezone
 import pandas as pd
 from shiny import module, reactive, render, req, ui
 
-from streamcurves import library as lib
 from streamcurves import overlap
 from streamcurves import owner_curves as oc
 from streamcurves import region_build as rb
@@ -39,14 +35,13 @@ from streamcurves.precheck import (
     precheck_warning_rows,
     run_metric_precheck,
 )
-from streamcurves.workbook import read_input_workbook
 from views import assessment_publish as ap
 from views import state as st
 from views.discipline_map import discipline_map_server, discipline_map_ui
 from views.import_map import import_map_server, import_map_ui
 from views.state import AppState, deep_copy_value, empty_phase2_settings
-from views.theme import STAF_LINKS, bi, fa
-from views.uihelpers import lifecycle_badge, linkify_rule_ids, status_badge
+from views.theme import bi
+from views.uihelpers import linkify_rule_ids, status_badge
 from views.workbook_grid import workbook_grid_server, workbook_grid_ui
 
 logger = logging.getLogger("streamcurves")
@@ -79,36 +74,335 @@ def _default_session_name(name: str | None, upload_filename: str | None) -> str:
     return f"Session {date.today():%Y-%m-%d}"
 
 
-def _upload_format_tooltip():
-    rows = [
-        ("File type:", "XLSX workbook."),
-        ("Structure:", "Separate sheets for data, metrics, stratifications, predictors, and recodes."),
-        ("Custom strata:", "Categorical and continuous grouping rules are materialized at import."),
-        ("Runtime config:", "Workbook metadata replaces the old YAML registries."),
-    ]
-    return ui.div(
-        *[
-            ui.div(ui.tags.strong(k), ui.tags.span(f" {v}"), class_="upload-format-row")
-            for k, v in rows
-        ],
-        class_="upload-format-tooltip",
-    )
+# --------------------------------------------------------------------------- #
+# Loading into the session: shared by the project controller (views/project.py),
+# the Region builder's staged open and this module's own views.
+# --------------------------------------------------------------------------- #
 
 
-def _session_tooltip():
-    rows = [
-        ("File type:", "StreamCurves session snapshot (.streamcurves.json)."),
-        ("Includes:", "The full analysis state: data, settings, results, curve "
-                      "choices, and decision history."),
-        ("Restore:", "Uploading the .json restores the saved workspace state."),
-    ]
-    return ui.div(
-        *[
-            ui.div(ui.tags.strong(k), ui.tags.span(f" {v}"), class_="upload-format-row")
-            for k, v in rows
-        ],
-        class_="upload-format-tooltip",
+def apply_workbook_bundle(state: AppState, bundle: dict, source_name: str) -> None:
+    """Load a read workbook (workbook.read_input_workbook) into the session (R:1973-2073)."""
+    p = ui.Progress(min=0, max=5)
+    try:
+        p.set(value=0, message="Loading Workbook", detail="Loading workbook tables...")
+        p.set(value=1, message="Loading Workbook", detail="Cleaning uploaded data...")
+        cleaned, _ = clean_data(
+            bundle["raw_data"],
+            bundle["metric_config"],
+            bundle["strat_config"],
+            bundle["factor_recode_config"],
+        )
+        p.set(value=2, message="Loading Workbook", detail="Deriving analysis variables...")
+        derived = derive_variables(
+            cleaned,
+            bundle["factor_recode_config"],
+            bundle["predictor_config"],
+            bundle["strat_config"],
+        )
+        p.set(value=3, message="Loading Workbook", detail="Running pre-run validation...")
+        precheck = run_metric_precheck(derived, bundle["metric_config"])
+
+        p.set(value=4, message="Loading Workbook", detail="Applying dataset to the app...")
+        st.reset_all_analysis(state)
+
+        state.metric_config.set(bundle["metric_config"])
+        state.strat_config.set(bundle["strat_config"])
+        state.predictor_config.set(bundle["predictor_config"])
+        state.factor_recode_config.set(bundle["factor_recode_config"])
+        state.input_metadata.set(bundle.get("metadata"))
+        state.site_mask_config.set(bundle.get("site_mask_config"))
+        state.data.set(derived)
+        state.precheck_df.set(precheck)
+        state.data_source.set("upload")
+        state.upload_filename.set(source_name)
+        state.data_fingerprint.set(
+            hashlib.md5(
+                pd.util.hash_pandas_object(derived, index=True).values.tobytes()
+            ).hexdigest()
+        )
+        metric_keys = list(bundle["metric_config"].keys())
+        with reactive.isolate():
+            current_metric = state.current_metric()
+        state.current_metric.set(metric_keys[0] if metric_keys else current_metric)
+        state.config_version.set(0)
+
+        mapping = bundle.get("discipline_function_mapping")
+        if mapping is not None:
+            state.discipline_function_mapping.set(mapping)
+            state.discipline_function_mapping_confirmed.set(
+                bool(bundle.get("mapping_covers_all_metrics"))
+            )
+            state.mapping_user_touched.set(True)
+            state.workbook_provided_mapping.set(True)
+        else:
+            state.discipline_function_mapping.set(None)
+            state.discipline_function_mapping_confirmed.set(False)
+            state.mapping_user_touched.set(False)
+            state.workbook_provided_mapping.set(False)
+        state.startup_discipline_function_mapping.set(None)
+
+        state.app_data_loaded.set(True)
+        p.set(value=5, message="Loading Workbook", detail="Done.")
+
+        ui.notification_show(
+            f"Loaded {len(derived)} rows x {derived.shape[1]} cols from {source_name}",
+            type="message",
+            duration=5,
+        )
+    finally:
+        p.close()
+
+
+def restore_session(state: AppState, payload: dict, source_name: str | None = None, *,
+                    decisions: str = "region", fields: dict | None = None) -> str:
+    """Restore a session payload into the session (R:2841-2934); returns its name.
+
+    ``decisions`` says how the owner's REF-15 curve decisions meet the region's record:
+
+    * ``"region"`` (a staged run, a library version): the region's record, when it keeps
+      one, is the standing record, so a decision saved while this session was closed
+      applies here and one undone since does not;
+    * ``"merge"`` (a project file, possibly one a reviewer revised and sent back): the
+      project's decisions stand and the region's record only adds to them. A decision the
+      record lacks is kept and reported, and a publish records it for the region.
+
+    ``fields`` takes the payload already decoded (session_io.decode_session_fields), which a
+    caller does off the event loop: decoding a large session takes a couple of seconds.
+    """
+    if fields is None:
+        fields = sio.decode_session_fields(payload)
+
+    st.reset_all_analysis(state)
+
+    state.data.set(fields.get("data"))
+    # precheck_df is restored further down: recomputing it needs metric_config,
+    # which is not set until below.
+    state.data_source.set(fields.get("data_source") or "session_file")
+    state.data_fingerprint.set(fields.get("data_fingerprint"))
+    state.upload_filename.set(fields.get("upload_filename"))
+    state.site_mask_config.set(fields.get("site_mask_config"))
+
+    with reactive.isolate():
+        startup_mc = state.startup_metric_config()
+        startup_sc = state.startup_strat_config()
+        startup_pc = state.startup_predictor_config()
+        startup_frc = state.startup_factor_recode_config()
+        startup_oc = state.startup_output_config()
+        startup_ver = state.startup_config_version()
+    state.metric_config.set(fields.get("metric_config") or deep_copy_value(startup_mc))
+    state.strat_config.set(fields.get("strat_config") or deep_copy_value(startup_sc))
+    state.predictor_config.set(fields.get("predictor_config") or deep_copy_value(startup_pc))
+    state.factor_recode_config.set(
+        fields.get("factor_recode_config") or deep_copy_value(startup_frc)
     )
+    if fields.get("output_config"):
+        merged = deep_copy_value(startup_oc) or {}
+        merged.update(fields["output_config"])
+        state.output_config.set(merged)
+    else:
+        state.output_config.set(deep_copy_value(startup_oc))
+    state.config_version.set(
+        fields.get("config_version") if fields.get("config_version") is not None else startup_ver or 0
+    )
+
+    # Workbook tables. Sessions written headlessly (the regional agent, the
+    # SQT migration) never had a workbook to save, so every published
+    # library assessment carries input_metadata: null -- which left the
+    # whole Workbook panel reading "No data loaded." over a perfectly good
+    # dataset, and left Apply a silent no-op. Rebuild them from the configs
+    # we just restored; tables_from_configs keeps each metric's real
+    # settings, so this is a faithful reconstruction rather than defaults.
+    restored_tables = fields.get("input_metadata")
+    if not restored_tables and fields.get("data") is not None:
+        with reactive.isolate():
+            restored_tables = wb.tables_from_configs(
+                state.data(),
+                state.metric_config(),
+                state.predictor_config(),
+                state.strat_config(),
+                state.factor_recode_config(),
+            )
+    state.input_metadata.set(restored_tables)
+
+    # Pre-run validation. Same gap as input_metadata above: headless sessions
+    # carry precheck_df: null, and the panel's only guard was a req() that
+    # renders nothing -- so a never-computed precheck looked exactly like a
+    # clean one, which would hide real failures on another dataset. Recompute
+    # rather than leave it blank. Wrapped: a QA table is never worth aborting
+    # an Open over, and the panel says "not run" if this fails.
+    restored_precheck = fields.get("precheck_df")
+    if restored_precheck is None and fields.get("data") is not None:
+        with reactive.isolate():
+            try:
+                restored_precheck = run_metric_precheck(
+                    state.data(), state.metric_config()
+                )
+            except Exception:  # noqa: BLE001
+                logger.warning("Precheck recompute on restore failed", exc_info=True)
+    state.precheck_df.set(restored_precheck)
+
+    state.phase1_candidates.set(fields.get("phase1_candidates") or {})
+    state.all_layer1_results.set(fields.get("all_layer1_results") or {})
+    state.all_layer2_results.set(fields.get("all_layer2_results") or {})
+    state.phase2_ranking.set(fields.get("phase2_ranking"))
+    state.cross_metric_consistency.set(fields.get("cross_metric_consistency"))
+    state.metric_redundancy.set(fields.get("metric_redundancy"))
+    state.phase2_settings.set(fields.get("phase2_settings") or empty_phase2_settings())
+    state.phase2_metric_overrides.set(fields.get("phase2_metric_overrides") or {})
+    # A completed metric whose stored phase4_signature says decision_type
+    # "none" was built unstratified, but get_metric_curve_stratification
+    # falls back to the phase-1 screening recommendation whenever there is no
+    # stored choice. Once a published session carries screening results that
+    # fallback recomputes a "single" signature, it stops matching the stored
+    # one, and every curve in a completed assessment renders as "not current,
+    # recompute required". Pin the choice the curves were actually built with.
+    restored_curve_strat = dict(fields.get("curve_stratification") or {})
+    for metric, entry in (fields.get("completed_metrics") or {}).items():
+        signature = (entry or {}).get("phase4_signature") or {}
+        if metric not in restored_curve_strat and signature.get("decision_type") == "none":
+            restored_curve_strat[metric] = "none"
+    state.curve_stratification.set(restored_curve_strat)
+    state.summary_available_overrides.set(fields.get("summary_available_overrides") or {})
+    state.summary_edit_notes.set(fields.get("summary_edit_notes") or {})
+    state.phase3_verification.set(fields.get("phase3_verification") or {})
+    state.metric_phase_cache.set(fields.get("metric_phase_cache") or {})
+    state.stratum_results.set(fields.get("stratum_results") or {})
+    state.completed_metrics.set(fields.get("completed_metrics") or {})
+    state.decision_log.set(
+        fields.get("decision_log") if fields.get("decision_log") is not None else pd.DataFrame()
+    )
+    state.custom_groupings.set(fields.get("custom_groupings") or {})
+    state.custom_grouping_counter.set(fields.get("custom_grouping_counter") or {})
+    state.cross_sections.set(fields.get("cross_sections") or {})
+    state.column_sources.set(fields.get("column_sources") or {})
+    state.column_functions.set(fields.get("column_functions") or {})
+    state.region_of_applicability.set(fields.get("region_of_applicability"))
+    state.candidate_sites.set(fields.get("candidate_sites"))
+    state.easi_screening_sites.set(fields.get("easi_screening_sites"))
+    state.easi_screening_metrics.set(fields.get("easi_screening_metrics"))
+    state.easi_screening_criteria.set(fields.get("easi_screening_criteria"))
+    state.run_meta.set(fields.get("run_meta"))
+    state.run_stage_status.set(fields.get("run_stage_status") or {})
+    state.curve_review.set(fields.get("curve_review") or {})
+    state.screening_run.set(fields.get("screening_run"))
+    state.site_exclusions.set(fields.get("site_exclusions") or [])
+    state.screening_skipped.set(bool(fields.get("screening_skipped")))
+    state.validation_records.set(fields.get("validation_records") or [])
+    # Origin + carried provenance: restored when a saved draft recorded them,
+    # cleared otherwise so a fresh open never wears a stale origin. Open
+    # paths that KNOW their origin (library picker, Region builder's staged
+    # open) re-seed both right after this restore returns.
+    state.assessment_source.set(fields.get("assessment_source"))
+    state.source_provenance.set(fields.get("source_provenance"))
+    # Standing-decision opt-ins: validated against the live policy, so a
+    # renamed or newly-standing entry falls away instead of riding along.
+    kept, dropped = rules_view.validate_selections(
+        fields.get("rule_selections") or [])
+    if dropped:
+        logger.info("restore: dropped rule selections %s", dropped)
+    state.rule_selections.set(kept)
+    # Absent in every session built before methodology 0.12 -> None, which
+    # reads as a legacy build (no fixed-criteria metrics to carry).
+    state.reference_build.set(fields.get("reference_build"))
+    # An unbuilt wizard (projects saved before Build dataset); None otherwise.
+    state.wizard_draft.set(fields.get("wizard_draft") if fields.get("data") is None else None)
+    # The owner's curve decisions (REF-15): how they meet the region's record
+    # depends on what is being opened (see ``decisions`` above); the session's
+    # copy still carries what its build computed.
+    session_decisions = list(fields.get("owner_curve_decisions") or [])
+    region_dir = (rb.region_run_dir(fields.get("region_of_applicability"))
+                  if fields.get("reference_build") else None)
+    record = oc.standing(region_dir)
+    if decisions == "merge":
+        chosen = oc.combine(session_decisions, record or [])
+        withdrawn = []
+        held = {d.get("id") for d in record or []}
+        unrecorded = [d for d in session_decisions
+                      if record is not None and d.get("id") not in held
+                      and not str(d.get("id") or "").startswith(oc.FLAG_PREFIX)]
+    else:
+        chosen, withdrawn = oc.restore(session_decisions, record)
+        unrecorded = []
+    state.owner_curve_decisions.set(chosen)
+    added = len({d["id"] for d in chosen} - {d.get("id") for d in session_decisions})
+    if added:
+        ui.notification_show(
+            f"{added} curve decision{'' if added == 1 else 's'} saved for this region "
+            f"{'is' if added == 1 else 'are'} applied here, as {'it' if added == 1 else 'they'}"
+            " will be to the next build.", type="message", duration=8)
+    if withdrawn:
+        n = len(withdrawn)
+        ui.notification_show(
+            f"{n} curve decision{'' if n == 1 else 's'} this session applied "
+            f"{'was' if n == 1 else 'were'} undone for this region since, so "
+            f"{'it does' if n == 1 else 'they do'} not apply here.",
+            type="message", duration=10)
+    if unrecorded:
+        n = len(unrecorded)
+        ui.notification_show(
+            f"This project carries {n} curve decision{'' if n == 1 else 's'} the region's "
+            f"record does not hold. {'It applies' if n == 1 else 'They apply'} here, and "
+            "publishing records them for the region.", type="message", duration=10)
+    # Absent in a session written before gaps had to be justified -> no
+    # exceptions, which is the honest reading of that file. A gap recorded with
+    # a curve decision that no longer stands goes with it.
+    state.function_coverage_exceptions.set(
+        oc.live_exceptions(fields.get("function_coverage_exceptions") or [], chosen)
+    )
+
+    mapping = fields.get("discipline_function_mapping")
+    if mapping is not None:
+        state.discipline_function_mapping.set(mapping)
+        state.discipline_function_mapping_confirmed.set(
+            bool(fields.get("discipline_function_mapping_confirmed"))
+        )
+        state.mapping_user_touched.set(True)
+        state.workbook_provided_mapping.set(bool(fields.get("workbook_provided_mapping")))
+    else:
+        state.discipline_function_mapping.set(None)
+        state.discipline_function_mapping_confirmed.set(False)
+        state.mapping_user_touched.set(False)
+        state.workbook_provided_mapping.set(False)
+
+    session_name = fields.get("session_name") or _default_session_name(
+        source_name, fields.get("upload_filename")
+    )
+    state.session_name.set(session_name)
+
+    metric_config = fields.get("metric_config") or {}
+    current = fields.get("current_metric")
+    if not current or current not in metric_config:
+        current = next(iter(metric_config), None)
+    if current is not None:
+        state.current_metric.set(current)
+
+    with reactive.isolate():
+        cache = state.metric_phase_cache() or {}
+    if current is not None and current in cache:
+        st.restore_metric_phase_state(state, current)
+
+    state.app_data_loaded.set(fields.get("data") is not None)
+    st.notify_workspace_refresh(state)
+    return session_name
+
+
+def seed_origin(state: AppState, *, kind: str, library_id=None, version=None,
+                staged_path=None, run_dir=None, content_digest=None, provenance=None,
+                portfolio_approvals=None) -> None:
+    """Stamp where the just-restored assessment came from (and its build's
+    provenance, when it has one). Disclosure only: a failure here must
+    never block the open. Called AFTER the restore so the baselines
+    describe what actually loaded."""
+    try:
+        state.source_provenance.set(provenance)
+        state.assessment_source.set(ap.build_origin(
+            state, kind=kind, library_id=library_id, version=version,
+            staged_path=staged_path, run_dir=run_dir,
+            content_digest=content_digest,
+            portfolio_approvals=portfolio_approvals,
+            loaded_at=datetime.now(timezone.utc).isoformat()))
+    except Exception:  # noqa: BLE001
+        logger.exception("open: origin seeding failed")
 
 
 @module.ui
@@ -130,8 +424,6 @@ def data_overview_server(input, output, session, state: AppState):
     import_map_server(
         "import_map", state, active=lambda: entry_view() in ("new", "wizard")
     )
-    upload_error = reactive.value(None)
-    metadata_status = reactive.value(None)
     ws_step = reactive.value("workbook")
 
     @reactive.effect
@@ -149,11 +441,6 @@ def data_overview_server(input, output, session, state: AppState):
         state.data_setup_view.set(resolved)
 
     # ── landing / entry views ────────────────────────────────────────────────
-    @reactive.effect
-    @reactive.event(input.start_new)
-    def _start_new():
-        entry_view.set("new")
-
     @reactive.effect
     @reactive.event(state.app_reset_nonce, ignore_init=True)
     def _closed():
@@ -228,38 +515,21 @@ def data_overview_server(input, output, session, state: AppState):
 
     # ── landing / new / workspace main content ──────────────────────────────
     def landing_view():
+        # Only ever seen behind the start page, or after a project-independent tool
+        # (NRSA explorer, Rules) closed it with no project open: say what to do and
+        # offer the one door.
         return ui.div(
             ui.div(
-                ui.div(
-                    ui.card(
-                        ui.card_body(
-                            ui.div(bi("plus-circle-fill"), class_="landing-card-icon text-primary"),
-                            ui.tags.h4("Start New Project", class_="landing-card-title"),
-                            ui.tags.p(
-                                "Choose a region, gather and screen sites, and build "
-                                "reference curves.",
-                                class_="text-muted landing-card-blurb",
-                            ),
-                            ui.input_action_button(
-                                ns("start_new"),
-                                ui.TagList(bi("arrow-right-circle"), " Start New Project"),
-                                class_="btn btn-primary",
-                            ),
-                        ),
-                        class_="h-100 landing-card border-primary",
-                    ),
-                    class_="col-12 col-lg-6",
-                ),
-                class_="row g-3 justify-content-center align-items-stretch",
+                ui.tags.p("No project is open.", class_="sc-empty-title"),
+                ui.tags.p("Create a project, open one, or download an assessment from "
+                          "the library.", class_="sc-empty-lead"),
+                ui.tags.button(
+                    "Projects", type="button", class_="btn btn-primary",
+                    onclick=("Shiny.setInputValue('start_page_open', "
+                             "Date.now() + Math.random(), {priority: 'event'})")),
+                class_="sc-empty-card",
             ),
-            ui.div(
-                bi("folder2-open"),
-                " Looking for saved work? Use ",
-                ui.tags.strong("Open"),
-                " in the top-right to load a saved project or a library assessment.",
-                class_="text-muted small text-center mt-3",
-            ),
-            class_="landing-shell",
+            class_="landing-shell sc-empty",
         )
 
     def new_project_view():
@@ -284,14 +554,6 @@ def data_overview_server(input, output, session, state: AppState):
                     bi("folder-check"),
                     " ",
                     ui.tags.strong(ui.output_text(ns("workspace_title"), inline=True)),
-                ),
-                ui.div(
-                    ui.input_action_button(
-                        ns("reset_analysis"),
-                        ui.TagList(fa("xmark"), " Close Project"),
-                        class_="btn btn-outline-danger btn-sm",
-                    ),
-                    class_="d-flex gap-2",
                 ),
                 class_="card-header data-setup-card-header",
             ),
@@ -321,563 +583,23 @@ def data_overview_server(input, output, session, state: AppState):
             return new_project_view()
         return landing_view()
 
-    # suspend_when_hidden=False: this output binds inside the Open modal's
-    # insert frame; default suspension would leave it permanently stale.
-    @output(suspend_when_hidden=False)
-    @render.ui
-    def upload_status():
-        err = upload_error()
-        if err is None:
-            return None
-        return ui.div(
-            fa("triangle-exclamation"),
-            f" {err}",
-            class_="alert alert-danger py-1 px-2 mt-1",
-        )
-
-    # ── workbook (xlsx) load pipeline (R:1973-2073) ─────────────────────────
-    def apply_workbook_bundle(bundle: dict, source_name: str):
-        p = ui.Progress(min=0, max=5)
-        try:
-            p.set(value=0, message="Loading Workbook", detail="Loading workbook tables...")
-            p.set(value=1, message="Loading Workbook", detail="Cleaning uploaded data...")
-            cleaned, _ = clean_data(
-                bundle["raw_data"],
-                bundle["metric_config"],
-                bundle["strat_config"],
-                bundle["factor_recode_config"],
-            )
-            p.set(value=2, message="Loading Workbook", detail="Deriving analysis variables...")
-            derived = derive_variables(
-                cleaned,
-                bundle["factor_recode_config"],
-                bundle["predictor_config"],
-                bundle["strat_config"],
-            )
-            p.set(value=3, message="Loading Workbook", detail="Running pre-run validation...")
-            precheck = run_metric_precheck(derived, bundle["metric_config"])
-
-            p.set(value=4, message="Loading Workbook", detail="Applying dataset to the app...")
-            st.reset_all_analysis(state)
-
-            state.metric_config.set(bundle["metric_config"])
-            state.strat_config.set(bundle["strat_config"])
-            state.predictor_config.set(bundle["predictor_config"])
-            state.factor_recode_config.set(bundle["factor_recode_config"])
-            state.input_metadata.set(bundle.get("metadata"))
-            state.site_mask_config.set(bundle.get("site_mask_config"))
-            state.data.set(derived)
-            state.precheck_df.set(precheck)
-            state.data_source.set("upload")
-            state.upload_filename.set(source_name)
-            state.data_fingerprint.set(
-                hashlib.md5(
-                    pd.util.hash_pandas_object(derived, index=True).values.tobytes()
-                ).hexdigest()
-            )
-            metric_keys = list(bundle["metric_config"].keys())
-            with reactive.isolate():
-                current_metric = state.current_metric()
-            state.current_metric.set(metric_keys[0] if metric_keys else current_metric)
-            state.config_version.set(0)
-
-            mapping = bundle.get("discipline_function_mapping")
-            if mapping is not None:
-                state.discipline_function_mapping.set(mapping)
-                state.discipline_function_mapping_confirmed.set(
-                    bool(bundle.get("mapping_covers_all_metrics"))
-                )
-                state.mapping_user_touched.set(True)
-                state.workbook_provided_mapping.set(True)
-            else:
-                state.discipline_function_mapping.set(None)
-                state.discipline_function_mapping_confirmed.set(False)
-                state.mapping_user_touched.set(False)
-                state.workbook_provided_mapping.set(False)
-            state.startup_discipline_function_mapping.set(None)
-
-            state.app_data_loaded.set(True)
-            metadata_status.set(None)
-            p.set(value=5, message="Loading Workbook", detail="Done.")
-
-            ui.notification_show(
-                f"Loaded {len(derived)} rows x {derived.shape[1]} cols from {source_name}",
-                type="message",
-                duration=5,
-            )
-        finally:
-            p.close()
-
-    # ── session (.json) restore (R:2841-2934) ───────────────────────────────
-    def restore_session_into_state(payload: dict, source_name: str | None = None):
-        fields = sio.decode_session_fields(payload)
-
-        st.reset_all_analysis(state)
-
-        state.data.set(fields.get("data"))
-        # precheck_df is restored further down: recomputing it needs metric_config,
-        # which is not set until below.
-        state.data_source.set(fields.get("data_source") or "session_file")
-        state.data_fingerprint.set(fields.get("data_fingerprint"))
-        state.upload_filename.set(fields.get("upload_filename"))
-        state.site_mask_config.set(fields.get("site_mask_config"))
-
-        with reactive.isolate():
-            startup_mc = state.startup_metric_config()
-            startup_sc = state.startup_strat_config()
-            startup_pc = state.startup_predictor_config()
-            startup_frc = state.startup_factor_recode_config()
-            startup_oc = state.startup_output_config()
-            startup_ver = state.startup_config_version()
-        state.metric_config.set(fields.get("metric_config") or deep_copy_value(startup_mc))
-        state.strat_config.set(fields.get("strat_config") or deep_copy_value(startup_sc))
-        state.predictor_config.set(fields.get("predictor_config") or deep_copy_value(startup_pc))
-        state.factor_recode_config.set(
-            fields.get("factor_recode_config") or deep_copy_value(startup_frc)
-        )
-        if fields.get("output_config"):
-            merged = deep_copy_value(startup_oc) or {}
-            merged.update(fields["output_config"])
-            state.output_config.set(merged)
-        else:
-            state.output_config.set(deep_copy_value(startup_oc))
-        state.config_version.set(
-            fields.get("config_version") if fields.get("config_version") is not None else startup_ver or 0
-        )
-
-        # Workbook tables. Sessions written headlessly (the regional agent, the
-        # SQT migration) never had a workbook to save, so every published
-        # library assessment carries input_metadata: null -- which left the
-        # whole Workbook panel reading "No data loaded." over a perfectly good
-        # dataset, and left Apply a silent no-op. Rebuild them from the configs
-        # we just restored; tables_from_configs keeps each metric's real
-        # settings, so this is a faithful reconstruction rather than defaults.
-        restored_tables = fields.get("input_metadata")
-        if not restored_tables and fields.get("data") is not None:
-            with reactive.isolate():
-                restored_tables = wb.tables_from_configs(
-                    state.data(),
-                    state.metric_config(),
-                    state.predictor_config(),
-                    state.strat_config(),
-                    state.factor_recode_config(),
-                )
-        state.input_metadata.set(restored_tables)
-
-        # Pre-run validation. Same gap as input_metadata above: headless sessions
-        # carry precheck_df: null, and the panel's only guard was a req() that
-        # renders nothing -- so a never-computed precheck looked exactly like a
-        # clean one, which would hide real failures on another dataset. Recompute
-        # rather than leave it blank. Wrapped: a QA table is never worth aborting
-        # an Open over, and the panel says "not run" if this fails.
-        restored_precheck = fields.get("precheck_df")
-        if restored_precheck is None and fields.get("data") is not None:
-            with reactive.isolate():
-                try:
-                    restored_precheck = run_metric_precheck(
-                        state.data(), state.metric_config()
-                    )
-                except Exception:  # noqa: BLE001
-                    logger.warning("Precheck recompute on restore failed", exc_info=True)
-        state.precheck_df.set(restored_precheck)
-
-        state.phase1_candidates.set(fields.get("phase1_candidates") or {})
-        state.all_layer1_results.set(fields.get("all_layer1_results") or {})
-        state.all_layer2_results.set(fields.get("all_layer2_results") or {})
-        state.phase2_ranking.set(fields.get("phase2_ranking"))
-        state.cross_metric_consistency.set(fields.get("cross_metric_consistency"))
-        state.metric_redundancy.set(fields.get("metric_redundancy"))
-        state.phase2_settings.set(fields.get("phase2_settings") or empty_phase2_settings())
-        state.phase2_metric_overrides.set(fields.get("phase2_metric_overrides") or {})
-        # A completed metric whose stored phase4_signature says decision_type
-        # "none" was built unstratified, but get_metric_curve_stratification
-        # falls back to the phase-1 screening recommendation whenever there is no
-        # stored choice. Once a published session carries screening results that
-        # fallback recomputes a "single" signature, it stops matching the stored
-        # one, and every curve in a completed assessment renders as "not current,
-        # recompute required". Pin the choice the curves were actually built with.
-        restored_curve_strat = dict(fields.get("curve_stratification") or {})
-        for metric, entry in (fields.get("completed_metrics") or {}).items():
-            signature = (entry or {}).get("phase4_signature") or {}
-            if metric not in restored_curve_strat and signature.get("decision_type") == "none":
-                restored_curve_strat[metric] = "none"
-        state.curve_stratification.set(restored_curve_strat)
-        state.summary_available_overrides.set(fields.get("summary_available_overrides") or {})
-        state.summary_edit_notes.set(fields.get("summary_edit_notes") or {})
-        state.phase3_verification.set(fields.get("phase3_verification") or {})
-        state.metric_phase_cache.set(fields.get("metric_phase_cache") or {})
-        state.stratum_results.set(fields.get("stratum_results") or {})
-        state.completed_metrics.set(fields.get("completed_metrics") or {})
-        state.decision_log.set(
-            fields.get("decision_log") if fields.get("decision_log") is not None else pd.DataFrame()
-        )
-        state.custom_groupings.set(fields.get("custom_groupings") or {})
-        state.custom_grouping_counter.set(fields.get("custom_grouping_counter") or {})
-        state.cross_sections.set(fields.get("cross_sections") or {})
-        state.column_sources.set(fields.get("column_sources") or {})
-        state.column_functions.set(fields.get("column_functions") or {})
-        state.region_of_applicability.set(fields.get("region_of_applicability"))
-        state.candidate_sites.set(fields.get("candidate_sites"))
-        state.easi_screening_sites.set(fields.get("easi_screening_sites"))
-        state.easi_screening_metrics.set(fields.get("easi_screening_metrics"))
-        state.easi_screening_criteria.set(fields.get("easi_screening_criteria"))
-        state.run_meta.set(fields.get("run_meta"))
-        state.run_stage_status.set(fields.get("run_stage_status") or {})
-        state.curve_review.set(fields.get("curve_review") or {})
-        state.screening_run.set(fields.get("screening_run"))
-        state.site_exclusions.set(fields.get("site_exclusions") or [])
-        state.screening_skipped.set(bool(fields.get("screening_skipped")))
-        state.validation_records.set(fields.get("validation_records") or [])
-        # Origin + carried provenance: restored when a saved draft recorded them,
-        # cleared otherwise so a fresh open never wears a stale origin. Open
-        # paths that KNOW their origin (library picker, Region builder's staged
-        # open) re-seed both right after this restore returns.
-        state.assessment_source.set(fields.get("assessment_source"))
-        state.source_provenance.set(fields.get("source_provenance"))
-        # Standing-decision opt-ins: validated against the live policy, so a
-        # renamed or newly-standing entry falls away instead of riding along.
-        kept, dropped = rules_view.validate_selections(
-            fields.get("rule_selections") or [])
-        if dropped:
-            logger.info("restore: dropped rule selections %s", dropped)
-        state.rule_selections.set(kept)
-        # Absent in every session built before methodology 0.12 -> None, which
-        # reads as a legacy build (no fixed-criteria metrics to carry).
-        state.reference_build.set(fields.get("reference_build"))
-        # The owner's curve decisions (REF-15): the region's record, when it keeps
-        # one, is the standing record, so a decision saved while this session was
-        # closed applies here as it will to the next build, and one undone since
-        # does not; the session's copy still carries what its build computed.
-        session_decisions = list(fields.get("owner_curve_decisions") or [])
-        region_dir = (rb.region_run_dir(fields.get("region_of_applicability"))
-                      if fields.get("reference_build") else None)
-        decisions, withdrawn = oc.restore(session_decisions, oc.standing(region_dir))
-        state.owner_curve_decisions.set(decisions)
-        added = len({d["id"] for d in decisions} - {d.get("id") for d in session_decisions})
-        if added:
-            ui.notification_show(
-                f"{added} curve decision{'' if added == 1 else 's'} saved for this region "
-                f"{'is' if added == 1 else 'are'} applied here, as {'it' if added == 1 else 'they'}"
-                " will be to the next build.", type="message", duration=8)
-        if withdrawn:
-            n = len(withdrawn)
-            ui.notification_show(
-                f"{n} curve decision{'' if n == 1 else 's'} this session applied "
-                f"{'was' if n == 1 else 'were'} undone for this region since, so "
-                f"{'it does' if n == 1 else 'they do'} not apply here.",
-                type="message", duration=10)
-        # Absent in a session written before gaps had to be justified -> no
-        # exceptions, which is the honest reading of that file. A gap recorded with
-        # a curve decision that no longer stands goes with it.
-        state.function_coverage_exceptions.set(
-            oc.live_exceptions(fields.get("function_coverage_exceptions") or [], decisions)
-        )
-
-        mapping = fields.get("discipline_function_mapping")
-        if mapping is not None:
-            state.discipline_function_mapping.set(mapping)
-            state.discipline_function_mapping_confirmed.set(
-                bool(fields.get("discipline_function_mapping_confirmed"))
-            )
-            state.mapping_user_touched.set(True)
-            state.workbook_provided_mapping.set(bool(fields.get("workbook_provided_mapping")))
-        else:
-            state.discipline_function_mapping.set(None)
-            state.discipline_function_mapping_confirmed.set(False)
-            state.mapping_user_touched.set(False)
-            state.workbook_provided_mapping.set(False)
-
-        session_name = fields.get("session_name") or _default_session_name(
-            source_name, fields.get("upload_filename")
-        )
-        state.session_name.set(session_name)
-
-        metric_config = fields.get("metric_config") or {}
-        current = fields.get("current_metric")
-        if not current or current not in metric_config:
-            current = next(iter(metric_config), None)
-        if current is not None:
-            state.current_metric.set(current)
-
-        with reactive.isolate():
-            cache = state.metric_phase_cache() or {}
-        if current is not None and current in cache:
-            st.restore_metric_phase_state(state, current)
-
-        state.app_data_loaded.set(fields.get("data") is not None)
-        metadata_status.set(None)
-        st.notify_workspace_refresh(state)
-        return session_name
-
-    # ── Open dialog (header "Open"): library picker + project-file upload ────
-    def _request_data_tab(wizard_step: int | None = None):
-        with reactive.isolate():
-            state.nav_request.set("data")
-            state.nav_request_nonce.set((state.nav_request_nonce() or 0) + 1)
-            if wizard_step is not None:
-                state.wizard_step_request.set(wizard_step)
-                state.wizard_step_nonce.set((state.wizard_step_nonce() or 0) + 1)
-
-    def _lib_assessments() -> list[dict]:
-        try:
-            return lib.list_assessments()
-        except Exception:  # noqa: BLE001
-            logger.exception("open dialog: reading catalog failed")
-            return []
-
-    def _open_click(aid: str, ver: int) -> str:
-        """Delegated per-row Open: one channel, {aid, ver} payload (the same
-        idiom as summary_page's row actions), so N rows need no N inputs."""
-        payload = json.dumps({"aid": str(aid), "ver": int(ver)})
-        return (
-            f"Shiny.setInputValue('{ns('open_dialog_action')}',"
-            f"{payload.replace(chr(39), chr(92) + chr(39))},"
-            "{priority:'event'})"
-        )
-
-    def _open_library_list(items: list[dict]):
-        if not items:
-            return ui.div(
-                bi("info-circle"),
-                " No assessments in the library yet.",
-                class_="alert alert-secondary py-2 small",
-            )
-        deep_base = (STAF_LINKS.get("deep") or "").rstrip("/")
-        rows = []
-        for a in items:
-            aid = str(a.get("assessmentId") or "")
-            latest = int(a.get("latestVersion") or 0)
-            badge = (
-                ui.tags.span(f"v{latest}", class_="badge bg-primary ms-1")
-                if latest > 0
-                else ui.tags.span("no versions", class_="badge bg-secondary ms-1")
-            )
-            # The lifecycle of the version the badge NAMES (the latest), derived
-            # from the catalog pointers, so review debt is visible right here:
-            # an unreviewed automated build reads "v4 Draft", never "v4" beside
-            # the default version's Preliminary. Older catalogs lack the draft
-            # pointers and fall back to defaultStatus.
-            lifecycle = None
-            if latest > 0:
-                if latest == (a.get("latestDraft") or 0):
-                    st_ = "draft"
-                elif latest == (a.get("latestCertified") or 0):
-                    st_ = "certified"
-                elif latest == (a.get("latestPreliminary") or 0):
-                    st_ = "preliminary"
-                else:
-                    st_ = a.get("defaultStatus") or lib.DEFAULT_STATUS
-                lifecycle = ui.tags.span(lifecycle_badge(st_), class_="ms-1")
-            region_txt = ap.region_label(a.get("region"))
-            open_btn = None
-            deep_link = None
-            toggle = None
-            versions_pane = None
-            if latest > 0:
-                open_btn = ui.tags.button(
-                    ui.TagList(bi("folder2-open"), " Open"),
-                    type="button",
-                    class_="btn btn-sm btn-primary",
-                    onclick=_open_click(aid, latest),
-                    title=f"Open v{latest} (latest)",
-                )
-                deep_link = ui.tags.a(
-                    ui.TagList(bi("arrow-right-circle"), " DEEP"),
-                    href=f"{deep_base}/?assessment={aid}",
-                    target="_blank",
-                    rel="noopener",
-                    class_="btn btn-sm btn-outline-primary",
-                    title="Review this assessment read-only in DEEP",
-                )
-                # Earlier versions live in a per-row expander (client-side
-                # Bootstrap collapse; content prebuilt here, each version with
-                # its own Open and lifecycle label).
-                manifest = lib.read_manifest(aid) or {}
-                versions = sorted(
-                    (int(v.get("version") or 0) for v in (manifest.get("versions") or [])),
-                    reverse=True,
-                )
-                if len(versions) > 1:
-                    dom = f"open-vers-{lib.slugify(aid)}"
-                    toggle = ui.tags.button(
-                        fa("chevron-down"),
-                        type="button",
-                        class_="btn btn-sm btn-link open-dialog-toggle",
-                        data_bs_toggle="collapse",
-                        data_bs_target=f"#{dom}",
-                        aria_expanded="false",
-                        aria_controls=dom,
-                        title="Show all versions",
-                    )
-                    vrows = []
-                    for v in versions:
-                        vlabel = (
-                            f"v{v} - {lib.status_label(lib.version_status(aid, v))}"
-                            + (" (latest)" if v == latest else "")
-                        )
-                        vrows.append(ui.div(
-                            ui.tags.span(vlabel, class_="small"),
-                            ui.tags.button(
-                                "Open", type="button",
-                                class_="btn btn-sm btn-outline-primary",
-                                onclick=_open_click(aid, v),
-                            ),
-                            class_="d-flex align-items-center justify-content-between "
-                                   "open-dialog-version",
-                        ))
-                    versions_pane = ui.div(*vrows, id=dom,
-                                           class_="collapse open-dialog-versions")
-            rows.append(
-                ui.div(
-                    ui.div(
-                        ui.div(
-                            ui.tags.strong(a.get("assessmentName") or aid),
-                            badge,
-                            lifecycle,
-                            ui.div(region_txt, class_="text-muted small"),
-                        ),
-                        ui.div(
-                            open_btn,
-                            deep_link,
-                            toggle,
-                            class_="d-flex align-items-center gap-1 ms-auto",
-                        ),
-                        class_="d-flex align-items-center",
-                    ),
-                    versions_pane,
-                    class_="list-group-item",
-                )
-            )
-        return ui.div(*rows, class_="list-group list-group-flush open-dialog-list mb-2")
-
-    @reactive.effect
-    @reactive.event(state.open_dialog_nonce, ignore_init=True)
-    def _show_open_dialog():
-        # Library first (the primary shared workflow): rows carry their own
-        # Open buttons and a version expander, so the old Assessment/Version
-        # selects and their fill effect are gone. Project file below.
-        items = _lib_assessments()
-        ui.modal_show(
-            ui.modal(
-                ui.tags.h6(
-                    ui.TagList(bi("layers"), " Assessment library"),
-                    class_="fw-bold mb-1",
-                ),
-                ui.p(
-                    "Opening an assessment restores its saved session and "
-                    "replaces whatever is open.",
-                    class_="text-muted small mb-2",
-                ),
-                _open_library_list(items),
-                ui.tags.hr(class_="my-3"),
-                ui.tags.h6(
-                    ui.TagList(bi("file-earmark-arrow-up"), " Project file"),
-                    class_="fw-bold mb-1",
-                ),
-                ui.p(
-                    "A saved session (.streamcurves.json) or a StreamCurves workbook (.xlsx).",
-                    class_="text-muted small mb-1",
-                ),
-                ui.input_file(
-                    ns("open_project_file"),
-                    None,
-                    accept=[".xlsx", ".json"],
-                    button_label="Choose File",
-                    placeholder="No file selected",
-                ),
-                ui.output_ui(ns("upload_status")),
-                title=ui.TagList(bi("folder2-open"), " Open"),
-                easy_close=True,
-                footer=ui.modal_button("Close"),
-                size="l",
-            )
-        )
-
-    def _seed_origin(*, kind: str, library_id=None, version=None, staged_path=None,
-                     run_dir=None, content_digest=None, provenance=None,
-                     portfolio_approvals=None):
-        """Stamp where the just-restored assessment came from (and its build's
-        provenance, when it has one). Disclosure only: a failure here must
-        never block the open. Called AFTER the restore so the baselines
-        describe what actually loaded."""
-        try:
-            state.source_provenance.set(provenance)
-            state.assessment_source.set(ap.build_origin(
-                state, kind=kind, library_id=library_id, version=version,
-                staged_path=staged_path, run_dir=run_dir,
-                content_digest=content_digest,
-                portfolio_approvals=portfolio_approvals,
-                loaded_at=datetime.now(timezone.utc).isoformat()))
-        except Exception:  # noqa: BLE001
-            logger.exception("open: origin seeding failed")
-
-    def _open_version_from_library(aid: str, ver: int) -> None:
-        """Open one library version into the session (shared by every per-row
-        and per-version Open button in the dialog)."""
-        try:
-            payload = lib.load_version_session(aid, int(ver))
-        except Exception as e:  # noqa: BLE001
-            ui.notification_show(
-                f"Could not open {aid} v{ver}: {e}", type="error", duration=8
-            )
-            return
-        manifest = lib.read_manifest(aid) or {}
-        name = manifest.get("assessmentName") or aid
-        try:
-            restore_session_into_state(payload, source_name=f"{name} v{ver}")
-        except Exception as e:  # noqa: BLE001
-            ui.notification_show(
-                f"Could not load the assessment: {e}", type="error", duration=8
-            )
-            return
-        try:
-            prov = lib.load_version_provenance(aid, int(ver))
-            digest = lib.version_content_digest(aid, int(ver))
-            approvals = lib.load_version_meta(aid, int(ver)).get("portfolioApprovals")
-        except Exception:  # noqa: BLE001
-            prov, digest, approvals = None, None, None
-        _seed_origin(kind="library", library_id=lib.slugify(aid), version=int(ver),
-                     content_digest=digest, provenance=prov,
-                     portfolio_approvals=approvals)
-        try:
-            # The library's own records for this version, so the Validate stage
-            # reads what is on disk rather than what the session last saw.
-            state.validation_records.set(
-                lib._validation_records_for(aid, int(ver)))
-        except Exception:  # noqa: BLE001
-            logger.exception("open: validation records read failed")
-        ui.modal_remove()
-        with reactive.isolate():
-            has_data = state.data() is not None
-        # Region-only sessions (e.g. migrated SQTs) have no dataset; open the
-        # hydrated wizard at the Region step instead of the landing screen.
-        _request_data_tab(wizard_step=None if has_data else 1)
-        ui.notification_show(f"Loaded {name} v{ver}.", type="message", duration=5)
-
-    @reactive.effect
-    @reactive.event(input.open_dialog_action)  # no ignore_init: first event on a never-set input IS the init run
-    def _open_dialog_action():
-        payload = input.open_dialog_action() or {}
-        aid = str(payload.get("aid") or "")
-        try:
-            ver = int(payload.get("ver") or 0)
-        except (TypeError, ValueError):
-            ver = 0
-        if not aid or ver < 1:
-            return
-        _open_version_from_library(aid, ver)
-
+    # ── loads from outside this module ──────────────────────────────────────
+    # The project controller (views/project.py) calls the module-level
+    # restore_session / apply_workbook_bundle / seed_origin directly. The
+    # Region builder's staged open still arrives on this nonce channel and opens
+    # as an unsaved project: Save asks where to keep it.
     @reactive.effect
     @reactive.event(state.session_restore_nonce, ignore_init=True)
     def _restore_from_library_request():
-        # Out-of-module callers can load a session payload and bump the nonce;
-        # reuse the exact same restore path as opening a .streamcurves.json file.
         with reactive.isolate():
             rq = state.session_restore_request()
         if not rq or not rq.get("payload"):
             return
+        before = state.hooks.get("before_replace")
+        if before is not None:
+            before()
         try:
-            restore_session_into_state(rq["payload"], source_name=rq.get("source_name"))
+            restore_session(state, rq["payload"], source_name=rq.get("source_name"))
         except Exception as e:  # noqa: BLE001
             ui.notification_show(
                 f"Could not load the assessment: {e}", type="error", duration=8
@@ -885,76 +607,20 @@ def data_overview_server(input, output, session, state: AppState):
             return
         seed = rq.get("origin_seed")
         if seed:
-            _seed_origin(kind=seed.get("kind") or "run",
-                         library_id=seed.get("library_id"),
-                         version=seed.get("version"),
-                         staged_path=seed.get("staged_path"),
-                         run_dir=seed.get("run_dir"),
-                         content_digest=seed.get("content_digest"),
-                         provenance=seed.get("provenance"),
-                         portfolio_approvals=seed.get("portfolio_approvals"))
-        ui.notification_show(f"Loaded {rq.get('source_name') or 'assessment'}.",
-                             type="message", duration=5)
-
-    @reactive.effect
-    @reactive.event(input.open_project_file)
-    async def _open_project():
-        finfo = input.open_project_file()
-        req(finfo)
-        f = finfo[0]
-        name = f.get("name", "")
-        ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
-        upload_error.set(None)
-        metadata_status.set(None)
-
-        if ext == "json":
-            try:
-                p = ui.Progress(min=0, max=3)
-                p.set(value=0, message="Loading Session", detail="Reading saved session snapshot...")
-                payload = sio.load_session_payload(f["datapath"])
-                p.set(value=1, message="Loading Session", detail="Restoring saved analysis state...")
-                stem = re.sub(r"\.json$", "", name, flags=re.I)
-                session_name = restore_session_into_state(payload, source_name=stem)
-                p.set(value=3, message="Loading Session", detail="Done.")
-                p.close()
-                ui.update_text("session_name", value=session_name or "")
-                await session.send_custom_message(
-                    "clearFileInput", {"id": ns("open_project_file")}
-                )
-                ui.modal_remove()
-                with reactive.isolate():
-                    n_completed = len(state.completed_metrics() or {})
-                    has_data = state.data() is not None
-                _request_data_tab(wizard_step=None if has_data else 1)
-                ui.notification_show(
-                    f"Session '{session_name}' loaded. {n_completed} completed metrics restored.",
-                    type="message",
-                    duration=5,
-                )
-            except Exception as e:  # noqa: BLE001
-                metadata_status.set({"type": "danger", "text": f"Session load failed: {e}"})
-                await session.send_custom_message(
-                    "clearFileInput", {"id": ns("open_project_file")}
-                )
-                ui.notification_show(f"Session load failed: {e}", type="error", duration=8)
-            return
-
-        if ext != "xlsx":
-            msg = "Unsupported file type. Choose a workbook (.xlsx) or a saved session (.json)."
-            upload_error.set(msg)
-            ui.notification_show(msg, type="error", duration=6)
-            return
-
-        try:
-            bundle = read_input_workbook(f["datapath"])
-            apply_workbook_bundle(bundle, name)
-        except Exception as e:  # noqa: BLE001
-            upload_error.set(str(e))
-            metadata_status.set({"type": "danger", "text": f"Upload failed: {e}"})
-            ui.notification_show(f"Upload failed: {e}", type="error", duration=8)
-            return
-        ui.modal_remove()
-        _request_data_tab()
+            seed_origin(state, kind=seed.get("kind") or "run",
+                        library_id=seed.get("library_id"),
+                        version=seed.get("version"),
+                        staged_path=seed.get("staged_path"),
+                        run_dir=seed.get("run_dir"),
+                        content_digest=seed.get("content_digest"),
+                        provenance=seed.get("provenance"),
+                        portfolio_approvals=seed.get("portfolio_approvals"))
+        adopted = state.hooks.get("adopt_unsaved")
+        if adopted is not None:
+            adopted(rq.get("source_name") or "Staged run")
+        ui.notification_show(
+            f"Loaded {rq.get('source_name') or 'assessment'}. Use Save As to keep it as "
+            "a project.", type="message", duration=6)
 
     # ── workspace step panels ────────────────────────────────────────────────
     @render.ui
@@ -1161,28 +827,3 @@ def data_overview_server(input, output, session, state: AppState):
 
     # Session/workbook downloads live on the Publish page (views/publish.py,
     # Draft pane); the header Save link navigates there.
-
-    # ── close project ─────────────────────────────────────────────────────────
-    @reactive.effect
-    @reactive.event(input.reset_analysis)
-    def _close_confirm():
-        ui.modal_show(
-            ui.modal(
-                "Close this project? Unsaved changes will be lost. The app returns "
-                "to the start screen.",
-                title="Close Project",
-                footer=ui.TagList(
-                    ui.modal_button("Cancel"),
-                    ui.input_action_button(
-                        ns("confirm_reset_analysis"), "Close Project", class_="btn btn-danger"
-                    ),
-                ),
-            )
-        )
-
-    @reactive.effect
-    @reactive.event(input.confirm_reset_analysis)
-    def _close_do():
-        ui.modal_remove()
-        st.reset_app_to_startup(state)
-        ui.notification_show("Project closed.", type="message", duration=3)

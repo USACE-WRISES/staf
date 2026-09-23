@@ -19,3 +19,15 @@ apps/stream-curves/streamcurves/_vendor/easi/data/screening-methods.json -text w
 # The NRSA archive manifest records this report's bytes as they were written (CRLF),
 # and every multi-cycle build digests that manifest, so the bytes stay as recorded.
 apps/stream-curves/data/nrsa/verification_report.md -text
+# The same for sources.lock.json and station_screen.meta.json: the archive manifest
+# records their CRLF bytes.
+apps/stream-curves/data/nrsa/sources.lock.json -text whitespace=cr-at-eol
+apps/stream-curves/data/nrsa/station_screen.meta.json -text whitespace=cr-at-eol
+# The legacy-1819 NRSA files: data/nrsa_provenance.json records their CRLF bytes, and every
+# published run manifest fingerprints nrsa_sites.csv (inputs.nrsa_sites), so they stay byte
+# identical in every checkout, CI run and desktop payload.
+apps/stream-curves/data/nrsa_sites.csv -text whitespace=cr-at-eol
+apps/stream-curves/data/nrsa_metric_catalog.csv -text whitespace=cr-at-eol
+# Fingerprinted with CRLF line endings into the published run manifests (configs[]), so a
+# rebuild anywhere reaches the recorded inputsDigest.
+apps/stream-curves/config/national_stratifier_registry.yaml -text whitespace=cr-at-eol

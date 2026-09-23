@@ -1,24 +1,32 @@
-# Builds the env payload: a relocatable python-build-standalone 3.12 interpreter with the full
-# STAF dependency set installed straight into it (no venv -> no pyvenv.cfg path problems).
+# Builds the StreamCurves env payload: a relocatable python-build-standalone 3.12 interpreter
+# with the full StreamCurves dependency set installed straight into it (no venv -> no
+# pyvenv.cfg path problems).
 #
 # Pipeline: pbs fetch+verify -> uv pip install (env.lock) -> fixups (drop Scripts\*.exe trampolines,
 # fail on absolute-path .pth, apply prune.txt, long-path check) -> compileall (unchecked-hash pycs,
-# CI prefix stripped) -> RELOCATION SMOKE GATE (move the tree, import the heavy stack, boot all
-# four real apps) -> zip + sha256. Nothing should ever publish an env zip that skipped the gate.
+# CI prefix stripped) -> RELOCATION SMOKE GATE (move the tree, import the heavy stack, boot the
+# real StreamCurves app from it) -> zip + sha256. Nothing should ever publish an env zip that
+# skipped the gate.
 #
-# ENV_VERSION is content-derived: env-cp312-<first 8 hex of sha256(LF(env.lock) + LF(pbs.lock))>.
-# The same computation runs in CI to decide whether a rebuild is needed at all.
+# ENV_VERSION is content-derived: env-cp312-<first 8 hex of sha256(LF(env.lock) + LF(pbs.lock) +
+# LF(prune.txt))>. The same computation runs in CI to decide whether a rebuild is needed at all.
+# Output: <OutDir>\streamcurves-<ENV_VERSION>.zip + .sha256.
 [CmdletBinding()]
 param(
-    [string]$RepoRoot = (Join-Path $PSScriptRoot '..\..'),
-    [string]$OutDir = (Join-Path $PSScriptRoot '..\build\release'),
-    [string]$WorkDir = (Join-Path $PSScriptRoot '..\build\env-work'),
+    [string]$RepoRoot,   # default: the checkout this script sits in
+    [string]$OutDir,     # default: desktop\build\release
+    [string]$WorkDir,    # default: desktop\build\env-work
     [string]$UvExe = 'uv',
     [switch]$NoUvCache,
     [switch]$SkipSmoke,  # local debugging only - CI must never pass this
     [switch]$VersionOnly # print ENV_VERSION and exit (CI uses this to decide whether to rebuild)
 )
 $ErrorActionPreference = 'Stop'
+# Defaults resolve here, not in param(): Windows PowerShell 5.1 leaves $PSScriptRoot empty
+# while binding an advanced script's param() defaults under `powershell -File`.
+if (-not $RepoRoot) { $RepoRoot = Join-Path $PSScriptRoot '..\..' }
+if (-not $OutDir) { $OutDir = Join-Path $PSScriptRoot '..\build\release' }
+if (-not $WorkDir) { $WorkDir = Join-Path $PSScriptRoot '..\build\env-work' }
 $RepoRoot = [IO.Path]::GetFullPath($RepoRoot)
 $OutDir = [IO.Path]::GetFullPath($OutDir)
 $WorkDir = [IO.Path]::GetFullPath($WorkDir)
@@ -51,7 +59,7 @@ Write-Host "[env] ENV_VERSION = $envVersion"
 if ($VersionOnly) { return }
 
 New-Item -ItemType Directory -Force $OutDir | Out-Null
-$zipPath = Join-Path $OutDir "staf-$envVersion.zip"
+$zipPath = Join-Path $OutDir "streamcurves-$envVersion.zip"
 if (Test-Path $zipPath) {
     Write-Host "[env] $zipPath already exists - nothing to do"
     return
@@ -129,7 +137,7 @@ Write-Host '[env] compileall...'
 & $py -m compileall -f -q -j 0 --invalidation-mode unchecked-hash -s $WorkDir (Join-Path $pyRoot 'Lib')
 if ($LASTEXITCODE -ne 0) { throw "compileall failed ($LASTEXITCODE)" }
 
-# -- 5. RELOCATION SMOKE GATE: move the tree, then import + boot all four apps from it --
+# -- 5. RELOCATION SMOKE GATE: move the tree, then import + boot StreamCurves from it --
 $relocated = Join-Path $WorkDir 'relocated'
 New-Item -ItemType Directory -Force $relocated | Out-Null
 Move-Item $pyRoot (Join-Path $relocated 'python')
@@ -138,7 +146,7 @@ $relocatedPy = Join-Path $relocated 'python\python.exe'
 if ($SkipSmoke) {
     Write-Warning '[env] SMOKE GATE SKIPPED - do not publish this zip'
 } else {
-    & $relocatedPy (Join-Path $PSScriptRoot 'smoke_boot_apps.py') `
+    & $relocatedPy (Join-Path $PSScriptRoot 'smoke_boot_app.py') `
         --python $relocatedPy --apps-root (Join-Path $RepoRoot 'apps')
     if ($LASTEXITCODE -ne 0) { throw "relocation smoke gate FAILED ($LASTEXITCODE)" }
 }

@@ -7,18 +7,18 @@
 STAF (Stream Tiered Assessment Framework) is a monorepo with two kinds of deliverables:
 
 1. **Documentation site** (`docs/`): Jekyll + [just-the-docs](https://just-the-docs.com/) remote theme on GitHub Pages, vanilla-JS widgets (IIFE-wrapped), and a TypeScript/Node build pipeline that compiles a source CSV into the metric library (validated with Zod).
-2. **Four Shiny for Python apps** (`apps/`), each deployed to its own Posit Connect Cloud content item:
+2. **Four Shiny for Python apps** (`apps/`). EASI, SFARI and DEEP each deploy to their own Posit Connect Cloud content item; StreamCurves runs only inside StreamCurves Desktop (item 3):
 
 | App | Tier | Purpose |
 |---|---|---|
 | `apps/easi` | Screening | Automated desktop screening (click a site → delineate → 20 metrics → condition score) |
 | `apps/sfari` | Rapid | Function-based rapid field assessment with desktop evidence support |
 | `apps/deep` | Detailed | Runs curve-based detailed assessments (predefined or uploaded `.deep.json` bundles) |
-| `apps/stream-curves` | Detailed (builder) | Builds reference/regional curves and exports `.deep.json` assessment bundles for DEEP |
+| `apps/stream-curves` | Detailed (builder) | Builds reference/regional curves into assessment versions for DEEP; a desktop app with project files and an Assessment library gallery |
 
 The site's Tools page is the app launch portal; app URLs live in `docs/_data/apps.yml` **and** in each app's `STAF_LINKS` dict — a URL change must be mirrored in both. Watershed metrics come from two engines, named once (`libs/README.md`, `docs/computation-engines.md`): the **StreamCat lookup engine** (token `streamcat`, EPA StreamCat by NHDPlus V2 COMID) and the **STAF site engine** (token `site-engine`, `libs/site_engine`, the HR reach watershed on NHDPlus HR), vendored per app and never a user-facing method choice.
 
-3. **STAF Desktop** (`desktop/`): a C#/.NET 10 WinForms + WebView2 shell that runs the *same four apps* locally from a self-managed payload (relocatable python-build-standalone + the apps tree, downloaded from GitHub Releases). Velopack packages it as a per-user `Setup.exe` and a self-updating portable zip. The only app-code concession to desktop is the `STAF_LINKS_OVERRIDES` env merge after each `STAF_LINKS` dict. See `desktop/RELEASING.md` for the release model.
+3. **StreamCurves Desktop** (`desktop/`): a C#/.NET 10 WinForms + WebView2 shell, ported from HYPE Desktop (`D:\Code\Work\hype-app`), that runs StreamCurves locally from a self-managed payload (relocatable python-build-standalone + `apps/stream-curves` + a read-only `apps/library` snapshot, downloaded from GitHub Releases). Velopack packages it as a per-user `Setup.exe` and a self-updating portable zip on its own channel, `streamcurves`. An installed copy is a *user* copy: its Assessment library downloads versions from the rolling `library` prerelease, and it never writes the library. Publishing happens in a *maintainer's* checkout with `STAF_LIBRARY_PUBLISH=1` (`streamcurves/workspace.py` decides the mode). The old four-app STAF Desktop is retired. See `desktop/RELEASING.md` for the release model.
 
 ## Codebase Structure
 
@@ -31,13 +31,15 @@ docs/_includes/                    HTML partials (page chrome, apps hub, widgets
 docs/_data/apps.yml                Canonical app names/URLs for the portal
 
 apps/easi | sfari | deep | stream-curves    Shiny for Python apps (own requirements.txt,
-                                            www/, data/, tests/, .posit/publish config)
+                                            www/, data/, tests/; the web apps .posit/publish)
 apps/library/                      Shared, versioned STAF assessment library — completed
                                    detailed assessments StreamCurves publishes and DEEP runs
-                                   (catalog.json + assessments/<id>/vN/; see its README)
-desktop/                           STAF Desktop shell (C#/.NET 10 + WebView2 + Velopack)
-desktop/src/Staf.Desktop.Core/     All shell logic (supervisor, payload manager) — unit-tested
-desktop/src/Staf.Desktop/          Thin WinForms host (launcher + per-app windows)
+                                   (catalog.json + assessments/<id>/vN/; see its README);
+                                   CI publishes it as the rolling `library` prerelease
+desktop/                           StreamCurves Desktop shell (C#/.NET 10 + WebView2 + Velopack)
+desktop/src/StreamCurves.Desktop.Core/  All shell logic (supervisor, payload manager, update
+                                   planner) — unit-tested
+desktop/src/StreamCurves.Desktop/  WinForms host: one window, launcher splash, native pickers
 desktop/launcher/                  Launcher page (vanilla HTML/CSS/JS, ships in the app)
 desktop/payload/                   env.lock + pbs.lock + prune.txt — inputs that define the env payload
 desktop/scripts/                   Payload build scripts (PowerShell/Python) — MUST stay pure ASCII
@@ -63,17 +65,17 @@ cd docs && bundle exec jekyll serve   # http://127.0.0.1:4000/staf/
 py -3.12 -m venv .venv && .venv\Scripts\pip install -r requirements-dev.txt
 cd apps\easi && shiny run app.py --port 8000     # sfari:8001 deep:8003 stream-curves:8012
 
-# Desktop shell (dev mode runs the apps from the repo .venv)
-dotnet test desktop\Staf.Desktop.slnx            # 82 unit tests
-dotnet run --project desktop\src\Staf.Desktop    # or launch the built StafDesktop.exe
+# StreamCurves Desktop shell (dev mode runs the app from the repo .venv)
+dotnet test desktop\StreamCurves.Desktop.slnx             # 123 unit tests
+dotnet run --project desktop\src\StreamCurves.Desktop     # or launch the built StreamCurvesDesktop.exe
 ```
 
 ## Deployment
 
 - **Site**: pushed to `main` → GitHub Pages rebuilds from `docs/` automatically. Nothing to deploy manually.
-- **Apps**: one repo, four separate deployments. Deploy with Posit Publisher (VS Code/Positron) — open `apps/<app>` as its own window first; Publisher's config discovery from the monorepo root is slow and unreliable. The tracked `.posit/publish/<name>.toml` is the config; the **untracked** `.posit/publish/deployments/*.toml` records tie redeploys to the existing Connect Cloud content item and keep the public URLs stable. Always confirm Publisher targets the existing deployment, never a new one. Note: the `*.share.connect.posit.cloud` URLs return 403 to curl/scripts (bot gate) — verify in a real browser.
-- **Desktop**: two tag streams on this repo's GitHub Releases — `v*` = shell installers (normal releases, built by `.github/workflows/desktop-shell.yml`), `desktop-payload-*` = payload components (**always prereleases**, built by `desktop-payload.yml`; the rolling `desktop-current` prerelease carries `latest-desktop.json` that installed shells poll). Full runbook: `desktop/RELEASING.md`.
-- **National dataset**: a third tag stream, the rolling `easi-national-current` prerelease (**always a prerelease**), published by `tools/easi-national` with `gh release upload --clobber`, `manifest.json` last. EASI's Nationwide screening map reads it through `easi/national` (server-side fetch + a session tile route; the asset host sends no CORS header, so the browser never reads the release directly). `EASI_NATIONAL_BASE` points a local EASI at another https base or a directory such as the builder's `staging/`.
+- **Apps**: one repo, three separate deployments (EASI, SFARI, DEEP). Deploy with Posit Publisher (VS Code/Positron) — open `apps/<app>` as its own window first; Publisher's config discovery from the monorepo root is slow and unreliable. The tracked `.posit/publish/<name>.toml` is the config; the **untracked** `.posit/publish/deployments/*.toml` records tie redeploys to the existing Connect Cloud content item and keep the public URLs stable. Always confirm Publisher targets the existing deployment, never a new one. Note: the `*.share.connect.posit.cloud` URLs return 403 to curl/scripts (bot gate) — verify in a real browser.
+- **StreamCurves Desktop**: three tag streams on this repo's GitHub Releases — `streamcurves-v*` = shell installers (normal releases, built by `.github/workflows/streamcurves-shell.yml`), `streamcurves-payload-*` = payload components (**always prereleases**, built by `streamcurves-payload.yml`; the rolling `streamcurves-current` prerelease carries `latest-desktop.json` that installed shells poll), and the rolling `library` prerelease (the assessment library the gallery and DEEP read, rebuilt by `library-release.yml` on every push to `main` that touches `apps/library/**`). Full runbook: `desktop/RELEASING.md`.
+- **National dataset**: another tag stream, the rolling `easi-national-current` prerelease (**always a prerelease**), published by `tools/easi-national` with `gh release upload --clobber`, `manifest.json` last. EASI's Nationwide screening map reads it through `easi/national` (server-side fetch + a session tile route; the asset host sends no CORS header, so the browser never reads the release directly). `EASI_NATIONAL_BASE` points a local EASI at another https base or a directory such as the builder's `staging/`.
 
 ## Coding Conventions
 
@@ -89,13 +91,13 @@ dotnet run --project desktop\src\Staf.Desktop    # or launch the built StafDeskt
 2. **Update cache-bust versions** when still-referenced JS/CSS assets change (in the relevant `_includes/` file)
 3. **Never commit or write to `docs/_site/`** — untracked Jekyll build output; the pipeline writes only under `docs/assets/data/`
 4. **Run pytest per app from that app's directory** — the four suites have colliding module names and per-app `conftest.py`; running from the repo root breaks
-5. **Never delete or commit `.posit/publish/deployments/`** — those untracked records are what keep the four public app URLs stable across redeploys
+5. **Never delete or commit `.posit/publish/deployments/`** — those untracked records are what keep the three public app URLs stable across redeploys
 6. **Use surgical edits** — prefer small, targeted changes over broad refactors
-7. **Validate after changes** — site: `npm test` + jekyll build; apps: the affected app's pytest suite; desktop: `dotnet test desktop\Staf.Desktop.slnx`
-8. **Payload releases are ALWAYS `--prerelease`** — only shell `v*` releases may be normal releases, or `releases/latest` stops resolving to an installer (Velopack updater + humans depend on it)
+7. **Validate after changes** — site: `npm test` + jekyll build; apps: the affected app's pytest suite; desktop: `dotnet test desktop\StreamCurves.Desktop.slnx` (plus `dotnet build desktop\src\StreamCurves.Desktop` after host changes)
+8. **Only `streamcurves-v*` shell releases are normal releases** — `streamcurves-payload-*`, `streamcurves-current`, `library` and `easi-national-current` are ALWAYS prereleases, or `releases/latest` stops resolving to the installer (Velopack updater + humans depend on it). Every vpk command names the channel `streamcurves`: Velopack merges the feed of every release on a channel and never checks the package id, so any other desktop app published here needs a channel of its own
 9. **`desktop/scripts/*.ps1` must stay pure ASCII** — PowerShell 5.1 reads BOM-less files as CP-1252, where UTF-8 em-dash bytes decode into smart quotes that PS honors as string delimiters, silently restructuring code
-10. **After changing any `apps/*/requirements.txt` pin, regenerate `desktop/payload/env.lock`** (command in `desktop/RELEASING.md`) — CI's consistency gate fails otherwise
-11. **After publishing an assessment library version, re-bake DEEP and commit both** — StreamCurves' Publish writes `apps/library/` and runs `apps/deep/scripts/bake_library_into_deep.py` (folding the latest into `apps/deep/data/deep-assessments.json`). Commit `apps/library/**`, `apps/deep/data/**` **and** `apps/deep/www/calculators/**` (the per-version Excel calculators the bake copies), then redeploy DEEP, so the cloud DEEP ships the new latest (it can't read `apps/library/` at runtime). Publishing is local/desktop only
+10. **After changing a pin in `apps/stream-curves/requirements.txt`, regenerate `desktop/payload/env.lock`** (command in `desktop/RELEASING.md`) — CI's consistency gate fails otherwise
+11. **After publishing an assessment library version, re-bake DEEP and commit both** — StreamCurves' Publish writes `apps/library/` and runs `apps/deep/scripts/bake_library_into_deep.py` (folding the latest into `apps/deep/data/deep-assessments.json`). Commit `apps/library/**`, `apps/deep/data/**` **and** `apps/deep/www/calculators/**` (the per-version Excel calculators the bake copies), then push `main`: `library-release.yml` refreshes the `library` prerelease, from which the cloud DEEP picks up preliminary and final versions (`deep/remote_library.py`) and installed StreamCurves copies list every version. The bake stays DEEP's offline fallback, so redeploy DEEP when the cloud copy should carry the version without the release. Publishing happens only in a maintainer's checkout (`STAF_LIBRARY_PUBLISH=1`); installed copies never write the library
 12. **Re-vendor after any engine or EASI source change, never hand-edit `_vendor/`** — `libs/site_engine` is copied into each app by that app's `scripts/vendor_site_engine.py` (order: libs, then easi, then sfari and deep, then stream-curves' site engine, then stream-curves' `vendor_easi_engine.py`, which carries EASI's nested engine copy); every app has a drift-gate test that goes red until the copy matches
 13. **Engine vocabulary: display names change, tokens never do** — user-visible text says "StreamCat lookup engine" and "STAF site engine" (from the vendored `naming` module); the tokens `streamcat` / `site-engine` / `streamcat-legacy` ride digests, bundles, manifests, the CLI, and YAML and are immutable
 14. **The national dataset scores from stored evidence, never from live calls** — `assessment.assess_preloaded` + `easi.national.providers` run the unchanged adapters over a record; never add a per-site network call to that path, keep `easi-national-current` a prerelease, and fetch every source per chunk in the builder (the fabric API refuses more than ~160 COMIDs per `IN` filter)

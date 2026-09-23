@@ -1,0 +1,185 @@
+# Builds, packages (Velopack) and publishes the StreamCurves Desktop shell when a
+# streamcurves-v* tag is pushed. The release created here is a NORMAL release (never a
+# prerelease): installed shells update through Velopack's GitHub source with prerelease:false,
+# and every StreamCurves payload release (streamcurves-payload-*, streamcurves-current) is a
+# prerelease.
+#
+# CHANNEL. This repository's releases carry more than one stream, so every vpk command names the
+# channel `streamcurves`. Velopack's GitHub source merges the releases.<channel>.json feed of
+# EVERY release it lists and its UpdateManager never checks the package id: an app on the
+# default channel would pick up any other app's feed on that channel. StreamCurves keeps its
+# own channel; any future desktop app in this repository needs its own (desktop/RELEASING.md).
+#
+# The same streamcurves-v* tag also fires streamcurves-payload. Both rewrite the rolling
+# streamcurves-current manifest, so they share one concurrency group and run one after the other.
+#
+# Release recipe: add the `## vX.Y.Z (YYYY-MM-DD)` section to apps/stream-curves/CHANGELOG.md,
+# set <Version> in desktop/src/StreamCurves.Desktop/StreamCurves.Desktop.csproj to X.Y.Z, then
+#   git tag streamcurves-vX.Y.Z && git push origin streamcurves-vX.Y.Z
+name: streamcurves-shell
+
+on:
+  push:
+    tags: ['streamcurves-v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: streamcurves-current
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  shell:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Version from tag (must equal the csproj <Version>)
+        id: ver
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          if ($tag -notmatch '^streamcurves-v(\d+\.\d+\.\d+)$') {
+            Write-Host "::error::tag must be streamcurves-vX.Y.Z (got $tag)"; exit 1
+          }
+          $version = $Matches[1]
+          [xml]$project = Get-Content desktop/src/StreamCurves.Desktop/StreamCurves.Desktop.csproj
+          $declared = @($project.Project.PropertyGroup | ForEach-Object { $_.Version } | Where-Object { $_ })[0]
+          if ($declared -ne $version) {
+            Write-Host "::error::tag version $version does not match <Version>$declared</Version> in StreamCurves.Desktop.csproj"; exit 1
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Unit tests
+        run: dotnet test desktop/StreamCurves.Desktop.slnx -c Release --nologo
+
+      - name: Publish self-contained
+        run: >
+          dotnet publish desktop/src/StreamCurves.Desktop -c Release -r win-x64 --self-contained
+          -p:Version=${{ steps.ver.outputs.version }}
+          -o desktop/publish
+
+      - name: Install Velopack CLI
+        # Pinned: packaging behavior (launcher naming, package layout) must not drift
+        # between releases just because CI ran on a different day.
+        run: dotnet tool install --global vpk --version 1.2.0
+
+      - name: Download previous release (enables delta packages)
+        continue-on-error: true   # first release has nothing to delta against
+        run: >
+          vpk download github --repoUrl https://github.com/${{ github.repository }}
+          --token ${{ github.token }} --channel streamcurves
+
+      - name: Pack (Setup.exe + self-updating portable zip + deltas)
+        shell: pwsh
+        run: |
+          # Code signing is deliberately dormant (unsigned decision). When a certificate
+          # materializes, add its vpk signing flags here (e.g. --signParams or
+          # --azureTrustedSignFile), gated on repo secrets.
+          vpk pack --packId StreamCurvesDesktop `
+            --packVersion ${{ steps.ver.outputs.version }} `
+            --packDir desktop/publish `
+            --mainExe StreamCurvesDesktop.exe `
+            --packTitle 'StreamCurves Desktop' `
+            --packAuthors 'USACE WRISES' `
+            --icon desktop/resources/icon.ico `
+            --channel streamcurves
+
+      - name: Normalize the portable launcher name
+        shell: pwsh
+        run: |
+          # vpk 1.2.0 names the launcher INSIDE the portable zip after the pack title
+          # ("StreamCurves Desktop.exe") while Setup installs and the updater both write the
+          # id-named "StreamCurvesDesktop.exe", so a portable install's first update would leave
+          # a stale duplicate launcher behind instead of overwriting. Rename the zip entry to
+          # the id name so extraction and updates agree on ONE file.
+          $zip = Get-ChildItem -Recurse -Filter 'StreamCurvesDesktop-streamcurves-Portable.zip' | Select-Object -First 1
+          if (-not $zip) { Write-Host '::error::portable zip not found'; exit 1 }
+          Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+          $a = [System.IO.Compression.ZipFile]::Open($zip.FullName, 'Update')
+          try {
+            $old = $a.Entries | Where-Object { $_.FullName -eq 'StreamCurves Desktop.exe' }
+            $new = $a.Entries | Where-Object { $_.FullName -eq 'StreamCurvesDesktop.exe' }
+            if (-not $old) {
+              Write-Host 'portable launcher already id-named - nothing to normalize'
+            } elseif ($new) {
+              $old.Delete()
+              Write-Host 'dropped the redundant title-named launcher'
+            } else {
+              $dst = $a.CreateEntry('StreamCurvesDesktop.exe', 'Optimal')
+              $s = $old.Open(); $d = $dst.Open()
+              $s.CopyTo($d); $d.Dispose(); $s.Dispose()
+              $old.Delete()
+              Write-Host 'renamed portable launcher: StreamCurves Desktop.exe -> StreamCurvesDesktop.exe'
+            }
+          } finally { $a.Dispose() }
+
+      - name: Upload release (installer, portable, deltas, releases.streamcurves.json feed)
+        run: >
+          vpk upload github --repoUrl https://github.com/${{ github.repository }}
+          --token ${{ github.token }}
+          --channel streamcurves
+          --publish
+          --releaseName "StreamCurves Desktop ${{ steps.ver.outputs.version }}"
+          --tag ${{ github.ref_name }}
+
+      - name: Release notes from apps/stream-curves/CHANGELOG.md
+        shell: pwsh
+        run: |
+          # Fill the release body with this version's CHANGELOG section (the bullets only: the
+          # section header repeats the release title).
+          $version = '${{ steps.ver.outputs.version }}'
+          $changelog = 'apps/stream-curves/CHANGELOG.md'
+          if (-not (Test-Path $changelog)) {
+            Write-Host "no $changelog - leaving the release body as packed"
+            exit 0
+          }
+          $lines = @(Get-Content $changelog)
+          $head = $lines | Select-String -Pattern ("^## v" + [regex]::Escape($version) + " \(") |
+            Select-Object -First 1
+          if (-not $head) {
+            Write-Host "no $changelog section for v$version - leaving the release body as packed"
+            exit 0
+          }
+          $rest = $lines[$head.LineNumber..($lines.Count - 1)]   # LineNumber is 1-based: skips the header
+          $next = $rest | Select-String -Pattern '^## v' | Select-Object -First 1
+          $section = if (-not $next) { $rest }
+                     elseif ($next.LineNumber -le 1) { @() }
+                     else { $rest[0..($next.LineNumber - 2)] }
+          $body = ($section -join "`n").Trim()
+          if (-not $body) {
+            Write-Host "empty $changelog section for v$version - leaving the release body as packed"
+            exit 0
+          }
+          Set-Content -Encoding utf8 release-notes.md $body
+          gh release edit '${{ github.ref_name }}' --repo '${{ github.repository }}' --notes-file release-notes.md
+
+      - name: Stamp the shell block onto the rolling streamcurves-current manifest
+        shell: pwsh
+        run: |
+          gh release download streamcurves-current --repo '${{ github.repository }}' --pattern latest-desktop.json --output latest-desktop.json
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path latest-desktop.json)) {
+            Write-Host 'no streamcurves-current manifest yet (the payload workflow has not run) - skipping the shell block'
+            exit 0
+          }
+          $version = '${{ steps.ver.outputs.version }}'
+          $base = 'https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}'
+          $manifest = Get-Content latest-desktop.json -Raw | ConvertFrom-Json
+          $shell = [ordered]@{
+            version      = $version
+            installerUrl = "$base/StreamCurvesDesktop-streamcurves-Setup.exe"
+            portableUrl  = "$base/StreamCurvesDesktop-streamcurves-Portable.zip"
+            sha256       = ''
+          }
+          $manifest | Add-Member -NotePropertyName shell -NotePropertyValue $shell -Force
+          $manifest | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 latest-desktop.json
+          gh release upload streamcurves-current --repo '${{ github.repository }}' latest-desktop.json --clobber

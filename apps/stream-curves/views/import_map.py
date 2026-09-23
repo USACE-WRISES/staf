@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import logging
 import math
 from functools import lru_cache
@@ -663,6 +664,78 @@ def import_map_server(
     _map_click = reactive.value(None)  # ("ecoregion"|"state", code, name)
     _map_draw = reactive.value(None)   # rings
 
+    # ── the unbuilt wizard survives a save and a reopen ─────────────────────────
+    # Until "Build dataset" writes state.data, the wizard's picks and its compiled
+    # table live only in the locals above. The project controller asks for them at
+    # save time (the "wizard_draft" hook) and the session carries them as the
+    # additive wizard_draft field; _hydrate_from_state puts them back. wizard_rev
+    # tells autosave the draft moved, without copying anything on every change.
+    def _draft_snapshot():
+        with reactive.isolate():
+            if state.app_data_loaded():
+                return None
+            pick = picker_sel()
+            draft = {
+                "step": int(step() or 1),
+                "picker": sorted(pick) if pick else None,
+                "compiled": compiled(),
+                "coverage": coverage(),
+                "unmatched": int(unmatched() or 0),
+                "col_source": col_source(),
+                "col_function": col_function(),
+                "assignments": saved_assignments(),
+                "upload": upload_df(),
+                "upload_source": upload_source(),
+                "id_col": id_col(),
+                "lat_col": lat_col(),
+                "lon_col": lon_col(),
+            }
+        if draft["step"] <= 1 and not any(
+                v is not None for k, v in draft.items() if k not in ("step", "unmatched")):
+            return None
+        return draft
+
+    state.hooks["wizard_draft"] = _draft_snapshot
+
+    @reactive.effect
+    def _bump_wizard_rev():
+        step()
+        picker_sel()
+        compiled()
+        saved_assignments()
+        upload_df()
+        with reactive.isolate():
+            state.wizard_rev.set((state.wizard_rev() or 0) + 1)
+
+    def _restore_draft(draft: dict) -> None:
+        """Put a saved unbuilt wizard back (the inverse of _draft_snapshot)."""
+        pick = draft.get("picker")
+        if pick:
+            picker_sel.set(set(pick))
+            split = mpick.split_selection_by_source(set(pick), _picker_table())
+            metric_sel.set(split["streamcat"])
+            nrsa_sel.set(split["nrsa"])
+            ss_sel.set(split["streamstats"])
+            mmw_sel.set(split["mmw"])
+            se_sel.set(split["site_engine"])
+        if draft.get("compiled") is not None:
+            compiled.set(draft["compiled"])
+            # a restored compile is a finished pull from an earlier sitting: its masks
+            # were applied when it ran, exactly like a hydrated frame
+            compiled_is_fresh.set(False)
+            coverage.set(draft.get("coverage"))
+            unmatched.set(int(draft.get("unmatched") or 0))
+            col_source.set(dict(draft.get("col_source") or {}))
+            col_function.set(dict(draft.get("col_function") or {}))
+        if draft.get("assignments") is not None:
+            saved_assignments.set(draft["assignments"])
+        if draft.get("upload") is not None:
+            upload_df.set(draft["upload"])
+            upload_source.set(draft.get("upload_source"))
+            id_col.set(draft.get("id_col"))
+            lat_col.set(draft.get("lat_col"))
+            lon_col.set(draft.get("lon_col"))
+
     def _inp(name):
         try:
             return input[name]()
@@ -722,11 +795,32 @@ def import_map_server(
         v = _inp("use_nrsa")
         return True if v is None else bool(v)
 
+    # Bumped when a Model My Watershed key is saved here, so the picker rebuilds with the
+    # MMW rows (the catalogs are otherwise built once per session).
+    mmw_rev = reactive.value(0)
+
     def _mmw_catalog() -> dict:
         try:
             return mmw_core_metrics() if mmw_available() else {}
         except Exception:  # noqa: BLE001
             return {}
+
+    @reactive.effect
+    @reactive.event(input.mmw_key_save)
+    def _mmw_key_save():
+        """A key typed here is kept in the per-user prefs (every installed copy lacks the
+        developers' key file) and used from now on."""
+        from streamcurves import prefs
+        key = str(_inp("mmw_key") or "").strip()
+        if not key:
+            ui.notification_show("Paste a Model My Watershed API key first.", type="warning",
+                                 duration=5)
+            return
+        prefs.set(prefs.MMW_API_KEY, key)
+        os.environ["MMW_API_KEY"] = key
+        mmw_rev.set(mmw_rev() + 1)
+        ui.notification_show("Saved. Model My Watershed metrics are now offered.",
+                             type="message", duration=5)
 
     def _se_catalog() -> dict:
         try:
@@ -736,9 +830,10 @@ def import_map_server(
 
     @reactive.calc
     def _picker_table():
-        # Static across a session (the catalogs don't change): built once. MMW
-        # and site-engine rows appear only when available, so they never
-        # dead-select.
+        # Static across a session (the catalogs don't change): built once, and again
+        # when a Model My Watershed key is saved. MMW and site-engine rows appear only
+        # when available, so they never dead-select.
+        mmw_rev()
         try:
             return mpick.build_metric_picker_table(
                 streamstats=ss_core_bcs(), mmw=_mmw_catalog(),
@@ -1271,10 +1366,14 @@ def import_map_server(
             saved_functions = state.column_functions()
             picker_untouched = picker_sel() is None
             compile_untouched = compiled() is None
+            draft = state.wizard_draft()
         # `data is None` too: a built project with no region/sites still needs
         # its step 4-7 seeding, which the old region-only test skipped.
-        if region is None and sc is None and cand is None and data is None:
+        if (region is None and sc is None and cand is None and data is None
+                and not draft):
             return
+        if data is None and isinstance(draft, dict) and picker_untouched and compile_untouched:
+            _restore_draft(draft)
         if region is not None:
             seed = wizard_seed_from_state(region)
             region_kind.set(seed["region_kind"])
@@ -1463,7 +1562,12 @@ def import_map_server(
     _compile_tasks: set = set()
 
     def _launch(coro):
-        task = asyncio.create_task(coro)
+        async def _marked():
+            # autosave waits while the pull runs, so it never records half a compile
+            with st.busy(state):
+                await coro
+
+        task = asyncio.create_task(_marked())
         _compile_tasks.add(task)
         task.add_done_callback(_compile_tasks.discard)
 
@@ -2803,10 +2907,18 @@ def import_map_server(
             notes.append(ui.div(
                 bi("info-circle"), " NRSA field metrics are hidden — NRSA was not chosen as a "
                 "data source in step 2.", class_="text-muted small mb-1"))
+        mmw_rev()
         if not mmw_available():
+            save_js = (f"Shiny.setInputValue('{ns('mmw_key_save')}', "
+                       "Date.now() + Math.random(), {priority: 'event'})")
             notes.append(ui.div(
                 bi("info-circle"), " Model My Watershed metrics need an API key and are omitted.",
-                class_="text-muted small mb-1"))
+                ui.input_text(ns("mmw_key"), None, placeholder="Paste an MMW API key",
+                              width="17rem"),
+                ui.tags.button("Use this key", type="button",
+                               class_="btn btn-outline-primary btn-sm", onclick=save_js),
+                class_="text-muted small mb-1 d-flex align-items-center gap-2 flex-wrap "
+                       "mmw-key-row"))
         if not ses.site_engine_available():
             notes.append(ui.div(
                 bi("info-circle"), f" {engine_names.SITE_ENGINE} metrics need the vendored "

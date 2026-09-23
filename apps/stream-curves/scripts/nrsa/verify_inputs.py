@@ -141,9 +141,9 @@ def run(write: bool = True) -> tuple[list[str], dict]:
     }
     if write:
         table.to_csv(DATA / "cycle_compatibility.csv", index=False, lineterminator="\n")
-        # LF on every platform: the manifest records these bytes, and Windows
-        # write_text would otherwise write CRLF
-        with open(DATA / "verification_report.md", "w", encoding="utf-8", newline="\n") as fh:
+        # CRLF on every platform: the archive manifest records the report's CRLF bytes and
+        # .gitattributes pins them (-text), so a rerun on any OS reproduces the recorded file
+        with open(DATA / "verification_report.md", "w", encoding="utf-8", newline="\r\n") as fh:
             fh.write(report(summary, table))
     return problems, summary
 

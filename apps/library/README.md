@@ -5,21 +5,23 @@ reference-curve sets built in **StreamCurves** and consumed by **DEEP**.
 
 This folder is the *contract*, not shared code. StreamCurves and DEEP each carry their own
 small reader/writer that follows the format below (the same "mirror the format, don't share the
-file" pattern the repo already uses for `.deep.json` bundles). This is deliberate: the four
-STAF apps deploy as isolated Posit Connect Cloud content items with no shared runtime
-filesystem, so nothing here can be imported across apps at runtime.
+file" pattern the repo already uses for `.deep.json` bundles). This is deliberate: DEEP
+deploys as an isolated Posit Connect Cloud content item and StreamCurves runs on users'
+machines (StreamCurves Desktop), with no shared runtime filesystem, so nothing here can be
+imported across apps at runtime.
 
 ## Who writes/reads what
 
 | App | Access | When |
 |---|---|---|
-| StreamCurves (`streamcurves/library.py`) | read + **write** (publish) | Local/desktop only — the folder is reachable and writable there. On the cloud it degrades to saving a Draft session file to send to the publisher. |
-| DEEP (`deep/library.py` + `scripts/build_deep_data.py`) | read | Dev/desktop: merges the live library over its baked registry. Cloud: reads only the baked snapshot in `apps/deep/data/deep-assessments.json`, produced by the bake step. |
+| StreamCurves (`streamcurves/library.py`) | read + **write** (publish) | Writes only in a maintainer's STAF checkout with `STAF_LIBRARY_PUBLISH=1`. An installed StreamCurves Desktop never writes it: its Assessment library downloads versions from the `library` release, and a revision goes back to the maintainer as a `.streamcurves` project file. |
+| DEEP (`deep/library.py`, `deep/remote_library.py`, `scripts/bake_library_into_deep.py`) | read | Every DEEP merges the `library` release's preliminary and final versions over the baked snapshot in `apps/deep/data/deep-assessments.json`. A checkout also merges this folder on top. |
+| The `library` release (`apps/stream-curves/scripts/library_release.py`) | read | CI (`.github/workflows/library-release.yml`) rebuilds it on every push to `main` that touches this folder: `library.json` plus each version's pack, DEEP bundle and calculator. See `desktop/RELEASING.md`. |
 
-A **builder** develops curves (anywhere) and saves a StreamCurves `*.streamcurves.json`
-**session**. A **publisher** (local/desktop) promotes a session into a new library **version**.
-DEEP always uses the **latest** version of each assessment; older versions stay here for
-reference.
+A **builder** or reviewer develops curves in a StreamCurves project (a `.streamcurves` file)
+and sends it to the **maintainer**, who publishes it from a checkout as a new library
+**version**. DEEP defaults to the latest final version of each assessment, else the latest
+preliminary one; older versions stay here for reference.
 
 ## Layout
 
@@ -172,8 +174,8 @@ Stored status literals never change; people see display labels:
 
 | Stored          | Displayed    | Meaning                                                        | Who sets it |
 |-----------------|--------------|----------------------------------------------------------------|-------------|
-| `draft`         | Draft        | Automation output; nobody reviewed the curves in the app yet   | batch stage/promote, the headless agent |
-| `preliminary`   | Preliminary  | A human reviewed and stands behind it                          | interactive publish, or Approve as Preliminary on a draft |
+| `draft`         | Draft        | Automation output, or a revision published for review; not approved yet | batch stage/promote, the headless agent, a maintainer's publish (the default) |
+| `preliminary`   | Preliminary  | A human reviewed and stands behind it                          | a maintainer's publish as Preliminary, or Approve as Preliminary on a draft |
 | `certified`     | Final        | Field-validated and certified                                  | Validate stage certify (gated on a validation record) |
 | `under_review`, `revised`, `retired` | Under review / Revised / Retired | admin states | Python (`set_version_status`) |
 
@@ -188,15 +190,21 @@ Only `preliminary` and `certified` are DEEP-eligible; drafts never bake.
    owner's name and publishes into `apps/library` as a **Draft** (pass `--status preliminary`
    only for a packet that was reviewed exhaustively). The Region builder inside the app
    drives the same commands.
-2. **Review path**: open the draft in StreamCurves (header **Open**; drafts are badged),
-   review the stages, then either **Approve as Preliminary** on the Validate stage (records
-   your review in place) or edit and publish a next version from **Publish** (interactive
-   publishes are always Preliminary; provenance carries the originating run plus your edits).
+2. **Review path**: open the version from the Assessment library on StreamCurves' start page
+   (drafts are badged), review the stages, then either **Approve as Preliminary** on the
+   Validate stage (records your review in place) or edit and publish a next version from
+   **Publish** (Draft by default, or Preliminary; provenance carries the originating run plus
+   your edits). A reviewer working in an installed copy sends the project file instead
+   (Publish, **Save a copy for the maintainer**); the maintainer opens it with **Projects >
+   Open project** and publishes from there.
 3. **Verification path**: on the Validate stage, overlay field data, record the validation
    (the version reads **Verified**), then **Certify** (displayed **Final**).
    Publishing, approving and certifying each re-bake DEEP's registry
    (`apps/deep/scripts/bake_library_into_deep.py`).
-4. Publisher commits `apps/library/**`, `apps/deep/data/**` and `apps/deep/www/calculators/**` and pushes; redeploy DEEP.
+4. The maintainer commits `apps/library/**`, `apps/deep/data/**` and
+   `apps/deep/www/calculators/**` and pushes `main`. `library-release` refreshes the `library`
+   release, which installed StreamCurves copies and DEEP read. Redeploy DEEP when its baked
+   fallback should carry the version too.
 
 Content never changes in place: edits are a new version. Status changes (`draft` to
 `preliminary`, certification, retiring) append to `status.json` without re-minting the

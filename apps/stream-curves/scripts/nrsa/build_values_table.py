@@ -395,8 +395,10 @@ def write_manifest(out_dir: Path, lock: dict) -> dict:
         "files": files,
         "totalBytes": sum(f["bytes"] for f in files.values()),
     }
+    # LF on every platform: every pooled run digests these bytes (manifestDigest), and
+    # Windows write_text would otherwise write CRLF.
     (out_dir / "manifest.json").write_text(
-        json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
     return manifest
 
 

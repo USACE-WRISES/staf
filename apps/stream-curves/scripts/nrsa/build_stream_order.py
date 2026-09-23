@@ -127,7 +127,7 @@ def main() -> int:
         rows, columns=CACHE_COLUMNS)
     out = out.drop_duplicates("comid", keep="last").sort_values("comid")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    out.to_csv(CACHE_PATH, index=False)
+    out.to_csv(CACHE_PATH, index=False, lineterminator="\n")   # the archive manifest records LF
     unresolved = [c for c in wanted if c not in fetched]
     print(f"wrote {CACHE_PATH.relative_to(APP_ROOT)}: {len(out)} COMIDs "
           f"({len(unresolved)} unresolved, {len(failed)} chunks failed)", flush=True)

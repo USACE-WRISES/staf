@@ -269,9 +269,26 @@ class AppState:
     # local widgets from the saved region/screening state (stage-banner clicks
     # and header Open on restored sessions). Transient: not in SESSION_FIELDS.
     wizard_hydrate_nonce: reactive.Value = _rv(0)
-    # Header "Open" asks Data & Setup to show the Open dialog (library picker
-    # plus project-file upload). Transient: not in SESSION_FIELDS.
-    open_dialog_nonce: reactive.Value = _rv(0)
+    # ── the open project (views/project.py owns all three; transient) ────────
+    # project_file: the main <Name>.streamcurves path (str), or None when nothing
+    # is open or the open work is unsaved (a staged run opened from the Region
+    # builder). project_meta: its identity (streamcurves.project_meta keys:
+    # project_name, project_id, project_created, project_description,
+    # prepared_by, origin). Neither is a session field: they live in the project
+    # file's project.json, beside the session.
+    project_file: reactive.Value = _rv()
+    project_meta: reactive.Value = _rv()
+    # Long work in progress (a compile, a screening run, a curve build): autosave
+    # waits for zero so it never records a job half done. st.busy(state) is the
+    # only writer. Transient.
+    busy_count: reactive.Value = _rv(0)
+    # The Region & data wizard's unbuilt work (picks, the compiled table, column
+    # roles, an uploaded table), captured at save time by the wizard's
+    # "wizard_draft" hook so a project closed before Build dataset reopens where
+    # it was. Persisted (session_io.SESSION_FIELDS, additive). wizard_rev is the
+    # wizard's cheap "something moved" signal for autosave. Transient.
+    wizard_draft: reactive.Value = _rv()
+    wizard_rev: reactive.Value = _rv(0)
     # Rules deep link: a rule id chip anywhere in the app asks the Rules page to
     # scroll to that rule's card after the nav lands. Transient: not in
     # SESSION_FIELDS.
@@ -317,6 +334,12 @@ class AppState:
     analysis_tab_preload_completed_status: reactive.Value = _rv()
     analysis_tab_preload_completed_nonce: reactive.Value = _rv(0)
 
+    # Plain callables other modules register for cross-module actions that must
+    # run synchronously (not reactive values): the project controller registers
+    # "before_replace" (a parting save of the open project) and "adopt_unsaved"
+    # (mark loaded work as an unsaved project) for the Region builder's staged open.
+    hooks: dict = field(default_factory=dict)
+
     # ------------------------------------------------------------------ #
 
     @classmethod
@@ -339,7 +362,8 @@ class AppState:
         return state
 
     def field_names(self) -> list[str]:
-        return [f.name for f in dc_fields(self)]
+        """The reactive fields (``hooks`` is a plain dict of callables, not state)."""
+        return [f.name for f in dc_fields(self) if f.name != "hooks"]
 
     def get(self, name: str):
         return getattr(self, name)()
@@ -496,9 +520,33 @@ def reset_app_to_startup(state: AppState) -> None:
         state.rule_selections.set([])
         state.reference_build.set(None)
         state.owner_curve_decisions.set([])
+        state.wizard_draft.set(None)
         state.current_metric.set(state.startup_current_metric() or "perRiffle")
         state.app_data_loaded.set(False)
         state.app_reset_nonce.set((state.app_reset_nonce() or 0) + 1)
+
+
+class busy:
+    """``with st.busy(state): ...`` marks long work in progress, so autosave waits.
+
+    A counter, not a flag, so nested or overlapping jobs compose. Safe to use around
+    ``await``: the count drops in ``__exit__`` however the block ends."""
+
+    def __init__(self, state: AppState):
+        self._state = state
+
+    def _bump(self, delta: int) -> None:
+        with reactive.isolate():
+            n = (self._state.busy_count() or 0) + delta
+        self._state.busy_count.set(max(0, n))
+
+    def __enter__(self):
+        self._bump(1)
+        return self
+
+    def __exit__(self, *exc):
+        self._bump(-1)
+        return False
 
 
 def bump_config(state: AppState) -> None:
