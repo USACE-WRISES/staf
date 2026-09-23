@@ -41,38 +41,46 @@ def test_a_metric_on_three_functions_counts_once():
 
 
 def test_the_published_regions_announce_what_they_score():
-    """The versions DEEP serves after methodology 0.14 (2026-09-21). Northeastern
+    """The versions DEEP serves. After methodology 0.14 (2026-09-21), Northeastern
     Highlands v9 scores 31, benthic total richness joining Population support once the
-    restored benthic records gave it a local pool. Interior Plateau v6 scores 29, with
-    chlorophyll a withheld after the 2013-14 values were corrected. The Eastern Corn Belt
-    Plains stays at v7 (25), and the Southeastern Plains v1 (25) is the first region
-    the workflow built on its own."""
+    restored benthic records gave it a local pool, and Interior Plateau v6 scores 29, with
+    chlorophyll a withheld after the 2013-14 values were corrected. The owner's answers
+    of 2026-09-22 published the Eastern Corn Belt Plains v8 (28, large wood back under D9
+    and Population support closed), the Southeastern Plains v2 (26, its own wetland pool
+    accepted), and the first versions of the Central Great Plains (23), the Northern
+    Lakes and Forests (28) and the Central Basin and Range (28). Every one covers all
+    twenty functions."""
     for aid, expected in (("northeastern-highlands", "31 metrics"),
                           ("interior-plateau", "29 metrics"),
-                          ("eastern-corn-belt-plains", "25 metrics"),
-                          ("southeastern-plains", "25 metrics")):
+                          ("eastern-corn-belt-plains", "28 metrics"),
+                          ("southeastern-plains", "26 metrics"),
+                          ("central-great-plains", "23 metrics"),
+                          ("northern-lakes-and-forests", "28 metrics"),
+                          ("central-basin-and-range", "28 metrics")):
         counts = _facts(assessments.load_predefined(aid).raw)["counts"]
         assert counts.startswith(expected), (aid, counts)
+        assert "20 of 20 functions" in counts and "documented" not in counts, (aid, counts)
 
 
 def test_a_documented_gap_is_still_named():
-    """The coverage note is untouched by the counting change."""
-    for aid in ("eastern-corn-belt-plains", "southeastern-plains"):
-        counts = _facts(assessments.load_predefined(aid).raw)["counts"]
-        assert "19 of 20 functions" in counts and "(1 documented)" in counts, (aid, counts)
+    """The coverage note is untouched by the counting change. The versions that left
+    a function documented stay servable by reference."""
+    for ref in ("eastern-corn-belt-plains@v7", "southeastern-plains@v1"):
+        counts = _facts(assessments.load_ref(ref).raw)["counts"]
+        assert "19 of 20 functions" in counts and "(1 documented)" in counts, (ref, counts)
 
 
 # --------------------------------------------------------------------------- #
 # Every function is retained (2026-09-20)
 # --------------------------------------------------------------------------- #
 def test_the_unassessed_functions_are_named_not_merely_absent():
-    """One Eastern Corn Belt Plains function has no scoring block. Methodology
+    """One Eastern Corn Belt Plains v7 function has no scoring block. Methodology
     0.13 restored the other three (2026-09-21), and Population support has no
-    admissible basis among the sources evaluated and carries a signed exception.
-    An unassessed function used to be absent from the walk and from the bundle's
-    function list alike, so the only trace was one line in the rail."""
+    admissible basis among the sources evaluated and carries a signed exception
+    (v8 closes it). An unassessed function used to be absent from the walk and from
+    the bundle's function list alike, so the only trace was one line in the rail."""
     from deep import reference_support
-    la = assessments.load_predefined("eastern-corn-belt-plains")
+    la = assessments.load_ref("eastern-corn-belt-plains@v7")
     un = reference_support.unassessed_functions(la)
     assert [u["functionName"] for u in un] == ["Population support"]
     # each says why, from the withheld records the bundle already carries
@@ -91,7 +99,8 @@ def test_the_walk_covers_the_whole_framework():
     meets twenty steps whichever assessment they open."""
     from deep import config, reference_support
     for aid in ("northeastern-highlands", "interior-plateau", "eastern-corn-belt-plains",
-                "southeastern-plains"):
+                "southeastern-plains", "central-great-plains", "northern-lakes-and-forests",
+                "central-basin-and-range"):
         la = assessments.load_predefined(aid)
         n_blocks = len([fn for fn in la.metrics_by_function if fn.get("metrics")])
         assert n_blocks + len(reference_support.unassessed_functions(la)) == len(config.functions())
@@ -129,12 +138,19 @@ def test_the_restored_records_released_the_held_curves():
 def test_a_workflow_gap_reaches_deep_under_the_owner():
     """The Southeastern Plains v1 left Surface water storage unassessed under the
     COV-01 standing decision. Promote rewrote the pending marker to the confirming
-    owner, so no pending text reaches DEEP."""
+    owner, so no pending text reaches DEEP. v2 closes the gap with the owner's
+    exception (REF-15), a curve on the region's own stations."""
     from deep import reference_support
-    la = assessments.load_predefined("southeastern-plains")
+    la = assessments.load_ref("southeastern-plains@v1")
     un = reference_support.unassessed_functions(la)
     assert [u["functionName"] for u in un] == ["Surface water storage"]
     ex = (la.raw.get("functionCoverage") or {}).get("exclusions") or []
     assert [e["functionId"] for e in ex] == ["surface-water-storage"]
     assert all(e.get("recordedBy") and "pending" not in str(e["recordedBy"]) for e in ex)
+    v2 = assessments.load_predefined("southeastern-plains")
+    assert reference_support.unassessed_functions(v2) == []
+    wet = [m for fn in v2.metrics_by_function for m in fn.get("metrics") or []
+           if m["metricId"] == "spring-pctwet2019ws"]
+    assert wet and wet[0]["ownerDecision"]["recordedBy"] == "gtmenichino"
+    assert wet[0]["criteriaBasis"] == "reference"
 

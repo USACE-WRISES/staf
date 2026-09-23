@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "central-basin-and-range",
+  "assessmentName": "Central Basin and Range reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "13",
+    "name": "Central Basin and Range"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 13), StreamCurves regional analysis, methodology 0.14-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-23T01:39:38Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 19 of 43 stations of this ecoregion pass. 24 reference curves use local stations, 2 borrow from a wider region, 5 metrics use fixed criteria, and 3 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:632f70661f0e013ef7afb9e58bb9c7520c0b52b7bcf443ef434748b0d2fd5770",
+      "supersedesVersion": null
+    }
+  ]
+}

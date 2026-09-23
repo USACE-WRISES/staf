@@ -10247,8 +10247,5 @@
     },
     "contentDigest": "sha256:fe2aca83722659416d0eccddf8e01ac668272363e995ca238259f7edf1971856",
     "supersedesVersion": 1
-  },
-  "version": 2,
-  "lifecycle": "preliminary",
-  "assessmentRef": "southeastern-plains@v2"
+  }
 }

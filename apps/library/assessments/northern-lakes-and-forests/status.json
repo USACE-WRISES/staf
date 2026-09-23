@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "northern-lakes-and-forests",
+  "history": [
+    {
+      "version": 1,
+      "status": "preliminary",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "timestamp": "2026-09-23T01:39:34Z",
+      "note": "Published new version."
+    }
+  ]
+}

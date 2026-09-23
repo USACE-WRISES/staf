@@ -1,0 +1,19 @@
+{
+  "assessmentId": "central-great-plains",
+  "assessmentName": "Central Great Plains reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-23T01:39:29Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 2 of 93 stations of this ecoregion pass. 0 reference curves use local stations, 11 borrow from a wider region, 5 metrics use fixed criteria, and 15 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "27",
+    "name": "Central Great Plains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 27), StreamCurves regional analysis, methodology 0.14-provisional",
+  "contentDigest": "sha256:a8d63f254bc0d56a5c1bee680104279a79f13f69b3a4d7c73c28e64948597a6f",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

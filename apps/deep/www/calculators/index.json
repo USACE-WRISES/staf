@@ -1,6 +1,20 @@
 {
   "schemaVersion": 1,
   "calculators": {
+    "central-basin-and-range@v1": {
+      "file": "central-basin-and-range@v1.xlsx",
+      "sha256": "sha256:2512084ccd039274a5e671b31e8f8a370e7ca7845574785233bbfeb580596813",
+      "bytes": 40112,
+      "contentDigest": "sha256:632f70661f0e013ef7afb9e58bb9c7520c0b52b7bcf443ef434748b0d2fd5770",
+      "generatorVersion": "1.0"
+    },
+    "central-great-plains@v1": {
+      "file": "central-great-plains@v1.xlsx",
+      "sha256": "sha256:2336e0eefc2df67057d9ea1877c15429ac0765be5f8d7d90093bb2e6773991b9",
+      "bytes": 38444,
+      "contentDigest": "sha256:a8d63f254bc0d56a5c1bee680104279a79f13f69b3a4d7c73c28e64948597a6f",
+      "generatorVersion": "1.0"
+    },
     "eastern-corn-belt-plains@v6": {
       "file": "eastern-corn-belt-plains@v6.xlsx",
       "sha256": "sha256:2527d61e2e0f2885574f32f66a229e641c8da223f6a5776f025ae0feca3a18f5",
@@ -13,6 +27,13 @@
       "sha256": "sha256:0c7c3bb0303434f3c014446a88be5d15a7e57e6d9e7cbb2c0f087e7250e30713",
       "bytes": 38320,
       "contentDigest": "sha256:e92d58c24e42fe6d2ad404e64a99c25b42c9ac9105621afb671fcef2ea203482",
+      "generatorVersion": "1.0"
+    },
+    "eastern-corn-belt-plains@v8": {
+      "file": "eastern-corn-belt-plains@v8.xlsx",
+      "sha256": "sha256:7145fda88b74015626baa3d0ed6cb0e3a0d1eb0db6076fab8ed247d6cd678d66",
+      "bytes": 40752,
+      "contentDigest": "sha256:2b9698cd3554ba99507d73f0a0e17f82561acdbc0d6fe5b31983ae6926e23f7f",
       "generatorVersion": "1.0"
     },
     "interior-plateau@v4": {
@@ -57,18 +78,35 @@
       "contentDigest": "sha256:4902d33d13042a2aff1c22bf8ac22e615dcb53ce02507641cf290e61d23ce593",
       "generatorVersion": "1.0"
     },
+    "northern-lakes-and-forests@v1": {
+      "file": "northern-lakes-and-forests@v1.xlsx",
+      "sha256": "sha256:49db634f06c1a80945ed9833518da3c25b128c5070ffcf2dc299e39d8d364a8e",
+      "bytes": 43498,
+      "contentDigest": "sha256:7d8d5bed086c24c7ac118c4008ca58ae2190f42e4209dca35415d0fa8e24277a",
+      "generatorVersion": "1.0"
+    },
     "southeastern-plains@v1": {
       "file": "southeastern-plains@v1.xlsx",
       "sha256": "sha256:c4b892762040da526b15f4bdb01909bd398c62dc94bb29047a08183bac85cf70",
       "bytes": 38913,
       "contentDigest": "sha256:8abb4be427ffede5aa948f81b33bbfafb5ecd83776962e58938ad3f253b4bdcd",
       "generatorVersion": "1.0"
+    },
+    "southeastern-plains@v2": {
+      "file": "southeastern-plains@v2.xlsx",
+      "sha256": "sha256:a52adbf445a9c1560c61cb0b997257226c5a0900b88b852683a6267f5db26a71",
+      "bytes": 39635,
+      "contentDigest": "sha256:fe2aca83722659416d0eccddf8e01ac668272363e995ca238259f7edf1971856",
+      "generatorVersion": "1.0"
     }
   },
   "default": {
+    "central-basin-and-range": "central-basin-and-range.xlsx",
+    "central-great-plains": "central-great-plains.xlsx",
     "eastern-corn-belt-plains": "eastern-corn-belt-plains.xlsx",
     "interior-plateau": "interior-plateau.xlsx",
     "northeastern-highlands": "northeastern-highlands.xlsx",
+    "northern-lakes-and-forests": "northern-lakes-and-forests.xlsx",
     "southeastern-plains": "southeastern-plains.xlsx"
   }
 }
