@@ -45,13 +45,6 @@ def _read_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def is_deep(entry: dict) -> bool:
-    """A library entry DEEP runs: every entry without an ``assessmentType`` (the whole
-    library before typed entries) or with ``deep``. An EASI screening method published
-    to the same library is never read here as a detailed assessment."""
-    return str((entry or {}).get("assessmentType") or "deep") == "deep"
-
-
 def latest_bundles() -> list[dict]:
     """Return each published assessment's latest ``assessment.deep.json`` bundle.
 
@@ -72,7 +65,7 @@ def latest_bundles() -> list[dict]:
     for entry in catalog.get("assessments") or []:
         aid = entry.get("assessmentId")
         latest = int(entry.get("latestVersion") or 0)
-        if not aid or latest < 1 or not is_deep(entry):
+        if not aid or latest < 1:
             continue
         bundle_path = root / "assessments" / aid / f"v{latest}" / "assessment.deep.json"
         if not bundle_path.is_file():
@@ -137,7 +130,7 @@ def all_eligible_bundles() -> list[dict]:
     out: list[dict] = []
     for entry in catalog.get("assessments") or []:
         aid = entry.get("assessmentId")
-        if not aid or not is_deep(entry):
+        if not aid:
             continue
         manifest_path = root / "assessments" / aid / "manifest.json"
         if not manifest_path.is_file():
@@ -145,8 +138,6 @@ def all_eligible_bundles() -> list[dict]:
         try:
             manifest = _read_json(manifest_path)
         except Exception:  # noqa: BLE001
-            continue
-        if not is_deep(manifest):
             continue
         smap = _status_map(root, aid)
         for v in manifest.get("versions") or []:
@@ -189,7 +180,7 @@ def catalog_pointers() -> dict[str, dict]:
     for entry in catalog.get("assessments") or []:
         aid = entry.get("assessmentId")
         latest = int(entry.get("latestVersion") or 0)
-        if not aid or latest < 1 or not is_deep(entry):
+        if not aid or latest < 1:
             continue
         out[aid] = {
             "defaultVersion": int(entry.get("defaultVersion") or latest),

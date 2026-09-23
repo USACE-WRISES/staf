@@ -22,6 +22,13 @@ matplotlib.use("Agg")
 
 from shiny import App, reactive, ui
 
+# StreamCurves scores DEEP inputs with the EASI method it ships (_vendor/easi); a stray
+# EASI_METHOD_PACKAGE / EASI_DATA_DIR / EASI_CRITERIA_SET would switch that copy silently.
+# EASI method versions are scored only in evaluation workers (streamcurves.easi_method).
+from streamcurves import easi_env as _easi_env  # noqa: E402
+
+_easi_env.sanitize()
+
 # ipywidgets front-end: the import-wizard maps (ipyleaflet) live in
 # dynamically-rendered UI, so their JS must be on the page BEFORE the first
 # widget model is created. views/widget_deps.py attaches the output binding +

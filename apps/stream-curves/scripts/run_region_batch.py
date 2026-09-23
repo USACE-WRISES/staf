@@ -56,6 +56,9 @@ _SCRIPTS = Path(__file__).resolve().parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
+from streamcurves import easi_env as _easi_env  # noqa: E402
+
+_easi_env.sanitize()
 from streamcurves import carry_forward as cf
 from streamcurves import owner_curves as oc  # noqa: E402
 from streamcurves import decisions as dec  # noqa: E402

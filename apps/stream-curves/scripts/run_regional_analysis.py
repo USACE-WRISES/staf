@@ -25,6 +25,9 @@ _APP_ROOT = Path(__file__).resolve().parent.parent
 if str(_APP_ROOT) not in sys.path:
     sys.path.insert(0, str(_APP_ROOT))
 
+from streamcurves import easi_env as _easi_env  # noqa: E402
+
+_easi_env.sanitize()
 import pandas as pd  # noqa: E402
 
 from streamcurves import citation  # noqa: E402

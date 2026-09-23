@@ -279,10 +279,6 @@ def parse_catalog(raw) -> Catalog:
         if aid in seen:
             logger.warning("remote library: skipped a second entry for %s", aid)
             continue
-        # library.json lists DEEP assessments only; an entry typed as anything else (an EASI
-        # screening method belongs to library-v2.json) is never a detailed assessment
-        if str(entry.get("type") or entry.get("assessmentType") or "deep") != "deep":
-            continue
         seen.add(aid)
         listed = entry.get("versions")
         if not isinstance(listed, list):
