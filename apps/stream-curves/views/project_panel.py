@@ -71,8 +71,6 @@ def tree(view: dict, *, project: dict | None, tools_allowed: set[str]) -> ui.Tag
     """The panel body: project row, Workflow (stages with the current one's children), Tools."""
     statuses = view["statuses"]
     current = view.get("current")
-    tool = view.get("tool")
-    has_data = bool(view.get("has_data"))
     rows: list = []
 
     # the project row
@@ -88,9 +86,11 @@ def tree(view: dict, *, project: dict | None, tools_allowed: set[str]) -> ui.Tag
     for i, key in enumerate(rs.STAGE_KEYS):
         info = statuses.get(key) or {}
         status = info.get("status", rs.STAGE_BLOCKED)
+        kids = children(view, key) if key == current else []
         cls = "sc-tree-row " + STATE_CLASS.get(status, "st-locked")
         if key == current:
-            cls += " is-current"
+            # one highlight: the current step when one is, else the stage itself
+            cls += " is-open" if any(cur for _t, _l, cur in kids) else " is-current"
         count = None
         if key == "curve_review" and view.get("n_flagged") and status == rs.STAGE_ATTENTION:
             count = ui.tags.span(str(view["n_flagged"]), class_="sc-stage-count sc-tree-count")
@@ -101,32 +101,23 @@ def tree(view: dict, *, project: dict | None, tools_allowed: set[str]) -> ui.Tag
             type="button", class_=cls,
             title=f"Step {i + 1}: {rs.STAGE_LABELS[key]}. {info.get('detail') or ''}".strip(),
             **{"data-jump": stage_target(key)}))
-        if key == current:
-            for target, label, is_cur in children(view, key):
+        if kids:
+            steps = []
+            for target, label, is_cur in kids:
                 badge = None
                 if target == "section:validation" and view.get("n_precheck_warnings"):
                     badge = ui.tags.span(str(view["n_precheck_warnings"]),
                                          class_="sc-stage-count sc-tree-count")
-                rows.append(ui.tags.button(
+                steps.append(ui.tags.button(
                     ui.span(label, class_="sc-tree-label"), badge,
                     type="button",
                     class_="sc-tree-row is-child" + (" is-current" if is_cur else ""),
                     **{"data-jump": target}))
+            # the steps hang from the stage on a guide line under its circle
+            rows.append(ui.div(*steps, class_="sc-tree-children"))
 
     rows.append(ui.div("Tools", class_="sc-tree-sec"))
-    for key in rs.TOOL_KEYS:
-        if key not in tools_allowed:
-            continue
-        cls = "sc-tree-row"
-        if key == tool:
-            cls += " is-current"
-        elif not has_data and key not in rs.TOOLS_WITHOUT_DATA:
-            cls += " is-dim"         # dimmed, never disabled: the page says what it needs
-        rows.append(ui.tags.button(
-            ui.span(bi(TOOL_ICON[key]), class_="sc-tree-mark"),
-            ui.span(rs.TOOL_LABELS[key], class_="sc-tree-label"),
-            type="button", class_=cls, title=rs.TOOL_TITLES[key],
-            **{"data-jump": tool_target(key)}))
+    rows += _tool_rows(view, tools_allowed, rs.TOOL_KEYS)
     return ui.TagList(*rows)
 
 
@@ -191,7 +182,12 @@ def project_summary(meta: dict | None, path: str | None) -> dict | None:
         return None
     meta = meta or {}
     name = meta.get("project_name") or "Untitled project"
-    sub = project_meta.origin_label(meta.get("origin"))
+    origin = meta.get("origin") or {}
+    sub = project_meta.origin_label(origin)
+    status = origin.get("statusLabel")
+    if sub and status and sub == f"{name} ({status})":
+        # a library copy keeps its version's name, so say only what the name does not
+        sub = f"{status}, from the library"
     if not path:
         sub = "Not saved yet"
     return {"name": name, "sub": sub or ""}

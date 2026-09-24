@@ -282,6 +282,11 @@ def not_ready_panel(
     )
 
 
+def count_text(n: int, noun: str, plural: str | None = None) -> str:
+    """"1 metric", "5 metrics": a count with its noun in the right number, never "metric(s)"."""
+    return f"{n} {noun if n == 1 else (plural or noun + 's')}"
+
+
 def no_data_alert():
     """The no-dataset case: the shared panel, pointing back at the first stage."""
     return not_ready_panel(

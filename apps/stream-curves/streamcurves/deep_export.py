@@ -498,10 +498,34 @@ def deep_points_from_row(row: dict) -> Optional[list[dict]]:
 
 
 # ---- rv -> one finalized curve row per metric -------------------------------
-def deep_collect_curve_rows(completed_metrics: dict) -> dict:
+def pooled_layers(row: dict, class_rows) -> list[dict]:
+    """The curve layers of a pooled curve and its class curves (a registry split,
+    STRAT-10): the pooled curve is the unnamed layer, so it stays the default and
+    the fallback for a reach whose class the pool could not support, then every
+    complete class curve, named by its class key."""
+    layers = [{"stratum": "", "curve_points": row.get("curve_points")}]
+    for srow in class_rows or []:
+        if str(srow.get("curve_status") or "complete") != "complete":
+            continue
+        layers.append({"stratum": str(srow.get("stratum") or ""),
+                       "curve_points": srow.get("curve_points")})
+    return layers
+
+
+def _is_pooled(rec: dict) -> bool:
+    stratum = deep_default(rec.get("stratum"), "")
+    return _is_na(stratum) or str(stratum) == ""
+
+
+def deep_collect_curve_rows(completed_metrics: dict, *, pooled_default: bool = False) -> dict:
     """Flatten completed_metrics into per-metric curve rows (dict of row dicts):
     prefer the unstratified curve, else the first "complete" stratum; gather all
-    complete, distinct strata into ``all_strata`` for curveLayers export."""
+    complete, distinct strata into ``all_strata`` for curveLayers export.
+
+    ``pooled_default`` reads a build's class split the way the build published it
+    (a pressure-screen session): the pooled row the build stored first is the curve
+    whatever its status, with ``pooled_layers``. Without it a degenerate pooled
+    curve gives way to the first complete class."""
     out: dict[str, dict] = {}
     for mk, cm in (completed_metrics or {}).items():
         if cm is None:
@@ -534,6 +558,15 @@ def deep_collect_curve_rows(completed_metrics: dict) -> dict:
                     candidates.append(rec)
         if len(candidates) == 0:
             continue
+
+        if pooled_default and len(candidates) > 1:
+            pooled = next((rec for rec in candidates if _is_pooled(rec)), None)
+            if pooled is not None:
+                pooled["metric"] = deep_default(pooled.get("metric"), mk)
+                pooled["all_strata"] = pooled_layers(
+                    pooled, [rec for rec in candidates if rec is not pooled])
+                out[mk] = pooled
+                continue
 
         # choose: unstratified (stratum NA/"") first, else first complete
         pick = None

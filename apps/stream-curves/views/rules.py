@@ -226,7 +226,7 @@ def rules_server(input, output, session, state: AppState, active=None):
         ]
         return ui.div(
             ui.div(
-                ui.h4("Rules", class_="mb-0"),
+                ui.h2("Rules", class_="sc-page-title"),
                 ui.tags.span(
                     f"Methodology {methodology.methodology_version()}"
                     f", standing decisions policy {dec.policy_version(policy)}",
