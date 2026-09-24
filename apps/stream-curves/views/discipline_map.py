@@ -58,10 +58,11 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def _default_actor() -> str:
+def _default_actor(state=None) -> str:
     """The initials a coverage exception is recorded under by default: the ones every
-    StreamCurves page records (``prefs.recorded_by``; ``n/a`` when none are set)."""
-    return prefs.recorded_by()
+    StreamCurves page records (``views.state.recorded_by``; ``n/a`` when none are set)."""
+    from views import state as _st
+    return _st.recorded_by(state)
 
 
 def _is_blank(v) -> bool:
@@ -771,7 +772,7 @@ def discipline_map_server(input, output, session, state: AppState):
                 ns("exc_justification"), "Justification", rows=3, width="100%",
                 placeholder="Why this function carries no metric in this assessment.",
             ),
-            ui.input_text(ns("exc_recorded_by"), "Recorded by (initials)", value=_default_actor()),
+            ui.input_text(ns("exc_recorded_by"), "Recorded by (initials)", value=_default_actor(state)),
             title="Document an uncovered function",
             footer=ui.TagList(
                 ui.modal_button("Cancel"),

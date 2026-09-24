@@ -12,8 +12,8 @@ Two roles:
   `STAF_LIBRARY_MAINTAINER=<initials>`. Only they publish to the canonical library.
 
 StreamCurves records initials, never a name or the Windows login: `STAF_LIBRARY_MAINTAINER`
-when it is set, else the Prepared by initials (Project panel), else `n/a`. A missing name
-never blocks a decision or a publish.
+when it is set, else the open project's Prepared by initials (Project panel, **Project
+properties**), else `n/a`. A missing name never blocks a decision or a publish.
 
 Nothing below publishes externally. Uploading feeds or evidence, redeploying an app and moving
 EASI's active method are the owner's decisions (see the adoption package in the notes).

@@ -62,12 +62,12 @@ def _status_choices() -> dict:
     }
 
 
-def _maintainer_name() -> str:
+def _maintainer_name(state=None) -> str:
     """Who to record as the publisher, derived rather than asked for: the initials every
-    StreamCurves page records (``prefs.recorded_by``: STAF_LIBRARY_MAINTAINER, else the
-    Prepared by initials, else ``n/a``; never the login)."""
-    from streamcurves import prefs
-    return prefs.recorded_by()
+    StreamCurves page records (``views.state.recorded_by``: STAF_LIBRARY_MAINTAINER, else the
+    open project's Prepared by, else ``n/a``; never the login)."""
+    from views import state as _st
+    return _st.recorded_by(state)
 
 
 def _publish_block_reason() -> str | None:
@@ -79,7 +79,7 @@ def _publish_block_reason() -> str | None:
     branch never reaches this note: _publish_pane replaces the whole form for
     that case.
     """
-    return lib.publish_gate_reason(_maintainer_name())
+    return lib.publish_gate_reason()
 
 
 def _portfolio_approval_text(pending: list[dict]) -> str:
@@ -638,7 +638,7 @@ def publish_server(input, output, session, state: AppState):
         # Canonical-publish gate: STAF_LIBRARY_PUBLISH=1 + writable + publisher name.
         # The button is already disabled when this fails, so reaching here needs a
         # deliberate DOM edit; keep the technical reason for that case.
-        maintainer = _maintainer_name()
+        maintainer = _maintainer_name(state)
         gate_reason = lib.publish_gate_reason(maintainer)
         if gate_reason:
             ui.notification_show(gate_reason, type="warning", duration=10)
@@ -786,7 +786,7 @@ def publish_server(input, output, session, state: AppState):
                 changes = ap.origin_changes(
                     state, origin, content_digest=lib.content_digest(bundle))
                 provenance_doc = pv.build_carried_provenance(
-                    source_doc, origin=origin or {}, publisher=_maintainer_name(),
+                    source_doc, origin=origin or {}, publisher=_maintainer_name(state),
                     session_name=session_name, changes=changes, timestamp=now_iso)
                 if dec.is_pending(provenance_doc):
                     # ValueError (a rationale contradicting its record) aborts
@@ -796,7 +796,7 @@ def publish_server(input, output, session, state: AppState):
             else:
                 provenance_doc = pv.build_interactive_provenance(
                     bundle, curve_review, region=region_now,
-                    publisher=_maintainer_name(), session_name=session_name)
+                    publisher=_maintainer_name(state), session_name=session_name)
             # promote's last check: nothing still marked pending rides into the
             # version the owner confirms
             if dec.is_pending(json.dumps({"bundle": bundle.get("functionCoverage"),

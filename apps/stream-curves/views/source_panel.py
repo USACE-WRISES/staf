@@ -66,12 +66,12 @@ def undo_onclick(decision_id: str, *, stop: bool = True) -> str:
     return _set(UNDO_INPUT, {"decision": str(decision_id)}, stop=stop)
 
 
-def maintainer() -> str:
+def maintainer(state=None) -> str:
     """Who records a decision: the same initials the publish and the builds record
-    (``prefs.recorded_by``: STAF_LIBRARY_MAINTAINER, else the Prepared by initials, else
-    ``n/a``; never the login)."""
-    from streamcurves import prefs
-    return prefs.recorded_by()
+    (``views.state.recorded_by``: STAF_LIBRARY_MAINTAINER, else the open project's Prepared by,
+    else ``n/a``; never the login)."""
+    from views import state as _st
+    return _st.recorded_by(state)
 
 
 def function_names_by_id() -> dict:
@@ -439,7 +439,7 @@ def source_panel_server(input, output, session, state: AppState):
         try:
             decision = oc.new_decision(p["metric"], p["action"],
                                        rationale=input.dec_rationale() or "",
-                                       recorded_by=maintainer(), functions=p["functions"],
+                                       recorded_by=maintainer(state), functions=p["functions"],
                                        coverage_exceptions=gaps)
             from views import curve_gallery as _cg
             basis = _cg.metric_basis(state, p["metric"], oc.merge(current, decision))

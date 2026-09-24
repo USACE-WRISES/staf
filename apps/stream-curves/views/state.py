@@ -400,6 +400,17 @@ class AppState:
 # --------------------------------------------------------------------------- #
 
 
+def recorded_by(state: "AppState | None") -> str:
+    """Who this session records (``prefs.recorded_by``): STAF_LIBRARY_MAINTAINER, else the open
+    project's Prepared by, else ``n/a``; read without depending on the project."""
+    from streamcurves import prefs
+    meta = None
+    if state is not None:
+        with reactive.isolate():
+            meta = state.project_meta()
+    return prefs.recorded_by(meta if isinstance(meta, dict) else None)
+
+
 def save_metric_phase_state(state: AppState, metric: str | None) -> None:
     if metric is None or metric == "":
         return

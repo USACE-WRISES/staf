@@ -525,9 +525,11 @@ and the chosen curve; it never names a replaced or unselected candidate.
 ## Who is recorded
 
 Every record of who did something (a decision, a completed curve, an edit, an import, a publish)
-names initials, never a name: `STAF_LIBRARY_MAINTAINER` when it is set, else the project's
-**Prepared by**, else `n/a` (`prefs.recorded_by`). The Windows login is never read (a test scans the
-app for it), and nothing is refused for a missing name: the canonical gate needs
+names initials, never a name: `STAF_LIBRARY_MAINTAINER` when it is set, else the open project's
+**Prepared by** (its Project panel field), else `n/a` (`prefs.recorded_by`, read by every page
+through `views.state.recorded_by`). A new project starts from the initials last typed on this
+computer; that preference is never recorded by itself. The Windows login is never read (a test scans
+the app for the usual ways of reading it), and nothing is refused for a missing name: the canonical gate needs
 `STAF_LIBRARY_PUBLISH=1` and a writable library, not a person. A dialog that asks for initials
 (the EASI selections, a curve's completion, a coverage exception) starts from these, and a cleared
 field records `n/a`; the other pages record them without asking. This is StreamCurves' own tracking,
