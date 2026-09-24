@@ -27,20 +27,26 @@
   // ---- 2. the Project panel ------------------------------------------------------------
   var KEY = "streamcurves.panelCollapsed";
   function panel() { return document.getElementById("sc-panel"); }
+  function setCollapsed(p, collapsed) {
+    p.classList.toggle("collapsed", collapsed);
+    var head = p.querySelector(".sc-panel-head");
+    if (head) head.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  }
   function applyStored() {
     var p = panel();
     if (!p) return;
     var collapsed = false;
     try { collapsed = window.localStorage.getItem(KEY) === "1"; } catch (e) { /* no storage */ }
-    p.classList.toggle("collapsed", collapsed);
+    setCollapsed(p, collapsed);
   }
+  // the head is a <button>, so Enter and Space arrive here as clicks too
   document.addEventListener("click", function (e) {
     var head = e.target && e.target.closest ? e.target.closest(".sc-panel-head") : null;
     if (!head) return;
     var p = panel();
     if (!p) return;
     var collapsed = !p.classList.contains("collapsed");
-    p.classList.toggle("collapsed", collapsed);
+    setCollapsed(p, collapsed);
     try { window.localStorage.setItem(KEY, collapsed ? "1" : "0"); } catch (err) { /* no storage */ }
   });
   document.addEventListener("DOMContentLoaded", applyStored);

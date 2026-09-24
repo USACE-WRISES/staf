@@ -1891,9 +1891,9 @@ table.workbook-grid-table.dataTable tbody tr.selected td {
 .rules-page [id^="rule-"] { scroll-margin-top: 5rem; }
 .rules-id { font-size: 0.8rem; }
 
-/* Sticky under the viewport top: nothing above the page is sticky or fixed
-   today (.stage-bar-shell scrolls away). If that ever changes, this top and
-   the 5rem scroll margins above and below move together. */
+/* Sticky at the top of the content pane, the one scroll container (shell.css .sc-content; the
+   header and the strip sit outside it). If that ever changes, this top and the 5rem scroll
+   margins above and below move together. */
 .rules-jumpbar { position: sticky; top: 0; z-index: 5; background: #fff;
   display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem;
   padding: 0.45rem 0; border-bottom: 1px solid #e3e8ef; margin-bottom: 0.6rem; }

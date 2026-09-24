@@ -337,9 +337,9 @@ def regional_curve_server(input, output, session, state: AppState):
         if state.data() is None:
             return no_data_alert()
         return ui.TagList(
-            ui.h4(
+            ui.h2(
                 "Regional curves",
-                class_="mb-2",
+                class_="sc-page-title mb-3",
                 title="Power-function relationships between bankfull channel "
                       "dimensions and drainage area (Y = a * X^b), fit by "
                       "log-log linear regression.",
@@ -350,7 +350,7 @@ def regional_curve_server(input, output, session, state: AppState):
                     ui.layout_column_wrap(
                         ui.input_selectize(
                             ns("response"),
-                            "Response Variable:",
+                            "Response variable",
                             choices=REGIONAL_RESPONSES,
                         ),
                         ui.output_ui(ns("exploration_strat_picker_ui")),
@@ -360,12 +360,12 @@ def regional_curve_server(input, output, session, state: AppState):
                 ),
             ),
             ui.card(
-                ui.card_header("Curve Settings"),
+                ui.card_header("Curve settings"),
                 ui.card_body(
                     ui.layout_column_wrap(
                         ui.input_selectize(
                             ns("predictor"),
-                            "Predictor Variable:",
+                            "Predictor variable",
                             choices=REGIONAL_PREDICTORS,
                         ),
                         ui.output_ui(ns("stratify_ui")),
@@ -374,7 +374,7 @@ def regional_curve_server(input, output, session, state: AppState):
                     ui.div(
                         ui.input_action_button(
                             ns("fit_curve"),
-                            "Fit Regional Curve",
+                            "Fit regional curve",
                             class_="btn-primary mt-2",
                             icon=fa("chart-line"),
                         )
@@ -401,7 +401,7 @@ def regional_curve_server(input, output, session, state: AppState):
         defaults = [k for k in _DEFAULT_EXPLORATION_STRATS if k in base_keys]
         return ui.input_selectize(
             ns("exploration_strats"),
-            "Stratifications:",
+            "Stratifications",
             choices=choices,
             selected=defaults,
             multiple=True,
@@ -415,7 +415,7 @@ def regional_curve_server(input, output, session, state: AppState):
         choices = _strat_choices(
             state.strat_config(), state.data().columns, include_none=True
         )
-        return ui.input_selectize(ns("stratify"), "Stratify by:", choices=choices)
+        return ui.input_selectize(ns("stratify"), "Stratify by", choices=choices)
 
     # ── Exploration boxplots (R exploration_boxplots reactive) ────────────────
     @reactive.calc

@@ -54,9 +54,10 @@ def project_panel_ui(id: str):
     """The panel card. Its head collapses it (www/shell.js); its body is the tree."""
     ns = module.resolve_id(id)
     return ui.div(
-        ui.div(ui.span(class_="sc-panel-caret"), ui.span("Project", class_="sc-panel-title"),
-               class_="sc-panel-head", title="Show or hide the project panel"),
-        ui.div(ui.output_ui(ns("panel_body")), class_="sc-panel-body",
+        ui.tags.button(ui.span(class_="sc-panel-caret"), ui.span("Project", class_="sc-panel-title"),
+                       type="button", class_="sc-panel-head", title="Show or hide the project panel",
+                       **{"aria-expanded": "true", "aria-controls": "sc-panel-body"}),
+        ui.div(ui.output_ui(ns("panel_body")), class_="sc-panel-body", id="sc-panel-body",
                **{"data-jump-to": ns("jump")}),
         id="sc-panel", class_="sc-panel")
 

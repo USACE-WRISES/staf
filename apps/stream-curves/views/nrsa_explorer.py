@@ -27,7 +27,6 @@ from streamcurves import evidence_store as evs
 from streamcurves import nrsa_dataset as nds
 from streamcurves import nrsa_explorer as nx
 from views.state import AppState
-from views.theme import bi
 from views.uihelpers import no_data_alert
 
 # the same basemap the import wizard uses
@@ -227,7 +226,7 @@ def nrsa_explorer_server(input, output, session, state: AppState, active=None):
             ui.div("Map requires ipyleaflet.", class_="text-muted")
         )
         return ui.TagList(
-            ui.h4(ui.TagList(bi("globe-americas"), " NRSA explorer"), class_="mb-1"),
+            ui.h2("NRSA explorer", class_="sc-page-title"),
             ui.div(
                 "Every NRSA station across the 2013-14, 2018-19 and 2023-24 "
                 "surveys. Read-only.",

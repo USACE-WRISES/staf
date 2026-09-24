@@ -241,7 +241,7 @@ def discipline_map_server(input, output, session, state: AppState):
         if state.discipline_function_mapping_confirmed():
             return ui.tags.span("Confirmed", class_="badge bg-success ms-2")
         return ui.tags.span(
-            "Unconfirmed — exports locked", class_="badge bg-warning text-dark ms-2"
+            "Unconfirmed: exports locked", class_="badge bg-warning text-dark ms-2"
         )
 
     @render.ui
@@ -271,7 +271,7 @@ def discipline_map_server(input, output, session, state: AppState):
         )
         if not has_assignment:
             ui.notification_show(
-                "Nothing to save — assign at least one metric to a function.",
+                "Nothing to save. Assign at least one metric to a function.",
                 type="warning",
                 duration=6,
             )
@@ -397,7 +397,7 @@ def discipline_map_server(input, output, session, state: AppState):
             fn = active_function()
         if not fn:
             ui.notification_show(
-                "Pick a function first — click + on a function in the table.",
+                "Pick a function first: click + on a function in the table.",
                 type="warning",
                 duration=5,
             )
@@ -637,7 +637,7 @@ def discipline_map_server(input, output, session, state: AppState):
             chips += [source_chip(rk, fn)
                       for rk in reference_by_fn.get(_pe.canonical_function_id(fn) or "", [])]
             if not chips:
-                chips = [ui.tags.span("—", class_="wb-empty text-muted")]
+                chips = [ui.tags.span("None", class_="wb-empty text-muted")]
             return ui.tags.td(*chips, class_="wb-metrics")
 
         return render_wb_table(by_disc, fn_cell=fn_cell, metrics_cell=metrics_cell)
@@ -876,7 +876,7 @@ def discipline_map_server(input, output, session, state: AppState):
                 usage_tag = ui.tags.span(
                     f"×{u} review",
                     class_="wb-usage wb-usage-flag",
-                    title=f"Already used in {u} functions — review",
+                    title=f"Already used in {u} functions: review",
                 )
             elif u == 1:
                 usage_tag = ui.tags.span("×1", class_="wb-usage", title="Used in 1 function")

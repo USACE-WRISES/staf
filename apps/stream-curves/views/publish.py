@@ -480,11 +480,9 @@ def publish_server(input, output, session, state: AppState):
         )
         region = state.region_of_applicability()
         return ui.TagList(
+            ui.div(ui.h2("Publish", class_="sc-page-title"),
+                   ui.div(session_name, class_="sc-page-sub"), class_="sc-page-head"),
             ui.card(
-                ui.card_header(
-                    ui.TagList(bi("file-earmark-arrow-up"), " Publish: ",
-                               ui.tags.strong(session_name))
-                ),
                 ui.card_body(
                     ui.output_ui("publish_checklist") if ws.can_publish() else None,
                     _publish_pane(session_name, region),
