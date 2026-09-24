@@ -437,3 +437,20 @@ def test_rolling_back_restores_the_criteria_set_the_process_started_with(cache, 
     mp.activate(_builtin_pkg())
     mp.activate(None)
     assert os.environ.get("EASI_CRITERIA_SET") == "regional"
+    assert "value" not in mp._ENTRY_CRITERIA               # a rollback spends its record
+
+
+def test_rolling_back_a_process_that_never_switched_keeps_its_own_settings(cache, restore):
+    # set and put back by hand: ``cache`` uses monkeypatch, whose teardown runs after restore's
+    old = os.environ.get("EASI_CRITERIA_SET")
+    os.environ["EASI_CRITERIA_SET"] = "legacy"
+    try:
+        before = os.environ.get("EASI_DATA_DIR")
+        ident = mp.activate(None)
+        assert os.environ.get("EASI_CRITERIA_SET") == "legacy" and ident["criteriaSet"] == "legacy"
+        assert os.environ.get("EASI_DATA_DIR") == before and ident["source"] == "built-in"
+    finally:
+        if old is None:
+            os.environ.pop("EASI_CRITERIA_SET", None)
+        else:
+            os.environ["EASI_CRITERIA_SET"] = old

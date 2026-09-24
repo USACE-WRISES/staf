@@ -1209,15 +1209,18 @@ def publish_easi_version(
     if existing is not None and entry_type(existing) != "easi":
         raise ValueError(f"{assessment_id} is a {entry_type(existing).upper()} assessment; an EASI "
                          "method version cannot be added to it")
-    if project:
-        # the gate the app applies, applied here too, so no caller can skip it
-        from .easi_method import register as _reg
-        from .easi_method.model import EasiProject as _EasiProject
-        waiting = _reg.needs_review(_EasiProject(meta=dict(project.get("meta") or {}), files=dict(files),
-                                                 register=project.get("register") or {}))
-        if waiting:
-            raise ValueError("confirm the changed selections before publishing: "
-                             + ", ".join(r["functionName"] for r in waiting))
+    if not project:
+        # the authoring record (register, decisions, lineage) rides with every version, and the
+        # gate below reads it: a version without it could skip that gate
+        raise ValueError("An EASI version is published from its authoring project.")
+    # the gate the app applies, applied here too, so no caller can skip it
+    from .easi_method import register as _reg
+    from .easi_method.model import EasiProject as _EasiProject
+    waiting = _reg.needs_review(_EasiProject(meta=dict(project.get("meta") or {}), files=dict(files),
+                                             register=project.get("register") or {}))
+    if waiting:
+        raise ValueError("confirm the changed selections before publishing: "
+                         + ", ".join(r["functionName"] for r in waiting))
     mp = _mp()
     pkg = mp.read_package(mp.to_zip(mp.MethodPackage(envelope=envelope, files=dict(files),
                                                       calculator=calculator)))

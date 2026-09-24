@@ -75,7 +75,7 @@
   "geo.py": "a3738e4d4c93261f50e6059b7592e033e891f8c5e3860fe6ec42f8df6ed754ec",
   "geomorph.py": "3e1937a91b94758381dcfb931d76f3edc1e7a039f87cc59fe34048dac716075f",
   "hydraulics.py": "066dfcad509887b44d5d6614901a533967d77daac6de0915a9a908f885d057fe",
-  "method_package.py": "052a84a0ec47239e6785059ba0c0389e23a7ca44ac7e34a99bd7c6dfcfb295b0",
+  "method_package.py": "d30e3d5c7d88cf59aa3649dca913e7c8931bb6ae5fa3ca901e0fbaeb002a92da",
   "method_plot.py": "9318fdcf112f4c0ba92a5873391f495ba3c0235507bb610da3b70d65ea3971a7",
   "methods.py": "cb1ce3a3bd7bcd5a91438b3e88b487bd279da97133d57ae4e592720cd7b5d527",
   "metrics/__init__.py": "e176022aac844e605133105dd4c3c0cef6f522336e26495dcdcb9b865712f139",
