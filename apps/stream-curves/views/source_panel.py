@@ -9,7 +9,6 @@ changes nothing.
 from __future__ import annotations
 
 import json
-import os
 import re
 from typing import Mapping, Optional
 
@@ -68,12 +67,11 @@ def undo_onclick(decision_id: str, *, stop: bool = True) -> str:
 
 
 def maintainer() -> str:
-    """Who records a decision: the same chain the publish and the builds use, with the
-    "Prepared by" name a reviewer gave their project before the account name (an installed
-    copy never carries STAF_LIBRARY_MAINTAINER)."""
+    """Who records a decision: the same initials the publish and the builds record
+    (``prefs.recorded_by``: STAF_LIBRARY_MAINTAINER, else the Prepared by initials, else
+    ``n/a``; never the login)."""
     from streamcurves import prefs
-    return (os.environ.get("STAF_LIBRARY_MAINTAINER") or str(prefs.get(prefs.PREPARED_BY) or "")
-            or os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
+    return prefs.recorded_by()
 
 
 def function_names_by_id() -> dict:

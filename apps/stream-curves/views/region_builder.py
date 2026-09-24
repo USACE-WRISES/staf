@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -95,9 +94,10 @@ _TASK_KEY = "region_build"
 
 
 def _maintainer() -> str:
-    """Who to record, derived rather than asked for. Same chain views/publish.py uses."""
-    return (os.environ.get("STAF_LIBRARY_MAINTAINER")
-            or os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
+    """Who to record, derived rather than asked for: the initials views/publish.py records
+    (``prefs.recorded_by``; ``n/a`` when none are set, never the login)."""
+    from streamcurves import prefs
+    return prefs.recorded_by()
 
 
 def _sites_for(dataset_id: str) -> pd.DataFrame:
@@ -222,7 +222,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         gaps = out_dir / "coverage_exceptions.json"
         argv = rb.stage_command(
             code, name, out_dir,
-            maintainer=_maintainer() or "unknown",
+            maintainer=_maintainer(),
             n_boot=int(input.build_nboot() or 1000),
             # The Rules page owns the opt-in selection; validate so a stale id
             # can never reach --enable-policy (the script would refuse the run).
@@ -376,7 +376,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         gaps = out_dir / "coverage_exceptions.json"
         argv = rb.stage_command(
             kw["l3_code"], kw["name"], out_dir,
-            maintainer=_maintainer() or "unknown",
+            maintainer=_maintainer(),
             n_boot=kw["n_boot"],
             enable_policies=kw["enable_policies"],
             dataset_id=kw["dataset_id"],
@@ -451,7 +451,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             if not action:
                 continue
             d = rb.build_decision(records, item, action, note,
-                                  reviewer=_maintainer() or "owner")
+                                  reviewer=_maintainer())
             found = rb.decision_problems(records, d)
             if found:
                 problems.append(f"{item.get('item_id')}: " + "; ".join(found))
@@ -470,7 +470,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             if not reason:
                 continue
             exc = rb.build_coverage_exception(gap["function_id"], reason, why,
-                                              recorded_by=_maintainer() or "owner")
+                                              recorded_by=_maintainer())
             found = rb.coverage_problems([exc])
             if found:
                 gap_problems.append(f'{gap["item_id"]}: ' + "; ".join(found))

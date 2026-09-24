@@ -9,7 +9,11 @@ Two roles:
 - An **author** works in an installed StreamCurves (or any checkout without the publish switch).
   They download a version, revise it as their own project, and send the project file back.
 - The **maintainer** works in a checkout with `STAF_LIBRARY_PUBLISH=1` and
-  `STAF_LIBRARY_MAINTAINER=<name>`. Only they publish to the canonical library.
+  `STAF_LIBRARY_MAINTAINER=<initials>`. Only they publish to the canonical library.
+
+StreamCurves records initials, never a name or the Windows login: `STAF_LIBRARY_MAINTAINER`
+when it is set, else the Prepared by initials (Project panel), else `n/a`. A missing name
+never blocks a decision or a publish.
 
 Nothing below publishes externally. Uploading feeds or evidence, redeploying an app and moving
 EASI's active method are the owner's decisions (see the adoption package in the notes).
@@ -53,7 +57,7 @@ EASI's active method are the owner's decisions (see the adoption package in the 
 - **Import the current EASI method** (once, from the checkout, byte for byte):
 
       .venv\Scripts\python.exe apps\stream-curves\scripts\import_easi_method.py --out "EASI screening method.streamcurves" ^
-          --by <name> --evidence D:\Data\staf-authoring\evidence ^
+          --by <initials> --evidence D:\Data\staf-authoring\evidence ^
           --alternatives D:\Data\easi-national\review\alternative-studies\2026-09-15-controlled-alternatives
 
 - **Publish** an author's project: open it with `STAF_LIBRARY_PUBLISH=1`, review, **Publish**

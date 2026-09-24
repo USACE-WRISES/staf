@@ -21,7 +21,6 @@ import copy
 import io
 import json
 import logging
-import os
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -64,38 +63,23 @@ def _status_choices() -> dict:
 
 
 def _maintainer_name() -> str:
-    """Who to record as the publisher, derived rather than asked for.
-
-    Same chain views/discipline_map.py uses for a coverage exception's author. The
-    page used to carry a "Maintainer name (for the canonical publish audit trail)"
-    field pre-filled from the first of these, which asked the publisher to retype
-    something the environment already knows.
-    """
-    return (os.environ.get("STAF_LIBRARY_MAINTAINER")
-            or os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
+    """Who to record as the publisher, derived rather than asked for: the initials every
+    StreamCurves page records (``prefs.recorded_by``: STAF_LIBRARY_MAINTAINER, else the
+    Prepared by initials, else ``n/a``; never the login)."""
+    from streamcurves import prefs
+    return prefs.recorded_by()
 
 
 def _publish_block_reason() -> str | None:
     """The actionable gate reason from library.publish_gate_reason, or None.
 
     The library's own copy names the fix (STAF_LIBRARY_PUBLISH=1 in a verified
-    repository checkout; a maintainer name for the audit trail), which is what
-    a blocked publisher actually needs to read. The page used to compress it to
-    "Publishing is off in this session.", which read as an unexplained fault,
-    and its branch order could mask the flag message behind the maintainer one.
-    The not-writable branch never reaches this note: _publish_pane replaces the
-    whole form for that case.
+    repository checkout), which is what a blocked publisher actually needs to read.
+    A missing name never blocks: the publish records ``n/a``. The not-writable
+    branch never reaches this note: _publish_pane replaces the whole form for
+    that case.
     """
-    reason = lib.publish_gate_reason(_maintainer_name())
-    if reason is None:
-        return None
-    if not _maintainer_name() and lib.can_publish_canonical("anyone"):
-        # Flag and writability are fine; only the audit name is missing. The
-        # library's wording ("Enter a maintainer name...") assumes a form
-        # field this page deliberately does not have.
-        return ("No publisher name is available for the audit trail. Set "
-                "STAF_LIBRARY_MAINTAINER (or run where USERNAME is set), then reload.")
-    return reason
+    return lib.publish_gate_reason(_maintainer_name())
 
 
 def _portfolio_approval_text(pending: list[dict]) -> str:

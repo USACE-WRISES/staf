@@ -63,8 +63,6 @@ OPERATOR_LABELS = {**es.OPERATOR_LABELS, "minimum": "Lowest of its inputs",
                    "minimum_of_products": "Lowest of paired products"}
 RATING_CLASS = {"Good": "is-good", "Fair": "is-fair", "Poor": "is-poor"}
 DECIDED_LABELS = {"imported": "Imported", "automated": "Automated", "person": "Person"}
-#: what an edit records when nobody set their name (never a stand-in identity)
-UNNAMED = "Name not set"
 
 
 # --------------------------------------------------------------------------- #
@@ -93,10 +91,9 @@ def _plain_failure(exc: Exception) -> str:
 
 
 def person() -> str:
-    """Who is recorded as making a decision or an edit."""
-    return (str(prefs.get(prefs.PREPARED_BY) or "").strip()
-            or os.environ.get("STAF_LIBRARY_MAINTAINER", "").strip()
-            or os.environ.get("USERNAME", "").strip() or os.environ.get("USER", "").strip())
+    """Who is recorded as making a decision or an edit: initials, ``n/a`` when none are set,
+    never the login (``prefs.recorded_by``)."""
+    return prefs.recorded_by()
 
 
 def _evt(evt_id: str, **fields) -> str:
@@ -754,7 +751,7 @@ def easi_page_server(input, output, session, state: AppState):
         p, ref = _ref_at(int((input.pkg_detach() or {}).get("i", -1)))
         if ref is None:
             return
-        _apply(ev.detach(p, ref["packageId"], by=person() or UNNAMED),
+        _apply(ev.detach(p, ref["packageId"], by=person()),
                f"The project no longer names {ref.get('title') or ref['packageId']}.")
 
     @reactive.effect
@@ -767,7 +764,7 @@ def easi_page_server(input, output, session, state: AppState):
         new = p
         for rec in ev.spare_packages(_installed(), p.evidence):
             new = ev.attach(new, ev.reference(rec["manifest"], package_digest=evs.package_digest(
-                rec["manifest"])), by=person() or UNNAMED)
+                rec["manifest"])), by=person())
         if new is not p:
             _apply(new, "Attached the packages on this computer.")
 
@@ -843,7 +840,7 @@ def easi_page_server(input, output, session, state: AppState):
                        _reason_input(placeholder="Why the project should name this version"),
                        apply_id="pkg_replace_apply", apply_label="Replace", size="m")
                 return
-            new = ev.attach(p, new_ref, by=person() or UNNAMED)
+            new = ev.attach(p, new_ref, by=person())
             if new is not p:
                 with reactive.isolate():
                     _apply(new, f"The project names {title}.")
@@ -879,7 +876,7 @@ def easi_page_server(input, output, session, state: AppState):
             return
         ui.modal_remove()
         _replacing.update(ref=None, old=None)
-        _apply(ev.attach(p, new_ref, by=person() or UNNAMED, reason=why),
+        _apply(ev.attach(p, new_ref, by=person(), reason=why),
                f"The project names {new_ref.get('title') or new_ref['packageId']} {new_ref.get('version')}.")
 
     @reactive.effect
@@ -1454,7 +1451,7 @@ def easi_page_server(input, output, session, state: AppState):
                ui.p("Its curves and criteria replace the draft's for these functions; the method it "
                     "replaces stays in the register as eligible, not selected. Selecting the method this "
                     "draft started from puts every byte of it back.", class_="easi-note"),
-               ui.input_text(ns("who"), "Your name", value=person(), width="100%"),
+               ui.input_text(ns("who"), "Your initials", value=person(), width="100%"),
                _reason_input(label="Reason (recorded with the decision)", placeholder="Why this method"),
                apply_id="alt_select_apply", apply_label="Select", size="m")
 
@@ -1466,7 +1463,7 @@ def easi_page_server(input, output, session, state: AppState):
         if _target.get("kind") != "alt_select":
             return
         try:
-            new = alts.adopt(p, str(_target.get("key")), by=str(input.who() or ""),
+            new = alts.adopt(p, str(_target.get("key")), by=prefs.given_or_na(input.who()),
                              reason=str(input.reason() or ""), at=_now())
         except (ValueError, alts.AlternativeError) as exc:
             _modal_err.set(str(exc))
@@ -1616,8 +1613,8 @@ def easi_page_server(input, output, session, state: AppState):
                                    selected=_drafts.get("pub_status") or "draft", inline=True),
             ui.input_text_area(ns("pub_notes"), "Revision notes", value=_drafts.get("pub_notes") or "",
                                placeholder="What changed and why", rows=3, width="100%"),
-            ui.div(f"Recorded as published by {person()} into {lib.library_root()}." if person() else
-                   f"Publishes into {lib.library_root()}; no name is set yet.", class_="easi-muted mb-2"),
+            ui.div(f"Recorded as published by {person()} into {lib.library_root()}.",
+                   class_="easi-muted mb-2"),
             _btn(ns("publish"), ui.TagList(fa("cloud-arrow-up"), f" Publish v{ver}"),
                  "btn btn-primary btn-sm", **({"disabled": "disabled"} if problems else {})),
             class_="easi-card")
@@ -1649,9 +1646,6 @@ def easi_page_server(input, output, session, state: AppState):
         if p.is_revision() and not p.is_unchanged_from_origin() and not (
                 pv and pv.get("packageDigest") == p.package_digest):
             problems.append("Preview the consequences of this version first.")
-        if not person():
-            problems.append("Say who publishes: set your name as Prepared by in the Project "
-                            "panel, or STAF_LIBRARY_MAINTAINER.")
         return problems
 
     def _origin_project(p):
@@ -1687,7 +1681,7 @@ def easi_page_server(input, output, session, state: AppState):
         p = _get()
         if p is None or p.is_revision():
             return
-        new = eio.fork(p, by=person() or UNNAMED, version=next_version(p))
+        new = eio.fork(p, by=person(), version=next_version(p))
         _apply(new, f"Started v{new.meta['version']}, a revision of v{p.meta.get('version')}. "
                     f"v{p.meta.get('version')} stays as it is.")
         state.easi_stage.set("curves")
@@ -1775,7 +1769,7 @@ def easi_page_server(input, output, session, state: AppState):
             reason = str(input.reason() or "").strip()
             if not reason:
                 raise edit.EditError("say why (a short reason is recorded with the change)")
-            new = edit.set_curve_points(p, name, stratum, pts, by=person() or UNNAMED,
+            new = edit.set_curve_points(p, name, stratum, pts, by=person(),
                                         reason=reason)
         except (ValueError, edit.EditError) as exc:
             _modal_err.set(str(exc) if isinstance(exc, edit.EditError)
@@ -1830,7 +1824,7 @@ def easi_page_server(input, output, session, state: AppState):
             if not reason:
                 raise edit.EditError("say why (a short reason is recorded with the change)")
             new = edit.set_band_edge(p, r["methodKey"], r["input"], int(_target["e"]), float(value),
-                                     owner=input.edge_owner(), by=person() or UNNAMED, reason=reason)
+                                     owner=input.edge_owner(), by=person(), reason=reason)
         except edit.EditError as exc:
             _modal_err.set(str(exc))
             return
@@ -1873,7 +1867,7 @@ def easi_page_server(input, output, session, state: AppState):
             if not reason:
                 raise edit.EditError("say why (a short reason is recorded with the change)")
             new = edit.set_regional_edges(p, r["methodKey"], r["input"], r["region"], float(good),
-                                          float(poor), by=person() or UNNAMED, reason=reason)
+                                          float(poor), by=person(), reason=reason)
         except edit.EditError as exc:
             _modal_err.set(str(exc))
             return
@@ -1903,7 +1897,7 @@ def easi_page_server(input, output, session, state: AppState):
         _modal(f"Confirm {r['functionName']}",
                ui.p(f"{r['functionName']} keeps {r['method']} as it now stands.", class_="mb-2"),
                ui.tags.ul(*[ui.tags.li(c) for c in changes], class_="easi-list") if changes else None,
-               ui.input_text(ns("who"), "Your name", value=person(), width="100%"),
+               ui.input_text(ns("who"), "Your initials", value=person(), width="100%"),
                _reason_input(label="Reason (recorded with the decision)",
                              placeholder="Why the selection stands"),
                apply_id="confirm_apply", apply_label="Confirm the selection",
@@ -1918,7 +1912,7 @@ def easi_page_server(input, output, session, state: AppState):
             return
         r = reg.status_rows(p)[int(_target["i"])]
         try:
-            new = reg.confirm_selection(p, r["functionId"], by=str(input.who() or ""),
+            new = reg.confirm_selection(p, r["functionId"], by=prefs.given_or_na(input.who()),
                                         reason=str(input.reason() or ""), at=_now())
         except ValueError as exc:
             _modal_err.set(str(exc))
@@ -2011,7 +2005,7 @@ def easi_page_server(input, output, session, state: AppState):
         new = p.copy()
         new.meta["version"] = to
         edit.restamp_identity(new)
-        new.history.append({"action": "renumber", "at": _now(), "by": person() or "",
+        new.history.append({"action": "renumber", "at": _now(), "by": person(),
                             "kind": "lifecycle", "reason": f"v{was} became v{to}: the library "
                             f"published v{to - 1} after this revision started",
                             "target": {"from": was, "to": to}})

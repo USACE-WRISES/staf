@@ -20,7 +20,6 @@ audit trail.
 """
 from __future__ import annotations
 
-import os
 import statistics
 
 import pandas as pd
@@ -49,14 +48,14 @@ _OUTCOMES = {"match": "Matches the curves",
 
 
 def _maintainer() -> str:
-    """Same chain views/publish.py and the Region builder use."""
-    return (os.environ.get("STAF_LIBRARY_MAINTAINER")
-            or os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
+    """The initials recorded, as views/publish.py and the Region builder record them."""
+    from streamcurves import prefs
+    return prefs.recorded_by()
 
 
 def _can_write() -> bool:
-    """The maintainer, in a checkout that publishes, with a writable library and a name."""
-    return ws.can_publish() and lib.writable() and bool(_maintainer())
+    """The maintainer, in a checkout that publishes, with a writable library."""
+    return ws.can_publish() and lib.writable()
 
 
 _MAINTAINER_NOTE = ("Recording validation, approving and certifying are done by the STAF "
@@ -169,8 +168,7 @@ def validate_server(input, output, session, state: AppState, active=None):
         maintainer = _maintainer()
         blocked = (None if _can_write()
                    else _MAINTAINER_NOTE if not ws.can_publish()
-                   else ("The library is read-only here." if not writable
-                         else "No maintainer name is available for the audit trail."))
+                   else "The library is read-only here.")
         return ui.div(
             ui.div(
                 ui.h4(f"{name} v{ver}", class_="mb-0"),

@@ -253,7 +253,7 @@ decisions, notes, the preview case set, history).
 
 ```powershell
 # a maintainer checkout: import EASI's current method, then export the package EASI loads
-.venv\Scripts\python.exe apps\stream-curves\scripts\import_easi_method.py --out "<folder>\EASI screening method.streamcurves" --by <name>
+.venv\Scripts\python.exe apps\stream-curves\scripts\import_easi_method.py --out "<folder>\EASI screening method.streamcurves" --by <initials>
 .venv\Scripts\python.exe apps\stream-curves\scripts\export_easi_method.py "<folder>\EASI screening method.streamcurves" --out <method.zip>
 ```
 
