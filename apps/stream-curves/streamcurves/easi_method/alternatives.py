@@ -32,6 +32,7 @@ from typing import Optional
 
 from . import edit as E
 from . import register as R
+from . import stages
 from .model import EasiProject, parsed
 
 STUDY_ID = "2026-09-15-controlled-alternatives"
@@ -155,6 +156,9 @@ LEGACY_REASON = ("The historical baseline criteria, which EASI still offers as i
                  "set. The 2026-09-15 study treated them as a separate definition, not a control. "
                  "The decision that replaced them is not recorded here.")
 STUDY_RULE = "study-2026-09-15"
+#: a person's selection of an alternative the study's rule excluded, with the reason given against
+#: the rule (the owner's decision of 2026-09-24, as the owner adopted Alternative 2 over the same rule)
+OVERRIDE_RULE = "study-2026-09-15-override"
 
 
 def import_alternatives(project: EasiProject, study_dir: Path, *, imported_by: str,
@@ -315,24 +319,38 @@ def affected(project: EasiProject, key: str) -> list[dict]:
     return [{"functionId": f, "candidateKey": k} for f, k in out.items()]
 
 
+def _excluded(cand: dict) -> bool:
+    return (cand.get("eligibility") or {}).get("status") == "excluded"
+
+
 def adopt(project: EasiProject, key: str, *, by: str, reason: str, at: Optional[str] = None,
-          allow_excluded: bool = False) -> EasiProject:
+          allow_excluded: bool = False, override_reason: str = "") -> EasiProject:
     """Select a candidate for its function in this draft: its catalog entry and curve sets
     replace the current ones (with every linked function), and the register records who
     selected it, when and why, and that the one it replaces is no longer selected. Adopting
-    the method the draft started from puts the origin bytes back."""
+    the method the draft started from puts the origin bytes back.
+
+    An alternative the 2026-09-15 study's rule excluded is selected only with
+    ``allow_excluded`` and ``override_reason``: why it is selected against that rule, in at
+    least 20 characters. Every row it moves that the rule excluded records
+    :data:`OVERRIDE_RULE`, the reason and the study's own reasons."""
     who, why = str(by or "").strip(), " ".join(str(reason or "").split())
     if not who:
-        raise AlternativeError("A selection needs the name of the person making it.")
+        raise AlternativeError("A selection needs the initials of the person making it.")
     if len(why) < 20:
         raise AlternativeError("Say why, in at least 20 characters.")
     if not project.is_revision():
         raise AlternativeError("Only a draft revision can change its selection; start a revision "
                                "of this version first.")
-    target = _cand(project, key)
-    if (target.get("eligibility") or {}).get("status") == "excluded" and not allow_excluded:
-        raise AlternativeError("This alternative is excluded: "
-                               + " ".join((target.get("eligibility") or {}).get("reasons") or []))
+    picked = _cand(project, key)
+    against = " ".join(str(override_reason or "").split())
+    if _excluded(picked):
+        if not allow_excluded:
+            raise AlternativeError("This alternative is excluded: "
+                                   + " ".join((picked.get("eligibility") or {}).get("reasons") or []))
+        if len(against) < 20:
+            raise AlternativeError("Say why you select it against the 2026-09-15 study's rule, in at "
+                                   "least 20 characters.")
     at = at or E._now()
     moves = affected(project, key)
     cat = copy.deepcopy(project.catalog())
@@ -361,6 +379,9 @@ def adopt(project: EasiProject, key: str, *, by: str, reason: str, at: Optional[
     new.calculator = None
     new.meta["calculatorFor"] = None
     E.restamp_identity(new)
+    if isinstance(new.meta.get("geography"), dict):
+        # an alternative can bring Level II or national-only curve sets
+        new.meta["geography"] = {**new.meta["geography"], "strata": stages.strata_names(curves)}
     new.meta["updated"] = at
     reg = new.register
     rows = {r["functionId"]: r for r in R.status_rows(project)}
@@ -374,22 +395,30 @@ def adopt(project: EasiProject, key: str, *, by: str, reason: str, at: Optional[
         basis = cand["basisDigest"] if cand.get("definition") else R.function_basis(new, fid)
         was = prior.get("selectedCandidate")
         from ..candidates import decision_id
-        reg.setdefault("decisions", []).append({
-            "decisionId": decision_id(reg.get("decisions", []), target, fid, "adopt", who, at, why),
-            "candidateKey": target, "functionId": fid,
-            "decision": "selected", "rule": "person", "reason": why, "decidedBy": "person",
-            "who": who, "when": at, "basisDigest": basis, "supersedes": prior.get("decisionId")})
+        chosen = {"decisionId": decision_id(reg.get("decisions", []), target, fid, "adopt", who, at, why),
+                  "candidateKey": target, "functionId": fid,
+                  "decision": "selected", "rule": "person", "reason": why, "decidedBy": "person",
+                  "who": who, "when": at, "basisDigest": basis, "supersedes": prior.get("decisionId")}
+        if _excluded(cand):
+            chosen.update(rule=OVERRIDE_RULE,
+                          override={"rule": STUDY_RULE, "reason": against,
+                                    "studyReasons": list((cand.get("eligibility") or {}).get("reasons") or [])})
+        reg.setdefault("decisions", []).append(chosen)
         if was and was != target:
             reg["decisions"].append({
                 "decisionId": decision_id(reg["decisions"], was, fid, "replaced", who, at, why),
                 "candidateKey": was, "functionId": fid,
                 "decision": "not_selected", "rule": "person", "reason": why, "decidedBy": "person",
                 "who": who, "when": at, "basisDigest": prior.get("basis"), "supersedes": None})
-    new.history.append({"action": "adopt_candidate", "at": at, "by": who, "kind": "analytical",
-                        "reason": why, "files": changed,
-                        "target": {"candidateKey": key, "functions": [m["functionId"] for m in moves]}})
+    entry = {"action": "adopt_candidate", "at": at, "by": who, "kind": "analytical",
+             "reason": why, "files": changed,
+             "target": {"candidateKey": key, "functions": [m["functionId"] for m in moves]}}
+    if _excluded(picked):
+        entry.update(rule=OVERRIDE_RULE, override=against)
+    new.history.append(entry)
     return new
 
 
 __all__ = ["STUDY_ID", "STUDY_COMPLETION_SHA256", "ADOPTION", "read_study", "import_alternatives",
-           "definition_of", "affected", "adopt", "AlternativeError", "LEGACY_REASON"]
+           "definition_of", "affected", "adopt", "AlternativeError", "LEGACY_REASON", "STUDY_RULE",
+           "OVERRIDE_RULE"]

@@ -430,17 +430,17 @@ _LOCK = threading.Lock()
 
 
 def cached_catalog() -> tuple[list[Entry], float] | None:
-    """(entries, fetched-at epoch seconds) of the newest good download (the typed feed's on
-    a tie), or None."""
-    best = None
+    """(entries, fetched-at epoch seconds) of the typed feed's cached copy whenever it parses,
+    else of ``library.json``'s, or None. A ``library.json`` an older StreamCurves refreshed in
+    the same cache folder never outranks the typed copy (it lists DEEP only, so EASI versions
+    would vanish until the next refresh); a withdrawn typed feed's copy is deleted by
+    :func:`refresh_catalog`."""
     for p in (_catalog_cache_v2(), _catalog_cache()):
         try:
-            got = parse_catalog(p.read_text(encoding="utf-8")), p.stat().st_mtime
+            return parse_catalog(p.read_text(encoding="utf-8")), p.stat().st_mtime
         except (OSError, ValueError):
             continue
-        if best is None or got[1] > best[1]:
-            best = got
-    return best
+    return None
 
 
 def catalog_stale(ttl_s: float = CATALOG_TTL_S) -> bool:

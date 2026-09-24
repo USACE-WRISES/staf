@@ -19,6 +19,7 @@ from typing import Optional
 
 from .._vendor.easi import method_package as mp
 from . import register as reg
+from . import stages
 from .model import EasiProject, sha
 
 METHOD_ID = "easi-screening"
@@ -60,9 +61,10 @@ def import_from_easi(data_dir: Path, *, imported_by: str, version: int = 1,
         "criteriaSet": "regional",
         "geography": {"kind": "national", "code": "CONUS",
                       "name": "Contiguous United States",
-                      "strata": ["NARS-9 region", "slope class"],
-                      "note": "One national method; NARS-9 and slope-class strata and their national "
-                              "fallbacks are inside the method."},
+                      # what the curve sets are stratified by (an adopted alternative updates it)
+                      "strata": stages.strata_names(project.curves()),
+                      "note": "One national method; its strata and their national fallbacks are "
+                              "inside the method."},
         "created": now,
         "updated": now,
         "calculatorFor": identity["packageDigest"] if calc else None,

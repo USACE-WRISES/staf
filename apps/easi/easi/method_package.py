@@ -744,6 +744,7 @@ def materialize_from_env() -> None:
     if crit and crit != pkg.criteria_set:
         raise MethodPackageError(f"EASI_CRITERIA_SET={crit!r} does not match the method package "
                                  f"({pkg.criteria_set!r})")
+    _ENTRY_CRITERIA["value"] = crit          # what a rollback (``activate(None)``) returns to
     os.environ["EASI_DATA_DIR"] = str(data_dir)
     os.environ["EASI_CRITERIA_SET"] = pkg.criteria_set
     _ACTIVE.clear()
@@ -857,7 +858,8 @@ def _point_modules_at(data_dir: Path) -> None:
     nrsa.DATA_PATH = data_dir / "nrsa-2018-19-evidence.json.gz"
 
 
-#: the criteria set the process started with, kept by the first ``activate``
+#: the criteria set the process had before its first switch to a package (kept by the first
+#: ``activate`` or by ``materialize_from_env``), until a rollback returns to it
 _ENTRY_CRITERIA: dict = {}
 
 
@@ -865,19 +867,26 @@ def activate(source: Union[str, Path, bytes, MethodPackage, None]) -> dict:
     """Switch the method inside this process: for tests and for a worker that scores
     one method. Production switching is by process (``EASI_METHOD_PACKAGE`` at start).
 
-    ``None`` returns to the built-in method. Every method cache is cleared, every
-    module path that derives from the data folder is repointed, and the method
-    version recomputed from the active files is returned with the identity.
+    ``None`` returns to the built-in method with the criteria set the process had before
+    its first switch, then forgets it. In a process that never switched (or has switched
+    back), ``None`` changes nothing but the caches: a process started with ``legacy``
+    stays legacy, and one started with its own ``EASI_DATA_DIR`` keeps it. Every method
+    cache is cleared, every module path that derives from the data folder is repointed,
+    and the method version recomputed from the active files is returned with the identity.
     """
+    if source is None and not _ACTIVE:
+        _reset_all_caches()
+        return active_identity()
     if source is None:
         data_dir = builtin_data_dir()
         os.environ.pop("EASI_DATA_DIR", None)
-        # back to the criteria set the process started with
-        entry = _ENTRY_CRITERIA.get("value")
-        if entry is None:
-            os.environ.pop("EASI_CRITERIA_SET", None)
-        else:
-            os.environ["EASI_CRITERIA_SET"] = entry
+        # back to the criteria set the process started with, and that record is spent
+        if "value" in _ENTRY_CRITERIA:
+            entry = _ENTRY_CRITERIA.pop("value")
+            if entry is None:
+                os.environ.pop("EASI_CRITERIA_SET", None)
+            else:
+                os.environ["EASI_CRITERIA_SET"] = entry
         _ACTIVE.clear()
     else:
         data_dir, pkg = materialize(source)

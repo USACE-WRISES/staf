@@ -48,6 +48,7 @@ from streamcurves.easi_method import io as eio
 from streamcurves.easi_method import register as reg
 from streamcurves.easi_method import stages as es
 from streamcurves.easi_method.model import parsed
+from views import final_selection as fs
 from views import state as st
 from views.state import AppState
 from views.theme import fa
@@ -312,12 +313,29 @@ def describe(h: dict, names: dict | None = None) -> str:
         return f"renumbered from v{t.get('from')} to v{t.get('to')}"
     if a == "adopt_candidate":
         fns = [names.get(f, f) for f in t.get("functions") or []]
-        return (", ".join(fns) or "a function") + ": another method selected"
+        against = (", against the 2026-09-15 study's rule: " + str(h.get("override") or "")
+                   if h.get("rule") == alts.OVERRIDE_RULE else "")
+        return (", ".join(fns) or "a function") + ": another method selected" + against
     if a == "import_alternatives":
         return "the study's alternatives, imported for comparison"
     if a == "add_sqt_candidate":
         return f"{names.get(t.get('functionId'), t.get('functionId'))}: a state SQT curve considered"
     return str(a or "change")
+
+
+def renumber_offer(version: int, latest: int, origin_version=None) -> tuple:
+    """``(number, warning)`` for a revision whose library moved on: a number is offered only
+    upward (the library's next version, when it is above the draft's own), and the warning says
+    when the library published a version after the one this draft started from, which the draft
+    does not contain."""
+    nxt = int(latest or 0) + 1
+    offer = nxt if nxt > int(version or 0) else None
+    warning = None
+    if origin_version is not None and int(latest or 0) > int(origin_version):
+        warning = (f"The library published v{int(latest)} after this revision started from "
+                   f"v{int(origin_version)}. This draft does not contain v{int(latest)}'s changes; "
+                   "look at them before you publish.")
+    return offer, warning
 
 
 def covers(coverage: dict) -> str:
@@ -574,8 +592,8 @@ def easi_page_server(input, output, session, state: AppState):
         calc = p.calculator if p.meta.get("calculatorFor") == p.package_digest else None
         facts = _facts([
             ("Origin", _origin_sentence(p)),
-            ("Geography", f"{geo.get('name') or 'Contiguous United States'}; reference curves by "
-                          "NARS-9 region or slope class, each with a national fallback"),
+            ("Geography", f"{geo.get('name') or 'Contiguous United States'}; "
+                          f"{es.geography_sentence(curves)}"),
             ("Functions", f"{len(cat.get('methods') or [])}"),
             ("Reference curves", f"{n_curves} in {len(curves.get('sets') or {})} families"),
             ("Calculator workbook", calc[0] if calc else
@@ -1354,11 +1372,17 @@ def easi_page_server(input, output, session, state: AppState):
                                        class_="btn btn-sm " + ("btn-primary" if on else "btn-outline-secondary"),
                                        onclick=_evt(ns("alt_cmp"), i=i, j=j),
                                        **{"aria-pressed": "true" if on else "false"})]
-                if x["status"] == "eligible_not_selected" and p.is_revision() \
-                        and (c.get("identity") or {}).get("sourceKind") == "imported_alternative":
+                study_alt = (c.get("identity") or {}).get("sourceKind") == "imported_alternative"
+                if x["status"] == "eligible_not_selected" and p.is_revision() and study_alt:
                     acts.append(ui.tags.button(ui.TagList(fa("circle-check"), " Select"), type="button",
                                                class_="btn btn-sm btn-outline-primary",
                                                onclick=_evt(ns("alt_select"), i=i, j=j)))
+                if x["status"] == "excluded" and p.is_revision() and study_alt and c.get("definition"):
+                    # the owner's decision 2 (2026-09-24): selectable against the study's rule,
+                    # with the reason recorded, as Alternative 2 was adopted over the same rule
+                    acts.append(ui.tags.button(ui.TagList(fa("circle-check"), " Select against the study"),
+                                               type="button", class_="btn btn-sm btn-outline-secondary",
+                                               onclick=_evt(ns("alt_override"), i=i, j=j)))
                 if x["status"] == "selected" and r["needsReview"]:
                     acts.append(ui.tags.button("Confirm…", type="button", class_="btn btn-sm btn-outline-primary",
                                                onclick=_evt(ns("confirm_open"), i=i)))
@@ -1369,7 +1393,10 @@ def easi_page_server(input, output, session, state: AppState):
                                             class_="fs-status " + {"selected": "is-selected",
                                                                    "excluded": "is-excluded"}.get(x["status"], "is-eligible"))),
                     ui.tags.td(ui.div(d.get("reason") or "", class_="fs-reason"),
-                               *[ui.div(x, class_="fs-rule") for x in (c.get("limitations") or [])[:3]]),
+                               ui.div(fs.rule_words(d.get("rule")), class_="fs-rule easi-rule")
+                               if d.get("rule") and d.get("rule") != "person" else None,
+                               # every limitation: the study's note on Alternative 2 comes last
+                               *[ui.div(x, class_="fs-rule") for x in (c.get("limitations") or [])]),
                     ui.tags.td(", ".join(v for v in ((d.get("who") if d.get("decidedBy") == "person" else
                                                       DECIDED_LABELS.get(d.get("decidedBy"), d.get("decidedBy") or "")),
                                                      str(d.get("when") or "")[:10]) if v), class_="fs-who"),
@@ -1470,6 +1497,55 @@ def easi_page_server(input, output, session, state: AppState):
             return
         ui.modal_remove()
         _apply(new, "Selected. Preview the consequences before you publish.")
+
+    # the owner's decision 2 (2026-09-24): an alternative the study's rule excluded is
+    # selected only with a reason given against that rule, recorded on every row it moves
+    @reactive.effect
+    @reactive.event(input.alt_override)
+    @guard("open the selection")
+    def _alt_override_open():
+        p = _get()
+        r, x = _alt_at(p, input.alt_override() or {})
+        if x is None:
+            return
+        cand = x["candidate"]
+        moves = alts.affected(p, x["candidateKey"])
+        names = {row["functionId"]: row["functionName"] for row in reg.status_rows(p)}
+        _target.update(kind="alt_override", key=x["candidateKey"])
+        _open_fns.add(r["functionId"])
+        study = " ".join((cand.get("eligibility") or {}).get("reasons") or [])
+        also = (" These functions read the same curves and move with it: "
+                + ", ".join(names.get(m["functionId"], m["functionId"]) for m in moves[1:]) + "."
+                if len(moves) > 1 else "")
+        _modal(f"Select for {r['functionName']}, against the study",
+               ui.p(f"The 2026-09-15 controlled study's rule excluded {_alt_source(cand)} here. {study}",
+                    class_="mb-2"),
+               ui.p("It can still be selected in this draft, as Alternative 2 was adopted on 2026-09-16 "
+                    "over the same rule. Your reason against the rule is recorded with the selection, "
+                    "in the history and in the published record." + also, class_="easi-note"),
+               ui.input_text(ns("who"), "Your initials", value=person(), width="100%"),
+               _reason_input(label="Reason (recorded with the decision)", placeholder="Why this method"),
+               ui.input_text(ns("override_reason"), "Why against the study's rule", width="100%",
+                             placeholder="What the study's rule does not weigh here"),
+               apply_id="alt_override_apply", apply_label="Select against the study", size="m")
+
+    @reactive.effect
+    @reactive.event(input.alt_override_apply)
+    @guard("select the method")
+    def _alt_override_apply():
+        p = _get()
+        if _target.get("kind") != "alt_override":
+            return
+        try:
+            new = alts.adopt(p, str(_target.get("key")), by=prefs.given_or_na(input.who()),
+                             reason=str(input.reason() or ""), at=_now(), allow_excluded=True,
+                             override_reason=str(input.override_reason() or ""))
+        except (ValueError, alts.AlternativeError) as exc:
+            _modal_err.set(str(exc))
+            return
+        ui.modal_remove()
+        _apply(new, "Selected against the study's rule, with your reason on the record. Preview the "
+                    "consequences before you publish.")
 
     @reactive.effect
     @reactive.event(input.alt_import)
@@ -1605,14 +1681,19 @@ def easi_page_server(input, output, session, state: AppState):
         ver = int(p.meta.get("version") or 1)
         problems = _publish_problems(p, pending)
         next_v = _next_library_version()
-        renumber = (_btn(ns("renumber"), f"Renumber as v{next_v}", "btn btn-outline-primary btn-sm")
-                    if p.is_revision() and ver != next_v else None)
+        origin = (p.meta.get("lineage") or {}).get("origin") or {}
+        offer, lineage_note = renumber_offer(ver, next_v - 1,
+                                             origin.get("version") if p.is_revision() else None)
+        renumber = (_btn(ns("renumber"), f"Renumber as v{offer}", "btn btn-outline-primary btn-sm")
+                    if p.is_revision() and offer else None)
         form = ui.div(
             ui.input_radio_buttons(ns("pub_status"), "Publish as",
                                    {"draft": "Draft", "preliminary": "Preliminary"},
                                    selected=_drafts.get("pub_status") or "draft", inline=True),
             ui.input_text_area(ns("pub_notes"), "Revision notes", value=_drafts.get("pub_notes") or "",
                                placeholder="What changed and why", rows=3, width="100%"),
+            ui.div(fa("triangle-exclamation"), " ", lineage_note, class_="easi-note mb-2")
+            if lineage_note else None,
             ui.div(f"Recorded as published by {person()} into {lib.library_root()}.",
                    class_="easi-muted mb-2"),
             _btn(ns("publish"), ui.TagList(fa("cloud-arrow-up"), f" Publish v{ver}"),
@@ -2000,8 +2081,8 @@ def easi_page_server(input, output, session, state: AppState):
             return
         to = _next_library_version()
         was = int(p.meta.get("version") or 1)
-        if to == was:
-            return
+        if to <= was:
+            return                        # a revision is renumbered upward only
         new = p.copy()
         new.meta["version"] = to
         edit.restamp_identity(new)
@@ -2014,4 +2095,4 @@ def easi_page_server(input, output, session, state: AppState):
 
 __all__ = ["easi_page_ui", "easi_page_server", "easi_view", "curve_list", "band_rules",
            "regional_rules", "curve_tile", "describe", "names_of", "history_since_origin",
-           "is_published"]
+           "is_published", "renumber_offer"]

@@ -77,6 +77,41 @@ FAMILY_NAMES = {
 STRATIFIER_NAMES = {"nars9": "NARS-9 region", "slope_class": "slope class",
                     "l2": "Level II region", "national": "national"}
 
+
+def curve_strata(curves: dict) -> dict:
+    """``{stratifier words: every set of it has a national fallback}`` over the method's curve
+    sets, in the order the sets first name them (a national-only set is ``national``)."""
+    out: dict = {}
+    for s in ((curves or {}).get("sets") or {}).values():
+        key = str(s.get("stratifier") or "national")
+        name = STRATIFIER_NAMES.get(key, key)
+        fallback = key != "national" and "national" in (s.get("curves") or {})
+        out[name] = out.get(name, True) and fallback
+    return out
+
+
+def strata_names(curves: dict) -> list:
+    """What the method's reference curves are stratified by, as ``meta.geography.strata``."""
+    return list(curve_strata(curves))
+
+
+def geography_sentence(curves: dict) -> str:
+    """The Method stage's geography, from the curve sets the method reads (an adopted
+    alternative can bring Level II or national-only sets)."""
+    strata = curve_strata(curves)
+    by = [n for n in strata if n != "national"]
+    if not by:
+        return "one national reference curve per family"
+    with_fallback = [n for n in by if strata[n]]
+    text = "reference curves by " + " or ".join(by)
+    if with_fallback and len(with_fallback) == len(by):
+        text += ", each with a national fallback" if len(by) > 1 else ", with a national fallback"
+    elif with_fallback:
+        text += f" ({' and '.join(with_fallback)} with a national fallback)"
+    if "national" in strata:
+        text += "; some families have national curves only"
+    return text
+
 #: What each curve family's x axis measures.
 QUANTITY_NAMES = {
     "natural_wsrp100": "natural cover in the 100 m riparian corridor (%)",
@@ -177,5 +212,5 @@ def stage_status(snap: dict) -> dict[str, dict]:
 
 __all__ = ["STAGE_KEYS", "STAGE_LABELS", "STAGE_SHORT", "TARGET_PREFIX", "OPERATOR_LABELS",
            "STRATUM_NAMES", "FAMILY_NAMES", "STRATIFIER_NAMES", "QUANTITY_NAMES", "stage_target",
-           "stratum_name",
+           "stratum_name", "curve_strata", "strata_names", "geography_sentence",
            "family_name", "version_line", "snapshot", "stage_status"]

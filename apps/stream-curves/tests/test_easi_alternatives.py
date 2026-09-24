@@ -141,7 +141,7 @@ def test_adopting_moves_the_curve_family_together_and_going_back_restores_every_
                 reason="the woody Level II curves for this draft")
     draft = eio.fork(imported, by="Owner")
     woody = _key(draft, "habitat-provision", "alternative-1")
-    with pytest.raises(A.AlternativeError, match="name"):
+    with pytest.raises(A.AlternativeError, match="initials"):
         A.adopt(draft, woody, by="", reason="the woody Level II curves for this draft")
     with pytest.raises(A.AlternativeError, match="at least 20"):
         A.adopt(draft, woody, by="Owner", reason="short")
@@ -168,7 +168,8 @@ def test_adopting_moves_the_curve_family_together_and_going_back_restores_every_
 def test_a_draft_that_adopted_an_alternative_saves_and_reopens_whole(imported, tmp_path):
     draft = eio.fork(imported, by="Owner")
     adopted = A.adopt(draft, _key(draft, "carbon-processing", "alternative-3"), by="Owner",
-                      reason="national references for the natural corridor curves", allow_excluded=True)
+                      reason="national references for the natural corridor curves", allow_excluded=True,
+                      override_reason="a test selection against the study's rule, on the record")
     path = eio.write_project(adopted, tmp_path / "EASI.streamcurves", name="EASI")
     _, back = eio.read_project(path)
     assert back.register == adopted.register and back.files == adopted.files
@@ -239,7 +240,8 @@ def test_every_real_alternative_adopted_in_a_draft_builds_a_package_easi_accepts
     stratifiers = set()
     for key in keys:
         adopted = A.adopt(draft, key, by="Owner", reason="testing that the adopted draft exports",
-                          allow_excluded=True)
+                          allow_excluded=True,
+                          override_reason="a test selection against the study's rule, on the record")
         pkg = eio.consumer_package(adopted)          # raises when the files do not validate
         stratifiers |= {s.get("stratifier") for s in json.loads(
             pkg.files["reference-curves.json"].decode("utf-8"))["sets"].values()}
@@ -257,7 +259,8 @@ def test_a_level_ii_and_a_national_alternative_score_in_a_worker(plain):
     draft = eio.fork(got, by="Owner")
     for alt in ("alternative-1", "alternative-3"):
         adopted = A.adopt(draft, _key(draft, "habitat-provision", alt), by="Owner",
-                          reason="testing that the adopted draft scores", allow_excluded=True)
+                          reason="testing that the adopted draft scores", allow_excluded=True,
+                          override_reason="a test selection against the study's rule, on the record")
         out = evaluate.run_cases(eio.consumer_package(adopted), cases)
         assert out["identity"]["packageDigest"] == adopted.package_digest
         assert len(out["results"]) == 40
@@ -278,3 +281,67 @@ def test_the_studys_own_eligibility_is_recorded(plain):
     draft = eio.fork(got, by="Owner")
     with pytest.raises(A.AlternativeError, match="excluded"):
         A.adopt(draft, low["alternative-3"]["candidateKey"], by="Owner", reason="an excluded alternative, refused")
+    # decision 2 (2026-09-24): selectable against the study's rule, with the reason recorded
+    key3 = low["alternative-3"]["candidateKey"]
+    with pytest.raises(A.AlternativeError, match="against the 2026-09-15 study's rule"):
+        A.adopt(draft, key3, by="AB", reason="national references for low flow here", allow_excluded=True,
+                override_reason="short")
+    why = "The owner prefers national references for low flow in this revision."
+    adopted = A.adopt(draft, key3, by="AB", reason="national references for low flow here", allow_excluded=True,
+                      override_reason=why, at="2026-09-24T00:00:00Z")
+    chosen = [d for d in adopted.register["decisions"] if d.get("decision") == "selected" and d.get("who") == "AB"]
+    assert chosen and all(d["rule"] == A.OVERRIDE_RULE and d["override"]["reason"] == why
+                          and d["override"]["rule"] == A.STUDY_RULE and d["override"]["studyReasons"]
+                          for d in chosen)
+    assert adopted.history[-1]["rule"] == A.OVERRIDE_RULE and adopted.history[-1]["override"] == why
+    from views import easi_page as ep
+    assert "against the 2026-09-15 study" in ep.describe(adopted.history[-1])
+
+
+def _score_in_easi(easi_app: pathlib.Path, env_extra: dict) -> dict:
+    """Every preview case scored in an EASI process of its own, by EASI's own case scorer."""
+    import os
+    import subprocess
+    import sys
+    script = ("import json, sys; sys.path.insert(0, 'tests'); "
+              "import calculator_cases as cc; fx = cc.load_fixture(); "
+              "out = dict((c['id'], cc.expected_from(cc.score_case(c))) for c in fx['cases']); "
+              "print(json.dumps(out, sort_keys=True, default=str))")
+    env = {k: v for k, v in os.environ.items()
+           if k not in ("EASI_DATA_DIR", "EASI_METHOD_PACKAGE", "EASI_CRITERIA_SET")}
+    env.update(env_extra)
+    proc = subprocess.run([sys.executable, "-B", "-c", script], cwd=easi_app, env=env,
+                          capture_output=True, text=True, timeout=1800)
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    return json.loads(proc.stdout.strip().splitlines()[-1])
+
+
+@pytest.mark.skipif(not (REAL_STUDY / "completion.json").is_file(),
+                    reason="the 2026-09-15 alternatives study is not on this machine")
+def test_a_draft_adopting_every_alternative_1_candidate_scores_as_the_studys_frozen_files(plain, tmp_path):
+    """Review A's probe, kept: adopting every Alternative 1 candidate in a draft gives a method
+    that scores all 792 preview cases exactly as the study's frozen Alternative 1 files do."""
+    easi = APP.parent / "easi"
+    if eio.easi_source(APP.parent.parent) is None:
+        pytest.skip("apps/easi is not present (the preview cases and the scorer come from it)")
+    got = A.import_alternatives(plain, REAL_STUDY, imported_by="Maintainer", at="2026-09-24T00:00:00Z")
+    draft = eio.fork(got, by="AB")
+    keys = [c["candidateKey"] for c in draft.register["candidates"]
+            if (c["identity"].get("sourceRef") or {}).get("alternative") == "alternative-1"]
+    assert keys
+    for key in keys:
+        try:
+            draft = A.adopt(draft, key, by="AB", reason="every Alternative 1 candidate, for the comparison")
+        except A.AlternativeError as exc:
+            if "already what this draft uses" not in str(exc):   # a linked function moved already
+                raise
+    zpath = tmp_path / "alternative-1-draft.zip"
+    eio.export_zip(draft, zpath)
+    mine = _score_in_easi(easi, {"EASI_METHOD_PACKAGE": str(zpath), "EASI_METHOD_CACHE": str(tmp_path / "cache")})
+    frozen = _score_in_easi(easi, {"EASI_DATA_DIR": str(REAL_STUDY / "candidates" / "alternative-1" / "app-data"),
+                                   "EASI_CRITERIA_SET": "regional"})
+    assert len(mine) == len(frozen) == 792
+    assert [k for k in mine if mine[k] != frozen[k]] == []
+    # and the adoption did something: the built-in method scores some of these cases otherwise
+    fixture = json.loads((easi / "tests" / "data" / "calculator_cases.json").read_text(encoding="utf-8"))
+    assert sum(1 for c in fixture["cases"] if c["expected"] != mine[c["id"]]) > 0

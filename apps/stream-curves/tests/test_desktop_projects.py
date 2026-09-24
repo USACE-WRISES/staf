@@ -468,7 +468,7 @@ def test_gallery_links_to_deep_use_the_form_deep_parses():
     assert "@v{v.version}" not in PROJECT
 
 
-def test_the_newer_catalog_download_wins_and_a_withdrawn_typed_feed_is_forgotten(monkeypatch, tmp_path):
+def test_the_typed_catalog_wins_and_a_withdrawn_typed_feed_is_forgotten(monkeypatch, tmp_path):
     import os
     pack = pf.build_bytes(meta={"project_name": "Demo v2"}, session_text=_session_text(),
                           desktop_project=False, deterministic=True)
@@ -476,7 +476,12 @@ def test_the_newer_catalog_download_wins_and_a_withdrawn_typed_feed_is_forgotten
     typed = gallery.cache_dir() / gallery.CATALOG_NAME_V2
     typed.write_text(json.dumps(_catalog(pack, schema=2, name="old-v2-p1.streamcurves")))
     os.utime(typed, (1_000_000, 1_000_000))
+    # a library.json refreshed later (StreamCurves 1.0.0 shares this cache folder) lists DEEP
+    # only: it never outranks the typed copy, however new
     (gallery.cache_dir() / gallery.CATALOG_NAME).write_text(json.dumps(_catalog(pack)))
+    entries, _at = gallery.cached_catalog()
+    assert entries[0].version().assets["pack"].name == "old-v2-p1.streamcurves"
+    typed.write_text("{ not json")                                  # an unreadable typed copy
     entries, _at = gallery.cached_catalog()
     assert entries[0].version().assets["pack"].name == "demo-v2-p1.streamcurves"
     # a library that publishes only library.json: the typed cache goes
