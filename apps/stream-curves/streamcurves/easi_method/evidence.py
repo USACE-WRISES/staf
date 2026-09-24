@@ -10,6 +10,7 @@ record only: the method files, and so the method EASI scores with, never change.
 from __future__ import annotations
 
 import datetime as _dt
+from pathlib import Path
 from typing import Optional
 
 from .model import EasiProject
@@ -69,6 +70,34 @@ def detach(project: EasiProject, package_id: str, *, by: str, reason: str = "") 
     return new
 
 
+def spare_packages(installed: list[dict], evidence: list[dict]) -> list[dict]:
+    """The verified EASI packages on this computer that the project does not name, one per
+    package: the most recently installed when several copies verify. A damaged or unverified
+    copy is never offered."""
+    named = {e.get("packageId") for e in evidence or []}
+    best: dict = {}
+    for rec in installed or []:
+        pid = rec.get("packageId")
+        if not rec.get("verified") or not str(pid or "").startswith("easi-") or pid in named:
+            continue
+        try:
+            when = (Path(rec["path"]) / "evidence.json").stat().st_mtime
+        except (KeyError, OSError, TypeError):
+            when = 0.0
+        if pid not in best or when > best[pid][0]:
+            best[pid] = (when, rec)
+    return [best[pid][1] for pid in sorted(best)]
+
+
+def carried_archive(old: Optional[dict], package_digest: str) -> Optional[dict]:
+    """The archive record of the reference ``old`` when it names exactly this package (the same
+    package digest). A record of another version, or of a reference without a package digest,
+    would send a later download to the wrong archive, so it is never carried over."""
+    if not old or not old.get("packageDigest") or old.get("packageDigest") != package_digest:
+        return None
+    return old.get("archive") or None
+
+
 def status(ref: dict, installed: list[dict]) -> str:
     """``installed`` (a verified copy of the package the reference names: its package digest
     when it records one, else its data digest), ``damaged`` (that copy failed its check),
@@ -84,4 +113,4 @@ def status(ref: dict, installed: list[dict]) -> str:
 
 
 __all__ = ["ROLE_LABELS", "REPRODUCIBILITY_LABELS", "REPRODUCIBILITY_HELP", "reference", "attach",
-           "detach", "status"]
+           "detach", "status", "spare_packages", "carried_archive"]

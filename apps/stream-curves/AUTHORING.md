@@ -307,7 +307,11 @@ only once every file's size and SHA-256 match. A folder keeps the size and time 
 from its last full check (`.verified.json`); listing the store trusts that only while they hold,
 and anything that reads the data (a refit, the viewer, an export) hashes every file first
 (`evidence_store.ready`). A copy damaged or edited on disk reads "Damaged" with the way to fetch
-it again, and a manifest changed after the install is damage too. Hosting is decided at adoption;
+it again, and a manifest changed after the install is damage too. One exception: a store folder
+installed before 2026-09-23 is named by the package's data digest, and there an edited manifest
+is caught only when its file table or data digest no longer matches the files; a reference that
+records a package digest still reads such a copy as another version, never as the package.
+Importing the package again installs it in a folder named by its package digest. Hosting is decided at adoption;
 it uses content-named assets on an existing rolling prerelease (a release per package would push
 the installer out of Velopack's 10-newest-releases window), and a rolling release URL is a
 location, never an identity. Until then `STREAMCURVES_EVIDENCE_BASE_URL` (a folder or an https

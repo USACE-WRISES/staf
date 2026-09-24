@@ -718,9 +718,7 @@ def easi_page_server(input, output, session, state: AppState):
                                                   title="Stop naming this package in the project",
                                                   onclick=_evt(ns("pkg_detach"), i=i)),
                            class_="easi-right easi-nowrap")))
-        attached = {r["packageId"] for r in refs}
-        spare = [r for r in inst if r.get("verified") and r["packageId"].startswith("easi-")
-                 and r["packageId"] not in attached]
+        spare = ev.spare_packages(inst, refs)
         if rows:
             table = ui.tags.table(
                 ui.tags.thead(ui.tags.tr(ui.tags.th("Package"), ui.tags.th("Role"),
@@ -765,11 +763,9 @@ def easi_page_server(input, output, session, state: AppState):
         if p is None:
             return
         new = p
-        for rec in _installed():
-            if rec.get("verified") and rec["packageId"].startswith("easi-") and rec["packageId"] not in {
-                    e["packageId"] for e in new.evidence}:
-                new = ev.attach(new, ev.reference(rec["manifest"], package_digest=evs.package_digest(
-                    rec["manifest"])), by=person() or UNNAMED)
+        for rec in ev.spare_packages(_installed(), p.evidence):
+            new = ev.attach(new, ev.reference(rec["manifest"], package_digest=evs.package_digest(
+                rec["manifest"])), by=person() or UNNAMED)
         if new is not p:
             _apply(new, "Attached the packages on this computer.")
 
@@ -831,8 +827,7 @@ def easi_page_server(input, output, session, state: AppState):
                    "packageDigest": evs.package_digest(doc)}
             old = next((e for e in p.evidence if e.get("packageId") == doc["packageId"]), None)
             same_data = bool(old) and old.get("dataDigest") == doc["dataDigest"]
-            same_package = bool(old) and old.get("packageDigest") == got["packageDigest"]
-            new_ref = ev.reference(doc, archive=archive or ((old or {}).get("archive") if same_package else None),
+            new_ref = ev.reference(doc, archive=archive or ev.carried_archive(old, got["packageDigest"]),
                                    package_digest=got["packageDigest"])
             if old is not None and not evs.matches(got, old):
                 # another version of a package the project names: the author decides
@@ -895,7 +890,7 @@ def easi_page_server(input, output, session, state: AppState):
         _launch(_run_install(None, ref=ref))
 
     # the package viewer
-    _viewing: dict = {"folder": None, "files": []}
+    _viewing: dict = {"folder": None, "files": [], "doc": None}
 
     @reactive.effect
     @reactive.event(input.pkg_view)
@@ -912,7 +907,7 @@ def easi_page_server(input, output, session, state: AppState):
             return
         doc = evs.read_manifest(folder)
         tables = [rel for rel, rec in doc["files"].items() if rel.endswith((".parquet", ".csv"))]
-        _viewing.update(folder=folder, files=tables)
+        _viewing.update(folder=folder, files=tables, doc=doc)
         files = ui.tags.table(
             ui.tags.thead(ui.tags.tr(ui.tags.th("File"), ui.tags.th("Rows", class_="easi-right"),
                                      ui.tags.th("Columns", class_="easi-right"),
@@ -1026,11 +1021,14 @@ def easi_page_server(input, output, session, state: AppState):
         if path is None:
             return
         rel = str(path.relative_to(Path(_viewing["folder"]))).replace("\\", "/")
-        rec = (evs.read_manifest(Path(_viewing["folder"]))["files"] or {}).get(rel) or {}
+        # the manifest that was verified when the viewer opened, never one read again from disk
+        rec = ((_viewing.get("doc") or {}).get("files") or {}).get(rel) or {}
         if evs.sha_file(path) != rec.get("sha256"):
-            ui.notification_show(f"{rel} no longer matches its package. Download or import the package "
-                                 "again.", type="error", duration=10)
-            return
+            why = f"{rel} no longer matches its package. Download or import the package again."
+            ui.notification_show(why, type="error", duration=10)
+            # raised, not returned: a download that ends without a byte would be saved as an empty
+            # file, while an error mid-stream leaves the transfer unfinished and the browser drops it
+            raise evs.EvidenceError(why)
         import pyarrow.csv as pacsv
         import pyarrow.parquet as pq
         import io as _io
