@@ -274,6 +274,44 @@ def test_pick_takes_the_newest_verified_copy(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
+# N9: a refit is exact only when the engine, the refit's code and the constants are recorded
+# and agree
+# --------------------------------------------------------------------------- #
+def _recipe_package(tmp_path, name, **recipe) -> Path:
+    folder = tmp_path / name
+    _make_package(folder, FILES, packageId="easi-dev-members", recipe=recipe)
+    return folder
+
+
+def test_the_recipe_check_needs_the_engine_and_the_refits_code_on_record(tmp_path):
+    from streamcurves.easi_method import refit
+    from streamcurves.paths import ROOT
+    engine = {"sha256_lf": _sha((ROOT / "streamcurves" / "curves.py").read_bytes().replace(b"\r\n", b"\n"))}
+    code = refit.recipe_code()
+    same = refit.recipe_check(_recipe_package(tmp_path, "same", engine=engine, code=code))
+    assert same["same"] and same["differences"] == [] and same["notRecorded"] == []
+    assert refit.recipe_words(same) is None
+
+    old = refit.recipe_check(_recipe_package(tmp_path, "old", engine=engine))      # before round 2
+    assert not old["same"] and old["notRecorded"] == ["the fit recipe code", "the refit code"]
+    assert refit.recipe_words(old) == ("The refit is not expected to match exactly: the package does not "
+                                       "record the fit recipe code or the refit code.")
+
+    bare = refit.recipe_check(_recipe_package(tmp_path, "bare"))
+    assert not bare["same"] and bare["notRecorded"][0] == "the curve engine"
+
+    moved = refit.recipe_check(_recipe_package(tmp_path, "moved", engine=engine,
+                                               code={**code, "refit.py": "0" * 64}))
+    assert not moved["same"] and moved["differences"] == ["refit code"]
+    assert refit.recipe_words(moved) == ("The refit is not expected to match exactly: the refit code here "
+                                         "differs from what the package records.")
+    both = {"same": False, "differences": ["curve engine", "refit code"], "notRecorded": ["the fit recipe code"]}
+    assert refit.recipe_words(both) == ("The refit is not expected to match exactly: the curve engine and "
+                                        "refit code here differ from what the package records; the "
+                                        "package does not record the fit recipe code.")
+
+
+# --------------------------------------------------------------------------- #
 # the CSV export (a Shiny download inside the page's server, so read as source)
 # --------------------------------------------------------------------------- #
 def test_the_csv_export_hashes_its_file_against_the_verified_manifest_and_fails_loudly():
