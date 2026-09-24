@@ -266,7 +266,9 @@ def test_relaxed_first_panels_are_labelled_relaxed_and_ranked_like_the_builder()
 
 
 # --------------------------------------------------------------------------- #
-# locks (review B round 2, N5): one holder, a race-safe takeover, only one's own release
+# locks (review B round 2, N5, and the round-2 review): the system's lock, one holder at a time
+# in any process, let go of when its holder ends; a record is never the lock; only one's own
+# record is removed
 # --------------------------------------------------------------------------- #
 def _holder(folder: Path, *, release: bool) -> subprocess.Popen:
     """Another process holding ``folder``'s lock until told to go (then releasing it, or
@@ -305,56 +307,87 @@ def test_a_second_process_finds_the_lock_busy_until_the_first_is_done(tmp_path):
     assert _locks(tmp_path) == []
 
 
-def test_a_takeover_that_loses_the_race_gives_the_lock_back(tmp_path):
-    lock = tmp_path / "lock.json"
-    stale = {"pid": 2 ** 31 - 7, "host": socket.gethostname(), "startedAt": "2026-09-23T00:00:00Z",
-             "nonce": "old"}
-    lock.write_text(json.dumps(stale), encoding="utf-8")
-    # A and B both judged that record stale. A moves it aside first and takes the lock ...
-    assert jobs._take_over(lock, stale)
-    a = jobs.acquire(tmp_path)
-    # ... then B's takeover finds A's fresh lock under the name: it puts it back and loses
-    assert not jobs._take_over(lock, stale)
-    assert jobs.holds(a) and _locks(tmp_path) == ["lock.json"]
-    jobs.release(a)
+#: A process contending for a folder's lock (the round-2 review's race, as a test): each round
+#: it takes the lock, marks the folder as entered (an exclusive create, so a second holder shows
+#: up as an overlap), checks it still holds it, and lets go; a dying one ends its last round
+#: holding the lock, which the system then lets go of.
+_CONTENDER = r'''
+import json, os, sys, time, pathlib
+sys.path.insert(0, sys.argv[2])
+from streamcurves import jobs
+folder, die = pathlib.Path(sys.argv[1]), sys.argv[3] == "1"
+while not (folder / "go").exists():
+    time.sleep(0.005)
+out = {"won": 0, "overlap": 0, "lost": 0}
+for r in range(8):
+    held = jobs.acquire(folder, wait=120)
+    try:
+        os.close(os.open(str(folder / "inside"), os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+        mine = True
+    except FileExistsError:
+        out["overlap"] += 1
+        mine = False
+    time.sleep(0.01)
+    out["lost"] += 0 if jobs.holds(held) else 1
+    if mine:
+        os.unlink(str(folder / "inside"))
+    out["won"] += 1
+    if die and r == 7:
+        print(json.dumps(out), flush=True)
+        os._exit(0)
+    jobs.release(held)
+print(json.dumps(out), flush=True)
+'''
+
+
+def test_processes_contending_for_a_lock_never_overlap_and_an_ended_holder_lets_go(tmp_path):
+    procs = [subprocess.Popen([sys.executable, "-c", _CONTENDER, str(tmp_path), str(APP), "1" if i < 2 else "0"],
+                              stdout=subprocess.PIPE, text=True) for i in range(4)]
+    (tmp_path / "go").write_text("1", encoding="utf-8")
+    results = [json.loads(p.communicate(timeout=600)[0].strip().splitlines()[-1]) for p in procs]
+    assert sum(r["won"] for r in results) == 32
+    assert not any(r["overlap"] or r["lost"] for r in results)
+    held = jobs.acquire(tmp_path)          # two of them ended holding it: nothing is left held
+    jobs.release(held)
     assert _locks(tmp_path) == []
 
 
-def test_a_release_never_removes_a_lock_another_run_holds(tmp_path):
+def test_a_record_is_never_the_lock_only_a_held_system_lock_is(tmp_path):
+    lock = tmp_path / "lock.json"
+    # records an ended holder (or a hand) can leave: this very process, another computer, damage
+    for text in (json.dumps({"pid": os.getpid(), "host": socket.gethostname(), "nonce": "n"}),
+                 json.dumps({"pid": 2 ** 31 - 7, "host": "another-computer", "nonce": "m"}),
+                 "", "{", json.dumps([1])):
+        lock.write_text(text, encoding="utf-8")
+        held = jobs.acquire(tmp_path, wait=0)
+        assert jobs.holds(held) and json.loads(lock.read_text(encoding="utf-8"))["nonce"] == held.nonce
+        jobs.release(held)
+        assert _locks(tmp_path) == []
+    # a held lock is busy whatever its record says: none, damaged, or someone else's
+    held = jobs.acquire(tmp_path)
+    try:
+        for text in (None, "", json.dumps({"pid": 2 ** 31 - 7, "host": "x", "nonce": "o"})):
+            if text is None:
+                lock.unlink()
+            else:
+                lock.write_text(text, encoding="utf-8")
+            with pytest.raises(jobs.CampaignBusy, match="Another run is using"):
+                jobs.acquire(tmp_path, wait=0)
+    finally:
+        jobs.release(held)
+
+
+def test_a_release_removes_only_its_own_record_and_always_lets_go(tmp_path):
     held = jobs.acquire(tmp_path)
     lock = tmp_path / "lock.json"
     lock.write_text(json.dumps({**json.loads(lock.read_text(encoding="utf-8")), "nonce": "another"}),
                     encoding="utf-8")
     jobs.release(held)
     assert lock.is_file() and not jobs.holds(held)
-
-
-def test_a_lock_that_cannot_be_read_is_busy_and_kept(tmp_path):
-    lock = tmp_path / "lock.json"
-    for text in ("", "{", json.dumps({"host": "x", "startedAt": "y"}), json.dumps({"pid": "12"}),
-                 json.dumps({"pid": True}), json.dumps([1])):
-        lock.write_text(text, encoding="utf-8")
-        with pytest.raises(jobs.CampaignBusy, match="cannot be read"):
-            jobs.acquire(tmp_path)
-        assert lock.read_text(encoding="utf-8") == text
-
-
-def test_a_pid_is_the_holder_only_while_its_process_is_the_one_that_locked(tmp_path):
-    lock = tmp_path / "lock.json"
-    me = {"pid": os.getpid(), "host": socket.gethostname(), "startedAt": "x", "nonce": "n"}
-    started = jobs._process_started(os.getpid())
-    if started is None:
-        pytest.skip("process start times cannot be read here")
-    lock.write_text(json.dumps({**me, "processStarted": started + 1}), encoding="utf-8")
-    held = jobs.acquire(tmp_path)                      # the pid now belongs to another process
-    assert jobs.holds(held)
-    jobs.release(held)
-    lock.write_text(json.dumps({**me, "processStarted": started}), encoding="utf-8")
-    with pytest.raises(jobs.CampaignBusy, match="Another run is using"):
-        jobs.acquire(tmp_path)                         # that process is still running
-    lock.write_text(json.dumps({**me, "pid": 2 ** 31 - 7, "host": "another-computer"}), encoding="utf-8")
-    with pytest.raises(jobs.CampaignBusy, match="another-computer"):
-        jobs.acquire(tmp_path)                         # another computer's lock is never judged
+    jobs.release(held)                     # a second release does nothing
+    again = jobs.acquire(tmp_path, wait=0)  # the system lock was let go
+    jobs.release(again)
+    assert _locks(tmp_path) == []
 
 
 def test_a_run_inside_a_held_lock_keeps_it_for_the_merge(tmp_path):
@@ -366,8 +399,11 @@ def test_a_run_inside_a_held_lock_keeps_it_for_the_merge(tmp_path):
     assert _locks(tmp_path) == []
     held = jobs.acquire(tmp_path)
     (tmp_path / "lock.json").write_text(json.dumps({"pid": os.getpid(), "nonce": "x"}), encoding="utf-8")
-    with pytest.raises(jobs.CampaignBusy, match="no longer"):
-        jobs.run(_cmd_jobs(1), tmp_path, workers=1, lock_held=held)
+    try:
+        with pytest.raises(jobs.CampaignBusy, match="no longer"):
+            jobs.run(_cmd_jobs(1), tmp_path, workers=1, lock_held=held)
+    finally:
+        jobs.release(held)
 
 
 # --------------------------------------------------------------------------- #

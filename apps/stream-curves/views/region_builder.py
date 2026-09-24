@@ -93,11 +93,10 @@ def _staged_reference_summary(session_path) -> dict:
 _TASK_KEY = "region_build"
 
 
-def _maintainer() -> str:
+def _maintainer(state=None) -> str:
     """Who to record, derived rather than asked for: the initials views/publish.py records
-    (``prefs.recorded_by``; ``n/a`` when none are set, never the login)."""
-    from streamcurves import prefs
-    return prefs.recorded_by()
+    (``views.state.recorded_by``; ``n/a`` when none are set, never the login)."""
+    return st.recorded_by(state)
 
 
 def _sites_for(dataset_id: str) -> pd.DataFrame:
@@ -222,7 +221,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         gaps = out_dir / "coverage_exceptions.json"
         argv = rb.stage_command(
             code, name, out_dir,
-            maintainer=_maintainer(),
+            maintainer=_maintainer(state),
             n_boot=int(input.build_nboot() or 1000),
             # The Rules page owns the opt-in selection; validate so a stale id
             # can never reach --enable-policy (the script would refuse the run).
@@ -376,7 +375,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         gaps = out_dir / "coverage_exceptions.json"
         argv = rb.stage_command(
             kw["l3_code"], kw["name"], out_dir,
-            maintainer=_maintainer(),
+            maintainer=_maintainer(state),
             n_boot=kw["n_boot"],
             enable_policies=kw["enable_policies"],
             dataset_id=kw["dataset_id"],
@@ -451,7 +450,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             if not action:
                 continue
             d = rb.build_decision(records, item, action, note,
-                                  reviewer=_maintainer())
+                                  reviewer=_maintainer(state))
             found = rb.decision_problems(records, d)
             if found:
                 problems.append(f"{item.get('item_id')}: " + "; ".join(found))
@@ -470,7 +469,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             if not reason:
                 continue
             exc = rb.build_coverage_exception(gap["function_id"], reason, why,
-                                              recorded_by=_maintainer())
+                                              recorded_by=_maintainer(state))
             found = rb.coverage_problems([exc])
             if found:
                 gap_problems.append(f'{gap["item_id"]}: ' + "; ".join(found))
@@ -601,7 +600,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                 "Not staged, so there is nothing to publish yet. Answer what is left "
                 "above and build this region again.",
                 class_="text-muted small mt-3")
-        blocked = lib.publish_gate_reason(_maintainer()) or _decisions_moved()
+        blocked = lib.publish_gate_reason() or _decisions_moved()
         return ui.div(
             ui.input_action_button(
                 ns("publish_run"), ui.TagList(bi("file-earmark-arrow-up"),
@@ -622,7 +621,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         packet = _packet() or {}
         if not (packet.get("staged") or {}).get("path"):
             return
-        blocked = lib.publish_gate_reason(_maintainer()) or _decisions_moved()
+        blocked = lib.publish_gate_reason() or _decisions_moved()
         if blocked:
             ui.notification_show(blocked, type="warning", duration=10)
             return
@@ -648,7 +647,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         out_dir = _active_dir()
         if out_dir is None:
             return
-        _launch(run_stage(rb.promote_command(out_dir, maintainer=_maintainer()),
+        _launch(run_stage(rb.promote_command(out_dir, maintainer=_maintainer(state)),
                           Path(out_dir), log_name="promote.log"))
 
     # ── page ─────────────────────────────────────────────────────────────────

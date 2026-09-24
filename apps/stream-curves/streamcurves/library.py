@@ -165,9 +165,9 @@ def _env_flag(name: str) -> bool:
 
 
 def _maintainer_name(maintainer: Optional[str] = None) -> str:
-    """The audit name recorded: the one given, else the initials every StreamCurves page
-    records (``prefs.recorded_by``: STAF_LIBRARY_MAINTAINER, else Prepared by, else ``n/a``).
-    Never empty and never the login, so a missing name never blocks a publish."""
+    """The audit name recorded: the one given (a page passes the open project's initials),
+    else STAF_LIBRARY_MAINTAINER, else ``n/a`` (``prefs.recorded_by`` with no project). Never
+    empty and never the login, so a missing name never blocks a publish."""
     from . import prefs
     return (maintainer or "").strip() or prefs.recorded_by()
 

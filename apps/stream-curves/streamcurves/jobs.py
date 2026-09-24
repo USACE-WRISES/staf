@@ -13,15 +13,17 @@ summary; a caller that merges or summarizes after the run holds the lock around 
 stops the other jobs; an interrupted campaign resumes by running ``run`` again: completed jobs
 are skipped, anything else starts over in a clean output folder.
 
-A lock is written whole (a temporary file linked into place, never a half-written file) and
-names its process by pid, host, start and a nonce. It is taken over only when that process has
-certainly ended; a lock that cannot be read is busy, never stale; the takeover moves aside only
-the record it judged stale, so two processes never both hold one lock; and a process removes
-only a lock that still carries its own nonce.
+A lock is the operating system's lock on the folder's ``.lock`` file (``msvcrt.locking`` on
+Windows, ``flock`` elsewhere), taken without waiting long: one handle holds it at a time, in any
+process, and the system lets go of it when its holder ends, however it ends, so a lock never
+outlives its holder and nothing has to judge whether one is stale. The holder writes its record
+(pid, host, start, a nonce) to ``lock.json`` whole, replacing any record an ended holder left, and
+removes the record at release only when it still carries its own nonce.
 
 Layout under a campaign folder::
 
     campaign.json                    what the campaign is (written once)
+    .lock                            the file the system locks for the holder (kept; it holds nothing)
     lock.json                        the running coordinator (pid, host, start, nonce); removed at the end
     index.jsonl                      one line per job event, append-only
     summary.json                     every job's last state, rewritten as jobs finish
@@ -170,73 +172,17 @@ class CampaignBusy(RuntimeError):
     """Another coordinator holds the campaign."""
 
 
-def _pid_alive(pid: int) -> bool:
-    """True while process ``pid`` runs (never signals it: on Windows ``os.kill`` would end it)."""
-    if pid <= 0:
-        return False
-    if os.name == "nt":
-        import ctypes
-        from ctypes import wintypes
-        k32 = ctypes.WinDLL("kernel32")
-        k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
-        k32.OpenProcess.restype = wintypes.HANDLE
-        k32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
-        k32.GetExitCodeProcess.restype = wintypes.BOOL
-        k32.CloseHandle.argtypes = [wintypes.HANDLE]
-        handle = k32.OpenProcess(0x1000, False, int(pid))     # PROCESS_QUERY_LIMITED_INFORMATION
-        if not handle:
-            return False
-        try:
-            code = wintypes.DWORD()
-            return bool(k32.GetExitCodeProcess(handle, ctypes.byref(code))) and code.value == 259
-        finally:
-            k32.CloseHandle(handle)
-    try:
-        os.kill(int(pid), 0)
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
-    return True
-
-
-def _process_started(pid: int) -> Optional[int]:
-    """When process ``pid`` started, as an opaque number that stays the same for the whole life
-    of the process (None where it cannot be read). A lock records it for its own process, so a
-    later process that happens to get the same pid is never taken for the lock's holder."""
-    try:
-        if os.name == "nt":
-            import ctypes
-            from ctypes import wintypes
-            k32 = ctypes.WinDLL("kernel32")
-            k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
-            k32.OpenProcess.restype = wintypes.HANDLE
-            k32.GetProcessTimes.argtypes = [wintypes.HANDLE] + [ctypes.POINTER(wintypes.FILETIME)] * 4
-            k32.GetProcessTimes.restype = wintypes.BOOL
-            k32.CloseHandle.argtypes = [wintypes.HANDLE]
-            k32.CloseHandle.restype = wintypes.BOOL
-            handle = k32.OpenProcess(0x1000, False, int(pid))     # PROCESS_QUERY_LIMITED_INFORMATION
-            if not handle:
-                return None
-            try:
-                times = [wintypes.FILETIME() for _ in range(4)]
-                if not k32.GetProcessTimes(handle, *(ctypes.byref(t) for t in times)):
-                    return None
-                return (times[0].dwHighDateTime << 32) | times[0].dwLowDateTime
-            finally:
-                k32.CloseHandle(handle)
-        import psutil
-        return int(psutil.Process(int(pid)).create_time() * 1_000_000)
-    except Exception:  # noqa: BLE001 - a missing start time only weakens the check to the pid
-        return None
-
-
 LOCK = "lock.json"
+#: The file whose system lock is the folder's lock. It is kept (it holds nothing): removing a
+#: file other processes may be opening is how two holders can happen.
+MUTEX = ".lock"
+#: The locks this process holds: nonce -> the handle whose system lock it is.
+_HELD: dict = {}
 
 
 @dataclass(frozen=True)
 class Held:
-    """A lock this process holds: its file and the nonce that proves the file is still ours."""
+    """A lock this process holds: its record file and the nonce that proves the record is ours."""
     path: Path
     nonce: str
 
@@ -253,160 +199,118 @@ def _retrying(fn, *, tries: int = 5, wait: float = 0.05):
             time.sleep(wait)
 
 
-def _busy(lock: Path, held: dict) -> CampaignBusy:
-    return CampaignBusy(f"Another run is using {lock.parent} (process {held.get('pid')} on "
-                        f"{held.get('host')}, since {held.get('startedAt')}). Wait for it to finish. "
-                        f"If no run is using the folder, delete {lock}.")
-
-
-def _read_lock(lock: Path) -> Optional[dict]:
-    """The lock's record, or None when there is no lock. A lock that cannot be read now (another
-    process has it open, or a crash left it empty) is never judged stale: it reads as busy."""
+def _os_lock(fd: int) -> bool:
+    """Lock ``fd``'s first byte for this handle alone, without waiting. False while another
+    handle holds it, in any process, this one included. The system drops the lock when the
+    handle is closed or its process ends, however it ends."""
     try:
-        text = _retrying(lambda: lock.read_text(encoding="utf-8"))
-    except FileNotFoundError:
-        return None
-    except OSError as exc:
-        raise CampaignBusy(f"The lock {lock} cannot be read ({exc}). If no run is using "
-                           f"{lock.parent}, delete it.") from exc
-    try:
-        rec = json.loads(text)
-    except ValueError:
-        rec = None
-    if not isinstance(rec, dict) or not isinstance(rec.get("pid"), int) or isinstance(rec.get("pid"), bool):
-        raise CampaignBusy(f"The lock {lock} cannot be read. If no run is using {lock.parent}, "
-                           "delete it.")
-    return rec
-
-
-def _holder_gone(held: dict) -> bool:
-    """True only when the lock's process has certainly ended: same host, and its pid is not
-    running or now belongs to a process that started at another time."""
-    import socket
-    if held.get("host") not in (None, socket.gethostname()):
-        return False
-    pid = int(held["pid"])
-    if not _pid_alive(pid):
+        if os.name == "nt":
+            import msvcrt
+            os.lseek(fd, 0, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         return True
-    recorded = held.get("processStarted")
-    if recorded is None:
+    except OSError:
         return False
-    now = _process_started(pid)
-    return now is not None and now != recorded
 
 
-def _place(lock: Path, text: str) -> bool:
-    """Put ``text`` at ``lock`` whole, only when no lock is there: written to a temporary file
-    and linked into place, so a lock is never seen half written. False when a lock exists."""
+def _os_unlock(fd: int) -> None:
+    try:
+        if os.name == "nt":
+            import msvcrt
+            os.lseek(fd, 0, os.SEEK_SET)
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(fd, fcntl.LOCK_UN)
+    except OSError:
+        pass                              # closing the handle lets go of it anyway
+
+
+def _peek(lock: Path) -> dict:
+    """The holder's record, or {} when there is none or it cannot be read now. A record is
+    only ever read to say who holds a lock, never to decide whether one is held."""
+    try:
+        rec = json.loads(_retrying(lambda: Path(lock).read_text(encoding="utf-8")))
+    except (OSError, ValueError):
+        return {}
+    return rec if isinstance(rec, dict) else {}
+
+
+def _busy(lock: Path, held: dict) -> CampaignBusy:
+    who = (f" (process {held.get('pid')} on {held.get('host')}, since {held.get('startedAt')})"
+           if held.get("pid") else "")
+    return CampaignBusy(f"Another run is using {lock.parent}{who}. Wait for it to finish.")
+
+
+def _record(lock: Path, text: str) -> None:
+    """Write the holder's record whole: a temporary file moved into place, replacing a record an
+    ended holder left (a reader has the old file open for a moment at most)."""
     tmp = lock.with_name(f"{lock.name}.{uuid.uuid4().hex}.tmp")
     tmp.write_text(text, encoding="utf-8")
     try:
-        try:
-            os.link(tmp, lock)
-            return True
-        except FileExistsError:
-            return False
-        except PermissionError:
-            return False                  # a lock that is being deleted still holds the name
-        except OSError:
-            pass                          # a file system without hard links
-        try:
-            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except (FileExistsError, PermissionError):
-            return False
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            fh.write(text)
-        return True
+        _retrying(lambda: os.replace(tmp, lock), tries=100, wait=0.02)
     finally:
         try:
             tmp.unlink()
         except OSError:
-            pass
+            pass                          # moved into place
 
 
-def _same_record(a: Optional[dict], b: dict) -> bool:
-    return isinstance(a, dict) and all(a.get(k) == b.get(k) for k in ("pid", "host", "startedAt", "nonce"))
-
-
-def _take_over(lock: Path, judged: dict) -> bool:
-    """Move aside the lock judged stale, and only that one. True when it is gone. When another
-    process took it over first (its fresh lock now holds the name), that lock is put back and
-    False says so: two processes never both hold one lock."""
-    aside = lock.with_name(f"lock.stale.{os.getpid()}.{time.time_ns()}")
-    try:
-        _retrying(lambda: os.replace(lock, aside))
-    except FileNotFoundError:
-        return True                       # already gone: whoever comes next creates the lock
-    except PermissionError:
-        return False
-    try:
-        moved = json.loads(aside.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        moved = None
-    if _same_record(moved, judged):
-        try:
-            aside.unlink()
-        except OSError:
-            pass
-        return True
-    try:
-        os.link(aside, lock)              # a live lock was moved: give it back
-    except OSError:
-        pass
-    try:
-        aside.unlink()
-    except OSError:
-        pass
-    return False
-
-
-def acquire(campaign: Path) -> Held:
-    """Take the folder's lock (``lock.json``, written whole and only when absent). A lock whose
-    process has ended is taken over; a live or unreadable one raises :class:`CampaignBusy`."""
+def acquire(campaign: Path, *, wait: float = 1.0) -> Held:
+    """Take the folder's lock: the system's lock on ``.lock``, then the holder's record in
+    ``lock.json``. Another holder, in this process or another, raises :class:`CampaignBusy`
+    once ``wait`` seconds have passed (a holder that is ending lets go within them). A record
+    an ended holder left is replaced: it never held anything."""
     import socket
     campaign = Path(campaign)
     campaign.mkdir(parents=True, exist_ok=True)
     lock = campaign / LOCK
+    fd = os.open(str(campaign / MUTEX), os.O_RDWR | os.O_CREAT, 0o644)
+    deadline = time.monotonic() + max(0.0, float(wait))
+    while not _os_lock(fd):
+        if time.monotonic() >= deadline:
+            os.close(fd)
+            raise _busy(lock, _peek(lock))
+        time.sleep(0.05)
     body = {"pid": os.getpid(), "host": socket.gethostname(), "startedAt": _now(),
-            "nonce": uuid.uuid4().hex, "processStarted": _process_started(os.getpid())}
-    text = json.dumps(body)
-    for _ in range(5):
-        if _place(lock, text):
-            try:
-                mine = _read_lock(lock)
-            except CampaignBusy:
-                mine = None
-            if not _same_record(mine, body):
-                raise _busy(lock, mine or {})
-            return Held(lock, body["nonce"])
-        held = _read_lock(lock)
-        if held is None:
-            time.sleep(0.05)              # released between the two steps: try again
-            continue
-        if not _holder_gone(held):
-            raise _busy(lock, held)
-        if not _take_over(lock, held):
-            raise _busy(lock, _read_lock(lock) or held)
-    raise CampaignBusy(f"The lock {lock} could not be taken. If no run is using {campaign}, delete it.")
+            "nonce": uuid.uuid4().hex}
+    try:
+        _record(lock, json.dumps(body))
+    except OSError as exc:
+        _os_unlock(fd)
+        os.close(fd)
+        raise CampaignBusy(f"The lock {lock} could not be written ({exc}). Try again.") from exc
+    _HELD[body["nonce"]] = fd
+    return Held(lock, body["nonce"])
 
 
 def holds(held: Held) -> bool:
-    """True while ``held``'s lock file is still this process's."""
-    try:
-        rec = json.loads(_retrying(lambda: Path(held.path).read_text(encoding="utf-8")))
-    except (OSError, ValueError):
-        return False
-    return isinstance(rec, dict) and rec.get("nonce") == held.nonce
+    """True while this process holds ``held``'s lock and the record is still ``held``'s."""
+    return held.nonce in _HELD and _peek(Path(held.path)).get("nonce") == held.nonce
 
 
 def release(held: Held) -> None:
-    """Remove the lock if it is still this process's; never a lock another process holds."""
-    if not holds(held):
+    """Remove the record if it is still ours, then let go of the system lock (in that order, so
+    no later holder's record is ever removed). Never raises: a record that cannot be removed now
+    is replaced by the next holder."""
+    fd = _HELD.pop(held.nonce, None)
+    if fd is None:
         return
     try:
-        _retrying(lambda: Path(held.path).unlink())
-    except FileNotFoundError:
-        pass
+        if _peek(Path(held.path)).get("nonce") == held.nonce:
+            try:
+                _retrying(lambda: Path(held.path).unlink())
+            except OSError:
+                pass
+    finally:
+        _os_unlock(fd)
+        try:
+            os.close(fd)
+        except OSError:
+            pass
 
 
 @contextlib.contextmanager
@@ -606,5 +510,5 @@ if __name__ == "__main__":
 
 
 __all__ = ["THREAD_CAPS", "Job", "run", "completed", "seed_for", "tree_digest", "canonical",
-           "acquire", "release", "holds", "lock", "Held", "LOCK", "CampaignBusy", "tree_fingerprint",
+           "acquire", "release", "holds", "lock", "Held", "LOCK", "MUTEX", "CampaignBusy", "tree_fingerprint",
            "peak_memory_mb"]

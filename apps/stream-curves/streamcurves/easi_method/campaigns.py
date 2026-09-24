@@ -12,6 +12,7 @@ interruption) gives the same outputs and redoes nothing already done.
 """
 from __future__ import annotations
 
+import contextlib
 import json
 from pathlib import Path
 from typing import Iterable, Optional
@@ -21,6 +22,18 @@ from .. import jobs
 
 def _key(r: dict) -> tuple:
     return (r["quantity"], r["level"], r["stratum"], r.get("split") or "")
+
+
+@contextlib.contextmanager
+def _locked(campaign: Path, kw: dict):
+    """``run``'s keywords with the campaign's lock held for the run and for reading what its jobs
+    wrote (another run could otherwise clean an output folder while it is read); the caller's
+    lock when it passes ``lock_held``."""
+    if kw.get("lock_held") is not None:
+        yield kw
+        return
+    with jobs.lock(Path(campaign)) as held:
+        yield {**kw, "lock_held": held}
 
 
 # --------------------------------------------------------------------------- #
@@ -59,16 +72,17 @@ def refit_campaign(members_dir: Path, campaign: Path, *, members_digest: str, wo
     """``(rows, summary)``: the registry rows of every quantity, in the registry's order."""
     from . import fit_recipe as fr
     js = refit_jobs(members_dir, members_digest=members_digest, quantities=quantities)
-    summary = jobs.run(js, campaign, workers=workers,
-                       meta={"task": "easi-refit", "members": members_digest}, **kw)
     rows: list[dict] = []
-    order = {q: i for i, q in enumerate(fr.QUANTITIES)}
-    for job in sorted(js, key=lambda j: order.get(j.spec["quantity"], 999)):
-        rec = jobs.completed(campaign, job)
-        if rec is None:
-            continue
-        rows.extend(json.loads((Path(campaign) / "jobs" / job.id / "out" / "rows.json")
-                               .read_text(encoding="utf-8")))
+    with _locked(campaign, kw) as kw:
+        summary = jobs.run(js, campaign, workers=workers,
+                           meta={"task": "easi-refit", "members": members_digest}, **kw)
+        order = {q: i for i, q in enumerate(fr.QUANTITIES)}
+        for job in sorted(js, key=lambda j: order.get(j.spec["quantity"], 999)):
+            rec = jobs.completed(campaign, job)
+            if rec is None:
+                continue
+            rows.extend(json.loads((Path(campaign) / "jobs" / job.id / "out" / "rows.json")
+                                   .read_text(encoding="utf-8")))
     return rows, summary
 
 
@@ -121,12 +135,13 @@ def evaluation_campaign(packages: dict[str, Path], cases_path: Path, campaign: P
                         workers: int = 2, **kw) -> tuple[dict, dict]:
     """``(results by label, summary)``."""
     js = evaluation_jobs(packages, cases_path, cache_dir=Path(campaign) / "method-cache")
-    summary = jobs.run(js, campaign, workers=workers, meta={"task": "easi-evaluate"}, **kw)
     results = {}
-    for job in js:
-        if jobs.completed(campaign, job) is not None:
-            results[job.label] = json.loads((Path(campaign) / "jobs" / job.id / "out" / "results.json")
-                                            .read_text(encoding="utf-8"))
+    with _locked(campaign, kw) as kw:
+        summary = jobs.run(js, campaign, workers=workers, meta={"task": "easi-evaluate"}, **kw)
+        for job in js:
+            if jobs.completed(campaign, job) is not None:
+                results[job.label] = json.loads((Path(campaign) / "jobs" / job.id / "out" / "results.json")
+                                                .read_text(encoding="utf-8"))
     return results, summary
 
 

@@ -7,7 +7,7 @@ One JSON object at <data root>/prefs.json. Keys used today:
 * `gallery_targets`: {"<assessment id>@<version>": main .streamcurves path}, where each
   downloaded assessment's working copy lives, so opening it again opens that copy;
 * `prepared_by`: the initials last typed into "Prepared by (initials)", offered for the next
-  project and recorded on decisions (:func:`recorded_by`);
+  new project only (a project keeps its own Prepared by, which :func:`recorded_by` reads);
 * `mmw_api_key`: an optional Model My Watershed key, exported to the environment at startup.
 
 Everything here is non-fatal: a read-only or broken data root never blocks creating a project.
@@ -18,6 +18,7 @@ import json
 import os
 import tempfile
 from pathlib import Path
+from typing import Mapping, Optional
 
 from .desktop_env import data_root
 
@@ -64,13 +65,15 @@ def set(key: str, value) -> None:  # noqa: A001 - the natural verb for a prefere
 NOT_GIVEN = "n/a"
 
 
-def recorded_by() -> str:
+def recorded_by(project_meta: Optional[Mapping] = None) -> str:
     """Who StreamCurves records as making a decision, an edit or a publish: initials, never a
     login. ``STAF_LIBRARY_MAINTAINER`` when the process sets it (a maintainer checkout, a
-    rehearsal), else the Prepared by initials this copy was given, else ``n/a``. Nothing is
-    refused for a missing name, and the Windows login is never read."""
+    rehearsal), else the open project's Prepared by (``project_meta``, the field its Project
+    panel edits), else ``n/a``. The preference of the same name only offers initials to the next
+    new project and is never recorded by itself. Nothing is refused for a missing name, and the
+    Windows login is never read."""
     return (os.environ.get("STAF_LIBRARY_MAINTAINER", "").strip()
-            or str(get(PREPARED_BY) or "").strip() or NOT_GIVEN)
+            or str((project_meta or {}).get("prepared_by") or "").strip() or NOT_GIVEN)
 
 
 def given_or_na(value) -> str:

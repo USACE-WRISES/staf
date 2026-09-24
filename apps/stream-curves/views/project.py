@@ -759,7 +759,7 @@ def project_server(input, output, session, state: AppState):
         try:
             evidence = os.environ.get("STAF_EVIDENCE_DIR", "").strip()
             project = await asyncio.to_thread(
-                eio.import_from_checkout, ws.repo_root(), imported_by=ep.person(),
+                eio.import_from_checkout, ws.repo_root(), imported_by=ep.person(state),
                 evidence_dir=Path(evidence) if evidence and (Path(evidence) / "index.json").is_file()
                 else None)
             await asyncio.to_thread(eio.write_project, project, target, name=target.stem,

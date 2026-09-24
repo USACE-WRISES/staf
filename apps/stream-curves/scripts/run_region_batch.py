@@ -315,9 +315,11 @@ BUSY_EXIT = 3
 
 
 def stage_locked(a) -> int:
-    """``stage``: cmd_stage with the region folder's lock (``lock.json``) held for the whole
+    """``stage``: cmd_stage with the region folder's lock (``jobs.acquire``) held for the whole
     stage, so two runs never stage one folder at once (a stage first deletes the folder's staged
-    library). Another run holding it: :data:`BUSY_EXIT`, with the sentence saying which."""
+    library). Another run holding it: :data:`BUSY_EXIT`, with the sentence saying which. A stage
+    run this way records no ``stage_complete.json`` and removes an older one, so the record in a
+    folder always describes its last stage."""
     from streamcurves import jobs as jb
     out_dir = Path(a.out).resolve()
     try:
@@ -326,6 +328,7 @@ def stage_locked(a) -> int:
         print(f"[batch] {exc}")
         return BUSY_EXIT
     try:
+        (out_dir / STAGE_COMPLETE).unlink(missing_ok=True)
         return cmd_stage(a)
     finally:
         jb.release(held)

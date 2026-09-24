@@ -634,10 +634,10 @@ def select_modal(cand: Mapping, function_name: str, fitted: list[tuple[str, str]
                           ui.input_action_button(ns("fs_select_confirm"), "Select", class_="btn btn-primary")))
 
 
-def completion_modal(cand: Mapping, function_name: str, *, ns):
+def completion_modal(cand: Mapping, function_name: str, *, ns, by: str = ""):
     """Complete an SQT curve the source leaves open (the owner's decision 1, 2026-09-24): the
     published points, each open end, up to ``COMPLETION_ROWS`` points past each, the reason
-    and the initials, with a live preview of the completed curve."""
+    and the initials (``by``, the open project's), with a live preview of the completed curve."""
     d = cand.get("definition") or {}
     published = d.get("publishedPoints") or d.get("points") or []
     ends = d.get("openEnds") or []
@@ -678,7 +678,7 @@ def completion_modal(cand: Mapping, function_name: str, *, ns):
         ui.output_ui(ns("fs_completion_preview")),
         ui.input_text_area(ns("fs_completion_reason"), "Why these points", rows=3, width="100%",
                            value=str((cand.get("completion") or {}).get("reason") or "")),
-        ui.input_text(ns("fs_completion_by"), "Your initials", value=sp.maintainer()),
+        ui.input_text(ns("fs_completion_by"), "Your initials", value=by),
         title="Complete the curve", size="l", easy_close=True,
         footer=ui.TagList(ui.modal_button("Cancel"),
                           ui.input_action_button(ns("fs_completion_save"), "Save the completion",
@@ -836,7 +836,7 @@ def final_selection_server(input, output, session, state, *, tiles):
                                    context=C.sqt_context(record, function_id=fid, states=_states(),
                                                          targets=targets))
             try:
-                new = C.add_considered(state.candidate_register(), cand, by=sp.maintainer())
+                new = C.add_considered(state.candidate_register(), cand, by=sp.maintainer(state))
             except ValueError as exc:
                 ui.notification_show(str(exc), type="warning", duration=6)
                 return
@@ -846,7 +846,7 @@ def final_selection_server(input, output, session, state, *, tiles):
         if action == "complete" and key in cands:
             pending.set({"key": key, "fid": fid, "complete": True})
             name = next((f["functionName"] for f in reg["functions"] if f["functionId"] == fid), fid)
-            ui.modal_show(completion_modal(cands[key], name, ns=ns))
+            ui.modal_show(completion_modal(cands[key], name, ns=ns, by=sp.maintainer(state)))
             return
         if action == "select" and key in cands:
             if not oc.alternatives_enabled():
@@ -874,7 +874,7 @@ def final_selection_server(input, output, session, state, *, tiles):
             reg = register()
         cand = next((c for c in reg["candidates"] if c["candidateKey"] == p["key"]), {})
         try:
-            new = C.record_disposition(state.candidate_register(), p["key"], p["fid"], by=sp.maintainer(),
+            new = C.record_disposition(state.candidate_register(), p["key"], p["fid"], by=sp.maintainer(state),
                                        reason=input.fs_reason() or "", basis_digest=cand.get("basisDigest"))
         except ValueError as exc:
             ui.notification_show(str(exc), type="warning", duration=6)
@@ -977,7 +977,7 @@ def final_selection_server(input, output, session, state, *, tiles):
             source = owner_sources.sqt_source(cand)
             decision = oc.new_decision(
                 metric, oc.SOURCE,
-                rationale=input.fs_select_reason() or "", recorded_by=sp.maintainer(),
+                rationale=input.fs_select_reason() or "", recorded_by=sp.maintainer(state),
                 functions=[p["fid"]], source=source,
                 replaces=[{"metric": mk, "functionId": p["fid"]} for mk in (input.fs_replace() or [])])
             # the digest the register computes for the curve this decision puts in the function
