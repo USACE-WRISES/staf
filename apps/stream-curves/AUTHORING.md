@@ -330,11 +330,13 @@ it again, and a manifest changed after the install is damage too. One exception:
 installed before 2026-09-23 is named by the package's data digest, and there an edited manifest
 is caught only when its file table or data digest no longer matches the files; a reference that
 records a package digest still reads such a copy as another version, never as the package.
-Importing the package again installs it in a folder named by its package digest. Hosting is decided at adoption;
-it uses content-named assets on an existing rolling prerelease (a release per package would push
-the installer out of Velopack's 10-newest-releases window), and a rolling release URL is a
-location, never an identity. Until then `STREAMCURVES_EVIDENCE_BASE_URL` (a folder or an https
-base) names where archives are fetched.
+Importing the package again installs it in a folder named by its package digest. The archives
+are hosted as content-named assets on one rolling prerelease, `easi-evidence` (a release per
+package would push the installer out of Velopack's 10-newest-releases window), and a rolling
+release URL is a location, never an identity. It holds the four packages derived from public
+federal data (the owner's decision of 2026-09-24); `easi-eval-refs` and `easi-operational-ref`
+are marked internal-review and are not hosted, so a project reads them from a file.
+`STREAMCURVES_EVIDENCE_BASE_URL` (a folder or an https base) overrides the location.
 
 EASI's development evidence (the 34 operational curves and the whole curve registry behind
 them) ships as five packages exported from the frozen 2026-09-15 baseline:

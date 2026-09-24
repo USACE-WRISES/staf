@@ -81,8 +81,10 @@ EASI's active method are the owner's decisions (see the adoption package in the 
       cd tools\easi-national
       ..\..\.venv\Scripts\python.exe -m builder.evidence_export --snapshot D:\Data\easi-national\review\2026-09-15-regional\baseline --out D:\Data\staf-authoring\evidence
 
-  Authors reach them through `STREAMCURVES_EVIDENCE_BASE_URL` (a folder or an http(s) base
-  holding the zips and `index.json`). Hosting is an owner decision.
+  Authors download the four public ones from the rolling `easi-evidence` prerelease, the
+  StreamCurves default; `STREAMCURVES_EVIDENCE_BASE_URL` (a folder or an http(s) base holding the
+  zips and `index.json`) points elsewhere. The two internal-review packages are not hosted. After
+  a re-export, upload the new archives to `easi-evidence` first and its `index.json` last.
 - **Refit from packages alone** (developer paths refused for the whole run):
 
       .venv\Scripts\python.exe apps\stream-curves\scripts\refit_easi_curves.py --evidence <store> --operational --block-dev-paths

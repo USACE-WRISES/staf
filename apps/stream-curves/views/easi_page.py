@@ -378,9 +378,16 @@ def size_text(n) -> str:
     return f"{n / 1e6:,.1f} MB" if n >= 100_000 else f"{n / 1e3:,.0f} KB"
 
 
+#: The rolling prerelease that hosts EASI's public development evidence: the four packages
+#: derived from public federal data (the owner's decision of 2026-09-24; the two internal-review
+#: packages are not hosted). A location, never an identity: projects pin packages by digest.
+PUBLIC_EVIDENCE_BASE = "https://github.com/USACE-WRISES/staf/releases/download/easi-evidence/"
+
+
 def evidence_base() -> str:
-    """Where packages are fetched from (a folder or an https base); empty when unset."""
-    return os.environ.get("STREAMCURVES_EVIDENCE_BASE_URL", "").strip()
+    """Where packages are fetched from: ``STREAMCURVES_EVIDENCE_BASE_URL`` (a folder or an https
+    base) when it is set, else the public ``easi-evidence`` prerelease."""
+    return os.environ.get("STREAMCURVES_EVIDENCE_BASE_URL", "").strip() or PUBLIC_EVIDENCE_BASE
 
 
 def easi_view(state: AppState) -> dict | None:
