@@ -1,7 +1,10 @@
 """Evidence packages: identity from the data, a deterministic archive, verification."""
 from __future__ import annotations
 
+import hashlib
+import inspect
 import json
+from pathlib import Path
 
 import pyarrow as pa
 
@@ -58,3 +61,55 @@ def test_a_dependency_must_resolve_in_the_export(tmp_path):
     pkg.finish(title="t", roles=["development"], reproducibility="reviewable",
                dependsOn=[{"packageId": "test-pkg", "dataDigest": real["dataDigest"]}])
     assert ee.check_dependencies(tmp_path) == []
+
+
+# --------------------------------------------------------------------------- #
+# review B, round 2: the exporter's identity (N6), the itemized gaps (M7), the recipe (N9)
+# --------------------------------------------------------------------------- #
+def _finish(folder, producer):
+    pkg = ee.Package(folder, "test-pkg")
+    pkg.json({"a": 1}, "notes.json")
+    return pkg.finish(title="t", roles=["development"], reproducibility="reviewable", producer=producer)
+
+
+def test_the_index_says_which_exporter_ran_and_keeps_a_clean_trees_false(tmp_path):
+    clean = _finish(tmp_path / "a", {"created": "2026-09-24T00:00:00Z", "commit": "abc", "tool": "x",
+                                     "exporterSha256": "f" * 64, "exporterDirty": False})
+    assert clean["exporterDirty"] is False and clean["exporterSha256"] == "f" * 64
+    assert clean["exporterCommit"] == "abc"
+    doc = json.loads((tmp_path / "a" / "test-pkg" / "evidence.json").read_text(encoding="utf-8"))
+    assert doc["producer"] == {"tool": "x"}                     # the rest went to the index
+    dirty = _finish(tmp_path / "b", {"created": "2026-09-25T00:00:00Z", "commit": "def", "tool": "x",
+                                     "exporterSha256": "e" * 64, "exporterDirty": True})
+    assert dirty["exporterDirty"] is True and dirty["packageDigest"] == clean["packageDigest"]
+    unknown = _finish(tmp_path / "c", {"tool": "x", "exporterDirty": None})
+    assert "exporterDirty" not in unknown                        # git could not say: not claimed
+    ident = ee.exporter_identity()
+    assert ident["exporterSha256"] == ee.sha_file(Path(ee.__file__))
+    assert ident["exporterDirty"] in (True, False, None)
+
+
+def test_both_value_packages_itemize_what_the_snapshot_cannot_show():
+    gaps = ee.values_gaps({"er_median": {"source": "values.er_median"},
+                           "woody_wsrp100": {"source": "landscape.woody_wsrp100"}}, "the reach values")
+    assert "er_median" in gaps[0]["item"] and "woody" not in gaps[0]["item"]
+    assert "values.parquet" in gaps[0]["why"] and "receipts" in gaps[0]["why"]
+    assert gaps[1]["item"] == "the vintages of the StreamCat, NLCD and EROM records behind the reach values"
+    only = ee.values_gaps({"woody_wsrp100": {"source": "landscape.woody_wsrp100"}}, "the member values")
+    assert [g["item"] for g in only] == [
+        "the vintages of the StreamCat, NLCD and EROM records behind the member values"]
+    for export in (ee.export_members, ee.export_universe_values):
+        assert "values_gaps(dictionary" in inspect.getsource(export)
+
+
+def test_the_recorded_recipe_code_is_what_the_refit_computes_and_stays_out_of_data():
+    from streamcurves.easi_method import refit
+    got = ee.recipe_code()
+    assert got == refit.recipe_code() and set(got) == {"fit_recipe.py", "refit.py"}
+    raw = (ee.STREAM_CURVES_APP / "streamcurves" / "easi_method" / "refit.py").read_bytes()
+    assert got["refit.py"] == hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest()
+    # the fits package also writes engine_block() into data/recipe.json: the code hashes must
+    # never ride there, or they would move that package's data digest
+    assert "code" not in ee.engine_block()
+    for export in (ee.export_members, ee.export_fits):
+        assert '"code": recipe_code()' in inspect.getsource(export)

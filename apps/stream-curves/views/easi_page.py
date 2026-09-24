@@ -1059,12 +1059,11 @@ def easi_page_server(input, output, session, state: AppState):
                      "recipe that produced them, and compare the fits with this project's curves.",
                      class_="mb-2")]
         if res and res.get("packageDigest") == p.package_digest:
+            from streamcurves.easi_method import refit as rf
             cmp_ = res["curves"]
-            rec = res.get("recipe") or {}
-            if rec and not rec.get("same"):
-                body.append(ui.div(fa("triangle-exclamation"), " The curve engine or fit settings here differ from "
-                                   "the ones the package records (" + ", ".join(rec.get("differences") or []) +
-                                   "), so the refit is not expected to match exactly.", class_="easi-note mb-2"))
+            words = rf.recipe_words(res.get("recipe") or {})
+            if words:
+                body.append(ui.div(fa("triangle-exclamation"), " ", words, class_="easi-note mb-2"))
             if cmp_["allIdentical"]:
                 body.append(ui.div(fa("circle-check"), f" All {cmp_['curves']} curves are exactly their "
                                    f"fits ({res['seconds']} s).", class_="easi-ok mb-2"))

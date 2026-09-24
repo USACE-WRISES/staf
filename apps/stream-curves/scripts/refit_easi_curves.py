@@ -128,9 +128,9 @@ def main(argv=None) -> int:
             raise SystemExit(f"{folder} does not verify")
     t_verify = time.perf_counter()
     report["recipe"] = refit.recipe_check(members_dir)
-    if not report["recipe"]["same"]:
-        print("the curve engine or fit constants here differ from the package's record ("
-              + ", ".join(report["recipe"]["differences"]) + "): the refit is not expected to be exact")
+    words = refit.recipe_words(report["recipe"])
+    if words:
+        print(words)
     members, values, panels = refit.load_members(members_dir)
     if a.panels:
         universe_dir = package_dir("easi-dev-universe")

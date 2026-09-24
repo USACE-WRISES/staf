@@ -288,8 +288,11 @@ what is missing (`unavailable`, each with a remedy) and what was checked when it
 (`checks`); every `dependsOn` resolves to a package of the same export, or the export stops.
 
 Identity is content. `dataDigest` covers the data files; `packageDigest` the whole manifest but
-its `producer` block. An archive's bytes are a function of the package alone (sorted entries,
-fixed times, every entry stored; when and from which commit it was exported go to the export's
+its `producer` block. The producer block travels inside the archive but outside the package
+digest, so no digest vouches for it: it says which tool and snapshot made the package, as the
+exporter states it. An archive's bytes are a function of the package alone (sorted entries,
+fixed times, every entry stored; when it was exported, from which commit, the exporter's own
+SHA-256 and whether its code had uncommitted changes (`exporterDirty`) go to the export's
 `index.json`, never into the package), and it is named by its package digest. A project pins a
 package by its digests; the archive it names (file, SHA-256, size) only says where a copy was.
 `evidence_store.fetch_reference` downloads that archive, or, when the host holds the same
@@ -334,8 +337,10 @@ selection, quantities, fit wrapper, usability, rho, artifact rounding) with a dr
 `easi_method/refit.py` groups members into fits as the builder does (its grouping and the
 pooled national entrenchment fallback are re-implemented, proven equal on the frozen registry,
 with no drift gate against the builder's `curves.py`). A refit first compares the running curve
-engine and fit constants with the package's recorded recipe (`refit.recipe_check`) and claims
-exactness only when they agree. Refitting from the installed packages with every developer path
+engine, its own code (the vendored fit recipe and `refit.py`, SHA-256 of their LF bytes, recorded
+in the members and fits manifests' `recipe.code`) and the fit constants with the package's
+recorded recipe (`refit.recipe_check`), and claims exactness only when they agree; a package that
+records no engine or code hash is never taken to agree. Refitting from the installed packages with every developer path
 blocked (Python's opens and pyarrow's) reproduces all 2,752 registry fits, every field the
 refit and the registry both carry (22) and every knot, and the 34 operational curves exactly,
 and the universe regenerates all 282,113 member rows

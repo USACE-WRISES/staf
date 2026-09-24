@@ -39,10 +39,25 @@ def load_members(package_dir: Path):
     return members, values, panels
 
 
+#: The refit's own code, recorded by the members and fits packages (SHA-256 of the LF bytes).
+RECIPE_CODE = {"fit_recipe.py": "fit recipe code", "refit.py": "refit code"}
+
+
+def recipe_code() -> dict:
+    """``{file: SHA-256}`` of the code a refit runs besides the curve engine: the vendored fit
+    recipe and this module, over their bytes with LF line endings (a CRLF working copy hashes
+    the same)."""
+    import hashlib
+    here = Path(__file__).resolve().parent
+    return {name: hashlib.sha256((here / name).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+            for name in RECIPE_CODE}
+
+
 def recipe_check(package_dir: Path) -> dict:
-    """The running curve engine and fit constants against those a package records (its
-    ``recipe`` block): ``{"same", "differences", "engine": {"recorded", "running"}}``. A refit
-    is expected to be exact only when they are the same."""
+    """The running curve engine, refit code and fit constants against those a package records
+    (its ``recipe`` block): ``{"same", "differences", "notRecorded", "engine": {"recorded",
+    "running"}}``. A refit is expected to be exact only when they are the same; a package that
+    records no engine or code hash is never taken to match."""
     import hashlib
     from .. import evidence_store as evs
     from ..paths import ROOT
@@ -51,9 +66,17 @@ def recipe_check(package_dir: Path) -> dict:
     engine = recipe.get("engine") or {}
     raw = (ROOT / "streamcurves" / "curves.py").read_bytes()
     running = hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest()
-    diffs = []
-    if engine.get("sha256_lf") and engine["sha256_lf"] != running:
+    diffs, missing = [], []
+    if not engine.get("sha256_lf"):
+        missing.append("the curve engine")
+    elif engine["sha256_lf"] != running:
         diffs.append("curve engine")
+    recorded_code = recipe.get("code") or {}
+    for name, sha_now in recipe_code().items():
+        if not recorded_code.get(name):
+            missing.append(f"the {RECIPE_CODE[name]}")
+        elif recorded_code[name] != sha_now:
+            diffs.append(RECIPE_CODE[name])
     here = {"indexBands": list(fr.INDEX_BANDS), "pressureRhoMax": fr.PRESSURE_RHO_MAX,
             "splitFloor": fr.SPLIT_FLOOR,
             "panelFloors": {"complete": fr.FLOOR_COMPLETE, "exploratory": fr.FLOOR_EXPLORATORY},
@@ -72,9 +95,28 @@ def recipe_check(package_dir: Path) -> dict:
                     diffs.append(f"screen {part}")
         elif key in recorded and norm(recorded[key]) != norm(value):
             diffs.append(key)
-    return {"same": not diffs, "differences": diffs,
+    return {"same": not diffs and not missing, "differences": diffs, "notRecorded": missing,
             "engine": {"recorded": engine.get("sha256_lf"), "running": running},
             "checkedConstants": bool(recorded)}
+
+
+def _listed(items: list, last: str) -> str:
+    items = [str(i) for i in items]
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + f" {last} " + items[-1]
+
+
+def recipe_words(check: dict) -> Optional[str]:
+    """A recipe check as one sentence, or None when the refit is expected to be exact."""
+    if not check or check.get("same"):
+        return None
+    parts = []
+    diffs = check.get("differences") or []
+    if diffs:
+        parts.append(f"the {_listed(diffs, 'and')} here {'differs' if len(diffs) == 1 else 'differ'} "
+                     "from what the package records")
+    if check.get("notRecorded"):
+        parts.append("the package does not record " + _listed(check["notRecorded"], "or"))
+    return "The refit is not expected to match exactly: " + "; ".join(parts) + "."
 
 
 def regenerate_members(universe_dir: Path):
@@ -299,5 +341,5 @@ def compare_curves(refit: dict, artifact: dict) -> dict:
 
 
 __all__ = ["load_members", "regenerate_members", "same_members", "fit_registry", "recipe_check",
-           "national_entrenchment", "operational_curves",
+           "recipe_code", "recipe_words", "RECIPE_CODE", "national_entrenchment", "operational_curves",
            "compare_registry", "compare_curves", "REGIONAL_SETS", "ENTRENCHMENT", "SLOPE_CLASSES"]

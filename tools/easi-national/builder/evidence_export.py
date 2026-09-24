@@ -91,9 +91,23 @@ def now() -> str:
     return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def git_commit() -> str:
+def git_commit() -> str | None:
     r = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, capture_output=True, text=True)
-    return r.stdout.strip()
+    return (r.stdout.strip() or None) if r.returncode == 0 else None
+
+
+#: What an export's own code covers: the exporter and the refit code its packages record.
+EXPORTER_TREES = ("tools/easi-national", "apps/stream-curves/streamcurves/easi_method")
+
+
+def exporter_identity() -> dict:
+    """Which exporter ran, for the export's index: the SHA-256 of this file and whether the
+    trees it and the recorded refit code live in had uncommitted changes (None when git cannot
+    say), so a commit is never claimed for code that was not committed."""
+    r = subprocess.run(["git", "status", "--porcelain", "--", *EXPORTER_TREES], cwd=REPO_ROOT,
+                       capture_output=True, text=True)
+    return {"exporterSha256": sha_file(Path(__file__)),
+            "exporterDirty": bool(r.stdout.strip()) if r.returncode == 0 else None}
 
 
 # --------------------------------------------------------------------------- #
@@ -142,7 +156,9 @@ class Package:
         # an archive's bytes are a function of its content: when and from which commit it was
         # exported go to the export's index, never into the package
         producer = dict(manifest.pop("producer", None) or {})
-        exported = {"exportedAt": producer.pop("created", None), "exporterCommit": producer.pop("commit", None)}
+        exported = {"exportedAt": producer.pop("created", None), "exporterCommit": producer.pop("commit", None),
+                    "exporterSha256": producer.pop("exporterSha256", None),
+                    "exporterDirty": producer.pop("exporterDirty", None)}
         if producer:
             manifest["producer"] = producer
         data_digest = "sha256:" + sha(canonical({k: v["sha256"] for k, v in sorted(self.files.items())}))
@@ -161,7 +177,7 @@ class Package:
                 "zip": zpath.name, "zipBytes": zpath.stat().st_size, "zipSha256": sha_file(zpath),
                 "bytes": sum(v["bytes"] for v in self.files.values()),
                 "dependsOn": list(doc.get("dependsOn") or []),
-                **{k: v for k, v in exported.items() if v}}
+                **{k: v for k, v in exported.items() if v is not None}}   # a clean tree's False stays
 
 
 def package_digest(doc: dict) -> str:
@@ -196,11 +212,44 @@ def snapshot_records(snapshot: Path) -> tuple[dict, str, dict]:
 
 
 def producer_block(snapshot: Path, manifest_sha: str, manifest_doc: dict) -> dict:
+    """Who produced the export. ``created``, ``commit`` and the exporter's identity go to the
+    export's index (``Package.finish``); the rest stays in the manifest outside the package
+    digest."""
     return {"tool": "tools/easi-national/builder/evidence_export.py", "commit": git_commit(),
             "snapshot": {"path": str(snapshot), "baselineManifestSha256": manifest_sha,
                          "createdUtc": manifest_doc.get("created_utc"),
                          "gitCommit": manifest_doc.get("git_commit")},
-            "created": now()}
+            "created": now(), **exporter_identity()}
+
+
+def values_gaps(dictionary: dict, whose: str) -> list[dict]:
+    """What the snapshot cannot show about the quantities a package carries: the derivation of
+    those read from ``values.parquet`` (geometry, bankfull, derivation version, receipts) and
+    the vintages of the source records. The members and universe-values packages both list
+    them (``whose`` names the package's values)."""
+    gaps = []
+    derived = sorted(k for k, d in dictionary.items() if str(d.get("source", "")).startswith("values."))
+    if derived:
+        gaps.append({"item": "the cross-section geometry, bankfull estimates and derivation version "
+                             f"behind {', '.join(derived)}",
+                     "why": "the baseline snapshot froze the derived values (values.parquet) but not the "
+                            "geometry, the derivation version or the receipts of the sources it read",
+                     "remedy": "these values can be reviewed and refit here but not rederived; rerunning "
+                               "the builder's values stage (tools/easi-national) makes a new snapshot, "
+                               "with its own values, not this one"})
+    gaps.append({"item": f"the vintages of the StreamCat, NLCD and EROM records behind {whose}",
+                 "why": "the snapshot names its tables, not the release of each source they came from",
+                 "remedy": "none from this package; a rebuild with tools/easi-national records the "
+                           "sources it reads"})
+    return gaps
+
+
+def recipe_code() -> dict:
+    """The refit's own code as the packages record it (SHA-256 of the LF bytes of the vendored
+    fit recipe and of refit.py), computed by the refit module itself so both sides hash alike.
+    It goes into the manifests only: never into a data file, whose digest it would move."""
+    from streamcurves.easi_method import refit
+    return refit.recipe_code()
 
 
 def _members(root) -> "object":
@@ -311,19 +360,7 @@ def export_members(root, out: Path, records: dict, producer: dict, universe_dige
     members = _members(root)
     values, dictionary, missing = member_values(root, members)
     pkg.parquet(values, "member_values.parquet")
-    derived = sorted(k for k, d in dictionary.items() if str(d.get("source", "")).startswith("values."))
-    if derived:
-        missing.append({"item": "the cross-section geometry, bankfull estimates and derivation version "
-                                f"behind {', '.join(derived)}",
-                        "why": "the baseline snapshot froze the derived values (values.parquet) but not the "
-                               "geometry, the derivation version or the receipts of the sources it read",
-                        "remedy": "these values can be reviewed and refit here but not rederived; rerunning "
-                                  "the builder's values stage (tools/easi-national) makes a new snapshot, "
-                                  "with its own values, not this one"})
-    missing.append({"item": "the vintages of the StreamCat, NLCD and EROM records behind the member values",
-                    "why": "the snapshot names its tables, not the release of each source they came from",
-                    "remedy": "none from this package; a rebuild with tools/easi-national records the "
-                              "sources it reads"})
+    missing.extend(values_gaps(dictionary, "the member values"))
     erom, erom_check = member_erom(root, np.asarray(values.column("comid").to_numpy(), dtype=np.int64))
     pkg.parquet(erom, "member_erom.parquet")
     dictionary.update({m: {"units": "cfs", "definition": f"EROM mean flow, month {m[-2:]}"} for m in MONTHS})
@@ -351,7 +388,7 @@ def export_members(root, out: Path, records: dict, producer: dict, universe_dige
                  {"id": "erom-live-cache", "path": str(LIVE_EROM), "sha256": sha_file(LIVE_EROM),
                   "citation": "NHDPlus V2 EROM monthly flows (national cache)"}],
         recipe={"fitRecipe": "apps/stream-curves/streamcurves/easi_method/fit_recipe.py",
-                "engine": engine_block(), "constants": constants_block()},
+                "engine": engine_block(), "constants": constants_block(), "code": recipe_code()},
         checks={"eromMonthsReproduceStoredCv": erom_check},
         dependsOn=([{"packageId": "easi-dev-universe", "dataDigest": universe_digest}]
                    if universe_digest else []),
@@ -444,7 +481,7 @@ def export_fits(root, out: Path, records: dict, producer: dict, members_digest: 
         sources=[{"id": "baseline-snapshot", "path": "analysis/curves",
                   "citation": "EASI national builder, 2026-09-15 regional baseline"}],
         recipe={"fitRecipe": "apps/stream-curves/streamcurves/easi_method/fit_recipe.py",
-                "engine": engine_block()},
+                "engine": engine_block(), "code": recipe_code()},
         dependsOn=[{"packageId": "easi-dev-members", "dataDigest": members_digest}],
         redistribution={"status": "public-derived", "notes": ""},
         limitations=["A fit's usability records the rules of analysis version 0.1.0."],
@@ -553,6 +590,7 @@ def export_universe_values(root, out: Path, producer: dict, universe_digest: str
                              if q.source == "landscape" else "float64"}
     table = pa.table(cols)
     pkg.parquet(table, "universe_values.parquet", order="the landscape table's row order")
+    missing.extend(values_gaps(dictionary, "the reach values"))
     return pkg.finish(
         title="EASI reference universe values",
         description="Every reach's fit input for every fitted quantity, in the universe's row "
