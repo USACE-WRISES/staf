@@ -122,6 +122,7 @@ STAGE_SECTIONS: dict[str, list[tuple[str, str]]] = {
     "curve_review": [
         ("gallery", "Gallery"),
         ("table", "Table"),
+        ("final", "Select final curves"),
     ],
 }
 

@@ -20,7 +20,6 @@ audit trail.
 """
 from __future__ import annotations
 
-import os
 import statistics
 
 import pandas as pd
@@ -48,15 +47,15 @@ _OUTCOMES = {"match": "Matches the curves",
              "major": "Major differences"}
 
 
-def _maintainer() -> str:
-    """Same chain views/publish.py and the Region builder use."""
-    return (os.environ.get("STAF_LIBRARY_MAINTAINER")
-            or os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
+def _maintainer(state=None) -> str:
+    """The initials recorded, as views/publish.py and the Region builder record them."""
+    from views import state as _st
+    return _st.recorded_by(state)
 
 
 def _can_write() -> bool:
-    """The maintainer, in a checkout that publishes, with a writable library and a name."""
-    return ws.can_publish() and lib.writable() and bool(_maintainer())
+    """The maintainer, in a checkout that publishes, with a writable library."""
+    return ws.can_publish() and lib.writable()
 
 
 _MAINTAINER_NOTE = ("Recording validation, approving and certifying are done by the STAF "
@@ -166,11 +165,10 @@ def validate_server(input, output, session, state: AppState, active=None):
         with reactive.isolate():
             n_records = len(state.validation_records() or [])
         writable = lib.writable()
-        maintainer = _maintainer()
+        maintainer = _maintainer(state)
         blocked = (None if _can_write()
                    else _MAINTAINER_NOTE if not ws.can_publish()
-                   else ("The library is read-only here." if not writable
-                         else "No maintainer name is available for the audit trail."))
+                   else "The library is read-only here.")
         return ui.div(
             ui.div(
                 ui.h4(f"{name} v{ver}", class_="mb-0"),
@@ -291,7 +289,7 @@ def validate_server(input, output, session, state: AppState, active=None):
         if target is None:
             return
         aid, ver = target
-        maintainer = _maintainer()
+        maintainer = _maintainer(state)
         if not _can_write():
             ui.notification_show(_MAINTAINER_NOTE, type="warning", duration=6)
             return
@@ -387,7 +385,7 @@ def validate_server(input, output, session, state: AppState, active=None):
         aid, ver = target
         if not _can_write():
             return
-        maintainer = _maintainer()
+        maintainer = _maintainer(state)
         lib.set_version_status(aid, ver, "preliminary", maintainer,
                                note="Reviewed in StreamCurves; approved as preliminary.")
         state.validation_records.set(lib._validation_records_for(aid, ver))
@@ -442,7 +440,7 @@ def validate_server(input, output, session, state: AppState, active=None):
         aid, ver = target
         if not _can_write():
             return
-        maintainer = _maintainer()
+        maintainer = _maintainer(state)
         lib.set_version_status(aid, ver, "certified", maintainer,
                                note="Certified after field-data validation.")
         # nudge the page's disk-read renders

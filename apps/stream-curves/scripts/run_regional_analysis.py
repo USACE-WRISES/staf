@@ -25,6 +25,9 @@ _APP_ROOT = Path(__file__).resolve().parent.parent
 if str(_APP_ROOT) not in sys.path:
     sys.path.insert(0, str(_APP_ROOT))
 
+from streamcurves import easi_env as _easi_env  # noqa: E402
+
+_easi_env.sanitize()
 import pandas as pd  # noqa: E402
 
 from streamcurves import citation  # noqa: E402
@@ -609,8 +612,8 @@ def main(argv=None) -> int:
     ap.add_argument("--source-citation", default="")
     ap.add_argument("--no-screen", action="store_true",
                     help="Skip the live EASI screen (offline smoke only)")
-    ap.add_argument("--maintainer", default="gtmenichino",
-                    help="Maintainer audit name, required by the canonical publish gate")
+    ap.add_argument("--maintainer", default="GM",
+                    help="Initials recorded as the maintainer on a publish (default: the owner's, GM)")
     ap.add_argument("--rebake-deep", action="store_true",
                     help="After publishing, fold the library's bundles into DEEP's baked registry")
     ap.add_argument("--coverage-exceptions", default=None, metavar="PATH",

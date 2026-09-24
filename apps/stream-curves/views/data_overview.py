@@ -324,6 +324,7 @@ def restore_session(state: AppState, payload: dict, source_name: str | None = No
         chosen, withdrawn = oc.restore(session_decisions, record)
         unrecorded = []
     state.owner_curve_decisions.set(chosen)
+    state.candidate_register.set(fields.get("candidate_register"))
     added = len({d["id"] for d in chosen} - {d.get("id") for d in session_decisions})
     if added:
         ui.notification_show(

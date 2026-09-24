@@ -64,19 +64,45 @@ VALID = ("Good", "Fair", "Poor")
 _EXCEL_EPOCH = _dt.date(1899, 12, 30)
 
 
+class CalculatorUnavailable(RuntimeError):
+    """The active method version carries no calculator generated from its files."""
+
+
 # --- The blank ----------------------------------------------------------------
+def template_path() -> Path | None:
+    """The workbook for the method this process scores with: the committed one for the
+    built-in method, a method package's own calculator, or None when the active package
+    carries none (a workbook is only ever served for the files it was generated from)."""
+    from . import method_package as mp
+
+    rec = mp.active()
+    if rec.get("source") != "package":
+        return TEMPLATE_PATH
+    path = Path(rec["calculator"]) if rec.get("calculator") else None
+    return path if path is not None and path.is_file() else None
+
+
+def available() -> bool:
+    return template_path() is not None
+
+
 @lru_cache(maxsize=1)
 def blank_bytes() -> bytes:
-    """The committed workbook, read once.
+    """The active method's workbook, read once.
 
     Bytes, not an open ``ZipFile``: handing a live archive's ``ZipInfo`` to
     ``writestr`` mutates it, which would corrupt a cached archive.
     """
-    return TEMPLATE_PATH.read_bytes()
+    path = template_path()
+    if path is None:
+        raise CalculatorUnavailable(
+            "No calculator workbook was generated for the active EASI method version.")
+    return path.read_bytes()
 
 
 def blank_filename() -> str:
-    return TEMPLATE_PATH.name
+    path = template_path()
+    return (path or TEMPLATE_PATH).name
 
 
 @lru_cache(maxsize=1)

@@ -36,17 +36,20 @@ from . import reference_pool as rp
 
 CATALOG, EARLIER, OTHER, REFUSED, ENTERED = (
     "catalog", "earlier_version", "other_assessment", "refused_source", "entered")
-SOURCE_KINDS = (CATALOG, EARLIER, OTHER, REFUSED, ENTERED)
+#: a published state SQT curve, frozen from the SQT registry (the REF-15 extension of
+#: 2026-09-23: accepted only while ``owner_curves.alternatives_enabled``)
+SQT = "sqt"
+SOURCE_KINDS = (CATALOG, EARLIER, OTHER, REFUSED, ENTERED, SQT)
 #: how a chosen source reads in the workspace (``curve_sources.KINDS``)
 DISPLAY_KIND = {CATALOG: "published_benchmark", EARLIER: "carried", OTHER: "borrowed",
-                REFUSED: "owner_exception", ENTERED: "owner_entered"}
+                REFUSED: "owner_exception", ENTERED: "owner_entered", SQT: "sqt"}
 #: the heading each source is listed under in the source dialog
 GROUP_LABELS = {CATALOG: "Verified catalog", EARLIER: "Earlier version of this assessment",
                 OTHER: "Another assessment", REFUSED: "Refused by the build",
-                ENTERED: "Enter a curve"}
+                ENTERED: "Enter a curve", SQT: "Published state SQT"}
 #: REF-15's outcome word for a source decision (rule_catalog.json)
 OUTCOMES = {CATALOG: "catalog", EARLIER: "earlier_version", OTHER: "borrowed",
-            REFUSED: "refused_accepted"}
+            REFUSED: "refused_accepted", SQT: "sqt"}
 THRESHOLDS, BREAKPOINTS = "thresholds", "breakpoints"
 #: the ``curve_source`` of a chosen curve's row
 CURVE_SOURCE = "owner"
@@ -97,6 +100,10 @@ def label_for(source: Optional[Mapping]) -> str:
         return f"From v{ref['version']}" if ref.get("version") else "From an earlier version"
     if kind == OTHER:
         return f"From {ref.get('regionName') or 'another assessment'}"
+    if kind == SQT:
+        tool = " ".join(str(x) for x in (ref.get("tool") or f"{ref.get('state') or ''} SQT".strip(),
+                                         ref.get("edition")) if x)
+        return tool or "State SQT"
     return "Owner exception"
 
 
@@ -601,7 +608,7 @@ def library_options(metric: str, *, region_code: str, current=None) -> list[dict
         return []
     for a in listed:
         reg = a.get("region") or {}
-        if reg.get("kind") != "ecoregion":
+        if reg.get("kind") != "ecoregion" or lib.entry_type(a) != "deep":
             continue
         aid = str(a.get("assessmentId") or "")
         name = str(a.get("assessmentName") or aid)
@@ -813,6 +820,120 @@ def pool_for(metric: str, *, region_code: str, region_name: Optional[str] = None
 # --------------------------------------------------------------------------- #
 # the decision's source
 # --------------------------------------------------------------------------- #
+SQT_LABEL = "State SQT"
+
+
+def _sqt_edition(frozen: Mapping) -> Optional[str]:
+    """The edition the original names; None when only the metric library's References
+    column suggests one (the curve row itself names no edition)."""
+    against = ((frozen.get("verification") or {}).get("against") or {})
+    return str(against["edition"]) if against.get("edition") else None
+
+
+def sqt_statement(frozen: Mapping) -> str:
+    edition = _sqt_edition(frozen)
+    tool = " ".join(str(x) for x in (frozen.get("tool"), edition) if x) or "a state SQT"
+    return (f"Scored against a curve published in the {tool}, rather than against stations from "
+            "this ecoregion. The SQT's own index is kept. DEEP calls an index at or below 0.39 Not "
+            "Functioning and at or below 0.69 Functioning At Risk; the SQT calls one below 0.30 Not "
+            "Functioning and below 0.70 At Risk, so an index from 0.30 to 0.39 reads worse in DEEP "
+            "and one above 0.69 and below 0.70 reads better.")
+
+
+def sqt_source(candidate: Mapping) -> dict:
+    """The ``source`` of a REF-15 decision that selects a considered state SQT curve
+    (``candidates.sqt_candidate``), rebuilt from its frozen record alone: the published rule
+    written as DEEP points (``candidates.sqt_adoption``) plus the author's completion of an
+    end the source leaves open (``candidates.check_completion``), in the shape a carried curve
+    rides in, stated as a published criterion with the SQT's own label, verification and
+    limits. Nothing saved beside the record is trusted: not its points, direction, units,
+    stratum, label or limits (the record's fingerprint does not cover them). Refused for a
+    record the registry or its fingerprint excludes, a rule DEEP cannot write, one stratum of
+    a metric, an open end that is not completed, and a candidate its checks excluded."""
+    from . import candidates as C
+    from . import owner_curves as oc
+    from . import sqt_registry
+    frozen = dict(candidate.get("record") or {})
+    if not sqt_registry.frozen_intact(frozen):
+        raise ValueError("The frozen SQT record no longer matches its fingerprint.")
+    if not frozen.get("eligible"):
+        raise ValueError("The SQT registry marks this curve ineligible.")
+    if (candidate.get("eligibility") or {}).get("status") != "eligible":
+        raise ValueError("This SQT curve is excluded: "
+                         + " ".join((candidate.get("eligibility") or {}).get("reasons") or []))
+    adoption = C.sqt_adoption(frozen)
+    if adoption["blockers"]:
+        raise ValueError(" ".join(adoption["blockers"]))
+    restricted = C.sqt_restriction(frozen)
+    if restricted:
+        raise ValueError(restricted)
+    direction = frozen.get("direction")
+    completion = candidate.get("completion") or {}
+    added = [{"x": float(p["x"]), "y": float(p["y"]), "side": str(p.get("side"))}
+             for p in completion.get("points") or []] if adoption["openEnds"] else []
+    if adoption["openEnds"]:
+        problems = C.check_completion(adoption["points"], adoption["openEnds"], direction, added)
+        if problems:
+            raise ValueError("Complete the curve first: " + " ".join(problems))
+    published = [(float(x), float(y)) for x, y in adoption["points"]]
+    points = sorted(published + [(p["x"], p["y"]) for p in added])
+    ident = candidate.get("identity") or {}
+    mk = str((ident.get("subject") or {}).get("id") or C.sqt_metric_key(frozen))
+    label = C.sqt_label(frozen)
+    edition = _sqt_edition(frozen)
+    tool = (" ".join(str(x) for x in (frozen.get("tool"), f"({edition})" if edition else None) if x)
+            or "the state SQT")
+    how = (str(frozen["protocol"]) if frozen.get("protocol") else
+           f"Measure it as the {tool} specifies.")
+    config = {"display_name": label or mk, "units": frozen.get("units") or "",
+              "column_name": mk, "notes": how}
+    if direction in ("increasing", "decreasing"):
+        config["higher_is_better"] = direction == "increasing"
+    ver = frozen.get("verification") or {}
+    checked = {"verified": "Checked against the original.",
+               "partially-verified": "Checked in part against the original."}.get(
+        ver.get("status"), "A STAF adaptation of the SQT, not checked against the original.")
+    limit = f"{curve_basis.limit_for(curve_basis.PUBLISHED)} {checked}"
+    # the verification is stated once, in the limit
+    caveats = [limit] + [x for x in C.sqt_limitations(frozen, adoption)
+                         if x not in C.VERIFICATION_LIMITS and x not in limit]
+    if added:
+        who = str(completion.get("by") or "n/a")
+        said = ", ".join(f"{p['x']:g} scores {p['y']:g}" for p in sorted(added, key=lambda q: q["x"]))
+        caveats.append(f"The SQT publishes points from {published[0][0]:g} to {published[-1][0]:g}; the "
+                       f"points past them were added by {who}: {said}"
+                       + (f" ({completion.get('reason')})." if completion.get("reason") else "."))
+    annotations = {"basis": curve_basis.PUBLISHED, "basisLabel": SQT_LABEL,
+                   "basisStatement": sqt_statement(frozen), "basisLimit": limit,
+                   # every limit, never a cut list: the one about the curve's ends matters most
+                   "curveCaveats": list(dict.fromkeys(caveats)),
+                   "criteriaSource": {"title": frozen.get("tool"), "edition": edition,
+                                      "citation": frozen.get("citation"), "state": frozen.get("state")},
+                   "sourceCitation": frozen.get("citation"),
+                   "sqt": {"registryKey": frozen.get("key"), "verification": ver.get("status"),
+                           "stratum": frozen.get("stratumName"),
+                           "conversion": list(adoption["notes"]),
+                           "publishedPoints": [{"x": x, "y": y} for x, y in published],
+                           "addedPoints": [dict(p) for p in added],
+                           **({"completedBy": str(completion.get("by") or "n/a"),
+                               "completionReason": str(completion.get("reason") or "")} if added else {})}}
+    if frozen.get("protocol"):
+        annotations["methodContext"] = str(frozen["protocol"])
+    return {"kind": SQT, "title": label or mk,
+            "citation": str(frozen.get("citation") or "") or None,
+            "ref": {"registryKey": frozen.get("key"), "state": frozen.get("state"),
+                    "tool": frozen.get("tool"), "edition": edition,
+                    "candidateKey": candidate.get("candidateKey"),
+                    "basisDigest": candidate.get("basisDigest"),
+                    "fingerprint": (frozen.get("frozen") or {}).get("contentFingerprint"),
+                    "verification": ver.get("status"),
+                    "adoptionVersion": oc.SQT_ADOPTION_VERSION},
+            "curve": {"displayName": config["display_name"], "curveStatus": "complete",
+                      "nReference": None, "stratum": str(frozen.get("stratumName") or ""),
+                      "points": [{"x": x, "y": y} for x, y in points],
+                      "layers": [], "config": config, "annotations": annotations}}
+
+
 def decision_source(metric: str, option: Mapping, *, config: Mapping) -> dict:
     """The ``source`` a SOURCE decision records for a chosen option: what it is,
     and the curve itself in the shape a carried curve rides in."""
@@ -837,7 +958,7 @@ def decision_source(metric: str, option: Mapping, *, config: Mapping) -> dict:
 
 __all__ = [
     "CATALOG", "EARLIER", "OTHER", "REFUSED", "ENTERED", "SOURCE_KINDS", "DISPLAY_KIND",
-    "GROUP_LABELS", "OUTCOMES", "THRESHOLDS", "BREAKPOINTS", "CURVE_SOURCE",
+    "GROUP_LABELS", "OUTCOMES", "THRESHOLDS", "BREAKPOINTS", "CURVE_SOURCE", "SQT",
     "ELIGIBLE_STATUSES", "ENTERED_LABEL", "ENTERED_LIMIT", "BORROWED_LIMIT", "JUDGMENT",
     "outcome_of", "label_for", "agent_config", "config_for", "sourceable",
     "function_candidates", "crosswalk_functions", "function_name", "mapping_rows_for",
@@ -846,5 +967,6 @@ __all__ = [
     "breakpoint_points", "entered_annotations", "entered_option", "catalog_annotations",
     "catalog_option", "borrowed_annotations", "earlier_annotations", "library_options",
     "refused_options", "pool_for", "decision_source", "REFUSAL_NOTE", "forced_annotations",
+    "sqt_source", "sqt_statement", "SQT_LABEL",
     "forced_curve",
 ]

@@ -35,7 +35,7 @@ from streamcurves import library as lib  # noqa: E402
 def targets(assessment: str | None, version: int | None) -> list[tuple[str, int]]:
     out: list[tuple[str, int]] = []
     ids = [lib.slugify(assessment)] if assessment else [
-        str(a.get("assessmentId")) for a in lib.list_assessments()]
+        str(a.get("assessmentId")) for a in lib.list_assessments() if lib.entry_type(a) == "deep"]
     for aid in ids:
         manifest = lib.read_manifest(aid)
         if not manifest:

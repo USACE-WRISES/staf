@@ -9,7 +9,6 @@ changes nothing.
 from __future__ import annotations
 
 import json
-import os
 import re
 from typing import Mapping, Optional
 
@@ -67,13 +66,12 @@ def undo_onclick(decision_id: str, *, stop: bool = True) -> str:
     return _set(UNDO_INPUT, {"decision": str(decision_id)}, stop=stop)
 
 
-def maintainer() -> str:
-    """Who records a decision: the same chain the publish and the builds use, with the
-    "Prepared by" name a reviewer gave their project before the account name (an installed
-    copy never carries STAF_LIBRARY_MAINTAINER)."""
-    from streamcurves import prefs
-    return (os.environ.get("STAF_LIBRARY_MAINTAINER") or str(prefs.get(prefs.PREPARED_BY) or "")
-            or os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
+def maintainer(state=None) -> str:
+    """Who records a decision: the same initials the publish and the builds record
+    (``views.state.recorded_by``: STAF_LIBRARY_MAINTAINER, else the open project's Prepared by,
+    else ``n/a``; never the login)."""
+    from views import state as _st
+    return _st.recorded_by(state)
 
 
 def function_names_by_id() -> dict:
@@ -441,8 +439,12 @@ def source_panel_server(input, output, session, state: AppState):
         try:
             decision = oc.new_decision(p["metric"], p["action"],
                                        rationale=input.dec_rationale() or "",
-                                       recorded_by=maintainer(), functions=p["functions"],
+                                       recorded_by=maintainer(state), functions=p["functions"],
                                        coverage_exceptions=gaps)
+            from views import curve_gallery as _cg
+            basis = _cg.metric_basis(state, p["metric"], oc.merge(current, decision))
+            if basis:
+                decision["basisDigest"] = basis
             oc.validate(decision, build=build, built=built, decisions=current)
             if run_dir is not None:
                 _standing(run_dir)

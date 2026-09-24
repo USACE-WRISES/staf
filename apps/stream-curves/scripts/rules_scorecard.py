@@ -64,6 +64,10 @@ def scorecard(library_root: Path, policy: dict) -> list[dict]:
     rows: list[dict] = []
     assess_root = library_root / "assessments"
     for adir in sorted(p for p in assess_root.iterdir() if p.is_dir()):
+        man = adir / "manifest.json"
+        if man.is_file() and str(json.loads(man.read_text(encoding="utf-8"))
+                                 .get("assessmentType") or "deep") != "deep":
+            continue                    # an EASI method records no DEEP decisions to replay
         vdirs = sorted((v for v in adir.iterdir()
                         if v.is_dir() and v.name.startswith("v")),
                        key=lambda v: int(v.name[1:]))

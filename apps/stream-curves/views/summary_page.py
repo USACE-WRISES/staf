@@ -28,6 +28,7 @@ from streamcurves import curve_svg as cs
 from streamcurves import run_state as rs
 from views import assessment_publish as ap
 from views import curve_gallery as cg
+from views import final_selection as fs
 from views import source_panel as sp
 from views import state as st
 from views import summary_state as ss
@@ -1150,26 +1151,26 @@ def summary_page_server(input, output, session, state: AppState):
     def _gallery_filter():
         gallery_filter_mode.set(input.gallery_filter() or "all")
 
-    @render.ui
-    def curve_gallery():
+    def _tiles(busy: set | None = None) -> list[dict]:
+        """Every tile the gallery draws: the fitted curves from the table's row
+        snapshots, then the curves the session did not fit. The Select final curves
+        section reads the same tiles, so the two never disagree."""
         metrics = summary_metrics()
         review = state.curve_review() or {}
         mc = state.metric_config() or {}
         functions = state.column_functions() or {}
         mapping = state.discipline_function_mapping()
-        mode = gallery_filter_mode()
-        bulk_running = bulk_recompute_active()
         rows = []
-        busy: set[str] = set()
         for metric in metrics:
             # the table's own snapshot, so the gallery invalidates exactly when a row does
             snap_rv = row_snapshot.get(metric)
             snap = snap_rv() if snap_rv is not None else None
             # row_busy is a dependency too, so a tile's recompute spinner
             # appears and clears live (same values the table rows read).
-            busy_rv = row_busy.get(metric)
-            if busy_rv is not None and busy_rv():
-                busy.add(metric)
+            if busy is not None:
+                busy_rv = row_busy.get(metric)
+                if busy_rv is not None and busy_rv():
+                    busy.add(metric)
             rows.append(cg.tile_row(
                 metric, (snap or {}).get("curve_rows"),
                 metric_entry=mc.get(metric), review_entry=review.get(metric),
@@ -1180,7 +1181,21 @@ def summary_page_server(input, output, session, state: AppState):
         rows = cg.mark_not_selected(cg.assign_functions(rows, mapping),
                                     ap.effective_reference_build(state))
         # and every curve the version scores that the session did not fit, read-only
-        rows += _reference_tiles()
+        return rows + _reference_tiles()
+
+    @reactive.calc
+    def gallery_tiles() -> list[dict]:
+        return _tiles()
+
+    # the candidate register over the same tiles (views/final_selection.py)
+    fs.final_selection_server(input, output, session, state, tiles=gallery_tiles)
+
+    @render.ui
+    def curve_gallery():
+        mode = gallery_filter_mode()
+        bulk_running = bulk_recompute_active()
+        busy: set[str] = set()
+        rows = _tiles(busy)
         return cg.gallery_ui(
             rows, channel_id=ns("curve_gallery_action"),
             filter_input_id=ns("gallery_filter"), filter_mode=mode,
@@ -1335,6 +1350,7 @@ def summary_page_server(input, output, session, state: AppState):
                 ui.nav_panel(None, ui.output_ui(ns("curve_gallery")), value="gallery"),
                 ui.nav_panel(None, ui.TagList(table_card, ui.output_ui(ns("reference_table"))),
                              value="table"),
+                ui.nav_panel(None, ui.output_ui(ns("final_selection")), value=fs.SECTION),
                 id=ns("curves_section"),
                 selected=section,
             ),
