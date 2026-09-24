@@ -1831,21 +1831,133 @@
     }
   },
   "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c",
+  "functionCoverage": {
+    "framework": "staf-20",
+    "total": 20,
+    "covered": 10,
+    "excluded": 10,
+    "missing": 0,
+    "coveredFunctionIds": [
+      "catchment-hydrology",
+      "reach-inflow",
+      "floodplain-connectivity",
+      "channel-floodplain-dynamics",
+      "sediment-continuity",
+      "light-thermal-regime",
+      "carbon-processing",
+      "water-soil-quality",
+      "habitat-provision",
+      "population-support"
+    ],
+    "missingFunctionIds": [],
+    "exclusions": [
+      {
+        "functionId": "surface-water-storage",
+        "functionName": "Surface water storage",
+        "discipline": "Hydrology",
+        "reason": "no-suitable-metric",
+        "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "streamflow-regime",
+        "functionName": "Streamflow regime",
+        "discipline": "Hydrology",
+        "reason": "deferred-to-other-tier",
+        "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Flashiness / Rate & Frequency of Change; Flow Alteration (Regulation / Water Use)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "low-flow-baseflow-dynamics",
+        "functionName": "Low flow and baseflow dynamics",
+        "discipline": "Hydraulics",
+        "reason": "no-suitable-metric",
+        "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "high-flow-dynamics",
+        "functionName": "High flow dynamics",
+        "discipline": "Hydraulics",
+        "reason": "no-suitable-metric",
+        "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "hyporheic-connectivity",
+        "functionName": "Hyporheic connectivity",
+        "discipline": "Hydraulics",
+        "reason": "no-suitable-metric",
+        "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "channel-evolution",
+        "functionName": "Channel evolution",
+        "discipline": "Geomorphology",
+        "reason": "deferred-to-other-tier",
+        "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Channelization / Ditching / Straightening), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "bed-composition-bedform-dynamics",
+        "functionName": "Bed composition and bedform dynamics",
+        "discipline": "Geomorphology",
+        "reason": "no-suitable-metric",
+        "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "nutrient-cycling",
+        "functionName": "Nutrient cycling",
+        "discipline": "Physicochemistry",
+        "reason": "deferred-to-other-tier",
+        "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Agriculture & Livestock Nutrient Pressure), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "community-dynamics",
+        "functionName": "Community dynamics",
+        "discipline": "Biology",
+        "reason": "deferred-to-other-tier",
+        "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Native Biodiversity & Taxa Richness), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "watershed-connectivity",
+        "functionName": "Watershed connectivity",
+        "discipline": "Biology",
+        "reason": "deferred-to-other-tier",
+        "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Fish Passage & Barrier Effects (longitudinal connectivity)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      }
+    ]
+  },
   "library": {
     "libraryId": "mn-sqt-adapted",
-    "version": 1,
-    "updatedAt": "2026-07-12T01:57:25Z",
-    "author": "STAF SQT migration",
-    "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+    "version": 2,
+    "updatedAt": "2026-09-24T15:33:28Z",
+    "author": "GM",
+    "revisionNotes": "The complete StreamCurves session for the state SQT transcribed in v1: every curve and stratum carried as the tool publishes it (State SQT), the function mapping, the documented gaps and the approved metric sets. Scores exactly as v1; known defects and open ends are stated as caveats.",
     "region": {
       "kind": "state",
       "code": "MN",
       "name": "Minnesota"
     },
     "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c",
-    "supersedesVersion": null
+    "supersedesVersion": 1
   },
-  "version": 1,
+  "version": 2,
   "lifecycle": "preliminary",
-  "assessmentRef": "mn-sqt-adapted@v1"
+  "assessmentRef": "mn-sqt-adapted@v2"
 }

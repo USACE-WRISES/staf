@@ -304,7 +304,11 @@ def test_the_library_builds_the_same_catalog_the_release_publishes():
     assert entries, "the library snapshot lists nothing"
     doc = gallery.catalog_doc(entries, source_commit="abc")
     back = gallery.parse_catalog(json.dumps(doc))
-    assert [e.id for e in back] == [e.id for e in entries]
+    # library.json lists DEEP only; library-v2.json every type (the library holds EASI v1)
+    assert [e.id for e in back] == [e.id for e in entries if e.type == "deep"]
+    typed = gallery.parse_catalog(json.dumps(gallery.catalog_doc(
+        entries, source_commit="abc", schema=gallery.CATALOG_SCHEMA_V2)))
+    assert [e.id for e in typed] == [e.id for e in entries]
     ecbp = next(e for e in back if e.id == "eastern-corn-belt-plains")
     assert ecbp.latest_version >= 8 and ecbp.version().functions_covered == 20
 

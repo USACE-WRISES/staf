@@ -10,7 +10,7 @@
   "stateCode": "NC",
   "stateName": "North Carolina",
   "sourceCitation": "North Carolina SQT",
-  "latestVersion": 1,
+  "latestVersion": 2,
   "versions": [
     {
       "version": 1,
@@ -19,6 +19,14 @@
       "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
       "supersedesVersion": null
+    },
+    {
+      "version": 2,
+      "updatedAt": "2026-09-24T15:33:30Z",
+      "author": "GM",
+      "revisionNotes": "The complete StreamCurves session for the state SQT transcribed in v1: every curve and stratum carried as the tool publishes it (State SQT), the function mapping, the documented gaps and the approved metric sets. Scores exactly as v1; known defects and open ends are stated as caveats.",
+      "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
+      "supersedesVersion": 1
     }
   ]
 }

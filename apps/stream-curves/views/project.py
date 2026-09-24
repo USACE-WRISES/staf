@@ -1398,7 +1398,7 @@ def project_server(input, output, session, state: AppState):
                 actions.append(nonce_button("gal_open", "Open a copy"
                                             if ws.gallery_source() == "checkout"
                                             else "Download and open"))
-            if v.in_deep and deep_base:
+            if v.in_deep and deep_base and not e.deep_hidden:
                 actions.append(ui.a("Open in DEEP",
                                     href=f"{deep_base}/?assessment={e.id}@{v.version}",
                                     target="_blank", rel="noopener", class_="btn btn-link"))
@@ -1425,6 +1425,7 @@ def project_server(input, output, session, state: AppState):
             ui.div(*actions, class_="sc-gallery-actions"),
             ui.div("An EASI screening method version. EASI keeps the method it ships until "
                    "a library version is adopted." if e.type == "easi" else
+                   "DEEP does not list the state SQT assessments." if e.deep_hidden else
                    "DEEP runs this version." if v.in_deep else
                    "A draft is for review; DEEP runs preliminary and final versions.",
                    class_="sc-form-note mt-2"),

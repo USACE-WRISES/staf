@@ -1585,21 +1585,109 @@
     }
   },
   "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
+  "functionCoverage": {
+    "framework": "staf-20",
+    "total": 20,
+    "covered": 13,
+    "excluded": 7,
+    "missing": 0,
+    "coveredFunctionIds": [
+      "catchment-hydrology",
+      "reach-inflow",
+      "streamflow-regime",
+      "low-flow-baseflow-dynamics",
+      "floodplain-connectivity",
+      "channel-floodplain-dynamics",
+      "sediment-continuity",
+      "light-thermal-regime",
+      "carbon-processing",
+      "water-soil-quality",
+      "habitat-provision",
+      "population-support",
+      "community-dynamics"
+    ],
+    "missingFunctionIds": [],
+    "exclusions": [
+      {
+        "functionId": "surface-water-storage",
+        "functionName": "Surface water storage",
+        "discipline": "Hydrology",
+        "reason": "deferred-to-other-tier",
+        "justification": "The Colorado Stream Quantification Tool addresses this function only with a screening-tier metric (Impoundments / Dams / Ponds), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "high-flow-dynamics",
+        "functionName": "High flow dynamics",
+        "discipline": "Hydraulics",
+        "reason": "no-suitable-metric",
+        "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "hyporheic-connectivity",
+        "functionName": "Hyporheic connectivity",
+        "discipline": "Hydraulics",
+        "reason": "no-suitable-metric",
+        "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "channel-evolution",
+        "functionName": "Channel evolution",
+        "discipline": "Geomorphology",
+        "reason": "no-suitable-metric",
+        "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "bed-composition-bedform-dynamics",
+        "functionName": "Bed composition and bedform dynamics",
+        "discipline": "Geomorphology",
+        "reason": "no-suitable-metric",
+        "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "nutrient-cycling",
+        "functionName": "Nutrient cycling",
+        "discipline": "Physicochemistry",
+        "reason": "no-suitable-metric",
+        "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      },
+      {
+        "functionId": "watershed-connectivity",
+        "functionName": "Watershed connectivity",
+        "discipline": "Biology",
+        "reason": "deferred-to-other-tier",
+        "justification": "The Colorado Stream Quantification Tool addresses this function only with a screening-tier metric (Adjacent Reach Condition for Recruitment (hardened/embedded); Fish Passage & Barrier Effects (longitudinal connectivity)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+        "recordedBy": "GM",
+        "recordedAt": "2026-09-24"
+      }
+    ]
+  },
   "library": {
     "libraryId": "co-sqt-adapted",
-    "version": 1,
-    "updatedAt": "2026-07-12T01:57:25Z",
-    "author": "STAF SQT migration",
-    "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+    "version": 2,
+    "updatedAt": "2026-09-24T15:33:24Z",
+    "author": "GM",
+    "revisionNotes": "The complete StreamCurves session for the state SQT transcribed in v1: every curve and stratum carried as the tool publishes it (State SQT), the function mapping, the documented gaps and the approved metric sets. Scores exactly as v1; known defects and open ends are stated as caveats.",
     "region": {
       "kind": "state",
       "code": "CO",
       "name": "Colorado"
     },
     "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
-    "supersedesVersion": null
+    "supersedesVersion": 1
   },
-  "version": 1,
+  "version": 2,
   "lifecycle": "preliminary",
-  "assessmentRef": "co-sqt-adapted@v1"
+  "assessmentRef": "co-sqt-adapted@v2"
 }

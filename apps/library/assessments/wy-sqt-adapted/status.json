@@ -8,6 +8,13 @@
       "actor": "STAF SQT migration",
       "timestamp": "2026-07-12T01:57:26Z",
       "note": "Published new version."
+    },
+    {
+      "version": 2,
+      "status": "preliminary",
+      "actor": "GM",
+      "timestamp": "2026-09-24T15:33:35Z",
+      "note": "Published new version."
     }
   ]
 }
