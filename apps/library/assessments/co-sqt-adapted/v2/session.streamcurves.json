@@ -1,0 +1,4914 @@
+{
+ "schema_version": 2,
+ "app": "streamcurves",
+ "app_version": "0.1.0",
+ "created": "2026-09-24T15:33:24.841411+00:00",
+ "session_name": "CO SQT Adapted",
+ "fields": {
+  "data": null,
+  "precheck_df": null,
+  "data_source": null,
+  "data_fingerprint": null,
+  "upload_filename": null,
+  "input_metadata": null,
+  "site_mask_config": null,
+  "metric_config": {},
+  "strat_config": {},
+  "predictor_config": {},
+  "factor_recode_config": {},
+  "output_config": {
+   "per_metric_outputs": {
+    "precheck": {
+     "enabled": true,
+     "files": [
+      "{metric}_precheck.csv"
+     ]
+    },
+    "stratification": {
+     "enabled": true,
+     "files": [
+      "{metric}_stratification_screening.csv",
+      "{metric}_stratification_pairwise.csv",
+      "{metric}_stratification_decision.csv"
+     ],
+     "plots": [
+      "{metric}_boxplot_{strat_var}.png"
+     ]
+    },
+    "model_candidates": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_candidates.csv",
+      "{metric}_predictor_importance.csv"
+     ],
+     "plots": [
+      "{metric}_bic_vs_npred.png",
+      "{metric}_adjr2_vs_npred.png",
+      "{metric}_model_heatmap.png",
+      "{metric}_predictor_importance.png"
+     ]
+    },
+    "model_selection": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_selection.csv"
+     ]
+    },
+    "diagnostics": {
+     "enabled": true,
+     "files": [
+      "{metric}_diagnostics.csv"
+     ],
+     "plots": [
+      "{metric}_diagnostic_4panel.png"
+     ]
+    },
+    "reference_curves": {
+     "enabled": true,
+     "files": [
+      "{metric}_reference_curve.csv"
+     ],
+     "plots": [
+      "{metric}_reference_bar_chart.png",
+      "{metric}_reference_curve.png"
+     ]
+    },
+    "rds_objects": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_object.rds"
+     ]
+    }
+   },
+   "summary_outputs": {
+    "thresholds": {
+     "enabled": true,
+     "files": [
+      "reference_curve_thresholds.csv"
+     ]
+    },
+    "metric_status": {
+     "enabled": true,
+     "files": [
+      "metric_status.csv"
+     ]
+    },
+    "stratification_decisions": {
+     "enabled": true,
+     "files": [
+      "stratification_decisions.csv"
+     ]
+    },
+    "decision_history": {
+     "enabled": true,
+     "files": [
+      "decision_history.csv"
+     ]
+    },
+    "regional_curves": {
+     "enabled": true,
+     "files": [
+      "regional_curves.csv"
+     ]
+    },
+    "results_bundle": {
+     "enabled": true,
+     "files": [
+      "results_bundle.zip"
+     ]
+    }
+   },
+   "report_products": {
+    "dashboard": {
+     "enabled": true,
+     "file": "reports/dashboard.qmd",
+     "format": "html",
+     "tier": 1
+    },
+    "summary": {
+     "enabled": true,
+     "file": "reports/summary.qmd",
+     "format": "pdf",
+     "tier": 2
+    },
+    "appendix": {
+     "enabled": true,
+     "file": "reports/appendix.qmd",
+     "format": "pdf",
+     "tier": 3
+    },
+    "list_of_metrics": {
+     "enabled": true,
+     "file": "docs/templates/OH/MN-List-of-Metricsv2.0.xlsx",
+     "format": "xlsx",
+     "tier": 1
+    },
+    "sqt_workbook": {
+     "enabled": true,
+     "file": "docs/templates/OH/WISQT_Reference_Curves.xlsx",
+     "format": "xlsx",
+     "tier": 1
+    },
+    "science_support": {
+     "enabled": true,
+     "file": "reports/science_support.qmd",
+     "format": "html",
+     "tier": 1
+    }
+   }
+  },
+  "config_version": 0,
+  "current_metric": "perRiffle",
+  "phase1_screening": null,
+  "phase1_effect_sizes": null,
+  "phase1_candidates": {},
+  "all_layer1_results": {},
+  "all_layer2_results": {},
+  "phase2_ranking": null,
+  "cross_metric_consistency": null,
+  "phase2_settings": {
+   "metric_filter": null,
+   "strat_filter": null,
+   "sig_threshold": 0.05,
+   "support_threshold": 0.5
+  },
+  "phase2_metric_overrides": {},
+  "curve_stratification": {},
+  "summary_available_overrides": {},
+  "summary_edit_notes": {},
+  "phase3_patterns": null,
+  "phase3_feasibility": null,
+  "phase3_verification": {},
+  "strat_decision_user": null,
+  "reference_curve": null,
+  "phase4_data": null,
+  "current_stratum_level": null,
+  "stratum_results": {},
+  "completed_metrics": {},
+  "decision_log": {
+   "__type__": "frame",
+   "columns": [],
+   "n": 0,
+   "data": {},
+   "dtypes": {},
+   "categories": {}
+  },
+  "metric_phase_cache": {},
+  "discipline_function_mapping": {
+   "__type__": "frame",
+   "columns": [
+    "metric_key",
+    "discipline",
+    "function_label",
+    "sort_order"
+   ],
+   "n": 26,
+   "data": {
+    "metric_key": [
+     "catchment-hydrology-land-use-coefficient",
+     "reach-inflow-concentrated-flow-points",
+     "streamflow-regime-flow-alteration-module",
+     "low-flow-and-baseflow-dynamics-average-depth",
+     "floodplain-connectivity-entrenchment-ratio-er",
+     "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+     "channel-and-floodplain-dynamics-greenline-stability-rating",
+     "channel-and-floodplain-dynamics-percent-armoring",
+     "channel-and-floodplain-dynamics-percent-side-channels",
+     "channel-and-floodplain-dynamics-percent-streambank-erosion",
+     "sediment-continuity-aggradation-ratio",
+     "light-and-thermal-regime-mwat",
+     "carbon-processing-chlorophyll",
+     "carbon-processing-herbaceous-vegetation-cover",
+     "carbon-processing-percent-native-cover",
+     "carbon-processing-riparian-extent",
+     "carbon-processing-woody-vegetation-cover",
+     "water-and-soil-quality-dissolved-oxygen-concentration",
+     "habitat-provision-lwd",
+     "habitat-provision-lwd-index",
+     "habitat-provision-percent-riffle",
+     "habitat-provision-pool-depth-ratio",
+     "habitat-provision-pool-spacing-ratio",
+     "population-support-co-mmi",
+     "population-support-wild-trout-biomass",
+     "community-dynamics-native-fish-species-richness"
+    ],
+    "discipline": [
+     "Hydrology",
+     "Hydrology",
+     "Hydrology",
+     "Hydraulics",
+     "Hydraulics",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology"
+    ],
+    "function_label": [
+     "Catchment hydrology",
+     "Reach inflow",
+     "Streamflow regime",
+     "Low flow and baseflow dynamics",
+     "Floodplain connectivity",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Sediment continuity",
+     "Light & thermal regime",
+     "Carbon processing",
+     "Carbon processing",
+     "Carbon processing",
+     "Carbon processing",
+     "Carbon processing",
+     "Water & soil quality",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Population support",
+     "Population support",
+     "Community dynamics"
+    ],
+    "sort_order": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26
+    ]
+   },
+   "dtypes": {
+    "metric_key": "str",
+    "discipline": "str",
+    "function_label": "str",
+    "sort_order": "int64"
+   },
+   "categories": {}
+  },
+  "discipline_function_mapping_confirmed": true,
+  "mapping_user_touched": false,
+  "workbook_provided_mapping": false,
+  "function_coverage_exceptions": [
+   {
+    "functionId": "surface-water-storage",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Colorado Stream Quantification Tool addresses this function only with a screening-tier metric (Impoundments / Dams / Ponds), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "high-flow-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "hyporheic-connectivity",
+    "reason": "no-suitable-metric",
+    "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "channel-evolution",
+    "reason": "no-suitable-metric",
+    "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "bed-composition-bedform-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "nutrient-cycling",
+    "reason": "no-suitable-metric",
+    "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "watershed-connectivity",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Colorado Stream Quantification Tool addresses this function only with a screening-tier metric (Adjacent Reach Condition for Recruitment (hardened/embedded); Fish Passage & Barrier Effects (longitudinal connectivity)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   }
+  ],
+  "custom_groupings": {},
+  "custom_grouping_counter": {},
+  "session_name": "CO SQT Adapted",
+  "app_data_loaded": false,
+  "cross_sections": {},
+  "column_sources": {},
+  "column_functions": {},
+  "region_of_applicability": {
+   "kind": "state",
+   "code": "CO",
+   "name": "Colorado"
+  },
+  "candidate_sites": null,
+  "easi_screening_sites": null,
+  "easi_screening_metrics": null,
+  "easi_screening_criteria": null,
+  "run_meta": null,
+  "run_stage_status": {},
+  "curve_review": {},
+  "screening_run": null,
+  "site_exclusions": [],
+  "screening_skipped": false,
+  "validation_records": [],
+  "metric_redundancy": null,
+  "assessment_source": null,
+  "source_provenance": null,
+  "rule_selections": [],
+  "reference_build": {
+   "method": "pressure-screen",
+   "referenceMethod": null,
+   "insufficientReferenceSupport": [],
+   "metricAnnotations": {},
+   "fixedMetrics": [],
+   "ladderMetrics": {},
+   "referenceTier": null,
+   "carriedMetrics": {
+    "catchment-hydrology-land-use-coefficient": {
+     "displayName": "Land Use Coefficient",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 55.0,
+       "y": 1.0
+      },
+      {
+       "x": 62.0,
+       "y": 0.7
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Land Use Coefficient",
+      "units": "",
+      "metric_family": "desktop (gis)",
+      "notes": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+      "column_name": "catchment-hydrology-land-use-coefficient",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+      "curveCaveats": [
+       "The published curve stops at its high end, 62 (index 0.7); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:co:land-use-coefficient:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 62 (index 0.7); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "catchment-hydrology-land-use-coefficient",
+       "discipline": "Hydrology",
+       "function_label": "Catchment hydrology"
+      }
+     ],
+     "decision": {
+      "metric": "catchment-hydrology-land-use-coefficient",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "catchment-hydrology-land-use-coefficient",
+       "metricName": "Land Use Coefficient",
+       "discipline": "Hydrology",
+       "inputType": "desktop (gis)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Land Use Coefficient",
+       "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+       "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+       "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 55,
+          "y": 1
+         },
+         {
+          "x": 62,
+          "y": 0.7
+         }
+        ]
+       }
+      },
+      "functions": [
+       "catchment-hydrology"
+      ]
+     }
+    },
+    "reach-inflow-concentrated-flow-points": {
+     "displayName": "Concentrated Flow Points",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.0,
+       "y": 0.69
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Concentrated Flow Points",
+      "units": "",
+      "metric_family": "field (with desktop pre-screen)",
+      "notes": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+      "column_name": "reach-inflow-concentrated-flow-points",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+      "curveCaveats": [
+       "The published curve stops at its high end, 1 (index 0.69); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:co:concentrated-flow-points:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 1 (index 0.69); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "reach-inflow-concentrated-flow-points",
+       "discipline": "Hydrology",
+       "function_label": "Reach inflow"
+      }
+     ],
+     "decision": {
+      "metric": "reach-inflow-concentrated-flow-points",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "reach-inflow-concentrated-flow-points",
+       "metricName": "Concentrated Flow Points",
+       "discipline": "Hydrology",
+       "inputType": "field (with desktop pre-screen)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Concentrated Flow Points",
+       "metricStatement": "Count of concentrated inflow locations (ditches, pipes, outfalls) that can deliver runoff, sediment, or pollutants to the reach.",
+       "howToMeasure": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+       "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 1,
+          "y": 0.69
+         }
+        ]
+       }
+      },
+      "functions": [
+       "reach-inflow"
+      ]
+     }
+    },
+    "streamflow-regime-flow-alteration-module": {
+     "displayName": "Flow Alteration Module",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "ALL METRICS",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.9,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Flow Alteration Module",
+      "units": "",
+      "metric_family": "desktop (hydrology/flow analysis)",
+      "notes": "Compile daily discharge (or model outputs). Calculate the module score per SQT guidance (often based on multiple IHA-style metrics).",
+      "column_name": "streamflow-regime-flow-alteration-module",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Watershed\n\nMethod: Desktop (hydrology/flow analysis)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "ALL METRICS",
+         "registryKey": "sqt:co:flow-alteration-module:all-metrics",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "streamflow-regime-flow-alteration-module",
+       "discipline": "Hydrology",
+       "function_label": "Streamflow regime"
+      }
+     ],
+     "decision": {
+      "metric": "streamflow-regime-flow-alteration-module",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "streamflow-regime-flow-alteration-module",
+       "metricName": "Flow Alteration Module",
+       "discipline": "Hydrology",
+       "inputType": "desktop (hydrology/flow analysis)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Flow Alteration Module",
+       "metricStatement": "Composite indicator of departure from natural flow timing, magnitude, and variability due to regulation, withdrawals, or land use.",
+       "howToMeasure": "Compile daily discharge (or model outputs). Calculate the module score per SQT guidance (often based on multiple IHA-style metrics).",
+       "methodContext": "Context: Watershed\n\nMethod: Desktop (hydrology/flow analysis)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - ALL METRICS",
+        "stratification": "ALL METRICS",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 0.9,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "streamflow-regime"
+      ]
+     }
+    },
+    "low-flow-and-baseflow-dynamics-average-depth": {
+     "displayName": "Average Depth",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "CS-I & CS-I MWF; W < 20ft",
+     "points": [
+      {
+       "x": 0.2,
+       "y": 0.0
+      },
+      {
+       "x": 1.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "CS-I & CS-I MWF; W < 20ft",
+       "points": [
+        {
+         "x": 0.2,
+         "y": 0.0
+        },
+        {
+         "x": 1.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "CS-I & CS-I MWF; W > 20ft",
+       "points": [
+        {
+         "x": 0.4,
+         "y": 0.0
+        },
+        {
+         "x": 1.5,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "CS-II",
+       "points": [
+        {
+         "x": 0.6,
+         "y": 0.0
+        },
+        {
+         "x": 2.3,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Average Depth",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Measure water depth at multiple transects during representative low flow and compute average; apply stratified scoring breakpoints.",
+      "column_name": "low-flow-and-baseflow-dynamics-average-depth",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "CS-I & CS-I MWF; W < 20ft",
+         "registryKey": "sqt:co:average-depth:cs-i-and-cs-i-mwf-w-lt-20ft",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "CS-I & CS-I MWF; W > 20ft",
+         "registryKey": "sqt:co:average-depth:cs-i-and-cs-i-mwf-w-gt-20ft",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "CS-II",
+         "registryKey": "sqt:co:average-depth:cs-ii",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "low-flow-and-baseflow-dynamics-average-depth",
+       "discipline": "Hydraulics",
+       "function_label": "Low flow and baseflow dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "low-flow-and-baseflow-dynamics-average-depth",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "low-flow-and-baseflow-dynamics-average-depth",
+       "metricName": "Average Depth",
+       "discipline": "Hydraulics",
+       "inputType": "field",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Average Depth",
+       "metricStatement": "Typical water depth at baseflow conditions used to infer low-flow habitat availability.",
+       "howToMeasure": "Measure water depth at multiple transects during representative low flow and compute average; apply stratified scoring breakpoints.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - CS-I & CS-I MWF; W < 20ft",
+        "stratification": "CS-I & CS-I MWF; W < 20ft",
+        "points": [
+         {
+          "x": 0.2,
+          "y": 0
+         },
+         {
+          "x": 1,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "CS-I & CS-I MWF; W < 20ft",
+         "layerName": "Colorado SQT - CS-I & CS-I MWF; W < 20ft",
+         "points": [
+          {
+           "x": 0.2,
+           "y": 0
+          },
+          {
+           "x": 1,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "CS-I & CS-I MWF; W > 20ft",
+         "layerName": "Colorado SQT - CS-I & CS-I MWF; W > 20ft",
+         "points": [
+          {
+           "x": 0.4,
+           "y": 0
+          },
+          {
+           "x": 1.5,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "CS-II",
+         "layerName": "Colorado SQT - CS-II",
+         "points": [
+          {
+           "x": 0.6,
+           "y": 0
+          },
+          {
+           "x": 2.3,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "CS-I & CS-I MWF; W < 20ft"
+      },
+      "functions": [
+       "low-flow-baseflow-dynamics"
+      ]
+     }
+    },
+    "floodplain-connectivity-entrenchment-ratio-er": {
+     "displayName": "Entrenchment Ratio (ER)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "C Streams",
+     "points": [
+      {
+       "x": 2.0,
+       "y": 0.3
+      },
+      {
+       "x": 2.4,
+       "y": 0.7
+      },
+      {
+       "x": 4.2,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "C Streams",
+       "points": [
+        {
+         "x": 2.0,
+         "y": 0.3
+        },
+        {
+         "x": 2.4,
+         "y": 0.7
+        },
+        {
+         "x": 4.2,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Cb Streams",
+       "points": [
+        {
+         "x": 2.0,
+         "y": 0.3
+        },
+        {
+         "x": 2.4,
+         "y": 0.7
+        },
+        {
+         "x": 3.9,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "E Streams",
+       "points": [
+        {
+         "x": 2.0,
+         "y": 0.3
+        },
+        {
+         "x": 2.4,
+         "y": 0.7
+        },
+        {
+         "x": 6.7,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "A and B Streams",
+       "points": [
+        {
+         "x": 1.2,
+         "y": 0.3
+        },
+        {
+         "x": 1.4,
+         "y": 0.7
+        },
+        {
+         "x": 2.2,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Entrenchment Ratio (ER)",
+      "units": "",
+      "metric_family": "field (survey) or desktop (lidar cross sections)",
+      "notes": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+      "column_name": "floodplain-connectivity-entrenchment-ratio-er",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+      "curveCaveats": [
+       "C Streams: the published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index.",
+       "Cb Streams: the published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index.",
+       "E Streams: the published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index.",
+       "A and B Streams: the published curve stops at its low end, 1.2 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "C Streams",
+         "registryKey": "sqt:co:entrenchment-ratio-er:c-streams",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Cb Streams",
+         "registryKey": "sqt:co:entrenchment-ratio-er:cb-streams",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "E Streams",
+         "registryKey": "sqt:co:entrenchment-ratio-er:e-streams",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "A and B Streams",
+         "registryKey": "sqt:co:entrenchment-ratio-er:a-and-b-streams",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 1.2 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "floodplain-connectivity-entrenchment-ratio-er",
+       "discipline": "Hydraulics",
+       "function_label": "Floodplain connectivity"
+      }
+     ],
+     "decision": {
+      "metric": "floodplain-connectivity-entrenchment-ratio-er",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+       "metricName": "Entrenchment Ratio (ER)",
+       "discipline": "Hydraulics",
+       "inputType": "field (survey) or desktop (lidar cross sections)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Entrenchment Ratio (ER)",
+       "metricStatement": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+       "howToMeasure": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+       "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - C Streams",
+        "stratification": "C Streams",
+        "points": [
+         {
+          "x": 2,
+          "y": 0.3
+         },
+         {
+          "x": 2.4,
+          "y": 0.7
+         },
+         {
+          "x": 4.2,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "C Streams",
+         "layerName": "Colorado SQT - C Streams",
+         "points": [
+          {
+           "x": 2,
+           "y": 0.3
+          },
+          {
+           "x": 2.4,
+           "y": 0.7
+          },
+          {
+           "x": 4.2,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Cb Streams",
+         "layerName": "Colorado SQT - Cb Streams",
+         "points": [
+          {
+           "x": 2,
+           "y": 0.3
+          },
+          {
+           "x": 2.4,
+           "y": 0.7
+          },
+          {
+           "x": 3.9,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "E Streams",
+         "layerName": "Colorado SQT - E Streams",
+         "points": [
+          {
+           "x": 2,
+           "y": 0.3
+          },
+          {
+           "x": 2.4,
+           "y": 0.7
+          },
+          {
+           "x": 6.7,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "A and B Streams",
+         "layerName": "Colorado SQT - A and B Streams",
+         "points": [
+          {
+           "x": 1.2,
+           "y": 0.3
+          },
+          {
+           "x": 1.4,
+           "y": 0.7
+          },
+          {
+           "x": 2.2,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "C Streams"
+      },
+      "functions": [
+       "floodplain-connectivity"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-bank-height-ratio-bhr": {
+     "displayName": "Bank Height Ratio (BHR)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "All Regimes",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.5,
+       "y": 0.3
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "All Regimes",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 1.0
+        },
+        {
+         "x": 1.5,
+         "y": 0.3
+        }
+       ]
+      },
+      {
+       "stratum": "Transport",
+       "points": [
+        {
+         "x": 0.8,
+         "y": 0.7
+        },
+        {
+         "x": 1.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Bank Height Ratio (BHR)",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [
+       "All Regimes: the published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index.",
+       "Transport: the published curve stops at its low end, 0.8 (index 0.7); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "All Regimes",
+         "registryKey": "sqt:co:bank-height-ratio-bhr:all-regimes",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Transport",
+         "registryKey": "sqt:co:bank-height-ratio-bhr:transport",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 0.8 (index 0.7); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+       "metricName": "Bank Height Ratio (BHR)",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Bank Height Ratio (BHR)",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - All Regimes",
+        "stratification": "All Regimes",
+        "points": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 1.5,
+          "y": 0.3
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "All Regimes",
+         "layerName": "Colorado SQT - All Regimes",
+         "points": [
+          {
+           "x": 1,
+           "y": 1
+          },
+          {
+           "x": 1.5,
+           "y": 0.3
+          }
+         ]
+        },
+        {
+         "stratum": "Transport",
+         "layerName": "Colorado SQT - Transport",
+         "points": [
+          {
+           "x": 0.8,
+           "y": 0.7
+          },
+          {
+           "x": 1,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "All Regimes"
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-greenline-stability-rating": {
+     "displayName": "Greenline Stability Rating",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 2.0,
+       "y": 0.0
+      },
+      {
+       "x": 5.0,
+       "y": 0.3
+      },
+      {
+       "x": 7.0,
+       "y": 0.7
+      },
+      {
+       "x": 9.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Greenline Stability Rating",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-greenline-stability-rating",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:co:greenline-stability-rating:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-greenline-stability-rating",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-greenline-stability-rating",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-greenline-stability-rating",
+       "metricName": "Greenline Stability Rating",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Greenline Stability Rating",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 2,
+          "y": 0
+         },
+         {
+          "x": 5,
+          "y": 0.3
+         },
+         {
+          "x": 7,
+          "y": 0.7
+         },
+         {
+          "x": 9,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-percent-armoring": {
+     "displayName": "Percent Armoring",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 30.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Armoring",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-percent-armoring",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:co:percent-armoring:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-percent-armoring",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-percent-armoring",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-percent-armoring",
+       "metricName": "Percent Armoring",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Percent Armoring",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 30,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-percent-side-channels": {
+     "displayName": "Percent Side Channels",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Unconfined Alluvial",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.3
+      },
+      {
+       "x": 50.0,
+       "y": 0.7
+      },
+      {
+       "x": 100.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Unconfined Alluvial",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 10.0,
+         "y": 0.3
+        },
+        {
+         "x": 50.0,
+         "y": 0.7
+        },
+        {
+         "x": 100.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Confined Alluvial",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 5.0,
+         "y": 0.3
+        },
+        {
+         "x": 25.0,
+         "y": 0.7
+        },
+        {
+         "x": 50.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Percent Side Channels",
+      "units": "",
+      "metric_family": "see state sqt protocol",
+      "notes": "Follow the state SQT metric definition and apply the scoring breakpoints for the appropriate stratum.",
+      "column_name": "channel-and-floodplain-dynamics-percent-side-channels",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Varies\n\nMethod: See state SQT protocol",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Unconfined Alluvial",
+         "registryKey": "sqt:co:percent-side-channels:unconfined-alluvial",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Confined Alluvial",
+         "registryKey": "sqt:co:percent-side-channels:confined-alluvial",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-percent-side-channels",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-percent-side-channels",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-percent-side-channels",
+       "metricName": "Percent Side Channels",
+       "discipline": "Geomorphology",
+       "inputType": "see state sqt protocol",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Percent Side Channels",
+       "metricStatement": "Metric definition and measurement are state SQT-specific.",
+       "howToMeasure": "Follow the state SQT metric definition and apply the scoring breakpoints for the appropriate stratum.",
+       "methodContext": "Context: Varies\n\nMethod: See state SQT protocol",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - Unconfined Alluvial",
+        "stratification": "Unconfined Alluvial",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0.3
+         },
+         {
+          "x": 50,
+          "y": 0.7
+         },
+         {
+          "x": 100,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Unconfined Alluvial",
+         "layerName": "Colorado SQT - Unconfined Alluvial",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 10,
+           "y": 0.3
+          },
+          {
+           "x": 50,
+           "y": 0.7
+          },
+          {
+           "x": 100,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Confined Alluvial",
+         "layerName": "Colorado SQT - Confined Alluvial",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 5,
+           "y": 0.3
+          },
+          {
+           "x": 25,
+           "y": 0.7
+          },
+          {
+           "x": 50,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Unconfined Alluvial"
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-percent-streambank-erosion": {
+     "displayName": "Percent Streambank Erosion",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 5.0,
+       "y": 1.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.7
+      },
+      {
+       "x": 75.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Streambank Erosion",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:co:percent-streambank-erosion:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+       "metricName": "Percent Streambank Erosion",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Percent Streambank Erosion",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 5,
+          "y": 1
+         },
+         {
+          "x": 10,
+          "y": 0.7
+         },
+         {
+          "x": 75,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "sediment-continuity-aggradation-ratio": {
+     "displayName": "Aggradation Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.2,
+       "y": 0.69
+      },
+      {
+       "x": 1.4,
+       "y": 0.3
+      },
+      {
+       "x": 1.6,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Aggradation Ratio",
+      "units": "",
+      "metric_family": "field or desktop (repeat elevation data)",
+      "notes": "Measure bed and bankfull indicators at repeat cross sections (or compare elevation datasets) to compute aggradation ratio per SQT definition.",
+      "column_name": "sediment-continuity-aggradation-ratio",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field or Desktop (repeat elevation data)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:co:aggradation-ratio:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "sediment-continuity-aggradation-ratio",
+       "discipline": "Geomorphology",
+       "function_label": "Sediment continuity"
+      }
+     ],
+     "decision": {
+      "metric": "sediment-continuity-aggradation-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "sediment-continuity-aggradation-ratio",
+       "metricName": "Aggradation Ratio",
+       "discipline": "Geomorphology",
+       "inputType": "field or desktop (repeat elevation data)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Aggradation Ratio",
+       "metricStatement": "Indicator of net sediment deposition/aggradation relative to reference condition.",
+       "howToMeasure": "Measure bed and bankfull indicators at repeat cross sections (or compare elevation datasets) to compute aggradation ratio per SQT definition.",
+       "methodContext": "Context: Channel\n\nMethod: Field or Desktop (repeat elevation data)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 1.2,
+          "y": 0.69
+         },
+         {
+          "x": 1.4,
+          "y": 0.3
+         },
+         {
+          "x": 1.6,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "sediment-continuity"
+      ]
+     }
+    },
+    "light-and-thermal-regime-mwat": {
+     "displayName": "MWAT",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "CS-I (MWF)",
+     "points": [
+      {
+       "x": 13.8,
+       "y": 1.0
+      },
+      {
+       "x": 16.9,
+       "y": 0.3
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "CS-I (MWF)",
+       "points": [
+        {
+         "x": 13.8,
+         "y": 1.0
+        },
+        {
+         "x": 16.9,
+         "y": 0.3
+        }
+       ]
+      },
+      {
+       "stratum": "CS-I",
+       "points": [
+        {
+         "x": 15.7,
+         "y": 1.0
+        },
+        {
+         "x": 17.0,
+         "y": 0.3
+        }
+       ]
+      },
+      {
+       "stratum": "CS-II",
+       "points": [
+        {
+         "x": 16.6,
+         "y": 1.0
+        },
+        {
+         "x": 18.3,
+         "y": 0.3
+        }
+       ]
+      },
+      {
+       "stratum": "WS-I",
+       "points": [
+        {
+         "x": 20.9,
+         "y": 1.0
+        },
+        {
+         "x": 24.2,
+         "y": 0.3
+        }
+       ]
+      },
+      {
+       "stratum": "WS-II",
+       "points": [
+        {
+         "x": 22.5,
+         "y": 1.0
+        },
+        {
+         "x": 27.5,
+         "y": 0.3
+        }
+       ]
+      },
+      {
+       "stratum": "WS-III",
+       "points": [
+        {
+         "x": 25.9,
+         "y": 1.0
+        },
+        {
+         "x": 28.7,
+         "y": 0.3
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "MWAT",
+      "units": "",
+      "metric_family": "field (logger) and/or desktop (data compilation)",
+      "notes": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+      "column_name": "light-and-thermal-regime-mwat",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+      "curveCaveats": [
+       "CS-I (MWF): the published curve stops at its high end, 16.9 (index 0.3); past it DEEP holds that index.",
+       "CS-I: the published curve stops at its high end, 17 (index 0.3); past it DEEP holds that index.",
+       "CS-II: the published curve stops at its high end, 18.3 (index 0.3); past it DEEP holds that index.",
+       "WS-I: the published curve stops at its high end, 24.2 (index 0.3); past it DEEP holds that index.",
+       "WS-II: the published curve stops at its high end, 27.5 (index 0.3); past it DEEP holds that index.",
+       "WS-III: the published curve stops at its high end, 28.7 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "CS-I (MWF)",
+         "registryKey": "sqt:co:mwat:cs-i-mwf",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 16.9 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "CS-I",
+         "registryKey": "sqt:co:mwat:cs-i",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 17 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "CS-II",
+         "registryKey": "sqt:co:mwat:cs-ii",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 18.3 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "WS-I",
+         "registryKey": "sqt:co:mwat:ws-i",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 24.2 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "WS-II",
+         "registryKey": "sqt:co:mwat:ws-ii",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 27.5 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "WS-III",
+         "registryKey": "sqt:co:mwat:ws-iii",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 28.7 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "light-and-thermal-regime-mwat",
+       "discipline": "Physicochemistry",
+       "function_label": "Light & thermal regime"
+      }
+     ],
+     "decision": {
+      "metric": "light-and-thermal-regime-mwat",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "light-and-thermal-regime-mwat",
+       "metricName": "MWAT",
+       "discipline": "Physicochemistry",
+       "inputType": "field (logger) and/or desktop (data compilation)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "MWAT",
+       "metricStatement": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+       "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - CS-I (MWF)",
+        "stratification": "CS-I (MWF)",
+        "points": [
+         {
+          "x": 13.8,
+          "y": 1
+         },
+         {
+          "x": 16.9,
+          "y": 0.3
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "CS-I (MWF)",
+         "layerName": "Colorado SQT - CS-I (MWF)",
+         "points": [
+          {
+           "x": 13.8,
+           "y": 1
+          },
+          {
+           "x": 16.9,
+           "y": 0.3
+          }
+         ]
+        },
+        {
+         "stratum": "CS-I",
+         "layerName": "Colorado SQT - CS-I",
+         "points": [
+          {
+           "x": 15.7,
+           "y": 1
+          },
+          {
+           "x": 17,
+           "y": 0.3
+          }
+         ]
+        },
+        {
+         "stratum": "CS-II",
+         "layerName": "Colorado SQT - CS-II",
+         "points": [
+          {
+           "x": 16.6,
+           "y": 1
+          },
+          {
+           "x": 18.3,
+           "y": 0.3
+          }
+         ]
+        },
+        {
+         "stratum": "WS-I",
+         "layerName": "Colorado SQT - WS-I",
+         "points": [
+          {
+           "x": 20.9,
+           "y": 1
+          },
+          {
+           "x": 24.2,
+           "y": 0.3
+          }
+         ]
+        },
+        {
+         "stratum": "WS-II",
+         "layerName": "Colorado SQT - WS-II",
+         "points": [
+          {
+           "x": 22.5,
+           "y": 1
+          },
+          {
+           "x": 27.5,
+           "y": 0.3
+          }
+         ]
+        },
+        {
+         "stratum": "WS-III",
+         "layerName": "Colorado SQT - WS-III",
+         "points": [
+          {
+           "x": 25.9,
+           "y": 1
+          },
+          {
+           "x": 28.7,
+           "y": 0.3
+          }
+         ]
+        }
+       ],
+       "activeStratum": "CS-I (MWF)"
+      },
+      "functions": [
+       "light-thermal-regime"
+      ]
+     }
+    },
+    "carbon-processing-chlorophyll": {
+     "displayName": "Chlorophyll ?",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Biotypes 1 and 2",
+     "points": [
+      {
+       "x": 12.0,
+       "y": 1.0
+      },
+      {
+       "x": 27.0,
+       "y": 0.69
+      },
+      {
+       "x": 53.0,
+       "y": 0.29
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Biotypes 1 and 2",
+       "points": [
+        {
+         "x": 12.0,
+         "y": 1.0
+        },
+        {
+         "x": 27.0,
+         "y": 0.69
+        },
+        {
+         "x": 53.0,
+         "y": 0.29
+        }
+       ]
+      },
+      {
+       "stratum": "Biotype 3",
+       "points": [
+        {
+         "x": 16.0,
+         "y": 1.0
+        },
+        {
+         "x": 29.0,
+         "y": 0.69
+        },
+        {
+         "x": 117.0,
+         "y": 0.29
+        },
+        {
+         "x": 150.0,
+         "y": 0.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Chlorophyll ?",
+      "units": "",
+      "metric_family": "field (sampling/assay)",
+      "notes": "Collect periphyton/algal samples (or estimate biomass) and compute chlorophyll-a or biomass metric; apply SQT thresholds by biotype.",
+      "column_name": "carbon-processing-chlorophyll",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (sampling/assay)",
+      "curveCaveats": [
+       "Biotypes 1 and 2: the published curve stops at its high end, 53 (index 0.29); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Biotypes 1 and 2",
+         "registryKey": "sqt:co:chlorophyll:biotypes-1-and-2",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 53 (index 0.29); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Biotype 3",
+         "registryKey": "sqt:co:chlorophyll:biotype-3",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-chlorophyll",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-chlorophyll",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-chlorophyll",
+       "metricName": "Chlorophyll ?",
+       "discipline": "Physicochemistry",
+       "inputType": "field (sampling/assay)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Chlorophyll ?",
+       "metricStatement": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+       "howToMeasure": "Collect periphyton/algal samples (or estimate biomass) and compute chlorophyll-a or biomass metric; apply SQT thresholds by biotype.",
+       "methodContext": "Context: Channel\n\nMethod: Field (sampling/assay)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - Biotypes 1 and 2",
+        "stratification": "Biotypes 1 and 2",
+        "points": [
+         {
+          "x": 12,
+          "y": 1
+         },
+         {
+          "x": 27,
+          "y": 0.69
+         },
+         {
+          "x": 53,
+          "y": 0.29
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Biotypes 1 and 2",
+         "layerName": "Colorado SQT - Biotypes 1 and 2",
+         "points": [
+          {
+           "x": 12,
+           "y": 1
+          },
+          {
+           "x": 27,
+           "y": 0.69
+          },
+          {
+           "x": 53,
+           "y": 0.29
+          }
+         ]
+        },
+        {
+         "stratum": "Biotype 3",
+         "layerName": "Colorado SQT - Biotype 3",
+         "points": [
+          {
+           "x": 16,
+           "y": 1
+          },
+          {
+           "x": 29,
+           "y": 0.69
+          },
+          {
+           "x": 117,
+           "y": 0.29
+          },
+          {
+           "x": 150,
+           "y": 0
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Biotypes 1 and 2"
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-herbaceous-vegetation-cover": {
+     "displayName": "Herbaceous Vegetation Cover",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Herbaceous Reference Vegetation Cover",
+     "points": [
+      {
+       "x": 34.0,
+       "y": 0.0
+      },
+      {
+       "x": 73.0,
+       "y": 0.7
+      },
+      {
+       "x": 120.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Herbaceous Vegetation Cover",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-herbaceous-vegetation-cover",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Herbaceous Reference Vegetation Cover",
+         "registryKey": "sqt:co:herbaceous-vegetation-cover:herbaceous-reference-vegetation-cover",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-herbaceous-vegetation-cover",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-herbaceous-vegetation-cover",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-herbaceous-vegetation-cover",
+       "metricName": "Herbaceous Vegetation Cover",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Herbaceous Vegetation Cover",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - Herbaceous Reference Vegetation Cover",
+        "stratification": "Herbaceous Reference Vegetation Cover",
+        "points": [
+         {
+          "x": 34,
+          "y": 0
+         },
+         {
+          "x": 73,
+          "y": 0.7
+         },
+         {
+          "x": 120,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-percent-native-cover": {
+     "displayName": "Percent Native Cover",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 65.0,
+       "y": 0.3
+      },
+      {
+       "x": 91.0,
+       "y": 0.69
+      },
+      {
+       "x": 100.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Native Cover",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-percent-native-cover",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [
+       "The published curve stops at its low end, 65 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:co:percent-native-cover:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 65 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-percent-native-cover",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-percent-native-cover",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-percent-native-cover",
+       "metricName": "Percent Native Cover",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Percent Native Cover",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 65,
+          "y": 0.3
+         },
+         {
+          "x": 91,
+          "y": 0.69
+         },
+         {
+          "x": 100,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-riparian-extent": {
+     "displayName": "Riparian Extent",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Unconfined Alluvial Valleys",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 30.0,
+       "y": 0.29
+      },
+      {
+       "x": 100.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Unconfined Alluvial Valleys",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 30.0,
+         "y": 0.29
+        },
+        {
+         "x": 100.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 60.0,
+         "y": 0.29
+        },
+        {
+         "x": 100.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Riparian Extent",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-riparian-extent",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Unconfined Alluvial Valleys",
+         "registryKey": "sqt:co:riparian-extent:unconfined-alluvial-valleys",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+         "registryKey": "sqt:co:riparian-extent:confined-alluvial-colluvial-v-shaped-or-bedrock-valleys",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-riparian-extent",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-riparian-extent",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-riparian-extent",
+       "metricName": "Riparian Extent",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Riparian Extent",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - Unconfined Alluvial Valleys",
+        "stratification": "Unconfined Alluvial Valleys",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0.29
+         },
+         {
+          "x": 100,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Unconfined Alluvial Valleys",
+         "layerName": "Colorado SQT - Unconfined Alluvial Valleys",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 30,
+           "y": 0.29
+          },
+          {
+           "x": 100,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+         "layerName": "Colorado SQT - Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 60,
+           "y": 0.29
+          },
+          {
+           "x": 100,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Unconfined Alluvial Valleys"
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-woody-vegetation-cover": {
+     "displayName": "Woody Vegetation Cover",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Mountains & Basins",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 69.0,
+       "y": 0.7
+      },
+      {
+       "x": 122.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Mountains & Basins",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 69.0,
+         "y": 0.7
+        },
+        {
+         "x": 122.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Plains",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 76.0,
+         "y": 1.0
+        },
+        {
+         "x": 101.0,
+         "y": 0.29
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Woody Vegetation Cover",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-woody-vegetation-cover",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [
+       "Plains: the published curve stops at its high end, 101 (index 0.29); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Mountains & Basins",
+         "registryKey": "sqt:co:woody-vegetation-cover:mountains-and-basins",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Plains",
+         "registryKey": "sqt:co:woody-vegetation-cover:plains",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 101 (index 0.29); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-woody-vegetation-cover",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-woody-vegetation-cover",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-woody-vegetation-cover",
+       "metricName": "Woody Vegetation Cover",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Woody Vegetation Cover",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - Mountains & Basins",
+        "stratification": "Mountains & Basins",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 69,
+          "y": 0.7
+         },
+         {
+          "x": 122,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Mountains & Basins",
+         "layerName": "Colorado SQT - Mountains & Basins",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 69,
+           "y": 0.7
+          },
+          {
+           "x": 122,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Plains",
+         "layerName": "Colorado SQT - Plains",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 76,
+           "y": 1
+          },
+          {
+           "x": 101,
+           "y": 0.29
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Mountains & Basins"
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "water-and-soil-quality-dissolved-oxygen-concentration": {
+     "displayName": "Dissolved Oxygen Concentration",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 6.0,
+       "y": 0.0
+      },
+      {
+       "x": 9.0,
+       "y": 0.7
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Dissolved Oxygen Concentration",
+      "units": "",
+      "metric_family": "field (meter/logger) and/or desktop (data compilation)",
+      "notes": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+      "column_name": "water-and-soil-quality-dissolved-oxygen-concentration",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+      "curveCaveats": [
+       "The published curve stops at its high end, 9 (index 0.7); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:co:dissolved-oxygen-concentration:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 9 (index 0.7); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "water-and-soil-quality-dissolved-oxygen-concentration",
+       "discipline": "Physicochemistry",
+       "function_label": "Water & soil quality"
+      }
+     ],
+     "decision": {
+      "metric": "water-and-soil-quality-dissolved-oxygen-concentration",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "water-and-soil-quality-dissolved-oxygen-concentration",
+       "metricName": "Dissolved Oxygen Concentration",
+       "discipline": "Physicochemistry",
+       "inputType": "field (meter/logger) and/or desktop (data compilation)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Dissolved Oxygen Concentration",
+       "metricStatement": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+       "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 6,
+          "y": 0
+         },
+         {
+          "x": 9,
+          "y": 0.7
+         }
+        ]
+       }
+      },
+      "functions": [
+       "water-soil-quality"
+      ]
+     }
+    },
+    "habitat-provision-lwd": {
+     "displayName": "LWD",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "# Pieces / 100 meters",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 13.0,
+       "y": 0.7
+      },
+      {
+       "x": 28.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "LWD",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+      "column_name": "habitat-provision-lwd",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "# Pieces / 100 meters",
+         "registryKey": "sqt:co:lwd:pieces-100-meters",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-lwd",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-lwd",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-lwd",
+       "metricName": "LWD",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "LWD",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - # Pieces / 100 meters",
+        "stratification": "# Pieces / 100 meters",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 13,
+          "y": 0.7
+         },
+         {
+          "x": 28,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-lwd-index": {
+     "displayName": "LWD Index",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 430.0,
+       "y": 0.7
+      },
+      {
+       "x": 660.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "LWD Index",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+      "column_name": "habitat-provision-lwd-index",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:co:lwd-index:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-lwd-index",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-lwd-index",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-lwd-index",
+       "metricName": "LWD Index",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "LWD Index",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 430,
+          "y": 0.7
+         },
+         {
+          "x": 660,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-percent-riffle": {
+     "displayName": "Percent Riffle",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Streams < 3% slope",
+     "points": [
+      {
+       "x": 39.0,
+       "y": 0.7
+      },
+      {
+       "x": 50.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Streams < 3% slope",
+       "points": [
+        {
+         "x": 39.0,
+         "y": 0.7
+        },
+        {
+         "x": 50.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Streams < 3% slope / Overall",
+       "points": [
+        {
+         "x": 60.0,
+         "y": 0.7
+        },
+        {
+         "x": 68.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Percent Riffle",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-percent-riffle",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [
+       "Streams < 3% slope: the metric library row this curve was transcribed from is defective: Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 50 scores 1. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix.",
+       "Streams < 3% slope: the published curve stops at its low end, 39 (index 0.7); past it DEEP holds that index.",
+       "Streams < 3% slope / Overall: the metric library row this curve was transcribed from is defective: Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 68 scores 1. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix.",
+       "Streams < 3% slope / Overall: the published curve stops at its low end, 60 (index 0.7); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Streams < 3% slope",
+         "registryKey": "sqt:co:percent-riffle:streams-lt-3-pct-slope",
+         "verification": "defective",
+         "defects": [
+          "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 50 scores 1. Not checked against this state's original."
+         ],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 39 (index 0.7); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Streams < 3% slope / Overall",
+         "registryKey": "sqt:co:percent-riffle:streams-lt-3-pct-slope-overall",
+         "verification": "defective",
+         "defects": [
+          "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 68 scores 1. Not checked against this state's original."
+         ],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 60 (index 0.7); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-percent-riffle",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-percent-riffle",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-percent-riffle",
+       "metricName": "Percent Riffle",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Percent Riffle",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - Streams < 3% slope",
+        "stratification": "Streams < 3% slope",
+        "points": [
+         {
+          "x": 39,
+          "y": 0.7
+         },
+         {
+          "x": 50,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Streams < 3% slope",
+         "layerName": "Colorado SQT - Streams < 3% slope",
+         "points": [
+          {
+           "x": 39,
+           "y": 0.7
+          },
+          {
+           "x": 50,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Streams < 3% slope / Overall",
+         "layerName": "Colorado SQT - Streams < 3% slope / Overall",
+         "points": [
+          {
+           "x": 60,
+           "y": 0.7
+          },
+          {
+           "x": 68,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Streams < 3% slope"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-pool-depth-ratio": {
+     "displayName": "Pool Depth Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 0.0
+      },
+      {
+       "x": 2.2,
+       "y": 0.7
+      },
+      {
+       "x": 3.2,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Pool Depth Ratio",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-pool-depth-ratio",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:co:pool-depth-ratio:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-pool-depth-ratio",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-pool-depth-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-pool-depth-ratio",
+       "metricName": "Pool Depth Ratio",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Pool Depth Ratio",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1,
+          "y": 0
+         },
+         {
+          "x": 2.2,
+          "y": 0.7
+         },
+         {
+          "x": 3.2,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-pool-spacing-ratio": {
+     "displayName": "Pool Spacing Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "C Stream Types",
+     "points": [
+      {
+       "x": 3.0,
+       "y": 0.0
+      },
+      {
+       "x": 3.7,
+       "y": 0.7
+      },
+      {
+       "x": 4.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "C Stream Types",
+       "points": [
+        {
+         "x": 3.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.7,
+         "y": 0.7
+        },
+        {
+         "x": 4.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Cb Stream Types",
+       "points": [
+        {
+         "x": 3.0,
+         "y": 0.7
+        },
+        {
+         "x": 3.7,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "B & Ba Stream Types",
+       "points": [
+        {
+         "x": 3.0,
+         "y": 1.0
+        },
+        {
+         "x": 4.0,
+         "y": 0.7
+        },
+        {
+         "x": 7.5,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "Bc Stream Types",
+       "points": [
+        {
+         "x": 3.4,
+         "y": 1.0
+        },
+        {
+         "x": 6.0,
+         "y": 0.7
+        }
+       ]
+      },
+      {
+       "stratum": "E Stream Types",
+       "points": [
+        {
+         "x": 1.833333333,
+         "y": 0.0
+        },
+        {
+         "x": 3.0,
+         "y": 0.7
+        },
+        {
+         "x": 3.5,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Pool Spacing Ratio",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-pool-spacing-ratio",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [
+       "C Stream Types: the metric library row this curve was transcribed from is defective: Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 4 scores 1. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix.",
+       "Cb Stream Types: the metric library row this curve was transcribed from is defective: Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.7 scores 1. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix.",
+       "Cb Stream Types: the published curve stops at its low end, 3 (index 0.7); past it DEEP holds that index.",
+       "Bc Stream Types: the published curve stops at its high end, 6 (index 0.7); past it DEEP holds that index.",
+       "E Stream Types: the metric library row this curve was transcribed from is defective: Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.5 scores 1. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "C Stream Types",
+         "registryKey": "sqt:co:pool-spacing-ratio:c-stream-types",
+         "verification": "defective",
+         "defects": [
+          "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 4 scores 1. Not checked against this state's original."
+         ],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Cb Stream Types",
+         "registryKey": "sqt:co:pool-spacing-ratio:cb-stream-types",
+         "verification": "defective",
+         "defects": [
+          "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.7 scores 1. Not checked against this state's original."
+         ],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 3 (index 0.7); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "B & Ba Stream Types",
+         "registryKey": "sqt:co:pool-spacing-ratio:b-and-ba-stream-types",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Bc Stream Types",
+         "registryKey": "sqt:co:pool-spacing-ratio:bc-stream-types",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 6 (index 0.7); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "E Stream Types",
+         "registryKey": "sqt:co:pool-spacing-ratio:e-stream-types",
+         "verification": "defective",
+         "defects": [
+          "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.5 scores 1. Not checked against this state's original."
+         ],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-pool-spacing-ratio",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-pool-spacing-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-pool-spacing-ratio",
+       "metricName": "Pool Spacing Ratio",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Pool Spacing Ratio",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - C Stream Types",
+        "stratification": "C Stream Types",
+        "points": [
+         {
+          "x": 3,
+          "y": 0
+         },
+         {
+          "x": 3.7,
+          "y": 0.7
+         },
+         {
+          "x": 4,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "C Stream Types",
+         "layerName": "Colorado SQT - C Stream Types",
+         "points": [
+          {
+           "x": 3,
+           "y": 0
+          },
+          {
+           "x": 3.7,
+           "y": 0.7
+          },
+          {
+           "x": 4,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Cb Stream Types",
+         "layerName": "Colorado SQT - Cb Stream Types",
+         "points": [
+          {
+           "x": 3,
+           "y": 0.7
+          },
+          {
+           "x": 3.7,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "B & Ba Stream Types",
+         "layerName": "Colorado SQT - B & Ba Stream Types",
+         "points": [
+          {
+           "x": 3,
+           "y": 1
+          },
+          {
+           "x": 4,
+           "y": 0.7
+          },
+          {
+           "x": 7.5,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "Bc Stream Types",
+         "layerName": "Colorado SQT - Bc Stream Types",
+         "points": [
+          {
+           "x": 3.4,
+           "y": 1
+          },
+          {
+           "x": 6,
+           "y": 0.7
+          }
+         ]
+        },
+        {
+         "stratum": "E Stream Types",
+         "layerName": "Colorado SQT - E Stream Types",
+         "points": [
+          {
+           "x": 1.833333333,
+           "y": 0
+          },
+          {
+           "x": 3,
+           "y": 0.7
+          },
+          {
+           "x": 3.5,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "C Stream Types"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "population-support-co-mmi": {
+     "displayName": "CO MMI",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Biotype 1",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 34.0,
+       "y": 0.29
+      },
+      {
+       "x": 45.0,
+       "y": 0.7
+      },
+      {
+       "x": 56.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Biotype 1",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 34.0,
+         "y": 0.29
+        },
+        {
+         "x": 45.0,
+         "y": 0.7
+        },
+        {
+         "x": 56.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Biotype 2",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 40.0,
+         "y": 0.29
+        },
+        {
+         "x": 48.0,
+         "y": 0.7
+        },
+        {
+         "x": 62.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Biotype 3",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 29.0,
+         "y": 0.29
+        },
+        {
+         "x": 42.0,
+         "y": 0.7
+        },
+        {
+         "x": 51.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "CO MMI",
+      "units": "",
+      "metric_family": "field (bioassessment) and/or desktop (existing scores)",
+      "notes": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+      "column_name": "population-support-co-mmi",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Biotype 1",
+         "registryKey": "sqt:co:co-mmi:biotype-1",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Biotype 2",
+         "registryKey": "sqt:co:co-mmi:biotype-2",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Biotype 3",
+         "registryKey": "sqt:co:co-mmi:biotype-3",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "population-support-co-mmi",
+       "discipline": "Biology",
+       "function_label": "Population support"
+      }
+     ],
+     "decision": {
+      "metric": "population-support-co-mmi",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "population-support-co-mmi",
+       "metricName": "CO MMI",
+       "discipline": "Biology",
+       "inputType": "field (bioassessment) and/or desktop (existing scores)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "CO MMI",
+       "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+       "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+       "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - Biotype 1",
+        "stratification": "Biotype 1",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 34,
+          "y": 0.29
+         },
+         {
+          "x": 45,
+          "y": 0.7
+         },
+         {
+          "x": 56,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Biotype 1",
+         "layerName": "Colorado SQT - Biotype 1",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 34,
+           "y": 0.29
+          },
+          {
+           "x": 45,
+           "y": 0.7
+          },
+          {
+           "x": 56,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Biotype 2",
+         "layerName": "Colorado SQT - Biotype 2",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 40,
+           "y": 0.29
+          },
+          {
+           "x": 48,
+           "y": 0.7
+          },
+          {
+           "x": 62,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Biotype 3",
+         "layerName": "Colorado SQT - Biotype 3",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 29,
+           "y": 0.29
+          },
+          {
+           "x": 42,
+           "y": 0.7
+          },
+          {
+           "x": 51,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Biotype 1"
+      },
+      "functions": [
+       "population-support"
+      ]
+     }
+    },
+    "population-support-wild-trout-biomass": {
+     "displayName": "Wild Trout Biomass",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "High",
+     "points": [
+      {
+       "x": 5.0,
+       "y": 0.3
+      },
+      {
+       "x": 25.0,
+       "y": 0.7
+      },
+      {
+       "x": 40.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "High",
+       "points": [
+        {
+         "x": 5.0,
+         "y": 0.3
+        },
+        {
+         "x": 25.0,
+         "y": 0.7
+        },
+        {
+         "x": 40.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Moderate",
+       "points": [
+        {
+         "x": 10.0,
+         "y": 0.3
+        },
+        {
+         "x": 50.0,
+         "y": 0.7
+        },
+        {
+         "x": 80.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Low",
+       "points": [
+        {
+         "x": 15.0,
+         "y": 0.3
+        },
+        {
+         "x": 75.0,
+         "y": 0.7
+        },
+        {
+         "x": 119.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Wild Trout Biomass",
+      "units": "",
+      "metric_family": "field (fish survey)",
+      "notes": "Estimate density/biomass (or % change from baseline) per SQT method and score using the appropriate tier/ribbon class thresholds.",
+      "column_name": "population-support-wild-trout-biomass",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (fish survey)",
+      "curveCaveats": [
+       "High: the published curve stops at its low end, 5 (index 0.3); past it DEEP holds that index.",
+       "Moderate: the published curve stops at its low end, 10 (index 0.3); past it DEEP holds that index.",
+       "Low: the published curve stops at its low end, 15 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "High",
+         "registryKey": "sqt:co:wild-trout-biomass:high",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 5 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Moderate",
+         "registryKey": "sqt:co:wild-trout-biomass:moderate",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 10 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Low",
+         "registryKey": "sqt:co:wild-trout-biomass:low",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 15 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "population-support-wild-trout-biomass",
+       "discipline": "Biology",
+       "function_label": "Population support"
+      }
+     ],
+     "decision": {
+      "metric": "population-support-wild-trout-biomass",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "population-support-wild-trout-biomass",
+       "metricName": "Wild Trout Biomass",
+       "discipline": "Biology",
+       "inputType": "field (fish survey)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Wild Trout Biomass",
+       "metricStatement": "Population abundance/biomass indicator reflecting recruitment and survival of target game/native species.",
+       "howToMeasure": "Estimate density/biomass (or % change from baseline) per SQT method and score using the appropriate tier/ribbon class thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (fish survey)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT - High",
+        "stratification": "High",
+        "points": [
+         {
+          "x": 5,
+          "y": 0.3
+         },
+         {
+          "x": 25,
+          "y": 0.7
+         },
+         {
+          "x": 40,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "High",
+         "layerName": "Colorado SQT - High",
+         "points": [
+          {
+           "x": 5,
+           "y": 0.3
+          },
+          {
+           "x": 25,
+           "y": 0.7
+          },
+          {
+           "x": 40,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Moderate",
+         "layerName": "Colorado SQT - Moderate",
+         "points": [
+          {
+           "x": 10,
+           "y": 0.3
+          },
+          {
+           "x": 50,
+           "y": 0.7
+          },
+          {
+           "x": 80,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Low",
+         "layerName": "Colorado SQT - Low",
+         "points": [
+          {
+           "x": 15,
+           "y": 0.3
+          },
+          {
+           "x": 75,
+           "y": 0.7
+          },
+          {
+           "x": 119,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "High"
+      },
+      "functions": [
+       "population-support"
+      ]
+     }
+    },
+    "community-dynamics-native-fish-species-richness": {
+     "displayName": "Native Fish Species Richness",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 80.0,
+       "y": 0.69
+      },
+      {
+       "x": 100.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Native Fish Species Richness",
+      "units": "",
+      "metric_family": "field (fish survey) and/or desktop (existing data)",
+      "notes": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+      "column_name": "community-dynamics-native-fish-species-richness",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Colorado Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Colorado SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Colorado SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (fish survey) and/or Desktop (existing data)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "co-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+      },
+      "sqtTranscription": {
+       "tool": "Colorado Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:co:native-fish-species-richness:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "community-dynamics-native-fish-species-richness",
+       "discipline": "Biology",
+       "function_label": "Community dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "community-dynamics-native-fish-species-richness",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "community-dynamics-native-fish-species-richness",
+       "metricName": "Native Fish Species Richness",
+       "discipline": "Biology",
+       "inputType": "field (fish survey) and/or desktop (existing data)",
+       "sourceCitation": "Colorado SQT",
+       "xLabel": "Native Fish Species Richness",
+       "metricStatement": "Community composition indicator reflecting native diversity and assemblage balance relative to expectation.",
+       "howToMeasure": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (fish survey) and/or Desktop (existing data)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Colorado SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 80,
+          "y": 0.69
+         },
+         {
+          "x": 100,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "community-dynamics"
+      ]
+     }
+    }
+   },
+   "carriedFrom": {
+    "assessmentId": "co-sqt-adapted",
+    "fromVersion": 1,
+    "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+   },
+   "transcription": {
+    "kind": "state-sqt",
+    "tool": "Colorado Stream Quantification Tool",
+    "by": "STAF SQT migration",
+    "on": "2026-07-12",
+    "source": "docs/assets/data/metric-library/detailed-adapted-assessments.json"
+   }
+  },
+  "owner_curve_decisions": [],
+  "candidate_register": null,
+  "wizard_draft": null
+ }
+}

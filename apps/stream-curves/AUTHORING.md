@@ -456,6 +456,23 @@ columns, a mislabelled stratum, two-sided curves cut to one limb) make a record 
 as issues. Owner-supplied originals go in `D:\Data\staf-authoring\sqt-originals\<STATE>\` with a
 `sources.json`; they are cited and fingerprinted, never redistributed.
 
+The eight `*-sqt-adapted` assessments themselves are state SQTs transcribed as the tools publish
+them. v1 (the STAF SQT migration, 2026-07-12) held the DEEP bundle and a stub session. v2 (the
+owner's decisions of 2026-09-24, `scripts/complete_sqt_assessments.py` over
+`streamcurves/sqt_transcription.py`) completes the session:
+- every v1 curve and stratum carried as a State SQT criterion under the function the metric
+  library gives it, each layer with its registry key and verification;
+- each known defect and open end stated as a caveat;
+- every gap documented (no suitable metric, or deferred to the screening tier where the SQT has
+  only a screening-tier metric for it);
+- each function's SQT metric set approved as published (SELECT-01).
+
+The bundle is v1's scored content, so the content digest and every score stay v1's. Fixing a
+defect is a new version with a new digest. DEEP hides these assessments (its `-sqt-adapted`
+filter), and the gallery never offers Open in DEEP for them. A project with curves and no data
+opens on Reference curves, which draws the carried curves without a dataset; only the analysis
+table needs data.
+
 A curve is added to a DEEP session from the section's picker (search by metric text; filter by
 state, edition as the rows name it, verification, function and eligibility). Each record is checked
 against the function's curves in this session (`candidates.sqt_context`) with the checks adding it

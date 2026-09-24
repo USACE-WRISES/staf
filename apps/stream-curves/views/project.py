@@ -49,6 +49,7 @@ from streamcurves import library as lib
 from streamcurves import pathpick
 from streamcurves import pick_run
 from streamcurves import prefs
+from streamcurves import pressure_evidence as pe
 from streamcurves import project_file as pfile
 from streamcurves import project_meta as pmeta
 from streamcurves import recents
@@ -633,6 +634,12 @@ def project_server(input, output, session, state: AppState):
         with reactive.isolate():
             has_data = state.data() is not None
             draft = state.wizard_draft()
+            has_curves = bool(pe.reference_keys(state.reference_build()))
+        if not has_data and has_curves and not draft:
+            # curves and no data to start from: a transcribed assessment (a state SQT), whose
+            # work is its curves, not the Region & data wizard
+            _request_nav("curves")
+            return
         if not has_data:
             step = int((draft or {}).get("step") or loc.get("wizard_step") or 1)
             _request_nav("data", wizard_step=max(1, min(step, 7)))
@@ -1391,7 +1398,7 @@ def project_server(input, output, session, state: AppState):
                 actions.append(nonce_button("gal_open", "Open a copy"
                                             if ws.gallery_source() == "checkout"
                                             else "Download and open"))
-            if v.in_deep and deep_base:
+            if v.in_deep and deep_base and not e.deep_hidden:
                 actions.append(ui.a("Open in DEEP",
                                     href=f"{deep_base}/?assessment={e.id}@{v.version}",
                                     target="_blank", rel="noopener", class_="btn btn-link"))
@@ -1418,6 +1425,7 @@ def project_server(input, output, session, state: AppState):
             ui.div(*actions, class_="sc-gallery-actions"),
             ui.div("An EASI screening method version. EASI keeps the method it ships until "
                    "a library version is adopted." if e.type == "easi" else
+                   "DEEP does not list the state SQT assessments." if e.deep_hidden else
                    "DEEP runs this version." if v.in_deep else
                    "A draft is for review; DEEP runs preliminary and final versions.",
                    class_="sc-form-note mt-2"),

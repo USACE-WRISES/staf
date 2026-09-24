@@ -1,0 +1,7028 @@
+{
+ "schema_version": 2,
+ "app": "streamcurves",
+ "app_version": "0.1.0",
+ "created": "2026-09-24T15:33:30.378603+00:00",
+ "session_name": "NC SQT Adapted",
+ "fields": {
+  "data": null,
+  "precheck_df": null,
+  "data_source": null,
+  "data_fingerprint": null,
+  "upload_filename": null,
+  "input_metadata": null,
+  "site_mask_config": null,
+  "metric_config": {},
+  "strat_config": {},
+  "predictor_config": {},
+  "factor_recode_config": {},
+  "output_config": {
+   "per_metric_outputs": {
+    "precheck": {
+     "enabled": true,
+     "files": [
+      "{metric}_precheck.csv"
+     ]
+    },
+    "stratification": {
+     "enabled": true,
+     "files": [
+      "{metric}_stratification_screening.csv",
+      "{metric}_stratification_pairwise.csv",
+      "{metric}_stratification_decision.csv"
+     ],
+     "plots": [
+      "{metric}_boxplot_{strat_var}.png"
+     ]
+    },
+    "model_candidates": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_candidates.csv",
+      "{metric}_predictor_importance.csv"
+     ],
+     "plots": [
+      "{metric}_bic_vs_npred.png",
+      "{metric}_adjr2_vs_npred.png",
+      "{metric}_model_heatmap.png",
+      "{metric}_predictor_importance.png"
+     ]
+    },
+    "model_selection": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_selection.csv"
+     ]
+    },
+    "diagnostics": {
+     "enabled": true,
+     "files": [
+      "{metric}_diagnostics.csv"
+     ],
+     "plots": [
+      "{metric}_diagnostic_4panel.png"
+     ]
+    },
+    "reference_curves": {
+     "enabled": true,
+     "files": [
+      "{metric}_reference_curve.csv"
+     ],
+     "plots": [
+      "{metric}_reference_bar_chart.png",
+      "{metric}_reference_curve.png"
+     ]
+    },
+    "rds_objects": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_object.rds"
+     ]
+    }
+   },
+   "summary_outputs": {
+    "thresholds": {
+     "enabled": true,
+     "files": [
+      "reference_curve_thresholds.csv"
+     ]
+    },
+    "metric_status": {
+     "enabled": true,
+     "files": [
+      "metric_status.csv"
+     ]
+    },
+    "stratification_decisions": {
+     "enabled": true,
+     "files": [
+      "stratification_decisions.csv"
+     ]
+    },
+    "decision_history": {
+     "enabled": true,
+     "files": [
+      "decision_history.csv"
+     ]
+    },
+    "regional_curves": {
+     "enabled": true,
+     "files": [
+      "regional_curves.csv"
+     ]
+    },
+    "results_bundle": {
+     "enabled": true,
+     "files": [
+      "results_bundle.zip"
+     ]
+    }
+   },
+   "report_products": {
+    "dashboard": {
+     "enabled": true,
+     "file": "reports/dashboard.qmd",
+     "format": "html",
+     "tier": 1
+    },
+    "summary": {
+     "enabled": true,
+     "file": "reports/summary.qmd",
+     "format": "pdf",
+     "tier": 2
+    },
+    "appendix": {
+     "enabled": true,
+     "file": "reports/appendix.qmd",
+     "format": "pdf",
+     "tier": 3
+    },
+    "list_of_metrics": {
+     "enabled": true,
+     "file": "docs/templates/OH/MN-List-of-Metricsv2.0.xlsx",
+     "format": "xlsx",
+     "tier": 1
+    },
+    "sqt_workbook": {
+     "enabled": true,
+     "file": "docs/templates/OH/WISQT_Reference_Curves.xlsx",
+     "format": "xlsx",
+     "tier": 1
+    },
+    "science_support": {
+     "enabled": true,
+     "file": "reports/science_support.qmd",
+     "format": "html",
+     "tier": 1
+    }
+   }
+  },
+  "config_version": 0,
+  "current_metric": "perRiffle",
+  "phase1_screening": null,
+  "phase1_effect_sizes": null,
+  "phase1_candidates": {},
+  "all_layer1_results": {},
+  "all_layer2_results": {},
+  "phase2_ranking": null,
+  "cross_metric_consistency": null,
+  "phase2_settings": {
+   "metric_filter": null,
+   "strat_filter": null,
+   "sig_threshold": 0.05,
+   "support_threshold": 0.5
+  },
+  "phase2_metric_overrides": {},
+  "curve_stratification": {},
+  "summary_available_overrides": {},
+  "summary_edit_notes": {},
+  "phase3_patterns": null,
+  "phase3_feasibility": null,
+  "phase3_verification": {},
+  "strat_decision_user": null,
+  "reference_curve": null,
+  "phase4_data": null,
+  "current_stratum_level": null,
+  "stratum_results": {},
+  "completed_metrics": {},
+  "decision_log": {
+   "__type__": "frame",
+   "columns": [],
+   "n": 0,
+   "data": {},
+   "dtypes": {},
+   "categories": {}
+  },
+  "metric_phase_cache": {},
+  "discipline_function_mapping": {
+   "__type__": "frame",
+   "columns": [
+    "metric_key",
+    "discipline",
+    "function_label",
+    "sort_order"
+   ],
+   "n": 29,
+   "data": {
+    "metric_key": [
+     "catchment-hydrology-curve-number",
+     "catchment-hydrology-percent-impervious-cover",
+     "reach-inflow-concentrated-flow-points",
+     "floodplain-connectivity-entrenchment-ratio-er",
+     "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+     "channel-and-floodplain-dynamics-erosion-rate",
+     "channel-and-floodplain-dynamics-percent-streambank-erosion",
+     "channel-and-floodplain-dynamics-sinuosity",
+     "channel-and-floodplain-dynamics-soil-compaction",
+     "sediment-continuity-aggradation-ratio",
+     "bed-composition-and-large-wood-bed-material-characterization",
+     "light-and-thermal-regime-canopy-coverage",
+     "light-and-thermal-regime-summer-daily-maximum",
+     "carbon-processing-basal-area",
+     "carbon-processing-leaf-litter-processing-rate",
+     "carbon-processing-riparian-vegetation-stem-density",
+     "carbon-processing-shredders",
+     "nutrient-cycling-buffer-width",
+     "nutrient-cycling-total-nitrogen",
+     "nutrient-cycling-total-phosphorous",
+     "water-and-soil-quality-fecal-coliform-bacteria",
+     "water-and-soil-quality-specific-conductivity",
+     "habitat-provision-lwd-pieces",
+     "habitat-provision-lwd-index",
+     "habitat-provision-percent-riffle",
+     "habitat-provision-pool-depth-ratio",
+     "habitat-provision-pool-spacing-ratio",
+     "population-support-ept-taxa-present",
+     "population-support-ncibi-score"
+    ],
+    "discipline": [
+     "Hydrology",
+     "Hydrology",
+     "Hydrology",
+     "Hydraulics",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology"
+    ],
+    "function_label": [
+     "Catchment hydrology",
+     "Catchment hydrology",
+     "Reach inflow",
+     "Floodplain connectivity",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Sediment continuity",
+     "Bed composition and bedform dynamics",
+     "Light & thermal regime",
+     "Light & thermal regime",
+     "Carbon processing",
+     "Carbon processing",
+     "Carbon processing",
+     "Carbon processing",
+     "Nutrient cycling",
+     "Nutrient cycling",
+     "Nutrient cycling",
+     "Water & soil quality",
+     "Water & soil quality",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Population support",
+     "Population support"
+    ],
+    "sort_order": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29
+    ]
+   },
+   "dtypes": {
+    "metric_key": "str",
+    "discipline": "str",
+    "function_label": "str",
+    "sort_order": "int64"
+   },
+   "categories": {}
+  },
+  "discipline_function_mapping_confirmed": true,
+  "mapping_user_touched": false,
+  "workbook_provided_mapping": false,
+  "function_coverage_exceptions": [
+   {
+    "functionId": "surface-water-storage",
+    "reason": "no-suitable-metric",
+    "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "streamflow-regime",
+    "reason": "no-suitable-metric",
+    "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "low-flow-baseflow-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "high-flow-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "hyporheic-connectivity",
+    "reason": "no-suitable-metric",
+    "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "channel-evolution",
+    "reason": "no-suitable-metric",
+    "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "community-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "watershed-connectivity",
+    "reason": "deferred-to-other-tier",
+    "justification": "The North Carolina Stream Quantification Tool addresses this function only with a screening-tier metric (Adjacent Reach Condition for Recruitment (hardened/embedded); Fish Passage & Barrier Effects (longitudinal connectivity)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   }
+  ],
+  "custom_groupings": {},
+  "custom_grouping_counter": {},
+  "session_name": "NC SQT Adapted",
+  "app_data_loaded": false,
+  "cross_sections": {},
+  "column_sources": {},
+  "column_functions": {},
+  "region_of_applicability": {
+   "kind": "state",
+   "code": "NC",
+   "name": "North Carolina"
+  },
+  "candidate_sites": null,
+  "easi_screening_sites": null,
+  "easi_screening_metrics": null,
+  "easi_screening_criteria": null,
+  "run_meta": null,
+  "run_stage_status": {},
+  "curve_review": {},
+  "screening_run": null,
+  "site_exclusions": [],
+  "screening_skipped": false,
+  "validation_records": [],
+  "metric_redundancy": null,
+  "assessment_source": null,
+  "source_provenance": null,
+  "rule_selections": [],
+  "reference_build": {
+   "method": "pressure-screen",
+   "referenceMethod": null,
+   "insufficientReferenceSupport": [],
+   "metricAnnotations": {},
+   "fixedMetrics": [],
+   "ladderMetrics": {},
+   "referenceTier": null,
+   "carriedMetrics": {
+    "catchment-hydrology-curve-number": {
+     "displayName": "Curve Number",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 30.0,
+       "y": 1.0
+      },
+      {
+       "x": 55.0,
+       "y": 0.7
+      },
+      {
+       "x": 70.0,
+       "y": 0.3
+      },
+      {
+       "x": 78.44963,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Curve Number",
+      "units": "",
+      "metric_family": "desktop (gis)",
+      "notes": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+      "column_name": "catchment-hydrology-curve-number",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:curve-number:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "catchment-hydrology-curve-number",
+       "discipline": "Hydrology",
+       "function_label": "Catchment hydrology"
+      }
+     ],
+     "decision": {
+      "metric": "catchment-hydrology-curve-number",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "catchment-hydrology-curve-number",
+       "metricName": "Curve Number",
+       "discipline": "Hydrology",
+       "inputType": "desktop (gis)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Curve Number",
+       "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+       "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+       "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 30,
+          "y": 1
+         },
+         {
+          "x": 55,
+          "y": 0.7
+         },
+         {
+          "x": 70,
+          "y": 0.3
+         },
+         {
+          "x": 78.44963,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "catchment-hydrology"
+      ]
+     }
+    },
+    "catchment-hydrology-percent-impervious-cover": {
+     "displayName": "Percent Impervious Cover",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 9.0,
+       "y": 0.7
+      },
+      {
+       "x": 10.0,
+       "y": 0.69
+      },
+      {
+       "x": 25.0,
+       "y": 0.3
+      },
+      {
+       "x": 26.0,
+       "y": 0.29
+      },
+      {
+       "x": 75.77966102,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Impervious Cover",
+      "units": "",
+      "metric_family": "desktop (gis)",
+      "notes": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+      "column_name": "catchment-hydrology-percent-impervious-cover",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:percent-impervious-cover:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "catchment-hydrology-percent-impervious-cover",
+       "discipline": "Hydrology",
+       "function_label": "Catchment hydrology"
+      }
+     ],
+     "decision": {
+      "metric": "catchment-hydrology-percent-impervious-cover",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "catchment-hydrology-percent-impervious-cover",
+       "metricName": "Percent Impervious Cover",
+       "discipline": "Hydrology",
+       "inputType": "desktop (gis)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Percent Impervious Cover",
+       "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+       "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+       "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 9,
+          "y": 0.7
+         },
+         {
+          "x": 10,
+          "y": 0.69
+         },
+         {
+          "x": 25,
+          "y": 0.3
+         },
+         {
+          "x": 26,
+          "y": 0.29
+         },
+         {
+          "x": 75.77966102,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "catchment-hydrology"
+      ]
+     }
+    },
+    "reach-inflow-concentrated-flow-points": {
+     "displayName": "Concentrated Flow Points",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.0,
+       "y": 0.69
+      },
+      {
+       "x": 3.0,
+       "y": 0.0
+      },
+      {
+       "x": 3.0,
+       "y": 0.3
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Concentrated Flow Points",
+      "units": "",
+      "metric_family": "field (with desktop pre-screen)",
+      "notes": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+      "column_name": "reach-inflow-concentrated-flow-points",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+      "curveCaveats": [
+       "The published curve stops at its high end, 3 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:concentrated-flow-points:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end",
+          "threshold-read-as-point"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 3 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "reach-inflow-concentrated-flow-points",
+       "discipline": "Hydrology",
+       "function_label": "Reach inflow"
+      }
+     ],
+     "decision": {
+      "metric": "reach-inflow-concentrated-flow-points",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "reach-inflow-concentrated-flow-points",
+       "metricName": "Concentrated Flow Points",
+       "discipline": "Hydrology",
+       "inputType": "field (with desktop pre-screen)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Concentrated Flow Points",
+       "metricStatement": "Count of concentrated inflow locations (ditches, pipes, outfalls) that can deliver runoff, sediment, or pollutants to the reach.",
+       "howToMeasure": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+       "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 1,
+          "y": 0.69
+         },
+         {
+          "x": 3,
+          "y": 0
+         },
+         {
+          "x": 3,
+          "y": 0.3
+         }
+        ]
+       }
+      },
+      "functions": [
+       "reach-inflow"
+      ]
+     }
+    },
+    "floodplain-connectivity-entrenchment-ratio-er": {
+     "displayName": "Entrenchment Ratio (ER)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "C and E Streams",
+     "points": [
+      {
+       "x": 2.0,
+       "y": 0.3
+      },
+      {
+       "x": 2.4,
+       "y": 0.7
+      },
+      {
+       "x": 5.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "C and E Streams",
+       "points": [
+        {
+         "x": 2.0,
+         "y": 0.3
+        },
+        {
+         "x": 2.4,
+         "y": 0.7
+        },
+        {
+         "x": 5.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "A, B and Bc Streams",
+       "points": [
+        {
+         "x": 1.2,
+         "y": 0.3
+        },
+        {
+         "x": 1.4,
+         "y": 0.7
+        },
+        {
+         "x": 2.2,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Entrenchment Ratio (ER)",
+      "units": "",
+      "metric_family": "field (survey) or desktop (lidar cross sections)",
+      "notes": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+      "column_name": "floodplain-connectivity-entrenchment-ratio-er",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+      "curveCaveats": [
+       "C and E Streams: the published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index.",
+       "A, B and Bc Streams: the published curve stops at its low end, 1.2 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "C and E Streams",
+         "registryKey": "sqt:nc:entrenchment-ratio-er:c-and-e-streams",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "A, B and Bc Streams",
+         "registryKey": "sqt:nc:entrenchment-ratio-er:a-b-and-bc-streams",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 1.2 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "floodplain-connectivity-entrenchment-ratio-er",
+       "discipline": "Hydraulics",
+       "function_label": "Floodplain connectivity"
+      }
+     ],
+     "decision": {
+      "metric": "floodplain-connectivity-entrenchment-ratio-er",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+       "metricName": "Entrenchment Ratio (ER)",
+       "discipline": "Hydraulics",
+       "inputType": "field (survey) or desktop (lidar cross sections)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Entrenchment Ratio (ER)",
+       "metricStatement": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+       "howToMeasure": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+       "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - C and E Streams",
+        "stratification": "C and E Streams",
+        "points": [
+         {
+          "x": 2,
+          "y": 0.3
+         },
+         {
+          "x": 2.4,
+          "y": 0.7
+         },
+         {
+          "x": 5,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "C and E Streams",
+         "layerName": "North Carolina SQT - C and E Streams",
+         "points": [
+          {
+           "x": 2,
+           "y": 0.3
+          },
+          {
+           "x": 2.4,
+           "y": 0.7
+          },
+          {
+           "x": 5,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "A, B and Bc Streams",
+         "layerName": "North Carolina SQT - A, B and Bc Streams",
+         "points": [
+          {
+           "x": 1.2,
+           "y": 0.3
+          },
+          {
+           "x": 1.4,
+           "y": 0.7
+          },
+          {
+           "x": 2.2,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "C and E Streams"
+      },
+      "functions": [
+       "floodplain-connectivity"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-bank-height-ratio-bhr": {
+     "displayName": "Bank Height Ratio (BHR)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.2,
+       "y": 0.7
+      },
+      {
+       "x": 1.5,
+       "y": 0.3
+      },
+      {
+       "x": 1.6,
+       "y": 0.2
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Bank Height Ratio (BHR)",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [
+       "The published curve stops at its high end, 1.6 (index 0.2); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:bank-height-ratio-bhr:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 1.6 (index 0.2); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+       "metricName": "Bank Height Ratio (BHR)",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Bank Height Ratio (BHR)",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 1.2,
+          "y": 0.7
+         },
+         {
+          "x": 1.5,
+          "y": 0.3
+         },
+         {
+          "x": 1.6,
+          "y": 0.2
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-erosion-rate": {
+     "displayName": "Erosion Rate",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.1,
+       "y": 1.0
+      },
+      {
+       "x": 0.19,
+       "y": 0.7
+      },
+      {
+       "x": 0.4,
+       "y": 0.3
+      },
+      {
+       "x": 0.4117,
+       "y": 0.29
+      },
+      {
+       "x": 0.71,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Erosion Rate",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-erosion-rate",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:erosion-rate:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-erosion-rate",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-erosion-rate",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-erosion-rate",
+       "metricName": "Erosion Rate",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Erosion Rate",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0.1,
+          "y": 1
+         },
+         {
+          "x": 0.19,
+          "y": 0.7
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": 0.4117,
+          "y": 0.29
+         },
+         {
+          "x": 0.71,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-percent-streambank-erosion": {
+     "displayName": "Percent Streambank Erosion",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 5.0,
+       "y": 1.0
+      },
+      {
+       "x": 9.0,
+       "y": 0.7
+      },
+      {
+       "x": 25.0,
+       "y": 0.3
+      },
+      {
+       "x": 41.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Streambank Erosion",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:percent-streambank-erosion:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+       "metricName": "Percent Streambank Erosion",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Percent Streambank Erosion",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 5,
+          "y": 1
+         },
+         {
+          "x": 9,
+          "y": 0.7
+         },
+         {
+          "x": 25,
+          "y": 0.3
+         },
+         {
+          "x": 41,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-sinuosity": {
+     "displayName": "Sinuosity",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "E5 streams in Unconfined Alluvial Valleys",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 1.0,
+       "y": 0.4
+      },
+      {
+       "x": 2.0,
+       "y": 0.7
+      },
+      {
+       "x": 3.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "E5 streams in Unconfined Alluvial Valleys",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.0,
+         "y": 0.4
+        },
+        {
+         "x": 2.0,
+         "y": 0.7
+        },
+        {
+         "x": 3.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Unconfined Alluvial Valleys",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.0,
+         "y": 0.4
+        },
+        {
+         "x": 2.0,
+         "y": 0.7
+        },
+        {
+         "x": 3.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Confined Alluvial Valleys",
+       "points": [
+        {
+         "x": 1.15,
+         "y": 0.7
+        },
+        {
+         "x": 1.4,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Colluvial Valleys",
+       "points": [
+        {
+         "x": 1.21,
+         "y": 0.69
+        },
+        {
+         "x": 1.3,
+         "y": 0.3
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Sinuosity",
+      "units": "",
+      "metric_family": "desktop",
+      "notes": "Compute channel centerline length divided by valley length in GIS.",
+      "column_name": "channel-and-floodplain-dynamics-sinuosity",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Desktop",
+      "curveCaveats": [
+       "E5 streams in Unconfined Alluvial Valleys: the metric library row this curve was transcribed from is defective: The row gives 1 usable breakpoint(s) for this stratum; a curve needs two. The other bins hold only the index template. It scores as v1 scores it; the assessment audit decides the fix.",
+       "Unconfined Alluvial Valleys: the metric library row this curve was transcribed from is defective: The row gives 1 usable breakpoint(s) for this stratum; a curve needs two. The other bins hold only the index template. It scores as v1 scores it; the assessment audit decides the fix.",
+       "Confined Alluvial Valleys: the published curve stops at its low end, 1.15 (index 0.7); past it DEEP holds that index.",
+       "Colluvial Valleys: the published curve stops at its low end, 1.21 (index 0.69); past it DEEP holds that index.",
+       "Colluvial Valleys: the published curve stops at its high end, 1.3 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "E5 streams in Unconfined Alluvial Valleys",
+         "registryKey": "sqt:nc:sinuosity:e5-streams-in-unconfined-alluvial-valleys",
+         "verification": "defective",
+         "defects": [
+          "The row gives 1 usable breakpoint(s) for this stratum; a curve needs two. The other bins hold only the index template."
+         ],
+         "differences": [
+          "placeholder"
+         ],
+         "openEnds": []
+        },
+        {
+         "stratum": "Unconfined Alluvial Valleys",
+         "registryKey": "sqt:nc:sinuosity:unconfined-alluvial-valleys",
+         "verification": "defective",
+         "defects": [
+          "The row gives 1 usable breakpoint(s) for this stratum; a curve needs two. The other bins hold only the index template."
+         ],
+         "differences": [
+          "placeholder"
+         ],
+         "openEnds": []
+        },
+        {
+         "stratum": "Confined Alluvial Valleys",
+         "registryKey": "sqt:nc:sinuosity:confined-alluvial-valleys",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 1.15 (index 0.7); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Colluvial Valleys",
+         "registryKey": "sqt:nc:sinuosity:colluvial-valleys",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 1.21 (index 0.69); past it DEEP holds that index.",
+          "The published curve stops at its high end, 1.3 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-sinuosity",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-sinuosity",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-sinuosity",
+       "metricName": "Sinuosity",
+       "discipline": "Geomorphology",
+       "inputType": "desktop",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Sinuosity",
+       "metricStatement": "Ratio of channel length to valley length; higher sinuosity indicates greater curvature and habitat variety.",
+       "howToMeasure": "Compute channel centerline length divided by valley length in GIS.",
+       "methodContext": "Context: Channel\n\nMethod: Desktop",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - E5 streams in Unconfined Alluvial Valleys",
+        "stratification": "E5 streams in Unconfined Alluvial Valleys",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 1,
+          "y": 0.4
+         },
+         {
+          "x": 2,
+          "y": 0.7
+         },
+         {
+          "x": 3,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "E5 streams in Unconfined Alluvial Valleys",
+         "layerName": "North Carolina SQT - E5 streams in Unconfined Alluvial Valleys",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 1,
+           "y": 0.4
+          },
+          {
+           "x": 2,
+           "y": 0.7
+          },
+          {
+           "x": 3,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Unconfined Alluvial Valleys",
+         "layerName": "North Carolina SQT - Unconfined Alluvial Valleys",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 1,
+           "y": 0.4
+          },
+          {
+           "x": 2,
+           "y": 0.7
+          },
+          {
+           "x": 3,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Confined Alluvial Valleys",
+         "layerName": "North Carolina SQT - Confined Alluvial Valleys",
+         "points": [
+          {
+           "x": 1.15,
+           "y": 0.7
+          },
+          {
+           "x": 1.4,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Colluvial Valleys",
+         "layerName": "North Carolina SQT - Colluvial Valleys",
+         "points": [
+          {
+           "x": 1.21,
+           "y": 0.69
+          },
+          {
+           "x": 1.3,
+           "y": 0.3
+          }
+         ]
+        }
+       ],
+       "activeStratum": "E5 streams in Unconfined Alluvial Valleys"
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-soil-compaction": {
+     "displayName": "Soil Compaction",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 6.0,
+       "y": 0.3
+      },
+      {
+       "x": 30.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Soil Compaction",
+      "units": "",
+      "metric_family": "see state sqt protocol",
+      "notes": "Follow the state SQT metric definition and apply the scoring breakpoints for the appropriate stratum.",
+      "column_name": "channel-and-floodplain-dynamics-soil-compaction",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Varies\n\nMethod: See state SQT protocol",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:soil-compaction:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-soil-compaction",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-soil-compaction",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-soil-compaction",
+       "metricName": "Soil Compaction",
+       "discipline": "Geomorphology",
+       "inputType": "see state sqt protocol",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Soil Compaction",
+       "metricStatement": "Metric definition and measurement are state SQT-specific.",
+       "howToMeasure": "Follow the state SQT metric definition and apply the scoring breakpoints for the appropriate stratum.",
+       "methodContext": "Context: Varies\n\nMethod: See state SQT protocol",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 6,
+          "y": 0.3
+         },
+         {
+          "x": 30,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "sediment-continuity-aggradation-ratio": {
+     "displayName": "Aggradation Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.2,
+       "y": 0.69
+      },
+      {
+       "x": 1.4,
+       "y": 0.3
+      },
+      {
+       "x": 1.6,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Aggradation Ratio",
+      "units": "",
+      "metric_family": "field or desktop (repeat elevation data)",
+      "notes": "Measure bed and bankfull indicators at repeat cross sections (or compare elevation datasets) to compute aggradation ratio per SQT definition.",
+      "column_name": "sediment-continuity-aggradation-ratio",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field or Desktop (repeat elevation data)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:aggradation-ratio:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "sediment-continuity-aggradation-ratio",
+       "discipline": "Geomorphology",
+       "function_label": "Sediment continuity"
+      }
+     ],
+     "decision": {
+      "metric": "sediment-continuity-aggradation-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "sediment-continuity-aggradation-ratio",
+       "metricName": "Aggradation Ratio",
+       "discipline": "Geomorphology",
+       "inputType": "field or desktop (repeat elevation data)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Aggradation Ratio",
+       "metricStatement": "Indicator of net sediment deposition/aggradation relative to reference condition.",
+       "howToMeasure": "Measure bed and bankfull indicators at repeat cross sections (or compare elevation datasets) to compute aggradation ratio per SQT definition.",
+       "methodContext": "Context: Channel\n\nMethod: Field or Desktop (repeat elevation data)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 1.2,
+          "y": 0.69
+         },
+         {
+          "x": 1.4,
+          "y": 0.3
+         },
+         {
+          "x": 1.6,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "sediment-continuity"
+      ]
+     }
+    },
+    "bed-composition-and-large-wood-bed-material-characterization": {
+     "displayName": "Bed Material Characterization",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.01,
+       "y": 0.0
+      },
+      {
+       "x": 0.05,
+       "y": 0.29
+      },
+      {
+       "x": 0.1,
+       "y": 0.652
+      },
+      {
+       "x": 0.11,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Bed Material Characterization",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+      "column_name": "bed-composition-and-large-wood-bed-material-characterization",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:bed-material-characterization:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "bed-composition-and-large-wood-bed-material-characterization",
+       "discipline": "Geomorphology",
+       "function_label": "Bed composition and bedform dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "bed-composition-and-large-wood-bed-material-characterization",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "bed-composition-and-large-wood-bed-material-characterization",
+       "metricName": "Bed Material Characterization",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Bed Material Characterization",
+       "metricStatement": "Streambed substrate size distribution used to infer habitat quality, sediment transport, and embeddedness/fine sediment stress.",
+       "howToMeasure": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0.01,
+          "y": 0
+         },
+         {
+          "x": 0.05,
+          "y": 0.29
+         },
+         {
+          "x": 0.1,
+          "y": 0.652
+         },
+         {
+          "x": 0.11,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "bed-composition-bedform-dynamics"
+      ]
+     }
+    },
+    "light-and-thermal-regime-canopy-coverage": {
+     "displayName": "Canopy Coverage",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 25.0,
+       "y": 0.3
+      },
+      {
+       "x": 61.0,
+       "y": 0.7
+      },
+      {
+       "x": 90.54,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Canopy Coverage",
+      "units": "",
+      "metric_family": "field and/or desktop",
+      "notes": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+      "column_name": "light-and-thermal-regime-canopy-coverage",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Riparian/Channel\n\nMethod: Field and/or Desktop",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:canopy-coverage:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "light-and-thermal-regime-canopy-coverage",
+       "discipline": "Physicochemistry",
+       "function_label": "Light & thermal regime"
+      }
+     ],
+     "decision": {
+      "metric": "light-and-thermal-regime-canopy-coverage",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "light-and-thermal-regime-canopy-coverage",
+       "metricName": "Canopy Coverage",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Canopy Coverage",
+       "metricStatement": "Riparian canopy cover that controls shading and thermal/light regime in the channel.",
+       "howToMeasure": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+       "methodContext": "Context: Riparian/Channel\n\nMethod: Field and/or Desktop",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 25,
+          "y": 0.3
+         },
+         {
+          "x": 61,
+          "y": 0.7
+         },
+         {
+          "x": 90.54,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "light-thermal-regime"
+      ]
+     }
+    },
+    "light-and-thermal-regime-summer-daily-maximum": {
+     "displayName": "Summer Daily Maximum",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Coldwater",
+     "points": [
+      {
+       "x": 58.0,
+       "y": 1.0
+      },
+      {
+       "x": 64.0,
+       "y": 0.7
+      },
+      {
+       "x": 77.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Coldwater",
+       "points": [
+        {
+         "x": 58.0,
+         "y": 1.0
+        },
+        {
+         "x": 64.0,
+         "y": 0.7
+        },
+        {
+         "x": 77.0,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "Coolwater",
+       "points": [
+        {
+         "x": 67.0,
+         "y": 1.0
+        },
+        {
+         "x": 97.0,
+         "y": 0.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Summer Daily Maximum",
+      "units": "",
+      "metric_family": "field (logger) and/or desktop (data compilation)",
+      "notes": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+      "column_name": "light-and-thermal-regime-summer-daily-maximum",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Coldwater",
+         "registryKey": "sqt:nc:summer-daily-maximum:coldwater",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Coolwater",
+         "registryKey": "sqt:nc:summer-daily-maximum:coolwater",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "light-and-thermal-regime-summer-daily-maximum",
+       "discipline": "Physicochemistry",
+       "function_label": "Light & thermal regime"
+      }
+     ],
+     "decision": {
+      "metric": "light-and-thermal-regime-summer-daily-maximum",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "light-and-thermal-regime-summer-daily-maximum",
+       "metricName": "Summer Daily Maximum",
+       "discipline": "Physicochemistry",
+       "inputType": "field (logger) and/or desktop (data compilation)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Summer Daily Maximum",
+       "metricStatement": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+       "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - Coldwater",
+        "stratification": "Coldwater",
+        "points": [
+         {
+          "x": 58,
+          "y": 1
+         },
+         {
+          "x": 64,
+          "y": 0.7
+         },
+         {
+          "x": 77,
+          "y": 0
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Coldwater",
+         "layerName": "North Carolina SQT - Coldwater",
+         "points": [
+          {
+           "x": 58,
+           "y": 1
+          },
+          {
+           "x": 64,
+           "y": 0.7
+          },
+          {
+           "x": 77,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "Coolwater",
+         "layerName": "North Carolina SQT - Coolwater",
+         "points": [
+          {
+           "x": 67,
+           "y": 1
+          },
+          {
+           "x": 97,
+           "y": 0
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Coldwater"
+      },
+      "functions": [
+       "light-thermal-regime"
+      ]
+     }
+    },
+    "carbon-processing-basal-area": {
+     "displayName": "Basal Area",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 40.0,
+       "y": 0.3
+      },
+      {
+       "x": 100.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Basal Area",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-basal-area",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:basal-area:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-basal-area",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-basal-area",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-basal-area",
+       "metricName": "Basal Area",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Basal Area",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 40,
+          "y": 0.3
+         },
+         {
+          "x": 100,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-leaf-litter-processing-rate": {
+     "displayName": "Leaf Litter Processing Rate",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.5,
+       "y": 0.3
+      },
+      {
+       "x": 0.75,
+       "y": 0.7
+      },
+      {
+       "x": 1.33,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Leaf Litter Processing Rate",
+      "units": "",
+      "metric_family": "field (sampling/assay)",
+      "notes": "Deploy standardized leaf packs, retrieve after set period, and calculate processing/decay rate per SQT method.",
+      "column_name": "carbon-processing-leaf-litter-processing-rate",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (sampling/assay)",
+      "curveCaveats": [
+       "The published curve stops at its low end, 0.5 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:leaf-litter-processing-rate:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 0.5 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-leaf-litter-processing-rate",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-leaf-litter-processing-rate",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-leaf-litter-processing-rate",
+       "metricName": "Leaf Litter Processing Rate",
+       "discipline": "Physicochemistry",
+       "inputType": "field (sampling/assay)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Leaf Litter Processing Rate",
+       "metricStatement": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+       "howToMeasure": "Deploy standardized leaf packs, retrieve after set period, and calculate processing/decay rate per SQT method.",
+       "methodContext": "Context: Channel\n\nMethod: Field (sampling/assay)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0.5,
+          "y": 0.3
+         },
+         {
+          "x": 0.75,
+          "y": 0.7
+         },
+         {
+          "x": 1.33,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-riparian-vegetation-stem-density": {
+     "displayName": "Riparian Vegetation Stem Density",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 260.0,
+       "y": 0.5
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Riparian Vegetation Stem Density",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-riparian-vegetation-stem-density",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [
+       "The published curve stops at its high end, 260 (index 0.5); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:riparian-vegetation-stem-density:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 260 (index 0.5); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-riparian-vegetation-stem-density",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-riparian-vegetation-stem-density",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-riparian-vegetation-stem-density",
+       "metricName": "Riparian Vegetation Stem Density",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Riparian Vegetation Stem Density",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 260,
+          "y": 0.5
+         }
+        ]
+       }
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-shredders": {
+     "displayName": "Shredders",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Field - W/Sp - Mountains & DA <= 5 Sq.Mi.",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 4.6,
+       "y": 0.2
+      },
+      {
+       "x": 6.9,
+       "y": 0.3
+      },
+      {
+       "x": 13.8,
+       "y": 0.6
+      },
+      {
+       "x": 16.1,
+       "y": 0.7
+      },
+      {
+       "x": 23.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Field - W/Sp - Mountains & DA <= 5 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.6,
+         "y": 0.2
+        },
+        {
+         "x": 6.9,
+         "y": 0.3
+        },
+        {
+         "x": 13.8,
+         "y": 0.6
+        },
+        {
+         "x": 16.1,
+         "y": 0.7
+        },
+        {
+         "x": 23.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Su - Mountains & DA <= 5 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.2,
+         "y": 0.2
+        },
+        {
+         "x": 6.3,
+         "y": 0.3
+        },
+        {
+         "x": 12.6,
+         "y": 0.6
+        },
+        {
+         "x": 14.7,
+         "y": 0.7
+        },
+        {
+         "x": 21.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Fall - Mountains & DA <= 5 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.6,
+         "y": 0.2
+        },
+        {
+         "x": 5.4,
+         "y": 0.3
+        },
+        {
+         "x": 10.8,
+         "y": 0.6
+        },
+        {
+         "x": 12.6,
+         "y": 0.7
+        },
+        {
+         "x": 18.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - W/Sp - Mountains & 5 < DA < 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.2,
+         "y": 0.2
+        },
+        {
+         "x": 4.8,
+         "y": 0.3
+        },
+        {
+         "x": 9.6,
+         "y": 0.6
+        },
+        {
+         "x": 11.2,
+         "y": 0.7
+        },
+        {
+         "x": 16.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Su - Mountains & 5 < DA < 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.8,
+         "y": 0.2
+        },
+        {
+         "x": 4.2,
+         "y": 0.3
+        },
+        {
+         "x": 8.4,
+         "y": 0.6
+        },
+        {
+         "x": 9.8,
+         "y": 0.7
+        },
+        {
+         "x": 14.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Fall - Mountains & 5 < DA < 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.4,
+         "y": 0.2
+        },
+        {
+         "x": 3.6,
+         "y": 0.3
+        },
+        {
+         "x": 7.2,
+         "y": 0.6
+        },
+        {
+         "x": 8.4,
+         "y": 0.7
+        },
+        {
+         "x": 12.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - W/Sp - Mountains & DA >= 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.8,
+         "y": 0.2
+        },
+        {
+         "x": 4.2,
+         "y": 0.3
+        },
+        {
+         "x": 8.4,
+         "y": 0.6
+        },
+        {
+         "x": 9.8,
+         "y": 0.7
+        },
+        {
+         "x": 14.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Su - Mountains & DA >= 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.2,
+         "y": 0.2
+        },
+        {
+         "x": 4.8,
+         "y": 0.3
+        },
+        {
+         "x": 9.6,
+         "y": 0.6
+        },
+        {
+         "x": 11.2,
+         "y": 0.7
+        },
+        {
+         "x": 16.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Fall - Mountains & DA >= 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.0,
+         "y": 0.2
+        },
+        {
+         "x": 4.5,
+         "y": 0.3
+        },
+        {
+         "x": 9.0,
+         "y": 0.6
+        },
+        {
+         "x": 10.5,
+         "y": 0.7
+        },
+        {
+         "x": 15.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - W/Sp - Piedmont & DA <= 5 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.6,
+         "y": 0.2
+        },
+        {
+         "x": 5.4,
+         "y": 0.3
+        },
+        {
+         "x": 10.8,
+         "y": 0.6
+        },
+        {
+         "x": 12.6,
+         "y": 0.7
+        },
+        {
+         "x": 18.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Su - Piedmont & DA <= 5 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.4,
+         "y": 0.2
+        },
+        {
+         "x": 3.6,
+         "y": 0.3
+        },
+        {
+         "x": 7.2,
+         "y": 0.6
+        },
+        {
+         "x": 8.4,
+         "y": 0.7
+        },
+        {
+         "x": 12.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Fall - Piedmont & DA <= 5 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.8,
+         "y": 0.2
+        },
+        {
+         "x": 4.2,
+         "y": 0.3
+        },
+        {
+         "x": 8.4,
+         "y": 0.6
+        },
+        {
+         "x": 9.8,
+         "y": 0.7
+        },
+        {
+         "x": 14.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - W/Sp - Piedmont & 5 < DA < 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.4,
+         "y": 0.2
+        },
+        {
+         "x": 3.6,
+         "y": 0.3
+        },
+        {
+         "x": 7.2,
+         "y": 0.6
+        },
+        {
+         "x": 8.4,
+         "y": 0.7
+        },
+        {
+         "x": 12.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Su - Piedmont & 5 < DA < 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.0,
+         "y": 0.2
+        },
+        {
+         "x": 1.5,
+         "y": 0.3
+        },
+        {
+         "x": 3.0,
+         "y": 0.6
+        },
+        {
+         "x": 3.5,
+         "y": 0.7
+        },
+        {
+         "x": 5.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Fall - Piedmont & 5 < DA < 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.6,
+         "y": 0.2
+        },
+        {
+         "x": 2.4,
+         "y": 0.3
+        },
+        {
+         "x": 4.8,
+         "y": 0.6
+        },
+        {
+         "x": 5.6,
+         "y": 0.7
+        },
+        {
+         "x": 8.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - W/Sp - Piedmont & DA >= 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.6,
+         "y": 0.2
+        },
+        {
+         "x": 2.4,
+         "y": 0.3
+        },
+        {
+         "x": 4.8,
+         "y": 0.6
+        },
+        {
+         "x": 5.6,
+         "y": 0.7
+        },
+        {
+         "x": 8.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Su - Piedmont & DA >= 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.4,
+         "y": 0.2
+        },
+        {
+         "x": 2.1,
+         "y": 0.3
+        },
+        {
+         "x": 4.2,
+         "y": 0.6
+        },
+        {
+         "x": 4.9,
+         "y": 0.7
+        },
+        {
+         "x": 7.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Fall - Piedmont & DA >= 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.6,
+         "y": 0.2
+        },
+        {
+         "x": 2.4,
+         "y": 0.3
+        },
+        {
+         "x": 4.8,
+         "y": 0.6
+        },
+        {
+         "x": 5.6,
+         "y": 0.7
+        },
+        {
+         "x": 8.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - W/Sp - Coastal & DA <= 5 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 6.6,
+         "y": 0.2
+        },
+        {
+         "x": 9.9,
+         "y": 0.3
+        },
+        {
+         "x": 19.8,
+         "y": 0.6
+        },
+        {
+         "x": 23.1,
+         "y": 0.7
+        },
+        {
+         "x": 33.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Su - Coastal & DA <= 5 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.8,
+         "y": 0.2
+        },
+        {
+         "x": 4.2,
+         "y": 0.3
+        },
+        {
+         "x": 8.4,
+         "y": 0.6
+        },
+        {
+         "x": 9.8,
+         "y": 0.7
+        },
+        {
+         "x": 14.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Fall - Coastal & DA <= 5 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 5.0,
+         "y": 0.2
+        },
+        {
+         "x": 7.5,
+         "y": 0.3
+        },
+        {
+         "x": 15.0,
+         "y": 0.6
+        },
+        {
+         "x": 17.5,
+         "y": 0.7
+        },
+        {
+         "x": 25.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - W/Sp - Coastal & 5 < DA < 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 4.0,
+         "y": 0.2
+        },
+        {
+         "x": 6.0,
+         "y": 0.3
+        },
+        {
+         "x": 12.0,
+         "y": 0.6
+        },
+        {
+         "x": 14.0,
+         "y": 0.7
+        },
+        {
+         "x": 20.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Su - Coastal & 5 < DA < 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.6,
+         "y": 0.2
+        },
+        {
+         "x": 3.9,
+         "y": 0.3
+        },
+        {
+         "x": 7.8,
+         "y": 0.6
+        },
+        {
+         "x": 9.1,
+         "y": 0.7
+        },
+        {
+         "x": 13.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Fall - Coastal & 5 < DA < 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.4,
+         "y": 0.2
+        },
+        {
+         "x": 3.6,
+         "y": 0.3
+        },
+        {
+         "x": 7.2,
+         "y": 0.6
+        },
+        {
+         "x": 8.4,
+         "y": 0.7
+        },
+        {
+         "x": 12.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - W/Sp - Coastal & DA >= 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.4,
+         "y": 0.2
+        },
+        {
+         "x": 5.1,
+         "y": 0.3
+        },
+        {
+         "x": 10.2,
+         "y": 0.6
+        },
+        {
+         "x": 11.9,
+         "y": 0.7
+        },
+        {
+         "x": 17.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Su - Coastal & DA >= 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.2,
+         "y": 0.2
+        },
+        {
+         "x": 4.8,
+         "y": 0.3
+        },
+        {
+         "x": 9.6,
+         "y": 0.6
+        },
+        {
+         "x": 11.2,
+         "y": 0.7
+        },
+        {
+         "x": 16.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Field - Fall - Coastal & DA >= 10 Sq.Mi.",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.6,
+         "y": 0.2
+        },
+        {
+         "x": 2.4,
+         "y": 0.3
+        },
+        {
+         "x": 4.8,
+         "y": 0.6
+        },
+        {
+         "x": 5.6,
+         "y": 0.7
+        },
+        {
+         "x": 8.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Shredders",
+      "units": "",
+      "metric_family": "field (sampling/assay)",
+      "notes": "From a macroinvertebrate sample, identify and count shredder taxa and compute the shredder metric per SQT guidance for the appropriate drainage area/region stratum.",
+      "column_name": "carbon-processing-shredders",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (sampling/assay)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Field - W/Sp - Mountains & DA <= 5 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-w-sp-mountains-and-da-le-5-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Su - Mountains & DA <= 5 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-su-mountains-and-da-le-5-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Fall - Mountains & DA <= 5 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-fall-mountains-and-da-le-5-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - W/Sp - Mountains & 5 < DA < 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-w-sp-mountains-and-5-lt-da-lt-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Su - Mountains & 5 < DA < 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-su-mountains-and-5-lt-da-lt-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Fall - Mountains & 5 < DA < 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-fall-mountains-and-5-lt-da-lt-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - W/Sp - Mountains & DA >= 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-w-sp-mountains-and-da-ge-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Su - Mountains & DA >= 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-su-mountains-and-da-ge-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Fall - Mountains & DA >= 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-fall-mountains-and-da-ge-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - W/Sp - Piedmont & DA <= 5 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-w-sp-piedmont-and-da-le-5-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Su - Piedmont & DA <= 5 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-su-piedmont-and-da-le-5-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Fall - Piedmont & DA <= 5 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-fall-piedmont-and-da-le-5-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - W/Sp - Piedmont & 5 < DA < 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-w-sp-piedmont-and-5-lt-da-lt-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Su - Piedmont & 5 < DA < 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-su-piedmont-and-5-lt-da-lt-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Fall - Piedmont & 5 < DA < 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-fall-piedmont-and-5-lt-da-lt-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - W/Sp - Piedmont & DA >= 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-w-sp-piedmont-and-da-ge-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Su - Piedmont & DA >= 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-su-piedmont-and-da-ge-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Fall - Piedmont & DA >= 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-fall-piedmont-and-da-ge-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - W/Sp - Coastal & DA <= 5 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-w-sp-coastal-and-da-le-5-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Su - Coastal & DA <= 5 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-su-coastal-and-da-le-5-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Fall - Coastal & DA <= 5 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-fall-coastal-and-da-le-5-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - W/Sp - Coastal & 5 < DA < 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-w-sp-coastal-and-5-lt-da-lt-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Su - Coastal & 5 < DA < 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-su-coastal-and-5-lt-da-lt-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Fall - Coastal & 5 < DA < 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-fall-coastal-and-5-lt-da-lt-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - W/Sp - Coastal & DA >= 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-w-sp-coastal-and-da-ge-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Su - Coastal & DA >= 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-su-coastal-and-da-ge-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Field - Fall - Coastal & DA >= 10 Sq.Mi.",
+         "registryKey": "sqt:nc:shredders:field-fall-coastal-and-da-ge-10-sq-mi",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-shredders",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-shredders",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-shredders",
+       "metricName": "Shredders",
+       "discipline": "Physicochemistry",
+       "inputType": "field (sampling/assay)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Shredders",
+       "metricStatement": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+       "howToMeasure": "From a macroinvertebrate sample, identify and count shredder taxa and compute the shredder metric per SQT guidance for the appropriate drainage area/region stratum.",
+       "methodContext": "Context: Channel\n\nMethod: Field (sampling/assay)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - Field - W/Sp - Mountains & DA <= 5 Sq.Mi.",
+        "stratification": "Field - W/Sp - Mountains & DA <= 5 Sq.Mi.",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 4.6,
+          "y": 0.2
+         },
+         {
+          "x": 6.9,
+          "y": 0.3
+         },
+         {
+          "x": 13.8,
+          "y": 0.6
+         },
+         {
+          "x": 16.1,
+          "y": 0.7
+         },
+         {
+          "x": 23,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Field - W/Sp - Mountains & DA <= 5 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - W/Sp - Mountains & DA <= 5 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 4.6,
+           "y": 0.2
+          },
+          {
+           "x": 6.9,
+           "y": 0.3
+          },
+          {
+           "x": 13.8,
+           "y": 0.6
+          },
+          {
+           "x": 16.1,
+           "y": 0.7
+          },
+          {
+           "x": 23,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Su - Mountains & DA <= 5 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Su - Mountains & DA <= 5 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 4.2,
+           "y": 0.2
+          },
+          {
+           "x": 6.3,
+           "y": 0.3
+          },
+          {
+           "x": 12.6,
+           "y": 0.6
+          },
+          {
+           "x": 14.7,
+           "y": 0.7
+          },
+          {
+           "x": 21,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Fall - Mountains & DA <= 5 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Fall - Mountains & DA <= 5 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 3.6,
+           "y": 0.2
+          },
+          {
+           "x": 5.4,
+           "y": 0.3
+          },
+          {
+           "x": 10.8,
+           "y": 0.6
+          },
+          {
+           "x": 12.6,
+           "y": 0.7
+          },
+          {
+           "x": 18,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - W/Sp - Mountains & 5 < DA < 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - W/Sp - Mountains & 5 < DA < 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 3.2,
+           "y": 0.2
+          },
+          {
+           "x": 4.8,
+           "y": 0.3
+          },
+          {
+           "x": 9.6,
+           "y": 0.6
+          },
+          {
+           "x": 11.2,
+           "y": 0.7
+          },
+          {
+           "x": 16,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Su - Mountains & 5 < DA < 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Su - Mountains & 5 < DA < 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 2.8,
+           "y": 0.2
+          },
+          {
+           "x": 4.2,
+           "y": 0.3
+          },
+          {
+           "x": 8.4,
+           "y": 0.6
+          },
+          {
+           "x": 9.8,
+           "y": 0.7
+          },
+          {
+           "x": 14,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Fall - Mountains & 5 < DA < 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Fall - Mountains & 5 < DA < 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 2.4,
+           "y": 0.2
+          },
+          {
+           "x": 3.6,
+           "y": 0.3
+          },
+          {
+           "x": 7.2,
+           "y": 0.6
+          },
+          {
+           "x": 8.4,
+           "y": 0.7
+          },
+          {
+           "x": 12,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - W/Sp - Mountains & DA >= 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - W/Sp - Mountains & DA >= 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 2.8,
+           "y": 0.2
+          },
+          {
+           "x": 4.2,
+           "y": 0.3
+          },
+          {
+           "x": 8.4,
+           "y": 0.6
+          },
+          {
+           "x": 9.8,
+           "y": 0.7
+          },
+          {
+           "x": 14,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Su - Mountains & DA >= 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Su - Mountains & DA >= 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 3.2,
+           "y": 0.2
+          },
+          {
+           "x": 4.8,
+           "y": 0.3
+          },
+          {
+           "x": 9.6,
+           "y": 0.6
+          },
+          {
+           "x": 11.2,
+           "y": 0.7
+          },
+          {
+           "x": 16,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Fall - Mountains & DA >= 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Fall - Mountains & DA >= 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 3,
+           "y": 0.2
+          },
+          {
+           "x": 4.5,
+           "y": 0.3
+          },
+          {
+           "x": 9,
+           "y": 0.6
+          },
+          {
+           "x": 10.5,
+           "y": 0.7
+          },
+          {
+           "x": 15,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - W/Sp - Piedmont & DA <= 5 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - W/Sp - Piedmont & DA <= 5 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 3.6,
+           "y": 0.2
+          },
+          {
+           "x": 5.4,
+           "y": 0.3
+          },
+          {
+           "x": 10.8,
+           "y": 0.6
+          },
+          {
+           "x": 12.6,
+           "y": 0.7
+          },
+          {
+           "x": 18,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Su - Piedmont & DA <= 5 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Su - Piedmont & DA <= 5 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 2.4,
+           "y": 0.2
+          },
+          {
+           "x": 3.6,
+           "y": 0.3
+          },
+          {
+           "x": 7.2,
+           "y": 0.6
+          },
+          {
+           "x": 8.4,
+           "y": 0.7
+          },
+          {
+           "x": 12,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Fall - Piedmont & DA <= 5 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Fall - Piedmont & DA <= 5 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 2.8,
+           "y": 0.2
+          },
+          {
+           "x": 4.2,
+           "y": 0.3
+          },
+          {
+           "x": 8.4,
+           "y": 0.6
+          },
+          {
+           "x": 9.8,
+           "y": 0.7
+          },
+          {
+           "x": 14,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - W/Sp - Piedmont & 5 < DA < 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - W/Sp - Piedmont & 5 < DA < 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 2.4,
+           "y": 0.2
+          },
+          {
+           "x": 3.6,
+           "y": 0.3
+          },
+          {
+           "x": 7.2,
+           "y": 0.6
+          },
+          {
+           "x": 8.4,
+           "y": 0.7
+          },
+          {
+           "x": 12,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Su - Piedmont & 5 < DA < 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Su - Piedmont & 5 < DA < 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 1,
+           "y": 0.2
+          },
+          {
+           "x": 1.5,
+           "y": 0.3
+          },
+          {
+           "x": 3,
+           "y": 0.6
+          },
+          {
+           "x": 3.5,
+           "y": 0.7
+          },
+          {
+           "x": 5,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Fall - Piedmont & 5 < DA < 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Fall - Piedmont & 5 < DA < 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 1.6,
+           "y": 0.2
+          },
+          {
+           "x": 2.4,
+           "y": 0.3
+          },
+          {
+           "x": 4.8,
+           "y": 0.6
+          },
+          {
+           "x": 5.6,
+           "y": 0.7
+          },
+          {
+           "x": 8,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - W/Sp - Piedmont & DA >= 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - W/Sp - Piedmont & DA >= 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 1.6,
+           "y": 0.2
+          },
+          {
+           "x": 2.4,
+           "y": 0.3
+          },
+          {
+           "x": 4.8,
+           "y": 0.6
+          },
+          {
+           "x": 5.6,
+           "y": 0.7
+          },
+          {
+           "x": 8,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Su - Piedmont & DA >= 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Su - Piedmont & DA >= 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 1.4,
+           "y": 0.2
+          },
+          {
+           "x": 2.1,
+           "y": 0.3
+          },
+          {
+           "x": 4.2,
+           "y": 0.6
+          },
+          {
+           "x": 4.9,
+           "y": 0.7
+          },
+          {
+           "x": 7,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Fall - Piedmont & DA >= 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Fall - Piedmont & DA >= 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 1.6,
+           "y": 0.2
+          },
+          {
+           "x": 2.4,
+           "y": 0.3
+          },
+          {
+           "x": 4.8,
+           "y": 0.6
+          },
+          {
+           "x": 5.6,
+           "y": 0.7
+          },
+          {
+           "x": 8,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - W/Sp - Coastal & DA <= 5 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - W/Sp - Coastal & DA <= 5 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 6.6,
+           "y": 0.2
+          },
+          {
+           "x": 9.9,
+           "y": 0.3
+          },
+          {
+           "x": 19.8,
+           "y": 0.6
+          },
+          {
+           "x": 23.1,
+           "y": 0.7
+          },
+          {
+           "x": 33,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Su - Coastal & DA <= 5 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Su - Coastal & DA <= 5 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 2.8,
+           "y": 0.2
+          },
+          {
+           "x": 4.2,
+           "y": 0.3
+          },
+          {
+           "x": 8.4,
+           "y": 0.6
+          },
+          {
+           "x": 9.8,
+           "y": 0.7
+          },
+          {
+           "x": 14,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Fall - Coastal & DA <= 5 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Fall - Coastal & DA <= 5 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 5,
+           "y": 0.2
+          },
+          {
+           "x": 7.5,
+           "y": 0.3
+          },
+          {
+           "x": 15,
+           "y": 0.6
+          },
+          {
+           "x": 17.5,
+           "y": 0.7
+          },
+          {
+           "x": 25,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - W/Sp - Coastal & 5 < DA < 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - W/Sp - Coastal & 5 < DA < 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 4,
+           "y": 0.2
+          },
+          {
+           "x": 6,
+           "y": 0.3
+          },
+          {
+           "x": 12,
+           "y": 0.6
+          },
+          {
+           "x": 14,
+           "y": 0.7
+          },
+          {
+           "x": 20,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Su - Coastal & 5 < DA < 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Su - Coastal & 5 < DA < 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 2.6,
+           "y": 0.2
+          },
+          {
+           "x": 3.9,
+           "y": 0.3
+          },
+          {
+           "x": 7.8,
+           "y": 0.6
+          },
+          {
+           "x": 9.1,
+           "y": 0.7
+          },
+          {
+           "x": 13,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Fall - Coastal & 5 < DA < 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Fall - Coastal & 5 < DA < 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 2.4,
+           "y": 0.2
+          },
+          {
+           "x": 3.6,
+           "y": 0.3
+          },
+          {
+           "x": 7.2,
+           "y": 0.6
+          },
+          {
+           "x": 8.4,
+           "y": 0.7
+          },
+          {
+           "x": 12,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - W/Sp - Coastal & DA >= 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - W/Sp - Coastal & DA >= 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 3.4,
+           "y": 0.2
+          },
+          {
+           "x": 5.1,
+           "y": 0.3
+          },
+          {
+           "x": 10.2,
+           "y": 0.6
+          },
+          {
+           "x": 11.9,
+           "y": 0.7
+          },
+          {
+           "x": 17,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Su - Coastal & DA >= 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Su - Coastal & DA >= 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 3.2,
+           "y": 0.2
+          },
+          {
+           "x": 4.8,
+           "y": 0.3
+          },
+          {
+           "x": 9.6,
+           "y": 0.6
+          },
+          {
+           "x": 11.2,
+           "y": 0.7
+          },
+          {
+           "x": 16,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Field - Fall - Coastal & DA >= 10 Sq.Mi.",
+         "layerName": "North Carolina SQT - Field - Fall - Coastal & DA >= 10 Sq.Mi.",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 1.6,
+           "y": 0.2
+          },
+          {
+           "x": 2.4,
+           "y": 0.3
+          },
+          {
+           "x": 4.8,
+           "y": 0.6
+          },
+          {
+           "x": 5.6,
+           "y": 0.7
+          },
+          {
+           "x": 8,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Field - W/Sp - Mountains & DA <= 5 Sq.Mi."
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "nutrient-cycling-buffer-width": {
+     "displayName": "Buffer Width",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Stream Type A, B, or Bc",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 13.0,
+       "y": 0.3
+      },
+      {
+       "x": 30.0,
+       "y": 0.7
+      },
+      {
+       "x": 50.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Stream Type A, B, or Bc",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 13.0,
+         "y": 0.3
+        },
+        {
+         "x": 30.0,
+         "y": 0.7
+        },
+        {
+         "x": 50.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Stream type C or E",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 30.0,
+         "y": 0.3
+        },
+        {
+         "x": 45.0,
+         "y": 0.7
+        },
+        {
+         "x": 150.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Buffer Width",
+      "units": "",
+      "metric_family": "desktop (gis) and/or field",
+      "notes": "Measure average buffer width along the reach by land use/valley setting; apply slope- or stream-type-stratified SQT thresholds.",
+      "column_name": "nutrient-cycling-buffer-width",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Desktop (GIS) and/or Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Stream Type A, B, or Bc",
+         "registryKey": "sqt:nc:buffer-width:stream-type-a-b-or-bc",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Stream type C or E",
+         "registryKey": "sqt:nc:buffer-width:stream-type-c-or-e",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "nutrient-cycling-buffer-width",
+       "discipline": "Physicochemistry",
+       "function_label": "Nutrient cycling"
+      }
+     ],
+     "decision": {
+      "metric": "nutrient-cycling-buffer-width",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "nutrient-cycling-buffer-width",
+       "metricName": "Buffer Width",
+       "discipline": "Physicochemistry",
+       "inputType": "desktop (gis) and/or field",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Buffer Width",
+       "metricStatement": "Width of vegetated riparian buffer that filters nutrients/sediment and moderates temperature and organic matter inputs.",
+       "howToMeasure": "Measure average buffer width along the reach by land use/valley setting; apply slope- or stream-type-stratified SQT thresholds.",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Desktop (GIS) and/or Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - Stream Type A, B, or Bc",
+        "stratification": "Stream Type A, B, or Bc",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 13,
+          "y": 0.3
+         },
+         {
+          "x": 30,
+          "y": 0.7
+         },
+         {
+          "x": 50,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Stream Type A, B, or Bc",
+         "layerName": "North Carolina SQT - Stream Type A, B, or Bc",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 13,
+           "y": 0.3
+          },
+          {
+           "x": 30,
+           "y": 0.7
+          },
+          {
+           "x": 50,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Stream type C or E",
+         "layerName": "North Carolina SQT - Stream type C or E",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 30,
+           "y": 0.3
+          },
+          {
+           "x": 45,
+           "y": 0.7
+          },
+          {
+           "x": 150,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Stream Type A, B, or Bc"
+      },
+      "functions": [
+       "nutrient-cycling"
+      ]
+     }
+    },
+    "nutrient-cycling-total-nitrogen": {
+     "displayName": "Total Nitrogen",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 0.7,
+       "y": 0.7
+      },
+      {
+       "x": 2.0,
+       "y": 0.3
+      },
+      {
+       "x": 3.9,
+       "y": 0.082174
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Total Nitrogen",
+      "units": "",
+      "metric_family": "field (sampling) and/or desktop (data compilation)",
+      "notes": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+      "column_name": "nutrient-cycling-total-nitrogen",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+      "curveCaveats": [
+       "The published curve stops at its high end, 3.9 (index 0.082174); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:total-nitrogen:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 3.9 (index 0.082174); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "nutrient-cycling-total-nitrogen",
+       "discipline": "Physicochemistry",
+       "function_label": "Nutrient cycling"
+      }
+     ],
+     "decision": {
+      "metric": "nutrient-cycling-total-nitrogen",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "nutrient-cycling-total-nitrogen",
+       "metricName": "Total Nitrogen",
+       "discipline": "Physicochemistry",
+       "inputType": "field (sampling) and/or desktop (data compilation)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Total Nitrogen",
+       "metricStatement": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+       "howToMeasure": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+       "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 0.7,
+          "y": 0.7
+         },
+         {
+          "x": 2,
+          "y": 0.3
+         },
+         {
+          "x": 3.9,
+          "y": 0.082174
+         }
+        ]
+       }
+      },
+      "functions": [
+       "nutrient-cycling"
+      ]
+     }
+    },
+    "nutrient-cycling-total-phosphorous": {
+     "displayName": "Total Phosphorous",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Adjacent",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 0.09,
+       "y": 0.7
+      },
+      {
+       "x": 0.18,
+       "y": 0.3
+      },
+      {
+       "x": 0.236,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Total Phosphorous",
+      "units": "",
+      "metric_family": "field (sampling) and/or desktop (data compilation)",
+      "notes": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+      "column_name": "nutrient-cycling-total-phosphorous",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Adjacent",
+         "registryKey": "sqt:nc:total-phosphorous:adjacent",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "nutrient-cycling-total-phosphorous",
+       "discipline": "Physicochemistry",
+       "function_label": "Nutrient cycling"
+      }
+     ],
+     "decision": {
+      "metric": "nutrient-cycling-total-phosphorous",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "nutrient-cycling-total-phosphorous",
+       "metricName": "Total Phosphorous",
+       "discipline": "Physicochemistry",
+       "inputType": "field (sampling) and/or desktop (data compilation)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Total Phosphorous",
+       "metricStatement": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+       "howToMeasure": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+       "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - Adjacent",
+        "stratification": "Adjacent",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 0.09,
+          "y": 0.7
+         },
+         {
+          "x": 0.18,
+          "y": 0.3
+         },
+         {
+          "x": 0.236,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "nutrient-cycling"
+      ]
+     }
+    },
+    "water-and-soil-quality-fecal-coliform-bacteria": {
+     "displayName": "Fecal Coliform Bacteria",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 85.27572484,
+       "y": 0.7
+      },
+      {
+       "x": 199.0,
+       "y": 0.3
+      },
+      {
+       "x": 284.2524161,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Fecal Coliform Bacteria",
+      "units": "",
+      "metric_family": "field (meter/logger) and/or desktop (data compilation)",
+      "notes": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+      "column_name": "water-and-soil-quality-fecal-coliform-bacteria",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:fecal-coliform-bacteria:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "water-and-soil-quality-fecal-coliform-bacteria",
+       "discipline": "Physicochemistry",
+       "function_label": "Water & soil quality"
+      }
+     ],
+     "decision": {
+      "metric": "water-and-soil-quality-fecal-coliform-bacteria",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "water-and-soil-quality-fecal-coliform-bacteria",
+       "metricName": "Fecal Coliform Bacteria",
+       "discipline": "Physicochemistry",
+       "inputType": "field (meter/logger) and/or desktop (data compilation)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Fecal Coliform Bacteria",
+       "metricStatement": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+       "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 85.27572484,
+          "y": 0.7
+         },
+         {
+          "x": 199,
+          "y": 0.3
+         },
+         {
+          "x": 284.2524161,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "water-soil-quality"
+      ]
+     }
+    },
+    "water-and-soil-quality-specific-conductivity": {
+     "displayName": "Specific Conductivity",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Piedmont",
+     "points": [
+      {
+       "x": 78.0,
+       "y": 0.69
+      },
+      {
+       "x": 229.0,
+       "y": 0.3
+      },
+      {
+       "x": 342.8846154,
+       "y": 0.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Piedmont",
+       "points": [
+        {
+         "x": 78.0,
+         "y": 0.69
+        },
+        {
+         "x": 229.0,
+         "y": 0.3
+        },
+        {
+         "x": 342.8846154,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "Mountain Region",
+       "points": [
+        {
+         "x": 41.0,
+         "y": 0.69
+        },
+        {
+         "x": 66.0,
+         "y": 0.3
+        },
+        {
+         "x": 85.23076923,
+         "y": 0.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Specific Conductivity",
+      "units": "",
+      "metric_family": "field (meter/logger) and/or desktop (data compilation)",
+      "notes": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+      "column_name": "water-and-soil-quality-specific-conductivity",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+      "curveCaveats": [
+       "Piedmont: the published curve stops at its low end, 78 (index 0.69); past it DEEP holds that index.",
+       "Mountain Region: the published curve stops at its low end, 41 (index 0.69); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Piedmont",
+         "registryKey": "sqt:nc:specific-conductivity:piedmont",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 78 (index 0.69); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Mountain Region",
+         "registryKey": "sqt:nc:specific-conductivity:mountain-region",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 41 (index 0.69); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "water-and-soil-quality-specific-conductivity",
+       "discipline": "Physicochemistry",
+       "function_label": "Water & soil quality"
+      }
+     ],
+     "decision": {
+      "metric": "water-and-soil-quality-specific-conductivity",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "water-and-soil-quality-specific-conductivity",
+       "metricName": "Specific Conductivity",
+       "discipline": "Physicochemistry",
+       "inputType": "field (meter/logger) and/or desktop (data compilation)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Specific Conductivity",
+       "metricStatement": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+       "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - Piedmont",
+        "stratification": "Piedmont",
+        "points": [
+         {
+          "x": 78,
+          "y": 0.69
+         },
+         {
+          "x": 229,
+          "y": 0.3
+         },
+         {
+          "x": 342.8846154,
+          "y": 0
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Piedmont",
+         "layerName": "North Carolina SQT - Piedmont",
+         "points": [
+          {
+           "x": 78,
+           "y": 0.69
+          },
+          {
+           "x": 229,
+           "y": 0.3
+          },
+          {
+           "x": 342.8846154,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "Mountain Region",
+         "layerName": "North Carolina SQT - Mountain Region",
+         "points": [
+          {
+           "x": 41,
+           "y": 0.69
+          },
+          {
+           "x": 66,
+           "y": 0.3
+          },
+          {
+           "x": 85.23076923,
+           "y": 0
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Piedmont"
+      },
+      "functions": [
+       "water-soil-quality"
+      ]
+     }
+    },
+    "habitat-provision-lwd-pieces": {
+     "displayName": "LWD # Pieces",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.3
+      },
+      {
+       "x": 15.0,
+       "y": 0.69
+      },
+      {
+       "x": 30.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "LWD # Pieces",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+      "column_name": "habitat-provision-lwd-pieces",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:lwd-pieces:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-lwd-pieces",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-lwd-pieces",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-lwd-pieces",
+       "metricName": "LWD # Pieces",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "LWD # Pieces",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0.3
+         },
+         {
+          "x": 15,
+          "y": 0.69
+         },
+         {
+          "x": 30,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-lwd-index": {
+     "displayName": "LWD Index",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 200.0,
+       "y": 0.3
+      },
+      {
+       "x": 300.0,
+       "y": 0.7
+      },
+      {
+       "x": 700.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "LWD Index",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+      "column_name": "habitat-provision-lwd-index",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:nc:lwd-index:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-lwd-index",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-lwd-index",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-lwd-index",
+       "metricName": "LWD Index",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "LWD Index",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 200,
+          "y": 0.3
+         },
+         {
+          "x": 300,
+          "y": 0.7
+         },
+         {
+          "x": 700,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-percent-riffle": {
+     "displayName": "Percent Riffle",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Streams < 3% slope",
+     "points": [
+      {
+       "x": 31.42857143,
+       "y": 0.0
+      },
+      {
+       "x": 40.0,
+       "y": 0.3
+      },
+      {
+       "x": 60.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Streams < 3% slope",
+       "points": [
+        {
+         "x": 31.42857143,
+         "y": 0.0
+        },
+        {
+         "x": 40.0,
+         "y": 0.3
+        },
+        {
+         "x": 60.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Streams 3%-10% slope",
+       "points": [
+        {
+         "x": 33.10161663,
+         "y": 0.0
+        },
+        {
+         "x": 40.0,
+         "y": 0.3
+        },
+        {
+         "x": 49.0,
+         "y": 0.69
+        },
+        {
+         "x": 50.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Streams >10% slope",
+       "points": [
+        {
+         "x": 66.7145,
+         "y": 0.0
+        },
+        {
+         "x": 70.0,
+         "y": 0.3
+        },
+        {
+         "x": 75.0,
+         "y": 0.69
+        },
+        {
+         "x": 80.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Percent Riffle",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-percent-riffle",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [
+       "Streams < 3% slope: the metric library row this curve was transcribed from is defective: Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 70 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix.",
+       "Streams 3%-10% slope: the metric library row this curve was transcribed from is defective: Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 60 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix.",
+       "Streams >10% slope: the metric library row this curve was transcribed from is defective: Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 80 scores 1. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix."
+      ],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Streams < 3% slope",
+         "registryKey": "sqt:nc:percent-riffle:streams-lt-3-pct-slope",
+         "verification": "defective",
+         "defects": [
+          "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 70 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original."
+         ],
+         "differences": [
+          "dropped-extra-breakpoint"
+         ],
+         "openEnds": []
+        },
+        {
+         "stratum": "Streams 3%-10% slope",
+         "registryKey": "sqt:nc:percent-riffle:streams-3-pct-10-pct-slope",
+         "verification": "defective",
+         "defects": [
+          "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 60 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original."
+         ],
+         "differences": [
+          "dropped-extra-breakpoint"
+         ],
+         "openEnds": []
+        },
+        {
+         "stratum": "Streams >10% slope",
+         "registryKey": "sqt:nc:percent-riffle:streams-gt-10-pct-slope",
+         "verification": "defective",
+         "defects": [
+          "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 80 scores 1. Not checked against this state's original."
+         ],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-percent-riffle",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-percent-riffle",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-percent-riffle",
+       "metricName": "Percent Riffle",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Percent Riffle",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - Streams < 3% slope",
+        "stratification": "Streams < 3% slope",
+        "points": [
+         {
+          "x": 31.42857143,
+          "y": 0
+         },
+         {
+          "x": 40,
+          "y": 0.3
+         },
+         {
+          "x": 60,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Streams < 3% slope",
+         "layerName": "North Carolina SQT - Streams < 3% slope",
+         "points": [
+          {
+           "x": 31.42857143,
+           "y": 0
+          },
+          {
+           "x": 40,
+           "y": 0.3
+          },
+          {
+           "x": 60,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Streams 3%-10% slope",
+         "layerName": "North Carolina SQT - Streams 3%-10% slope",
+         "points": [
+          {
+           "x": 33.10161663,
+           "y": 0
+          },
+          {
+           "x": 40,
+           "y": 0.3
+          },
+          {
+           "x": 49,
+           "y": 0.69
+          },
+          {
+           "x": 50,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Streams >10% slope",
+         "layerName": "North Carolina SQT - Streams >10% slope",
+         "points": [
+          {
+           "x": 66.7145,
+           "y": 0
+          },
+          {
+           "x": 70,
+           "y": 0.3
+          },
+          {
+           "x": 75,
+           "y": 0.69
+          },
+          {
+           "x": 80,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Streams < 3% slope"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-pool-depth-ratio": {
+     "displayName": "Pool Depth Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "gravel bed C and E stream",
+     "points": [
+      {
+       "x": 1.1,
+       "y": 0.0
+      },
+      {
+       "x": 1.2,
+       "y": 0.3
+      },
+      {
+       "x": 1.51,
+       "y": 0.7
+      },
+      {
+       "x": 1.742540494,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "gravel bed C and E stream",
+       "points": [
+        {
+         "x": 1.1,
+         "y": 0.0
+        },
+        {
+         "x": 1.2,
+         "y": 0.3
+        },
+        {
+         "x": 1.51,
+         "y": 0.7
+        },
+        {
+         "x": 1.742540494,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "sand bed C and E stream",
+       "points": [
+        {
+         "x": 1.1,
+         "y": 0.0
+        },
+        {
+         "x": 1.15,
+         "y": 0.3
+        },
+        {
+         "x": 1.21,
+         "y": 0.7
+        },
+        {
+         "x": 1.2513,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "A, B and Bc stream",
+       "points": [
+        {
+         "x": 1.1,
+         "y": 0.0
+        },
+        {
+         "x": 1.2,
+         "y": 0.3
+        },
+        {
+         "x": 1.51,
+         "y": 0.7
+        },
+        {
+         "x": 1.742540494,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Pool Depth Ratio",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-pool-depth-ratio",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "gravel bed C and E stream",
+         "registryKey": "sqt:nc:pool-depth-ratio:gravel-bed-c-and-e-stream",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "sand bed C and E stream",
+         "registryKey": "sqt:nc:pool-depth-ratio:sand-bed-c-and-e-stream",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "A, B and Bc stream",
+         "registryKey": "sqt:nc:pool-depth-ratio:a-b-and-bc-stream",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-pool-depth-ratio",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-pool-depth-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-pool-depth-ratio",
+       "metricName": "Pool Depth Ratio",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Pool Depth Ratio",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - gravel bed C and E stream",
+        "stratification": "gravel bed C and E stream",
+        "points": [
+         {
+          "x": 1.1,
+          "y": 0
+         },
+         {
+          "x": 1.2,
+          "y": 0.3
+         },
+         {
+          "x": 1.51,
+          "y": 0.7
+         },
+         {
+          "x": 1.742540494,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "gravel bed C and E stream",
+         "layerName": "North Carolina SQT - gravel bed C and E stream",
+         "points": [
+          {
+           "x": 1.1,
+           "y": 0
+          },
+          {
+           "x": 1.2,
+           "y": 0.3
+          },
+          {
+           "x": 1.51,
+           "y": 0.7
+          },
+          {
+           "x": 1.742540494,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "sand bed C and E stream",
+         "layerName": "North Carolina SQT - sand bed C and E stream",
+         "points": [
+          {
+           "x": 1.1,
+           "y": 0
+          },
+          {
+           "x": 1.15,
+           "y": 0.3
+          },
+          {
+           "x": 1.21,
+           "y": 0.7
+          },
+          {
+           "x": 1.2513,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "A, B and Bc stream",
+         "layerName": "North Carolina SQT - A, B and Bc stream",
+         "points": [
+          {
+           "x": 1.1,
+           "y": 0
+          },
+          {
+           "x": 1.2,
+           "y": 0.3
+          },
+          {
+           "x": 1.51,
+           "y": 0.7
+          },
+          {
+           "x": 1.742540494,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "gravel bed C and E stream"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-pool-spacing-ratio": {
+     "displayName": "Pool Spacing Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "slope < 4% & DA >=10 & C or E stream types",
+     "points": [
+      {
+       "x": 2.9416,
+       "y": 0.0
+      },
+      {
+       "x": 3.2,
+       "y": 0.29
+      },
+      {
+       "x": 4.0,
+       "y": 1.0
+      },
+      {
+       "x": 7.8,
+       "y": 0.3
+      },
+      {
+       "x": 8.0668,
+       "y": 0.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "slope < 4% & DA >=10 & C or E stream types",
+       "points": [
+        {
+         "x": 2.9416,
+         "y": 0.0
+        },
+        {
+         "x": 3.2,
+         "y": 0.29
+        },
+        {
+         "x": 4.0,
+         "y": 1.0
+        },
+        {
+         "x": 7.8,
+         "y": 0.3
+        },
+        {
+         "x": 8.0668,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "slope < 4% & DA <10 & C or E stream types",
+       "points": [
+        {
+         "x": 3.0,
+         "y": 0.3
+        },
+        {
+         "x": 4.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Pool Spacing Ratio",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-pool-spacing-ratio"
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [
+       "slope < 4% & DA <10 & C or E stream types: the metric library row this curve was transcribed from is defective: Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 5.5 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix.",
+       "slope < 4% & DA <10 & C or E stream types: the published curve stops at its low end, 3 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "slope < 4% & DA >=10 & C or E stream types",
+         "registryKey": "sqt:nc:pool-spacing-ratio:slope-lt-4-pct-and-da-ge-10-and-c-or-e-stream-types",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "dropped-extra-breakpoint"
+         ],
+         "openEnds": []
+        },
+        {
+         "stratum": "slope < 4% & DA <10 & C or E stream types",
+         "registryKey": "sqt:nc:pool-spacing-ratio:slope-lt-4-pct-and-da-lt-10-and-c-or-e-stream-types",
+         "verification": "defective",
+         "defects": [
+          "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 5.5 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original."
+         ],
+         "differences": [
+          "dropped-extra-breakpoint",
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 3 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-pool-spacing-ratio",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-pool-spacing-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-pool-spacing-ratio",
+       "metricName": "Pool Spacing Ratio",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "Pool Spacing Ratio",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - slope < 4% & DA >=10 & C or E stream types",
+        "stratification": "slope < 4% & DA >=10 & C or E stream types",
+        "points": [
+         {
+          "x": 2.9416,
+          "y": 0
+         },
+         {
+          "x": 3.2,
+          "y": 0.29
+         },
+         {
+          "x": 4,
+          "y": 1
+         },
+         {
+          "x": 7.8,
+          "y": 0.3
+         },
+         {
+          "x": 8.0668,
+          "y": 0
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "slope < 4% & DA >=10 & C or E stream types",
+         "layerName": "North Carolina SQT - slope < 4% & DA >=10 & C or E stream types",
+         "points": [
+          {
+           "x": 2.9416,
+           "y": 0
+          },
+          {
+           "x": 3.2,
+           "y": 0.29
+          },
+          {
+           "x": 4,
+           "y": 1
+          },
+          {
+           "x": 7.8,
+           "y": 0.3
+          },
+          {
+           "x": 8.0668,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "slope < 4% & DA <10 & C or E stream types",
+         "layerName": "North Carolina SQT - slope < 4% & DA <10 & C or E stream types",
+         "points": [
+          {
+           "x": 3,
+           "y": 0.3
+          },
+          {
+           "x": 4,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "slope < 4% & DA >=10 & C or E stream types"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "population-support-ept-taxa-present": {
+     "displayName": "EPT Taxa Present",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Mountains",
+     "points": [
+      {
+       "x": 10.0,
+       "y": 0.0
+      },
+      {
+       "x": 19.0,
+       "y": 0.3
+      },
+      {
+       "x": 28.0,
+       "y": 0.7
+      },
+      {
+       "x": 36.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Mountains",
+       "points": [
+        {
+         "x": 10.0,
+         "y": 0.0
+        },
+        {
+         "x": 19.0,
+         "y": 0.3
+        },
+        {
+         "x": 28.0,
+         "y": 0.7
+        },
+        {
+         "x": 36.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Piedmont",
+       "points": [
+        {
+         "x": 6.0,
+         "y": 0.0
+        },
+        {
+         "x": 14.0,
+         "y": 0.3
+        },
+        {
+         "x": 21.0,
+         "y": 0.7
+        },
+        {
+         "x": 28.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Coastal Plain",
+       "points": [
+        {
+         "x": 5.0,
+         "y": 0.0
+        },
+        {
+         "x": 12.0,
+         "y": 0.3
+        },
+        {
+         "x": 18.0,
+         "y": 0.7
+        },
+        {
+         "x": 24.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "EPT Taxa Present",
+      "units": "",
+      "metric_family": "field (bioassessment) and/or desktop (existing scores)",
+      "notes": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+      "column_name": "population-support-ept-taxa-present",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Mountains",
+         "registryKey": "sqt:nc:ept-taxa-present:mountains",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Piedmont",
+         "registryKey": "sqt:nc:ept-taxa-present:piedmont",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Coastal Plain",
+         "registryKey": "sqt:nc:ept-taxa-present:coastal-plain",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "population-support-ept-taxa-present",
+       "discipline": "Biology",
+       "function_label": "Population support"
+      }
+     ],
+     "decision": {
+      "metric": "population-support-ept-taxa-present",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "population-support-ept-taxa-present",
+       "metricName": "EPT Taxa Present",
+       "discipline": "Biology",
+       "inputType": "field (bioassessment) and/or desktop (existing scores)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "EPT Taxa Present",
+       "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+       "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+       "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - Mountains",
+        "stratification": "Mountains",
+        "points": [
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 19,
+          "y": 0.3
+         },
+         {
+          "x": 28,
+          "y": 0.7
+         },
+         {
+          "x": 36,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Mountains",
+         "layerName": "North Carolina SQT - Mountains",
+         "points": [
+          {
+           "x": 10,
+           "y": 0
+          },
+          {
+           "x": 19,
+           "y": 0.3
+          },
+          {
+           "x": 28,
+           "y": 0.7
+          },
+          {
+           "x": 36,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Piedmont",
+         "layerName": "North Carolina SQT - Piedmont",
+         "points": [
+          {
+           "x": 6,
+           "y": 0
+          },
+          {
+           "x": 14,
+           "y": 0.3
+          },
+          {
+           "x": 21,
+           "y": 0.7
+          },
+          {
+           "x": 28,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Coastal Plain",
+         "layerName": "North Carolina SQT - Coastal Plain",
+         "points": [
+          {
+           "x": 5,
+           "y": 0
+          },
+          {
+           "x": 12,
+           "y": 0.3
+          },
+          {
+           "x": 18,
+           "y": 0.7
+          },
+          {
+           "x": 24,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Mountains"
+      },
+      "functions": [
+       "population-support"
+      ]
+     }
+    },
+    "population-support-ncibi-score": {
+     "displayName": "NCIBI Score",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "French Broad, Hiwassee, Little Tennessee, New, and Watauga River basins",
+     "points": [
+      {
+       "x": 21.15384615,
+       "y": 0.0
+      },
+      {
+       "x": 33.0,
+       "y": 0.3
+      },
+      {
+       "x": 48.0,
+       "y": 0.7
+      },
+      {
+       "x": 60.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "French Broad, Hiwassee, Little Tennessee, New, and Watauga River basins",
+       "points": [
+        {
+         "x": 21.15384615,
+         "y": 0.0
+        },
+        {
+         "x": 33.0,
+         "y": 0.3
+        },
+        {
+         "x": 48.0,
+         "y": 0.7
+        },
+        {
+         "x": 60.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Broad, Catawba, Savannah, and Yadkin River basins",
+       "points": [
+        {
+         "x": 26.6,
+         "y": 0.0
+        },
+        {
+         "x": 35.0,
+         "y": 0.3
+        },
+        {
+         "x": 48.0,
+         "y": 0.7
+        },
+        {
+         "x": 60.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Cape Fear, Neuse, Roanoke, and Tar-Pamlico River basins",
+       "points": [
+        {
+         "x": 25.1,
+         "y": 0.0
+        },
+        {
+         "x": 33.0,
+         "y": 0.3
+        },
+        {
+         "x": 46.0,
+         "y": 0.7
+        },
+        {
+         "x": 60.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "NCIBI Score",
+      "units": "",
+      "metric_family": "field (bioassessment) and/or desktop (existing scores)",
+      "notes": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+      "column_name": "population-support-ncibi-score",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "North Carolina Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "North Carolina SQT"
+        }
+       ]
+      },
+      "sourceCitation": "North Carolina SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "nc-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+      },
+      "sqtTranscription": {
+       "tool": "North Carolina Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "French Broad, Hiwassee, Little Tennessee, New, and Watauga River basins",
+         "registryKey": "sqt:nc:ncibi-score:french-broad-hiwassee-little-tennessee-new-and-watauga-river-basins",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Broad, Catawba, Savannah, and Yadkin River basins",
+         "registryKey": "sqt:nc:ncibi-score:broad-catawba-savannah-and-yadkin-river-basins",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Cape Fear, Neuse, Roanoke, and Tar-Pamlico River basins",
+         "registryKey": "sqt:nc:ncibi-score:cape-fear-neuse-roanoke-and-tar-pamlico-river-basins",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "population-support-ncibi-score",
+       "discipline": "Biology",
+       "function_label": "Population support"
+      }
+     ],
+     "decision": {
+      "metric": "population-support-ncibi-score",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "population-support-ncibi-score",
+       "metricName": "NCIBI Score",
+       "discipline": "Biology",
+       "inputType": "field (bioassessment) and/or desktop (existing scores)",
+       "sourceCitation": "North Carolina SQT",
+       "xLabel": "NCIBI Score",
+       "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+       "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+       "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "North Carolina SQT - French Broad, Hiwassee, Little Tennessee, New, and Watauga River basins",
+        "stratification": "French Broad, Hiwassee, Little Tennessee, New, and Watauga River basins",
+        "points": [
+         {
+          "x": 21.15384615,
+          "y": 0
+         },
+         {
+          "x": 33,
+          "y": 0.3
+         },
+         {
+          "x": 48,
+          "y": 0.7
+         },
+         {
+          "x": 60,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "French Broad, Hiwassee, Little Tennessee, New, and Watauga River basins",
+         "layerName": "North Carolina SQT - French Broad, Hiwassee, Little Tennessee, New, and Watauga River basins",
+         "points": [
+          {
+           "x": 21.15384615,
+           "y": 0
+          },
+          {
+           "x": 33,
+           "y": 0.3
+          },
+          {
+           "x": 48,
+           "y": 0.7
+          },
+          {
+           "x": 60,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Broad, Catawba, Savannah, and Yadkin River basins",
+         "layerName": "North Carolina SQT - Broad, Catawba, Savannah, and Yadkin River basins",
+         "points": [
+          {
+           "x": 26.6,
+           "y": 0
+          },
+          {
+           "x": 35,
+           "y": 0.3
+          },
+          {
+           "x": 48,
+           "y": 0.7
+          },
+          {
+           "x": 60,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Cape Fear, Neuse, Roanoke, and Tar-Pamlico River basins",
+         "layerName": "North Carolina SQT - Cape Fear, Neuse, Roanoke, and Tar-Pamlico River basins",
+         "points": [
+          {
+           "x": 25.1,
+           "y": 0
+          },
+          {
+           "x": 33,
+           "y": 0.3
+          },
+          {
+           "x": 46,
+           "y": 0.7
+          },
+          {
+           "x": 60,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "French Broad, Hiwassee, Little Tennessee, New, and Watauga River basins"
+      },
+      "functions": [
+       "population-support"
+      ]
+     }
+    }
+   },
+   "carriedFrom": {
+    "assessmentId": "nc-sqt-adapted",
+    "fromVersion": 1,
+    "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+   },
+   "transcription": {
+    "kind": "state-sqt",
+    "tool": "North Carolina Stream Quantification Tool",
+    "by": "STAF SQT migration",
+    "on": "2026-07-12",
+    "source": "docs/assets/data/metric-library/detailed-adapted-assessments.json"
+   }
+  },
+  "owner_curve_decisions": [],
+  "candidate_register": null,
+  "wizard_draft": null
+ }
+}
