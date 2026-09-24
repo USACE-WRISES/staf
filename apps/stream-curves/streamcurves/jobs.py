@@ -1,10 +1,13 @@
 """A bounded job runner for campaigns: many independent jobs, a few at a time, resumable.
 
 A job is a spec (anything JSON can hold) of a kind; its id is the SHA-256 of the canonical
-``{kind, spec}``, so the same work always has the same id and a job whose completion record
-names that id is never run again. Every job runs in its own process, with the thread caps
-of ``THREAD_CAPS`` and the environment it names, and writes only inside its own folder. The
-coordinator (the process calling ``run``) is the only writer of the campaign's index and
+``{kind, spec, argv, target, env, cwd}``, so the same work always has the same id and a job
+whose completion record names that id is never run again. A caller puts into the spec the
+digest of every input the work reads (code, data, packages), so a changed input is another
+job. Every job runs in its own process, with the thread caps of ``THREAD_CAPS`` and the
+environment it names, and gets its own output folder; a job that writes elsewhere (a stage job
+writes its region's run folder) binds that to its inputs itself. One coordinator (the process
+calling ``run``, holding the campaign's lock) is the only writer of the campaign's index and
 summary. A failure is recorded and never stops the other jobs; an interrupted campaign resumes
 by running ``run`` again: completed jobs are skipped, anything else starts over in a clean
 output folder.
@@ -12,6 +15,7 @@ output folder.
 Layout under a campaign folder::
 
     campaign.json                    what the campaign is (written once)
+    lock.json                        the running coordinator (pid, host, start); removed at the end
     index.jsonl                      one line per job event, append-only
     summary.json                     every job's last state, rewritten as jobs finish
     jobs/<id>/job.json               the job's kind and spec
@@ -73,6 +77,52 @@ def tree_digest(folder: Path) -> dict:
             for p in sorted(folder.rglob("*")) if p.is_file()}
 
 
+def tree_fingerprint(root: Path, folders) -> str:
+    """SHA-256 over every file under ``folders`` of ``root`` (relative path and bytes, caches
+    skipped): a job's code and data inputs in one digest, for its spec."""
+    h = hashlib.sha256()
+    for sub in folders:
+        for p in sorted((Path(root) / sub).rglob("*")):
+            if not p.is_file() or "__pycache__" in p.parts:
+                continue
+            h.update(p.relative_to(root).as_posix().encode("utf-8"))
+            h.update(b"\0")
+            h.update(p.read_bytes())
+            h.update(b"\0")
+    return h.hexdigest()
+
+
+def peak_memory_mb() -> Optional[float]:
+    """This process's peak working set (resident set) in MB, or None where it cannot be read.
+    It counts native buffers (Arrow's pool) that ``tracemalloc`` does not see."""
+    try:
+        if os.name == "nt":
+            import ctypes
+            from ctypes import wintypes
+
+            class _Counters(ctypes.Structure):
+                _fields_ = [("cb", wintypes.DWORD), ("PageFaultCount", wintypes.DWORD),
+                            ("PeakWorkingSetSize", ctypes.c_size_t), ("WorkingSetSize", ctypes.c_size_t),
+                            ("QuotaPeakPagedPoolUsage", ctypes.c_size_t), ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                            ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                            ("QuotaNonPagedPoolUsage", ctypes.c_size_t), ("PagefileUsage", ctypes.c_size_t),
+                            ("PeakPagefileUsage", ctypes.c_size_t)]
+            c = _Counters()
+            c.cb = ctypes.sizeof(_Counters)
+            k32 = ctypes.WinDLL("kernel32")
+            k32.GetCurrentProcess.restype = wintypes.HANDLE      # a 64-bit pseudo handle
+            psapi = ctypes.WinDLL("psapi")
+            psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(_Counters), wintypes.DWORD]
+            psapi.GetProcessMemoryInfo.restype = wintypes.BOOL
+            if not psapi.GetProcessMemoryInfo(k32.GetCurrentProcess(), ctypes.byref(c), c.cb):
+                return None
+            return round(c.PeakWorkingSetSize / 1e6, 1)
+        import resource
+        return round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e3, 1)
+    except Exception:  # noqa: BLE001 - a measurement, never a failure
+        return None
+
+
 def seed_for(job_id: str, stream: str = "default") -> int:
     """A seed that belongs to a job (and a named stream within it), never to its position in
     a queue or to the worker that runs it."""
@@ -92,7 +142,9 @@ class Job:
 
     @property
     def id(self) -> str:
-        return hashlib.sha256(canonical({"kind": self.kind, "spec": self.spec})).hexdigest()[:16]
+        return hashlib.sha256(canonical({"kind": self.kind, "spec": self.spec, "argv": self.argv,
+                                         "target": self.target, "env": self.env,
+                                         "cwd": self.cwd})).hexdigest()[:16]
 
     def describe(self) -> dict:
         return {"id": self.id, "kind": self.kind, "label": self.label, "spec": self.spec,
@@ -100,9 +152,70 @@ class Job:
 
 
 def _write_atomic(path: Path, obj) -> None:
-    tmp = path.with_name(path.name + ".part")
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.part")
     tmp.write_text(json.dumps(obj, indent=1, sort_keys=True, default=str) + "\n", encoding="utf-8")
     os.replace(tmp, path)
+
+
+class CampaignBusy(RuntimeError):
+    """Another coordinator holds the campaign."""
+
+
+def _pid_alive(pid: int) -> bool:
+    """True while process ``pid`` runs (never signals it: on Windows ``os.kill`` would end it)."""
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+        k32 = ctypes.WinDLL("kernel32")
+        k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        k32.OpenProcess.restype = wintypes.HANDLE
+        k32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+        k32.GetExitCodeProcess.restype = wintypes.BOOL
+        k32.CloseHandle.argtypes = [wintypes.HANDLE]
+        handle = k32.OpenProcess(0x1000, False, int(pid))     # PROCESS_QUERY_LIMITED_INFORMATION
+        if not handle:
+            return False
+        try:
+            code = wintypes.DWORD()
+            return bool(k32.GetExitCodeProcess(handle, ctypes.byref(code))) and code.value == 259
+        finally:
+            k32.CloseHandle(handle)
+    try:
+        os.kill(int(pid), 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def acquire(campaign: Path) -> Path:
+    """Take the campaign's lock (``lock.json``, created exclusively). A lock whose process is
+    gone is taken over; a live one raises :class:`CampaignBusy`."""
+    import socket
+    lock = Path(campaign) / "lock.json"
+    body = json.dumps({"pid": os.getpid(), "host": socket.gethostname(), "startedAt": _now()}).encode()
+    for _ in range(2):
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            try:
+                held = json.loads(lock.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                held = {}
+            same_host = held.get("host") in (None, socket.gethostname())
+            if same_host and not _pid_alive(int(held.get("pid") or 0)):
+                lock.unlink(missing_ok=True)          # its coordinator is gone
+                continue
+            raise CampaignBusy(f"another coordinator runs this campaign (pid {held.get('pid')} on "
+                               f"{held.get('host')} since {held.get('startedAt')}). If none does, "
+                               f"delete {lock}.")
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(body)
+        return lock
+    raise CampaignBusy(f"the campaign lock {lock} could not be taken")
 
 
 def completed(campaign: Path, job: Job) -> Optional[dict]:
@@ -161,8 +274,12 @@ def _run_one(campaign: Path, job: Job, base_env: Optional[dict]) -> dict:
     result = None
     if (d / "result.json").is_file():
         result = json.loads((d / "result.json").read_text(encoding="utf-8"))
+    resources = None
+    if (d / "resources.json").is_file():
+        resources = json.loads((d / "resources.json").read_text(encoding="utf-8"))
     rec = {"id": job.id, "label": job.label, "spec": json.loads(canonical(job.spec)),
-           "outputs": tree_digest(out), "result": result, "seconds": seconds, "finishedAt": _now()}
+           "outputs": tree_digest(out), "result": result, "seconds": seconds, "finishedAt": _now(),
+           "resources": resources}
     _write_atomic(d / "complete.json", rec)
     return {"state": "completed", **rec}
 
@@ -181,6 +298,16 @@ def run(jobs: list[Job], campaign: Path, *, workers: int = 2, meta: Optional[dic
     ids = [j.id for j in jobs]
     if len(set(ids)) != len(ids):
         raise ValueError("two jobs have the same spec")
+    held = acquire(campaign)
+    try:
+        return _run_locked(jobs, campaign, workers=workers, meta=meta, base_env=base_env, stop=stop,
+                           on_event=on_event, max_starts=max_starts, retries=retries)
+    finally:
+        held.unlink(missing_ok=True)
+
+
+def _run_locked(jobs: list[Job], campaign: Path, *, workers, meta, base_env, stop, on_event,
+                max_starts, retries) -> dict:
     if not (campaign / "campaign.json").is_file():
         _write_atomic(campaign / "campaign.json", {"created": _now(), "meta": meta or {},
                                                    "jobs": len(jobs)})
@@ -194,7 +321,7 @@ def run(jobs: list[Job], campaign: Path, *, workers: int = 2, meta: Optional[dic
             with index.open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps(rec, sort_keys=True, default=str) + "\n")
             states[job.id] = {"label": job.label, "state": kind, **{k: v for k, v in extra.items()
-                                                                    if k in ("seconds", "exit")}}
+                                                                    if k in ("seconds", "exit", "peakMemoryMB")}}
         if on_event:
             on_event(rec)
 
@@ -235,7 +362,8 @@ def run(jobs: list[Job], campaign: Path, *, workers: int = 2, meta: Optional[dic
                     event("retrying", job, seconds=res.get("seconds"), exit=res.get("exit"))
                     queue.insert(0, job)
                     continue
-                event(res["state"], job, seconds=res.get("seconds"), exit=res.get("exit"))
+                event(res["state"], job, seconds=res.get("seconds"), exit=res.get("exit"),
+                      peakMemoryMB=(res.get("resources") or {}).get("peakMemoryMB"))
     for job in jobs:
         states.setdefault(job.id, {"label": job.label, "state": "not-started"})
     summary = {"updated": _now(), "workers": int(workers), "seconds": round(time.perf_counter() - t0, 2),
@@ -255,6 +383,7 @@ def _run_python(job_dir: Path) -> int:
     fn = getattr(importlib.import_module(module), name)
     result = fn(doc["spec"], job_dir / "out")
     _write_atomic(job_dir / "result.json", result if result is not None else {})
+    _write_atomic(job_dir / "resources.json", {"peakMemoryMB": peak_memory_mb()})
     return 0
 
 
@@ -269,4 +398,5 @@ if __name__ == "__main__":
     raise SystemExit(main(sys.argv))
 
 
-__all__ = ["THREAD_CAPS", "Job", "run", "completed", "seed_for", "tree_digest", "canonical"]
+__all__ = ["THREAD_CAPS", "Job", "run", "completed", "seed_for", "tree_digest", "canonical",
+           "acquire", "CampaignBusy", "tree_fingerprint", "peak_memory_mb"]

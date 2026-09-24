@@ -32,9 +32,12 @@ class EvaluationError(RuntimeError):
 
 
 def method_cache_root() -> Path:
-    """Where workers keep materialized method folders (the app's data root when set)."""
+    """Where workers keep materialized method folders: the app's data root when set, and
+    never EASI's own default cache (a maintainer activating a package in EASI must not
+    reuse a folder a preview wrote)."""
     base = os.environ.get("STREAMCURVES_DATA_ROOT")
-    root = Path(base) / "cache" / "easi-methods" if base else Path(tempfile.gettempdir()) / "easi-methods"
+    root = (Path(base) / "cache" / "easi-methods" if base
+            else Path(tempfile.gettempdir()) / "streamcurves-easi-methods")
     root.mkdir(parents=True, exist_ok=True)
     return root
 
@@ -125,8 +128,10 @@ def _cases_digest(cases: dict) -> str:
 
 def _result_cache(package: mp.MethodPackage, cases_digest: str) -> Path:
     import hashlib
-    key = hashlib.sha256(f"{package.digest}|{mp.evaluator_digest()}|{cases_digest}"
-                         .encode("utf-8")).hexdigest()[:24]
+    # the evaluator and the acquisition code both decide a result (a re-vendor touching
+    # only the adapters must not reuse an older result)
+    key = hashlib.sha256(f"{package.digest}|{mp.evaluator_digest()}|{mp.acquisition_digest()}|"
+                         f"{cases_digest}".encode("utf-8")).hexdigest()[:24]
     root = method_cache_root().parent / "easi-previews"
     root.mkdir(parents=True, exist_ok=True)
     return root / f"{key}.json"

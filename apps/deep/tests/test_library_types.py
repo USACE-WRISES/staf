@@ -77,6 +77,9 @@ def test_the_ea32716_reader_never_yields_an_easi_method(typed_library):
     spec.loader.exec_module(legacy)
     assert [b["assessmentId"] for b in legacy.latest_bundles()] == ["test-region"]
     assert [b["assessmentRef"] for b in legacy.all_eligible_bundles()] == ["test-region@v1"]
+    # its catalog pointers do name the EASI entry: only an old bake's libraryCatalog metadata
+    # reads them, and no bundle exists to follow one to, so nothing is scored from it
+    assert set(legacy.catalog_pointers()) == {"test-region", "easi-screening"}
 
 
 def test_the_remote_feed_skips_a_typed_non_deep_entry():

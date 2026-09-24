@@ -68,22 +68,36 @@ def main(argv=None) -> int:
     if a.kind == "deep":
         from streamcurves import nrsa_dataset as nds
         dataset = a.dataset or nds.MULTI_CYCLE_DATASET_ID
+        # the code, configuration and data a cell reads (the engine, the archive, the station
+        # screen, the directions): a change to any of them is another cell
+        code = jobs.tree_fingerprint(APP, ("streamcurves", "config", "data"))
         cells = [jobs.Job(kind="python", target="streamcurves.explore:deep_cell",
-                          spec={"task": "explore-deep", "campaign": campaign, "l3": str(code),
+                          spec={"task": "explore-deep", "campaign": campaign, "l3": str(code_),
                                 "dataset": dataset, "metrics": sorted(a.metric) if a.metric else None,
                                 "rungs": list(a.rung) if a.rung else list(explore.RUNGS),
-                                "code": jobs.sha_file(APP / "streamcurves" / "explore.py")},
-                          env=env, label=f"L3-{code}") for code in a.l3]
+                                "code": code},
+                          env=env, label=f"L3-{code_}") for code_ in a.l3]
     else:
         from streamcurves import evidence_store as evs
         from streamcurves.easi_method import fit_recipe as fr
-        members = _package(a.evidence, "easi-dev-members")
-        digest = evs.read_manifest(members)["dataDigest"]
+
+        def verified(package_id: str):
+            folder = _package(a.evidence, package_id)
+            got = evs.verify_folder(folder)
+            if not got["ok"]:
+                raise SystemExit(f"{package_id} does not verify: {(got['damaged'] + got['unlisted'])[:3]}")
+            return folder, got
+
+        members, got_m = verified("easi-dev-members")
+        digest = got_m["dataDigest"]
         variants = list(a.variant or ["as-built"])
-        extra = {}
+        extra = {"membersPackageDigest": got_m["packageDigest"],
+                 "code": jobs.tree_fingerprint(APP, ("streamcurves",))}
         if any(v != "as-built" for v in variants):
-            extra = {"universe": str(_package(a.evidence, "easi-dev-universe")),
-                     "universeValues": str(_package(a.evidence, "easi-dev-universe-values"))}
+            universe, got_u = verified("easi-dev-universe")
+            universe_values, got_v = verified("easi-dev-universe-values")
+            extra.update({"universe": str(universe), "universeDigest": got_u["dataDigest"],
+                          "universeValues": str(universe_values), "universeValuesDigest": got_v["dataDigest"]})
         quantities = list(a.quantity or ["woody_wsrp100", "natural_wsrp100", "q_cv_monthly", "er_median"])
         levels = list(a.level or ["nars9", "l2", "national"])
         cells = []
@@ -95,13 +109,11 @@ def main(argv=None) -> int:
                     cells.append(jobs.Job(
                         kind="python", target="streamcurves.explore:easi_cell",
                         spec={"task": "explore-easi", "campaign": campaign, "quantity": q, "level": level,
-                              "variant": v, "members": str(members), "evidenceDigest": digest, **extra,
-                              "code": jobs.sha_file(APP / "streamcurves" / "explore.py"),
-                              "recipe": jobs.sha_file(Path(fr.__file__))},
+                              "variant": v, "members": str(members), "evidenceDigest": digest, **extra},
                         env=env, label=f"{q} {level} {v}"))
     summary = jobs.run(cells, a.out, workers=a.workers, meta={"task": f"explore-{a.kind}"},
                        on_event=lambda ev: print(f"[explore] {ev['label']}: {ev['event']}", flush=True))
-    merged = explore.merge(a.out, [c.id for c in cells])
+    merged = explore.merge(a.out, [c.id for c in cells if jobs.completed(a.out, c) is not None])
     print(f"[explore] {merged['candidates']} candidates ({merged['built']} built) -> "
           f"{a.out / 'candidates.jsonl'}; {summary['counts']}")
     return 0 if summary["counts"]["failed"] == 0 else 1

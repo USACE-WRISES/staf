@@ -1186,9 +1186,11 @@ def publish_easi_version(
     """Write a new EASI method version and return its number.
 
     The version is exactly the method package ``envelope`` + ``files`` (+ ``calculator``)
-    describes, checked the way EASI checks it before use (entry names, sizes, sha256, the
-    evaluator capabilities it needs, cross-file consistency, the recorded method version),
-    so nothing EASI would refuse is ever published. ``project`` is the authoring record
+    describes, checked the way EASI checks a package when it loads it (entry names, sizes,
+    sha256, the evaluator capabilities it needs, cross-file consistency, curve directions,
+    the recorded method version); EASI's full catalog validation runs when the package is
+    previewed or activated. A version whose authoring record still has a selection waiting
+    for confirmation is refused. ``project`` is the authoring record
     (register, decisions, lineage, notes, history) and ``cases`` the preview case set; they
     ride beside the method and never inside it. No DEEP gate, bundle, calculator or bake
     applies: DEEP never reads an EASI method.
@@ -1205,6 +1207,15 @@ def publish_easi_version(
     if existing is not None and entry_type(existing) != "easi":
         raise ValueError(f"{assessment_id} is a {entry_type(existing).upper()} assessment; an EASI "
                          "method version cannot be added to it")
+    if project:
+        # the gate the app applies, applied here too, so no caller can skip it
+        from .easi_method import register as _reg
+        from .easi_method.model import EasiProject as _EasiProject
+        waiting = _reg.needs_review(_EasiProject(meta=dict(project.get("meta") or {}), files=dict(files),
+                                                 register=project.get("register") or {}))
+        if waiting:
+            raise ValueError("confirm the changed selections before publishing: "
+                             + ", ".join(r["functionName"] for r in waiting))
     mp = _mp()
     pkg = mp.read_package(mp.to_zip(mp.MethodPackage(envelope=envelope, files=dict(files),
                                                       calculator=calculator)))

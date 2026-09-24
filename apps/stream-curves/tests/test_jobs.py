@@ -109,6 +109,12 @@ def _members_package(tmp_path):
     panels = [{"level": lv, "stratum": st, "panel_tier": "exploratory", "screen": "strict"}
               for lv, st in {(r["level"], r["stratum"]) for r in rows}]
     pq.write_table(pa.Table.from_pylist(panels), d / "reference_panels.parquet")
+    from streamcurves import evidence_store as es
+    files = {f"data/{f.name}": {"bytes": f.stat().st_size, "sha256": es.sha_file(f)}
+             for f in sorted(d.iterdir())}
+    (d.parent / "evidence.json").write_text(json.dumps({
+        "schema": es.SCHEMA, "schemaVersion": 1, "packageId": "easi-dev-members", "version": "test",
+        "dataDigest": es.data_digest(files), "files": files}), encoding="utf-8")
     return d.parent
 
 
@@ -118,13 +124,17 @@ def test_a_parallel_refit_equals_the_serial_one(tmp_path):
     members, values, panels = refit.load_members(folder)
     qs = ["woody_wsrp100", "natural_wsrp100", "q_cv_monthly"]
     serial = refit.fit_registry(members, values, panels, quantities=qs)
-    rows, summary = campaigns.refit_campaign(folder, tmp_path / "c", members_digest="sha256:test",
+    from streamcurves import evidence_store as es
+    digest = es.read_manifest(folder)["dataDigest"]
+    with pytest.raises(ValueError, match="does not verify"):
+        campaigns.refit_jobs(folder, members_digest="sha256:" + "0" * 64)
+    rows, summary = campaigns.refit_campaign(folder, tmp_path / "c", members_digest=digest,
                                              workers=3, quantities=qs)
     assert summary["counts"]["completed"] == 3
     norm = lambda rs: json.loads(json.dumps(sorted(rs, key=lambda r: (r["quantity"], r["level"],  # noqa: E731
                                                                        r["stratum"])), default=float))
     assert norm(rows) == norm(serial)
-    again, summary = campaigns.refit_campaign(folder, tmp_path / "c", members_digest="sha256:test",
+    again, summary = campaigns.refit_campaign(folder, tmp_path / "c", members_digest=digest,
                                               workers=3, quantities=qs)
     assert summary["counts"]["skipped"] == 3 and norm(again) == norm(serial)
 
@@ -199,3 +209,52 @@ def test_an_exploration_cell_writes_register_candidates(tmp_path):
     assert all(c["candidateKey"].startswith("cand-") and c["basisDigest"].startswith("sha256:")
                for c in cands)
     assert (out / "grid.csv").read_text().splitlines()[0].startswith("assessmentType,subject,level")
+
+
+def test_a_job_is_everything_that_runs_it():
+    base = dict(kind="python", spec={"x": 1}, target="m:f", env={"A": "1"})
+    ids = {jobs.Job(**base).id, jobs.Job(**{**base, "env": {"A": "2"}}).id,
+           jobs.Job(**{**base, "target": "m:g"}).id, jobs.Job(**{**base, "cwd": "elsewhere"}).id}
+    assert len(ids) == 4
+
+
+def test_one_coordinator_holds_a_campaign(tmp_path):
+    held = jobs.acquire(tmp_path)
+    with pytest.raises(jobs.CampaignBusy, match="another coordinator"):
+        jobs.run(_cmd_jobs(1), tmp_path, workers=1)
+    held.unlink()
+    # a lock whose process is gone is taken over
+    import socket
+    (tmp_path / "lock.json").write_text(json.dumps({"pid": 2 ** 31 - 7, "host": socket.gethostname(),
+                                                    "startedAt": "2026-09-23T00:00:00Z"}),
+                                        encoding="utf-8")
+    summary = jobs.run(_cmd_jobs(1), tmp_path, workers=1)
+    assert summary["counts"]["completed"] == 1 and not (tmp_path / "lock.json").exists()
+
+
+def test_relaxed_first_panels_are_labelled_relaxed_and_ranked_like_the_builder():
+    import pandas as pd
+    from streamcurves import explore
+    from streamcurves.easi_method import fit_recipe as fr
+    rng = np.random.default_rng(11)
+    n = 1200
+    frame = pd.DataFrame({"comid": np.arange(1, n + 1), "huc12": [f"h{i}" for i in range(n)],
+                          "l3": "50", "l2": "5.2", "l1": "5", "nars9": "NAP",
+                          "fcode_class": "stream", "wadeable": True,
+                          # every reach passes the relaxed screen and fails the strict one
+                          "pctimp2019ws": 2.0, "agriculture_ws": rng.uniform(0, 9, n), "rddensws": 1.0,
+                          "dor": 1.0, "sc__nabd_densws": 0.0, "sc__npdesdensws": 0.0, "mines_ws": 0.0,
+                          "corridor_conversion_wsrp100": rng.uniform(0, 5, n)})
+    as_built = explore.draw_panels(frame, "as-built")
+    first = explore.draw_panels(frame, "relaxed-first")
+    for level in fr.LEVELS:
+        assert set(as_built[level][0]["panel_tier"]) == {"best_available"}
+        panels, members = first[level]
+        assert set(panels["screen"]) == {"relaxed"} and set(panels["panel_tier"]) == {"best_available"}
+        assert set(members["screen"]) == {"relaxed"} and set(members["panel_tier"]) == {"best_available"}
+    # the builder's rule for a relaxed panel: a pressure-driven fit is not usable
+    q = fr.QUANTITIES["woody_wsrp100"]
+    row = {"status": "complete", "x39": 40.0, "x69": 70.0, "q25": 50.0, "q75": 80.0, "rho_pressure": 0.45}
+    assert fr.usable(q, row, "best_available")[0] is False
+    per = explore.member_pressure(frame, first)
+    assert len(per) == n and per["composite_pressure"].notna().all()

@@ -466,3 +466,23 @@ def test_autosave_waits_for_quiet_and_for_every_job():
 def test_gallery_links_to_deep_use_the_form_deep_parses():
     assert "?assessment={e.id}@{v.version}" in PROJECT
     assert "@v{v.version}" not in PROJECT
+
+
+def test_the_newer_catalog_download_wins_and_a_withdrawn_typed_feed_is_forgotten(monkeypatch, tmp_path):
+    import os
+    pack = pf.build_bytes(meta={"project_name": "Demo v2"}, session_text=_session_text(),
+                          desktop_project=False, deterministic=True)
+    gallery.cache_dir().mkdir(parents=True, exist_ok=True)
+    typed = gallery.cache_dir() / gallery.CATALOG_NAME_V2
+    typed.write_text(json.dumps(_catalog(pack, schema=2, name="old-v2-p1.streamcurves")))
+    os.utime(typed, (1_000_000, 1_000_000))
+    (gallery.cache_dir() / gallery.CATALOG_NAME).write_text(json.dumps(_catalog(pack)))
+    entries, _at = gallery.cached_catalog()
+    assert entries[0].version().assets["pack"].name == "demo-v2-p1.streamcurves"
+    # a library that publishes only library.json: the typed cache goes
+    (tmp_path / "lib").mkdir()
+    (tmp_path / "lib" / gallery.CATALOG_NAME).write_text(json.dumps(_catalog(pack)))
+    monkeypatch.setenv(gallery.BASE_URL_ENV, str(tmp_path / "lib"))
+    typed.write_text(json.dumps(_catalog(pack, schema=2)))
+    gallery.refresh_catalog(force=True)
+    assert not typed.exists() and not gallery.catalog_stale()

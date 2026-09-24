@@ -63,6 +63,8 @@ OPERATOR_LABELS = {**es.OPERATOR_LABELS, "minimum": "Lowest of its inputs",
                    "minimum_of_products": "Lowest of paired products"}
 RATING_CLASS = {"Good": "is-good", "Fair": "is-fair", "Poor": "is-poor"}
 DECIDED_LABELS = {"imported": "Imported", "automated": "Automated", "person": "Person"}
+#: what an edit records when nobody set their name (never a stand-in identity)
+UNNAMED = "Name not set"
 
 
 # --------------------------------------------------------------------------- #
@@ -75,6 +77,19 @@ def _now() -> str:
 def short(digest) -> str:
     d = str(digest or "")
     return d.split(":", 1)[1][:12] if ":" in d else d[:12]
+
+
+def _plain_failure(exc: Exception) -> str:
+    """A failed preview in words, with the next step (the detail stays in the log)."""
+    text = str(exc)
+    if "not consistent" in text or "unknown stratifier" in text or "direction" in text:
+        first = text.split(": ", 1)[-1].split(";")[0]
+        return ("The preview could not run: the draft's method files do not pass EASI's checks "
+                f"({first}). Undo the last change, or correct it, and preview again.")
+    if "capabilities" in text:
+        return ("The preview could not run: this draft needs something this EASI cannot score. "
+                "Undo the last change and preview again.")
+    return f"The preview could not run: {text}. Try again; if it fails again, save the project and report it."
 
 
 def person() -> str:
@@ -262,7 +277,9 @@ def describe(h: dict, names: dict | None = None) -> str:
         return (f"{fname}: {what.lower() if t.get('input') else what} edge {t.get('edge', 0) + 1} "
                 f"from {_fmt(b.get('value'))} to {_fmt(af.get('value'))}"
                 + ("" if b.get("owner") == af.get("owner")
-                   else f", a value at the edge now counts toward the {af.get('owner')} band"))
+                   else f", a value at the edge now counts toward the {af.get('owner')} band")
+                + ("; read its breakpoint note again, it explains the old edge"
+                   if h.get("textToCheck") else ""))
     if a == "set_regional_edges":
         b, af = h.get("before") or [None, None], h.get("after") or [None, None]
         what = names.get(f"{mk}/{t.get('input')}", str(t.get("input") or "").upper())
@@ -279,6 +296,8 @@ def describe(h: dict, names: dict | None = None) -> str:
         return "the start of this revision"
     if a == "import":
         return "the import"
+    if a == "renumber":
+        return f"renumbered from v{t.get('from')} to v{t.get('to')}"
     if a == "adopt_candidate":
         fns = [names.get(f, f) for f in t.get("functions") or []]
         return (", ".join(fns) or "a function") + ": another method selected"
@@ -363,6 +382,19 @@ def is_published(project) -> bool:
                for v in (man or {}).get("versions") or [])
 
 
+def _package_blob(project) -> bytes:
+    """The method package a download serves: the library's own bytes for a published
+    version it holds (the release asset), otherwise the project's export."""
+    if is_published(project):
+        try:
+            ver = int(project.meta.get("version") or 0)
+            if lib.exists() and lib.version_dir(eio.ASSESSMENT_ID, ver).is_dir():
+                return lib.easi_package_bytes(eio.ASSESSMENT_ID, ver)
+        except Exception:  # noqa: BLE001 - fall back to exporting the same files
+            pass
+    return eio.export_zip(project)[0]
+
+
 def next_version(project) -> int:
     """The version a revision of ``project`` becomes: after the project's own version and
     after the latest the library holds."""
@@ -443,14 +475,16 @@ def easi_page_server(input, output, session, state: AppState):
                                           class_="btn btn-outline-secondary btn-sm"))
         chips = [ui.span(ui.span("Method", class_="easi-id-k"), ui.span(ident["methodVersion"],
                                                                       class_="easi-id-v"),
-                         class_="easi-id", title="The method version EASI reports with every score"),
-                 ui.span(ui.span("Package", class_="easi-id-k"),
+                         class_="easi-id", title="The method version EASI reports with every score")]
+        more = [ui.span(ui.span("Package", class_="easi-id-k"),
                          ui.span(short(ident["packageDigest"]), class_="easi-id-v"),
                          class_="easi-id", title=ident["packageDigest"]),
                  ui.span(ui.span("Evaluator", class_="easi-id-k"),
                          ui.span(short(ident["evaluatorDigest"]), class_="easi-id-v"),
                          class_="easi-id",
                          title="The EASI code these files are scored with: " + ident["evaluatorDigest"])]
+        chips.append(ui.tags.details(ui.tags.summary("Identity", class_="easi-ids-more"),
+                                     ui.div(*more, class_="easi-ids"), class_="easi-ids-details"))
         banner = None
         if not p.is_revision():
             banner = ui.div(
@@ -471,9 +505,7 @@ def easi_page_server(input, output, session, state: AppState):
 
     @render.download(filename=lambda: _package_name())
     def dl_package():
-        p = _get()
-        blob, _ident = eio.export_zip(p)
-        yield blob
+        yield _package_blob(_get())
 
     def _package_name() -> str:
         p = _get()
@@ -599,14 +631,15 @@ def easi_page_server(input, output, session, state: AppState):
         if (frame.get("fcode_class") or [None, None])[:2] == ["!=", "canal"]:
             frame_words.append("canals excluded")
         frame_words += [f"{k} {rule(v)}" for k, v in frame.items() if k not in ("wadeable", "fcode_class")]
-        facts = _facts([
+        facts = ui.TagList(_facts([
             ("Reference screen", screen.get("id")),
             ("Frame", ", ".join(frame_words)),
-            ("Panel floors", "; ".join(f"{k} panel {v} sites" for k, v in floors.items())),
             ("Dataset vintage", prov.get("datasetVintage")),
+        ]), ui.tags.details(ui.tags.summary("Technical record", class_="easi-muted"), _facts([
+            ("Smallest panel per level", "; ".join(f"{k}: {v} sites" for k, v in floors.items())),
             ("Curve engine", short(prov.get("curveEngineSha256"))),
             ("Fit registry", short((prov.get("registry") or {}).get("sha256"))),
-        ])
+        ])))
         return ui.TagList(
             ui.p("The reference curves record how their reference sites were chosen and fit. "
                  "Least-disturbed sites pass every criterion of the strict screen; strata "
@@ -639,16 +672,20 @@ def easi_page_server(input, output, session, state: AppState):
         rows = []
         for i, ref in enumerate(refs):
             st = ev.status(ref, inst)
+            fetchable = bool(evidence_base())
             if st == "installed":
                 here = ui.span(fa("circle-check"), " Verified", class_="easi-ok")
                 action = ui.tags.button("View", type="button", class_="btn btn-outline-secondary btn-sm",
                                         onclick=_evt(ns("pkg_view"), i=i))
             else:
-                here = ui.span("Not on this computer" if st == "missing" else "Another version here",
-                               class_="easi-muted")
+                words = {"damaged": "Damaged: download or import it again",
+                         "other": "Another version is here", "missing": "Not on this computer"}[st]
+                here = ui.div(ui.span(fa("triangle-exclamation"), " ", words, class_="easi-bad")
+                              if st == "damaged" else ui.span(words, class_="easi-muted"),
+                              None if fetchable else ui.div("Import its package file.", class_="easi-muted"))
                 action = (ui.tags.button("Download", type="button", class_="btn btn-outline-primary btn-sm",
                                          onclick=_evt(ns("pkg_download"), i=i))
-                          if ref.get("archive") and evidence_base() else None)
+                          if fetchable else None)
             roles = ", ".join(ev.ROLE_LABELS.get(r, r) for r in ref.get("roles") or [])
             repro = ref.get("reproducibility") or ""
             rows.append(ui.tags.tr(
@@ -658,7 +695,9 @@ def easi_page_server(input, output, session, state: AppState):
                 ui.tags.td(ev.REPRODUCIBILITY_LABELS.get(repro, repro),
                            title=ev.REPRODUCIBILITY_HELP.get(repro, "")),
                 ui.tags.td(covers(ref.get("coverage"))),
-                ui.tags.td(size_text(ref.get("bytes")), class_="easi-right easi-nowrap"),
+                ui.tags.td(size_text(ref.get("bytes")), class_="easi-right easi-nowrap",
+                           title=(f"Unpacked. The download is {size_text((ref.get('archive') or {}).get('bytes'))}."
+                                  if (ref.get("archive") or {}).get("bytes") else "Unpacked")),
                 ui.tags.td(here, class_="easi-nowrap"),
                 ui.tags.td(action, ui.tags.button("Remove", type="button", class_="btn btn-link btn-sm",
                                                   title="Stop naming this package in the project",
@@ -699,7 +738,7 @@ def easi_page_server(input, output, session, state: AppState):
         p, ref = _ref_at(int((input.pkg_detach() or {}).get("i", -1)))
         if ref is None:
             return
-        _apply(ev.detach(p, ref["packageId"], by=person() or "author"),
+        _apply(ev.detach(p, ref["packageId"], by=person() or UNNAMED),
                f"The project no longer names {ref.get('title') or ref['packageId']}.")
 
     @reactive.effect
@@ -714,7 +753,7 @@ def easi_page_server(input, output, session, state: AppState):
             if rec["packageId"].startswith("easi-") and rec["packageId"] not in {
                     e["packageId"] for e in new.evidence}:
                 new = ev.attach(new, ev.reference(rec["manifest"], package_digest=evs.package_digest(
-                    rec["manifest"])), by=person() or "author")
+                    rec["manifest"])), by=person() or UNNAMED)
         if new is not p:
             _apply(new, "Attached the packages on this computer.")
 
@@ -727,7 +766,7 @@ def easi_page_server(input, output, session, state: AppState):
                ui.p("A package is a .evidence.zip file or its unpacked folder. It is checked file "
                     "by file before the project names it.", class_="mb-2"),
                ui.input_text(ns("pkg_path"), "Package file or folder", width="100%",
-                             placeholder=r"D:\Data\evidence\easi-dev-members-....evidence.zip"),
+                             placeholder="For example: easi-dev-members-2026.09.15-baseline.evidence.zip"),
                apply_id="pkg_import_apply", apply_label="Import", size="m")
 
     @reactive.effect
@@ -745,52 +784,98 @@ def easi_page_server(input, output, session, state: AppState):
         ui.modal_remove()
         _launch(_run_install(path))
 
-    async def _run_install(path: Path, *, fetch: dict | None = None):
-        label = path.name if fetch is None else fetch["name"]
-        _jobs["busy"] = f" Checking {label}..."
+    _replacing: dict = {"ref": None, "old": None}
+
+    async def _run_install(path: Path | None, *, ref: dict | None = None):
+        label = (ref.get("title") or ref["packageId"]) if ref is not None else path.name
+        _jobs["busy"] = f" Downloading {label}..." if ref is not None else f" Checking {label}..."
         _store_tick.set(_store_tick() + 1)
         await st.task_flush()
         try:
             with st.busy(state):
-                if fetch is not None:
-                    path = await asyncio.to_thread(evs.download, evidence_base(), fetch["name"],
-                                                   sha256=fetch["sha256"], size=int(fetch["bytes"]))
                 archive = None
-                if path.is_file():
+                if ref is not None:
+                    target = await asyncio.to_thread(evs.fetch_reference, evidence_base(), ref)
+                elif path.is_file():
                     target = await asyncio.to_thread(evs.install_zip, path)
                     archive = {"name": path.name, "sha256": await asyncio.to_thread(evs.sha_file, path),
                                "bytes": path.stat().st_size}
                 else:
                     target = await asyncio.to_thread(evs.install_folder, path)
                 doc = evs.read_manifest(target)
+            title = doc.get("title") or doc["packageId"]
+            if ref is not None:
+                ui.notification_show(f"{title} is on this computer and verified.", type="message", duration=5)
+                return
             with reactive.isolate():
                 p = state.easi_project()
-            if p is not None:
-                old = next((e for e in p.evidence if e.get("packageId") == doc["packageId"]), None)
-                ref = ev.reference(doc, archive=archive or (old or {}).get("archive"),
-                                   package_digest=evs.package_digest(doc))
-                new = ev.attach(p, ref, by=person() or "author")
-                if new is not p:
-                    with reactive.isolate():
-                        _apply(new, f"The project names {doc.get('title') or doc['packageId']}.")
-                else:
-                    ui.notification_show(f"{doc.get('title') or doc['packageId']} is verified on this "
-                                         "computer.", type="message", duration=5)
+            if p is None:
+                return
+            got = {"packageId": doc["packageId"], "dataDigest": doc["dataDigest"],
+                   "packageDigest": evs.package_digest(doc)}
+            old = next((e for e in p.evidence if e.get("packageId") == doc["packageId"]), None)
+            same_data = bool(old) and old.get("dataDigest") == doc["dataDigest"]
+            new_ref = ev.reference(doc, archive=archive or ((old or {}).get("archive") if same_data else None),
+                                   package_digest=got["packageDigest"])
+            if old is not None and not evs.matches(got, old):
+                # another version of a package the project names: the author decides
+                _replacing.update(ref=new_ref, old=old)
+                _modal(f"Replace {title}?",
+                       ui.p(f"This project names {title} {old.get('version')}. The package just "
+                            f"checked is {doc.get('version')}"
+                            + (", with the same data and another description." if same_data
+                               else ", with other data.")
+                            + " Replace the reference?", class_="mb-2"),
+                       _reason_input(placeholder="Why the project should name this version"),
+                       apply_id="pkg_replace_apply", apply_label="Replace", size="m")
+                return
+            new = ev.attach(p, new_ref, by=person() or UNNAMED)
+            if new is not p:
+                with reactive.isolate():
+                    _apply(new, f"The project names {title}.")
+            else:
+                ui.notification_show(f"{title} is verified on this computer.", type="message", duration=5)
+        except evs.EvidenceCancelled:
+            ui.notification_show("Download cancelled. It continues from where it stopped next time.",
+                                 type="message", duration=6)
         except evs.EvidenceError as exc:
-            ui.notification_show(f"The package was not imported: {exc}", type="error", duration=10)
+            ui.notification_show(f"The package was not installed: {exc}", type="error", duration=12)
+        except Exception as exc:  # noqa: BLE001 - never a silent failure
+            logger.exception("evidence package install failed")
+            ui.notification_show(f"The package could not be installed ({exc}).", type="error", duration=12)
         finally:
             _jobs["busy"] = None
             _store_tick.set(_store_tick() + 1)
             await st.task_flush()
 
     @reactive.effect
+    @reactive.event(input.pkg_replace_apply)
+    @guard("replace the package reference")
+    def _pkg_replace_apply():
+        new_ref, old = _replacing.get("ref"), _replacing.get("old")
+        why = str(input.reason() or "").strip()
+        if new_ref is None:
+            ui.modal_remove()
+            return
+        if len(why) < 10:
+            _modal_err.set("give a reason of at least 10 characters")
+            return
+        p = _get()
+        if p is None:
+            return
+        ui.modal_remove()
+        _replacing.update(ref=None, old=None)
+        _apply(ev.attach(p, new_ref, by=person() or UNNAMED, reason=why),
+               f"The project names {new_ref.get('title') or new_ref['packageId']} {new_ref.get('version')}.")
+
+    @reactive.effect
     @reactive.event(input.pkg_download)
     @guard("download the package")
     def _pkg_download():
         p, ref = _ref_at(int((input.pkg_download() or {}).get("i", -1)))
-        if ref is None or not ref.get("archive") or _jobs.get("busy"):
+        if ref is None or _jobs.get("busy"):
             return
-        _launch(_run_install(Path(ref["archive"]["name"]), fetch=ref["archive"]))
+        _launch(_run_install(None, ref=ref))
 
     # the package viewer
     _viewing: dict = {"folder": None, "files": []}
@@ -798,12 +883,15 @@ def easi_page_server(input, output, session, state: AppState):
     @reactive.effect
     @reactive.event(input.pkg_view)
     @guard("open the package")
-    def _pkg_view():
+    async def _pkg_view():
         p, ref = _ref_at(int((input.pkg_view() or {}).get("i", -1)))
         if ref is None:
             return
-        folder = evs.find(ref["packageId"], ref.get("dataDigest"))
-        if folder is None:
+        try:
+            folder = await asyncio.to_thread(evs.ready, ref)
+        except evs.EvidenceError as exc:
+            _store_tick.set(_store_tick() + 1)
+            ui.notification_show(str(exc), type="error", duration=10)
             return
         doc = evs.read_manifest(folder)
         tables = [rel for rel, rec in doc["files"].items() if rel.endswith((".parquet", ".csv"))]
@@ -827,9 +915,15 @@ def easi_page_server(input, output, session, state: AppState):
             ("Reproducible", f"{ev.REPRODUCIBILITY_LABELS.get(repro, repro)}: "
                              f"{ev.REPRODUCIBILITY_HELP.get(repro, '')}" if repro else None),
             ("Covers", covers(doc.get("coverage"))),
-            ("Data digest", short(doc["dataDigest"])),
             ("Shared as", (doc.get("redistribution") or {}).get("status")),
         ])
+        sources = [s for s in doc.get("sources") or [] if isinstance(s, dict)]
+        technical = ui.tags.details(ui.tags.summary("Technical record", class_="easi-muted"), _facts([
+            ("Data digest", doc["dataDigest"]),
+            ("Package digest", evs.package_digest(doc)),
+            ("Depends on", ", ".join(f"{d.get('packageId')} ({short(d.get('dataDigest'))})"
+                                     for d in doc.get("dependsOn") or [])),
+        ]))
         lists = []
         for key, title in (("limitations", "Limitations"), ("unavailable", "Not in this package")):
             items = doc.get(key) or []
@@ -850,7 +944,11 @@ def easi_page_server(input, output, session, state: AppState):
                        class_="easi-tools"),
                 ui.output_ui(ns("pkg_preview")))
         ui.modal_show(ui.modal(
-            ui.p(doc.get("description") or "", class_="mb-2"), facts,
+            ui.p(doc.get("description") or "", class_="mb-2"), facts, technical,
+            ui.div("Sources", class_="sc-sec") if sources else None,
+            ui.tags.ul(*[ui.tags.li(" ".join(str(x) for x in (s.get("citation") or s.get("id"),
+                                                             f"({s['path']})" if s.get("path") else "") if x))
+                         for s in sources], class_="easi-list") if sources else None,
             ui.div("Checks", class_="sc-sec") if checks else None,
             ui.tags.ul(*[ui.tags.li(x) for x in check_lines(checks)], class_="easi-list")
             if checks else None,
@@ -939,6 +1037,11 @@ def easi_page_server(input, output, session, state: AppState):
                      class_="mb-2")]
         if res and res.get("packageDigest") == p.package_digest:
             cmp_ = res["curves"]
+            rec = res.get("recipe") or {}
+            if rec and not rec.get("same"):
+                body.append(ui.div(fa("triangle-exclamation"), " The curve engine or fit settings here differ from "
+                                   "the ones the package records (" + ", ".join(rec.get("differences") or []) +
+                                   "), so the refit is not expected to match exactly.", class_="easi-note mb-2"))
             if cmp_["allIdentical"]:
                 body.append(ui.div(fa("circle-check"), f" All {cmp_['curves']} curves are exactly their "
                                    f"fits ({res['seconds']} s).", class_="easi-ok mb-2"))
@@ -973,9 +1076,8 @@ def easi_page_server(input, output, session, state: AppState):
         await st.task_flush()
         try:
             with st.busy(state):
-                members_dir = evs.find("easi-dev-members",
-                                       next(e["dataDigest"] for e in p.evidence
-                                            if e["packageId"] == "easi-dev-members"))
+                members_dir = await asyncio.to_thread(
+                    evs.ready, next(e for e in p.evidence if e["packageId"] == "easi-dev-members"))
 
                 def work():
                     import time as _time
@@ -985,6 +1087,7 @@ def easi_page_server(input, output, session, state: AppState):
                         "natural_wsrp100", "woody_wsrp100", "q_cv_monthly", "er_median"))
                     curves = rf.operational_curves(rows, members, values, panels)
                     return {"curves": rf.compare_curves(curves, p.curves()),
+                            "recipe": rf.recipe_check(members_dir),
                             "seconds": round(_time.perf_counter() - t0, 1),
                             "packageDigest": p.package_digest}
 
@@ -1146,7 +1249,9 @@ def easi_page_server(input, output, session, state: AppState):
         for name, s in (d.get("curveSets") or {}).items():
             strata = [{"label": k, "points": [(float(x), float(y)) for x, y in (v or {}).get("points") or []]}
                       for k, v in sorted((s.get("curves") or {}).items())]
-            out.append(ui.div(ui.div(f"{name} ({s.get('stratifier')}, {len(strata)} curves)", class_="easi-muted"),
+            out.append(ui.div(ui.div(f"{es.family_name(name)} (by "
+                                     f"{es.STRATIFIER_NAMES.get(s.get('stratifier'), s.get('stratifier'))}, "
+                                     f"{len(strata)} curves)", class_="easi-muted"),
                               ui.HTML(curve_svg.tile_svg({"metric": name, "display_name": name, "strata": strata,
                                                    "reference_range": (None, None), "domain": None},
                                                   w=260, h=150))))
@@ -1178,11 +1283,12 @@ def easi_page_server(input, output, session, state: AppState):
         parts = [ui.p(lead, class_="easi-note mt-0")]
         for s in studies:
             parts.append(ui.div(
-                fa("book-open"), f" Alternatives from the {s['id']} study (receipt "
-                f"{str(s.get('completionSha256') or '')[:8]}). Its rule recommended "
+                fa("book-open"), " Alternatives from the controlled study of 2026-09-15 (receipts "
+                "verified). Its rule recommended "
                 f"{str(s.get('recommendation') or 'no alternative').replace('alternative-', 'Alternative ')}; "
                 f"the owner adopted {str(s.get('adopted') or '').replace('alternative-', 'Alternative ')} "
-                f"on {(s.get('adoption') or {}).get('date')}.", class_="fs-note"))
+                f"on {(s.get('adoption') or {}).get('date')}.", class_="fs-note",
+                title=f"Study completion record sha256 {s.get('completionSha256')}"))
         if not studies and alts.STUDY_DIR.is_dir() and p.is_revision():
             parts.append(ui.div(
                 _btn(ns("alt_import"), ui.TagList(fa("download"), " Import the 2026-09-15 study alternatives"),
@@ -1241,7 +1347,8 @@ def easi_page_server(input, output, session, state: AppState):
                     ui.tags.td(ui.tags.span(cands_mod.STATUS_LABELS.get(x["status"], x["status"]),
                                             class_="fs-status " + {"selected": "is-selected",
                                                                    "excluded": "is-excluded"}.get(x["status"], "is-eligible"))),
-                    ui.tags.td(ui.div(d.get("reason") or "", class_="fs-reason")),
+                    ui.tags.td(ui.div(d.get("reason") or "", class_="fs-reason"),
+                               *[ui.div(x, class_="fs-rule") for x in (c.get("limitations") or [])[:3]]),
                     ui.tags.td(", ".join(v for v in ((d.get("who") if d.get("decidedBy") == "person" else
                                                       DECIDED_LABELS.get(d.get("decidedBy"), d.get("decidedBy") or "")),
                                                      str(d.get("when") or "")[:10]) if v), class_="fs-who"),
@@ -1446,7 +1553,10 @@ def easi_page_server(input, output, session, state: AppState):
                    class_="easi-card"),
             ui.div("Method package", class_="sc-sec"),
             ui.div(ui.p("The package is the file EASI loads: these method files and the identity "
-                        "they score with. Downloading it changes nothing in EASI.", class_="mb-2"),
+                        "they score with. Downloading it changes nothing in EASI. When the "
+                        "maintainer activates a changed method in EASI, new assessments use it, and "
+                        "the stored nationwide results stay those of the earlier method until they "
+                        "are recomputed.", class_="mb-2"),
                    ui.download_button(ns("dl_package2"), ui.TagList(fa("file-zipper"),
                                                                     " Download method package"),
                                       class_="btn btn-outline-secondary btn-sm"),
@@ -1456,9 +1566,7 @@ def easi_page_server(input, output, session, state: AppState):
 
     @render.download(filename=lambda: _package_name())
     def dl_package2():
-        p = _get()
-        blob, _ident = eio.export_zip(p)
-        yield blob
+        yield _package_blob(_get())
 
     def _publish_form(p, pending):
         _pub_tick()
@@ -1469,13 +1577,41 @@ def easi_page_server(input, output, session, state: AppState):
         block = publish_block_reason()
         if block == "maintainer":
             return ui.div(ui.p("Versions are published to the STAF assessment library by its "
-                               "maintainer, from a STAF checkout started with "
-                               "STAF_LIBRARY_PUBLISH=1. Send them this project file.",
+                               "maintainer. Send them this project file.",
                                class_="mb-0"), class_="easi-card")
         if block:
             return ui.div(ui.p(block, class_="mb-0"), class_="easi-card")
+        ver = int(p.meta.get("version") or 1)
+        problems = _publish_problems(p, pending)
+        next_v = _next_library_version()
+        renumber = (_btn(ns("renumber"), f"Renumber as v{next_v}", "btn btn-outline-primary btn-sm")
+                    if p.is_revision() and ver != next_v else None)
+        form = ui.div(
+            ui.input_radio_buttons(ns("pub_status"), "Publish as",
+                                   {"draft": "Draft", "preliminary": "Preliminary"},
+                                   selected=_drafts.get("pub_status") or "draft", inline=True),
+            ui.input_text_area(ns("pub_notes"), "Revision notes", value=_drafts.get("pub_notes") or "",
+                               placeholder="What changed and why", rows=3, width="100%"),
+            ui.div(f"Recorded as published by {person()} into {lib.library_root()}." if person() else
+                   f"Publishes into {lib.library_root()}; no name is set yet.", class_="easi-muted mb-2"),
+            _btn(ns("publish"), ui.TagList(fa("cloud-arrow-up"), f" Publish v{ver}"),
+                 "btn btn-primary btn-sm", **({"disabled": "disabled"} if problems else {})),
+            class_="easi-card")
+        if problems:
+            return ui.TagList(ui.div(*[ui.div(fa("circle-exclamation"), " ", x) for x in problems],
+                                     renumber, class_="easi-problems"), form)
+        return form
+
+    def _next_library_version() -> int:
         man = lib.read_manifest(eio.ASSESSMENT_ID) or {}
-        next_v = int(man.get("latestVersion") or 0) + 1
+        return int(man.get("latestVersion") or 0) + 1
+
+    def _publish_problems(p, pending=None) -> list[str]:
+        """Why this project cannot be published yet: the form shows these and the publish
+        handler refuses on the same list, so a click can never skip one."""
+        if pending is None:
+            pending = reg.needs_review(p)
+        next_v = _next_library_version()
         ver = int(p.meta.get("version") or 1)
         problems = []
         if ver != next_v:
@@ -1489,21 +1625,10 @@ def easi_page_server(input, output, session, state: AppState):
         if p.is_revision() and not p.is_unchanged_from_origin() and not (
                 pv and pv.get("packageDigest") == p.package_digest):
             problems.append("Preview the consequences of this version first.")
-        form = ui.div(
-            ui.input_radio_buttons(ns("pub_status"), "Publish as",
-                                   {"draft": "Draft", "preliminary": "Preliminary"},
-                                   selected=_drafts.get("pub_status") or "draft", inline=True),
-            ui.input_text_area(ns("pub_notes"), "Revision notes", value=_drafts.get("pub_notes") or "",
-                               placeholder="What changed and why", rows=3, width="100%"),
-            ui.div(f"Recorded as published by {person() or 'nobody (set STAF_LIBRARY_MAINTAINER)'} "
-                   f"into {lib.library_root()}.", class_="easi-muted mb-2"),
-            _btn(ns("publish"), ui.TagList(fa("cloud-arrow-up"), f" Publish v{ver}"),
-                 "btn btn-primary btn-sm", **({"disabled": "disabled"} if problems else {})),
-            class_="easi-card")
-        if problems:
-            return ui.TagList(ui.div(*[ui.div(fa("circle-exclamation"), " ", x) for x in problems],
-                                     class_="easi-problems"), form)
-        return form
+        if not person():
+            problems.append("Say who publishes: set your name as Prepared by in the Project "
+                            "panel, or STAF_LIBRARY_MAINTAINER.")
+        return problems
 
     def _origin_project(p):
         o = p.copy()
@@ -1538,7 +1663,7 @@ def easi_page_server(input, output, session, state: AppState):
         p = _get()
         if p is None or p.is_revision():
             return
-        new = eio.fork(p, by=person() or "author", version=next_version(p))
+        new = eio.fork(p, by=person() or UNNAMED, version=next_version(p))
         _apply(new, f"Started v{new.meta['version']}, a revision of v{p.meta.get('version')}. "
                     f"v{p.meta.get('version')} stays as it is.")
         state.easi_stage.set("curves")
@@ -1623,7 +1748,7 @@ def easi_page_server(input, output, session, state: AppState):
             reason = str(input.reason() or "").strip()
             if not reason:
                 raise edit.EditError("say why (a short reason is recorded with the change)")
-            new = edit.set_curve_points(p, name, stratum, pts, by=person() or "author",
+            new = edit.set_curve_points(p, name, stratum, pts, by=person() or UNNAMED,
                                         reason=reason)
         except (ValueError, edit.EditError) as exc:
             _modal_err.set(str(exc) if isinstance(exc, edit.EditError)
@@ -1678,7 +1803,7 @@ def easi_page_server(input, output, session, state: AppState):
             if not reason:
                 raise edit.EditError("say why (a short reason is recorded with the change)")
             new = edit.set_band_edge(p, r["methodKey"], r["input"], int(_target["e"]), float(value),
-                                     owner=input.edge_owner(), by=person() or "author", reason=reason)
+                                     owner=input.edge_owner(), by=person() or UNNAMED, reason=reason)
         except edit.EditError as exc:
             _modal_err.set(str(exc))
             return
@@ -1721,7 +1846,7 @@ def easi_page_server(input, output, session, state: AppState):
             if not reason:
                 raise edit.EditError("say why (a short reason is recorded with the change)")
             new = edit.set_regional_edges(p, r["methodKey"], r["input"], r["region"], float(good),
-                                          float(poor), by=person() or "author", reason=reason)
+                                          float(poor), by=person() or UNNAMED, reason=reason)
         except edit.EditError as exc:
             _modal_err.set(str(exc))
             return
@@ -1741,9 +1866,13 @@ def easi_page_server(input, output, session, state: AppState):
         r = rows[i]
         _target.update(kind="confirm", i=i)
         names = names_of(p)
+        method = next((m for m in p.catalog().get("methods", []) if m.get("methodKey") == r["methodKey"]), {})
+        reads = set(reg.curve_sets_used(method))
         changes = [describe(h, names) for h in history_since_origin(p)
                    if (h.get("target") or {}).get("methodKey") == r["methodKey"]
-                   or h.get("action") == "set_curve_points"]
+                   or (h.get("action") == "set_curve_points" and (h.get("target") or {}).get("set") in reads)
+                   or (h.get("action") == "adopt_candidate"
+                       and r["functionId"] in ((h.get("target") or {}).get("functions") or []))]
         _modal(f"Confirm {r['functionName']}",
                ui.p(f"{r['functionName']} keeps {r['method']} as it now stands.", class_="mb-2"),
                ui.tags.ul(*[ui.tags.li(c) for c in changes], class_="easi-list") if changes else None,
@@ -1802,8 +1931,7 @@ def easi_page_server(input, output, session, state: AppState):
                     type="message", duration=5)
             except Exception as exc:  # noqa: BLE001 - the task must say what happened
                 logger.exception("EASI preview failed")
-                ui.notification_show(f"The preview could not run: {exc}", type="error",
-                                     duration=10)
+                ui.notification_show(_plain_failure(exc), type="error", duration=12)
             finally:
                 _set_running(False)
             await st.task_flush()
@@ -1815,6 +1943,10 @@ def easi_page_server(input, output, session, state: AppState):
     def _publish():
         p = _get()
         if p is None or publish_block_reason():
+            return
+        problems = _publish_problems(p)
+        if problems:
+            ui.notification_show("Not published: " + " ".join(problems), type="warning", duration=10)
             return
         notes = str(input.pub_notes() or "").strip()
         if not notes:
@@ -1837,6 +1969,26 @@ def easi_page_server(input, output, session, state: AppState):
         state.easi_project.set(p.copy())        # the strip and the page re-read the library
         ui.notification_show(f"Published EASI method v{version} to {lib.library_root()}.",
                              type="message", duration=8)
+
+    @reactive.effect
+    @reactive.event(input.renumber)
+    @guard("renumber the revision")
+    def _renumber():
+        p = _get()
+        if p is None or not p.is_revision():
+            return
+        to = _next_library_version()
+        was = int(p.meta.get("version") or 1)
+        if to == was:
+            return
+        new = p.copy()
+        new.meta["version"] = to
+        edit.restamp_identity(new)
+        new.history.append({"action": "renumber", "at": _now(), "by": person() or "",
+                            "kind": "lifecycle", "reason": f"v{was} became v{to}: the library "
+                            f"published v{to - 1} after this revision started",
+                            "target": {"from": was, "to": to}})
+        _apply(new, f"This revision is now v{to}.")
 
 
 __all__ = ["easi_page_ui", "easi_page_server", "easi_view", "curve_list", "band_rules",

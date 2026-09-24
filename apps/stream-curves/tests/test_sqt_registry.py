@@ -531,3 +531,40 @@ def test_frozen_copy_survives_registry_changes():
     edited = json.loads(json.dumps(frozen))
     edited["normalizedPoints"][0]["y"] = 0.5
     assert not sr.frozen_intact(edited)
+
+
+def test_a_missing_sheet_is_a_finding_never_another_sheet(builder, tmp_path):
+    import openpyxl
+    co = tmp_path / "CO"
+    co.mkdir()
+    _owner_workbook(co / "co-curves.xlsx")
+    (co / "sources.json").write_text(json.dumps({"state": "CO", "sources": [
+        {"id": "co-wrong-sheet", "file": "co-curves.xlsx", "edition": "test", "citation": "test",
+         "layout": "reference-curves", "sheet": "Not There"}]}), encoding="utf-8")
+    doc = builder.build(originals=tmp_path)
+    assert any(f["code"] == "original-sheet-missing" and f["state"] == "CO" for f in doc["findings"])
+    er = {r["key"]: r for r in doc["records"]}["sqt:co:entrenchment-ratio-er:c-streams"]
+    assert er["verification"]["status"] == "unverified"
+    two = openpyxl.Workbook()
+    two.create_sheet("Second")
+    with pytest.raises(builder.SourceProblem) as e:
+        builder.pick_sheet(two, None, "two.xlsx")
+    assert e.value.code == "original-sheet-not-named"
+    one = openpyxl.Workbook()
+    assert builder.pick_sheet(one, None, "one.xlsx") is one.worksheets[0]
+
+
+def test_original_cells_pair_with_bins_by_index_level(builder):
+    # a transcribed table written from index 1 down: position would pair 1.0 with the 0 bin
+    table = builder.parse_manual({"tables": [{"metric": "Bank Height Ratio", "levels": [1.0, 0.7, 0.3, 0.0],
+                                              "values": ["1.0", "1.2", "1.5", "2.0"], "page": 3}]}, "manual.pdf")[0]
+    rec = {"originalValues": [{"field": f, "fieldNumber": float(f) if f else None, "index": str(i),
+                               "indexNumber": i}
+                              for f, i in (("2.0", 0.0), ("", 0.29), ("1.5", 0.3), ("", 0.69),
+                                           ("1.2", 0.7), ("1.0", 1.0))],
+           "normalizedPoints": [{"x": 1.0, "y": 1.0}, {"x": 1.2, "y": 0.7}, {"x": 1.5, "y": 0.3},
+                                {"x": 2.0, "y": 0.0}],
+           "direction": "decreasing"}
+    out = builder.compare_to_table(rec, table)
+    assert out["counts"]["exact"] == 4 and out["counts"]["mismatch"] == 0
+    assert {r["index"]: r["original"] for r in out["rows"]}[0.0] == "2.0"

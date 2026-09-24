@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import io
 import json
+import hashlib
 import os
 import subprocess
 import sys
@@ -280,7 +281,12 @@ def test_operator_and_stratifier_lists_match_the_evaluator():
     assert set(mp.OPERATORS) == set(sm.VALID_OPERATORS)
     req = _builtin_pkg().envelope["evaluator"]["requires"]
     assert set(req["operators"]) <= set(mp.OPERATORS)
-    assert set(req["stratifiers"]) == set(mp.STRATIFIERS)
+    assert set(req["stratifiers"]) <= set(mp.STRATIFIERS)
+    # every stratifier a package may name is one the evaluator resolves: a strata key of a
+    # reach, or the national-only set
+    from easi import geo
+    keys = set(geo.strata_for("50", slope=0.01)) | {"nars9", "national"}
+    assert set(mp.STRATIFIERS) <= keys
     assert req["behaviors"] == list(mp.BEHAVIORS)
 
 
@@ -344,3 +350,90 @@ def test_the_acquisition_digest_leaves_out_the_method_and_presentation_code():
     ident = mp.active_identity()
     assert ident["acquisitionDigest"].startswith("sha256:")
     assert ident["methodVersion"] == RELEASE_METHOD
+
+
+# --------------------------------------------------------------------------- #
+# review A (2026-09-23): stratifiers, the calculator in the cache, status, direction
+# --------------------------------------------------------------------------- #
+def _with_curves(files: dict, edit) -> dict:
+    files = dict(files)
+    curves = json.loads(files["reference-curves.json"].decode("utf-8"))
+    edit(curves)
+    files["reference-curves.json"] = json.dumps(curves, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    ident = json.loads(files["scoring-identity.json"].decode("utf-8"))
+    ident["curves_sha256"] = hashlib.sha256(files["reference-curves.json"]).hexdigest()
+    ident["curve_count"] = sum(len(s["curves"]) for s in curves["sets"].values())
+    files["scoring-identity.json"] = json.dumps(ident, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    return files
+
+
+def test_level_ii_and_national_curve_sets_are_accepted_as_the_evaluator_resolves_them():
+    files = dict(_builtin_pkg().files)
+    l2 = list(json.loads(files["ecoregion-crosswalk.json"].decode("utf-8"))["l2"])[:2]
+
+    def to_l2(curves):
+        s = curves["sets"]["corridor-woody"]
+        s["stratifier"] = "l2"
+        nat = s["curves"]["national"]
+        s["curves"] = {"national": nat, **{code: dict(nat) for code in l2}}
+
+    def to_national(curves):
+        s = curves["sets"]["corridor-natural"]
+        s["stratifier"], s["curves"] = "national", {"national": s["curves"]["national"]}
+
+    assert not mp.validate_files(_with_curves(files, to_l2))
+    assert not mp.validate_files(_with_curves(files, to_national))
+
+    def bad_l2(curves):
+        curves["sets"]["corridor-woody"]["stratifier"] = "l2"     # NARS-9 codes under an l2 set
+
+    assert any("are not l2 codes" in p for p in mp.validate_files(_with_curves(files, bad_l2)))
+
+    def bad_national(curves):
+        curves["sets"]["corridor-natural"]["stratifier"] = "national"   # regional curves kept
+
+    assert any("holds only the national curve" in p for p in mp.validate_files(_with_curves(files, bad_national)))
+
+
+def test_a_curve_against_its_sets_direction_is_refused():
+    files = dict(_builtin_pkg().files)
+
+    def reversed_curve(curves):
+        c = curves["sets"]["corridor-woody"]["curves"]["national"]     # higher is better
+        c["points"] = [[0.0, 1.0], [50.0, 0.5], [100.0, 0.0]]
+
+    assert any("runs against its set's direction" in p
+               for p in mp.validate_files(_with_curves(files, reversed_curve)))
+
+
+def test_the_package_names_no_lifecycle_status():
+    env = _builtin_pkg().envelope
+    assert "status" not in env
+    with zipfile.ZipFile(io.BytesIO(mp.to_zip(_builtin_pkg()))) as zf:
+        assert "status" not in json.loads(zf.read(mp.ENVELOPE))
+
+
+def test_two_packages_with_other_calculators_never_share_a_folder(cache, restore):
+    files = dict(_builtin_pkg().files)
+    env = mp.build_envelope(files, method_id="easi-screening", version=1, label="x")
+    bare = mp.MethodPackage(envelope=env, files=files)
+    wb = (mp.builtin_data_dir().parent / "www" / "EASI_Calculator_1.0.xlsx")
+    if not wb.is_file():
+        wb = next(mp.builtin_data_dir().parent.rglob("EASI_Calculator_*.xlsx"), None)
+    if wb is None:
+        pytest.skip("no committed calculator in this checkout")
+    calc = (wb.name, wb.read_bytes())
+    env2 = mp.build_envelope(files, method_id="easi-screening", version=1, label="x", calculator=calc)
+    with_calc = mp.MethodPackage(envelope=env2, files=files, calculator=calc)
+    d1, _ = mp.materialize(bare)
+    d2, _ = mp.materialize(with_calc)
+    assert d1 != d2
+    assert (d2.parent / mp.CALCULATOR_DIR / wb.name).read_bytes() == calc[1]
+    assert not (d1.parent / mp.CALCULATOR_DIR).exists()
+
+
+def test_rolling_back_restores_the_criteria_set_the_process_started_with(cache, restore, monkeypatch):
+    monkeypatch.setenv("EASI_CRITERIA_SET", "regional")
+    mp.activate(_builtin_pkg())
+    mp.activate(None)
+    assert os.environ.get("EASI_CRITERIA_SET") == "regional"

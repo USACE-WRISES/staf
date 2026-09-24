@@ -70,11 +70,16 @@ def detach(project: EasiProject, package_id: str, *, by: str, reason: str = "") 
 
 
 def status(ref: dict, installed: list[dict]) -> str:
-    """``installed`` (a verified copy with this data digest), ``other`` (the package is here
-    with other data) or ``missing``."""
+    """``installed`` (a verified copy of the package the reference names: its package digest
+    when it records one, else its data digest), ``damaged`` (that copy failed its check),
+    ``other`` (the package is here in another version) or ``missing``."""
+    from ..evidence_store import matches
     same = [r for r in installed if r["packageId"] == ref.get("packageId")]
-    if any(r["dataDigest"] == ref.get("dataDigest") for r in same):
+    mine = [r for r in same if matches(r, ref)]
+    if any(r.get("verified", True) for r in mine):
         return "installed"
+    if mine:
+        return "damaged"
     return "other" if same else "missing"
 
 

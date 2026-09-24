@@ -24,6 +24,7 @@ so none carries an em dash.
 from __future__ import annotations
 
 import copy
+import functools
 import hashlib
 import json
 import math
@@ -129,10 +130,30 @@ def load_register(value: Any) -> dict:
     return out
 
 
+def decision_id(decisions: Iterable[Mapping], key: str, *parts: Any) -> str:
+    """An id for a new decision on ``key``: a digest of what it records, so the id of an
+    undone decision is not handed out again, and never one ``decisions`` already holds."""
+    taken = {str(d.get("decisionId")) for d in decisions or []}
+    base = (f"dec-{str(key)[5:]}-"
+            + hashlib.sha256(canonical([str(key), *[str(p) for p in parts]])).hexdigest()[:10])
+    out, n = base, 2
+    while out in taken:
+        out, n = f"{base}-{n}", n + 1
+    return out
+
+
+def _considered_functions(c: Mapping) -> list[str]:
+    ident = c.get("identity") or {}
+    fns = c.get("functions") or ident.get("functions") or (
+        [ident["functionId"]] if ident.get("functionId") else [])
+    return [str(f) for f in fns]
+
+
 def add_considered(register: Any, candidate: Mapping, *, by: str, at: Optional[str] = None) -> dict:
-    """The register with ``candidate`` added for comparison. Adding the same candidate
-    again replaces its definition and keeps its dispositions (a refreshed SQT record keeps
-    its key); nothing is selected by adding."""
+    """The register with ``candidate`` added for comparison; nothing is selected by adding.
+    Adding a candidate with the same key again (the same record, function and region)
+    replaces its definition and keeps its dispositions. A refreshed SQT record has another
+    content fingerprint, so it is another candidate, beside the one added before."""
     who = str(by or "").strip()
     if not who:
         raise ValueError("Adding a candidate needs the name of the person adding it.")
@@ -147,9 +168,14 @@ def add_considered(register: Any, candidate: Mapping, *, by: str, at: Optional[s
     return reg
 
 
-def remove_considered(register: Any, key: str) -> dict:
+def remove_considered(register: Any, key: str, *, decisions: Iterable[Mapping] = ()) -> dict:
     """The register without a considered candidate. Its dispositions go with it; one that a
-    REF-15 decision selected cannot be removed until that decision is withdrawn."""
+    REF-15 decision (in ``decisions``, the session's) selects cannot be removed until that
+    decision is undone."""
+    for d in decisions or []:
+        if str(((d.get("source") or {}).get("ref") or {}).get("candidateKey") or "") == str(key):
+            raise ValueError("An owner decision (REF-15) selects this curve. Undo that decision "
+                             "before removing it.")
     reg = load_register(register)
     reg["considered"] = [c for c in reg["considered"] if c.get("candidateKey") != key]
     reg["decisions"] = [d for d in reg["decisions"] if d.get("candidateKey") != key]
@@ -168,15 +194,19 @@ def record_disposition(register: Any, key: str, function_id: str, *, by: str, re
     if len(why) < min_reason:
         raise ValueError(f"Give a reason of at least {min_reason} characters.")
     reg = load_register(register)
-    if not any(c.get("candidateKey") == key for c in reg["considered"]):
+    cand = next((c for c in reg["considered"] if c.get("candidateKey") == key), None)
+    if cand is None:
         raise ValueError("That candidate is not in this register.")
+    if str(function_id) not in _considered_functions(cand):
+        raise ValueError("That candidate is not considered for this function.")
     prior = [d for d in reg["decisions"]
              if d.get("candidateKey") == key and d.get("functionId") == str(function_id)]
-    n = len([d for d in reg["decisions"] if d.get("candidateKey") == key])
+    when = at or _now()
     reg["decisions"].append({
-        "decisionId": f"dec-{key[5:]}-{n + 1}", "candidateKey": key,
+        "decisionId": decision_id(reg["decisions"], key, function_id, who, when, why),
+        "candidateKey": key,
         "functionId": str(function_id), "decision": "not_selected", "rule": "person",
-        "reason": why, "decidedBy": PERSON, "who": who, "when": at or _now(),
+        "reason": why, "decidedBy": PERSON, "who": who, "when": when,
         "basisDigest": basis_digest, "supersedes": prior[-1]["decisionId"] if prior else None})
     return reg
 
@@ -217,6 +247,12 @@ def _tile_functions(tile: Mapping) -> list[str]:
 def _tile_digest(tile: Mapping, config: Optional[Mapping] = None) -> Optional[str]:
     hib = (config or {}).get("higher_is_better")
     return curve_basis_digest(tile.get("strata") or [], higher_is_better=hib)
+
+
+def tile_basis_digest(tile: Optional[Mapping], config: Optional[Mapping] = None) -> Optional[str]:
+    """A gallery tile's basis digest, as the register computes it (what a REF-15 decision
+    records, so a later change to the curve asks for the decision to be looked at again)."""
+    return _tile_digest(tile, config) if tile else None
 
 
 def _deep_identity(metric: str, kind: str, source_ref: Mapping, region: Mapping) -> dict:
@@ -271,47 +307,62 @@ def deep_register(*, tiles: Iterable[Mapping], build: Optional[Mapping],
     decisions; ``register``: the session's ``candidate_register`` field. Returns
     ``{"candidates": [...], "rows": [...], "functions": [...]}``; ``functions`` holds the 20
     STAF functions in framework order with their selected rows, alternatives, gap and
-    unresolved items."""
+    unresolved items. A decision this methodology does not apply (the REF-15 extension while
+    it is off) selects nothing here, as it scores nothing in the version."""
+    from . import curve_sources as cs_
     from . import owner_curves as oc
     region = dict(region or {})
     config = dict(metric_config or {})
     decisions = [dict(d) for d in decisions or [] if isinstance(d, Mapping)]
+    applied = [d for d in decisions if not (oc.needs_extension(d) and not oc.alternatives_enabled())]
     built = [str(t.get("metric")) for t in tiles if not t.get("read_only")]
-    effective = oc.effective_build(build, decisions, built=built) or {}
+    effective = oc.effective_build(build, applied, built=built) or {}
+    portfolio_recorded = "portfolioSelection" in (build or {})
     selection = effective.get("portfolioSelection") or {}
     not_sel: dict[tuple[str, str], dict] = {}
     for fid, sel in selection.items():
         for x in (sel or {}).get("notSelected") or []:
             not_sel[(str(x.get("metric")), str(fid))] = dict(x)
-    included = {(str(d.get("metric")), str(f)): d for d in decisions
+    included = {(str(d.get("metric")), str(f)): d for d in applied
                 if d.get("action") == oc.INCLUDE for f in d.get("functions") or []}
     by_id = {str(d.get("id")): d for d in decisions}
     reg = load_register(register)
+    considered = {str(c.get("candidateKey")): c for c in reg["considered"]}
     candidates: dict[str, dict] = {}
     rows: list[dict] = []
+    done: set = set()                 # (candidate, function) pairs already stated
 
     def add(identity: dict, *, label: str, basis: Optional[str], build_status: str,
-            tile: Optional[Mapping] = None, extra: Optional[Mapping] = None) -> str:
-        key = candidate_key(identity)
+            tile: Optional[Mapping] = None, eligibility: Optional[dict] = None,
+            key: Optional[str] = None) -> str:
+        key = key or candidate_key(identity)
         if key not in candidates:
-            c = {"candidateKey": key, "identity": identity, "basisDigest": basis,
-                 "purpose": "operational", "campaign": None, "buildStatus": build_status,
-                 "supersededBy": None, "label": label,
-                 "eligibility": {"status": "eligible", "reasons": [], "checks": []}}
-            if tile is not None:
+            c = (copy.deepcopy(dict(considered[key])) if key in considered else
+                 {"candidateKey": key, "identity": identity, "basisDigest": basis,
+                  "purpose": "operational", "campaign": None, "buildStatus": build_status,
+                  "supersededBy": None, "label": label,
+                  "eligibility": eligibility or {"status": "eligible", "reasons": [], "checks": []}})
+            if tile is not None and not c.get("tile"):
                 c["tile"] = {k: tile.get(k) for k in ("metric", "display_name", "units", "strata",
                                                       "reference_range", "domain", "badge",
                                                       "reference_n", "status_text")}
-            if extra:
-                c.update(extra)
             candidates[key] = c
         return key
 
     def row(key: str, fid: str, status: str, decision: dict, *, unresolved: str = "") -> None:
+        if (key, fid) in done:
+            return
+        done.add((key, fid))
         rows.append({"candidateKey": key, "functionId": fid, "status": status,
                      "decision": decision, "unresolved": unresolved,
                      "needsReview": bool(decision.get("basisDigest") and candidates[key].get("basisDigest")
                                          and decision["basisDigest"] != candidates[key]["basisDigest"])})
+
+    def owner_row(key: str, fid: str, status: str, d: Mapping, verb: str) -> None:
+        row(key, fid, status, _decision(
+            key, fid, verb, rule="REF-15", reason=str(d.get("rationale") or ""), by=PERSON,
+            who=d.get("recordedBy"), when=d.get("recordedAt"), basis=d.get("basisDigest"),
+            ref=d.get("id")))
 
     for t in tiles:
         mk = str(t.get("metric") or "")
@@ -326,45 +377,41 @@ def deep_register(*, tiles: Iterable[Mapping], build: Optional[Mapping],
             kind = _owner_source_kind(t, owner_d) if owner_d else \
                 _TILE_KINDS.get(str(t.get("source_kind")), str(t.get("source_kind") or "carried"))
             ref = {"curve": str(t.get("badge") or "")}
+            same_as = None
             if owner_d:
                 src = owner_d.get("source") or {}
                 ref = {"decision": owner_d.get("id"), "kind": src.get("kind"),
                        **{k: v for k, v in (src.get("ref") or {}).items()
                           if k in ("candidateKey", "recordId", "version", "assessmentId", "rule",
                                    "option", "state", "edition")}}
+                # a considered candidate the owner selected is that candidate, not a second one
+                ck = str((src.get("ref") or {}).get("candidateKey") or "")
+                same_as = ck if ck in considered else None
             key = add(_deep_identity(mk, kind, ref, region), label=name, basis=digest,
-                      build_status="built", tile=t)
+                      build_status="built", tile=t, key=same_as)
             ns_fids = {f for (m, f) in not_sel if m == mk}
             for fid in dict.fromkeys(fns + sorted(ns_fids)):
                 if t.get("removed_decision"):
-                    d = by_id.get(str(t["removed_decision"])) or {}
-                    row(key, fid, ELIGIBLE, _decision(
-                        key, fid, "not_selected", rule="REF-15", reason=str(d.get("rationale") or ""),
-                        by=PERSON, who=d.get("recordedBy"), when=d.get("recordedAt"),
-                        ref=d.get("id")))
+                    owner_row(key, fid, ELIGIBLE, by_id.get(str(t["removed_decision"])) or {}, "not_selected")
                 elif (mk, fid) in not_sel:
                     x = not_sel[(mk, fid)]
                     if x.get("owner"):
-                        d = by_id.get(str(x.get("decision"))) or {}
-                        row(key, fid, ELIGIBLE, _decision(
-                            key, fid, "not_selected", rule="REF-15",
-                            reason=str(d.get("rationale") or ""), by=PERSON,
-                            who=d.get("recordedBy"), when=d.get("recordedAt"), ref=d.get("id")))
+                        owner_row(key, fid, ELIGIBLE, by_id.get(str(x.get("decision"))) or {}, "not_selected")
                     else:
                         row(key, fid, ELIGIBLE, _decision(key, fid, "not_selected", rule="SELECT-04",
                                                           reason=_select04_reason(x), by=AUTOMATED))
                 elif owner_d:
-                    row(key, fid, SELECTED, _decision(
-                        key, fid, "selected", rule="REF-15", reason=str(owner_d.get("rationale") or ""),
-                        by=PERSON, who=owner_d.get("recordedBy"), when=owner_d.get("recordedAt"),
-                        basis=owner_d.get("basisDigest"), ref=owner_d.get("id")))
+                    owner_row(key, fid, SELECTED, owner_d, "selected")
                 else:
-                    rule, why = {
-                        "carried": ("SELECT-04", "Carried forward from the published version, which "
-                                                 "keeps its place in the function."),
-                        "fixed": ("CURVE-11", "A fixed criterion, scored the same way in every "
-                                              "region."),
-                    }.get(kind, ("REF-12", "The build's source after the station pools."))
+                    rule = cs_.KIND_RULES.get(kind, "REF-12")
+                    why = {"carried": "Carried forward from the published version, which keeps its "
+                                      "place in the function.",
+                           "fixed": "A fixed criterion, scored the same way in every region.",
+                           "national": "The build's national reference, after the station pools.",
+                           "modeled": "The build's modeled reference, after the station pools.",
+                           "published_benchmark": "The build's published criterion, after the "
+                                                  "station pools and the modeled reference."}.get(
+                        kind, "The build's source after the station pools.")
                     row(key, fid, SELECTED, _decision(key, fid, "selected", rule=rule, reason=why,
                                                       by=AUTOMATED))
             continue
@@ -390,24 +437,22 @@ def deep_register(*, tiles: Iterable[Mapping], build: Optional[Mapping],
             elif (mk, fid) in not_sel:
                 x = not_sel[(mk, fid)]
                 if x.get("owner"):
-                    d = by_id.get(str(x.get("decision"))) or {}
-                    row(key, fid, ELIGIBLE, _decision(
-                        key, fid, "not_selected", rule="REF-15", reason=str(d.get("rationale") or ""),
-                        by=PERSON, who=d.get("recordedBy"), when=d.get("recordedAt"),
-                        ref=d.get("id")))
+                    owner_row(key, fid, ELIGIBLE, by_id.get(str(x.get("decision"))) or {}, "not_selected")
                 else:
                     row(key, fid, ELIGIBLE, _decision(key, fid, "not_selected", rule="SELECT-04",
                                                       reason=_select04_reason(x), by=AUTOMATED))
             elif (mk, fid) in included:
-                d = included[(mk, fid)]
-                row(key, fid, SELECTED, _decision(
-                    key, fid, "selected", rule="REF-15", reason=str(d.get("rationale") or ""),
-                    by=PERSON, who=d.get("recordedBy"), when=d.get("recordedAt"),
-                    basis=d.get("basisDigest"), ref=d.get("id")))
-            else:
+                owner_row(key, fid, SELECTED, included[(mk, fid)], "selected")
+            elif portfolio_recorded:
                 row(key, fid, SELECTED, _decision(
                     key, fid, "selected", rule="SELECT-04",
                     reason="Fitted here and chosen for the function by the portfolio rule.",
+                    by=AUTOMATED))
+            else:
+                row(key, fid, SELECTED, _decision(
+                    key, fid, "selected", rule="mapping",
+                    reason="Fitted here and scored in the function by the version's function "
+                           "mapping; the version was built before the portfolio rule (SELECT-04).",
                     by=AUTOMATED))
     # a metric the build could not support: no curve, one record per function
     have = {str(t.get("metric")) for t in tiles}
@@ -415,54 +460,54 @@ def deep_register(*, tiles: Iterable[Mapping], build: Optional[Mapping],
         mk = str(w.get("metricKey") or "")
         if not mk or mk in have:
             continue
+        held = w.get("reason") == "held-for-review"
         key = add(_deep_identity(mk, "fitted", {"build": "this session"}, region),
-                  label=str(w.get("metricName") or mk), basis=None, build_status="not_run")
+                  label=str(w.get("metricName") or mk), basis=None, build_status="not_run",
+                  eligibility={"status": "excluded", "reasons": [str(w.get("statement") or "")],
+                               "checks": []})
         for f in w.get("functions") or [{"functionId": w.get("functionId")}]:
             fid = str((f or {}).get("functionId") or "")
             if fid:
                 row(key, fid, EXCLUDED, _decision(key, fid, "not_selected",
-                                                  rule="REF-06" if w.get("reason") != "held-for-review"
-                                                  else "CURVE-07",
+                                                  rule="CURVE-07" if held else "REF-06",
                                                   reason=str(w.get("statement") or ""), by=AUTOMATED))
     # the candidates added for comparison
     chosen = {}
-    for d in decisions:
+    for d in applied:
         if d.get("action") == oc.SOURCE:
             ck = ((d.get("source") or {}).get("ref") or {}).get("candidateKey")
             if ck:
                 for f in d.get("functions") or []:
                     chosen[(str(ck), str(f))] = d
     dispositions = _live_dispositions(reg)
-    for c in reg["considered"]:
-        key = str(c.get("candidateKey"))
-        cand = copy.deepcopy(dict(c))
-        candidates[key] = cand
-        fns = [str(f) for f in (cand.get("identity") or {}).get("functions") or cand.get("functions") or []]
+    for key, c in considered.items():
+        if key not in candidates:
+            candidates[key] = copy.deepcopy(dict(c))
+        cand = candidates[key]
+        fns = [str(f) for f in cand.get("functions") or (cand.get("identity") or {}).get("functions") or []]
         eligible = (cand.get("eligibility") or {}).get("status", "eligible") == "eligible"
         for fid in fns:
             if (key, fid) in chosen:
-                d = chosen[(key, fid)]
-                row(key, fid, SELECTED, _decision(
-                    key, fid, "selected", rule="REF-15", reason=str(d.get("rationale") or ""),
-                    by=PERSON, who=d.get("recordedBy"), when=d.get("recordedAt"),
-                    basis=d.get("basisDigest") or ((d.get("source") or {}).get("ref") or {}).get("basisDigest"),
-                    ref=d.get("id")))
+                owner_row(key, fid, SELECTED, chosen[(key, fid)], "selected")
             elif (key, fid) in dispositions:
                 d = dispositions[(key, fid)]
-                row(key, fid, ELIGIBLE if eligible else EXCLUDED, {
-                    **_decision(key, fid, "not_selected", rule="person", reason=str(d.get("reason") or ""),
-                                by=PERSON, who=d.get("who"), when=d.get("when"),
-                                basis=d.get("basisDigest"), ref=d.get("decisionId"))})
+                row(key, fid, ELIGIBLE if eligible else EXCLUDED, _decision(
+                    key, fid, "not_selected", rule="person", reason=str(d.get("reason") or ""),
+                    by=PERSON, who=d.get("who"), when=d.get("when"), basis=d.get("basisDigest"),
+                    ref=d.get("decisionId")))
             elif not eligible:
                 reasons = (cand.get("eligibility") or {}).get("reasons") or []
                 row(key, fid, EXCLUDED, _decision(key, fid, "not_selected", rule="applicability",
                                                   reason=" ".join(str(r) for r in reasons),
                                                   by=AUTOMATED))
             else:
+                added = " ".join(x for x in (f"by {cand['addedBy']}" if cand.get("addedBy") else "",
+                                             f"on {str(cand.get('addedAt'))[:10]}" if cand.get("addedAt") else "")
+                                 if x)
                 row(key, fid, NOT_EVALUATED, _decision(
                     key, fid, "pending", rule="considered",
-                    reason="Added for comparison. No decision yet.", by=PERSON,
-                    who=cand.get("addedBy"), when=cand.get("addedAt")), unresolved="undecided")
+                    reason=f"Added for comparison{' ' + added if added else ''}. No decision yet.",
+                    by=None), unresolved="undecided")
     return {"candidates": list(candidates.values()), "rows": rows,
             "functions": function_rows(rows, candidates, decisions=decisions, build=build,
                                        built=built, coverage_exceptions=coverage_exceptions)}
@@ -565,24 +610,138 @@ def sqt_metric_key(record: Mapping) -> str:
     return "sqt_" + re.sub(r"[^a-z0-9]+", "_", key.lower()).strip("_")
 
 
+#: registry issues that describe the older adapted assessments or the registry's own work,
+#: not a limit of the adopted curve (they stay in the registry and the candidate record)
+_AUTHORING_ISSUES = {"adapted-held-flat", "adapted-threshold-as-point", "adapted-drops-breakpoint",
+                     "adapted-placeholder", "adapted-clamped", "does-not-reach-0", "does-not-reach-1",
+                     "missing-breakpoints", "extra-breakpoint"}
+
+
+def _interp(points: list, x: float) -> float:
+    if x <= points[0][0]:
+        return points[0][1]
+    if x >= points[-1][0]:
+        return points[-1][1]
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        if x0 <= x <= x1:
+            return y0 if x1 == x0 else y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+    return points[-1][1]
+
+
+def sqt_adoption(record: Mapping) -> dict:
+    """The published rule written as a DEEP curve, or why it cannot be.
+
+    DEEP interpolates between points and holds the end value past the last one. The rule
+    is taken from the original's own points where the registry verified them, else from the
+    metric library's bins; an end the source extends linearly is extended to the index limit
+    it reaches; an end threshold bin (">3 scores 0") becomes a step just past its value. What
+    DEEP cannot write (a logarithmic original, a two-sided or tabulated form, a threshold
+    inside the curve) is a blocker. Returns ``{points, notes, blockers, openEnds}``: an open
+    end is one that stops inside the index range where the source does not say how it
+    scores beyond it."""
+    ver = record.get("verification") or {}
+    issues = {str(i.get("code")) for i in record.get("issues") or []}
+    against = ver.get("against") or {}
+    notes: list = []
+    blockers: list = []
+    if ver.get("status") in ("verified", "partially-verified") and ver.get("originalPoints"):
+        base = ver["originalPoints"]
+        notes.append(f"Points from the original ({against.get('citation') or 'the source file'}).")
+    else:
+        base = record.get("normalizedPoints") or []
+    pts = sorted((float(p["x"]), float(p["y"])) for p in base)
+    form = record.get("form")
+    if form != "piecewise":
+        blockers.append(f"DEEP adopts a curve of points; this SQT rule is a {str(form).replace('-', ' ')}.")
+    if "original-log-form" in issues:
+        blockers.append("The original scores with a logarithmic curve; straight segments between its "
+                        "points do not reproduce it.")
+    if len(pts) < 2:
+        blockers.append("The source gives fewer than two points.")
+        return {"points": pts, "notes": notes, "blockers": blockers, "openEnds": []}
+    for th in record.get("thresholds") or []:
+        v, idx, op = float(th.get("value")), float(th.get("index")), str(th.get("op"))
+        eps = max(abs(v), 1.0) * 1e-6
+        if op == ">" and v == pts[-1][0]:
+            pts.append((v + eps, idx))
+            notes.append(f"The bin \"> {v:g} scores {idx:g}\" is written as a step just past {v:g}.")
+        elif op == "<" and v == pts[0][0]:
+            pts.insert(0, (v - eps, idx))
+            notes.append(f"The bin \"< {v:g} scores {idx:g}\" is written as a step just before {v:g}.")
+        else:
+            blockers.append(f"The bin \"{op} {v:g} scores {idx:g}\" cannot be written as a curve.")
+    open_ends = []
+    ext = record.get("extrapolation")
+    for side in ("low", "high"):
+        (x0, y0), (x1, y1) = (pts[0], pts[1]) if side == "low" else (pts[-1], pts[-2])
+        if y0 in (0.0, 1.0):
+            continue                    # the index holds at its limit, as DEEP holds it
+        if ext == "linear" and x1 != x0 and y1 != y0:
+            m = (y1 - y0) / (x1 - x0)
+            target = (0.0 if m > 0 else 1.0) if side == "low" else (1.0 if m > 0 else 0.0)
+            xt = x0 + (target - y0) / m
+            if side == "low":
+                pts.insert(0, (xt, target))
+            else:
+                pts.append((xt, target))
+            notes.append(f"The {side} end is extended along its last segment to {target:g} at "
+                         f"{xt:.4g}, as the source's segment equations do.")
+        else:
+            open_ends.append({"side": side, "x": x0, "y": y0})
+    return {"points": pts, "notes": notes, "blockers": blockers, "openEnds": open_ends}
+
+
+def _sqt_siblings(frozen: Mapping) -> list[str]:
+    """The other strata the same state's SQT scores this metric in."""
+    from . import sqt_registry as reg
+    parts = str(frozen.get("key") or "").split(":")
+    if len(parts) < 3:
+        return []
+    return sorted({str(r.get("stratumName")) for r in reg.records(state=frozen.get("state"))
+                   if str(r.get("key") or "").split(":")[2:3] == parts[2:3]
+                   and r.get("key") != frozen.get("key")})
+
+
 def sqt_candidate(record: Mapping, *, function_id: str, context: Optional[Mapping] = None,
                   region: Optional[Mapping] = None) -> dict:
-    """A considered candidate from one SQT registry record, frozen: the copy carries
-    everything the curve needs, so a later registry build never changes it. Its
-    applicability checks against ``context`` (``sqt_registry.applicability``) decide its
-    eligibility; a record with a defect, or a failed check, is excluded with the reason."""
+    """A considered candidate from one SQT registry record for one function, frozen: the
+    copy carries everything the curve needs, so a later registry build never changes it.
+    It is eligible only when DEEP can reproduce the published rule (``sqt_adoption``), the
+    registry marks the record eligible, no applicability check fails, and the record is not
+    one stratum of a stratified metric (DEEP would apply that stratum to every site)."""
     from . import sqt_registry as reg
+    ctx = dict(context or {})
     frozen = reg.frozen_copy(record)
-    checks = reg.applicability(frozen, context)
+    checks = reg.applicability(frozen, ctx)
+    adoption = sqt_adoption(frozen)
+    rng = ctx.get("xRange")
+    xs = [x for x, _ in adoption["points"]]
+    inside = (isinstance(rng, (list, tuple)) and len(rng) == 2 and xs
+              and float(rng[0]) >= xs[0] and float(rng[1]) <= xs[-1])
+    if adoption["openEnds"] and not inside:
+        ends = " and ".join(f"{e['side']} end ({e['x']:g} scores {e['y']:g})" for e in adoption["openEnds"])
+        checks.append({"id": "past-ends", "status": "fail",
+                       "detail": f"The source does not say how it scores past its {ends}; DEEP would hold "
+                                 "the end value there. Only a target whose values all fall inside the "
+                                 "curve can use it."})
+    for b in adoption["blockers"]:
+        checks.append({"id": "form", "status": "fail", "detail": b})
+    siblings = _sqt_siblings(frozen)
+    if siblings and not ctx.get("stratumCoversTarget"):
+        checks.append({"id": "strata", "status": "fail",
+                       "detail": f"The SQT scores this metric by stratum ({frozen.get('stratumName')}; also "
+                                 f"{', '.join(siblings)}). DEEP would apply this one stratum to every site."})
+    elif siblings:
+        checks.append({"id": "strata", "status": "pass",
+                       "detail": f"Recorded as covering the whole target: {frozen.get('stratumName')}."})
     worst = reg.overall(checks)
     region = dict(region or {})
     identity = {"assessmentType": "deep", "subject": {"kind": "metric", "id": sqt_metric_key(frozen)},
-                "sourceKind": "sqt",
+                "functionId": str(function_id), "sourceKind": "sqt",
                 "sourceRef": {"registryKey": frozen.get("key"), "state": frozen.get("state"),
                               "tool": frozen.get("tool"), "edition": frozen.get("edition"),
                               "fingerprint": frozen["frozen"]["contentFingerprint"]},
                 "applicability": {"geography": {"kind": "ecoregion", "code": region.get("code")}}}
-    pts = [(float(p["x"]), float(p["y"])) for p in frozen.get("normalizedPoints") or []]
     direction = frozen.get("direction")
     ver = frozen.get("verification") or {}
     reasons = []
@@ -592,15 +751,18 @@ def sqt_candidate(record: Mapping, *, function_id: str, context: Optional[Mappin
                                    if i.get("severity") == "defect"))
     reasons += [c["detail"] for c in checks if c.get("status") == "fail"]
     eligible = bool(frozen.get("eligible")) and worst != "fail"
-    # a verified record's reasons say what matched; any other status's say what was not checked
-    limitations = [] if ver.get("status") == "verified" else list(ver.get("reasons") or [])
+    # what limits the adopted curve (never the registry's own authoring notes)
+    limitations = [] if ver.get("status") == "verified" else [
+        "Checked only in part against the original." if ver.get("status") == "partially-verified" else
+        "A STAF adaptation of the SQT, not checked against the original."]
     limitations += [str(i.get("detail")) for i in frozen.get("issues") or []
-                    if i.get("severity") in ("warning", "defect")]
-    limitations += [c["detail"] for c in checks if c.get("status") == "warn"]
+                    if i.get("severity") in ("warning", "defect") and i.get("code") not in _AUTHORING_ISSUES]
+    limitations += adoption["notes"]
     label = " ".join(x for x in (str(frozen.get("originalMetricName") or ""),
                                  f"({frozen.get('state')} SQT"
                                  + (f", {frozen.get('stratumName')})" if frozen.get("stratumName")
                                     and frozen.get("stratumName") != "Default" else ")")) if x)
+    pts = adoption["points"]
     return {"candidateKey": candidate_key(identity), "identity": identity,
             "functions": [str(function_id)],
             "basisDigest": curve_basis_digest([{"label": frozen.get("stratumName"), "points": pts}],
@@ -611,15 +773,73 @@ def sqt_candidate(record: Mapping, *, function_id: str, context: Optional[Mappin
             "verificationNotes": list(ver.get("reasons") or []),
             "eligibility": {"status": "eligible" if eligible else "excluded", "reasons": reasons,
                             "checks": checks},
-            "limitations": limitations,
+            "limitations": list(dict.fromkeys(limitations)),
             "definition": {"points": [{"x": x, "y": y} for x, y in pts], "units": frozen.get("units"),
                            "stratum": frozen.get("stratumName"), "direction": direction,
-                           "extrapolation": frozen.get("extrapolation")},
+                           "extrapolation": frozen.get("extrapolation"),
+                           "conversion": adoption["notes"], "openEnds": adoption["openEnds"]},
             "record": frozen}
+
+
+# --------------------------------------------------------------------------- #
+# what an SQT curve is checked against in a session
+# --------------------------------------------------------------------------- #
+@functools.lru_cache(maxsize=1)
+def _crosswalk() -> frozenset:
+    """``(STAF metric library id, app metric key)`` pairs from the metric library's own
+    crosswalk (``config/staf_metric_library.json``), the one the metric workbench uses."""
+    from .staf_library import staf_metric_library_entries
+    ent = staf_metric_library_entries()
+    return frozenset((str(a), str(b)) for a, b in zip(ent["library_id"], ent["app_metric_key"])
+                     if isinstance(b, str) and b.strip())
+
+
+def same_metric(record: Mapping, metric: Any) -> bool:
+    """True when the STAF metric library names ``metric`` as this app's key for the metric
+    the SQT record scores."""
+    return (str(record.get("stafMetricId") or ""), str(metric or "")) in _crosswalk()
+
+
+def sqt_target(metric: str, config: Optional[Mapping] = None,
+               x_range: Optional[Iterable] = None) -> dict:
+    """One of the session's curves, as an SQT curve is checked against it: its units, the
+    direction its index runs (``higher_is_better``, or two-sided for an optimum) and
+    ``[min, max]`` of the values the session scores on it."""
+    cfg = dict(config or {})
+    hib = cfg.get("higher_is_better")
+    shape = str(cfg.get("curve_form") or cfg.get("expected_shape") or "").lower()
+    direction = ("increasing" if hib is True else "decreasing" if hib is False else
+                 "two-sided" if shape in ("optimum", "trapezoidal", "two-sided") else None)
+    rng = [float(v) for v in x_range] if x_range is not None else []
+    return {"metric": str(metric), "name": str(cfg.get("display_name") or metric),
+            "units": cfg.get("units") or None, "direction": direction,
+            "xRange": rng if len(rng) == 2 else None}
+
+
+def sqt_context(record: Mapping, *, function_id: str, states: Iterable = (),
+                targets: Iterable[Mapping] = ()) -> dict:
+    """The applicability context of an SQT record for one function of a DEEP session: the
+    function, the region's states and the STAF score scale; and, when one of ``targets``
+    (:func:`sqt_target`) scores the same metric (:func:`same_metric`), that curve's units,
+    direction and value range. When none does, the construct check names the curves."""
+    ctx: dict = {"function": str(function_id), "states": [str(s) for s in states or []],
+                 "scoreScale": "staf"}
+    targets = [dict(t) for t in targets or []]
+    same = next((t for t in targets if same_metric(record, t.get("metric"))), None)
+    if same is not None:
+        ctx.update({"stafMetricId": record.get("stafMetricId"), "targetMetric": same["metric"],
+                    "targetName": same.get("name")})
+        for k in ("units", "direction", "xRange"):
+            if same.get(k) is not None:
+                ctx[k] = same[k]
+    elif targets:
+        ctx["comparedMetrics"] = [str(t.get("name") or t.get("metric")) for t in targets]
+    return ctx
 
 
 __all__ = ["STATUSES", "STATUS_LABELS", "DECIDED_BY", "SOURCE_KINDS", "SOURCE_KIND_LABELS",
            "SESSION_FIELD", "candidate_key", "curve_basis_digest", "load_register",
-           "empty_register", "add_considered", "remove_considered", "record_disposition",
+           "empty_register", "add_considered", "remove_considered", "record_disposition", "decision_id",
            "withdraw_disposition", "deep_register", "function_rows", "register_counts",
-           "export_rows", "diff", "MAX_COMPARE", "sqt_candidate", "sqt_metric_key"]
+           "export_rows", "diff", "MAX_COMPARE", "sqt_candidate", "sqt_metric_key", "sqt_adoption",
+           "tile_basis_digest", "same_metric", "sqt_target", "sqt_context"]

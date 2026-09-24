@@ -786,6 +786,9 @@ def _hierarchy_records(result: dict, add) -> None:
                     computed["failedAtBuild"] = src["failedAtBuild"]
                     verdict = VERDICT_FAIL
                     chosen += f" Not applied: {src['failedAtBuild']}"
+        if owner_curves.needs_extension(d) and not owner_curves.alternatives_enabled():
+            verdict = VERDICT_FAIL
+            chosen += f" Not applied: {owner_curves.EXTENSION_OFF}"
         held = (result.get("held_by_owner") or {}).get(str(d.get("metric")))
         if held and action in (owner_curves.SOURCE, owner_curves.REMOVE):
             # "your choice stands": the build kept the metric out of its own fit,
@@ -799,7 +802,7 @@ def _hierarchy_records(result: dict, add) -> None:
                        f"({_pe.held_words(summary)}); the decision holds it out of the build "
                        "until the owner withdraws it.")
         add(owner_curves.RULE, "owner_decision", str(d.get("id")),
-            inputs=owner_curves.summary(d),
+            inputs=owner_curves.bundle_summary(d),
             thresholds={"min_rationale": owner_curves.min_rationale()},
             computed={k: v for k, v in computed.items() if v is not None},
             verdict=verdict,

@@ -541,3 +541,37 @@ def test_a_refused_run_names_its_uncovered_functions(refused_run):
     gaps = rb.coverage_gaps(packet)
     assert {g["function_id"] for g in gaps} == set(missing)
     assert all(g["label"] and g["question"] for g in gaps)
+
+
+def _batch():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("run_region_batch_under_test", SCRIPT)
+    mod = importlib.util.module_from_spec(spec)
+    sys.path.insert(0, str(SCRIPT.parent))
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_stage_many_records_the_command_and_binds_a_region_to_its_outputs(tmp_path):
+    rb = _batch()
+    assert rb.recorded_argv(["stage-many", "--l3", "55", "--workers", "3", "--out-root", "x",
+                             "--workers=2", "--isolated"]) == ["stage-many", "--l3", "55", "--out-root", "x"]
+    import argparse
+    a = argparse.Namespace(**{k: None for k in rb._STAGE_MANY_FLAGS})
+    a.enable_policy, a.approve_portfolio = [], []
+    ns = rb.region_stage_namespace(a, "55", "Eastern Corn Belt Plains", tmp_path / "r",
+                                   argv=["stage-many", "--workers", "3"])
+    assert ns.argv == ["stage-many"] and ns.l3 == "55" and ns.include_site == []
+    assert set(rb._STAGE_MANY_FLAGS) <= set(vars(ns))
+    # a region's digest names what it carries forward from
+    d1 = rb.region_digest("55", "n", {"x": 1}, {"assessmentId": "a", "version": 8, "contentDigest": "c"})
+    d2 = rb.region_digest("55", "n", {"x": 1}, {"assessmentId": "a", "version": 9, "contentDigest": "d"})
+    assert d1 != d2
+    # a recorded output that changed makes the region stage again
+    region = tmp_path / "r"
+    (region / "library").mkdir(parents=True)
+    (region / "library" / "v1.json").write_text("{}", encoding="utf-8")
+    rec = {"outputs": {"library/v1.json": rb._file_sha(region / "library" / "v1.json")}}
+    assert rb.outputs_intact(region, rec)
+    (region / "library" / "v1.json").write_text("{ }", encoding="utf-8")
+    assert not rb.outputs_intact(region, rec) and not rb.outputs_intact(region, {"outputs": {}})

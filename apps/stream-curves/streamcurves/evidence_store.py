@@ -1,25 +1,35 @@
 """Evidence packages: verified before use, installed once, reused offline.
 
 An evidence package (AUTHORING.md, "Evidence") is ``evidence.json`` plus ``data/`` files,
-distributed as a zip ``<packageId>-<version>-<sha8>.evidence.zip``. Its identity is its data:
-``dataDigest`` = SHA-256 over the canonical map of data-file SHA-256s; a download location
-(a folder or an https base, a rolling release URL included) is never an identity.
+distributed as a zip ``<packageId>-<version>-<sha8>.evidence.zip``. Its identity is its
+content: ``dataDigest`` = SHA-256 over the canonical map of data-file SHA-256s, and
+``packageDigest`` = SHA-256 over the canonical manifest without its ``producer`` block. A
+download location (a folder or an https base, a rolling release URL included) and an
+archive's own bytes are never an identity: the archive's SHA-256 checks the transfer, and the
+package digests decide what was installed.
 
-The store lives under the data root (``<data root>/evidence/<packageId>/<data digest 12>/``).
-A package is ready only after every file's size and SHA-256 match its manifest; an archive is
-extracted into a staging folder with path checks (no absolute paths, no ``..``, no links, data
-file types only) and moved into place only once verified. Downloads resume from ``.part``
-files with an HTTP Range request, and a verified package is reused offline.
+The store lives under the data root, one folder per package digest
+(``<data root>/evidence/<packageId>/<package digest 12>/``), so an installed manifest is exactly
+the one a project names. A package is ready only after every file's size and SHA-256 match its
+manifest; an archive is extracted into a staging folder with path checks (no absolute paths, no
+``..``, no links, data file types only) and moved into place only once verified. A folder keeps
+``.verified.json``: the size and time of every file when it was last hashed in full. Listing the
+store trusts that record only while every file keeps them (and hashes the folder again when one
+does not); anything that reads the data (a refit, the viewer, an export) hashes every file first
+(:func:`ready`). Downloads resume from ``.part`` files with an HTTP Range request, and a
+verified package is reused offline.
 """
 from __future__ import annotations
 
 import hashlib
 import json
 import os
+import re
 import shutil
 import threading
 import uuid
 import zipfile
+import zlib
 from pathlib import Path, PurePosixPath
 from typing import Callable, Optional
 
@@ -28,9 +38,15 @@ from .desktop_env import data_root
 SCHEMA = "staf-evidence-package"
 SCHEMA_VERSION = 1
 MANIFEST = "evidence.json"
+STAMP = ".verified.json"
+INDEX = "index.json"
 #: The file types a package may carry (data, never code).
 DATA_SUFFIXES = (".parquet", ".csv", ".json", ".txt", ".md", ".tsv", ".geojson")
 MAX_MANIFEST_BYTES = 8 * 1024 * 1024
+#: a package id is a folder name in the store: lower-case letters, digits, dot, dash, underscore
+PACKAGE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
+#: a version label rides in archive names
+VERSION_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,63}$")
 _CHUNK = 1 << 20
 
 ProgressFn = Callable[[int, int], None]
@@ -42,6 +58,14 @@ class EvidenceError(RuntimeError):
 
 class EvidenceCancelled(EvidenceError):
     pass
+
+
+class EvidenceMissing(EvidenceError):
+    """The host does not hold the archive asked for."""
+
+
+class EvidenceMismatch(EvidenceError):
+    """The host's bytes under that name are not the archive the record names."""
 
 
 def store_root() -> Path:
@@ -91,6 +115,10 @@ def check_manifest(doc: dict) -> dict:
     for key in ("packageId", "version", "dataDigest", "files"):
         if not doc.get(key):
             raise EvidenceError(f"evidence.json has no {key}")
+    if not isinstance(doc["packageId"], str) or not PACKAGE_ID_RE.match(doc["packageId"]):
+        raise EvidenceError(f"evidence.json has an unusable package id: {doc['packageId']!r}")
+    if not VERSION_RE.match(str(doc["version"])):
+        raise EvidenceError(f"evidence.json has an unusable version: {doc['version']!r}")
     files = doc["files"]
     if not isinstance(files, dict) or not files:
         raise EvidenceError("evidence.json lists no files")
@@ -110,7 +138,18 @@ def read_manifest(folder: Path) -> dict:
         raise EvidenceError(f"no {MANIFEST} in {folder}")
     if p.stat().st_size > MAX_MANIFEST_BYTES:
         raise EvidenceError("evidence.json is too large")
-    return check_manifest(json.loads(p.read_text(encoding="utf-8")))
+    try:
+        doc = json.loads(p.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise EvidenceError(f"evidence.json cannot be read ({exc})") from exc
+    return check_manifest(doc)
+
+
+def _data_files(folder: Path) -> list[str]:
+    base = folder / "data"
+    if not base.is_dir():
+        return []
+    return sorted(str(p.relative_to(folder)).replace("\\", "/") for p in base.rglob("*") if p.is_file())
 
 
 def verify_folder(folder: Path) -> dict:
@@ -123,97 +162,208 @@ def verify_folder(folder: Path) -> dict:
         if not p.is_file() or p.stat().st_size != rec["bytes"] or sha_file(p) != rec["sha256"]:
             damaged.append(rel)
     listed = set(doc["files"])
-    extra = sorted(str(p.relative_to(folder)).replace("\\", "/") for p in (folder / "data").rglob("*")
-                   if p.is_file() and str(p.relative_to(folder)).replace("\\", "/") not in listed)
+    extra = [rel for rel in _data_files(folder) if rel not in listed]
     return {"packageId": doc["packageId"], "version": doc["version"], "dataDigest": doc["dataDigest"],
             "packageDigest": package_digest(doc), "damaged": damaged, "unlisted": extra,
             "ok": not damaged and not extra, "manifest": doc}
 
 
+# --------------------------------------------------------------------------- #
+# the record of the last full check
+# --------------------------------------------------------------------------- #
+def _stats(folder: Path, doc: dict) -> dict:
+    out = {}
+    for rel in list(doc["files"]) + [MANIFEST]:
+        st = (folder / rel).stat()
+        out[rel] = [st.st_size, st.st_mtime_ns]
+    return out
+
+
+def _stamp(folder: Path, doc: dict) -> None:
+    try:
+        (folder / STAMP).write_text(json.dumps({"packageDigest": package_digest(doc),
+                                                "stats": _stats(folder, doc)}), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _unstamp(folder: Path) -> None:
+    try:
+        (folder / STAMP).unlink()
+    except OSError:
+        pass
+
+
+def _stamp_ok(folder: Path, doc: dict) -> bool:
+    try:
+        rec = json.loads((folder / STAMP).read_text(encoding="utf-8"))
+        return (rec.get("packageDigest") == package_digest(doc) and rec.get("stats") == _stats(folder, doc)
+                and set(_data_files(folder)) <= set(doc["files"]))
+    except (OSError, ValueError, TypeError):
+        return False
+
+
+def check(folder: Path, *, full: bool = False) -> dict:
+    """:func:`verify_folder`, or (``full`` False) the record of the last full check while every
+    file keeps the size and time it had then. ``checked`` says which: ``full`` or ``stamp``."""
+    folder = Path(folder)
+    doc = read_manifest(folder)
+    if _renamed(folder, doc):
+        # an installed folder is named by the digest it was installed with: a manifest that
+        # hashes to another one was changed after the install
+        _unstamp(folder)
+        return {"packageId": doc["packageId"], "version": doc["version"], "dataDigest": doc["dataDigest"],
+                "packageDigest": package_digest(doc), "damaged": [MANIFEST], "unlisted": [], "ok": False,
+                "manifest": doc, "checked": "full"}
+    if not full and _stamp_ok(folder, doc):
+        return {"packageId": doc["packageId"], "version": doc["version"], "dataDigest": doc["dataDigest"],
+                "packageDigest": package_digest(doc), "damaged": [], "unlisted": [], "ok": True,
+                "manifest": doc, "checked": "stamp"}
+    got = verify_folder(folder)
+    if got["ok"]:
+        _stamp(folder, doc)
+    else:
+        _unstamp(folder)
+    return {**got, "checked": "full"}
+
+
+def _renamed(folder: Path, doc: dict) -> bool:
+    name = folder.name
+    if len(name) != 12 or any(ch not in "0123456789abcdef" for ch in name):
+        return False                      # not a store folder (a source being imported)
+    return name not in (package_digest(doc).split(":", 1)[-1][:12],
+                        doc["dataDigest"].split(":", 1)[-1][:12])
+
+
+# --------------------------------------------------------------------------- #
+# installing
+# --------------------------------------------------------------------------- #
+def _inside(root: Path, target: Path) -> Path:
+    r, t = root.resolve(), target.resolve()
+    if t == r or r not in t.parents:
+        raise EvidenceError("the package would install outside the evidence store")
+    return target
+
+
 def _target(root: Path, doc: dict) -> Path:
-    return root / doc["packageId"] / doc["dataDigest"].split(":", 1)[-1][:12]
+    return _inside(root, root / doc["packageId"] / package_digest(doc).split(":", 1)[-1][:12])
+
+
+def _reusable(target: Path, doc: dict) -> bool:
+    if not target.is_dir():
+        return False
+    try:
+        got = check(target)
+    except (EvidenceError, OSError):
+        got = {"ok": False}
+    if got["ok"] and got.get("packageDigest") == package_digest(doc):
+        return True
+    shutil.rmtree(target, ignore_errors=True)
+    return False
 
 
 def install_zip(zip_path: Path, *, root: Optional[Path] = None) -> Path:
-    """Install a package archive (or reuse the verified copy already installed)."""
+    """Install a package archive (or reuse the verified copy already installed). A damaged
+    archive is refused with a plain message; nothing partial is ever left in the store."""
     root = Path(root or store_root())
     try:
         z = zipfile.ZipFile(zip_path)
     except (zipfile.BadZipFile, OSError) as exc:
-        raise EvidenceError(f"not a readable package archive: {exc}") from exc
-    with z:
-        infos = [i for i in z.infolist() if not i.is_dir()]
-        names = [i.filename for i in infos]
-        if MANIFEST not in names:
-            raise EvidenceError("the archive has no evidence.json")
+        raise EvidenceError(f"The archive is damaged or not a package ({exc}). Download or import "
+                            "it again.") from exc
+    try:
+        with z:
+            return _install_from(z, root)
+    except EvidenceError:
+        raise
+    except (zipfile.BadZipFile, zlib.error, EOFError, UnicodeDecodeError, ValueError) as exc:
+        raise EvidenceError(f"The archive is damaged ({exc}). Download or import it again.") from exc
+
+
+def _install_from(z: zipfile.ZipFile, root: Path) -> Path:
+    infos = [i for i in z.infolist() if not i.is_dir()]
+    names = [i.filename for i in infos]
+    if MANIFEST not in names:
+        raise EvidenceError("the archive has no evidence.json")
+    for info in infos:
+        _safe_rel(info.filename)
+        if (info.external_attr >> 16) & 0o170000 == 0o120000:
+            raise EvidenceError(f"links are not allowed in a package: {info.filename!r}")
+    if z.getinfo(MANIFEST).file_size > MAX_MANIFEST_BYTES:
+        raise EvidenceError("evidence.json is too large")
+    doc = check_manifest(json.loads(z.read(MANIFEST).decode("utf-8")))
+    listed = set(doc["files"]) | {MANIFEST}
+    unlisted = [n for n in names if n not in listed]
+    if unlisted:
+        raise EvidenceError(f"the archive holds files its manifest does not list: {unlisted[:3]}")
+    target = _target(root, doc)
+    if _reusable(target, doc):
+        return target
+    staging = root / f".staging-{uuid.uuid4().hex[:10]}"
+    staging.mkdir(parents=True)
+    try:
         for info in infos:
-            _safe_rel(info.filename)
-            if (info.external_attr >> 16) & 0o170000 == 0o120000:
-                raise EvidenceError(f"links are not allowed in a package: {info.filename!r}")
-        manifest_info = z.getinfo(MANIFEST)
-        if manifest_info.file_size > MAX_MANIFEST_BYTES:
-            raise EvidenceError("evidence.json is too large")
-        doc = check_manifest(json.loads(z.read(MANIFEST).decode("utf-8")))
-        listed = set(doc["files"]) | {MANIFEST}
-        unlisted = [n for n in names if n not in listed]
-        if unlisted:
-            raise EvidenceError(f"the archive holds files its manifest does not list: {unlisted[:3]}")
-        target = _target(root, doc)
-        if target.is_dir():
-            got = verify_folder(target)
-            if got["ok"] and got["dataDigest"] == doc["dataDigest"]:
-                return target
-            shutil.rmtree(target, ignore_errors=True)
-        staging = root / f".staging-{uuid.uuid4().hex[:10]}"
-        staging.mkdir(parents=True)
-        try:
-            for info in infos:
-                dest = staging / info.filename
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                rec = doc["files"].get(info.filename)
-                if rec is not None and info.file_size != rec["bytes"]:
-                    raise EvidenceError(f"{info.filename} is not the size its manifest records")
-                h = hashlib.sha256()
-                with z.open(info) as src, dest.open("wb") as out:
-                    for block in iter(lambda: src.read(_CHUNK), b""):
-                        h.update(block)
-                        out.write(block)
-                if rec is not None and h.hexdigest() != rec["sha256"]:
-                    raise EvidenceError(f"{info.filename} does not match its manifest")
-            missing = [rel for rel in doc["files"] if not (staging / rel).is_file()]
-            if missing:
-                raise EvidenceError(f"the archive lacks files its manifest lists: {missing[:3]}")
-            target.parent.mkdir(parents=True, exist_ok=True)
-            os.replace(staging, target)
-        except BaseException:
-            shutil.rmtree(staging, ignore_errors=True)
-            raise
+            dest = staging / info.filename
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            rec = doc["files"].get(info.filename)
+            if rec is not None and info.file_size != rec["bytes"]:
+                raise EvidenceError(f"{info.filename} is not the size its manifest records")
+            h = hashlib.sha256()
+            with z.open(info) as src, dest.open("wb") as out:
+                for block in iter(lambda: src.read(_CHUNK), b""):
+                    h.update(block)
+                    out.write(block)
+            if rec is not None and h.hexdigest() != rec["sha256"]:
+                raise EvidenceError(f"{info.filename} does not match its manifest")
+        missing = [rel for rel in doc["files"] if not (staging / rel).is_file()]
+        if missing:
+            raise EvidenceError(f"the archive lacks files its manifest lists: {missing[:3]}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists():
+            shutil.rmtree(target)
+        os.replace(staging, target)
+    except BaseException:
+        shutil.rmtree(staging, ignore_errors=True)
+        raise
+    _stamp(target, doc)
     return target
 
 
 def install_folder(folder: Path, *, root: Optional[Path] = None) -> Path:
-    """Install an unpacked package folder (verified first; the source is never changed)."""
+    """Install an unpacked package folder: verified first, then only ``evidence.json`` and the
+    files it lists are copied (the source is never changed)."""
+    folder = Path(folder)
     got = verify_folder(folder)
     if not got["ok"]:
         raise EvidenceError(f"the package is damaged: {(got['damaged'] + got['unlisted'])[:3]}")
     root = Path(root or store_root())
-    target = _target(root, got["manifest"])
-    if target.is_dir() and verify_folder(target)["ok"]:
+    doc = got["manifest"]
+    target = _target(root, doc)
+    if _reusable(target, doc):
         return target
     staging = root / f".staging-{uuid.uuid4().hex[:10]}"
-    shutil.copytree(folder, staging, ignore=shutil.ignore_patterns("*.part"))
-    if not verify_folder(staging)["ok"]:
+    try:
+        for rel in [MANIFEST] + list(doc["files"]):
+            dest = staging / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(folder / rel, dest)
+        if not verify_folder(staging)["ok"]:
+            raise EvidenceError("the copied package did not verify")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists():
+            shutil.rmtree(target)
+        os.replace(staging, target)
+    except BaseException:
         shutil.rmtree(staging, ignore_errors=True)
-        raise EvidenceError("the copied package did not verify")
-    target.parent.mkdir(parents=True, exist_ok=True)
-    if target.exists():
-        shutil.rmtree(target)
-    os.replace(staging, target)
+        raise
+    _stamp(target, doc)
     return target
 
 
 def installed(root: Optional[Path] = None) -> list[dict]:
-    """Every verified package in the store (a damaged copy is listed as damaged)."""
+    """Every package in the store, each ``verified`` or not (``damaged`` lists the files that
+    failed). A folder is hashed again only when a file's size or time changed since its last
+    full check."""
     root = Path(root or store_root())
     out = []
     if not root.is_dir():
@@ -221,25 +371,61 @@ def installed(root: Optional[Path] = None) -> list[dict]:
     for pkg in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith(".")):
         for ver in sorted(p for p in pkg.iterdir() if p.is_dir()):
             try:
-                doc = read_manifest(ver)
-            except (EvidenceError, ValueError, OSError):
+                got = check(ver)
+            except (EvidenceError, OSError):
                 continue
+            doc = got["manifest"]
             out.append({"packageId": doc["packageId"], "version": doc["version"],
-                        "dataDigest": doc["dataDigest"], "path": str(ver),
-                        "title": doc.get("title") or doc["packageId"],
+                        "dataDigest": doc["dataDigest"], "packageDigest": got["packageDigest"],
+                        "path": str(ver), "title": doc.get("title") or doc["packageId"],
                         "roles": doc.get("roles") or [], "reproducibility": doc.get("reproducibility"),
                         "bytes": sum(r["bytes"] for r in doc["files"].values()),
+                        "verified": got["ok"], "damaged": got["damaged"] + got["unlisted"],
                         "manifest": doc})
     return out
 
 
-def find(package_id: str, data_digest_: Optional[str] = None, *,
+def matches(rec: dict, ref: dict) -> bool:
+    """True when an installed package (or a check result) is the one ``ref`` names: its package
+    digest when the reference records one, else its data digest."""
+    if rec.get("packageId") != ref.get("packageId"):
+        return False
+    if ref.get("packageDigest"):
+        return rec.get("packageDigest") == ref["packageDigest"]
+    return rec.get("dataDigest") == ref.get("dataDigest")
+
+
+def find(package_id: str, data_digest_: Optional[str] = None, *, package_digest_: Optional[str] = None,
          root: Optional[Path] = None) -> Optional[Path]:
-    """The installed folder of a package (a specific data digest when given)."""
+    """The verified installed folder of a package (a specific data or package digest when
+    given), or None."""
     for rec in installed(root):
-        if rec["packageId"] == package_id and (data_digest_ is None or rec["dataDigest"] == data_digest_):
-            return Path(rec["path"])
+        if rec["packageId"] != package_id or not rec["verified"]:
+            continue
+        if data_digest_ is not None and rec["dataDigest"] != data_digest_:
+            continue
+        if package_digest_ is not None and rec["packageDigest"] != package_digest_:
+            continue
+        return Path(rec["path"])
     return None
+
+
+def ready(ref: dict, *, root: Optional[Path] = None) -> Path:
+    """The installed folder of the package ``ref`` names, every file hashed now. Raises
+    :class:`EvidenceError` saying what to do when it is missing or damaged."""
+    root = Path(root or store_root())
+    title = ref.get("title") or ref.get("packageId")
+    mine = [r for r in installed(root) if matches(r, ref)]
+    damaged: list = []
+    for rec in mine:
+        got = check(Path(rec["path"]), full=True)
+        if got["ok"]:
+            return Path(rec["path"])
+        damaged += got["damaged"] + got["unlisted"]
+    if mine:
+        raise EvidenceError(f"{title} is damaged on this computer ({', '.join(damaged[:3])} failed its "
+                            "check). Import or download it again.")
+    raise EvidenceError(f"{title} is not on this computer. Import or download it first.")
 
 
 # --------------------------------------------------------------------------- #
@@ -284,12 +470,27 @@ def _default_http_get(url: str, *, headers: Optional[dict] = None, stream: bool 
 http_get = _default_http_get
 
 
+def _is_http(base: str) -> bool:
+    return base.lower().startswith(("http://", "https://"))
+
+
+def _stream_error(exc: Exception) -> EvidenceError:
+    """A failure while bytes arrive: a dropped connection reads as one, a disk error as one."""
+    mod = type(exc).__module__ or ""
+    if mod.startswith(("requests", "urllib3", "http", "socket", "ssl")) or isinstance(exc, (ConnectionError, TimeoutError)):
+        return EvidenceError("The download stopped before it finished. Try again: it continues "
+                             "where it stopped.")
+    return EvidenceError(f"The download could not be saved ({exc}).")
+
+
 def download(base: str, name: str, *, sha256: str, size: int, root: Optional[Path] = None,
              progress: Optional[ProgressFn] = None,
              cancel: Optional[threading.Event] = None) -> Path:
     """Fetch ``name`` from ``base`` (a folder or an http(s) base) into the store's download
-    folder, resuming a ``.part``, and return it once its size and SHA-256 match. Cancel keeps
-    the ``.part`` for a later resume; a mismatch deletes it."""
+    folder, resuming a ``.part``, and return it once its size and SHA-256 match. Cancel and a
+    dropped connection keep the ``.part`` for a later resume; bytes that are not the archive
+    asked for are deleted (:class:`EvidenceMismatch`); a name the host does not hold raises
+    :class:`EvidenceMissing`."""
     root = Path(root or store_root())
     downloads = root / ".downloads"
     downloads.mkdir(parents=True, exist_ok=True)
@@ -299,40 +500,67 @@ def download(base: str, name: str, *, sha256: str, size: int, root: Optional[Pat
     if dest.is_file() and dest.stat().st_size == size and sha_file(dest) == sha256:
         return dest
     part = downloads / (name + ".part")
-    if not base.lower().startswith(("http://", "https://")):
-        src = Path(base) / name
-        if not src.is_file():
-            raise EvidenceError(f"{name} is not at {base}")
+    for attempt in (0, 1):
         have = part.stat().st_size if part.is_file() else 0
-        with src.open("rb") as fh, part.open("ab" if have else "wb") as out:
-            fh.seek(have)
-            got = have
-            for block in iter(lambda: fh.read(_CHUNK), b""):
-                if cancel is not None and cancel.is_set():
-                    raise EvidenceCancelled("Download cancelled.")
-                out.write(block)
-                got += len(block)
-                if progress:
-                    progress(got, size)
-    else:
-        have = part.stat().st_size if part.is_file() else 0
-        if have > size:
+        if have >= size:
+            # a finished transfer that was never renamed, or bytes past the end: decide now
+            if have == size and sha_file(part) == sha256:
+                os.replace(part, dest)
+                return dest
             part.unlink(missing_ok=True)
             have = 0
-        headers = {"Range": f"bytes={have}-"} if have else {}
-        url = base + ("" if base.endswith("/") else "/") + name
+        restart = _fetch_into(base, name, part, have, size, progress=progress, cancel=cancel)
+        if restart and attempt == 0:
+            part.unlink(missing_ok=True)
+            continue
+        break
+    if not part.is_file() or part.stat().st_size != size or sha_file(part) != sha256:
+        part.unlink(missing_ok=True)
+        raise EvidenceMismatch(f"The host's {name} is not the archive this record names.")
+    os.replace(part, dest)
+    return dest
+
+
+def _fetch_into(base: str, name: str, part: Path, have: int, size: int, *, progress, cancel) -> bool:
+    """Append the bytes after ``have`` to ``part``. True when the host cannot continue from
+    there (HTTP 416) and the transfer must start over."""
+    if not _is_http(base):
+        src = Path(base) / name
+        if not src.is_file():
+            raise EvidenceMissing(f"{name} is not at {base}")
         try:
-            r = http_get(url, headers=headers, stream=True, timeout=60.0)
-        except Exception as exc:  # noqa: BLE001
-            raise EvidenceError("The download could not start. Check the connection and try "
-                                "again.") from exc
+            with src.open("rb") as fh, part.open("ab" if have else "wb") as out:
+                fh.seek(have)
+                got = have
+                for block in iter(lambda: fh.read(_CHUNK), b""):
+                    if cancel is not None and cancel.is_set():
+                        raise EvidenceCancelled("Download cancelled.")
+                    out.write(block)
+                    got += len(block)
+                    if progress:
+                        progress(got, size)
+        except EvidenceError:
+            raise
+        except OSError as exc:
+            raise _stream_error(exc) from exc
+        return False
+    headers = {"Range": f"bytes={have}-"} if have else {}
+    url = base + ("" if base.endswith("/") else "/") + name
+    try:
+        r = http_get(url, headers=headers, stream=True, timeout=60.0)
+    except Exception as exc:  # noqa: BLE001
+        raise EvidenceError("The download could not start. Check the connection and try "
+                            "again.") from exc
+    try:
+        if r.status_code == 404:
+            raise EvidenceMissing(f"{name} is not at {base}")
+        if r.status_code == 416:
+            return True
+        if r.status_code == 200 and have:
+            have = 0                      # the server ignored the range: start over
+        elif r.status_code not in (200, 206):
+            raise EvidenceError(f"The download failed (HTTP {r.status_code}).")
         try:
-            if r.status_code == 404:
-                raise EvidenceError(f"{name} is not at {base}")
-            if r.status_code == 200 and have:
-                have = 0                  # the server ignored the range: start over
-            elif r.status_code not in (200, 206):
-                raise EvidenceError(f"The download failed (HTTP {r.status_code}).")
             with part.open("ab" if have else "wb") as out:
                 got = have
                 for chunk in r.iter_content(_CHUNK):
@@ -344,19 +572,84 @@ def download(base: str, name: str, *, sha256: str, size: int, root: Optional[Pat
                     got += len(chunk)
                     if progress:
                         progress(got, size)
-        finally:
+        except EvidenceError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - said plainly; the .part stays for a resume
+            raise _stream_error(exc) from exc
+    finally:
+        try:
+            r.close()
+        except Exception:  # noqa: BLE001
+            pass
+    return False
+
+
+def read_index(base: str) -> dict:
+    """The host's ``index.json`` (``{packageId: {zip, zipSha256, zipBytes, packageDigest,
+    dataDigest}}``), or {} when it holds none."""
+    try:
+        if _is_http(base):
+            r = http_get(base + ("" if base.endswith("/") else "/") + INDEX, timeout=30.0)
             try:
-                r.close()
-            except Exception:  # noqa: BLE001
-                pass
-    if part.stat().st_size != size or sha_file(part) != sha256:
-        part.unlink(missing_ok=True)
-        raise EvidenceError("The downloaded package did not match its record. Try again.")
-    os.replace(part, dest)
-    return dest
+                if r.status_code != 200:
+                    return {}
+                text = r.content.decode("utf-8")
+            finally:
+                try:
+                    r.close()
+                except Exception:  # noqa: BLE001
+                    pass
+        else:
+            p = Path(base) / INDEX
+            if not p.is_file():
+                return {}
+            text = p.read_text(encoding="utf-8")
+        doc = json.loads(text)
+    except Exception:  # noqa: BLE001 - no index is the same as an unreadable one
+        return {}
+    return doc if isinstance(doc, dict) else {}
 
 
-__all__ = ["SCHEMA", "SCHEMA_VERSION", "MANIFEST", "DATA_SUFFIXES", "EvidenceError",
-           "EvidenceCancelled", "store_root", "check_manifest", "read_manifest", "verify_folder",
-           "install_zip", "install_folder", "installed", "find", "download", "data_digest",
-           "package_digest", "http_get", "nrsa_archive_record"]
+def fetch_reference(base: str, ref: dict, *, root: Optional[Path] = None,
+                    progress: Optional[ProgressFn] = None,
+                    cancel: Optional[threading.Event] = None) -> Path:
+    """Install the package ``ref`` names from ``base`` and return its folder: the archive the
+    reference pins, or, when the host holds this package under another archive (a re-export,
+    other bytes), the one its ``index.json`` lists for this package. Either is accepted only
+    when the installed package is the one named (:func:`matches`). The downloaded archive is
+    removed once installed."""
+    root = Path(root or store_root())
+    title = ref.get("title") or ref.get("packageId")
+    arch = ref.get("archive") or {}
+    tried = []
+    if arch.get("name") and arch.get("sha256") and arch.get("bytes") is not None:
+        try:
+            z = download(base, arch["name"], sha256=arch["sha256"], size=int(arch["bytes"]), root=root,
+                         progress=progress, cancel=cancel)
+            folder = install_zip(z, root=root)
+            if matches(check(folder), ref):
+                z.unlink(missing_ok=True)
+                return folder
+            tried.append((arch["name"], arch["sha256"]))
+        except (EvidenceMissing, EvidenceMismatch):
+            tried.append((arch["name"], arch["sha256"]))
+    entry = read_index(base).get(str(ref.get("packageId")))
+    if not isinstance(entry, dict) or not matches({"packageId": ref.get("packageId"), **entry}, ref) \
+            or not entry.get("zip") or (entry.get("zip"), entry.get("zipSha256")) in tried:
+        raise EvidenceError(f"The host does not hold this version of {title}. Import it from a file "
+                            "or ask for the package.")
+    z = download(base, entry["zip"], sha256=entry["zipSha256"], size=int(entry["zipBytes"]), root=root,
+                 progress=progress, cancel=cancel)
+    folder = install_zip(z, root=root)
+    if not matches(check(folder), ref):
+        raise EvidenceError(f"The host's copy of {title} is another version of the package.")
+    z.unlink(missing_ok=True)
+    return folder
+
+
+__all__ = ["SCHEMA", "SCHEMA_VERSION", "MANIFEST", "STAMP", "INDEX", "DATA_SUFFIXES", "EvidenceError",
+           "EvidenceCancelled", "EvidenceMissing", "EvidenceMismatch", "store_root",
+           "check_manifest", "read_manifest", "verify_folder", "check", "install_zip",
+           "install_folder", "installed", "matches", "find", "ready", "download", "read_index",
+           "fetch_reference", "data_digest", "package_digest", "http_get", "nrsa_archive_record",
+           "sha_file"]

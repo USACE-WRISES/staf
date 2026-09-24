@@ -14,6 +14,7 @@ import copy
 import json
 import math
 import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -50,7 +51,15 @@ from easi import method_package  # noqa: E402  (EASI_METHOD_PACKAGE: the scoring
 # catalog and the recomputed method version are checked here so a package that does not
 # validate stops the app at startup instead of scoring. Unset, the built-in method runs.
 if method_package.active().get("source") == "package":
-    method_package.verify_active()
+    _verified = method_package.verify_active()
+    _rec = method_package.active()
+    # stated once at startup: which method scores, and whether it was validated under
+    # this evaluator (a package validated elsewhere runs, and says so)
+    print(f"EASI: method package {_rec.get('methodId')} v{_rec.get('version')} active, "
+          f"method {_verified.get('methodVersion')}"
+          + ("" if _verified.get("sameEvaluator") else
+             "; validated under another evaluator (the method version recomputed here matches)"),
+          file=sys.stderr, flush=True)
 
 FT_PER_M = 3.28083989501312
 LOCAL_REVIEW_ROOT = local_review.review_root()

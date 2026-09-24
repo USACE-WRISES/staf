@@ -262,7 +262,8 @@ def pack_bytes(entry: Entry, version: Version, *, source: str = "release") -> by
             "origin": origin_meta(entry, version, source=source)}
     return pf.build_bytes(meta=meta, session_text=session_text,
                           origin=origin_files(entry.id, version.version),
-                          desktop_project=False, deterministic=True)
+                          desktop_project=False, deterministic=True,
+                          min_format=pf.session_text_format(session_text, pack=True))
 
 
 def _easi_pack_bytes(entry: Entry, version: Version, *, source: str) -> bytes:
@@ -429,13 +430,17 @@ _LOCK = threading.Lock()
 
 
 def cached_catalog() -> tuple[list[Entry], float] | None:
-    """(entries, fetched-at epoch seconds) of the last good download, or None."""
+    """(entries, fetched-at epoch seconds) of the newest good download (the typed feed's on
+    a tie), or None."""
+    best = None
     for p in (_catalog_cache_v2(), _catalog_cache()):
         try:
-            return parse_catalog(p.read_text(encoding="utf-8")), p.stat().st_mtime
+            got = parse_catalog(p.read_text(encoding="utf-8")), p.stat().st_mtime
         except (OSError, ValueError):
             continue
-    return None
+        if best is None or got[1] > best[1]:
+            best = got
+    return best
 
 
 def catalog_stale(ttl_s: float = CATALOG_TTL_S) -> bool:
@@ -457,6 +462,13 @@ def refresh_catalog(*, force: bool = False) -> list[Entry]:
             if got is not None:
                 text, name = got, candidate
                 break
+            if candidate == CATALOG_NAME_V2:
+                # the typed feed is not published (withdrawn, or a release from before it):
+                # its cached copy must not outlive it
+                try:
+                    _catalog_cache_v2().unlink()
+                except OSError:
+                    pass
         if text is None:
             raise GalleryError("The assessment library is being updated. Try again in a minute.")
         try:

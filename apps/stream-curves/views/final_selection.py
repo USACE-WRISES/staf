@@ -80,11 +80,6 @@ def crossings(points, breaks=cs.DEEP_INDEX_BANDS) -> list:
     return out if any(v is not None for v in out) else []
 
 
-def _short(digest: Any) -> str:
-    text = str(digest or "")
-    return text.split(":", 1)[-1][:10] if text else ""
-
-
 def status_pill(status: str, *, review: bool = False):
     pill = ui.tags.span(C.STATUS_LABELS.get(status, status),
                         class_=f"fs-status {STATUS_CLASS.get(status, '')}")
@@ -211,8 +206,10 @@ def function_row_ui(fn: Mapping, cands: Mapping, *, ns, compare: list, extension
     if fn["unresolved"]:
         flags.append(ui.tags.span(f"{fn['unresolved']} to resolve", class_="fs-flag is-open"))
     summary = ui.tags.summary(
-        ui.div(ui.tags.span(fn["functionName"], class_="fs-fn-name"),
-               ui.tags.span(fn["discipline"], class_="fs-fn-disc"), class_="fs-fn-head"),
+        ui.div(ui.tags.span(fa("chevron-right"), class_="fs-chev"),
+               ui.div(ui.tags.span(fn["functionName"], class_="fs-fn-name"),
+                      ui.tags.span(fn["discipline"], class_="fs-fn-disc"), class_="fs-fn-title"),
+               class_="fs-fn-head"),
         ui.div(*([_chip(c) for c in selected] or [ui.tags.span("Nothing selected", class_="fs-none")]),
                class_="fs-chips"),
         ui.div(ui.tags.span(f"{len(alts)} considered" if alts else "No alternatives", class_="fs-count"),
@@ -257,22 +254,26 @@ def compare_ui(cands: list[Mapping], *, ns):
         return None
     cols = []
     for c in cands[:C.MAX_COMPARE]:
-        ident = c.get("identity") or {}
         tile = candidate_tile(c)
-        facts = [("Source", kind_label(c)),
-                 ("Metric", (ident.get("subject") or {}).get("id")),
-                 ("Reference n", tile.get("reference_n"))]
+        facts = [("Source", kind_label(c)), ("Reference n", tile.get("reference_n"))]
         for s in tile.get("strata") or []:
             at = crossings(s.get("points") or [])
             if at:
                 facts.append(((f"{s.get('label')}: " if s.get("label") else "") + "Crosses 0.39 / 0.69",
                               " / ".join(cs.fmt_num(x) if x is not None else "none" for x in at)))
-        facts.append(("Content", _short(c.get("basisDigest"))))
-        for chk in (c.get("eligibility") or {}).get("checks") or []:
-            facts.append((str(chk.get("id") or chk.get("check") or "").replace("-", " ").capitalize(),
-                          f"{chk.get('status')}: {chk.get('detail') or ''}".strip(": ")))
+        checks = (c.get("eligibility") or {}).get("checks") or []
+        said = []
+        for chk in checks:
+            if chk.get("status") != "pass":
+                said.append(str(chk.get("detail") or ""))
+                facts.append((CHECK_WORDS.get(str(chk.get("id")), str(chk.get("id") or "").replace("-", " ").capitalize()),
+                              f"{CHECK_STATUS_WORDS.get(chk.get('status'), chk.get('status'))}. {chk.get('detail') or ''}".strip()))
+        passed = [CHECK_WORDS.get(str(chk.get("id")), str(chk.get("id"))) for chk in checks if chk.get("status") == "pass"]
+        if passed:
+            facts.append(("Checks passed", ", ".join(passed)))
         for lim in c.get("limitations") or []:
-            facts.append(("Limitation", lim))
+            if not any(lim in d or d in lim for d in said if d):
+                facts.append(("Limitation", lim))
         cols.append(ui.div(
             ui.div(c.get("label") or "", class_="fs-cmp-title"),
             ui.HTML(cs.tile_svg(tile, w=TILE_W, h=TILE_H)),
@@ -348,6 +349,8 @@ def register_export(state) -> Optional[dict]:
                                   region={"code": region.get("code")})
         return {"schema": 1, "rows": C.export_rows(reg), "counts": C.register_counts(reg)}
     except Exception:  # noqa: BLE001 - the record is additive; the publish goes on without it
+        import logging
+        logging.getLogger("streamcurves").exception("the candidate register could not be exported")
         return None
 
 
@@ -369,6 +372,12 @@ def export_csv(register: Mapping) -> str:
 VERIFICATION_WORDS = {"verified": "Verified", "partially-verified": "Partly verified",
                       "unverified": "Not verified", "defective": "Defective"}
 CHECK_CLASS = {"pass": "is-selected", "warn": "is-pending", "fail": "is-excluded", "unknown": "is-eligible"}
+CHECK_WORDS = {"eligibility": "Registry", "construct": "Metric", "protocol": "Protocol", "units": "Units",
+               "direction": "Direction", "score-scale": "Index bands", "geography": "Where",
+               "stream-type": "Stream type", "source-limits": "Source limits",
+               "extrapolation": "Past the ends", "past-ends": "Past the ends", "form": "Form",
+               "strata": "Strata"}
+CHECK_STATUS_WORDS = {"fail": "Does not apply", "warn": "Note", "unknown": "Not established"}
 
 
 @functools.lru_cache(maxsize=64)
@@ -384,19 +393,74 @@ def region_states(code: str) -> tuple:
         return ()
 
 
-def sqt_context(code: Any, function_id: str) -> dict:
-    return {"function": function_id, "states": list(region_states(str(code or ""))), "scoreScale": "staf"}
+def function_metrics(register: Mapping, function_id: str) -> list[str]:
+    """The metric keys of the curves this session has for a function, selected or not, other
+    than considered SQT curves: what an SQT curve for it is checked against."""
+    cands = {c["candidateKey"]: c for c in register.get("candidates") or []}
+    fn = next((x for x in register.get("functions") or [] if x["functionId"] == function_id), None) or {}
+    out: list[str] = []
+    for row in list(fn.get("selected") or []) + list(fn.get("alternatives") or []):
+        ident = (cands.get(row["candidateKey"]) or {}).get("identity") or {}
+        mk = (ident.get("subject") or {}).get("id")
+        if ident.get("sourceKind") != "sqt" and mk and str(mk) not in out:
+            out.append(str(mk))
+    return out
+
+
+def curve_targets(state, metrics: Iterable[str]) -> list[dict]:
+    """``candidates.sqt_target`` for each metric: the session's configuration of it and the
+    range of its values in the session's data."""
+    import numpy as np
+    import pandas as pd
+    with reactive.isolate():
+        mc = state.metric_config() or {}
+        data = state.data()
+    out = []
+    for mk in metrics or []:
+        cfg = mc.get(mk) or {}
+        col = cfg.get("column_name") or mk
+        rng = None
+        if isinstance(data, pd.DataFrame) and col in data.columns:
+            v = pd.to_numeric(data[col], errors="coerce").to_numpy(dtype=float)
+            v = v[np.isfinite(v)]
+            if v.size:
+                rng = (float(v.min()), float(v.max()))
+        out.append(C.sqt_target(mk, cfg, rng))
+    return out
+
+
+def recheck(cand: Mapping, function_id: str, *, states: Iterable = (), targets: Iterable[Mapping] = (),
+            region: Optional[Mapping] = None) -> dict:
+    """A considered SQT candidate checked again against ``targets`` (the curves it would take
+    the place of): the same candidate, with the checks that context gives."""
+    rec = cand.get("record") or {}
+    return C.sqt_candidate(rec, function_id=function_id, region=region,
+                           context=C.sqt_context(rec, function_id=function_id, states=states,
+                                                 targets=targets))
+
+
+def _edition_words(r: Mapping) -> str:
+    named = ((r.get("verification") or {}).get("against") or {}).get("edition")
+    if named:
+        return f"{r.get('state')} SQT {named}"
+    if r.get("edition"):
+        return f"{r.get('edition')} (edition inferred)"
+    return f"{r.get('state')} SQT, edition not named"
 
 
 def picker_modal(function_id: str, function_name: str, *, ns, states: Iterable[str]):
+    from streamcurves import sqt_registry
     states = list(states or [])
+    facets = sqt_registry.facets()
+    here = [s for s in states if s in facets["states"]]
     return ui.modal(
         ui.p(f"Published state SQT curves for {function_name}. Adding one puts it beside this "
              "function's curves for comparison; it selects nothing.", class_="fs-note"),
         ui.div(ui.input_text(ns("fs_q"), "Metric", placeholder="For example: canopy"),
-               ui.input_select(ns("fs_state"), "State", {"": "Any state", **{s: s for s in
-                               ("AK", "CO", "MI", "MN", "NC", "SC", "WI", "WY")}},
-                               selected=states[0] if len(states) == 1 else ""),
+               ui.input_select(ns("fs_state"), "State", {"": "Any state", **{s: s for s in facets["states"]}},
+                               selected=here[0] if len(here) == 1 else ""),
+               ui.input_select(ns("fs_edition"), "Edition", {"": "Any edition",
+                                                             **{x: x for x in facets["editions"]}}),
                ui.input_select(ns("fs_ver"), "Verification", {"": "Any", **VERIFICATION_WORDS}),
                ui.input_checkbox(ns("fs_allfn"), "Every function", False),
                ui.input_checkbox(ns("fs_elig"), "Eligible only", True),
@@ -405,15 +469,21 @@ def picker_modal(function_id: str, function_name: str, *, ns, states: Iterable[s
         title="Add a state SQT curve", size="xl", easy_close=True, footer=ui.modal_button("Close"))
 
 
-def picker_results_ui(records: list, *, ns, function_id: str, context: Mapping, have: Iterable[str] = (),
+def picker_results_ui(records: list, *, ns, function_id: str, context: Optional[Mapping] = None,
+                      states: Iterable = (), targets: Iterable[Mapping] = (), have: Iterable[str] = (),
                       limit: int = 60):
+    """The matching records, the ones that apply first. Each is checked against ``context``
+    when given, else against this function's curves (``targets``, ``candidates.sqt_context``)."""
     from streamcurves import sqt_registry as reg
     if not records:
         return ui.div(fa("circle-info"), " No SQT curve matches these filters.", class_="fs-note")
     rows = []
     scored = []
+    targets = list(targets or [])
     for r in records:
-        checks = reg.applicability(r, context)
+        ctx = context if context is not None else C.sqt_context(r, function_id=function_id, states=states,
+                                                                targets=targets)
+        checks = reg.applicability(r, ctx)
         scored.append((("fail", "warn", "unknown", "pass").index(reg.overall(checks)) * -1, r, checks))
     scored.sort(key=lambda x: (x[0], x[1].get("state"), x[1].get("originalMetricName") or ""))
     have = set(have or ())
@@ -425,7 +495,7 @@ def picker_results_ui(records: list, *, ns, function_id: str, context: Mapping, 
         rows.append(ui.tags.tr(
             ui.tags.td(ui.div(r.get("originalMetricName"), class_="fs-name"),
                        ui.div(r.get("stratumName") if r.get("stratumName") != "Default" else "", class_="fs-kind")),
-            ui.tags.td(ui.div(str(r.get("edition") or f"{r.get('state')} SQT, edition not named")),
+            ui.tags.td(ui.div(_edition_words(r)),
                        ui.div((r.get("function") or {}).get("name") or "", class_="fs-kind")),
             ui.tags.td(ui.tags.span(VERIFICATION_WORDS.get(ver, ver or ""),
                                     class_="fs-status " + {"verified": "is-selected", "partially-verified": "is-pending",
@@ -447,6 +517,33 @@ def picker_results_ui(records: list, *, ns, function_id: str, context: Mapping, 
         ui.tags.tbody(*rows), class_="table table-sm fs-table"), more)
 
 
+def replacement_checks_ui(results: list[tuple[Mapping, dict]]):
+    """What checking a considered SQT curve again against each curve it takes the place of
+    says: ``[(target, rechecked candidate)]``."""
+    if not results:
+        return None
+    items = []
+    for target, again in results:
+        name = target.get("name") or target.get("metric")
+        checks = (again.get("eligibility") or {}).get("checks") or []
+        if not C.same_metric(again.get("record") or {}, target.get("metric")):
+            items.append(ui.tags.li(f"{name} measures another metric. The SQT curve scores its own, "
+                                    "measured as the SQT specifies, so units and values are not compared."))
+            continue
+        bad = [c for c in checks if c.get("status") == "fail"]
+        notes = [c for c in checks if c.get("status") in ("warn", "unknown")
+                 and c.get("id") in ("units", "direction", "extrapolation", "past-ends")]
+        if bad:
+            items.append(ui.tags.li(ui.tags.strong(f"{name}: does not apply. "),
+                                    " ".join(str(c.get("detail")) for c in bad), class_="is-fail"))
+        else:
+            items.append(ui.tags.li(ui.tags.strong(f"{name}: the same metric. "),
+                                    " ".join(str(c.get("detail")) for c in notes)
+                                    or "Units, direction and the values scored here agree."))
+    return ui.div(ui.tags.strong("Checked against the curves it takes the place of"),
+                  ui.tags.ul(*items), class_="fs-recheck")
+
+
 def select_modal(cand: Mapping, function_name: str, fitted: list[tuple[str, str]], *, ns):
     """Select a considered SQT curve for a function (REF-15): why, and which curves built
     here it takes the place of there."""
@@ -462,6 +559,7 @@ def select_modal(cand: Mapping, function_name: str, fitted: list[tuple[str, str]
                                 "supported, not selected)", {mk: name for mk, name in fitted},
                                 selected=[mk for mk, _ in fitted]) if fitted else
         ui.div("No curve built here scores this function, so nothing is replaced.", class_="fs-note"),
+        ui.output_ui(ns("fs_select_checks")),
         ui.input_text_area(ns("fs_select_reason"), "Why", rows=3, width="100%"),
         title="Select a state SQT curve", size="l", easy_close=True,
         footer=ui.TagList(ui.modal_button("Cancel"),
@@ -507,9 +605,14 @@ def final_selection_server(input, output, session, state, *, tiles):
     def _sqt_ready() -> bool:
         try:
             from streamcurves import sqt_registry
-            return bool(sqt_registry.load().get("records"))
+            return sqt_registry.available()
         except Exception:  # noqa: BLE001 - no registry yet reads as not available
             return False
+
+    def _states() -> list:
+        with reactive.isolate():
+            code = (state.region_of_applicability() or {}).get("code")
+        return list(region_states(str(code or "")))
 
     @render.ui
     def final_selection():
@@ -587,7 +690,13 @@ def final_selection_server(input, output, session, state, *, tiles):
             ui.notification_show("Undone.", type="message", duration=4)
             return
         if action == "drop" and key:
-            state.candidate_register.set(C.remove_considered(state.candidate_register(), key))
+            try:
+                new = C.remove_considered(state.candidate_register(), key,
+                                          decisions=state.owner_curve_decisions() or [])
+            except ValueError as exc:
+                ui.notification_show(str(exc), type="warning", duration=6)
+                return
+            state.candidate_register.set(new)
             compare.set([k for k in compare() if k != key])
             return
         if action == "add_sqt":
@@ -603,8 +712,10 @@ def final_selection_server(input, output, session, state, *, tiles):
                 ui.notification_show("That SQT curve is no longer in the registry.", type="warning", duration=5)
                 return
             code = (state.region_of_applicability() or {}).get("code")
-            cand = C.sqt_candidate(record, function_id=fid, context=sqt_context(code, fid),
-                                   region={"code": code})
+            targets = curve_targets(state, function_metrics(reg, fid))
+            cand = C.sqt_candidate(record, function_id=fid, region={"code": code},
+                                   context=C.sqt_context(record, function_id=fid, states=_states(),
+                                                         targets=targets))
             try:
                 new = C.add_considered(state.candidate_register(), cand, by=sp.maintainer())
             except ValueError as exc:
@@ -654,7 +765,7 @@ def final_selection_server(input, output, session, state, *, tiles):
             return None
         from streamcurves import sqt_registry
         with reactive.isolate():
-            code = (state.region_of_applicability() or {}).get("code")
+            targets = curve_targets(state, function_metrics(register(), fid))
         # read live, so a curve just added reads Added
         have = {((c.get("identity") or {}).get("sourceRef") or {}).get("registryKey")
                 for c in C.load_register(state.candidate_register())["considered"]
@@ -662,13 +773,31 @@ def final_selection_server(input, output, session, state, *, tiles):
         q = " ".join(str(input.fs_q() or "").lower().split())
         recs = sqt_registry.records(state=input.fs_state() or None,
                                     function=None if input.fs_allfn() else fid,
+                                    edition=input.fs_edition() or None,
                                     eligible=True if input.fs_elig() else None)
         if input.fs_ver():
             recs = [r for r in recs if (r.get("verification") or {}).get("status") == input.fs_ver()]
         if q:
             recs = [r for r in recs if q in " ".join(str(x or "") for x in (
                 r.get("originalMetricName"), r.get("key"), r.get("stratumName"))).lower()]
-        return picker_results_ui(recs, ns=ns, function_id=fid, context=sqt_context(code, fid), have=have)
+        return picker_results_ui(recs, ns=ns, function_id=fid, states=_states(), targets=targets, have=have)
+
+    def _rechecks(p: Mapping, replaced: Iterable[str]) -> list:
+        with reactive.isolate():
+            reg = register()
+            code = (state.region_of_applicability() or {}).get("code")
+        cand = next((c for c in reg["candidates"] if c["candidateKey"] == p.get("key")), None)
+        if cand is None or not cand.get("record"):
+            return []
+        return [(tg, recheck(cand, p["fid"], states=_states(), targets=[tg], region={"code": code}))
+                for tg in curve_targets(state, list(replaced or []))]
+
+    @render.ui
+    def fs_select_checks():
+        p = pending()
+        if not p or not p.get("select"):
+            return None
+        return replacement_checks_ui(_rechecks(p, input.fs_replace() or []))
 
     @reactive.effect
     @reactive.event(input.fs_select_confirm)
@@ -688,13 +817,22 @@ def final_selection_server(input, output, session, state, *, tiles):
         cand = next((c for c in reg["candidates"] if c["candidateKey"] == p["key"]), None)
         if cand is None:
             return
+        refused = [(tg, again) for tg, again in _rechecks(p, input.fs_replace() or [])
+                   if (again.get("eligibility") or {}).get("status") != "eligible"]
+        if refused:
+            tg, again = refused[0]
+            ui.notification_show(f"It does not apply in place of {tg.get('name')}: "
+                                 + " ".join((again.get("eligibility") or {}).get("reasons") or []),
+                                 type="warning", duration=10)
+            return
         try:
             source = owner_sources.sqt_source(cand)
             decision = oc.new_decision(
                 (cand["identity"].get("subject") or {}).get("id"), oc.SOURCE,
                 rationale=input.fs_select_reason() or "", recorded_by=sp.maintainer(),
                 functions=[p["fid"]], source=source,
-                replaces=[{"metric": mk, "functionId": p["fid"]} for mk in (input.fs_replace() or [])])
+                replaces=[{"metric": mk, "functionId": p["fid"]} for mk in (input.fs_replace() or [])],
+                basis_digest=cand.get("basisDigest"))
             oc.validate(decision, build=build, built=built, decisions=current)
             run_dir = rb.region_run_dir(region)
             if run_dir is not None:
@@ -712,4 +850,6 @@ def final_selection_server(input, output, session, state, *, tiles):
 
 __all__ = ["SECTION", "candidate_tile", "final_selection_ui", "function_row_ui", "compare_ui",
            "head_ui", "functions_ui", "has_curve", "kind_label", "reason_ui", "dom_id",
-           "export_csv", "final_selection_server", "disposition_form", "register_export"]
+           "export_csv", "final_selection_server", "disposition_form", "register_export",
+           "function_metrics", "curve_targets", "recheck", "replacement_checks_ui", "picker_results_ui",
+           "picker_modal", "select_modal", "region_states"]

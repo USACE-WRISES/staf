@@ -126,17 +126,45 @@ def _format_for(assessment_type: str | None, parts: dict | None) -> int:
     return 2 if (parts or (assessment_type and assessment_type != "deep")) else FORMAT_VERSION
 
 
+def required_format(fields, *, pack: bool = False) -> int:
+    """The lowest format a DEEP session's fields need. 2 when StreamCurves 1.0.0 would
+    misread them (an owner decision only the REF-15 extension applies: 1.0.0 would still
+    score the curves it replaces) or, in a project, drop part of them on a re-save (curves
+    added for comparison or reasons recorded in the candidate register); else 1. A pack
+    keeps format 1 for the register alone, as the version's provenance holds that record."""
+    from . import owner_curves
+    fields = fields if isinstance(fields, dict) else {}
+    decisions = fields.get("owner_curve_decisions")
+    if isinstance(decisions, list) and any(isinstance(d, dict) and owner_curves.needs_extension(d)
+                                           for d in decisions):
+        return 2
+    reg = fields.get("candidate_register")
+    if not pack and isinstance(reg, dict) and (reg.get("considered") or reg.get("decisions")):
+        return 2
+    return FORMAT_VERSION
+
+
+def session_text_format(session_text: str, *, pack: bool = False) -> int:
+    """:func:`required_format` of a session envelope's text."""
+    try:
+        doc = json.loads(session_text or "{}")
+    except ValueError:
+        return FORMAT_VERSION
+    return required_format((doc or {}).get("fields") if isinstance(doc, dict) else None, pack=pack)
+
+
 def build_bytes(*, meta: dict, session_text: str, origin: dict[str, bytes] | None = None,
                 desktop_project: bool = True, deterministic: bool = False,
                 saved_at: str | None = None, parts: dict[str, bytes] | None = None,
-                assessment_type: str | None = None) -> bytes:
+                assessment_type: str | None = None, min_format: int = FORMAT_VERSION) -> bytes:
     """The zip bytes of a project (or, with desktop_project=False, a pack). Typed parts
-    (format 2) ride byte for byte under their own folder names."""
+    (format 2) ride byte for byte under their own folder names. ``min_format``: the format
+    the session needs (:func:`required_format`)."""
     for name in parts or {}:
         if not name.startswith(PART_PREFIXES) or ".." in name.split("/"):
             raise ValueError(f"not a project part name: {name}")
     doc = project_json(meta, desktop_project=desktop_project,
-                       format_version=_format_for(assessment_type, parts),
+                       format_version=max(_format_for(assessment_type, parts), int(min_format)),
                        assessment_type=assessment_type)
     if deterministic:
         # a pack's bytes must not change with the clock
@@ -185,12 +213,16 @@ def atomic_write(path: Path, data: bytes, *, attempts: int = 6) -> Path:
 def write_project(path: str | os.PathLike[str], *, meta: dict, session_text: str,
                   origin: dict[str, bytes] | None = None, desktop_project: bool = True,
                   parts: dict[str, bytes] | None = None,
-                  assessment_type: str | None = None) -> Path:
-    """Write a project main file atomically, creating its folder and `exports/`."""
+                  assessment_type: str | None = None, min_format: int | None = None) -> Path:
+    """Write a project main file atomically, creating its folder and `exports/`. Without
+    ``min_format`` the session text says what format it needs."""
     path = Path(path)
+    if min_format is None:
+        min_format = session_text_format(session_text) if (assessment_type or "deep") == "deep" \
+            else FORMAT_VERSION
     data = build_bytes(meta=meta, session_text=session_text, origin=origin,
                        desktop_project=desktop_project, parts=parts,
-                       assessment_type=assessment_type)
+                       assessment_type=assessment_type, min_format=min_format)
     atomic_write(path, data)
     if desktop_project:
         try:
@@ -285,4 +317,5 @@ def pack_asset_name(assessment_id: str, version: int, sha256: str | None = None,
 __all__ = ["FORMAT", "FORMAT_VERSION", "PACK_SCHEMA", "PROJECT_JSON", "SESSION_NAME",
            "ORIGIN_PREFIX", "ORIGIN_FILES", "ProjectFileError", "ProjectFile", "project_json",
            "build_bytes", "atomic_write", "write_project", "session_text_from_fields",
+           "required_format", "session_text_format",
            "read_project", "import_as_project", "pack_asset_name"]

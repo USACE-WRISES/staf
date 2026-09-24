@@ -825,6 +825,10 @@ def publish_server(input, output, session, state: AppState):
             register_doc = fs.register_export(state)
             if register_doc and isinstance(provenance_doc, dict):
                 provenance_doc = {**provenance_doc, "candidateRegister": register_doc}
+            elif register_doc is None and state.reference_build() is not None:
+                ui.notification_show("The candidate register could not be read, so this version's "
+                                     "record goes without it. The log has the details.",
+                                     type="warning", duration=10)
             version = lib.publish_version(aid, meta, full_payload, bundle,
                                           provenance=provenance_doc, status=status)
         except Exception as e:  # noqa: BLE001

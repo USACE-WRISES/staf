@@ -46,6 +46,9 @@ def import_from_easi(data_dir: Path, *, imported_by: str, version: int = 1,
     project = EasiProject(meta={}, files=files, calculator=calc, cases=cases)
     identity = project.identity()
     receipt = None
+    if promotion_receipt is None and (data_dir / "source" / "alternative-2-promotion.json").is_file():
+        # the promotion record EASI keeps beside its method files
+        promotion_receipt = data_dir / "source" / "alternative-2-promotion.json"
     if promotion_receipt and Path(promotion_receipt).is_file():
         receipt = json.loads(Path(promotion_receipt).read_text(encoding="utf-8"))
     now = _now()
@@ -76,7 +79,7 @@ def import_from_easi(data_dir: Path, *, imported_by: str, version: int = 1,
             "origin": {"kind": "import", **identity},
         },
     }
-    project.register = reg.imported_register(project, decided_at=now)
+    project.register = reg.imported_register(project, decided_at=now, receipt=receipt)
     project.history = [{"action": "import", "at": now, "by": imported_by, "kind": "import",
                         "detail": f"method {identity['methodVersion']} imported unchanged from "
                                   f"apps/easi/data"}]
@@ -140,7 +143,7 @@ def evidence_references(evidence_dir: Path) -> list[dict]:
     return refs
 
 
-def consumer_package(project: EasiProject, *, status: Optional[str] = None) -> mp.MethodPackage:
+def consumer_package(project: EasiProject) -> mp.MethodPackage:
     """The method package EASI loads: the method files plus the envelope; a calculator
     only when it was generated from exactly these files."""
     calc = project.calculator if (project.calculator and
@@ -148,15 +151,13 @@ def consumer_package(project: EasiProject, *, status: Optional[str] = None) -> m
     env = mp.build_envelope(project.files, method_id=project.meta.get("methodId") or METHOD_ID,
                             version=int(project.meta.get("version") or 1),
                             label=project.meta.get("label") or "",
-                            status=status or project.meta.get("status") or "draft",
                             criteria_set=project.meta.get("criteriaSet") or "regional",
                             calculator=calc)
     return mp.MethodPackage(envelope=env, files=dict(project.files), calculator=calc)
 
 
-def export_zip(project: EasiProject, out: Optional[Path] = None, *,
-               status: Optional[str] = None) -> tuple[bytes, dict]:
-    pkg = consumer_package(project, status=status)
+def export_zip(project: EasiProject, out: Optional[Path] = None) -> tuple[bytes, dict]:
+    pkg = consumer_package(project)
     blob = mp.to_zip(pkg)
     if out is not None:
         Path(out).parent.mkdir(parents=True, exist_ok=True)
@@ -257,7 +258,7 @@ def publish(project: EasiProject, *, author: str, revision_notes: str = "", stat
     if pending:
         names = ", ".join(r["functionName"] for r in pending)
         raise ValueError(f"confirm the changed selections before publishing: {names}")
-    pkg = consumer_package(project, status=status)
+    pkg = consumer_package(project)
     doc = json.loads(project.to_parts()["easi/package.json"].decode("utf-8"))
     ident = project.identity()
     provenance = {"kind": "easi-method", "methodId": project.meta.get("methodId"),
