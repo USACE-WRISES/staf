@@ -112,15 +112,23 @@ def _no_constant(name: str):
     raise EvidenceError(f"evidence.json holds {name}, which is not a finite number")
 
 
+def _finite(text: str) -> float:
+    value = float(text)
+    if value != value or value in (float("inf"), float("-inf")):
+        _no_constant(text)
+    return value
+
+
 def loads(text: str) -> dict:
-    """A manifest's JSON, refusing NaN and Infinity (a canonical digest cannot hold them)."""
-    return json.loads(text, parse_constant=_no_constant)
+    """A manifest's JSON, refusing NaN and Infinity, spelled out or overflowing (``1e999``): a
+    canonical digest cannot hold them."""
+    return json.loads(text, parse_constant=_no_constant, parse_float=_finite)
 
 
 def usable_package_id(pid) -> bool:
     """A plain folder name: lower-case letters, digits, dot, dash, underscore; not a name
     Windows reserves; no trailing dot."""
-    if not isinstance(pid, str) or not PACKAGE_ID_RE.match(pid) or pid.endswith("."):
+    if not isinstance(pid, str) or not PACKAGE_ID_RE.fullmatch(pid) or pid.endswith("."):
         return False
     return pid.split(".", 1)[0] not in _RESERVED
 
@@ -143,7 +151,7 @@ def check_manifest(doc: dict) -> dict:
         raise EvidenceError(f"evidence.json has an unusable package id: {doc['packageId']!r}")
     if not isinstance(doc["dataDigest"], str) or not doc["dataDigest"].startswith("sha256:"):
         raise EvidenceError("evidence.json has an unusable data digest")
-    if not VERSION_RE.match(str(doc["version"])):
+    if not VERSION_RE.fullmatch(str(doc["version"])):
         raise EvidenceError(f"evidence.json has an unusable version: {doc['version']!r}")
     files = doc["files"]
     if not isinstance(files, dict) or not files:
