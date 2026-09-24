@@ -50,11 +50,24 @@ def empty_library(tmp_path, monkeypatch):
     return root
 
 
+def _deep_only_copy(dest: Path) -> Path:
+    """A copy of the real library holding only its DEEP entries (the real one holds EASI v1
+    since 2026-09-24), so a test can publish the unchanged EASI method into it."""
+    shutil.copytree(REAL_LIBRARY, dest)
+    cat_path = dest / "catalog.json"
+    cat = json.loads(cat_path.read_text(encoding="utf-8"))
+    for e in cat.get("assessments") or []:
+        if lib.entry_type(e) != "deep":
+            shutil.rmtree(dest / "assessments" / e["assessmentId"])
+    cat["assessments"] = [e for e in cat.get("assessments") or [] if lib.entry_type(e) == "deep"]
+    cat_path.write_text(json.dumps(cat, indent=2) + "\n", encoding="utf-8")
+    return dest
+
+
 @pytest.fixture
 def typed_library(tmp_path, monkeypatch, project):
-    """A copy of the real library with the unchanged EASI method published beside it."""
-    root = tmp_path / "library"
-    shutil.copytree(REAL_LIBRARY, root)
+    """A copy of the real library's DEEP entries with the unchanged EASI method published beside them."""
+    root = _deep_only_copy(tmp_path / "library")
     monkeypatch.setenv("STAF_LIBRARY_ROOT", str(root))
     before = json.loads((root / "catalog.json").read_text(encoding="utf-8"))
     eio.publish(project, author="tester", revision_notes="the unchanged method")
@@ -126,8 +139,7 @@ def test_library_json_is_unchanged_by_an_easi_method_and_v2_lists_it(typed_libra
     root, _ = typed_library
     typed_out = tmp_path / "typed"
     rel.build(typed_out)
-    plain = tmp_path / "plain-library"
-    shutil.copytree(REAL_LIBRARY, plain)
+    plain = _deep_only_copy(tmp_path / "plain-library")
     monkeypatch.setenv("STAF_LIBRARY_ROOT", str(plain))
     plain_out = tmp_path / "plain"
     rel.build(plain_out)

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-23T01:39:43Z",
+  "generatedAt": "2026-09-24T13:41:13Z",
   "assessments": [
     {
       "assessmentId": "ak-sqt-adapted",
@@ -93,6 +93,31 @@
       "validationSummary": null,
       "provenanceState": "absent",
       "calculatorState": "absent"
+    },
+    {
+      "assessmentType": "easi",
+      "methodVersion": "b2e3033116e3",
+      "assessmentId": "easi-screening",
+      "assessmentName": "EASI screening method",
+      "region": {
+        "kind": "national",
+        "code": "CONUS",
+        "name": "Contiguous United States"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-24T13:41:12Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:5b733a6b7690f7893c6c15357178128a04646595e5d2cff7f8bb69fdbf40246d",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
     },
     {
       "assessmentId": "eastern-corn-belt-plains",

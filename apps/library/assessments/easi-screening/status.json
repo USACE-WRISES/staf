@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "easi-screening",
+  "history": [
+    {
+      "version": 1,
+      "status": "preliminary",
+      "actor": "GM",
+      "timestamp": "2026-09-24T13:41:13Z",
+      "note": "Published new version."
+    }
+  ]
+}

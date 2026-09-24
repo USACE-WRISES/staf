@@ -1,0 +1,19 @@
+{
+  "assessmentId": "easi-screening",
+  "assessmentType": "easi",
+  "assessmentName": "EASI screening method",
+  "version": 1,
+  "updatedAt": "2026-09-24T13:41:12Z",
+  "author": "GM",
+  "revisionNotes": "EASI 1.0.0 (tag easi-v1.0.0, 2026-09-18): the operational screening method, Alternative 2 with NARS-9 references, which the owner adopted on 2026-09-16. Imported unchanged from apps/easi/data (method b2e3033116e3).",
+  "region": {
+    "kind": "national",
+    "code": "CONUS",
+    "name": "Contiguous United States"
+  },
+  "contentDigest": "sha256:5b733a6b7690f7893c6c15357178128a04646595e5d2cff7f8bb69fdbf40246d",
+  "methodVersion": "b2e3033116e3",
+  "evaluatorDigest": "sha256:594bd096fd36bc4060d1023f99379446beeb522364c3ac18a143d55786345845",
+  "supersedesVersion": null,
+  "provenance": "present"
+}
