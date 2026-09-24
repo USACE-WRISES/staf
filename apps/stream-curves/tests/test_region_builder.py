@@ -170,6 +170,7 @@ def test_exit_codes_read_as_sentences():
     assert rb.exit_meaning(0) == "Staged."
     assert "did not settle" in rb.exit_meaning(1)
     assert "landscape" in rb.exit_meaning(2)
+    assert "Another run is staging this region" in rb.exit_meaning(3)   # the region's lock is held
     assert "7" in rb.exit_meaning(7)
 
 

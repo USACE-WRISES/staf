@@ -310,6 +310,27 @@ def _without_outcome_asserts(decisions: list[dict]) -> list[dict]:
     return decisions
 
 
+#: The exit code of a stage that did not start because another run holds its folder.
+BUSY_EXIT = 3
+
+
+def stage_locked(a) -> int:
+    """``stage``: cmd_stage with the region folder's lock (``lock.json``) held for the whole
+    stage, so two runs never stage one folder at once (a stage first deletes the folder's staged
+    library). Another run holding it: :data:`BUSY_EXIT`, with the sentence saying which."""
+    from streamcurves import jobs as jb
+    out_dir = Path(a.out).resolve()
+    try:
+        held = jb.acquire(out_dir)
+    except jb.CampaignBusy as exc:
+        print(f"[batch] {exc}")
+        return BUSY_EXIT
+    try:
+        return cmd_stage(a)
+    finally:
+        jb.release(held)
+
+
 def cmd_stage(a) -> int:
     out_dir = Path(a.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -806,18 +827,26 @@ _STAGE_MANY_FLAGS = ("screen", "no_screen", "no_streamcat", "maintainer", "n_boo
                      "reference_method", "predictor_source")
 
 
+def _is_prefix_of(token: str, flag: str, shortest: str) -> bool:
+    """True when ``token`` is ``flag`` or an abbreviation argparse accepts for it (at least
+    ``shortest``; no other stage-many flag starts that way)."""
+    return len(token) >= len(shortest) and flag.startswith(token)
+
+
 def recorded_argv(argv) -> list:
     """The stage-many command as provenance records it: the worker count and ``--isolated``
-    only schedule the work, so every way of running the same regions records the same command."""
+    only schedule the work, so every way of running the same regions records the same command,
+    however the flags are spelled (argparse accepts ``--w 3``, ``--wor=3`` and ``--i``)."""
     out, skip = [], False
     for x in [str(v) for v in argv or []]:
         if skip:
             skip = False
             continue
-        if x == "--workers":
-            skip = True
+        flag, eq, _ = x.partition("=")
+        if _is_prefix_of(flag, "--workers", "--w"):
+            skip = not eq                     # a bare flag takes the next token as its value
             continue
-        if x.startswith("--workers=") or x == "--isolated":
+        if not eq and _is_prefix_of(flag, "--isolated", "--i"):
             continue
         out.append(x)
     return out
@@ -916,9 +945,20 @@ def stage_job(spec: dict, out_dir) -> dict:
     """A job target (streamcurves.jobs): stage one region in this process, then record what
     it was staged from and what it wrote (``stage_complete.json``, written only when the stage
     succeeded and its inputs, code and data included, were the batch's at its start and end)."""
+    from streamcurves import jobs as jb
     args = dict(spec["args"])
     region_dir = Path(args["out"])
-    region_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        held = jb.acquire(region_dir)
+    except jb.CampaignBusy as exc:
+        raise SystemExit(f"{exc}")
+    try:
+        return _stage_job_locked(spec, args, region_dir)
+    finally:
+        jb.release(held)
+
+
+def _stage_job_locked(spec: dict, args: dict, region_dir: Path) -> dict:
     (region_dir / STAGE_COMPLETE).unlink(missing_ok=True)
 
     def now_digest() -> str:
@@ -967,8 +1007,21 @@ def _region_row(code: str, name: Optional[str], out_dir: Path) -> dict:
     return row
 
 
-def _stage_many_parallel(a, out_root: Path, regions: list[tuple[str, Optional[str], Path]]) -> int:
+def _stage_record(out_dir: Path) -> Optional[dict]:
+    try:
+        rec = json.loads((out_dir / STAGE_COMPLETE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return rec if isinstance(rec, dict) else None
+
+
+def _stage_many_parallel(a, out_root: Path, regions: list[tuple[str, Optional[str], Path]], held) -> int:
+    """Stage the regions as jobs, the campaign's lock (``held``) kept from the first check to
+    the summary. A region whose ``stage_complete.json`` names the same inputs and whose outputs
+    are intact is reported as already staged and gets no job, so resuming never depends on the
+    job id (which covers the whole command) and a changed region list stages only what it adds."""
     from streamcurves import jobs as jb
+    campaign = out_root / ".campaign"
     inputs = None
     todo, rows = [], {}
     for code, name, out_dir in regions:
@@ -980,22 +1033,28 @@ def _stage_many_parallel(a, out_root: Path, regions: list[tuple[str, Optional[st
         if inputs is None:
             inputs = region_inputs(args)
         digest = region_digest(code, name, inputs, carried_from(code))
+        rec = _stage_record(out_dir)
+        if rec is not None and rec.get("inputsDigest") == digest and outputs_intact(out_dir, rec):
+            row = _region_row(code, name, out_dir)
+            row.update(exit=0, error="already staged from the same inputs", seconds=None)
+            rows[code] = row
+            print(f"[batch-many] L3-{code} {name}: already staged from the same inputs", flush=True)
+            continue
         job = jb.Job(kind="python", target="run_region_batch:stage_job",
                      spec={"task": "stage-region", "l3": code, "inputsDigest": digest, "args": args},
                      env={"PYTHONPATH": str(_SCRIPTS) + os.pathsep + str(_APP_ROOT),
                           "HYRIVER_CACHE_NAME": str(out_dir / "hyriver_cache.sqlite")},
                      label=f"L3-{code} {name}")
-        # a region staged from other inputs, whose folder lost its record, or whose recorded
-        # outputs changed, stages again
-        done = out_dir / STAGE_COMPLETE
-        rec = json.loads(done.read_text(encoding="utf-8")) if done.is_file() else None
-        if rec is None or rec.get("inputsDigest") != digest or not outputs_intact(out_dir, rec):
-            (out_root / ".campaign" / "jobs" / job.id / "complete.json").unlink(missing_ok=True)
+        # staged from other inputs, a lost record or changed outputs: it stages again (a stage
+        # job writes nothing under its job folder, so an old completion would read as intact)
+        (campaign / "jobs" / job.id / "complete.json").unlink(missing_ok=True)
         todo.append((code, name, out_dir, job))
     t0 = time.monotonic()
-    summary = jb.run([t[3] for t in todo], out_root / ".campaign", workers=a.workers,
-                     meta={"task": "stage-many", "inputs": inputs},
-                     on_event=lambda e: print(f"[batch-many] {e['label']}: {e['event']}", flush=True))
+    summary = {"jobs": {}}
+    if todo:
+        summary = jb.run([t[3] for t in todo], campaign, workers=a.workers,
+                         meta={"task": "stage-many", "inputs": inputs}, lock_held=held,
+                         on_event=lambda e: print(f"[batch-many] {e['label']}: {e['event']}", flush=True))
     for code, name, out_dir, job in todo:
         row = _region_row(code, name, out_dir)
         state = summary["jobs"].get(job.id, {}).get("state")
@@ -1020,9 +1079,24 @@ def _stage_many_parallel(a, out_root: Path, regions: list[tuple[str, Optional[st
 
 def cmd_stage_many(a) -> int:
     """Stage several regions with the same flags, one run folder each under ``--out-root``,
-    and a summary table; ``--workers`` above 1 stages that many at once. Never promotes."""
+    and a summary table; ``--workers`` above 1 stages that many at once. Never promotes. One
+    batch at a time per ``--out-root`` (the lock in its ``.campaign`` folder), and each region
+    is staged under its own folder's lock."""
+    from streamcurves import jobs as jb
     out_root = Path(a.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
+    try:
+        held = jb.acquire(out_root / ".campaign")
+    except jb.CampaignBusy as exc:
+        print(f"[batch-many] {exc}")
+        return BUSY_EXIT
+    try:
+        return _stage_many_locked(a, out_root, held)
+    finally:
+        jb.release(held)
+
+
+def _stage_many_locked(a, out_root: Path, held) -> int:
     names = _parse_kv(a.name, "--name")
     if int(getattr(a, "workers", 1) or 1) > 1 or getattr(a, "isolated", False):
         regions = []
@@ -1031,7 +1105,7 @@ def cmd_stage_many(a) -> int:
             name = names.get(code) or ra.region_name_for(code)
             slug = lib.slugify(name) if name else f"l3-{code}"
             regions.append((code, name, out_root / f"l3-{code}-{slug}"))
-        return _stage_many_parallel(a, out_root, regions)
+        return _stage_many_parallel(a, out_root, regions, held)
     rows: list[dict] = []
     for code in a.l3:
         code = str(code).strip()
@@ -1045,7 +1119,9 @@ def cmd_stage_many(a) -> int:
         else:
             ns = region_stage_namespace(a, code, name, out_dir)
             try:
-                row["exit"] = int(cmd_stage(ns))
+                row["exit"] = int(stage_locked(ns))
+                if row["exit"] == BUSY_EXIT:
+                    row["error"] = "another run is staging this region"
             except SystemExit as exc:
                 row.update(exit=exc.code if isinstance(exc.code, int) else 1, error=str(exc))
             except Exception as exc:  # noqa: BLE001 - one region's failure must not end the batch
@@ -1209,7 +1285,7 @@ def main(argv=None) -> int:
                    help="stage anyway on the record when the unresolved share is above the limit")
     s.add_argument("--reference-method", default=None, choices=run_state.REFERENCE_METHODS,
                    help=REFERENCE_METHOD_HELP)
-    s.set_defaults(fn=cmd_stage)
+    s.set_defaults(fn=stage_locked)
 
     m = sub.add_parser("stage-many", help="stage several regions in sequence with a summary table; never promotes")
     m.add_argument("--l3", action="append", required=True, metavar="CODE",

@@ -7,7 +7,12 @@ run on it.
 """
 from __future__ import annotations
 
+import argparse
+import hashlib
 import json
+import os
+import socket
+import subprocess
 import sys
 from pathlib import Path
 
@@ -220,9 +225,9 @@ def test_a_job_is_everything_that_runs_it():
 
 def test_one_coordinator_holds_a_campaign(tmp_path):
     held = jobs.acquire(tmp_path)
-    with pytest.raises(jobs.CampaignBusy, match="another coordinator"):
+    with pytest.raises(jobs.CampaignBusy, match="Another run is using"):
         jobs.run(_cmd_jobs(1), tmp_path, workers=1)
-    held.unlink()
+    jobs.release(held)
     # a lock whose process is gone is taken over
     import socket
     (tmp_path / "lock.json").write_text(json.dumps({"pid": 2 ** 31 - 7, "host": socket.gethostname(),
@@ -258,3 +263,206 @@ def test_relaxed_first_panels_are_labelled_relaxed_and_ranked_like_the_builder()
     assert fr.usable(q, row, "best_available")[0] is False
     per = explore.member_pressure(frame, first)
     assert len(per) == n and per["composite_pressure"].notna().all()
+
+
+# --------------------------------------------------------------------------- #
+# locks (review B round 2, N5): one holder, a race-safe takeover, only one's own release
+# --------------------------------------------------------------------------- #
+def _holder(folder: Path, *, release: bool) -> subprocess.Popen:
+    """Another process holding ``folder``'s lock until told to go (then releasing it, or
+    ending without releasing it)."""
+    code = ("import os, sys, pathlib; sys.path.insert(0, sys.argv[2]); "
+            "from streamcurves import jobs; h = jobs.acquire(pathlib.Path(sys.argv[1])); "
+            "print('held', flush=True); sys.stdin.readline(); "
+            "jobs.release(h) if sys.argv[3] == '1' else os._exit(0)")
+    proc = subprocess.Popen([sys.executable, "-c", code, str(folder), str(APP), "1" if release else "0"],
+                            stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+    assert proc.stdout.readline().strip() == "held"
+    return proc
+
+
+def _locks(folder: Path) -> list:
+    return sorted(p.name for p in folder.iterdir() if p.name.startswith("lock"))
+
+
+def test_a_second_process_finds_the_lock_busy_until_the_first_is_done(tmp_path):
+    proc = _holder(tmp_path, release=True)
+    try:
+        with pytest.raises(jobs.CampaignBusy, match="Another run is using"):
+            jobs.acquire(tmp_path)
+        with pytest.raises(jobs.CampaignBusy):
+            jobs.run(_cmd_jobs(1), tmp_path, workers=1)
+    finally:
+        proc.communicate("go\n", timeout=120)
+    jobs.release(jobs.acquire(tmp_path))
+    # a holder that ends without releasing leaves a lock that is taken over, and nothing else
+    proc = _holder(tmp_path, release=False)
+    proc.communicate("go\n", timeout=120)
+    assert _locks(tmp_path) == ["lock.json"]
+    held = jobs.acquire(tmp_path)
+    assert jobs.holds(held) and _locks(tmp_path) == ["lock.json"]
+    jobs.release(held)
+    assert _locks(tmp_path) == []
+
+
+def test_a_takeover_that_loses_the_race_gives_the_lock_back(tmp_path):
+    lock = tmp_path / "lock.json"
+    stale = {"pid": 2 ** 31 - 7, "host": socket.gethostname(), "startedAt": "2026-09-23T00:00:00Z",
+             "nonce": "old"}
+    lock.write_text(json.dumps(stale), encoding="utf-8")
+    # A and B both judged that record stale. A moves it aside first and takes the lock ...
+    assert jobs._take_over(lock, stale)
+    a = jobs.acquire(tmp_path)
+    # ... then B's takeover finds A's fresh lock under the name: it puts it back and loses
+    assert not jobs._take_over(lock, stale)
+    assert jobs.holds(a) and _locks(tmp_path) == ["lock.json"]
+    jobs.release(a)
+    assert _locks(tmp_path) == []
+
+
+def test_a_release_never_removes_a_lock_another_run_holds(tmp_path):
+    held = jobs.acquire(tmp_path)
+    lock = tmp_path / "lock.json"
+    lock.write_text(json.dumps({**json.loads(lock.read_text(encoding="utf-8")), "nonce": "another"}),
+                    encoding="utf-8")
+    jobs.release(held)
+    assert lock.is_file() and not jobs.holds(held)
+
+
+def test_a_lock_that_cannot_be_read_is_busy_and_kept(tmp_path):
+    lock = tmp_path / "lock.json"
+    for text in ("", "{", json.dumps({"host": "x", "startedAt": "y"}), json.dumps({"pid": "12"}),
+                 json.dumps({"pid": True}), json.dumps([1])):
+        lock.write_text(text, encoding="utf-8")
+        with pytest.raises(jobs.CampaignBusy, match="cannot be read"):
+            jobs.acquire(tmp_path)
+        assert lock.read_text(encoding="utf-8") == text
+
+
+def test_a_pid_is_the_holder_only_while_its_process_is_the_one_that_locked(tmp_path):
+    lock = tmp_path / "lock.json"
+    me = {"pid": os.getpid(), "host": socket.gethostname(), "startedAt": "x", "nonce": "n"}
+    started = jobs._process_started(os.getpid())
+    if started is None:
+        pytest.skip("process start times cannot be read here")
+    lock.write_text(json.dumps({**me, "processStarted": started + 1}), encoding="utf-8")
+    held = jobs.acquire(tmp_path)                      # the pid now belongs to another process
+    assert jobs.holds(held)
+    jobs.release(held)
+    lock.write_text(json.dumps({**me, "processStarted": started}), encoding="utf-8")
+    with pytest.raises(jobs.CampaignBusy, match="Another run is using"):
+        jobs.acquire(tmp_path)                         # that process is still running
+    lock.write_text(json.dumps({**me, "pid": 2 ** 31 - 7, "host": "another-computer"}), encoding="utf-8")
+    with pytest.raises(jobs.CampaignBusy, match="another-computer"):
+        jobs.acquire(tmp_path)                         # another computer's lock is never judged
+
+
+def test_a_run_inside_a_held_lock_keeps_it_for_the_merge(tmp_path):
+    with jobs.lock(tmp_path) as held:
+        summary = jobs.run(_cmd_jobs(2), tmp_path, workers=2, lock_held=held)
+        assert summary["counts"]["completed"] == 2 and jobs.holds(held)
+        with pytest.raises(ValueError, match="not this campaign"):
+            jobs.run(_cmd_jobs(1), tmp_path / "other", workers=1, lock_held=held)
+    assert _locks(tmp_path) == []
+    held = jobs.acquire(tmp_path)
+    (tmp_path / "lock.json").write_text(json.dumps({"pid": os.getpid(), "nonce": "x"}), encoding="utf-8")
+    with pytest.raises(jobs.CampaignBusy, match="no longer"):
+        jobs.run(_cmd_jobs(1), tmp_path, workers=1, lock_held=held)
+
+
+# --------------------------------------------------------------------------- #
+# stage-many resumes by region, and the stage holds its folder (N5, N11)
+# --------------------------------------------------------------------------- #
+def _many_args(rb, out_root: Path, codes: dict) -> argparse.Namespace:
+    base = {k: None for k in rb._STAGE_MANY_FLAGS}
+    base.update(maintainer="Rehearsal (not an owner decision)", workers=2, isolated=False,
+                out_root=str(out_root), l3=list(codes), name=[f"{c}={n}" for c, n in codes.items()])
+    return argparse.Namespace(**base)
+
+
+def test_stage_many_skips_a_region_staged_from_the_same_inputs_whatever_the_list(tmp_path, monkeypatch):
+    rb = _batch_module()
+    monkeypatch.setattr(rb, "region_inputs", lambda args: {"fixed": 1})
+    monkeypatch.setattr(rb, "carried_from", lambda code: None)
+    seen = []
+
+    def fake_run(js, campaign, **kw):
+        seen.append(([j.label for j in js], Path(kw["lock_held"].path)))
+        return {"jobs": {j.id: {"state": "completed", "seconds": 1.0} for j in js}}
+
+    monkeypatch.setattr(jobs, "run", fake_run)
+    out_root = tmp_path / "many"
+    staged = out_root / "l3-55-region-a"
+    staged.mkdir(parents=True)
+    (staged / "review_packet.json").write_text("{}", encoding="utf-8")
+    rec = {"inputsDigest": rb.region_digest("55", "Region A", {"fixed": 1}, None),
+           "outputs": {"review_packet.json": hashlib.sha256(b"{}").hexdigest()}}
+    (staged / rb.STAGE_COMPLETE).write_text(json.dumps(rec), encoding="utf-8")
+
+    assert rb.cmd_stage_many(_many_args(rb, out_root, {"55": "Region A", "65": "Region B"})) == 0
+    assert seen[-1] == (["L3-65 Region B"], out_root / ".campaign" / "lock.json")
+    rows = {r["l3"]: r for r in json.loads((out_root / "batch_summary.json").read_text(encoding="utf-8"))["regions"]}
+    assert rows["55"]["exit"] == 0 and "already staged" in rows["55"]["error"]
+    # another region list: the finished region is still not staged again
+    rb.cmd_stage_many(_many_args(rb, out_root, {"55": "Region A", "65": "Region B", "71": "Region C"}))
+    assert seen[-1][0] == ["L3-65 Region B", "L3-71 Region C"]
+    # a changed output stages it again
+    (staged / "review_packet.json").write_text('{"x": 1}', encoding="utf-8")
+    rb.cmd_stage_many(_many_args(rb, out_root, {"55": "Region A"}))
+    assert seen[-1][0] == ["L3-55 Region A"]
+    assert _locks(out_root / ".campaign") == []
+    # a second batch on the same folder is refused while one runs
+    held = jobs.acquire(out_root / ".campaign")
+    try:
+        assert rb.cmd_stage_many(_many_args(rb, out_root, {"55": "Region A"})) == rb.BUSY_EXIT
+    finally:
+        jobs.release(held)
+
+
+def test_the_recorded_command_drops_every_spelling_of_the_scheduling_flags():
+    rb = _batch_module()
+    argv = ["stage-many", "--l3", "55", "--w", "3", "--wor=2", "--workers", "4", "--i", "--iso",
+            "--isolated", "--out-root", "x", "--name", "55=W", "--workers=5", "--wo", "6"]
+    assert rb.recorded_argv(argv) == ["stage-many", "--l3", "55", "--out-root", "x", "--name", "55=W"]
+
+
+def test_a_stage_holds_its_folders_lock_and_a_busy_one_says_so(tmp_path, monkeypatch):
+    from streamcurves import region_build
+    rb = _batch_module()
+    region = tmp_path / "region"
+    during = []
+    monkeypatch.setattr(rb, "cmd_stage", lambda a: (during.append(_locks(region)), 0)[1])
+    ns = argparse.Namespace(out=str(region))
+    assert rb.stage_locked(ns) == 0 and during == [["lock.json"]] and _locks(region) == []
+    held = jobs.acquire(region)
+    try:
+        assert rb.stage_locked(ns) == rb.BUSY_EXIT and len(during) == 1
+    finally:
+        jobs.release(held)
+    assert "Another run is staging this region" in region_build.exit_meaning(rb.BUSY_EXIT)
+
+
+def test_a_stage_job_holds_the_region_lock_and_never_records_it(tmp_path, monkeypatch):
+    rb = _batch_module()
+    monkeypatch.setattr(rb, "region_inputs", lambda args: {"fixed": 1})
+    monkeypatch.setattr(rb, "carried_from", lambda code: None)
+    monkeypatch.setattr(rb, "code_fingerprint", lambda: "code")
+    region = tmp_path / "l3-55"
+
+    def fake_stage(ns):
+        assert _locks(region) == ["lock.json"]
+        (region / "review_packet.json").write_text("{}", encoding="utf-8")
+        return 0
+
+    monkeypatch.setattr(rb, "cmd_stage", fake_stage)
+    spec = {"inputsDigest": rb.region_digest("55", "Region A", {"fixed": 1}, None),
+            "args": {"l3": "55", "name": "Region A", "out": str(region)}}
+    assert rb.stage_job(spec, tmp_path / "job-out")["exit"] == 0
+    rec = json.loads((region / rb.STAGE_COMPLETE).read_text(encoding="utf-8"))
+    assert list(rec["outputs"]) == ["review_packet.json"] and _locks(region) == []
+    held = jobs.acquire(region)
+    try:
+        with pytest.raises(SystemExit, match="Another run is using"):
+            rb.stage_job(spec, tmp_path / "job-out")
+    finally:
+        jobs.release(held)

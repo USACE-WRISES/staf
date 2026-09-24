@@ -95,7 +95,9 @@ EASI's active method are the owner's decisions (see the adoption package in the 
 
   Each region is bound to its inputs (code, configuration, data and the version it carries
   forward from) and to what it wrote; a finished region whose outputs are intact is skipped on
-  rerun, and a region staged again replaces its staged library. `--isolated` stages one region at
+  rerun, also when the region list changed, and a region staged again replaces its staged
+  library. One run uses a folder at a time: a second batch on the same `--out-root`, or a stage
+  into a region folder that is being staged, stops and says another run is using it. `--isolated` stages one region at
   a time, each in its own process. Promote stays one region at a time
   (`run_region_batch.py promote`). Three workers are a reasonable start on a 12-core machine;
   keep it low when the screen calls live services.
