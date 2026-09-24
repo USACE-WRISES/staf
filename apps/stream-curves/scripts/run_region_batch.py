@@ -31,9 +31,9 @@ it back and the evidence pass reproduces offline.
 Usage (from the repo root, shared venv):
     .venv/Scripts/python apps/stream-curves/scripts/run_region_batch.py stage \
         --l3 71 --name "Interior Plateau" --out notes/DEEP_Working/analysis/runs/ip-71 \
-        --n-boot 1000 --maintainer gtmenichino
+        --n-boot 1000 --maintainer GM
     .venv/Scripts/python apps/stream-curves/scripts/run_region_batch.py promote \
-        --out notes/DEEP_Working/analysis/runs/ip-71 --maintainer gtmenichino \
+        --out notes/DEEP_Working/analysis/runs/ip-71 --maintainer GM \
         --publish-root apps/library --rebake-deep
 
 A staged version can never reach the canonical library by accident: its
@@ -108,7 +108,7 @@ def _parse_kv(specs, flag, sep="="):
 
 
 def _valid_approver(approver: str) -> bool:
-    """An approver is a name (one token, e.g. ``gtmenichino``) or a pending
+    """An approver is a name (one token, e.g. ``GM``) or a pending
     marker (``owner-draft (pending owner confirmation)``); prose in this slot
     means the NOTE was passed without an approver, which once put a rationale
     into a published meta as the approving person."""
@@ -134,19 +134,37 @@ def _parse_approvals(specs):
     return out
 
 
+#: Earlier names of the promoting maintainer, comma separated: approvals recorded before
+#: StreamCurves recorded initials name the owner's login (the owner's decision of 2026-09-24).
+#: Set in the maintainer's own environment (a launch configuration), never in code.
+ALIASES_ENV = "STAF_LIBRARY_MAINTAINER_ALIASES"
+
+
+def maintainer_names(maintainer: str) -> set[str]:
+    """The promoting maintainer's name and the earlier names ``ALIASES_ENV`` lists."""
+    names = {str(maintainer or "").strip()}
+    names |= {n.strip() for n in os.environ.get(ALIASES_ENV, "").split(",")}
+    names.discard("")
+    return names
+
+
 def _confirm_approvals(meta: dict, *, maintainer: str, date: str) -> list[dict]:
     """Rewrite pending portfolio approvals to the confirming owner and refuse
     any approval that does not resolve to that owner: a canonical version
-    carries one approving person, the one who said go."""
+    carries one approving person, the one who said go. An approval recorded under
+    an earlier name of the owner (``ALIASES_ENV``) is the owner's and keeps the
+    name it was recorded under."""
     approvals = meta.get("portfolioApprovals") or []
     dec.confirm_approvals(approvals, maintainer=maintainer, date=date)
+    mine = maintainer_names(maintainer)
     strangers = [str(ap.get("functionId")) for ap in approvals
-                 if str(ap.get("approvedBy") or "").strip() != maintainer]
+                 if str(ap.get("approvedBy") or "").strip() not in mine]
     if strangers:
         raise SystemExit(
             "portfolio approvals not confirmed by the promoting owner on: "
             f"{', '.join(strangers)}. Re-stage with --approve-portfolio FUNCTIONID=APPROVER:NOTE "
-            "(a name or a pending marker as APPROVER).")
+            "(a name or a pending marker as APPROVER), or list the name they were recorded under "
+            f"in {ALIASES_ENV} when it is an earlier name of yours.")
     return approvals
 
 
@@ -1220,7 +1238,8 @@ def main(argv=None) -> int:
     s.add_argument("--source-citation", default="")
     s.add_argument("--no-screen", action="store_true", help="offline smoke only")
     s.add_argument("--no-streamcat", action="store_true", help="offline smoke only")
-    s.add_argument("--maintainer", default="gtmenichino")
+    s.add_argument("--maintainer", default="GM", help="initials recorded as the reviewer and the author "
+                   "(default: the owner's, GM)")
     s.add_argument("--n-boot", type=int, default=1000)
     s.add_argument("--coverage-exceptions", default=None)
     s.add_argument("--policy", default=None, help="standing_decisions.yaml (default: the config one)")
@@ -1299,7 +1318,8 @@ def main(argv=None) -> int:
     m.add_argument("--screen", default="functional", choices=["functional", "at_risk_or_better"])
     m.add_argument("--no-screen", action="store_true", help="offline smoke only")
     m.add_argument("--no-streamcat", action="store_true", help="offline smoke only")
-    m.add_argument("--maintainer", default="gtmenichino")
+    m.add_argument("--maintainer", default="GM", help="initials recorded as the reviewer and the author "
+                   "(default: the owner's, GM)")
     m.add_argument("--n-boot", type=int, default=1000)
     m.add_argument("--coverage-exceptions", default=None)
     m.add_argument("--policy", default=None)
