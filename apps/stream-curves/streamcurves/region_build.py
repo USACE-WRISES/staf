@@ -507,6 +507,7 @@ EXIT_MEANINGS = {
     1: "The review queue did not settle within the pass limit. Nothing was staged.",
     2: "A landscape data source failed, so the run would have had a silent gap. "
        "Nothing was staged.",
+    3: "Another run is staging this region. Wait for it to finish, then build again.",
 }
 
 

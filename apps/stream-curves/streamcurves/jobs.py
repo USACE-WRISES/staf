@@ -8,14 +8,21 @@ job. Every job runs in its own process, with the thread caps of ``THREAD_CAPS`` 
 environment it names, and gets its own output folder; a job that writes elsewhere (a stage job
 writes its region's run folder) binds that to its inputs itself. One coordinator (the process
 calling ``run``, holding the campaign's lock) is the only writer of the campaign's index and
-summary. A failure is recorded and never stops the other jobs; an interrupted campaign resumes
-by running ``run`` again: completed jobs are skipped, anything else starts over in a clean
-output folder.
+summary; a caller that merges or summarizes after the run holds the lock around all of it
+(``with lock(campaign) as held: run(..., lock_held=held)``). A failure is recorded and never
+stops the other jobs; an interrupted campaign resumes by running ``run`` again: completed jobs
+are skipped, anything else starts over in a clean output folder.
+
+A lock is written whole (a temporary file linked into place, never a half-written file) and
+names its process by pid, host, start and a nonce. It is taken over only when that process has
+certainly ended; a lock that cannot be read is busy, never stale; the takeover moves aside only
+the record it judged stale, so two processes never both hold one lock; and a process removes
+only a lock that still carries its own nonce.
 
 Layout under a campaign folder::
 
     campaign.json                    what the campaign is (written once)
-    lock.json                        the running coordinator (pid, host, start); removed at the end
+    lock.json                        the running coordinator (pid, host, start, nonce); removed at the end
     index.jsonl                      one line per job event, append-only
     summary.json                     every job's last state, rewritten as jobs finish
     jobs/<id>/job.json               the job's kind and spec
@@ -31,6 +38,7 @@ job folders) and ``python`` (``module:function`` called in a fresh interpreter a
 """
 from __future__ import annotations
 
+import contextlib
 import datetime as _dt
 import hashlib
 import importlib
@@ -41,6 +49,7 @@ import subprocess
 import sys
 import threading
 import time
+import uuid
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -191,31 +200,224 @@ def _pid_alive(pid: int) -> bool:
     return True
 
 
-def acquire(campaign: Path) -> Path:
-    """Take the campaign's lock (``lock.json``, created exclusively). A lock whose process is
-    gone is taken over; a live one raises :class:`CampaignBusy`."""
+def _process_started(pid: int) -> Optional[int]:
+    """When process ``pid`` started, as an opaque number that stays the same for the whole life
+    of the process (None where it cannot be read). A lock records it for its own process, so a
+    later process that happens to get the same pid is never taken for the lock's holder."""
+    try:
+        if os.name == "nt":
+            import ctypes
+            from ctypes import wintypes
+            k32 = ctypes.WinDLL("kernel32")
+            k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+            k32.OpenProcess.restype = wintypes.HANDLE
+            k32.GetProcessTimes.argtypes = [wintypes.HANDLE] + [ctypes.POINTER(wintypes.FILETIME)] * 4
+            k32.GetProcessTimes.restype = wintypes.BOOL
+            k32.CloseHandle.argtypes = [wintypes.HANDLE]
+            k32.CloseHandle.restype = wintypes.BOOL
+            handle = k32.OpenProcess(0x1000, False, int(pid))     # PROCESS_QUERY_LIMITED_INFORMATION
+            if not handle:
+                return None
+            try:
+                times = [wintypes.FILETIME() for _ in range(4)]
+                if not k32.GetProcessTimes(handle, *(ctypes.byref(t) for t in times)):
+                    return None
+                return (times[0].dwHighDateTime << 32) | times[0].dwLowDateTime
+            finally:
+                k32.CloseHandle(handle)
+        import psutil
+        return int(psutil.Process(int(pid)).create_time() * 1_000_000)
+    except Exception:  # noqa: BLE001 - a missing start time only weakens the check to the pid
+        return None
+
+
+LOCK = "lock.json"
+
+
+@dataclass(frozen=True)
+class Held:
+    """A lock this process holds: its file and the nonce that proves the file is still ours."""
+    path: Path
+    nonce: str
+
+
+def _retrying(fn, *, tries: int = 5, wait: float = 0.05):
+    """``fn()``, tried again while Windows refuses it because another process has the file open
+    for a moment (a PermissionError); the last refusal is raised."""
+    for attempt in range(tries):
+        try:
+            return fn()
+        except PermissionError:
+            if attempt == tries - 1:
+                raise
+            time.sleep(wait)
+
+
+def _busy(lock: Path, held: dict) -> CampaignBusy:
+    return CampaignBusy(f"Another run is using {lock.parent} (process {held.get('pid')} on "
+                        f"{held.get('host')}, since {held.get('startedAt')}). Wait for it to finish. "
+                        f"If no run is using the folder, delete {lock}.")
+
+
+def _read_lock(lock: Path) -> Optional[dict]:
+    """The lock's record, or None when there is no lock. A lock that cannot be read now (another
+    process has it open, or a crash left it empty) is never judged stale: it reads as busy."""
+    try:
+        text = _retrying(lambda: lock.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise CampaignBusy(f"The lock {lock} cannot be read ({exc}). If no run is using "
+                           f"{lock.parent}, delete it.") from exc
+    try:
+        rec = json.loads(text)
+    except ValueError:
+        rec = None
+    if not isinstance(rec, dict) or not isinstance(rec.get("pid"), int) or isinstance(rec.get("pid"), bool):
+        raise CampaignBusy(f"The lock {lock} cannot be read. If no run is using {lock.parent}, "
+                           "delete it.")
+    return rec
+
+
+def _holder_gone(held: dict) -> bool:
+    """True only when the lock's process has certainly ended: same host, and its pid is not
+    running or now belongs to a process that started at another time."""
     import socket
-    lock = Path(campaign) / "lock.json"
-    body = json.dumps({"pid": os.getpid(), "host": socket.gethostname(), "startedAt": _now()}).encode()
-    for _ in range(2):
+    if held.get("host") not in (None, socket.gethostname()):
+        return False
+    pid = int(held["pid"])
+    if not _pid_alive(pid):
+        return True
+    recorded = held.get("processStarted")
+    if recorded is None:
+        return False
+    now = _process_started(pid)
+    return now is not None and now != recorded
+
+
+def _place(lock: Path, text: str) -> bool:
+    """Put ``text`` at ``lock`` whole, only when no lock is there: written to a temporary file
+    and linked into place, so a lock is never seen half written. False when a lock exists."""
+    tmp = lock.with_name(f"{lock.name}.{uuid.uuid4().hex}.tmp")
+    tmp.write_text(text, encoding="utf-8")
+    try:
+        try:
+            os.link(tmp, lock)
+            return True
+        except FileExistsError:
+            return False
+        except PermissionError:
+            return False                  # a lock that is being deleted still holds the name
+        except OSError:
+            pass                          # a file system without hard links
         try:
             fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except FileExistsError:
+        except (FileExistsError, PermissionError):
+            return False
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        return True
+    finally:
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+
+
+def _same_record(a: Optional[dict], b: dict) -> bool:
+    return isinstance(a, dict) and all(a.get(k) == b.get(k) for k in ("pid", "host", "startedAt", "nonce"))
+
+
+def _take_over(lock: Path, judged: dict) -> bool:
+    """Move aside the lock judged stale, and only that one. True when it is gone. When another
+    process took it over first (its fresh lock now holds the name), that lock is put back and
+    False says so: two processes never both hold one lock."""
+    aside = lock.with_name(f"lock.stale.{os.getpid()}.{time.time_ns()}")
+    try:
+        _retrying(lambda: os.replace(lock, aside))
+    except FileNotFoundError:
+        return True                       # already gone: whoever comes next creates the lock
+    except PermissionError:
+        return False
+    try:
+        moved = json.loads(aside.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        moved = None
+    if _same_record(moved, judged):
+        try:
+            aside.unlink()
+        except OSError:
+            pass
+        return True
+    try:
+        os.link(aside, lock)              # a live lock was moved: give it back
+    except OSError:
+        pass
+    try:
+        aside.unlink()
+    except OSError:
+        pass
+    return False
+
+
+def acquire(campaign: Path) -> Held:
+    """Take the folder's lock (``lock.json``, written whole and only when absent). A lock whose
+    process has ended is taken over; a live or unreadable one raises :class:`CampaignBusy`."""
+    import socket
+    campaign = Path(campaign)
+    campaign.mkdir(parents=True, exist_ok=True)
+    lock = campaign / LOCK
+    body = {"pid": os.getpid(), "host": socket.gethostname(), "startedAt": _now(),
+            "nonce": uuid.uuid4().hex, "processStarted": _process_started(os.getpid())}
+    text = json.dumps(body)
+    for _ in range(5):
+        if _place(lock, text):
             try:
-                held = json.loads(lock.read_text(encoding="utf-8"))
-            except (OSError, ValueError):
-                held = {}
-            same_host = held.get("host") in (None, socket.gethostname())
-            if same_host and not _pid_alive(int(held.get("pid") or 0)):
-                lock.unlink(missing_ok=True)          # its coordinator is gone
-                continue
-            raise CampaignBusy(f"another coordinator runs this campaign (pid {held.get('pid')} on "
-                               f"{held.get('host')} since {held.get('startedAt')}). If none does, "
-                               f"delete {lock}.")
-        with os.fdopen(fd, "wb") as fh:
-            fh.write(body)
-        return lock
-    raise CampaignBusy(f"the campaign lock {lock} could not be taken")
+                mine = _read_lock(lock)
+            except CampaignBusy:
+                mine = None
+            if not _same_record(mine, body):
+                raise _busy(lock, mine or {})
+            return Held(lock, body["nonce"])
+        held = _read_lock(lock)
+        if held is None:
+            time.sleep(0.05)              # released between the two steps: try again
+            continue
+        if not _holder_gone(held):
+            raise _busy(lock, held)
+        if not _take_over(lock, held):
+            raise _busy(lock, _read_lock(lock) or held)
+    raise CampaignBusy(f"The lock {lock} could not be taken. If no run is using {campaign}, delete it.")
+
+
+def holds(held: Held) -> bool:
+    """True while ``held``'s lock file is still this process's."""
+    try:
+        rec = json.loads(_retrying(lambda: Path(held.path).read_text(encoding="utf-8")))
+    except (OSError, ValueError):
+        return False
+    return isinstance(rec, dict) and rec.get("nonce") == held.nonce
+
+
+def release(held: Held) -> None:
+    """Remove the lock if it is still this process's; never a lock another process holds."""
+    if not holds(held):
+        return
+    try:
+        _retrying(lambda: Path(held.path).unlink())
+    except FileNotFoundError:
+        pass
+
+
+@contextlib.contextmanager
+def lock(campaign: Path):
+    """``with jobs.lock(folder) as held:`` hold the folder's lock for the whole block, and pass
+    ``lock_held=held`` to :func:`run` so the run, the merge and the summary are one campaign."""
+    held = acquire(campaign)
+    try:
+        yield held
+    finally:
+        release(held)
 
 
 def completed(campaign: Path, job: Job) -> Optional[dict]:
@@ -287,23 +489,28 @@ def _run_one(campaign: Path, job: Job, base_env: Optional[dict]) -> dict:
 def run(jobs: list[Job], campaign: Path, *, workers: int = 2, meta: Optional[dict] = None,
         base_env: Optional[dict] = None, stop: Optional[threading.Event] = None,
         on_event: Optional[Callable[[dict], None]] = None, max_starts: Optional[int] = None,
-        retries: int = 1) -> dict:
+        retries: int = 1, lock_held: Optional[Held] = None) -> dict:
     """Run every job not already completed, ``workers`` at a time. Returns the summary.
     ``stop`` (or ``max_starts``) ends the campaign early: no new job starts, running jobs
     finish; a later ``run`` resumes where this one stopped. A job that fails is started
     again up to ``retries`` times (a worker process can die of a transient native fault);
-    every attempt is in the index."""
+    every attempt is in the index. The campaign's lock is taken for the run, or ``lock_held``
+    is the caller's (:func:`lock`) when it also merges or summarizes afterwards."""
     campaign = Path(campaign)
     (campaign / "jobs").mkdir(parents=True, exist_ok=True)
     ids = [j.id for j in jobs]
     if len(set(ids)) != len(ids):
         raise ValueError("two jobs have the same spec")
-    held = acquire(campaign)
-    try:
-        return _run_locked(jobs, campaign, workers=workers, meta=meta, base_env=base_env, stop=stop,
-                           on_event=on_event, max_starts=max_starts, retries=retries)
-    finally:
-        held.unlink(missing_ok=True)
+    kw = dict(workers=workers, meta=meta, base_env=base_env, stop=stop, on_event=on_event,
+              max_starts=max_starts, retries=retries)
+    if lock_held is not None:
+        if Path(lock_held.path).resolve() != (campaign / LOCK).resolve():
+            raise ValueError(f"the lock held is {lock_held.path}, not this campaign's")
+        if not holds(lock_held):
+            raise CampaignBusy(f"The lock {lock_held.path} is no longer this run's. Start the run again.")
+        return _run_locked(jobs, campaign, **kw)
+    with lock(campaign):
+        return _run_locked(jobs, campaign, **kw)
 
 
 def _run_locked(jobs: list[Job], campaign: Path, *, workers, meta, base_env, stop, on_event,
@@ -399,4 +606,5 @@ if __name__ == "__main__":
 
 
 __all__ = ["THREAD_CAPS", "Job", "run", "completed", "seed_for", "tree_digest", "canonical",
-           "acquire", "CampaignBusy", "tree_fingerprint", "peak_memory_mb"]
+           "acquire", "release", "holds", "lock", "Held", "LOCK", "CampaignBusy", "tree_fingerprint",
+           "peak_memory_mb"]

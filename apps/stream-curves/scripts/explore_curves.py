@@ -111,9 +111,12 @@ def main(argv=None) -> int:
                         spec={"task": "explore-easi", "campaign": campaign, "quantity": q, "level": level,
                               "variant": v, "members": str(members), "evidenceDigest": digest, **extra},
                         env=env, label=f"{q} {level} {v}"))
-    summary = jobs.run(cells, a.out, workers=a.workers, meta={"task": f"explore-{a.kind}"},
-                       on_event=lambda ev: print(f"[explore] {ev['label']}: {ev['event']}", flush=True))
-    merged = explore.merge(a.out, [c.id for c in cells if jobs.completed(a.out, c) is not None])
+    # one lock from the run to the merge: candidates.jsonl and grid.csv are the campaign's too
+    with jobs.lock(a.out) as held:
+        summary = jobs.run(cells, a.out, workers=a.workers, meta={"task": f"explore-{a.kind}"},
+                           on_event=lambda ev: print(f"[explore] {ev['label']}: {ev['event']}", flush=True),
+                           lock_held=held)
+        merged = explore.merge(a.out, [c.id for c in cells if jobs.completed(a.out, c) is not None])
     print(f"[explore] {merged['candidates']} candidates ({merged['built']} built) -> "
           f"{a.out / 'candidates.jsonl'}; {summary['counts']}")
     return 0 if summary["counts"]["failed"] == 0 else 1
