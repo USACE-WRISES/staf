@@ -31,7 +31,7 @@ from views.state import AppState
 APP = Path(__file__).resolve().parents[1]
 LIBRARY = APP.parent / "library" / "assessments"
 VERSIONS = ("interior-plateau/v6", "northeastern-highlands/v9", "eastern-corn-belt-plains/v7",
-            "southeastern-plains/v1")
+            "southeastern-plains/v1", "northern-lakes-and-forests/v1", "central-basin-and-range/v1")
 FIELDS = ("completed_metrics", "curve_review", "discipline_function_mapping", "metric_config",
           "region_of_applicability", "function_coverage_exceptions", "predictor_config",
           "reference_build", "session_name")

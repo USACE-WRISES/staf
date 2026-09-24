@@ -341,7 +341,7 @@ def publish_server(input, output, session, state: AppState):
         # green while an alert explained the env var, so the only way to find out
         # was to fill the form and read a warning toast. The gate reads env vars
         # only, so it cannot change mid-session and this can stay static.
-        blocked = _publish_block_reason()
+        blocked = _publish_block_reason() or ap.transcription_refusal(state)
         # An assessment that came from an agent build carries its origin and the
         # build's provenance in state; say what this publish will record before
         # it runs, and steer an untouched staged build to promote instead.
@@ -456,6 +456,10 @@ def publish_server(input, output, session, state: AppState):
     @render.ui
     def publish_body():
         refresh()
+        state.reference_build()     # a transcription says so, whatever else is loaded
+        refusal = ap.transcription_refusal(state)
+        if refusal:
+            return not_ready_panel("Not revised in the app", refusal, icon="file-arrow-up")
         loaded = bool(state.app_data_loaded())
         if not loaded:
             return not_ready_panel(
@@ -604,6 +608,10 @@ def publish_server(input, output, session, state: AppState):
         if not ws.can_publish():
             ui.notification_show("The maintainer publishes: save a copy for them instead.",
                                  type="warning", duration=8)
+            return
+        refusal = ap.transcription_refusal(state)
+        if refusal:
+            ui.notification_show(refusal, type="warning", duration=8)
             return
         status = input.pub_status() or "draft"
         if status not in lib.PUBLISH_STATUSES:

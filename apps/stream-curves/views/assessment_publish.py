@@ -195,6 +195,18 @@ def portfolio_approval_needed(state: AppState) -> list[dict]:
             if n > limit and fid not in approved]
 
 
+#: The owner's decision of 2026-09-24: a state SQT is a transcription of the tool
+#: (scripts/complete_sqt_assessments.py), never revised in the app.
+TRANSCRIPTION_REFUSAL = "State SQT assessments are transcriptions and are not revised in the app."
+
+
+def transcription_refusal(state: AppState) -> str | None:
+    """Why this session cannot publish from the app, when it is a state SQT transcription."""
+    with reactive.isolate():
+        build = state.reference_build()
+    return TRANSCRIPTION_REFUSAL if isinstance(build, dict) and build.get("transcription") else None
+
+
 def run_snapshot(state: AppState) -> dict:
     """Snapshot of the current run for ``run_state.derive_stage_status`` /
     ``is_ready_to_publish``. Shared by the stage banner and the Publish page gate
@@ -500,7 +512,12 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
         # sorts), so an untouched republish is the same content, entry for entry
         completed = {mk: completed[mk] for mk in sorted(completed)}
 
-    curve_rows = deep_collect_curve_rows(completed)
+    from streamcurves import owner_curves as _oc
+    from streamcurves import pressure_evidence as _pe
+    pressure = bool(reference_build) and reference_build.get("method") == _pe.METHOD
+    # a pressure-screen build's class splits read as the build published them: the
+    # pooled curve it stored first, whatever its status, with the complete classes
+    curve_rows = deep_collect_curve_rows(completed, pooled_default=pressure)
 
     from streamcurves import site_engine_source as _ses
     full_meta: dict = {
@@ -517,14 +534,21 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
         if region.get("kind") == "state":
             full_meta["stateCode"] = region.get("code") or ""
             full_meta["stateName"] = region.get("name") or ""
+    # A republish states the applicability the opened version stated; a new version
+    # names its region, as a build does.
+    with reactive.isolate():
+        opened = origin_bundle(state.assessment_source())
+    applicability = (opened or {}).get("applicability")
+    if applicability is None and region:
+        applicability = region.get("name")
+    if applicability:
+        full_meta["applicability"] = applicability
     if meta:
         full_meta.update({k: v for k, v in meta.items() if v is not None})
     # A pressure-screen build (methodology 0.12) keeps its reference statement
     # through an interactive republish: the fixed-criteria metrics, each curve's
     # reference support, the withheld list. A legacy session passes through.
-    from streamcurves import owner_curves as _oc
-    from streamcurves import pressure_evidence as _pe
-    if reference_build and reference_build.get("method") == _pe.METHOD:
+    if pressure:
         # SELECT-04's drop and the owner's curve decisions (REF-15), through the one
         # transform a build runs, so the workspace publishes what a build would
         curve_rows, mapping, metric_config = _pe.apply_reference_build(

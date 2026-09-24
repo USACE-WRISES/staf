@@ -43,7 +43,7 @@ from . import published_benchmark
 from . import curve_stability, curves, easi_screening, field_methods, fixed_criteria
 from . import metric_map
 from . import methodology, nrsa, nrsa_dataset, run_state, staf_library
-from .deep_export import deep_slug
+from .deep_export import deep_slug, pooled_layers
 from . import discrimination as dz
 from . import reference_pool as rp
 from . import reference_screen as rscreen
@@ -191,15 +191,10 @@ def layered_row(row: dict, class_rows: list[dict], record: dict) -> dict:
 
     A layer is named by its class KEY (``ge_2``), the value the data column
     holds, so a bundle rebuilt from a reopened session names its layers the
-    same way. The ``stratifier`` block carries the words a person reads."""
-    layers = [{"stratum": "", "curve_points": row.get("curve_points")}]
-    for srow in class_rows or []:
-        if str(srow.get("curve_status") or "complete") != "complete":
-            continue
-        layers.append({"stratum": str(srow.get("stratum") or ""),
-                       "curve_points": srow.get("curve_points")})
+    same way. The ``stratifier`` block carries the words a person reads. A
+    republish reads the stored rows with the same rule (``deep_export.pooled_layers``)."""
     out = dict(row)
-    out["all_strata"] = layers
+    out["all_strata"] = pooled_layers(row, class_rows)
     return out
 
 
