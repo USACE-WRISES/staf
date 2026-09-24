@@ -151,9 +151,10 @@ def _reason(alt: str, study: dict) -> str:
             "adopted Alternative 2 on 2026-09-16." + finding)
 
 
-LEGACY_REASON = ("The historical baseline criteria, kept in the method (EASI_CRITERIA_SET=legacy). "
-                 "The 2026-09-15 study treated it as a separate definition, not a control. The "
-                 "decision that replaced it is not recorded here.")
+LEGACY_REASON = ("The historical baseline criteria, which EASI still offers as its legacy criteria "
+                 "set. The 2026-09-15 study treated them as a separate definition, not a control. "
+                 "The decision that replaced them is not recorded here.")
+STUDY_RULE = "study-2026-09-15"
 
 
 def import_alternatives(project: EasiProject, study_dir: Path, *, imported_by: str,
@@ -185,6 +186,13 @@ def import_alternatives(project: EasiProject, study_dir: Path, *, imported_by: s
             if cand["basisDigest"] == current[fid]:
                 continue
             cand["evidence"] = evidence
+            found = (study.get("findings") or {}).get(alt_id) or {}
+            if found and found.get("eligible") is False:
+                # the study's own simplification rule found it not eligible; the register says so
+                cand["eligibility"] = {
+                    "status": "excluded",
+                    "reasons": [f"Not eligible under the 2026-09-15 study's rule: {found.get('finding')}"],
+                    "checks": [{"id": STUDY_RULE, "status": "fail", "detail": found.get("finding")}]}
             group.append(cand)
         # functions that read one changed curve family move together
         for c in group:
@@ -195,10 +203,12 @@ def import_alternatives(project: EasiProject, study_dir: Path, *, imported_by: s
             if c["candidateKey"] in have:
                 continue
             reg.setdefault("candidates", []).append(c)
+            excluded = (c.get("eligibility") or {}).get("status") == "excluded"
             reg.setdefault("decisions", []).append({
                 "decisionId": f"dec-{c['candidateKey'][5:]}-import", "candidateKey": c["candidateKey"],
                 "functionId": c["identity"]["functionId"], "decision": "not_selected",
-                "rule": "owner-adoption-2026-09-16" if alt_id != "legacy" else "historical-baseline",
+                "rule": (STUDY_RULE if excluded else
+                         "owner-adoption-2026-09-16" if alt_id != "legacy" else "historical-baseline"),
                 "reason": reason, "decidedBy": "imported", "who": None,
                 "when": ADOPTION["date"] if alt_id != "legacy" else None,
                 "basisDigest": c["basisDigest"], "supersedes": None})
@@ -224,6 +234,16 @@ def import_alternatives(project: EasiProject, study_dir: Path, *, imported_by: s
         offer("legacy", rows, project.curves(),
               {"criteriaSet": "legacy", "file": LEGACY_FILE, "sha256": _sha(raw)},
               "Legacy criteria", LEGACY_REASON, {"file": LEGACY_FILE, "sha256": _sha(raw)})
+    a2 = (study.get("findings") or {}).get(ADOPTED) or {}
+    changed = {c["identity"]["functionId"] for c in reg.get("candidates", [])
+               if (c["identity"].get("sourceRef") or {}).get("alternative") == "alternative-1"}
+    if a2.get("finding"):
+        note = (f"The 2026-09-15 study found Alternative 2 not eligible under its own rule: "
+                f"{a2['finding']} The owner adopted it on {ADOPTION['date']}.")
+        for c in reg.get("candidates", []):
+            if (c["identity"].get("sourceRef") or {}).get("importedFrom") and \
+                    c["identity"].get("functionId") in changed and note not in (c.get("limitations") or []):
+                c["limitations"] = list(c.get("limitations") or []) + [note]
     studies = [s for s in reg.get("studies") or [] if s.get("id") != STUDY_ID]
     studies.append({"id": STUDY_ID, "completionSha256": study["completionSha256"],
                     "manifestSha256": study["manifestSha256"], "reportSha256": study["reportSha256"],
@@ -295,7 +315,8 @@ def affected(project: EasiProject, key: str) -> list[dict]:
     return [{"functionId": f, "candidateKey": k} for f, k in out.items()]
 
 
-def adopt(project: EasiProject, key: str, *, by: str, reason: str, at: Optional[str] = None) -> EasiProject:
+def adopt(project: EasiProject, key: str, *, by: str, reason: str, at: Optional[str] = None,
+          allow_excluded: bool = False) -> EasiProject:
     """Select a candidate for its function in this draft: its catalog entry and curve sets
     replace the current ones (with every linked function), and the register records who
     selected it, when and why, and that the one it replaces is no longer selected. Adopting
@@ -308,6 +329,10 @@ def adopt(project: EasiProject, key: str, *, by: str, reason: str, at: Optional[
     if not project.is_revision():
         raise AlternativeError("Only a draft revision can change its selection; start a revision "
                                "of this version first.")
+    target = _cand(project, key)
+    if (target.get("eligibility") or {}).get("status") == "excluded" and not allow_excluded:
+        raise AlternativeError("This alternative is excluded: "
+                               + " ".join((target.get("eligibility") or {}).get("reasons") or []))
     at = at or E._now()
     moves = affected(project, key)
     cat = copy.deepcopy(project.catalog())
@@ -348,15 +373,16 @@ def adopt(project: EasiProject, key: str, *, by: str, reason: str, at: Optional[
         cand = _cand(new, target)
         basis = cand["basisDigest"] if cand.get("definition") else R.function_basis(new, fid)
         was = prior.get("selectedCandidate")
-        n = sum(1 for d in reg.get("decisions", []) if d.get("candidateKey") == target)
+        from ..candidates import decision_id
         reg.setdefault("decisions", []).append({
-            "decisionId": f"dec-{target[5:]}-{n + 1}", "candidateKey": target, "functionId": fid,
+            "decisionId": decision_id(reg.get("decisions", []), target, fid, "adopt", who, at, why),
+            "candidateKey": target, "functionId": fid,
             "decision": "selected", "rule": "person", "reason": why, "decidedBy": "person",
             "who": who, "when": at, "basisDigest": basis, "supersedes": prior.get("decisionId")})
         if was and was != target:
-            m = sum(1 for d in reg.get("decisions", []) if d.get("candidateKey") == was)
             reg["decisions"].append({
-                "decisionId": f"dec-{was[5:]}-{m + 1}", "candidateKey": was, "functionId": fid,
+                "decisionId": decision_id(reg["decisions"], was, fid, "replaced", who, at, why),
+                "candidateKey": was, "functionId": fid,
                 "decision": "not_selected", "rule": "person", "reason": why, "decidedBy": "person",
                 "who": who, "when": at, "basisDigest": prior.get("basis"), "supersedes": None})
     new.history.append({"action": "adopt_candidate", "at": at, "by": who, "kind": "analytical",

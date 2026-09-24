@@ -110,11 +110,12 @@ def test_the_import_records_the_owners_choice_as_imported_and_the_study_by_hash(
     statuses = {r["candidate"]["identity"]["sourceRef"].get("alternative") or
                 r["candidate"]["identity"]["sourceRef"].get("criteriaSet") or "origin": r["status"]
                 for r in low["rows"]}
+    # the study's report marks Alternative 4 not eligible under its rule: excluded, with the finding
     assert statuses == {"origin": "selected", "alternative-1": "eligible_not_selected",
-                        "alternative-4": "eligible_not_selected", "legacy": "eligible_not_selected"}
+                        "alternative-4": "excluded", "legacy": "eligible_not_selected"}
     decisions = {d["candidateKey"]: d for d in imported.register["decisions"]}
     a4 = decisions[_key(imported, "low-flow-baseflow-dynamics", "alternative-4")]
-    assert a4["decidedBy"] == "imported" and a4["when"] == "2026-09-16"
+    assert a4["decidedBy"] == "imported" and a4["when"] == "2026-09-16" and a4["rule"] == A.STUDY_RULE
     assert "Test finding four." in a4["reason"] and "Alternative 2" in a4["reason"]
     s = imported.register["studies"][0]
     assert s["recommendation"] == "alternative-1" and s["adopted"] == "alternative-2"
@@ -167,7 +168,7 @@ def test_adopting_moves_the_curve_family_together_and_going_back_restores_every_
 def test_a_draft_that_adopted_an_alternative_saves_and_reopens_whole(imported, tmp_path):
     draft = eio.fork(imported, by="Owner")
     adopted = A.adopt(draft, _key(draft, "carbon-processing", "alternative-3"), by="Owner",
-                      reason="national references for the natural corridor curves")
+                      reason="national references for the natural corridor curves", allow_excluded=True)
     path = eio.write_project(adopted, tmp_path / "EASI.streamcurves", name="EASI")
     _, back = eio.read_project(path)
     assert back.register == adopted.register and back.files == adopted.files
@@ -201,7 +202,9 @@ def test_an_sqt_curve_for_an_easi_proxy_is_kept_out_as_field_against_desktop(pla
     row = {r["functionId"]: r for r in reg.status_rows(got)}["floodplain-connectivity"]
     sqt_row = next(x for x in row["rows"] if x["candidate"]["identity"]["sourceKind"] == "sqt")
     assert sqt_row["status"] == "excluded" and sqt_row["decision"]["rule"] == "field-vs-desktop"
-    assert sqt_row["decision"]["who"] == "Reviewer" and row["decidedBy"] == "imported"
+    # the exclusion is the rule's outcome; the person is who added the curve
+    assert sqt_row["decision"]["decidedBy"] == "automated" and sqt_row["decision"]["who"] is None
+    assert sqt_row["candidate"]["addedBy"] == "Reviewer" and row["decidedBy"] == "imported"
     with pytest.raises(ValueError, match="already"):
         reg.add_sqt_candidate(got, er, "floodplain-connectivity", by="Reviewer", at="2026-09-23T00:00:00Z")
 
@@ -215,9 +218,63 @@ def test_a_published_version_keeps_the_register_in_its_provenance_and_out_of_its
     assert eio.publish(imported, author="tester") == 1
     prov = json.loads((lib.version_dir(eio.ASSESSMENT_ID, 1) / lib.PROVENANCE_FILE).read_text(encoding="utf-8"))
     rows = prov["candidateRegister"]["rows"]
-    assert {r["status"] for r in rows} == {"selected", "eligible_not_selected"}
+    assert {r["status"] for r in rows} <= {"selected", "eligible_not_selected", "excluded"}
+    assert {"selected", "eligible_not_selected"} <= {r["status"] for r in rows}
     assert prov["candidateRegister"]["studies"][0]["adopted"] == "alternative-2"
     method = lib.version_dir(eio.ASSESSMENT_ID, 1) / "method"
     text = "".join(p.read_text(encoding="utf-8", errors="replace") for p in method.rglob("*.json"))
     keys = {r["candidateKey"] for r in rows if r["status"] != "selected"}
     assert keys and not any(k in text for k in keys) and "eligible_not_selected" not in text
+
+
+@pytest.mark.skipif(not (REAL_STUDY / "completion.json").is_file(),
+                    reason="the 2026-09-15 alternatives study is not on this machine")
+def test_every_real_alternative_adopted_in_a_draft_builds_a_package_easi_accepts(plain):
+    """Alternatives 1 and 4 use Level II curve sets and Alternative 3 national-only sets:
+    a draft that adopts any of them must still export (review A, H1)."""
+    got = A.import_alternatives(plain, REAL_STUDY, imported_by="Maintainer", at="2026-09-23T00:00:00Z")
+    draft = eio.fork(got, by="Owner")
+    keys = [c["candidateKey"] for c in draft.register["candidates"]
+            if c["identity"]["sourceKind"] == "imported_alternative" and c.get("definition")]
+    stratifiers = set()
+    for key in keys:
+        adopted = A.adopt(draft, key, by="Owner", reason="testing that the adopted draft exports",
+                          allow_excluded=True)
+        pkg = eio.consumer_package(adopted)          # raises when the files do not validate
+        stratifiers |= {s.get("stratifier") for s in json.loads(
+            pkg.files["reference-curves.json"].decode("utf-8"))["sets"].values()}
+    assert {"l2", "national"} <= stratifiers
+
+
+@pytest.mark.skipif(not (REAL_STUDY / "completion.json").is_file(),
+                    reason="the 2026-09-15 alternatives study is not on this machine")
+def test_a_level_ii_and_a_national_alternative_score_in_a_worker(plain):
+    from streamcurves.easi_method import evaluate
+    if eio.easi_source(APP.parent.parent) is None:
+        pytest.skip("apps/easi is not present (the preview cases come from it)")
+    cases = {"cases": eio.export_cases(APP.parent / "easi")["cases"][:40]}
+    got = A.import_alternatives(plain, REAL_STUDY, imported_by="Maintainer", at="2026-09-23T00:00:00Z")
+    draft = eio.fork(got, by="Owner")
+    for alt in ("alternative-1", "alternative-3"):
+        adopted = A.adopt(draft, _key(draft, "habitat-provision", alt), by="Owner",
+                          reason="testing that the adopted draft scores", allow_excluded=True)
+        out = evaluate.run_cases(eio.consumer_package(adopted), cases)
+        assert out["identity"]["packageDigest"] == adopted.package_digest
+        assert len(out["results"]) == 40
+
+
+@pytest.mark.skipif(not (REAL_STUDY / "completion.json").is_file(),
+                    reason="the 2026-09-15 alternatives study is not on this machine")
+def test_the_studys_own_eligibility_is_recorded(plain):
+    got = A.import_alternatives(plain, REAL_STUDY, imported_by="Maintainer", at="2026-09-23T00:00:00Z")
+    rows = {r["functionId"]: r for r in reg.status_rows(got)}
+    low = {x["candidate"]["identity"]["sourceRef"].get("alternative")
+           or x["candidate"]["identity"]["sourceRef"].get("criteriaSet") or "origin": x
+           for x in rows["low-flow-baseflow-dynamics"]["rows"]}
+    assert low["alternative-3"]["status"] == low["alternative-4"]["status"] == "excluded"
+    assert low["alternative-3"]["decision"]["rule"] == A.STUDY_RULE
+    assert low["alternative-1"]["status"] == "eligible_not_selected"
+    assert any("not eligible under its own rule" in x for x in low["origin"]["candidate"]["limitations"])
+    draft = eio.fork(got, by="Owner")
+    with pytest.raises(A.AlternativeError, match="excluded"):
+        A.adopt(draft, low["alternative-3"]["candidateKey"], by="Owner", reason="an excluded alternative, refused")

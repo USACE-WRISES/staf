@@ -39,6 +39,44 @@ def load_members(package_dir: Path):
     return members, values, panels
 
 
+def recipe_check(package_dir: Path) -> dict:
+    """The running curve engine and fit constants against those a package records (its
+    ``recipe`` block): ``{"same", "differences", "engine": {"recorded", "running"}}``. A refit
+    is expected to be exact only when they are the same."""
+    import hashlib
+    from .. import evidence_store as evs
+    from ..paths import ROOT
+    from . import fit_recipe as fr
+    recipe = evs.read_manifest(Path(package_dir)).get("recipe") or {}
+    engine = recipe.get("engine") or {}
+    raw = (ROOT / "streamcurves" / "curves.py").read_bytes()
+    running = hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest()
+    diffs = []
+    if engine.get("sha256_lf") and engine["sha256_lf"] != running:
+        diffs.append("curve engine")
+    here = {"indexBands": list(fr.INDEX_BANDS), "pressureRhoMax": fr.PRESSURE_RHO_MAX,
+            "splitFloor": fr.SPLIT_FLOOR,
+            "panelFloors": {"complete": fr.FLOOR_COMPLETE, "exploratory": fr.FLOOR_EXPLORATORY},
+            "minStratum": fr.MIN_STRATUM, "thinningSeed": fr.SEED,
+            "screen": {"strict": fr.STRICT, "relaxed": fr.RELAXED, "frame": fr.FRAME_RULES,
+                       "pressureVariables": list(fr.PRESSURE_VARIABLES)}}
+    recorded = recipe.get("constants") or {}
+
+    def norm(v):
+        return json.loads(json.dumps(v, sort_keys=True, default=list))
+
+    for key, value in here.items():
+        if key == "screen":
+            for part, val in value.items():
+                if part in (recorded.get("screen") or {}) and norm(recorded["screen"][part]) != norm(val):
+                    diffs.append(f"screen {part}")
+        elif key in recorded and norm(recorded[key]) != norm(value):
+            diffs.append(key)
+    return {"same": not diffs, "differences": diffs,
+            "engine": {"recorded": engine.get("sha256_lf"), "running": running},
+            "checkedConstants": bool(recorded)}
+
+
 def regenerate_members(universe_dir: Path):
     """Every level's reference panel members drawn again from an ``easi-dev-universe``
     package: the builder's screens and seeded thinning (``fit_recipe.select_panels``) over the
@@ -193,16 +231,25 @@ def _close(a, b, tol: float) -> bool:
     return a == b
 
 
+_KEY_FIELDS = {"quantity", "level", "stratum", "split", "points", "points_json"}
+
+
 def compare_registry(refit: list[dict], stored: list[dict], *, tol: float = 0.0) -> dict:
     """Refit rows against a stored registry: rows matched by (quantity, level, stratum, split),
-    every recorded field and every knot compared (exactly unless ``tol``)."""
+    every field both carry and every knot compared (exactly unless ``tol``). A stored field the
+    refit does not produce is listed in ``notRefit``, never counted as agreeing."""
     key = lambda r: (r["quantity"], r["level"], r["stratum"], r.get("split") or "")  # noqa: E731
     a = {key(r): r for r in refit}
     b = {key(r): r for r in stored}
     differing = []
+    not_refit: set = set()
+    compared_fields: set = set()
     for k in sorted(set(a) & set(b)):
         x, y = a[k], b[k]
-        fields = [f for f in REGISTRY_FIELDS if not _close(x.get(f), y.get(f), tol)]
+        both = sorted((set(x) & set(y)) - _KEY_FIELDS)
+        compared_fields.update(both)
+        not_refit.update(set(y) - set(x) - _KEY_FIELDS)
+        fields = [f for f in both if not _close(x.get(f), y.get(f), tol)]
         px = x.get("points") or []
         py = y.get("points")
         if py is None:
@@ -214,12 +261,17 @@ def compare_registry(refit: list[dict], stored: list[dict], *, tol: float = 0.0)
             differing.append({"key": list(k), "fields": fields})
     return {"compared": len(set(a) & set(b)), "onlyRefit": sorted(map(list, set(a) - set(b))),
             "onlyStored": sorted(map(list, set(b) - set(a))), "differing": differing,
+            "fieldsCompared": sorted(compared_fields), "notRefit": sorted(not_refit),
             "identical": not differing and set(a) == set(b)}
 
 
 def compare_curves(refit: dict, artifact: dict) -> dict:
     """Refit operational curves against a method file's reference curves, field by field."""
-    out = {"curves": 0, "identical": 0, "differing": [], "missing": []}
+    out = {"curves": 0, "identical": 0, "differing": [], "missing": [], "extra": []}
+    for set_id, got_set in (refit or {}).items():
+        for key in got_set or {}:
+            if key not in (((artifact.get("sets") or {}).get(set_id) or {}).get("curves") or {}):
+                out["extra"].append(f"{set_id}/{key}")
     for set_id, s in (artifact.get("sets") or {}).items():
         for key, curve in (s.get("curves") or {}).items():
             out["curves"] += 1
@@ -242,10 +294,10 @@ def compare_curves(refit: dict, artifact: dict) -> dict:
                 else:
                     diffs[field] = [a, b]
             out["differing"].append({"curve": f"{set_id}/{key}", "diffs": diffs})
-    out["allIdentical"] = out["identical"] == out["curves"] and not out["missing"]
+    out["allIdentical"] = out["identical"] == out["curves"] and not out["missing"] and not out["extra"]
     return out
 
 
-__all__ = ["load_members", "regenerate_members", "same_members", "fit_registry",
+__all__ = ["load_members", "regenerate_members", "same_members", "fit_registry", "recipe_check",
            "national_entrenchment", "operational_curves",
            "compare_registry", "compare_curves", "REGIONAL_SETS", "ENTRENCHMENT", "SLOPE_CLASSES"]

@@ -54,6 +54,7 @@ VERSION = "2026.09.15-baseline"
 LIVE_EROM = Path(r"D:\Data\easi-national\national\erom.parquet")
 STUDY = Path(r"D:\Data\easi-national\review\alternative-studies\2026-09-15-controlled-alternatives")
 ROLLOUT = Path(r"D:\Data\easi-national\review\alternative-2-rollout")
+RIVANNA_CHECK = Path(r"D:\Data\staf-authoring\phase3\rivanna_spot_check.json")
 OPERATIONAL_BUILD = "3d8a4711c5414d4e9e76ca2233815783"
 OPERATIONAL_METHOD = "b2e3033116e3"
 MONTHS = tuple(f"qe_{m:02d}" for m in range(1, 13))
@@ -138,6 +139,12 @@ class Package:
         return rel
 
     def finish(self, **manifest) -> dict:
+        # an archive's bytes are a function of its content: when and from which commit it was
+        # exported go to the export's index, never into the package
+        producer = dict(manifest.pop("producer", None) or {})
+        exported = {"exportedAt": producer.pop("created", None), "exporterCommit": producer.pop("commit", None)}
+        if producer:
+            manifest["producer"] = producer
         data_digest = "sha256:" + sha(canonical({k: v["sha256"] for k, v in sorted(self.files.items())}))
         doc = {"schema": SCHEMA, "schemaVersion": SCHEMA_VERSION, "packageId": self.id,
                "version": VERSION, "dataDigest": data_digest,
@@ -152,7 +159,9 @@ class Package:
         write_zip(self.dir, zpath)
         return {"packageId": self.id, "packageDigest": "sha256:" + digest, "dataDigest": data_digest,
                 "zip": zpath.name, "zipBytes": zpath.stat().st_size, "zipSha256": sha_file(zpath),
-                "bytes": sum(v["bytes"] for v in self.files.values())}
+                "bytes": sum(v["bytes"] for v in self.files.values()),
+                "dependsOn": list(doc.get("dependsOn") or []),
+                **{k: v for k, v in exported.items() if v}}
 
 
 def package_digest(doc: dict) -> str:
@@ -162,7 +171,8 @@ def package_digest(doc: dict) -> str:
 
 
 def write_zip(folder: Path, zpath: Path) -> None:
-    """Deterministic: sorted entries, fixed times; parquet stored, text deflated."""
+    """Deterministic: sorted entries, fixed times, every entry stored (parquet compresses its
+    own columns; stored text keeps the bytes independent of the zlib build)."""
     names = ["evidence.json"] + sorted(str(p.relative_to(folder)).replace("\\", "/")
                                        for p in (folder / "data").rglob("*") if p.is_file())
     tmp = zpath.with_suffix(".part")
@@ -170,8 +180,7 @@ def write_zip(folder: Path, zpath: Path) -> None:
         for name in names:
             info = zipfile.ZipInfo(name, date_time=ZIP_TIME)
             info.external_attr = 0o644 << 16
-            info.compress_type = (zipfile.ZIP_STORED if name.endswith(".parquet")
-                                  else zipfile.ZIP_DEFLATED)
+            info.compress_type = zipfile.ZIP_STORED
             z.writestr(info, (folder / name).read_bytes())
     tmp.replace(zpath)
 
@@ -302,6 +311,19 @@ def export_members(root, out: Path, records: dict, producer: dict, universe_dige
     members = _members(root)
     values, dictionary, missing = member_values(root, members)
     pkg.parquet(values, "member_values.parquet")
+    derived = sorted(k for k, d in dictionary.items() if str(d.get("source", "")).startswith("values."))
+    if derived:
+        missing.append({"item": "the cross-section geometry, bankfull estimates and derivation version "
+                                f"behind {', '.join(derived)}",
+                        "why": "the baseline snapshot froze the derived values (values.parquet) but not the "
+                               "geometry, the derivation version or the receipts of the sources it read",
+                        "remedy": "these values can be reviewed and refit here but not rederived; rerunning "
+                                  "the builder's values stage (tools/easi-national) makes a new snapshot, "
+                                  "with its own values, not this one"})
+    missing.append({"item": "the vintages of the StreamCat, NLCD and EROM records behind the member values",
+                    "why": "the snapshot names its tables, not the release of each source they came from",
+                    "remedy": "none from this package; a rebuild with tools/easi-national records the "
+                              "sources it reads"})
     erom, erom_check = member_erom(root, np.asarray(values.column("comid").to_numpy(), dtype=np.int64))
     pkg.parquet(erom, "member_erom.parquet")
     dictionary.update({m: {"units": "cfs", "definition": f"EROM mean flow, month {m[-2:]}"} for m in MONTHS})
@@ -462,6 +484,17 @@ def export_universe(root, out: Path, producer: dict, *, check: bool = True) -> d
     pkg.parquet(table, "universe.parquet", order="the landscape table's row order (the thinning key "
                                                 "depends on it)")
     checks = {}
+    if RIVANNA_CHECK.is_file():
+        spot = json.loads(RIVANNA_CHECK.read_text(encoding="utf-8"))
+        checks["liveStreamCatSpotCheck"] = {
+            "scope": f"HUC8 {spot.get('huc8')}: {spot.get('memberComids')} panel member reaches, "
+                     f"{len(spot.get('compare') or {})} StreamCat-derived variables fetched live "
+                     "and compared with the packaged member values; EROM, geometry and strata "
+                     "columns were not part of it",
+            "variables": {k: {x: v.get(x) for x in ("comparable", "identicalAtStoredPrecision",
+                                                     "maxAbsDifference")}
+                          for k, v in sorted((spot.get("compare") or {}).items())},
+            "sha256": sha_file(RIVANNA_CHECK)}
     if check:
         t0 = time.perf_counter()
         members = regenerate_members(table)
@@ -491,8 +524,10 @@ def export_universe(root, out: Path, producer: dict, *, check: bool = True) -> d
                      "NHDPlus and EROM needs the builder's pipeline and network access."],
         unavailable=[{"item": "the StreamCat, NHDPlus V2 and EROM source records behind the landscape "
                               "table", "why": "large public federal datasets, re-downloadable",
-                      "remedy": "run the builder's landscape stage for a HUC8 or the country "
-                                "(tools/easi-national); a HUC8 spot check is recorded with this package"}],
+                      "remedy": "run the builder's landscape stage (tools/easi-national) for a HUC8 or "
+                                "the country and compare its columns with universe.parquet"
+                                + ("; one HUC8 of StreamCat-derived values was compared this way (the "
+                                   "liveStreamCatSpotCheck check)" if RIVANNA_CHECK.is_file() else "")}],
         producer=producer)
 
 
@@ -561,8 +596,12 @@ def export_eval_refs(out: Path, producer: dict) -> dict:
         redistribution={"status": "internal-review", "notes": "Study receipts for the owner's review."},
         limitations=["NRSA stations screened by EASI-derived variables are not independent of EASI "
                      "for agreement statistics."],
-        unavailable=[{"item": "the study's per-reach results", "why": "large; reviewable in place",
-                      "remedy": "open the study folder named in references.json"}],
+        unavailable=[{"item": "the study's per-reach results, panels and code",
+                      "why": "kept with the study for review; the receipts here are what its decision "
+                             "rests on",
+                      "remedy": "ask the EASI maintainer for the study archive (the 2026-09-15 controlled "
+                                "alternatives study; its completion record's SHA-256 is in "
+                                "study_completion.json)"}],
         producer=producer)
 
 
@@ -584,7 +623,14 @@ def export_operational(out: Path, producer: dict) -> dict:
                                                                         "path": str(ROLLOUT)}],
         recipe={}, dependsOn=[], redistribution={"status": "internal-review", "notes": ""},
         limitations=["The national dataset is a development record, not an assessment product."],
-        unavailable=[], producer=producer)
+        unavailable=[{"item": "the national dataset's files",
+                      "why": "a separate product, published as the rolling easi-national-current "
+                             "prerelease of the STAF repository; this package names one build by hashes",
+                      "remedy": "download that release's manifest.json and compare its SHA-256 with "
+                                "staging/manifest.json here; when they differ the release holds a later "
+                                f"build, and build {OPERATIONAL_BUILD[:8]} (method {OPERATIONAL_METHOD}) is "
+                                "rebuilt with tools/easi-national"}],
+        producer=producer)
 
 
 # --------------------------------------------------------------------------- #
@@ -600,6 +646,21 @@ def verify(folder: Path) -> dict:
     data_digest = "sha256:" + sha(canonical({k: v["sha256"] for k, v in sorted(doc["files"].items())}))
     return {"packageId": doc["packageId"], "files": len(doc["files"]), "damaged": bad,
             "dataDigestOk": data_digest == doc["dataDigest"], "packageDigest": "sha256:" + package_digest(doc)}
+
+
+def check_dependencies(out: Path) -> list[str]:
+    """Every ``dependsOn`` of every package in ``out`` names a package there with that data."""
+    have = {}
+    for path in sorted(out.glob("*/evidence.json")):
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        have[doc["packageId"]] = doc
+    bad = []
+    for pid, doc in sorted(have.items()):
+        for dep in doc.get("dependsOn") or []:
+            other = have.get(dep.get("packageId"))
+            if other is None or other.get("dataDigest") != dep.get("dataDigest"):
+                bad.append(f"{pid} needs {dep.get('packageId')} {dep.get('dataDigest', '')[:19]}")
+    return bad
 
 
 def main(argv=None) -> int:
@@ -625,24 +686,34 @@ def main(argv=None) -> int:
     results = {}
     t0 = time.perf_counter()
     universe = members = None
+
+    def on_disk(package_id: str):
+        path = out / package_id / "evidence.json"
+        return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+
+    def needs(package_id: str, got):
+        got = got or on_disk(package_id)
+        if got is None:
+            raise SystemExit(f"this export depends on {package_id}; export it first "
+                             f"(--package {package_id}) into {out}")
+        return got
+
     if "easi-dev-universe" in wanted:
         universe = export_universe(root, out, producer, check=not a.skip_universe_check)
         results["easi-dev-universe"] = universe
         print(json.dumps(universe), flush=True)
     if "easi-dev-members" in wanted:
-        members = export_members(root, out, records, producer, universe and universe["dataDigest"])
+        members = export_members(root, out, records, producer,
+                                 needs("easi-dev-universe", universe)["dataDigest"])
         results["easi-dev-members"] = members
         print(json.dumps(members), flush=True)
     if "easi-dev-fits" in wanted:
-        if members is None:
-            members = json.loads((out / "easi-dev-members" / "evidence.json").read_text(encoding="utf-8"))
-        results["easi-dev-fits"] = export_fits(root, out, records, producer, members["dataDigest"])
+        results["easi-dev-fits"] = export_fits(root, out, records, producer,
+                                               needs("easi-dev-members", members)["dataDigest"])
         print(json.dumps(results["easi-dev-fits"]), flush=True)
     if "easi-dev-universe-values" in wanted:
-        if universe is None and (out / "easi-dev-universe" / "evidence.json").is_file():
-            universe = json.loads((out / "easi-dev-universe" / "evidence.json").read_text(encoding="utf-8"))
         results["easi-dev-universe-values"] = export_universe_values(
-            root, out, producer, universe and universe["dataDigest"])
+            root, out, producer, needs("easi-dev-universe", universe)["dataDigest"])
         print(json.dumps(results["easi-dev-universe-values"]), flush=True)
     if "easi-eval-refs" in wanted:
         results["easi-eval-refs"] = export_eval_refs(out, producer)
@@ -650,6 +721,9 @@ def main(argv=None) -> int:
     if "easi-operational-ref" in wanted:
         results["easi-operational-ref"] = export_operational(out, producer)
         print(json.dumps(results["easi-operational-ref"]), flush=True)
+    unresolved = check_dependencies(out)
+    if unresolved:
+        raise SystemExit("unresolved package dependencies: " + "; ".join(unresolved))
     index = out / "index.json"
     prior = json.loads(index.read_text(encoding="utf-8")) if index.is_file() else {}
     prior.update(results)

@@ -4,8 +4,7 @@ StreamCurves develops, compares, selects, versions and publishes the STAF assess
 Two applications apply them: **DEEP** runs detailed (field) assessments and **EASI** runs the
 desktop screening assessment. This document is the contract between the authoring app, the
 assessment library (`apps/library`, format in `apps/library/README.md`) and the two consumers.
-A section marked *planned* is the agreed design the authoring-foundation branch implements; the
-others describe code that exists.
+Every section describes code that exists on the authoring-foundation branch.
 
 ## Producers and consumers
 
@@ -18,7 +17,7 @@ others describe code that exists.
 | Library catalog and manifests | `library.publish_version` (DEEP) and `library.publish_easi_version` (EASI), maintainer checkout, `STAF_LIBRARY_PUBLISH=1` | StreamCurves, DEEP, `scripts/library_release.py` |
 | Release feeds `library.json` / `library-v2.json` | `scripts/library_release.py` (CI) | StreamCurves gallery, DEEP remote library |
 | Evidence packages | `tools/easi-national/builder/evidence_export.py` (EASI); the NRSA archive builder (DEEP, in-app) | StreamCurves evidence store (`streamcurves/evidence_store.py`), refit (`easi_method/refit.py`) and exploration |
-| SQT source registry (*planned*) | `scripts/build_sqt_registry.py` | StreamCurves source dialog and candidate register |
+| SQT source registry `data/sqt/registry.json` | `scripts/build_sqt_registry.py` (from the metric-library CSV, the adapted assessments and any originals) | the Select final curves picker, `candidates.sqt_candidate`, REF-15's `sqt` source |
 
 A consumer never writes what it reads. After the owner adopts the authority flip, a producer that
 feeds a method file (the metric-library TSV, the NARS-9 fetch) no longer writes `apps/easi/data`:
@@ -73,7 +72,7 @@ Analytical identity is separate from packaging, review and lifecycle.
   (`dataDigest`); the package digest is the canonical manifest without its producer block, so
   rewording a description never breaks a `dependsOn` reference and exporting the same data and
   description again gives the same package digest.
-- **Candidate key and basis digest** (*planned*, see Candidates).
+- **Candidate key and basis digest**: what a candidate is (its identity) and what it holds (its analytical content); see Candidates and final selection.
 - **Project id**: a UUID per project file (`project_meta`), unrelated to any analytical identity.
 
 Author notes, unselected alternatives, reviewer comments and lifecycle records never enter a
@@ -186,11 +185,14 @@ decisions, evidence references, recipes, notes, history), `easi/method/<file>`,
 `easi/calculator/<file>`, `easi/cases.json` and `easi/base/<file>` (the origin's bytes of each
 method file a draft changed, so the version it came from is recoverable from the project alone and
 checked against the origin's package digest); an EASI project's session is empty and its interface
-state (the current stage) rides in `project.json`. A DEEP project stays format 1
-unless it carries content an older app would drop (added SQT candidates, final-selection
-decisions). StreamCurves 1.0.0 refuses a format-2 file with "update the app" instead of opening it
-and dropping what it cannot read. Packs are named with the pack schema they hold (`-p1-`, `-p2-`),
-and every DEEP pack stays format 1.
+state (the current stage) rides in `project.json`. A DEEP project is written as format 2 when its
+session holds what an older app would drop on a re-save (curves added for comparison or reasons
+recorded in the candidate register) or misread (an owner decision only the REF-15 extension
+applies), and as format 1 otherwise (`project_file.required_format`). StreamCurves 1.0.0 refuses a
+format-2 file with "update the app" instead of opening it and dropping what it cannot read. Packs
+are named with the pack schema they hold (`-p1-`, `-p2-`). A DEEP pack stays format 1 unless its
+session holds an extension decision; its candidate register alone keeps it format 1, because the
+version's provenance holds that record and every installed app can still open the version.
 
 ## Library feeds
 
@@ -234,7 +236,11 @@ Rules:
   crossings are recomputed and a curve that misses either break is refused. An edit returned to
   the origin's values restores the origin's bytes exactly (labels and identity included), so an
   undone experiment never leaves a changed method behind. No edit trail is written into a method
-  file: history and provenance carry it.
+  file: history and provenance carry it. A text edit (title, label, limitations, rationale, basis
+  class) scores nothing differently and raises no review flag, but it changes the catalog's bytes,
+  so the package digest and the method version change with it: activated in EASI, it marks the
+  stored nationwide results as from another method until they are recomputed. The page offers no
+  text edit today (`edit.set_text` is a function call), and a basis class must be one EASI accepts.
 - Operators, inputs, data routes, derivations, weights, anchors and the rollup are the
   evaluator's (its digest is shown) and change only in EASI itself.
 - An analytical change flags its function in Final selection. A person confirms the selection
@@ -260,15 +266,18 @@ stays visible when agreement between the two is discussed.
 {
   "schema": "staf-evidence-package", "schemaVersion": 1,
   "packageId": "easi-dev-members", "version": "2026.09.15-baseline",
+  "title": "...", "description": "...",
   "roles": ["development"], "reproducibility": "refittable",
   "dataDigest": "sha256:...",
-  "files": {"members.parquet": {"bytes": 0, "sha256": "...", "rows": 0, "columns": ["..."]}},
-  "dictionary": {"woody_wsrp100": {"units": "%", "definition": "..."}},
-  "sources": [{"id": "streamcat", "citation": "...", "vintage": "...", "url": "..."}],
-  "recipe": {"engine": {"path": "streamcurves/curves.py", "sha256": "...", "sha256_lf": "..."}},
-  "dependsOn": [{"packageId": "...", "dataDigest": "sha256:..."}],
-  "redistribution": {"status": "public", "notes": "..."},
-  "limitations": ["..."], "created": "2026-09-23T00:00:00Z"
+  "files": {"data/member_values.parquet": {"bytes": 0, "sha256": "...", "rows": 0, "columns": ["..."]}},
+  "coverage": {}, "dictionary": {"woody_wsrp100": {"definition": "...", "source": "landscape.woody_wsrp100"}},
+  "sources": [{"id": "baseline-snapshot", "path": "...", "citation": "..."}],
+  "recipe": {"engine": {"path": "apps/stream-curves/streamcurves/curves.py", "sha256_lf": "..."},
+             "constants": {}},
+  "checks": {}, "dependsOn": [{"packageId": "easi-dev-universe", "dataDigest": "sha256:..."}],
+  "redistribution": {"status": "public-derived", "notes": "..."},
+  "limitations": ["..."], "unavailable": [{"item": "...", "why": "...", "remedy": "..."}],
+  "producer": {"tool": "...", "snapshot": {"baselineManifestSha256": "..."}}
 }
 ```
 
@@ -276,14 +285,33 @@ Reproducibility levels: **reviewable** (the values behind a curve can be inspect
 **refittable** (the curve can be refit from preserved development evidence) and **regenerable**
 (the evidence can be rebuilt from original sources). A package declares its level and itemizes
 what is missing (`unavailable`, each with a remedy) and what was checked when it was made
-(`checks`). The store (`<data root>/evidence/<packageId>/<data digest 12>/`) downloads with
-resume into `.part` files, verifies size and SHA-256 before a package is ready, extracts into a
-staging folder with path checks (no absolute paths, `..` or links; `evidence.json` and data file
-types under `data/` only; nothing the manifest does not list), and reuses verified packages
-offline. Hosting is decided at adoption; it uses content-named assets on an existing rolling
-prerelease (a release per package would push the installer out of Velopack's 10-newest-releases
-window), and a rolling release URL is a location, never an identity. Until then
-`STREAMCURVES_EVIDENCE_BASE_URL` (a folder or an https base) names where archives are fetched.
+(`checks`); every `dependsOn` resolves to a package of the same export, or the export stops.
+
+Identity is content. `dataDigest` covers the data files; `packageDigest` the whole manifest but
+its `producer` block. An archive's bytes are a function of the package alone (sorted entries,
+fixed times, every entry stored; when and from which commit it was exported go to the export's
+`index.json`, never into the package), and it is named by its package digest. A project pins a
+package by its digests; the archive it names (file, SHA-256, size) only says where a copy was.
+`evidence_store.fetch_reference` downloads that archive, or, when the host holds the same
+package under another archive (a re-export), the one the host's `index.json` lists for it; either
+is accepted only when the installed package's digests are the project's. The zip's SHA-256
+checks the transfer: a download resumes a `.part` with an HTTP Range request, a finished `.part`
+is decided at once, a host that cannot continue (HTTP 416) starts over, a dropped connection
+keeps the `.part` and says so, and the archive is removed once installed.
+
+The store (`<data root>/evidence/<packageId>/<package digest 12>/`, one folder per package digest,
+a package id being a plain name) extracts into a staging folder with path checks (no absolute
+paths, `..` or links; `evidence.json` and data file types under `data/` only; nothing the
+manifest does not list; a damaged archive refused with a plain message) and moves it into place
+only once every file's size and SHA-256 match. A folder keeps the size and time of every file
+from its last full check (`.verified.json`); listing the store trusts that only while they hold,
+and anything that reads the data (a refit, the viewer, an export) hashes every file first
+(`evidence_store.ready`). A copy damaged or edited on disk reads "Damaged" with the way to fetch
+it again, and a manifest changed after the install is damage too. Hosting is decided at adoption;
+it uses content-named assets on an existing rolling prerelease (a release per package would push
+the installer out of Velopack's 10-newest-releases window), and a rolling release URL is a
+location, never an identity. Until then `STREAMCURVES_EVIDENCE_BASE_URL` (a folder or an https
+base) names where archives are fetched.
 
 EASI's development evidence (the 34 operational curves and the whole curve registry behind
 them) ships as five packages exported from the frozen 2026-09-15 baseline:
@@ -299,9 +327,14 @@ them) ships as five packages exported from the frozen 2026-09-15 baseline:
 The fit recipe is the builder's code, vendored verbatim into
 `streamcurves/easi_method/fit_recipe.py` by `scripts/vendor_fit_recipe.py` (screens, panel
 selection, quantities, fit wrapper, usability, rho, artifact rounding) with a drift gate;
-`easi_method/refit.py` groups members into fits as the builder does. Refitting from the
-installed packages with every developer path blocked reproduces all 2,752 registry fits and
-the 34 operational curves exactly, and the universe regenerates all 282,113 member rows
+`easi_method/refit.py` groups members into fits as the builder does (its grouping and the
+pooled national entrenchment fallback are re-implemented, proven equal on the frozen registry,
+with no drift gate against the builder's `curves.py`). A refit first compares the running curve
+engine and fit constants with the package's recorded recipe (`refit.recipe_check`) and claims
+exactness only when they agree. Refitting from the installed packages with every developer path
+blocked (Python's opens and pyarrow's) reproduces all 2,752 registry fits, every field the
+refit and the registry both carry (22) and every knot, and the 34 operational curves exactly,
+and the universe regenerates all 282,113 member rows
 (`scripts/refit_easi_curves.py --panels --block-dev-paths`). An EASI project names the packages
 it was developed from (`project.evidence`: package, version, data digest, roles,
 reproducibility, coverage, archive), never their bytes; its Development data stage shows them,
@@ -338,7 +371,9 @@ One vocabulary for every alternative considered, in DEEP and EASI (`streamcurves
 - Status per candidate and function: `selected`, `eligible_not_selected`, `excluded` (or
   unsupported), `not_evaluated`, `failed`, `superseded`. Decisions carry `rule`, `reason`,
   `decidedBy` (`automated`, `imported`, `person`), `who`, `when` and the `basisDigest` decided on;
-  one whose basis no longer matches reads "Look again" and stays in the history.
+  one whose basis no longer matches reads "Look again" and stays in the history. A DEEP REF-15
+  decision records the digest of the curve it was made on, computed as the register computes it
+  (`views.curve_gallery.metric_basis`), so a refit that moves that curve asks for another look.
 
 **DEEP** (`deep_register`) is a projection over records the session already keeps, read from the
 gallery's own tiles so the two views never disagree: SELECT-04's `portfolioSelection` (selected,
@@ -353,7 +388,7 @@ third section, **Select final curves**, lists the 20 functions with their select
 and unresolved items; each opens to the alternatives considered with status, reason and who
 decided, "Use in this function" and "Undo" (REF-15's own form), "Record why not", and a compare
 panel for up to three curves. An interactive publish writes the register's export
-(`candidateRegister`) into the version's provenance.
+(`candidateRegister`) into the version's provenance, and says so when it cannot.
 
 **EASI** keeps its register in the project (`easi/register.json`). `easi_method/alternatives.py`
 imports the 2026-09-15 controlled study (verified by its completion record, sha256 97a24b44..., and
@@ -381,15 +416,34 @@ columns, a mislabelled stratum, two-sided curves cut to one limb) make a record 
 as issues. Owner-supplied originals go in `D:\Data\staf-authoring\sqt-originals\<STATE>\` with a
 `sources.json`; they are cited and fingerprinted, never redistributed.
 
-A curve is added to a DEEP session from the section's picker (search by metric text, state,
-verification, eligibility), which shows ten explicit applicability checks (construct, protocol,
-units, direction, score scale, geography, stream type, source limits, extrapolation, eligibility).
-`candidates.sqt_candidate` freezes the record into the candidate; a failed check excludes it with the
-reason. SQT bands (0.30, 0.70) differ from DEEP's (0.39, 0.69): a selected SQT curve keeps the
-published index, is labelled "State SQT" on the published-criterion basis, and states the banding
-difference; no conversion is applied. For an EASI function an SQT curve is a field measurement
-against EASI's desktop estimate, so `register.add_sqt_candidate` records it excluded for that
-reason, never a silent substitution.
+A curve is added to a DEEP session from the section's picker (search by metric text; filter by
+state, edition, verification, function and eligibility). Each record is checked against the
+function's curves in this session (`candidates.sqt_context`): the ten registry checks (eligibility,
+construct, protocol, units, direction, score scale, geography, stream type, source limits,
+extrapolation) plus the adoption checks (the curve's ends, its form, a stratified metric). When the
+STAF metric library's crosswalk (`config/staf_metric_library.json`, `app_metric_key`) says one of
+those curves measures the same metric, its units, direction (`higher_is_better`) and the range of
+the values the session scores on it enter the checks; otherwise the construct check names the
+curves and units and values are not compared. The picker shows the worst status and its reason;
+Compare lists every check that is not a pass. `candidates.sqt_candidate` freezes the record into the
+candidate; a failed check excludes it with the reason. Selecting one checks it again against each
+fitted curve it would take the place of and refuses on a failure. The published rule is written as
+DEEP points (`candidates.sqt_adoption`): the original's points where the registry verified them,
+an end the source extends linearly carried to the index limit it reaches, an end threshold bin as a
+step; a form DEEP cannot write, or an end the source leaves open where the session's values run
+past it, excludes the curve. The index itself is never rescaled: SQT bands (0.30, 0.70) differ from
+DEEP's (0.39, 0.69), so a selected SQT curve keeps the published index, is labelled "State SQT" on
+the published-criterion basis, and states the banding difference. For an EASI function an SQT curve
+is a field measurement against EASI's desktop estimate, so `register.add_sqt_candidate` records it
+excluded for that reason, never a silent substitution.
+
+Known gaps, for the campaigns to close when they need them: a headless build
+(`regional_agent`, `run_region_batch.py`) does not carry the session's `candidate_register`, so a
+batch rebuild keeps the automated records but not the curves added for comparison or the reasons
+people recorded, and only an interactive publish writes `candidateRegister` into provenance;
+comparing two versions' registers exists as `candidates.diff` (tests, scripts), with no page in
+either app; adding an SQT curve to an EASI project is a function call
+(`register.add_sqt_candidate`), not yet a picker.
 
 ### The REF-15 extension (off until adopted)
 

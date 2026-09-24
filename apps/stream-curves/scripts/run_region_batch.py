@@ -314,6 +314,11 @@ def cmd_stage(a) -> int:
     out_dir = Path(a.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     staged_root = _staged_root(out_dir)
+    if staged_root.exists():
+        # a stage replaces what an earlier stage of this folder left: its staged publish
+        # would otherwise number after the old one (a staged v2 beside a stale v1)
+        print(f"[batch] replacing the earlier staged library at {staged_root}")
+        shutil.rmtree(staged_root)
     policy = dec.load_policy(a.policy)
     problems = dec.validate_policy(policy)
     if problems:
@@ -504,7 +509,7 @@ def cmd_stage(a) -> int:
             "appliedCount": len(policy_decisions),
             "confirmedBy": None, "confirmedAt": None,
         }
-        manifest = pv.build_run_manifest(result, argv=list(sys.argv[1:]),
+        manifest = pv.build_run_manifest(result, argv=list(getattr(a, "argv", None) or sys.argv[1:]),
                                          started_at=started, finished_at=_now())
         doc = pv.build_provenance(result, manifest, timestamp=started)
         # a curve the owner finalized or removed by flag closes its own CURVE-07 item
@@ -801,16 +806,60 @@ _STAGE_MANY_FLAGS = ("screen", "no_screen", "no_streamcat", "maintainer", "n_boo
                      "reference_method", "predictor_source")
 
 
+def recorded_argv(argv) -> list:
+    """The stage-many command as provenance records it: the worker count and ``--isolated``
+    only schedule the work, so every way of running the same regions records the same command."""
+    out, skip = [], False
+    for x in [str(v) for v in argv or []]:
+        if skip:
+            skip = False
+            continue
+        if x == "--workers":
+            skip = True
+            continue
+        if x.startswith("--workers=") or x == "--isolated":
+            continue
+        out.append(x)
+    return out
+
+
+def region_stage_namespace(a, code: str, name: str, out_dir: Path, argv=None) -> argparse.Namespace:
+    """The namespace cmd_stage reads for one region of stage-many, built by hand so that no
+    flag is dropped silently. Serial and parallel runs both use it."""
+    return argparse.Namespace(
+        l3=code, name=name, out=str(out_dir), screen=a.screen, source_citation="",
+        no_screen=a.no_screen, no_streamcat=a.no_streamcat, maintainer=a.maintainer,
+        n_boot=a.n_boot, coverage_exceptions=a.coverage_exceptions, policy=a.policy,
+        enable_policy=list(a.enable_policy or []), max_iterations=a.max_iterations,
+        # SELECT-01 approvals apply to every region staged in one call:
+        # a function that carries three metrics carries them everywhere,
+        # and without this stage-many could never stage such a region.
+        approve_portfolio=list(a.approve_portfolio or []),
+        reviewer_decisions=None, finalize_metric=[], remove_metric=[],
+        curve_decisions=None,
+        max_unresolved_share=a.max_unresolved_share, allow_unresolved=a.allow_unresolved,
+        nrsa_dataset=a.nrsa_dataset, nrsa_cycles=a.nrsa_cycles,
+        reference_frame=a.reference_frame, include_site=[],
+        screen_retries=a.screen_retries, screen_retry_wait=a.screen_retry_wait,
+        engine_snap_tolerance_ft=a.engine_snap_tolerance_ft,
+        engine_max_reaches=a.engine_max_reaches, engine_max_hops=a.engine_max_hops,
+        exclude_site=[],
+        reference_method=a.reference_method,
+        predictor_source=a.predictor_source,
+        argv=recorded_argv(argv if argv is not None else sys.argv[1:]))
+
+
 def code_fingerprint() -> str:
-    """SHA-256 over the app's code and configuration (streamcurves/, scripts/, config/), by
-    relative path and raw bytes: a stage records it at its start and its end."""
+    """SHA-256 over what a stage reads from the app, by relative path and raw bytes: every file
+    under streamcurves/ (vendored copies and their data included), data/ and config/, and the
+    scripts. A stage records it at its start and its end."""
     root = _APP_ROOT
     h = hashlib.sha256()
-    for sub_dir, patterns in (("streamcurves", ("*.py", "*.json", "*.yaml")), ("scripts", ("*.py",)),
-                              ("config", ("*.yaml", "*.json", "*.csv"))):
+    for sub_dir, patterns in (("streamcurves", ("*",)), ("scripts", ("*.py",)), ("config", ("*",)),
+                              ("data", ("*",))):
         for pattern in patterns:
             for p in sorted((root / sub_dir).rglob(pattern)):
-                if "__pycache__" in p.parts:
+                if "__pycache__" in p.parts or not p.is_file():
                     continue
                 h.update(str(p.relative_to(root)).replace("\\", "/").encode("utf-8"))
                 h.update(b"\0")
@@ -823,38 +872,67 @@ def _file_sha(path) -> Optional[str]:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest() if path and Path(path).is_file() else None
 
 
+def carried_from(code: str) -> Optional[dict]:
+    """The canonical library's published version of the region a stage carries forward from
+    (its approvals and curves), or None."""
+    from streamcurves import carry_forward as cf
+    got = cf.find_published(str(code))
+    if got is None:
+        return None
+    aid, ver = got
+    man = json.loads((ra.CANONICAL_LIBRARY / "assessments" / aid / "manifest.json").read_text(encoding="utf-8"))
+    row = next((v for v in man.get("versions") or [] if int(v.get("version") or 0) == int(ver)), {})
+    return {"assessmentId": aid, "version": int(ver), "contentDigest": row.get("contentDigest")}
+
+
 def region_inputs(args: dict) -> dict:
     """Everything a region's stage depends on, beside the region itself."""
     policy = dec.load_policy(args.get("policy"))
-    ds = nrsa_dataset.dataset_manifest_digest(args.get("nrsa_dataset")) \
-        if hasattr(nrsa_dataset, "dataset_manifest_digest") else None
     return {"flags": {k: args.get(k) for k in _STAGE_MANY_FLAGS},
             "methodology": methodology.config_fingerprints(),
             "policy": {"version": dec.policy_version(policy),
                        "sha256": _file_sha(policy["meta"]["path"])},
             "coverageExceptions": _file_sha(args.get("coverage_exceptions")),
-            "nrsaManifest": ds or _file_sha(_APP_ROOT / "data" / "nrsa" / "manifest.json"),
+            "nrsaManifest": _file_sha(_APP_ROOT / "data" / "nrsa" / "manifest.json"),
             "legacyNrsa": {n: _file_sha(_APP_ROOT / "data" / n)
                            for n in ("nrsa_metrics.parquet", "nrsa_sites.csv")},
             "stationScreen": _file_sha(_APP_ROOT / "data" / "nrsa" / "station_screen.parquet"),
             "code": code_fingerprint()}
 
 
+def region_digest(code: str, name: str, inputs: dict, carried: Optional[dict]) -> str:
+    return hashlib.sha256(json.dumps({"region": code, "name": name, "inputs": inputs,
+                                      "carriedFrom": carried},
+                                     sort_keys=True, default=str).encode("utf-8")).hexdigest()
+
+
+def outputs_intact(region_dir: Path, rec: dict) -> bool:
+    """Every output a stage_complete.json records is still there with its SHA-256."""
+    outs = rec.get("outputs") or {}
+    return bool(outs) and all(_file_sha(region_dir / rel) == sha for rel, sha in outs.items())
+
+
 def stage_job(spec: dict, out_dir) -> dict:
     """A job target (streamcurves.jobs): stage one region in this process, then record what
-    it was staged from in its run folder (``stage_complete.json``, written only when the stage
-    succeeded and the code did not change while it ran)."""
+    it was staged from and what it wrote (``stage_complete.json``, written only when the stage
+    succeeded and its inputs, code and data included, were the batch's at its start and end)."""
     args = dict(spec["args"])
     region_dir = Path(args["out"])
     region_dir.mkdir(parents=True, exist_ok=True)
     (region_dir / STAGE_COMPLETE).unlink(missing_ok=True)
+
+    def now_digest() -> str:
+        return region_digest(args["l3"], args["name"], region_inputs(args), carried_from(args["l3"]))
+
     started, code_start = _now(), code_fingerprint()
+    if now_digest() != spec["inputsDigest"]:
+        raise SystemExit("the inputs changed after this batch started; run the batch again")
     exit_code = int(cmd_stage(argparse.Namespace(**args)))
     code_end = code_fingerprint()
     if exit_code != 0:
         raise SystemExit(exit_code)
-    if code_end != code_start:
-        raise SystemExit("the code changed while this region was staged; stage it again")
+    if code_end != code_start or now_digest() != spec["inputsDigest"]:
+        raise SystemExit("the inputs changed while this region was staged; stage it again")
     outputs = {}
     for rel in ("review_packet.json", "run_manifest.json", "standing_decisions_applied.json"):
         p = region_dir / rel
@@ -871,7 +949,7 @@ def stage_job(spec: dict, out_dir) -> dict:
     tmp = region_dir / (STAGE_COMPLETE + ".part")
     tmp.write_text(json.dumps(rec, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     os.replace(tmp, region_dir / STAGE_COMPLETE)
-    return {"l3": args["l3"], "exit": 0}
+    return {"l3": args["l3"], "exit": 0, "outputs": len(outputs)}
 
 
 def _region_row(code: str, name: Optional[str], out_dir: Path) -> dict:
@@ -891,30 +969,27 @@ def _region_row(code: str, name: Optional[str], out_dir: Path) -> dict:
 
 def _stage_many_parallel(a, out_root: Path, regions: list[tuple[str, Optional[str], Path]]) -> int:
     from streamcurves import jobs as jb
-    base = {k: getattr(a, k) for k in _STAGE_MANY_FLAGS}
-    base["enable_policy"] = list(base.get("enable_policy") or [])
-    base["approve_portfolio"] = list(base.get("approve_portfolio") or [])
-    inputs = region_inputs(base)
+    inputs = None
     todo, rows = [], {}
     for code, name, out_dir in regions:
         if not name:
             rows[code] = {"l3": code, "name": None, "out": str(out_dir), "exit": 1,
                           "error": f"no NRSA candidate sites for L3 ecoregion {code}"}
             continue
-        args = {**base, "l3": code, "name": name, "out": str(out_dir), "source_citation": "",
-                "reviewer_decisions": None, "finalize_metric": [], "remove_metric": [],
-                "curve_decisions": None, "include_site": [], "exclude_site": []}
-        digest = hashlib.sha256(json.dumps({"region": code, "name": name, "inputs": inputs},
-                                           sort_keys=True, default=str).encode("utf-8")).hexdigest()
+        args = vars(region_stage_namespace(a, code, name, out_dir))
+        if inputs is None:
+            inputs = region_inputs(args)
+        digest = region_digest(code, name, inputs, carried_from(code))
         job = jb.Job(kind="python", target="run_region_batch:stage_job",
                      spec={"task": "stage-region", "l3": code, "inputsDigest": digest, "args": args},
                      env={"PYTHONPATH": str(_SCRIPTS) + os.pathsep + str(_APP_ROOT),
                           "HYRIVER_CACHE_NAME": str(out_dir / "hyriver_cache.sqlite")},
                      label=f"L3-{code} {name}")
-        # a region staged from other inputs, or whose folder lost its record, stages again
+        # a region staged from other inputs, whose folder lost its record, or whose recorded
+        # outputs changed, stages again
         done = out_dir / STAGE_COMPLETE
         rec = json.loads(done.read_text(encoding="utf-8")) if done.is_file() else None
-        if rec is None or rec.get("inputsDigest") != digest:
+        if rec is None or rec.get("inputsDigest") != digest or not outputs_intact(out_dir, rec):
             (out_root / ".campaign" / "jobs" / job.id / "complete.json").unlink(missing_ok=True)
         todo.append((code, name, out_dir, job))
     t0 = time.monotonic()
@@ -949,7 +1024,7 @@ def cmd_stage_many(a) -> int:
     out_root = Path(a.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
     names = _parse_kv(a.name, "--name")
-    if int(getattr(a, "workers", 1) or 1) > 1:
+    if int(getattr(a, "workers", 1) or 1) > 1 or getattr(a, "isolated", False):
         regions = []
         for code in a.l3:
             code = str(code).strip()
@@ -968,26 +1043,7 @@ def cmd_stage_many(a) -> int:
         if not name:
             row.update(exit=1, error=f"no NRSA candidate sites for L3 ecoregion {code}")
         else:
-            ns = argparse.Namespace(
-                l3=code, name=name, out=str(out_dir), screen=a.screen, source_citation="",
-                no_screen=a.no_screen, no_streamcat=a.no_streamcat, maintainer=a.maintainer,
-                n_boot=a.n_boot, coverage_exceptions=a.coverage_exceptions, policy=a.policy,
-                enable_policy=list(a.enable_policy or []), max_iterations=a.max_iterations,
-                # SELECT-01 approvals apply to every region staged in one call:
-                # a function that carries three metrics carries them everywhere,
-                # and without this stage-many could never stage such a region.
-                approve_portfolio=list(a.approve_portfolio or []),
-                reviewer_decisions=None, finalize_metric=[], remove_metric=[],
-                curve_decisions=None,
-                max_unresolved_share=a.max_unresolved_share, allow_unresolved=a.allow_unresolved,
-                nrsa_dataset=a.nrsa_dataset, nrsa_cycles=a.nrsa_cycles,
-                reference_frame=a.reference_frame, include_site=[],
-                screen_retries=a.screen_retries, screen_retry_wait=a.screen_retry_wait,
-                engine_snap_tolerance_ft=a.engine_snap_tolerance_ft,
-                engine_max_reaches=a.engine_max_reaches, engine_max_hops=a.engine_max_hops,
-                exclude_site=[],
-                reference_method=a.reference_method,
-                predictor_source=a.predictor_source)
+            ns = region_stage_namespace(a, code, name, out_dir)
             try:
                 row["exit"] = int(cmd_stage(ns))
             except SystemExit as exc:
@@ -1200,6 +1256,10 @@ def main(argv=None) -> int:
     m.add_argument("--allow-unresolved", action="store_true")
     m.add_argument("--reference-method", default=None, choices=run_state.REFERENCE_METHODS,
                    help=REFERENCE_METHOD_HELP)
+    m.add_argument("--isolated", action="store_true",
+                   help="stage each region in its own process with thread caps, as --workers above 1 "
+                        "does, even one at a time (compare a parallel run with this, not with "
+                        "the in-process serial path)")
     m.add_argument("--workers", type=int, default=1,
                    help="regions staged at once, each in its own process (1: one after another "
                         "in this process, as before). Keep it low when the screen calls live "

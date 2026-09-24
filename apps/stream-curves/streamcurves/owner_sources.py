@@ -823,18 +823,29 @@ def pool_for(metric: str, *, region_code: str, region_name: Optional[str] = None
 SQT_LABEL = "State SQT"
 
 
+def _sqt_edition(frozen: Mapping) -> Optional[str]:
+    """The edition the original names; None when only the metric library's References
+    column suggests one (the curve row itself names no edition)."""
+    against = ((frozen.get("verification") or {}).get("against") or {})
+    return str(against["edition"]) if against.get("edition") else None
+
+
 def sqt_statement(frozen: Mapping) -> str:
-    tool = " ".join(str(x) for x in (frozen.get("tool"), frozen.get("edition")) if x) or "a state SQT"
+    edition = _sqt_edition(frozen)
+    tool = " ".join(str(x) for x in (frozen.get("tool"), edition) if x) or "a state SQT"
     return (f"Scored against a curve published in the {tool}, rather than against stations from "
-            "this ecoregion. The SQT's own index is kept, and DEEP bands it at 0.39 and 0.69, "
-            "where the SQT bands it at 0.30 and 0.70.")
+            "this ecoregion. The SQT's own index is kept. DEEP calls an index at or below 0.39 Not "
+            "Functioning and at or below 0.69 Functioning At Risk; the SQT calls one below 0.30 Not "
+            "Functioning and below 0.70 At Risk, so an index from 0.30 to 0.39 reads worse in DEEP "
+            "and one above 0.69 and below 0.70 reads better.")
 
 
 def sqt_source(candidate: Mapping) -> dict:
     """The ``source`` of a REF-15 decision that selects a considered state SQT curve
-    (``candidates.sqt_candidate``): the frozen record's curve in the shape a carried curve
-    rides in, stated as a published criterion with the SQT's own label, verification and
-    limits. Refused for a candidate the registry or its checks exclude."""
+    (``candidates.sqt_candidate``): the published rule written as DEEP points (the conversion
+    ``candidates.sqt_adoption`` recorded), in the shape a carried curve rides in, stated as a
+    published criterion with the SQT's own label, verification and limits. Refused for a
+    candidate the registry, its checks or its frozen record exclude."""
     if (candidate.get("eligibility") or {}).get("status") != "eligible":
         raise ValueError("This SQT curve is excluded: "
                          + " ".join((candidate.get("eligibility") or {}).get("reasons") or []))
@@ -842,36 +853,43 @@ def sqt_source(candidate: Mapping) -> dict:
     from . import sqt_registry
     if not sqt_registry.frozen_intact(frozen):
         raise ValueError("The frozen SQT record no longer matches its fingerprint.")
+    if not frozen.get("eligible"):
+        raise ValueError("The SQT registry marks this curve ineligible.")
     ident = candidate.get("identity") or {}
     mk = str((ident.get("subject") or {}).get("id"))
     d = candidate.get("definition") or {}
     direction = d.get("direction")
-    tool = " ".join(str(x) for x in (frozen.get("tool"), f"({frozen.get('edition')})"
-                                     if frozen.get("edition") else None) if x) or "the state SQT"
+    edition = _sqt_edition(frozen)
+    tool = " ".join(str(x) for x in (frozen.get("tool"), f"({edition})" if edition else None) if x) \
+        or "the state SQT"
     how = (str(frozen["protocol"]) if frozen.get("protocol") else
-           f"Measure it as the {tool} specifies; the registry records the curve, not the protocol.")
+           f"Measure it as the {tool} specifies.")
     config = {"display_name": candidate.get("label") or mk, "units": d.get("units") or "",
               "column_name": mk, "notes": how}
     if direction in ("increasing", "decreasing"):
         config["higher_is_better"] = direction == "increasing"
     ver = frozen.get("verification") or {}
-    limit = " ".join([curve_basis.limit_for(curve_basis.PUBLISHED)]
-                     + [str(r) for r in ver.get("reasons") or []])
+    checked = {"verified": "Checked against the original.",
+               "partially-verified": "Checked in part against the original."}.get(
+        ver.get("status"), "A STAF adaptation of the SQT, not checked against the original.")
+    limit = f"{curve_basis.limit_for(curve_basis.PUBLISHED)} {checked}"
+    caveats = [limit] + [str(x) for x in candidate.get("limitations") or [] if str(x) not in limit]
     annotations = {"basis": curve_basis.PUBLISHED, "basisLabel": SQT_LABEL,
                    "basisStatement": sqt_statement(frozen), "basisLimit": limit,
-                   "curveCaveats": [limit] + [str(x) for x in candidate.get("limitations") or []][:4],
-                   "criteriaSource": {"title": frozen.get("tool"), "edition": frozen.get("edition"),
+                   # every limit, never a cut list: the one about the curve's ends matters most
+                   "curveCaveats": list(dict.fromkeys(caveats)),
+                   "criteriaSource": {"title": frozen.get("tool"), "edition": edition,
                                       "citation": frozen.get("citation"), "state": frozen.get("state")},
                    "sourceCitation": frozen.get("citation"),
                    "sqt": {"registryKey": frozen.get("key"), "verification": ver.get("status"),
-                           "fingerprint": (frozen.get("frozen") or {}).get("contentFingerprint"),
-                           "stratum": frozen.get("stratumName"), "extrapolation": frozen.get("extrapolation")}}
+                           "stratum": frozen.get("stratumName"),
+                           "conversion": list(d.get("conversion") or [])}}
     if frozen.get("protocol"):
         annotations["methodContext"] = str(frozen["protocol"])
     return {"kind": SQT, "title": str(candidate.get("label") or mk),
             "citation": str(frozen.get("citation") or "") or None,
             "ref": {"registryKey": frozen.get("key"), "state": frozen.get("state"),
-                    "tool": frozen.get("tool"), "edition": frozen.get("edition"),
+                    "tool": frozen.get("tool"), "edition": edition,
                     "candidateKey": candidate.get("candidateKey"),
                     "basisDigest": candidate.get("basisDigest"),
                     "fingerprint": (frozen.get("frozen") or {}).get("contentFingerprint"),

@@ -75,7 +75,7 @@ FAMILY_NAMES = {
 }
 
 STRATIFIER_NAMES = {"nars9": "NARS-9 region", "slope_class": "slope class",
-                    "national": "national"}
+                    "l2": "Level II region", "national": "national"}
 
 #: What each curve family's x axis measures.
 QUANTITY_NAMES = {

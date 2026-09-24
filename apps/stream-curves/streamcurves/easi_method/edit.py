@@ -92,8 +92,10 @@ def restamp_identity(project: EasiProject) -> None:
         if "scoring-identity.json" in project.base:
             project.set_file("scoring-identity.json", project.base["scoring-identity.json"])
         return
-    base = ((lineage.get("importedFrom") or {}).get("scoringIdentity")
-            or origin.get("scoringIdentity") or {})
+    # the version this draft came from (a revision of v2 derives from v2, not from the
+    # import at the root of the lineage)
+    base = (origin.get("scoringIdentity")
+            or (lineage.get("importedFrom") or {}).get("scoringIdentity") or {})
     ident["catalog_sha256"] = sha_hex(project.files["screening-methods.json"])
     ident["curves_sha256"] = sha_hex(project.files["reference-curves.json"])
     ident["nars_geography_sha256"] = sha_hex(project.files["nars-ecoregions-9.geojson.gz"])
@@ -253,13 +255,20 @@ def set_band_edge(project: EasiProject, method_key: str, input_key: Optional[str
         moved = replace_number(old_label, before["value"], v) if own == before["owner"] else None
         band["label"] = moved if moved is not None else band_label(band, label_suffix(old_label))
     method = _method(cat, method_key)
-    plotted = (input_key is None or (not method.get("bands") and not method.get("curve") and next(
-        (i.get("key") for i in method.get("inputs") or [] if not i.get("contextOnly")), None) == input_key))
     marks = method.get("breakpoints") or []
-    if plotted and edge < len(marks) and isinstance(marks[edge], dict) and marks[edge].get("label"):
-        moved = replace_number(marks[edge]["label"], before["value"], v)
-        if moved is not None:
-            marks[edge]["label"] = moved      # the plot's annotation at this edge
+    rule_marks = _own_marks(method, input_key)
+    to_check = []
+    mark = next((m for m in rule_marks if replace_number(m.get("label") or "", before["value"], v) is not None),
+                None)
+    if mark is not None and not _same(before["value"], v):
+        mark["label"] = replace_number(mark["label"], before["value"], v)   # the plot's annotation
+        desc = mark.get("description")
+        if desc:
+            moved_desc = replace_number(desc, before["value"], v)
+            if moved_desc is not None:
+                mark["description"] = moved_desc
+            # a cited rationale explains the edge as it was; the author reads it again
+            to_check.append(f"{mark['label']}: {mark.get('description')}")
     try:
         o_method = _method(_origin(project, "screening-methods.json"), method_key)
         o_rule = _rule(o_method, input_key)
@@ -267,14 +276,32 @@ def set_band_edge(project: EasiProject, method_key: str, input_key: Optional[str
         o_method = o_rule = None
     if (o_rule is not None and isinstance(o_rule.get("bands"), list)
             and _band_signature(o_rule["bands"]) == _band_signature(rule["bands"])):
-        # back to the origin's bands: its own labels and annotations, byte for byte
+        # back to the origin's bands: its own labels, and this rule's own annotations, byte
+        # for byte (another input's moved edge keeps its own)
         rule["bands"] = copy.deepcopy(o_rule["bands"])
-        if "breakpoints" in o_method:
-            method["breakpoints"] = copy.deepcopy(o_method["breakpoints"])
-    return _with_file(project, "screening-methods.json", cat, {
-        "action": "set_band_edge", "kind": "analytical", "by": by, "reason": reason,
-        "target": {"methodKey": method_key, "input": input_key, "edge": edge},
-        "before": before, "after": {"value": v, "owner": own}})
+        o_own = _own_marks(o_method, input_key)
+        if len(o_own) == len(rule_marks):
+            for m, o in zip(rule_marks, o_own):
+                m.clear()
+                m.update(copy.deepcopy(o))
+            to_check = []
+    record = {"action": "set_band_edge", "kind": "analytical", "by": by, "reason": reason,
+              "target": {"methodKey": method_key, "input": input_key, "edge": edge},
+              "before": before, "after": {"value": v, "owner": own}}
+    if to_check:
+        record["textToCheck"] = to_check
+    return _with_file(project, "screening-methods.json", cat, record)
+
+
+def _own_marks(method: dict, input_key: Optional[str]) -> list[dict]:
+    """The breakpoint marks of one rule: marks that name an input belong to it; a method
+    whose marks name none plots its bands (or its first scored input) with them."""
+    marks = [m for m in method.get("breakpoints") or [] if isinstance(m, dict)]
+    if any("input" in m for m in marks):
+        return [m for m in marks if m.get("input") == input_key]
+    plotted = (input_key is None or (not method.get("bands") and not method.get("curve") and next(
+        (i.get("key") for i in method.get("inputs") or [] if not i.get("contextOnly")), None) == input_key))
+    return marks if plotted else []
 
 
 def set_regional_edges(project: EasiProject, method_key: str, input_key: str, region: str,
@@ -317,6 +344,15 @@ def set_curve_points(project: EasiProject, set_name: str, stratum: str, points: 
         raise EditError(f"no curve {set_name}/{stratum}")
     c = s["curves"][stratum]
     before = c.get("points")
+    # EASI draws a curve's bands from its crossings and the family's direction, so a curve
+    # that turns back, or runs the other way, would score against the bands it shows
+    ys = [y for _, y in pts]
+    if s.get("higherIsBetter") is True and any(b < a for a, b in zip(ys, ys[1:])):
+        raise EditError("this curve family scores higher values as better, so the index must "
+                        "never fall as the value grows")
+    if s.get("higherIsBetter") is False and any(b > a for a, b in zip(ys, ys[1:])):
+        raise EditError("this curve family scores lower values as better, so the index must "
+                        "never rise as the value grows")
     crossings = {key: crossing(pts, t) for key, t in (("x39", 0.39), ("x69", 0.69))}
     missing = [k for k, v in crossings.items() if v is None]
     if missing:
@@ -340,6 +376,10 @@ def set_text(project: EasiProject, method_key: str, field: str, value, *, by: st
              reason: str) -> EasiProject:
     if field not in DISPLAY_FIELDS:
         raise EditError(f"{field!r} is not a display field")
+    if field == "basisClass":
+        from .._vendor.easi.screening_methods import VALID_BASIS
+        if value not in VALID_BASIS:
+            raise EditError("The basis class must be one EASI accepts: " + ", ".join(sorted(VALID_BASIS)) + ".")
     cat = _load(project, "screening-methods.json")
     m = _method(cat, method_key)
     before = m.get(field)

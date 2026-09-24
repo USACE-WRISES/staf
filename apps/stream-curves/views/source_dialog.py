@@ -540,6 +540,10 @@ def source_dialog_server(input, output, session, state: AppState):
             decision = oc.new_decision(metric, oc.SOURCE, rationale=rationale,
                                        recorded_by=sp.maintainer(), functions=functions,
                                        source=osrc.decision_source(metric, opt, config=config))
+            from views import curve_gallery as _cg
+            basis = _cg.metric_basis(state, metric, oc.merge(current, decision))
+            if basis:
+                decision["basisDigest"] = basis
             oc.validate(decision, build=view["build"], built=view["built"], decisions=current)
             if run_dir is not None:
                 # the region's record starts from its published decisions (seeded once);

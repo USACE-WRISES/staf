@@ -98,7 +98,7 @@ def new_decision(metric: str, action: str, *, rationale: str, recorded_by: str,
                  functions: Iterable[str] = (), source: Optional[dict] = None,
                  coverage_exceptions: Iterable[dict] = (),
                  recorded_at: Optional[str] = None, decision_id: Optional[str] = None,
-                 replaces: Iterable[Mapping] = ()) -> dict:
+                 replaces: Iterable[Mapping] = (), basis_digest: Optional[str] = None) -> dict:
     """A decision record, checked for what every decision needs. What depends on
     the open session is :func:`validate`'s."""
     d = {"id": decision_id or ("cd-" + uuid.uuid4().hex[:10]),
@@ -119,6 +119,9 @@ def new_decision(metric: str, action: str, *, rationale: str, recorded_by: str,
         # only a decision that replaces a fitted curve carries the key, so every
         # other decision keeps the shape it always had
         d["replaces"] = replaced
+    if basis_digest:
+        # the curve the decision was made on: a later change to it asks for another look
+        d["basisDigest"] = str(basis_digest)
     check(d)
     return d
 
@@ -484,7 +487,7 @@ def held_metrics(decisions: Iterable[Mapping]) -> list[str]:
     """The metrics a build keeps out of its own fit (owner decision 2026-09-22,
     "your choice stands"): every metric the owner removed or chose a source for,
     until the decision is withdrawn (``pressure_evidence.run_evidence(hold=)``)."""
-    acts = _by_action(decisions)
+    acts = _by_action([d for d in decisions or [] if _usable(d)])
     return sorted(set(acts[REMOVE]) | set(acts[SOURCE]))
 
 
@@ -493,7 +496,7 @@ def forced_sources(decisions: Iterable[Mapping]) -> dict:
     what a build computes for them (``basis_ladder.force_source``)."""
     from . import owner_sources
     out = {}
-    for mk, d in _by_action(decisions)[SOURCE].items():
+    for mk, d in _by_action([d for d in decisions or [] if _usable(d)])[SOURCE].items():
         src = d.get("source") or {}
         if src.get("kind") == owner_sources.REFUSED:
             ref = src.get("ref") or {}
@@ -505,7 +508,7 @@ def pending(decisions: Iterable[Mapping]) -> dict:
     """``{metric: decision}`` of the refused sources the owner accepted that no
     build has computed yet: they wait for the next build of the region."""
     from . import owner_sources
-    return {mk: d for mk, d in _by_action(decisions)[SOURCE].items()
+    return {mk: d for mk, d in _by_action([d for d in decisions or [] if _usable(d)])[SOURCE].items()
             if (d.get("source") or {}).get("kind") == owner_sources.REFUSED
             and not source_curve(d).get("points")
             and not (d.get("source") or {}).get("failedAtBuild")}
@@ -678,8 +681,9 @@ def apply_to_inputs(rows: dict, mapping, config: dict, meta: dict,
                                         keep={str(k) for k in keep or ()} - gone)
     if selection:
         meta["portfolioSelection"] = selection
-    if decisions:
-        meta["ownerCurveDecisions"] = [summary(d) for d in decisions]
+    applied = [d for d in decisions if _usable(d)]
+    if applied:
+        meta["ownerCurveDecisions"] = [bundle_summary(d) for d in applied]
         # a curve still scoring states the owner's decisions on where it scores,
         # each one that changed a pair here (a stale one is named by stale())
         annotations = meta.setdefault("metricAnnotations", {})
@@ -713,6 +717,20 @@ def summary(d: Mapping) -> dict:
             out["source"]["waitsForBuild"] = True
     if d.get("coverageExceptions"):
         out["coverageExceptions"] = [dict(g) for g in d["coverageExceptions"]]
+    return out
+
+
+#: the authoring register's own keys a source reference may hold: they identify the
+#: candidate in the author's register and never ride in a bundle
+REGISTER_REF_KEYS = ("candidateKey", "basisDigest", "fingerprint")
+
+
+def bundle_summary(d: Mapping) -> dict:
+    """:func:`summary` as a bundle carries it: the same, without the register's keys."""
+    out = summary(d)
+    src = out.get("source")
+    if src and isinstance(src.get("ref"), dict):
+        src["ref"] = {k: v for k, v in src["ref"].items() if k not in REGISTER_REF_KEYS}
     return out
 
 
@@ -836,7 +854,7 @@ def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
 
 __all__ = [
     "RULE", "DECISIONS_FILE", "LEGACY_REMOVALS_FILE", "REMOVE", "UNMAP", "INCLUDE", "SOURCE",
-    "EXTENSION_FLAG", "EXTENSION_OFF", "alternatives_enabled", "needs_extension",
+    "EXTENSION_FLAG", "EXTENSION_OFF", "alternatives_enabled", "needs_extension", "bundle_summary",
     "ACTIONS", "GAP_REASON", "ACTION_LABELS", "FLAG_PREFIX", "min_rationale", "new_decision",
     "check", "validate", "load", "path_of", "standing", "load_file", "seed", "supersedes",
     "merge", "save", "undo", "combine", "restore", "from_removals", "effective_selection",

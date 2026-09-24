@@ -7,7 +7,6 @@ calculator only when it was generated from exactly these files. Nothing is writt
 explicit activation.
 
     python apps/stream-curves/scripts/export_easi_method.py <project.streamcurves> --out <method.zip>
-        [--status draft|preliminary]
 """
 from __future__ import annotations
 
@@ -32,10 +31,9 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("project", help="an EASI method project (.streamcurves)")
     ap.add_argument("--out", required=True, help="the method package to write (.zip)")
-    ap.add_argument("--status", default=None, help="the lifecycle status to stamp (default: the project's)")
     a = ap.parse_args(argv)
     _, project = eio.read_project(Path(a.project))
-    blob, ident = eio.export_zip(project, Path(a.out), status=a.status)
+    blob, ident = eio.export_zip(project, Path(a.out))
     print(json.dumps({"out": a.out, **ident}, indent=1))
     return 0
 

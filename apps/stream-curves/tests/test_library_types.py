@@ -75,7 +75,7 @@ def test_an_easi_version_is_stored_as_the_package_easi_loads(project, empty_libr
     assert cat["region"]["kind"] == "national"
     got = lib.easi_version_files("easi-screening", 1)
     assert got["files"] == project.files and got["project"]["register"] == project.register
-    assert lib.easi_package_bytes("easi-screening", 1) == eio.export_zip(project, status="draft")[0]
+    assert lib.easi_package_bytes("easi-screening", 1) == eio.export_zip(project)[0]
     with pytest.raises(ValueError, match="not a DEEP assessment"):
         lib.load_version_bundle("easi-screening", 1)
 
@@ -182,3 +182,30 @@ def test_a_deep_pack_stays_format_1(typed_library):
     proj = pf.read_project(blob)
     assert proj.format_version == 1 and proj.assessment_type == "deep" and not proj.parts
     assert "-p1-" in gallery.pack_name(deep, deep.versions[0], "0" * 64)
+
+
+def test_a_deep_project_an_older_app_would_drop_part_of_is_format_2(tmp_path):
+    from streamcurves import candidates as C
+    legacy_pf = _load("streamcurves.legacy_project_file_1_0_0",
+                      APP / "tests" / "legacy" / "project_file_1_0_0.py")
+    register = C.add_considered(None, {"candidateKey": "cand-000000000009", "identity": {}},
+                                by="Reviewer", at="2026-09-23T00:00:00Z")
+    plain = pf.session_text_from_fields({}, session_name="t")
+    with_register = pf.session_text_from_fields({C.SESSION_FIELD: register}, session_name="t")
+    a = pf.write_project(tmp_path / "a" / "a.streamcurves", meta={"project_name": "a"}, session_text=plain)
+    b = pf.write_project(tmp_path / "b" / "b.streamcurves", meta={"project_name": "b"},
+                         session_text=with_register)
+    assert pf.read_project(a).format_version == 1 and legacy_pf.read_project(a).format_version == 1
+    assert pf.read_project(b).format_version == 2
+    with pytest.raises(legacy_pf.ProjectFileError, match="Update the app"):
+        legacy_pf.read_project(b)
+    # a copy of it stays format 2
+    c = pf.import_as_project(pf.read_project(b), tmp_path / "c" / "c.streamcurves")
+    assert pf.read_project(c).format_version == 2
+    # a pack keeps format 1 for the register alone (its provenance holds the record), never
+    # for a decision only the REF-15 extension applies, which 1.0.0 would misread
+    assert pf.session_text_format(with_register, pack=True) == 1
+    extension = pf.session_text_from_fields({"owner_curve_decisions": [
+        {"id": "d1", "action": "source", "metric": "m", "source": {"kind": "sqt"}}]}, session_name="t")
+    assert pf.session_text_format(extension, pack=True) == 2
+    assert pf.required_format({C.SESSION_FIELD: register}) == 2 and pf.required_format({}) == 1

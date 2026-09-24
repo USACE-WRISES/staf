@@ -443,6 +443,10 @@ def source_panel_server(input, output, session, state: AppState):
                                        rationale=input.dec_rationale() or "",
                                        recorded_by=maintainer(), functions=p["functions"],
                                        coverage_exceptions=gaps)
+            from views import curve_gallery as _cg
+            basis = _cg.metric_basis(state, p["metric"], oc.merge(current, decision))
+            if basis:
+                decision["basisDigest"] = basis
             oc.validate(decision, build=build, built=built, decisions=current)
             if run_dir is not None:
                 _standing(run_dir)

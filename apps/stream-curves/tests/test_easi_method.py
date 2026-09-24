@@ -113,6 +113,11 @@ def test_a_display_edit_is_not_analytical(project):
     d = edit.diff(project, draft)
     assert not d["analytical"] and d["methods"][0]["display"]
     assert not any(r["needsReview"] for r in reg.status_rows(draft))
+    # it still names another method: the catalog's bytes changed
+    assert draft.identity()["methodVersion"] != project.identity()["methodVersion"]
+    with pytest.raises(edit.EditError, match="one EASI accepts"):
+        edit.set_text(eio.fork(project, by="test"), "road-density-inflow-pressure", "basisClass",
+                      "a new basis", by="test", reason="wording")
 
 
 def test_workers_score_the_exported_baseline_like_the_builtin_method(project, cases):

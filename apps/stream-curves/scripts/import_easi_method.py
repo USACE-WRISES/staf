@@ -39,7 +39,7 @@ EASI = REPO / "apps" / "easi"
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--out", required=True, help="the project file to write (.streamcurves)")
-    ap.add_argument("--by", default="", help="who imports it (recorded)")
+    ap.add_argument("--by", required=True, help="who imports it (recorded as the importer)")
     ap.add_argument("--version", type=int, default=1)
     ap.add_argument("--name", default="EASI screening method")
     ap.add_argument("--release-tag", default=None)
@@ -52,11 +52,11 @@ def main(argv=None) -> int:
     if eio.easi_source(REPO) is None:
         raise SystemExit("apps/easi is not in this checkout; importing needs the EASI source")
     project = eio.import_from_checkout(
-        REPO, imported_by=a.by or "maintainer", version=a.version,
+        REPO, imported_by=a.by, version=a.version,
         release=({"tag": a.release_tag, "date": a.release_date} if a.release_tag else None),
         evidence_dir=a.evidence)
     if a.alternatives is not None:
-        project = alts.import_alternatives(project, a.alternatives, imported_by=a.by or "maintainer")
+        project = alts.import_alternatives(project, a.alternatives, imported_by=a.by)
     path = eio.write_project(project, Path(a.out), name=a.name)
     ident = project.identity()
     print(f"imported method {ident['methodVersion']} (package {ident['packageDigest'][7:19]}) "

@@ -95,7 +95,9 @@ def test_the_deep_register_states_every_record_the_session_keeps():
     assert rows[(k("broken"), "population-support")]["status"] == C.FAILED
     w = rows[(k("withheld"), "population-support")]
     assert w["status"] == C.EXCLUDED and w["decision"]["rule"] == "REF-06"
-    assert rows[(k("carried"), "light-thermal-regime")]["decision"]["rule"] == "SELECT-04"
+    assert rows[(k("carried"), "light-thermal-regime")]["decision"]["rule"] == "REF-05"
+    # a withheld metric is an excluded candidate, not an eligible one with an excluded row
+    assert next(c for c in reg["candidates"] if c["candidateKey"] == k("withheld"))["eligibility"]["status"] == "excluded"
     fns = {f["functionId"]: f for f in reg["functions"]}
     assert len(fns) == 20
     assert [r["candidateKey"] for r in fns["habitat-provision"]["selected"]] == [k("fit_a")]
@@ -115,11 +117,20 @@ def test_the_owners_decisions_read_as_a_persons():
     row = _rows(reg)[(_key_of(reg, "fit_b"), "habitat-provision")]
     assert row["status"] == C.SELECTED and row["decision"]["decidedBy"] == C.PERSON
     assert row["decision"]["who"] == "Owner" and row["decision"]["decisionRef"] == include["id"]
-    removed = _decision("carried", oc.REMOVE)
+    # a decision records the curve it was made on; a refit that moves the curve asks for another look
+    stamped = _decision("fit_b", oc.INCLUDE, ["habitat-provision"],
+                        basis_digest=C.tile_basis_digest(tiles[0]))
+    reg = C.deep_register(tiles=tiles, build=build, decisions=[stamped])
+    assert not _rows(reg)[(_key_of(reg, "fit_b"), "habitat-provision")]["needsReview"]
+    moved = [_tile("fit_b", ["habitat-provision"], points=((0, 0), (2, 1)))] + tiles[1:]
+    reg = C.deep_register(tiles=moved, build=build, decisions=[stamped])
+    assert _rows(reg)[(_key_of(reg, "fit_b"), "habitat-provision")]["needsReview"]
+    removed = _decision("carried", oc.REMOVE, basis_digest=C.tile_basis_digest(tiles[1]))
     tiles[1]["removed_decision"] = removed["id"]
     reg = C.deep_register(tiles=tiles, build=build, decisions=[removed])
     row = _rows(reg)[(_key_of(reg, "carried"), "light-thermal-regime")]
     assert row["status"] == C.ELIGIBLE and row["decision"]["rule"] == "REF-15"
+    assert not row["needsReview"]
 
 
 def test_a_considered_candidate_keeps_its_dispositions_and_refuses_what_it_cannot_hold():
@@ -215,7 +226,9 @@ def test_a_published_version_selects_exactly_what_its_bundle_scores(aid, version
 # a published state SQT curve as a candidate, and the section that shows it
 # --------------------------------------------------------------------------- #
 MN_CANOPY = "sqt:mn:canopy-cover:woody-vegetation-is-a-natural-component-of-riparian-zone"
+MN_BHR = "sqt:mn:bank-height-ratio-bhr:default"
 NLF = {"function": "light-thermal-regime", "states": ["MI", "MN", "WI"], "scoreScale": "staf"}
+BHR_CTX = {"function": "channel-floodplain-dynamics", "states": ["MI", "MN", "WI"], "scoreScale": "staf"}
 
 
 def _sqt():
@@ -228,23 +241,49 @@ def _sqt():
 def test_an_sqt_candidate_is_frozen_checked_and_refused_when_defective():
     from streamcurves import owner_sources
     reg = _sqt()
-    cand = C.sqt_candidate(reg.record(MN_CANOPY), function_id="light-thermal-regime", context=NLF,
+    cand = C.sqt_candidate(reg.record(MN_BHR), function_id="channel-floodplain-dynamics", context=BHR_CTX,
                            region={"code": "50"})
     assert cand["identity"]["sourceKind"] == "sqt" and cand["eligibility"]["status"] == "eligible"
-    assert cand["verification"] == "verified" and reg.frozen_intact(cand["record"])
-    assert {c["id"] for c in cand["eligibility"]["checks"]} >= {"geography", "score-scale", "protocol"}
+    assert cand["identity"]["functionId"] == "channel-floodplain-dynamics"
+    assert reg.frozen_intact(cand["record"])
+    # the original's own points, including its 1.71 -> 0 the metric library row lacks
+    assert [(p["x"], p["y"]) for p in cand["definition"]["points"]] == [(1.0, 1.0), (1.21, 0.7),
+                                                                         (1.493, 0.3), (1.71, 0.0)]
     src = owner_sources.sqt_source(cand)
-    assert src["kind"] == "sqt" and src["curve"]["annotations"]["basisLabel"] == "State SQT"
-    assert src["curve"]["annotations"]["basis"] == "published-benchmark"
-    assert [p["x"] for p in src["curve"]["points"]] == [p["x"] for p in cand["record"]["normalizedPoints"]]
-    assert "0.39 and 0.69" in src["curve"]["annotations"]["basisStatement"]
-    elsewhere = C.sqt_candidate(reg.record(MN_CANOPY), function_id="light-thermal-regime",
-                                context={**NLF, "states": ["IN", "OH"]}, region={"code": "55"})
+    ann = src["curve"]["annotations"]
+    assert src["kind"] == "sqt" and ann["basisLabel"] == "State SQT" and ann["basis"] == "published-benchmark"
+    assert [p["x"] for p in src["curve"]["points"]] == [p["x"] for p in cand["definition"]["points"]]
+    assert "at or below 0.39" in ann["basisStatement"] and "above 0.69 and below 0.70" in ann["basisStatement"]
+    assert not any("(" in c and "H" in c and ")" in c and "cell" in c.lower() for c in ann["curveCaveats"])
+    elsewhere = C.sqt_candidate(reg.record(MN_BHR), function_id="channel-floodplain-dynamics",
+                                context={**BHR_CTX, "states": ["IN", "OH"]}, region={"code": "55"})
     assert elsewhere["eligibility"]["status"] == "excluded"
     with pytest.raises(ValueError, match="excluded"):
         owner_sources.sqt_source(elsewhere)
     defect = next(r for r in reg.load()["records"] if not r["eligible"])
     assert C.sqt_candidate(defect, function_id=defect["function"]["id"])["eligibility"]["status"] == "excluded"
+
+
+def test_an_sqt_rule_is_written_out_or_refused_never_held_flat_silently():
+    reg = _sqt()
+    # WI cold transition: the original's segment equation continues to 0 at about 22.7 C
+    wi = C.sqt_adoption(reg.record("sqt:wi:summer-mean-temperature:cold-transition"))
+    assert wi["points"][-1][1] == 0.0 and wi["points"][-1][0] == pytest.approx(22.6667, abs=1e-3)
+    assert not wi["openEnds"] and wi["notes"]
+    # a logarithmic original cannot be straight segments
+    dpi = C.sqt_candidate(reg.record("sqt:wi:diatom-phosphorus-index-dpi:default"), function_id="x")
+    assert dpi["eligibility"]["status"] == "excluded"
+    assert any(c["id"] == "form" and c["status"] == "fail" for c in dpi["eligibility"]["checks"])
+    # a stratified metric: one stratum would be scored for every site
+    canopy = C.sqt_candidate(reg.record(MN_CANOPY), function_id="light-thermal-regime", context=NLF)
+    strata = next(c for c in canopy["eligibility"]["checks"] if c["id"] == "strata")
+    assert strata["status"] == "fail" and "not a natural component" in strata["detail"]
+    covered = C.sqt_candidate(reg.record(MN_CANOPY), function_id="light-thermal-regime",
+                              context={**NLF, "stratumCoversTarget": True})
+    assert next(c for c in covered["eligibility"]["checks"] if c["id"] == "strata")["status"] == "pass"
+    # the same record under two functions is two candidates
+    other = C.sqt_candidate(reg.record(MN_CANOPY), function_id="habitat-provision", context=NLF)
+    assert other["candidateKey"] != canopy["candidateKey"]
 
 
 def _html(tag) -> str:
@@ -254,17 +293,17 @@ def _html(tag) -> str:
 def test_the_section_shows_selections_alternatives_and_what_a_person_can_do():
     from views import final_selection as fs
     reg = _sqt()
-    cand = C.sqt_candidate(reg.record(MN_CANOPY), function_id="light-thermal-regime", context=NLF,
+    cand = C.sqt_candidate(reg.record(MN_BHR), function_id="channel-floodplain-dynamics", context=BHR_CTX,
                            region={"code": "50"})
-    tiles = [_tile("fit_a", ["light-thermal-regime"]), _tile("fit_b", ["light-thermal-regime"])]
-    build = _build(portfolioSelection={"light-thermal-regime": {"kept": [], "selected": ["fit_a"], "notSelected": [
+    tiles = [_tile("fit_a", ["channel-floodplain-dynamics"]), _tile("fit_b", ["channel-floodplain-dynamics"])]
+    build = _build(portfolioSelection={"channel-floodplain-dynamics": {"kept": [], "selected": ["fit_a"], "notSelected": [
         {"metric": "fit_b", "source": "local", "score": 0.5, "reserve": False}]}})
     register = C.deep_register(tiles=tiles, build=build, register=C.add_considered(None, cand, by="Reviewer"))
     ns = lambda x: f"summary-{x}"  # noqa: E731
     keys = [c["candidateKey"] for c in register["candidates"]][:2]
     html = _html(fs.final_selection_ui(register, ns=ns, compare=keys, extension_on=False,
-                                       open_ids=["light-thermal-regime"], sqt_ready=True))
-    assert "Select final curves" in html and "Light &amp; thermal regime" in html
+                                       open_ids=["channel-floodplain-dynamics"], sqt_ready=True))
+    assert "Select final curves" in html and "Channel and floodplain dynamics" in html
     assert "Use in this function" in html and "Record why not" in html
     assert 'disabled="disabled"' in html and oc.EXTENSION_OFF in html
     assert html.count('class="fs-cmp-col"') == 2 and "<svg" in html
@@ -284,3 +323,72 @@ def test_the_picker_says_where_a_curve_applies():
                                       context={**NLF, "states": ["IN", "OH"]}, have=[MN_CANOPY]))
     assert "Does not apply" in away and "Added" in away
     assert fs.crossings([(0, 0), (10, 0.5), (20, 1)]) == pytest.approx([7.8, 13.8])
+
+
+def test_an_sqt_curve_is_checked_against_the_curve_here_that_measures_the_same_metric():
+    from views import final_selection as fs
+    reg = _sqt()
+    turb = reg.record("sqt:ak:daily-average-turbidity:default")
+    assert C.same_metric(turb, "chem_TURB") and not C.same_metric(turb, "chem_PTL")
+    here = C.sqt_target("chem_TURB", {"display_name": "Turbidity", "units": "NTU", "higher_is_better": False},
+                        (0.5, 150.0))
+    assert here["direction"] == "decreasing" and here["xRange"] == [0.5, 150.0]
+    ctx = C.sqt_context(turb, function_id="water-soil-quality", states=["AK"], targets=[here])
+    assert ctx["targetMetric"] == "chem_TURB" and ctx["xRange"] == [0.5, 150.0]
+    checks = {c["id"]: c for c in reg.applicability(turb, ctx)}
+    assert checks["construct"]["status"] == "pass" and "Turbidity" in checks["construct"]["detail"]
+    assert checks["direction"]["status"] == "pass"
+    cand = C.sqt_candidate(turb, function_id="water-soil-quality", context=ctx)
+    assert cand["eligibility"]["status"] == "eligible"
+    # scoring the same metric the other way round: not this curve
+    upside = {**here, "direction": "increasing"}
+    again = fs.recheck(cand, "water-soil-quality", states=["AK"], targets=[upside])
+    assert again["eligibility"]["status"] == "excluded" and again["candidateKey"] == cand["candidateKey"]
+    html = _html(fs.replacement_checks_ui([(upside, again)]))
+    assert "does not apply" in html and "Opposite directions" in html
+    # another metric: named, never compared
+    tp = C.sqt_target("chem_PTL", {"display_name": "Total phosphorus", "higher_is_better": False}, (1, 90))
+    other = C.sqt_context(turb, function_id="water-soil-quality", states=["AK"], targets=[tp])
+    assert "xRange" not in other and "Total phosphorus" in {c["id"]: c for c in reg.applicability(turb, other)}["construct"]["detail"]
+    assert "measures another metric" in _html(fs.replacement_checks_ui([(tp, fs.recheck(cand, "water-soil-quality",
+                                                                                          states=["AK"], targets=[tp]))]))
+    # an end the source leaves open: only a range inside it can use the curve
+    cond = reg.record("sqt:nc:specific-conductivity:piedmont")
+    wide = C.sqt_target("chem_COND", {"display_name": "Conductivity", "higher_is_better": False}, (50, 300))
+    inside = C.sqt_target("chem_COND", {"display_name": "Conductivity", "higher_is_better": False}, (100, 300))
+    # (the Piedmont stratum recorded as covering the target, so only the ends decide)
+    status = lambda t: C.sqt_candidate(cond, function_id="water-soil-quality", context={  # noqa: E731
+        **C.sqt_context(cond, function_id="water-soil-quality", states=["NC"], targets=[t]),
+        "stratumCoversTarget": True})["eligibility"]["status"]
+    assert status(wide) == "excluded" and status(inside) == "eligible"
+    # the picker checks each record against this function's curves
+    listed = _html(fs.picker_results_ui([turb], ns=lambda x: x, function_id="water-soil-quality",
+                                        states=["AK"], targets=[upside]))
+    assert "Does not apply" in listed and "edition" in listed
+
+
+def test_the_register_keeps_its_records_apart_and_refuses_what_would_break_them():
+    sqt = {"candidateKey": "cand-000000000003", "label": "An SQT curve",
+           "identity": {"assessmentType": "deep", "subject": {"kind": "metric", "id": "sqt_x"},
+                        "sourceKind": "sqt", "functionId": "habitat-provision"},
+           "functions": ["habitat-provision"], "basisDigest": "sha256:cc"}
+    reg = C.add_considered(None, sqt, by="Reviewer", at="2026-09-23T00:00:00Z")
+    why = "The protocol differs from what DEEP users measure in the field."
+    with pytest.raises(ValueError, match="this function"):
+        C.record_disposition(reg, sqt["candidateKey"], "carbon-processing", by="Reviewer", reason=why)
+    one = C.record_disposition(reg, sqt["candidateKey"], "habitat-provision", by="Reviewer", reason=why,
+                               at="2026-09-23T01:00:00Z")
+    two = C.record_disposition(one, sqt["candidateKey"], "habitat-provision", by="Reviewer",
+                               reason=why + " Checked again.", at="2026-09-23T02:00:00Z")
+    back = C.withdraw_disposition(two, two["decisions"][-1]["decisionId"])
+    three = C.record_disposition(back, sqt["candidateKey"], "habitat-provision", by="Reviewer",
+                                 reason=why + " A third look.", at="2026-09-23T03:00:00Z")
+    ids = [d["decisionId"] for d in three["decisions"]]
+    assert len(ids) == len(set(ids)) == 2
+    assert len(C.withdraw_disposition(three, ids[-1])["decisions"]) == 1
+    # a curve an owner decision selects stays until that decision is undone
+    chosen = [{"id": "d1", "action": oc.SOURCE, "metric": "sqt_x",
+               "source": {"kind": "sqt", "ref": {"candidateKey": sqt["candidateKey"]}}}]
+    with pytest.raises(ValueError, match="Undo that decision"):
+        C.remove_considered(three, sqt["candidateKey"], decisions=chosen)
+    assert not C.remove_considered(three, sqt["candidateKey"])["considered"]

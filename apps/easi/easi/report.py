@@ -47,7 +47,7 @@ def scoring_method(result: dict | None = None) -> dict:
         out["acquisition_digest"] = ident["acquisitionDigest"]
     if ident.get("source") == "package":
         out["package"] = {"method_id": ident.get("methodId"), "version": ident.get("version"),
-                          "status": ident.get("status"), "label": ident.get("label"),
+                          "label": ident.get("label"),
                           "package_digest": ident.get("packageDigest")}
     return out
 
@@ -62,7 +62,7 @@ def scoring_method_text(method: dict | None = None) -> str:
     text = f"{name} (method {m.get('method_version')})"
     pkg = m.get("package")
     if pkg:
-        text += f", method package {pkg.get('method_id')} v{pkg.get('version')} ({pkg.get('status')})"
+        text += f", method package {pkg.get('method_id')} v{pkg.get('version')}"
     return text
 
 

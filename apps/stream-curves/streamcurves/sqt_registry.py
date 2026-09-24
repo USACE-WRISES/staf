@@ -112,6 +112,13 @@ def available(path: Optional[Path] = None) -> bool:
     return bool(_doc(_path(path)).get("records"))
 
 
+def facets(path: Optional[Path] = None) -> dict:
+    """The states and editions the registry holds, for filters (cheap: no copy)."""
+    recs = _doc(_path(path)).get("records") or []
+    return {"states": sorted({str(x.get("state")) for x in recs if x.get("state")}),
+            "editions": sorted({str(x.get("edition")) for x in recs if x.get("edition")})}
+
+
 def registry_fingerprint(path: Optional[Path] = None) -> Optional[str]:
     """``sha256:`` of the registry file's bytes, or None when it is absent."""
     p = Path(_path(path))
@@ -274,7 +281,9 @@ def _construct(r: Mapping, ctx: Mapping) -> dict:
     rfn = r.get("function") or {}
     if target:
         if _norm(target) in (_norm(rid), _norm(r.get("originalMetricName"))):
-            return _check("construct", "pass", f"Same metric ({rid}).")
+            here = ctx.get("targetName")
+            return _check("construct", "pass",
+                          f"Same metric as {here}, scored here." if here else f"Same metric ({rid}).")
         if fn and _norm(fn) in (_norm(rfn.get("id")), _norm(rfn.get("name"))):
             return _check("construct", "warn",
                           f"Same STAF function ({rfn.get('name')}), different metric: "
@@ -284,6 +293,12 @@ def _construct(r: Mapping, ctx: Mapping) -> dict:
                       f"({rid}).")
     if fn:
         if _norm(fn) in (_norm(rfn.get("id")), _norm(rfn.get("name"))):
+            compared = [str(x) for x in ctx.get("comparedMetrics") or []]
+            if compared:
+                named = ", ".join(compared[:3]) + (f" and {len(compared) - 3} more" if len(compared) > 3 else "")
+                return _check("construct", "warn",
+                              f"Same STAF function ({rfn.get('name')}); none of its curves here "
+                              f"({named}) measures {r.get('originalMetricName')}.")
             return _check("construct", "warn",
                           f"Same STAF function ({rfn.get('name')}); the target metric "
                           "is not given.")

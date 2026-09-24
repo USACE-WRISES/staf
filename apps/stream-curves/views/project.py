@@ -414,7 +414,7 @@ def project_server(input, output, session, state: AppState):
                 return
             text = pfile.session_text_from_fields(snap["fields"], session_name=snap["name"])
             pfile.write_project(snap["path"], meta=snap["meta"], session_text=text,
-                                origin=snap["origin"])
+                                origin=snap["origin"], min_format=pfile.required_format(snap["fields"]))
 
     async def _save(*, explicit: bool = False) -> bool:
         snap = _snapshot()
@@ -759,7 +759,7 @@ def project_server(input, output, session, state: AppState):
         try:
             evidence = os.environ.get("STAF_EVIDENCE_DIR", "").strip()
             project = await asyncio.to_thread(
-                eio.import_from_checkout, ws.repo_root(), imported_by=ep.person() or "maintainer",
+                eio.import_from_checkout, ws.repo_root(), imported_by=ep.person() or ep.UNNAMED,
                 evidence_dir=Path(evidence) if evidence and (Path(evidence) / "index.json").is_file()
                 else None)
             await asyncio.to_thread(eio.write_project, project, target, name=target.stem,

@@ -752,7 +752,9 @@ def build_deep_assessment_bundle(
                     # curve taken from another one comes from
                     "ownerDecisions", "ownerDecision", "borrowedFrom",
                     # and the checks a refused source the owner accepted failed
-                    "ownerException"):
+                    "ownerException",
+                    # a state SQT curve's registry record and how its rule was written out
+                    "sqt"):
             if key in annotations and annotations[key] is not None:
                 base_entry[key] = annotations[key]
 
@@ -900,7 +902,7 @@ def build_deep_assessment_bundle(
                 # or took from another assessment (REF-15), whose reference, if
                 # any, is not this build's
                 if m.get("criteriaBasis") == "fixed" or m.get("basis") == "owner-entered" \
-                        or isinstance(m.get("borrowedFrom"), dict):
+                        or isinstance(m.get("borrowedFrom"), dict) or isinstance(m.get("sqt"), dict):
                     continue
                 m["referenceTier"] = tier
     # Methodology 0.12: how reference condition was defined for this build, and

@@ -109,11 +109,43 @@ def _function_rows(project) -> list[tuple[str, dict, dict, dict]]:
     return rows
 
 
-def imported_register(project, *, decided_at: str) -> dict:
+def import_reason(project, receipt: Optional[dict] = None) -> str:
+    """Why the imported method is selected, from what the import can show: the promotion
+    record, when it names exactly these bytes, and nothing it cannot show."""
+    import hashlib
+    ident = project.identity()
+    try:
+        scoring = json.loads(project.files["scoring-identity.json"].decode("utf-8"))
+    except (KeyError, ValueError, UnicodeDecodeError):
+        scoring = {}
+    name = scoring.get("alternative_name") or "an unnamed method"
+    outputs = (receipt or {}).get("outputs") or {}
+    names_these = bool(outputs) and all(
+        outputs.get(n) == hashlib.sha256(project.files[n]).hexdigest()
+        for n in ("screening-methods.json", "reference-curves.json", "scoring-identity.json"))
+    if names_these:
+        from .alternatives import ADOPTION, STUDY_COMPLETION_SHA256
+        if (receipt.get("operation") == "promote-frozen-alternative-2"
+                and receipt.get("source_completion_sha256") == STUDY_COMPLETION_SHA256):
+            return (f"The operational EASI method when it was imported ({name}): the files the "
+                    "promotion record names byte for byte, promoted from the 2026-09-15 controlled "
+                    f"alternatives study and adopted by the owner on {ADOPTION['date']} (commit "
+                    f"{ADOPTION['commit'][:7]}). Earlier alternatives and their decisions are recorded "
+                    "only where their study records exist.")
+        return (f"The operational EASI method when it was imported ({name}): the files the "
+                f"promotion record ({receipt.get('operation') or 'unnamed operation'}) names byte for "
+                "byte. Who adopted it and when is not recorded here.")
+    return (f"The EASI method in the imported folder ({name}, method {ident['methodVersion']}). How "
+            "and when it became operational is not recorded here; the verified history starts at "
+            "this import.")
+
+
+def imported_register(project, *, decided_at: str, receipt: Optional[dict] = None) -> dict:
     """The register at import: the operational method of each function, selected, with
     the decision recorded as imported (the history before import is not reconstructed)."""
     curves = project.curves()
     ident = project.identity()
+    reason = import_reason(project, receipt)
     candidates, decisions = [], []
     for fid, method, meta, cwa_row in _function_rows(project):
         identity = {"assessmentType": "easi", "subject": {"kind": "method", "id": method["methodKey"]},
@@ -133,11 +165,7 @@ def imported_register(project, *, decided_at: str) -> dict:
                            "limitations": list(method.get("limitations") or [])})
         decisions.append({"decisionId": f"dec-{cid[5:]}-import", "candidateKey": cid, "functionId": fid,
                           "decision": "selected", "rule": "operational-at-import",
-                          "reason": "The operational EASI method when it was imported "
-                                    "(Alternative 2: NARS-9 references, adopted by the owner "
-                                    "2026-09-16). Earlier alternatives and their decisions are "
-                                    "recorded only where their study records exist.",
-                          "decidedBy": "imported", "who": None, "when": decided_at,
+                          "reason": reason, "decidedBy": "imported", "who": None, "when": decided_at,
                           "basisDigest": basis, "supersedes": None})
     return {"schema": 1, "candidates": candidates, "decisions": decisions,
             "scope": "the operational method of each function at import"}
@@ -153,7 +181,10 @@ def function_basis(project, function_id: str) -> str:
 
 
 def _status_of(decision: Optional[dict], candidate: dict) -> str:
-    """A candidate's status for a function from its latest decision there."""
+    """A candidate's status for a function from its latest decision there. A selection
+    stands whatever the candidate's eligibility (a person selected it on the record)."""
+    if decision is not None and decision.get("decision") == "selected":
+        return "selected"
     if candidate.get("supersededBy"):
         return "superseded"
     if candidate.get("buildStatus") == "failed":
@@ -243,9 +274,10 @@ def confirm_selection(project, function_id: str, *, by: str, reason: str, at: st
             c["basisDigest"] = current
             c["methodVersion"] = ident["methodVersion"]
             c["dataFingerprint"] = ident["packageDigest"]
-    n = sum(1 for d in reg.get("decisions", []) if d.get("candidateKey") == cid)
+    from ..candidates import decision_id
     reg.setdefault("decisions", []).append({
-        "decisionId": f"dec-{cid[5:]}-{n + 1}", "candidateKey": cid, "functionId": function_id,
+        "decisionId": decision_id(reg["decisions"], cid, function_id, "confirm", who, at, reason),
+        "candidateKey": cid, "functionId": function_id,
         "decision": "selected", "rule": "confirmed-after-change", "reason": reason,
         "decidedBy": "person", "who": who, "when": at, "basisDigest": current,
         "supersedes": prior[-1]["decisionId"] if prior else None})
@@ -303,17 +335,28 @@ def add_sqt_candidate(project, record: dict, function_id: str, *, by: str, at: s
         "buildStatus": "built", "supersededBy": None,
         "label": f"{frozen.get('originalMetricName')} ({frozen.get('state')} SQT, {frozen.get('stratumName')})",
         "eligibility": {"status": "excluded", "reasons": [reason], "checks": []},
-        "limitations": [str((frozen.get("verification") or {}).get("status") or "")],
+        "limitations": [str(x) for x in ((frozen.get("verification") or {}).get("reasons") or [])
+                        if (frozen.get("verification") or {}).get("status") != "verified"]
+                       + [str(i.get("detail")) for i in frozen.get("issues") or []
+                          if i.get("severity") in ("warning", "defect")],
         "definition": {"points": [{"x": x, "y": y} for x, y in pts], "units": frozen.get("units"),
                        "direction": frozen.get("direction")},
         "record": frozen, "addedBy": who, "addedAt": at})
+    # the exclusion is the rule's outcome (a field measurement never stands in for a desktop
+    # estimate); the person is who added the curve for comparison
     reg.setdefault("decisions", []).append({
-        "decisionId": f"dec-{key[5:]}-1", "candidateKey": key, "functionId": function_id,
+        "decisionId": _decision_id(reg.get("decisions", []), key, function_id, "field-vs-desktop", at),
+        "candidateKey": key, "functionId": function_id,
         "decision": "not_selected", "rule": "field-vs-desktop", "reason": reason,
-        "decidedBy": "person", "who": who, "when": at, "basisDigest": None, "supersedes": None})
+        "decidedBy": "automated", "who": None, "when": at, "basisDigest": None, "supersedes": None})
     new.history.append({"action": "add_sqt_candidate", "at": at, "by": who, "kind": "register",
                         "reason": reason, "target": {"functionId": function_id, "candidateKey": key}})
     return new
+
+
+def _decision_id(decisions, key, *parts) -> str:
+    from ..candidates import decision_id
+    return decision_id(decisions, key, *parts)
 
 
 def export_rows(project) -> list[dict]:

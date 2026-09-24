@@ -78,7 +78,8 @@ def template_path() -> Path | None:
     rec = mp.active()
     if rec.get("source") != "package":
         return TEMPLATE_PATH
-    return Path(rec["calculator"]) if rec.get("calculator") else None
+    path = Path(rec["calculator"]) if rec.get("calculator") else None
+    return path if path is not None and path.is_file() else None
 
 
 def available() -> bool:

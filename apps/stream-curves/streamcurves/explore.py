@@ -5,7 +5,8 @@ screen) without building, deciding or publishing anything. Each grid cell is one
 ``streamcurves.jobs`` (resumable, one process per cell); every fit becomes a candidate in the
 register's vocabulary (AUTHORING.md, "Candidates"): its identity says what it is, its
 ``basisDigest`` what it holds, ``purpose: exploration`` that no build selected it. A campaign's
-``candidates.jsonl`` opens in StreamCurves beside the curves a build produced.
+``candidates.jsonl`` holds them in the register's format; no page reads it yet (the campaigns
+decide how a reviewer sees them).
 
 - DEEP (``deep_cell``): one Level III ecoregion; every scored NRSA metric fit on the reference
   stations (the fixed pressure screen, strict) of the region, its Level II and its Level I
@@ -74,7 +75,8 @@ def _write_outputs(out_dir: Path, cands: list[dict]) -> dict:
 
 
 def merge(campaign: Path, job_ids: list[str]) -> dict:
-    """The campaign's ``candidates.jsonl`` and ``grid.csv`` from its completed cells."""
+    """The campaign's ``candidates.jsonl`` and ``grid.csv`` from the cells named (the caller
+    names completed cells only: a worker that wrote and then failed contributes nothing)."""
     cands = []
     for jid in job_ids:
         p = Path(campaign) / "jobs" / jid / "out" / "candidates.jsonl"
@@ -161,11 +163,51 @@ def _f(row, col) -> Optional[float]:
 SCREEN_VARIANTS = ("as-built", "relaxed-first")
 
 
+def draw_panels(frame, variant: str) -> dict:
+    """Every level's ``(panels, members)`` drawn from a universe frame under ``variant``, as the
+    builder draws them. Under ``relaxed-first`` the relaxed screen draws the panels a strict
+    screen would, and they are labelled what they are: screen ``relaxed``, tier
+    ``best_available``, so the builder's rule for a relaxed panel (a pressure-driven fit is not
+    usable) applies to them."""
+    from .easi_method import fit_recipe as fr
+    saved = fr.screens.STRICT
+    try:
+        if variant == "relaxed-first":
+            fr.screens.STRICT = fr.RELAXED
+        drawn = {level: fr.select_panels(frame, level) for level in fr.LEVELS}
+    finally:
+        fr.screens.STRICT = saved
+    if variant == "relaxed-first":
+        for panels, members in drawn.values():
+            for df in (panels, members):
+                if len(df):
+                    strict = df["screen"] == "strict"
+                    df.loc[strict, "screen"] = "relaxed"
+                    df.loc[strict, "panel_tier"] = "best_available"
+            if len(panels):
+                panels.loc[panels["screen"] == "relaxed", "reason"] = "the relaxed screen drew this panel first"
+    return drawn
+
+
+def member_pressure(frame, drawn: dict):
+    """Each member reach's composite pressure, ranked over every member row of every level as
+    the builder ranks it (one value per reach)."""
+    import pandas as pd
+    from .easi_method import fit_recipe as fr
+    rows = pd.concat([m for _p, m in drawn.values() if len(m)], ignore_index=True)
+    pos = pd.Index(frame["comid"]).get_indexer(rows["comid"])
+    raw = {v: frame[v].to_numpy()[pos] for v in fr.PRESSURE_VARIABLES if v in frame.columns}
+    pressure, _ = fr.composite_pressure(raw)
+    per = pd.DataFrame({"comid": rows["comid"].to_numpy(), "composite_pressure": pressure})
+    two = per.groupby("comid")["composite_pressure"].nunique(dropna=True)
+    if (two > 1).any():
+        raise RuntimeError("a member reach has two composite pressures")
+    return per.drop_duplicates("comid")
+
+
 def _members_for(spec: dict):
     """(members, values, panels) as built, or redrawn from the universe under a variant."""
-    import pandas as pd
     import pyarrow.parquet as pq
-    from .easi_method import fit_recipe as fr
     from .easi_method import refit
     if spec["variant"] == "as-built":
         return refit.load_members(Path(spec["members"]))
@@ -173,16 +215,11 @@ def _members_for(spec: dict):
     for name in frame.columns:
         if str(frame[name].dtype) == "float32":
             frame[name] = frame[name].astype("float64")
-    if spec["variant"] == "relaxed-first":
-        # this job's own process: the relaxed screen draws the panels first
-        fr.screens.STRICT = fr.RELAXED
-    panels, members = fr.select_panels(frame, spec["level"])
+    drawn = draw_panels(frame, spec["variant"])
+    panels, members = drawn[spec["level"]]
     vals = pq.read_table(Path(spec["universeValues"]) / "data" / "universe_values.parquet").to_pandas()
-    raw = {v: frame[v].to_numpy() for v in fr.PRESSURE_VARIABLES if v in frame.columns}
-    in_members = frame["comid"].isin(members["comid"]).to_numpy()
-    pressure, _ = fr.composite_pressure({k: v[in_members] for k, v in raw.items()})
-    pres = pd.DataFrame({"comid": frame["comid"].to_numpy()[in_members], "composite_pressure": pressure})
-    values = vals[vals["comid"].isin(members["comid"])].merge(pres, on="comid", how="left")
+    values = vals[vals["comid"].isin(members["comid"])].merge(member_pressure(frame, drawn), on="comid",
+                                                              how="left")
     return members, values, panels
 
 
@@ -199,11 +236,15 @@ def easi_cell(spec: dict, out_dir: Path) -> dict:
         identity = {"assessmentType": "easi", "subject": {"kind": "quantity", "id": q.key},
                     "sourceKind": "fitted",
                     "sourceRef": {"level": r["level"], "stratum": r["stratum"], "split": r.get("split") or "",
-                                  "variant": spec["variant"], "evidence": spec.get("evidenceDigest")},
+                                  "variant": spec["variant"],
+                                  "evidence": (spec.get("evidenceDigest") if spec["variant"] == "as-built"
+                                               else {"universe": spec.get("universeDigest"),
+                                                     "universeValues": spec.get("universeValuesDigest")})},
                     "applicability": {"geography": {"kind": r["level"], "code": r["stratum"]}}}
         cands.append(candidate(identity, r, campaign=spec["campaign"], usable=bool(r.get("usable")),
                                reason=r.get("reason") or ""))
     return _write_outputs(out_dir, cands)
 
 
-__all__ = ["candidate", "merge", "deep_cell", "easi_cell", "RUNGS", "SCREEN_VARIANTS", "GRID_COLUMNS"]
+__all__ = ["candidate", "merge", "deep_cell", "easi_cell", "RUNGS", "SCREEN_VARIANTS", "GRID_COLUMNS",
+           "draw_panels", "member_pressure"]

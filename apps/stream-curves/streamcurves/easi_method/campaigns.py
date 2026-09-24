@@ -34,17 +34,23 @@ def fit_quantity(spec: dict, out_dir: Path) -> dict:
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     (Path(out_dir) / "rows.json").write_text(json.dumps(rows, sort_keys=True, default=float) + "\n",
                                              encoding="utf-8")
-    return {"fits": len(rows), "quantity": spec["quantity"]}
+    return {"fits": len(rows), "quantity": spec["quantity"],
+            "recipe": refit.recipe_check(Path(spec["members"]))}
 
 
 def refit_jobs(members_dir: Path, *, members_digest: str,
                quantities: Optional[Iterable[str]] = None) -> list[jobs.Job]:
+    from .. import evidence_store as evs
     from . import fit_recipe as fr
+    got = evs.verify_folder(Path(members_dir))
+    if not got["ok"] or got["dataDigest"] != members_digest:
+        raise ValueError("the members package does not verify as the one named")
     wanted = list(quantities) if quantities is not None else list(fr.QUANTITIES)
+    code = jobs.tree_fingerprint(jobs.APP_ROOT, ("streamcurves",))
     return [jobs.Job(kind="python", target="streamcurves.easi_method.campaigns:fit_quantity",
                      spec={"task": "easi-refit", "quantity": q, "members": str(members_dir),
-                           "membersDigest": members_digest,
-                           "recipe": jobs.sha_file(Path(fr.__file__))},
+                           "membersDigest": got["dataDigest"], "membersPackageDigest": got["packageDigest"],
+                           "code": code},
                      label=f"refit {q}") for q in wanted]
 
 
@@ -95,6 +101,7 @@ def evaluation_jobs(packages: dict[str, Path], cases_path: Path, *, cache_dir: P
     """One job per method package (``label -> package zip``), each with its package active."""
     from .._vendor.easi import method_package as mp
     cases_sha = jobs.sha_file(cases_path)
+    code = jobs.tree_fingerprint(jobs.APP_ROOT, ("streamcurves",))
     out = []
     for label, pkg in sorted(packages.items()):
         digest = mp.read_package(Path(pkg).read_bytes()).digest
@@ -102,7 +109,8 @@ def evaluation_jobs(packages: dict[str, Path], cases_path: Path, *, cache_dir: P
             kind="python", target="streamcurves.easi_method.campaigns:score_cases",
             spec={"task": "easi-evaluate", "packageDigest": digest, "casesSha256": cases_sha,
                   "cases": str(cases_path), "package": str(pkg),
-                  "evaluator": mp.evaluator_digest()},
+                  "evaluator": mp.evaluator_digest(), "acquisition": mp.acquisition_digest(),
+                  "code": code},
             env={"EASI_METHOD_PACKAGE": str(pkg), mp.WORKER_ENV: "1", "EASI_CRITERIA_SET": "regional",
                  "EASI_METHOD_CACHE": str(cache_dir), "PYTHONDONTWRITEBYTECODE": "1"},
             label=label))

@@ -93,7 +93,10 @@ WORKER_ENV = "STREAMCURVES_EASI_WORKER"
 #: ``tests/test_method_package.py`` keeps OPERATORS equal to ``screening_methods``'s.
 OPERATORS = ("threshold", "ratio", "minimum", "minimum_of_products", "worst_index", "best_index",
              "weighted_capped_sum", "sum_capped", "categorical_lookup", "unscored")
-STRATIFIERS = ("nars9", "slope_class")
+#: The curve-set stratifiers the evaluator resolves: a key of the reach's strata
+#: (``geo.strata_for`` / ``strata_at``), or ``national`` (a set holding only the national
+#: curve). Level II sets were Alternative 1's; national-only sets were Alternative 3's.
+STRATIFIERS = ("nars9", "slope_class", "l2", "national")
 SLOPE_CLASSES = ("lt_0.5", "0.5_to_2", "ge_2")
 #: Scoring behavior that lives in the evaluator's code, not in the method files. A
 #: package names the ones its ratings rely on; a later evaluator that changes one of
@@ -322,7 +325,11 @@ def validate_files(files: dict[str, bytes]) -> list[str]:
         problems.append(f"NARS-9 geography unreadable: {exc}")
     if not nars:
         problems.append("NARS-9 geography names no region codes")
-    allowed = {"nars9": nars, "slope_class": set(SLOPE_CLASSES)}
+    try:
+        l2_codes = set((_json(files, "ecoregion-crosswalk.json").get("l2") or {}).keys())
+    except Exception:  # noqa: BLE001 - reported where the crosswalk is checked
+        l2_codes = set()
+    allowed = {"nars9": nars, "slope_class": set(SLOPE_CLASSES), "l2": l2_codes, "national": set()}
     for name, s in sets.items():
         keys = set((s.get("curves") or {}).keys())
         if "national" not in keys:
@@ -330,6 +337,10 @@ def validate_files(files: dict[str, bytes]) -> list[str]:
         strat = s.get("stratifier")
         if strat not in allowed:
             problems.append(f"curve set {name}: unknown stratifier {strat!r}")
+        elif strat == "national" and keys != {"national"}:
+            problems.append(f"curve set {name}: a national set holds only the national curve")
+        elif strat == "l2" and not l2_codes:
+            problems.append(f"curve set {name}: the crosswalk names no Level II codes")
         elif allowed[strat] and not (keys - {"national"}) <= allowed[strat]:
             problems.append(f"curve set {name}: strata {sorted(keys - {'national'} - allowed[strat])} "
                             f"are not {strat} codes")
@@ -340,6 +351,18 @@ def validate_files(files: dict[str, bytes]) -> list[str]:
             elif any(b[0] < a[0] for a, b in zip(pts, pts[1:])) or \
                     any(not 0.0 <= float(p[1]) <= 1.0 for p in pts):
                 problems.append(f"curve {name}/{stratum} knots must increase in x with 0 <= y <= 1")
+            else:
+                ys = [float(p[1]) for p in pts]
+                hib = s.get("higherIsBetter")
+                if (hib is True and any(b < a for a, b in zip(ys, ys[1:]))) or \
+                        (hib is False and any(b > a for a, b in zip(ys, ys[1:]))):
+                    problems.append(f"curve {name}/{stratum} runs against its set's direction "
+                                    f"(higherIsBetter {hib})")
+                x39, x69 = (c or {}).get("x39"), (c or {}).get("x69")
+                if isinstance(x39, (int, float)) and isinstance(x69, (int, float)) and \
+                        ((hib is True and x39 > x69) or (hib is False and x39 < x69)):
+                    problems.append(f"curve {name}/{stratum}: x39 and x69 are in the wrong order "
+                                    f"for its direction")
 
     def uses(rule):
         c = (rule or {}).get("curve")
@@ -406,7 +429,7 @@ class MethodPackage:
 
 
 def build_envelope(files: dict[str, bytes], *, method_id: str, version: int, label: str,
-                   status: str = "draft", criteria_set: str = "regional",
+                   criteria_set: str = "regional",
                    calculator: Optional[tuple[str, bytes]] = None,
                    extra: Optional[dict] = None) -> dict:
     """The ``method.json`` for a file set, with identities computed here."""
@@ -430,7 +453,8 @@ def build_envelope(files: dict[str, bytes], *, method_id: str, version: int, lab
         "schemaVersion": SCHEMA_VERSION,
         "methodId": method_id,
         "version": int(version),
-        "status": status,
+        # the lifecycle status (draft, preliminary, final) is the library's record and can
+        # change after publication; the package names only what it is
         "label": label,
         "criteriaSet": criteria_set,
         "identity": {
@@ -629,6 +653,10 @@ def _verify_dir(target: Path, pkg: MethodPackage, assets: dict[str, str]) -> boo
         for name, sha in assets.items():
             if _sha((target / name).read_bytes()) != sha:
                 return False
+        if pkg.calculator is not None:
+            calc = target.parent / CALCULATOR_DIR / pkg.calculator[0]
+            if calc.read_bytes() != pkg.calculator[1]:
+                return False
         return True
     except OSError:
         return False
@@ -645,7 +673,10 @@ def materialize(source: Union[str, Path, bytes, MethodPackage]) -> tuple[Path, M
         p = builtin / name
         if p.is_file():
             assets[name] = _sha(p.read_bytes())
-    key = _sha(canonical({"package": pkg.digest, "assets": assets}))[:24]
+    # the workbook is part of what a folder serves: two packages with the same method files
+    # and different calculators (or one without) never share a folder
+    calc_key = [pkg.calculator[0], _sha(pkg.calculator[1])] if pkg.calculator is not None else None
+    key = _sha(canonical({"package": pkg.digest, "assets": assets, "calculator": calc_key}))[:24]
     final = cache_root() / key
     target = final / "data"
     if target.is_dir():
@@ -722,8 +753,10 @@ def materialize_from_env() -> None:
 def _active_record(pkg: MethodPackage, data_dir: Path) -> dict:
     env = pkg.envelope
     calc = (data_dir.parent / CALCULATOR_DIR / pkg.calculator[0]) if pkg.calculator else None
+    if calc is not None and not calc.is_file():
+        calc = None
     return {"source": "package", "methodId": env.get("methodId"), "version": env.get("version"),
-            "status": env.get("status"), "label": env.get("label"),
+            "label": env.get("label"),
             "packageDigest": pkg.digest, "recordedMethodVersion": pkg.identity.get("methodVersion"),
             "recordedEvaluatorDigest": pkg.identity.get("evaluatorDigest"),
             "dataDir": str(data_dir), "calculator": str(calc) if calc else None}
@@ -824,6 +857,10 @@ def _point_modules_at(data_dir: Path) -> None:
     nrsa.DATA_PATH = data_dir / "nrsa-2018-19-evidence.json.gz"
 
 
+#: the criteria set the process started with, kept by the first ``activate``
+_ENTRY_CRITERIA: dict = {}
+
+
 def activate(source: Union[str, Path, bytes, MethodPackage, None]) -> dict:
     """Switch the method inside this process: for tests and for a worker that scores
     one method. Production switching is by process (``EASI_METHOD_PACKAGE`` at start).
@@ -835,9 +872,22 @@ def activate(source: Union[str, Path, bytes, MethodPackage, None]) -> dict:
     if source is None:
         data_dir = builtin_data_dir()
         os.environ.pop("EASI_DATA_DIR", None)
+        # back to the criteria set the process started with
+        entry = _ENTRY_CRITERIA.get("value")
+        if entry is None:
+            os.environ.pop("EASI_CRITERIA_SET", None)
+        else:
+            os.environ["EASI_CRITERIA_SET"] = entry
         _ACTIVE.clear()
     else:
         data_dir, pkg = materialize(source)
+        if not _ACTIVE:
+            # the first switch away from the built-in method remembers the entry value
+            _ENTRY_CRITERIA["value"] = os.environ.get("EASI_CRITERIA_SET")
+        crit = _ENTRY_CRITERIA.get("value")
+        if crit and crit != pkg.criteria_set:
+            raise MethodPackageError(f"EASI_CRITERIA_SET={crit!r} does not match the method package "
+                                     f"({pkg.criteria_set!r})")
         os.environ["EASI_DATA_DIR"] = str(data_dir)
         os.environ["EASI_CRITERIA_SET"] = pkg.criteria_set
         _ACTIVE.clear()
@@ -853,7 +903,7 @@ def activate(source: Union[str, Path, bytes, MethodPackage, None]) -> dict:
 
 
 def package_from_dir(data_dir: Union[str, Path], *, method_id: str = "easi-screening",
-                     version: int = 1, label: str = "", status: str = "draft",
+                     version: int = 1, label: str = "",
                      calculator: Optional[Union[str, Path]] = None) -> MethodPackage:
     """A package of the method files in a data folder, byte for byte (the importer's
     first step, and how tests build the built-in package)."""
@@ -870,5 +920,5 @@ def package_from_dir(data_dir: Union[str, Path], *, method_id: str = "easi-scree
         pass
     env = build_envelope(files, method_id=method_id, version=version,
                          label=label or ident.get("alternative_name") or "EASI screening method",
-                         status=status, calculator=calc)
+                         calculator=calc)
     return MethodPackage(envelope=env, files=files, calculator=calc, source=str(data_dir))

@@ -223,7 +223,12 @@ def test_the_easi_page_helpers_cover_the_method(plain):
     assert set(users) == set(plain.curves()["sets"])
     edited = _edge(eio.fork(plain, by="tester"))
     assert [ep.describe(h, ep.names_of(edited)) for h in ep.history_since_origin(edited)] == [
-        "Reach inflow: band edge 1 from 1 to 1.5"]
+        "Reach inflow: band edge 1 from 1 to 1.5; read its breakpoint note again, it explains the "
+        "old edge"]
+    # the moved edge's annotation says 1.5; its cited note is named for the author to re-read
+    mark = next(m for m in json.loads(edited.files["screening-methods.json"])["methods"]
+                if m["methodKey"] == ROAD)["breakpoints"][0]
+    assert mark["label"].startswith("1.5") and edited.history[-1]["textToCheck"]
 
 
 # --------------------------------------------------------------------------- #

@@ -72,7 +72,9 @@ assessments/easi-screening/
     meta.json, provenance.json
 ```
 
-Readers keep to their type: DEEP's readers and bake skip every entry whose type is not `deep`;
+Readers keep to their type: DEEP's readers and bake skip every entry whose type is not `deep`
+(DEEP's ea32716 reader never yields an EASI bundle either; only its catalog pointers, which an old
+bake copies into `libraryCatalog`, would name the EASI entry, with nothing to point to);
 StreamCurves' DEEP paths (carry-forward, other-assessment sources, the DEEP publish page, the
 calculator backfill, the rules scorecard) do too; `library.load_version_bundle` refuses an EASI
 id. EASI versions are published by `library.publish_easi_version` (through

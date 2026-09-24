@@ -1016,6 +1016,30 @@ def discover_sources(templates_dir: Path = TEMPLATES_DIR,
 CATEGORICAL_INPUT_LABELS = ("dominant behi/nbs",)
 
 
+class SourceProblem(Exception):
+    """An original the builder must not read as named (a finding, never a substitution)."""
+
+    def __init__(self, code: str, detail: str):
+        super().__init__(detail)
+        self.code = code
+        self.detail = detail
+
+
+def pick_sheet(wb, sheet: Optional[str], display: str):
+    """The worksheet a source names. A named sheet the workbook lacks, or an unnamed one in
+    a workbook of several, is a :class:`SourceProblem`: another sheet is never read instead."""
+    if sheet:
+        if sheet in wb.sheetnames:
+            return wb[sheet]
+        raise SourceProblem("original-sheet-missing",
+                            f"{display} has no sheet named {sheet!r} (it has "
+                            f"{', '.join(repr(n) for n in wb.sheetnames)}).")
+    if len(wb.worksheets) == 1:
+        return wb.worksheets[0]
+    raise SourceProblem("original-sheet-not-named",
+                        f"{display} has {len(wb.worksheets)} sheets and its source record names none.")
+
+
 def read_source_tables(source: dict) -> list[dict]:
     """The tables of one original. Also records, on ``source["_categoricalInputs"]``, any
     cell naming a categorical SQT input (such as a Dominant BEHI/NBS pull-down list)."""
@@ -1031,8 +1055,7 @@ def read_source_tables(source: dict) -> list[dict]:
         read_only = layout == "reference-curves"
         wb = openpyxl.load_workbook(source["_path"], data_only=False, read_only=read_only)
         try:
-            sheet = source.get("sheet")
-            ws = wb[sheet] if sheet in wb.sheetnames else wb.worksheets[0]
+            ws = pick_sheet(wb, source.get("sheet"), display)
             tables = (parse_performance_standards(ws, source)
                       if layout == "performance-standards" else parse_reference_curves(ws, source))
             for t in tables:
@@ -1120,9 +1143,23 @@ def compare_to_table(rec: dict, table: dict) -> dict:
     if table["twoSided"] and rec["direction"] in ("increasing", "decreasing"):
         rising = rec["direction"] == "increasing"
     counts = {"exact": 0, "consistent": 0, "rounded": 0, "drift": 0, "mismatch": 0}
-    for k, (lvl, cell) in enumerate(zip(levels, table["parsed"])):
-        b = bins[k] if k < len(bins) else None
-        ref = table["cellRefs"][k] if k < len(table["cellRefs"]) else ""
+    # each original cell pairs with the record's bin at the same index level, never by
+    # position; a bin at a level the original does not write is checked against its line
+    used: set = set()
+
+    def bin_at(level: float):
+        for i, x in enumerate(bins):
+            if i not in used and x.get("indexNumber") is not None \
+                    and abs(float(x["indexNumber"]) - float(level)) <= 1e-9:
+                used.add(i)
+                return x
+        return None
+
+    pairs = [(lvl, cell, bin_at(lvl), table["cellRefs"][k] if k < len(table["cellRefs"]) else "")
+             for k, (lvl, cell) in enumerate(zip(levels, table["parsed"]))]
+    pairs += [(float(x["indexNumber"]), {"tokens": [], "text": ""}, x, "")
+              for i, x in enumerate(bins) if i not in used and x.get("indexNumber") is not None]
+    for lvl, cell, b, ref in pairs:
         skip = lvl in table.get("inconsistentLevels", [])
         tok = _tok_value(cell, rising)
         has_rec = b is not None and b["fieldNumber"] is not None and b["indexNumber"] is not None
@@ -1693,6 +1730,9 @@ def build(csv_path: Optional[Path] = None, *, library_dir: Path = METRIC_LIBRARY
     for s in sources:
         try:
             tables = read_source_tables(s)
+        except SourceProblem as e:
+            problems.append({"code": e.code, "state": s["state"], "detail": e.detail})
+            continue
         except Exception as e:  # noqa: BLE001 - an unreadable owner file is a finding
             problems.append({"code": "original-unreadable", "state": s["state"],
                              "detail": f"{_rel(s['_path'], s.get('_root'))} could not be read "
