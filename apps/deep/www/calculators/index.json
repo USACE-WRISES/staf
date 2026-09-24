@@ -1,6 +1,13 @@
 {
   "schemaVersion": 1,
   "calculators": {
+    "ak-sqt-adapted@v2": {
+      "file": "ak-sqt-adapted@v2.xlsx",
+      "sha256": "sha256:c58bc6657e7387879307cba860a7d11c39e1398a867672e68a7bf32bad316e0b",
+      "bytes": 37136,
+      "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
+      "generatorVersion": "1.0"
+    },
     "central-basin-and-range@v1": {
       "file": "central-basin-and-range@v1.xlsx",
       "sha256": "sha256:2512084ccd039274a5e671b31e8f8a370e7ca7845574785233bbfeb580596813",
@@ -13,6 +20,13 @@
       "sha256": "sha256:2336e0eefc2df67057d9ea1877c15429ac0765be5f8d7d90093bb2e6773991b9",
       "bytes": 38444,
       "contentDigest": "sha256:a8d63f254bc0d56a5c1bee680104279a79f13f69b3a4d7c73c28e64948597a6f",
+      "generatorVersion": "1.0"
+    },
+    "co-sqt-adapted@v2": {
+      "file": "co-sqt-adapted@v2.xlsx",
+      "sha256": "sha256:765b1560e6226c331550de4f9e159cd266e9109dfdbb28f6b02305124325cbf1",
+      "bytes": 39551,
+      "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
       "generatorVersion": "1.0"
     },
     "eastern-corn-belt-plains@v6": {
@@ -57,6 +71,27 @@
       "contentDigest": "sha256:c7f3ba4aab6330c47fa23613a0ca1969469bd4b99a8f5b268498601311da0f73",
       "generatorVersion": "1.0"
     },
+    "mi-sqt-adapted@v2": {
+      "file": "mi-sqt-adapted@v2.xlsx",
+      "sha256": "sha256:d5853ba6699aa4bccbff75cd8dd00bbd70ec4ddd853443f168d5f9d5583095ac",
+      "bytes": 35927,
+      "contentDigest": "sha256:5d8e95677f0cf2bf4b18d1f089024b4fda8aefb21767fb89e2742ad819998e02",
+      "generatorVersion": "1.0"
+    },
+    "mn-sqt-adapted@v2": {
+      "file": "mn-sqt-adapted@v2.xlsx",
+      "sha256": "sha256:2f0f5b7943e8a5226f3128a8177ddfcc9ccd02cc3281a7d441297aadd7ba831d",
+      "bytes": 37046,
+      "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c",
+      "generatorVersion": "1.0"
+    },
+    "nc-sqt-adapted@v2": {
+      "file": "nc-sqt-adapted@v2.xlsx",
+      "sha256": "sha256:8d60a421163dc5aae6bb49329614d8df4ab10a59867b635fd99a09b348731ff4",
+      "bytes": 43861,
+      "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
+      "generatorVersion": "1.0"
+    },
     "northeastern-highlands@v7": {
       "file": "northeastern-highlands@v7.xlsx",
       "sha256": "sha256:40b3e974ccd7b748a4f47f875492c03ff6e22f5d28e46894d3172c50d52defa6",
@@ -85,6 +120,13 @@
       "contentDigest": "sha256:7d8d5bed086c24c7ac118c4008ca58ae2190f42e4209dca35415d0fa8e24277a",
       "generatorVersion": "1.0"
     },
+    "sc-sqt-adapted@v2": {
+      "file": "sc-sqt-adapted@v2.xlsx",
+      "sha256": "sha256:05960db85e274c3337f5a3008232851fdaa37cd782c0b895fbb6a61880b50c60",
+      "bytes": 39153,
+      "contentDigest": "sha256:91a19a28ca5e6bbbe1f35eefb5a06284a65b006ccddca6f905fe28e79a893f23",
+      "generatorVersion": "1.0"
+    },
     "southeastern-plains@v1": {
       "file": "southeastern-plains@v1.xlsx",
       "sha256": "sha256:c4b892762040da526b15f4bdb01909bd398c62dc94bb29047a08183bac85cf70",
@@ -98,15 +140,37 @@
       "bytes": 39635,
       "contentDigest": "sha256:fe2aca83722659416d0eccddf8e01ac668272363e995ca238259f7edf1971856",
       "generatorVersion": "1.0"
+    },
+    "wi-sqt-adapted@v2": {
+      "file": "wi-sqt-adapted@v2.xlsx",
+      "sha256": "sha256:9914cf889f9ee2041ca2513c3a8d57cec11ccffa9b796bbee8c8dd1e560827a7",
+      "bytes": 38035,
+      "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b",
+      "generatorVersion": "1.0"
+    },
+    "wy-sqt-adapted@v2": {
+      "file": "wy-sqt-adapted@v2.xlsx",
+      "sha256": "sha256:43be48b9b6266d31ca27d41d8dba32f480d53200b247310c33da13dd108736ab",
+      "bytes": 38750,
+      "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
+      "generatorVersion": "1.0"
     }
   },
   "default": {
+    "ak-sqt-adapted": "ak-sqt-adapted.xlsx",
     "central-basin-and-range": "central-basin-and-range.xlsx",
     "central-great-plains": "central-great-plains.xlsx",
+    "co-sqt-adapted": "co-sqt-adapted.xlsx",
     "eastern-corn-belt-plains": "eastern-corn-belt-plains.xlsx",
     "interior-plateau": "interior-plateau.xlsx",
+    "mi-sqt-adapted": "mi-sqt-adapted.xlsx",
+    "mn-sqt-adapted": "mn-sqt-adapted.xlsx",
+    "nc-sqt-adapted": "nc-sqt-adapted.xlsx",
     "northeastern-highlands": "northeastern-highlands.xlsx",
     "northern-lakes-and-forests": "northern-lakes-and-forests.xlsx",
-    "southeastern-plains": "southeastern-plains.xlsx"
+    "sc-sqt-adapted": "sc-sqt-adapted.xlsx",
+    "southeastern-plains": "southeastern-plains.xlsx",
+    "wi-sqt-adapted": "wi-sqt-adapted.xlsx",
+    "wy-sqt-adapted": "wy-sqt-adapted.xlsx"
   }
 }

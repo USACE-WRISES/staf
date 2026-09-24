@@ -1,0 +1,781 @@
+{
+  "kind": "sqt-transcription",
+  "schemaVersion": 1,
+  "assessmentId": "ak-sqt-adapted",
+  "tool": "Alaska Stream Quantification Tool",
+  "publishedBy": "GM",
+  "publishedAt": "2026-09-24",
+  "transcribedFrom": {
+    "version": 1,
+    "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
+    "by": "STAF SQT migration",
+    "on": "2026-07-12",
+    "source": "docs/assets/data/metric-library/detailed-adapted-assessments.json"
+  },
+  "ownerDecisions": [
+    "2026-09-24: complete the state SQT assessments as StreamCurves sessions, the metrics under the functions the metric library gives them (approach a).",
+    "2026-09-24: score exactly as v1; defective and open-ended layers are flagged as caveats, not fixed.",
+    "2026-09-24: approve each function's SQT metric set as published (SELECT-01).",
+    "2026-09-24: Preliminary; DEEP keeps hiding the state SQT assessments."
+  ],
+  "sources": {
+    "metricLibrary": {
+      "path": "docs/assets/data/metric-library/detailed-adapted-assessments.json",
+      "sha256": "sha256:289699f66216da27c63e149004203d46d31a76da8b389a5895e3ec8c91493649"
+    },
+    "sqtRegistry": {
+      "path": "apps/stream-curves/data/sqt/registry.json",
+      "sha256": "sha256:21f4d780206d5f3a74687e0fbac055356bb4033f70ee54db51a296cd3dbaf032"
+    }
+  },
+  "curves": [
+    {
+      "metricId": "catchment-hydrology-anthropogenic-land-cover",
+      "functions": [
+        "catchment-hydrology"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:anthropogenic-land-cover:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 50 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "catchment-hydrology-impervious-cover",
+      "functions": [
+        "catchment-hydrology"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:impervious-cover:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 10 (index 0.7); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "catchment-hydrology-land-use-coefficient",
+      "functions": [
+        "catchment-hydrology"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:land-use-coefficient:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "reach-inflow-concentrated-flow-points-1-000-ft",
+      "functions": [
+        "reach-inflow"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:concentrated-flow-points-1-000-ft:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 1 (index 0.7); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "functions": [
+        "floodplain-connectivity"
+      ],
+      "layers": [
+        {
+          "stratum": "C Streams",
+          "registryKey": "sqt:ak:entrenchment-ratio-er:c-streams",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "E Streams",
+          "registryKey": "sqt:ak:entrenchment-ratio-er:e-streams",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "B Stream Types",
+          "registryKey": "sqt:ak:entrenchment-ratio-er:b-stream-types",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "channel-evolution-width-depth-ratio",
+      "functions": [
+        "channel-evolution"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:width-depth-ratio:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:bank-height-ratio-bhr:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:percent-streambank-armoring:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:percent-streambank-erosion:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "bed-composition-and-large-wood-percent-fines-2mm",
+      "functions": [
+        "bed-composition-bedform-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "Gravel Bed",
+          "registryKey": "sqt:ak:percent-fines-lt-2mm:gravel-bed",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 37 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "Cobble, Boulders, Bedrock",
+          "registryKey": "sqt:ak:percent-fines-lt-2mm:cobble-boulders-bedrock",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 10 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-daily-maximum-temperature",
+      "functions": [
+        "light-thermal-regime"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:daily-maximum-temperature:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 1.25 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-percent-native-cover",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:percent-native-cover:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 95 (index 0.7); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-riparian-extent",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "Unconfined Alluvial Valleys",
+          "registryKey": "sqt:ak:riparian-extent:unconfined-alluvial-valleys",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Confined Alluvial or Colluvial/V-Shaped Valleys",
+          "registryKey": "sqt:ak:riparian-extent:confined-alluvial-or-colluvial-v-shaped-valleys",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-vegetative-complexity",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "Alaska & Brooks Range",
+          "registryKey": "sqt:ak:vegetative-complexity:alaska-and-brooks-range",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Interior Highlands",
+          "registryKey": "sqt:ak:vegetative-complexity:interior-highlands",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Interior Bottomlands",
+          "registryKey": "sqt:ak:vegetative-complexity:interior-bottomlands",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Interior Forested Lowlands/Uplands",
+          "registryKey": "sqt:ak:vegetative-complexity:interior-forested-lowlands-uplands",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "nutrient-cycling-diatom-index",
+      "functions": [
+        "nutrient-cycling"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:diatom-index:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 58 (index 0.7); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "water-and-soil-quality-daily-average-turbidity",
+      "functions": [
+        "water-soil-quality"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:daily-average-turbidity:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-lwd-frequency",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "Alaska Range",
+          "registryKey": "sqt:ak:lwd-frequency:alaska-range",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Brooks Range",
+          "registryKey": "sqt:ak:lwd-frequency:brooks-range",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Interior Bottomlands",
+          "registryKey": "sqt:ak:lwd-frequency:interior-bottomlands",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Interior Forested Lowlands/Uplands and Highlands",
+          "registryKey": "sqt:ak:lwd-frequency:interior-forested-lowlands-uplands-and-highlands",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "Slopes < 3%",
+          "registryKey": "sqt:ak:percent-riffle:slopes-lt-3-pct",
+          "verification": "defective",
+          "defects": [
+            "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 68 scores 1. Not checked against this state's original."
+          ],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Slopes < 3% / Overall",
+          "registryKey": "sqt:ak:percent-riffle:slopes-lt-3-pct-overall",
+          "verification": "defective",
+          "defects": [
+            "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 50 scores 1. Not checked against this state's original."
+          ],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-depth-ratio",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "B & Ba Streams",
+          "registryKey": "sqt:ak:pool-depth-ratio:b-and-ba-streams",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "All other Streams",
+          "registryKey": "sqt:ak:pool-depth-ratio:all-other-streams",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "B and Ba Stream Types",
+          "registryKey": "sqt:ak:pool-spacing-ratio:b-and-ba-stream-types",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Bc Stream Types",
+          "registryKey": "sqt:ak:pool-spacing-ratio:bc-stream-types",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 6 (index 0.7); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "C Streams",
+          "registryKey": "sqt:ak:pool-spacing-ratio:c-streams",
+          "verification": "defective",
+          "defects": [
+            "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 4 scores 1. Not checked against this state's original."
+          ],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "E Streams",
+          "registryKey": "sqt:ak:pool-spacing-ratio:e-streams",
+          "verification": "defective",
+          "defects": [
+            "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.5 scores 1. Not checked against this state's original."
+          ],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "population-support-alaskan-interior-mmi",
+      "functions": [
+        "population-support"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:alaskan-interior-mmi:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "community-dynamics-fish-species-richness",
+      "functions": [
+        "community-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "Anadromous",
+          "registryKey": "sqt:ak:fish-species-richness:anadromous",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Non-anadromous",
+          "registryKey": "sqt:ak:fish-species-richness:non-anadromous",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "community-dynamics-relative-abundance-and-species-biomass-metrics",
+      "functions": [
+        "community-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:ak:relative-abundance-and-species-biomass-metrics:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    }
+  ],
+  "defects": [
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "stratum": "Slopes < 3%",
+      "registryKey": "sqt:ak:percent-riffle:slopes-lt-3-pct",
+      "defects": [
+        "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 68 scores 1. Not checked against this state's original."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "stratum": "Slopes < 3% / Overall",
+      "registryKey": "sqt:ak:percent-riffle:slopes-lt-3-pct-overall",
+      "defects": [
+        "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 50 scores 1. Not checked against this state's original."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "stratum": "C Streams",
+      "registryKey": "sqt:ak:pool-spacing-ratio:c-streams",
+      "defects": [
+        "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 4 scores 1. Not checked against this state's original."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "stratum": "E Streams",
+      "registryKey": "sqt:ak:pool-spacing-ratio:e-streams",
+      "defects": [
+        "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.5 scores 1. Not checked against this state's original."
+      ]
+    }
+  ],
+  "openEnds": [
+    {
+      "metricId": "catchment-hydrology-anthropogenic-land-cover",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 50 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "catchment-hydrology-impervious-cover",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 10 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "reach-inflow-concentrated-flow-points-1-000-ft",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 1 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "stratum": "C Streams",
+      "sentences": [
+        "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "stratum": "E Streams",
+      "sentences": [
+        "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "bed-composition-and-large-wood-percent-fines-2mm",
+      "stratum": "Gravel Bed",
+      "sentences": [
+        "The published curve stops at its high end, 37 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "bed-composition-and-large-wood-percent-fines-2mm",
+      "stratum": "Cobble, Boulders, Bedrock",
+      "sentences": [
+        "The published curve stops at its high end, 10 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-daily-maximum-temperature",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 1.25 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "carbon-processing-percent-native-cover",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its low end, 95 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "nutrient-cycling-diatom-index",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its low end, 58 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "stratum": "Bc Stream Types",
+      "sentences": [
+        "The published curve stops at its high end, 6 (index 0.7); past it DEEP holds that index."
+      ]
+    }
+  ],
+  "coverageExceptions": [
+    {
+      "functionId": "surface-water-storage",
+      "reason": "no-suitable-metric",
+      "justification": "The Alaska Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "streamflow-regime",
+      "reason": "deferred-to-other-tier",
+      "justification": "The Alaska Stream Quantification Tool addresses this function only with a screening-tier metric (Flow Alteration (Regulation / Water Use)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "reason": "deferred-to-other-tier",
+      "justification": "The Alaska Stream Quantification Tool addresses this function only with a screening-tier metric (Aufeis / Icing Impacts), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "high-flow-dynamics",
+      "reason": "no-suitable-metric",
+      "justification": "The Alaska Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "hyporheic-connectivity",
+      "reason": "no-suitable-metric",
+      "justification": "The Alaska Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "sediment-continuity",
+      "reason": "deferred-to-other-tier",
+      "justification": "The Alaska Stream Quantification Tool addresses this function only with a screening-tier metric (Permafrost Degradation / Thermokarst; Sediment Supply Potential (watershed/banks)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "watershed-connectivity",
+      "reason": "deferred-to-other-tier",
+      "justification": "The Alaska Stream Quantification Tool addresses this function only with a screening-tier metric (Adjacent Reach Condition for Recruitment (hardened/embedded); Fish Passage & Barrier Effects (longitudinal connectivity)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    }
+  ],
+  "portfolioApprovals": [
+    {
+      "functionId": "catchment-hydrology",
+      "approvedBy": "GM",
+      "note": "The Alaska Stream Quantification Tool's own published metric set for this function (3 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "approvedBy": "GM",
+      "note": "The Alaska Stream Quantification Tool's own published metric set for this function (3 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "carbon-processing",
+      "approvedBy": "GM",
+      "note": "The Alaska Stream Quantification Tool's own published metric set for this function (3 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "habitat-provision",
+      "approvedBy": "GM",
+      "note": "The Alaska Stream Quantification Tool's own published metric set for this function (4 metrics), transcribed unchanged."
+    }
+  ],
+  "version": 2,
+  "updatedAt": "2026-09-24T15:33:22Z",
+  "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+}

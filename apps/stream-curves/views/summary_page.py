@@ -25,6 +25,7 @@ from shiny import module, reactive, render, req, ui
 
 from streamcurves import curve_automation as ca
 from streamcurves import curve_svg as cs
+from streamcurves import pressure_evidence as pe
 from streamcurves import run_state as rs
 from views import assessment_publish as ap
 from views import curve_gallery as cg
@@ -1271,7 +1272,10 @@ def summary_page_server(input, output, session, state: AppState):
     # ── page shell (R:790-858) ────────────────────────────────────────────────
     @render.ui
     def summary_page():
-        if state.data() is None:
+        # A session with curves and no dataset (a transcribed state SQT) still shows
+        # its curves; only the analysis table needs the data.
+        has_data = state.data() is not None
+        if not has_data and not pe.reference_keys(state.reference_build()):
             return no_data_alert()
         metrics = summary_metrics()
         with reactive.isolate():
@@ -1348,7 +1352,8 @@ def summary_page_server(input, output, session, state: AppState):
             ui.output_ui(ns("review_queue")),
             ui.navset_hidden(
                 ui.nav_panel(None, ui.output_ui(ns("curve_gallery")), value="gallery"),
-                ui.nav_panel(None, ui.TagList(table_card, ui.output_ui(ns("reference_table"))),
+                ui.nav_panel(None, ui.TagList(table_card if has_data else None,
+                                              ui.output_ui(ns("reference_table"))),
                              value="table"),
                 ui.nav_panel(None, ui.output_ui(ns("final_selection")), value=fs.SECTION),
                 id=ns("curves_section"),

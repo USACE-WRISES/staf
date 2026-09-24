@@ -1,0 +1,36 @@
+{
+  "assessmentId": "wy-sqt-adapted",
+  "assessmentName": "WY SQT Adapted",
+  "version": 2,
+  "updatedAt": "2026-09-24T15:33:35Z",
+  "author": "GM",
+  "revisionNotes": "The complete StreamCurves session for the state SQT transcribed in v1: every curve and stratum carried as the tool publishes it (State SQT), the function mapping, the documented gaps and the approved metric sets. Scores exactly as v1; known defects and open ends are stated as caveats.",
+  "region": {
+    "kind": "state",
+    "code": "WY",
+    "name": "Wyoming"
+  },
+  "stateCode": "WY",
+  "stateName": "Wyoming",
+  "sourceCitation": "Wyoming SQT",
+  "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
+  "supersedesVersion": 1,
+  "provenance": "present",
+  "portfolioApprovals": [
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "approvedBy": "GM",
+      "note": "The Wyoming Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "carbon-processing",
+      "approvedBy": "GM",
+      "note": "The Wyoming Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "habitat-provision",
+      "approvedBy": "GM",
+      "note": "The Wyoming Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    }
+  ]
+}

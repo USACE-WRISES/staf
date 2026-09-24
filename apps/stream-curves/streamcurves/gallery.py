@@ -109,6 +109,12 @@ class Version:
             return ""
 
 
+#: Assessments DEEP hides from every surface, by id suffix: the state SQT transcriptions (the
+#: owner's decision of 2026-09-24). The same rule as DEEP's own ``_HIDDEN_ID_SUFFIXES``
+#: (``apps/deep/deep/config.py``); a test keeps the two equal.
+DEEP_HIDDEN_SUFFIXES = ("-sqt-adapted",)
+
+
 @dataclass(frozen=True)
 class Entry:
     id: str
@@ -118,6 +124,11 @@ class Entry:
     default_version: int
     versions: tuple            # Version, newest first
     type: str = "deep"         # "deep" | "easi"
+
+    @property
+    def deep_hidden(self) -> bool:
+        """DEEP does not list this assessment, whatever its versions' statuses."""
+        return self.type == "deep" and str(self.id).endswith(DEEP_HIDDEN_SUFFIXES)
 
     @property
     def group(self) -> str:

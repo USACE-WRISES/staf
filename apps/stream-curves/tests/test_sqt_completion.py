@@ -145,12 +145,29 @@ def test_the_completed_session_opens_on_its_curves_as_state_sqt_criteria(complet
     assert tr.BASIS_LIMIT in cs.limits(rows[mk])
 
 
+def test_the_gallery_never_offers_deep_a_state_sqt_and_follows_deeps_own_rule():
+    from streamcurves import gallery
+    deep_config = (APP.parent / "deep" / "deep" / "config.py").read_text(encoding="utf-8")
+    deep_rule = re.search(r"_HIDDEN_ID_SUFFIXES\s*=\s*(\([^)]*\))", deep_config).group(1)
+    assert eval(deep_rule) == gallery.DEEP_HIDDEN_SUFFIXES             # a literal tuple of strings
+    entries = {e.id: e for e in gallery.entries_from_library()}
+    assert all(entries[aid].deep_hidden for aid in IDS)
+    assert not entries["northeastern-highlands"].deep_hidden
+    src = (APP / "views" / "project.py").read_text(encoding="utf-8")
+    assert "if v.in_deep and deep_base and not e.deep_hidden:" in src
+
+
 def test_a_project_with_curves_and_no_data_opens_on_its_curves():
     src = (APP / "views" / "project.py").read_text(encoding="utf-8")
     body = src[src.index("def _land(meta: dict):"):]
     body = body[:body.index("\n    async def ")]
     assert "reference_keys(state.reference_build())" in body
     assert body.index('_request_nav("curves")') < body.index('_request_nav("data", wizard_step')
+    # and the curves page draws them: only the analysis table needs a dataset
+    page = (APP / "views" / "summary_page.py").read_text(encoding="utf-8").replace(chr(13), "")
+    page = page[page.index("    def summary_page():"):]
+    assert "if not has_data and not pe.reference_keys(state.reference_build()):" in page
+    assert "table_card if has_data else None" in page
 
 
 def test_publishing_writes_the_next_version_scored_as_v1(tmp_path, monkeypatch):

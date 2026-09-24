@@ -1,0 +1,1126 @@
+{
+  "kind": "sqt-transcription",
+  "schemaVersion": 1,
+  "assessmentId": "nc-sqt-adapted",
+  "tool": "North Carolina Stream Quantification Tool",
+  "publishedBy": "GM",
+  "publishedAt": "2026-09-24",
+  "transcribedFrom": {
+    "version": 1,
+    "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
+    "by": "STAF SQT migration",
+    "on": "2026-07-12",
+    "source": "docs/assets/data/metric-library/detailed-adapted-assessments.json"
+  },
+  "ownerDecisions": [
+    "2026-09-24: complete the state SQT assessments as StreamCurves sessions, the metrics under the functions the metric library gives them (approach a).",
+    "2026-09-24: score exactly as v1; defective and open-ended layers are flagged as caveats, not fixed.",
+    "2026-09-24: approve each function's SQT metric set as published (SELECT-01).",
+    "2026-09-24: Preliminary; DEEP keeps hiding the state SQT assessments."
+  ],
+  "sources": {
+    "metricLibrary": {
+      "path": "docs/assets/data/metric-library/detailed-adapted-assessments.json",
+      "sha256": "sha256:289699f66216da27c63e149004203d46d31a76da8b389a5895e3ec8c91493649"
+    },
+    "sqtRegistry": {
+      "path": "apps/stream-curves/data/sqt/registry.json",
+      "sha256": "sha256:21f4d780206d5f3a74687e0fbac055356bb4033f70ee54db51a296cd3dbaf032"
+    }
+  },
+  "curves": [
+    {
+      "metricId": "catchment-hydrology-curve-number",
+      "functions": [
+        "catchment-hydrology"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:curve-number:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "catchment-hydrology-percent-impervious-cover",
+      "functions": [
+        "catchment-hydrology"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:percent-impervious-cover:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "reach-inflow-concentrated-flow-points",
+      "functions": [
+        "reach-inflow"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:concentrated-flow-points:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end",
+            "threshold-read-as-point"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 3 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "functions": [
+        "floodplain-connectivity"
+      ],
+      "layers": [
+        {
+          "stratum": "C and E Streams",
+          "registryKey": "sqt:nc:entrenchment-ratio-er:c-and-e-streams",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "A, B and Bc Streams",
+          "registryKey": "sqt:nc:entrenchment-ratio-er:a-b-and-bc-streams",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 1.2 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:bank-height-ratio-bhr:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 1.6 (index 0.2); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-erosion-rate",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:erosion-rate:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:percent-streambank-erosion:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-sinuosity",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "E5 streams in Unconfined Alluvial Valleys",
+          "registryKey": "sqt:nc:sinuosity:e5-streams-in-unconfined-alluvial-valleys",
+          "verification": "defective",
+          "defects": [
+            "The row gives 1 usable breakpoint(s) for this stratum; a curve needs two. The other bins hold only the index template."
+          ],
+          "differences": [
+            "placeholder"
+          ],
+          "openEnds": []
+        },
+        {
+          "stratum": "Unconfined Alluvial Valleys",
+          "registryKey": "sqt:nc:sinuosity:unconfined-alluvial-valleys",
+          "verification": "defective",
+          "defects": [
+            "The row gives 1 usable breakpoint(s) for this stratum; a curve needs two. The other bins hold only the index template."
+          ],
+          "differences": [
+            "placeholder"
+          ],
+          "openEnds": []
+        },
+        {
+          "stratum": "Confined Alluvial Valleys",
+          "registryKey": "sqt:nc:sinuosity:confined-alluvial-valleys",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 1.15 (index 0.7); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "Colluvial Valleys",
+          "registryKey": "sqt:nc:sinuosity:colluvial-valleys",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 1.21 (index 0.69); past it DEEP holds that index.",
+            "The published curve stops at its high end, 1.3 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-soil-compaction",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:soil-compaction:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "sediment-continuity-aggradation-ratio",
+      "functions": [
+        "sediment-continuity"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:aggradation-ratio:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "bed-composition-and-large-wood-bed-material-characterization",
+      "functions": [
+        "bed-composition-bedform-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:bed-material-characterization:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-canopy-coverage",
+      "functions": [
+        "light-thermal-regime"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:canopy-coverage:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-summer-daily-maximum",
+      "functions": [
+        "light-thermal-regime"
+      ],
+      "layers": [
+        {
+          "stratum": "Coldwater",
+          "registryKey": "sqt:nc:summer-daily-maximum:coldwater",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Coolwater",
+          "registryKey": "sqt:nc:summer-daily-maximum:coolwater",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-basal-area",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:basal-area:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-leaf-litter-processing-rate",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:leaf-litter-processing-rate:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 0.5 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-riparian-vegetation-stem-density",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:riparian-vegetation-stem-density:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 260 (index 0.5); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-shredders",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "Field - W/Sp - Mountains & DA <= 5 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-w-sp-mountains-and-da-le-5-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Su - Mountains & DA <= 5 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-su-mountains-and-da-le-5-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Fall - Mountains & DA <= 5 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-fall-mountains-and-da-le-5-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - W/Sp - Mountains & 5 < DA < 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-w-sp-mountains-and-5-lt-da-lt-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Su - Mountains & 5 < DA < 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-su-mountains-and-5-lt-da-lt-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Fall - Mountains & 5 < DA < 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-fall-mountains-and-5-lt-da-lt-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - W/Sp - Mountains & DA >= 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-w-sp-mountains-and-da-ge-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Su - Mountains & DA >= 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-su-mountains-and-da-ge-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Fall - Mountains & DA >= 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-fall-mountains-and-da-ge-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - W/Sp - Piedmont & DA <= 5 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-w-sp-piedmont-and-da-le-5-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Su - Piedmont & DA <= 5 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-su-piedmont-and-da-le-5-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Fall - Piedmont & DA <= 5 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-fall-piedmont-and-da-le-5-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - W/Sp - Piedmont & 5 < DA < 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-w-sp-piedmont-and-5-lt-da-lt-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Su - Piedmont & 5 < DA < 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-su-piedmont-and-5-lt-da-lt-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Fall - Piedmont & 5 < DA < 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-fall-piedmont-and-5-lt-da-lt-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - W/Sp - Piedmont & DA >= 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-w-sp-piedmont-and-da-ge-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Su - Piedmont & DA >= 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-su-piedmont-and-da-ge-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Fall - Piedmont & DA >= 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-fall-piedmont-and-da-ge-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - W/Sp - Coastal & DA <= 5 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-w-sp-coastal-and-da-le-5-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Su - Coastal & DA <= 5 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-su-coastal-and-da-le-5-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Fall - Coastal & DA <= 5 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-fall-coastal-and-da-le-5-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - W/Sp - Coastal & 5 < DA < 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-w-sp-coastal-and-5-lt-da-lt-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Su - Coastal & 5 < DA < 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-su-coastal-and-5-lt-da-lt-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Fall - Coastal & 5 < DA < 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-fall-coastal-and-5-lt-da-lt-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - W/Sp - Coastal & DA >= 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-w-sp-coastal-and-da-ge-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Su - Coastal & DA >= 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-su-coastal-and-da-ge-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Field - Fall - Coastal & DA >= 10 Sq.Mi.",
+          "registryKey": "sqt:nc:shredders:field-fall-coastal-and-da-ge-10-sq-mi",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "nutrient-cycling-buffer-width",
+      "functions": [
+        "nutrient-cycling"
+      ],
+      "layers": [
+        {
+          "stratum": "Stream Type A, B, or Bc",
+          "registryKey": "sqt:nc:buffer-width:stream-type-a-b-or-bc",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Stream type C or E",
+          "registryKey": "sqt:nc:buffer-width:stream-type-c-or-e",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "nutrient-cycling-total-nitrogen",
+      "functions": [
+        "nutrient-cycling"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:total-nitrogen:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 3.9 (index 0.082174); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "nutrient-cycling-total-phosphorous",
+      "functions": [
+        "nutrient-cycling"
+      ],
+      "layers": [
+        {
+          "stratum": "Adjacent",
+          "registryKey": "sqt:nc:total-phosphorous:adjacent",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "water-and-soil-quality-fecal-coliform-bacteria",
+      "functions": [
+        "water-soil-quality"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:fecal-coliform-bacteria:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "water-and-soil-quality-specific-conductivity",
+      "functions": [
+        "water-soil-quality"
+      ],
+      "layers": [
+        {
+          "stratum": "Piedmont",
+          "registryKey": "sqt:nc:specific-conductivity:piedmont",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 78 (index 0.69); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "Mountain Region",
+          "registryKey": "sqt:nc:specific-conductivity:mountain-region",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 41 (index 0.69); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-lwd-pieces",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:lwd-pieces:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-lwd-index",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:nc:lwd-index:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "Streams < 3% slope",
+          "registryKey": "sqt:nc:percent-riffle:streams-lt-3-pct-slope",
+          "verification": "defective",
+          "defects": [
+            "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 70 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original."
+          ],
+          "differences": [
+            "dropped-extra-breakpoint"
+          ],
+          "openEnds": []
+        },
+        {
+          "stratum": "Streams 3%-10% slope",
+          "registryKey": "sqt:nc:percent-riffle:streams-3-pct-10-pct-slope",
+          "verification": "defective",
+          "defects": [
+            "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 60 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original."
+          ],
+          "differences": [
+            "dropped-extra-breakpoint"
+          ],
+          "openEnds": []
+        },
+        {
+          "stratum": "Streams >10% slope",
+          "registryKey": "sqt:nc:percent-riffle:streams-gt-10-pct-slope",
+          "verification": "defective",
+          "defects": [
+            "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 80 scores 1. Not checked against this state's original."
+          ],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-depth-ratio",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "gravel bed C and E stream",
+          "registryKey": "sqt:nc:pool-depth-ratio:gravel-bed-c-and-e-stream",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "sand bed C and E stream",
+          "registryKey": "sqt:nc:pool-depth-ratio:sand-bed-c-and-e-stream",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "A, B and Bc stream",
+          "registryKey": "sqt:nc:pool-depth-ratio:a-b-and-bc-stream",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "slope < 4% & DA >=10 & C or E stream types",
+          "registryKey": "sqt:nc:pool-spacing-ratio:slope-lt-4-pct-and-da-ge-10-and-c-or-e-stream-types",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "dropped-extra-breakpoint"
+          ],
+          "openEnds": []
+        },
+        {
+          "stratum": "slope < 4% & DA <10 & C or E stream types",
+          "registryKey": "sqt:nc:pool-spacing-ratio:slope-lt-4-pct-and-da-lt-10-and-c-or-e-stream-types",
+          "verification": "defective",
+          "defects": [
+            "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 5.5 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original."
+          ],
+          "differences": [
+            "dropped-extra-breakpoint",
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 3 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "population-support-ept-taxa-present",
+      "functions": [
+        "population-support"
+      ],
+      "layers": [
+        {
+          "stratum": "Mountains",
+          "registryKey": "sqt:nc:ept-taxa-present:mountains",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Piedmont",
+          "registryKey": "sqt:nc:ept-taxa-present:piedmont",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Coastal Plain",
+          "registryKey": "sqt:nc:ept-taxa-present:coastal-plain",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "population-support-ncibi-score",
+      "functions": [
+        "population-support"
+      ],
+      "layers": [
+        {
+          "stratum": "French Broad, Hiwassee, Little Tennessee, New, and Watauga River basins",
+          "registryKey": "sqt:nc:ncibi-score:french-broad-hiwassee-little-tennessee-new-and-watauga-river-basins",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Broad, Catawba, Savannah, and Yadkin River basins",
+          "registryKey": "sqt:nc:ncibi-score:broad-catawba-savannah-and-yadkin-river-basins",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Cape Fear, Neuse, Roanoke, and Tar-Pamlico River basins",
+          "registryKey": "sqt:nc:ncibi-score:cape-fear-neuse-roanoke-and-tar-pamlico-river-basins",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    }
+  ],
+  "defects": [
+    {
+      "metricId": "channel-and-floodplain-dynamics-sinuosity",
+      "stratum": "E5 streams in Unconfined Alluvial Valleys",
+      "registryKey": "sqt:nc:sinuosity:e5-streams-in-unconfined-alluvial-valleys",
+      "defects": [
+        "The row gives 1 usable breakpoint(s) for this stratum; a curve needs two. The other bins hold only the index template."
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-sinuosity",
+      "stratum": "Unconfined Alluvial Valleys",
+      "registryKey": "sqt:nc:sinuosity:unconfined-alluvial-valleys",
+      "defects": [
+        "The row gives 1 usable breakpoint(s) for this stratum; a curve needs two. The other bins hold only the index template."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "stratum": "Streams < 3% slope",
+      "registryKey": "sqt:nc:percent-riffle:streams-lt-3-pct-slope",
+      "defects": [
+        "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 70 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "stratum": "Streams 3%-10% slope",
+      "registryKey": "sqt:nc:percent-riffle:streams-3-pct-10-pct-slope",
+      "defects": [
+        "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 60 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "stratum": "Streams >10% slope",
+      "registryKey": "sqt:nc:percent-riffle:streams-gt-10-pct-slope",
+      "defects": [
+        "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 80 scores 1. Not checked against this state's original."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "stratum": "slope < 4% & DA <10 & C or E stream types",
+      "registryKey": "sqt:nc:pool-spacing-ratio:slope-lt-4-pct-and-da-lt-10-and-c-or-e-stream-types",
+      "defects": [
+        "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 5.5 scores 1. The row marks the end of the optimum but gives no falling limb. Not checked against this state's original."
+      ]
+    }
+  ],
+  "openEnds": [
+    {
+      "metricId": "reach-inflow-concentrated-flow-points",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 3 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "stratum": "C and E Streams",
+      "sentences": [
+        "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "stratum": "A, B and Bc Streams",
+      "sentences": [
+        "The published curve stops at its low end, 1.2 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 1.6 (index 0.2); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-sinuosity",
+      "stratum": "Confined Alluvial Valleys",
+      "sentences": [
+        "The published curve stops at its low end, 1.15 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-sinuosity",
+      "stratum": "Colluvial Valleys",
+      "sentences": [
+        "The published curve stops at its low end, 1.21 (index 0.69); past it DEEP holds that index.",
+        "The published curve stops at its high end, 1.3 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "carbon-processing-leaf-litter-processing-rate",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its low end, 0.5 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "carbon-processing-riparian-vegetation-stem-density",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 260 (index 0.5); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "nutrient-cycling-total-nitrogen",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 3.9 (index 0.082174); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "water-and-soil-quality-specific-conductivity",
+      "stratum": "Piedmont",
+      "sentences": [
+        "The published curve stops at its low end, 78 (index 0.69); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "water-and-soil-quality-specific-conductivity",
+      "stratum": "Mountain Region",
+      "sentences": [
+        "The published curve stops at its low end, 41 (index 0.69); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "stratum": "slope < 4% & DA <10 & C or E stream types",
+      "sentences": [
+        "The published curve stops at its low end, 3 (index 0.3); past it DEEP holds that index."
+      ]
+    }
+  ],
+  "coverageExceptions": [
+    {
+      "functionId": "surface-water-storage",
+      "reason": "no-suitable-metric",
+      "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "streamflow-regime",
+      "reason": "no-suitable-metric",
+      "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "reason": "no-suitable-metric",
+      "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "high-flow-dynamics",
+      "reason": "no-suitable-metric",
+      "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "hyporheic-connectivity",
+      "reason": "no-suitable-metric",
+      "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "channel-evolution",
+      "reason": "no-suitable-metric",
+      "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "community-dynamics",
+      "reason": "no-suitable-metric",
+      "justification": "The North Carolina Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "watershed-connectivity",
+      "reason": "deferred-to-other-tier",
+      "justification": "The North Carolina Stream Quantification Tool addresses this function only with a screening-tier metric (Adjacent Reach Condition for Recruitment (hardened/embedded); Fish Passage & Barrier Effects (longitudinal connectivity)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    }
+  ],
+  "portfolioApprovals": [
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "approvedBy": "GM",
+      "note": "The North Carolina Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "carbon-processing",
+      "approvedBy": "GM",
+      "note": "The North Carolina Stream Quantification Tool's own published metric set for this function (4 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "nutrient-cycling",
+      "approvedBy": "GM",
+      "note": "The North Carolina Stream Quantification Tool's own published metric set for this function (3 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "habitat-provision",
+      "approvedBy": "GM",
+      "note": "The North Carolina Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    }
+  ],
+  "version": 2,
+  "updatedAt": "2026-09-24T15:33:30Z",
+  "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb"
+}

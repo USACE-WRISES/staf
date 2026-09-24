@@ -1,0 +1,4610 @@
+{
+ "schema_version": 2,
+ "app": "streamcurves",
+ "app_version": "0.1.0",
+ "created": "2026-09-24T15:33:28.687999+00:00",
+ "session_name": "MN SQT Adapted",
+ "fields": {
+  "data": null,
+  "precheck_df": null,
+  "data_source": null,
+  "data_fingerprint": null,
+  "upload_filename": null,
+  "input_metadata": null,
+  "site_mask_config": null,
+  "metric_config": {},
+  "strat_config": {},
+  "predictor_config": {},
+  "factor_recode_config": {},
+  "output_config": {
+   "per_metric_outputs": {
+    "precheck": {
+     "enabled": true,
+     "files": [
+      "{metric}_precheck.csv"
+     ]
+    },
+    "stratification": {
+     "enabled": true,
+     "files": [
+      "{metric}_stratification_screening.csv",
+      "{metric}_stratification_pairwise.csv",
+      "{metric}_stratification_decision.csv"
+     ],
+     "plots": [
+      "{metric}_boxplot_{strat_var}.png"
+     ]
+    },
+    "model_candidates": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_candidates.csv",
+      "{metric}_predictor_importance.csv"
+     ],
+     "plots": [
+      "{metric}_bic_vs_npred.png",
+      "{metric}_adjr2_vs_npred.png",
+      "{metric}_model_heatmap.png",
+      "{metric}_predictor_importance.png"
+     ]
+    },
+    "model_selection": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_selection.csv"
+     ]
+    },
+    "diagnostics": {
+     "enabled": true,
+     "files": [
+      "{metric}_diagnostics.csv"
+     ],
+     "plots": [
+      "{metric}_diagnostic_4panel.png"
+     ]
+    },
+    "reference_curves": {
+     "enabled": true,
+     "files": [
+      "{metric}_reference_curve.csv"
+     ],
+     "plots": [
+      "{metric}_reference_bar_chart.png",
+      "{metric}_reference_curve.png"
+     ]
+    },
+    "rds_objects": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_object.rds"
+     ]
+    }
+   },
+   "summary_outputs": {
+    "thresholds": {
+     "enabled": true,
+     "files": [
+      "reference_curve_thresholds.csv"
+     ]
+    },
+    "metric_status": {
+     "enabled": true,
+     "files": [
+      "metric_status.csv"
+     ]
+    },
+    "stratification_decisions": {
+     "enabled": true,
+     "files": [
+      "stratification_decisions.csv"
+     ]
+    },
+    "decision_history": {
+     "enabled": true,
+     "files": [
+      "decision_history.csv"
+     ]
+    },
+    "regional_curves": {
+     "enabled": true,
+     "files": [
+      "regional_curves.csv"
+     ]
+    },
+    "results_bundle": {
+     "enabled": true,
+     "files": [
+      "results_bundle.zip"
+     ]
+    }
+   },
+   "report_products": {
+    "dashboard": {
+     "enabled": true,
+     "file": "reports/dashboard.qmd",
+     "format": "html",
+     "tier": 1
+    },
+    "summary": {
+     "enabled": true,
+     "file": "reports/summary.qmd",
+     "format": "pdf",
+     "tier": 2
+    },
+    "appendix": {
+     "enabled": true,
+     "file": "reports/appendix.qmd",
+     "format": "pdf",
+     "tier": 3
+    },
+    "list_of_metrics": {
+     "enabled": true,
+     "file": "docs/templates/OH/MN-List-of-Metricsv2.0.xlsx",
+     "format": "xlsx",
+     "tier": 1
+    },
+    "sqt_workbook": {
+     "enabled": true,
+     "file": "docs/templates/OH/WISQT_Reference_Curves.xlsx",
+     "format": "xlsx",
+     "tier": 1
+    },
+    "science_support": {
+     "enabled": true,
+     "file": "reports/science_support.qmd",
+     "format": "html",
+     "tier": 1
+    }
+   }
+  },
+  "config_version": 0,
+  "current_metric": "perRiffle",
+  "phase1_screening": null,
+  "phase1_effect_sizes": null,
+  "phase1_candidates": {},
+  "all_layer1_results": {},
+  "all_layer2_results": {},
+  "phase2_ranking": null,
+  "cross_metric_consistency": null,
+  "phase2_settings": {
+   "metric_filter": null,
+   "strat_filter": null,
+   "sig_threshold": 0.05,
+   "support_threshold": 0.5
+  },
+  "phase2_metric_overrides": {},
+  "curve_stratification": {},
+  "summary_available_overrides": {},
+  "summary_edit_notes": {},
+  "phase3_patterns": null,
+  "phase3_feasibility": null,
+  "phase3_verification": {},
+  "strat_decision_user": null,
+  "reference_curve": null,
+  "phase4_data": null,
+  "current_stratum_level": null,
+  "stratum_results": {},
+  "completed_metrics": {},
+  "decision_log": {
+   "__type__": "frame",
+   "columns": [],
+   "n": 0,
+   "data": {},
+   "dtypes": {},
+   "categories": {}
+  },
+  "metric_phase_cache": {},
+  "discipline_function_mapping": {
+   "__type__": "frame",
+   "columns": [
+    "metric_key",
+    "discipline",
+    "function_label",
+    "sort_order"
+   ],
+   "n": 22,
+   "data": {
+    "metric_key": [
+     "catchment-hydrology-bmp-mids-rv-coefficient",
+     "catchment-hydrology-land-use-coefficient",
+     "reach-inflow-concentrated-flow-points-1-000-ft",
+     "floodplain-connectivity-entrenchment-ratio-er",
+     "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+     "channel-and-floodplain-dynamics-percent-armoring",
+     "channel-and-floodplain-dynamics-percent-streambank-erosion",
+     "sediment-continuity-aggradation-ratio",
+     "light-and-thermal-regime-canopy-cover",
+     "light-and-thermal-regime-summer-average",
+     "carbon-processing-effective-vegetated-riparian-area",
+     "carbon-processing-herbaceous-strata-vegetation-cover",
+     "carbon-processing-woody-stem-basal-area",
+     "water-and-soil-quality-do",
+     "water-and-soil-quality-tss",
+     "habitat-provision-lwd",
+     "habitat-provision-lwd-index",
+     "habitat-provision-percent-riffle",
+     "habitat-provision-pool-depth-ratio",
+     "habitat-provision-pool-spacing-ratio",
+     "population-support-fish-ibi",
+     "population-support-macroinvertebrate-ibi"
+    ],
+    "discipline": [
+     "Hydrology",
+     "Hydrology",
+     "Hydrology",
+     "Hydraulics",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology"
+    ],
+    "function_label": [
+     "Catchment hydrology",
+     "Catchment hydrology",
+     "Reach inflow",
+     "Floodplain connectivity",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Sediment continuity",
+     "Light & thermal regime",
+     "Light & thermal regime",
+     "Carbon processing",
+     "Carbon processing",
+     "Carbon processing",
+     "Water & soil quality",
+     "Water & soil quality",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Population support",
+     "Population support"
+    ],
+    "sort_order": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22
+    ]
+   },
+   "dtypes": {
+    "metric_key": "str",
+    "discipline": "str",
+    "function_label": "str",
+    "sort_order": "int64"
+   },
+   "categories": {}
+  },
+  "discipline_function_mapping_confirmed": true,
+  "mapping_user_touched": false,
+  "workbook_provided_mapping": false,
+  "function_coverage_exceptions": [
+   {
+    "functionId": "surface-water-storage",
+    "reason": "no-suitable-metric",
+    "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "streamflow-regime",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Flashiness / Rate & Frequency of Change; Flow Alteration (Regulation / Water Use)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "low-flow-baseflow-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "high-flow-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "hyporheic-connectivity",
+    "reason": "no-suitable-metric",
+    "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "channel-evolution",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Channelization / Ditching / Straightening), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "bed-composition-bedform-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "nutrient-cycling",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Agriculture & Livestock Nutrient Pressure), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "community-dynamics",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Native Biodiversity & Taxa Richness), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "watershed-connectivity",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Fish Passage & Barrier Effects (longitudinal connectivity)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   }
+  ],
+  "custom_groupings": {},
+  "custom_grouping_counter": {},
+  "session_name": "MN SQT Adapted",
+  "app_data_loaded": false,
+  "cross_sections": {},
+  "column_sources": {},
+  "column_functions": {},
+  "region_of_applicability": {
+   "kind": "state",
+   "code": "MN",
+   "name": "Minnesota"
+  },
+  "candidate_sites": null,
+  "easi_screening_sites": null,
+  "easi_screening_metrics": null,
+  "easi_screening_criteria": null,
+  "run_meta": null,
+  "run_stage_status": {},
+  "curve_review": {},
+  "screening_run": null,
+  "site_exclusions": [],
+  "screening_skipped": false,
+  "validation_records": [],
+  "metric_redundancy": null,
+  "assessment_source": null,
+  "source_provenance": null,
+  "rule_selections": [],
+  "reference_build": {
+   "method": "pressure-screen",
+   "referenceMethod": null,
+   "insufficientReferenceSupport": [],
+   "metricAnnotations": {},
+   "fixedMetrics": [],
+   "ladderMetrics": {},
+   "referenceTier": null,
+   "carriedMetrics": {
+    "catchment-hydrology-bmp-mids-rv-coefficient": {
+     "displayName": "BMP MIDS Rv Coefficient",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.02,
+       "y": 1.0
+      },
+      {
+       "x": 0.05,
+       "y": 0.7
+      },
+      {
+       "x": 0.25,
+       "y": 0.3
+      },
+      {
+       "x": 0.95,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "BMP MIDS Rv Coefficient",
+      "units": "",
+      "metric_family": "desktop (gis)",
+      "notes": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+      "column_name": "catchment-hydrology-bmp-mids-rv-coefficient",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:bmp-mids-rv-coefficient:default",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "catchment-hydrology-bmp-mids-rv-coefficient",
+       "discipline": "Hydrology",
+       "function_label": "Catchment hydrology"
+      }
+     ],
+     "decision": {
+      "metric": "catchment-hydrology-bmp-mids-rv-coefficient",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "catchment-hydrology-bmp-mids-rv-coefficient",
+       "metricName": "BMP MIDS Rv Coefficient",
+       "discipline": "Hydrology",
+       "inputType": "desktop (gis)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "BMP MIDS Rv Coefficient",
+       "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+       "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+       "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0.02,
+          "y": 1
+         },
+         {
+          "x": 0.05,
+          "y": 0.7
+         },
+         {
+          "x": 0.25,
+          "y": 0.3
+         },
+         {
+          "x": 0.95,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "catchment-hydrology"
+      ]
+     }
+    },
+    "catchment-hydrology-land-use-coefficient": {
+     "displayName": "Land Use Coefficient",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 40.0,
+       "y": 1.0
+      },
+      {
+       "x": 68.0,
+       "y": 0.7
+      },
+      {
+       "x": 80.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Land Use Coefficient",
+      "units": "",
+      "metric_family": "desktop (gis)",
+      "notes": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+      "column_name": "catchment-hydrology-land-use-coefficient",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:land-use-coefficient:default",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "catchment-hydrology-land-use-coefficient",
+       "discipline": "Hydrology",
+       "function_label": "Catchment hydrology"
+      }
+     ],
+     "decision": {
+      "metric": "catchment-hydrology-land-use-coefficient",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "catchment-hydrology-land-use-coefficient",
+       "metricName": "Land Use Coefficient",
+       "discipline": "Hydrology",
+       "inputType": "desktop (gis)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Land Use Coefficient",
+       "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+       "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+       "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 40,
+          "y": 1
+         },
+         {
+          "x": 68,
+          "y": 0.7
+         },
+         {
+          "x": 80,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "catchment-hydrology"
+      ]
+     }
+    },
+    "reach-inflow-concentrated-flow-points-1-000-ft": {
+     "displayName": "Concentrated Flow Points / 1,000 ft",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.0,
+       "y": 0.69
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Concentrated Flow Points / 1,000 ft",
+      "units": "",
+      "metric_family": "field (with desktop pre-screen)",
+      "notes": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+      "column_name": "reach-inflow-concentrated-flow-points-1-000-ft",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+      "curveCaveats": [
+       "The published curve stops at its high end, 1 (index 0.69); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:concentrated-flow-points-1-000-ft:default",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 1 (index 0.69); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "reach-inflow-concentrated-flow-points-1-000-ft",
+       "discipline": "Hydrology",
+       "function_label": "Reach inflow"
+      }
+     ],
+     "decision": {
+      "metric": "reach-inflow-concentrated-flow-points-1-000-ft",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "reach-inflow-concentrated-flow-points-1-000-ft",
+       "metricName": "Concentrated Flow Points / 1,000 ft",
+       "discipline": "Hydrology",
+       "inputType": "field (with desktop pre-screen)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Concentrated Flow Points / 1,000 ft",
+       "metricStatement": "Count of concentrated inflow locations (ditches, pipes, outfalls) that can deliver runoff, sediment, or pollutants to the reach.",
+       "howToMeasure": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+       "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 1,
+          "y": 0.69
+         }
+        ]
+       }
+      },
+      "functions": [
+       "reach-inflow"
+      ]
+     }
+    },
+    "floodplain-connectivity-entrenchment-ratio-er": {
+     "displayName": "Entrenchment Ratio (ER)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "C Streams",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 0.0
+      },
+      {
+       "x": 2.2,
+       "y": 0.7
+      },
+      {
+       "x": 5.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "C Streams",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.2,
+         "y": 0.7
+        },
+        {
+         "x": 5.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "B Streams",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.4,
+         "y": 0.7
+        },
+        {
+         "x": 2.2,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "E Streams",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.2,
+         "y": 0.7
+        },
+        {
+         "x": 9.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Entrenchment Ratio (ER)",
+      "units": "",
+      "metric_family": "field (survey) or desktop (lidar cross sections)",
+      "notes": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+      "column_name": "floodplain-connectivity-entrenchment-ratio-er",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "C Streams",
+         "registryKey": "sqt:mn:entrenchment-ratio-er:c-streams",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "B Streams",
+         "registryKey": "sqt:mn:entrenchment-ratio-er:b-streams",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "E Streams",
+         "registryKey": "sqt:mn:entrenchment-ratio-er:e-streams",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "floodplain-connectivity-entrenchment-ratio-er",
+       "discipline": "Hydraulics",
+       "function_label": "Floodplain connectivity"
+      }
+     ],
+     "decision": {
+      "metric": "floodplain-connectivity-entrenchment-ratio-er",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+       "metricName": "Entrenchment Ratio (ER)",
+       "discipline": "Hydraulics",
+       "inputType": "field (survey) or desktop (lidar cross sections)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Entrenchment Ratio (ER)",
+       "metricStatement": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+       "howToMeasure": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+       "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT - C Streams",
+        "stratification": "C Streams",
+        "points": [
+         {
+          "x": 1,
+          "y": 0
+         },
+         {
+          "x": 2.2,
+          "y": 0.7
+         },
+         {
+          "x": 5,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "C Streams",
+         "layerName": "Minnesota SQT - C Streams",
+         "points": [
+          {
+           "x": 1,
+           "y": 0
+          },
+          {
+           "x": 2.2,
+           "y": 0.7
+          },
+          {
+           "x": 5,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "B Streams",
+         "layerName": "Minnesota SQT - B Streams",
+         "points": [
+          {
+           "x": 1,
+           "y": 0
+          },
+          {
+           "x": 1.4,
+           "y": 0.7
+          },
+          {
+           "x": 2.2,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "E Streams",
+         "layerName": "Minnesota SQT - E Streams",
+         "points": [
+          {
+           "x": 1,
+           "y": 0
+          },
+          {
+           "x": 2.2,
+           "y": 0.7
+          },
+          {
+           "x": 9,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "C Streams"
+      },
+      "functions": [
+       "floodplain-connectivity"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-bank-height-ratio-bhr": {
+     "displayName": "Bank Height Ratio (BHR)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.2,
+       "y": 0.7
+      },
+      {
+       "x": 1.5,
+       "y": 0.3
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Bank Height Ratio (BHR)",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [
+       "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:bank-height-ratio-bhr:default",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+       "metricName": "Bank Height Ratio (BHR)",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Bank Height Ratio (BHR)",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 1.2,
+          "y": 0.7
+         },
+         {
+          "x": 1.5,
+          "y": 0.3
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-percent-armoring": {
+     "displayName": "Percent Armoring",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 50.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Armoring",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-percent-armoring",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:percent-armoring:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-percent-armoring",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-percent-armoring",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-percent-armoring",
+       "metricName": "Percent Armoring",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Percent Armoring",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 50,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-percent-streambank-erosion": {
+     "displayName": "Percent Streambank Erosion",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 5.0,
+       "y": 1.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.7
+      },
+      {
+       "x": 75.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Streambank Erosion",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:percent-streambank-erosion:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+       "metricName": "Percent Streambank Erosion",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Percent Streambank Erosion",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 5,
+          "y": 1
+         },
+         {
+          "x": 10,
+          "y": 0.7
+         },
+         {
+          "x": 75,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "sediment-continuity-aggradation-ratio": {
+     "displayName": "Aggradation Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.2,
+       "y": 0.69
+      },
+      {
+       "x": 1.4,
+       "y": 0.3
+      },
+      {
+       "x": 1.6,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Aggradation Ratio",
+      "units": "",
+      "metric_family": "field or desktop (repeat elevation data)",
+      "notes": "Measure bed and bankfull indicators at repeat cross sections (or compare elevation datasets) to compute aggradation ratio per SQT definition.",
+      "column_name": "sediment-continuity-aggradation-ratio",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field or Desktop (repeat elevation data)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:aggradation-ratio:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "sediment-continuity-aggradation-ratio",
+       "discipline": "Geomorphology",
+       "function_label": "Sediment continuity"
+      }
+     ],
+     "decision": {
+      "metric": "sediment-continuity-aggradation-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "sediment-continuity-aggradation-ratio",
+       "metricName": "Aggradation Ratio",
+       "discipline": "Geomorphology",
+       "inputType": "field or desktop (repeat elevation data)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Aggradation Ratio",
+       "metricStatement": "Indicator of net sediment deposition/aggradation relative to reference condition.",
+       "howToMeasure": "Measure bed and bankfull indicators at repeat cross sections (or compare elevation datasets) to compute aggradation ratio per SQT definition.",
+       "methodContext": "Context: Channel\n\nMethod: Field or Desktop (repeat elevation data)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 1.2,
+          "y": 0.69
+         },
+         {
+          "x": 1.4,
+          "y": 0.3
+         },
+         {
+          "x": 1.6,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "sediment-continuity"
+      ]
+     }
+    },
+    "light-and-thermal-regime-canopy-cover": {
+     "displayName": "Canopy Cover",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Woody vegetation is a natural component of riparian zone",
+     "points": [
+      {
+       "x": 50.0,
+       "y": 0.0
+      },
+      {
+       "x": 80.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Woody vegetation is a natural component of riparian zone",
+       "points": [
+        {
+         "x": 50.0,
+         "y": 0.0
+        },
+        {
+         "x": 80.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Woody vegetation is not a natural component of riparian zone",
+       "points": [
+        {
+         "x": 50.0,
+         "y": 1.0
+        },
+        {
+         "x": 80.0,
+         "y": 0.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Canopy Cover",
+      "units": "",
+      "metric_family": "field and/or desktop",
+      "notes": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+      "column_name": "light-and-thermal-regime-canopy-cover",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Riparian/Channel\n\nMethod: Field and/or Desktop",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Woody vegetation is a natural component of riparian zone",
+         "registryKey": "sqt:mn:canopy-cover:woody-vegetation-is-a-natural-component-of-riparian-zone",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Woody vegetation is not a natural component of riparian zone",
+         "registryKey": "sqt:mn:canopy-cover:woody-vegetation-is-not-a-natural-component-of-riparian-zone",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "light-and-thermal-regime-canopy-cover",
+       "discipline": "Physicochemistry",
+       "function_label": "Light & thermal regime"
+      }
+     ],
+     "decision": {
+      "metric": "light-and-thermal-regime-canopy-cover",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "light-and-thermal-regime-canopy-cover",
+       "metricName": "Canopy Cover",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Canopy Cover",
+       "metricStatement": "Riparian canopy cover that controls shading and thermal/light regime in the channel.",
+       "howToMeasure": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+       "methodContext": "Context: Riparian/Channel\n\nMethod: Field and/or Desktop",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT - Woody vegetation is a natural component of riparian zone",
+        "stratification": "Woody vegetation is a natural component of riparian zone",
+        "points": [
+         {
+          "x": 50,
+          "y": 0
+         },
+         {
+          "x": 80,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Woody vegetation is a natural component of riparian zone",
+         "layerName": "Minnesota SQT - Woody vegetation is a natural component of riparian zone",
+         "points": [
+          {
+           "x": 50,
+           "y": 0
+          },
+          {
+           "x": 80,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Woody vegetation is not a natural component of riparian zone",
+         "layerName": "Minnesota SQT - Woody vegetation is not a natural component of riparian zone",
+         "points": [
+          {
+           "x": 50,
+           "y": 1
+          },
+          {
+           "x": 80,
+           "y": 0
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Woody vegetation is a natural component of riparian zone"
+      },
+      "functions": [
+       "light-thermal-regime"
+      ]
+     }
+    },
+    "light-and-thermal-regime-summer-average": {
+     "displayName": "Summer Average",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 10.0,
+       "y": 1.0
+      },
+      {
+       "x": 14.0,
+       "y": 0.7
+      },
+      {
+       "x": 18.0,
+       "y": 0.3
+      },
+      {
+       "x": 25.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Summer Average",
+      "units": "",
+      "metric_family": "field (logger) and/or desktop (data compilation)",
+      "notes": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+      "column_name": "light-and-thermal-regime-summer-average",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:summer-average:default",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "light-and-thermal-regime-summer-average",
+       "discipline": "Physicochemistry",
+       "function_label": "Light & thermal regime"
+      }
+     ],
+     "decision": {
+      "metric": "light-and-thermal-regime-summer-average",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "light-and-thermal-regime-summer-average",
+       "metricName": "Summer Average",
+       "discipline": "Physicochemistry",
+       "inputType": "field (logger) and/or desktop (data compilation)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Summer Average",
+       "metricStatement": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+       "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 10,
+          "y": 1
+         },
+         {
+          "x": 14,
+          "y": 0.7
+         },
+         {
+          "x": 18,
+          "y": 0.3
+         },
+         {
+          "x": 25,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "light-thermal-regime"
+      ]
+     }
+    },
+    "carbon-processing-effective-vegetated-riparian-area": {
+     "displayName": "Effective Vegetated Riparian Area",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Unconfined Alluvial Valleys",
+     "points": [
+      {
+       "x": 30.0,
+       "y": 0.0
+      },
+      {
+       "x": 100.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Unconfined Alluvial Valleys",
+       "points": [
+        {
+         "x": 30.0,
+         "y": 0.0
+        },
+        {
+         "x": 100.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Confined Alluvial or Colluvial/V-Shaped Valleys",
+       "points": [
+        {
+         "x": 60.0,
+         "y": 0.0
+        },
+        {
+         "x": 100.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Effective Vegetated Riparian Area",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-effective-vegetated-riparian-area",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Unconfined Alluvial Valleys",
+         "registryKey": "sqt:mn:effective-vegetated-riparian-area:unconfined-alluvial-valleys",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Confined Alluvial or Colluvial/V-Shaped Valleys",
+         "registryKey": "sqt:mn:effective-vegetated-riparian-area:confined-alluvial-or-colluvial-v-shaped-valleys",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-effective-vegetated-riparian-area",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-effective-vegetated-riparian-area",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-effective-vegetated-riparian-area",
+       "metricName": "Effective Vegetated Riparian Area",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Effective Vegetated Riparian Area",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT - Unconfined Alluvial Valleys",
+        "stratification": "Unconfined Alluvial Valleys",
+        "points": [
+         {
+          "x": 30,
+          "y": 0
+         },
+         {
+          "x": 100,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Unconfined Alluvial Valleys",
+         "layerName": "Minnesota SQT - Unconfined Alluvial Valleys",
+         "points": [
+          {
+           "x": 30,
+           "y": 0
+          },
+          {
+           "x": 100,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Confined Alluvial or Colluvial/V-Shaped Valleys",
+         "layerName": "Minnesota SQT - Confined Alluvial or Colluvial/V-Shaped Valleys",
+         "points": [
+          {
+           "x": 60,
+           "y": 0
+          },
+          {
+           "x": 100,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Unconfined Alluvial Valleys"
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-herbaceous-strata-vegetation-cover": {
+     "displayName": "Herbaceous Strata Vegetation Cover",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 50.0,
+       "y": 0.0
+      },
+      {
+       "x": 80.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Herbaceous Strata Vegetation Cover",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-herbaceous-strata-vegetation-cover",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:herbaceous-strata-vegetation-cover:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-herbaceous-strata-vegetation-cover",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-herbaceous-strata-vegetation-cover",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-herbaceous-strata-vegetation-cover",
+       "metricName": "Herbaceous Strata Vegetation Cover",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Herbaceous Strata Vegetation Cover",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 50,
+          "y": 0
+         },
+         {
+          "x": 80,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-woody-stem-basal-area": {
+     "displayName": "Woody Stem Basal Area",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 9.0,
+       "y": 0.0
+      },
+      {
+       "x": 14.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Woody Stem Basal Area",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-woody-stem-basal-area",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:woody-stem-basal-area:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-woody-stem-basal-area",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-woody-stem-basal-area",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-woody-stem-basal-area",
+       "metricName": "Woody Stem Basal Area",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Woody Stem Basal Area",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 9,
+          "y": 0
+         },
+         {
+          "x": 14,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "water-and-soil-quality-do": {
+     "displayName": "DO",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "2A",
+     "points": [
+      {
+       "x": 5.25,
+       "y": 0.0
+      },
+      {
+       "x": 6.3,
+       "y": 0.3
+      },
+      {
+       "x": 7.7,
+       "y": 0.7
+      },
+      {
+       "x": 8.75,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "2A",
+       "points": [
+        {
+         "x": 5.25,
+         "y": 0.0
+        },
+        {
+         "x": 6.3,
+         "y": 0.3
+        },
+        {
+         "x": 7.7,
+         "y": 0.7
+        },
+        {
+         "x": 8.75,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "2B/2Bd",
+       "points": [
+        {
+         "x": 0.75,
+         "y": 0.0
+        },
+        {
+         "x": 0.9,
+         "y": 0.3
+        },
+        {
+         "x": 1.1,
+         "y": 0.7
+        },
+        {
+         "x": 1.25,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "DO",
+      "units": "",
+      "metric_family": "field (meter/logger) and/or desktop (data compilation)",
+      "notes": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+      "column_name": "water-and-soil-quality-do",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+      "curveCaveats": [
+       "2B/2Bd: the metric library row this curve was transcribed from is defective: Labelled 2B/2Bd, but its values are the original's Use Class: 7 row (F32:K32: 3 of 4 agree; except 0.75 vs ≤ 0.80 (F32)). The original's Use Class: 2B/2Bd values (F31:K31: ≤ 3.8, 4.5, 5.5, ≥ 6.24) are not in the metric library. It scores as v1 scores it; the assessment audit decides the fix."
+      ],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "2A",
+         "registryKey": "sqt:mn:do:2a",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "2B/2Bd",
+         "registryKey": "sqt:mn:do:2b-2bd",
+         "verification": "defective",
+         "defects": [
+          "Labelled 2B/2Bd, but its values are the original's Use Class: 7 row (F32:K32: 3 of 4 agree; except 0.75 vs ≤ 0.80 (F32)). The original's Use Class: 2B/2Bd values (F31:K31: ≤ 3.8, 4.5, 5.5, ≥ 6.24) are not in the metric library."
+         ],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "water-and-soil-quality-do",
+       "discipline": "Physicochemistry",
+       "function_label": "Water & soil quality"
+      }
+     ],
+     "decision": {
+      "metric": "water-and-soil-quality-do",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "water-and-soil-quality-do",
+       "metricName": "DO",
+       "discipline": "Physicochemistry",
+       "inputType": "field (meter/logger) and/or desktop (data compilation)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "DO",
+       "metricStatement": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+       "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT - 2A",
+        "stratification": "2A",
+        "points": [
+         {
+          "x": 5.25,
+          "y": 0
+         },
+         {
+          "x": 6.3,
+          "y": 0.3
+         },
+         {
+          "x": 7.7,
+          "y": 0.7
+         },
+         {
+          "x": 8.75,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "2A",
+         "layerName": "Minnesota SQT - 2A",
+         "points": [
+          {
+           "x": 5.25,
+           "y": 0
+          },
+          {
+           "x": 6.3,
+           "y": 0.3
+          },
+          {
+           "x": 7.7,
+           "y": 0.7
+          },
+          {
+           "x": 8.75,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "2B/2Bd",
+         "layerName": "Minnesota SQT - 2B/2Bd",
+         "points": [
+          {
+           "x": 0.75,
+           "y": 0
+          },
+          {
+           "x": 0.9,
+           "y": 0.3
+          },
+          {
+           "x": 1.1,
+           "y": 0.7
+          },
+          {
+           "x": 1.25,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "2A"
+      },
+      "functions": [
+       "water-soil-quality"
+      ]
+     }
+    },
+    "water-and-soil-quality-tss": {
+     "displayName": "TSS",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "2A / -",
+     "points": [
+      {
+       "x": 7.5,
+       "y": 1.0
+      },
+      {
+       "x": 9.0,
+       "y": 0.7
+      },
+      {
+       "x": 11.0,
+       "y": 0.3
+      },
+      {
+       "x": 12.5,
+       "y": 0.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "2A / -",
+       "points": [
+        {
+         "x": 7.5,
+         "y": 1.0
+        },
+        {
+         "x": 9.0,
+         "y": 0.7
+        },
+        {
+         "x": 11.0,
+         "y": 0.3
+        },
+        {
+         "x": 12.5,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "2B/2Bd - North",
+       "points": [
+        {
+         "x": 11.3,
+         "y": 1.0
+        },
+        {
+         "x": 13.5,
+         "y": 0.7
+        },
+        {
+         "x": 16.5,
+         "y": 0.3
+        },
+        {
+         "x": 18.8,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "2B/2Bd - Central",
+       "points": [
+        {
+         "x": 22.5,
+         "y": 1.0
+        },
+        {
+         "x": 27.0,
+         "y": 0.7
+        },
+        {
+         "x": 33.0,
+         "y": 0.3
+        },
+        {
+         "x": 37.5,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "2B/2Bd - South",
+       "points": [
+        {
+         "x": 48.7,
+         "y": 1.0
+        },
+        {
+         "x": 58.5,
+         "y": 0.7
+        },
+        {
+         "x": 71.5,
+         "y": 0.3
+        },
+        {
+         "x": 81.2,
+         "y": 0.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "TSS",
+      "units": "",
+      "metric_family": "field (meter/logger) and/or desktop (data compilation)",
+      "notes": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+      "column_name": "water-and-soil-quality-tss",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "2A / -",
+         "registryKey": "sqt:mn:tss:2a",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "2B/2Bd - North",
+         "registryKey": "sqt:mn:tss:2b-2bd-north",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "2B/2Bd - Central",
+         "registryKey": "sqt:mn:tss:2b-2bd-central",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "2B/2Bd - South",
+         "registryKey": "sqt:mn:tss:2b-2bd-south",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "water-and-soil-quality-tss",
+       "discipline": "Physicochemistry",
+       "function_label": "Water & soil quality"
+      }
+     ],
+     "decision": {
+      "metric": "water-and-soil-quality-tss",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "water-and-soil-quality-tss",
+       "metricName": "TSS",
+       "discipline": "Physicochemistry",
+       "inputType": "field (meter/logger) and/or desktop (data compilation)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "TSS",
+       "metricStatement": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+       "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT - 2A / -",
+        "stratification": "2A / -",
+        "points": [
+         {
+          "x": 7.5,
+          "y": 1
+         },
+         {
+          "x": 9,
+          "y": 0.7
+         },
+         {
+          "x": 11,
+          "y": 0.3
+         },
+         {
+          "x": 12.5,
+          "y": 0
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "2A / -",
+         "layerName": "Minnesota SQT - 2A / -",
+         "points": [
+          {
+           "x": 7.5,
+           "y": 1
+          },
+          {
+           "x": 9,
+           "y": 0.7
+          },
+          {
+           "x": 11,
+           "y": 0.3
+          },
+          {
+           "x": 12.5,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "2B/2Bd - North",
+         "layerName": "Minnesota SQT - 2B/2Bd - North",
+         "points": [
+          {
+           "x": 11.3,
+           "y": 1
+          },
+          {
+           "x": 13.5,
+           "y": 0.7
+          },
+          {
+           "x": 16.5,
+           "y": 0.3
+          },
+          {
+           "x": 18.8,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "2B/2Bd - Central",
+         "layerName": "Minnesota SQT - 2B/2Bd - Central",
+         "points": [
+          {
+           "x": 22.5,
+           "y": 1
+          },
+          {
+           "x": 27,
+           "y": 0.7
+          },
+          {
+           "x": 33,
+           "y": 0.3
+          },
+          {
+           "x": 37.5,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "2B/2Bd - South",
+         "layerName": "Minnesota SQT - 2B/2Bd - South",
+         "points": [
+          {
+           "x": 48.7,
+           "y": 1
+          },
+          {
+           "x": 58.5,
+           "y": 0.7
+          },
+          {
+           "x": 71.5,
+           "y": 0.3
+          },
+          {
+           "x": 81.2,
+           "y": 0
+          }
+         ]
+        }
+       ],
+       "activeStratum": "2A / -"
+      },
+      "functions": [
+       "water-soil-quality"
+      ]
+     }
+    },
+    "habitat-provision-lwd": {
+     "displayName": "LWD",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "# Pieces / 100 meters",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 13.0,
+       "y": 0.7
+      },
+      {
+       "x": 28.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "LWD",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+      "column_name": "habitat-provision-lwd",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "# Pieces / 100 meters",
+         "registryKey": "sqt:mn:lwd:pieces-100-meters",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-lwd",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-lwd",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-lwd",
+       "metricName": "LWD",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "LWD",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT - # Pieces / 100 meters",
+        "stratification": "# Pieces / 100 meters",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 13,
+          "y": 0.7
+         },
+         {
+          "x": 28,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-lwd-index": {
+     "displayName": "LWD Index",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 430.0,
+       "y": 0.7
+      },
+      {
+       "x": 660.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "LWD Index",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+      "column_name": "habitat-provision-lwd-index",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:lwd-index:default",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-lwd-index",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-lwd-index",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-lwd-index",
+       "metricName": "LWD Index",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "LWD Index",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 430,
+          "y": 0.7
+         },
+         {
+          "x": 660,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-percent-riffle": {
+     "displayName": "Percent Riffle",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "A and B Streams",
+     "points": [
+      {
+       "x": 20.0,
+       "y": 0.0
+      },
+      {
+       "x": 50.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "A and B Streams",
+       "points": [
+        {
+         "x": 20.0,
+         "y": 0.0
+        },
+        {
+         "x": 50.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "C and E Stream Types",
+       "points": [
+        {
+         "x": 20.0,
+         "y": 0.0
+        },
+        {
+         "x": 45.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Percent Riffle",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-percent-riffle",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [
+       "A and B Streams: the metric library row this curve was transcribed from is defective: The original is two-sided: 20 (0), 29 (0.3), 41 (0.7), 50 (1), 60 (1), 69 (0.7), 81 (0.3), 90 (0). This row holds one limb, so any value above 50 scores 1. Missing: 60 (1), 69 (0.7), 81 (0.3), 90 (0). It scores as v1 scores it; the assessment audit decides the fix.",
+       "C and E Stream Types: the metric library row this curve was transcribed from is defective: The original is two-sided: 20 (0), 45 (1), 65 (1), 85 (0). This row holds one limb, so any value above 45 scores 1. Missing: 65 (1), 85 (0). It scores as v1 scores it; the assessment audit decides the fix."
+      ],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "A and B Streams",
+         "registryKey": "sqt:mn:percent-riffle:a-and-b-streams",
+         "verification": "defective",
+         "defects": [
+          "The original is two-sided: 20 (0), 29 (0.3), 41 (0.7), 50 (1), 60 (1), 69 (0.7), 81 (0.3), 90 (0). This row holds one limb, so any value above 50 scores 1. Missing: 60 (1), 69 (0.7), 81 (0.3), 90 (0)."
+         ],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "C and E Stream Types",
+         "registryKey": "sqt:mn:percent-riffle:c-and-e-stream-types",
+         "verification": "defective",
+         "defects": [
+          "The original is two-sided: 20 (0), 45 (1), 65 (1), 85 (0). This row holds one limb, so any value above 45 scores 1. Missing: 65 (1), 85 (0)."
+         ],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-percent-riffle",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-percent-riffle",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-percent-riffle",
+       "metricName": "Percent Riffle",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Percent Riffle",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT - A and B Streams",
+        "stratification": "A and B Streams",
+        "points": [
+         {
+          "x": 20,
+          "y": 0
+         },
+         {
+          "x": 50,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "A and B Streams",
+         "layerName": "Minnesota SQT - A and B Streams",
+         "points": [
+          {
+           "x": 20,
+           "y": 0
+          },
+          {
+           "x": 50,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "C and E Stream Types",
+         "layerName": "Minnesota SQT - C and E Stream Types",
+         "points": [
+          {
+           "x": 20,
+           "y": 0
+          },
+          {
+           "x": 45,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "A and B Streams"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-pool-depth-ratio": {
+     "displayName": "Pool Depth Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.1,
+       "y": 0.0
+      },
+      {
+       "x": 1.5,
+       "y": 0.3
+      },
+      {
+       "x": 2.0,
+       "y": 0.7
+      },
+      {
+       "x": 3.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Pool Depth Ratio",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-pool-depth-ratio",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:mn:pool-depth-ratio:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-pool-depth-ratio",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-pool-depth-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-pool-depth-ratio",
+       "metricName": "Pool Depth Ratio",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Pool Depth Ratio",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1.1,
+          "y": 0
+         },
+         {
+          "x": 1.5,
+          "y": 0.3
+         },
+         {
+          "x": 2,
+          "y": 0.7
+         },
+         {
+          "x": 3,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-pool-spacing-ratio": {
+     "displayName": "Pool Spacing Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "A and B Stream Types",
+     "points": [
+      {
+       "x": 4.0,
+       "y": 1.0
+      },
+      {
+       "x": 5.0,
+       "y": 0.7
+      },
+      {
+       "x": 6.5,
+       "y": 0.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "A and B Stream Types",
+       "points": [
+        {
+         "x": 4.0,
+         "y": 1.0
+        },
+        {
+         "x": 5.0,
+         "y": 0.7
+        },
+        {
+         "x": 6.5,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "Bc Stream Types",
+       "points": [
+        {
+         "x": 5.0,
+         "y": 1.0
+        },
+        {
+         "x": 6.0,
+         "y": 0.7
+        },
+        {
+         "x": 8.0,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "C and E Streams",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.5,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Pool Spacing Ratio",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-pool-spacing-ratio",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [
+       "C and E Streams: the metric library row this curve was transcribed from is defective: The original is two-sided: 1 (0), 1.74 (0.3), 2.74 (0.7), 3.5 (1), 6 (1), 6.89 (0.7), 8.11 (0.3), 9 (0). This row holds one limb, so any value above 3.5 scores 1. Missing: 6 (1), 6.89 (0.7), 8.11 (0.3), 9 (0). It scores as v1 scores it; the assessment audit decides the fix."
+      ],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "A and B Stream Types",
+         "registryKey": "sqt:mn:pool-spacing-ratio:a-and-b-stream-types",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Bc Stream Types",
+         "registryKey": "sqt:mn:pool-spacing-ratio:bc-stream-types",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "C and E Streams",
+         "registryKey": "sqt:mn:pool-spacing-ratio:c-and-e-streams",
+         "verification": "defective",
+         "defects": [
+          "The original is two-sided: 1 (0), 1.74 (0.3), 2.74 (0.7), 3.5 (1), 6 (1), 6.89 (0.7), 8.11 (0.3), 9 (0). This row holds one limb, so any value above 3.5 scores 1. Missing: 6 (1), 6.89 (0.7), 8.11 (0.3), 9 (0)."
+         ],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-pool-spacing-ratio",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-pool-spacing-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-pool-spacing-ratio",
+       "metricName": "Pool Spacing Ratio",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Pool Spacing Ratio",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT - A and B Stream Types",
+        "stratification": "A and B Stream Types",
+        "points": [
+         {
+          "x": 4,
+          "y": 1
+         },
+         {
+          "x": 5,
+          "y": 0.7
+         },
+         {
+          "x": 6.5,
+          "y": 0
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "A and B Stream Types",
+         "layerName": "Minnesota SQT - A and B Stream Types",
+         "points": [
+          {
+           "x": 4,
+           "y": 1
+          },
+          {
+           "x": 5,
+           "y": 0.7
+          },
+          {
+           "x": 6.5,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "Bc Stream Types",
+         "layerName": "Minnesota SQT - Bc Stream Types",
+         "points": [
+          {
+           "x": 5,
+           "y": 1
+          },
+          {
+           "x": 6,
+           "y": 0.7
+          },
+          {
+           "x": 8,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "C and E Streams",
+         "layerName": "Minnesota SQT - C and E Streams",
+         "points": [
+          {
+           "x": 1,
+           "y": 0
+          },
+          {
+           "x": 3.5,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "A and B Stream Types"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "population-support-fish-ibi": {
+     "displayName": "Fish IBI",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Northern Rivers - Northern",
+     "points": [
+      {
+       "x": 29.0,
+       "y": 0.0
+      },
+      {
+       "x": 38.0,
+       "y": 0.3
+      },
+      {
+       "x": 47.0,
+       "y": 0.7
+      },
+      {
+       "x": 67.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Northern Rivers - Northern",
+       "points": [
+        {
+         "x": 29.0,
+         "y": 0.0
+        },
+        {
+         "x": 38.0,
+         "y": 0.3
+        },
+        {
+         "x": 47.0,
+         "y": 0.7
+        },
+        {
+         "x": 67.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Northern Streams - Northern",
+       "points": [
+        {
+         "x": 35.0,
+         "y": 0.0
+        },
+        {
+         "x": 47.0,
+         "y": 0.3
+        },
+        {
+         "x": 56.0,
+         "y": 0.7
+        },
+        {
+         "x": 61.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Northern Headwaters - Northern",
+       "points": [
+        {
+         "x": 23.0,
+         "y": 0.0
+        },
+        {
+         "x": 42.0,
+         "y": 0.3
+        },
+        {
+         "x": 58.0,
+         "y": 0.7
+        },
+        {
+         "x": 68.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Northern Coldwater - Northern",
+       "points": [
+        {
+         "x": 25.0,
+         "y": 0.0
+        },
+        {
+         "x": 35.0,
+         "y": 0.3
+        },
+        {
+         "x": 45.0,
+         "y": 0.7
+        },
+        {
+         "x": 60.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Southern River - Southern",
+       "points": [
+        {
+         "x": 38.0,
+         "y": 0.0
+        },
+        {
+         "x": 49.0,
+         "y": 0.3
+        },
+        {
+         "x": 60.0,
+         "y": 0.7
+        },
+        {
+         "x": 71.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Southern Streams - Southern",
+       "points": [
+        {
+         "x": 35.0,
+         "y": 0.0
+        },
+        {
+         "x": 50.0,
+         "y": 0.3
+        },
+        {
+         "x": 59.0,
+         "y": 0.7
+        },
+        {
+         "x": 66.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Southern Headwaters - Southern",
+       "points": [
+        {
+         "x": 33.0,
+         "y": 0.0
+        },
+        {
+         "x": 55.0,
+         "y": 0.3
+        },
+        {
+         "x": 62.0,
+         "y": 0.7
+        },
+        {
+         "x": 74.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Southern Coldwater - Southern",
+       "points": [
+        {
+         "x": 37.0,
+         "y": 0.0
+        },
+        {
+         "x": 50.0,
+         "y": 0.3
+        },
+        {
+         "x": 63.0,
+         "y": 0.7
+        },
+        {
+         "x": 82.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Low Gradient - Low Gradient",
+       "points": [
+        {
+         "x": 15.0,
+         "y": 0.0
+        },
+        {
+         "x": 42.0,
+         "y": 0.3
+        },
+        {
+         "x": 52.0,
+         "y": 0.7
+        },
+        {
+         "x": 70.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Fish IBI",
+      "units": "",
+      "metric_family": "field (bioassessment) and/or desktop (existing scores)",
+      "notes": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+      "column_name": "population-support-fish-ibi",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Northern Rivers - Northern",
+         "registryKey": "sqt:mn:fish-ibi:northern-rivers-northern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Northern Streams - Northern",
+         "registryKey": "sqt:mn:fish-ibi:northern-streams-northern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Northern Headwaters - Northern",
+         "registryKey": "sqt:mn:fish-ibi:northern-headwaters-northern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Northern Coldwater - Northern",
+         "registryKey": "sqt:mn:fish-ibi:northern-coldwater-northern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Southern River - Southern",
+         "registryKey": "sqt:mn:fish-ibi:southern-river-southern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Southern Streams - Southern",
+         "registryKey": "sqt:mn:fish-ibi:southern-streams-southern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Southern Headwaters - Southern",
+         "registryKey": "sqt:mn:fish-ibi:southern-headwaters-southern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Southern Coldwater - Southern",
+         "registryKey": "sqt:mn:fish-ibi:southern-coldwater-southern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Low Gradient - Low Gradient",
+         "registryKey": "sqt:mn:fish-ibi:low-gradient-low-gradient",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "population-support-fish-ibi",
+       "discipline": "Biology",
+       "function_label": "Population support"
+      }
+     ],
+     "decision": {
+      "metric": "population-support-fish-ibi",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "population-support-fish-ibi",
+       "metricName": "Fish IBI",
+       "discipline": "Biology",
+       "inputType": "field (bioassessment) and/or desktop (existing scores)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Fish IBI",
+       "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+       "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+       "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT - Northern Rivers - Northern",
+        "stratification": "Northern Rivers - Northern",
+        "points": [
+         {
+          "x": 29,
+          "y": 0
+         },
+         {
+          "x": 38,
+          "y": 0.3
+         },
+         {
+          "x": 47,
+          "y": 0.7
+         },
+         {
+          "x": 67,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Northern Rivers - Northern",
+         "layerName": "Minnesota SQT - Northern Rivers - Northern",
+         "points": [
+          {
+           "x": 29,
+           "y": 0
+          },
+          {
+           "x": 38,
+           "y": 0.3
+          },
+          {
+           "x": 47,
+           "y": 0.7
+          },
+          {
+           "x": 67,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Northern Streams - Northern",
+         "layerName": "Minnesota SQT - Northern Streams - Northern",
+         "points": [
+          {
+           "x": 35,
+           "y": 0
+          },
+          {
+           "x": 47,
+           "y": 0.3
+          },
+          {
+           "x": 56,
+           "y": 0.7
+          },
+          {
+           "x": 61,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Northern Headwaters - Northern",
+         "layerName": "Minnesota SQT - Northern Headwaters - Northern",
+         "points": [
+          {
+           "x": 23,
+           "y": 0
+          },
+          {
+           "x": 42,
+           "y": 0.3
+          },
+          {
+           "x": 58,
+           "y": 0.7
+          },
+          {
+           "x": 68,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Northern Coldwater - Northern",
+         "layerName": "Minnesota SQT - Northern Coldwater - Northern",
+         "points": [
+          {
+           "x": 25,
+           "y": 0
+          },
+          {
+           "x": 35,
+           "y": 0.3
+          },
+          {
+           "x": 45,
+           "y": 0.7
+          },
+          {
+           "x": 60,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Southern River - Southern",
+         "layerName": "Minnesota SQT - Southern River - Southern",
+         "points": [
+          {
+           "x": 38,
+           "y": 0
+          },
+          {
+           "x": 49,
+           "y": 0.3
+          },
+          {
+           "x": 60,
+           "y": 0.7
+          },
+          {
+           "x": 71,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Southern Streams - Southern",
+         "layerName": "Minnesota SQT - Southern Streams - Southern",
+         "points": [
+          {
+           "x": 35,
+           "y": 0
+          },
+          {
+           "x": 50,
+           "y": 0.3
+          },
+          {
+           "x": 59,
+           "y": 0.7
+          },
+          {
+           "x": 66,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Southern Headwaters - Southern",
+         "layerName": "Minnesota SQT - Southern Headwaters - Southern",
+         "points": [
+          {
+           "x": 33,
+           "y": 0
+          },
+          {
+           "x": 55,
+           "y": 0.3
+          },
+          {
+           "x": 62,
+           "y": 0.7
+          },
+          {
+           "x": 74,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Southern Coldwater - Southern",
+         "layerName": "Minnesota SQT - Southern Coldwater - Southern",
+         "points": [
+          {
+           "x": 37,
+           "y": 0
+          },
+          {
+           "x": 50,
+           "y": 0.3
+          },
+          {
+           "x": 63,
+           "y": 0.7
+          },
+          {
+           "x": 82,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Low Gradient - Low Gradient",
+         "layerName": "Minnesota SQT - Low Gradient - Low Gradient",
+         "points": [
+          {
+           "x": 15,
+           "y": 0
+          },
+          {
+           "x": 42,
+           "y": 0.3
+          },
+          {
+           "x": 52,
+           "y": 0.7
+          },
+          {
+           "x": 70,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Northern Rivers - Northern"
+      },
+      "functions": [
+       "population-support"
+      ]
+     }
+    },
+    "population-support-macroinvertebrate-ibi": {
+     "displayName": "Macroinvertebrate IBI",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Northern Forest Rivers - Northern",
+     "points": [
+      {
+       "x": 38.2,
+       "y": 0.0
+      },
+      {
+       "x": 49.0,
+       "y": 0.3
+      },
+      {
+       "x": 59.8,
+       "y": 0.7
+      },
+      {
+       "x": 77.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Northern Forest Rivers - Northern",
+       "points": [
+        {
+         "x": 38.2,
+         "y": 0.0
+        },
+        {
+         "x": 49.0,
+         "y": 0.3
+        },
+        {
+         "x": 59.8,
+         "y": 0.7
+        },
+        {
+         "x": 77.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Northern Forest Streams Riffle-run - Northern",
+       "points": [
+        {
+         "x": 40.4,
+         "y": 0.0
+        },
+        {
+         "x": 53.0,
+         "y": 0.3
+        },
+        {
+         "x": 65.6,
+         "y": 0.7
+        },
+        {
+         "x": 82.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Northern Forest Streams Glide-pool - Northern",
+       "points": [
+        {
+         "x": 37.0,
+         "y": 0.0
+        },
+        {
+         "x": 51.0,
+         "y": 0.3
+        },
+        {
+         "x": 64.6,
+         "y": 0.7
+        },
+        {
+         "x": 76.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Northern Coldwater - Northern",
+       "points": [
+        {
+         "x": 19.6,
+         "y": 0.0
+        },
+        {
+         "x": 32.0,
+         "y": 0.3
+        },
+        {
+         "x": 44.4,
+         "y": 0.7
+        },
+        {
+         "x": 52.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Southern Forest Streams Riffle-run - Southern",
+       "points": [
+        {
+         "x": 24.0,
+         "y": 0.0
+        },
+        {
+         "x": 37.0,
+         "y": 0.3
+        },
+        {
+         "x": 49.6,
+         "y": 0.7
+        },
+        {
+         "x": 62.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Southern Forest Streams Glide-pool - Southern",
+       "points": [
+        {
+         "x": 29.4,
+         "y": 0.0
+        },
+        {
+         "x": 43.0,
+         "y": 0.3
+        },
+        {
+         "x": 56.6,
+         "y": 0.7
+        },
+        {
+         "x": 66.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Southern Coldwater - Southern",
+       "points": [
+        {
+         "x": 29.2,
+         "y": 0.0
+        },
+        {
+         "x": 43.0,
+         "y": 0.3
+        },
+        {
+         "x": 56.8,
+         "y": 0.7
+        },
+        {
+         "x": 72.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Prairie Forest Rivers - Prairie",
+       "points": [
+        {
+         "x": 20.2,
+         "y": 0.0
+        },
+        {
+         "x": 31.0,
+         "y": 0.3
+        },
+        {
+         "x": 41.8,
+         "y": 0.7
+        },
+        {
+         "x": 63.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Prairie Streams Glide-Pool - Prairie",
+       "points": [
+        {
+         "x": 27.4,
+         "y": 0.0
+        },
+        {
+         "x": 41.0,
+         "y": 0.3
+        },
+        {
+         "x": 54.6,
+         "y": 0.7
+        },
+        {
+         "x": 69.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Macroinvertebrate IBI",
+      "units": "",
+      "metric_family": "field (bioassessment) and/or desktop (existing scores)",
+      "notes": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+      "column_name": "population-support-macroinvertebrate-ibi",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Minnesota Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Minnesota SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Minnesota SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "mn-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+      },
+      "sqtTranscription": {
+       "tool": "Minnesota Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Northern Forest Rivers - Northern",
+         "registryKey": "sqt:mn:macroinvertebrate-ibi:northern-forest-rivers-northern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Northern Forest Streams Riffle-run - Northern",
+         "registryKey": "sqt:mn:macroinvertebrate-ibi:northern-forest-streams-riffle-run-northern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Northern Forest Streams Glide-pool - Northern",
+         "registryKey": "sqt:mn:macroinvertebrate-ibi:northern-forest-streams-glide-pool-northern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Northern Coldwater - Northern",
+         "registryKey": "sqt:mn:macroinvertebrate-ibi:northern-coldwater-northern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Southern Forest Streams Riffle-run - Southern",
+         "registryKey": "sqt:mn:macroinvertebrate-ibi:southern-forest-streams-riffle-run-southern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Southern Forest Streams Glide-pool - Southern",
+         "registryKey": "sqt:mn:macroinvertebrate-ibi:southern-forest-streams-glide-pool-southern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Southern Coldwater - Southern",
+         "registryKey": "sqt:mn:macroinvertebrate-ibi:southern-coldwater-southern",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Prairie Forest Rivers - Prairie",
+         "registryKey": "sqt:mn:macroinvertebrate-ibi:prairie-forest-rivers-prairie",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Prairie Streams Glide-Pool - Prairie",
+         "registryKey": "sqt:mn:macroinvertebrate-ibi:prairie-streams-glide-pool-prairie",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "population-support-macroinvertebrate-ibi",
+       "discipline": "Biology",
+       "function_label": "Population support"
+      }
+     ],
+     "decision": {
+      "metric": "population-support-macroinvertebrate-ibi",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "population-support-macroinvertebrate-ibi",
+       "metricName": "Macroinvertebrate IBI",
+       "discipline": "Biology",
+       "inputType": "field (bioassessment) and/or desktop (existing scores)",
+       "sourceCitation": "Minnesota SQT",
+       "xLabel": "Macroinvertebrate IBI",
+       "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+       "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+       "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Minnesota SQT - Northern Forest Rivers - Northern",
+        "stratification": "Northern Forest Rivers - Northern",
+        "points": [
+         {
+          "x": 38.2,
+          "y": 0
+         },
+         {
+          "x": 49,
+          "y": 0.3
+         },
+         {
+          "x": 59.8,
+          "y": 0.7
+         },
+         {
+          "x": 77,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Northern Forest Rivers - Northern",
+         "layerName": "Minnesota SQT - Northern Forest Rivers - Northern",
+         "points": [
+          {
+           "x": 38.2,
+           "y": 0
+          },
+          {
+           "x": 49,
+           "y": 0.3
+          },
+          {
+           "x": 59.8,
+           "y": 0.7
+          },
+          {
+           "x": 77,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Northern Forest Streams Riffle-run - Northern",
+         "layerName": "Minnesota SQT - Northern Forest Streams Riffle-run - Northern",
+         "points": [
+          {
+           "x": 40.4,
+           "y": 0
+          },
+          {
+           "x": 53,
+           "y": 0.3
+          },
+          {
+           "x": 65.6,
+           "y": 0.7
+          },
+          {
+           "x": 82,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Northern Forest Streams Glide-pool - Northern",
+         "layerName": "Minnesota SQT - Northern Forest Streams Glide-pool - Northern",
+         "points": [
+          {
+           "x": 37,
+           "y": 0
+          },
+          {
+           "x": 51,
+           "y": 0.3
+          },
+          {
+           "x": 64.6,
+           "y": 0.7
+          },
+          {
+           "x": 76,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Northern Coldwater - Northern",
+         "layerName": "Minnesota SQT - Northern Coldwater - Northern",
+         "points": [
+          {
+           "x": 19.6,
+           "y": 0
+          },
+          {
+           "x": 32,
+           "y": 0.3
+          },
+          {
+           "x": 44.4,
+           "y": 0.7
+          },
+          {
+           "x": 52,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Southern Forest Streams Riffle-run - Southern",
+         "layerName": "Minnesota SQT - Southern Forest Streams Riffle-run - Southern",
+         "points": [
+          {
+           "x": 24,
+           "y": 0
+          },
+          {
+           "x": 37,
+           "y": 0.3
+          },
+          {
+           "x": 49.6,
+           "y": 0.7
+          },
+          {
+           "x": 62,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Southern Forest Streams Glide-pool - Southern",
+         "layerName": "Minnesota SQT - Southern Forest Streams Glide-pool - Southern",
+         "points": [
+          {
+           "x": 29.4,
+           "y": 0
+          },
+          {
+           "x": 43,
+           "y": 0.3
+          },
+          {
+           "x": 56.6,
+           "y": 0.7
+          },
+          {
+           "x": 66,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Southern Coldwater - Southern",
+         "layerName": "Minnesota SQT - Southern Coldwater - Southern",
+         "points": [
+          {
+           "x": 29.2,
+           "y": 0
+          },
+          {
+           "x": 43,
+           "y": 0.3
+          },
+          {
+           "x": 56.8,
+           "y": 0.7
+          },
+          {
+           "x": 72,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Prairie Forest Rivers - Prairie",
+         "layerName": "Minnesota SQT - Prairie Forest Rivers - Prairie",
+         "points": [
+          {
+           "x": 20.2,
+           "y": 0
+          },
+          {
+           "x": 31,
+           "y": 0.3
+          },
+          {
+           "x": 41.8,
+           "y": 0.7
+          },
+          {
+           "x": 63,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Prairie Streams Glide-Pool - Prairie",
+         "layerName": "Minnesota SQT - Prairie Streams Glide-Pool - Prairie",
+         "points": [
+          {
+           "x": 27.4,
+           "y": 0
+          },
+          {
+           "x": 41,
+           "y": 0.3
+          },
+          {
+           "x": 54.6,
+           "y": 0.7
+          },
+          {
+           "x": 69,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Northern Forest Rivers - Northern"
+      },
+      "functions": [
+       "population-support"
+      ]
+     }
+    }
+   },
+   "carriedFrom": {
+    "assessmentId": "mn-sqt-adapted",
+    "fromVersion": 1,
+    "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+   },
+   "transcription": {
+    "kind": "state-sqt",
+    "tool": "Minnesota Stream Quantification Tool",
+    "by": "STAF SQT migration",
+    "on": "2026-07-12",
+    "source": "docs/assets/data/metric-library/detailed-adapted-assessments.json"
+   }
+  },
+  "owner_curve_decisions": [],
+  "candidate_register": null,
+  "wizard_draft": null
+ }
+}
