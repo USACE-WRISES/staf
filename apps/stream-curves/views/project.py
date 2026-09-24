@@ -49,6 +49,7 @@ from streamcurves import library as lib
 from streamcurves import pathpick
 from streamcurves import pick_run
 from streamcurves import prefs
+from streamcurves import pressure_evidence as pe
 from streamcurves import project_file as pfile
 from streamcurves import project_meta as pmeta
 from streamcurves import recents
@@ -633,6 +634,12 @@ def project_server(input, output, session, state: AppState):
         with reactive.isolate():
             has_data = state.data() is not None
             draft = state.wizard_draft()
+            has_curves = bool(pe.reference_keys(state.reference_build()))
+        if not has_data and has_curves and not draft:
+            # curves and no data to start from: a transcribed assessment (a state SQT), whose
+            # work is its curves, not the Region & data wizard
+            _request_nav("curves")
+            return
         if not has_data:
             step = int((draft or {}).get("step") or loc.get("wizard_step") or 1)
             _request_nav("data", wizard_step=max(1, min(step, 7)))
