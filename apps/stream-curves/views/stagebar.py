@@ -27,8 +27,10 @@ from shiny import module, reactive, render, ui
 
 from streamcurves import run_state as rs
 from streamcurves import workspace as ws
+from streamcurves.easi_method import stages as es
 from streamcurves.precheck import precheck_summary
 from views import assessment_publish as ap
+from views import easi_page as ep
 from views import project_panel as pp
 from views.state import AppState
 from views.theme import bi
@@ -83,6 +85,13 @@ def stagebar_server(input, output, session, state: AppState):
     # ── one snapshot for the strip and the panel ────────────────────────────
     @reactive.calc
     def _view() -> dict:
+        if state.assessment_type() == "easi":
+            # An EASI method project: its own five stages (streamcurves.easi_method.stages),
+            # none of the DEEP snapshot.
+            tab = state.current_tab()
+            ev = ep.easi_view(state)
+            return {"easi": ev, "tab": tab, "tool": rs.current_tool(tab), "has_data": True,
+                    "current": (ev or {}).get("stage") if tab == "easi" else None}
         # run_snapshot() isolates every read it makes, so declare the snapshot's
         # inputs as dependencies here. Reads only: nothing here may write a reactive,
         # or it would loop like the old _screen_done bug.
@@ -128,9 +137,39 @@ def stagebar_server(input, output, session, state: AppState):
         }
 
     # ── the strip ───────────────────────────────────────────────────────────
+    def _easi_bar(v: dict):
+        ev = v.get("easi") or {}
+        statuses = ev.get("statuses") or {}
+        n_pending = (ev.get("snap") or {}).get("n_pending") or 0
+        chips = []
+        for i, key in enumerate(es.STAGE_KEYS):
+            info = statuses.get(key) or {"status": rs.STAGE_BLOCKED, "detail": ""}
+            cls = "sc-stage " + pp.STATE_CLASS.get(info["status"], "st-locked")
+            if key == v["current"]:
+                cls += " active"
+            count = (ui.tags.span(str(n_pending), class_="sc-stage-count")
+                     if key == "selection" and n_pending else None)
+            chips.append(ui.tags.button(
+                ui.tags.span(str(i + 1), class_="sc-stage-num"),
+                ui.tags.span(es.STAGE_SHORT[key], class_="sc-stage-name"),
+                count,
+                type="button", class_=cls,
+                title=f"Step {i + 1}: {es.STAGE_LABELS[key]}. {info['detail']}",
+                **{"data-jump": es.stage_target(key)}))
+            if i < len(es.STAGE_KEYS) - 1:
+                chips.append(ui.tags.span(class_="sc-stage-sep"))
+        return ui.div(
+            ui.div(*chips, class_="sc-stagebar-scroll"),
+            ui.div("EASI method", class_="sc-stagebar-kind",
+                   title="This project authors an EASI screening method"),
+            class_="sc-stagebar" + (" aside" if v["tool"] else ""),
+            **{"data-jump-to": ns("jump")})
+
     @render.ui
     def stage_bar():
         v = _view()
+        if "easi" in v:
+            return _easi_bar(v)
         snap, statuses = v["snap"], v["statuses"]
         chips = []
         for i, key in enumerate(rs.STAGE_KEYS):
@@ -168,6 +207,8 @@ def stagebar_server(input, output, session, state: AppState):
     def panel_body():
         v = _view()
         project = pp.project_summary(state.project_meta(), state.project_file())
+        if "easi" in v:
+            return pp.easi_tree(v, project=project, tools_allowed=tools_allowed())
         return pp.tree(v, project=project, tools_allowed=tools_allowed())
 
     # ── navigation: one input, one guarded dispatcher ───────────────────────
@@ -181,7 +222,7 @@ def stagebar_server(input, output, session, state: AppState):
 
     # tasks_running is keyed by stage, so a job that is not one of the stages needs its
     # own phrase; without this the toast reads "Still working on region_build".
-    _TASK_LABELS = {"region_build": "a region build"}
+    _TASK_LABELS = {"region_build": "a region build", ep.TASK_KEY: "the consequences preview"}
 
     def _refuse_while_busy() -> bool:
         """True (after saying so) while a job runs. A switch lands mid-flush, and
@@ -231,7 +272,13 @@ def stagebar_server(input, output, session, state: AppState):
     def _jump():
         target = str((input.jump() or {}).get("target") or "")
         kind, _, key = target.partition(":")
-        if kind == "stage" and key in STAGE_TARGETS:
+        if target.startswith(es.TARGET_PREFIX) and key in es.STAGE_KEYS:
+            if _refuse_while_busy():
+                return
+            with reactive.isolate():
+                state.easi_stage.set(key)
+            _request_nav("easi")
+        elif kind == "stage" and key in STAGE_TARGETS:
             _go(key)
         elif kind == "substep" and key.isdigit() and int(key) in _SUBSTEPS:
             if _refuse_while_busy():

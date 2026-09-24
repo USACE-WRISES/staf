@@ -105,7 +105,7 @@ def test_a_project_from_a_newer_app_asks_for_an_update(tmp_path):
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w") as zf:
         zf.writestr(pf.PROJECT_JSON, json.dumps({"format": pf.FORMAT,
-                                                 "format_version": pf.FORMAT_VERSION + 1}))
+                                                 "format_version": pf.FORMAT_VERSION_MAX + 1}))
         zf.writestr(pf.SESSION_NAME, _session_text())
     with pytest.raises(pf.ProjectFileError, match="newer StreamCurves"):
         pf.read_project(buf.getvalue())
@@ -296,7 +296,7 @@ def test_a_catalog_parses_newest_first_and_skips_bad_rows():
     assert e.version(1).in_deep
     assert e.version().assets["pack"].size == 3
     with pytest.raises(ValueError, match="newer"):
-        gallery.parse_catalog(json.dumps(_catalog(schema=2)))
+        gallery.parse_catalog(json.dumps(_catalog(schema=gallery.CATALOG_SCHEMA_V2 + 1)))
 
 
 def test_the_library_builds_the_same_catalog_the_release_publishes():
@@ -466,3 +466,28 @@ def test_autosave_waits_for_quiet_and_for_every_job():
 def test_gallery_links_to_deep_use_the_form_deep_parses():
     assert "?assessment={e.id}@{v.version}" in PROJECT
     assert "@v{v.version}" not in PROJECT
+
+
+def test_the_typed_catalog_wins_and_a_withdrawn_typed_feed_is_forgotten(monkeypatch, tmp_path):
+    import os
+    pack = pf.build_bytes(meta={"project_name": "Demo v2"}, session_text=_session_text(),
+                          desktop_project=False, deterministic=True)
+    gallery.cache_dir().mkdir(parents=True, exist_ok=True)
+    typed = gallery.cache_dir() / gallery.CATALOG_NAME_V2
+    typed.write_text(json.dumps(_catalog(pack, schema=2, name="old-v2-p1.streamcurves")))
+    os.utime(typed, (1_000_000, 1_000_000))
+    # a library.json refreshed later (StreamCurves 1.0.0 shares this cache folder) lists DEEP
+    # only: it never outranks the typed copy, however new
+    (gallery.cache_dir() / gallery.CATALOG_NAME).write_text(json.dumps(_catalog(pack)))
+    entries, _at = gallery.cached_catalog()
+    assert entries[0].version().assets["pack"].name == "old-v2-p1.streamcurves"
+    typed.write_text("{ not json")                                  # an unreadable typed copy
+    entries, _at = gallery.cached_catalog()
+    assert entries[0].version().assets["pack"].name == "demo-v2-p1.streamcurves"
+    # a library that publishes only library.json: the typed cache goes
+    (tmp_path / "lib").mkdir()
+    (tmp_path / "lib" / gallery.CATALOG_NAME).write_text(json.dumps(_catalog(pack)))
+    monkeypatch.setenv(gallery.BASE_URL_ENV, str(tmp_path / "lib"))
+    typed.write_text(json.dumps(_catalog(pack, schema=2)))
+    gallery.refresh_catalog(force=True)
+    assert not typed.exists() and not gallery.catalog_stale()

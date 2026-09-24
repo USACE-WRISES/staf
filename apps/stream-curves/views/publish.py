@@ -21,7 +21,6 @@ import copy
 import io
 import json
 import logging
-import os
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -37,6 +36,7 @@ from streamcurves import session_io as sio
 from streamcurves import workspace as ws
 from streamcurves.workbook import write_input_workbook
 from views import assessment_publish as ap
+from views import final_selection as fs
 from views.data_overview import _default_session_name, _sanitize_file_stem
 from views.state import AppState
 from views.theme import bi, fa
@@ -62,39 +62,24 @@ def _status_choices() -> dict:
     }
 
 
-def _maintainer_name() -> str:
-    """Who to record as the publisher, derived rather than asked for.
-
-    Same chain views/discipline_map.py uses for a coverage exception's author. The
-    page used to carry a "Maintainer name (for the canonical publish audit trail)"
-    field pre-filled from the first of these, which asked the publisher to retype
-    something the environment already knows.
-    """
-    return (os.environ.get("STAF_LIBRARY_MAINTAINER")
-            or os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
+def _maintainer_name(state=None) -> str:
+    """Who to record as the publisher, derived rather than asked for: the initials every
+    StreamCurves page records (``views.state.recorded_by``: STAF_LIBRARY_MAINTAINER, else the
+    open project's Prepared by, else ``n/a``; never the login)."""
+    from views import state as _st
+    return _st.recorded_by(state)
 
 
 def _publish_block_reason() -> str | None:
     """The actionable gate reason from library.publish_gate_reason, or None.
 
     The library's own copy names the fix (STAF_LIBRARY_PUBLISH=1 in a verified
-    repository checkout; a maintainer name for the audit trail), which is what
-    a blocked publisher actually needs to read. The page used to compress it to
-    "Publishing is off in this session.", which read as an unexplained fault,
-    and its branch order could mask the flag message behind the maintainer one.
-    The not-writable branch never reaches this note: _publish_pane replaces the
-    whole form for that case.
+    repository checkout), which is what a blocked publisher actually needs to read.
+    A missing name never blocks: the publish records ``n/a``. The not-writable
+    branch never reaches this note: _publish_pane replaces the whole form for
+    that case.
     """
-    reason = lib.publish_gate_reason(_maintainer_name())
-    if reason is None:
-        return None
-    if not _maintainer_name() and lib.can_publish_canonical("anyone"):
-        # Flag and writability are fine; only the audit name is missing. The
-        # library's wording ("Enter a maintainer name...") assumes a form
-        # field this page deliberately does not have.
-        return ("No publisher name is available for the audit trail. Set "
-                "STAF_LIBRARY_MAINTAINER (or run where USERNAME is set), then reload.")
-    return reason
+    return lib.publish_gate_reason()
 
 
 def _portfolio_approval_text(pending: list[dict]) -> str:
@@ -169,7 +154,8 @@ def publish_server(input, output, session, state: AppState):
     def _assessments() -> list[dict]:
         refresh()
         try:
-            return lib.list_assessments()
+            # the DEEP publish page publishes DEEP assessments only (an EASI method has its own)
+            return [a for a in lib.list_assessments() if lib.entry_type(a) == "deep"]
         except Exception:  # noqa: BLE001
             logger.exception("publish: reading catalog failed")
             return []
@@ -652,7 +638,7 @@ def publish_server(input, output, session, state: AppState):
         # Canonical-publish gate: STAF_LIBRARY_PUBLISH=1 + writable + publisher name.
         # The button is already disabled when this fails, so reaching here needs a
         # deliberate DOM edit; keep the technical reason for that case.
-        maintainer = _maintainer_name()
+        maintainer = _maintainer_name(state)
         gate_reason = lib.publish_gate_reason(maintainer)
         if gate_reason:
             ui.notification_show(gate_reason, type="warning", duration=10)
@@ -800,7 +786,7 @@ def publish_server(input, output, session, state: AppState):
                 changes = ap.origin_changes(
                     state, origin, content_digest=lib.content_digest(bundle))
                 provenance_doc = pv.build_carried_provenance(
-                    source_doc, origin=origin or {}, publisher=_maintainer_name(),
+                    source_doc, origin=origin or {}, publisher=_maintainer_name(state),
                     session_name=session_name, changes=changes, timestamp=now_iso)
                 if dec.is_pending(provenance_doc):
                     # ValueError (a rationale contradicting its record) aborts
@@ -810,7 +796,7 @@ def publish_server(input, output, session, state: AppState):
             else:
                 provenance_doc = pv.build_interactive_provenance(
                     bundle, curve_review, region=region_now,
-                    publisher=_maintainer_name(), session_name=session_name)
+                    publisher=_maintainer_name(state), session_name=session_name)
             # promote's last check: nothing still marked pending rides into the
             # version the owner confirms
             if dec.is_pending(json.dumps({"bundle": bundle.get("functionCoverage"),
@@ -818,6 +804,15 @@ def publish_server(input, output, session, state: AppState):
                                          default=str)):
                 raise ValueError("a standing decision is still marked pending owner "
                                  "confirmation.")
+            # the candidate register: what was considered for each function and why,
+            # beside the bundle and never in it
+            register_doc = fs.register_export(state)
+            if register_doc and isinstance(provenance_doc, dict):
+                provenance_doc = {**provenance_doc, "candidateRegister": register_doc}
+            elif register_doc is None and state.reference_build() is not None:
+                ui.notification_show("The candidate register could not be read, so this version's "
+                                     "record goes without it. The log has the details.",
+                                     type="warning", duration=10)
             version = lib.publish_version(aid, meta, full_payload, bundle,
                                           provenance=provenance_doc, status=status)
         except Exception as e:  # noqa: BLE001

@@ -15,6 +15,7 @@ from shiny import ui
 
 from streamcurves import project_meta
 from streamcurves import run_state as rs
+from streamcurves.easi_method import stages as es
 from views.theme import bi
 
 #: Status -> the state class HYPE's strip uses (shell.css .st-*). "ready" has none: todo.
@@ -129,6 +130,61 @@ def tree(view: dict, *, project: dict | None, tools_allowed: set[str]) -> ui.Tag
     return ui.TagList(*rows)
 
 
+def _tool_rows(view: dict, tools_allowed: set[str], keys) -> list:
+    tool = view.get("tool")
+    has_data = bool(view.get("has_data"))
+    rows = []
+    for key in keys:
+        if key not in tools_allowed:
+            continue
+        cls = "sc-tree-row"
+        if key == tool:
+            cls += " is-current"
+        elif not has_data and key not in rs.TOOLS_WITHOUT_DATA:
+            cls += " is-dim"
+        rows.append(ui.tags.button(
+            ui.span(bi(TOOL_ICON[key]), class_="sc-tree-mark"),
+            ui.span(rs.TOOL_LABELS[key], class_="sc-tree-label"),
+            type="button", class_=cls, title=rs.TOOL_TITLES[key],
+            **{"data-jump": tool_target(key)}))
+    return rows
+
+
+def easi_tree(view: dict, *, project: dict | None, tools_allowed: set[str]) -> ui.TagList:
+    """The panel body for an EASI method project: its five stages, then the tools that need
+    no DEEP dataset."""
+    ev = view.get("easi") or {}
+    statuses = ev.get("statuses") or {}
+    current = view.get("current")
+    name = (project or {}).get("name") or "EASI method"
+    rows: list = [ui.tags.button(
+        ui.span(name, class_="sc-tree-project-name"),
+        ui.span(ev.get("version_line") or "", class_="sc-tree-project-sub"),
+        type="button", class_="sc-tree-project", title="Project properties",
+        **{"data-jump": "project"})]
+    rows.append(ui.div("Workflow", class_="sc-tree-sec"))
+    n_pending = (ev.get("snap") or {}).get("n_pending") or 0
+    for i, key in enumerate(es.STAGE_KEYS):
+        info = statuses.get(key) or {}
+        status = info.get("status", rs.STAGE_BLOCKED)
+        cls = "sc-tree-row " + STATE_CLASS.get(status, "st-locked")
+        if key == current:
+            cls += " is-current"
+        count = (ui.tags.span(str(n_pending), class_="sc-stage-count sc-tree-count")
+                 if key == "selection" and n_pending else None)
+        rows.append(ui.tags.button(
+            _num(i, status), ui.span(es.STAGE_SHORT[key], class_="sc-tree-label"), count,
+            type="button", class_=cls,
+            title=f"Step {i + 1}: {es.STAGE_LABELS[key]}. {info.get('detail') or ''}".strip(),
+            **{"data-jump": es.stage_target(key)}))
+    tools = _tool_rows(view, tools_allowed,
+                       [k for k in rs.TOOL_KEYS if k in rs.TOOLS_WITHOUT_DATA])
+    if tools:
+        rows.append(ui.div("Tools", class_="sc-tree-sec"))
+        rows += tools
+    return ui.TagList(*rows)
+
+
 def project_summary(meta: dict | None, path: str | None) -> dict | None:
     """The project row's name and one-line subtitle."""
     if not meta and not path:
@@ -142,4 +198,4 @@ def project_summary(meta: dict | None, path: str | None) -> dict | None:
 
 
 __all__ = ["STATE_CLASS", "TOOL_ICON", "stage_target", "tool_target", "children", "tree",
-           "project_summary"]
+           "easi_tree", "project_summary"]

@@ -249,6 +249,10 @@ class AppState:
     # over reference_build by owner_curves.effective_build; the region's run
     # folder keeps them too, so every later build applies them. Persisted.
     owner_curve_decisions: reactive.Value = _rv_factory(list)
+    # The candidate register's own part: curves added for comparison and the
+    # reasons a person gave for not selecting one (candidates.SESSION_FIELD).
+    # None reads as an empty register. Persisted.
+    candidate_register: reactive.Value = _rv()
 
     # ── root navigation requests (stage banner -> shell) ────────────────────
     # nav_request: a nav_panel value to switch main_navbar to; wizard_step_request:
@@ -278,6 +282,21 @@ class AppState:
     # file's project.json, beside the session.
     project_file: reactive.Value = _rv()
     project_meta: reactive.Value = _rv()
+    # What the open project authors: "deep" (reference curves for a DEEP assessment, every
+    # field above and below) or "easi" (an EASI screening method: the fields below, with the
+    # DEEP fields at their startup values). Set only by the project controller
+    # (views/project.py) when a project opens or is created. Transient: the project file
+    # records its own type.
+    assessment_type: reactive.Value = _rv("deep")
+    # The open EASI method project (streamcurves.easi_method.model.EasiProject), replaced
+    # whole on every edit (never mutated in place); easi_undo holds the projects it replaced,
+    # newest last. easi_stage is the EASI strip's current stage; easi_preview the last
+    # consequences preview (it names the package digest it scored). All transient: the
+    # project file holds the project itself.
+    easi_project: reactive.Value = _rv()
+    easi_undo: reactive.Value = _rv_factory(list)
+    easi_stage: reactive.Value = _rv("method")
+    easi_preview: reactive.Value = _rv()
     # Long work in progress (a compile, a screening run, a curve build): autosave
     # waits for zero so it never records a job half done. st.busy(state) is the
     # only writer. Transient.
@@ -379,6 +398,17 @@ class AppState:
 # --------------------------------------------------------------------------- #
 # Per-metric phase state save/restore (phase_tracker.R:74-142)
 # --------------------------------------------------------------------------- #
+
+
+def recorded_by(state: "AppState | None") -> str:
+    """Who this session records (``prefs.recorded_by``): STAF_LIBRARY_MAINTAINER, else the open
+    project's Prepared by, else ``n/a``; read without depending on the project."""
+    from streamcurves import prefs
+    meta = None
+    if state is not None:
+        with reactive.isolate():
+            meta = state.project_meta()
+    return prefs.recorded_by(meta if isinstance(meta, dict) else None)
 
 
 def save_metric_phase_state(state: AppState, metric: str | None) -> None:
@@ -520,7 +550,13 @@ def reset_app_to_startup(state: AppState) -> None:
         state.rule_selections.set([])
         state.reference_build.set(None)
         state.owner_curve_decisions.set([])
+        state.candidate_register.set(None)
         state.wizard_draft.set(None)
+        state.assessment_type.set("deep")
+        state.easi_project.set(None)
+        state.easi_undo.set([])
+        state.easi_stage.set("method")
+        state.easi_preview.set(None)
         state.current_metric.set(state.startup_current_metric() or "perRiffle")
         state.app_data_loaded.set(False)
         state.app_reset_nonce.set((state.app_reset_nonce() or 0) + 1)

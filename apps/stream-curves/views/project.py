@@ -56,10 +56,14 @@ from streamcurves import region_art
 from streamcurves import region_build as rb
 from streamcurves import session_io as sio
 from streamcurves import workspace as ws
+from streamcurves.easi_method import io as eio
+from streamcurves.easi_method import stages as easi_stages
+from streamcurves.easi_method.model import EasiProject
 from streamcurves.version import (APP_NAME, APP_SUBTITLE, APP_TAGLINE, APP_VERSION_LABEL,
                                   ISSUES_URL, REPO_URL)
 from views import assessment_publish as ap
 from views import data_overview as dov
+from views import easi_page as ep
 from views import state as st
 from views.help import app_help_content
 from views.state import AppState
@@ -352,6 +356,7 @@ def project_server(input, output, session, state: AppState):
         for name in sio.SESSION_FIELDS:
             state.get(name)
         state.wizard_rev()
+        state.easi_project()
         with reactive.isolate():
             if _restoring["on"] or state.project_file() is None:
                 return
@@ -369,8 +374,16 @@ def project_server(input, output, session, state: AppState):
     def _is_dirty() -> bool:
         return _dirty["gen"] != _dirty["saved"]
 
-    def _snapshot() -> tuple[str | None, dict, str | None, dict, dict]:
-        """(path, fields, session name, meta, origin files), read on the event loop."""
+    def _snapshot() -> dict:
+        """What a save writes, read on the event loop: path, meta, origin files, and either
+        the DEEP session fields or the EASI project."""
+        with reactive.isolate():
+            if state.assessment_type() == "easi" and state.easi_project() is not None:
+                meta = dict(state.project_meta() or {})
+                meta["ui"] = {"tab": state.current_tab(), "easi_stage": state.easi_stage()}
+                return {"path": state.project_file(), "fields": None,
+                        "name": state.session_name(), "meta": meta,
+                        "origin": dict(_origin["files"]), "easi": state.easi_project()}
         with reactive.isolate():
             path = state.project_file()
             fields = {n: state.get(n) for n in sio.SESSION_FIELDS}
@@ -388,20 +401,29 @@ def project_server(input, output, session, state: AppState):
             fields["wizard_draft"] = None
         meta["region"] = _region_brief(region) or meta.get("region")
         meta["ui"] = loc
-        return path, fields, name, meta, dict(_origin["files"])
+        return {"path": path, "fields": fields, "name": name, "meta": meta,
+                "origin": dict(_origin["files"]), "easi": None}
 
-    def _write(path: str, fields: dict, name: str | None, meta: dict, origin: dict) -> None:
+    def _write(snap: dict) -> None:
         with _write_lock:
-            text = pfile.session_text_from_fields(fields, session_name=name)
-            pfile.write_project(path, meta=meta, session_text=text, origin=origin)
+            if snap["easi"] is not None:
+                eio.write_project(snap["easi"], snap["path"],
+                                  name=snap["meta"].get("project_name") or snap["name"]
+                                  or Path(snap["path"]).stem,
+                                  meta=snap["meta"], origin_files=snap["origin"])
+                return
+            text = pfile.session_text_from_fields(snap["fields"], session_name=snap["name"])
+            pfile.write_project(snap["path"], meta=snap["meta"], session_text=text,
+                                origin=snap["origin"], min_format=pfile.required_format(snap["fields"]))
 
     async def _save(*, explicit: bool = False) -> bool:
-        path, fields, name, meta, origin = _snapshot()
+        snap = _snapshot()
+        path = snap["path"]
         if not path:
             return False
         gen = _dirty["gen"]
         try:
-            await asyncio.to_thread(_write, path, fields, name, meta, origin)
+            await asyncio.to_thread(_write, snap)
         except Exception as e:  # noqa: BLE001
             logger.exception("project save failed")
             ui.notification_show(f"The project could not be saved: {e}", type="error",
@@ -418,10 +440,10 @@ def project_server(input, output, session, state: AppState):
         if not _is_dirty():
             return
         try:
-            path, fields, name, meta, origin = _snapshot()
-            if path:
+            snap = _snapshot()
+            if snap["path"]:
                 gen = _dirty["gen"]
-                _write(path, fields, name, meta, origin)
+                _write(snap)
                 _dirty["saved"] = max(_dirty["saved"], gen)
         except Exception:  # noqa: BLE001
             logger.exception("parting save failed")
@@ -449,6 +471,8 @@ def project_server(input, output, session, state: AppState):
 
     def _adopt_unsaved(name: str):
         """Loaded work with no file yet (a staged run from the Region builder)."""
+        state.assessment_type.set("deep")
+        state.easi_project.set(None)
         state.project_file.set(None)
         state.project_meta.set({"project_name": name})
         _origin["files"] = {}
@@ -466,7 +490,8 @@ def project_server(input, output, session, state: AppState):
                "save_as": "Save Project As",
                "import_target": "Save the Imported Project As",
                "new_folder": "Choose the Folder for the New Project",
-               "gallery_target": "Save the Assessment Copy To"}
+               "gallery_target": "Save the Assessment Copy To",
+               "easi_import_target": "Save the EASI Method Project As"}
 
     def _pick(purpose: str, *, mode: str, file_name: str | None = None,
               initial_dir: str | None = None, context: dict | None = None):
@@ -598,6 +623,8 @@ def project_server(input, output, session, state: AppState):
         elif purpose == "gallery_target":
             _gal_target.set(str(pathpick.ensure_suffix(p)))
             _show_start("gallery")
+        elif purpose == "easi_import_target":
+            await _import_easi(pathpick.ensure_suffix(p))
 
     # ── opening, creating, importing ─────────────────────────────────────────
     def _land(meta: dict):
@@ -629,6 +656,15 @@ def project_server(input, output, session, state: AppState):
         await st.task_flush()
         try:
             proj = await asyncio.to_thread(pfile.read_project, path)
+        except (pfile.ProjectFileError, ValueError, OSError) as e:
+            ui.notification_remove("sc-open")
+            ui.notification_show(f"Could not open {path.name}: {e}", type="error", duration=10)
+            _ensure_start()
+            return
+        if proj.assessment_type == "easi":
+            await _open_easi(path, proj, first_open=first_open)
+            return
+        try:
             payload = await asyncio.to_thread(proj.session_payload)
             fields = await asyncio.to_thread(sio.decode_session_fields, payload)
         except (pfile.ProjectFileError, ValueError, OSError) as e:
@@ -672,6 +708,72 @@ def project_server(input, output, session, state: AppState):
             _touch_dirty()
             await _save()
         ui.notification_show(f"Opened {meta['project_name']}.", type="message", duration=4)
+
+    async def _open_easi(path: Path, proj: pfile.ProjectFile, *, first_open: dict | None = None):
+        """Open an EASI method project: its own state (views/easi_page.py), none of the DEEP
+        session. A fresh library copy already names its origin inside the project."""
+        try:
+            project = await asyncio.to_thread(EasiProject.from_parts, proj.parts)
+        except ValueError as e:
+            ui.notification_remove("sc-open")
+            ui.notification_show(f"Could not open {path.name}: this EASI project is damaged ({e}).",
+                                 type="error", duration=10)
+            _ensure_start()
+            return
+        _save_sync()
+        _restoring["on"] = True
+        meta = dict(proj.meta)
+        try:
+            ui.modal_remove()
+            with reactive.isolate():
+                st.reset_app_to_startup(state)
+                if not meta.get("project_name"):
+                    meta["project_name"] = path.stem
+                state.session_name.set(meta["project_name"])
+                state.project_meta.set(meta)
+                state.project_file.set(str(path))
+                state.assessment_type.set("easi")
+                state.easi_project.set(project)
+                stage = str((meta.get("ui") or {}).get("easi_stage") or "method")
+                state.easi_stage.set(stage if stage in easi_stages.STAGE_KEYS else "method")
+            _origin["files"] = dict(proj.origin)
+            _request_nav("easi")
+            recents.touch(path, name=meta["project_name"])
+            await st.task_flush()
+            await _push_title()
+            await st.task_flush()
+        finally:
+            _restoring["on"] = False
+            _mark_saved()
+            ui.notification_remove("sc-open")
+        if first_open:
+            _touch_dirty()
+            await _save()
+        ui.notification_show(f"Opened {meta['project_name']}.", type="message", duration=4)
+
+    async def _import_easi(target: Path):
+        """EASI's current method from this checkout, unchanged, as a new project."""
+        ui.notification_show("Importing EASI's method (its preview cases take a moment)...",
+                             id="sc-open", duration=None, close_button=False)
+        await st.task_flush()
+        try:
+            evidence = os.environ.get("STAF_EVIDENCE_DIR", "").strip()
+            project = await asyncio.to_thread(
+                eio.import_from_checkout, ws.repo_root(), imported_by=ep.person(state),
+                evidence_dir=Path(evidence) if evidence and (Path(evidence) / "index.json").is_file()
+                else None)
+            await asyncio.to_thread(eio.write_project, project, target, name=target.stem,
+                                    prepared_by=prefs.get(prefs.PREPARED_BY) or None)
+        except Exception as e:  # noqa: BLE001 - say what happened, then offer the start page
+            ui.notification_remove("sc-open")
+            logger.exception("EASI import failed")
+            ui.notification_show(f"Could not import EASI's method: {e}", type="error",
+                                 duration=10)
+            _ensure_start()
+            return
+        ui.notification_remove("sc-open")
+        prefs.set(prefs.LAST_PROJECTS_DIR, str(target.parent.parent))
+        await _open_path(target)
 
     def _seed_library_origin(proj: pfile.ProjectFile, first_open: dict):
         """A fresh gallery copy: record its library origin the way opening a library version
@@ -928,6 +1030,10 @@ def project_server(input, output, session, state: AppState):
         if ws.is_checkout():
             links.append(_start_link("start_runs", f"Region builder runs ({_runs_count()})",
                                      "Staged regional builds in this checkout"))
+            if eio.easi_source(ws.repo_root()) is not None:
+                links.append(_start_link("start_easi_import", "Import EASI's method",
+                                         "A new project holding EASI's current screening "
+                                         "method, unchanged"))
         rail = ui.div(
             ui.div(ui.tags.img(src=versioned_www_asset("streamcurves-icon.svg"), alt="",
                                class_="sc-start-icon"),
@@ -1033,6 +1139,13 @@ def project_server(input, output, session, state: AppState):
     @reactive.event(input.start_runs)
     def _start_runs():
         _open_tool("build")
+
+    @reactive.effect
+    @reactive.event(input.start_easi_import)
+    def _start_easi_import():
+        stem = "EASI screening method"
+        _pick("easi_import_target", mode="save", file_name=f"{stem}{pathpick.SUFFIX}",
+              context={"stem": stem})
 
     @reactive.effect
     @reactive.event(input.start_help)
@@ -1247,11 +1360,16 @@ def project_server(input, output, session, state: AppState):
         have = _copy_of(e, v)
         deep_base = (STAF_LINKS.get("deep") or "").rstrip("/")
         facts = [("Region", e.region_line), ("Version", f"v{v.version} of {e.latest_version}"),
-                 ("Status", v.status_label), ("Validation", v.validation_label)]
+                 ("Status", v.status_label)]
+        if e.type == "easi":
+            if v.method_version:
+                facts.append(("Method version", v.method_version))
+        else:
+            facts.append(("Validation", v.validation_label))
         if v.published_display:
             facts.append(("Published", v.published_display
                           + (f" by {v.published_by}" if v.published_by else "")))
-        if v.metrics is not None:
+        if v.metrics is not None and e.type != "easi":
             facts.append(("Metrics", str(v.metrics)))
         if v.functions_covered is not None:
             facts.append(("Functions", f"{v.functions_covered} of 20"))
@@ -1298,7 +1416,9 @@ def project_server(input, output, session, state: AppState):
             target_row,
             ui.div(_gal_error(), class_="sc-gallery-err") if _gal_error() else None,
             ui.div(*actions, class_="sc-gallery-actions"),
-            ui.div("DEEP runs this version." if v.in_deep else
+            ui.div("An EASI screening method version. EASI keeps the method it ships until "
+                   "a library version is adopted." if e.type == "easi" else
+                   "DEEP runs this version." if v.in_deep else
                    "A draft is for review; DEEP runs preliminary and final versions.",
                    class_="sc-form-note mt-2"),
             class_="sc-gallery-detail")
@@ -1434,7 +1554,7 @@ def project_server(input, output, session, state: AppState):
                    nonce_button("np_browse", "Browse…", "btn btn-outline-secondary"),
                    class_="sc-folder-row mb-2"),
             ui.output_ui("np_target"),
-            ui.input_text("np_prepared", "Prepared by",
+            ui.input_text("np_prepared", "Prepared by (initials)",
                           value=vals.get("prepared", prefs.get(prefs.PREPARED_BY) or ""),
                           width="100%"),
             ui.input_text_area("np_desc", "Description (optional)", value=vals.get("desc", ""),
@@ -1510,6 +1630,11 @@ def project_server(input, output, session, state: AppState):
             _show_start("home")
             return
         origin = pmeta.origin_label(meta.get("origin")) or "Created here"
+        with reactive.isolate():
+            easi = state.easi_project() if state.assessment_type() == "easi" else None
+        if easi is not None and not meta.get("origin"):
+            origin = ("Imported from EASI" if easi.origin().get("kind") == "import"
+                      else easi_stages.version_line(easi))
         rows = [
             ("Location", ui.TagList(
                 ui.span(str(Path(path).parent) if path else "Not saved yet"),
@@ -1521,7 +1646,7 @@ def project_server(input, output, session, state: AppState):
         ui.modal_show(ui.modal(
             ui.input_text("pp_name", "Name", value=meta.get("project_name") or "",
                           width="100%"),
-            ui.input_text("pp_prepared", "Prepared by", value=meta.get("prepared_by") or "",
+            ui.input_text("pp_prepared", "Prepared by (initials)", value=meta.get("prepared_by") or "",
                           width="100%"),
             ui.input_text_area("pp_desc", "Description",
                                value=meta.get("project_description") or "", rows=2,

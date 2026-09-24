@@ -595,6 +595,10 @@ coverage:
 owner_decisions:
   min_rationale: 20
   decisions_file: "curve_decisions.json"
+  # REF-15 extension (2026-09-23, authoring foundation): a published state SQT curve
+  # as a source, and a chosen curve in place of curves this build fitted. Off until
+  # the owner adopts it; a decision that needs it applies nothing while off.
+  alternatives_over_fitted: false
 
 # --------------------------------------------------------------------------- #
 # Standing decisions (v0.7). The owner's class decisions a batch run may apply

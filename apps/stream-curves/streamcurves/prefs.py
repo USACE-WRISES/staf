@@ -6,7 +6,8 @@ One JSON object at <data root>/prefs.json. Keys used today:
   dialog starts there;
 * `gallery_targets`: {"<assessment id>@<version>": main .streamcurves path}, where each
   downloaded assessment's working copy lives, so opening it again opens that copy;
-* `prepared_by`: the name last typed into "Prepared by", offered for the next project;
+* `prepared_by`: the initials last typed into "Prepared by (initials)", offered for the next
+  new project only (a project keeps its own Prepared by, which :func:`recorded_by` reads);
 * `mmw_api_key`: an optional Model My Watershed key, exported to the environment at startup.
 
 Everything here is non-fatal: a read-only or broken data root never blocks creating a project.
@@ -17,6 +18,7 @@ import json
 import os
 import tempfile
 from pathlib import Path
+from typing import Mapping, Optional
 
 from .desktop_env import data_root
 
@@ -59,6 +61,26 @@ def set(key: str, value) -> None:  # noqa: A001 - the natural verb for a prefere
         pass
 
 
+#: What StreamCurves records when nobody is named (the owner's rule of 2026-09-23).
+NOT_GIVEN = "n/a"
+
+
+def recorded_by(project_meta: Optional[Mapping] = None) -> str:
+    """Who StreamCurves records as making a decision, an edit or a publish: initials, never a
+    login. ``STAF_LIBRARY_MAINTAINER`` when the process sets it (a maintainer checkout, a
+    rehearsal), else the open project's Prepared by (``project_meta``, the field its Project
+    panel edits), else ``n/a``. The preference of the same name only offers initials to the next
+    new project and is never recorded by itself. Nothing is refused for a missing name, and the
+    Windows login is never read."""
+    return (os.environ.get("STAF_LIBRARY_MAINTAINER", "").strip()
+            or str((project_meta or {}).get("prepared_by") or "").strip() or NOT_GIVEN)
+
+
+def given_or_na(value) -> str:
+    """What was typed into an initials field, or ``n/a`` when it was left empty."""
+    return str(value or "").strip() or NOT_GIVEN
+
+
 def apply_environment() -> None:
     """Export the preferences that configure libraries through the environment.
 
@@ -70,5 +92,5 @@ def apply_environment() -> None:
         os.environ["MMW_API_KEY"] = key
 
 
-__all__ = ["LAST_PROJECTS_DIR", "GALLERY_TARGETS", "PREPARED_BY", "MMW_API_KEY",
-           "load", "get", "set", "apply_environment"]
+__all__ = ["LAST_PROJECTS_DIR", "GALLERY_TARGETS", "PREPARED_BY", "MMW_API_KEY", "NOT_GIVEN",
+           "load", "get", "set", "apply_environment", "recorded_by", "given_or_na"]

@@ -34,10 +34,20 @@ from . import project_meta, session_io as sio
 from .version import APP_VERSION
 
 FORMAT = "streamcurves-project"
+#: The format a DEEP project is written in: StreamCurves 1.0.0 reads it, so every DEEP project
+#: and pack stays format 1 unless it carries content an older app would drop.
 FORMAT_VERSION = 1
+#: The newest format this app reads. Format 2 adds `assessment_type` and typed parts (an EASI
+#: project's `easi/...`); StreamCurves 1.0.0 refuses it with its "update the app" message
+#: instead of opening it and dropping what it cannot read.
+FORMAT_VERSION_MAX = 2
 #: The pack schema; it is part of every pack's asset name (`<id>-v<N>-p1.streamcurves`), so a
 #: change to what a pack holds reaches clients under a new name instead of never.
 PACK_SCHEMA = 1
+#: The pack schema of a format-2 project (an EASI method version's pack is `-p2-`).
+PACK_SCHEMA_TYPED = 2
+#: Zip folders of typed parts a project may carry beside its session (format 2).
+PART_PREFIXES = ("easi/",)
 
 PROJECT_JSON = "project.json"
 SESSION_NAME = "session.streamcurves.json"
@@ -62,6 +72,10 @@ class ProjectFile:
     app_version: str | None
     session_text: str
     origin: dict[str, bytes] = field(default_factory=dict)
+    #: typed parts (format 2): zip name -> bytes, e.g. an EASI project's `easi/...`
+    parts: dict[str, bytes] = field(default_factory=dict)
+    #: "deep" (absent: every format-1 project) or "easi"
+    assessment_type: str = "deep"
 
     def session_payload(self) -> dict:
         """The migrated, validated session payload (session_io.load_session_payload)."""
@@ -78,17 +92,21 @@ class ProjectFile:
         return doc if isinstance(doc, dict) else None
 
 
-def project_json(meta: dict, *, desktop_project: bool) -> dict:
+def project_json(meta: dict, *, desktop_project: bool, format_version: int = FORMAT_VERSION,
+                 assessment_type: str | None = None) -> dict:
     """The project.json document for `meta` (project_meta keys)."""
     m = project_meta.clean_meta(meta)
-    return {
+    doc = {
         "format": FORMAT,
-        "format_version": FORMAT_VERSION,
+        "format_version": int(format_version),
         "app_version": APP_VERSION,
         "desktop_project": bool(desktop_project),
         "saved_at": project_meta.now_iso(),
         **m,
     }
+    if assessment_type and assessment_type != "deep":
+        doc["assessment_type"] = assessment_type
+    return doc
 
 
 def _zip_bytes(entries: list[tuple[str, bytes]], *, deterministic: bool) -> bytes:
@@ -103,11 +121,51 @@ def _zip_bytes(entries: list[tuple[str, bytes]], *, deterministic: bool) -> byte
     return buf.getvalue()
 
 
+def _format_for(assessment_type: str | None, parts: dict | None) -> int:
+    """The lowest format a project needs: 2 for a typed project or typed parts, else 1."""
+    return 2 if (parts or (assessment_type and assessment_type != "deep")) else FORMAT_VERSION
+
+
+def required_format(fields, *, pack: bool = False) -> int:
+    """The lowest format a DEEP session's fields need. 2 when StreamCurves 1.0.0 would
+    misread them (an owner decision only the REF-15 extension applies: 1.0.0 would still
+    score the curves it replaces) or, in a project, drop part of them on a re-save (curves
+    added for comparison or reasons recorded in the candidate register); else 1. A pack
+    keeps format 1 for the register alone, as the version's provenance holds that record."""
+    from . import owner_curves
+    fields = fields if isinstance(fields, dict) else {}
+    decisions = fields.get("owner_curve_decisions")
+    if isinstance(decisions, list) and any(isinstance(d, dict) and owner_curves.needs_extension(d)
+                                           for d in decisions):
+        return 2
+    reg = fields.get("candidate_register")
+    if not pack and isinstance(reg, dict) and (reg.get("considered") or reg.get("decisions")):
+        return 2
+    return FORMAT_VERSION
+
+
+def session_text_format(session_text: str, *, pack: bool = False) -> int:
+    """:func:`required_format` of a session envelope's text."""
+    try:
+        doc = json.loads(session_text or "{}")
+    except ValueError:
+        return FORMAT_VERSION
+    return required_format((doc or {}).get("fields") if isinstance(doc, dict) else None, pack=pack)
+
+
 def build_bytes(*, meta: dict, session_text: str, origin: dict[str, bytes] | None = None,
                 desktop_project: bool = True, deterministic: bool = False,
-                saved_at: str | None = None) -> bytes:
-    """The zip bytes of a project (or, with desktop_project=False, a pack)."""
-    doc = project_json(meta, desktop_project=desktop_project)
+                saved_at: str | None = None, parts: dict[str, bytes] | None = None,
+                assessment_type: str | None = None, min_format: int = FORMAT_VERSION) -> bytes:
+    """The zip bytes of a project (or, with desktop_project=False, a pack). Typed parts
+    (format 2) ride byte for byte under their own folder names. ``min_format``: the format
+    the session needs (:func:`required_format`)."""
+    for name in parts or {}:
+        if not name.startswith(PART_PREFIXES) or ".." in name.split("/"):
+            raise ValueError(f"not a project part name: {name}")
+    doc = project_json(meta, desktop_project=desktop_project,
+                       format_version=max(_format_for(assessment_type, parts), int(min_format)),
+                       assessment_type=assessment_type)
     if deterministic:
         # a pack's bytes must not change with the clock
         doc["saved_at"] = saved_at or ""
@@ -117,6 +175,8 @@ def build_bytes(*, meta: dict, session_text: str, origin: dict[str, bytes] | Non
                (SESSION_NAME, session_text.encode("utf-8"))]
     for name, data in sorted((origin or {}).items()):
         entries.append((ORIGIN_PREFIX + name, data))
+    for name, data in sorted((parts or {}).items()):
+        entries.append((name, data))
     return _zip_bytes(entries, deterministic=deterministic)
 
 
@@ -151,11 +211,18 @@ def atomic_write(path: Path, data: bytes, *, attempts: int = 6) -> Path:
 
 
 def write_project(path: str | os.PathLike[str], *, meta: dict, session_text: str,
-                  origin: dict[str, bytes] | None = None, desktop_project: bool = True) -> Path:
-    """Write a project main file atomically, creating its folder and `exports/`."""
+                  origin: dict[str, bytes] | None = None, desktop_project: bool = True,
+                  parts: dict[str, bytes] | None = None,
+                  assessment_type: str | None = None, min_format: int | None = None) -> Path:
+    """Write a project main file atomically, creating its folder and `exports/`. Without
+    ``min_format`` the session text says what format it needs."""
     path = Path(path)
+    if min_format is None:
+        min_format = session_text_format(session_text) if (assessment_type or "deep") == "deep" \
+            else FORMAT_VERSION
     data = build_bytes(meta=meta, session_text=session_text, origin=origin,
-                       desktop_project=desktop_project)
+                       desktop_project=desktop_project, parts=parts,
+                       assessment_type=assessment_type, min_format=min_format)
     atomic_write(path, data)
     if desktop_project:
         try:
@@ -184,6 +251,9 @@ def read_project(path: str | os.PathLike[str] | bytes) -> ProjectFile:
             session_text = zf.read(SESSION_NAME).decode("utf-8")
             origin = {n[len(ORIGIN_PREFIX):]: zf.read(n) for n in sorted(names)
                       if n.startswith(ORIGIN_PREFIX) and not n.endswith("/")}
+            parts = {n: zf.read(n) for n in sorted(names)
+                     if n.startswith(PART_PREFIXES) and not n.endswith("/")
+                     and ".." not in n.split("/")}
     except zipfile.BadZipFile as e:
         raise ProjectFileError("This is not a StreamCurves project file.") from e
     except (UnicodeDecodeError, ValueError) as e:
@@ -195,10 +265,14 @@ def read_project(path: str | os.PathLike[str] | bytes) -> ProjectFile:
     ver = doc.get("format_version")
     if not isinstance(ver, int) or ver < 1:
         raise ProjectFileError("This project file has no valid format version.")
-    if ver > FORMAT_VERSION:
+    if ver > FORMAT_VERSION_MAX:
         raise ProjectFileError(
             f"This project was saved by a newer StreamCurves (project format {ver}; this app "
-            f"reads up to {FORMAT_VERSION}). Update the app to open it.")
+            f"reads up to {FORMAT_VERSION_MAX}). Update the app to open it.")
+    atype = str(doc.get("assessment_type") or "deep")
+    if atype not in ("deep", "easi"):
+        raise ProjectFileError(f"This project holds a kind of assessment this app does not know "
+                               f"({atype}). Update the app to open it.")
     fallback = None if isinstance(path, (bytes, bytearray)) else Path(path).stem
     return ProjectFile(
         path=None if isinstance(path, (bytes, bytearray)) else Path(path),
@@ -208,6 +282,8 @@ def read_project(path: str | os.PathLike[str] | bytes) -> ProjectFile:
         app_version=str(doc.get("app_version") or "") or None,
         session_text=session_text,
         origin=origin,
+        parts=parts,
+        assessment_type=atype,
     )
 
 
@@ -226,17 +302,20 @@ def import_as_project(src: ProjectFile, target: str | os.PathLike[str], *,
     if description is not None:
         meta["project_description"] = description or None
     return write_project(target, meta=meta, session_text=src.session_text, origin=src.origin,
-                         desktop_project=True)
+                         desktop_project=True, parts=src.parts,
+                         assessment_type=src.assessment_type)
 
 
-def pack_asset_name(assessment_id: str, version: int, sha256: str | None = None) -> str:
+def pack_asset_name(assessment_id: str, version: int, sha256: str | None = None, *,
+                    schema: int = PACK_SCHEMA) -> str:
     """`<id>-v<N>-p<schema>[-<sha8>].streamcurves`: the pack schema and a content hash in
     the name, so a changed pack is a new asset, never a silent overwrite."""
     tail = f"-{sha256[:8]}" if sha256 else ""
-    return f"{assessment_id}-v{int(version)}-p{PACK_SCHEMA}{tail}.streamcurves"
+    return f"{assessment_id}-v{int(version)}-p{int(schema)}{tail}.streamcurves"
 
 
 __all__ = ["FORMAT", "FORMAT_VERSION", "PACK_SCHEMA", "PROJECT_JSON", "SESSION_NAME",
            "ORIGIN_PREFIX", "ORIGIN_FILES", "ProjectFileError", "ProjectFile", "project_json",
            "build_bytes", "atomic_write", "write_project", "session_text_from_fields",
+           "required_format", "session_text_format",
            "read_project", "import_as_project", "pack_asset_name"]

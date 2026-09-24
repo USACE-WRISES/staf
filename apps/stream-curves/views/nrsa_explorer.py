@@ -23,6 +23,7 @@ try:
 except Exception:  # noqa: BLE001
     _HAS_MAP = False
 
+from streamcurves import evidence_store as evs
 from streamcurves import nrsa_dataset as nds
 from streamcurves import nrsa_explorer as nx
 from views.state import AppState
@@ -149,6 +150,24 @@ def nrsa_explorer_server(input, output, session, state: AppState, active=None):
     selected_station = reactive.value(None)
     map_holder: dict[str, object] = {}
 
+    @render.ui
+    def archive_line():
+        """The archive as DEEP's development data: version, coverage, every file verified."""
+        if active is not None and not active():
+            return None
+        rec = evs.nrsa_archive_record()
+        if rec is None:
+            return None
+        cov = rec["coverage"]
+        mb = rec["bytes"] / 1e6
+        check = ("every file matches its manifest" if rec["verified"]
+                 else f"{len(rec['damaged'])} files do not match their manifest")
+        return ui.div(
+            ui.tags.strong("Development data for DEEP curves. "),
+            f"Archive {rec['version']}: {len(cov['cycles'])} survey cycles, {cov['files']} files "
+            f"({mb:.1f} MB), {check}; regenerable from {cov['sourceFiles']} locked EPA source files.",
+            class_="small mb-3 " + ("text-muted" if rec["verified"] else "text-danger"))
+
     @reactive.calc
     def dataset():
         if not nds.multi_cycle_available():
@@ -218,6 +237,7 @@ def nrsa_explorer_server(input, output, session, state: AppState, active=None):
                       "persistent NARS id where it exists and by flowline and "
                       "position otherwise.",
             ),
+            ui.output_ui(ns("archive_line")),
             controls,
             ui.output_ui(ns("summary_line")),
             ui.output_ui(ns("legend")),

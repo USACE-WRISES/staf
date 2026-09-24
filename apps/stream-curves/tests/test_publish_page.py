@@ -61,12 +61,15 @@ def test_block_reason_none_when_the_gate_is_open(monkeypatch):
     assert pub._publish_block_reason() is None
 
 
-def test_block_reason_names_the_maintainer_env_when_only_the_name_is_missing(monkeypatch):
+def test_a_missing_name_never_blocks_and_records_n_a(monkeypatch, tmp_path):
+    """The owner's rule of 2026-09-23: initials, n/a when none are set, never the login, and
+    nothing refused for a missing name."""
     monkeypatch.setenv("STAF_LIBRARY_PUBLISH", "1")
+    monkeypatch.setenv("STREAMCURVES_DATA_ROOT", str(tmp_path / "data-root"))   # no Prepared by
     for var in ("STAF_LIBRARY_MAINTAINER", "USERNAME", "USER"):
         monkeypatch.delenv(var, raising=False)
-    reason = pub._publish_block_reason()
-    assert reason is not None and "STAF_LIBRARY_MAINTAINER" in reason
+    assert pub._publish_block_reason() is None
+    assert pub._maintainer_name() == "n/a"
 
 
 def test_autofill_effect_exists_guarded_and_evented():

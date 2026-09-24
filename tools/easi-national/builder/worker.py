@@ -117,9 +117,31 @@ def queue_state_run(root: DataRoot, abbr: str) -> list[dict]:
     return items
 
 
+#: set to 1 to build or publish with a method package on purpose
+ALLOW_PACKAGE_ENV = "EASI_NATIONAL_ALLOW_PACKAGE"
+
+
+def method_guard(job: dict) -> dict:
+    """The method this build scores with, stated for every job; a method package set by a
+    stray EASI_METHOD_PACKAGE stops the job unless EASI_NATIONAL_ALLOW_PACKAGE=1, since the
+    national dataset and easi-national-current are built with EASI's built-in method."""
+    from easi import method_package as mp
+    rec = mp.active()
+    ident = mp.active_identity()
+    print(f"[builder] {job.get('job')}: scoring method {ident.get('methodVersion')} "
+          f"({'package ' + str(rec.get('methodId')) + ' v' + str(rec.get('version')) if rec.get('source') == 'package' else 'built-in'})",
+          flush=True)
+    if rec.get("source") == "package" and os.environ.get(ALLOW_PACKAGE_ENV, "").strip() != "1":
+        raise RuntimeError("EASI_METHOD_PACKAGE is set, so this job would score with a method package "
+                           "instead of EASI's built-in method. Unset it, or set "
+                           f"{ALLOW_PACKAGE_ENV}=1 to build with the package on purpose.")
+    return ident
+
+
 def run_job(root: DataRoot, job: dict, states: UnitStates, progress: Progress,
             control: Control) -> None:
     kind = job.get("job")
+    method_guard(job)
     started = time.monotonic()
     progress.job = job_label(job)
     if kind == "national":

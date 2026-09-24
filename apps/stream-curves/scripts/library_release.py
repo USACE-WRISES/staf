@@ -72,9 +72,18 @@ def build(out: Path, *, commit: str | None = None) -> dict:
             assets = {}
             pack = gallery.pack_bytes(e, v)
             sha = _sha(pack)
-            name = pf.pack_asset_name(e.id, v.version, sha)
+            name = gallery.pack_name(e, v, sha)
             (out / name).write_bytes(pack)
             assets["pack"] = gallery.Asset(name=name, size=len(pack), sha256=sha)
+            if e.type == "easi":
+                # the method package EASI loads, byte for byte (never a DEEP bundle)
+                data = lib.easi_package_bytes(e.id, v.version)
+                sha = _sha(data)
+                name = f"{e.id}-v{v.version}-{sha[:8]}.easi-method.zip"
+                (out / name).write_bytes(data)
+                assets["method"] = gallery.Asset(name=name, size=len(data), sha256=sha)
+                versions.append(dataclasses.replace(v, assets=assets))
+                continue
             bundle_path = lib.version_dir(e.id, v.version) / lib.BUNDLE_FILE
             if bundle_path.is_file():
                 data = _text_bytes(bundle_path)
@@ -94,6 +103,9 @@ def build(out: Path, *, commit: str | None = None) -> dict:
     doc = gallery.catalog_doc(rebuilt, source_commit=commit)
     (out / gallery.CATALOG_NAME).write_text(json.dumps(doc, indent=1, ensure_ascii=False),
                                             encoding="utf-8")
+    doc2 = gallery.catalog_doc(rebuilt, source_commit=commit, schema=gallery.CATALOG_SCHEMA_V2)
+    (out / gallery.CATALOG_NAME_V2).write_text(json.dumps(doc2, indent=1, ensure_ascii=False),
+                                               encoding="utf-8")
     n_assets = sum(len(v.assets) for e in rebuilt for v in e.versions)
     print(f"built {len(rebuilt)} assessments, "
           f"{sum(len(e.versions) for e in rebuilt)} versions, {n_assets} assets into {out}")
@@ -127,13 +139,29 @@ def release_assets(repo: str, tag: str) -> dict[str, int] | None:
     return {a["name"]: int(a.get("size") or 0) for a in json.loads(proc.stdout).get("assets") or []}
 
 
+def catalogs(folder: Path) -> list[dict]:
+    """The built catalogs: library.json and, when built, library-v2.json."""
+    docs = [json.loads((folder / gallery.CATALOG_NAME).read_text(encoding="utf-8"))]
+    v2 = folder / gallery.CATALOG_NAME_V2
+    if v2.is_file():
+        docs.append(json.loads(v2.read_text(encoding="utf-8")))
+    return docs
+
+
+def all_names(folder: Path) -> set[str]:
+    """Every asset either catalog names (the union: nothing one feed needs is ever pruned)."""
+    names: set[str] = set()
+    for doc in catalogs(folder):
+        names |= catalog_names(doc)
+    return names
+
+
 def plan(folder: Path, repo: str, tag: str) -> tuple[list[str], list[str], dict | None]:
     """(names to upload, names already there with a different size, existing assets)."""
-    doc = json.loads((folder / gallery.CATALOG_NAME).read_text(encoding="utf-8"))
     existing = release_assets(repo, tag)
     have = existing or {}
     missing, clashes = [], []
-    for name in sorted(catalog_names(doc)):
+    for name in sorted(all_names(folder)):
         size = (folder / name).stat().st_size
         if name not in have:
             missing.append(name)
@@ -148,7 +176,7 @@ def upload(folder: Path, repo: str, tag: str, *, dry_run: bool = False,
     if clashes:
         raise SystemExit("These published assets differ from the build under the same name "
                          f"(names carry a content hash, so this should not happen): {clashes}")
-    print(f"{len(missing)} asset(s) to upload; library.json last")
+    print(f"{len(missing)} asset(s) to upload; the catalogs last, library.json at the end")
     if dry_run:
         for name in missing:
             print("  would upload", name)
@@ -164,14 +192,17 @@ def upload(folder: Path, repo: str, tag: str, *, dry_run: bool = False,
         batch = [str(folder / n) for n in missing[i:i + 20]]
         _gh("release", "upload", tag, *batch, "--repo", repo)
         print(f"  uploaded {min(i + 20, len(missing))} of {len(missing)}")
+    if (folder / gallery.CATALOG_NAME_V2).is_file():
+        _gh("release", "upload", tag, str(folder / gallery.CATALOG_NAME_V2), "--repo", repo,
+            "--clobber")
+        print("uploaded library-v2.json")
     _gh("release", "upload", tag, str(folder / gallery.CATALOG_NAME), "--repo", repo,
         "--clobber")
     print("uploaded library.json")
 
 
 def prune(folder: Path, repo: str, tag: str, *, yes: bool = False) -> None:
-    doc = json.loads((folder / gallery.CATALOG_NAME).read_text(encoding="utf-8"))
-    keep = catalog_names(doc) | {gallery.CATALOG_NAME}
+    keep = all_names(folder) | {gallery.CATALOG_NAME, gallery.CATALOG_NAME_V2}
     have = release_assets(repo, tag) or {}
     stale = sorted(n for n in have if n not in keep)
     for name in stale:

@@ -41,6 +41,12 @@ from .version import REPO
 CATALOG_SCHEMA = 1
 RELEASE_TAG = "library"
 CATALOG_NAME = "library.json"
+#: The typed feed: every assessment with its type (DEEP detailed assessments and EASI
+#: screening methods). library.json stays the DEEP-only schema-1 feed StreamCurves 1.0.0 and
+#: DEEP read; this app reads library-v2.json and falls back to library.json.
+CATALOG_SCHEMA_V2 = 2
+CATALOG_NAME_V2 = "library-v2.json"
+ASSESSMENT_GROUPS = {"easi": "EASI screening methods"}
 PUBLIC_BASE_URL = f"https://github.com/{REPO}/releases/download/{RELEASE_TAG}/"
 #: A folder or an http(s) base holding the same files (a mirror, or a local E2E server).
 BASE_URL_ENV = "STREAMCURVES_LIBRARY_BASE_URL"
@@ -87,10 +93,12 @@ class Version:
     functions_covered: int | None
     revision_notes: str | None
     assets: dict = field(default_factory=dict)       # kind -> Asset
+    assessment_type: str = "deep"
+    method_version: str | None = None                # an EASI version: the identity EASI reports
 
     @property
     def in_deep(self) -> bool:
-        return self.status in DEEP_STATUSES
+        return self.assessment_type == "deep" and self.status in DEEP_STATUSES
 
     @property
     def published_display(self) -> str:
@@ -109,9 +117,12 @@ class Entry:
     latest_version: int
     default_version: int
     versions: tuple            # Version, newest first
+    type: str = "deep"         # "deep" | "easi"
 
     @property
     def group(self) -> str:
+        if self.type in ASSESSMENT_GROUPS:
+            return ASSESSMENT_GROUPS[self.type]
         kind = str((self.region or {}).get("kind") or "")
         return {"ecoregion": "Ecoregions", "state": "States"}.get(kind, "Other regions")
 
@@ -127,6 +138,8 @@ class Entry:
             return f"{name or code} (Level III {code})"
         if kind == "state" and code:
             return f"{name or code} (state)"
+        if kind == "national":
+            return f"{name or code} (one national method)"
         return str(name or "Custom region")
 
 
@@ -155,16 +168,32 @@ def _bundle_counts(bundle: dict | None) -> tuple[int | None, int | None]:
     return (len(ids) if isinstance(mbf, list) else None), covered
 
 
-def version_from_library(aid: str, row: dict, *, assets: dict | None = None) -> Version:
+def _easi_counts(aid: str, v: int) -> tuple[int | None, int | None]:
+    """(methods, functions) of an EASI method version from its catalog and metrics files."""
+    try:
+        vdir = lib.version_dir(aid, v) / lib.EASI_METHOD_DIR
+        cat = json.loads((vdir / "screening-methods.json").read_text(encoding="utf-8"))
+        metrics = json.loads((vdir / "easi-metrics.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None, None
+    fids = {m.get("functionId") for m in metrics.get("metrics") or [] if m.get("functionId")}
+    return len(cat.get("methods") or []), len(fids)
+
+
+def version_from_library(aid: str, row: dict, *, assets: dict | None = None,
+                         assessment_type: str = "deep") -> Version:
     """One version's catalog row from its library files."""
     v = int(row.get("version") or 0)
     status = lib.version_status(aid, v)
     validation = lib.version_validation_state(aid, v)
-    try:
-        bundle = lib.load_version_bundle(aid, v)
-    except Exception:  # noqa: BLE001 - a version without a bundle still lists
-        bundle = None
-    n_metrics, covered = _bundle_counts(bundle)
+    if assessment_type == "easi":
+        n_metrics, covered = _easi_counts(aid, v)
+    else:
+        try:
+            bundle = lib.load_version_bundle(aid, v)
+        except Exception:  # noqa: BLE001 - a version without a bundle still lists
+            bundle = None
+        n_metrics, covered = _bundle_counts(bundle)
     return Version(
         version=v, status=status, status_label=lib.status_label(status),
         validation=validation, validation_label=lib.validation_label(validation),
@@ -172,7 +201,8 @@ def version_from_library(aid: str, row: dict, *, assets: dict | None = None) -> 
         content_digest=row.get("contentDigest") or lib.version_content_digest(aid, v),
         metrics=n_metrics, functions_covered=covered,
         revision_notes=(row.get("revisionNotes") or None),
-        assets=dict(assets or {}))
+        assets=dict(assets or {}), assessment_type=assessment_type,
+        method_version=(row.get("methodVersion") or None) if assessment_type == "easi" else None)
 
 
 def entries_from_library(*, assets_for: Callable[[str, int], dict] | None = None) -> list[Entry]:
@@ -183,9 +213,11 @@ def entries_from_library(*, assets_for: Callable[[str, int], dict] | None = None
         if not aid:
             continue
         manifest = lib.read_manifest(aid) or {}
+        atype = lib.entry_type(manifest)
         rows = sorted(manifest.get("versions") or [], key=lambda r: -int(r.get("version") or 0))
         versions = tuple(version_from_library(aid, r, assets=(assets_for(aid, int(r["version"]))
-                                                              if assets_for else None))
+                                                              if assets_for else None),
+                                              assessment_type=atype)
                          for r in rows if int(r.get("version") or 0) > 0)
         if not versions:
             continue
@@ -194,7 +226,7 @@ def entries_from_library(*, assets_for: Callable[[str, int], dict] | None = None
             region=dict(a.get("region") or manifest.get("region") or {}),
             latest_version=int(a.get("latestVersion") or versions[0].version),
             default_version=int(a.get("defaultVersion") or versions[0].version),
-            versions=versions))
+            versions=versions, type=atype))
     return sorted(out, key=lambda e: (e.group, e.name.lower()))
 
 
@@ -222,27 +254,56 @@ def origin_meta(entry: Entry, version: Version, *, source: str) -> dict:
 
 def pack_bytes(entry: Entry, version: Version, *, source: str = "release") -> bytes:
     """The byte-deterministic pack of one library version."""
+    if entry.type == "easi":
+        return _easi_pack_bytes(entry, version, source=source)
     vdir = lib.version_dir(entry.id, version.version)
     session_text = (vdir / lib.SESSION_FILE).read_text(encoding="utf-8")
     meta = {"project_name": f"{entry.name} v{version.version}",
             "origin": origin_meta(entry, version, source=source)}
     return pf.build_bytes(meta=meta, session_text=session_text,
                           origin=origin_files(entry.id, version.version),
-                          desktop_project=False, deterministic=True)
+                          desktop_project=False, deterministic=True,
+                          min_format=pf.session_text_format(session_text, pack=True))
+
+
+def _easi_pack_bytes(entry: Entry, version: Version, *, source: str) -> bytes:
+    """An EASI method version's pack: a format-2 project holding the method files byte for
+    byte and the version's authoring record (StreamCurves 1.0.0 refuses it cleanly)."""
+    from .easi_method import io as eio
+    project = eio.open_version(entry.id, version.version)
+    meta = {"project_name": f"{entry.name} v{version.version}",
+            "origin": origin_meta(entry, version, source=source),
+            "region": dict(entry.region or {})}
+    session_text = pf.session_text_from_fields({}, session_name=meta["project_name"])
+    return pf.build_bytes(meta=meta, session_text=session_text,
+                          origin=origin_files(entry.id, version.version),
+                          desktop_project=False, deterministic=True,
+                          parts=project.to_parts(), assessment_type="easi")
+
+
+def pack_name(entry: Entry, version: Version, sha256: str) -> str:
+    """The pack's asset name: its pack schema (-p1- DEEP, -p2- EASI) and a content hash."""
+    schema = pf.PACK_SCHEMA_TYPED if entry.type != "deep" else pf.PACK_SCHEMA
+    return pf.pack_asset_name(entry.id, version.version, sha256, schema=schema)
 
 
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def catalog_doc(entries: Iterable[Entry], *, source_commit: str | None = None) -> dict:
-    """library.json (schema 1): every assessment, every version, every asset."""
-    doc = {"schema": CATALOG_SCHEMA,
+def catalog_doc(entries: Iterable[Entry], *, source_commit: str | None = None,
+                schema: int = CATALOG_SCHEMA) -> dict:
+    """library.json (schema 1): every DEEP assessment, every version, every asset; or
+    library-v2.json (schema 2): every assessment of every type, each entry typed."""
+    doc = {"schema": int(schema),
            "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "source": {"repo": REPO, "commit": source_commit},
            "assessments": []}
     for e in entries:
+        if schema == CATALOG_SCHEMA and e.type != "deep":
+            continue                       # the schema-1 feed never lists another type
         doc["assessments"].append({
+            **({"type": e.type} if schema >= CATALOG_SCHEMA_V2 else {}),
             "id": e.id, "name": e.name, "region": e.region,
             "latestVersion": e.latest_version, "defaultVersion": e.default_version,
             "versions": [{
@@ -253,6 +314,7 @@ def catalog_doc(entries: Iterable[Entry], *, source_commit: str | None = None) -
                 "functionsCovered": v.functions_covered, "revisionNotes": v.revision_notes,
                 "assets": {k: ({"name": a.name, "size": a.size, "sha256": a.sha256}
                                if a is not None else None) for k, a in v.assets.items()},
+                **({"methodVersion": v.method_version} if e.type == "easi" else {}),
             } for v in e.versions],
         })
     return doc
@@ -281,7 +343,7 @@ def parse_catalog(text: str) -> list[Entry]:
     schema = doc.get("schema")
     if not isinstance(schema, int) or schema < 1:
         raise ValueError("not a library catalog")
-    if schema > CATALOG_SCHEMA:
+    if schema > CATALOG_SCHEMA_V2:
         raise ValueError(f"library catalog schema {schema} is newer than this app reads")
     out: list[Entry] = []
     for a in doc.get("assessments") or []:
@@ -289,6 +351,9 @@ def parse_catalog(text: str) -> list[Entry]:
             aid = str(a.get("id") or "")
             if not _ID_RE.match(aid):
                 continue
+            atype = str(a.get("type") or "deep")
+            if atype not in ("deep", "easi"):
+                continue                   # a type this app does not know is never guessed at
             versions = []
             for v in a.get("versions") or []:
                 n = int(v.get("version") or 0)
@@ -307,7 +372,10 @@ def parse_catalog(text: str) -> list[Entry]:
                     functions_covered=(v.get("functionsCovered")
                                        if isinstance(v.get("functionsCovered"), int) else None),
                     revision_notes=v.get("revisionNotes") or None,
-                    assets={k: x for k, x in assets.items() if x is not None}))
+                    assets={k: x for k, x in assets.items() if x is not None},
+                    assessment_type=atype,
+                    method_version=(str(v.get("methodVersion")) if atype == "easi"
+                                    and v.get("methodVersion") else None)))
             if not versions:
                 continue
             versions.sort(key=lambda x: -x.version)
@@ -315,7 +383,7 @@ def parse_catalog(text: str) -> list[Entry]:
                              region=dict(a.get("region") or {}),
                              latest_version=int(a.get("latestVersion") or versions[0].version),
                              default_version=int(a.get("defaultVersion") or versions[0].version),
-                             versions=tuple(versions)))
+                             versions=tuple(versions), type=atype))
         except (TypeError, ValueError, AttributeError):
             continue
     return sorted(out, key=lambda e: (e.group, e.name.lower()))
@@ -354,16 +422,25 @@ def _catalog_cache() -> Path:
     return cache_dir() / CATALOG_NAME
 
 
+def _catalog_cache_v2() -> Path:
+    return cache_dir() / CATALOG_NAME_V2
+
+
 _LOCK = threading.Lock()
 
 
 def cached_catalog() -> tuple[list[Entry], float] | None:
-    """(entries, fetched-at epoch seconds) of the last good download, or None."""
-    p = _catalog_cache()
-    try:
-        return parse_catalog(p.read_text(encoding="utf-8")), p.stat().st_mtime
-    except (OSError, ValueError):
-        return None
+    """(entries, fetched-at epoch seconds) of the typed feed's cached copy whenever it parses,
+    else of ``library.json``'s, or None. A ``library.json`` an older StreamCurves refreshed in
+    the same cache folder never outranks the typed copy (it lists DEEP only, so EASI versions
+    would vanish until the next refresh); a withdrawn typed feed's copy is deleted by
+    :func:`refresh_catalog`."""
+    for p in (_catalog_cache_v2(), _catalog_cache()):
+        try:
+            return parse_catalog(p.read_text(encoding="utf-8")), p.stat().st_mtime
+        except (OSError, ValueError):
+            continue
+    return None
 
 
 def catalog_stale(ttl_s: float = CATALOG_TTL_S) -> bool:
@@ -379,35 +456,57 @@ def refresh_catalog(*, force: bool = False) -> list[Entry]:
         if not force and not catalog_stale():
             return cached_catalog()[0]
         base = base_url()
-        if _is_folder(base):
-            try:
-                text = (Path(base) / CATALOG_NAME).read_text(encoding="utf-8")
-            except OSError as e:
-                raise GalleryError(f"The assessment library could not be read ({e}).") from e
-        else:
-            try:
-                r = http_get(base + CATALOG_NAME, timeout=20.0)
-            except Exception as e:  # noqa: BLE001
-                raise GalleryError("The assessment library could not be reached. Check the "
-                                   "internet connection and try again.") from e
-            try:
-                if r.status_code == 404:
-                    raise GalleryError("The assessment library is being updated. Try again "
-                                       "in a minute.")
-                if r.status_code != 200:
-                    raise GalleryError(f"The assessment library answered {r.status_code}.")
-                text = r.content.decode("utf-8")
-            finally:
+        text, name = None, None
+        for candidate in (CATALOG_NAME_V2, CATALOG_NAME):
+            got = _read_catalog_text(base, candidate)
+            if got is not None:
+                text, name = got, candidate
+                break
+            if candidate == CATALOG_NAME_V2:
+                # the typed feed is not published (withdrawn, or a release from before it):
+                # its cached copy must not outlive it
                 try:
-                    r.close()
-                except Exception:  # noqa: BLE001
+                    _catalog_cache_v2().unlink()
+                except OSError:
                     pass
+        if text is None:
+            raise GalleryError("The assessment library is being updated. Try again in a minute.")
         try:
             entries = parse_catalog(text)
         except ValueError as e:
             raise GalleryError(f"The assessment library catalog could not be read ({e}).") from e
-        pf.atomic_write(_catalog_cache(), text.encode("utf-8"))
+        pf.atomic_write(_catalog_cache_v2() if name == CATALOG_NAME_V2 else _catalog_cache(),
+                        text.encode("utf-8"))
         return entries
+
+
+def _read_catalog_text(base: str, name: str) -> str | None:
+    """One catalog's text, None when that catalog is not published (the typed feed is absent
+    from a release built before it existed, so the schema-1 feed is read instead)."""
+    if _is_folder(base):
+        p = Path(base) / name
+        if not p.is_file():
+            return None
+        try:
+            return p.read_text(encoding="utf-8")
+        except OSError as e:
+            raise GalleryError(f"The assessment library could not be read ({e}).") from e
+    try:
+        r = http_get(base + name, timeout=20.0)
+    except Exception as e:  # noqa: BLE001
+        raise GalleryError("The assessment library could not be reached. Check the "
+                           "internet connection and try again.") from e
+    try:
+        if r.status_code == 404:
+            return None
+        if r.status_code != 200:
+            raise GalleryError(f"The assessment library answered {r.status_code}.")
+        return r.content.decode("utf-8")
+    finally:
+        try:
+            r.close()
+        except Exception:  # noqa: BLE001
+            pass
 
 
 def snapshot_entries() -> list[Entry]:
@@ -518,7 +617,8 @@ def fetch_pack(asset: Asset, *, progress: ProgressFn | None = None,
     return dest
 
 
-__all__ = ["CATALOG_SCHEMA", "RELEASE_TAG", "CATALOG_NAME", "PUBLIC_BASE_URL", "BASE_URL_ENV",
+__all__ = ["CATALOG_SCHEMA", "CATALOG_SCHEMA_V2", "CATALOG_NAME_V2", "pack_name",
+           "RELEASE_TAG", "CATALOG_NAME", "PUBLIC_BASE_URL", "BASE_URL_ENV",
            "DEEP_STATUSES", "GalleryError", "GalleryGone", "GalleryCancelled", "Asset",
            "Version", "Entry", "entries_from_library", "version_from_library", "origin_files",
            "origin_meta", "pack_bytes", "sha256_bytes", "catalog_doc", "parse_catalog",

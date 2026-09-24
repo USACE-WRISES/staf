@@ -50,6 +50,65 @@ ACTION_LABELS = {REMOVE: "Removed from the assessment", UNMAP: "Removed from a f
 #: the id prefix of a removal a build makes from ``--remove-metric``: it lives in
 #: that build's session and never in the region's file
 FLAG_PREFIX = "cd-flag-"
+#: The REF-15 extension of the authoring foundation (2026-09-23): a published state SQT curve
+#: as a source (``owner_sources.SQT``), and a chosen curve taking the place of curves this
+#: build fitted in the functions it names (``replaces``); each replaced curve stays built
+#: and is recorded as supported, not selected. False in the canonical configuration until
+#: the owner adopts it, and a decision that needs it applies nothing while it is false.
+EXTENSION_FLAG = "owner_decisions.alternatives_over_fitted"
+EXTENSION_OFF = ("Choosing a state SQT curve, or a curve in place of one built here, is not "
+                 "enabled in this methodology.")
+
+
+def alternatives_enabled() -> bool:
+    """The REF-15 extension is on (``owner_decisions.alternatives_over_fitted``)."""
+    try:
+        return bool(methodology.threshold(EXTENSION_FLAG, False))
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
+def needs_extension(d: Optional[Mapping]) -> bool:
+    """The decision chooses a state SQT curve or replaces a curve built here."""
+    src = (d or {}).get("source") or {}
+    return src.get("kind") == "sqt" or bool((d or {}).get("replaces"))
+
+
+#: The version of the SQT adoption checks a state SQT choice records
+#: (``owner_sources.sqt_source``). A choice made before them (round 2 of the authoring
+#: foundation, 2026-09-24) applies nothing: its curve was never rebuilt from the frozen
+#: record, and an open end was never completed.
+SQT_ADOPTION_VERSION = 2
+PRE_ADOPTION = "Made before the SQT adoption checks; select the curve again."
+
+
+def _pre_adoption_sqt(d: Optional[Mapping]) -> bool:
+    src = (d or {}).get("source") or {}
+    if src.get("kind") != "sqt":
+        return False                      # every other source keeps applying as it did
+    try:
+        version = int((src.get("ref") or {}).get("adoptionVersion") or 0)
+    except (TypeError, ValueError):
+        version = 0
+    return version < SQT_ADOPTION_VERSION
+
+
+def unusable_reason(d: Mapping) -> Optional[str]:
+    """Why this session applies nothing of the decision, or None when it applies: the REF-15
+    extension is off, or it chooses a state SQT curve under an older adoption."""
+    if needs_extension(d) and not alternatives_enabled():
+        return EXTENSION_OFF
+    if _pre_adoption_sqt(d):
+        return PRE_ADOPTION
+    return None
+
+
+def usable(d: Mapping) -> bool:
+    """The decision applies in this session (:func:`unusable_reason` says why not)."""
+    return unusable_reason(d) is None
+
+
+_usable = usable
 
 
 def min_rationale() -> int:
@@ -71,7 +130,8 @@ def _clean(text: Any) -> str:
 def new_decision(metric: str, action: str, *, rationale: str, recorded_by: str,
                  functions: Iterable[str] = (), source: Optional[dict] = None,
                  coverage_exceptions: Iterable[dict] = (),
-                 recorded_at: Optional[str] = None, decision_id: Optional[str] = None) -> dict:
+                 recorded_at: Optional[str] = None, decision_id: Optional[str] = None,
+                 replaces: Iterable[Mapping] = (), basis_digest: Optional[str] = None) -> dict:
     """A decision record, checked for what every decision needs. What depends on
     the open session is :func:`validate`'s."""
     d = {"id": decision_id or ("cd-" + uuid.uuid4().hex[:10]),
@@ -86,6 +146,15 @@ def new_decision(metric: str, action: str, *, rationale: str, recorded_by: str,
          # an explicit value, even an empty one, is kept: a --remove-metric removal
          # carries none, so two builds given the same flags record the same decision
          "recordedAt": _now() if recorded_at is None else str(recorded_at)}
+    replaced = [{"metric": str(r.get("metric")), "functionId": str(r.get("functionId"))}
+                for r in replaces or () if r]
+    if replaced:
+        # only a decision that replaces a fitted curve carries the key, so every
+        # other decision keeps the shape it always had
+        d["replaces"] = replaced
+    if basis_digest:
+        # the curve the decision was made on: a later change to it asks for another look
+        d["basisDigest"] = str(basis_digest)
     check(d)
     return d
 
@@ -103,6 +172,20 @@ def check(d: Mapping) -> None:
         raise ValueError("A curve decision needs a named owner. Set STAF_LIBRARY_MAINTAINER.")
     if d["action"] in (UNMAP, INCLUDE, SOURCE) and not d.get("functions"):
         raise ValueError("Name the function.")
+    if needs_extension(d) and not alternatives_enabled():
+        raise ValueError(EXTENSION_OFF)
+    if _pre_adoption_sqt(d):
+        raise ValueError(PRE_ADOPTION)
+    if d.get("replaces"):
+        if d["action"] != SOURCE:
+            raise ValueError("Only a chosen source can take the place of a curve built here.")
+        named = {str(f) for f in d.get("functions") or []}
+        for r in d["replaces"]:
+            if not str(r.get("metric") or "").strip() or str(r.get("functionId")) not in named:
+                raise ValueError("A replaced curve names its metric and one of the decision's "
+                                 "functions.")
+            if str(r.get("metric")) == str(d.get("metric")):
+                raise ValueError("A curve cannot take its own place.")
     if d["action"] == SOURCE:
         from . import owner_sources
         src = d.get("source") or {}
@@ -140,6 +223,10 @@ def validate(d: Mapping, *, build: Optional[Mapping], built: Iterable[str] = (),
                          "source.")
     if action == SOURCE and mk in built:
         raise ValueError("This curve was built here. Edit it in its analysis instead.")
+    for r in d.get("replaces") or []:
+        if str(r.get("metric")) not in built:
+            raise ValueError(f"{r.get('metric')} is not a curve built here, so nothing is "
+                             "replaced; take it out with its own decision instead.")
     if action in (REMOVE, UNMAP):
         if mk in built:
             raise ValueError("This curve was built here. Take it out of a function in Function "
@@ -381,6 +468,14 @@ def effective_selection(selection: Optional[Mapping], decisions: Iterable[Mappin
                 if sel and sel.get("notSelected"):
                     sel["notSelected"] = [x for x in sel["notSelected"]
                                           if str(x.get("metric")) != mk]
+                for r in (d.get("replaces") or []) if _usable(d) else []:
+                    if str(r.get("functionId")) != str(fid):
+                        continue
+                    sel = out.setdefault(str(fid), {"kept": [], "selected": [], "notSelected": []})
+                    sel["notSelected"] = [x for x in sel.get("notSelected") or []
+                                          if str(x.get("metric")) != str(r.get("metric"))]
+                    sel["notSelected"].append({"metric": str(r.get("metric")), "owner": True,
+                                               "decision": d.get("id"), "replacedBy": mk})
                 continue
             sel = out.setdefault(str(fid), {"kept": [], "selected": [], "notSelected": []})
             sel["notSelected"] = list(sel.get("notSelected") or [])
@@ -413,7 +508,7 @@ def _chosen(acts: dict, built=()) -> dict:
     """The source decisions that put a curve in: a refused source the owner
     accepted has one only once a build has computed it."""
     return {mk: d for mk, d in acts[SOURCE].items()
-            if mk not in acts[REMOVE] and applies(mk, built=built)
+            if mk not in acts[REMOVE] and applies(mk, built=built) and _usable(d)
             and len(source_curve(d).get("points") or []) >= 2}
 
 
@@ -427,7 +522,7 @@ def held_metrics(decisions: Iterable[Mapping]) -> list[str]:
     """The metrics a build keeps out of its own fit (owner decision 2026-09-22,
     "your choice stands"): every metric the owner removed or chose a source for,
     until the decision is withdrawn (``pressure_evidence.run_evidence(hold=)``)."""
-    acts = _by_action(decisions)
+    acts = _by_action([d for d in decisions or [] if _usable(d)])
     return sorted(set(acts[REMOVE]) | set(acts[SOURCE]))
 
 
@@ -436,7 +531,7 @@ def forced_sources(decisions: Iterable[Mapping]) -> dict:
     what a build computes for them (``basis_ladder.force_source``)."""
     from . import owner_sources
     out = {}
-    for mk, d in _by_action(decisions)[SOURCE].items():
+    for mk, d in _by_action([d for d in decisions or [] if _usable(d)])[SOURCE].items():
         src = d.get("source") or {}
         if src.get("kind") == owner_sources.REFUSED:
             ref = src.get("ref") or {}
@@ -448,7 +543,7 @@ def pending(decisions: Iterable[Mapping]) -> dict:
     """``{metric: decision}`` of the refused sources the owner accepted that no
     build has computed yet: they wait for the next build of the region."""
     from . import owner_sources
-    return {mk: d for mk, d in _by_action(decisions)[SOURCE].items()
+    return {mk: d for mk, d in _by_action([d for d in decisions or [] if _usable(d)])[SOURCE].items()
             if (d.get("source") or {}).get("kind") == owner_sources.REFUSED
             and not source_curve(d).get("points")
             and not (d.get("source") or {}).get("failedAtBuild")}
@@ -621,8 +716,9 @@ def apply_to_inputs(rows: dict, mapping, config: dict, meta: dict,
                                         keep={str(k) for k in keep or ()} - gone)
     if selection:
         meta["portfolioSelection"] = selection
-    if decisions:
-        meta["ownerCurveDecisions"] = [summary(d) for d in decisions]
+    applied = [d for d in decisions if _usable(d)]
+    if applied:
+        meta["ownerCurveDecisions"] = [bundle_summary(d) for d in applied]
         # a curve still scoring states the owner's decisions on where it scores,
         # each one that changed a pair here (a stale one is named by stale())
         annotations = meta.setdefault("metricAnnotations", {})
@@ -659,6 +755,20 @@ def summary(d: Mapping) -> dict:
     return out
 
 
+#: the authoring register's own keys a source reference may hold: they identify the
+#: candidate in the author's register and never ride in a bundle
+REGISTER_REF_KEYS = ("candidateKey", "basisDigest", "fingerprint")
+
+
+def bundle_summary(d: Mapping) -> dict:
+    """:func:`summary` as a bundle carries it: the same, without the register's keys."""
+    out = summary(d)
+    src = out.get("source")
+    if src and isinstance(src.get("ref"), dict):
+        src["ref"] = {k: v for k, v in src["ref"].items() if k not in REGISTER_REF_KEYS}
+    return out
+
+
 def requests(decisions: Iterable[Mapping]) -> list[str]:
     """What the owner recorded in each decision, one canonical string each,
     sorted: the id, metric, action, functions, source (kind, ref, title,
@@ -678,7 +788,8 @@ def requests(decisions: Iterable[Mapping]) -> list[str]:
             "coverageExceptions": [{"functionId": str(g.get("functionId")),
                                     "justification": _clean(g.get("justification"))}
                                    for g in d.get("coverageExceptions") or []],
-            "rationale": _clean(d.get("rationale")), "recordedBy": d.get("recordedBy")},
+            "rationale": _clean(d.get("rationale")), "recordedBy": d.get("recordedBy"),
+            **({"replaces": [dict(r) for r in d["replaces"]]} if d.get("replaces") else {})},
             sort_keys=True, default=str))
     return sorted(out)
 
@@ -753,7 +864,12 @@ def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
     out = []
     for d in decisions:
         mk = str(d.get("metric"))
-        if d.get("action") == SOURCE and mk in built:
+        why = unusable_reason(d)
+        if why == EXTENSION_OFF:
+            out.append((dict(d), EXTENSION_OFF + " This decision applies nothing here."))
+        elif why:
+            out.append((dict(d), why))
+        elif d.get("action") == SOURCE and mk in built:
             out.append((dict(d), "This build fitted the metric before your choice could hold it "
                                  "out of the fit, so its own curve scores. Build the region "
                                  "again to apply the choice."))
@@ -776,6 +892,8 @@ def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
 
 __all__ = [
     "RULE", "DECISIONS_FILE", "LEGACY_REMOVALS_FILE", "REMOVE", "UNMAP", "INCLUDE", "SOURCE",
+    "EXTENSION_FLAG", "EXTENSION_OFF", "alternatives_enabled", "needs_extension", "bundle_summary",
+    "usable", "unusable_reason", "SQT_ADOPTION_VERSION", "PRE_ADOPTION",
     "ACTIONS", "GAP_REASON", "ACTION_LABELS", "FLAG_PREFIX", "min_rationale", "new_decision",
     "check", "validate", "load", "path_of", "standing", "load_file", "seed", "supersedes",
     "merge", "save", "undo", "combine", "restore", "from_removals", "effective_selection",

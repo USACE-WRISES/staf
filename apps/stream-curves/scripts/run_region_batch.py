@@ -14,9 +14,13 @@ end-review packet, then a zero-recompute promote after the owner's review.
     replay   apply the policy to published versions offline and report whether
              it reproduces their recorded decisions.
     stage-many
-             stage several Level III codes in sequence with the same flags
-             (names from the NRSA site table), one run folder each under
-             --out-root, and write batch_summary.md; never promotes.
+             stage several Level III codes with the same flags (names from the
+             NRSA site table), one run folder each under --out-root, and write
+             batch_summary.md; never promotes. --workers N stages N regions at
+             once, each in its own process with its own caches and thread caps;
+             a region whose stage_complete.json names the same inputs (flags,
+             methodology, data, decision files, code) is not staged again, so an
+             interrupted batch resumes by running the same command.
 
 A stage refuses when the screen left more than --max-unresolved-share of the
 candidates unresolved (a service outage shrinks the pool without excluding
@@ -27,9 +31,9 @@ it back and the evidence pass reproduces offline.
 Usage (from the repo root, shared venv):
     .venv/Scripts/python apps/stream-curves/scripts/run_region_batch.py stage \
         --l3 71 --name "Interior Plateau" --out notes/DEEP_Working/analysis/runs/ip-71 \
-        --n-boot 1000 --maintainer gtmenichino
+        --n-boot 1000 --maintainer GM
     .venv/Scripts/python apps/stream-curves/scripts/run_region_batch.py promote \
-        --out notes/DEEP_Working/analysis/runs/ip-71 --maintainer gtmenichino \
+        --out notes/DEEP_Working/analysis/runs/ip-71 --maintainer GM \
         --publish-root apps/library --rebake-deep
 
 A staged version can never reach the canonical library by accident: its
@@ -56,6 +60,9 @@ _SCRIPTS = Path(__file__).resolve().parent
 if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
+from streamcurves import easi_env as _easi_env  # noqa: E402
+
+_easi_env.sanitize()
 from streamcurves import carry_forward as cf
 from streamcurves import owner_curves as oc  # noqa: E402
 from streamcurves import decisions as dec  # noqa: E402
@@ -101,7 +108,7 @@ def _parse_kv(specs, flag, sep="="):
 
 
 def _valid_approver(approver: str) -> bool:
-    """An approver is a name (one token, e.g. ``gtmenichino``) or a pending
+    """An approver is a name (one token, e.g. ``GM``) or a pending
     marker (``owner-draft (pending owner confirmation)``); prose in this slot
     means the NOTE was passed without an approver, which once put a rationale
     into a published meta as the approving person."""
@@ -127,19 +134,37 @@ def _parse_approvals(specs):
     return out
 
 
+#: Earlier names of the promoting maintainer, comma separated: approvals recorded before
+#: StreamCurves recorded initials name the owner's login (the owner's decision of 2026-09-24).
+#: Set in the maintainer's own environment (a launch configuration), never in code.
+ALIASES_ENV = "STAF_LIBRARY_MAINTAINER_ALIASES"
+
+
+def maintainer_names(maintainer: str) -> set[str]:
+    """The promoting maintainer's name and the earlier names ``ALIASES_ENV`` lists."""
+    names = {str(maintainer or "").strip()}
+    names |= {n.strip() for n in os.environ.get(ALIASES_ENV, "").split(",")}
+    names.discard("")
+    return names
+
+
 def _confirm_approvals(meta: dict, *, maintainer: str, date: str) -> list[dict]:
     """Rewrite pending portfolio approvals to the confirming owner and refuse
     any approval that does not resolve to that owner: a canonical version
-    carries one approving person, the one who said go."""
+    carries one approving person, the one who said go. An approval recorded under
+    an earlier name of the owner (``ALIASES_ENV``) is the owner's and keeps the
+    name it was recorded under."""
     approvals = meta.get("portfolioApprovals") or []
     dec.confirm_approvals(approvals, maintainer=maintainer, date=date)
+    mine = maintainer_names(maintainer)
     strangers = [str(ap.get("functionId")) for ap in approvals
-                 if str(ap.get("approvedBy") or "").strip() != maintainer]
+                 if str(ap.get("approvedBy") or "").strip() not in mine]
     if strangers:
         raise SystemExit(
             "portfolio approvals not confirmed by the promoting owner on: "
             f"{', '.join(strangers)}. Re-stage with --approve-portfolio FUNCTIONID=APPROVER:NOTE "
-            "(a name or a pending marker as APPROVER).")
+            "(a name or a pending marker as APPROVER), or list the name they were recorded under "
+            f"in {ALIASES_ENV} when it is an earlier name of yours.")
     return approvals
 
 
@@ -303,10 +328,39 @@ def _without_outcome_asserts(decisions: list[dict]) -> list[dict]:
     return decisions
 
 
+#: The exit code of a stage that did not start because another run holds its folder.
+BUSY_EXIT = 3
+
+
+def stage_locked(a) -> int:
+    """``stage``: cmd_stage with the region folder's lock (``jobs.acquire``) held for the whole
+    stage, so two runs never stage one folder at once (a stage first deletes the folder's staged
+    library). Another run holding it: :data:`BUSY_EXIT`, with the sentence saying which. A stage
+    run this way records no ``stage_complete.json`` and removes an older one, so the record in a
+    folder always describes its last stage."""
+    from streamcurves import jobs as jb
+    out_dir = Path(a.out).resolve()
+    try:
+        held = jb.acquire(out_dir)
+    except jb.CampaignBusy as exc:
+        print(f"[batch] {exc}")
+        return BUSY_EXIT
+    try:
+        (out_dir / STAGE_COMPLETE).unlink(missing_ok=True)
+        return cmd_stage(a)
+    finally:
+        jb.release(held)
+
+
 def cmd_stage(a) -> int:
     out_dir = Path(a.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     staged_root = _staged_root(out_dir)
+    if staged_root.exists():
+        # a stage replaces what an earlier stage of this folder left: its staged publish
+        # would otherwise number after the old one (a staged v2 beside a stale v1)
+        print(f"[batch] replacing the earlier staged library at {staged_root}")
+        shutil.rmtree(staged_root)
     policy = dec.load_policy(a.policy)
     problems = dec.validate_policy(policy)
     if problems:
@@ -497,7 +551,7 @@ def cmd_stage(a) -> int:
             "appliedCount": len(policy_decisions),
             "confirmedBy": None, "confirmedAt": None,
         }
-        manifest = pv.build_run_manifest(result, argv=list(sys.argv[1:]),
+        manifest = pv.build_run_manifest(result, argv=list(getattr(a, "argv", None) or sys.argv[1:]),
                                          started_at=started, finished_at=_now())
         doc = pv.build_provenance(result, manifest, timestamp=started)
         # a curve the owner finalized or removed by flag closes its own CURVE-07 item
@@ -784,12 +838,295 @@ def write_batch_summary(rows: list[dict], out_root: Path | str) -> tuple[Path, P
     return jp, mp
 
 
+STAGE_COMPLETE = "stage_complete.json"
+#: The stage flags stage-many passes to every region (the Namespace cmd_stage reads).
+_STAGE_MANY_FLAGS = ("screen", "no_screen", "no_streamcat", "maintainer", "n_boot",
+                     "coverage_exceptions", "policy", "enable_policy", "max_iterations",
+                     "approve_portfolio", "max_unresolved_share", "allow_unresolved", "nrsa_dataset",
+                     "nrsa_cycles", "reference_frame", "screen_retries", "screen_retry_wait",
+                     "engine_snap_tolerance_ft", "engine_max_reaches", "engine_max_hops",
+                     "reference_method", "predictor_source")
+
+
+def _is_prefix_of(token: str, flag: str, shortest: str) -> bool:
+    """True when ``token`` is ``flag`` or an abbreviation argparse accepts for it (at least
+    ``shortest``; no other stage-many flag starts that way)."""
+    return len(token) >= len(shortest) and flag.startswith(token)
+
+
+def recorded_argv(argv) -> list:
+    """The stage-many command as provenance records it: the worker count and ``--isolated``
+    only schedule the work, so every way of running the same regions records the same command,
+    however the flags are spelled (argparse accepts ``--w 3``, ``--wor=3`` and ``--i``)."""
+    out, skip = [], False
+    for x in [str(v) for v in argv or []]:
+        if skip:
+            skip = False
+            continue
+        flag, eq, _ = x.partition("=")
+        if _is_prefix_of(flag, "--workers", "--w"):
+            skip = not eq                     # a bare flag takes the next token as its value
+            continue
+        if not eq and _is_prefix_of(flag, "--isolated", "--i"):
+            continue
+        out.append(x)
+    return out
+
+
+def region_stage_namespace(a, code: str, name: str, out_dir: Path, argv=None) -> argparse.Namespace:
+    """The namespace cmd_stage reads for one region of stage-many, built by hand so that no
+    flag is dropped silently. Serial and parallel runs both use it."""
+    return argparse.Namespace(
+        l3=code, name=name, out=str(out_dir), screen=a.screen, source_citation="",
+        no_screen=a.no_screen, no_streamcat=a.no_streamcat, maintainer=a.maintainer,
+        n_boot=a.n_boot, coverage_exceptions=a.coverage_exceptions, policy=a.policy,
+        enable_policy=list(a.enable_policy or []), max_iterations=a.max_iterations,
+        # SELECT-01 approvals apply to every region staged in one call:
+        # a function that carries three metrics carries them everywhere,
+        # and without this stage-many could never stage such a region.
+        approve_portfolio=list(a.approve_portfolio or []),
+        reviewer_decisions=None, finalize_metric=[], remove_metric=[],
+        curve_decisions=None,
+        max_unresolved_share=a.max_unresolved_share, allow_unresolved=a.allow_unresolved,
+        nrsa_dataset=a.nrsa_dataset, nrsa_cycles=a.nrsa_cycles,
+        reference_frame=a.reference_frame, include_site=[],
+        screen_retries=a.screen_retries, screen_retry_wait=a.screen_retry_wait,
+        engine_snap_tolerance_ft=a.engine_snap_tolerance_ft,
+        engine_max_reaches=a.engine_max_reaches, engine_max_hops=a.engine_max_hops,
+        exclude_site=[],
+        reference_method=a.reference_method,
+        argv=recorded_argv(argv if argv is not None else sys.argv[1:]),
+        predictor_source=a.predictor_source)
+
+
+def code_fingerprint() -> str:
+    """SHA-256 over what a stage reads from the app, by relative path and raw bytes: every file
+    under streamcurves/ (vendored copies and their data included), data/ and config/, and the
+    scripts. A stage records it at its start and its end."""
+    root = _APP_ROOT
+    h = hashlib.sha256()
+    for sub_dir, patterns in (("streamcurves", ("*",)), ("scripts", ("*.py",)), ("config", ("*",)),
+                              ("data", ("*",))):
+        for pattern in patterns:
+            for p in sorted((root / sub_dir).rglob(pattern)):
+                if "__pycache__" in p.parts or not p.is_file():
+                    continue
+                h.update(str(p.relative_to(root)).replace("\\", "/").encode("utf-8"))
+                h.update(b"\0")
+                h.update(p.read_bytes())
+                h.update(b"\0")
+    return h.hexdigest()
+
+
+def _file_sha(path) -> Optional[str]:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest() if path and Path(path).is_file() else None
+
+
+def carried_from(code: str) -> Optional[dict]:
+    """The canonical library's published version of the region a stage carries forward from
+    (its approvals and curves), or None."""
+    from streamcurves import carry_forward as cf
+    got = cf.find_published(str(code))
+    if got is None:
+        return None
+    aid, ver = got
+    man = json.loads((ra.CANONICAL_LIBRARY / "assessments" / aid / "manifest.json").read_text(encoding="utf-8"))
+    row = next((v for v in man.get("versions") or [] if int(v.get("version") or 0) == int(ver)), {})
+    return {"assessmentId": aid, "version": int(ver), "contentDigest": row.get("contentDigest")}
+
+
+def region_inputs(args: dict) -> dict:
+    """Everything a region's stage depends on, beside the region itself."""
+    policy = dec.load_policy(args.get("policy"))
+    return {"flags": {k: args.get(k) for k in _STAGE_MANY_FLAGS},
+            "methodology": methodology.config_fingerprints(),
+            "policy": {"version": dec.policy_version(policy),
+                       "sha256": _file_sha(policy["meta"]["path"])},
+            "coverageExceptions": _file_sha(args.get("coverage_exceptions")),
+            "nrsaManifest": _file_sha(_APP_ROOT / "data" / "nrsa" / "manifest.json"),
+            "legacyNrsa": {n: _file_sha(_APP_ROOT / "data" / n)
+                           for n in ("nrsa_metrics.parquet", "nrsa_sites.csv")},
+            "stationScreen": _file_sha(_APP_ROOT / "data" / "nrsa" / "station_screen.parquet"),
+            "code": code_fingerprint()}
+
+
+def region_digest(code: str, name: str, inputs: dict, carried: Optional[dict]) -> str:
+    return hashlib.sha256(json.dumps({"region": code, "name": name, "inputs": inputs,
+                                      "carriedFrom": carried},
+                                     sort_keys=True, default=str).encode("utf-8")).hexdigest()
+
+
+def outputs_intact(region_dir: Path, rec: dict) -> bool:
+    """Every output a stage_complete.json records is still there with its SHA-256."""
+    outs = rec.get("outputs") or {}
+    return bool(outs) and all(_file_sha(region_dir / rel) == sha for rel, sha in outs.items())
+
+
+def stage_job(spec: dict, out_dir) -> dict:
+    """A job target (streamcurves.jobs): stage one region in this process, then record what
+    it was staged from and what it wrote (``stage_complete.json``, written only when the stage
+    succeeded and its inputs, code and data included, were the batch's at its start and end)."""
+    from streamcurves import jobs as jb
+    args = dict(spec["args"])
+    region_dir = Path(args["out"])
+    try:
+        held = jb.acquire(region_dir)
+    except jb.CampaignBusy as exc:
+        raise SystemExit(f"{exc}")
+    try:
+        return _stage_job_locked(spec, args, region_dir)
+    finally:
+        jb.release(held)
+
+
+def _stage_job_locked(spec: dict, args: dict, region_dir: Path) -> dict:
+    (region_dir / STAGE_COMPLETE).unlink(missing_ok=True)
+
+    def now_digest() -> str:
+        return region_digest(args["l3"], args["name"], region_inputs(args), carried_from(args["l3"]))
+
+    started, code_start = _now(), code_fingerprint()
+    if now_digest() != spec["inputsDigest"]:
+        raise SystemExit("the inputs changed after this batch started; run the batch again")
+    exit_code = int(cmd_stage(argparse.Namespace(**args)))
+    code_end = code_fingerprint()
+    if exit_code != 0:
+        raise SystemExit(exit_code)
+    if code_end != code_start or now_digest() != spec["inputsDigest"]:
+        raise SystemExit("the inputs changed while this region was staged; stage it again")
+    outputs = {}
+    for rel in ("review_packet.json", "run_manifest.json", "standing_decisions_applied.json"):
+        p = region_dir / rel
+        if p.is_file():
+            outputs[rel] = _file_sha(p)
+    library = region_dir / "library"
+    if library.is_dir():
+        for p in sorted(library.rglob("*")):
+            if p.is_file():
+                outputs[str(p.relative_to(region_dir)).replace("\\", "/")] = _file_sha(p)
+    rec = {"l3": args["l3"], "name": args["name"], "inputsDigest": spec["inputsDigest"],
+           "code": {"start": code_start, "end": code_end}, "startedAt": started,
+           "finishedAt": _now(), "outputs": outputs}
+    tmp = region_dir / (STAGE_COMPLETE + ".part")
+    tmp.write_text(json.dumps(rec, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    os.replace(tmp, region_dir / STAGE_COMPLETE)
+    return {"l3": args["l3"], "exit": 0, "outputs": len(outputs)}
+
+
+def _region_row(code: str, name: Optional[str], out_dir: Path) -> dict:
+    row: dict = {"l3": code, "name": name, "out": str(out_dir), "exit": None, "error": None}
+    packet_path = out_dir / "review_packet.json"
+    if packet_path.is_file():
+        p = json.loads(packet_path.read_text(encoding="utf-8"))
+        scr = p.get("screening") or {}
+        row.update(candidates=scr.get("n_candidates"), retained=scr.get("n_retained"),
+                   tier=p.get("reference_tier"), curves=len(p.get("curves") or []),
+                   decisions=len(p.get("decisions_applied") or []),
+                   open_items=len(p.get("open_items") or []),
+                   hard_stops=len(p.get("hard_stops") or []),
+                   staged_version=(p.get("staged") or {}).get("version"))
+    return row
+
+
+def _stage_record(out_dir: Path) -> Optional[dict]:
+    try:
+        rec = json.loads((out_dir / STAGE_COMPLETE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return rec if isinstance(rec, dict) else None
+
+
+def _stage_many_parallel(a, out_root: Path, regions: list[tuple[str, Optional[str], Path]], held) -> int:
+    """Stage the regions as jobs, the campaign's lock (``held``) kept from the first check to
+    the summary. A region whose ``stage_complete.json`` names the same inputs and whose outputs
+    are intact is reported as already staged and gets no job, so resuming never depends on the
+    job id (which covers the whole command) and a changed region list stages only what it adds."""
+    from streamcurves import jobs as jb
+    campaign = out_root / ".campaign"
+    inputs = None
+    todo, rows = [], {}
+    for code, name, out_dir in regions:
+        if not name:
+            rows[code] = {"l3": code, "name": None, "out": str(out_dir), "exit": 1,
+                          "error": f"no NRSA candidate sites for L3 ecoregion {code}"}
+            continue
+        args = vars(region_stage_namespace(a, code, name, out_dir))
+        if inputs is None:
+            inputs = region_inputs(args)
+        digest = region_digest(code, name, inputs, carried_from(code))
+        rec = _stage_record(out_dir)
+        if rec is not None and rec.get("inputsDigest") == digest and outputs_intact(out_dir, rec):
+            row = _region_row(code, name, out_dir)
+            row.update(exit=0, error="already staged from the same inputs", seconds=None)
+            rows[code] = row
+            print(f"[batch-many] L3-{code} {name}: already staged from the same inputs", flush=True)
+            continue
+        job = jb.Job(kind="python", target="run_region_batch:stage_job",
+                     spec={"task": "stage-region", "l3": code, "inputsDigest": digest, "args": args},
+                     env={"PYTHONPATH": str(_SCRIPTS) + os.pathsep + str(_APP_ROOT),
+                          "HYRIVER_CACHE_NAME": str(out_dir / "hyriver_cache.sqlite")},
+                     label=f"L3-{code} {name}")
+        # staged from other inputs, a lost record or changed outputs: it stages again (a stage
+        # job writes nothing under its job folder, so an old completion would read as intact)
+        (campaign / "jobs" / job.id / "complete.json").unlink(missing_ok=True)
+        todo.append((code, name, out_dir, job))
+    t0 = time.monotonic()
+    summary = {"jobs": {}}
+    if todo:
+        summary = jb.run([t[3] for t in todo], campaign, workers=a.workers,
+                         meta={"task": "stage-many", "inputs": inputs}, lock_held=held,
+                         on_event=lambda e: print(f"[batch-many] {e['label']}: {e['event']}", flush=True))
+    for code, name, out_dir, job in todo:
+        row = _region_row(code, name, out_dir)
+        state = summary["jobs"].get(job.id, {}).get("state")
+        row["exit"] = 0 if state in ("completed", "skipped") else 1
+        if state == "skipped":
+            row["error"] = "already staged from the same inputs"
+        elif state not in ("completed",):
+            failed = out_root / ".campaign" / "jobs" / job.id / "failed.json"
+            row["error"] = (json.loads(failed.read_text(encoding="utf-8")).get("tail", "")[-300:]
+                            if failed.is_file() else state)
+        row["seconds"] = summary["jobs"].get(job.id, {}).get("seconds")
+        log = out_root / ".campaign" / "jobs" / job.id / "log.txt"
+        if log.is_file() and state == "completed":
+            shutil.copyfile(log, out_dir / "stage.log")
+        rows[code] = row
+    ordered = [rows[c] for c, _, _ in regions]
+    jp, mp = write_batch_summary(ordered, out_root)
+    print(f"[batch-many] {len(regions)} region(s) in {time.monotonic() - t0:.0f} s with "
+          f"{a.workers} worker(s); summary -> {mp}")
+    return 0 if all(r.get("exit") == 0 for r in ordered) else 1
+
+
 def cmd_stage_many(a) -> int:
-    """Stage several regions one after another with the same flags, one run
-    folder each under ``--out-root``, and a summary table. Never promotes."""
+    """Stage several regions with the same flags, one run folder each under ``--out-root``,
+    and a summary table; ``--workers`` above 1 stages that many at once. Never promotes. One
+    batch at a time per ``--out-root`` (the lock in its ``.campaign`` folder), and each region
+    is staged under its own folder's lock."""
+    from streamcurves import jobs as jb
     out_root = Path(a.out_root).resolve()
     out_root.mkdir(parents=True, exist_ok=True)
+    try:
+        held = jb.acquire(out_root / ".campaign")
+    except jb.CampaignBusy as exc:
+        print(f"[batch-many] {exc}")
+        return BUSY_EXIT
+    try:
+        return _stage_many_locked(a, out_root, held)
+    finally:
+        jb.release(held)
+
+
+def _stage_many_locked(a, out_root: Path, held) -> int:
     names = _parse_kv(a.name, "--name")
+    if int(getattr(a, "workers", 1) or 1) > 1 or getattr(a, "isolated", False):
+        regions = []
+        for code in a.l3:
+            code = str(code).strip()
+            name = names.get(code) or ra.region_name_for(code)
+            slug = lib.slugify(name) if name else f"l3-{code}"
+            regions.append((code, name, out_root / f"l3-{code}-{slug}"))
+        return _stage_many_parallel(a, out_root, regions, held)
     rows: list[dict] = []
     for code in a.l3:
         code = str(code).strip()
@@ -801,28 +1138,11 @@ def cmd_stage_many(a) -> int:
         if not name:
             row.update(exit=1, error=f"no NRSA candidate sites for L3 ecoregion {code}")
         else:
-            ns = argparse.Namespace(
-                l3=code, name=name, out=str(out_dir), screen=a.screen, source_citation="",
-                no_screen=a.no_screen, no_streamcat=a.no_streamcat, maintainer=a.maintainer,
-                n_boot=a.n_boot, coverage_exceptions=a.coverage_exceptions, policy=a.policy,
-                enable_policy=list(a.enable_policy or []), max_iterations=a.max_iterations,
-                # SELECT-01 approvals apply to every region staged in one call:
-                # a function that carries three metrics carries them everywhere,
-                # and without this stage-many could never stage such a region.
-                approve_portfolio=list(a.approve_portfolio or []),
-                reviewer_decisions=None, finalize_metric=[], remove_metric=[],
-                curve_decisions=None,
-                max_unresolved_share=a.max_unresolved_share, allow_unresolved=a.allow_unresolved,
-                nrsa_dataset=a.nrsa_dataset, nrsa_cycles=a.nrsa_cycles,
-                reference_frame=a.reference_frame, include_site=[],
-                screen_retries=a.screen_retries, screen_retry_wait=a.screen_retry_wait,
-                engine_snap_tolerance_ft=a.engine_snap_tolerance_ft,
-                engine_max_reaches=a.engine_max_reaches, engine_max_hops=a.engine_max_hops,
-                exclude_site=[],
-                reference_method=a.reference_method,
-                predictor_source=a.predictor_source)
+            ns = region_stage_namespace(a, code, name, out_dir)
             try:
-                row["exit"] = int(cmd_stage(ns))
+                row["exit"] = int(stage_locked(ns))
+                if row["exit"] == BUSY_EXIT:
+                    row["error"] = "another run is staging this region"
             except SystemExit as exc:
                 row.update(exit=exc.code if isinstance(exc.code, int) else 1, error=str(exc))
             except Exception as exc:  # noqa: BLE001 - one region's failure must not end the batch
@@ -918,7 +1238,8 @@ def main(argv=None) -> int:
     s.add_argument("--source-citation", default="")
     s.add_argument("--no-screen", action="store_true", help="offline smoke only")
     s.add_argument("--no-streamcat", action="store_true", help="offline smoke only")
-    s.add_argument("--maintainer", default="gtmenichino")
+    s.add_argument("--maintainer", default="GM", help="initials recorded as the reviewer and the author "
+                   "(default: the owner's, GM)")
     s.add_argument("--n-boot", type=int, default=1000)
     s.add_argument("--coverage-exceptions", default=None)
     s.add_argument("--policy", default=None, help="standing_decisions.yaml (default: the config one)")
@@ -986,7 +1307,7 @@ def main(argv=None) -> int:
                    help="stage anyway on the record when the unresolved share is above the limit")
     s.add_argument("--reference-method", default=None, choices=run_state.REFERENCE_METHODS,
                    help=REFERENCE_METHOD_HELP)
-    s.set_defaults(fn=cmd_stage)
+    s.set_defaults(fn=stage_locked)
 
     m = sub.add_parser("stage-many", help="stage several regions in sequence with a summary table; never promotes")
     m.add_argument("--l3", action="append", required=True, metavar="CODE",
@@ -997,7 +1318,8 @@ def main(argv=None) -> int:
     m.add_argument("--screen", default="functional", choices=["functional", "at_risk_or_better"])
     m.add_argument("--no-screen", action="store_true", help="offline smoke only")
     m.add_argument("--no-streamcat", action="store_true", help="offline smoke only")
-    m.add_argument("--maintainer", default="gtmenichino")
+    m.add_argument("--maintainer", default="GM", help="initials recorded as the reviewer and the author "
+                   "(default: the owner's, GM)")
     m.add_argument("--n-boot", type=int, default=1000)
     m.add_argument("--coverage-exceptions", default=None)
     m.add_argument("--policy", default=None)
@@ -1033,6 +1355,14 @@ def main(argv=None) -> int:
     m.add_argument("--allow-unresolved", action="store_true")
     m.add_argument("--reference-method", default=None, choices=run_state.REFERENCE_METHODS,
                    help=REFERENCE_METHOD_HELP)
+    m.add_argument("--isolated", action="store_true",
+                   help="stage each region in its own process with thread caps, as --workers above 1 "
+                        "does, even one at a time (compare a parallel run with this, not with "
+                        "the in-process serial path)")
+    m.add_argument("--workers", type=int, default=1,
+                   help="regions staged at once, each in its own process (1: one after another "
+                        "in this process, as before). Keep it low when the screen calls live "
+                        "services")
     m.set_defaults(fn=cmd_stage_many)
 
     c = sub.add_parser("census", help="reference support per region and metric, before any build "

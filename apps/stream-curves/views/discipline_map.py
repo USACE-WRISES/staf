@@ -11,7 +11,6 @@ active, then click a library metric to add it. All wiring uses onclick →
 from __future__ import annotations
 
 import math
-import os
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -35,6 +34,7 @@ from streamcurves.staf_library import (
     staf_metric_library_entries,
 )
 from streamcurves import curve_sources as _src
+from streamcurves import prefs
 from streamcurves import pressure_evidence as _pe
 from streamcurves import region_build as _rb
 from views import assessment_publish as _ap
@@ -58,11 +58,11 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def _default_actor() -> str:
-    """Best-effort author name for a coverage exception, same env the library
-    publisher reads for its maintainer audit name."""
-    return (os.environ.get("STAF_LIBRARY_MAINTAINER")
-            or os.environ.get("USERNAME") or os.environ.get("USER") or "")
+def _default_actor(state=None) -> str:
+    """The initials a coverage exception is recorded under by default: the ones every
+    StreamCurves page records (``views.state.recorded_by``; ``n/a`` when none are set)."""
+    from views import state as _st
+    return _st.recorded_by(state)
 
 
 def _is_blank(v) -> bool:
@@ -772,7 +772,7 @@ def discipline_map_server(input, output, session, state: AppState):
                 ns("exc_justification"), "Justification", rows=3, width="100%",
                 placeholder="Why this function carries no metric in this assessment.",
             ),
-            ui.input_text(ns("exc_recorded_by"), "Recorded by", value=_default_actor()),
+            ui.input_text(ns("exc_recorded_by"), "Recorded by (initials)", value=_default_actor(state)),
             title="Document an uncovered function",
             footer=ui.TagList(
                 ui.modal_button("Cancel"),
@@ -789,7 +789,7 @@ def discipline_map_server(input, output, session, state: AppState):
             "functionId": input.exc_function(),
             "reason": input.exc_reason(),
             "justification": (input.exc_justification() or "").strip(),
-            "recordedBy": (input.exc_recorded_by() or "").strip(),
+            "recordedBy": prefs.given_or_na(input.exc_recorded_by()),
             "recordedAt": _now_iso(),
         }
         existing = list(state.function_coverage_exceptions() or [])

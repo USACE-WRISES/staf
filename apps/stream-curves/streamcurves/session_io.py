@@ -134,6 +134,12 @@ SESSION_FIELDS = [
     # v2, additive): applied over reference_build, which stays as the build wrote
     # it so a decision can be undone. Absent reads as None, which is no decision.
     "owner_curve_decisions",
+    # The candidate register's own part (schema v2, additive): curves added for
+    # comparison (a published state SQT curve, an exploration fit) and the reasons
+    # a person gave for not selecting one. What a version scores stays REF-15's
+    # (owner_curve_decisions); candidates.deep_register projects the rest. Absent
+    # reads as None, which is an empty register.
+    "candidate_register",
     # The Region & data wizard's unbuilt work (schema v2, additive): picks, the
     # compiled table and column roles before Build dataset, so a project closed
     # mid-wizard reopens where it was. None once the dataset is built, and absent

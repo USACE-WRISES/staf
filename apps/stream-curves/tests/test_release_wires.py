@@ -249,7 +249,9 @@ def test_the_builder_writes_every_asset_its_catalog_names_the_same_way_twice(tmp
             assert asset["sha256"].startswith(m["sha"])
             assert data == (tmp_path / "b" / asset["name"]).read_bytes(), "not deterministic"
     files = {p.name for p in (tmp_path / "a").iterdir()}
-    assert files == lr.catalog_names(doc) | {gallery.CATALOG_NAME}
+    # the schema-1 feed, the typed feed, and every asset either names
+    assert files == lr.all_names(tmp_path / "a") | {gallery.CATALOG_NAME, gallery.CATALOG_NAME_V2}
+    assert lr.catalog_names(doc) <= files
 
 
 def test_upload_creates_a_prerelease_and_sends_the_catalog_last(tmp_path, monkeypatch):

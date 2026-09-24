@@ -14,6 +14,7 @@ import copy
 import json
 import math
 import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -44,6 +45,21 @@ from easi.datasources.geocode import geocode_address  # noqa: E402
 from easi.pipeline import DEFAULT_REACH_FT  # noqa: E402
 from easi.snapcard import hr_snap_card  # noqa: E402
 from easi import calculator  # noqa: E402  (the Excel calculator, blank and completed)
+from easi import method_package  # noqa: E402  (EASI_METHOD_PACKAGE: the scoring method)
+
+# A method package named by EASI_METHOD_PACKAGE was verified when easi was imported; the
+# catalog and the recomputed method version are checked here so a package that does not
+# validate stops the app at startup instead of scoring. Unset, the built-in method runs.
+if method_package.active().get("source") == "package":
+    _verified = method_package.verify_active()
+    _rec = method_package.active()
+    # stated once at startup: which method scores, and whether it was validated under
+    # this evaluator (a package validated elsewhere runs, and says so)
+    print(f"EASI: method package {_rec.get('methodId')} v{_rec.get('version')} active, "
+          f"method {_verified.get('methodVersion')}"
+          + ("" if _verified.get("sameEvaluator") else
+             "; validated under another evaluator (the method version recomputed here matches)"),
+          file=sys.stderr, flush=True)
 
 FT_PER_M = 3.28083989501312
 LOCAL_REVIEW_ROOT = local_review.review_root()
@@ -1297,7 +1313,8 @@ def _dl_buttons():
         ui.download_button("dl_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
         ui.download_button("dl_csv", "CSV", class_="btn-sm btn-outline-secondary"),
         ui.download_button("dl_geojson", "GeoJSON", class_="btn-sm btn-outline-secondary"),
-        ui.download_button("dl_workbook", "Completed workbook", class_="btn-sm btn-outline-secondary"),
+        (ui.download_button("dl_workbook", "Completed workbook", class_="btn-sm btn-outline-secondary")
+         if calculator.available() else None),
         ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
         class_="easi-modal-footer",
     )
@@ -1568,14 +1585,17 @@ def _forms_modal(res):
                 "dl_forms_pdf", "Desktop metrics PDF", class_="btn-sm btn-primary",
                 title="The 20 desktop metrics with this site's values, ratings and sources"),
                 class_="ff-dl")),
-            ui.nav_control(ui.div(ui.download_button(
+            *((ui.nav_control(ui.div(ui.download_button(
                 "dl_forms_filled", "Completed workbook", class_="btn-sm btn-primary",
                 title="The EASI calculator with this site's values, your ratings and your notes entered"),
                 class_="ff-dl")),
-            ui.nav_control(ui.div(ui.download_button(
-                "dl_forms_blank", "Blank workbook", class_="btn-sm btn-primary",
-                title="The EASI calculator with empty entry cells"),
-                class_="ff-dl")),
+               ui.nav_control(ui.div(ui.download_button(
+                   "dl_forms_blank", "Blank workbook", class_="btn-sm btn-primary",
+                   title="The EASI calculator with empty entry cells"),
+                   class_="ff-dl")))
+              if calculator.available() else
+              (ui.nav_control(ui.div("No calculator workbook for this method version",
+                                     class_="ff-dl ff-dl-note")),)),
             id="gf_tabs", selected="metrics"),
         title="Get Forms", easy_close=True, size="xl",
         footer=ui.modal_button("Close"), class_="ff-modal-body")

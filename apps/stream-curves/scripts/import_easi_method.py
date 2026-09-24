@@ -1,0 +1,68 @@
+"""Import EASI's current method into an authored StreamCurves project (maintainer, checkout).
+
+The one explicit way EASI's method files enter StreamCurves: the eight method files are
+read byte for byte from ``apps/easi/data``, the preview case set is exported by EASI's own
+script, the committed calculator rides along (it was generated from exactly these files),
+and the promotion receipt names how the files became operational. Nothing is written to
+``apps/easi``.
+
+    python apps/stream-curves/scripts/import_easi_method.py --out <Name>.streamcurves
+        --by INITIALS [--version 1] [--release-tag easi-v1.0.0 --release-date 2026-09-16]
+        [--evidence <evidence folder>] [--alternatives <2026-09-15 study folder>]
+
+``--alternatives`` adds the controlled study's alternatives (and the legacy criteria) to the
+project's register as considered candidates, verified against the study's receipts; the
+method files never change.
+"""
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+APP = HERE.parent
+REPO = APP.parent.parent
+if str(APP) not in sys.path:
+    sys.path.insert(0, str(APP))
+
+from streamcurves import easi_env  # noqa: E402
+
+easi_env.sanitize()
+
+from streamcurves.easi_method import alternatives as alts  # noqa: E402
+from streamcurves.easi_method import io as eio  # noqa: E402
+
+EASI = REPO / "apps" / "easi"
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--out", required=True, help="the project file to write (.streamcurves)")
+    ap.add_argument("--by", required=True, help="the importer's initials (recorded as the importer)")
+    ap.add_argument("--version", type=int, default=1)
+    ap.add_argument("--name", default="EASI screening method")
+    ap.add_argument("--release-tag", default=None)
+    ap.add_argument("--release-date", default=None)
+    ap.add_argument("--evidence", type=Path, default=None,
+                    help="an evidence export folder (index.json): the project names its packages")
+    ap.add_argument("--alternatives", type=Path, default=None,
+                    help="the 2026-09-15 controlled alternatives study folder")
+    a = ap.parse_args(argv)
+    if eio.easi_source(REPO) is None:
+        raise SystemExit("apps/easi is not in this checkout; importing needs the EASI source")
+    project = eio.import_from_checkout(
+        REPO, imported_by=a.by, version=a.version,
+        release=({"tag": a.release_tag, "date": a.release_date} if a.release_tag else None),
+        evidence_dir=a.evidence)
+    if a.alternatives is not None:
+        project = alts.import_alternatives(project, a.alternatives, imported_by=a.by)
+    path = eio.write_project(project, Path(a.out), name=a.name)
+    ident = project.identity()
+    print(f"imported method {ident['methodVersion']} (package {ident['packageDigest'][7:19]}) "
+          f"-> {path}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -186,6 +186,23 @@ def gallery_rows(state: AppState, metrics: Optional[Iterable[str]] = None, *,
     return out
 
 
+def metric_basis(state: AppState, metric: str, decisions: Iterable[Mapping]) -> Optional[str]:
+    """The basis digest the candidate register computes for ``metric``'s curve under
+    ``decisions`` (the session's own with the decision being made merged in): its fitted
+    tile, or the curve its source gives it, or the one a removal leaves dimmed. What a
+    REF-15 decision records, so a later change to that curve asks for another look."""
+    from streamcurves import candidates as _c
+    with reactive.isolate():
+        mc = state.metric_config() or {}
+        build = state.reference_build()
+        mapping = state.discipline_function_mapping()
+        built = state.completed_metrics() or {}
+    tiles = (gallery_rows(state, [metric]) if metric in mc else []) + \
+        reference_tiles_for(build, mapping, built=built, decisions=list(decisions or []))
+    tile = next((x for x in tiles if str(x.get("metric")) == str(metric)), None)
+    return _c.tile_basis_digest(tile, mc.get(metric))
+
+
 def filter_rows(rows: Iterable[Mapping], mode: str) -> list[dict]:
     rows = [dict(r) for r in rows]
     if mode == "flagged":
@@ -551,7 +568,7 @@ def sources_popover(rows: Iterable[Mapping]):
 
 __all__ = [
     "REVIEW_STATUS_LABELS", "DECISION_LABELS", "GALLERY_FILTERS", "DEFAULT_SECTION",
-    "curves_sections", "tile_row", "assign_functions", "gallery_rows", "filter_rows",
+    "curves_sections", "tile_row", "assign_functions", "gallery_rows", "filter_rows", "metric_basis",
     "setinput_onclick", "tile_ui", "function_header_ui", "section_ui", "gallery_counts",
     "gallery_ui", "mark_not_selected", "not_selected_here", "sources_popover",
 ]
