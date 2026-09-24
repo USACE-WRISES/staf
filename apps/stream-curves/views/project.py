@@ -759,7 +759,7 @@ def project_server(input, output, session, state: AppState):
         try:
             evidence = os.environ.get("STAF_EVIDENCE_DIR", "").strip()
             project = await asyncio.to_thread(
-                eio.import_from_checkout, ws.repo_root(), imported_by=ep.person() or ep.UNNAMED,
+                eio.import_from_checkout, ws.repo_root(), imported_by=ep.person(),
                 evidence_dir=Path(evidence) if evidence and (Path(evidence) / "index.json").is_file()
                 else None)
             await asyncio.to_thread(eio.write_project, project, target, name=target.stem,
@@ -1554,7 +1554,7 @@ def project_server(input, output, session, state: AppState):
                    nonce_button("np_browse", "Browse…", "btn btn-outline-secondary"),
                    class_="sc-folder-row mb-2"),
             ui.output_ui("np_target"),
-            ui.input_text("np_prepared", "Prepared by",
+            ui.input_text("np_prepared", "Prepared by (initials)",
                           value=vals.get("prepared", prefs.get(prefs.PREPARED_BY) or ""),
                           width="100%"),
             ui.input_text_area("np_desc", "Description (optional)", value=vals.get("desc", ""),
@@ -1646,7 +1646,7 @@ def project_server(input, output, session, state: AppState):
         ui.modal_show(ui.modal(
             ui.input_text("pp_name", "Name", value=meta.get("project_name") or "",
                           width="100%"),
-            ui.input_text("pp_prepared", "Prepared by", value=meta.get("prepared_by") or "",
+            ui.input_text("pp_prepared", "Prepared by (initials)", value=meta.get("prepared_by") or "",
                           width="100%"),
             ui.input_text_area("pp_desc", "Description",
                                value=meta.get("project_description") or "", rows=2,

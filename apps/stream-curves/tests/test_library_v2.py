@@ -316,23 +316,27 @@ def test_v1_catalog_and_manifest_read_as_all_preliminary(libroot):
 # --------------------------------------------------------------------------- #
 # Canonical-publish gate
 # --------------------------------------------------------------------------- #
-def test_can_publish_canonical_requires_flag_writable_and_maintainer(libroot, monkeypatch):
+def test_can_publish_canonical_requires_flag_and_writable_never_a_name(libroot, monkeypatch, tmp_path):
     # writable() is True (libroot exists), but the flag is unset by the fixture.
     assert lib.can_publish_canonical("jane") is False
     reason = lib.publish_gate_reason("jane")
     assert reason and "STAF_LIBRARY_PUBLISH" in reason
 
     monkeypatch.setenv("STAF_LIBRARY_PUBLISH", "1")
+    monkeypatch.setenv("STREAMCURVES_DATA_ROOT", str(tmp_path / "data-root"))   # no Prepared by here
+    monkeypatch.delenv("STAF_LIBRARY_MAINTAINER", raising=False)
+    monkeypatch.setenv("USERNAME", "the-login")
     # flag + writable + maintainer arg -> allowed
     assert lib.can_publish_canonical("jane") is True
     assert lib.publish_gate_reason("jane") is None
-    # flag + writable but no maintainer -> blocked with a maintainer message
-    assert lib.can_publish_canonical("") is False
-    assert lib.can_publish_canonical(None) is False
-    assert "maintainer" in lib.publish_gate_reason("").lower()
-    # maintainer can arrive via the environment instead of the argument
-    monkeypatch.setenv("STAF_LIBRARY_MAINTAINER", "env-jane")
-    assert lib.can_publish_canonical() is True
+    # flag + writable and no name: allowed, recorded as n/a, never the login (the owner's
+    # rule of 2026-09-23: initials, n/a by default, nothing refused for a missing name)
+    assert lib.can_publish_canonical("") is True
+    assert lib.can_publish_canonical(None) is True
+    assert lib._maintainer_name("") == "n/a" and lib._maintainer_name(None) == "n/a"
+    # the initials can arrive via the environment instead of the argument
+    monkeypatch.setenv("STAF_LIBRARY_MAINTAINER", "ABC")
+    assert lib.can_publish_canonical() is True and lib._maintainer_name() == "ABC"
 
 
 def test_gate_blocks_when_not_writable(tmp_path, monkeypatch):

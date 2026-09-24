@@ -41,9 +41,9 @@ STATUS_SCHEMA_VERSION = 2
 # Lets the desktop shell or tests point at a specific library root.
 _ENV_ROOT = "STAF_LIBRARY_ROOT"
 # Canonical-publish gate (Part F): mutating the repo apps/library tree requires a
-# verified checkout (this flag), a writable library, and a maintainer audit name.
+# verified checkout (this flag) and a writable library; the audit name is the recorded
+# initials, n/a when none are set (prefs.recorded_by), never a reason to refuse.
 _ENV_PUBLISH = "STAF_LIBRARY_PUBLISH"
-_ENV_MAINTAINER = "STAF_LIBRARY_MAINTAINER"
 
 BUNDLE_FILE = "assessment.deep.json"
 SESSION_FILE = "session.streamcurves.json"
@@ -165,16 +165,20 @@ def _env_flag(name: str) -> bool:
 
 
 def _maintainer_name(maintainer: Optional[str] = None) -> str:
-    raw = maintainer if maintainer is not None else os.environ.get(_ENV_MAINTAINER, "")
-    return (raw or "").strip()
+    """The audit name recorded: the one given, else the initials every StreamCurves page
+    records (``prefs.recorded_by``: STAF_LIBRARY_MAINTAINER, else Prepared by, else ``n/a``).
+    Never empty and never the login, so a missing name never blocks a publish."""
+    from . import prefs
+    return (maintainer or "").strip() or prefs.recorded_by()
 
 
 def publish_gate_reason(maintainer: Optional[str] = None) -> Optional[str]:
     """Why publishing to the canonical library is blocked, or ``None`` when allowed.
 
-    Mutating the repo ``apps/library`` tree requires all of: ``STAF_LIBRARY_PUBLISH=1``
-    (a verified repository checkout), a writable library, and a non-empty maintainer
-    audit name (the ``maintainer`` argument, else env ``STAF_LIBRARY_MAINTAINER``).
+    Mutating the repo ``apps/library`` tree requires ``STAF_LIBRARY_PUBLISH=1`` (a
+    verified repository checkout) and a writable library. The audit name is the
+    ``maintainer`` argument, else the recorded initials (:func:`_maintainer_name`); a
+    missing name records ``n/a`` and never blocks (the owner's rule of 2026-09-23).
     Ordinary users without the flag can still run the local flow and export packages;
     they just cannot mutate the canonical library.
     """
@@ -188,8 +192,6 @@ def publish_gate_reason(maintainer: Optional[str] = None) -> Optional[str]:
             f"The assessment library at {library_root()} is not writable here. Publishing "
             "is a local/desktop action; on the web, share the session with the publisher."
         )
-    if not _maintainer_name(maintainer):
-        return "Enter a maintainer name for the publish audit trail before publishing."
     return None
 
 
@@ -1093,7 +1095,7 @@ def publish_version(
         assessment_id,
         new_version,
         status,
-        meta.get("author") or "publisher",
+        meta.get("author") or _maintainer_name(),
         "Published as draft (automation output; not yet human-reviewed)."
         if status == "draft" else "Published new version.",
     )
@@ -1106,7 +1108,7 @@ def publish_version(
     # scripts/build_deep_calculators.py can build it later.
     try:
         write_calculator(assessment_id, new_version,
-                         actor=meta.get("author") or "publisher",
+                         actor=meta.get("author") or _maintainer_name(),
                          note="Built at publish.")
     except Exception as exc:  # noqa: BLE001 - never let the workbook fail a publish
         logger.warning("Published %s v%d without an Excel calculator: %s",
@@ -1286,7 +1288,7 @@ def publish_easi_version(
         "revisionNotes": meta.get("revisionNotes", ""), "contentDigest": digest,
         "methodVersion": ident["methodVersion"], "supersedesVersion": supersedes_version}]
     _write_json(manifest_path(assessment_id), manifest)
-    _append_status(assessment_id, new_version, status, meta.get("author") or "publisher",
+    _append_status(assessment_id, new_version, status, meta.get("author") or _maintainer_name(),
                    "Published as draft." if status == "draft" else "Published new version.")
     _regenerate_catalog()
     logger.info("Published EASI method %s v%d (method %s).", assessment_id, new_version,
