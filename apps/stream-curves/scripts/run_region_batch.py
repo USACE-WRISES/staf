@@ -845,8 +845,8 @@ def region_stage_namespace(a, code: str, name: str, out_dir: Path, argv=None) ->
         engine_max_reaches=a.engine_max_reaches, engine_max_hops=a.engine_max_hops,
         exclude_site=[],
         reference_method=a.reference_method,
-        predictor_source=a.predictor_source,
-        argv=recorded_argv(argv if argv is not None else sys.argv[1:]))
+        argv=recorded_argv(argv if argv is not None else sys.argv[1:]),
+        predictor_source=a.predictor_source)
 
 
 def code_fingerprint() -> str:
