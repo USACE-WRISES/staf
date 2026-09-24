@@ -1,0 +1,36 @@
+{
+  "assessmentId": "co-sqt-adapted",
+  "assessmentName": "CO SQT Adapted",
+  "version": 2,
+  "updatedAt": "2026-09-24T15:33:24Z",
+  "author": "GM",
+  "revisionNotes": "The complete StreamCurves session for the state SQT transcribed in v1: every curve and stratum carried as the tool publishes it (State SQT), the function mapping, the documented gaps and the approved metric sets. Scores exactly as v1; known defects and open ends are stated as caveats.",
+  "region": {
+    "kind": "state",
+    "code": "CO",
+    "name": "Colorado"
+  },
+  "stateCode": "CO",
+  "stateName": "Colorado",
+  "sourceCitation": "Colorado SQT",
+  "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
+  "supersedesVersion": 1,
+  "provenance": "present",
+  "portfolioApprovals": [
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "approvedBy": "GM",
+      "note": "The Colorado Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "carbon-processing",
+      "approvedBy": "GM",
+      "note": "The Colorado Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "habitat-provision",
+      "approvedBy": "GM",
+      "note": "The Colorado Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    }
+  ]
+}

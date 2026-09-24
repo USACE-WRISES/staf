@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "wi-sqt-adapted",
+  "history": [
+    {
+      "version": 2,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:9914cf889f9ee2041ca2513c3a8d57cec11ccffa9b796bbee8c8dd1e560827a7",
+      "bytes": 38035,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b",
+      "builtAt": "2026-09-24T15:33:34Z",
+      "actor": "GM",
+      "note": "Built at publish."
+    }
+  ]
+}

@@ -1,0 +1,1041 @@
+{
+  "kind": "sqt-transcription",
+  "schemaVersion": 1,
+  "assessmentId": "co-sqt-adapted",
+  "tool": "Colorado Stream Quantification Tool",
+  "publishedBy": "GM",
+  "publishedAt": "2026-09-24",
+  "transcribedFrom": {
+    "version": 1,
+    "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
+    "by": "STAF SQT migration",
+    "on": "2026-07-12",
+    "source": "docs/assets/data/metric-library/detailed-adapted-assessments.json"
+  },
+  "ownerDecisions": [
+    "2026-09-24: complete the state SQT assessments as StreamCurves sessions, the metrics under the functions the metric library gives them (approach a).",
+    "2026-09-24: score exactly as v1; defective and open-ended layers are flagged as caveats, not fixed.",
+    "2026-09-24: approve each function's SQT metric set as published (SELECT-01).",
+    "2026-09-24: Preliminary; DEEP keeps hiding the state SQT assessments."
+  ],
+  "sources": {
+    "metricLibrary": {
+      "path": "docs/assets/data/metric-library/detailed-adapted-assessments.json",
+      "sha256": "sha256:289699f66216da27c63e149004203d46d31a76da8b389a5895e3ec8c91493649"
+    },
+    "sqtRegistry": {
+      "path": "apps/stream-curves/data/sqt/registry.json",
+      "sha256": "sha256:21f4d780206d5f3a74687e0fbac055356bb4033f70ee54db51a296cd3dbaf032"
+    }
+  },
+  "curves": [
+    {
+      "metricId": "catchment-hydrology-land-use-coefficient",
+      "functions": [
+        "catchment-hydrology"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:co:land-use-coefficient:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 62 (index 0.7); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "reach-inflow-concentrated-flow-points",
+      "functions": [
+        "reach-inflow"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:co:concentrated-flow-points:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 1 (index 0.69); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "streamflow-regime-flow-alteration-module",
+      "functions": [
+        "streamflow-regime"
+      ],
+      "layers": [
+        {
+          "stratum": "ALL METRICS",
+          "registryKey": "sqt:co:flow-alteration-module:all-metrics",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "low-flow-and-baseflow-dynamics-average-depth",
+      "functions": [
+        "low-flow-baseflow-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "CS-I & CS-I MWF; W < 20ft",
+          "registryKey": "sqt:co:average-depth:cs-i-and-cs-i-mwf-w-lt-20ft",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "CS-I & CS-I MWF; W > 20ft",
+          "registryKey": "sqt:co:average-depth:cs-i-and-cs-i-mwf-w-gt-20ft",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "CS-II",
+          "registryKey": "sqt:co:average-depth:cs-ii",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "functions": [
+        "floodplain-connectivity"
+      ],
+      "layers": [
+        {
+          "stratum": "C Streams",
+          "registryKey": "sqt:co:entrenchment-ratio-er:c-streams",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "Cb Streams",
+          "registryKey": "sqt:co:entrenchment-ratio-er:cb-streams",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "E Streams",
+          "registryKey": "sqt:co:entrenchment-ratio-er:e-streams",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "A and B Streams",
+          "registryKey": "sqt:co:entrenchment-ratio-er:a-and-b-streams",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 1.2 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "All Regimes",
+          "registryKey": "sqt:co:bank-height-ratio-bhr:all-regimes",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "Transport",
+          "registryKey": "sqt:co:bank-height-ratio-bhr:transport",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 0.8 (index 0.7); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-greenline-stability-rating",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:co:greenline-stability-rating:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-percent-armoring",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:co:percent-armoring:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-percent-side-channels",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "Unconfined Alluvial",
+          "registryKey": "sqt:co:percent-side-channels:unconfined-alluvial",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Confined Alluvial",
+          "registryKey": "sqt:co:percent-side-channels:confined-alluvial",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:co:percent-streambank-erosion:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "sediment-continuity-aggradation-ratio",
+      "functions": [
+        "sediment-continuity"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:co:aggradation-ratio:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-mwat",
+      "functions": [
+        "light-thermal-regime"
+      ],
+      "layers": [
+        {
+          "stratum": "CS-I (MWF)",
+          "registryKey": "sqt:co:mwat:cs-i-mwf",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 16.9 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "CS-I",
+          "registryKey": "sqt:co:mwat:cs-i",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 17 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "CS-II",
+          "registryKey": "sqt:co:mwat:cs-ii",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 18.3 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "WS-I",
+          "registryKey": "sqt:co:mwat:ws-i",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 24.2 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "WS-II",
+          "registryKey": "sqt:co:mwat:ws-ii",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 27.5 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "WS-III",
+          "registryKey": "sqt:co:mwat:ws-iii",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 28.7 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-chlorophyll",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "Biotypes 1 and 2",
+          "registryKey": "sqt:co:chlorophyll:biotypes-1-and-2",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 53 (index 0.29); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "Biotype 3",
+          "registryKey": "sqt:co:chlorophyll:biotype-3",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-herbaceous-vegetation-cover",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "Herbaceous Reference Vegetation Cover",
+          "registryKey": "sqt:co:herbaceous-vegetation-cover:herbaceous-reference-vegetation-cover",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-percent-native-cover",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:co:percent-native-cover:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 65 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-riparian-extent",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "Unconfined Alluvial Valleys",
+          "registryKey": "sqt:co:riparian-extent:unconfined-alluvial-valleys",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+          "registryKey": "sqt:co:riparian-extent:confined-alluvial-colluvial-v-shaped-or-bedrock-valleys",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-woody-vegetation-cover",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "Mountains & Basins",
+          "registryKey": "sqt:co:woody-vegetation-cover:mountains-and-basins",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Plains",
+          "registryKey": "sqt:co:woody-vegetation-cover:plains",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 101 (index 0.29); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "water-and-soil-quality-dissolved-oxygen-concentration",
+      "functions": [
+        "water-soil-quality"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:co:dissolved-oxygen-concentration:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 9 (index 0.7); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-lwd",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "# Pieces / 100 meters",
+          "registryKey": "sqt:co:lwd:pieces-100-meters",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-lwd-index",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:co:lwd-index:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "Streams < 3% slope",
+          "registryKey": "sqt:co:percent-riffle:streams-lt-3-pct-slope",
+          "verification": "defective",
+          "defects": [
+            "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 50 scores 1. Not checked against this state's original."
+          ],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 39 (index 0.7); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "Streams < 3% slope / Overall",
+          "registryKey": "sqt:co:percent-riffle:streams-lt-3-pct-slope-overall",
+          "verification": "defective",
+          "defects": [
+            "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 68 scores 1. Not checked against this state's original."
+          ],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 60 (index 0.7); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-depth-ratio",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:co:pool-depth-ratio:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "C Stream Types",
+          "registryKey": "sqt:co:pool-spacing-ratio:c-stream-types",
+          "verification": "defective",
+          "defects": [
+            "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 4 scores 1. Not checked against this state's original."
+          ],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Cb Stream Types",
+          "registryKey": "sqt:co:pool-spacing-ratio:cb-stream-types",
+          "verification": "defective",
+          "defects": [
+            "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.7 scores 1. Not checked against this state's original."
+          ],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 3 (index 0.7); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "B & Ba Stream Types",
+          "registryKey": "sqt:co:pool-spacing-ratio:b-and-ba-stream-types",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Bc Stream Types",
+          "registryKey": "sqt:co:pool-spacing-ratio:bc-stream-types",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 6 (index 0.7); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "E Stream Types",
+          "registryKey": "sqt:co:pool-spacing-ratio:e-stream-types",
+          "verification": "defective",
+          "defects": [
+            "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.5 scores 1. Not checked against this state's original."
+          ],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "population-support-co-mmi",
+      "functions": [
+        "population-support"
+      ],
+      "layers": [
+        {
+          "stratum": "Biotype 1",
+          "registryKey": "sqt:co:co-mmi:biotype-1",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Biotype 2",
+          "registryKey": "sqt:co:co-mmi:biotype-2",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Biotype 3",
+          "registryKey": "sqt:co:co-mmi:biotype-3",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "population-support-wild-trout-biomass",
+      "functions": [
+        "population-support"
+      ],
+      "layers": [
+        {
+          "stratum": "High",
+          "registryKey": "sqt:co:wild-trout-biomass:high",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 5 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "Moderate",
+          "registryKey": "sqt:co:wild-trout-biomass:moderate",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 10 (index 0.3); past it DEEP holds that index."
+          ]
+        },
+        {
+          "stratum": "Low",
+          "registryKey": "sqt:co:wild-trout-biomass:low",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its low end, 15 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "community-dynamics-native-fish-species-richness",
+      "functions": [
+        "community-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:co:native-fish-species-richness:default",
+          "verification": "unverified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    }
+  ],
+  "defects": [
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "stratum": "Streams < 3% slope",
+      "registryKey": "sqt:co:percent-riffle:streams-lt-3-pct-slope",
+      "defects": [
+        "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 50 scores 1. Not checked against this state's original."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "stratum": "Streams < 3% slope / Overall",
+      "registryKey": "sqt:co:percent-riffle:streams-lt-3-pct-slope-overall",
+      "defects": [
+        "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 68 scores 1. Not checked against this state's original."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "stratum": "C Stream Types",
+      "registryKey": "sqt:co:pool-spacing-ratio:c-stream-types",
+      "defects": [
+        "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 4 scores 1. Not checked against this state's original."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "stratum": "Cb Stream Types",
+      "registryKey": "sqt:co:pool-spacing-ratio:cb-stream-types",
+      "defects": [
+        "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.7 scores 1. Not checked against this state's original."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "stratum": "E Stream Types",
+      "registryKey": "sqt:co:pool-spacing-ratio:e-stream-types",
+      "defects": [
+        "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.5 scores 1. Not checked against this state's original."
+      ]
+    }
+  ],
+  "openEnds": [
+    {
+      "metricId": "catchment-hydrology-land-use-coefficient",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 62 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "reach-inflow-concentrated-flow-points",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 1 (index 0.69); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "stratum": "C Streams",
+      "sentences": [
+        "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "stratum": "Cb Streams",
+      "sentences": [
+        "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "stratum": "E Streams",
+      "sentences": [
+        "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "stratum": "A and B Streams",
+      "sentences": [
+        "The published curve stops at its low end, 1.2 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "stratum": "All Regimes",
+      "sentences": [
+        "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "stratum": "Transport",
+      "sentences": [
+        "The published curve stops at its low end, 0.8 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-mwat",
+      "stratum": "CS-I (MWF)",
+      "sentences": [
+        "The published curve stops at its high end, 16.9 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-mwat",
+      "stratum": "CS-I",
+      "sentences": [
+        "The published curve stops at its high end, 17 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-mwat",
+      "stratum": "CS-II",
+      "sentences": [
+        "The published curve stops at its high end, 18.3 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-mwat",
+      "stratum": "WS-I",
+      "sentences": [
+        "The published curve stops at its high end, 24.2 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-mwat",
+      "stratum": "WS-II",
+      "sentences": [
+        "The published curve stops at its high end, 27.5 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-mwat",
+      "stratum": "WS-III",
+      "sentences": [
+        "The published curve stops at its high end, 28.7 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "carbon-processing-chlorophyll",
+      "stratum": "Biotypes 1 and 2",
+      "sentences": [
+        "The published curve stops at its high end, 53 (index 0.29); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "carbon-processing-percent-native-cover",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its low end, 65 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "carbon-processing-woody-vegetation-cover",
+      "stratum": "Plains",
+      "sentences": [
+        "The published curve stops at its high end, 101 (index 0.29); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "water-and-soil-quality-dissolved-oxygen-concentration",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 9 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "stratum": "Streams < 3% slope",
+      "sentences": [
+        "The published curve stops at its low end, 39 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "stratum": "Streams < 3% slope / Overall",
+      "sentences": [
+        "The published curve stops at its low end, 60 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "stratum": "Cb Stream Types",
+      "sentences": [
+        "The published curve stops at its low end, 3 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "stratum": "Bc Stream Types",
+      "sentences": [
+        "The published curve stops at its high end, 6 (index 0.7); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "population-support-wild-trout-biomass",
+      "stratum": "High",
+      "sentences": [
+        "The published curve stops at its low end, 5 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "population-support-wild-trout-biomass",
+      "stratum": "Moderate",
+      "sentences": [
+        "The published curve stops at its low end, 10 (index 0.3); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "population-support-wild-trout-biomass",
+      "stratum": "Low",
+      "sentences": [
+        "The published curve stops at its low end, 15 (index 0.3); past it DEEP holds that index."
+      ]
+    }
+  ],
+  "coverageExceptions": [
+    {
+      "functionId": "surface-water-storage",
+      "reason": "deferred-to-other-tier",
+      "justification": "The Colorado Stream Quantification Tool addresses this function only with a screening-tier metric (Impoundments / Dams / Ponds), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "high-flow-dynamics",
+      "reason": "no-suitable-metric",
+      "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "hyporheic-connectivity",
+      "reason": "no-suitable-metric",
+      "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "channel-evolution",
+      "reason": "no-suitable-metric",
+      "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "reason": "no-suitable-metric",
+      "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "nutrient-cycling",
+      "reason": "no-suitable-metric",
+      "justification": "The Colorado Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "watershed-connectivity",
+      "reason": "deferred-to-other-tier",
+      "justification": "The Colorado Stream Quantification Tool addresses this function only with a screening-tier metric (Adjacent Reach Condition for Recruitment (hardened/embedded); Fish Passage & Barrier Effects (longitudinal connectivity)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    }
+  ],
+  "portfolioApprovals": [
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "approvedBy": "GM",
+      "note": "The Colorado Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "carbon-processing",
+      "approvedBy": "GM",
+      "note": "The Colorado Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "habitat-provision",
+      "approvedBy": "GM",
+      "note": "The Colorado Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    }
+  ],
+  "version": 2,
+  "updatedAt": "2026-09-24T15:33:24Z",
+  "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a"
+}

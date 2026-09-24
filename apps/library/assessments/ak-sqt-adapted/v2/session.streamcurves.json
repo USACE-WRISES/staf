@@ -1,0 +1,4145 @@
+{
+ "schema_version": 2,
+ "app": "streamcurves",
+ "app_version": "0.1.0",
+ "created": "2026-09-24T15:33:22.479507+00:00",
+ "session_name": "AK SQT Adapted",
+ "fields": {
+  "data": null,
+  "precheck_df": null,
+  "data_source": null,
+  "data_fingerprint": null,
+  "upload_filename": null,
+  "input_metadata": null,
+  "site_mask_config": null,
+  "metric_config": {},
+  "strat_config": {},
+  "predictor_config": {},
+  "factor_recode_config": {},
+  "output_config": {
+   "per_metric_outputs": {
+    "precheck": {
+     "enabled": true,
+     "files": [
+      "{metric}_precheck.csv"
+     ]
+    },
+    "stratification": {
+     "enabled": true,
+     "files": [
+      "{metric}_stratification_screening.csv",
+      "{metric}_stratification_pairwise.csv",
+      "{metric}_stratification_decision.csv"
+     ],
+     "plots": [
+      "{metric}_boxplot_{strat_var}.png"
+     ]
+    },
+    "model_candidates": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_candidates.csv",
+      "{metric}_predictor_importance.csv"
+     ],
+     "plots": [
+      "{metric}_bic_vs_npred.png",
+      "{metric}_adjr2_vs_npred.png",
+      "{metric}_model_heatmap.png",
+      "{metric}_predictor_importance.png"
+     ]
+    },
+    "model_selection": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_selection.csv"
+     ]
+    },
+    "diagnostics": {
+     "enabled": true,
+     "files": [
+      "{metric}_diagnostics.csv"
+     ],
+     "plots": [
+      "{metric}_diagnostic_4panel.png"
+     ]
+    },
+    "reference_curves": {
+     "enabled": true,
+     "files": [
+      "{metric}_reference_curve.csv"
+     ],
+     "plots": [
+      "{metric}_reference_bar_chart.png",
+      "{metric}_reference_curve.png"
+     ]
+    },
+    "rds_objects": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_object.rds"
+     ]
+    }
+   },
+   "summary_outputs": {
+    "thresholds": {
+     "enabled": true,
+     "files": [
+      "reference_curve_thresholds.csv"
+     ]
+    },
+    "metric_status": {
+     "enabled": true,
+     "files": [
+      "metric_status.csv"
+     ]
+    },
+    "stratification_decisions": {
+     "enabled": true,
+     "files": [
+      "stratification_decisions.csv"
+     ]
+    },
+    "decision_history": {
+     "enabled": true,
+     "files": [
+      "decision_history.csv"
+     ]
+    },
+    "regional_curves": {
+     "enabled": true,
+     "files": [
+      "regional_curves.csv"
+     ]
+    },
+    "results_bundle": {
+     "enabled": true,
+     "files": [
+      "results_bundle.zip"
+     ]
+    }
+   },
+   "report_products": {
+    "dashboard": {
+     "enabled": true,
+     "file": "reports/dashboard.qmd",
+     "format": "html",
+     "tier": 1
+    },
+    "summary": {
+     "enabled": true,
+     "file": "reports/summary.qmd",
+     "format": "pdf",
+     "tier": 2
+    },
+    "appendix": {
+     "enabled": true,
+     "file": "reports/appendix.qmd",
+     "format": "pdf",
+     "tier": 3
+    },
+    "list_of_metrics": {
+     "enabled": true,
+     "file": "docs/templates/OH/MN-List-of-Metricsv2.0.xlsx",
+     "format": "xlsx",
+     "tier": 1
+    },
+    "sqt_workbook": {
+     "enabled": true,
+     "file": "docs/templates/OH/WISQT_Reference_Curves.xlsx",
+     "format": "xlsx",
+     "tier": 1
+    },
+    "science_support": {
+     "enabled": true,
+     "file": "reports/science_support.qmd",
+     "format": "html",
+     "tier": 1
+    }
+   }
+  },
+  "config_version": 0,
+  "current_metric": "perRiffle",
+  "phase1_screening": null,
+  "phase1_effect_sizes": null,
+  "phase1_candidates": {},
+  "all_layer1_results": {},
+  "all_layer2_results": {},
+  "phase2_ranking": null,
+  "cross_metric_consistency": null,
+  "phase2_settings": {
+   "metric_filter": null,
+   "strat_filter": null,
+   "sig_threshold": 0.05,
+   "support_threshold": 0.5
+  },
+  "phase2_metric_overrides": {},
+  "curve_stratification": {},
+  "summary_available_overrides": {},
+  "summary_edit_notes": {},
+  "phase3_patterns": null,
+  "phase3_feasibility": null,
+  "phase3_verification": {},
+  "strat_decision_user": null,
+  "reference_curve": null,
+  "phase4_data": null,
+  "current_stratum_level": null,
+  "stratum_results": {},
+  "completed_metrics": {},
+  "decision_log": {
+   "__type__": "frame",
+   "columns": [],
+   "n": 0,
+   "data": {},
+   "dtypes": {},
+   "categories": {}
+  },
+  "metric_phase_cache": {},
+  "discipline_function_mapping": {
+   "__type__": "frame",
+   "columns": [
+    "metric_key",
+    "discipline",
+    "function_label",
+    "sort_order"
+   ],
+   "n": 23,
+   "data": {
+    "metric_key": [
+     "catchment-hydrology-anthropogenic-land-cover",
+     "catchment-hydrology-impervious-cover",
+     "catchment-hydrology-land-use-coefficient",
+     "reach-inflow-concentrated-flow-points-1-000-ft",
+     "floodplain-connectivity-entrenchment-ratio-er",
+     "channel-evolution-width-depth-ratio",
+     "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+     "channel-and-floodplain-dynamics-percent-streambank-armoring",
+     "channel-and-floodplain-dynamics-percent-streambank-erosion",
+     "bed-composition-and-large-wood-percent-fines-2mm",
+     "light-and-thermal-regime-daily-maximum-temperature",
+     "carbon-processing-percent-native-cover",
+     "carbon-processing-riparian-extent",
+     "carbon-processing-vegetative-complexity",
+     "nutrient-cycling-diatom-index",
+     "water-and-soil-quality-daily-average-turbidity",
+     "habitat-provision-lwd-frequency",
+     "habitat-provision-percent-riffle",
+     "habitat-provision-pool-depth-ratio",
+     "habitat-provision-pool-spacing-ratio",
+     "population-support-alaskan-interior-mmi",
+     "community-dynamics-fish-species-richness",
+     "community-dynamics-relative-abundance-and-species-biomass-metrics"
+    ],
+    "discipline": [
+     "Hydrology",
+     "Hydrology",
+     "Hydrology",
+     "Hydrology",
+     "Hydraulics",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology"
+    ],
+    "function_label": [
+     "Catchment hydrology",
+     "Catchment hydrology",
+     "Catchment hydrology",
+     "Reach inflow",
+     "Floodplain connectivity",
+     "Channel evolution",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Bed composition and bedform dynamics",
+     "Light & thermal regime",
+     "Carbon processing",
+     "Carbon processing",
+     "Carbon processing",
+     "Nutrient cycling",
+     "Water & soil quality",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Population support",
+     "Community dynamics",
+     "Community dynamics"
+    ],
+    "sort_order": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23
+    ]
+   },
+   "dtypes": {
+    "metric_key": "str",
+    "discipline": "str",
+    "function_label": "str",
+    "sort_order": "int64"
+   },
+   "categories": {}
+  },
+  "discipline_function_mapping_confirmed": true,
+  "mapping_user_touched": false,
+  "workbook_provided_mapping": false,
+  "function_coverage_exceptions": [
+   {
+    "functionId": "surface-water-storage",
+    "reason": "no-suitable-metric",
+    "justification": "The Alaska Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "streamflow-regime",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Alaska Stream Quantification Tool addresses this function only with a screening-tier metric (Flow Alteration (Regulation / Water Use)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "low-flow-baseflow-dynamics",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Alaska Stream Quantification Tool addresses this function only with a screening-tier metric (Aufeis / Icing Impacts), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "high-flow-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The Alaska Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "hyporheic-connectivity",
+    "reason": "no-suitable-metric",
+    "justification": "The Alaska Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "sediment-continuity",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Alaska Stream Quantification Tool addresses this function only with a screening-tier metric (Permafrost Degradation / Thermokarst; Sediment Supply Potential (watershed/banks)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "watershed-connectivity",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Alaska Stream Quantification Tool addresses this function only with a screening-tier metric (Adjacent Reach Condition for Recruitment (hardened/embedded); Fish Passage & Barrier Effects (longitudinal connectivity)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   }
+  ],
+  "custom_groupings": {},
+  "custom_grouping_counter": {},
+  "session_name": "AK SQT Adapted",
+  "app_data_loaded": false,
+  "cross_sections": {},
+  "column_sources": {},
+  "column_functions": {},
+  "region_of_applicability": {
+   "kind": "state",
+   "code": "AK",
+   "name": "Alaska"
+  },
+  "candidate_sites": null,
+  "easi_screening_sites": null,
+  "easi_screening_metrics": null,
+  "easi_screening_criteria": null,
+  "run_meta": null,
+  "run_stage_status": {},
+  "curve_review": {},
+  "screening_run": null,
+  "site_exclusions": [],
+  "screening_skipped": false,
+  "validation_records": [],
+  "metric_redundancy": null,
+  "assessment_source": null,
+  "source_provenance": null,
+  "rule_selections": [],
+  "reference_build": {
+   "method": "pressure-screen",
+   "referenceMethod": null,
+   "insufficientReferenceSupport": [],
+   "metricAnnotations": {},
+   "fixedMetrics": [],
+   "ladderMetrics": {},
+   "referenceTier": null,
+   "carriedMetrics": {
+    "catchment-hydrology-anthropogenic-land-cover": {
+     "displayName": "Anthropogenic Land Cover",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 35.0,
+       "y": 0.7
+      },
+      {
+       "x": 50.0,
+       "y": 0.3
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Anthropogenic Land Cover",
+      "units": "",
+      "metric_family": "desktop (gis)",
+      "notes": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+      "column_name": "catchment-hydrology-anthropogenic-land-cover",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+      "curveCaveats": [
+       "The published curve stops at its high end, 50 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:anthropogenic-land-cover:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 50 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "catchment-hydrology-anthropogenic-land-cover",
+       "discipline": "Hydrology",
+       "function_label": "Catchment hydrology"
+      }
+     ],
+     "decision": {
+      "metric": "catchment-hydrology-anthropogenic-land-cover",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "catchment-hydrology-anthropogenic-land-cover",
+       "metricName": "Anthropogenic Land Cover",
+       "discipline": "Hydrology",
+       "inputType": "desktop (gis)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Anthropogenic Land Cover",
+       "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+       "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+       "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 35,
+          "y": 0.7
+         },
+         {
+          "x": 50,
+          "y": 0.3
+         }
+        ]
+       }
+      },
+      "functions": [
+       "catchment-hydrology"
+      ]
+     }
+    },
+    "catchment-hydrology-impervious-cover": {
+     "displayName": "Impervious Cover",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.7
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Impervious Cover",
+      "units": "",
+      "metric_family": "desktop (gis)",
+      "notes": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+      "column_name": "catchment-hydrology-impervious-cover",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+      "curveCaveats": [
+       "The published curve stops at its high end, 10 (index 0.7); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:impervious-cover:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 10 (index 0.7); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "catchment-hydrology-impervious-cover",
+       "discipline": "Hydrology",
+       "function_label": "Catchment hydrology"
+      }
+     ],
+     "decision": {
+      "metric": "catchment-hydrology-impervious-cover",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "catchment-hydrology-impervious-cover",
+       "metricName": "Impervious Cover",
+       "discipline": "Hydrology",
+       "inputType": "desktop (gis)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Impervious Cover",
+       "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+       "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+       "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 10,
+          "y": 0.7
+         }
+        ]
+       }
+      },
+      "functions": [
+       "catchment-hydrology"
+      ]
+     }
+    },
+    "catchment-hydrology-land-use-coefficient": {
+     "displayName": "Land Use Coefficient",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 9.0,
+       "y": 1.0
+      },
+      {
+       "x": 16.0,
+       "y": 0.7
+      },
+      {
+       "x": 22.0,
+       "y": 0.3
+      },
+      {
+       "x": 86.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Land Use Coefficient",
+      "units": "",
+      "metric_family": "desktop (gis)",
+      "notes": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+      "column_name": "catchment-hydrology-land-use-coefficient",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:land-use-coefficient:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "catchment-hydrology-land-use-coefficient",
+       "discipline": "Hydrology",
+       "function_label": "Catchment hydrology"
+      }
+     ],
+     "decision": {
+      "metric": "catchment-hydrology-land-use-coefficient",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "catchment-hydrology-land-use-coefficient",
+       "metricName": "Land Use Coefficient",
+       "discipline": "Hydrology",
+       "inputType": "desktop (gis)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Land Use Coefficient",
+       "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+       "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+       "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 9,
+          "y": 1
+         },
+         {
+          "x": 16,
+          "y": 0.7
+         },
+         {
+          "x": 22,
+          "y": 0.3
+         },
+         {
+          "x": 86,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "catchment-hydrology"
+      ]
+     }
+    },
+    "reach-inflow-concentrated-flow-points-1-000-ft": {
+     "displayName": "Concentrated Flow Points / 1,000 ft",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.0,
+       "y": 0.7
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Concentrated Flow Points / 1,000 ft",
+      "units": "",
+      "metric_family": "field (with desktop pre-screen)",
+      "notes": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+      "column_name": "reach-inflow-concentrated-flow-points-1-000-ft",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+      "curveCaveats": [
+       "The published curve stops at its high end, 1 (index 0.7); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:concentrated-flow-points-1-000-ft:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 1 (index 0.7); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "reach-inflow-concentrated-flow-points-1-000-ft",
+       "discipline": "Hydrology",
+       "function_label": "Reach inflow"
+      }
+     ],
+     "decision": {
+      "metric": "reach-inflow-concentrated-flow-points-1-000-ft",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "reach-inflow-concentrated-flow-points-1-000-ft",
+       "metricName": "Concentrated Flow Points / 1,000 ft",
+       "discipline": "Hydrology",
+       "inputType": "field (with desktop pre-screen)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Concentrated Flow Points / 1,000 ft",
+       "metricStatement": "Count of concentrated inflow locations (ditches, pipes, outfalls) that can deliver runoff, sediment, or pollutants to the reach.",
+       "howToMeasure": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+       "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 1,
+          "y": 0.7
+         }
+        ]
+       }
+      },
+      "functions": [
+       "reach-inflow"
+      ]
+     }
+    },
+    "floodplain-connectivity-entrenchment-ratio-er": {
+     "displayName": "Entrenchment Ratio (ER)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "C Streams",
+     "points": [
+      {
+       "x": 2.0,
+       "y": 0.3
+      },
+      {
+       "x": 2.4,
+       "y": 0.7
+      },
+      {
+       "x": 4.4,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "C Streams",
+       "points": [
+        {
+         "x": 2.0,
+         "y": 0.3
+        },
+        {
+         "x": 2.4,
+         "y": 0.7
+        },
+        {
+         "x": 4.4,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "E Streams",
+       "points": [
+        {
+         "x": 2.0,
+         "y": 0.3
+        },
+        {
+         "x": 2.4,
+         "y": 0.7
+        },
+        {
+         "x": 6.5,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "B Stream Types",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.4,
+         "y": 0.7
+        },
+        {
+         "x": 2.2,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Entrenchment Ratio (ER)",
+      "units": "",
+      "metric_family": "field (survey) or desktop (lidar cross sections)",
+      "notes": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+      "column_name": "floodplain-connectivity-entrenchment-ratio-er",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+      "curveCaveats": [
+       "C Streams: the published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index.",
+       "E Streams: the published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "C Streams",
+         "registryKey": "sqt:ak:entrenchment-ratio-er:c-streams",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "E Streams",
+         "registryKey": "sqt:ak:entrenchment-ratio-er:e-streams",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 2 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "B Stream Types",
+         "registryKey": "sqt:ak:entrenchment-ratio-er:b-stream-types",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "floodplain-connectivity-entrenchment-ratio-er",
+       "discipline": "Hydraulics",
+       "function_label": "Floodplain connectivity"
+      }
+     ],
+     "decision": {
+      "metric": "floodplain-connectivity-entrenchment-ratio-er",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+       "metricName": "Entrenchment Ratio (ER)",
+       "discipline": "Hydraulics",
+       "inputType": "field (survey) or desktop (lidar cross sections)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Entrenchment Ratio (ER)",
+       "metricStatement": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+       "howToMeasure": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+       "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT - C Streams",
+        "stratification": "C Streams",
+        "points": [
+         {
+          "x": 2,
+          "y": 0.3
+         },
+         {
+          "x": 2.4,
+          "y": 0.7
+         },
+         {
+          "x": 4.4,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "C Streams",
+         "layerName": "Alaska SQT - C Streams",
+         "points": [
+          {
+           "x": 2,
+           "y": 0.3
+          },
+          {
+           "x": 2.4,
+           "y": 0.7
+          },
+          {
+           "x": 4.4,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "E Streams",
+         "layerName": "Alaska SQT - E Streams",
+         "points": [
+          {
+           "x": 2,
+           "y": 0.3
+          },
+          {
+           "x": 2.4,
+           "y": 0.7
+          },
+          {
+           "x": 6.5,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "B Stream Types",
+         "layerName": "Alaska SQT - B Stream Types",
+         "points": [
+          {
+           "x": 1,
+           "y": 0
+          },
+          {
+           "x": 1.4,
+           "y": 0.7
+          },
+          {
+           "x": 2.2,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "C Streams"
+      },
+      "functions": [
+       "floodplain-connectivity"
+      ]
+     }
+    },
+    "channel-evolution-width-depth-ratio": {
+     "displayName": "Width/Depth Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 20.0,
+       "y": 0.0
+      },
+      {
+       "x": 100.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Width/Depth Ratio",
+      "units": "",
+      "metric_family": "field (survey)",
+      "notes": "Measure bankfull width and mean depth at representative cross sections; compute W/D and compare to expected (regional curves or SQT reference).",
+      "column_name": "channel-evolution-width-depth-ratio",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (survey)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:width-depth-ratio:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-evolution-width-depth-ratio",
+       "discipline": "Geomorphology",
+       "function_label": "Channel evolution"
+      }
+     ],
+     "decision": {
+      "metric": "channel-evolution-width-depth-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-evolution-width-depth-ratio",
+       "metricName": "Width/Depth Ratio",
+       "discipline": "Geomorphology",
+       "inputType": "field (survey)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Width/Depth Ratio",
+       "metricStatement": "Channel dimension indicator used to infer incision/widening or departure from reference geometry.",
+       "howToMeasure": "Measure bankfull width and mean depth at representative cross sections; compute W/D and compare to expected (regional curves or SQT reference).",
+       "methodContext": "Context: Channel\n\nMethod: Field (survey)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 20,
+          "y": 0
+         },
+         {
+          "x": 100,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-evolution"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-bank-height-ratio-bhr": {
+     "displayName": "Bank Height Ratio (BHR)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.5,
+       "y": 0.3
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Bank Height Ratio (BHR)",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [
+       "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:bank-height-ratio-bhr:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+       "metricName": "Bank Height Ratio (BHR)",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Bank Height Ratio (BHR)",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 1.5,
+          "y": 0.3
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-percent-streambank-armoring": {
+     "displayName": "Percent Streambank Armoring",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 30.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Streambank Armoring",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:percent-streambank-armoring:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+       "metricName": "Percent Streambank Armoring",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Percent Streambank Armoring",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 30,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-percent-streambank-erosion": {
+     "displayName": "Percent Streambank Erosion",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 5.0,
+       "y": 1.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.7
+      },
+      {
+       "x": 75.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Streambank Erosion",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:percent-streambank-erosion:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+       "metricName": "Percent Streambank Erosion",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Percent Streambank Erosion",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 5,
+          "y": 1
+         },
+         {
+          "x": 10,
+          "y": 0.7
+         },
+         {
+          "x": 75,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "bed-composition-and-large-wood-percent-fines-2mm": {
+     "displayName": "Percent Fines < 2mm",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Gravel Bed",
+     "points": [
+      {
+       "x": 3.0,
+       "y": 1.0
+      },
+      {
+       "x": 15.0,
+       "y": 0.7
+      },
+      {
+       "x": 37.0,
+       "y": 0.3
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Gravel Bed",
+       "points": [
+        {
+         "x": 3.0,
+         "y": 1.0
+        },
+        {
+         "x": 15.0,
+         "y": 0.7
+        },
+        {
+         "x": 37.0,
+         "y": 0.3
+        }
+       ]
+      },
+      {
+       "stratum": "Cobble, Boulders, Bedrock",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 1.0
+        },
+        {
+         "x": 5.0,
+         "y": 0.7
+        },
+        {
+         "x": 10.0,
+         "y": 0.3
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Percent Fines < 2mm",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+      "column_name": "bed-composition-and-large-wood-percent-fines-2mm",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [
+       "Gravel Bed: the published curve stops at its high end, 37 (index 0.3); past it DEEP holds that index.",
+       "Cobble, Boulders, Bedrock: the published curve stops at its high end, 10 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Gravel Bed",
+         "registryKey": "sqt:ak:percent-fines-lt-2mm:gravel-bed",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 37 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Cobble, Boulders, Bedrock",
+         "registryKey": "sqt:ak:percent-fines-lt-2mm:cobble-boulders-bedrock",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 10 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "bed-composition-and-large-wood-percent-fines-2mm",
+       "discipline": "Geomorphology",
+       "function_label": "Bed composition and bedform dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "bed-composition-and-large-wood-percent-fines-2mm",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "bed-composition-and-large-wood-percent-fines-2mm",
+       "metricName": "Percent Fines < 2mm",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Percent Fines < 2mm",
+       "metricStatement": "Streambed substrate size distribution used to infer habitat quality, sediment transport, and embeddedness/fine sediment stress.",
+       "howToMeasure": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT - Gravel Bed",
+        "stratification": "Gravel Bed",
+        "points": [
+         {
+          "x": 3,
+          "y": 1
+         },
+         {
+          "x": 15,
+          "y": 0.7
+         },
+         {
+          "x": 37,
+          "y": 0.3
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Gravel Bed",
+         "layerName": "Alaska SQT - Gravel Bed",
+         "points": [
+          {
+           "x": 3,
+           "y": 1
+          },
+          {
+           "x": 15,
+           "y": 0.7
+          },
+          {
+           "x": 37,
+           "y": 0.3
+          }
+         ]
+        },
+        {
+         "stratum": "Cobble, Boulders, Bedrock",
+         "layerName": "Alaska SQT - Cobble, Boulders, Bedrock",
+         "points": [
+          {
+           "x": 0,
+           "y": 1
+          },
+          {
+           "x": 5,
+           "y": 0.7
+          },
+          {
+           "x": 10,
+           "y": 0.3
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Gravel Bed"
+      },
+      "functions": [
+       "bed-composition-bedform-dynamics"
+      ]
+     }
+    },
+    "light-and-thermal-regime-daily-maximum-temperature": {
+     "displayName": "Daily Maximum Temperature",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.1,
+       "y": 1.0
+      },
+      {
+       "x": 1.25,
+       "y": 0.3
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Daily Maximum Temperature",
+      "units": "",
+      "metric_family": "field (logger) and/or desktop (data compilation)",
+      "notes": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+      "column_name": "light-and-thermal-regime-daily-maximum-temperature",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+      "curveCaveats": [
+       "The published curve stops at its high end, 1.25 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:daily-maximum-temperature:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 1.25 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "light-and-thermal-regime-daily-maximum-temperature",
+       "discipline": "Physicochemistry",
+       "function_label": "Light & thermal regime"
+      }
+     ],
+     "decision": {
+      "metric": "light-and-thermal-regime-daily-maximum-temperature",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "light-and-thermal-regime-daily-maximum-temperature",
+       "metricName": "Daily Maximum Temperature",
+       "discipline": "Physicochemistry",
+       "inputType": "field (logger) and/or desktop (data compilation)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Daily Maximum Temperature",
+       "metricStatement": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+       "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1.1,
+          "y": 1
+         },
+         {
+          "x": 1.25,
+          "y": 0.3
+         }
+        ]
+       }
+      },
+      "functions": [
+       "light-thermal-regime"
+      ]
+     }
+    },
+    "carbon-processing-percent-native-cover": {
+     "displayName": "Percent Native Cover",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 95.0,
+       "y": 0.7
+      },
+      {
+       "x": 100.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Native Cover",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-percent-native-cover",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [
+       "The published curve stops at its low end, 95 (index 0.7); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:percent-native-cover:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 95 (index 0.7); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-percent-native-cover",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-percent-native-cover",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-percent-native-cover",
+       "metricName": "Percent Native Cover",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Percent Native Cover",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 95,
+          "y": 0.7
+         },
+         {
+          "x": 100,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-riparian-extent": {
+     "displayName": "Riparian Extent",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Unconfined Alluvial Valleys",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 100.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Unconfined Alluvial Valleys",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 100.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Confined Alluvial or Colluvial/V-Shaped Valleys",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 60.0,
+         "y": 0.3
+        },
+        {
+         "x": 100.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Riparian Extent",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-riparian-extent",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Unconfined Alluvial Valleys",
+         "registryKey": "sqt:ak:riparian-extent:unconfined-alluvial-valleys",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Confined Alluvial or Colluvial/V-Shaped Valleys",
+         "registryKey": "sqt:ak:riparian-extent:confined-alluvial-or-colluvial-v-shaped-valleys",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-riparian-extent",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-riparian-extent",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-riparian-extent",
+       "metricName": "Riparian Extent",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Riparian Extent",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT - Unconfined Alluvial Valleys",
+        "stratification": "Unconfined Alluvial Valleys",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 100,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Unconfined Alluvial Valleys",
+         "layerName": "Alaska SQT - Unconfined Alluvial Valleys",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 100,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Confined Alluvial or Colluvial/V-Shaped Valleys",
+         "layerName": "Alaska SQT - Confined Alluvial or Colluvial/V-Shaped Valleys",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 60,
+           "y": 0.3
+          },
+          {
+           "x": 100,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Unconfined Alluvial Valleys"
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-vegetative-complexity": {
+     "displayName": "Vegetative Complexity",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Alaska & Brooks Range",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.06,
+       "y": 0.3
+      },
+      {
+       "x": 0.83,
+       "y": 0.7
+      },
+      {
+       "x": 1.57,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Alaska & Brooks Range",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 0.06,
+         "y": 0.3
+        },
+        {
+         "x": 0.83,
+         "y": 0.7
+        },
+        {
+         "x": 1.57,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Interior Highlands",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 0.94,
+         "y": 0.3
+        },
+        {
+         "x": 1.21,
+         "y": 0.7
+        },
+        {
+         "x": 1.67,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Interior Bottomlands",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.19,
+         "y": 0.3
+        },
+        {
+         "x": 1.37,
+         "y": 0.7
+        },
+        {
+         "x": 1.82,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Interior Forested Lowlands/Uplands",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.24,
+         "y": 0.3
+        },
+        {
+         "x": 1.45,
+         "y": 0.7
+        },
+        {
+         "x": 1.87,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Vegetative Complexity",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-vegetative-complexity",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Alaska & Brooks Range",
+         "registryKey": "sqt:ak:vegetative-complexity:alaska-and-brooks-range",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Interior Highlands",
+         "registryKey": "sqt:ak:vegetative-complexity:interior-highlands",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Interior Bottomlands",
+         "registryKey": "sqt:ak:vegetative-complexity:interior-bottomlands",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Interior Forested Lowlands/Uplands",
+         "registryKey": "sqt:ak:vegetative-complexity:interior-forested-lowlands-uplands",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-vegetative-complexity",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-vegetative-complexity",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-vegetative-complexity",
+       "metricName": "Vegetative Complexity",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Vegetative Complexity",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT - Alaska & Brooks Range",
+        "stratification": "Alaska & Brooks Range",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 0.06,
+          "y": 0.3
+         },
+         {
+          "x": 0.83,
+          "y": 0.7
+         },
+         {
+          "x": 1.57,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Alaska & Brooks Range",
+         "layerName": "Alaska SQT - Alaska & Brooks Range",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 0.06,
+           "y": 0.3
+          },
+          {
+           "x": 0.83,
+           "y": 0.7
+          },
+          {
+           "x": 1.57,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Interior Highlands",
+         "layerName": "Alaska SQT - Interior Highlands",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 0.94,
+           "y": 0.3
+          },
+          {
+           "x": 1.21,
+           "y": 0.7
+          },
+          {
+           "x": 1.67,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Interior Bottomlands",
+         "layerName": "Alaska SQT - Interior Bottomlands",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 1.19,
+           "y": 0.3
+          },
+          {
+           "x": 1.37,
+           "y": 0.7
+          },
+          {
+           "x": 1.82,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Interior Forested Lowlands/Uplands",
+         "layerName": "Alaska SQT - Interior Forested Lowlands/Uplands",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 1.24,
+           "y": 0.3
+          },
+          {
+           "x": 1.45,
+           "y": 0.7
+          },
+          {
+           "x": 1.87,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Alaska & Brooks Range"
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "nutrient-cycling-diatom-index": {
+     "displayName": "Diatom Index",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 58.0,
+       "y": 0.7
+      },
+      {
+       "x": 75.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Diatom Index",
+      "units": "",
+      "metric_family": "field (sampling) and/or desktop (data compilation)",
+      "notes": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+      "column_name": "nutrient-cycling-diatom-index",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+      "curveCaveats": [
+       "The published curve stops at its low end, 58 (index 0.7); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:diatom-index:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 58 (index 0.7); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "nutrient-cycling-diatom-index",
+       "discipline": "Physicochemistry",
+       "function_label": "Nutrient cycling"
+      }
+     ],
+     "decision": {
+      "metric": "nutrient-cycling-diatom-index",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "nutrient-cycling-diatom-index",
+       "metricName": "Diatom Index",
+       "discipline": "Physicochemistry",
+       "inputType": "field (sampling) and/or desktop (data compilation)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Diatom Index",
+       "metricStatement": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+       "howToMeasure": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+       "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 58,
+          "y": 0.7
+         },
+         {
+          "x": 75,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "nutrient-cycling"
+      ]
+     }
+    },
+    "water-and-soil-quality-daily-average-turbidity": {
+     "displayName": "Daily Average Turbidity",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 3.0,
+       "y": 1.0
+      },
+      {
+       "x": 10.0,
+       "y": 0.7
+      },
+      {
+       "x": 100.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Daily Average Turbidity",
+      "units": "",
+      "metric_family": "field (meter/logger) and/or desktop (data compilation)",
+      "notes": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+      "column_name": "water-and-soil-quality-daily-average-turbidity",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:daily-average-turbidity:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "water-and-soil-quality-daily-average-turbidity",
+       "discipline": "Physicochemistry",
+       "function_label": "Water & soil quality"
+      }
+     ],
+     "decision": {
+      "metric": "water-and-soil-quality-daily-average-turbidity",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "water-and-soil-quality-daily-average-turbidity",
+       "metricName": "Daily Average Turbidity",
+       "discipline": "Physicochemistry",
+       "inputType": "field (meter/logger) and/or desktop (data compilation)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Daily Average Turbidity",
+       "metricStatement": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+       "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 3,
+          "y": 1
+         },
+         {
+          "x": 10,
+          "y": 0.7
+         },
+         {
+          "x": 100,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "water-soil-quality"
+      ]
+     }
+    },
+    "habitat-provision-lwd-frequency": {
+     "displayName": "LWD Frequency",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Alaska Range",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.8,
+       "y": 0.3
+      },
+      {
+       "x": 1.5,
+       "y": 0.7
+      },
+      {
+       "x": 6.3,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Alaska Range",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 0.8,
+         "y": 0.3
+        },
+        {
+         "x": 1.5,
+         "y": 0.7
+        },
+        {
+         "x": 6.3,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Brooks Range",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 0.62,
+         "y": 0.3
+        },
+        {
+         "x": 1.2,
+         "y": 0.7
+        },
+        {
+         "x": 4.2,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Interior Bottomlands",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.7,
+         "y": 0.3
+        },
+        {
+         "x": 4.7,
+         "y": 0.7
+        },
+        {
+         "x": 54.5,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Interior Forested Lowlands/Uplands and Highlands",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 0.6,
+         "y": 0.3
+        },
+        {
+         "x": 1.3,
+         "y": 0.7
+        },
+        {
+         "x": 24.1,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "LWD Frequency",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+      "column_name": "habitat-provision-lwd-frequency",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Alaska Range",
+         "registryKey": "sqt:ak:lwd-frequency:alaska-range",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Brooks Range",
+         "registryKey": "sqt:ak:lwd-frequency:brooks-range",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Interior Bottomlands",
+         "registryKey": "sqt:ak:lwd-frequency:interior-bottomlands",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Interior Forested Lowlands/Uplands and Highlands",
+         "registryKey": "sqt:ak:lwd-frequency:interior-forested-lowlands-uplands-and-highlands",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-lwd-frequency",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-lwd-frequency",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-lwd-frequency",
+       "metricName": "LWD Frequency",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "LWD Frequency",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT - Alaska Range",
+        "stratification": "Alaska Range",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 0.8,
+          "y": 0.3
+         },
+         {
+          "x": 1.5,
+          "y": 0.7
+         },
+         {
+          "x": 6.3,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Alaska Range",
+         "layerName": "Alaska SQT - Alaska Range",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 0.8,
+           "y": 0.3
+          },
+          {
+           "x": 1.5,
+           "y": 0.7
+          },
+          {
+           "x": 6.3,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Brooks Range",
+         "layerName": "Alaska SQT - Brooks Range",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 0.62,
+           "y": 0.3
+          },
+          {
+           "x": 1.2,
+           "y": 0.7
+          },
+          {
+           "x": 4.2,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Interior Bottomlands",
+         "layerName": "Alaska SQT - Interior Bottomlands",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 3.7,
+           "y": 0.3
+          },
+          {
+           "x": 4.7,
+           "y": 0.7
+          },
+          {
+           "x": 54.5,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Interior Forested Lowlands/Uplands and Highlands",
+         "layerName": "Alaska SQT - Interior Forested Lowlands/Uplands and Highlands",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 0.6,
+           "y": 0.3
+          },
+          {
+           "x": 1.3,
+           "y": 0.7
+          },
+          {
+           "x": 24.1,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Alaska Range"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-percent-riffle": {
+     "displayName": "Percent Riffle",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Slopes < 3%",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 62.0,
+       "y": 0.7
+      },
+      {
+       "x": 68.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Slopes < 3%",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 62.0,
+         "y": 0.7
+        },
+        {
+         "x": 68.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Slopes < 3% / Overall",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 39.0,
+         "y": 0.7
+        },
+        {
+         "x": 50.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Percent Riffle",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-percent-riffle",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [
+       "Slopes < 3%: the metric library row this curve was transcribed from is defective: Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 68 scores 1. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix.",
+       "Slopes < 3% / Overall: the metric library row this curve was transcribed from is defective: Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 50 scores 1. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix."
+      ],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Slopes < 3%",
+         "registryKey": "sqt:ak:percent-riffle:slopes-lt-3-pct",
+         "verification": "defective",
+         "defects": [
+          "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 68 scores 1. Not checked against this state's original."
+         ],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Slopes < 3% / Overall",
+         "registryKey": "sqt:ak:percent-riffle:slopes-lt-3-pct-overall",
+         "verification": "defective",
+         "defects": [
+          "Percent riffle rises to an optimum and falls again (the MN v2.0 list (rows 20 and 21) and the WI curves sheet (rows 436 and 472) give both limbs, and the NC rows mark the end of the optimum). This row holds one limb, so any value above 50 scores 1. Not checked against this state's original."
+         ],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-percent-riffle",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-percent-riffle",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-percent-riffle",
+       "metricName": "Percent Riffle",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Percent Riffle",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT - Slopes < 3%",
+        "stratification": "Slopes < 3%",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 62,
+          "y": 0.7
+         },
+         {
+          "x": 68,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Slopes < 3%",
+         "layerName": "Alaska SQT - Slopes < 3%",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 62,
+           "y": 0.7
+          },
+          {
+           "x": 68,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Slopes < 3% / Overall",
+         "layerName": "Alaska SQT - Slopes < 3% / Overall",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 39,
+           "y": 0.7
+          },
+          {
+           "x": 50,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Slopes < 3%"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-pool-depth-ratio": {
+     "displayName": "Pool Depth Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "B & Ba Streams",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 0.0
+      },
+      {
+       "x": 1.8,
+       "y": 0.7
+      },
+      {
+       "x": 2.8,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "B & Ba Streams",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.8,
+         "y": 0.7
+        },
+        {
+         "x": 2.8,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "All other Streams",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.2,
+         "y": 0.7
+        },
+        {
+         "x": 3.2,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Pool Depth Ratio",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-pool-depth-ratio",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "B & Ba Streams",
+         "registryKey": "sqt:ak:pool-depth-ratio:b-and-ba-streams",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "All other Streams",
+         "registryKey": "sqt:ak:pool-depth-ratio:all-other-streams",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-pool-depth-ratio",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-pool-depth-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-pool-depth-ratio",
+       "metricName": "Pool Depth Ratio",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Pool Depth Ratio",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT - B & Ba Streams",
+        "stratification": "B & Ba Streams",
+        "points": [
+         {
+          "x": 1,
+          "y": 0
+         },
+         {
+          "x": 1.8,
+          "y": 0.7
+         },
+         {
+          "x": 2.8,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "B & Ba Streams",
+         "layerName": "Alaska SQT - B & Ba Streams",
+         "points": [
+          {
+           "x": 1,
+           "y": 0
+          },
+          {
+           "x": 1.8,
+           "y": 0.7
+          },
+          {
+           "x": 2.8,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "All other Streams",
+         "layerName": "Alaska SQT - All other Streams",
+         "points": [
+          {
+           "x": 1,
+           "y": 0
+          },
+          {
+           "x": 2.2,
+           "y": 0.7
+          },
+          {
+           "x": 3.2,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "B & Ba Streams"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-pool-spacing-ratio": {
+     "displayName": "Pool Spacing Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "B and Ba Stream Types",
+     "points": [
+      {
+       "x": 2.0,
+       "y": 1.0
+      },
+      {
+       "x": 3.9,
+       "y": 0.7
+      },
+      {
+       "x": 6.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "B and Ba Stream Types",
+       "points": [
+        {
+         "x": 2.0,
+         "y": 1.0
+        },
+        {
+         "x": 3.9,
+         "y": 0.7
+        },
+        {
+         "x": 6.0,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "Bc Stream Types",
+       "points": [
+        {
+         "x": 3.4,
+         "y": 1.0
+        },
+        {
+         "x": 6.0,
+         "y": 0.7
+        }
+       ]
+      },
+      {
+       "stratum": "C Streams",
+       "points": [
+        {
+         "x": 3.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.7,
+         "y": 0.7
+        },
+        {
+         "x": 4.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "E Streams",
+       "points": [
+        {
+         "x": 1.8,
+         "y": 0.0
+        },
+        {
+         "x": 3.0,
+         "y": 0.7
+        },
+        {
+         "x": 3.5,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Pool Spacing Ratio",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-pool-spacing-ratio",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [
+       "Bc Stream Types: the published curve stops at its high end, 6 (index 0.7); past it DEEP holds that index.",
+       "C Streams: the metric library row this curve was transcribed from is defective: Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 4 scores 1. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix.",
+       "E Streams: the metric library row this curve was transcribed from is defective: Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.5 scores 1. Not checked against this state's original. It scores as v1 scores it; the assessment audit decides the fix."
+      ],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "B and Ba Stream Types",
+         "registryKey": "sqt:ak:pool-spacing-ratio:b-and-ba-stream-types",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Bc Stream Types",
+         "registryKey": "sqt:ak:pool-spacing-ratio:bc-stream-types",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 6 (index 0.7); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "C Streams",
+         "registryKey": "sqt:ak:pool-spacing-ratio:c-streams",
+         "verification": "defective",
+         "defects": [
+          "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 4 scores 1. Not checked against this state's original."
+         ],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "E Streams",
+         "registryKey": "sqt:ak:pool-spacing-ratio:e-streams",
+         "verification": "defective",
+         "defects": [
+          "Pool spacing ratio for C and E stream types rises to an optimum and falls again (the MN v2.0 list (row 18) and the WI curves sheet (rows 363 and 364) give both limbs, and one NC stratum (CSV row 257) carries both). This row holds one limb, so any value above 3.5 scores 1. Not checked against this state's original."
+         ],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-pool-spacing-ratio",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-pool-spacing-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-pool-spacing-ratio",
+       "metricName": "Pool Spacing Ratio",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Pool Spacing Ratio",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT - B and Ba Stream Types",
+        "stratification": "B and Ba Stream Types",
+        "points": [
+         {
+          "x": 2,
+          "y": 1
+         },
+         {
+          "x": 3.9,
+          "y": 0.7
+         },
+         {
+          "x": 6,
+          "y": 0
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "B and Ba Stream Types",
+         "layerName": "Alaska SQT - B and Ba Stream Types",
+         "points": [
+          {
+           "x": 2,
+           "y": 1
+          },
+          {
+           "x": 3.9,
+           "y": 0.7
+          },
+          {
+           "x": 6,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "Bc Stream Types",
+         "layerName": "Alaska SQT - Bc Stream Types",
+         "points": [
+          {
+           "x": 3.4,
+           "y": 1
+          },
+          {
+           "x": 6,
+           "y": 0.7
+          }
+         ]
+        },
+        {
+         "stratum": "C Streams",
+         "layerName": "Alaska SQT - C Streams",
+         "points": [
+          {
+           "x": 3,
+           "y": 0
+          },
+          {
+           "x": 3.7,
+           "y": 0.7
+          },
+          {
+           "x": 4,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "E Streams",
+         "layerName": "Alaska SQT - E Streams",
+         "points": [
+          {
+           "x": 1.8,
+           "y": 0
+          },
+          {
+           "x": 3,
+           "y": 0.7
+          },
+          {
+           "x": 3.5,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "B and Ba Stream Types"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "population-support-alaskan-interior-mmi": {
+     "displayName": "Alaskan Interior MMI",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 36.0,
+       "y": 1.0
+      },
+      {
+       "x": 43.0,
+       "y": 0.7
+      },
+      {
+       "x": 62.0,
+       "y": 0.3
+      },
+      {
+       "x": 81.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Alaskan Interior MMI",
+      "units": "",
+      "metric_family": "field (bioassessment) and/or desktop (existing scores)",
+      "notes": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+      "column_name": "population-support-alaskan-interior-mmi",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:alaskan-interior-mmi:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "population-support-alaskan-interior-mmi",
+       "discipline": "Biology",
+       "function_label": "Population support"
+      }
+     ],
+     "decision": {
+      "metric": "population-support-alaskan-interior-mmi",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "population-support-alaskan-interior-mmi",
+       "metricName": "Alaskan Interior MMI",
+       "discipline": "Biology",
+       "inputType": "field (bioassessment) and/or desktop (existing scores)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Alaskan Interior MMI",
+       "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+       "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+       "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 36,
+          "y": 1
+         },
+         {
+          "x": 43,
+          "y": 0.7
+         },
+         {
+          "x": 62,
+          "y": 0.3
+         },
+         {
+          "x": 81,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "population-support"
+      ]
+     }
+    },
+    "community-dynamics-fish-species-richness": {
+     "displayName": "Fish Species Richness",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Anadromous",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 80.0,
+       "y": 0.7
+      },
+      {
+       "x": 100.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Anadromous",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 80.0,
+         "y": 0.7
+        },
+        {
+         "x": 100.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Non-anadromous",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 60.0,
+         "y": 0.7
+        },
+        {
+         "x": 100.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Fish Species Richness",
+      "units": "",
+      "metric_family": "field (fish survey) and/or desktop (existing data)",
+      "notes": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+      "column_name": "community-dynamics-fish-species-richness",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (fish survey) and/or Desktop (existing data)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Anadromous",
+         "registryKey": "sqt:ak:fish-species-richness:anadromous",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Non-anadromous",
+         "registryKey": "sqt:ak:fish-species-richness:non-anadromous",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "community-dynamics-fish-species-richness",
+       "discipline": "Biology",
+       "function_label": "Community dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "community-dynamics-fish-species-richness",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "community-dynamics-fish-species-richness",
+       "metricName": "Fish Species Richness",
+       "discipline": "Biology",
+       "inputType": "field (fish survey) and/or desktop (existing data)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Fish Species Richness",
+       "metricStatement": "Community composition indicator reflecting native diversity and assemblage balance relative to expectation.",
+       "howToMeasure": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (fish survey) and/or Desktop (existing data)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT - Anadromous",
+        "stratification": "Anadromous",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 80,
+          "y": 0.7
+         },
+         {
+          "x": 100,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Anadromous",
+         "layerName": "Alaska SQT - Anadromous",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 80,
+           "y": 0.7
+          },
+          {
+           "x": 100,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Non-anadromous",
+         "layerName": "Alaska SQT - Non-anadromous",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 60,
+           "y": 0.7
+          },
+          {
+           "x": 100,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Anadromous"
+      },
+      "functions": [
+       "community-dynamics"
+      ]
+     }
+    },
+    "community-dynamics-relative-abundance-and-species-biomass-metrics": {
+     "displayName": "Relative Abundance and Species Biomass metrics",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 0.9,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Relative Abundance and Species Biomass metrics",
+      "units": "",
+      "metric_family": "field (fish survey) and/or desktop (existing data)",
+      "notes": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+      "column_name": "community-dynamics-relative-abundance-and-species-biomass-metrics",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Alaska Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Alaska SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Alaska SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (fish survey) and/or Desktop (existing data)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "ak-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+      },
+      "sqtTranscription": {
+       "tool": "Alaska Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:ak:relative-abundance-and-species-biomass-metrics:default",
+         "verification": "unverified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "community-dynamics-relative-abundance-and-species-biomass-metrics",
+       "discipline": "Biology",
+       "function_label": "Community dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "community-dynamics-relative-abundance-and-species-biomass-metrics",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "community-dynamics-relative-abundance-and-species-biomass-metrics",
+       "metricName": "Relative Abundance and Species Biomass metrics",
+       "discipline": "Biology",
+       "inputType": "field (fish survey) and/or desktop (existing data)",
+       "sourceCitation": "Alaska SQT",
+       "xLabel": "Relative Abundance and Species Biomass metrics",
+       "metricStatement": "Community composition indicator reflecting native diversity and assemblage balance relative to expectation.",
+       "howToMeasure": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (fish survey) and/or Desktop (existing data)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Alaska SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 0.9,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "community-dynamics"
+      ]
+     }
+    }
+   },
+   "carriedFrom": {
+    "assessmentId": "ak-sqt-adapted",
+    "fromVersion": 1,
+    "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd"
+   },
+   "transcription": {
+    "kind": "state-sqt",
+    "tool": "Alaska Stream Quantification Tool",
+    "by": "STAF SQT migration",
+    "on": "2026-07-12",
+    "source": "docs/assets/data/metric-library/detailed-adapted-assessments.json"
+   }
+  },
+  "owner_curve_decisions": [],
+  "candidate_register": null,
+  "wizard_draft": null
+ }
+}

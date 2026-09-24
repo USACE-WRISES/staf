@@ -1,0 +1,759 @@
+{
+  "kind": "sqt-transcription",
+  "schemaVersion": 1,
+  "assessmentId": "mn-sqt-adapted",
+  "tool": "Minnesota Stream Quantification Tool",
+  "publishedBy": "GM",
+  "publishedAt": "2026-09-24",
+  "transcribedFrom": {
+    "version": 1,
+    "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c",
+    "by": "STAF SQT migration",
+    "on": "2026-07-12",
+    "source": "docs/assets/data/metric-library/detailed-adapted-assessments.json"
+  },
+  "ownerDecisions": [
+    "2026-09-24: complete the state SQT assessments as StreamCurves sessions, the metrics under the functions the metric library gives them (approach a).",
+    "2026-09-24: score exactly as v1; defective and open-ended layers are flagged as caveats, not fixed.",
+    "2026-09-24: approve each function's SQT metric set as published (SELECT-01).",
+    "2026-09-24: Preliminary; DEEP keeps hiding the state SQT assessments."
+  ],
+  "sources": {
+    "metricLibrary": {
+      "path": "docs/assets/data/metric-library/detailed-adapted-assessments.json",
+      "sha256": "sha256:289699f66216da27c63e149004203d46d31a76da8b389a5895e3ec8c91493649"
+    },
+    "sqtRegistry": {
+      "path": "apps/stream-curves/data/sqt/registry.json",
+      "sha256": "sha256:21f4d780206d5f3a74687e0fbac055356bb4033f70ee54db51a296cd3dbaf032"
+    }
+  },
+  "curves": [
+    {
+      "metricId": "catchment-hydrology-bmp-mids-rv-coefficient",
+      "functions": [
+        "catchment-hydrology"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:bmp-mids-rv-coefficient:default",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "catchment-hydrology-land-use-coefficient",
+      "functions": [
+        "catchment-hydrology"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:land-use-coefficient:default",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "reach-inflow-concentrated-flow-points-1-000-ft",
+      "functions": [
+        "reach-inflow"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:concentrated-flow-points-1-000-ft:default",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 1 (index 0.69); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+      "functions": [
+        "floodplain-connectivity"
+      ],
+      "layers": [
+        {
+          "stratum": "C Streams",
+          "registryKey": "sqt:mn:entrenchment-ratio-er:c-streams",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "B Streams",
+          "registryKey": "sqt:mn:entrenchment-ratio-er:b-streams",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "E Streams",
+          "registryKey": "sqt:mn:entrenchment-ratio-er:e-streams",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:bank-height-ratio-bhr:default",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [
+            "held-flat-past-open-end"
+          ],
+          "openEnds": [
+            "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-percent-armoring",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:percent-armoring:default",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "functions": [
+        "channel-floodplain-dynamics"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:percent-streambank-erosion:default",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "sediment-continuity-aggradation-ratio",
+      "functions": [
+        "sediment-continuity"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:aggradation-ratio:default",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-canopy-cover",
+      "functions": [
+        "light-thermal-regime"
+      ],
+      "layers": [
+        {
+          "stratum": "Woody vegetation is a natural component of riparian zone",
+          "registryKey": "sqt:mn:canopy-cover:woody-vegetation-is-a-natural-component-of-riparian-zone",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Woody vegetation is not a natural component of riparian zone",
+          "registryKey": "sqt:mn:canopy-cover:woody-vegetation-is-not-a-natural-component-of-riparian-zone",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "light-and-thermal-regime-summer-average",
+      "functions": [
+        "light-thermal-regime"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:summer-average:default",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-effective-vegetated-riparian-area",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "Unconfined Alluvial Valleys",
+          "registryKey": "sqt:mn:effective-vegetated-riparian-area:unconfined-alluvial-valleys",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Confined Alluvial or Colluvial/V-Shaped Valleys",
+          "registryKey": "sqt:mn:effective-vegetated-riparian-area:confined-alluvial-or-colluvial-v-shaped-valleys",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-herbaceous-strata-vegetation-cover",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:herbaceous-strata-vegetation-cover:default",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "carbon-processing-woody-stem-basal-area",
+      "functions": [
+        "carbon-processing"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:woody-stem-basal-area:default",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "water-and-soil-quality-do",
+      "functions": [
+        "water-soil-quality"
+      ],
+      "layers": [
+        {
+          "stratum": "2A",
+          "registryKey": "sqt:mn:do:2a",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "2B/2Bd",
+          "registryKey": "sqt:mn:do:2b-2bd",
+          "verification": "defective",
+          "defects": [
+            "Labelled 2B/2Bd, but its values are the original's Use Class: 7 row (F32:K32: 3 of 4 agree; except 0.75 vs ≤ 0.80 (F32)). The original's Use Class: 2B/2Bd values (F31:K31: ≤ 3.8, 4.5, 5.5, ≥ 6.24) are not in the metric library."
+          ],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "water-and-soil-quality-tss",
+      "functions": [
+        "water-soil-quality"
+      ],
+      "layers": [
+        {
+          "stratum": "2A / -",
+          "registryKey": "sqt:mn:tss:2a",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "2B/2Bd - North",
+          "registryKey": "sqt:mn:tss:2b-2bd-north",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "2B/2Bd - Central",
+          "registryKey": "sqt:mn:tss:2b-2bd-central",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "2B/2Bd - South",
+          "registryKey": "sqt:mn:tss:2b-2bd-south",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-lwd",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "# Pieces / 100 meters",
+          "registryKey": "sqt:mn:lwd:pieces-100-meters",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-lwd-index",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:lwd-index:default",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "A and B Streams",
+          "registryKey": "sqt:mn:percent-riffle:a-and-b-streams",
+          "verification": "defective",
+          "defects": [
+            "The original is two-sided: 20 (0), 29 (0.3), 41 (0.7), 50 (1), 60 (1), 69 (0.7), 81 (0.3), 90 (0). This row holds one limb, so any value above 50 scores 1. Missing: 60 (1), 69 (0.7), 81 (0.3), 90 (0)."
+          ],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "C and E Stream Types",
+          "registryKey": "sqt:mn:percent-riffle:c-and-e-stream-types",
+          "verification": "defective",
+          "defects": [
+            "The original is two-sided: 20 (0), 45 (1), 65 (1), 85 (0). This row holds one limb, so any value above 45 scores 1. Missing: 65 (1), 85 (0)."
+          ],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-depth-ratio",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "",
+          "registryKey": "sqt:mn:pool-depth-ratio:default",
+          "verification": "verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "functions": [
+        "habitat-provision"
+      ],
+      "layers": [
+        {
+          "stratum": "A and B Stream Types",
+          "registryKey": "sqt:mn:pool-spacing-ratio:a-and-b-stream-types",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Bc Stream Types",
+          "registryKey": "sqt:mn:pool-spacing-ratio:bc-stream-types",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "C and E Streams",
+          "registryKey": "sqt:mn:pool-spacing-ratio:c-and-e-streams",
+          "verification": "defective",
+          "defects": [
+            "The original is two-sided: 1 (0), 1.74 (0.3), 2.74 (0.7), 3.5 (1), 6 (1), 6.89 (0.7), 8.11 (0.3), 9 (0). This row holds one limb, so any value above 3.5 scores 1. Missing: 6 (1), 6.89 (0.7), 8.11 (0.3), 9 (0)."
+          ],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "population-support-fish-ibi",
+      "functions": [
+        "population-support"
+      ],
+      "layers": [
+        {
+          "stratum": "Northern Rivers - Northern",
+          "registryKey": "sqt:mn:fish-ibi:northern-rivers-northern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Northern Streams - Northern",
+          "registryKey": "sqt:mn:fish-ibi:northern-streams-northern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Northern Headwaters - Northern",
+          "registryKey": "sqt:mn:fish-ibi:northern-headwaters-northern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Northern Coldwater - Northern",
+          "registryKey": "sqt:mn:fish-ibi:northern-coldwater-northern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Southern River - Southern",
+          "registryKey": "sqt:mn:fish-ibi:southern-river-southern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Southern Streams - Southern",
+          "registryKey": "sqt:mn:fish-ibi:southern-streams-southern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Southern Headwaters - Southern",
+          "registryKey": "sqt:mn:fish-ibi:southern-headwaters-southern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Southern Coldwater - Southern",
+          "registryKey": "sqt:mn:fish-ibi:southern-coldwater-southern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Low Gradient - Low Gradient",
+          "registryKey": "sqt:mn:fish-ibi:low-gradient-low-gradient",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    },
+    {
+      "metricId": "population-support-macroinvertebrate-ibi",
+      "functions": [
+        "population-support"
+      ],
+      "layers": [
+        {
+          "stratum": "Northern Forest Rivers - Northern",
+          "registryKey": "sqt:mn:macroinvertebrate-ibi:northern-forest-rivers-northern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Northern Forest Streams Riffle-run - Northern",
+          "registryKey": "sqt:mn:macroinvertebrate-ibi:northern-forest-streams-riffle-run-northern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Northern Forest Streams Glide-pool - Northern",
+          "registryKey": "sqt:mn:macroinvertebrate-ibi:northern-forest-streams-glide-pool-northern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Northern Coldwater - Northern",
+          "registryKey": "sqt:mn:macroinvertebrate-ibi:northern-coldwater-northern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Southern Forest Streams Riffle-run - Southern",
+          "registryKey": "sqt:mn:macroinvertebrate-ibi:southern-forest-streams-riffle-run-southern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Southern Forest Streams Glide-pool - Southern",
+          "registryKey": "sqt:mn:macroinvertebrate-ibi:southern-forest-streams-glide-pool-southern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Southern Coldwater - Southern",
+          "registryKey": "sqt:mn:macroinvertebrate-ibi:southern-coldwater-southern",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Prairie Forest Rivers - Prairie",
+          "registryKey": "sqt:mn:macroinvertebrate-ibi:prairie-forest-rivers-prairie",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        },
+        {
+          "stratum": "Prairie Streams Glide-Pool - Prairie",
+          "registryKey": "sqt:mn:macroinvertebrate-ibi:prairie-streams-glide-pool-prairie",
+          "verification": "partially-verified",
+          "defects": [],
+          "differences": [],
+          "openEnds": []
+        }
+      ]
+    }
+  ],
+  "defects": [
+    {
+      "metricId": "water-and-soil-quality-do",
+      "stratum": "2B/2Bd",
+      "registryKey": "sqt:mn:do:2b-2bd",
+      "defects": [
+        "Labelled 2B/2Bd, but its values are the original's Use Class: 7 row (F32:K32: 3 of 4 agree; except 0.75 vs ≤ 0.80 (F32)). The original's Use Class: 2B/2Bd values (F31:K31: ≤ 3.8, 4.5, 5.5, ≥ 6.24) are not in the metric library."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "stratum": "A and B Streams",
+      "registryKey": "sqt:mn:percent-riffle:a-and-b-streams",
+      "defects": [
+        "The original is two-sided: 20 (0), 29 (0.3), 41 (0.7), 50 (1), 60 (1), 69 (0.7), 81 (0.3), 90 (0). This row holds one limb, so any value above 50 scores 1. Missing: 60 (1), 69 (0.7), 81 (0.3), 90 (0)."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-percent-riffle",
+      "stratum": "C and E Stream Types",
+      "registryKey": "sqt:mn:percent-riffle:c-and-e-stream-types",
+      "defects": [
+        "The original is two-sided: 20 (0), 45 (1), 65 (1), 85 (0). This row holds one limb, so any value above 45 scores 1. Missing: 65 (1), 85 (0)."
+      ]
+    },
+    {
+      "metricId": "habitat-provision-pool-spacing-ratio",
+      "stratum": "C and E Streams",
+      "registryKey": "sqt:mn:pool-spacing-ratio:c-and-e-streams",
+      "defects": [
+        "The original is two-sided: 1 (0), 1.74 (0.3), 2.74 (0.7), 3.5 (1), 6 (1), 6.89 (0.7), 8.11 (0.3), 9 (0). This row holds one limb, so any value above 3.5 scores 1. Missing: 6 (1), 6.89 (0.7), 8.11 (0.3), 9 (0)."
+      ]
+    }
+  ],
+  "openEnds": [
+    {
+      "metricId": "reach-inflow-concentrated-flow-points-1-000-ft",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 1 (index 0.69); past it DEEP holds that index."
+      ]
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "stratum": "",
+      "sentences": [
+        "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+      ]
+    }
+  ],
+  "coverageExceptions": [
+    {
+      "functionId": "surface-water-storage",
+      "reason": "no-suitable-metric",
+      "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "streamflow-regime",
+      "reason": "deferred-to-other-tier",
+      "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Flashiness / Rate & Frequency of Change; Flow Alteration (Regulation / Water Use)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "reason": "no-suitable-metric",
+      "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "high-flow-dynamics",
+      "reason": "no-suitable-metric",
+      "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "hyporheic-connectivity",
+      "reason": "no-suitable-metric",
+      "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "channel-evolution",
+      "reason": "deferred-to-other-tier",
+      "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Channelization / Ditching / Straightening), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "reason": "no-suitable-metric",
+      "justification": "The Minnesota Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "nutrient-cycling",
+      "reason": "deferred-to-other-tier",
+      "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Agriculture & Livestock Nutrient Pressure), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "community-dynamics",
+      "reason": "deferred-to-other-tier",
+      "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Native Biodiversity & Taxa Richness), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    },
+    {
+      "functionId": "watershed-connectivity",
+      "reason": "deferred-to-other-tier",
+      "justification": "The Minnesota Stream Quantification Tool addresses this function only with a screening-tier metric (Fish Passage & Barrier Effects (longitudinal connectivity)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+      "recordedBy": "GM",
+      "recordedAt": "2026-09-24"
+    }
+  ],
+  "portfolioApprovals": [
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "approvedBy": "GM",
+      "note": "The Minnesota Stream Quantification Tool's own published metric set for this function (3 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "carbon-processing",
+      "approvedBy": "GM",
+      "note": "The Minnesota Stream Quantification Tool's own published metric set for this function (3 metrics), transcribed unchanged."
+    },
+    {
+      "functionId": "habitat-provision",
+      "approvedBy": "GM",
+      "note": "The Minnesota Stream Quantification Tool's own published metric set for this function (5 metrics), transcribed unchanged."
+    }
+  ],
+  "version": 2,
+  "updatedAt": "2026-09-24T15:33:28Z",
+  "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c"
+}

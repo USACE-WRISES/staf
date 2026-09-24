@@ -1,0 +1,4406 @@
+{
+ "schema_version": 2,
+ "app": "streamcurves",
+ "app_version": "0.1.0",
+ "created": "2026-09-24T15:33:34.058441+00:00",
+ "session_name": "WI SQT Adapted",
+ "fields": {
+  "data": null,
+  "precheck_df": null,
+  "data_source": null,
+  "data_fingerprint": null,
+  "upload_filename": null,
+  "input_metadata": null,
+  "site_mask_config": null,
+  "metric_config": {},
+  "strat_config": {},
+  "predictor_config": {},
+  "factor_recode_config": {},
+  "output_config": {
+   "per_metric_outputs": {
+    "precheck": {
+     "enabled": true,
+     "files": [
+      "{metric}_precheck.csv"
+     ]
+    },
+    "stratification": {
+     "enabled": true,
+     "files": [
+      "{metric}_stratification_screening.csv",
+      "{metric}_stratification_pairwise.csv",
+      "{metric}_stratification_decision.csv"
+     ],
+     "plots": [
+      "{metric}_boxplot_{strat_var}.png"
+     ]
+    },
+    "model_candidates": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_candidates.csv",
+      "{metric}_predictor_importance.csv"
+     ],
+     "plots": [
+      "{metric}_bic_vs_npred.png",
+      "{metric}_adjr2_vs_npred.png",
+      "{metric}_model_heatmap.png",
+      "{metric}_predictor_importance.png"
+     ]
+    },
+    "model_selection": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_selection.csv"
+     ]
+    },
+    "diagnostics": {
+     "enabled": true,
+     "files": [
+      "{metric}_diagnostics.csv"
+     ],
+     "plots": [
+      "{metric}_diagnostic_4panel.png"
+     ]
+    },
+    "reference_curves": {
+     "enabled": true,
+     "files": [
+      "{metric}_reference_curve.csv"
+     ],
+     "plots": [
+      "{metric}_reference_bar_chart.png",
+      "{metric}_reference_curve.png"
+     ]
+    },
+    "rds_objects": {
+     "enabled": true,
+     "files": [
+      "{metric}_model_object.rds"
+     ]
+    }
+   },
+   "summary_outputs": {
+    "thresholds": {
+     "enabled": true,
+     "files": [
+      "reference_curve_thresholds.csv"
+     ]
+    },
+    "metric_status": {
+     "enabled": true,
+     "files": [
+      "metric_status.csv"
+     ]
+    },
+    "stratification_decisions": {
+     "enabled": true,
+     "files": [
+      "stratification_decisions.csv"
+     ]
+    },
+    "decision_history": {
+     "enabled": true,
+     "files": [
+      "decision_history.csv"
+     ]
+    },
+    "regional_curves": {
+     "enabled": true,
+     "files": [
+      "regional_curves.csv"
+     ]
+    },
+    "results_bundle": {
+     "enabled": true,
+     "files": [
+      "results_bundle.zip"
+     ]
+    }
+   },
+   "report_products": {
+    "dashboard": {
+     "enabled": true,
+     "file": "reports/dashboard.qmd",
+     "format": "html",
+     "tier": 1
+    },
+    "summary": {
+     "enabled": true,
+     "file": "reports/summary.qmd",
+     "format": "pdf",
+     "tier": 2
+    },
+    "appendix": {
+     "enabled": true,
+     "file": "reports/appendix.qmd",
+     "format": "pdf",
+     "tier": 3
+    },
+    "list_of_metrics": {
+     "enabled": true,
+     "file": "docs/templates/OH/MN-List-of-Metricsv2.0.xlsx",
+     "format": "xlsx",
+     "tier": 1
+    },
+    "sqt_workbook": {
+     "enabled": true,
+     "file": "docs/templates/OH/WISQT_Reference_Curves.xlsx",
+     "format": "xlsx",
+     "tier": 1
+    },
+    "science_support": {
+     "enabled": true,
+     "file": "reports/science_support.qmd",
+     "format": "html",
+     "tier": 1
+    }
+   }
+  },
+  "config_version": 0,
+  "current_metric": "perRiffle",
+  "phase1_screening": null,
+  "phase1_effect_sizes": null,
+  "phase1_candidates": {},
+  "all_layer1_results": {},
+  "all_layer2_results": {},
+  "phase2_ranking": null,
+  "cross_metric_consistency": null,
+  "phase2_settings": {
+   "metric_filter": null,
+   "strat_filter": null,
+   "sig_threshold": 0.05,
+   "support_threshold": 0.5
+  },
+  "phase2_metric_overrides": {},
+  "curve_stratification": {},
+  "summary_available_overrides": {},
+  "summary_edit_notes": {},
+  "phase3_patterns": null,
+  "phase3_feasibility": null,
+  "phase3_verification": {},
+  "strat_decision_user": null,
+  "reference_curve": null,
+  "phase4_data": null,
+  "current_stratum_level": null,
+  "stratum_results": {},
+  "completed_metrics": {},
+  "decision_log": {
+   "__type__": "frame",
+   "columns": [],
+   "n": 0,
+   "data": {},
+   "dtypes": {},
+   "categories": {}
+  },
+  "metric_phase_cache": {},
+  "discipline_function_mapping": {
+   "__type__": "frame",
+   "columns": [
+    "metric_key",
+    "discipline",
+    "function_label",
+    "sort_order"
+   ],
+   "n": 26,
+   "data": {
+    "metric_key": [
+     "catchment-hydrology-land-use-coefficient",
+     "reach-inflow-concentrated-flow-point-index",
+     "floodplain-connectivity-entrenchment-ratio-er",
+     "channel-evolution-width-depth-ratio-state",
+     "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+     "channel-and-floodplain-dynamics-percent-streambank-armoring",
+     "channel-and-floodplain-dynamics-percent-streambank-erosion",
+     "bed-composition-and-large-wood-median-particle-size",
+     "bed-composition-and-large-wood-percent-fines-2mm",
+     "bed-composition-and-large-wood-percent-fines-6-35mm",
+     "light-and-thermal-regime-canopy-cover",
+     "light-and-thermal-regime-summer-mean-temperature",
+     "carbon-processing-benthic-algal-biomass",
+     "carbon-processing-effective-vegetated-riparian-area",
+     "carbon-processing-herbaceous-cover",
+     "carbon-processing-woody-stem-basal-area",
+     "nutrient-cycling-diatom-phosphorus-index-dpi",
+     "habitat-provision-lwd-frequency",
+     "habitat-provision-lwd-index",
+     "habitat-provision-percent-riffle",
+     "habitat-provision-pool-depth-ratio",
+     "habitat-provision-pool-spacing-ratio",
+     "population-support-fibi",
+     "population-support-fish-abundance",
+     "population-support-hilsenhoff-biotic-index-hbi",
+     "population-support-mibi"
+    ],
+    "discipline": [
+     "Hydrology",
+     "Hydrology",
+     "Hydraulics",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Geomorphology",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Physicochemistry",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology",
+     "Biology"
+    ],
+    "function_label": [
+     "Catchment hydrology",
+     "Reach inflow",
+     "Floodplain connectivity",
+     "Channel evolution",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Channel and floodplain dynamics",
+     "Bed composition and bedform dynamics",
+     "Bed composition and bedform dynamics",
+     "Bed composition and bedform dynamics",
+     "Light & thermal regime",
+     "Light & thermal regime",
+     "Carbon processing",
+     "Carbon processing",
+     "Carbon processing",
+     "Carbon processing",
+     "Nutrient cycling",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Habitat provision",
+     "Population support",
+     "Population support",
+     "Population support",
+     "Population support"
+    ],
+    "sort_order": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26
+    ]
+   },
+   "dtypes": {
+    "metric_key": "str",
+    "discipline": "str",
+    "function_label": "str",
+    "sort_order": "int64"
+   },
+   "categories": {}
+  },
+  "discipline_function_mapping_confirmed": true,
+  "mapping_user_touched": false,
+  "workbook_provided_mapping": false,
+  "function_coverage_exceptions": [
+   {
+    "functionId": "surface-water-storage",
+    "reason": "no-suitable-metric",
+    "justification": "The Wisconsin Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "streamflow-regime",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Wisconsin Stream Quantification Tool addresses this function only with a screening-tier metric (Flashiness / Rate & Frequency of Change; Flow Alteration (Regulation / Water Use)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "low-flow-baseflow-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The Wisconsin Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "high-flow-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The Wisconsin Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "hyporheic-connectivity",
+    "reason": "no-suitable-metric",
+    "justification": "The Wisconsin Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "sediment-continuity",
+    "reason": "no-suitable-metric",
+    "justification": "The Wisconsin Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "water-soil-quality",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Wisconsin Stream Quantification Tool addresses this function only with a screening-tier metric (Regulatory Impairment Status (305b/303d/TMDL)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "community-dynamics",
+    "reason": "no-suitable-metric",
+    "justification": "The Wisconsin Stream Quantification Tool publishes no curve for this function, and this assessment transcribes that tool's curves as published.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   },
+   {
+    "functionId": "watershed-connectivity",
+    "reason": "deferred-to-other-tier",
+    "justification": "The Wisconsin Stream Quantification Tool addresses this function only with a screening-tier metric (Adjacent Reach Condition for Recruitment (hardened/embedded); Fish Passage & Barrier Effects (longitudinal connectivity)), which has no curve. This assessment transcribes the tool's curves, so the function is left to the screening tier.",
+    "recordedBy": "GM",
+    "recordedAt": "2026-09-24"
+   }
+  ],
+  "custom_groupings": {},
+  "custom_grouping_counter": {},
+  "session_name": "WI SQT Adapted",
+  "app_data_loaded": false,
+  "cross_sections": {},
+  "column_sources": {},
+  "column_functions": {},
+  "region_of_applicability": {
+   "kind": "state",
+   "code": "WI",
+   "name": "Wisconsin"
+  },
+  "candidate_sites": null,
+  "easi_screening_sites": null,
+  "easi_screening_metrics": null,
+  "easi_screening_criteria": null,
+  "run_meta": null,
+  "run_stage_status": {},
+  "curve_review": {},
+  "screening_run": null,
+  "site_exclusions": [],
+  "screening_skipped": false,
+  "validation_records": [],
+  "metric_redundancy": null,
+  "assessment_source": null,
+  "source_provenance": null,
+  "rule_selections": [],
+  "reference_build": {
+   "method": "pressure-screen",
+   "referenceMethod": null,
+   "insufficientReferenceSupport": [],
+   "metricAnnotations": {},
+   "fixedMetrics": [],
+   "ladderMetrics": {},
+   "referenceTier": null,
+   "carriedMetrics": {
+    "catchment-hydrology-land-use-coefficient": {
+     "displayName": "Land Use Coefficient",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 55.0,
+       "y": 1.0
+      },
+      {
+       "x": 68.0,
+       "y": 0.7
+      },
+      {
+       "x": 75.0,
+       "y": 0.3
+      },
+      {
+       "x": 98.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Land Use Coefficient",
+      "units": "",
+      "metric_family": "desktop (gis)",
+      "notes": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+      "column_name": "catchment-hydrology-land-use-coefficient",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:land-use-coefficient:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "catchment-hydrology-land-use-coefficient",
+       "discipline": "Hydrology",
+       "function_label": "Catchment hydrology"
+      }
+     ],
+     "decision": {
+      "metric": "catchment-hydrology-land-use-coefficient",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "catchment-hydrology-land-use-coefficient",
+       "metricName": "Land Use Coefficient",
+       "discipline": "Hydrology",
+       "inputType": "desktop (gis)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Land Use Coefficient",
+       "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+       "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+       "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 55,
+          "y": 1
+         },
+         {
+          "x": 68,
+          "y": 0.7
+         },
+         {
+          "x": 75,
+          "y": 0.3
+         },
+         {
+          "x": 98,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "catchment-hydrology"
+      ]
+     }
+    },
+    "reach-inflow-concentrated-flow-point-index": {
+     "displayName": "Concentrated Flow Point Index",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 0.6,
+       "y": 0.3
+      },
+      {
+       "x": 1.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Concentrated Flow Point Index",
+      "units": "",
+      "metric_family": "field (with desktop pre-screen)",
+      "notes": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+      "column_name": "reach-inflow-concentrated-flow-point-index",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:concentrated-flow-point-index:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "reach-inflow-concentrated-flow-point-index",
+       "discipline": "Hydrology",
+       "function_label": "Reach inflow"
+      }
+     ],
+     "decision": {
+      "metric": "reach-inflow-concentrated-flow-point-index",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "reach-inflow-concentrated-flow-point-index",
+       "metricName": "Concentrated Flow Point Index",
+       "discipline": "Hydrology",
+       "inputType": "field (with desktop pre-screen)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Concentrated Flow Point Index",
+       "metricStatement": "Count of concentrated inflow locations (ditches, pipes, outfalls) that can deliver runoff, sediment, or pollutants to the reach.",
+       "howToMeasure": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+       "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 0.6,
+          "y": 0.3
+         },
+         {
+          "x": 1,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "reach-inflow"
+      ]
+     }
+    },
+    "floodplain-connectivity-entrenchment-ratio-er": {
+     "displayName": "Entrenchment Ratio (ER)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "C Stream Types",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 0.0
+      },
+      {
+       "x": 2.2,
+       "y": 0.7
+      },
+      {
+       "x": 5.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "C Stream Types",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.2,
+         "y": 0.7
+        },
+        {
+         "x": 5.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "E Stream Types",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 0.0
+        },
+        {
+         "x": 2.2,
+         "y": 0.7
+        },
+        {
+         "x": 9.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "B Stream Types",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 0.0
+        },
+        {
+         "x": 1.4,
+         "y": 0.7
+        },
+        {
+         "x": 2.2,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Entrenchment Ratio (ER)",
+      "units": "",
+      "metric_family": "field (survey) or desktop (lidar cross sections)",
+      "notes": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+      "column_name": "floodplain-connectivity-entrenchment-ratio-er",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "C Stream Types",
+         "registryKey": "sqt:wi:entrenchment-ratio-er:c-stream-types",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "E Stream Types",
+         "registryKey": "sqt:wi:entrenchment-ratio-er:e-stream-types",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "B Stream Types",
+         "registryKey": "sqt:wi:entrenchment-ratio-er:b-stream-types",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "floodplain-connectivity-entrenchment-ratio-er",
+       "discipline": "Hydraulics",
+       "function_label": "Floodplain connectivity"
+      }
+     ],
+     "decision": {
+      "metric": "floodplain-connectivity-entrenchment-ratio-er",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+       "metricName": "Entrenchment Ratio (ER)",
+       "discipline": "Hydraulics",
+       "inputType": "field (survey) or desktop (lidar cross sections)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Entrenchment Ratio (ER)",
+       "metricStatement": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+       "howToMeasure": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+       "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT - C Stream Types",
+        "stratification": "C Stream Types",
+        "points": [
+         {
+          "x": 1,
+          "y": 0
+         },
+         {
+          "x": 2.2,
+          "y": 0.7
+         },
+         {
+          "x": 5,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "C Stream Types",
+         "layerName": "Wisconsin SQT - C Stream Types",
+         "points": [
+          {
+           "x": 1,
+           "y": 0
+          },
+          {
+           "x": 2.2,
+           "y": 0.7
+          },
+          {
+           "x": 5,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "E Stream Types",
+         "layerName": "Wisconsin SQT - E Stream Types",
+         "points": [
+          {
+           "x": 1,
+           "y": 0
+          },
+          {
+           "x": 2.2,
+           "y": 0.7
+          },
+          {
+           "x": 9,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "B Stream Types",
+         "layerName": "Wisconsin SQT - B Stream Types",
+         "points": [
+          {
+           "x": 1,
+           "y": 0
+          },
+          {
+           "x": 1.4,
+           "y": 0.7
+          },
+          {
+           "x": 2.2,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "C Stream Types"
+      },
+      "functions": [
+       "floodplain-connectivity"
+      ]
+     }
+    },
+    "channel-evolution-width-depth-ratio-state": {
+     "displayName": "Width/Depth Ratio State",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.8,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Width/Depth Ratio State",
+      "units": "",
+      "metric_family": "field (survey)",
+      "notes": "Measure bankfull width and mean depth at representative cross sections; compute W/D and compare to expected (regional curves or SQT reference).",
+      "column_name": "channel-evolution-width-depth-ratio-state",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (survey)",
+      "curveCaveats": [
+       "The metric library row this curve was transcribed from is defective: The original is two-sided: 0.2 (0), 1 (1), 1.8 (0). This row holds one limb, so any value below 1 scores 1. Missing: 0.2 (0). It scores as v1 scores it; the assessment audit decides the fix."
+      ],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:width-depth-ratio-state:default",
+         "verification": "defective",
+         "defects": [
+          "The original is two-sided: 0.2 (0), 1 (1), 1.8 (0). This row holds one limb, so any value below 1 scores 1. Missing: 0.2 (0)."
+         ],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-evolution-width-depth-ratio-state",
+       "discipline": "Geomorphology",
+       "function_label": "Channel evolution"
+      }
+     ],
+     "decision": {
+      "metric": "channel-evolution-width-depth-ratio-state",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-evolution-width-depth-ratio-state",
+       "metricName": "Width/Depth Ratio State",
+       "discipline": "Geomorphology",
+       "inputType": "field (survey)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Width/Depth Ratio State",
+       "metricStatement": "Channel dimension indicator used to infer incision/widening or departure from reference geometry.",
+       "howToMeasure": "Measure bankfull width and mean depth at representative cross sections; compute W/D and compare to expected (regional curves or SQT reference).",
+       "methodContext": "Context: Channel\n\nMethod: Field (survey)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 1.8,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-evolution"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-bank-height-ratio-bhr": {
+     "displayName": "Bank Height Ratio (BHR)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 1.0
+      },
+      {
+       "x": 1.5,
+       "y": 0.3
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Bank Height Ratio (BHR)",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [
+       "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:bank-height-ratio-bhr:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 1.5 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+       "metricName": "Bank Height Ratio (BHR)",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Bank Height Ratio (BHR)",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1,
+          "y": 1
+         },
+         {
+          "x": 1.5,
+          "y": 0.3
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-percent-streambank-armoring": {
+     "displayName": "Percent Streambank Armoring",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 1.0
+      },
+      {
+       "x": 50.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Streambank Armoring",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:percent-streambank-armoring:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+       "metricName": "Percent Streambank Armoring",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Percent Streambank Armoring",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 1
+         },
+         {
+          "x": 50,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "channel-and-floodplain-dynamics-percent-streambank-erosion": {
+     "displayName": "Percent Streambank Erosion",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 5.0,
+       "y": 1.0
+      },
+      {
+       "x": 11.0,
+       "y": 0.7
+      },
+      {
+       "x": 50.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Streambank Erosion",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+      "column_name": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:percent-streambank-erosion:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+       "discipline": "Geomorphology",
+       "function_label": "Channel and floodplain dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+       "metricName": "Percent Streambank Erosion",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Percent Streambank Erosion",
+       "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+       "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+       "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 5,
+          "y": 1
+         },
+         {
+          "x": 11,
+          "y": 0.7
+         },
+         {
+          "x": 50,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "channel-floodplain-dynamics"
+      ]
+     }
+    },
+    "bed-composition-and-large-wood-median-particle-size": {
+     "displayName": "Median Particle Size",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 10.0,
+       "y": 0.0
+      },
+      {
+       "x": 34.0,
+       "y": 0.7
+      },
+      {
+       "x": 70.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Median Particle Size",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+      "column_name": "bed-composition-and-large-wood-median-particle-size",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:median-particle-size:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "bed-composition-and-large-wood-median-particle-size",
+       "discipline": "Geomorphology",
+       "function_label": "Bed composition and bedform dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "bed-composition-and-large-wood-median-particle-size",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "bed-composition-and-large-wood-median-particle-size",
+       "metricName": "Median Particle Size",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Median Particle Size",
+       "metricStatement": "Streambed substrate size distribution used to infer habitat quality, sediment transport, and embeddedness/fine sediment stress.",
+       "howToMeasure": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 34,
+          "y": 0.7
+         },
+         {
+          "x": 70,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "bed-composition-bedform-dynamics"
+      ]
+     }
+    },
+    "bed-composition-and-large-wood-percent-fines-2mm": {
+     "displayName": "Percent Fines < 2mm",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 5.0,
+       "y": 1.0
+      },
+      {
+       "x": 14.8,
+       "y": 0.7
+      },
+      {
+       "x": 32.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Fines < 2mm",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+      "column_name": "bed-composition-and-large-wood-percent-fines-2mm",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:percent-fines-lt-2mm:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "bed-composition-and-large-wood-percent-fines-2mm",
+       "discipline": "Geomorphology",
+       "function_label": "Bed composition and bedform dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "bed-composition-and-large-wood-percent-fines-2mm",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "bed-composition-and-large-wood-percent-fines-2mm",
+       "metricName": "Percent Fines < 2mm",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Percent Fines < 2mm",
+       "metricStatement": "Streambed substrate size distribution used to infer habitat quality, sediment transport, and embeddedness/fine sediment stress.",
+       "howToMeasure": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 5,
+          "y": 1
+         },
+         {
+          "x": 14.8,
+          "y": 0.7
+         },
+         {
+          "x": 32,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "bed-composition-bedform-dynamics"
+      ]
+     }
+    },
+    "bed-composition-and-large-wood-percent-fines-6-35mm": {
+     "displayName": "Percent Fines <6.35mm",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 5.0,
+       "y": 1.0
+      },
+      {
+       "x": 16.9,
+       "y": 0.7
+      },
+      {
+       "x": 35.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Percent Fines <6.35mm",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+      "column_name": "bed-composition-and-large-wood-percent-fines-6-35mm",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:percent-fines-lt-6-35mm:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "bed-composition-and-large-wood-percent-fines-6-35mm",
+       "discipline": "Geomorphology",
+       "function_label": "Bed composition and bedform dynamics"
+      }
+     ],
+     "decision": {
+      "metric": "bed-composition-and-large-wood-percent-fines-6-35mm",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "bed-composition-and-large-wood-percent-fines-6-35mm",
+       "metricName": "Percent Fines <6.35mm",
+       "discipline": "Geomorphology",
+       "inputType": "field",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Percent Fines <6.35mm",
+       "metricStatement": "Streambed substrate size distribution used to infer habitat quality, sediment transport, and embeddedness/fine sediment stress.",
+       "howToMeasure": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 5,
+          "y": 1
+         },
+         {
+          "x": 16.9,
+          "y": 0.7
+         },
+         {
+          "x": 35,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "bed-composition-bedform-dynamics"
+      ]
+     }
+    },
+    "light-and-thermal-regime-canopy-cover": {
+     "displayName": "Canopy Cover",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Woody Reference Vegetation Cover",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 50.0,
+       "y": 0.7
+      },
+      {
+       "x": 87.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Woody Reference Vegetation Cover",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 50.0,
+         "y": 0.7
+        },
+        {
+         "x": 87.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Herbaceous Reference Vegetation Cover",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 1.0
+        },
+        {
+         "x": 15.0,
+         "y": 0.7
+        },
+        {
+         "x": 35.0,
+         "y": 0.3
+        },
+        {
+         "x": 70.0,
+         "y": 0.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Canopy Cover",
+      "units": "",
+      "metric_family": "field and/or desktop",
+      "notes": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+      "column_name": "light-and-thermal-regime-canopy-cover",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Riparian/Channel\n\nMethod: Field and/or Desktop",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Woody Reference Vegetation Cover",
+         "registryKey": "sqt:wi:canopy-cover:woody-reference-vegetation-cover",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Herbaceous Reference Vegetation Cover",
+         "registryKey": "sqt:wi:canopy-cover:herbaceous-reference-vegetation-cover",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "light-and-thermal-regime-canopy-cover",
+       "discipline": "Physicochemistry",
+       "function_label": "Light & thermal regime"
+      }
+     ],
+     "decision": {
+      "metric": "light-and-thermal-regime-canopy-cover",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "light-and-thermal-regime-canopy-cover",
+       "metricName": "Canopy Cover",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Canopy Cover",
+       "metricStatement": "Riparian canopy cover that controls shading and thermal/light regime in the channel.",
+       "howToMeasure": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+       "methodContext": "Context: Riparian/Channel\n\nMethod: Field and/or Desktop",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT - Woody Reference Vegetation Cover",
+        "stratification": "Woody Reference Vegetation Cover",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 50,
+          "y": 0.7
+         },
+         {
+          "x": 87,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Woody Reference Vegetation Cover",
+         "layerName": "Wisconsin SQT - Woody Reference Vegetation Cover",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 50,
+           "y": 0.7
+          },
+          {
+           "x": 87,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Herbaceous Reference Vegetation Cover",
+         "layerName": "Wisconsin SQT - Herbaceous Reference Vegetation Cover",
+         "points": [
+          {
+           "x": 0,
+           "y": 1
+          },
+          {
+           "x": 15,
+           "y": 0.7
+          },
+          {
+           "x": 35,
+           "y": 0.3
+          },
+          {
+           "x": 70,
+           "y": 0
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Woody Reference Vegetation Cover"
+      },
+      "functions": [
+       "light-thermal-regime"
+      ]
+     }
+    },
+    "light-and-thermal-regime-summer-mean-temperature": {
+     "displayName": "Summer Mean Temperature",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Cold",
+     "points": [
+      {
+       "x": 12.5,
+       "y": 1.0
+      },
+      {
+       "x": 17.0,
+       "y": 0.7
+      },
+      {
+       "x": 18.7,
+       "y": 0.3
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Cold",
+       "points": [
+        {
+         "x": 12.5,
+         "y": 1.0
+        },
+        {
+         "x": 17.0,
+         "y": 0.7
+        },
+        {
+         "x": 18.7,
+         "y": 0.3
+        }
+       ]
+      },
+      {
+       "stratum": "Cold Transition",
+       "points": [
+        {
+         "x": 17.0,
+         "y": 1.0
+        },
+        {
+         "x": 18.7,
+         "y": 0.7
+        }
+       ]
+      },
+      {
+       "stratum": "Warm Transition",
+       "points": [
+        {
+         "x": 18.7,
+         "y": 1.0
+        },
+        {
+         "x": 20.5,
+         "y": 0.7
+        }
+       ]
+      },
+      {
+       "stratum": "Warm",
+       "points": [
+        {
+         "x": 20.5,
+         "y": 1.0
+        },
+        {
+         "x": 23.0,
+         "y": 0.7
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Summer Mean Temperature",
+      "units": "",
+      "metric_family": "field (logger) and/or desktop (data compilation)",
+      "notes": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+      "column_name": "light-and-thermal-regime-summer-mean-temperature",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+      "curveCaveats": [
+       "Cold: the published curve stops at its high end, 18.7 (index 0.3); past it DEEP holds that index.",
+       "Cold Transition: the published curve stops at its high end, 18.7 (index 0.7); past it DEEP holds that index.",
+       "Warm Transition: the published curve stops at its high end, 20.5 (index 0.7); past it DEEP holds that index.",
+       "Warm: the published curve stops at its high end, 23 (index 0.7); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Cold",
+         "registryKey": "sqt:wi:summer-mean-temperature:cold",
+         "verification": "verified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 18.7 (index 0.3); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Cold Transition",
+         "registryKey": "sqt:wi:summer-mean-temperature:cold-transition",
+         "verification": "verified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 18.7 (index 0.7); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Warm Transition",
+         "registryKey": "sqt:wi:summer-mean-temperature:warm-transition",
+         "verification": "verified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 20.5 (index 0.7); past it DEEP holds that index."
+         ]
+        },
+        {
+         "stratum": "Warm",
+         "registryKey": "sqt:wi:summer-mean-temperature:warm",
+         "verification": "verified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its high end, 23 (index 0.7); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "light-and-thermal-regime-summer-mean-temperature",
+       "discipline": "Physicochemistry",
+       "function_label": "Light & thermal regime"
+      }
+     ],
+     "decision": {
+      "metric": "light-and-thermal-regime-summer-mean-temperature",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "light-and-thermal-regime-summer-mean-temperature",
+       "metricName": "Summer Mean Temperature",
+       "discipline": "Physicochemistry",
+       "inputType": "field (logger) and/or desktop (data compilation)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Summer Mean Temperature",
+       "metricStatement": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+       "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT - Cold",
+        "stratification": "Cold",
+        "points": [
+         {
+          "x": 12.5,
+          "y": 1
+         },
+         {
+          "x": 17,
+          "y": 0.7
+         },
+         {
+          "x": 18.7,
+          "y": 0.3
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Cold",
+         "layerName": "Wisconsin SQT - Cold",
+         "points": [
+          {
+           "x": 12.5,
+           "y": 1
+          },
+          {
+           "x": 17,
+           "y": 0.7
+          },
+          {
+           "x": 18.7,
+           "y": 0.3
+          }
+         ]
+        },
+        {
+         "stratum": "Cold Transition",
+         "layerName": "Wisconsin SQT - Cold Transition",
+         "points": [
+          {
+           "x": 17,
+           "y": 1
+          },
+          {
+           "x": 18.7,
+           "y": 0.7
+          }
+         ]
+        },
+        {
+         "stratum": "Warm Transition",
+         "layerName": "Wisconsin SQT - Warm Transition",
+         "points": [
+          {
+           "x": 18.7,
+           "y": 1
+          },
+          {
+           "x": 20.5,
+           "y": 0.7
+          }
+         ]
+        },
+        {
+         "stratum": "Warm",
+         "layerName": "Wisconsin SQT - Warm",
+         "points": [
+          {
+           "x": 20.5,
+           "y": 1
+          },
+          {
+           "x": 23,
+           "y": 0.7
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Cold"
+      },
+      "functions": [
+       "light-thermal-regime"
+      ]
+     }
+    },
+    "carbon-processing-benthic-algal-biomass": {
+     "displayName": "Benthic Algal Biomass",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Field Value (Mean Score)",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 0.7
+      },
+      {
+       "x": 2.0,
+       "y": 0.3
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Benthic Algal Biomass",
+      "units": "",
+      "metric_family": "field (sampling/assay)",
+      "notes": "Collect periphyton/algal samples (or estimate biomass) and compute chlorophyll-a or biomass metric; apply SQT thresholds by biotype.",
+      "column_name": "carbon-processing-benthic-algal-biomass",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (sampling/assay)",
+      "curveCaveats": [
+       "Field Value (Mean Score): the published curve stops at its low end, 1 (index 0.7); past it DEEP holds that index.",
+       "Field Value (Mean Score): the published curve stops at its high end, 2 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Field Value (Mean Score)",
+         "registryKey": "sqt:wi:benthic-algal-biomass:field-value-mean-score",
+         "verification": "verified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 1 (index 0.7); past it DEEP holds that index.",
+          "The published curve stops at its high end, 2 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-benthic-algal-biomass",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-benthic-algal-biomass",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-benthic-algal-biomass",
+       "metricName": "Benthic Algal Biomass",
+       "discipline": "Physicochemistry",
+       "inputType": "field (sampling/assay)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Benthic Algal Biomass",
+       "metricStatement": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+       "howToMeasure": "Collect periphyton/algal samples (or estimate biomass) and compute chlorophyll-a or biomass metric; apply SQT thresholds by biotype.",
+       "methodContext": "Context: Channel\n\nMethod: Field (sampling/assay)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT - Field Value (Mean Score)",
+        "stratification": "Field Value (Mean Score)",
+        "points": [
+         {
+          "x": 1,
+          "y": 0.7
+         },
+         {
+          "x": 2,
+          "y": 0.3
+         }
+        ]
+       }
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-effective-vegetated-riparian-area": {
+     "displayName": "Effective Vegetated Riparian Area",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Unconfined Alluvial",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 30.0,
+       "y": 0.3
+      },
+      {
+       "x": 100.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Unconfined Alluvial",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 30.0,
+         "y": 0.3
+        },
+        {
+         "x": 100.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Confined and Colluvial",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 60.0,
+         "y": 0.3
+        },
+        {
+         "x": 100.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Effective Vegetated Riparian Area",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-effective-vegetated-riparian-area",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Unconfined Alluvial",
+         "registryKey": "sqt:wi:effective-vegetated-riparian-area:unconfined-alluvial",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Confined and Colluvial",
+         "registryKey": "sqt:wi:effective-vegetated-riparian-area:confined-and-colluvial",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-effective-vegetated-riparian-area",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-effective-vegetated-riparian-area",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-effective-vegetated-riparian-area",
+       "metricName": "Effective Vegetated Riparian Area",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Effective Vegetated Riparian Area",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT - Unconfined Alluvial",
+        "stratification": "Unconfined Alluvial",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0.3
+         },
+         {
+          "x": 100,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Unconfined Alluvial",
+         "layerName": "Wisconsin SQT - Unconfined Alluvial",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 30,
+           "y": 0.3
+          },
+          {
+           "x": 100,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Confined and Colluvial",
+         "layerName": "Wisconsin SQT - Confined and Colluvial",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 60,
+           "y": 0.3
+          },
+          {
+           "x": 100,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Unconfined Alluvial"
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-herbaceous-cover": {
+     "displayName": "Herbaceous Cover",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 80.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Herbaceous Cover",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-herbaceous-cover",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:herbaceous-cover:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-herbaceous-cover",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-herbaceous-cover",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-herbaceous-cover",
+       "metricName": "Herbaceous Cover",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Herbaceous Cover",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 80,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "carbon-processing-woody-stem-basal-area": {
+     "displayName": "Woody Stem Basal Area",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 9.2,
+       "y": 0.3
+      },
+      {
+       "x": 13.8,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Woody Stem Basal Area",
+      "units": "",
+      "metric_family": "field and/or desktop (imagery/gis)",
+      "notes": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+      "column_name": "carbon-processing-woody-stem-basal-area",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:woody-stem-basal-area:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "carbon-processing-woody-stem-basal-area",
+       "discipline": "Physicochemistry",
+       "function_label": "Carbon processing"
+      }
+     ],
+     "decision": {
+      "metric": "carbon-processing-woody-stem-basal-area",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "carbon-processing-woody-stem-basal-area",
+       "metricName": "Woody Stem Basal Area",
+       "discipline": "Physicochemistry",
+       "inputType": "field and/or desktop (imagery/gis)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Woody Stem Basal Area",
+       "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+       "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+       "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 9.2,
+          "y": 0.3
+         },
+         {
+          "x": 13.8,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "carbon-processing"
+      ]
+     }
+    },
+    "nutrient-cycling-diatom-phosphorus-index-dpi": {
+     "displayName": "Diatom Phosphorus Index (DPI)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 75.0,
+       "y": 0.7
+      },
+      {
+       "x": 150.0,
+       "y": 0.3
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Diatom Phosphorus Index (DPI)",
+      "units": "",
+      "metric_family": "field (sampling) and/or desktop (data compilation)",
+      "notes": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+      "column_name": "nutrient-cycling-diatom-phosphorus-index-dpi",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+      "curveCaveats": [
+       "The published curve stops at its low end, 75 (index 0.7); past it DEEP holds that index.",
+       "The published curve stops at its high end, 150 (index 0.3); past it DEEP holds that index."
+      ],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:diatom-phosphorus-index-dpi:default",
+         "verification": "partially-verified",
+         "defects": [],
+         "differences": [
+          "held-flat-past-open-end"
+         ],
+         "openEnds": [
+          "The published curve stops at its low end, 75 (index 0.7); past it DEEP holds that index.",
+          "The published curve stops at its high end, 150 (index 0.3); past it DEEP holds that index."
+         ]
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "nutrient-cycling-diatom-phosphorus-index-dpi",
+       "discipline": "Physicochemistry",
+       "function_label": "Nutrient cycling"
+      }
+     ],
+     "decision": {
+      "metric": "nutrient-cycling-diatom-phosphorus-index-dpi",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "nutrient-cycling-diatom-phosphorus-index-dpi",
+       "metricName": "Diatom Phosphorus Index (DPI)",
+       "discipline": "Physicochemistry",
+       "inputType": "field (sampling) and/or desktop (data compilation)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Diatom Phosphorus Index (DPI)",
+       "metricStatement": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+       "howToMeasure": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+       "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 75,
+          "y": 0.7
+         },
+         {
+          "x": 150,
+          "y": 0.3
+         }
+        ]
+       }
+      },
+      "functions": [
+       "nutrient-cycling"
+      ]
+     }
+    },
+    "habitat-provision-lwd-frequency": {
+     "displayName": "LWD Frequency",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 90.0,
+       "y": 0.7
+      },
+      {
+       "x": 171.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "LWD Frequency",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+      "column_name": "habitat-provision-lwd-frequency",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:lwd-frequency:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-lwd-frequency",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-lwd-frequency",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-lwd-frequency",
+       "metricName": "LWD Frequency",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "LWD Frequency",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 90,
+          "y": 0.7
+         },
+         {
+          "x": 171,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-lwd-index": {
+     "displayName": "LWD Index",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 1350.0,
+       "y": 0.7
+      },
+      {
+       "x": 2825.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "LWD Index",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+      "column_name": "habitat-provision-lwd-index",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:lwd-index:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-lwd-index",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-lwd-index",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-lwd-index",
+       "metricName": "LWD Index",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "LWD Index",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 1350,
+          "y": 0.7
+         },
+         {
+          "x": 2825,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-percent-riffle": {
+     "displayName": "Percent Riffle",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "A and B Stream Types",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 50.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "A and B Stream Types",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 50.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "C and E Stream Types",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 45.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Percent Riffle",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-percent-riffle",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [
+       "A and B Stream Types: the metric library row this curve was transcribed from is defective: The original is two-sided: 0 (0), 50 (1), 60 (1), 100 (0). This row holds one limb, so any value above 50 scores 1. Missing: 60 (1), 100 (0). It scores as v1 scores it; the assessment audit decides the fix.",
+       "C and E Stream Types: the metric library row this curve was transcribed from is defective: The original is two-sided: 0 (0), 45 (1), 65 (1), 100 (0). This row holds one limb, so any value above 45 scores 1. Missing: 65 (1), 100 (0). It scores as v1 scores it; the assessment audit decides the fix."
+      ],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "A and B Stream Types",
+         "registryKey": "sqt:wi:percent-riffle:a-and-b-stream-types",
+         "verification": "defective",
+         "defects": [
+          "The original is two-sided: 0 (0), 50 (1), 60 (1), 100 (0). This row holds one limb, so any value above 50 scores 1. Missing: 60 (1), 100 (0)."
+         ],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "C and E Stream Types",
+         "registryKey": "sqt:wi:percent-riffle:c-and-e-stream-types",
+         "verification": "defective",
+         "defects": [
+          "The original is two-sided: 0 (0), 45 (1), 65 (1), 100 (0). This row holds one limb, so any value above 45 scores 1. Missing: 65 (1), 100 (0)."
+         ],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-percent-riffle",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-percent-riffle",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-percent-riffle",
+       "metricName": "Percent Riffle",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Percent Riffle",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT - A and B Stream Types",
+        "stratification": "A and B Stream Types",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 50,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "A and B Stream Types",
+         "layerName": "Wisconsin SQT - A and B Stream Types",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 50,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "C and E Stream Types",
+         "layerName": "Wisconsin SQT - C and E Stream Types",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 45,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "A and B Stream Types"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-pool-depth-ratio": {
+     "displayName": "Pool Depth Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 1.0,
+       "y": 0.0
+      },
+      {
+       "x": 2.0,
+       "y": 0.7
+      },
+      {
+       "x": 3.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Pool Depth Ratio",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-pool-depth-ratio",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:pool-depth-ratio:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-pool-depth-ratio",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-pool-depth-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-pool-depth-ratio",
+       "metricName": "Pool Depth Ratio",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Pool Depth Ratio",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 1,
+          "y": 0
+         },
+         {
+          "x": 2,
+          "y": 0.7
+         },
+         {
+          "x": 3,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "habitat-provision-pool-spacing-ratio": {
+     "displayName": "Pool Spacing Ratio",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "A and B Stream Types",
+     "points": [
+      {
+       "x": 4.0,
+       "y": 1.0
+      },
+      {
+       "x": 5.0,
+       "y": 0.7
+      },
+      {
+       "x": 6.5,
+       "y": 0.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "A and B Stream Types",
+       "points": [
+        {
+         "x": 4.0,
+         "y": 1.0
+        },
+        {
+         "x": 5.0,
+         "y": 0.7
+        },
+        {
+         "x": 6.5,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "Bc Stream Types",
+       "points": [
+        {
+         "x": 5.0,
+         "y": 1.0
+        },
+        {
+         "x": 6.0,
+         "y": 0.7
+        },
+        {
+         "x": 8.0,
+         "y": 0.0
+        }
+       ]
+      },
+      {
+       "stratum": "C and E Stream Types",
+       "points": [
+        {
+         "x": 1.0,
+         "y": 0.0
+        },
+        {
+         "x": 3.5,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Pool Spacing Ratio",
+      "units": "",
+      "metric_family": "field",
+      "notes": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+      "column_name": "habitat-provision-pool-spacing-ratio",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field",
+      "curveCaveats": [
+       "C and E Stream Types: the metric library row this curve was transcribed from is defective: The original is two-sided: 1 (0), 3.5 (1), 6 (1), 9 (0). This row holds one limb, so any value above 3.5 scores 1. Missing: 6 (1), 9 (0). It scores as v1 scores it; the assessment audit decides the fix."
+      ],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "A and B Stream Types",
+         "registryKey": "sqt:wi:pool-spacing-ratio:a-and-b-stream-types",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Bc Stream Types",
+         "registryKey": "sqt:wi:pool-spacing-ratio:bc-stream-types",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "C and E Stream Types",
+         "registryKey": "sqt:wi:pool-spacing-ratio:c-and-e-stream-types",
+         "verification": "defective",
+         "defects": [
+          "The original is two-sided: 1 (0), 3.5 (1), 6 (1), 9 (0). This row holds one limb, so any value above 3.5 scores 1. Missing: 6 (1), 9 (0)."
+         ],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "habitat-provision-pool-spacing-ratio",
+       "discipline": "Biology",
+       "function_label": "Habitat provision"
+      }
+     ],
+     "decision": {
+      "metric": "habitat-provision-pool-spacing-ratio",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "habitat-provision-pool-spacing-ratio",
+       "metricName": "Pool Spacing Ratio",
+       "discipline": "Biology",
+       "inputType": "field",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Pool Spacing Ratio",
+       "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+       "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+       "methodContext": "Context: Channel\n\nMethod: Field",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT - A and B Stream Types",
+        "stratification": "A and B Stream Types",
+        "points": [
+         {
+          "x": 4,
+          "y": 1
+         },
+         {
+          "x": 5,
+          "y": 0.7
+         },
+         {
+          "x": 6.5,
+          "y": 0
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "A and B Stream Types",
+         "layerName": "Wisconsin SQT - A and B Stream Types",
+         "points": [
+          {
+           "x": 4,
+           "y": 1
+          },
+          {
+           "x": 5,
+           "y": 0.7
+          },
+          {
+           "x": 6.5,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "Bc Stream Types",
+         "layerName": "Wisconsin SQT - Bc Stream Types",
+         "points": [
+          {
+           "x": 5,
+           "y": 1
+          },
+          {
+           "x": 6,
+           "y": 0.7
+          },
+          {
+           "x": 8,
+           "y": 0
+          }
+         ]
+        },
+        {
+         "stratum": "C and E Stream Types",
+         "layerName": "Wisconsin SQT - C and E Stream Types",
+         "points": [
+          {
+           "x": 1,
+           "y": 0
+          },
+          {
+           "x": 3.5,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "A and B Stream Types"
+      },
+      "functions": [
+       "habitat-provision"
+      ]
+     }
+    },
+    "population-support-fibi": {
+     "displayName": "fIBI",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Coldwater",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 30.0,
+       "y": 0.3
+      },
+      {
+       "x": 60.0,
+       "y": 0.7
+      },
+      {
+       "x": 90.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Coldwater",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 30.0,
+         "y": 0.3
+        },
+        {
+         "x": 60.0,
+         "y": 0.7
+        },
+        {
+         "x": 90.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Coolwater",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 30.0,
+         "y": 0.3
+        },
+        {
+         "x": 50.0,
+         "y": 0.7
+        },
+        {
+         "x": 70.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Warmwater",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 30.0,
+         "y": 0.3
+        },
+        {
+         "x": 50.0,
+         "y": 0.7
+        },
+        {
+         "x": 65.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "fIBI",
+      "units": "",
+      "metric_family": "field (bioassessment) and/or desktop (existing scores)",
+      "notes": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+      "column_name": "population-support-fibi",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Coldwater",
+         "registryKey": "sqt:wi:fibi:coldwater",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Coolwater",
+         "registryKey": "sqt:wi:fibi:coolwater",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Warmwater",
+         "registryKey": "sqt:wi:fibi:warmwater",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "population-support-fibi",
+       "discipline": "Biology",
+       "function_label": "Population support"
+      }
+     ],
+     "decision": {
+      "metric": "population-support-fibi",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "population-support-fibi",
+       "metricName": "fIBI",
+       "discipline": "Biology",
+       "inputType": "field (bioassessment) and/or desktop (existing scores)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "fIBI",
+       "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+       "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+       "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT - Coldwater",
+        "stratification": "Coldwater",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 30,
+          "y": 0.3
+         },
+         {
+          "x": 60,
+          "y": 0.7
+         },
+         {
+          "x": 90,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Coldwater",
+         "layerName": "Wisconsin SQT - Coldwater",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 30,
+           "y": 0.3
+          },
+          {
+           "x": 60,
+           "y": 0.7
+          },
+          {
+           "x": 90,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Coolwater",
+         "layerName": "Wisconsin SQT - Coolwater",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 30,
+           "y": 0.3
+          },
+          {
+           "x": 50,
+           "y": 0.7
+          },
+          {
+           "x": 70,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Warmwater",
+         "layerName": "Wisconsin SQT - Warmwater",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 30,
+           "y": 0.3
+          },
+          {
+           "x": 50,
+           "y": 0.7
+          },
+          {
+           "x": 65,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Coldwater"
+      },
+      "functions": [
+       "population-support"
+      ]
+     }
+    },
+    "population-support-fish-abundance": {
+     "displayName": "Fish Abundance",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "Adult Smallmouth Bass (Native)",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 28.0,
+       "y": 0.7
+      },
+      {
+       "x": 98.0,
+       "y": 1.0
+      }
+     ],
+     "layers": [
+      {
+       "stratum": "Adult Smallmouth Bass (Native)",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 28.0,
+         "y": 0.7
+        },
+        {
+         "x": 98.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Adult and Yearling Brown Trout",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 533.0,
+         "y": 0.7
+        },
+        {
+         "x": 1860.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Adult and Yearling Brook Trout (Native)",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 380.0,
+         "y": 0.7
+        },
+        {
+         "x": 1306.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Lake Superior Trout YoY",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 300.0,
+         "y": 0.7
+        },
+        {
+         "x": 900.0,
+         "y": 1.0
+        }
+       ]
+      },
+      {
+       "stratum": "Lake Michigan Trout YoY",
+       "points": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 100.0,
+         "y": 0.7
+        },
+        {
+         "x": 220.0,
+         "y": 1.0
+        }
+       ]
+      }
+     ],
+     "config": {
+      "display_name": "Fish Abundance",
+      "units": "",
+      "metric_family": "field (fish survey)",
+      "notes": "Estimate density/biomass (or % change from baseline) per SQT method and score using the appropriate tier/ribbon class thresholds.",
+      "column_name": "population-support-fish-abundance",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (fish survey)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "Adult Smallmouth Bass (Native)",
+         "registryKey": "sqt:wi:fish-abundance:adult-smallmouth-bass-native",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Adult and Yearling Brown Trout",
+         "registryKey": "sqt:wi:fish-abundance:adult-and-yearling-brown-trout",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Adult and Yearling Brook Trout (Native)",
+         "registryKey": "sqt:wi:fish-abundance:adult-and-yearling-brook-trout-native",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Lake Superior Trout YoY",
+         "registryKey": "sqt:wi:fish-abundance:lake-superior-trout-yoy",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        },
+        {
+         "stratum": "Lake Michigan Trout YoY",
+         "registryKey": "sqt:wi:fish-abundance:lake-michigan-trout-yoy",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "population-support-fish-abundance",
+       "discipline": "Biology",
+       "function_label": "Population support"
+      }
+     ],
+     "decision": {
+      "metric": "population-support-fish-abundance",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "population-support-fish-abundance",
+       "metricName": "Fish Abundance",
+       "discipline": "Biology",
+       "inputType": "field (fish survey)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Fish Abundance",
+       "metricStatement": "Population abundance/biomass indicator reflecting recruitment and survival of target game/native species.",
+       "howToMeasure": "Estimate density/biomass (or % change from baseline) per SQT method and score using the appropriate tier/ribbon class thresholds.",
+       "methodContext": "Context: Channel\n\nMethod: Field (fish survey)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT - Adult Smallmouth Bass (Native)",
+        "stratification": "Adult Smallmouth Bass (Native)",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 28,
+          "y": 0.7
+         },
+         {
+          "x": 98,
+          "y": 1
+         }
+        ]
+       },
+       "curveLayers": [
+        {
+         "stratum": "Adult Smallmouth Bass (Native)",
+         "layerName": "Wisconsin SQT - Adult Smallmouth Bass (Native)",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 28,
+           "y": 0.7
+          },
+          {
+           "x": 98,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Adult and Yearling Brown Trout",
+         "layerName": "Wisconsin SQT - Adult and Yearling Brown Trout",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 533,
+           "y": 0.7
+          },
+          {
+           "x": 1860,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Adult and Yearling Brook Trout (Native)",
+         "layerName": "Wisconsin SQT - Adult and Yearling Brook Trout (Native)",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 380,
+           "y": 0.7
+          },
+          {
+           "x": 1306,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Lake Superior Trout YoY",
+         "layerName": "Wisconsin SQT - Lake Superior Trout YoY",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 300,
+           "y": 0.7
+          },
+          {
+           "x": 900,
+           "y": 1
+          }
+         ]
+        },
+        {
+         "stratum": "Lake Michigan Trout YoY",
+         "layerName": "Wisconsin SQT - Lake Michigan Trout YoY",
+         "points": [
+          {
+           "x": 0,
+           "y": 0
+          },
+          {
+           "x": 100,
+           "y": 0.7
+          },
+          {
+           "x": 220,
+           "y": 1
+          }
+         ]
+        }
+       ],
+       "activeStratum": "Adult Smallmouth Bass (Native)"
+      },
+      "functions": [
+       "population-support"
+      ]
+     }
+    },
+    "population-support-hilsenhoff-biotic-index-hbi": {
+     "displayName": "Hilsenhoff Biotic Index (HBI)",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 3.5,
+       "y": 1.0
+      },
+      {
+       "x": 4.5,
+       "y": 0.7
+      },
+      {
+       "x": 6.5,
+       "y": 0.3
+      },
+      {
+       "x": 10.0,
+       "y": 0.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "Hilsenhoff Biotic Index (HBI)",
+      "units": "",
+      "metric_family": "field (bioassessment) and/or desktop (existing scores)",
+      "notes": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+      "column_name": "population-support-hilsenhoff-biotic-index-hbi",
+      "higher_is_better": false
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:hilsenhoff-biotic-index-hbi:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "population-support-hilsenhoff-biotic-index-hbi",
+       "discipline": "Biology",
+       "function_label": "Population support"
+      }
+     ],
+     "decision": {
+      "metric": "population-support-hilsenhoff-biotic-index-hbi",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "population-support-hilsenhoff-biotic-index-hbi",
+       "metricName": "Hilsenhoff Biotic Index (HBI)",
+       "discipline": "Biology",
+       "inputType": "field (bioassessment) and/or desktop (existing scores)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "Hilsenhoff Biotic Index (HBI)",
+       "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+       "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+       "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 3.5,
+          "y": 1
+         },
+         {
+          "x": 4.5,
+          "y": 0.7
+         },
+         {
+          "x": 6.5,
+          "y": 0.3
+         },
+         {
+          "x": 10,
+          "y": 0
+         }
+        ]
+       }
+      },
+      "functions": [
+       "population-support"
+      ]
+     }
+    },
+    "population-support-mibi": {
+     "displayName": "mIBI",
+     "curveStatus": "complete",
+     "nReference": null,
+     "stratum": "",
+     "points": [
+      {
+       "x": 0.0,
+       "y": 0.0
+      },
+      {
+       "x": 2.5,
+       "y": 0.3
+      },
+      {
+       "x": 5.0,
+       "y": 0.7
+      },
+      {
+       "x": 7.5,
+       "y": 1.0
+      }
+     ],
+     "layers": [],
+     "config": {
+      "display_name": "mIBI",
+      "units": "",
+      "metric_family": "field (bioassessment) and/or desktop (existing scores)",
+      "notes": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+      "column_name": "population-support-mibi",
+      "higher_is_better": true
+     },
+     "annotations": {
+      "basis": "published-benchmark",
+      "basisLabel": "State SQT",
+      "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+      "basisLimit": "A state SQT criterion transcribed as the tool publishes it: not a reference expectation for this state's streams. The SQT's bands (0.30, 0.70) differ from DEEP's (0.39, 0.69), and the index is not rescaled.",
+      "criteriaSource": {
+       "title": "Wisconsin Stream Quantification Tool",
+       "citations": [
+        {
+         "text": "Wisconsin SQT"
+        }
+       ]
+      },
+      "sourceCitation": "Wisconsin SQT",
+      "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+      "curveCaveats": [],
+      "carriedForward": {
+       "assessmentId": "wi-sqt-adapted",
+       "fromVersion": 1,
+       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+      },
+      "sqtTranscription": {
+       "tool": "Wisconsin Stream Quantification Tool",
+       "fromVersion": 1,
+       "migratedBy": "STAF SQT migration",
+       "migratedOn": "2026-07-12",
+       "layers": [
+        {
+         "stratum": "",
+         "registryKey": "sqt:wi:mibi:default",
+         "verification": "verified",
+         "defects": [],
+         "differences": [],
+         "openEnds": []
+        }
+       ]
+      }
+     },
+     "mapping": [
+      {
+       "metric_key": "population-support-mibi",
+       "discipline": "Biology",
+       "function_label": "Population support"
+      }
+     ],
+     "decision": {
+      "metric": "population-support-mibi",
+      "carried_from": 1
+     },
+     "transcribed": {
+      "bundleEntry": {
+       "metricId": "population-support-mibi",
+       "metricName": "mIBI",
+       "discipline": "Biology",
+       "inputType": "field (bioassessment) and/or desktop (existing scores)",
+       "sourceCitation": "Wisconsin SQT",
+       "xLabel": "mIBI",
+       "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+       "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+       "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+       "assignmentOrigin": "",
+       "curve": {
+        "layerName": "Wisconsin SQT",
+        "stratification": "",
+        "points": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 2.5,
+          "y": 0.3
+         },
+         {
+          "x": 5,
+          "y": 0.7
+         },
+         {
+          "x": 7.5,
+          "y": 1
+         }
+        ]
+       }
+      },
+      "functions": [
+       "population-support"
+      ]
+     }
+    }
+   },
+   "carriedFrom": {
+    "assessmentId": "wi-sqt-adapted",
+    "fromVersion": 1,
+    "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b"
+   },
+   "transcription": {
+    "kind": "state-sqt",
+    "tool": "Wisconsin Stream Quantification Tool",
+    "by": "STAF SQT migration",
+    "on": "2026-07-12",
+    "source": "docs/assets/data/metric-library/detailed-adapted-assessments.json"
+   }
+  },
+  "owner_curve_decisions": [],
+  "candidate_register": null,
+  "wizard_draft": null
+ }
+}

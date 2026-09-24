@@ -370,7 +370,13 @@ def _owner_facts(metric: str, entry: Mapping, owner: Mapping) -> list[tuple[str,
 
 
 def chosen_by(metric: str, entry: Mapping) -> str:
-    """Who put the curve in this version, and under which rule."""
+    """Who put the curve in this version, and under which rule. A state SQT curve transcribed
+    as the tool publishes it names the transcription, not a build rule."""
+    sqt = ((entry or {}).get("annotations") or {}).get("sqtTranscription")
+    if isinstance(sqt, dict):
+        on = sqt.get("migratedOn")
+        return (f"Transcribed from the {sqt.get('tool') or 'state SQT'} in v{sqt.get('fromVersion') or 1}"
+                + (f" ({sqt['migratedBy']}, {on})" if sqt.get("migratedBy") and on else ""))
     owner = (entry or {}).get("owner")
     if owner:
         who = str(owner.get("recordedBy") or "The owner")
