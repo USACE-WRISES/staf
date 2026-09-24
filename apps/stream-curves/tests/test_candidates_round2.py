@@ -234,6 +234,22 @@ def test_every_rule_reads_as_words_and_the_editions_as_the_rows_show_them():
         words = fs.rule_words(rid)
         assert words and words != rid
     assert fs.rule_words("REF-02").endswith("(REF-02)") and fs.rule_words("no-such-rule") == "Another rule"
+    # every rule a register writes (DEEP's candidates, EASI's register and alternatives, the
+    # build's curve kinds) has words; a new rule without them would read "Another rule"
+    import re
+    from pathlib import Path
+    from streamcurves import curve_sources
+    from streamcurves.easi_method import alternatives
+    pkg = Path(C.__file__).parent
+    literal = re.compile(r"""["']rule["']\s*:\s*["']([^"']+)["']|\brule\s*=\s*["']([^"']+)["']""")
+    written = set(curve_sources.KIND_RULES.values()) | {alternatives.STUDY_RULE, alternatives.OVERRIDE_RULE,
+                                                         # chosen in an expression at import
+                                                         "owner-adoption-2026-09-16", "historical-baseline"}
+    for rel in ("candidates.py", "easi_method/register.py", "easi_method/alternatives.py"):
+        text = (pkg / rel).read_text(encoding="utf-8")
+        written |= {a or b for a, b in literal.findall(text)}
+    assert {"operational-at-import", "confirmed-after-change", "SELECT-04", "considered"} <= written
+    assert not [r for r in written if fs.rule_words(r) == "Another rule"]
     reg = _reg()
     recs = reg.records(state="MN")
     choices = fs.edition_choices(recs)

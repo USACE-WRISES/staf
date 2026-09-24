@@ -48,7 +48,9 @@ RULE_WORDS = {"SELECT-04": "Portfolio rule (SELECT-04)", "REF-15": "Owner decisi
               "study-2026-09-15-override": "Selected against the alternatives study",
               "field-vs-desktop": "Field protocol vs desktop estimate",
               "owner-adoption-2026-09-16": "Owner's adoption of Alternative 2 (2026-09-16)",
-              "historical-baseline": "Historical baseline criteria"}
+              "historical-baseline": "Historical baseline criteria",
+              "operational-at-import": "The operational method when imported",
+              "confirmed-after-change": "Confirmed after a change"}
 
 
 def rule_words(rule: Any) -> str:
