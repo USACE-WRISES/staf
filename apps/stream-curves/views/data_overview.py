@@ -40,8 +40,7 @@ from views import state as st
 from views.discipline_map import discipline_map_server, discipline_map_ui
 from views.import_map import import_map_server, import_map_ui
 from views.state import AppState, deep_copy_value, empty_phase2_settings
-from views.theme import bi
-from views.uihelpers import linkify_rule_ids, status_badge
+from views.uihelpers import count_text, linkify_rule_ids, status_badge
 from views.workbook_grid import workbook_grid_server, workbook_grid_ui
 
 logger = logging.getLogger("streamcurves")
@@ -510,9 +509,10 @@ def data_overview_server(input, output, session, state: AppState):
 
     @render.text
     def workspace_title():
-        name = state.session_name()
-        upload = state.upload_filename()
-        return _default_session_name(name, upload)
+        # the section on screen names the page; the header and the panel name the project
+        cur = ws_step()
+        return next((s["label"] for s in WORKSPACE_STEPS if s["value"] == cur),
+                    "Refine & map")
 
     # ── landing / new / workspace main content ──────────────────────────────
     def landing_view():
@@ -551,11 +551,8 @@ def data_overview_server(input, output, session, state: AppState):
         }
         return ui.div(
             ui.div(
-                ui.tags.span(
-                    bi("folder-check"),
-                    " ",
-                    ui.tags.strong(ui.output_text(ns("workspace_title"), inline=True)),
-                ),
+                ui.tags.h2(ui.output_text(ns("workspace_title"), inline=True),
+                           class_="sc-page-title"),
                 class_="card-header data-setup-card-header",
             ),
             ui.div(
@@ -812,7 +809,7 @@ def data_overview_server(input, output, session, state: AppState):
             header,
             ui.tags.p(
                 linkify_rule_ids(
-                    f"{len(table)} pair(s) above the reporting floor, {flagged} flagged "
+                    f"{count_text(len(table), 'pair')} above the reporting floor, {flagged} flagged "
                     "by RED-01."),
                 class_="text-muted small mb-2",
             ),

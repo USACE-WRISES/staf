@@ -1363,8 +1363,9 @@ def easi_page_server(input, output, session, state: AppState):
             if r["needsReview"]:
                 flags.append(ui.span("Needs your confirmation", class_="sc-tag is-attention"))
             summary = ui.tags.summary(
-                ui.div(ui.tags.span(r["functionName"], class_="fs-fn-name"),
-                       ui.tags.span(r["method"], class_="fs-fn-disc"), class_="fs-fn-head"),
+                ui.div(ui.div(ui.tags.span(r["functionName"], class_="fs-fn-name"),
+                              ui.tags.span(r["method"], class_="fs-fn-method"),
+                              class_="fs-fn-title"), class_="fs-fn-head"),
                 ui.div(ui.tags.span(ui.tags.span(_alt_source(selected) if selected else "Nothing selected",
                                                  class_="fs-chip-name"),
                                     ui.tags.span(r.get("who") if r["decidedBy"] == "person" and r.get("who")

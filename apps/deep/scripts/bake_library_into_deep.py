@@ -43,8 +43,10 @@ def _load(path: Path):
 
 
 def _write(path: Path, obj) -> None:
+    # LF on every platform, as git stores it (a Windows bake used to leave CRLF copies)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(obj, indent=2, ensure_ascii=False), encoding="utf-8")
+    path.write_text(json.dumps(obj, indent=2, ensure_ascii=False), encoding="utf-8",
+                    newline="\n")
 
 
 def bake(out: Path | None = None, library_root: Path | None = None,

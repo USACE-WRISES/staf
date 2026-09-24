@@ -485,11 +485,13 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
     busy = {str(m) for m in (busy_metrics or ())}
     c = gallery_counts(rows)
     mode = filter_mode if filter_mode in GALLERY_FILTERS else "all"
+    # only the kinds there are: "0 flagged, 0 not in scope" is noise on a clean page
+    extras = [text for n, text in ((c["flagged"], f"{c['flagged']} flagged"),
+                                   (c["out_of_scope"], f"{c['out_of_scope']} not in scope"),
+                                   (c["not_built"], f"{c['not_built']} not built here")) if n]
     counts = ui.div(
         ui.tags.strong(f"{c['n']} curve" + ("" if c["n"] == 1 else "s")),
-        ui.tags.span(f", {c['flagged']} flagged, {c['out_of_scope']} not in scope"
-                     + (f", {c['not_built']} not built here" if c["not_built"] else ""),
-                     class_="text-muted"),
+        ui.tags.span(", " + ", ".join(extras), class_="text-muted") if extras else None,
         class_="curve-gallery-counts",
     )
     actions = []
@@ -499,8 +501,9 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
             ui.TagList(fa("arrows-rotate"), " Recompute all"),
             class_="btn btn-sm btn-outline-primary curve-gallery-recompute",
             **({"disabled": "disabled"} if recompute_all_disabled else {})))
-    actions.append(ui.input_radio_buttons(
-        filter_input_id, None, GALLERY_FILTERS, selected=mode, inline=True))
+    actions.append(ui.div(ui.input_radio_buttons(
+        filter_input_id, None, GALLERY_FILTERS, selected=mode, inline=True),
+        class_="curve-gallery-filter"))
     actions.append(sources_popover(rows))
     toolbar = ui.div(
         counts,

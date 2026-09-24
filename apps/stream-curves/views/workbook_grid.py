@@ -33,6 +33,7 @@ from views.classify_ui import (
 from views.rebuild import rebuild_app_from_tables
 from views.state import AppState
 from views.theme import bi, fa
+from views.uihelpers import count_text
 
 SHEETS = [
     {"key": "data", "label": "Data", "kind": "data"},
@@ -130,7 +131,7 @@ def workbook_grid_ui():
             ui.div(
                 ui.div(
                     "Check which data columns to use as metrics, predictors, or "
-                    "stratifications. Applying rebuilds the dataset — recompute "
+                    "stratifications. Applying rebuilds the dataset, so recompute the "
                     "reference curves afterward. Switch to ",
                     ui.tags.strong("Table"),
                     " to fine-tune each entity's settings.",
@@ -506,7 +507,7 @@ def workbook_grid_server(input, output, session, state: AppState):
     def dirty_badge():
         if dirty():
             return ui.tags.span(
-                "Unsaved edits — click Apply changes", class_="badge text-bg-warning"
+                "Unsaved edits: click Apply changes", class_="badge text-bg-warning"
             )
         return ui.tags.span("All changes applied", class_="badge text-bg-success")
 
@@ -606,7 +607,7 @@ def workbook_grid_server(input, output, session, state: AppState):
         if custom_s:
             items.append(f"grouped/paired stratifications ({', '.join(custom_s)})")
         if len(recodes) > 0:
-            items.append(f"{len(recodes)} factor recode(s)")
+            items.append(count_text(len(recodes), "factor recode"))
         if not items:
             return None
         return ui.div(

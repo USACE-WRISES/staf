@@ -107,6 +107,7 @@ from views.state import AppState
 from views.theme import bi, fa
 from views.uihelpers import (
     CompileProgress,
+    count_text,
     not_ready_panel,
     remove_final_loading_notification,
     show_final_loading_notification,
@@ -148,6 +149,11 @@ def wizard_seed_from_state(region: dict | None) -> dict:
         "user_polygon": region.get("polygon") if kind == "polygon" else None,
         "region_approach": _KIND_TO_APPROACH[kind],
     }
+#: The screening table's column heads, over its stored names.
+_SCREENING_HEADS = {"site_id": "Site", "state": "Status", "eci": "ECI",
+                    "condition": "Condition", "auto_decision": "Screen",
+                    "final_decision": "Decision", "reviewer": "Reviewer",
+                    "comid_source": "COMID source", "reason": "Reason"}
 _NRSA_SECTIONS = [
     ("chem", "Water chemistry"),
     ("phab", "Physical habitat"),
@@ -534,17 +540,13 @@ def import_map_ui():
             # Reopening a project mounts this same wizard, so a fixed "Start a
             # new project" claimed the user was doing something they weren't.
             ui.output_ui("wizard_header_title"),
-            ui.tags.span(
-                "Define the region, gather sites, pull metrics, build",
-                class_="text-muted small",
-            ),
-            class_="card-header data-setup-card-header d-flex justify-content-between align-items-center",
+            class_="card-header data-setup-card-header wizard-head",
         ),
         ui.div(
             ui.output_ui("step_style"),
             # Region block (step 1) — persistent so the map survives step nav.
             ui.div(
-                ui.tags.h5("Region of applicability"),
+                ui.tags.h2("Region of applicability", class_="sc-page-title"),
                 ui.tags.p(
                     "Define where these reference curves apply. Choose how to set the "
                     "region, then pick it from the list or draw it on the map. You can "
@@ -581,7 +583,7 @@ def import_map_ui():
             # destroy/recreate of this div therefore leaks a map that fights the real
             # one for control of the view.
             ui.div(
-                ui.tags.h5("Screen and confirm sites"),
+                ui.tags.h2("Screen and confirm sites", class_="sc-page-title"),
                 ui.output_ui("step3_blocker"),
                 ui.div(
                     ui.tags.p("These are the sites we'll pull data for.",
@@ -1342,12 +1344,13 @@ def import_map_server(
 
     @render.ui
     def wizard_header_title():
+        # over an open project each step titles its own page; the header and the
+        # panel already name the project
         if state.app_data_loaded():
-            name = (state.session_name() or "").strip()
-            return ui.tags.span(
-                bi("geo-alt-fill"), " Editing ", ui.tags.strong(name or "this project"),
-            )
-        return ui.tags.span(bi("geo-alt-fill"), " Start a new project")
+            return None
+        return ui.div(ui.tags.div("New project", class_="wizard-head-title"),
+                      ui.tags.div("Define the region, gather sites, pull metrics, build.",
+                                  class_="wizard-head-sub"))
 
     @reactive.effect
     @reactive.event(state.wizard_hydrate_nonce, ignore_init=True)
@@ -2059,7 +2062,7 @@ def import_map_server(
             # step-4 picker rendered with its recommended defaults pre-checked made
             # an empty project look finished.
             return ui.TagList(
-                ui.tags.h5(_STEP_LABELS[cur - 1]),
+                ui.tags.h2(_STEP_LABELS[cur - 1], class_="sc-page-title"),
                 _blocker_panel(blocker),
             )
         if cur == 4:
@@ -2074,7 +2077,7 @@ def import_map_server(
         nr = nrsa_in_region()
         n_nrsa = 0 if nr is None else len(nr)
         return ui.TagList(
-            ui.tags.h5(f"Add data{': ' + region_label() if region_code() else ''}"),
+            ui.tags.h2(f"Add data{': ' + region_label() if region_code() else ''}", class_="sc-page-title"),
             ui.tags.p("Where should the site data come from? You can combine both.", class_="text-muted"),
             ui.input_checkbox(
                 "use_nrsa",
@@ -2105,7 +2108,7 @@ def import_map_server(
                         "source": "Sort: source", "discipline": "Sort: discipline",
                         "function": "Sort: function"}
         return ui.TagList(
-            ui.tags.h5("Choose metrics"),
+            ui.tags.h2("Choose metrics", class_="sc-page-title"),
             ui.tags.p("Pick the metrics to pull for each site.", class_="text-muted"),
             ui.output_ui("coverage_panel"),
             ui.output_ui("metric_selected_count"),
@@ -2149,7 +2152,7 @@ def import_map_server(
 
     def _body_step5():
         return ui.TagList(
-            ui.tags.h5("Compile"),
+            ui.tags.h2("Compile", class_="sc-page-title"),
             ui.output_ui("compile_intro"),
             ui.div(
                 ui.input_action_button("do_compile", ui.TagList(fa("cloud-arrow-down"), " Pull & compile data"),
@@ -2163,7 +2166,7 @@ def import_map_server(
 
     def _body_step6():
         return ui.TagList(
-            ui.tags.h5("Classify columns"),
+            ui.tags.h2("Classify columns", class_="sc-page-title"),
             ui.tags.p("Mark the columns to build curves for as Metric.",
                       class_="text-muted"),
             ui.output_ui("role_summary"),
@@ -2172,7 +2175,7 @@ def import_map_server(
 
     def _body_step7():
         return ui.TagList(
-            ui.tags.h5("Review & build"),
+            ui.tags.h2("Review & build", class_="sc-page-title"),
             ui.output_ui("build_summary"),
             ui.navset_pill(
                 ui.nav_panel("Metrics", ui.div(ui.output_ui("review_metrics"), class_="mt-3")),
@@ -2198,12 +2201,12 @@ def import_map_server(
                                       selected=region_code() or "", width="100%")
         if kind == "draw":
             return ui.div(
-                ui.div("Use the polygon tool (top-left of the map) to outline your area — "
+                ui.div("Use the polygon tool (top-left of the map) to outline your area: "
                        "click to add points, then click the first point to finish.",
                        class_="small text-muted mb-2"),
             )
         return ui.div(
-            "No region of applicability — the analysis won't be tied to an ecoregion, state, "
+            "No region of applicability: the analysis won't be tied to an ecoregion, state, "
             "or area. Bring your own site data in the next step.",
             class_="small text-muted",
         )
@@ -2218,9 +2221,9 @@ def import_map_server(
         if has_sel:
             return ui.div(fa("check"), " ", region_label(), class_="alert alert-success py-2 mt-2 mb-0")
         msg = {
-            "ecoregion": "No ecoregion selected yet — pick one or click the map.",
-            "state": "No state selected yet — pick one or click the map.",
-            "polygon": "No area drawn yet — use the polygon tool on the map.",
+            "ecoregion": "No ecoregion selected yet. Pick one or click the map.",
+            "state": "No state selected yet. Pick one or click the map.",
+            "polygon": "No area drawn yet. Use the polygon tool on the map.",
         }.get(kind, "No region selected yet.")
         return ui.div(msg, class_="text-muted small mt-2")
 
@@ -2596,7 +2599,7 @@ def import_map_server(
         state.easi_screening_sites.set(df)
         _sync_screening_derivations(df)
         ui.notification_show(
-            f"{len(rows0)} site(s) marked {decision}.", type="message", duration=4)
+            f"{count_text(len(rows0), 'site')} marked {decision}.", type="message", duration=4)
 
     @reactive.effect
     @reactive.event(input.screening_retain_sel)
@@ -2616,8 +2619,9 @@ def import_map_server(
         cols = [c for c in ("site_id", "state", "eci", "condition", "auto_decision",
                             "final_decision", "reviewer", "comid_source", "reason")
                 if c in df.columns]
-        return render.DataGrid(df[cols].reset_index(drop=True), height="260px",
-                               selection_mode="rows", width="100%")
+        # readable heads over the stored column names (selection reads row positions)
+        shown = df[cols].reset_index(drop=True).rename(columns=_SCREENING_HEADS)
+        return render.DataGrid(shown, height="260px", selection_mode="rows", width="100%")
 
     def _screening_failure_note(df, counts: dict):
         """Say what actually broke when sites could not be assessed.
@@ -2635,10 +2639,10 @@ def import_map_server(
                     msgs.append(m)
         bits = []
         if counts["n_failed"]:
-            head = f"{counts['n_failed']} site(s) could not be assessed"
+            head = f"{count_text(counts['n_failed'], 'site')} could not be assessed"
             bits.append(f"{head}: {msgs[0]}" if msgs else head)
             if len(msgs) > 1:
-                bits.append(f"(+{len(msgs) - 1} other error(s))")
+                bits.append(f"(+{count_text(len(msgs) - 1, 'other error')})")
         if counts["n_cancelled"]:
             bits.append(f"{counts['n_cancelled']} cancelled")
         diag = (state.easi_screening_criteria() or {}).get("diagnostics") or {}
@@ -2852,14 +2856,14 @@ def import_map_server(
 
     def _fn_chips(funcs):
         if not funcs:
-            return ui.tags.span("—", class_="text-muted")
+            return ui.tags.span("None", class_="text-muted")
         return ui.TagList(*[ui.tags.span(f, class_="metric-fn-chip") for f in funcs])
 
     def _metric_row(r, checked: bool):
         code = str(r["code"])
         star = (ui.tags.span("★", class_="metric-rec-star", title="Recommended default")
                 if bool(r["recommended"]) else "")
-        disc = ", ".join(r["disciplines"]) if r["disciplines"] else "—"
+        disc = ", ".join(r["disciplines"]) if r["disciplines"] else ""
         return ui.tags.tr(
             ui.tags.td(_pick_checkbox(code, checked, "metric-pick-cb"), class_="metric-cb-cell"),
             ui.tags.td(ui.tags.span(r["name"], class_="metric-name"), " ", star),
@@ -2905,7 +2909,7 @@ def import_map_server(
         notes = []
         if not _use_nrsa():
             notes.append(ui.div(
-                bi("info-circle"), " NRSA field metrics are hidden — NRSA was not chosen as a "
+                bi("info-circle"), " NRSA field metrics are hidden: NRSA was not chosen as a "
                 "data source in step 2.", class_="text-muted small mb-1"))
         mmw_rev()
         if not mmw_available():
@@ -2932,7 +2936,7 @@ def import_map_server(
         view = _sort_named(view, _inp("pick_sort") or "recommended")
         header = ui.tags.thead(ui.tags.tr(
             ui.tags.th(""), ui.tags.th("Metric"), ui.tags.th("Code"), ui.tags.th("Source"),
-            ui.tags.th("Units"), ui.tags.th("Function(s)"), ui.tags.th("Discipline"),
+            ui.tags.th("Units"), ui.tags.th("Functions"), ui.tags.th("Discipline"),
         ))
         body = ui.tags.tbody(*[_metric_row(r, str(r["code"]) in sel) for _, r in view.iterrows()])
         return ui.TagList(
@@ -2970,7 +2974,7 @@ def import_map_server(
                 ui.tags.span(r["category"], class_="text-muted small"),
                 class_="metric-adv-row d-flex align-items-center gap-1",
             ))
-        more = (ui.div(f"Showing {cap} of {len(hit)} matches — refine your search.",
+        more = (ui.div(f"Showing {cap} of {len(hit)} matches. Refine your search.",
                        class_="text-muted small mt-1") if len(hit) > cap else None)
         return ui.TagList(note, ui.div(*rows, class_="metric-adv-list"), more)
 
@@ -2988,7 +2992,9 @@ def import_map_server(
     @output(suspend_when_hidden=False)
     @render.ui
     def metric_selected_count():
-        return ui.div(ui.tags.strong(str(n_metrics_selected())), " metric(s) selected across sources.",
+        n = n_metrics_selected()
+        return ui.div(ui.tags.strong(str(n)),
+                      f" {'metric' if n == 1 else 'metrics'} selected across sources.",
                       class_="alert alert-light border py-1 px-2 small mb-2")
 
     # ── metric picker events ──────────────────────────────────────────────────
@@ -3054,7 +3060,7 @@ def import_map_server(
             f"{len(metric_sel() or [])} {engine_names.STREAMCAT} + {len(nrsa_sel() or [])} NRSA"
             + (f" + {n_ss} StreamStats" if n_ss else "")
             + (f" + {n_mmw} MMW" if n_mmw else "")
-            + " metric(s)"
+            + " metrics"
             + (" + " + ", ".join(computed) if computed else "") + ".",
             class_="alert alert-info py-2",
         )
@@ -3139,8 +3145,10 @@ def import_map_server(
         if err is not None:
             return err
         return ui.div(
-            f"Will create {len(t['metrics'])} metric(s), {len(t['predictors'])} predictor(s), "
-            f"and {len(t['stratifications'])} stratification(s) from {len(t['data'])} rows.",
+            f"Will create {count_text(len(t['metrics']), 'metric')}, "
+            f"{count_text(len(t['predictors']), 'predictor')} "
+            f"and {count_text(len(t['stratifications']), 'stratification')} "
+            f"from {len(t['data'])} rows.",
             class_="alert alert-info py-2",
         )
 
@@ -3205,7 +3213,7 @@ def _coverage_table_ui(fn_metrics: dict):
         mets = fn_metrics.get(fn) or []
         if not mets:
             return ui.tags.td(
-                ui.tags.span("—", class_="wb-empty text-muted"), class_="wb-metrics"
+                ui.tags.span("None", class_="wb-empty text-muted"), class_="wb-metrics"
             )
         chips = [
             ui.tags.span(
