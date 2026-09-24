@@ -43,12 +43,15 @@ entry, pack and bundle keeps its meaning.
 | Type | Consumer | Version payload | Scope |
 |---|---|---|---|
 | `deep` | DEEP | `assessment.deep.json` (+ calculator) | one Level III ecoregion or one state |
-| `easi` | EASI | `method.json` + `method/` files | one national method with internal NARS-9 and slope-class strata |
+| `easi` | EASI | `method.json` + `method/` files | one national method with its strata inside it |
 
 An `easi` version is never written under DEEP's file names, never listed in the schema-1 release
 feed and never baked into DEEP. EASI is one versioned national method: its geography is stated as
 national with the strata and fallbacks inside the method, never as 85 regional copies or a
-placeholder region.
+placeholder region. The strata it states (`meta.geography.strata` and the Method stage's geography
+line, `easi_method.stages.geography_sentence`) are read from its curve sets' stratifiers: NARS-9
+region and slope class today, each with a national fallback; an adopted alternative can bring
+Level II or national-only sets, and the geography then says so.
 
 ## Identities
 
@@ -100,7 +103,7 @@ calculator/EASI_Calculator_<ver>.xlsx    optional: generated from exactly these 
 ```json
 {
   "schema": "staf-easi-method", "schemaVersion": 1,
-  "methodId": "easi-screening", "version": 1, "status": "draft",
+  "methodId": "easi-screening", "version": 1,
   "label": "Alternative 2: NARS-9 references", "criteriaSet": "regional",
   "identity": {"methodVersion": "b2e3033116e3", "packageDigest": "sha256:...",
                "evaluatorDigest": "sha256:...",
@@ -112,6 +115,10 @@ calculator/EASI_Calculator_<ver>.xlsx    optional: generated from exactly these 
   "files": {"screening-methods.json": {"bytes": 100718, "sha256": "78c1e292..."}}
 }
 ```
+
+The envelope says what the package is, never its lifecycle: draft, preliminary or final is the
+library's record (`status.json`) and can change after publication without touching the package. A
+package that carries a calculator names it in `calculator` (name, bytes, SHA-256).
 
 Method files: `screening-methods.json`, `reference-curves.json`, `easi-metrics.json`,
 `cwa-mapping.json`, `functions.json`, `ecoregion-crosswalk.json`, `scoring-identity.json`,
@@ -126,9 +133,13 @@ Validation, before anything is used:
   anchors from `indexMidpoints`, `round(index x 15)`, the D/i weights, the ECI mean, the 0.70
   coverage rule, composites on anchor indices, the curve fallback order, twenty methods);
 - cross-file consistency: `indexMidpoints` equal the catalog's `ratingIndex`, no anchor rounds on a
-  tie, every CWA row is D/i/-, every curve set referenced exists with a national curve, strata are
-  NARS-9 or slope-class codes, knots increase with index values in [0, 1], and
-  `scoring-identity.json` names the hashes of the files it identifies;
+  tie, every CWA row is D/i/-, and every curve set referenced exists with a national curve; a set's
+  stratifier is one this evaluator resolves (`nars9`, `slope_class`, `l2` or `national`) and its
+  strata are codes of it (NARS-9 codes from the package's own geography, Level II codes from its
+  crosswalk; a `national` set holds only the national curve); knots never decrease in x, index
+  values lie in [0, 1] and run with the set's direction (`higherIsBetter`), and a curve's `x39` and
+  `x69` are in that direction's order; `scoring-identity.json` names the hashes of the files it
+  identifies;
 - identity: `method_version` recomputed under this evaluator must equal the one recorded for this
   evaluator in `validatedUnder`; under an evaluator not in the list it is reported, not assumed.
   An unknown `schemaVersion` or `engineApi`, a missing capability, or a `criteriaSet` that
@@ -143,7 +154,9 @@ Activation and isolation:
   built-in `apps/easi/data` (rollback).
 - One method per process. Switching is by process in production; `activate()` switches inside a
   process for tests and single-method workers, repointing every data-derived path and clearing
-  every method cache (tested on the live region lookup both ways).
+  every method cache (tested on the live region lookup both ways). `activate(None)` returns a
+  process to what it started with, its criteria set included; a process that never switched keeps
+  its own settings (a legacy start stays legacy) and only has its caches cleared.
 - Results carry the identity they were computed with, and callers check it.
 - The calculator served is the active package's own, the committed one for the built-in method,
   or none: a workbook is only served for the files it was generated from.
@@ -228,7 +241,9 @@ Rules:
 
 - Only a draft revision is edited. An import or an opened library version stays exactly as it
   is; *Start vN* forks it (`io.fork`) into the next version, numbered after both the origin and
-  the library's latest. A fork records its origin (version, method version, package digest).
+  the library's latest. A fork records its origin (version, method version, package digest). When
+  the library publishes a version while a draft is open, Renumber offers the next number, only
+  upward, and the page warns that the draft does not contain what that version changed.
 - Supported edits (`easi_method.edit`): band edges and which side owns them, regional TN and TP
   edges, curve knots, and display text. Every edit needs a reason and becomes one history record
   and one undo step. A moved edge rewrites the two band labels and the plot annotation EASI shows
@@ -247,13 +262,14 @@ Rules:
   with a reason (`register.confirm_selection`, `decidedBy: person`), and the library refuses a
   version with a flag still open.
 - The consequences preview scores the draft and its origin on the project's preview cases in
-  worker processes, never in the app's own EASI; results are cached by package, evaluator and
-  case set. The preview cases are EASI's calculator test cases (every band edge, curve crossing
+  worker processes, never in the app's own EASI; results are cached by package, evaluator,
+  acquisition code and case set, so a re-vendor that touches either code scores again. The preview cases are EASI's calculator test cases (every band edge, curve crossing
   and fallback route around one reach): they show which rules move, not how many real reaches
   would. The reviewed summary is kept in the published version's provenance.
 - Publishing a revision needs a current preview in the app; publishing into the canonical
   library also needs the canonical gate (`library.publish_gate_reason`), checked in
-  `io.publish` itself.
+  `io.publish` itself. `library.publish_easi_version` refuses a version without its authoring
+  project, so the review record always travels with the method.
 
 ## Evidence
 
@@ -347,7 +363,9 @@ and the universe regenerates all 282,113 member rows
 (`scripts/refit_easi_curves.py --panels --block-dev-paths`). An EASI project names the packages
 it was developed from (`project.evidence`: package, version, data digest, roles,
 reproducibility, coverage, archive), never their bytes; its Development data stage shows them,
-downloads, imports and views them, and refits the curves from them. DEEP's development data,
+downloads, imports and views them, and refits the curves from them. The stage does not yet show a
+download's progress or cancel one (the store takes both, `fetch_reference(progress=, cancel=)`),
+show a package's data dictionary, or link a curve to the members it was fitted from. DEEP's development data,
 the in-app NRSA archive, is described and verified the same way on the NRSA explorer page.
 
 ## Candidates and final selection
@@ -415,8 +433,15 @@ history before the import is stated as missing. The Final selection stage (**Sel
 methods**) compares up to three definitions curve family by curve family and, in a draft revision,
 adopts one: every function reading a curve family it rewrites moves with it (the woody curves
 serve light and thermal regime and habitat provision), the replaced method stays as eligible, not
-selected, and adopting the method the draft started from restores its exact bytes. Published EASI
-versions carry the register export in their provenance, never in the method package.
+selected, and adopting the method the draft started from restores its exact bytes. Where
+Alternatives 3 and 4 differ, the study's rule excluded them, and their rows say so with the
+study's reasons. A person can still select one in a draft revision **against the study**
+(`alternatives.adopt(..., allow_excluded=True, override_reason=...)`), as the owner adopted
+Alternative 2 over the same rule: it needs a reason against the rule of at least 20 characters.
+Every moved row the rule excluded records rule `study-2026-09-15-override` with that reason and
+the study's reasons, and the history entry records the rule and the reason. Every limitation of a study alternative is shown, the
+study's note on Alternative 2 included. Published EASI versions carry the register export in their
+provenance, never in the method package.
 
 ### Published state SQT curves
 
@@ -496,6 +521,18 @@ versions republish unchanged. A state SQT choice saved before the adoption check
 checks, with an Undo, and the curve is selected again. Every other kind of source keeps applying as
 it did. The bundle carries the owner's decision summary (never `replaces`)
 and the chosen curve; it never names a replaced or unselected candidate.
+
+## Who is recorded
+
+Every record of who did something (a decision, a completed curve, an edit, an import, a publish)
+names initials, never a name: `STAF_LIBRARY_MAINTAINER` when it is set, else the project's
+**Prepared by**, else `n/a` (`prefs.recorded_by`). The Windows login is never read (a test scans the
+app for it), and nothing is refused for a missing name: the canonical gate needs
+`STAF_LIBRARY_PUBLISH=1` and a writable library, not a person. A dialog that asks for initials
+(the EASI selections, a curve's completion, a coverage exception) starts from these, and a cleared
+field records `n/a`; the other pages record them without asking. This is StreamCurves' own tracking,
+on its DEEP and EASI pages alike; the DEEP app and the bundle format do not change. The batch
+script's `--maintainer` keeps its default, because `promote` confirms approvals against that name.
 
 ## Compatibility rules
 

@@ -47,7 +47,10 @@ EASI's active method are the owner's decisions (see the adoption package in the 
    moves that curve, the function asks you to look again. EASI:
    **Final selection** lists the alternatives the method was chosen from; **Select** adopts one
    in the draft (functions that read the same curves move with it); selecting the method the
-   draft started from restores it exactly.
+   draft started from restores it exactly. Alternatives 3 and 4, where the 2026-09-15 study's
+   rule excluded them, offer **Select against the study** instead: it asks for your initials,
+   your reason, and why you select it against the rule (at least 20 characters), and records all
+   three in the selection and the history.
 6. **Preview the consequences.** EASI: **Preview consequences** scores the project's cases with
    the draft and its origin in separate processes and lists every rating that moves. A function
    whose method changed asks you to **Confirm** the selection with a reason.

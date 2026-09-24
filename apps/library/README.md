@@ -56,8 +56,9 @@ Every assessment has a type in its `manifest.json` (and its `catalog.json` entry
 DEEP detailed assessment, and a DEEP entry never gains the key.
 
 `easi` is EASI's screening method: one national method (region `{kind: "national", code:
-"CONUS"}`) with its NARS-9 and slope-class strata inside it, never regional copies. Its versions
-hold the method package EASI loads, not a DEEP bundle:
+"CONUS"}`) with its strata inside it, never regional copies. The strata are read from its curve
+sets (NARS-9 region and slope class today; an alternative can bring Level II or national-only
+sets). Its versions hold the method package EASI loads, not a DEEP bundle:
 
 ```
 assessments/easi-screening/

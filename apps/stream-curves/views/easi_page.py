@@ -810,6 +810,10 @@ def easi_page_server(input, output, session, state: AppState):
         if not path.exists():
             _modal_err.set("nothing is at that path")
             return
+        if _jobs.get("busy"):
+            # one package job at a time, as a download waits for one
+            _modal_err.set("another package is being checked or downloaded; import it when that finishes")
+            return
         ui.modal_remove()
         _launch(_run_install(path))
 
