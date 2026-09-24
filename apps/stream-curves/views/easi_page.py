@@ -719,7 +719,8 @@ def easi_page_server(input, output, session, state: AppState):
                                                   onclick=_evt(ns("pkg_detach"), i=i)),
                            class_="easi-right easi-nowrap")))
         attached = {r["packageId"] for r in refs}
-        spare = [r for r in inst if r["packageId"].startswith("easi-") and r["packageId"] not in attached]
+        spare = [r for r in inst if r.get("verified") and r["packageId"].startswith("easi-")
+                 and r["packageId"] not in attached]
         if rows:
             table = ui.tags.table(
                 ui.tags.thead(ui.tags.tr(ui.tags.th("Package"), ui.tags.th("Role"),
@@ -765,7 +766,7 @@ def easi_page_server(input, output, session, state: AppState):
             return
         new = p
         for rec in _installed():
-            if rec["packageId"].startswith("easi-") and rec["packageId"] not in {
+            if rec.get("verified") and rec["packageId"].startswith("easi-") and rec["packageId"] not in {
                     e["packageId"] for e in new.evidence}:
                 new = ev.attach(new, ev.reference(rec["manifest"], package_digest=evs.package_digest(
                     rec["manifest"])), by=person() or UNNAMED)
@@ -830,7 +831,8 @@ def easi_page_server(input, output, session, state: AppState):
                    "packageDigest": evs.package_digest(doc)}
             old = next((e for e in p.evidence if e.get("packageId") == doc["packageId"]), None)
             same_data = bool(old) and old.get("dataDigest") == doc["dataDigest"]
-            new_ref = ev.reference(doc, archive=archive or ((old or {}).get("archive") if same_data else None),
+            same_package = bool(old) and old.get("packageDigest") == got["packageDigest"]
+            new_ref = ev.reference(doc, archive=archive or ((old or {}).get("archive") if same_package else None),
                                    package_digest=got["packageDigest"])
             if old is not None and not evs.matches(got, old):
                 # another version of a package the project names: the author decides
@@ -1022,6 +1024,12 @@ def easi_page_server(input, output, session, state: AppState):
     def pkg_csv():
         path = _table_path()
         if path is None:
+            return
+        rel = str(path.relative_to(Path(_viewing["folder"]))).replace("\\", "/")
+        rec = (evs.read_manifest(Path(_viewing["folder"]))["files"] or {}).get(rel) or {}
+        if evs.sha_file(path) != rec.get("sha256"):
+            ui.notification_show(f"{rel} no longer matches its package. Download or import the package "
+                                 "again.", type="error", duration=10)
             return
         import pyarrow.csv as pacsv
         import pyarrow.parquet as pq

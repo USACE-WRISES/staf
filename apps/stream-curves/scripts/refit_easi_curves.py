@@ -50,8 +50,9 @@ def block_dev_paths() -> list[str]:
             check(args[0])
 
     sys.addaudithook(hook)
+    import pyarrow.dataset as _ds
     import pyarrow.parquet as _pq
-    for name in ("read_table", "read_schema", "read_metadata"):
+    for name in ("read_table", "read_schema", "read_metadata", "read_pandas"):
         original = getattr(_pq, name)
 
         def guarded(source, *args, _original=original, **kwargs):
@@ -66,6 +67,22 @@ def block_dev_paths() -> list[str]:
         return parquet_file_init(self, source, *args, **kwargs)
 
     _pq.ParquetFile.__init__ = guarded_init
+    dataset_init = _pq.ParquetDataset.__init__
+
+    def guarded_dataset(self, path_or_paths, *args, **kwargs):
+        for x in (path_or_paths if isinstance(path_or_paths, (list, tuple)) else [path_or_paths]):
+            check(x)
+        return dataset_init(self, path_or_paths, *args, **kwargs)
+
+    _pq.ParquetDataset.__init__ = guarded_dataset
+    ds_dataset = _ds.dataset
+
+    def guarded_ds(source, *args, **kwargs):
+        for x in (source if isinstance(source, (list, tuple)) else [source]):
+            check(x)
+        return ds_dataset(source, *args, **kwargs)
+
+    _ds.dataset = guarded_ds
     return refused
 
 
@@ -91,14 +108,14 @@ def main(argv=None) -> int:
     t0 = time.perf_counter()
     tracemalloc.start()
     def package_dir(package_id: str) -> Path:
-        """A package folder, or the single installed copy under an evidence store."""
-        folder = a.evidence / package_id
-        if (folder / "evidence.json").is_file():
-            return folder
-        copies = sorted(p for p in folder.glob("*") if (p / "evidence.json").is_file())
-        if len(copies) != 1:
-            raise SystemExit(f"{package_id}: expected one package under {folder}, found {len(copies)}")
-        return copies[0]
+        """A package folder, or the verified installed copy under an evidence store (the most
+        recently installed when the store holds several versions)."""
+        try:
+            got = es.pick(a.evidence / package_id)
+        except es.EvidenceError as exc:
+            raise SystemExit(f"{package_id}: {exc}")
+        print(f"{package_id}: {got}")
+        return got
 
     members_dir, fits_dir = package_dir("easi-dev-members"), package_dir("easi-dev-fits")
     report = {"evidence": str(a.evidence), "blockedDevPaths": bool(a.block_dev_paths)}

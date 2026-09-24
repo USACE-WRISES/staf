@@ -36,13 +36,13 @@ from streamcurves import explore, jobs  # noqa: E402
 
 
 def _package(evidence: Path, package_id: str) -> Path:
-    folder = evidence / package_id
-    if (folder / "evidence.json").is_file():
-        return folder
-    copies = sorted(p for p in folder.glob("*") if (p / "evidence.json").is_file())
-    if len(copies) != 1:
-        raise SystemExit(f"{package_id}: expected one package under {folder}")
-    return copies[0]
+    """A package folder, or the verified installed copy under an evidence store (the most
+    recently installed when the store holds several versions)."""
+    from streamcurves import evidence_store as evs
+    try:
+        return evs.pick(evidence / package_id)
+    except evs.EvidenceError as exc:
+        raise SystemExit(f"{package_id}: {exc}")
 
 
 def main(argv=None) -> int:

@@ -47,6 +47,8 @@ MAX_MANIFEST_BYTES = 8 * 1024 * 1024
 PACKAGE_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 #: a version label rides in archive names
 VERSION_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,63}$")
+#: names Windows reserves for devices, as a folder name or before its first dot
+_RESERVED = {"con", "prn", "aux", "nul", *(f"com{i}" for i in range(1, 10)), *(f"lpt{i}" for i in range(1, 10))}
 _CHUNK = 1 << 20
 
 ProgressFn = Callable[[int, int], None]
@@ -106,17 +108,41 @@ def _safe_rel(name: str) -> str:
     return name
 
 
+def _no_constant(name: str):
+    raise EvidenceError(f"evidence.json holds {name}, which is not a finite number")
+
+
+def loads(text: str) -> dict:
+    """A manifest's JSON, refusing NaN and Infinity (a canonical digest cannot hold them)."""
+    return json.loads(text, parse_constant=_no_constant)
+
+
+def usable_package_id(pid) -> bool:
+    """A plain folder name: lower-case letters, digits, dot, dash, underscore; not a name
+    Windows reserves; no trailing dot."""
+    if not isinstance(pid, str) or not PACKAGE_ID_RE.match(pid) or pid.endswith("."):
+        return False
+    return pid.split(".", 1)[0] not in _RESERVED
+
+
 def check_manifest(doc: dict) -> dict:
     """The manifest's shape: schema, id, version, digest and a file table of safe paths."""
     if not isinstance(doc, dict) or doc.get("schema") != SCHEMA:
         raise EvidenceError("not an evidence package")
-    if int(doc.get("schemaVersion") or 0) > SCHEMA_VERSION:
+    schema_version = doc.get("schemaVersion", 0)
+    if schema_version is None:
+        schema_version = 0
+    if not isinstance(schema_version, int) or isinstance(schema_version, bool):
+        raise EvidenceError("evidence.json has an unusable schemaVersion")
+    if schema_version > SCHEMA_VERSION:
         raise EvidenceError("this evidence package is newer than this app reads; update the app")
     for key in ("packageId", "version", "dataDigest", "files"):
         if not doc.get(key):
             raise EvidenceError(f"evidence.json has no {key}")
-    if not isinstance(doc["packageId"], str) or not PACKAGE_ID_RE.match(doc["packageId"]):
+    if not usable_package_id(doc["packageId"]):
         raise EvidenceError(f"evidence.json has an unusable package id: {doc['packageId']!r}")
+    if not isinstance(doc["dataDigest"], str) or not doc["dataDigest"].startswith("sha256:"):
+        raise EvidenceError("evidence.json has an unusable data digest")
     if not VERSION_RE.match(str(doc["version"])):
         raise EvidenceError(f"evidence.json has an unusable version: {doc['version']!r}")
     files = doc["files"]
@@ -124,8 +150,10 @@ def check_manifest(doc: dict) -> dict:
         raise EvidenceError("evidence.json lists no files")
     for rel, rec in files.items():
         _safe_rel(rel)
-        if not isinstance(rec, dict) or not isinstance(rec.get("bytes"), int) or rec["bytes"] < 0 \
-                or len(str(rec.get("sha256") or "")) != 64:
+        sha = rec.get("sha256") if isinstance(rec, dict) else None
+        if not isinstance(rec, dict) or not isinstance(rec.get("bytes"), int) or isinstance(rec["bytes"], bool) \
+                or rec["bytes"] < 0 or not isinstance(sha, str) or len(sha) != 64 \
+                or any(ch not in "0123456789abcdef" for ch in sha):
             raise EvidenceError(f"evidence.json has a bad record for {rel}")
     if data_digest(files) != doc["dataDigest"]:
         raise EvidenceError("evidence.json's data digest does not match its file table")
@@ -139,7 +167,9 @@ def read_manifest(folder: Path) -> dict:
     if p.stat().st_size > MAX_MANIFEST_BYTES:
         raise EvidenceError("evidence.json is too large")
     try:
-        doc = json.loads(p.read_text(encoding="utf-8"))
+        doc = loads(p.read_text(encoding="utf-8"))
+    except EvidenceError:
+        raise
     except (UnicodeDecodeError, ValueError) as exc:
         raise EvidenceError(f"evidence.json cannot be read ({exc})") from exc
     return check_manifest(doc)
@@ -250,11 +280,13 @@ def _target(root: Path, doc: dict) -> Path:
 
 
 def _reusable(target: Path, doc: dict) -> bool:
+    """True when ``target`` already holds this package, every file hashed now; anything else
+    there (damaged, edited, unreadable) is removed so the install replaces it."""
     if not target.is_dir():
         return False
     try:
-        got = check(target)
-    except (EvidenceError, OSError):
+        got = check(target, full=True)
+    except Exception:  # noqa: BLE001 - an unreadable folder is replaced, never trusted
         got = {"ok": False}
     if got["ok"] and got.get("packageDigest") == package_digest(doc):
         return True
@@ -291,7 +323,7 @@ def _install_from(z: zipfile.ZipFile, root: Path) -> Path:
             raise EvidenceError(f"links are not allowed in a package: {info.filename!r}")
     if z.getinfo(MANIFEST).file_size > MAX_MANIFEST_BYTES:
         raise EvidenceError("evidence.json is too large")
-    doc = check_manifest(json.loads(z.read(MANIFEST).decode("utf-8")))
+    doc = check_manifest(loads(z.read(MANIFEST).decode("utf-8")))
     listed = set(doc["files"]) | {MANIFEST}
     unlisted = [n for n in names if n not in listed]
     if unlisted:
@@ -372,12 +404,20 @@ def installed(root: Optional[Path] = None) -> list[dict]:
         for ver in sorted(p for p in pkg.iterdir() if p.is_dir()):
             try:
                 got = check(ver)
-            except (EvidenceError, OSError):
+            except Exception as exc:  # noqa: BLE001 - one bad folder never hides the others
+                # a manifest that cannot be read: listed as a damaged copy of the package its
+                # folder is filed under, so the page offers to fetch it again
+                out.append({"packageId": pkg.name, "version": None, "dataDigest": None,
+                            "packageDigest": None, "installedAs": ver.name, "path": str(ver),
+                            "title": pkg.name, "roles": [], "reproducibility": None, "bytes": 0,
+                            "verified": False, "damaged": [MANIFEST], "manifest": None,
+                            "problem": str(exc)[:200]})
                 continue
             doc = got["manifest"]
             out.append({"packageId": doc["packageId"], "version": doc["version"],
                         "dataDigest": doc["dataDigest"], "packageDigest": got["packageDigest"],
-                        "path": str(ver), "title": doc.get("title") or doc["packageId"],
+                        "installedAs": ver.name, "path": str(ver),
+                        "title": doc.get("title") or doc["packageId"],
                         "roles": doc.get("roles") or [], "reproducibility": doc.get("reproducibility"),
                         "bytes": sum(r["bytes"] for r in doc["files"].values()),
                         "verified": got["ok"], "damaged": got["damaged"] + got["unlisted"],
@@ -385,13 +425,20 @@ def installed(root: Optional[Path] = None) -> list[dict]:
     return out
 
 
+def _short(digest) -> str:
+    return str(digest or "").split(":", 1)[-1][:12]
+
+
 def matches(rec: dict, ref: dict) -> bool:
     """True when an installed package (or a check result) is the one ``ref`` names: its package
-    digest when the reference records one, else its data digest."""
+    digest when the reference records one, else its data digest. A store folder installed under
+    the reference's package digest is that package even when its manifest was changed since (it
+    is then listed as damaged, never as another version)."""
     if rec.get("packageId") != ref.get("packageId"):
         return False
     if ref.get("packageDigest"):
-        return rec.get("packageDigest") == ref["packageDigest"]
+        return (rec.get("packageDigest") == ref["packageDigest"]
+                or (bool(rec.get("installedAs")) and rec.get("installedAs") == _short(ref["packageDigest"])))
     return rec.get("dataDigest") == ref.get("dataDigest")
 
 
@@ -418,14 +465,37 @@ def ready(ref: dict, *, root: Optional[Path] = None) -> Path:
     mine = [r for r in installed(root) if matches(r, ref)]
     damaged: list = []
     for rec in mine:
-        got = check(Path(rec["path"]), full=True)
-        if got["ok"]:
+        try:
+            got = check(Path(rec["path"]), full=True)
+        except Exception:  # noqa: BLE001 - an unreadable manifest is damage
+            got = {"ok": False, "damaged": [MANIFEST], "unlisted": []}
+        if got["ok"] and (not ref.get("packageDigest") or got.get("packageDigest") == ref["packageDigest"]):
             return Path(rec["path"])
         damaged += got["damaged"] + got["unlisted"]
     if mine:
         raise EvidenceError(f"{title} is damaged on this computer ({', '.join(damaged[:3])} failed its "
                             "check). Import or download it again.")
     raise EvidenceError(f"{title} is not on this computer. Import or download it first.")
+
+
+def pick(folder: Path) -> Path:
+    """A package folder (``<folder>/evidence.json``), or the copy to use when ``folder`` is a
+    store's package folder holding one or more installed versions: the verified one, the most
+    recently installed when several verify. Raises :class:`EvidenceError` when none verifies."""
+    folder = Path(folder)
+    if (folder / MANIFEST).is_file():
+        return folder
+    copies = sorted(p for p in folder.glob("*") if (p / MANIFEST).is_file())
+    good = []
+    for c in copies:
+        try:
+            if check(c)["ok"]:
+                good.append(c)
+        except Exception:  # noqa: BLE001 - an unreadable copy is not a candidate
+            continue
+    if not good:
+        raise EvidenceError(f"no verified package under {folder} ({len(copies)} copies found)")
+    return max(good, key=lambda c: (c / MANIFEST).stat().st_mtime)
 
 
 # --------------------------------------------------------------------------- #
@@ -584,30 +654,53 @@ def _fetch_into(base: str, name: str, part: Path, have: int, size: int, *, progr
     return False
 
 
-def read_index(base: str) -> dict:
+def read_index(base: str) -> Optional[dict]:
     """The host's ``index.json`` (``{packageId: {zip, zipSha256, zipBytes, packageDigest,
-    dataDigest}}``), or {} when it holds none."""
-    try:
-        if _is_http(base):
+    dataDigest}}``); {} when the host holds none or an unusable one; None when the host
+    cannot be reached."""
+    if _is_http(base):
+        try:
             r = http_get(base + ("" if base.endswith("/") else "/") + INDEX, timeout=30.0)
-            try:
-                if r.status_code != 200:
-                    return {}
-                text = r.content.decode("utf-8")
-            finally:
-                try:
-                    r.close()
-                except Exception:  # noqa: BLE001
-                    pass
-        else:
-            p = Path(base) / INDEX
-            if not p.is_file():
+        except Exception:  # noqa: BLE001 - the host is not there
+            return None
+        try:
+            if r.status_code != 200:
                 return {}
+            text = r.content.decode("utf-8", "replace")
+        except Exception:  # noqa: BLE001
+            return None
+        finally:
+            try:
+                r.close()
+            except Exception:  # noqa: BLE001
+                pass
+    else:
+        folder = Path(base)
+        if not folder.is_dir():
+            return None
+        p = folder / INDEX
+        if not p.is_file():
+            return {}
+        try:
             text = p.read_text(encoding="utf-8")
+        except OSError:
+            return None
+    try:
         doc = json.loads(text)
-    except Exception:  # noqa: BLE001 - no index is the same as an unreadable one
+    except ValueError:
         return {}
     return doc if isinstance(doc, dict) else {}
+
+
+def _archive_is(z: Path, ref: dict) -> bool:
+    """True when the archive at ``z`` holds the package ``ref`` names (its manifest only is read)."""
+    try:
+        with zipfile.ZipFile(z) as zf:
+            doc = check_manifest(loads(zf.read(MANIFEST).decode("utf-8")))
+    except Exception:  # noqa: BLE001 - install_zip says what is wrong with it
+        return True
+    return matches({"packageId": doc["packageId"], "packageDigest": package_digest(doc),
+                    "dataDigest": doc["dataDigest"]}, ref)
 
 
 def fetch_reference(base: str, ref: dict, *, root: Optional[Path] = None,
@@ -626,24 +719,33 @@ def fetch_reference(base: str, ref: dict, *, root: Optional[Path] = None,
         try:
             z = download(base, arch["name"], sha256=arch["sha256"], size=int(arch["bytes"]), root=root,
                          progress=progress, cancel=cancel)
-            folder = install_zip(z, root=root)
-            if matches(check(folder), ref):
-                z.unlink(missing_ok=True)
-                return folder
+            if _archive_is(z, ref):
+                folder = install_zip(z, root=root)
+                if matches(check(folder), ref):
+                    z.unlink(missing_ok=True)
+                    return folder
+            z.unlink(missing_ok=True)       # another version under the pinned name: not installed
             tried.append((arch["name"], arch["sha256"]))
         except (EvidenceMissing, EvidenceMismatch):
             tried.append((arch["name"], arch["sha256"]))
-    entry = read_index(base).get(str(ref.get("packageId")))
+    index = read_index(base)
+    if index is None:
+        raise EvidenceError(f"The host of {title} could not be reached. Check the connection and try "
+                            "again, or import the package from a file.")
+    entry = index.get(str(ref.get("packageId")))
     if not isinstance(entry, dict) or not matches({"packageId": ref.get("packageId"), **entry}, ref) \
             or not entry.get("zip") or (entry.get("zip"), entry.get("zipSha256")) in tried:
         raise EvidenceError(f"The host does not hold this version of {title}. Import it from a file "
                             "or ask for the package.")
     z = download(base, entry["zip"], sha256=entry["zipSha256"], size=int(entry["zipBytes"]), root=root,
                  progress=progress, cancel=cancel)
+    if not _archive_is(z, ref):
+        z.unlink(missing_ok=True)
+        raise EvidenceError(f"The host's copy of {title} is another version of the package.")
     folder = install_zip(z, root=root)
+    z.unlink(missing_ok=True)
     if not matches(check(folder), ref):
         raise EvidenceError(f"The host's copy of {title} is another version of the package.")
-    z.unlink(missing_ok=True)
     return folder
 
 
@@ -652,4 +754,4 @@ __all__ = ["SCHEMA", "SCHEMA_VERSION", "MANIFEST", "STAMP", "INDEX", "DATA_SUFFI
            "check_manifest", "read_manifest", "verify_folder", "check", "install_zip",
            "install_folder", "installed", "matches", "find", "ready", "download", "read_index",
            "fetch_reference", "data_digest", "package_digest", "http_get", "nrsa_archive_record",
-           "sha_file"]
+           "sha_file", "loads", "usable_package_id", "pick"]
