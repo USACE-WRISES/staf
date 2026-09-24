@@ -358,7 +358,8 @@ def _score_scale(r: Mapping, ctx: Mapping) -> dict:
                       "SQT bands differ from STAF: the SQT calls an index below 0.30 Not "
                       "Functioning and below 0.70 At Risk; STAF and DEEP use 0.39 and 0.69, "
                       "so an SQT index from 0.30 to 0.39 is At Risk in the SQT and Not "
-                      "Functioning in DEEP.")
+                      "Functioning in DEEP, and one above 0.69 and below 0.70 is At Risk in the "
+                      "SQT and Functioning in DEEP.")
     return _check("score-scale", "unknown", f"Unrecognized score scale {kind}.")
 
 

@@ -714,6 +714,12 @@ def sqt_candidate(record: Mapping, *, function_id: str, context: Optional[Mappin
     frozen = reg.frozen_copy(record)
     checks = reg.applicability(frozen, ctx)
     adoption = sqt_adoption(frozen)
+    if not adoption["openEnds"] and not adoption["blockers"]:
+        # the registry's check reads the record's own bins; the adopted curve is what scores
+        checks = [c for c in checks if c.get("id") != "extrapolation"] + [{
+            "id": "extrapolation", "status": "pass",
+            "detail": "The adopted curve runs from index 0 to 1, so nothing past its ends is left to "
+                      "assume" + (" (" + " ".join(adoption["notes"]) + ")" if adoption["notes"] else "") + "."}]
     rng = ctx.get("xRange")
     xs = [x for x, _ in adoption["points"]]
     inside = (isinstance(rng, (list, tuple)) and len(rng) == 2 and xs
@@ -755,8 +761,12 @@ def sqt_candidate(record: Mapping, *, function_id: str, context: Optional[Mappin
     limitations = [] if ver.get("status") == "verified" else [
         "Checked only in part against the original." if ver.get("status") == "partially-verified" else
         "A STAF adaptation of the SQT, not checked against the original."]
+    # with the original's own points adopted, differences between the metric library's bins and
+    # the original describe the older adaptation, not this curve
+    from_original = ver.get("status") in ("verified", "partially-verified") and bool(ver.get("originalPoints"))
+    skip = _AUTHORING_ISSUES | ({"rounded-values", "value-drift"} if from_original else set())
     limitations += [str(i.get("detail")) for i in frozen.get("issues") or []
-                    if i.get("severity") in ("warning", "defect") and i.get("code") not in _AUTHORING_ISSUES]
+                    if i.get("severity") in ("warning", "defect") and i.get("code") not in skip]
     limitations += adoption["notes"]
     label = " ".join(x for x in (str(frozen.get("originalMetricName") or ""),
                                  f"({frozen.get('state')} SQT"

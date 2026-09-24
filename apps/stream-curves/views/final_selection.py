@@ -758,6 +758,9 @@ def final_selection_server(input, output, session, state, *, tiles):
         ui.notification_show("Recorded. It stays with this project and its published record.",
                              type="message", duration=5)
 
+    # suspend_when_hidden=False: dialog outputs bind while the modal is still hidden
+    # (Bootstrap fade) and a suspended output never resumes (DEEP documents the same trap)
+    @output(suspend_when_hidden=False)
     @render.ui
     def fs_sqt_results():
         fid = picker()
@@ -792,6 +795,9 @@ def final_selection_server(input, output, session, state, *, tiles):
         return [(tg, recheck(cand, p["fid"], states=_states(), targets=[tg], region={"code": code}))
                 for tg in curve_targets(state, list(replaced or []))]
 
+    # suspend_when_hidden=False: dialog outputs bind while the modal is still hidden
+    # (Bootstrap fade) and a suspended output never resumes (DEEP documents the same trap)
+    @output(suspend_when_hidden=False)
     @render.ui
     def fs_select_checks():
         p = pending()
