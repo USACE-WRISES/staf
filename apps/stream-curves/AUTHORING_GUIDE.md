@@ -9,7 +9,10 @@ Two roles:
 - An **author** works in an installed StreamCurves (or any checkout without the publish switch).
   They download a version, revise it as their own project, and send the project file back.
 - The **maintainer** works in a checkout with `STAF_LIBRARY_PUBLISH=1` and
-  `STAF_LIBRARY_MAINTAINER=<initials>`. Only they publish to the canonical library.
+  `STAF_LIBRARY_MAINTAINER=<initials>`. Only they publish to the canonical library. When
+  approvals carried from earlier versions are recorded under another name of theirs (their login,
+  before 2026-09-24), `STAF_LIBRARY_MAINTAINER_ALIASES=<that name>` lets `promote` take them as
+  theirs.
 
 StreamCurves records initials, never a name or the Windows login: `STAF_LIBRARY_MAINTAINER`
 when it is set, else the open project's Prepared by initials (Project panel, **Project

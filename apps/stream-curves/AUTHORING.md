@@ -534,7 +534,11 @@ the app for the usual ways of reading it), and nothing is refused for a missing 
 (the EASI selections, a curve's completion, a coverage exception) starts from these, and a cleared
 field records `n/a`; the other pages record them without asking. This is StreamCurves' own tracking,
 on its DEEP and EASI pages alike; the DEEP app and the bundle format do not change. The batch
-script's `--maintainer` keeps its default, because `promote` confirms approvals against that name.
+scripts' `--maintainer` defaults to the owner's initials (GM). `promote` accepts only approvals
+recorded under the promoting maintainer's name, or under an earlier name of theirs that
+`STAF_LIBRARY_MAINTAINER_ALIASES` lists (approvals recorded before 2026-09-24 name the owner's
+login); such an approval keeps the name it was recorded under. The list lives in the maintainer's
+own environment, never in code.
 
 ## Compatibility rules
 

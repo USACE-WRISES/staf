@@ -442,6 +442,26 @@ def test_confirm_approvals_resolves_every_approval_to_the_owner():
         mod._confirm_approvals(bad, maintainer="owner", date="2026-08-22")
 
 
+def test_promote_takes_an_approval_under_an_earlier_name_of_the_owner_as_the_owners(monkeypatch):
+    """Approvals carried from earlier versions name the owner's login; with initials as the
+    maintainer they are the owner's only when the owner lists that name (2026-09-24)."""
+    import copy
+    mod = _batch_module()
+    meta = {"portfolioApprovals": [
+        {"functionId": "fn-a", "approvedBy": "earlier-name", "note": "carried"},
+        {"functionId": "fn-b", "approvedBy": "standing-policy:select01 " + dec.PENDING_SUFFIX, "note": "y"}]}
+    monkeypatch.delenv(mod.ALIASES_ENV, raising=False)
+    with pytest.raises(SystemExit, match="fn-a"):
+        mod._confirm_approvals(copy.deepcopy(meta), maintainer="GM", date="2026-09-24")
+    monkeypatch.setenv(mod.ALIASES_ENV, " earlier-name , another ")
+    out = mod._confirm_approvals(copy.deepcopy(meta), maintainer="GM", date="2026-09-24")
+    assert [a["approvedBy"] for a in out] == ["earlier-name", "GM"]      # the recorded name is kept
+    monkeypatch.setenv(mod.ALIASES_ENV, "another")
+    with pytest.raises(SystemExit, match=mod.ALIASES_ENV):
+        mod._confirm_approvals(copy.deepcopy(meta), maintainer="GM", date="2026-09-24")
+    assert mod.maintainer_names("GM") == {"GM", "another"}
+
+
 def test_html_gallery_has_one_tile_per_curve_row(assembled, tmp_path):
     from streamcurves import curve_svg as cs
     p = rp.write_curve_gallery_html(assembled, tmp_path / "curve_gallery.html")
