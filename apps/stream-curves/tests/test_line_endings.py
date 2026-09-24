@@ -81,12 +81,32 @@ def fingerprinted() -> set[Path]:
 
 
 def recorded() -> set[Path]:
-    """Every file data/nrsa_provenance.json or the NRSA archive manifest records by its bytes."""
+    """Every file data/nrsa_provenance.json, the NRSA archive manifest or the SQT registry
+    records by its bytes (the registry pins each adapted SQT bundle it read)."""
     data = Path(DATA_DIR)
     prov = json.loads((data / "nrsa_provenance.json").read_text(encoding="utf-8"))
     out = {data / f["file"] for f in prov["files"]}
     manifest = json.loads((data / "nrsa" / "manifest.json").read_text(encoding="utf-8"))
-    return out | {data / "nrsa" / rel for rel in manifest["files"]}
+    out |= {data / "nrsa" / rel for rel in manifest["files"]}
+    registry = json.loads((data / "sqt" / "registry.json").read_text(encoding="utf-8"))
+    return out | {REPO / b["path"] for b in registry["inputs"]["adaptedBundles"]}
+
+
+def test_the_library_and_the_deep_bake_write_lf_on_every_platform(tmp_path):
+    """A version the library writes on Windows is byte for byte what git stores, so the SQT
+    registry's digests of it hold in every copy (2026-09-24: the SQT v2 publish left CRLF
+    working copies that the registry then recorded)."""
+    from streamcurves import library as lib
+    lib._write_json(tmp_path / "a.json", {"lines": [1, 2]})
+    data = (tmp_path / "a.json").read_bytes()
+    assert b"\n" in data and b"\r" not in data
+    src = (PKG / "library.py").read_text(encoding="utf-8")
+    assert 'session_io.dumps_session(session_payload), encoding="utf-8", newline="\\n"' in src
+    # the bake imports the DEEP package at import time, so its writer is read, not run
+    bake = (REPO / "apps" / "deep" / "scripts" / "bake_library_into_deep.py").read_text(
+        encoding="utf-8")
+    body = bake[bake.index("def _write(path: Path, obj) -> None:"):]
+    assert 'newline="\\n"' in body[:body.index("\ndef ")]
 
 
 _HOW = ("is CRLF in this checkout but LF in git, so this checkout fingerprints it differently "

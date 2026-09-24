@@ -247,8 +247,11 @@ def _read_json(path: Path) -> Any:
 
 
 def _write_json(path: Path, obj: Any) -> None:
+    # LF on every platform: git stores these as LF, and the SQT registry records the adapted
+    # bundles by their bytes, so a CRLF working copy would hash unlike every other copy
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(obj, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(obj, indent=2, ensure_ascii=False) + "\n", encoding="utf-8",
+                    newline="\n")
 
 
 def _now_iso() -> str:
@@ -1037,7 +1040,7 @@ def publish_version(
     vdir.mkdir(parents=True, exist_ok=True)
     _write_json(vdir / BUNDLE_FILE, out_bundle)
     (vdir / SESSION_FILE).write_text(
-        session_io.dumps_session(session_payload), encoding="utf-8"
+        session_io.dumps_session(session_payload), encoding="utf-8", newline="\n"
     )
     if provenance:
         _write_json(vdir / PROVENANCE_FILE, {
