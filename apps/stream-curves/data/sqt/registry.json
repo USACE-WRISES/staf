@@ -390,7 +390,7 @@
    {
     "assessmentId": "ak-sqt-adapted",
     "path": "apps/library/assessments/ak-sqt-adapted/v2/assessment.deep.json",
-    "sha256": "sha256:98d1eceec3c8cb7f467ffbc53f1496fcf4e47bf846b0f7d365b767065c812e87",
+    "sha256": "sha256:42c3a9c4b61d42eb7bec45b8bc9f143de92bfe30ffbbc66795a62ffebcd00842",
     "version": 2
    },
    {
@@ -402,7 +402,7 @@
    {
     "assessmentId": "co-sqt-adapted",
     "path": "apps/library/assessments/co-sqt-adapted/v2/assessment.deep.json",
-    "sha256": "sha256:af98f6922077bff3ce3df11a730b4e6702ad6745e48710558949fdfbbe810c68",
+    "sha256": "sha256:1e94d4e5ec2cd532e9e6e23251c51eecafc136fd74403ad8858836addec6fb6f",
     "version": 2
    },
    {
@@ -414,7 +414,7 @@
    {
     "assessmentId": "mi-sqt-adapted",
     "path": "apps/library/assessments/mi-sqt-adapted/v2/assessment.deep.json",
-    "sha256": "sha256:81614a0ddf07949ca23df9cd6295797c2b331fe55a97fb92c5b7d40dc538e6bf",
+    "sha256": "sha256:afa1af108e794e427a4d766842c696bc23fc52b247449287d8bbdbb89e168536",
     "version": 2
    },
    {
@@ -426,7 +426,7 @@
    {
     "assessmentId": "mn-sqt-adapted",
     "path": "apps/library/assessments/mn-sqt-adapted/v2/assessment.deep.json",
-    "sha256": "sha256:5e4a057e6f7d8ec66303cabfe8ce820321be1af04e120ffa7be2ac2144cfcd64",
+    "sha256": "sha256:07c0a0acdc1d37bf9ec2002520daeb9b3a5d1dd9b83bc77f0b7eeac2104da1e9",
     "version": 2
    },
    {
@@ -438,7 +438,7 @@
    {
     "assessmentId": "nc-sqt-adapted",
     "path": "apps/library/assessments/nc-sqt-adapted/v2/assessment.deep.json",
-    "sha256": "sha256:a31f886221997e004cb4a18c18c439896dadb90c20ae949a66626b9ea7c182e5",
+    "sha256": "sha256:fc3d9314692c2eec28779dd1bed904936a23fac816b0c28756f0fb2e017be66f",
     "version": 2
    },
    {
@@ -450,7 +450,7 @@
    {
     "assessmentId": "sc-sqt-adapted",
     "path": "apps/library/assessments/sc-sqt-adapted/v2/assessment.deep.json",
-    "sha256": "sha256:77e811fe1c136c4acbae59c3d35f5dae5598873345e8532118f898b03b5400b3",
+    "sha256": "sha256:302d472c9b0880c8acc184844993d8c6fb822609860978e5a7d3262ece5941a4",
     "version": 2
    },
    {
@@ -462,7 +462,7 @@
    {
     "assessmentId": "wi-sqt-adapted",
     "path": "apps/library/assessments/wi-sqt-adapted/v2/assessment.deep.json",
-    "sha256": "sha256:542e84a20e70f77482e0b75c7a6a0826343dc31380c847221be4d65f64bf2af6",
+    "sha256": "sha256:e91134d1e46899cab9936ca83d9e87bcae5070cedd6abcae3b2facf9bddab1e5",
     "version": 2
    },
    {
@@ -474,7 +474,7 @@
    {
     "assessmentId": "wy-sqt-adapted",
     "path": "apps/library/assessments/wy-sqt-adapted/v2/assessment.deep.json",
-    "sha256": "sha256:c263688ffd6a1974a127d09434d3298cf4bb4d96bb4c24e8643950a5ca38ab16",
+    "sha256": "sha256:e515ac03d8320b72d70e4de22cb83dc0023dd27960cff7725c84a30ac33b9875",
     "version": 2
    }
   ],
