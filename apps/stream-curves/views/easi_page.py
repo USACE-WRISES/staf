@@ -109,6 +109,21 @@ def _btn(evt_id: str, label, cls: str = "btn btn-primary btn-sm", **attrs):
     return ui.tags.button(label, type="button", class_=cls, onclick=_evt(evt_id), **attrs)
 
 
+def _sentence(text) -> str:
+    text = str(text or "").strip()
+    if not text:
+        return ""
+    text = text[0].upper() + text[1:]
+    return text if text.endswith((".", "!", "?")) else text + "."
+
+
+def _unavailable_line(i: dict) -> str:
+    """One item a package does not carry: what, why, and what to do."""
+    head = str(i.get("item") or "").strip()
+    head = head[:1].upper() + head[1:]
+    return " ".join(x for x in (f"{head}:", _sentence(i.get("why")), _sentence(i.get("remedy"))) if x.strip(": "))
+
+
 def _fmt(v) -> str:
     """An authored number exactly as it scores (up to ten significant digits)."""
     try:
@@ -929,8 +944,7 @@ def easi_page_server(input, output, session, state: AppState):
             items = doc.get(key) or []
             if items:
                 lists.append(ui.div(title, class_="sc-sec"))
-                lists.append(ui.tags.ul(*[ui.tags.li(i if isinstance(i, str) else
-                                                     f"{i.get('item')}: {i.get('why')}. {i.get('remedy') or ''}")
+                lists.append(ui.tags.ul(*[ui.tags.li(i if isinstance(i, str) else _unavailable_line(i))
                                           for i in items], class_="easi-list"))
         checks = doc.get("checks") or {}
         preview = None
@@ -966,6 +980,9 @@ def easi_page_server(input, output, session, state: AppState):
             return None
         return Path(folder) / rel
 
+    # suspend_when_hidden=False: dialog outputs bind while the modal is still hidden
+    # (Bootstrap fade) and a suspended output never resumes (DEEP documents the same trap)
+    @output(suspend_when_hidden=False)
     @render.ui
     def pkg_preview():
         path = _table_path()
@@ -1676,6 +1693,9 @@ def easi_page_server(input, output, session, state: AppState):
             footer=ui.TagList(ui.modal_button("Cancel", class_="btn btn-outline-secondary"),
                               _btn(ns(apply_id), apply_label, "btn btn-primary"))))
 
+    # suspend_when_hidden=False: dialog outputs bind while the modal is still hidden
+    # (Bootstrap fade) and a suspended output never resumes (DEEP documents the same trap)
+    @output(suspend_when_hidden=False)
     @render.ui
     def modal_err():
         msg = str(_modal_err() or "").strip()
