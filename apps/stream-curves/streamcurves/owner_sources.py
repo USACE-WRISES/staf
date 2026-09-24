@@ -842,29 +842,50 @@ def sqt_statement(frozen: Mapping) -> str:
 
 def sqt_source(candidate: Mapping) -> dict:
     """The ``source`` of a REF-15 decision that selects a considered state SQT curve
-    (``candidates.sqt_candidate``): the published rule written as DEEP points (the conversion
-    ``candidates.sqt_adoption`` recorded), in the shape a carried curve rides in, stated as a
-    published criterion with the SQT's own label, verification and limits. Refused for a
-    candidate the registry, its checks or its frozen record exclude."""
-    if (candidate.get("eligibility") or {}).get("status") != "eligible":
-        raise ValueError("This SQT curve is excluded: "
-                         + " ".join((candidate.get("eligibility") or {}).get("reasons") or []))
-    frozen = dict(candidate.get("record") or {})
+    (``candidates.sqt_candidate``), rebuilt from its frozen record alone: the published rule
+    written as DEEP points (``candidates.sqt_adoption``) plus the author's completion of an
+    end the source leaves open (``candidates.check_completion``), in the shape a carried curve
+    rides in, stated as a published criterion with the SQT's own label, verification and
+    limits. Nothing saved beside the record is trusted: not its points, direction, units,
+    stratum, label or limits (the record's fingerprint does not cover them). Refused for a
+    record the registry or its fingerprint excludes, a rule DEEP cannot write, one stratum of
+    a metric, an open end that is not completed, and a candidate its checks excluded."""
+    from . import candidates as C
+    from . import owner_curves as oc
     from . import sqt_registry
+    frozen = dict(candidate.get("record") or {})
     if not sqt_registry.frozen_intact(frozen):
         raise ValueError("The frozen SQT record no longer matches its fingerprint.")
     if not frozen.get("eligible"):
         raise ValueError("The SQT registry marks this curve ineligible.")
+    if (candidate.get("eligibility") or {}).get("status") != "eligible":
+        raise ValueError("This SQT curve is excluded: "
+                         + " ".join((candidate.get("eligibility") or {}).get("reasons") or []))
+    adoption = C.sqt_adoption(frozen)
+    if adoption["blockers"]:
+        raise ValueError(" ".join(adoption["blockers"]))
+    restricted = C.sqt_restriction(frozen)
+    if restricted:
+        raise ValueError(restricted)
+    direction = frozen.get("direction")
+    completion = candidate.get("completion") or {}
+    added = [{"x": float(p["x"]), "y": float(p["y"]), "side": str(p.get("side"))}
+             for p in completion.get("points") or []] if adoption["openEnds"] else []
+    if adoption["openEnds"]:
+        problems = C.check_completion(adoption["points"], adoption["openEnds"], direction, added)
+        if problems:
+            raise ValueError("Complete the curve first: " + " ".join(problems))
+    published = [(float(x), float(y)) for x, y in adoption["points"]]
+    points = sorted(published + [(p["x"], p["y"]) for p in added])
     ident = candidate.get("identity") or {}
-    mk = str((ident.get("subject") or {}).get("id"))
-    d = candidate.get("definition") or {}
-    direction = d.get("direction")
+    mk = str((ident.get("subject") or {}).get("id") or C.sqt_metric_key(frozen))
+    label = C.sqt_label(frozen)
     edition = _sqt_edition(frozen)
-    tool = " ".join(str(x) for x in (frozen.get("tool"), f"({edition})" if edition else None) if x) \
-        or "the state SQT"
+    tool = (" ".join(str(x) for x in (frozen.get("tool"), f"({edition})" if edition else None) if x)
+            or "the state SQT")
     how = (str(frozen["protocol"]) if frozen.get("protocol") else
            f"Measure it as the {tool} specifies.")
-    config = {"display_name": candidate.get("label") or mk, "units": d.get("units") or "",
+    config = {"display_name": label or mk, "units": frozen.get("units") or "",
               "column_name": mk, "notes": how}
     if direction in ("increasing", "decreasing"):
         config["higher_is_better"] = direction == "increasing"
@@ -873,7 +894,15 @@ def sqt_source(candidate: Mapping) -> dict:
                "partially-verified": "Checked in part against the original."}.get(
         ver.get("status"), "A STAF adaptation of the SQT, not checked against the original.")
     limit = f"{curve_basis.limit_for(curve_basis.PUBLISHED)} {checked}"
-    caveats = [limit] + [str(x) for x in candidate.get("limitations") or [] if str(x) not in limit]
+    # the verification is stated once, in the limit
+    caveats = [limit] + [x for x in C.sqt_limitations(frozen, adoption)
+                         if x not in C.VERIFICATION_LIMITS and x not in limit]
+    if added:
+        who = str(completion.get("by") or "n/a")
+        said = ", ".join(f"{p['x']:g} scores {p['y']:g}" for p in sorted(added, key=lambda q: q["x"]))
+        caveats.append(f"The SQT publishes points from {published[0][0]:g} to {published[-1][0]:g}; the "
+                       f"points past them were added by {who}: {said}"
+                       + (f" ({completion.get('reason')})." if completion.get("reason") else "."))
     annotations = {"basis": curve_basis.PUBLISHED, "basisLabel": SQT_LABEL,
                    "basisStatement": sqt_statement(frozen), "basisLimit": limit,
                    # every limit, never a cut list: the one about the curve's ends matters most
@@ -883,20 +912,25 @@ def sqt_source(candidate: Mapping) -> dict:
                    "sourceCitation": frozen.get("citation"),
                    "sqt": {"registryKey": frozen.get("key"), "verification": ver.get("status"),
                            "stratum": frozen.get("stratumName"),
-                           "conversion": list(d.get("conversion") or [])}}
+                           "conversion": list(adoption["notes"]),
+                           "publishedPoints": [{"x": x, "y": y} for x, y in published],
+                           "addedPoints": [dict(p) for p in added],
+                           **({"completedBy": str(completion.get("by") or "n/a"),
+                               "completionReason": str(completion.get("reason") or "")} if added else {})}}
     if frozen.get("protocol"):
         annotations["methodContext"] = str(frozen["protocol"])
-    return {"kind": SQT, "title": str(candidate.get("label") or mk),
+    return {"kind": SQT, "title": label or mk,
             "citation": str(frozen.get("citation") or "") or None,
             "ref": {"registryKey": frozen.get("key"), "state": frozen.get("state"),
                     "tool": frozen.get("tool"), "edition": edition,
                     "candidateKey": candidate.get("candidateKey"),
                     "basisDigest": candidate.get("basisDigest"),
                     "fingerprint": (frozen.get("frozen") or {}).get("contentFingerprint"),
-                    "verification": ver.get("status")},
+                    "verification": ver.get("status"),
+                    "adoptionVersion": oc.SQT_ADOPTION_VERSION},
             "curve": {"displayName": config["display_name"], "curveStatus": "complete",
-                      "nReference": None, "stratum": str(d.get("stratum") or ""),
-                      "points": [{"x": float(p["x"]), "y": float(p["y"])} for p in d.get("points") or []],
+                      "nReference": None, "stratum": str(frozen.get("stratumName") or ""),
+                      "points": [{"x": x, "y": y} for x, y in points],
                       "layers": [], "config": config, "annotations": annotations}}
 
 

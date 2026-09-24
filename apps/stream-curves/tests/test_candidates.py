@@ -352,15 +352,20 @@ def test_an_sqt_curve_is_checked_against_the_curve_here_that_measures_the_same_m
     assert "xRange" not in other and "Total phosphorus" in {c["id"]: c for c in reg.applicability(turb, other)}["construct"]["detail"]
     assert "measures another metric" in _html(fs.replacement_checks_ui([(tp, fs.recheck(cand, "water-soil-quality",
                                                                                           states=["AK"], targets=[tp]))]))
-    # an end the source leaves open: only a range inside it can use the curve
+    # an end the source leaves open: a candidate with a note, whatever values the target holds
+    # (later sites may fall past it), that the author completes before it can be selected
+    # (the owner's decision 1, 2026-09-24)
     cond = reg.record("sqt:nc:specific-conductivity:piedmont")
     wide = C.sqt_target("chem_COND", {"display_name": "Conductivity", "higher_is_better": False}, (50, 300))
     inside = C.sqt_target("chem_COND", {"display_name": "Conductivity", "higher_is_better": False}, (100, 300))
-    # (the Piedmont stratum recorded as covering the target, so only the ends decide)
-    status = lambda t: C.sqt_candidate(cond, function_id="water-soil-quality", context={  # noqa: E731
-        **C.sqt_context(cond, function_id="water-soil-quality", states=["NC"], targets=[t]),
-        "stratumCoversTarget": True})["eligibility"]["status"]
-    assert status(wide) == "excluded" and status(inside) == "eligible"
+    for target in (wide, inside):
+        # (the Piedmont stratum recorded as covering the target, so only the ends decide)
+        c = C.sqt_candidate(cond, function_id="water-soil-quality", context={
+            **C.sqt_context(cond, function_id="water-soil-quality", states=["NC"], targets=[target]),
+            "stratumCoversTarget": True})
+        ends = next(x for x in c["eligibility"]["checks"] if x["id"] == "past-ends")
+        assert c["eligibility"]["status"] == "eligible" and c["needsCompletion"]
+        assert ends["status"] == "warn" and "low end (78 scores 0.69)" in ends["detail"]
     # the picker checks each record against this function's curves
     listed = _html(fs.picker_results_ui([turb], ns=lambda x: x, function_id="water-soil-quality",
                                         states=["AK"], targets=[upside]))

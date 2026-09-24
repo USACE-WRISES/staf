@@ -371,9 +371,10 @@ One vocabulary for every alternative considered, in DEEP and EASI (`streamcurves
   history; `basisDigest` hashes the analytical content (DEEP: every stratum's points at 12
   significant digits and the direction; EASI: `register.basis_digest`, the catalog entry's
   analytical fields, the curve sets it reads, anchors and CWA weights) and never captions, badges
-  or caveat text. A DEEP curve can serve several functions, so its identity names none and each
-  decision names its function; an EASI method entry serves one function, so its identity carries
-  `functionId`.
+  or caveat text. A DEEP curve from the build can serve several functions, so its identity names
+  none and each decision names its function. A state SQT candidate is checked for one function, so
+  its identity carries `functionId` (the same record added for two functions is two candidates), as
+  an EASI method entry's does.
 - `sourceKind`: `fitted`, `carried`, `national`, `modeled`, `published_benchmark`, `fixed`, `sqt`,
   `owner_entered`, `borrowed`, `earlier_version`, `imported_alternative`. A fallback route inside
   one selected method (EASI's national curve) is part of that method, never a candidate.
@@ -382,7 +383,10 @@ One vocabulary for every alternative considered, in DEEP and EASI (`streamcurves
   `decidedBy` (`automated`, `imported`, `person`), `who`, `when` and the `basisDigest` decided on;
   one whose basis no longer matches reads "Look again" and stays in the history. A DEEP REF-15
   decision records the digest of the curve it was made on, computed as the register computes it
-  (`views.curve_gallery.metric_basis`), so a refit that moves that curve asks for another look.
+  (`views.curve_gallery.metric_basis`), so a refit that moves that curve asks for another look. The
+  digest is compared only with that curve (its tile), never with a curve the decision replaced in
+  the same function, and a selected SQT curve is compared with its own tile, whether or not its
+  considered candidate is in the session's register.
 
 **DEEP** (`deep_register`) is a projection over records the session already keeps, read from the
 gallery's own tiles so the two views never disagree: SELECT-04's `portfolioSelection` (selected,
@@ -426,21 +430,45 @@ as issues. Owner-supplied originals go in `D:\Data\staf-authoring\sqt-originals\
 `sources.json`; they are cited and fingerprinted, never redistributed.
 
 A curve is added to a DEEP session from the section's picker (search by metric text; filter by
-state, edition, verification, function and eligibility). Each record is checked against the
-function's curves in this session (`candidates.sqt_context`): the ten registry checks (eligibility,
-construct, protocol, units, direction, score scale, geography, stream type, source limits,
-extrapolation) plus the adoption checks (the curve's ends, its form, a stratified metric). When the
-STAF metric library's crosswalk (`config/staf_metric_library.json`, `app_metric_key`) says one of
-those curves measures the same metric, its units, direction (`higher_is_better`) and the range of
-the values the session scores on it enter the checks; otherwise the construct check names the
-curves and units and values are not compared. The picker shows the worst status and its reason;
-Compare lists every check that is not a pass. `candidates.sqt_candidate` freezes the record into the
+state, edition as the rows name it, verification, function and eligibility). Each record is checked
+against the function's curves in this session (`candidates.sqt_context`) with the checks adding it
+runs (`candidates.sqt_checks`): the registry checks (eligibility, construct, protocol, units,
+direction, score scale, geography, stream type, source limits) with the ends judged on the curve
+DEEP adopts, plus its form and the strata rule. When the STAF metric library's crosswalk
+(`config/staf_metric_library.json`, `app_metric_key`) says one of those curves measures the same
+metric, its units, direction (`higher_is_better`) and the range of the values the session scores on
+it enter the checks; otherwise the construct check names the curves and units and values are not
+compared. The crosswalk holds 10 pairs, so 13 of the 346 eligible records can ever get units,
+direction or a range from a curve here. The picker shows the worst status and its reason; Compare
+lists every check that is not a pass. `candidates.sqt_candidate` freezes the record into the
 candidate; a failed check excludes it with the reason. Selecting one checks it again against each
-fitted curve it would take the place of and refuses on a failure. The published rule is written as
-DEEP points (`candidates.sqt_adoption`): the original's points where the registry verified them,
-an end the source extends linearly carried to the index limit it reaches, an end threshold bin as a
-step; a form DEEP cannot write, or an end the source leaves open where the session's values run
-past it, excludes the curve. The index itself is never rescaled: SQT bands (0.30, 0.70) differ from
+fitted curve it would take the place of, or against the function's own curves when it replaces
+none, and refuses on a failure. The published rule is written as DEEP points
+(`candidates.sqt_adoption`): the original's points where the registry verified them, an end the
+source extends linearly carried to the index limit it reaches, an end threshold bin as a step; a
+form DEEP cannot write excludes the curve.
+
+An end the source leaves open (the curve stops inside the index range and the source does not say
+how it scores beyond it) keeps the curve a candidate with a note, whatever values the session holds
+now, because later sites may fall past it. The author completes it (**Complete the curve**) with up
+to three points past each open end, the last at the index limit, keeping the curve's direction, with
+initials and a reason (`candidates.complete_curve`, checked by `check_completion`); only then can it
+be selected. A changed completion changes the candidate's basis digest; a selected curve's
+completion cannot change until its decision is undone. The published curve names the points the
+SQT publishes and the ones added (`annotations.sqt.publishedPoints`, `addedPoints`), and a caveat
+says who added them and why.
+
+Any stratum other than Default, and a Default stratum where the state scores the metric in other
+strata, is one stratum of a metric: DEEP would apply it to every site, so the curve is excluded. How
+a stratum would be recorded as covering the whole target is not built (the check reads a context
+flag, `stratumCoversTarget`, that nothing stores), and neither is adopting all strata as layers. Of
+the 346 eligible records, 232 are one stratum of a metric; three of those are labels rather than
+restrictions (`ALL METRICS`, `# Pieces / 100 meters`, `Field Value (Mean Score)`) and stay excluded
+until coverage can be recorded.
+
+The source a selection records is rebuilt from the frozen record alone, with the completion
+(`owner_sources.sqt_source`): its points, direction, units, stratum, label and limits, never what
+was saved beside the record, and it records `adoptionVersion` 2. The index itself is never rescaled: SQT bands (0.30, 0.70) differ from
 DEEP's (0.39, 0.69), so a selected SQT curve keeps the published index, is labelled "State SQT" on
 the published-criterion basis, and states the banding difference. For an EASI function an SQT curve
 is a field measurement against EASI's desktop estimate, so `register.add_sqt_candidate` records it
@@ -463,7 +491,10 @@ methodology config and the REF-15 rule text say so). With it on, a `source` deci
 stays built and is recorded as supported, not selected, under the decision, and SELECT-04 and the
 reference-source hierarchy keep their order. With it off, such a decision is refused when made and,
 if a session already holds one, applies nothing and says so (`owner_curves.stale`); published
-versions republish unchanged. The bundle carries the owner's decision summary (never `replaces`)
+versions republish unchanged. A state SQT choice saved before the adoption checks of 2026-09-24 (no
+`adoptionVersion`) applies nothing even with the extension on: it is listed as made before the
+checks, with an Undo, and the curve is selected again. Every other kind of source keeps applying as
+it did. The bundle carries the owner's decision summary (never `replaces`)
 and the chosen curve; it never names a replaced or unselected candidate.
 
 ## Compatibility rules
