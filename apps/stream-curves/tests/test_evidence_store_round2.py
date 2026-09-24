@@ -311,6 +311,14 @@ def test_the_recipe_check_needs_the_engine_and_the_refits_code_on_record(tmp_pat
                                         "package does not record the fit recipe code.")
 
 
+def test_a_recorded_check_reads_the_same_with_or_without_its_duration():
+    from views import easi_page as ep
+    now = ep.check_lines({"panelsRegenerateMembers": {"identical": True, "memberRows": 282113}})
+    assert now == ["Drawing the panels again from this package gives the same 282,113 member rows."]
+    before = ep.check_lines({"panelsRegenerateMembers": {"identical": True, "memberRows": 7, "seconds": 18.7}})
+    assert before == ["Drawing the panels again from this package gives the same 7 member rows (18.7 s)."]
+
+
 # --------------------------------------------------------------------------- #
 # the CSV export (a Shiny download inside the page's server, so read as source)
 # --------------------------------------------------------------------------- #

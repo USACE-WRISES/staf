@@ -102,6 +102,15 @@ def test_both_value_packages_itemize_what_the_snapshot_cannot_show():
         assert "values_gaps(dictionary" in inspect.getsource(export)
 
 
+def test_no_timing_rides_in_a_manifest():
+    """A check's duration in the manifest gave every export of the universe another package
+    digest (18.7 s, then 17.2 s): the exports record results only, and the index records when."""
+    for export in (ee.export_universe, ee.export_members, ee.export_fits, ee.export_universe_values,
+                   ee.export_eval_refs, ee.export_operational):
+        src = inspect.getsource(export)
+        assert '"seconds"' not in src and "perf_counter() - t0, 1)}" not in src, export.__name__
+
+
 def test_the_recorded_recipe_code_is_what_the_refit_computes_and_stays_out_of_data():
     from streamcurves.easi_method import refit
     got = ee.recipe_code()
