@@ -7,7 +7,7 @@ and the promotion receipt names how the files became operational. Nothing is wri
 ``apps/easi``.
 
     python apps/stream-curves/scripts/import_easi_method.py --out <Name>.streamcurves
-        [--by NAME] [--version 1] [--release-tag easi-v1.0.0 --release-date 2026-09-16]
+        --by INITIALS [--version 1] [--release-tag easi-v1.0.0 --release-date 2026-09-16]
         [--evidence <evidence folder>] [--alternatives <2026-09-15 study folder>]
 
 ``--alternatives`` adds the controlled study's alternatives (and the legacy criteria) to the
@@ -39,7 +39,7 @@ EASI = REPO / "apps" / "easi"
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--out", required=True, help="the project file to write (.streamcurves)")
-    ap.add_argument("--by", required=True, help="who imports it (recorded as the importer)")
+    ap.add_argument("--by", required=True, help="the importer's initials (recorded as the importer)")
     ap.add_argument("--version", type=int, default=1)
     ap.add_argument("--name", default="EASI screening method")
     ap.add_argument("--release-tag", default=None)

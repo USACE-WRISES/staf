@@ -331,3 +331,12 @@ def test_the_csv_export_hashes_its_file_against_the_verified_manifest_and_fails_
     assert "raise evs.EvidenceError" in body
     # the check comes before the first byte is sent
     assert body.index("raise evs.EvidenceError") < body.index("yield")
+
+
+def test_an_import_waits_for_a_running_package_job_as_a_download_does():
+    src = (APP / "views" / "easi_page.py").read_text(encoding="utf-8")
+    for handler in ("def _pkg_import_apply", "def _pkg_download"):
+        body = src[src.index(handler):]
+        body = body[:re.search(r"\n    (?:@|def |# )", body[1:]).start() + 1]
+        assert '_jobs.get("busy")' in body, handler
+        assert body.index('_jobs.get("busy")') < body.index("_launch(")
