@@ -539,8 +539,11 @@ def export_universe(root, out: Path, producer: dict, *, check: bool = True) -> d
         cols = list(stored.columns)
         same = (len(members) == len(stored)
                 and members[cols].reset_index(drop=True).equals(stored[cols].reset_index(drop=True)))
-        checks["panelsRegenerateMembers"] = {"memberRows": int(len(members)), "identical": bool(same),
-                                              "seconds": round(time.perf_counter() - t0, 1)}
+        # the manifest records what the check found, never how long it took: a timing in the
+        # manifest would give every export of the same package another package digest
+        checks["panelsRegenerateMembers"] = {"memberRows": int(len(members)), "identical": bool(same)}
+        print(f"panels regenerate the members: identical={bool(same)} "
+              f"({time.perf_counter() - t0:.1f} s)", flush=True)
         if not same:
             raise RuntimeError("the universe does not regenerate the stored panel members")
     return pkg.finish(

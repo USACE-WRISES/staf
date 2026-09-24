@@ -348,9 +348,11 @@ def check_lines(checks: dict) -> list[str]:
                        f"members exactly at its stored precision ({c.get('storedType')}); "
                        f"missing values agree: {'yes' if c.get('nullsAgree') else 'no'}.")
         elif key == "panelsRegenerateMembers" and isinstance(c, dict):
+            # packages exported before 2026-09-24 also recorded how long the check took
+            took = f" ({c['seconds']} s)" if c.get("seconds") is not None else ""
             out.append(f"Drawing the panels again from this package gives "
                        f"{'the same' if c.get('identical') else 'different'} "
-                       f"{c.get('memberRows', 0):,} member rows ({c.get('seconds')} s).")
+                       f"{c.get('memberRows', 0):,} member rows{took}.")
         else:
             out.append(f"{key}: {json.dumps(c, sort_keys=True)}")
     return out
