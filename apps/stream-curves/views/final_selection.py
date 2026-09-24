@@ -37,9 +37,39 @@ STATUS_CLASS = {C.SELECTED: "is-selected", C.ELIGIBLE: "is-eligible", C.EXCLUDED
 RULE_WORDS = {"SELECT-04": "Portfolio rule (SELECT-04)", "REF-15": "Owner decision (REF-15)",
               "REF-06": "No defensible reference (REF-06)", "CURVE-07": "Held for review (CURVE-07)",
               "CURVE-11": "Fixed criterion (CURVE-11)", "REF-12": "Reference hierarchy",
+              # the rule each kind of curve the build chose was chosen under (curve_sources.KIND_RULES):
+              # a carried curve keeps its place (REF-05 is the rule the register cites for it)
+              "REF-05": "Carried forward (REF-05)", "REF-13": "Modeled reference (REF-13)",
+              "REF-14": "Published benchmark (REF-14)", "mapping": "Function mapping",
               "review": "Curve review", "build": "Build", "person": "Recorded by a person",
-              "applicability": "Applicability checks", "considered": "Added for comparison"}
+              "applicability": "Applicability checks", "considered": "Added for comparison",
+              # EASI's register (easi_method.alternatives, easi_method.register)
+              "study-2026-09-15": "Alternatives study (2026-09-15)",
+              "study-2026-09-15-override": "Selected against the alternatives study",
+              "field-vs-desktop": "Field protocol vs desktop estimate"}
+
+
+def rule_words(rule: Any) -> str:
+    """A rule id as a person reads it: the register's own words, else the methodology's name
+    for a catalog rule, never a bare id."""
+    rid = str(rule or "")
+    if not rid:
+        return ""
+    if rid in RULE_WORDS:
+        return RULE_WORDS[rid]
+    try:
+        from streamcurves import methodology
+        name = (methodology.rule(rid) or {}).get("name")
+    except Exception:  # noqa: BLE001 - an unknown id reads as a rule, never raw
+        name = None
+    return f"{name} ({rid})" if name else "Another rule"
+
+
 TILE_W, TILE_H = 260, 160
+COMPLETE_FIRST = ("Complete the curve first: the source leaves an end open, and the curve is used "
+                  "only once points past that end are added.")
+#: at most this many points are added past each open end of an SQT curve
+COMPLETION_ROWS = 3
 
 
 def dom_id(function_id: Any) -> str:
@@ -131,9 +161,16 @@ def _actions(row: Mapping, cand: Mapping, *, ns, compare: list, extension_on: bo
                                       class_="btn btn-sm btn-outline-secondary",
                                       onclick=_onclick(channel, {"action": "withdraw",
                                                                  "decision": d["decisionRef"]})))
-        if (cand.get("eligibility") or {}).get("status", "eligible") == "eligible":
-            attrs = {} if extension_on else {"disabled": "disabled",
-                                             "title": oc.EXTENSION_OFF}
+        eligible = (cand.get("eligibility") or {}).get("status", "eligible") == "eligible"
+        if eligible and ((cand.get("definition") or {}).get("openEnds") or cand.get("completion")):
+            out.append(ui.tags.button(fa("pen-ruler"), " Complete the curve" if cand.get("needsCompletion")
+                                      else " Change the completion", type="button",
+                                      class_="btn btn-sm " + ("btn-outline-primary" if cand.get("needsCompletion")
+                                                              else "btn-outline-secondary"),
+                                      onclick=_onclick(channel, {"action": "complete", "key": key, "fid": fid})))
+        if eligible:
+            attrs = ({"disabled": "disabled", "title": oc.EXTENSION_OFF} if not extension_on else
+                     {"disabled": "disabled", "title": COMPLETE_FIRST} if cand.get("needsCompletion") else {})
             out.append(ui.tags.button(fa("circle-check"), " Select", type="button",
                                       class_="btn btn-sm btn-outline-primary",
                                       onclick=_onclick(channel, {"action": "select", "key": key, "fid": fid}),
@@ -177,7 +214,7 @@ def alternative_row_ui(row: Mapping, cand: Mapping, *, ns, compare: list, extens
                    ui.div(kind_label(cand), class_="fs-kind")),
         ui.tags.td(status_pill(row["status"], review=bool(row.get("needsReview")))),
         ui.tags.td(reason_ui(d.get("reason") or ""),
-                   ui.div(RULE_WORDS.get(d.get("rule"), d.get("rule") or ""), class_="fs-rule")),
+                   ui.div(rule_words(d.get("rule")), class_="fs-rule")),
         ui.tags.td(_who(d), class_="fs-who"),
         ui.tags.td(_actions(row, cand, ns=ns, compare=compare, extension_on=extension_on)),
     )
@@ -225,7 +262,12 @@ def function_row_ui(fn: Mapping, cands: Mapping, *, ns, compare: list, extension
                            f"({(w.get('source') or {}).get('title') or 'a refused source'}).",
                            class_="fs-waiting"))
     for s in fn.get("stale") or []:
-        body.append(ui.div(fa("triangle-exclamation"), f" {s['decision'].get('metric')}: {s['why']}",
+        # a decision the version cannot apply can still be withdrawn here (REF-15's own undo),
+        # which also frees a considered curve it selected for removal
+        undo = (ui.tags.button(fa("rotate-left"), " Undo", type="button",
+                               class_="btn btn-sm btn-link", onclick=sp.undo_onclick(s["decision"]["id"]))
+                if s["decision"].get("id") else None)
+        body.append(ui.div(fa("triangle-exclamation"), f" {s['decision'].get('metric')}: {s['why']}", undo,
                            class_="fs-waiting is-stale"))
     rows = [alternative_row_ui(r, cands[r["candidateKey"]], ns=ns, compare=compare,
                                extension_on=extension_on) for r in fn["selected"] + alts
@@ -432,11 +474,13 @@ def curve_targets(state, metrics: Iterable[str]) -> list[dict]:
 def recheck(cand: Mapping, function_id: str, *, states: Iterable = (), targets: Iterable[Mapping] = (),
             region: Optional[Mapping] = None) -> dict:
     """A considered SQT candidate checked again against ``targets`` (the curves it would take
-    the place of): the same candidate, with the checks that context gives."""
+    the place of, else the function's own): the same candidate, rebuilt from its frozen record
+    with the checks that context gives and the author's completion applied."""
     rec = cand.get("record") or {}
-    return C.sqt_candidate(rec, function_id=function_id, region=region,
-                           context=C.sqt_context(rec, function_id=function_id, states=states,
-                                                 targets=targets))
+    again = C.sqt_candidate(rec, function_id=function_id, region=region,
+                            context=C.sqt_context(rec, function_id=function_id, states=states,
+                                                  targets=targets))
+    return C.with_completion(again, cand.get("completion"))
 
 
 def _edition_words(r: Mapping) -> str:
@@ -446,6 +490,11 @@ def _edition_words(r: Mapping) -> str:
     if r.get("edition"):
         return f"{r.get('edition')} (edition inferred)"
     return f"{r.get('state')} SQT, edition not named"
+
+
+def edition_choices(records: Iterable[Mapping]) -> dict:
+    """The edition filter's options, in the words each row shows (``_edition_words``)."""
+    return {w: w for w in sorted({_edition_words(r) for r in records or []})}
 
 
 def picker_modal(function_id: str, function_name: str, *, ns, states: Iterable[str]):
@@ -460,7 +509,7 @@ def picker_modal(function_id: str, function_name: str, *, ns, states: Iterable[s
                ui.input_select(ns("fs_state"), "State", {"": "Any state", **{s: s for s in facets["states"]}},
                                selected=here[0] if len(here) == 1 else ""),
                ui.input_select(ns("fs_edition"), "Edition", {"": "Any edition",
-                                                             **{x: x for x in facets["editions"]}}),
+                                                             **edition_choices(sqt_registry.records())}),
                ui.input_select(ns("fs_ver"), "Verification", {"": "Any", **VERIFICATION_WORDS}),
                ui.input_checkbox(ns("fs_allfn"), "Every function", False),
                ui.input_checkbox(ns("fs_elig"), "Eligible only", True),
@@ -473,7 +522,9 @@ def picker_results_ui(records: list, *, ns, function_id: str, context: Optional[
                       states: Iterable = (), targets: Iterable[Mapping] = (), have: Iterable[str] = (),
                       limit: int = 60):
     """The matching records, the ones that apply first. Each is checked against ``context``
-    when given, else against this function's curves (``targets``, ``candidates.sqt_context``)."""
+    when given, else against this function's curves (``targets``, ``candidates.sqt_context``),
+    with the checks adding it runs (``candidates.sqt_checks``), so a row never reads Applies
+    for a curve that adding would exclude."""
     from streamcurves import sqt_registry as reg
     if not records:
         return ui.div(fa("circle-info"), " No SQT curve matches these filters.", class_="fs-note")
@@ -483,7 +534,7 @@ def picker_results_ui(records: list, *, ns, function_id: str, context: Optional[
     for r in records:
         ctx = context if context is not None else C.sqt_context(r, function_id=function_id, states=states,
                                                                 targets=targets)
-        checks = reg.applicability(r, ctx)
+        checks, _adoption = C.sqt_checks(r, ctx)
         scored.append((("fail", "warn", "unknown", "pass").index(reg.overall(checks)) * -1, r, checks))
     scored.sort(key=lambda x: (x[0], x[1].get("state"), x[1].get("originalMetricName") or ""))
     have = set(have or ())
@@ -517,15 +568,27 @@ def picker_results_ui(records: list, *, ns, function_id: str, context: Optional[
         ui.tags.tbody(*rows), class_="table table-sm fs-table"), more)
 
 
-def replacement_checks_ui(results: list[tuple[Mapping, dict]]):
-    """What checking a considered SQT curve again against each curve it takes the place of
-    says: ``[(target, rechecked candidate)]``."""
+def replacement_checks_ui(results: list[tuple[Optional[Mapping], dict]]):
+    """What checking a considered SQT curve again says: ``[(target, rechecked candidate)]``,
+    one per curve it takes the place of, or ``[(None, rechecked)]`` against the function's own
+    curves when it replaces none."""
     if not results:
         return None
     items = []
     for target, again in results:
-        name = target.get("name") or target.get("metric")
         checks = (again.get("eligibility") or {}).get("checks") or []
+        if target is None:
+            bad = [c for c in checks if c.get("status") == "fail"]
+            notes = [c for c in checks if c.get("status") in ("warn", "unknown")]
+            if bad:
+                items.append(ui.tags.li(ui.tags.strong("It does not apply here. "),
+                                        " ".join(str(c.get("detail")) for c in bad), class_="is-fail"))
+            else:
+                items.append(ui.tags.li(ui.tags.strong("Checked against this function's curves. "),
+                                        " ".join(str(c.get("detail")) for c in notes)
+                                        or "Nothing here refuses it."))
+            continue
+        name = target.get("name") or target.get("metric")
         if not C.same_metric(again.get("record") or {}, target.get("metric")):
             items.append(ui.tags.li(f"{name} measures another metric. The SQT curve scores its own, "
                                     "measured as the SQT specifies, so units and values are not compared."))
@@ -540,8 +603,9 @@ def replacement_checks_ui(results: list[tuple[Mapping, dict]]):
             items.append(ui.tags.li(ui.tags.strong(f"{name}: the same metric. "),
                                     " ".join(str(c.get("detail")) for c in notes)
                                     or "Units, direction and the values scored here agree."))
-    return ui.div(ui.tags.strong("Checked against the curves it takes the place of"),
-                  ui.tags.ul(*items), class_="fs-recheck")
+    head = ("Checked again for this function" if all(t is None for t, _ in results)
+            else "Checked against the curves it takes the place of")
+    return ui.div(ui.tags.strong(head), ui.tags.ul(*items), class_="fs-recheck")
 
 
 def select_modal(cand: Mapping, function_name: str, fitted: list[tuple[str, str]], *, ns):
@@ -564,6 +628,57 @@ def select_modal(cand: Mapping, function_name: str, fitted: list[tuple[str, str]
         title="Select a state SQT curve", size="l", easy_close=True,
         footer=ui.TagList(ui.modal_button("Cancel"),
                           ui.input_action_button(ns("fs_select_confirm"), "Select", class_="btn btn-primary")))
+
+
+def completion_modal(cand: Mapping, function_name: str, *, ns):
+    """Complete an SQT curve the source leaves open (the owner's decision 1, 2026-09-24): the
+    published points, each open end, up to ``COMPLETION_ROWS`` points past each, the reason
+    and the initials, with a live preview of the completed curve."""
+    d = cand.get("definition") or {}
+    published = d.get("publishedPoints") or d.get("points") or []
+    ends = d.get("openEnds") or []
+    prior: dict = {}
+    for q in (cand.get("completion") or {}).get("points") or []:
+        prior.setdefault(str(q.get("side")), []).append(q)
+    toward = {"increasing": {"low": 0, "high": 1}, "decreasing": {"low": 1, "high": 0}}.get(
+        str(d.get("direction")), {})
+    blocks = []
+    for e in ends:
+        side = str(e.get("side"))
+        aim = f" Its last point reaches index {toward[side]}." if side in toward else ""
+        mine = prior.get(side) or []
+        fields = []
+        for i in range(COMPLETION_ROWS):
+            q = mine[i] if i < len(mine) else None
+            fields.append(ui.div(
+                ui.input_numeric(ns(f"fs_cx_{side}_{i}"), "Value", value=q.get("x") if q else None),
+                ui.input_numeric(ns(f"fs_cy_{side}_{i}"), "Index", value=q.get("y") if q else None,
+                                 min=0, max=1, step=0.01),
+                class_="fs-completion-row"))
+        blocks.append(ui.div(
+            ui.tags.strong(f"Past the {side} end"),
+            ui.div(f"The source stops at {cs.fmt_num(e.get('x'))}, which scores {cs.fmt_num(e.get('y'))}.{aim}",
+                   class_="fs-note"),
+            *fields, class_="fs-completion-end"))
+    points = ui.tags.table(
+        ui.tags.thead(ui.tags.tr(ui.tags.th("Value"), ui.tags.th("Index"))),
+        ui.tags.tbody(*[ui.tags.tr(ui.tags.td(cs.fmt_num(q.get("x"))), ui.tags.td(cs.fmt_num(q.get("y"))))
+                        for q in published]),
+        class_="table table-sm fs-table fs-completion-points")
+    return ui.modal(
+        ui.p(f"{cand.get('label')} for {function_name}. The source does not say how the curve scores "
+             "past its open end, so it is used only once points take it to the index limit, keeping "
+             "its direction. The published curve names the points the SQT publishes and the ones "
+             "added here.", class_="mb-2"),
+        ui.div(ui.div(ui.tags.strong("Points the SQT publishes"), points), *blocks, class_="fs-completion"),
+        ui.output_ui(ns("fs_completion_preview")),
+        ui.input_text_area(ns("fs_completion_reason"), "Why these points", rows=3, width="100%",
+                           value=str((cand.get("completion") or {}).get("reason") or "")),
+        ui.input_text(ns("fs_completion_by"), "Your initials", value=sp.maintainer()),
+        title="Complete the curve", size="l", easy_close=True,
+        footer=ui.TagList(ui.modal_button("Cancel"),
+                          ui.input_action_button(ns("fs_completion_save"), "Save the completion",
+                                                 class_="btn btn-primary")))
 
 
 # --------------------------------------------------------------------------- #
@@ -724,9 +839,17 @@ def final_selection_server(input, output, session, state, *, tiles):
             state.candidate_register.set(new)
             ui.notification_show(f"Added for comparison: {cand['label']}.", type="message", duration=5)
             return
+        if action == "complete" and key in cands:
+            pending.set({"key": key, "fid": fid, "complete": True})
+            name = next((f["functionName"] for f in reg["functions"] if f["functionId"] == fid), fid)
+            ui.modal_show(completion_modal(cands[key], name, ns=ns))
+            return
         if action == "select" and key in cands:
             if not oc.alternatives_enabled():
                 ui.notification_show(oc.EXTENSION_OFF, type="warning", duration=6)
+                return
+            if cands[key].get("needsCompletion"):
+                ui.notification_show(COMPLETE_FIRST, type="warning", duration=8)
                 return
             fn = next((f for f in reg["functions"] if f["functionId"] == fid), None)
             fitted = [((cands[r["candidateKey"]]["identity"].get("subject") or {}).get("id"),
@@ -776,8 +899,10 @@ def final_selection_server(input, output, session, state, *, tiles):
         q = " ".join(str(input.fs_q() or "").lower().split())
         recs = sqt_registry.records(state=input.fs_state() or None,
                                     function=None if input.fs_allfn() else fid,
-                                    edition=input.fs_edition() or None,
                                     eligible=True if input.fs_elig() else None)
+        if input.fs_edition():
+            # filtered by the words the rows show, the ones the filter offers
+            recs = [r for r in recs if _edition_words(r) == input.fs_edition()]
         if input.fs_ver():
             recs = [r for r in recs if (r.get("verification") or {}).get("status") == input.fs_ver()]
         if q:
@@ -786,14 +911,20 @@ def final_selection_server(input, output, session, state, *, tiles):
         return picker_results_ui(recs, ns=ns, function_id=fid, states=_states(), targets=targets, have=have)
 
     def _rechecks(p: Mapping, replaced: Iterable[str]) -> list:
+        """The candidate checked again as adding checked it: against each curve it takes the
+        place of, or, when it replaces none, against the function's own curves."""
         with reactive.isolate():
             reg = register()
             code = (state.region_of_applicability() or {}).get("code")
         cand = next((c for c in reg["candidates"] if c["candidateKey"] == p.get("key")), None)
         if cand is None or not cand.get("record"):
             return []
+        replaced = list(replaced or [])
+        if not replaced:
+            targets = curve_targets(state, function_metrics(reg, p["fid"]))
+            return [(None, recheck(cand, p["fid"], states=_states(), targets=targets, region={"code": code}))]
         return [(tg, recheck(cand, p["fid"], states=_states(), targets=[tg], region={"code": code}))
-                for tg in curve_targets(state, list(replaced or []))]
+                for tg in curve_targets(state, replaced)]
 
     # suspend_when_hidden=False: dialog outputs bind while the modal is still hidden
     # (Bootstrap fade) and a suspended output never resumes (DEEP documents the same trap)
@@ -823,22 +954,33 @@ def final_selection_server(input, output, session, state, *, tiles):
         cand = next((c for c in reg["candidates"] if c["candidateKey"] == p["key"]), None)
         if cand is None:
             return
-        refused = [(tg, again) for tg, again in _rechecks(p, input.fs_replace() or [])
+        rechecked = _rechecks(p, input.fs_replace() or [])
+        refused = [(tg, again) for tg, again in rechecked
                    if (again.get("eligibility") or {}).get("status") != "eligible"]
         if refused:
             tg, again = refused[0]
-            ui.notification_show(f"It does not apply in place of {tg.get('name')}: "
+            where = f"in place of {tg.get('name')}" if tg else "here"
+            ui.notification_show(f"It does not apply {where}: "
                                  + " ".join((again.get("eligibility") or {}).get("reasons") or []),
                                  type="warning", duration=10)
             return
+        if cand.get("needsCompletion") or any(again.get("needsCompletion") for _tg, again in rechecked):
+            ui.notification_show(COMPLETE_FIRST, type="warning", duration=8)
+            return
         try:
+            from views import curve_gallery as cg
+            metric = (cand["identity"].get("subject") or {}).get("id")
             source = owner_sources.sqt_source(cand)
             decision = oc.new_decision(
-                (cand["identity"].get("subject") or {}).get("id"), oc.SOURCE,
+                metric, oc.SOURCE,
                 rationale=input.fs_select_reason() or "", recorded_by=sp.maintainer(),
                 functions=[p["fid"]], source=source,
-                replaces=[{"metric": mk, "functionId": p["fid"]} for mk in (input.fs_replace() or [])],
-                basis_digest=cand.get("basisDigest"))
+                replaces=[{"metric": mk, "functionId": p["fid"]} for mk in (input.fs_replace() or [])])
+            # the digest the register computes for the curve this decision puts in the function
+            # (its tile), so the decision reads Look again only when that curve changes
+            basis = cg.metric_basis(state, metric, oc.merge(current, decision))
+            if basis:
+                decision["basisDigest"] = basis
             oc.validate(decision, build=build, built=built, decisions=current)
             run_dir = rb.region_run_dir(region)
             if run_dir is not None:
@@ -853,9 +995,82 @@ def final_selection_server(input, output, session, state, *, tiles):
         ui.notification_show("Selected. It applies here now and to every later build of this region.",
                              type="message", duration=6)
 
+    # completing an SQT curve the source leaves open
+    def _completing() -> Optional[dict]:
+        p = pending()
+        if not p or not p.get("complete"):
+            return None
+        with reactive.isolate():
+            reg = register()
+        return next((c for c in reg["candidates"] if c["candidateKey"] == p["key"]), None)
+
+    def _typed_points(cand: Mapping) -> list[dict]:
+        """The points typed into the dialog, past each open end (blank rows left out)."""
+        out = []
+        for e in (cand.get("definition") or {}).get("openEnds") or []:
+            side = str(e.get("side"))
+            for i in range(COMPLETION_ROWS):
+                ids = (f"fs_cx_{side}_{i}", f"fs_cy_{side}_{i}")
+                if not all(x in input for x in ids):
+                    continue
+                x, y = input[ids[0]](), input[ids[1]]()
+                if x is None and y is None:
+                    continue
+                out.append({"x": x, "y": y, "side": side})
+        return out
+
+    # suspend_when_hidden=False: dialog outputs bind while the modal is still hidden
+    # (Bootstrap fade) and a suspended output never resumes (DEEP documents the same trap)
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def fs_completion_preview():
+        cand = _completing()
+        if cand is None:
+            return None
+        rec = cand.get("record") or {}
+        adoption = C.sqt_adoption(rec)
+        typed = _typed_points(cand)
+        problems = C.check_completion(adoption["points"], adoption["openEnds"], rec.get("direction"), typed)
+        pts = sorted([(float(x), float(y)) for x, y in adoption["points"]]
+                     + [(float(q["x"]), float(q["y"])) for q in typed
+                        if q.get("x") is not None and q.get("y") is not None])
+        tile = {"metric": (cand.get("identity") or {}).get("subject", {}).get("id"),
+                "display_name": cand.get("label"), "units": rec.get("units"),
+                "strata": [{"label": None, "points": pts}], "reference_range": (None, None),
+                "domain": None, "badge": ""}
+        said = (ui.tags.ul(*[ui.tags.li(x) for x in problems], class_="fs-completion-problems") if problems
+                else ui.div(fa("circle-check"), " These points complete the curve.", class_="fs-completion-ok"))
+        return ui.div(ui.HTML(cs.tile_svg(tile, w=TILE_W + 120, h=TILE_H + 40)), said,
+                      class_="fs-completion-preview")
+
+    @reactive.effect
+    @reactive.event(input.fs_completion_save)
+    @guard("save the completion")
+    def _save_completion():
+        from streamcurves import prefs
+        cand = _completing()
+        if cand is None:
+            return
+        p = pending()
+        with reactive.isolate():
+            decisions = list(state.owner_curve_decisions() or [])
+        try:
+            new = C.complete_curve(state.candidate_register(), p["key"], _typed_points(cand),
+                                   by=prefs.given_or_na(input.fs_completion_by()),
+                                   reason=input.fs_completion_reason() or "", decisions=decisions)
+        except ValueError as exc:
+            ui.notification_show(str(exc), type="warning", duration=10)
+            return
+        state.candidate_register.set(new)
+        pending.set(None)
+        ui.modal_remove()
+        ui.notification_show("Completed. The curve names the points you added, and it can now be selected.",
+                             type="message", duration=6)
+
 
 __all__ = ["SECTION", "candidate_tile", "final_selection_ui", "function_row_ui", "compare_ui",
            "head_ui", "functions_ui", "has_curve", "kind_label", "reason_ui", "dom_id",
            "export_csv", "final_selection_server", "disposition_form", "register_export",
            "function_metrics", "curve_targets", "recheck", "replacement_checks_ui", "picker_results_ui",
-           "picker_modal", "select_modal", "region_states"]
+           "picker_modal", "select_modal", "region_states", "completion_modal", "rule_words",
+           "edition_choices", "COMPLETE_FIRST", "RULE_WORDS"]

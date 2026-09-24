@@ -97,9 +97,32 @@ def _path(path: Optional[Path]) -> str:
     return str(path or REGISTRY_PATH)
 
 
+@lru_cache(maxsize=4)
+def _strata(path_text: str) -> dict:
+    """``{(state, metric): [(key, stratum name)]}`` over the registry's keys
+    (``sqt:<state>:<metric>:<stratum>``), built once per registry."""
+    out: dict = {}
+    for r in _doc(path_text).get("records") or []:
+        parts = str(r.get("key") or "").split(":")
+        if len(parts) >= 4:
+            out.setdefault((parts[1], parts[2]), []).append((str(r.get("key")), str(r.get("stratumName"))))
+    return out
+
+
+def siblings(record_: Mapping, path: Optional[Path] = None) -> list[str]:
+    """The other strata the same state's SQT scores this record's metric in (cheap: the
+    cached key map, no record copies)."""
+    parts = str((record_ or {}).get("key") or "").split(":")
+    if len(parts) < 4:
+        return []
+    return sorted({name for key, name in _strata(_path(path)).get((parts[1], parts[2]), [])
+                   if key != record_.get("key")})
+
+
 def clear_cache() -> None:
     _doc.cache_clear()
     _index.cache_clear()
+    _strata.cache_clear()
 
 
 def load(path: Optional[Path] = None) -> dict:

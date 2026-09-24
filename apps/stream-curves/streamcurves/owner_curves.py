@@ -74,8 +74,41 @@ def needs_extension(d: Optional[Mapping]) -> bool:
     return src.get("kind") == "sqt" or bool((d or {}).get("replaces"))
 
 
-def _usable(d: Mapping) -> bool:
-    return not needs_extension(d) or alternatives_enabled()
+#: The version of the SQT adoption checks a state SQT choice records
+#: (``owner_sources.sqt_source``). A choice made before them (round 2 of the authoring
+#: foundation, 2026-09-24) applies nothing: its curve was never rebuilt from the frozen
+#: record, and an open end was never completed.
+SQT_ADOPTION_VERSION = 2
+PRE_ADOPTION = "Made before the SQT adoption checks; select the curve again."
+
+
+def _pre_adoption_sqt(d: Optional[Mapping]) -> bool:
+    src = (d or {}).get("source") or {}
+    if src.get("kind") != "sqt":
+        return False                      # every other source keeps applying as it did
+    try:
+        version = int((src.get("ref") or {}).get("adoptionVersion") or 0)
+    except (TypeError, ValueError):
+        version = 0
+    return version < SQT_ADOPTION_VERSION
+
+
+def unusable_reason(d: Mapping) -> Optional[str]:
+    """Why this session applies nothing of the decision, or None when it applies: the REF-15
+    extension is off, or it chooses a state SQT curve under an older adoption."""
+    if needs_extension(d) and not alternatives_enabled():
+        return EXTENSION_OFF
+    if _pre_adoption_sqt(d):
+        return PRE_ADOPTION
+    return None
+
+
+def usable(d: Mapping) -> bool:
+    """The decision applies in this session (:func:`unusable_reason` says why not)."""
+    return unusable_reason(d) is None
+
+
+_usable = usable
 
 
 def min_rationale() -> int:
@@ -141,6 +174,8 @@ def check(d: Mapping) -> None:
         raise ValueError("Name the function.")
     if needs_extension(d) and not alternatives_enabled():
         raise ValueError(EXTENSION_OFF)
+    if _pre_adoption_sqt(d):
+        raise ValueError(PRE_ADOPTION)
     if d.get("replaces"):
         if d["action"] != SOURCE:
             raise ValueError("Only a chosen source can take the place of a curve built here.")
@@ -829,8 +864,11 @@ def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
     out = []
     for d in decisions:
         mk = str(d.get("metric"))
-        if needs_extension(d) and not alternatives_enabled():
+        why = unusable_reason(d)
+        if why == EXTENSION_OFF:
             out.append((dict(d), EXTENSION_OFF + " This decision applies nothing here."))
+        elif why:
+            out.append((dict(d), why))
         elif d.get("action") == SOURCE and mk in built:
             out.append((dict(d), "This build fitted the metric before your choice could hold it "
                                  "out of the fit, so its own curve scores. Build the region "
@@ -855,6 +893,7 @@ def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
 __all__ = [
     "RULE", "DECISIONS_FILE", "LEGACY_REMOVALS_FILE", "REMOVE", "UNMAP", "INCLUDE", "SOURCE",
     "EXTENSION_FLAG", "EXTENSION_OFF", "alternatives_enabled", "needs_extension", "bundle_summary",
+    "usable", "unusable_reason", "SQT_ADOPTION_VERSION", "PRE_ADOPTION",
     "ACTIONS", "GAP_REASON", "ACTION_LABELS", "FLAG_PREFIX", "min_rationale", "new_decision",
     "check", "validate", "load", "path_of", "standing", "load_file", "seed", "supersedes",
     "merge", "save", "undo", "combine", "restore", "from_removals", "effective_selection",

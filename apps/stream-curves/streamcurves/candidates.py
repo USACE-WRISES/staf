@@ -163,6 +163,10 @@ def add_considered(register: Any, candidate: Mapping, *, by: str, at: Optional[s
         raise ValueError("A candidate needs a candidate key.")
     c.setdefault("addedBy", who)
     c.setdefault("addedAt", at or _now())
+    prior = next((x for x in reg["considered"] if x.get("candidateKey") == c["candidateKey"]), None)
+    if prior and prior.get("completion") and not c.get("completion"):
+        # the same key is the same frozen record: the author's completion still belongs to it
+        c = with_completion(c, prior["completion"])
     reg["considered"] = [x for x in reg["considered"] if x.get("candidateKey") != c["candidateKey"]]
     reg["considered"].append(c)
     return reg
@@ -314,7 +318,7 @@ def deep_register(*, tiles: Iterable[Mapping], build: Optional[Mapping],
     region = dict(region or {})
     config = dict(metric_config or {})
     decisions = [dict(d) for d in decisions or [] if isinstance(d, Mapping)]
-    applied = [d for d in decisions if not (oc.needs_extension(d) and not oc.alternatives_enabled())]
+    applied = [d for d in decisions if oc.usable(d)]
     built = [str(t.get("metric")) for t in tiles if not t.get("read_only")]
     effective = oc.effective_build(build, applied, built=built) or {}
     portfolio_recorded = "portfolioSelection" in (build or {})
@@ -349,20 +353,30 @@ def deep_register(*, tiles: Iterable[Mapping], build: Optional[Mapping],
             candidates[key] = c
         return key
 
-    def row(key: str, fid: str, status: str, decision: dict, *, unresolved: str = "") -> None:
+    def row(key: str, fid: str, status: str, decision: dict, *, unresolved: str = "",
+            current: Optional[str] = None) -> None:
+        """``current``: the digest the decision is compared with, when it is not the
+        candidate's own (an owner decision on a curve read from the build, whose tile the
+        decision was made on)."""
         if (key, fid) in done:
             return
         done.add((key, fid))
+        now = current if current is not None else candidates[key].get("basisDigest")
         rows.append({"candidateKey": key, "functionId": fid, "status": status,
                      "decision": decision, "unresolved": unresolved,
-                     "needsReview": bool(decision.get("basisDigest") and candidates[key].get("basisDigest")
-                                         and decision["basisDigest"] != candidates[key]["basisDigest"])})
+                     "needsReview": bool(decision.get("basisDigest") and now
+                                         and decision["basisDigest"] != now)})
 
-    def owner_row(key: str, fid: str, status: str, d: Mapping, verb: str) -> None:
+    def owner_row(key: str, fid: str, status: str, d: Mapping, verb: str, *,
+                  current: Optional[str] = None) -> None:
+        # a decision records the curve it was made on: its digest is compared only with that
+        # curve, never with a curve it replaced (another metric) in the same function
+        subject = ((candidates[key].get("identity") or {}).get("subject") or {}).get("id")
+        basis = d.get("basisDigest") if str(d.get("metric") or "") == str(subject or "") else None
         row(key, fid, status, _decision(
             key, fid, verb, rule="REF-15", reason=str(d.get("rationale") or ""), by=PERSON,
-            who=d.get("recordedBy"), when=d.get("recordedAt"), basis=d.get("basisDigest"),
-            ref=d.get("id")))
+            who=d.get("recordedBy"), when=d.get("recordedAt"), basis=basis,
+            ref=d.get("id")), current=current)
 
     for t in tiles:
         mk = str(t.get("metric") or "")
@@ -391,17 +405,21 @@ def deep_register(*, tiles: Iterable[Mapping], build: Optional[Mapping],
                       build_status="built", tile=t, key=same_as)
             ns_fids = {f for (m, f) in not_sel if m == mk}
             for fid in dict.fromkeys(fns + sorted(ns_fids)):
+                # an owner decision on this curve was made on this tile: compared with its digest,
+                # even when the tile is a considered candidate the owner selected
                 if t.get("removed_decision"):
-                    owner_row(key, fid, ELIGIBLE, by_id.get(str(t["removed_decision"])) or {}, "not_selected")
+                    owner_row(key, fid, ELIGIBLE, by_id.get(str(t["removed_decision"])) or {}, "not_selected",
+                              current=digest)
                 elif (mk, fid) in not_sel:
                     x = not_sel[(mk, fid)]
                     if x.get("owner"):
-                        owner_row(key, fid, ELIGIBLE, by_id.get(str(x.get("decision"))) or {}, "not_selected")
+                        owner_row(key, fid, ELIGIBLE, by_id.get(str(x.get("decision"))) or {}, "not_selected",
+                                  current=digest)
                     else:
                         row(key, fid, ELIGIBLE, _decision(key, fid, "not_selected", rule="SELECT-04",
                                                           reason=_select04_reason(x), by=AUTOMATED))
                 elif owner_d:
-                    owner_row(key, fid, SELECTED, owner_d, "selected")
+                    owner_row(key, fid, SELECTED, owner_d, "selected", current=digest)
                 else:
                     rule = cs_.KIND_RULES.get(kind, "REF-12")
                     why = {"carried": "Carried forward from the published version, which keeps its "
@@ -504,10 +522,13 @@ def deep_register(*, tiles: Iterable[Mapping], build: Optional[Mapping],
                 added = " ".join(x for x in (f"by {cand['addedBy']}" if cand.get("addedBy") else "",
                                              f"on {str(cand.get('addedAt'))[:10]}" if cand.get("addedAt") else "")
                                  if x)
+                opened = bool(cand.get("needsCompletion"))
                 row(key, fid, NOT_EVALUATED, _decision(
                     key, fid, "pending", rule="considered",
-                    reason=f"Added for comparison{' ' + added if added else ''}. No decision yet.",
-                    by=None), unresolved="undecided")
+                    reason=f"Added for comparison{' ' + added if added else ''}. "
+                           + ("The source leaves an end of the curve open: complete the curve before it "
+                              "can be selected." if opened else "No decision yet."),
+                    by=None), unresolved="complete the curve" if opened else "undecided")
     return {"candidates": list(candidates.values()), "rows": rows,
             "functions": function_rows(rows, candidates, decisions=decisions, build=build,
                                        built=built, coverage_exceptions=coverage_exceptions)}
@@ -641,12 +662,11 @@ def sqt_adoption(record: Mapping) -> dict:
     scores beyond it."""
     ver = record.get("verification") or {}
     issues = {str(i.get("code")) for i in record.get("issues") or []}
-    against = ver.get("against") or {}
     notes: list = []
     blockers: list = []
     if ver.get("status") in ("verified", "partially-verified") and ver.get("originalPoints"):
         base = ver["originalPoints"]
-        notes.append(f"Points from the original ({against.get('citation') or 'the source file'}).")
+        notes.append("Points from the original SQT.")
     else:
         base = record.get("normalizedPoints") or []
     pts = sorted((float(p["x"]), float(p["y"])) for p in base)
@@ -691,15 +711,84 @@ def sqt_adoption(record: Mapping) -> dict:
     return {"points": pts, "notes": notes, "blockers": blockers, "openEnds": open_ends}
 
 
-def _sqt_siblings(frozen: Mapping) -> list[str]:
-    """The other strata the same state's SQT scores this metric in."""
+def sqt_restriction(record: Mapping) -> Optional[str]:
+    """Why one SQT record is one stratum of a metric (DEEP would apply it to every site), or
+    None: any stratum other than Default is a restriction, siblings in the registry or not,
+    and a Default stratum is one when the same state scores the metric in other strata."""
     from . import sqt_registry as reg
-    parts = str(frozen.get("key") or "").split(":")
-    if len(parts) < 3:
-        return []
-    return sorted({str(r.get("stratumName")) for r in reg.records(state=frozen.get("state"))
-                   if str(r.get("key") or "").split(":")[2:3] == parts[2:3]
-                   and r.get("key") != frozen.get("key")})
+    stratum = str(record.get("stratumName") or "Default")
+    siblings = reg.siblings(record)
+    if stratum == "Default" and not siblings:
+        return None
+    also = f"; also {', '.join(siblings)}" if siblings else ""
+    return (f"The SQT scores this metric for one stratum ({stratum}{also}). DEEP would apply it to "
+            "every site; how a stratum is recorded as covering the whole target is not built.")
+
+
+def sqt_checks(record: Mapping, context: Optional[Mapping] = None) -> tuple[list, dict]:
+    """``(checks, adoption)``: every check of one SQT record against a target, the ones adding
+    runs and the picker ranks by (never a lighter list). The registry's applicability checks,
+    with the ends judged on the curve DEEP would adopt (``sqt_adoption``): an open end is a
+    note until the author completes the curve, whatever values the target holds, because
+    later sites may fall past it. A form DEEP cannot write fails, and so does a stratum."""
+    from . import sqt_registry as reg
+    ctx = dict(context or {})
+    adoption = sqt_adoption(record)
+    checks = reg.applicability(record, ctx)
+    if not adoption["blockers"]:
+        checks = [c for c in checks if c.get("id") != "extrapolation"]
+        if adoption["openEnds"]:
+            ends = " and ".join(f"{e['side']} end ({e['x']:g} scores {e['y']:g})" for e in adoption["openEnds"])
+            checks.append({"id": "past-ends", "status": "warn",
+                           "detail": f"The source does not say how it scores past its {ends}. Add points "
+                                     "to complete the curve before it can be selected."})
+        else:
+            checks.append({"id": "extrapolation", "status": "pass",
+                           "detail": "The adopted curve runs from index 0 to 1, so nothing past its ends is "
+                                     "left to assume" + (" (" + " ".join(adoption["notes"]) + ")"
+                                                         if adoption["notes"] else "") + "."})
+    for b in adoption["blockers"]:
+        checks.append({"id": "form", "status": "fail", "detail": b})
+    restricted = sqt_restriction(record)
+    if restricted and not ctx.get("stratumCoversTarget"):
+        checks.append({"id": "strata", "status": "fail", "detail": restricted})
+    elif restricted:
+        checks.append({"id": "strata", "status": "pass",
+                       "detail": f"Recorded as covering the whole target: {record.get('stratumName')}."})
+    return checks, adoption
+
+
+#: what a partly checked or unchecked SQT curve says about itself (``owner_sources`` states
+#: the verification once, so these never repeat beside it)
+VERIFICATION_LIMITS = ("Checked only in part against the original.",
+                       "A STAF adaptation of the SQT, not checked against the original.")
+
+
+def sqt_limitations(frozen: Mapping, adoption: Mapping) -> list[str]:
+    """What limits the adopted curve, from the frozen record alone (never the registry's own
+    authoring notes, never a file name)."""
+    ver = frozen.get("verification") or {}
+    out = [] if ver.get("status") == "verified" else [
+        VERIFICATION_LIMITS[0] if ver.get("status") == "partially-verified" else VERIFICATION_LIMITS[1]]
+    # with the original's own points adopted, differences between the metric library's bins and
+    # the original describe the older adaptation, not this curve
+    from_original = ver.get("status") in ("verified", "partially-verified") and bool(ver.get("originalPoints"))
+    skip = _AUTHORING_ISSUES | ({"rounded-values", "value-drift"} if from_original else set())
+    out += [str(i.get("detail")) for i in frozen.get("issues") or []
+            if i.get("severity") in ("warning", "defect") and i.get("code") not in skip]
+    out += list(adoption.get("notes") or [])
+    return list(dict.fromkeys(out))
+
+
+def sqt_label(frozen: Mapping) -> str:
+    return " ".join(x for x in (str(frozen.get("originalMetricName") or ""),
+                                f"({frozen.get('state')} SQT"
+                                + (f", {frozen.get('stratumName')})" if frozen.get("stratumName")
+                                   and frozen.get("stratumName") != "Default" else ")")) if x)
+
+
+def _higher_is_better(direction: Any) -> Optional[bool]:
+    return direction == "increasing" if direction in ("increasing", "decreasing") else None
 
 
 def sqt_candidate(record: Mapping, *, function_id: str, context: Optional[Mapping] = None,
@@ -707,39 +796,13 @@ def sqt_candidate(record: Mapping, *, function_id: str, context: Optional[Mappin
     """A considered candidate from one SQT registry record for one function, frozen: the
     copy carries everything the curve needs, so a later registry build never changes it.
     It is eligible only when DEEP can reproduce the published rule (``sqt_adoption``), the
-    registry marks the record eligible, no applicability check fails, and the record is not
-    one stratum of a stratified metric (DEEP would apply that stratum to every site)."""
+    registry marks the record eligible, no check fails (:func:`sqt_checks`), and the record
+    is not one stratum of a metric. A curve the source leaves open at an end stays eligible
+    with ``needsCompletion``: it can be selected once the author completes it
+    (:func:`complete_curve`)."""
     from . import sqt_registry as reg
-    ctx = dict(context or {})
     frozen = reg.frozen_copy(record)
-    checks = reg.applicability(frozen, ctx)
-    adoption = sqt_adoption(frozen)
-    if not adoption["openEnds"] and not adoption["blockers"]:
-        # the registry's check reads the record's own bins; the adopted curve is what scores
-        checks = [c for c in checks if c.get("id") != "extrapolation"] + [{
-            "id": "extrapolation", "status": "pass",
-            "detail": "The adopted curve runs from index 0 to 1, so nothing past its ends is left to "
-                      "assume" + (" (" + " ".join(adoption["notes"]) + ")" if adoption["notes"] else "") + "."}]
-    rng = ctx.get("xRange")
-    xs = [x for x, _ in adoption["points"]]
-    inside = (isinstance(rng, (list, tuple)) and len(rng) == 2 and xs
-              and float(rng[0]) >= xs[0] and float(rng[1]) <= xs[-1])
-    if adoption["openEnds"] and not inside:
-        ends = " and ".join(f"{e['side']} end ({e['x']:g} scores {e['y']:g})" for e in adoption["openEnds"])
-        checks.append({"id": "past-ends", "status": "fail",
-                       "detail": f"The source does not say how it scores past its {ends}; DEEP would hold "
-                                 "the end value there. Only a target whose values all fall inside the "
-                                 "curve can use it."})
-    for b in adoption["blockers"]:
-        checks.append({"id": "form", "status": "fail", "detail": b})
-    siblings = _sqt_siblings(frozen)
-    if siblings and not ctx.get("stratumCoversTarget"):
-        checks.append({"id": "strata", "status": "fail",
-                       "detail": f"The SQT scores this metric by stratum ({frozen.get('stratumName')}; also "
-                                 f"{', '.join(siblings)}). DEEP would apply this one stratum to every site."})
-    elif siblings:
-        checks.append({"id": "strata", "status": "pass",
-                       "detail": f"Recorded as covering the whole target: {frozen.get('stratumName')}."})
+    checks, adoption = sqt_checks(frozen, context)
     worst = reg.overall(checks)
     region = dict(region or {})
     identity = {"assessmentType": "deep", "subject": {"kind": "metric", "id": sqt_metric_key(frozen)},
@@ -757,38 +820,189 @@ def sqt_candidate(record: Mapping, *, function_id: str, context: Optional[Mappin
                                    if i.get("severity") == "defect"))
     reasons += [c["detail"] for c in checks if c.get("status") == "fail"]
     eligible = bool(frozen.get("eligible")) and worst != "fail"
-    # what limits the adopted curve (never the registry's own authoring notes)
-    limitations = [] if ver.get("status") == "verified" else [
-        "Checked only in part against the original." if ver.get("status") == "partially-verified" else
-        "A STAF adaptation of the SQT, not checked against the original."]
-    # with the original's own points adopted, differences between the metric library's bins and
-    # the original describe the older adaptation, not this curve
-    from_original = ver.get("status") in ("verified", "partially-verified") and bool(ver.get("originalPoints"))
-    skip = _AUTHORING_ISSUES | ({"rounded-values", "value-drift"} if from_original else set())
-    limitations += [str(i.get("detail")) for i in frozen.get("issues") or []
-                    if i.get("severity") in ("warning", "defect") and i.get("code") not in skip]
-    limitations += adoption["notes"]
-    label = " ".join(x for x in (str(frozen.get("originalMetricName") or ""),
-                                 f"({frozen.get('state')} SQT"
-                                 + (f", {frozen.get('stratumName')})" if frozen.get("stratumName")
-                                    and frozen.get("stratumName") != "Default" else ")")) if x)
     pts = adoption["points"]
     return {"candidateKey": candidate_key(identity), "identity": identity,
             "functions": [str(function_id)],
             "basisDigest": curve_basis_digest([{"label": frozen.get("stratumName"), "points": pts}],
-                                              higher_is_better=direction == "increasing"
-                                              if direction in ("increasing", "decreasing") else None),
+                                              higher_is_better=_higher_is_better(direction)),
             "purpose": "operational", "campaign": None, "buildStatus": "built", "supersededBy": None,
-            "label": label, "verification": ver.get("status"),
+            "label": sqt_label(frozen), "verification": ver.get("status"),
             "verificationNotes": list(ver.get("reasons") or []),
             "eligibility": {"status": "eligible" if eligible else "excluded", "reasons": reasons,
                             "checks": checks},
-            "limitations": list(dict.fromkeys(limitations)),
+            "needsCompletion": bool(adoption["openEnds"]) and not adoption["blockers"],
+            "limitations": sqt_limitations(frozen, adoption),
             "definition": {"points": [{"x": x, "y": y} for x, y in pts], "units": frozen.get("units"),
                            "stratum": frozen.get("stratumName"), "direction": direction,
                            "extrapolation": frozen.get("extrapolation"),
                            "conversion": adoption["notes"], "openEnds": adoption["openEnds"]},
             "record": frozen}
+
+
+# --------------------------------------------------------------------------- #
+# completing an SQT curve the source leaves open (the owner's decision 1, 2026-09-24)
+# --------------------------------------------------------------------------- #
+COMPLETION_NOTE = "Points past the published curve were added by"
+
+
+def check_completion(points: Iterable, open_ends: Iterable[Mapping], direction: Any,
+                     added: Iterable[Mapping]) -> list[str]:
+    """What is wrong with points added past a curve's open ends, as sentences (empty when
+    they complete it). ``points``: the adopted curve's ``(x, y)``; ``open_ends``: its
+    ``{side, x, y}``; ``added``: ``{x, y, side}``. Every open end gets a point beyond it, and
+    only open ends; values are finite, distinct and never a published x; every index is in
+    [0, 1]; the completed curve keeps the direction (the record's, else the published points'
+    own; a flat curve has none); the outermost point on each open side reaches the index limit
+    that direction implies; and a value below 0 is refused unless the curve itself has one."""
+    pts = sorted((float(x), float(y)) for x, y in points or [])
+    sides = {str(e.get("side")) for e in open_ends or []}
+    if len(pts) < 2 or not sides:
+        return ["This curve has no open end to complete."]
+    if direction == "two-sided":
+        return ["A two-sided curve is completed by its source, not here."]
+    problems: list[str] = []
+    add: list[tuple[str, float, float]] = []
+    for p in added or []:
+        side, x, y = str(p.get("side") or ""), _num(p.get("x")), _num(p.get("y"))
+        if side not in ("low", "high"):
+            problems.append("Each added point is past the low end or the high end.")
+            continue
+        if x is None or y is None:
+            problems.append("Each added point needs a number for its value and for its index.")
+            continue
+        if side not in sides:
+            problems.append(f"The {side} end is not open: points are added only past an open end.")
+        elif side == "low" and x >= pts[0][0]:
+            problems.append(f"A point past the low end lies below {pts[0][0]:g}.")
+        elif side == "high" and x <= pts[-1][0]:
+            problems.append(f"A point past the high end lies above {pts[-1][0]:g}.")
+        if not 0.0 <= y <= 1.0:
+            problems.append(f"An index is between 0 and 1; {y:g} is not.")
+        add.append((side, x, y))
+    for side in sorted(sides):
+        if not any(s == side for s, _, _ in add):
+            problems.append(f"Add at least one point past the {side} end.")
+    xs = [x for _, x, _ in add]
+    if len(set(xs)) != len(xs) or set(xs) & {x for x, _ in pts}:
+        problems.append("Each added point needs its own value, none equal to a published one.")
+    if pts[0][0] >= 0 and any(x < 0 for _, x, _ in add):
+        problems.append("A value below 0 is not one this curve takes.")
+    if problems:
+        return list(dict.fromkeys(problems))
+    sign = {"increasing": 1.0, "decreasing": -1.0}.get(str(direction))
+    if sign is None:
+        rise = pts[-1][1] - pts[0][1]
+        if rise == 0:
+            return ["The published curve is flat, so it has no direction to keep."]
+        sign = 1.0 if rise > 0 else -1.0
+    full = sorted(pts + [(x, y) for _, x, y in add])
+    if any((y1 - y0) * sign < 0 for (_, y0), (_, y1) in zip(full, full[1:])):
+        problems.append("The completed curve must keep its direction: "
+                        + ("the index rises as the value rises." if sign > 0
+                           else "the index falls as the value rises."))
+    for side in sorted(sides):
+        mine = [(x, y) for s, x, y in add if s == side]
+        outer = min(mine) if side == "low" else max(mine)
+        limit = (0.0 if sign > 0 else 1.0) if side == "low" else (1.0 if sign > 0 else 0.0)
+        if outer[1] != limit:
+            problems.append(f"The last point past the {side} end reaches index {limit:g}.")
+    return problems
+
+
+def _completion_points(completion: Optional[Mapping]) -> list[dict]:
+    return [{"x": float(p["x"]), "y": float(p["y"]), "side": str(p.get("side"))}
+            for p in (completion or {}).get("points") or []]
+
+
+def apply_completion(candidate: Mapping, completion: Mapping) -> dict:
+    """The candidate with an author's completion applied (a pure function; the completion is
+    checked by the caller): its points are the published ones and the added ones, it records
+    which is which, its basis digest covers the completed curve (so a changed completion asks
+    for another look), the ends check passes naming who added what, and a limitation says so."""
+    c = copy.deepcopy(dict(candidate))
+    d = dict(c.get("definition") or {})
+    published = sorted((float(p["x"]), float(p["y"])) for p in (d.get("publishedPoints") or d.get("points") or []))
+    added = _completion_points(completion)
+    full = sorted(published + [(p["x"], p["y"]) for p in added])
+    by = str((completion or {}).get("by") or "n/a")
+    said = ", ".join(f"{p['x']:g} scores {p['y']:g}" for p in sorted(added, key=lambda q: q["x"]))
+    d.update(points=[{"x": x, "y": y} for x, y in full],
+             publishedPoints=[{"x": x, "y": y} for x, y in published], addedPoints=added)
+    c["definition"] = d
+    c["completion"] = {"points": added, "by": by, "reason": str((completion or {}).get("reason") or ""),
+                       "at": (completion or {}).get("at")}
+    c["needsCompletion"] = False
+    c["basisDigest"] = curve_basis_digest([{"label": d.get("stratum"), "points": full}],
+                                          higher_is_better=_higher_is_better(d.get("direction")))
+    elig = dict(c.get("eligibility") or {})
+    elig["checks"] = [x for x in elig.get("checks") or [] if x.get("id") != "past-ends"] + [
+        {"id": "past-ends", "status": "pass", "detail": f"Completed by {by}: {said}."}]
+    c["eligibility"] = elig
+    note = f"{COMPLETION_NOTE} {by}: {said} ({c['completion']['reason']})."
+    c["limitations"] = [x for x in c.get("limitations") or [] if not str(x).startswith(COMPLETION_NOTE)] + [note]
+    return c
+
+
+def with_completion(candidate: Mapping, completion: Optional[Mapping]) -> dict:
+    """The candidate with a recorded completion applied when it still completes the curve;
+    one that no longer fits (the curve was rebuilt, the record was edited) leaves the curve
+    open and says why. A curve with no open end is returned as it is."""
+    c = copy.deepcopy(dict(candidate))
+    d = c.get("definition") or {}
+    open_ends = d.get("openEnds") or []
+    if not open_ends or not completion:
+        return c
+    base = [(float(p["x"]), float(p["y"])) for p in (d.get("publishedPoints") or d.get("points") or [])]
+    problems = check_completion(base, open_ends, d.get("direction"), _completion_points(completion))
+    if not problems:
+        return apply_completion(c, completion)
+    elig = dict(c.get("eligibility") or {})
+    elig["checks"] = [x for x in elig.get("checks") or [] if x.get("id") != "past-ends"] + [
+        {"id": "past-ends", "status": "warn",
+         "detail": "The recorded completion no longer completes this curve: " + " ".join(problems)}]
+    c["eligibility"] = elig
+    c["needsCompletion"] = True
+    return c
+
+
+def complete_curve(register: Any, key: str, points: Iterable[Mapping], *, by: str, reason: str,
+                   at: Optional[str] = None, decisions: Iterable[Mapping] = (),
+                   min_reason: int = 20) -> dict:
+    """The register with the author's completion of a considered SQT curve whose source leaves
+    an end open: points past each open end to the index limit, keeping the curve's direction,
+    with who added them and why (:func:`check_completion`). Refused while an owner decision
+    selects the curve (undo it first), so a selected curve never changes under its decision."""
+    who, why = str(by or "").strip(), " ".join(str(reason or "").split())
+    if not who:
+        raise ValueError("A completion needs the initials of the person adding the points.")
+    if len(why) < min_reason:
+        raise ValueError(f"Give a reason of at least {min_reason} characters.")
+    for d in decisions or []:
+        if str(((d.get("source") or {}).get("ref") or {}).get("candidateKey") or "") == str(key):
+            raise ValueError("An owner decision (REF-15) selects this curve. Undo that decision "
+                             "before changing its completion.")
+    reg = load_register(register)
+    cand = next((c for c in reg["considered"] if c.get("candidateKey") == key), None)
+    if cand is None:
+        raise ValueError("That candidate is not in this register.")
+    record = cand.get("record") or {}
+    if not record:
+        raise ValueError("Only a state SQT curve is completed here.")
+    adoption = sqt_adoption(record)
+    added = [{"x": _num(p.get("x")), "y": _num(p.get("y")), "side": str(p.get("side") or "")}
+             for p in points or []]
+    problems = check_completion(adoption["points"], adoption["openEnds"], record.get("direction"), added)
+    if problems:
+        raise ValueError(" ".join(problems))
+    completion = {"points": added, "by": who, "reason": why, "at": at or _now()}
+    base = {**cand, "definition": {**(cand.get("definition") or {}),
+                                   "points": [{"x": x, "y": y} for x, y in adoption["points"]],
+                                   "openEnds": adoption["openEnds"]}}
+    base["definition"].pop("publishedPoints", None)
+    base["definition"].pop("addedPoints", None)
+    new = apply_completion(base, completion)
+    reg["considered"] = [new if c.get("candidateKey") == key else c for c in reg["considered"]]
+    return reg
 
 
 # --------------------------------------------------------------------------- #
@@ -852,4 +1066,6 @@ __all__ = ["STATUSES", "STATUS_LABELS", "DECIDED_BY", "SOURCE_KINDS", "SOURCE_KI
            "empty_register", "add_considered", "remove_considered", "record_disposition", "decision_id",
            "withdraw_disposition", "deep_register", "function_rows", "register_counts",
            "export_rows", "diff", "MAX_COMPARE", "sqt_candidate", "sqt_metric_key", "sqt_adoption",
-           "tile_basis_digest", "same_metric", "sqt_target", "sqt_context"]
+           "tile_basis_digest", "same_metric", "sqt_target", "sqt_context", "sqt_checks",
+           "sqt_restriction", "sqt_limitations", "sqt_label", "VERIFICATION_LIMITS", "check_completion",
+           "apply_completion", "with_completion", "complete_curve", "COMPLETION_NOTE"]

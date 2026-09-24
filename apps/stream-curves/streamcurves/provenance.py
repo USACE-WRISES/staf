@@ -786,9 +786,10 @@ def _hierarchy_records(result: dict, add) -> None:
                     computed["failedAtBuild"] = src["failedAtBuild"]
                     verdict = VERDICT_FAIL
                     chosen += f" Not applied: {src['failedAtBuild']}"
-        if owner_curves.needs_extension(d) and not owner_curves.alternatives_enabled():
+        why_not = owner_curves.unusable_reason(d)
+        if why_not:
             verdict = VERDICT_FAIL
-            chosen += f" Not applied: {owner_curves.EXTENSION_OFF}"
+            chosen += f" Not applied: {why_not}"
         held = (result.get("held_by_owner") or {}).get(str(d.get("metric")))
         if held and action in (owner_curves.SOURCE, owner_curves.REMOVE):
             # "your choice stands": the build kept the metric out of its own fit,

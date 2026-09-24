@@ -40,7 +40,9 @@ EASI's active method are the owner's decisions (see the adoption package in the 
    its selected curves and, when opened, every alternative with its status, reason and who
    decided; **Compare** puts up to three side by side; **Use in this function** and **Undo** are
    REF-15 decisions; **Add a state SQT curve** searches the SQT registry and checks each curve
-   against this region and the function's own curves; **Record why not** keeps your reason for
+   against this region and the function's own curves; a curve its source leaves open at an end
+   is completed first (**Complete the curve**: points past the end to the index limit, keeping its
+   direction, with your initials and a reason); **Record why not** keeps your reason for
    leaving a considered curve out. A decision records the curve it was made on: when a rebuild
    moves that curve, the function asks you to look again. EASI:
    **Final selection** lists the alternatives the method was chosen from; **Select** adopts one

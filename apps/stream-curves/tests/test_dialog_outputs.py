@@ -13,7 +13,7 @@ import pytest
 
 VIEWS = Path(__file__).resolve().parents[1] / "views"
 DIALOG_OUTPUTS = {"easi_page.py": ("modal_err", "pkg_preview"),
-                  "final_selection.py": ("fs_sqt_results", "fs_select_checks")}
+                  "final_selection.py": ("fs_sqt_results", "fs_select_checks", "fs_completion_preview")}
 
 
 @pytest.mark.parametrize("module,name", [(m, n) for m, names in DIALOG_OUTPUTS.items() for n in names])
