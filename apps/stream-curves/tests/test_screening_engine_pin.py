@@ -108,11 +108,31 @@ def test_the_manifest_records_the_pin_inside_the_digest():
         pv.digest_payload_from_manifest(plain))
 
 
+# A version not built from NRSA data carries another provenance document, which names its
+# kind and holds no run manifest: an EASI method version and a state SQT transcription.
+_NOT_BUILT = ("easi-method", "sqt-transcription")
+
+
+def _kind(path: Path):
+    return json.loads(path.read_text(encoding="utf-8")).get("kind")
+
+
 def _published_manifests() -> list[tuple[str, Path]]:
     out = []
     for p in sorted(_LIBRARY.glob("*/v*/provenance.json")):
+        if _kind(p) in _NOT_BUILT:
+            continue
         out.append((f"{p.parents[1].name}/{p.parent.name}", p))
     return out
+
+
+@pytest.mark.skipif(not _LIBRARY.is_dir(), reason="assessment library not present")
+def test_every_library_provenance_is_a_manifest_or_a_named_kind():
+    # leaving the other kinds out never hides a build manifest that lost its digest
+    for p in sorted(_LIBRARY.glob("*/v*/provenance.json")):
+        doc = json.loads(p.read_text(encoding="utf-8"))
+        manifest = doc.get("manifest") or doc
+        assert manifest.get("inputsDigest") or doc.get("kind") in _NOT_BUILT, str(p)
 
 
 @pytest.mark.skipif(not _LIBRARY.is_dir(), reason="assessment library not present")

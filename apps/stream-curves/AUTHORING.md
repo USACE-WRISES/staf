@@ -469,7 +469,9 @@ owner's decisions of 2026-09-24, `scripts/complete_sqt_assessments.py` over
 
 The bundle is v1's scored content, so the content digest and every score stay v1's. Fixing a
 defect is a new version with a new digest. DEEP hides these assessments (its `-sqt-adapted`
-filter). A project with curves and no data opens on Reference curves.
+filter), and the gallery never offers Open in DEEP for them. A project with curves and no data
+opens on Reference curves, which draws the carried curves without a dataset; only the analysis
+table needs data.
 
 A curve is added to a DEEP session from the section's picker (search by metric text; filter by
 state, edition as the rows name it, verification, function and eligibility). Each record is checked
