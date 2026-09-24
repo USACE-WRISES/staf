@@ -222,7 +222,7 @@ def summary_export_server(input, output, session, state: AppState):
             sqt_cards.append(
                 download_card(
                     "SQT Reference Curves (xlsx)",
-                    "The Reference Curves workbook — per-metric discipline bands, "
+                    "The Reference Curves workbook: per-metric discipline bands, "
                     "line coefficients, and embedded curve figures.",
                     dl_button("dl_sqt_workbook", "Download Reference Curves"),
                 )
@@ -252,7 +252,7 @@ def summary_export_server(input, output, session, state: AppState):
                     download_card(
                         "DEEP Assessment Bundle (.deep.json)",
                         "A portable detailed-assessment definition for the DEEP "
-                        "executor app — finalized curves, mapped to STAF functions.",
+                        "executor app: finalized curves, mapped to STAF functions.",
                         dl_button(
                             "dl_deep_assessment",
                             "Download DEEP Bundle",

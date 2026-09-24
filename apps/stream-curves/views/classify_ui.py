@@ -12,6 +12,7 @@ from shiny import ui
 from streamcurves import metric_names
 from streamcurves.profiler import metric_family_levels
 from views.theme import fa
+from views.uihelpers import count_text
 
 ROLE_CHOICES = {"metric": "Metric", "predictor": "Predictor", "stratifier": "Stratifier"}
 
@@ -111,8 +112,8 @@ def classify_table_html(ns, profile: pd.DataFrame):
             ui.tags.th("Column"),
             ui.tags.th("Name"),
             ui.tags.th("Type"),
-            ui.tags.th("# Unique"),
-            ui.tags.th("% Missing"),
+            ui.tags.th("Unique"),
+            ui.tags.th("Missing"),
             ui.tags.th("Examples"),
             ui.tags.th("Role"),
             ui.tags.th("Family (metrics)"),
@@ -158,8 +159,9 @@ def classify_role_summary_html(assignments: pd.DataFrame):
         (~(assignments["is_metric"] | assignments["is_predictor"] | assignments["is_stratifier"])).sum()
     )
 
-    def badge(label, value, cls):
-        return ui.tags.span(f"{value} {label}", class_=f"badge {cls} me-1")
+    def badge(noun, value, cls):
+        text = f"{value} {noun}" if noun == "not used" else count_text(value, noun)
+        return ui.tags.span(text, class_=f"badge {cls} me-1")
 
     warn = None
     if n_metric < 1:
@@ -169,9 +171,9 @@ def classify_role_summary_html(assignments: pd.DataFrame):
             class_="text-danger ms-2 small",
         )
     return ui.div(
-        badge("metric(s)", n_metric, "bg-primary"),
-        badge("predictor(s)", n_pred, "bg-success"),
-        badge("stratifier(s)", n_strat, "bg-info"),
+        badge("metric", n_metric, "bg-primary"),
+        badge("predictor", n_pred, "bg-success"),
+        badge("stratifier", n_strat, "bg-info"),
         badge("not used", n_unused, "bg-light text-dark border"),
         warn,
         class_="mb-2",

@@ -33,8 +33,7 @@
   --shadow-3: 0 8px 28px rgba(15, 23, 42, .16);
   --sc-focus: 0 0 0 3px rgba(47, 75, 124, .22);
   --sc-header-h: 50px;
-  --sc-stage-h: 38px;
-  --sc-chrome-h: calc(var(--sc-header-h) + var(--sc-stage-h));
+  --sc-stage-h: 36px;
   --sc-panel-w: 300px;
   --ic-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5 6.5 12 13 4.5' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --ic-chev:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M6 3.5 10.5 8 6 12.5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -106,7 +105,7 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-head); }
   border-bottom: 1px solid var(--sc-rule); }
 .sc-stagebar-scroll { display: flex; align-items: center; gap: 2px; flex: 1 1 auto; min-width: 0;
   height: 100%; overflow-x: auto; overflow-y: hidden; }
-.sc-stage { display: inline-flex; align-items: center; gap: 7px; height: 28px; flex: none;
+.sc-stage { display: inline-flex; align-items: center; gap: 7px; height: 26px; flex: none;
   padding: 0 10px; border: 0; background: transparent; border-radius: var(--r-1);
   cursor: pointer; font: 500 var(--fs-1)/1 var(--font-body); color: var(--sc-text-muted); }
 .sc-stage:hover { background: var(--sc-surface-soft); color: var(--sc-text); }
@@ -119,7 +118,7 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-head); }
   min-width: 17px; height: 17px; padding: 0 5px; border-radius: 999px; font-size: 10px;
   font-weight: 700; background: var(--sc-warn-soft); color: var(--sc-warn);
   border: 1px solid var(--sc-warn-border); }
-.sc-stage-sep { width: 13px; height: 13px; flex: none; background: var(--sc-text-faint);
+.sc-stage-sep { width: 11px; height: 11px; flex: none; background: var(--sc-border);
   -webkit-mask: var(--ic-chev) center/contain no-repeat; mask: var(--ic-chev) center/contain no-repeat; }
 .sc-stage.st-locked { color: var(--sc-text-faint); }
 .sc-stage.st-locked .sc-stage-num { border-color: var(--sc-rule); color: var(--sc-text-faint); }
@@ -140,6 +139,9 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-head); }
 .sc-stage.active .sc-stage-num { background: var(--sc-accent); border-color: var(--sc-accent);
   color: #fff; }
 .sc-stage.active .sc-stage-num::after { display: none; }
+/* a done stage you are on keeps its check, white on the fill (the panel does the same) */
+.sc-stage.active.st-done .sc-stage-num { color: transparent; }
+.sc-stage.active.st-done .sc-stage-num::after { display: block; background: #fff; }
 .sc-stage.active.st-running .sc-stage-num { border: 2px solid var(--sc-accent);
   border-top-color: transparent; background: #fff; color: transparent; }
 .sc-stagebar.aside .sc-stage { opacity: .6; }
@@ -155,10 +157,12 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-head); }
   max-height: calc(100% - 24px); }
 .sc-panel.collapsed { width: auto; box-shadow: var(--shadow-2); }
 .sc-panel.collapsed .sc-panel-body { display: none; }
-.sc-panel-head { display: flex; align-items: center; gap: var(--sp-2); height: 38px;
+.sc-panel-head { display: flex; align-items: center; gap: var(--sp-2); width: 100%; height: 38px;
   padding: 0 var(--sp-3); flex: none; cursor: pointer; user-select: none; background: #fff;
-  color: var(--sc-text-strong); border-bottom: 1px solid var(--sc-rule); }
+  color: var(--sc-text-strong); border: 0; border-bottom: 1px solid var(--sc-rule);
+  text-align: left; font: inherit; }
 .sc-panel-head:hover { background: var(--sc-surface-soft); }
+.sc-panel-head:focus-visible { outline: none; box-shadow: inset var(--sc-focus); }
 .sc-panel.collapsed .sc-panel-head { border-bottom: none; }
 .sc-panel-title { font-family: var(--font-head); font-weight: 600; font-size: var(--fs-2);
   color: var(--sc-text-strong); white-space: nowrap; }
@@ -171,16 +175,26 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-head); }
 .sc-panel-body { overflow-y: auto; padding: 6px 0 10px; }
 .sc-tree-sec { padding: 10px 14px 4px; font: 600 var(--fs-0)/1 var(--font-body);
   letter-spacing: .07em; text-transform: uppercase; color: var(--sc-text-muted); }
-.sc-tree-row { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 30px;
-  padding: 4px 12px 4px 14px; border: 0; background: transparent; text-align: left;
+.sc-tree-row { position: relative; display: flex; align-items: center; gap: 8px; width: 100%;
+  min-height: 30px; padding: 4px 12px 4px 14px; border: 0; background: transparent; text-align: left;
   font: 500 var(--fs-2)/1.25 var(--font-body); color: var(--sc-text); cursor: pointer; }
 .sc-tree-row:hover { background: var(--sc-surface-soft); }
 .sc-tree-row:focus-visible { outline: none; box-shadow: inset var(--sc-focus); }
 .sc-tree-row.is-current { background: var(--sc-accent-soft); color: var(--sc-accent-dark);
   font-weight: 600; box-shadow: inset 3px 0 0 var(--sc-accent); }
-.sc-tree-row.is-child { padding-left: 42px; font-weight: 400; font-size: var(--fs-1);
+/* the stage whose step is current: named in the accent, its circle filled, never a second highlight */
+.sc-tree-row.is-open { color: var(--sc-accent-dark); font-weight: 600; }
+/* a stage's steps hang from it on a guide line under its circle (the row's 14px padding plus half
+   the 18px circle), each label one step in from the stage's own (52px against 40px) */
+.sc-tree-children { position: relative; padding-bottom: 4px; }
+.sc-tree-children::before { content: ""; position: absolute; left: 22.5px; top: 0; bottom: 8px;
+  width: 1px; background: var(--sc-border); }
+.sc-tree-row.is-child { padding-left: 52px; font-weight: 400; font-size: var(--fs-1);
   min-height: 26px; color: var(--sc-text-muted); }
-.sc-tree-row.is-child.is-current { color: var(--sc-accent-dark); font-weight: 600; }
+.sc-tree-row.is-child:hover { color: var(--sc-text); }
+.sc-tree-row.is-child.is-current { color: var(--sc-accent-dark); font-weight: 600; box-shadow: none; }
+.sc-tree-row.is-child.is-current::before { content: ""; position: absolute; left: 21.5px; top: 5px;
+  bottom: 5px; width: 3px; border-radius: 2px; background: var(--sc-accent); }
 .sc-tree-row.is-dim { color: var(--sc-text-faint); }
 .sc-tree-row .sc-tree-label { flex: 1 1 auto; min-width: 0; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap; }
@@ -209,6 +223,16 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-head); }
   border-top-color: transparent; color: transparent; animation: sc-spin .8s linear infinite; }
 .sc-tree-row.st-locked { color: var(--sc-text-faint); }
 .sc-tree-row.st-locked .sc-stage-num { border-color: var(--sc-rule); color: var(--sc-text-faint); }
+/* the stage you are on, filled as the strip fills it; after the states so it wins */
+.sc-tree-row.is-current .sc-stage-num, .sc-tree-row.is-open .sc-stage-num {
+  background: var(--sc-accent); border-color: var(--sc-accent); color: #fff; }
+.sc-tree-row.is-current.st-done .sc-stage-num, .sc-tree-row.is-open.st-done .sc-stage-num {
+  color: transparent; }
+.sc-tree-row.is-current.st-done .sc-stage-num::after,
+.sc-tree-row.is-open.st-done .sc-stage-num::after { background: #fff; }
+.sc-tree-row.is-current.st-running .sc-stage-num, .sc-tree-row.is-open.st-running .sc-stage-num {
+  border: 2px solid var(--sc-accent); border-top-color: transparent; background: #fff;
+  color: transparent; }
 
 /* ============ 5. start page (three columns, the startup gate) ============ */
 .sc-start { flex: 1 1 auto; min-width: 0; min-height: 0; display: grid;
@@ -660,3 +684,79 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-head); }
 .easi-ids-details { display: inline-block; }
 .easi-ids-details > summary { cursor: pointer; font-size: var(--fs-1); color: var(--sc-text-muted); }
 .easi-ids-details[open] > summary { margin-bottom: 4px; }
+
+/* ============ 14. pages: one header pattern, one control scale ============ */
+/* Every page is titled by what it is (the project is named in the header and the panel), the
+   way the EASI pages and Select final curves already are. */
+.sc-page-title { font: 600 var(--fs-5)/1.2 var(--font-head); color: var(--sc-text-strong);
+  margin: 0 0 4px; }
+.sc-page-sub { color: var(--sc-text-muted); font-size: var(--fs-2); }
+.sc-page-head { margin-bottom: 14px; }
+/* the Region & data wizard and the Refine & map sections read as pages, not one boxed card */
+.card.import-map-card, .card.workspace-card { border-width: 0; box-shadow: none;
+  background: transparent; }
+.card.import-map-card > .card-body, .card.workspace-card > .card-body { padding: 0; }
+.import-map-card > .data-setup-card-header, .workspace-card > .data-setup-card-header {
+  background: none; border: 0; padding: 4px 0 6px; }
+/* over an open project the wizard's header is empty: each step titles itself */
+.import-map-card > .wizard-head:has(> .shiny-html-output:empty) { display: none; }
+.wizard-head-title { font: 600 var(--fs-5)/1.2 var(--font-head); color: var(--sc-text-strong); }
+.wizard-head-sub { color: var(--sc-text-muted); font-size: var(--fs-2); margin-top: 2px; }
+
+/* One control scale. The theme draws 15px text in 47px buttons and 37px fields, a web form's
+   proportions; a desktop tool reads better with buttons and fields sharing a 34px row at the
+   body size. */
+.btn { padding: 6px 14px; font-size: var(--fs-3); line-height: 20px; border-radius: var(--r-1); }
+.btn-sm { padding: 3px 10px; font-size: var(--fs-1); line-height: 18px; }
+.btn-lg { padding: 8px 18px; font-size: var(--fs-3); line-height: 22px; }
+/* a card body is a flex column: a button placed straight in it keeps its own width */
+.card-body > .btn, .card-body > .shiny-download-link { align-self: flex-start; }
+.form-control, .form-select { font-size: var(--fs-3); line-height: 20px; border-radius: var(--r-1); }
+.selectize-input, .selectize-dropdown { font-size: var(--fs-3); }
+.selectize-input { border-radius: var(--r-1); }
+/* one head style for every table: small caps in the muted text, as the EASI and register tables */
+.sc-content .table > thead th, .modal .table > thead th { font-size: var(--fs-0); font-weight: 600;
+  letter-spacing: .05em; text-transform: uppercase; color: var(--sc-text-muted);
+  vertical-align: bottom; }
+.sc-content .table td.num, .sc-content .table th.num { text-align: right;
+  font-variant-numeric: tabular-nums; }
+
+/* page notes (AUDIT.md) */
+.region-approach-toggle .shiny-options-group { flex-wrap: nowrap; }
+/* the segmented controls: the theme pads each radio label 26px for a dot these hide, and sizes
+   the labels to their text; the segments fill the control evenly instead */
+.region-approach-toggle .shiny-options-group > .radio-inline,
+.sites-view-toggle .shiny-options-group > .radio-inline,
+.curve-gallery-filter .shiny-options-group > .radio-inline { padding-left: 0 !important; }
+.region-approach-toggle .shiny-options-group > .radio-inline { flex: 1 1 0 !important; min-width: 0; }
+.region-approach-toggle .shiny-options-group, .sites-view-toggle .shiny-options-group,
+.curve-gallery-filter .shiny-options-group { gap: 0; }
+.wizard-classify-table .shiny-input-checkboxgroup { margin-bottom: 0; width: auto; }
+.wizard-classify-table .shiny-options-group { display: flex; flex-wrap: nowrap; gap: 10px;
+  font-size: var(--fs-2); }
+.wizard-classify-table td.wizard-col-examples { max-width: 140px; }
+.wizard-classify-table .shiny-options-group .checkbox-inline,
+.wizard-classify-table .shiny-options-group .form-check-inline { margin: 0; white-space: nowrap; }
+/* Reference curves, Table: each card header is its title row, then its sentence, full width; the
+   status stays on one line */
+.summary-shell > .card-header { flex-direction: column; align-items: stretch; gap: 2px; }
+.summary-col-curve { width: 160px; min-width: 160px; max-width: 160px; }
+.summary-col-status { width: 112px; min-width: 112px; max-width: 112px; white-space: nowrap; }
+/* EASI Final selection: the method sits under its function, in sentence case */
+.fs-fn-method { font-size: var(--fs-1); color: var(--sc-text-muted); line-height: 1.35; }
+/* Reference curves gallery: the filter is one segmented control (as Region type and Map/Table),
+   a cross-listed copy steps back until you point at it, and the metric code is secondary */
+.curve-gallery-filter .shiny-input-radiogroup { margin: 0; }
+.curve-gallery-filter .shiny-options-group { display: inline-flex; flex-wrap: nowrap;
+  border: 1px solid var(--sc-border); border-radius: var(--r-1); overflow: hidden; }
+.curve-gallery-filter .radio-inline { display: flex; margin: 0 !important; padding: 0; }
+.curve-gallery-filter .radio-inline + .radio-inline { border-left: 1px solid var(--sc-border); }
+.curve-gallery-filter .radio-inline input[type="radio"] { position: absolute; opacity: 0;
+  pointer-events: none; }
+.curve-gallery-filter .radio-inline > span { padding: 3px 12px; font-size: var(--fs-1);
+  color: var(--sc-accent); cursor: pointer; white-space: nowrap; user-select: none; }
+.curve-gallery-filter .radio-inline input:checked + span { background: var(--sc-accent); color: #fff; }
+.curve-gallery-filter .radio-inline input:focus-visible + span { box-shadow: inset var(--sc-focus); }
+.curve-tile.is-cross-listed { opacity: .72; }
+.curve-tile.is-cross-listed:hover, .curve-tile.is-cross-listed:focus-visible { opacity: 1; }
+.curve-tile-code { color: var(--sc-text-faint); }

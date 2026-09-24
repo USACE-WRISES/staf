@@ -55,7 +55,7 @@ from views.plotly_html import plotly_html_fragment
 from views.rebuild import rebuild_app_from_tables
 from views.state import AppState
 from views.theme import fa
-from views.uihelpers import no_data_alert
+from views.uihelpers import count_text, no_data_alert
 
 logger = logging.getLogger("streamcurves")
 
@@ -389,7 +389,7 @@ def cross_section_server(input, output, session, state: AppState):
                 analyzed_nonce.set(analyzed_nonce() + 1)
 
         ui.notification_show(
-            f"Analyzed {site}: {len(out)} cross-section(s) from "
+            f"Analyzed {site}: {count_text(len(out), 'cross-section')} from "
             f"{out[0]['resolution_m']} m terrain.",
             type="message",
             duration=5,
@@ -476,7 +476,7 @@ def cross_section_server(input, output, session, state: AppState):
                 # Normally unmounted (the editor swaps to a warning card for
                 # stale sites) — belt-and-braces for hand-edited sessions.
                 return ui.tags.span(
-                    "— re-run Analyze to refresh terrain", class_="text-muted small"
+                    "Re-run Analyze to refresh the terrain.", class_="text-muted small"
                 )
             m = transect_metrics(t)
             if m is None:
@@ -488,7 +488,7 @@ def cross_section_server(input, output, session, state: AppState):
 
     def _metric_chips(m: dict):
         def chip(lab, val):
-            shown = "—" if val is None else val
+            shown = "n/a" if val is None else val
             return ui.tags.span(
                 f"{lab}: {shown}", class_="badge bg-light text-dark border me-1"
             )
@@ -556,7 +556,7 @@ def cross_section_server(input, output, session, state: AppState):
             return None
 
         def box(lab, val):
-            disp = "—" if val is None else val
+            disp = "n/a" if val is None else val
             return ui.div(
                 ui.div(disp, class_="xsec-stat-val"),
                 ui.div(lab, class_="xsec-stat-lab"),
@@ -567,12 +567,12 @@ def cross_section_server(input, output, session, state: AppState):
         da_mi = (da * SQKM_TO_SQMI) if (da is not None and np.isfinite(da)) else float("nan")
         meta = (
             f"COMID {cs['comid']} · {cs['division']} · "
-            f"DA {da_mi:.1f} sq mi · {r['n']} transect(s)"
+            f"DA {da_mi:.1f} sq mi · {count_text(r['n'], 'transect')}"
         )
         return ui.div(
             ui.div(
                 ui.div(
-                    ui.tags.h6(f"Reach summary — {site}", class_="mb-2"),
+                    ui.tags.h6(f"Reach summary: {site}", class_="mb-2"),
                     ui.tags.span(meta, class_="text-muted small"),
                     class_="d-flex justify-content-between align-items-center flex-wrap",
                 ),
@@ -702,7 +702,7 @@ def cross_section_server(input, output, session, state: AppState):
         auto_id = detect_geo_cols(data)["id_col"]
         return ui.TagList(
             ui.div(
-                ui.tags.h4("Geomorphic cross-sections", class_="mb-0"),
+                ui.tags.h2("Geomorphic cross-sections", class_="sc-page-title"),
                 ui.output_ui(ns("analyzed_count")),
                 class_="d-flex justify-content-between align-items-center flex-wrap mb-2",
             ),
@@ -791,7 +791,7 @@ def cross_section_server(input, output, session, state: AppState):
         sel = selected_site()
         if not store:
             return ui.div(
-                "No sites analyzed yet — pick a site below and click Analyze.",
+                "No sites analyzed yet. Pick a site below and click Analyze.",
                 class_="text-muted small mb-2",
             )
         chips = []
@@ -802,11 +802,11 @@ def cross_section_server(input, output, session, state: AppState):
                 classes += " xsec-chip-active"
             if stale:
                 classes += " xsec-chip-stale"
-                title = "Analyzed with an older version — select it and re-run Analyze"
+                title = "Analyzed with an older version. Select it and re-run Analyze."
             else:
                 title = (
-                    f"{len(cs.get('transects') or [])} cross-section(s) — "
-                    "click to view"
+                    f"{count_text(len(cs.get('transects') or []), 'cross-section')}. "
+                    "Click to view."
                 )
             chips.append(
                 ui.tags.span(
@@ -921,7 +921,7 @@ def cross_section_server(input, output, session, state: AppState):
             cs = (state.cross_sections() or {}).get(site)
         if cs is None or not cs.get("transects"):
             return ui.div(
-                "No cross-sections yet for this site — click Analyze.",
+                "No cross-sections yet for this site. Click Analyze.",
                 class_="text-muted",
             )
         if stale_stations(cs):
@@ -933,7 +933,7 @@ def cross_section_server(input, output, session, state: AppState):
                         class_="mb-2 text-warning-emphasis",
                     ),
                     ui.tags.p(
-                        "This site was analyzed with an older version of the tool — "
+                        "This site was analyzed with an older version of the tool, so "
                         "its stored stations are in the wrong units, so widths would "
                         "read as 0. Click “Analyze site (pull terrain)” to "
                         "refresh it.",
@@ -954,7 +954,7 @@ def cross_section_server(input, output, session, state: AppState):
                 ui.div(
                     ui.div(
                         ui.tags.span(
-                            f"Cross-section {t} — {tname}", class_="fw-semibold"
+                            f"Cross-section {t}: {tname}", class_="fw-semibold"
                         ),
                         ui.tags.span(
                             f"{tr['resolution_m']} m DEM · relief {relief} m",

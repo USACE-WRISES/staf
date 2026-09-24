@@ -33,7 +33,7 @@ from views import assessment_publish as _ap
 from views import curve_gallery as cg
 from views.state import AppState
 from views.theme import bi
-from views.uihelpers import guard, lifecycle_badge, not_ready_panel
+from views.uihelpers import count_text, guard, lifecycle_badge, not_ready_panel
 
 #: Case-insensitive header aliases for the minimal CSV (site, metric, value).
 _COL_ALIASES = {
@@ -171,14 +171,17 @@ def validate_server(input, output, session, state: AppState, active=None):
                    else "The library is read-only here.")
         return ui.div(
             ui.div(
-                ui.h4(f"{name} v{ver}", class_="mb-0"),
-                ui.tags.span(lifecycle_badge(status), class_="ms-2"),
-                ui.tags.span(lib.validation_label(val_state),
-                             class_="badge ms-1 " + ("text-bg-success"
-                                                     if val_state == "validated"
-                                                     else "text-bg-warning")),
-                ui.tags.span(f"{n_records} record(s)", class_="text-muted small ms-2"),
-                class_="d-flex align-items-baseline flex-wrap mb-2"),
+                ui.h2("Validate", class_="sc-page-title"),
+                ui.div(
+                    f"{name} v{ver}",
+                    ui.tags.span(lifecycle_badge(status), class_="ms-2"),
+                    ui.tags.span(lib.validation_label(val_state),
+                                 class_="badge ms-1 " + ("text-bg-success"
+                                                         if val_state == "validated"
+                                                         else "text-bg-warning")),
+                    ui.tags.span(count_text(n_records, "record"), class_="ms-2"),
+                    class_="sc-page-sub"),
+                class_="sc-page-head"),
             ui.input_file(ns("field_csv"), "Field data (CSV: site, metric, value)",
                           accept=[".csv"], width="26rem"),
             ui.output_ui(ns("overlay_view")),
@@ -257,12 +260,12 @@ def validate_server(input, output, session, state: AppState, active=None):
                     scores.append(float(y))
             if scores:
                 med = statistics.median(scores)
-                caption = (f"{len(scores)} value(s), median score {med:.2f} "
+                caption = (f"{count_text(len(scores), 'value')}, median score {med:.2f} "
                            f"({_score_band(med, bands)})")
                 if len(strata) > 1:
                     caption += "; scored on the first stratum"
             else:
-                caption = f"{len(raw)} value(s); no curve to score against"
+                caption = f"{count_text(len(raw), 'value')}; no curve to score against"
             tiles.append(ui.div(
                 ui.div(
                     ui.tags.span(row.get("display_name") or metric,
@@ -271,10 +274,11 @@ def validate_server(input, output, session, state: AppState, active=None):
                 ui.HTML(cs.tile_svg(row, overlay=overlay)),
                 ui.div(caption, class_="curve-tile-foot"),
                 class_="curve-tile"))
-        note = (f"{data['n_sites']} site(s), {len(data['values'])} metric(s) matched"
-                + (f", {len(data['unmatched'])} code(s) unmatched"
+        note = (f"{count_text(data['n_sites'], 'site')}, "
+                f"{count_text(len(data['values']), 'metric')} matched"
+                + (f", {count_text(len(data['unmatched']), 'code')} unmatched"
                    if data["unmatched"] else "")
-                + (f", {data['n_dropped']} non-numeric value(s) dropped"
+                + (f", {count_text(data['n_dropped'], 'non-numeric value')} dropped"
                    if data["n_dropped"] else "") + ".")
         return ui.div(
             ui.div(note, class_="text-muted small mt-1 mb-2"),
@@ -312,7 +316,7 @@ def validate_server(input, output, session, state: AppState, active=None):
         with reactive.isolate():
             stamped = dict(state.run_stage_status() or {})
         stamped["validate"] = {"status": "done",
-                               "label": f"{n} validation record(s)."}
+                               "label": f"{count_text(n, 'validation record')}."}
         state.run_stage_status.set(stamped)
         ui.notification_show(f"Validation recorded for {aid} v{ver}.",
                              type="message", duration=6)

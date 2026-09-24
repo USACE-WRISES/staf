@@ -42,6 +42,7 @@ from views.state import AppState
 from views.theme import bi, fa
 from views.uihelpers import (
     _rules_goto_onclick,
+    count_text,
     guard,
     linkify_rule_ids,
     not_ready_panel,
@@ -492,13 +493,13 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             merged = rb.merge_answers(_read_json(path), decisions,
                                       key=lambda d: (d.get("rule_id"), str(d.get("subject"))))
             path.write_text(json.dumps(merged, indent=1) + "\n", encoding="utf-8")
-            saved.append(f"{len(decisions)} decision(s)")
+            saved.append(count_text(len(decisions), "decision"))
         if gaps:
             path = out / "coverage_exceptions.json"
             merged = rb.merge_answers(_read_json(path), gaps,
                                       key=lambda g: str(g.get("functionId")))
             path.write_text(json.dumps(merged, indent=1) + "\n", encoding="utf-8")
-            saved.append(f"{len(gaps)} coverage exception(s)")
+            saved.append(count_text(len(gaps), "coverage exception"))
         ui.notification_show(
             "Saved " + " and ".join(saved) + ". Build this region again to fold them in.",
             type="message", duration=8)
@@ -665,7 +666,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                 "ecoregion can be built here.",
                 icon="database")
         return ui.div(
-            ui.h4("Region builder", class_="mb-1"),
+            ui.h2("Region builder", class_="sc-page-title"),
             ui.p("Run the whole workflow for one Level III ecoregion, then review "
                  "what it decided. Publishing stays a separate step you confirm.",
                  class_="text-muted small"),
