@@ -682,6 +682,16 @@ def _traceability_lines(p: dict) -> list[str]:
     policy = p.get("value_policy")
     if not (refit or evidence or ledger or policy):
         return []
+    # The batch records some of these as plain values: `refit` may be the mode alone,
+    # `evidence` the reference dict or a file name, `ledger` the ledger file's name
+    # (`rebuild_ledger.json` beside this packet). Render whatever shape arrives.
+    if not isinstance(refit, dict):
+        refit = {"mode": str(refit)}
+    if not isinstance(evidence, dict):
+        evidence = {"packageId": str(evidence)}
+    ledger_file = None
+    if not isinstance(ledger, dict):
+        ledger_file, ledger = str(ledger), {}
     lines = ["## 5a. Refit, value policy, evidence and ledger", ""]
     if refit:
         mode = refit.get("mode") or "missing"
@@ -714,13 +724,18 @@ def _traceability_lines(p: dict) -> list[str]:
         lines += [f"Development evidence package `{pid}` ({repro}) {digest}: the stations, values, "
                   "pools, curves and decisions behind every curve of this build, obtainable "
                   "through the assessment.", ""]
+    if ledger_file:
+        lines += [f"Rebuild ledger: `{ledger_file}` beside this packet (one row per metric and "
+                  "function: refitted, carried, fixed, owner sourced, owner held, removed, "
+                  "unsupported, held for review or not evaluated).", ""]
     if ledger:
         counts = ledger.get("counts") or {}
         if not counts and isinstance(ledger.get("rows"), list):
             counts = {}
             for row in ledger["rows"]:
-                key = str(row.get("disposition") or "")
-                counts[key] = counts.get(key, 0) + 1
+                if isinstance(row, dict):
+                    key = str(row.get("disposition") or "")
+                    counts[key] = counts.get(key, 0) + 1
         if counts:
             lines += ["Rebuild ledger dispositions: " + ", ".join(
                 f"{k} {v}" for k, v in sorted(counts.items())) + ".", ""]
