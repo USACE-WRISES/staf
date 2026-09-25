@@ -249,7 +249,13 @@ def _tile_functions(tile: Mapping) -> list[str]:
 
 
 def _tile_digest(tile: Mapping, config: Optional[Mapping] = None) -> Optional[str]:
+    # the metric's direction from the session's metric_config, else the one the tile
+    # itself carries (a carried, ladder or criterion curve is not in metric_config, and
+    # its direction comes with its own config: curve_tiles.reference_tiles_for), so the
+    # same curve reads the same digest whether this version fitted it or carries it
     hib = (config or {}).get("higher_is_better")
+    if hib is None:
+        hib = tile.get("higher_is_better")
     return curve_basis_digest(tile.get("strata") or [], higher_is_better=hib)
 
 
@@ -577,6 +583,39 @@ def register_counts(register: Mapping) -> dict:
     counts["functionsUnassessed"] = sum(1 for f in fns if f["unassessed"])
     counts["unresolved"] = sum(f["unresolved"] for f in fns)
     return counts
+
+
+#: the schema of the register export a version's provenance carries (``candidateRegister``)
+EXPORT_SCHEMA = 1
+
+
+def register_for_result(result: Mapping, considered: Optional[Iterable[Mapping]] = None) -> dict:
+    """The register :func:`deep_register` computes from an open session, computed headless
+    from a stage result (``regional_agent.assemble``) or from a session's decoded fields
+    (``curve_tiles.fields_from_result`` tells the two apart). The tiles are the ones the
+    Reference Curves page would show (``curve_tiles.tiles_for_fields``), so a batch's
+    register and the page's never disagree. ``considered``: candidates added for comparison
+    beside the result's own ``candidate_register`` field (a person's, read from the region's
+    ``candidate_register.json``), each carried with the name that added it."""
+    from . import curve_tiles as ct
+    fields = ct.fields_from_result(result)
+    reg = load_register(fields.get(SESSION_FIELD))
+    for c in considered or []:
+        if not isinstance(c, Mapping):
+            continue
+        reg = add_considered(reg, c, by=str(c.get("addedBy") or "n/a"), at=c.get("addedAt"))
+    region = fields.get("region_of_applicability") or {}
+    return deep_register(tiles=ct.tiles_for_fields(fields), build=fields.get("reference_build"),
+                         decisions=fields.get("owner_curve_decisions") or [],
+                         metric_config=fields.get("metric_config") or {}, register=reg,
+                         coverage_exceptions=fields.get("function_coverage_exceptions") or [],
+                         region={"code": (region or {}).get("code")})
+
+
+def register_document(register: Mapping) -> dict:
+    """The register as a version's provenance carries it (``candidateRegister``): one record
+    per candidate and function and the counts, the shape an interactive publish writes."""
+    return {"schema": EXPORT_SCHEMA, "rows": export_rows(register), "counts": register_counts(register)}
 
 
 def export_rows(register: Mapping) -> list[dict]:
@@ -1065,6 +1104,7 @@ __all__ = ["STATUSES", "STATUS_LABELS", "DECIDED_BY", "SOURCE_KINDS", "SOURCE_KI
            "SESSION_FIELD", "candidate_key", "curve_basis_digest", "load_register",
            "empty_register", "add_considered", "remove_considered", "record_disposition", "decision_id",
            "withdraw_disposition", "deep_register", "function_rows", "register_counts",
+           "register_for_result", "register_document", "EXPORT_SCHEMA",
            "export_rows", "diff", "MAX_COMPARE", "sqt_candidate", "sqt_metric_key", "sqt_adoption",
            "tile_basis_digest", "same_metric", "sqt_target", "sqt_context", "sqt_checks",
            "sqt_restriction", "sqt_limitations", "sqt_label", "VERIFICATION_LIMITS", "check_completion",

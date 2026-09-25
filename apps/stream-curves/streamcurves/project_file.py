@@ -130,8 +130,9 @@ def required_format(fields, *, pack: bool = False) -> int:
     """The lowest format a DEEP session's fields need. 2 when StreamCurves 1.0.0 would
     misread them (an owner decision only the REF-15 extension applies: 1.0.0 would still
     score the curves it replaces) or, in a project, drop part of them on a re-save (curves
-    added for comparison or reasons recorded in the candidate register); else 1. A pack
-    keeps format 1 for the register alone, as the version's provenance holds that record."""
+    added for comparison or reasons recorded in the candidate register, or SELECT-01
+    approvals recorded in the session); else 1. A pack keeps format 1 for the register and
+    the approvals alone, as the version's provenance and meta hold those records."""
     from . import owner_curves
     fields = fields if isinstance(fields, dict) else {}
     decisions = fields.get("owner_curve_decisions")
@@ -140,6 +141,9 @@ def required_format(fields, *, pack: bool = False) -> int:
         return 2
     reg = fields.get("candidate_register")
     if not pack and isinstance(reg, dict) and (reg.get("considered") or reg.get("decisions")):
+        return 2
+    approvals = fields.get("portfolio_approvals")
+    if not pack and isinstance(approvals, list) and any(isinstance(a, dict) for a in approvals):
         return 2
     return FORMAT_VERSION
 

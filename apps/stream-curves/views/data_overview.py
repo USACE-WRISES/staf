@@ -324,6 +324,9 @@ def restore_session(state: AppState, payload: dict, source_name: str | None = No
         unrecorded = []
     state.owner_curve_decisions.set(chosen)
     state.candidate_register.set(fields.get("candidate_register"))
+    # SELECT-01 approvals given in Select final curves (absent in every session
+    # written before the field existed -> None -> no approval).
+    state.portfolio_approvals.set(fields.get("portfolio_approvals") or None)
     added = len({d["id"] for d in chosen} - {d.get("id") for d in session_decisions})
     if added:
         ui.notification_show(

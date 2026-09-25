@@ -86,7 +86,7 @@ def test_the_three_pilots_read_the_screen_the_station_table_pins(evidence):
     for ev in evidence.values():
         assert ev["reference_method"] == "pressure-screen"
         assert ev["screening_method"] == rscreen.METHOD
-        assert ev["nrsa_policy"] == nrsa_dataset.POLICY_LATEST_NON_NULL
+        assert ev["nrsa_policy"] == nrsa_dataset.DEFAULT_VALUE_POLICY
         assert ev["easi_vendor"] is None and ev["screening_cache"] is None
 
 
@@ -382,7 +382,7 @@ def test_the_manifest_and_digest_carry_the_reference_inputs(results):
     assert ref["screenId"] == rscreen.SCREEN_ID
     assert ref["stationScreen"]["sha256"] == rscreen.station_screen_identity()["sha256"]
     assert ref["fixedCriteria"]["sha256"] == fixed_criteria.fixed_criteria_sha256()
-    assert ref["valuePolicy"] == nrsa_dataset.POLICY_LATEST_NON_NULL
+    assert ref["valuePolicy"] == nrsa_dataset.DEFAULT_VALUE_POLICY
     payload = pv.digest_payload_from_manifest(manifest)
     assert payload["reference"]["method"] == "pressure-screen"
     # the digest moves when a reference input moves

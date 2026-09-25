@@ -117,6 +117,73 @@ def test_an_edited_curve_band_mirror_is_reported(monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
+# Config hygiene (campaign Round 1, 2026-09-25): the keys no code read are gone,
+# carry_forward is read, and the two describing blocks are mirror-checked.
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("path", [
+    "reference_pool.levels", "reference_pool.ladder_rule", "reference_pool.review_risks",
+    "reference_hierarchy.sources", "reference_hierarchy.option_rank",
+])
+def test_the_keys_no_code_read_stay_deleted(path):
+    assert methodology.threshold(path, "__missing__") == "__missing__", path
+
+
+def test_the_keys_the_code_reads_are_still_there():
+    assert methodology.threshold("reference_pool.envelope_quantiles") == [0.025, 0.975]
+    assert methodology.threshold("reference_pool.min_self_coverage") == 0.80
+    assert methodology.threshold("reference_hierarchy.national_options")
+    assert methodology.threshold("reference_hierarchy.regional_screen")["id"]
+
+
+def test_carry_forward_default_is_read_from_the_config(monkeypatch):
+    assert methodology.carry_forward_default() == "published_curves"
+    assert methodology.carry_forward_default() == methodology.threshold(
+        "reference_hierarchy.carry_forward")
+    clean = methodology.load_config()
+    tweaked = {**clean, "reference_hierarchy": {**clean["reference_hierarchy"],
+                                                "carry_forward": "sometimes"}}
+    monkeypatch.setattr(methodology, "load_config", lambda: tweaked)
+    with pytest.raises(ValueError, match="carry_forward"):
+        methodology.carry_forward_default()
+
+
+def test_the_standing_decisions_index_is_mirror_checked(monkeypatch):
+    from streamcurves import decisions as dec
+    from streamcurves import rules_view as rv
+    policy = dec.load_policy()
+    index = methodology.load_config()["standing_decisions"]
+    assert sorted(index["default_enabled"]) == sorted(rv.default_policy_ids(policy))
+    assert sorted(index["enable_per_run_only"]) == sorted(rv.optional_policy_ids(policy))
+    clean = methodology.load_config()
+    tweaked = {**clean, "standing_decisions": {
+        **clean["standing_decisions"],
+        "default_enabled": list(clean["standing_decisions"]["default_enabled"]) + ["no-such"]}}
+    monkeypatch.setattr(methodology, "load_config", lambda: tweaked)
+    assert any(d.startswith("standing_decisions.default_enabled")
+               for d in methodology.mirror_drift())
+
+
+def test_the_lifecycle_block_mirrors_the_library(monkeypatch):
+    from streamcurves import library as lib
+    life = methodology.load_config()["lifecycle"]
+    assert life["version_statuses"] == list(lib.VERSION_STATUSES)
+    assert "draft" in life["version_statuses"]
+    assert life["default_status"] == lib.DEFAULT_STATUS
+    assert life["validation_states"] == list(lib.VALIDATION_STATES)
+    clean = methodology.load_config()
+    tweaked = {**clean, "lifecycle": {**clean["lifecycle"], "version_statuses": [
+        s for s in clean["lifecycle"]["version_statuses"] if s != "draft"]}}
+    monkeypatch.setattr(methodology, "load_config", lambda: tweaked)
+    assert any(d.startswith("lifecycle.version_statuses") for d in methodology.mirror_drift())
+
+
+def test_the_calibration_note_records_the_hygiene_pass():
+    note = methodology.load_config()["meta"]["calibration_note"]
+    assert "2026-09-25 hygiene" in note
+    assert methodology.methodology_version() == "0.14-provisional"
+
+
+# --------------------------------------------------------------------------- #
 # Missingness dispositions (DATA-01/02/03 wired as acting thresholds)
 # --------------------------------------------------------------------------- #
 def test_missingness_dispositions_follow_the_config_bands():

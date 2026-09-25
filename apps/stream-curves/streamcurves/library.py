@@ -70,14 +70,18 @@ VALIDATION_VALIDATED = "validated"
 VALIDATION_STATES = (VALIDATION_UNVALIDATED, VALIDATION_VALIDATED)
 
 # Lifecycle vocabulary (writer side). The six states live here for
-# history/admin; DEEP the consumer only distinguishes preliminary vs certified,
-# and only those two are eligible for new DEEP assessments. "draft" is
-# automation output (batch stage/promote, the headless agent) that no human has
-# reviewed curve by curve in the app: never DEEP-eligible, upgraded to
-# preliminary by the Validate page's Approve button or by publishing a reviewed
-# next version. DEFAULT_STATUS stays preliminary: an interactive publish IS the
-# human review, and versions with no status record (v1 libraries) keep reading
-# as preliminary.
+# history/admin (config/methodology/methodology_config.yaml lifecycle.* mirrors
+# them, checked by methodology.mirror_drift); DEEP the consumer only
+# distinguishes preliminary vs certified, and only those two are eligible for
+# new DEEP assessments. "draft" is what automation publishes (batch
+# stage/promote, the headless agent) and what an interactive publish defaults
+# to (views/publish.py) unless its readiness checklist passes with no
+# unresolved item, when the page offers preliminary: nobody has reviewed a
+# draft curve by curve, so it is never DEEP-eligible until the Validate page's
+# Approve button, or a reviewed next version, makes it preliminary. Certify
+# (Final) needs a validation record that matches the curves on a preliminary
+# version. DEFAULT_STATUS stays preliminary because it is what a version with
+# NO status record (v1 libraries) reads as, not what a publish seeds.
 DEFAULT_STATUS = "preliminary"
 VERSION_STATUSES = (
     "draft",

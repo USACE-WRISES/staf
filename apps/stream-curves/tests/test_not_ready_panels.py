@@ -59,11 +59,16 @@ class _Blockers:
 
     The helper itself is a server closure over reactive values and cannot be imported;
     this mirrors its decision table exactly so a change to either side is caught by a
-    failing test rather than by a user landing on a blank screen.
+    failing test rather than by a user landing on a blank screen. An ecoregion project
+    (one build path, 2026-09-25) has one Build step at 4, which needs the region and
+    nothing else: the build reads the NRSA station table itself.
     """
 
     @staticmethod
-    def of(step, *, has_sites, n_metrics, compiled, assignments):
+    def of(step, *, has_sites, n_metrics, compiled, assignments, ecoregion=False,
+           has_region=True):
+        if step >= 4 and ecoregion:
+            return None if has_region else "No ecoregion chosen yet"
         if step in (3, 4) and not has_sites:
             return "No sites yet"
         if step == 5:
@@ -116,6 +121,28 @@ def test_choose_metrics_is_blocked_without_sites():
 def test_compile_blocked_reasons_are_ordered_sites_then_metrics():
     assert _Blockers.of(5, **_EMPTY) == "No sites yet"
     assert _Blockers.of(5, **_SITES) == "No metrics selected"
+
+
+def test_an_ecoregions_build_step_needs_the_region_and_nothing_else():
+    """One build path: the Build step runs the batch, which assembles and screens the
+    region's stations itself, so unassembled sites block nothing; a missing region does.
+    Steps 5 to 7 do not exist for an ecoregion (the wizard clamps to its Build step)."""
+    assert _Blockers.of(4, **_EMPTY, ecoregion=True) is None
+    assert _Blockers.of(4, **_EMPTY, ecoregion=True, has_region=False) == "No ecoregion chosen yet"
+    assert _Blockers.of(3, **_EMPTY, ecoregion=True) == "No sites yet"   # the screen still needs them
+    import pathlib
+
+    import views.import_map as im
+    src = pathlib.Path(im.__file__).read_text(encoding="utf-8")
+    blocker = src[src.index("def _step_blocker(cur: int)"):src.index("def _blocker_panel(")]
+    assert "if cur >= 4 and _ecoregion_build():" in blocker
+    assert '"No ecoregion chosen yet"' in blocker and '"goto_step": 1' in blocker
+    body = src[src.index("    def body():"):src.index("def _body_build():")]
+    assert "if cur >= 4 and _ecoregion_build():\n            return _body_build()" in body
+    build = src[src.index("def _body_build():"):src.index("def _body_step2():")]
+    assert "ws.is_checkout()" in build and "Builds run from a STAF checkout" in build
+    assert 'region_builder_ui("region_builder")' in build
+    assert "step.set(min(_max_step(), cur + 1))" in src
 
 
 # --- the real helper, exercised through a tiny fake ------------------------- #

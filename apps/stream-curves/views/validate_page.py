@@ -46,6 +46,34 @@ _OUTCOMES = {"match": "Matches the curves",
              "minor": "Minor differences",
              "major": "Major differences"}
 
+#: What the page says beside the outcome, in one sentence.
+_OUTCOME_NOTE = ("Only a record whose outcome matches the curves marks the version Verified; "
+                 "minor and major differences are recorded and leave it Unvalidated.")
+_APPROVE_FIRST = "Approve as Preliminary first."
+
+
+def validation_state_for(outcome) -> str | None:
+    """The library validation state a recorded outcome supports: ``validated``
+    for a match, ``None`` for a minor or major difference, which is recorded
+    but changes nothing (the version stays as it was, so a version already
+    Verified is not un-verified by a later difference either)."""
+    return (lib.VALIDATION_VALIDATED
+            if str(outcome or "").strip().lower() == "match" else None)
+
+
+def certify_block_state(status, validation_state, can_write: bool) -> str:
+    """What the Certify block shows: ``hidden`` (not Verified, or a reader),
+    ``certified`` (already Final), ``approve-first`` (a Verified Draft: a
+    draft has had no review, so it is approved as Preliminary before it can be
+    certified) or ``offer`` (the button)."""
+    if str(validation_state or "") != lib.VALIDATION_VALIDATED:
+        return "hidden"
+    if str(status or "") == "certified":
+        return "certified"
+    if str(status or "") == "draft":
+        return "approve-first"
+    return "offer" if can_write else "hidden"
+
 
 def _maintainer(state=None) -> str:
     """The initials recorded, as views/publish.py and the Region builder record them."""
@@ -197,6 +225,7 @@ def validate_server(input, output, session, state: AppState, active=None):
                 ui.input_text_area(ns("val_note"), "Validation note", rows=2,
                                    width="100%",
                                    placeholder="Aggregate only, no site data"),
+                ui.div(_OUTCOME_NOTE, class_="text-muted small mb-2"),
                 ui.input_action_button(
                     ns("record_validation"),
                     ui.TagList(bi("ui-checks"), " Record validation"),
@@ -310,16 +339,27 @@ def validate_server(input, output, session, state: AppState, active=None):
         lib.add_validation_record(aid, ver, record, actor=maintainer,
                                   note=(input.val_note() or "").strip() or None)
         n = len(lib._validation_records_for(aid, ver))
-        lib.set_version_validation(aid, ver, "validated", {"n_records": n},
-                                   maintainer)
+        # Only a match verifies the version; a minor or major difference is on
+        # the record and the state stays what it was (2026-09-25, before this
+        # every outcome marked the version Verified).
+        target_state = validation_state_for(record["outcome"])
+        if target_state:
+            lib.set_version_validation(aid, ver, target_state, {"n_records": n},
+                                       maintainer)
+            message = f"Validation recorded for {aid} v{ver}: the version is Verified."
+        else:
+            message = (f"Validation recorded for {aid} v{ver} as "
+                       f"{_OUTCOMES.get(record['outcome'], record['outcome'])}: "
+                       "the version stays Unvalidated until a record matches the curves.")
         state.validation_records.set(lib._validation_records_for(aid, ver))
         with reactive.isolate():
             stamped = dict(state.run_stage_status() or {})
-        stamped["validate"] = {"status": "done",
-                               "label": f"{count_text(n, 'validation record')}."}
+        verified = lib.version_validation_state(aid, ver) == lib.VALIDATION_VALIDATED
+        stamped["validate"] = {"status": "done" if verified else "in_progress",
+                               "label": f"{count_text(n, 'validation record')}"
+                                        + ("." if verified else "; unvalidated.")}
         state.run_stage_status.set(stamped)
-        ui.notification_show(f"Validation recorded for {aid} v{ver}.",
-                             type="message", duration=6)
+        ui.notification_show(message, type="message", duration=8)
 
     def _rebake_and_toast(prefix: str):
         """Fold the change into DEEP's baked registry (status changes move bake
@@ -402,12 +442,16 @@ def validate_server(input, output, session, state: AppState, active=None):
         if target is None:
             return None
         aid, ver = target
-        if lib.version_validation_state(aid, ver) != "validated":
-            return None
-        if _status(aid, ver) == "certified":
+        shown = certify_block_state(_status(aid, ver), lib.version_validation_state(aid, ver),
+                                    _can_write())
+        if shown == "certified":
             return ui.div("This version is certified (shown as Final).",
                           class_="text-success small mt-2")
-        if not _can_write():
+        if shown == "approve-first":
+            # a Draft is never certified straight from validation: the approve
+            # block above records the review first (2026-09-25)
+            return ui.div(_APPROVE_FIRST, class_="text-muted small mt-2")
+        if shown != "offer":
             return None
         return ui.div(
             ui.input_action_button(

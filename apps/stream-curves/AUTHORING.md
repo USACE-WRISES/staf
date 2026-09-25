@@ -423,7 +423,8 @@ decided, "Use in this function" and "Undo" (REF-15's own form), "Record why not"
 panel for up to three curves. An interactive publish writes the register's export
 (`candidateRegister`) into the version's provenance, and says so when it cannot.
 
-**EASI** keeps its register in the project (`easi/register.json`). `easi_method/alternatives.py`
+**EASI** keeps its register in the project (the candidate register part of `easi/package.json`,
+see StreamCurves project files above). `easi_method/alternatives.py`
 imports the 2026-09-15 controlled study (verified by its completion record, sha256 97a24b44..., and
 each candidate's catalog and curve hashes): a candidate only where an alternative's definition
 differs from the method's. Alternative 2 differs nowhere; Alternatives 1, 3 and 4 differ in low
@@ -431,8 +432,8 @@ flow, light and thermal regime, carbon processing and habitat provision; the leg
 (an evaluator asset, read from the vendored copy) in eight functions. Each carries its definition,
 so the register is complete without the study folder, and its reason quotes the study (whose rule
 recommended Alternative 1) and the owner's adoption of Alternative 2 on 2026-09-16 (commit 02f39a8);
-history before the import is stated as missing. The Final selection stage (**Select final
-methods**) compares up to three definitions curve family by curve family and, in a draft revision,
+history before the import is stated as missing. The **Final selection** stage (the label
+`easi_method/stages.py` gives it) compares up to three definitions curve family by curve family and, in a draft revision,
 adopts one: every function reading a curve family it rewrites moves with it (the woody curves
 serve light and thermal regime and habitat provision), the replaced method stays as eligible, not
 selected, and adopting the method the draft started from restores its exact bytes. Where

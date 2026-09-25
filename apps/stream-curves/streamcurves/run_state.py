@@ -52,7 +52,7 @@ STAGE_KEYS = [
 
 STAGE_LABELS = {
     "region_sources": "Region & Data Sources",
-    "candidate_screening": "Screen Candidate Sites (EASI)",
+    "candidate_screening": "Screen Candidate Sites",
     "enrichment_build": "Build Dataset: Metrics, Compile & Classify",
     "refine_map": "Refine Workbook, Map Functions & Validate",
     "curve_review": "Reference Curves & Flagged Review",
@@ -77,8 +77,10 @@ STAGE_SHORT = {
 # six-stage strip).
 STAGE_HELP = {
     "region_sources": "Choose a region of applicability and gather candidate sites.",
-    "candidate_screening": "Run EASI reference screening and confirm the sites to keep.",
-    "enrichment_build": "Choose metrics, pull and compile data, classify columns, and build.",
+    "candidate_screening": ("Read each candidate site's outcome under the fixed pressure "
+                            "screen (rule REF-04); an older version shows its EASI screen."),
+    "enrichment_build": ("Build the ecoregion's assessment in one run, or, for a state or "
+                         "custom region, choose metrics, compile, classify and build."),
     "refine_map": "Refine the workbook, map metrics to STAF functions, and validate.",
     "curve_review": "Build reference curves and resolve any flagged reviews.",
     "publish": "Save a project file, or publish to the STAF assessment library for DEEP.",
@@ -104,6 +106,24 @@ STAGE_SUBSTEPS: dict[str, list[tuple[int, str]]] = {
         (7, "Review & build"),
     ],
 }
+
+# A Level III ecoregion project has one build path: stage 3 is a single "Build"
+# step whose body is the Region builder (the same ``stage`` subprocess the batch
+# runs), pre-filled with the region chosen in stage 1. The wizard's steps 4 to 7
+# stay for state, polygon and workbook projects, which the batch cannot build.
+ECOREGION_BUILD_SUBSTEPS: list[tuple[int, str]] = [(4, "Build")]
+
+
+def substeps_for(stage_key: str, region_kind: Optional[str]) -> list[tuple[int, str]]:
+    """The ordered (wizard_step, label) pairs a stage shows for a region kind.
+
+    ``STAGE_SUBSTEPS`` declares every wizard step there is (the strip's chip
+    inputs are registered from it); this is the projection a project sees.
+    """
+    if stage_key == "enrichment_build" and region_kind == "ecoregion":
+        return list(ECOREGION_BUILD_SUBSTEPS)
+    return list(STAGE_SUBSTEPS.get(stage_key) or [])
+
 
 # stage key -> ordered (section value, label) pairs. Sections are the panels of
 # a page stage, NOT wizard steps -- refine_map's are the workspace panels, and
@@ -186,20 +206,17 @@ def current_stage(
 # numbered sequence. They produce no stage status and gate no publish, so they stay
 # out of STAGE_KEYS / STAGE_LANDINGS -- the strip renders them as unnumbered chips
 # after the numbered stages, and current_stage() keeps returning None while one is open.
-TOOL_KEYS = ["regional", "xsec", "nrsa", "build", "rules"]  # == their main_navbar nav values
+TOOL_KEYS = ["regional", "xsec", "nrsa", "rules"]  # == their main_navbar nav values
 TOOL_LABELS = {
     "regional": "Regional curves",
     "xsec": "Cross-sections",
     # the explorer needs no built dataset: it reads the bundled NRSA archive
     "nrsa": "NRSA explorer",
-    # the builder starts from an ecoregion code, so it needs no project either --
-    # it is how a project gets made
-    "build": "Region builder",
     # the rule reference reads the methodology configs, never the project
     "rules": "Rules",
 }
 # Tools that work with no project loaded, so the strip must not dim them.
-TOOLS_WITHOUT_DATA = {"nrsa", "build", "rules"}
+TOOLS_WITHOUT_DATA = {"nrsa", "rules"}
 
 # Why each tool exists and what it needs. The strip's chip tooltips and the
 # About modal both read this, so the two cannot drift.
@@ -215,10 +232,6 @@ TOOL_TITLES = {
     "nrsa": (
         "Browse every NRSA station across the 2013-14, 2018-19 and 2023-24 "
         "surveys. Read-only, and needs no project."
-    ),
-    "build": (
-        "Run the whole workflow for one Level III ecoregion, then review what it "
-        "decided. Stages into its own run folder; publishing stays separate."
     ),
     "rules": (
         "Every methodology rule the app applies: thresholds, statuses and "
@@ -239,6 +252,71 @@ STAGE_READY = "ready"
 STAGE_RUNNING = "in_progress"
 STAGE_ATTENTION = "attention"
 STAGE_DONE = "done"
+
+
+def next_action(statuses: Optional[dict]) -> tuple[Optional[str], str]:
+    """``(stage_key, detail)`` of the first stage that is not done, in strip order.
+
+    What the Project panel says under the project row. A stage still running
+    counts as the next action (it is where the work is); ``(None, ...)`` once
+    every stage is done, and the first stage when nothing is known yet.
+    """
+    statuses = statuses or {}
+    for key in STAGE_KEYS:
+        info = statuses.get(key) or {}
+        if info.get("status") != STAGE_DONE:
+            detail = str(info.get("detail") or "").strip()
+            return key, detail or f"{STAGE_SHORT[key]} is next."
+    return None, "Every stage is done."
+
+
+# --------------------------------------------------------------------------- #
+# Which screen a session's stage 2 shows
+# --------------------------------------------------------------------------- #
+#: The ``screening_run.method`` tokens an EASI-screened session records
+#: (the wizard's live engine, an imported batch ZIP, and the two the headless
+#: agent wrote before methodology 0.12). A pressure-screen build records
+#: ``pressure_screen`` (reference_screen.METHOD).
+LEGACY_SCREENING_METHODS = ("direct_engine", "zip_import", "representative", "unscreened_test")
+PRESSURE_SCREENING_METHOD = "pressure_screen"
+
+
+def screening_mode(region: Optional[dict], reference_build: Optional[dict],
+                   screening_run: Optional[dict]) -> str:
+    """``pressure-screen`` or ``easi-eci``: the body stage 2 renders.
+
+    One build path (2026-09-25): a session that carries a pressure-screen
+    ``reference_build``, or whose screen was the pressure screen, or a new
+    ecoregion project, shows the station-screen table only (rule REF-04). The
+    live EASI screen renders only for the replay of an older EASI-screened
+    version, and for a state or custom region, which the pressure screen (a
+    table over NRSA stations by ecoregion) cannot serve.
+    """
+    if isinstance(reference_build, dict) and reference_build:
+        return REFERENCE_METHOD_PRESSURE
+    method = str((screening_run or {}).get("method") or "")
+    if method == PRESSURE_SCREENING_METHOD:
+        return REFERENCE_METHOD_PRESSURE
+    if method in LEGACY_SCREENING_METHODS:
+        return REFERENCE_METHOD_EASI
+    if (region or {}).get("kind") == "ecoregion":
+        return REFERENCE_METHOD_PRESSURE
+    return REFERENCE_METHOD_EASI
+
+
+def reference_method_of(reference_build: Optional[dict],
+                        screening_run: Optional[dict]) -> Optional[str]:
+    """The reference method a session's screen rests on, for the publish
+    checklist: ``pressure-screen``, ``easi-eci``, or None when the session
+    has screened nothing yet."""
+    if isinstance(reference_build, dict) and reference_build:
+        return str(reference_build.get("method") or REFERENCE_METHOD_PRESSURE)
+    method = str((screening_run or {}).get("method") or "")
+    if method == PRESSURE_SCREENING_METHOD:
+        return REFERENCE_METHOD_PRESSURE
+    if method in LEGACY_SCREENING_METHODS:
+        return REFERENCE_METHOD_EASI
+    return None
 
 # --------------------------------------------------------------------------- #
 # Curve-proposal classification outcomes (the six statuses).
@@ -265,8 +343,35 @@ CURVE_STATUSES = [
     CURVE_STATUS_ERROR,
 ]
 
-# Every classification except a clean auto_ok lands in the flagged-review queue.
-CURVE_REVIEW_REQUIRED = {s for s in CURVE_STATUSES if s != CURVE_STATUS_AUTO_OK}
+# Every classification except a clean auto_ok lands in the flagged-review queue:
+# these are the triggers that hold a curve for review (rule CURVE-07, "Curve held
+# for review"). The rule catalog's test text is generated from CURVE_REVIEW_TRIGGERS
+# below, so the catalog and the classifier cannot drift apart.
+CURVE_REVIEW_REQUIRED = frozenset(s for s in CURVE_STATUSES if s != CURVE_STATUS_AUTO_OK)
+
+#: (status, what holds the curve), in classification precedence. Plain words,
+#: no rule ids: the catalog sentence names the rule once.
+CURVE_REVIEW_TRIGGERS: tuple[tuple[str, str], ...] = (
+    (CURVE_STATUS_ERROR, "the curve build raised an error"),
+    (CURVE_STATUS_UNMAPPED, "the metric is assigned to no STAF function"),
+    (CURVE_STATUS_INSUFFICIENT, "a stratum has fewer than 5 reference observations"),
+    (CURVE_STATUS_DEGENERATE, "the IQR seed produced a fallback or invalid curve"),
+    (CURVE_STATUS_MULTI_CROSSING, "the curve crosses a scoring threshold more than twice"),
+    (CURVE_STATUS_SHAPE_CONFLICT, "the realized shape contradicts the approved expectation"),
+    (CURVE_STATUS_DATA_REVIEW, "the missing-data fraction exceeds the review threshold"),
+    (CURVE_STATUS_STRAT_REVIEW, "the stratification needs review"),
+)
+assert frozenset(s for s, _ in CURVE_REVIEW_TRIGGERS) == CURVE_REVIEW_REQUIRED, \
+    "every review-required status names its trigger, and nothing else does"
+
+
+def curve_review_triggers_text() -> str:
+    """One sentence naming every trigger that holds a curve for review, for the
+    rule catalog's CURVE-07 test text."""
+    parts = [words for _, words in CURVE_REVIEW_TRIGGERS]
+    return ("A curve is held for review when " + ", ".join(parts[:-1]) + ", or "
+            + parts[-1] + ". A held curve is finalized or removed by a reviewer "
+            "with a rationale, never published unreviewed.")
 
 # Reviewer decisions on a proposal.
 DECISION_AUTO = "auto_finalized"       # clean build, no review needed
@@ -430,7 +535,10 @@ def derive_stage_status(
     elif n_ret > 0:
         out["enrichment_build"] = {
             "status": STAGE_READY,
-            "detail": "Retained sites ready to enrich.",
+            # an ecoregion is built in one run (the Region builder is its Build
+            # step); every other region kind walks the wizard's enrichment steps
+            "detail": ("Ready to build this ecoregion." if s.get("region_is_ecoregion")
+                       else "Retained sites ready to enrich."),
         }
     elif s.get("screening_skipped") and n_cand > 0:
         out["enrichment_build"] = {
@@ -1011,6 +1119,10 @@ def readiness_checklist(snapshot: dict) -> list[dict]:
     cr = s.get("curve_review") or {}
     intended = intended_metrics_for_publish(cr)
     unresolved = flagged_metrics(cr)
+    # The screening item names the rule the session's screen rests on: the fixed
+    # pressure screen (REF-04, methodology 0.12 on) or the legacy EASI condition
+    # screen (REF-01) of an older version. The predicate is the same either way.
+    pressure = s.get("reference_method") == REFERENCE_METHOD_PRESSURE
     return [
         {
             "key": "region",
@@ -1022,7 +1134,8 @@ def readiness_checklist(snapshot: dict) -> list[dict]:
             # A deliberate skip turns the stage green for exploration but never
             # satisfies this item: the library requires screened references.
             "label": (
-                "Reference screening complete with reference support"
+                ("Reference screen complete (fixed pressure screen)" if pressure
+                 else "Reference screening complete with reference support")
                 + (" (screening was skipped; run screening to publish to the library)"
                    if s.get("screening_skipped") else "")
                 + (" (the All sites option keeps every candidate; screen with a "
@@ -1043,7 +1156,7 @@ def readiness_checklist(snapshot: dict) -> list[dict]:
             # "rule": the catalog rule that governs the item, rendered as a chip
             # into the Rules page where a governing rule exists. Optional: the
             # coverage gate, for one, has no single catalog rule.
-            "rule": "REF-01",
+            "rule": "REF-04" if pressure else "REF-01",
         },
         {
             "key": "enriched",

@@ -630,7 +630,11 @@ def frame_counts(nrsa_keys: list[str], landscape_keys: list[str]) -> dict:
     keys = frame["station_key"].astype(str).tolist()
     out: dict[str, tuple[int, int]] = {}
     if nrsa_keys:
-        values, _ledger2 = nrsa_dataset.latest_values(keys, metrics=list(nrsa_keys))
+        # under the policy every published version reads (v1): the table documents
+        # the archive as published builds saw it; a rebuild under another policy
+        # is a new edition of the table, made on purpose
+        values, _ledger2 = nrsa_dataset.latest_values(keys, metrics=list(nrsa_keys),
+                                                      policy=nrsa_dataset.VALUE_POLICY_V1)
         values = values.set_index("site_id").reindex(keys)
         for mk in nrsa_keys:
             if mk in values.columns:

@@ -31,6 +31,11 @@ from .paths import CONFIG_DIR
 
 logger = logging.getLogger("streamcurves")
 
+#: The ``reason`` of a withheld record for a curve that was built and is still
+#: held for a reviewer (``pressure_evidence.HELD_FOR_REVIEW`` writes it); the
+#: bundle counts those records apart from the metrics with no defensible pool.
+HELD_FOR_REVIEW_REASON = "held-for-review"
+
 # The DEEP scoring contract's numeric constants, stated once. They mirror
 # apps/deep/deep/config.py (INDEX_BANDS thresholds, FUNCTION_SCORE_BANDS,
 # FUNCTION_SCORE_MAX, indirect weight); the methodology mirror check
@@ -944,7 +949,7 @@ def build_deep_assessment_bundle(
     # an older reader is unaffected. Both are absent on a legacy build.
     reference_method = meta.get("referenceMethod")
     if reference_method:
-        bundle["referenceMethod"] = reference_method
+        bundle["referenceMethod"] = dict(reference_method)
     # A metric is never both scored and withheld: a record whose metric made it
     # into a scoring block (a reviewer finalized it on republish) is stale.
     scored_ids = {m.get("metricId") for fn in bundle.get("metricsByFunction") or []
@@ -953,6 +958,18 @@ def build_deep_assessment_bundle(
                 if w.get("metricId") not in scored_ids]
     if withheld:
         bundle["insufficientReferenceSupport"] = withheld
+    # The counts a reader sets against that list come from the list as exported.
+    # The evidence-time count (pressure_evidence.reference_method_block) no longer
+    # matched once owner sources and finalizations moved metrics back into scoring
+    # blocks (CGP 15 against 9, ECBP 7 against 6, IP 4 against 3, SEP 6 against 5,
+    # read 2026-09-24), and a curve held for a reviewer is listed with its own
+    # reason, so it is counted apart. Both sit in the top-level referenceMethod
+    # block, outside the content digest (metricsByFunction and the region code),
+    # so setting them cannot re-mint a published version's fingerprint.
+    if isinstance(bundle.get("referenceMethod"), dict):
+        bundle["referenceMethod"]["nWithheld"] = len(withheld)
+        bundle["referenceMethod"]["nHeldForReview"] = sum(
+            1 for w in withheld if w.get("reason") == HELD_FOR_REVIEW_REASON)
     # REF-15: the owner's decisions on the curves the build did not fit (what was
     # removed, taken out of a function or put back, by whom and why). Outside
     # metricsByFunction, like the withheld list; absent when there are none.

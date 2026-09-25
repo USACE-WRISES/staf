@@ -75,6 +75,8 @@ from streamcurves.metric_map import (
     metric_map_functions_for,
 )
 from streamcurves import nrsa_dataset as nds
+from streamcurves import reference_screen as rscreen
+from streamcurves import workspace as ws
 from streamcurves.nrsa import (
     attach_nrsa_metrics,
     load_nrsa_catalog,
@@ -102,6 +104,7 @@ from views.classify_ui import (
     classify_table_html,
 )
 from views.rebuild import rebuild_app_from_tables
+from views.region_builder import region_builder_server, region_builder_ui
 from views import state as st
 from views.state import AppState
 from views.theme import bi, fa
@@ -154,6 +157,53 @@ _SCREENING_HEADS = {"site_id": "Site", "state": "Status", "eci": "ECI",
                     "condition": "Condition", "auto_decision": "Screen",
                     "final_decision": "Decision", "reviewer": "Reviewer",
                     "comid_source": "COMID source", "reason": "Reason"}
+#: The station-screen table's heads (rule REF-04): the same stored names, read
+#: as what the fixed pressure screen says about each candidate.
+_PRESSURE_HEADS = {"site_id": "Site", "final_decision": "Screen outcome",
+                   "reason": "Why", "comid": "COMID"}
+
+
+def pressure_screen_tables(sites_df, aliases: dict | None = None) -> dict | None:
+    """The three screening tables for the wizard's candidate sites under the fixed
+    pressure screen (``reference_screen.to_screening_tables``, rule REF-04).
+
+    The station table is keyed by the archive's station key; a candidate's
+    ``site_id`` may be a per-cycle EPA id (``aliases`` maps it), and an uploaded
+    site has no record, which reads as not evaluable. Rows come back under the
+    wizard's own site ids, so the retained set and the exclusions match the
+    candidate frame. None when the station table is not built here or there are
+    no candidates to screen. Pure, so the mapping can be pinned.
+    """
+    if sites_df is None or not len(sites_df) or "site_id" not in getattr(sites_df, "columns", []):
+        return None
+    if not rscreen.station_screen_available():
+        return None
+    aliases = aliases or {}
+    ids = [str(s) for s in sites_df["site_id"].tolist()]
+    keys = [aliases.get(sid, sid) for sid in ids]
+    panel = pd.DataFrame({
+        "site_id": keys,
+        "lat": pd.to_numeric(sites_df["lat"], errors="coerce").tolist()
+        if "lat" in sites_df.columns else [None] * len(ids),
+        "lon": pd.to_numeric(sites_df["lon"], errors="coerce").tolist()
+        if "lon" in sites_df.columns else [None] * len(ids),
+    })
+    if "comid" in sites_df.columns:
+        panel["comid"] = sites_df["comid"].tolist()
+    tables = rscreen.to_screening_tables(panel)
+    # one row per panel row, in order: the wizard's id goes back on by position
+    for row, sid in zip(tables["easi_screening_sites"], ids):
+        row["site_id"] = sid
+    return tables
+
+
+def screened_site_ids(sites_table) -> set[str]:
+    """The site ids a screening table holds (a DataFrame or a list of rows)."""
+    if sites_table is None:
+        return set()
+    if hasattr(sites_table, "columns"):
+        return set(sites_table["site_id"].astype(str)) if "site_id" in sites_table.columns else set()
+    return {str(r.get("site_id")) for r in sites_table if isinstance(r, dict)}
 _NRSA_SECTIONS = [
     ("chem", "Water chemistry"),
     ("phab", "Physical habitat"),
@@ -665,6 +715,24 @@ def import_map_server(
 
     _map_click = reactive.value(None)  # ("ecoregion"|"state", code, name)
     _map_draw = reactive.value(None)   # rings
+
+    # ── one build path (2026-09-25) ──────────────────────────────────────────
+    # A Level III ecoregion is built in one run: stage 3 is a single Build step
+    # whose body is the Region builder, pre-filled with stage 1's region. The
+    # wizard's steps 4 to 7 stay for state, polygon and workbook projects.
+    def _ecoregion_build() -> bool:
+        return region_kind() == "ecoregion"
+
+    def _max_step() -> int:
+        """The last wizard step this project has (run_state.substeps_for)."""
+        subs = rs.substeps_for("enrichment_build", region_kind())
+        return max(n for n, _ in subs) if subs else N_STEPS
+
+    region_builder_server(
+        "region_builder", state,
+        active=lambda: ((active is None or bool(active())) and _ecoregion_build()
+                        and int(step() or 1) >= 4),
+        region=lambda: (region_code(), region_name()))
 
     # ── the unbuilt wizard survives a save and a reopen ─────────────────────────
     # Until "Build dataset" writes state.data, the wizard's picks and its compiled
@@ -1297,7 +1365,7 @@ def import_map_server(
                 )
                 return
             saved_assignments.set(live)
-        step.set(min(N_STEPS, cur + 1))
+        step.set(min(_max_step(), cur + 1))
 
     @reactive.effect
     @reactive.event(input.to_back)
@@ -1312,7 +1380,9 @@ def import_map_server(
             req_step = state.wizard_step_request()
         if req_step is None:
             return
-        step.set(max(1, min(N_STEPS, int(req_step))))
+        # an ecoregion project ends at its Build step: a request for a later
+        # step (a stage-3 click lands on 4 anyway) shows the Build step
+        step.set(max(1, min(_max_step(), int(req_step))))
 
     @reactive.effect
     @reactive.event(state.app_reset_nonce, ignore_init=True)
@@ -1971,7 +2041,14 @@ def import_map_server(
         blocked_kwargs = (
             {"disabled": "disabled", "title": blocker["message"]} if blocker else {}
         )
-        if cur == 7:
+        if _ecoregion_build() and cur >= 4:
+            # the Build step is the last: the build itself moves the project on
+            right = ui.tags.span()
+        elif _ecoregion_build() and cur == 3:
+            right = ui.input_action_button(
+                "to_next", ui.TagList("Next: Build ", fa("arrow-right")),
+                class_="btn btn-primary", **blocked_kwargs)
+        elif cur == 7:
             right = ui.input_action_button(
                 "wiz_build", ui.TagList(fa("check"), " Build dataset"),
                 class_="btn btn-success", **blocked_kwargs)
@@ -1999,8 +2076,18 @@ def import_map_server(
         Declared once so the body renderers and the nav/action buttons agree: a step
         that shows a not-ready panel must never also offer a button that silently
         does nothing. Steps 1 and 2 have no prerequisite -- a new project starts
-        there.
+        there. An ecoregion's Build step (4) needs the region, not assembled
+        sites: the build reads the NRSA station table itself.
         """
+        if cur >= 4 and _ecoregion_build():
+            if not region_code():
+                return {
+                    "title": "No ecoregion chosen yet",
+                    "message": ("Choose the Level III ecoregion first; the build runs "
+                                "for that region."),
+                    "action_label": "Go to Region", "goto_step": 1,
+                }
+            return None
         if cur in (3, 4) and not _has_sites():
             return {
                 "title": "No sites yet",
@@ -2053,6 +2140,8 @@ def import_map_server(
         cur = step()
         if cur == 2:
             return _body_step2()
+        if cur >= 4 and _ecoregion_build():
+            return _body_build()
         if cur not in (4, 5, 6, 7):
             return None
         blocker = _step_blocker(cur)
@@ -2072,6 +2161,26 @@ def import_map_server(
         if cur == 6:
             return _body_step6()
         return _body_step7()
+
+    def _body_build():
+        """An ecoregion's stage 3: the Region builder, pre-filled with stage 1's
+        region. The build needs a STAF checkout (its runs live under notes/), so
+        any other copy sees the reason instead of a form that cannot run."""
+        blocker = _step_blocker(4)
+        if blocker is not None:
+            return ui.TagList(ui.tags.h2("Build", class_="sc-page-title"),
+                              _blocker_panel(blocker))
+        if not ws.is_checkout():
+            return ui.TagList(
+                ui.tags.h2("Build", class_="sc-page-title"),
+                not_ready_panel(
+                    "Builds run from a STAF checkout",
+                    "An ecoregion is built by the batch runner, whose run folders live "
+                    "in the repository's notes folder. Open the region's published "
+                    "version from the library to review it here, or build it from a "
+                    "checkout.",
+                    icon="database"))
+        return region_builder_ui("region_builder")
 
     def _body_step2():
         nr = nrsa_in_region()
@@ -2528,46 +2637,49 @@ def import_map_server(
         state.site_exclusions.set([])
         state.screening_run.set(None)
 
-    @reactive.effect
-    @reactive.event(input.screening_skip)
-    def _screening_skip():
-        s = sites()
-        n = 0 if s is None else len(s)
-        ui.modal_show(ui.modal(
-            ui.tags.p(f"All {n} candidate sites will be included without EASI "
-                      "reference-condition evidence."),
-            ui.tags.p("You can build curves, save the project to a file, and "
-                      "preview in DEEP. Publishing to the assessment library "
-                      "still requires screening (REF-01). Running screening "
-                      "later replaces the skip.",
-                      class_="text-muted small mb-0"),
-            title="Skip screening?",
-            easy_close=True,
-            footer=ui.TagList(
-                ui.modal_button("Cancel"),
-                ui.input_action_button(
-                    ns("screening_skip_confirm"), "Skip screening",
-                    class_="btn btn-primary"),
-            ),
-        ))
+    # The Skip button is gone (one build path, 2026-09-25): a session that skipped
+    # screening before then keeps its ``screening_skipped`` flag, which the stage
+    # status and the publish checklist still read; running or importing a real
+    # screen clears it (_persist_screening).
 
-    @reactive.effect
-    @reactive.event(input.screening_skip_confirm)
-    def _screening_skip_confirm():
-        ui.modal_remove()
-        state.screening_skipped.set(True)
+    def _screening_mode() -> str:
+        """Which stage-2 body this session gets (run_state.screening_mode)."""
         with reactive.isolate():
-            state.run_meta.set(rs.touch_run_meta(state.run_meta()))
-        ui.notification_show(
-            "Screening skipped. All candidate sites will be included.",
-            type="message", duration=6)
+            build = state.reference_build()
+            run = state.screening_run()
+        return rs.screening_mode({"kind": region_kind()}, build, run)
 
     @reactive.effect
-    @reactive.event(input.screening_skip_undo)
-    def _screening_skip_undo():
-        state.screening_skipped.set(False)
-        ui.notification_show("Skip removed. Candidate sites are ready to screen.",
-                             type="message", duration=5)
+    def _apply_pressure_screen():
+        """Screen the assembled candidates under the fixed pressure screen (REF-04).
+
+        The screen is a table read, not a run: as soon as an ecoregion project has
+        candidates, their outcomes are read and kept as the session's screening
+        tables, so stage 2 is a table to read and the retained set is what the
+        build will use. Re-read when the candidates change; never over a legacy
+        EASI screen or a build's own tables (a pressure-screen build carries
+        the same rows already).
+        """
+        s = sites()
+        kind = region_kind()
+        with reactive.isolate():
+            existing = state.easi_screening_sites()
+            build = state.reference_build()
+            run = state.screening_run()
+        if kind != "ecoregion" or build is not None or s is None or not len(s):
+            return
+        if rs.screening_mode({"kind": kind}, build, run) != rs.REFERENCE_METHOD_PRESSURE:
+            return
+        method = str((run or {}).get("method") or "")
+        if existing is not None and method == rs.PRESSURE_SCREENING_METHOD \
+                and screened_site_ids(existing) == set(s["site_id"].astype(str)):
+            return
+        if existing is not None and method and method != rs.PRESSURE_SCREENING_METHOD:
+            return   # a legacy screen: shown as it was, never overwritten here
+        tables = pressure_screen_tables(s, _nrsa_site_id_aliases())
+        if tables is None:
+            return
+        _persist_screening(tables, method=rs.PRESSURE_SCREENING_METHOD)
 
     def _apply_reviewer_override(decision: str) -> None:
         sc = state.easi_screening_sites()
@@ -2652,13 +2764,65 @@ def import_map_server(
             bits.append("Service issues: " + ", ".join(stats) + ".")
         return ui.tags.p(" ".join(bits), class_="text-danger small mb-2")
 
+    @render.data_frame
+    def pressure_table():
+        """The station-screen table (REF-04): each candidate's outcome under the
+        fixed pressure screen and why. Read-only: the screen is a committed table."""
+        sc = state.easi_screening_sites()
+        req(sc is not None)
+        df = sc if hasattr(sc, "columns") else pd.DataFrame(sc)
+        cols = [c for c in ("site_id", "final_decision", "reason", "comid") if c in df.columns]
+        shown = df[cols].reset_index(drop=True).rename(columns=_PRESSURE_HEADS)
+        return render.DataGrid(shown, height="300px", width="100%")
+
+    def _pressure_screen_panel(s, sc):
+        """Stage 2 under the fixed pressure screen: the outcomes, a count, and the
+        rule. No run, no skip, no override: least-disturbed membership is read
+        from the committed station table (reference_screen.py, rule REF-04), and
+        the build reads the same table."""
+        head = ui.tags.h6("Reference screen: fixed pressure screen", class_="mb-1")
+        if sc is None or (hasattr(sc, "empty") and sc.empty) or (isinstance(sc, list) and not sc):
+            note = ("The station screen table is not built in this checkout, so the "
+                    "candidates cannot be screened here. Run "
+                    "scripts/nrsa/build_station_screen.py, or build the region from "
+                    "a checkout that has it."
+                    if not rscreen.station_screen_available() else
+                    "Reading each candidate's outcome from the station screen table.")
+            return ui.div(head, ui.tags.p(note, class_="text-muted small mb-0"),
+                          class_="easi-screening-panel border rounded p-2 mt-3")
+        df = sc if hasattr(sc, "columns") else pd.DataFrame(sc)
+        c = easi_screening.summarize_screening_rows(df.to_dict("records"))
+        n_missing = int((df["auto_decision"] == "not_evaluable").sum()) \
+            if "auto_decision" in df.columns else 0
+        summary = (f"{c['n_screened']} candidates: {c['n_retained']} least disturbed, "
+                   f"{c['n_excluded']} excluded by the screen")
+        if n_missing:
+            summary += f", {n_missing} with no station record"
+        return ui.div(
+            head,
+            ui.div(summary, class_="alert alert-info py-2 mb-2"),
+            ui.tags.p(
+                "Every NRSA station is screened once, the same way in every region, "
+                "on fixed landscape-pressure limits (rule REF-04, ",
+                ui.tags.code(rscreen.SCREEN_ID), "). A metric whose pool is too thin "
+                "borrows comparable stations from the parent ecoregion when the region "
+                "is built, so a small count here is not a refusal. A site the table "
+                "does not hold (an uploaded site) cannot enter the reference pool.",
+                class_="text-muted small mb-2"),
+            ui.output_data_frame("pressure_table"),
+            class_="easi-screening-panel border rounded p-2 mt-3")
+
     @render.ui
     def easi_screening_panel():
         s = sites()
         if s is None or len(s) == 0:
             return None
-        engine_ok = easi_screening.engine_available()
         sc = state.easi_screening_sites()
+        if _screening_mode() == rs.REFERENCE_METHOD_PRESSURE:
+            return _pressure_screen_panel(s, sc)
+        # The legacy EASI condition screen: the replay of an older version, or a
+        # state or custom region the pressure screen cannot serve.
+        engine_ok = easi_screening.engine_available()
         if sc is None or (hasattr(sc, "empty") and sc.empty):
             run_controls = (
                 ui.TagList(
@@ -2690,28 +2854,15 @@ def import_map_server(
                        "somewhere that has it.",
                        class_="text-muted small mb-2")
             )
-            if state.screening_skipped():
-                skip_block = ui.div(
-                    ui.tags.p(
-                        f"Screening skipped: all {len(s)} candidate sites will "
-                        "be included without EASI evidence. Publishing to the "
-                        "assessment library still requires screening (REF-01).",
-                        class_="text-muted small mb-1"),
-                    ui.input_action_button(
-                        ns("screening_skip_undo"), "Undo skip",
-                        class_="btn btn-sm btn-outline-secondary"),
-                )
-            else:
-                skip_block = ui.div(
-                    ui.input_action_button(
-                        ns("screening_skip"),
-                        "Skip screening and include all sites",
-                        class_="btn btn-sm btn-outline-secondary"),
-                    ui.tags.p(
-                        "For exploration: continue with every candidate site "
-                        "and no reference-condition evidence.",
-                        class_="text-muted small mb-0 mt-1"),
-                )
+            # A session that skipped screening before the button was removed:
+            # say so, read-only; a real screen supersedes the skip.
+            skipped_note = (ui.tags.p(
+                f"Screening was skipped in this session: all {len(s)} candidate "
+                "sites are included without reference evidence. Publishing to "
+                "the assessment library still requires a screen (REF-01); "
+                "running or importing one replaces the skip.",
+                class_="text-muted small mb-0")
+                if state.screening_skipped() else None)
             return ui.div(
                 ui.tags.h6("EASI reference-condition screening", class_="mb-1"),
                 run_controls,
@@ -2719,8 +2870,8 @@ def import_map_server(
                 ui.tags.p("Or import a finalized EASI batch ZIP (cloud-safe, no engine):",
                           class_="text-muted small mb-1"),
                 ui.input_file(ns("screening_zip"), None, accept=[".zip"]),
-                ui.tags.hr(class_="my-2"),
-                skip_block,
+                (ui.tags.hr(class_="my-2") if skipped_note is not None else None),
+                skipped_note,
                 class_="easi-screening-panel border rounded p-2 mt-3")
         df = sc if hasattr(sc, "columns") else pd.DataFrame(sc)
         c = easi_screening.summarize_screening_rows(df.to_dict("records"))

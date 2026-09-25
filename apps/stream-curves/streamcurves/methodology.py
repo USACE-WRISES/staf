@@ -82,6 +82,23 @@ def threshold(path: str, default: Any = None) -> Any:
     return node
 
 
+CARRY_FORWARD_CHOICES = ("published_curves", "none")
+
+
+def carry_forward_default() -> str:
+    """``reference_hierarchy.carry_forward``: what a build does with the curves
+    its ecoregion's latest published version scores when the caller does not
+    say. ``published_curves`` carries them forward unchanged unless their data
+    were found defective (methodology 0.14, ``carry_forward.prepare``); ``none``
+    rebuilds every curve. The batch runner's ``--refit`` default reads this."""
+    value = str(threshold("reference_hierarchy.carry_forward")).strip()
+    if value not in CARRY_FORWARD_CHOICES:
+        raise ValueError(
+            f"reference_hierarchy.carry_forward is {value!r}; expected one of "
+            f"{', '.join(CARRY_FORWARD_CHOICES)}.")
+    return value
+
+
 def missingness_disposition(missing_fraction: Any) -> str:
     """DATA-01/02/03 band for a variable's missing-data fraction.
 
@@ -249,6 +266,48 @@ def mirror_drift() -> list[str]:
         problems += _fixed.criteria_drift()
     except Exception as exc:  # noqa: BLE001
         problems.append(f"could not compare the fixed criteria: {exc}")
+
+    # 8. The standing-decisions index mirrors the policy file's enabled flags
+    #    (config/methodology/standing_decisions.yaml governs; the index is what
+    #    the Rules page and the prose cite).
+    try:
+        from . import decisions as _dec
+        policy = _dec.load_policy()
+        entries = [e for e in policy.get("entries") or [] if e.get("id")]
+        on = sorted(str(e["id"]) for e in entries if e.get("enabled", False))
+        off = sorted(str(e["id"]) for e in entries if not e.get("enabled", False))
+        index = cfg.get("standing_decisions") or {}
+        declared_on = sorted(str(i) for i in index.get("default_enabled") or [])
+        declared_off = sorted(str(i) for i in index.get("enable_per_run_only") or [])
+        if declared_on != on:
+            problems.append(
+                f"standing_decisions.default_enabled {declared_on} differs from the "
+                f"policy file's enabled entries {on}.")
+        if declared_off != off:
+            problems.append(
+                f"standing_decisions.enable_per_run_only {declared_off} differs from "
+                f"the policy file's opt-in entries {off}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the standing-decisions index: {exc}")
+
+    # 9. The lifecycle block mirrors the library's vocabulary (library.py is
+    #    the writer; the config describes it to a reader).
+    try:
+        from . import library as _lib
+        life = cfg.get("lifecycle") or {}
+        pairs = [
+            ("lifecycle.version_statuses", list(life.get("version_statuses") or []),
+             list(_lib.VERSION_STATUSES)),
+            ("lifecycle.default_status", life.get("default_status"), _lib.DEFAULT_STATUS),
+            ("lifecycle.validation_states", list(life.get("validation_states") or []),
+             list(_lib.VALIDATION_STATES)),
+        ]
+        for path, declared, actual in pairs:
+            if declared != actual:
+                problems.append(
+                    f"{path} ({declared!r}) differs from the library's {actual!r}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the lifecycle vocabulary: {exc}")
 
     return problems
 

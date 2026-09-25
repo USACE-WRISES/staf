@@ -11,17 +11,11 @@ active, then click a library metric to add it. All wiring uses onclick →
 from __future__ import annotations
 
 import math
-from datetime import datetime, timezone
 
 import pandas as pd
 from shiny import module, reactive, render, ui
 
-from streamcurves.deep_export import (
-    FUNCTION_EXCLUSION_REASONS,
-    deep_read_staf_crosswalk,
-    uncovered_functions_from_mapping,
-    validate_coverage_exceptions,
-)
+from streamcurves.deep_export import uncovered_functions_from_mapping
 from streamcurves.mapping import (
     blank_function_mapping_scaffold,
     metric_usage_counts,
@@ -34,9 +28,7 @@ from streamcurves.staf_library import (
     staf_metric_library_entries,
 )
 from streamcurves import curve_sources as _src
-from streamcurves import prefs
 from streamcurves import pressure_evidence as _pe
-from streamcurves import region_build as _rb
 from views import assessment_publish as _ap
 from views import source_panel as _sp
 from views.state import AppState
@@ -54,13 +46,11 @@ def js_str(x: str) -> str:
     return str(x).replace("\\", "\\\\").replace("'", "\\'")
 
 
-def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
-
-
 def _default_actor(state=None) -> str:
-    """The initials a coverage exception is recorded under by default: the ones every
-    StreamCurves page records (``views.state.recorded_by``; ``n/a`` when none are set)."""
+    """The initials this page would record a decision under: the ones every
+    StreamCurves page records (``views.state.recorded_by``; ``n/a`` when none are
+    set). Kept as the page's one naming rule, though gaps are now documented in
+    Select final curves."""
     from views import state as _st
     return _st.recorded_by(state)
 
@@ -365,23 +355,11 @@ def discipline_map_server(input, output, session, state: AppState):
                 " on a function, then add metrics from below.",
                 class_="workbench-active-hint small text-muted mb-2",
             )
-        # a pressure-screen assessment of an ecoregion can take a curve from another
-        # source for the function (REF-15)
-        add_source = None
-        build = state.reference_build()
-        fid = _pe.canonical_function_id(fn)
-        if fid and build and build.get("method") == _pe.METHOD and _rb.is_ecoregion(
-                state.region_of_applicability()):
-            from views import source_dialog as _sd
-            add_source = ui.tags.button(
-                fa("circle-plus"), " Add a source", type="button",
-                class_="btn btn-sm btn-outline-primary ms-auto",
-                title=f"Choose where a curve for {fn} comes from",
-                onclick=_sd.open_onclick(function=fid, stop=False))
+        # (a curve from another source for the function, REF-15, is chosen in
+        # Select final curves; this bar assigns workbook metrics only)
         return ui.div(
             ui.tags.span("Adding to ", class_="small text-muted"),
             ui.tags.span(fn, class_="badge bg-primary"),
-            add_source,
             class_="workbench-active-bar mb-2 d-flex align-items-center gap-2",
         )
 
@@ -542,6 +520,9 @@ def discipline_map_server(input, output, session, state: AppState):
             return rows.sort_values("sort_order")["metric_key"].astype(str).tolist()
 
         def make_chip(mk: str, fn: str):
+            # The chip reads the portfolio's verdict and the owner's decision on it;
+            # the decision itself (use here, undo) is made in Reference curves,
+            # Select final curves, the one place REF-15 decisions are taken.
             nodata = not workbench_has_data(mk, metric_config)
             label = workbench_metric_label(mk, metric_config, lib_by_id)
             u = int(usage_v.get(mk, 1) or 1)
@@ -552,19 +533,12 @@ def discipline_map_server(input, output, session, state: AppState):
                 ui.tags.span(label, class_="wb-chip-label"),
                 ui.tags.span("no data", class_="wb-chip-tag") if nodata else None,
                 (ui.tags.span(_src.kind_label("not_selected"), class_="wb-chip-tag",
-                              title=_src.kind_sentence("not_selected"))
+                              title=_src.kind_sentence("not_selected")
+                                    + " Use it here from Select final curves.")
                  if left_out else None),
-                (ui.tags.button(fa("circle-plus"), " Use", type="button",
-                                class_="wb-chip-use",
-                                title="Use this curve in this function (recorded as your "
-                                      "decision)",
-                                onclick=_sp.act_onclick(mk, "include", [fid]))
-                 if left_out else None),
-                (ui.tags.span("used by the owner", class_="wb-chip-tag")
-                 if fid in (included.get(mk) or {}) else None),
-                (ui.tags.button(fa("rotate-left"), type="button", class_="wb-chip-use",
-                                title="Undo: leave this curve out of this function again",
-                                onclick=_sp.undo_onclick(included[mk][fid]))
+                (ui.tags.span("used by the owner", class_="wb-chip-tag",
+                              title="Put back into this function by the owner (REF-15); "
+                                    "undone from Select final curves.")
                  if fid in (included.get(mk) or {}) else None),
                 (
                     ui.tags.span(
@@ -592,18 +566,18 @@ def discipline_map_server(input, output, session, state: AppState):
             kind = entry.get("kind")
             icon = _src.kind_icon(kind)
             fid = str(_pe.canonical_function_id(fn) or "")
+            # no x: taking a source curve out of a function is a REF-15 decision,
+            # made in Select final curves; the chip only opens where it comes from
             return ui.tags.span(
                 fa(icon) if icon else None,
                 ui.tags.span(_sp.display_name(mk, entry), class_="wb-chip-label"),
                 ui.tags.span(str(entry.get("label") or ""), class_="wb-chip-tag"),
                 (ui.tags.span("chosen by the owner", class_="wb-chip-tag")
                  if entry.get("owner") else None),
-                ui.tags.button(ui.HTML("&times;"), type="button", class_="wb-chip-x",
-                               title="Remove from this function (recorded as your decision)",
-                               onclick=_sp.act_onclick(mk, "unmap", [fid])),
                 class_=f"wb-chip wb-chip-data wb-chip-source {_sp.kind_class(kind)}",
                 role="button", tabindex="0",
-                title=f"{entry.get('label')}. Click to see where this curve comes from.",
+                title=f"{entry.get('label')}. Click to see where this curve comes from. "
+                      "Remove it, or take it out of this function, from Select final curves.",
                 onclick=_sp.open_onclick(mk), onkeydown=_sp.open_onkeydown(),
             )
 
@@ -705,22 +679,13 @@ def discipline_map_server(input, output, session, state: AppState):
             exclude_pairs=_pe.not_selected_pairs(build),
         )
 
-    def _can_add_source() -> bool:
-        build = state.reference_build()
-        return bool(build and build.get("method") == _pe.METHOD and _rb.is_ecoregion(
-            state.region_of_applicability()))
-
-    def _add_source_button(gaps):
-        """Choose a source for the first function with no metric (REF-15)."""
-        if not gaps or not _can_add_source():
-            return None
-        from views import source_dialog as _sd
-        return ui.tags.button(fa("circle-plus"), " Add a source", type="button",
-                              class_="btn btn-outline-primary btn-sm ms-auto",
-                              onclick=_sd.open_onclick(function=gaps[0][0], stop=False))
-
     @render.ui
     def uncovered_panel():
+        """The functions with neither a metric nor a documented reason, read-only.
+
+        What to do about one is decided in Reference curves, Select final curves:
+        choose a source for it (REF-15) or document the gap (COV-01). This page
+        assigns workbook metrics; it records no decision of its own."""
         if state.metric_config() is None or not state.metric_config():
             return None
         gaps = _uncovered_functions()
@@ -733,83 +698,18 @@ def discipline_map_server(input, output, session, state: AppState):
                 ui.tags.strong(
                     f"{n} STAF function{'' if n == 1 else 's'} with no metric"
                 ),
-                _add_source_button(gaps),
-                ui.input_action_button(
-                    ns("open_coverage_exception"), "Document a gap",
-                    class_="btn btn-outline-secondary btn-sm"
-                    + ("" if _can_add_source() else " ms-auto"),
-                ),
                 class_="d-flex align-items-center gap-2 mb-1",
             ),
             ui.tags.small(
                 "Publishing needs each of the 20 functions either covered by a metric "
-                "or recorded with a reason. Assign a metric from the library, or "
-                "document why it is out of scope: ",
+                "or recorded with a reason. Assign a metric from the library here, or "
+                "choose a source for the function or document the gap in Reference "
+                "curves, Select final curves: ",
                 class_="text-muted",
             ),
             ui.tags.small(", ".join(name for _, name in gaps)),
             class_="alert alert-warning py-2 px-3 mb-2 workbench-uncovered",
         )
-
-    @reactive.effect
-    @reactive.event(input.open_coverage_exception)
-    @guard("open the exception form")
-    def _open_coverage_exception():
-        gaps = _uncovered_functions()
-        if not gaps:
-            ui.notification_show("Every STAF function is covered or documented.",
-                                 type="message")
-            return
-        ui.modal_show(ui.modal(
-            ui.p("Recorded on the assessment so a reader can tell a deliberate scope "
-                 "decision from an oversight. Travels with the published bundle.",
-                 class_="text-muted small"),
-            ui.input_select(ns("exc_function"), "Function",
-                            {fid: name for fid, name in gaps}),
-            ui.input_select(ns("exc_reason"), "Reason",
-                            {r: r.replace("-", " ") for r in FUNCTION_EXCLUSION_REASONS}),
-            ui.input_text_area(
-                ns("exc_justification"), "Justification", rows=3, width="100%",
-                placeholder="Why this function carries no metric in this assessment.",
-            ),
-            ui.input_text(ns("exc_recorded_by"), "Recorded by (initials)", value=_default_actor(state)),
-            title="Document an uncovered function",
-            footer=ui.TagList(
-                ui.modal_button("Cancel"),
-                ui.input_action_button(ns("exc_save"), "Record", class_="btn btn-primary"),
-            ),
-            easy_close=True,
-        ))
-
-    @reactive.effect
-    @reactive.event(input.exc_save)
-    @guard("record the exception")
-    def _save_coverage_exception():
-        record = {
-            "functionId": input.exc_function(),
-            "reason": input.exc_reason(),
-            "justification": (input.exc_justification() or "").strip(),
-            "recordedBy": prefs.given_or_na(input.exc_recorded_by()),
-            "recordedAt": _now_iso(),
-        }
-        existing = list(state.function_coverage_exceptions() or [])
-        try:
-            # Validate the whole set, so one bad entry cannot be smuggled past the
-            # publish gate by being saved alongside good ones.
-            validate_coverage_exceptions(
-                [e for e in existing if e.get("functionId") != record["functionId"]]
-                + [record],
-                deep_read_staf_crosswalk(),
-            )
-        except ValueError as exc:
-            ui.notification_show(str(exc), type="error", duration=10)
-            return
-        state.function_coverage_exceptions.set(
-            [e for e in existing if e.get("functionId") != record["functionId"]] + [record]
-        )
-        ui.modal_remove()
-        ui.notification_show(
-            f"Recorded {record['functionId']} as out of scope.", type="message")
 
     # ---- RIGHT: searchable metric library -------------------------------------
     @render.ui

@@ -253,6 +253,13 @@ class AppState:
     # reasons a person gave for not selecting one (candidates.SESSION_FIELD).
     # None reads as an empty register. Persisted.
     candidate_register: reactive.Value = _rv()
+    # SELECT-01 approvals given in Select final curves: a function carrying more
+    # metrics than the portfolio maximum publishes only with a recorded human
+    # approval. Entries are {functionId, approver, note, date}; the publish maps
+    # them onto meta.portfolioApprovals (approvedBy) for library's gate. None
+    # reads as no approval (session_io absent-reads-as-None). Persisted once
+    # session_io lists the field; the accessors below are the only writers.
+    portfolio_approvals: reactive.Value = _rv()
 
     # ── root navigation requests (stage banner -> shell) ────────────────────
     # nav_request: a nav_panel value to switch main_navbar to; wizard_step_request:
@@ -411,6 +418,76 @@ def recorded_by(state: "AppState | None") -> str:
     return prefs.recorded_by(meta if isinstance(meta, dict) else None)
 
 
+# --------------------------------------------------------------------------- #
+# SELECT-01 approvals (the ``portfolio_approvals`` session field)
+# --------------------------------------------------------------------------- #
+def _approval_entry(a) -> dict | None:
+    """One approval in the session's shape, whichever spelling it arrived in
+    (the field's ``approver`` or meta.json's ``approvedBy``)."""
+    if not isinstance(a, dict) or not a.get("functionId"):
+        return None
+    who = str(a.get("approver") or a.get("approvedBy") or "").strip()
+    return {"functionId": str(a["functionId"]), "approver": who,
+            "note": str(a.get("note") or "").strip(),
+            "date": str(a.get("date") or a.get("approvedAt") or a.get("confirmedAt") or "")}
+
+
+def portfolio_approvals(state: AppState) -> list[dict]:
+    """The session's SELECT-01 approvals, read without a reactive dependency."""
+    with reactive.isolate():
+        raw = state.portfolio_approvals()
+    return [e for e in (_approval_entry(a) for a in raw or []) if e is not None]
+
+
+def approved_function_ids(approvals) -> set[str]:
+    """The functions ``approvals`` cover with a named approver (a blank name,
+    like the pending marker's absence, approves nothing)."""
+    out = set()
+    for a in approvals or []:
+        e = _approval_entry(a)
+        if e and e["approver"]:
+            out.add(e["functionId"])
+    return out
+
+
+def add_portfolio_approval(state: AppState, function_id: str, *, approver: str,
+                           note: str = "", date: str | None = None) -> list[dict]:
+    """Record (or replace) the approval of one function's set; returns the field."""
+    from datetime import datetime, timezone
+    fid = str(function_id or "").strip()
+    who = str(approver or "").strip()
+    if not fid:
+        raise ValueError("An approval names its function.")
+    if not who:
+        raise ValueError("Give your initials: an approval is recorded under a name.")
+    entry = {"functionId": fid, "approver": who, "note": str(note or "").strip(),
+             "date": date or datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    kept = [a for a in portfolio_approvals(state) if a["functionId"] != fid]
+    state.portfolio_approvals.set(kept + [entry])
+    return kept + [entry]
+
+
+def withdraw_portfolio_approval(state: AppState, function_id: str) -> list[dict]:
+    """Take one function's approval back; returns the field (None once empty)."""
+    kept = [a for a in portfolio_approvals(state) if a["functionId"] != str(function_id)]
+    state.portfolio_approvals.set(kept or None)
+    return kept
+
+
+def approvals_for_meta(approvals) -> list[dict]:
+    """The field's entries in the shape ``library._require_portfolio_approval``
+    reads from meta.json: ``{functionId, approvedBy, note, approvedAt}``."""
+    out = []
+    for a in approvals or []:
+        e = _approval_entry(a)
+        if e and e["approver"]:
+            rec = {"functionId": e["functionId"], "approvedBy": e["approver"], "note": e["note"]}
+            if e["date"]:
+                rec["approvedAt"] = e["date"]
+            out.append(rec)
+    return out
+
+
 def save_metric_phase_state(state: AppState, metric: str | None) -> None:
     if metric is None or metric == "":
         return
@@ -551,6 +628,7 @@ def reset_app_to_startup(state: AppState) -> None:
         state.reference_build.set(None)
         state.owner_curve_decisions.set([])
         state.candidate_register.set(None)
+        state.portfolio_approvals.set(None)
         state.wizard_draft.set(None)
         state.assessment_type.set("deep")
         state.easi_project.set(None)

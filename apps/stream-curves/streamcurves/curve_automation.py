@@ -39,6 +39,8 @@ def reconcile_review_map(old_review: Optional[dict], proposals: dict) -> dict:
             mapping_ok=prop.get("mapping_ok", True),
             strat_ok=prop.get("strat_ok", True),
             strat_reason=prop.get("strat_reason"),
+            data_ok=prop.get("data_ok", True),
+            data_reason=prop.get("data_reason"),
             shape_ok=prop.get("shape_ok", True),
             shape_reason=prop.get("shape_reason"),
             exc=prop.get("exc"),
@@ -54,6 +56,34 @@ def reconcile_review_map(old_review: Optional[dict], proposals: dict) -> dict:
             proposal_summary=prop.get("summary") or {},
         )
     return review
+
+
+def data_flags(missingness_entry: Optional[dict]) -> tuple[bool, Optional[str]]:
+    """DATA-03 for one metric from its ``regional_agent.metric_missingness``
+    entry, worded exactly as the headless classification words it
+    (``regional_agent.review_curves``), so a curve the app flags reads the same
+    as one a batch flags. No entry means unknown, which is not a flag."""
+    miss = missingness_entry or {}
+    if miss.get("disposition") != "review":
+        return True, None
+    frac = miss.get("missing_fraction")
+    reason = (f"Missing-data fraction {frac:.0%} exceeds the DATA-03 review "
+              "threshold, so the curve must not be auto-recommended."
+              if isinstance(frac, (int, float)) else None)
+    return False, reason
+
+
+def session_missingness(state: AppState, metrics) -> dict:
+    """``regional_agent.metric_missingness`` over the session's data frame, which
+    is the retained reference pool in both flows (the import wizard keeps the
+    screened sites; the Region builder seeds the evidence pass's ``data``).
+    Empty when the session holds no data, so nothing is flagged on a guess."""
+    from streamcurves import regional_agent as ra
+    with reactive.isolate():
+        data = state.data()
+    if data is None or len(data) == 0:
+        return {}
+    return ra.metric_missingness(data, list(metrics))
 
 
 # --------------------------------------------------------------------------- #
@@ -114,12 +144,19 @@ def _proposal_summary(metric: str, curve_rows, mapping, strat_used) -> dict:
     }
 
 
-def build_metric_proposal(state: AppState, metric: str, *, exc: Optional[BaseException] = None) -> dict:
-    """Read the fresh phase4 curve rows + mapping + stratification for a metric."""
+def build_metric_proposal(state: AppState, metric: str, *, exc: Optional[BaseException] = None,
+                          missingness: Optional[dict] = None) -> dict:
+    """Read the fresh phase4 curve rows + mapping + stratification for a metric.
+
+    ``missingness`` (``session_missingness``) carries DATA-03: a metric whose
+    missing-data fraction over the reference pool exceeds the review threshold
+    is flagged here exactly as the headless path flags it, instead of only there
+    (the interactive classification used to skip the rule, 2026-09-25)."""
     if exc is not None:
         return {"curve_rows": None, "mapping_ok": True, "strat_ok": True,
                 "mapping": None, "strat": None, "exc": exc,
                 "summary": {"metric": metric, "error": str(exc)}}
+    data_ok, data_reason = data_flags((missingness or {}).get(metric))
     phase4 = ss.get_metric_phase4_display_state(state, metric)
     curve_rows = phase4.get("curve_rows")
     mapping = _metric_function(state, metric)
@@ -140,6 +177,8 @@ def build_metric_proposal(state: AppState, metric: str, *, exc: Optional[BaseExc
         "mapping_ok": _mapping_ok(state, metric),
         "strat_ok": _strat_ok(state, metric) and floors_ok,
         "strat_reason": floor_reason,
+        "data_ok": data_ok,
+        "data_reason": data_reason,
         "shape_ok": shape_ok,
         "shape_reason": shape_reason,
         "mapping": mapping,
@@ -164,7 +203,8 @@ def sync_curve_review_after_recompute(
         if metrics is not None
         else ss.eligible_summary_metrics(metric_config)
     )
-    proposals = {m: build_metric_proposal(state, m) for m in targets}
+    missingness = session_missingness(state, targets)
+    proposals = {m: build_metric_proposal(state, m, missingness=missingness) for m in targets}
     review = reconcile_review_map(old_review, proposals)
     state.curve_review.set(review)
     return review
@@ -181,7 +221,10 @@ def run_curve_automation(
 
     Reuses ``summary_state.recompute_metrics_from_summary`` (phase1->phase4) with an
     ``on_metric_done`` that re-scores just that metric, so partial progress lands in
-    ``curve_review`` incrementally. Returns the final review map.
+    ``curve_review`` incrementally. Each score carries DATA-03 from
+    ``session_missingness`` (through ``sync_curve_review_after_recompute``), the
+    same ``regional_agent.metric_missingness`` the headless path applies.
+    Returns the final review map.
     """
     with reactive.isolate():
         metric_config = state.metric_config() or {}

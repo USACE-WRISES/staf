@@ -173,6 +173,12 @@ metrics:
       Total phosphorus in micrograms per liter, laboratory analysis of the
       mid-channel grab sample from the X-site, kept on ice.
     source: nrsa-fom-wadeable-2023
+  chem_NTL:
+    where: X-site, mid-channel
+    method: >-
+      Total nitrogen in milligrams of nitrogen per liter, laboratory analysis of the
+      unfiltered mid-channel grab sample from the X-site, kept on ice.
+    source: nrsa-fom-wadeable-2023
   chem_NTL_DISS:
     where: X-site, mid-channel
     method: >-
@@ -212,13 +218,39 @@ metrics:
       From the same 11-transect composite D-frame net sample (500 micrometer mesh)
       and laboratory subsample. The value is the percent of individuals that belong
       to pollution tolerant taxa.
-  fish_NAT_TOTLNTAX:
+  fish_NAT_TOTLNTAX: &fish
     where: whole reach
     method: >-
       Electrofish the sampling reach in an upstream direction, working every habitat
       between the transects, and identify and count every fish. The value is the
       number of native taxa.
     source: nrsa-fom-wadeable-2023
+  # the reserve fish metrics, from the same electrofishing pass
+  fish_NAT_NTOLNTAX:
+    <<: *fish
+    method: >-
+      From the same upstream electrofishing pass over every habitat between the
+      transects, with every fish identified and counted. The value is the number of
+      native taxa that are not classed tolerant.
+  fish_NAT_NTOLPTAX:
+    <<: *fish
+    method: >-
+      From the same upstream electrofishing pass over every habitat between the
+      transects, with every fish identified and counted. The value is the percent of
+      native taxa that are not classed tolerant.
+  fish_NAT_TOLRPIND:
+    <<: *fish
+    method: >-
+      From the same upstream electrofishing pass over every habitat between the
+      transects, with every fish identified and counted. The value is the percent of
+      native individuals that belong to tolerant taxa.
+  fish_NAT_LITHPIND:
+    <<: *fish
+    method: >-
+      From the same upstream electrofishing pass over every habitat between the
+      transects, with every fish identified and counted. The value is the percent of
+      native individuals that are simple lithophils, spawning on clean coarse
+      substrate without building a nest.
   # ---- desktop metrics -------------------------------------------------------
   bfiws:
     where: desktop

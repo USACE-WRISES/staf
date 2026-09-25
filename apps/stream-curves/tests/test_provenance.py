@@ -226,3 +226,122 @@ def test_records_flatten_to_a_table(provenance):
     frame = pv.to_frame(provenance["records"])
     assert list(frame.columns) == list(pv.RULE_RECORD_FIELDS)
     assert len(frame) == len(provenance["records"])
+
+
+# --- the rebuild ledger and the register (campaign Round 1) -------------------- #
+def test_the_document_carries_the_ledger_and_the_register(provenance, result):
+    """Every build writes both: a legacy build's fitted curves have no reference-support
+    record, so each reads not_evaluated with the reason; the selected set still names
+    every bundle pair."""
+    ledger = provenance["metricLedger"]
+    assert ledger["schema"] == pv.LEDGER_SCHEMA
+    assert ledger["build"]["inputsDigest"] == provenance["inputsDigest"]
+    assert ledger["build"]["refit"] == "missing" and ledger["build"]["carriedFrom"] is None
+    rows = ledger["rows"]
+    assert rows and all(r["disposition"] in pv.LEDGER_DISPOSITIONS for r in rows)
+    assert {r["disposition"] for r in rows if r["functionId"]} <= {pv.NOT_EVALUATED, pv.REMOVED}
+    legacy = [r for r in rows if r["disposition"] == pv.NOT_EVALUATED]
+    assert legacy and all("legacy reference method" in r["reason"] for r in legacy)
+    assert all(not r["engine"]["executed"] for r in legacy)
+    register = provenance["candidateRegister"]
+    assert register["schema"] == 1 and register["rows"]
+    selected = {(r["subject"], r["functionId"]) for r in register["rows"] if r["status"] == "selected"}
+    assert selected == {(r["metric"], r["functionId"]) for r in legacy}
+    json.dumps(provenance)
+
+
+def test_build_provenance_takes_a_register_already_computed(result, manifest):
+    from streamcurves import candidates as C
+    reg = C.register_for_result(result)
+    doc = pv.build_provenance(result, manifest, timestamp=TS, register=reg)
+    assert doc["candidateRegister"] == C.register_document(reg)
+    assert doc["metricLedger"] == pv.build_ledger(result, manifest=manifest, register=reg)
+
+
+def test_ledger_rows_for_bundle_states_both_sides():
+    ledger = {"rows": [{"metric": "phab_XEMBED", "functionId": "f1", "disposition": pv.REFITTED},
+                       {"metric": "chem_PTL", "functionId": "f1", "disposition": pv.UNSUPPORTED},
+                       {"metric": "phab_SINU", "functionId": None, "disposition": pv.REFITTED}]}
+    bundle = {"metricsByFunction": [{"functionId": "f1", "metrics": [{"metricId": "spring-phab-xembed"},
+                                                                     {"metricId": "spring-chem-ptl"}]}]}
+    got = pv.ledger_rows_for_bundle(bundle, ledger)
+    assert got["selected"] == [("spring-phab-xembed", "f1")]
+    assert got["missing"] == [("spring-chem-ptl", "f1")] and got["extra"] == [] and not got["equal"]
+
+
+# --- digest schema 2 ----------------------------------------------------------- #
+def test_a_legacy_manifest_keeps_its_digest_under_the_legacy_rules(result, manifest):
+    assert "digestSchema" not in manifest
+    payload = pv.digest_payload_from_manifest(manifest)
+    assert "code" not in payload and "decisions" not in payload
+    assert methodology.inputs_digest(payload) == manifest["inputsDigest"]
+    assert manifest["agent"]["agentVersion"] == pv.AGENT_VERSION == "regional-agent-2"
+    assert "codeFingerprint" not in manifest["agent"]
+
+
+def test_new_manifest_defaults_declare_schema_2_and_move_the_digest(result, manifest):
+    from streamcurves import code_identity
+    defaults = pv.new_manifest_defaults()
+    assert defaults == {"digestSchema": 2}
+    two = pv.build_run_manifest(result, argv=["--l3", "58"], started_at=TS, finished_at=TS,
+                                defaults=defaults)
+    assert two["digestSchema"] == 2 and two["inputsDigest"] != manifest["inputsDigest"]
+    assert two["agent"]["codeFingerprint"] == code_identity.fingerprint()
+    assert two["inputs"]["refit"] == {"mode": "missing", "carriedFrom": None}
+    assert two["reviewerInputs"]["decisionsDigest"].startswith("sha256:")
+    assert two["reviewerInputs"]["files"] == {} and two["experimental"] is None
+    names = {c["path"] for c in two["configs"]}
+    assert {"config/" + n for n in pv.DIGEST_SCHEMA_2_CONFIGS} <= names
+    assert {c["path"] for c in manifest["configs"]} < names
+    assert "config/metric_evidence.yaml" not in names
+    payload = pv.digest_payload_from_manifest(two)
+    assert payload["code"] == two["agent"]["codeFingerprint"] and payload["refit"] == "missing"
+    assert methodology.inputs_digest(payload) == two["inputsDigest"]
+    # what the batch declares rides through: the refit mode, the files, the experimental block
+    three = pv.build_run_manifest(result, argv=[], started_at=TS, finished_at=TS, defaults={
+        "digestSchema": 2, "refit": "all", "reviewerInputs": {"files": {"owner_decisions.json": "abc"}},
+        "experimental": {"configRoot": "variant-a", "extensionFlag": True}})
+    assert three["inputs"]["refit"]["mode"] == "all"
+    assert three["reviewerInputs"]["files"] == {"owner_decisions.json": "abc"}
+    assert three["experimental"]["configRoot"] == "variant-a"
+    assert three["inputsDigest"] != two["inputsDigest"]
+    with pytest.raises(ValueError):
+        pv.build_run_manifest(result, defaults={"digestSchema": 9})
+
+
+def test_the_decisions_digest_is_canonical_and_input_sensitive():
+    from streamcurves import owner_curves as oc
+    d = oc.new_decision("chem_PTL", oc.REMOVE, rationale="The owner explains this decision here.",
+                        recorded_by="GM", recorded_at="2026-09-25T00:00:00+00:00")
+    base = {"curveDecisions": [d], "answers": [{"rule_id": "CURVE-07", "subject": "m", "action": "accept",
+                                                 "rationale": "fine  as is"}],
+            "finalizations": {"m": "note"}, "approvals": [{"functionId": "f", "approvedBy": "GM", "note": "ok"}],
+            "gaps": [{"functionId": "g", "reason": "no-suitable-metric", "justification": "none fits"}],
+            "enabledPolicyIds": ["b", "a"], "consideredCandidates": ["cand-2", "cand-1"]}
+    one = pv.decisions_digest(base)
+    assert one.startswith("sha256:") and one == pv.decisions_digest(dict(base))
+    # order and whitespace never count; who confirmed an approval never counts
+    reordered = {**base, "enabledPolicyIds": ["a", "b"], "consideredCandidates": ["cand-1", "cand-2"],
+                 "answers": [{**base["answers"][0], "rationale": "fine as is"}],
+                 "approvals": [{"functionId": "f", "approvedBy": "standing-policy (pending)", "note": "ok"}]}
+    assert pv.decisions_digest(reordered) == one
+    for change in ({"answers": []}, {"finalizations": {}}, {"gaps": []}, {"enabledPolicyIds": []},
+                   {"consideredCandidates": []}, {"curveDecisions": []},
+                   {"approvals": [{"functionId": "f", "note": "other"}]}):
+        assert pv.decisions_digest({**base, **change}) != one
+    assert pv.decisions_digest({}) == pv.decisions_digest({"answers": [], "gaps": []})
+    assert pv.decision_inputs_of({"curve_decisions": [d], "standing_decisions": {"enabledIds": ["x"]},
+                                  "meta": {"portfolioApprovals": [{"functionId": "f"}]}})["approvals"] == [{"functionId": "f"}]
+
+
+def test_an_interactive_document_carries_the_ledger_when_given_the_fields():
+    bundle = {"metricsByFunction": []}
+    without = pv.build_interactive_provenance(bundle, {}, region={"code": "58"}, timestamp=TS)
+    assert "metricLedger" not in without and without["metricLedgerNote"]
+    fields = {"metric_config": {}, "curve_review": {}, "completed_metrics": {}, "reference_build": None,
+              "owner_curve_decisions": [], "region_of_applicability": {"kind": "ecoregion", "code": "58"}}
+    with_fields = pv.build_interactive_provenance(bundle, {}, region={"code": "58"}, timestamp=TS,
+                                                  fields=fields)
+    ledger = with_fields["metricLedger"]
+    assert ledger["schema"] == pv.LEDGER_SCHEMA and ledger["region"]["code"] == "58"
+    assert ledger["rows"] == [] and ledger["build"]["inputsDigest"] is None

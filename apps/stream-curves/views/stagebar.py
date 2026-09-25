@@ -26,7 +26,6 @@ from __future__ import annotations
 from shiny import module, reactive, render, ui
 
 from streamcurves import run_state as rs
-from streamcurves import workspace as ws
 from streamcurves.easi_method import stages as es
 from streamcurves.precheck import precheck_summary
 from views import assessment_publish as ap
@@ -63,12 +62,10 @@ def project_panel_ui(id: str):
 
 
 def tools_allowed() -> set[str]:
-    """The Region builder needs a STAF checkout (its runs live under notes/); every other
-    tool works in any copy."""
-    keys = set(rs.TOOL_KEYS)
-    if not ws.is_checkout():
-        keys.discard("build")
-    return keys
+    """Every tool works in any copy. (The Region builder, which needs a STAF checkout,
+    is no tool any more: it is an ecoregion project's Build step, and the step's body
+    says so when the copy is not a checkout.)"""
+    return set(rs.TOOL_KEYS)
 
 
 @module.server
@@ -116,12 +113,16 @@ def stagebar_server(input, output, session, state: AppState):
         # The Validate stage's status inputs (run_snapshot isolates its reads).
         state.validation_records()
         state.assessment_source()
+        # The reference method the checklist names (REF-04 or the legacy REF-01).
+        reference_build = state.reference_build()
+        screening_run = state.screening_run()
         precheck = state.precheck_df()
         tasks = dict(state.tasks_running() or {})
         tab = state.current_tab()
         view = state.data_setup_view()
         wiz_step = state.wizard_current_step()
         snap = ap.run_snapshot(state)
+        snap["reference_method"] = rs.reference_method_of(reference_build, screening_run)
         return {
             "snap": snap,
             "statuses": rs.derive_stage_status(snap, tasks),
@@ -133,6 +134,9 @@ def stagebar_server(input, output, session, state: AppState):
             "tab": tab,
             "view": view,
             "wiz_step": wiz_step,
+            # the project's region kind picks the steps a stage lists
+            # (run_state.substeps_for): an ecoregion builds in one step
+            "region_kind": snap.get("region_kind"),
             "active_section": state.workspace_section(),
             "curves_section": state.curves_section(),
         }

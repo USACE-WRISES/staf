@@ -560,3 +560,66 @@ def test_the_site_picker_carries_and_shows_the_stream_order():
     assert 'ui.output_ui("sites_frame_note")' in src
     assert "def sites_frame_note():" in src
     assert 'methodology.threshold("reference_panel.max_stream_order")' in src
+
+
+# --------------------------------------------------------------------------- #
+# One build path (2026-09-25): stage 2 is the station-screen table (REF-04)
+# --------------------------------------------------------------------------- #
+SCREEN = pytest.mark.skipif(
+    not __import__("streamcurves.reference_screen", fromlist=["x"]).station_screen_available(),
+    reason="the station screen table is not built (scripts/nrsa/build_station_screen.py)",
+)
+
+
+@SCREEN
+def test_the_pressure_screen_reads_each_candidate_under_the_wizards_own_site_ids():
+    """The station table is keyed by the archive's station key; a candidate may carry a
+    per-cycle EPA id, and an uploaded site has no record. The rows come back under the
+    wizard's ids so the retained set and the exclusions match the candidate frame."""
+    from streamcurves import reference_screen as rscreen
+    from views.import_map import pressure_screen_tables, screened_site_ids
+    table = rscreen.load_station_screen()
+    key = str(table["station_key"].iloc[0])
+    sites = pd.DataFrame({
+        "site_id": ["ALIAS-1", key, "U1"],
+        "lat": [40.0, 40.1, 40.2], "lon": [-84.0, -84.1, -84.2],
+        "comid": [None, None, None], ".source": ["nrsa", "nrsa", "upload"],
+    })
+    tables = pressure_screen_tables(sites, aliases={"ALIAS-1": key})
+    rows = {r["site_id"]: r for r in tables["easi_screening_sites"]}
+    assert set(rows) == {"ALIAS-1", key, "U1"}          # the wizard's ids, never the keys
+    assert rows["ALIAS-1"]["final_decision"] in ("retained", "excluded", "not_evaluable")
+    assert rows["ALIAS-1"]["final_decision"] == rows[key]["final_decision"]
+    assert rows["U1"]["auto_decision"] == "not_evaluable" and "no screen record" in rows["U1"]["reason"]
+    assert tables["easi_screening_criteria"]["method"] == rscreen.METHOD == "pressure_screen"
+    assert tables["easi_screening_criteria"]["criteria"]["screen"] == rscreen.SCREEN_ID
+    assert screened_site_ids(tables["easi_screening_sites"]) == {"ALIAS-1", key, "U1"}
+    assert screened_site_ids(pd.DataFrame(tables["easi_screening_sites"])) == {"ALIAS-1", key, "U1"}
+    assert screened_site_ids(None) == set()
+    assert pressure_screen_tables(None) is None and pressure_screen_tables(pd.DataFrame()) is None
+
+
+def test_stage_two_has_no_skip_button_and_switches_on_the_screening_mode():
+    """The Skip button is gone; the legacy EASI panel renders only for a replay of an
+    older EASI-screened version or a non-ecoregion region; an old session's skip flag
+    is still read (a note, never a button)."""
+    import pathlib
+
+    import views.import_map as im
+    src = pathlib.Path(im.__file__).read_text(encoding="utf-8")
+    for gone in ('ns("screening_skip")', 'ns("screening_skip_confirm")', 'ns("screening_skip_undo")',
+                 "def _screening_skip(", "def _screening_skip_confirm(", "def _screening_skip_undo(",
+                 "Skip screening and include all sites"):
+        assert gone not in src, f"stage 2 still carries {gone!r}"
+    assert "state.screening_skipped.set(True)" not in src
+    assert "state.screening_skipped.set(False)" in src          # a real screen clears an old skip
+    panel = src[src.index("    def easi_screening_panel():"):src.index("def _refresh_sites_map_now(")]
+    assert "if _screening_mode() == rs.REFERENCE_METHOD_PRESSURE:" in panel
+    assert "return _pressure_screen_panel(s, sc)" in panel
+    assert "Screening was skipped in this session" in panel
+    assert "def _apply_pressure_screen():" in src and "def _pressure_screen_panel(s, sc):" in src
+    assert 'ui.output_data_frame("pressure_table")' in src and "def pressure_table():" in src
+    # the screen itself is the committed table: no run, no override, no clear
+    pressure = src[src.index("def _pressure_screen_panel(s, sc):"):src.index("    def easi_screening_panel():")]
+    for control in ("screening_run_direct", "screening_retain_sel", "screening_exclude_sel", "screening_clear"):
+        assert control not in pressure

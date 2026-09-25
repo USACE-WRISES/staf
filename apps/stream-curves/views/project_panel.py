@@ -30,8 +30,7 @@ STATE_CLASS = {
 # Every icon here must exist in the vendored www/vendor/bs-icons.json subset or bi() raises
 # at render (test_rules_page_nav pins the whole map against it).
 TOOL_ICON = {"regional": "bezier2", "xsec": "graph-down",
-             "nrsa": "globe-americas", "build": "magic",
-             "rules": "ui-checks"}
+             "nrsa": "globe-americas", "rules": "ui-checks"}
 
 
 def stage_target(key: str) -> str:
@@ -48,11 +47,14 @@ def _num(i: int, status: str):
 
 
 def children(view: dict, stage_key: str) -> list[tuple[str, str, bool]]:
-    """(target, label, current) rows under a stage, for the stage that is current."""
+    """(target, label, current) rows under a stage, for the stage that is current.
+
+    The steps are the project's (``run_state.substeps_for``): an ecoregion's
+    stage 3 is one Build step, so it lists no children, like Screen sites."""
     tab, dview = view.get("tab"), view.get("view")
     wiz = view.get("wiz_step")
     out: list[tuple[str, str, bool]] = []
-    subs = rs.STAGE_SUBSTEPS.get(stage_key) or []
+    subs = rs.substeps_for(stage_key, view.get("region_kind"))
     if len(subs) > 1:
         in_wizard = tab == "data" and dview in ("new", "wizard")
         for n, label in subs:
@@ -81,6 +83,9 @@ def tree(view: dict, *, project: dict | None, tools_allowed: set[str]) -> ui.Tag
         ui.span(sub, class_="sc-tree-project-sub") if sub else None,
         type="button", class_="sc-tree-project", title="Project properties",
         **{"data-jump": "project"}))
+    # what to do next: the first stage that is not done, as a row that jumps there
+    if project:
+        rows.append(next_action_row(statuses))
 
     rows.append(ui.div("Workflow", class_="sc-tree-sec"))
     for i, key in enumerate(rs.STAGE_KEYS):
@@ -119,6 +124,21 @@ def tree(view: dict, *, project: dict | None, tools_allowed: set[str]) -> ui.Tag
     rows.append(ui.div("Tools", class_="sc-tree-sec"))
     rows += _tool_rows(view, tools_allowed, rs.TOOL_KEYS)
     return ui.TagList(*rows)
+
+
+def next_action_row(statuses: dict):
+    """The line under the project row: the next stage to work on and why
+    (``run_state.next_action``), a row that jumps to that stage."""
+    key, detail = rs.next_action(statuses)
+    if key is None:
+        return ui.div(ui.span("Next: ", class_="sc-tree-next-k"), ui.span(detail),
+                      class_="sc-tree-next sc-tree-project-sub px-3 pb-2")
+    return ui.tags.button(
+        ui.span("Next: ", class_="sc-tree-next-k"),
+        ui.span(f"{rs.STAGE_SHORT[key]}. {detail}", class_="sc-tree-label"),
+        type="button", class_="sc-tree-row sc-tree-next",
+        title=f"{rs.STAGE_LABELS[key]}. {detail}",
+        **{"data-jump": stage_target(key)})
 
 
 def _tool_rows(view: dict, tools_allowed: set[str], keys) -> list:
@@ -194,4 +214,4 @@ def project_summary(meta: dict | None, path: str | None) -> dict | None:
 
 
 __all__ = ["STATE_CLASS", "TOOL_ICON", "stage_target", "tool_target", "children", "tree",
-           "easi_tree", "project_summary"]
+           "next_action_row", "easi_tree", "project_summary"]

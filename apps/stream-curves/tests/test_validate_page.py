@@ -13,7 +13,8 @@ from streamcurves import curve_svg as cs
 from streamcurves import library as lib
 from streamcurves import session_io as sio
 from streamcurves.deep_export import build_deep_assessment_bundle
-from views.validate_page import _score_band, parse_field_data
+from views.validate_page import (_score_band, certify_block_state, parse_field_data,
+                                 validation_state_for)
 
 REGION = {"kind": "ecoregion", "code": "55", "name": "Eastern Corn Belt Plains"}
 
@@ -153,3 +154,69 @@ def test_the_page_declares_the_approve_flow_and_the_certify_rebake():
     import re
     effects = re.findall(r"@reactive\.effect\s*\n(.*?)def ", text, re.S)
     assert effects and all("@guard(" in d for d in effects)
+
+
+# --------------------------------------------------------------------------- #
+# Only a match verifies; no Certify on a Draft (campaign Round 1, 2026-09-25)
+# --------------------------------------------------------------------------- #
+def test_only_a_matching_outcome_supports_the_validated_state():
+    assert validation_state_for("match") == lib.VALIDATION_VALIDATED
+    assert validation_state_for("Match ") == lib.VALIDATION_VALIDATED
+    for outcome in ("minor", "major", "", None):
+        assert validation_state_for(outcome) is None, outcome
+
+
+def test_certify_is_absent_on_a_draft_and_offered_on_a_verified_preliminary():
+    validated, unvalidated = lib.VALIDATION_VALIDATED, lib.VALIDATION_UNVALIDATED
+    assert certify_block_state("draft", validated, True) == "approve-first"
+    assert certify_block_state("draft", unvalidated, True) == "hidden"
+    assert certify_block_state("preliminary", validated, True) == "offer"
+    assert certify_block_state("preliminary", validated, False) == "hidden"
+    assert certify_block_state("preliminary", unvalidated, True) == "hidden"
+    assert certify_block_state("certified", validated, False) == "certified"
+
+
+def test_a_minor_record_is_kept_and_leaves_the_version_unvalidated(libroot):
+    """The page's record flow, outcome by outcome: a minor or major difference
+    is on the record and changes nothing; a match verifies; a later difference
+    does not un-verify."""
+    payload = sio.dump_session_fields({"session_name": "ecbp"}, session_name="ecbp")
+    version = lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                                  payload, _bundle())
+
+    def record(outcome):
+        lib.add_validation_record("ecbp", version,
+                                  {"method": "field data overlay", "checker": "jess",
+                                   "outcome": outcome}, actor="jess")
+        n = len(lib._validation_records_for("ecbp", version))
+        target = validation_state_for(outcome)
+        if target:
+            lib.set_version_validation("ecbp", version, target, {"n_records": n}, "jess")
+
+    record("minor")
+    assert lib.version_validation_state("ecbp", version) == lib.VALIDATION_UNVALIDATED
+    assert len(lib._validation_records_for("ecbp", version)) == 1
+    record("major")
+    assert lib.version_validation_state("ecbp", version) == lib.VALIDATION_UNVALIDATED
+    record("match")
+    assert lib.version_validation_state("ecbp", version) == lib.VALIDATION_VALIDATED
+    record("major")
+    assert lib.version_validation_state("ecbp", version) == lib.VALIDATION_VALIDATED
+    assert [r["outcome"] for r in lib._validation_records_for("ecbp", version)] == [
+        "minor", "major", "match", "major"]
+
+
+def test_the_page_routes_the_outcome_and_the_draft_rule():
+    """Source scan: the record effect decides the state through
+    validation_state_for, the page carries the one-sentence rule, and the
+    certify block decides through certify_block_state."""
+    text = (Path(__file__).resolve().parents[1] / "views" /
+            "validate_page.py").read_text(encoding="utf-8")
+    record = text[text.index("def _record("):text.index("def _rebake_and_toast(")]
+    assert 'validation_state_for(record["outcome"])' in record
+    assert "the version stays Unvalidated" in record
+    assert '"validated"' not in record, "the state is never written unconditionally"
+    assert "_OUTCOME_NOTE" in text[text.index("def validate_page("):text.index("def _read_csv(")]
+    certify = text[text.index("def certify_block("):text.index("def _certify_ask(")]
+    assert "certify_block_state(" in certify and "_APPROVE_FIRST" in certify
+    assert "Approve as Preliminary first." in text

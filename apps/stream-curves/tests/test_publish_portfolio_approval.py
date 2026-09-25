@@ -1,17 +1,20 @@
-"""SELECT-01 is answerable on the Publish page (2026-09-20).
+"""SELECT-01 is answerable in Select final curves and read by the Publish page.
 
 A function carrying more metrics than the portfolio maximum publishes only with a
 recorded human approval. The batch runner takes one as ``--approve-portfolio`` and an
-opened build carries its own on the origin, but a session opened as a project file has
-neither, so the interactive publish used to come back with the gate's error and no way
-to answer it. The page now names the functions and records the publisher's approval.
+opened build carries its own on the origin. Since 2026-09-25 (one decision authority)
+the approval is given on the function's row in Select final curves, under initials,
+into the session's ``portfolio_approvals``; the Publish page lists what is still
+unapproved as a checklist line and writes the field into ``meta['portfolioApprovals']``
+(``approvedBy``) for the library's unchanged gate.
 
-These tests pin the three pieces that have to agree: the count the page makes without
-building a bundle, the count the gate makes from the real bundle, and the handler that
-turns the checkbox into ``meta['portfolioApprovals']``.
+These tests pin the pieces that have to agree: the count the page makes without
+building a bundle, the count the gate makes from the real bundle, the field's
+accessors, and the handler that turns the field into the meta.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -124,34 +127,91 @@ def test_the_prompt_names_the_function_and_its_count():
     text = pub._portfolio_approval_text(
         [{"functionId": FUNCTION_ID, "functionName": "Water and soil quality", "nMetrics": 3}])
     assert "Water and soil quality (3 metrics)" in text and "SELECT-01" in text
+    assert "Select final curves" in text
     assert "—" not in text and ";" not in text            # project style gates
 
 
-# ---- what the handler does with the checkbox --------------------------------
+# ---- the field, its accessors, and what reaches the meta --------------------
 SRC = Path(pub.__file__).read_text(encoding="utf-8")
 
 
-def test_the_form_emits_the_checkbox_and_the_handler_reads_it():
-    assert '"pub_select01"' in SRC
-    assert "input.pub_select01()" in SRC
+def test_an_approval_given_in_select_final_curves_reaches_the_field_and_the_meta():
+    from views import state as st
+    state = AppState.fresh()
+    assert st.portfolio_approvals(state) == []
+    with pytest.raises(ValueError):
+        st.add_portfolio_approval(state, FUNCTION_ID, approver="   ")
+    st.add_portfolio_approval(state, FUNCTION_ID, approver=" GM ", note="Complementary chemistry.")
+    field = st.portfolio_approvals(state)
+    assert len(field) == 1
+    assert field[0]["functionId"] == FUNCTION_ID and field[0]["approver"] == "GM"
+    assert field[0]["note"] == "Complementary chemistry." and field[0]["date"]
+    assert set(field[0]) == {"functionId", "approver", "note", "date"}
+    # replacing, never duplicating
+    st.add_portfolio_approval(state, FUNCTION_ID, approver="AB", note="Again.")
+    assert [a["approver"] for a in st.portfolio_approvals(state)] == ["AB"]
+    assert st.approved_function_ids(st.portfolio_approvals(state)) == {FUNCTION_ID}
+    # the meta shape the library gate reads
+    meta = st.approvals_for_meta(st.portfolio_approvals(state))
+    assert meta[0]["functionId"] == FUNCTION_ID and meta[0]["approvedBy"] == "AB"
+    assert meta[0]["note"] == "Again." and meta[0]["approvedAt"]
+    completed, mapping = _completed(), _mapping()
+    bundle = build_deep_assessment_bundle(deep_collect_curve_rows(completed), mapping, {}, {})
+    lib._require_portfolio_approval("t", bundle, {"portfolioApprovals": meta})   # accepted
+    with pytest.raises(ValueError, match="SELECT-01"):
+        lib._require_portfolio_approval("t", bundle, {"portfolioApprovals": []})
+    # withdrawing empties the field back to None (absent reads as no approval)
+    st.withdraw_portfolio_approval(state, FUNCTION_ID)
+    assert st.portfolio_approvals(state) == []
+    with reactive.isolate():
+        assert state.portfolio_approvals() is None
+    # a blank approver approves nothing, whichever spelling it came in
+    assert st.approved_function_ids([{"functionId": "x", "approvedBy": ""}]) == set()
+    assert st.approved_function_ids([{"functionId": "x", "approvedBy": "owner"}]) == {"x"}
 
 
-def test_the_handler_judges_the_real_bundle_and_records_the_publisher():
+def test_an_approval_round_trips_through_the_session_and_reset_clears_it():
+    """The field is persisted through session_io once WP-A lists it; the accessors
+    read either spelling, so a build's meta.portfolioApprovals written into the field
+    (approvedBy) counts too."""
+    from streamcurves import session_io as sio
+    from views import state as st
+    state = AppState.fresh()
+    st.add_portfolio_approval(state, FUNCTION_ID, approver="GM", note="n")
+    with reactive.isolate():
+        raw = state.portfolio_approvals()
+    if "portfolio_approvals" in sio.SESSION_FIELDS:
+        payload = sio.dump_session_fields({"portfolio_approvals": raw}, session_name="t")
+        back = sio.decode_session_fields(json.loads(sio.dumps_session(payload)))
+        assert back["portfolio_approvals"] == raw
+        assert sio.decode_session_fields({}).get("portfolio_approvals") is None
+    else:
+        pytest.xfail("session_io does not list portfolio_approvals yet (WP-A adds it)")
+    written_by_a_build = [{"functionId": FUNCTION_ID, "approvedBy": "owner", "note": "carried"}]
+    state.portfolio_approvals.set(written_by_a_build)
+    assert st.portfolio_approvals(state)[0]["approver"] == "owner"
+    assert st.approvals_for_meta(written_by_a_build)[0]["approvedBy"] == "owner"
+    st.reset_app_to_startup(state)
+    with reactive.isolate():
+        assert state.portfolio_approvals() is None
+
+
+def test_the_handler_judges_the_real_bundle_and_writes_the_field_into_the_meta():
     """The page's quick count may be stale; the publish itself reads the bundle it
-    is about to write, and the approval is recorded under the publisher's name."""
+    is about to write, carries the field's approvals as approvedBy, and refuses,
+    pointing at Select final curves, while a function is still unapproved."""
     assert "lib.functions_over_metric_limit(bundle)" in SRC
-    assert '"approvedBy": maintainer' in SRC
-
-
-def test_an_unticked_box_refuses_before_anything_is_written():
-    """The refusal restores the stage stamp the handler set, like the failure path."""
+    assert "given = _st.approvals_for_meta(_st.portfolio_approvals(state))" in SRC
+    assert '"approvedBy": maintainer' not in SRC, "no approval is invented under the publisher"
     handler = SRC[SRC.index("if unapproved:"):SRC.index("if source_doc:")]
     assert "state.run_stage_status.set(prev_stage_status)" in handler
-    assert "return" in handler
+    assert "return" in handler and "Select final curves" in handler
+    # the checklist line reads the same helper the section uses
+    assert "fs.unapproved_functions(state, reg)" in SRC
+    assert "_portfolio_approval_text(left[\"unapproved\"])" in SRC
 
 
-@pytest.mark.parametrize("ident", ["pub_select01"])
-def test_the_new_id_is_listed_with_the_other_handler_ids(ident):
-    """views/publish.py's own contract test reads HANDLER_IDS; keep them in step."""
+def test_the_page_no_longer_carries_the_checkbox():
     from tests.test_publish_page import HANDLER_IDS
-    assert ident in HANDLER_IDS
+    assert "pub_select01" not in HANDLER_IDS
+    assert '"pub_select01"' not in SRC and "pub-select01" not in SRC
