@@ -354,8 +354,11 @@ def build() -> tuple[list[dict], dict]:
     newest_cycle = visits.groupby("station_key")["cycle"].max()
     protocol_by_visit = visits.set_index(KEYS)["protocol"]
 
+    # the raw selection (value policy v1, what every published version reads):
+    # the audit exists to report the defects the v2 corrections read out, so it
+    # never reads under them
     wide, ledger = nd.latest_values(inp["stations"], dataset=nd.MULTI_CYCLE_DATASET_ID,
-                                    metrics=metrics)
+                                    metrics=metrics, policy=nd.VALUE_POLICY_V1)
     ledger = ledger.copy()
     ledger["protocol"] = protocol_by_visit.reindex(
         pd.MultiIndex.from_arrays([ledger["station_key"], ledger["source_cycle"],

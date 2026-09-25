@@ -5,7 +5,7 @@ Read-only over the three governing files (rule catalog, standing-decisions
 policy, methodology config), joined by streamcurves/rules_view.py. One aligned
 table, one tbody per family with a jump-bar chip per family; each rule row is
 followed by a hidden detail row toggled purely client-side. Status badges mark
-only DEPARTURES from the page baseline (36 of 42 rules are provisional and
+only DEPARTURES from the page baseline (56 of the 71 rules are provisional and
 implemented, so that pair says nothing); the full status always rides in the
 detail row.
 

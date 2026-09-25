@@ -441,6 +441,10 @@ def reference_method_block(evidence: dict) -> dict:
             "nCurvesBorrowed": sum(1 for s in statuses if s.startswith("borrowed")),
             "nCurvesRegionalScreen": statuses.count(rp.STATUS_LOCAL_RELAXED),
             "nCurvesCarried": sum(1 for d in support.values() if d.get("carried_from")),
+            # the evidence-time count: metrics with no defensible pool. The bundle's
+            # own nWithheld and nHeldForReview are set at assembly from the list it
+            # exports (deep_export.build_deep_assessment_bundle), which differs once
+            # owner sources and finalizations move metrics back into scoring blocks.
             "nWithheld": statuses.count(rp.STATUS_INSUFFICIENT),
             "curvesByBasis": _basis_counts(support),
             "statement": _method_statement(support)}
@@ -1632,13 +1636,20 @@ def _add_carried(carried: dict, rows: dict, config: dict, annotations: dict) -> 
 # --------------------------------------------------------------------------- #
 def national_inputs(*, dataset_id: Optional[str] = None, cycles=None,
                     max_stream_order: Optional[int] = None, protocols=None,
-                    keep_stations: Optional[dict] = None) -> dict:
+                    keep_stations: Optional[dict] = None,
+                    value_policy: Optional[str] = None) -> dict:
     """The national frame, the DATA-11 values of every metric a build could
     fit, and the metric configs. One function, so the census a reviewer reads
-    before a build and the build itself can never see different inputs."""
+    before a build and the build itself can never see different inputs.
+
+    ``value_policy`` is the id the archive is read under
+    (``nrsa_dataset.resolve_value_policy``; ``None`` is the new-build default);
+    the id actually used rides back as ``value_policy`` so every record of the
+    run names it."""
     from . import regional_agent as ra
     from . import stratifiers
     dataset_id = dataset_id or nrsa_dataset.MULTI_CYCLE_DATASET_ID
+    policy = nrsa_dataset.resolve_value_policy(value_policy)
     directions = ra.load_directions()
     landscape_directions = ra.load_landscape_directions()
     frame, frame_ledger = rp.national_frame(
@@ -1652,7 +1663,7 @@ def national_inputs(*, dataset_id: Optional[str] = None, cycles=None,
     wanted = list(dict.fromkeys(list(metric_config) + registry_cols))
     values, value_ledger = nrsa_dataset.latest_values(
         frame["station_key"], dataset=dataset, metrics=wanted,
-        cycles=cycles or nrsa_dataset.CYCLES_NEWEST_FIRST)
+        cycles=cycles or nrsa_dataset.CYCLES_NEWEST_FIRST, policy=policy)
     landscape_config, landscape_missing = ra.build_landscape_metric_config(
         list(frame.columns), landscape_directions, expectation_only=True)
     by_key = frame.set_index(frame["station_key"].astype(str))
@@ -1665,7 +1676,8 @@ def national_inputs(*, dataset_id: Optional[str] = None, cycles=None,
             "landscape_config": landscape_config,
             "flagged_direction": flagged_direction + landscape_missing,
             "predictor_config": ra.build_predictor_config(list(frame.columns),
-                                                          landscape_directions)}
+                                                          landscape_directions),
+            "value_policy": policy}
 
 
 CENSUS_COLUMNS = ["l3", "region", "metric", "display_name", "family", "status", "level",
@@ -1712,17 +1724,19 @@ def forced_sources(force: Optional[dict], *, metric_config: dict, carried: dict,
 
 def census(l3_codes, *, max_stream_order: Optional[int] = None, protocols=None,
            keep_stations: Optional[dict] = None, excluded: Optional[dict] = None,
-           scale_registry: Optional[dict] = None) -> dict:
+           scale_registry: Optional[dict] = None,
+           value_policy: Optional[str] = None) -> dict:
     """Reference support per region and metric, before any curve is fitted.
 
     Returns ``{"table": DataFrame, "regions": [...]}``. ``zero_inflated`` marks
     a higher-is-better metric whose pool's lower quartile is at or below zero:
     the curve engine can only draw a degenerate seed from such a pool, so the
-    reviewer sees it here and not first in a flagged curve.
+    reviewer sees it here and not first in a flagged curve. ``value_policy`` is
+    the build's (``national_inputs``), so the census counts what the build reads.
     """
     from . import regional_agent as ra
     inputs = national_inputs(max_stream_order=max_stream_order, protocols=protocols,
-                             keep_stations=keep_stations)
+                             keep_stations=keep_stations, value_policy=value_policy)
     frame, values, metric_config = inputs["frame"], inputs["values"], inputs["metric_config"]
     registry = scale_registry if scale_registry is not None else scale_analysis.load_registry()
     wide = values.set_index(values["site_id"].astype(str))
@@ -1840,8 +1854,16 @@ def run_evidence(l3_code: str, name: str, *,
                  scale_registry: Optional[dict] = None,
                  carry: Any = True,
                  force: Optional[dict] = None,
-                 hold: Optional[list] = None) -> dict:
+                 hold: Optional[list] = None,
+                 value_policy: Optional[str] = None) -> dict:
     """The decision-free half of a regional run under the pressure screen.
+
+    ``value_policy`` (rule DATA-11): the id the archive's values are read under
+    (``nrsa_dataset.resolve_value_policy``). ``None`` is the new-build default;
+    a replay of a published version passes the id that version's manifest
+    records (``inputs.nrsa_dataset.policy``), and the evidence records the id
+    actually used (``nrsa_policy``, ``value_selection.policy``), which the
+    inputs digest carries.
 
     ``carry`` (methodology 0.14): True carries forward every curve the
     ecoregion's latest published version scores unless its data were found
@@ -1918,8 +1940,10 @@ def run_evidence(l3_code: str, name: str, *,
     # --- the national frame the pools draw from, and the values (DATA-11) ---
     inputs = national_inputs(dataset_id=dataset_id, cycles=cycles,
                              max_stream_order=nrsa_max_stream_order, protocols=protocols,
-                             keep_stations=nrsa_keep_sites or None)
+                             keep_stations=nrsa_keep_sites or None,
+                             value_policy=value_policy)
     frame, values, value_ledger = inputs["frame"], inputs["values"], inputs["value_ledger"]
+    value_policy = inputs["value_policy"]      # the id actually read under
     metric_config = inputs["metric_config"]
     landscape_config = inputs["landscape_config"]
     flagged_direction = inputs["flagged_direction"]
@@ -2103,7 +2127,7 @@ def run_evidence(l3_code: str, name: str, *,
         "tier": tier, "screening": screening, "retained_ids": retained_ids,
         "nrsa_dataset": dataset_id,
         "nrsa_cycles": list(nrsa_cycles) if nrsa_cycles else None,
-        "nrsa_policy": nrsa_dataset.POLICY_LATEST_NON_NULL,
+        "nrsa_policy": value_policy,
         "nrsa_max_stream_order": nrsa_max_stream_order,
         "nrsa_protocols": list(protocols) if protocols else None,
         "nrsa_frame_overrides": frame_overrides,
@@ -2173,7 +2197,7 @@ def run_evidence(l3_code: str, name: str, *,
                            "version": (registry or {}).get("version"),
                            "analysis_version": (registry or {}).get("analysis_version"),
                            "present": bool((registry or {}).get("metrics"))},
-        "value_selection": {"policy": nrsa_dataset.POLICY_LATEST_NON_NULL,
+        "value_selection": {"policy": value_policy,
                             "byMetricCycle": nrsa_dataset.latest_values_summary(
                                 value_ledger[value_ledger["metric"].isin(metric_cols)])},
     }

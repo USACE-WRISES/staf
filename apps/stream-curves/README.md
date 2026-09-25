@@ -31,7 +31,15 @@ implementation is preserved on the
 The app reads NRSA through `streamcurves.nrsa_dataset`, which knows two datasets.
 
 **`legacy-1819`** is the default: the bundled `data/nrsa_metrics.parquet` and
-`data/nrsa_sites.csv`, NRSA 2018-19 only, 1,919 sites. Do not regenerate these
+`data/nrsa_sites.csv`, NRSA 2018-19 only. Its site counts differ by file, and
+none is regenerated: `nrsa_sites.csv` has 1,908 rows for 1,906 unique ids
+(NRS18_MN_RF001 and RF002 are each listed twice, identical rows);
+`nrsa_metrics.parquet` has 1,920 unique ids (NRS18_CA_10044 carries 22 metrics and
+no visit record anywhere, and 13 sampled 2018-19 probability sites, 12 of them
+boatable, have metric rows but no site row); and 1,919 is the number of distinct
+2018-19 EPA site ids in the archive's visits, the count the pooling text below
+uses. The legacy R application evidently built its site table from a different
+EPA file or join than its metrics table. Do not regenerate these
 two files. Every published assessment fingerprints them in its manifest
 (`provenance.build_inputs`), `tests/test_data_provenance.py` pins their sha256,
 and changing them would break the reproducibility of work already published.
@@ -221,6 +229,34 @@ folder's `owner_decisions.json`, where a save adds to the answers already there,
 build applies them. A curve finalized or removed by flag closes its own item, so it is no longer
 listed as a hard stop.
 
+### Version lifecycle
+
+A library version is `draft`, `preliminary`, `under_review`, `certified` (shown as Final),
+`revised` or `retired` (`library.VERSION_STATUSES`; `lifecycle.version_statuses` in the
+methodology config mirrors it). The defaults: automation (`stage`, `promote`, the headless
+agent) publishes Draft; an interactive publish defaults to Draft unless the Publish page's
+checklist passes with no unresolved item, when the page offers Preliminary; a version with no
+status record (a v1 library) reads as Preliminary. A Draft becomes Preliminary through Approve
+as Preliminary on the Validate page or by publishing a reviewed next version, and DEEP runs
+Preliminary and Final versions only. On Validate, only a record whose outcome matches the
+curves marks a version Verified; minor and major differences are recorded and leave it
+Unvalidated, and Certify (Final) is offered for a Verified Preliminary version. `under_review`,
+`revised` and `retired` are set from Python (`library.set_version_status`) and have no page.
+
+### NRSA value policy (DATA-11)
+
+A pooled build reads each metric's value from the newest compatible cycle's index visit
+under a value policy whose id the run records (`nrsa_policy`, `value_selection.policy`) and
+the inputs digest carries. `latest_non_null_index_visit` (v1) is what every published version
+reads under and never changes. `newest-nonnull-v2`, the default for a new build
+(`nrsa_dataset.DEFAULT_VALUE_POLICY`), adds three read-time corrections from the harmonization
+audit: a non-finite cell is missing (three 2013-14 width-to-depth ratios over a zero depth),
+a value outside the metric's declared physical domain is missing (one total phosphorus of
+-2, one canopy density over 100 percent, seven sinuosities below 1), and 2013-14 residual
+pool depth (`phab_RP100_cm`) is read from `phab_RP100`, which equals it wherever both exist
+(2,215 rows recovered). `nrsa_dataset.value_policy_report` counts what a policy changes. A
+replay passes the id its version recorded; nothing under `data/nrsa/` is rewritten.
+
 A fallback curve has at least a quarter of its reference pool at zero. On a metric whose floor is
 zero, it is a straight line from 0 at zero to 1 at the pool's upper quartile, so the median
 reference station rates Not functioning on it. Its caveat says so.
@@ -332,9 +368,9 @@ the owner's class decisions from the pilots) to the review queue, publishes into
 run's own staged library root, and writes `review_packet.md` for the owner. `promote`
 confirms the staged decisions under the owner's name after the end review and publishes
 the identical content into `apps/library`. `replay` proves the policy reproduces the
-published pilots' recorded decisions. `stage-many` stages a list of Level III codes in
-sequence with the same flags (names from the NRSA site table) and writes
-`batch_summary.md`; it never promotes. A stage refuses to proceed when the screen left
+published pilots' recorded decisions. `stage-many` stages a list of Level III codes with
+the same flags (names from the NRSA site table; `--workers N` stages N at once) and
+writes `batch_summary.md`; it never promotes. A stage refuses to proceed when the screen left
 more than a share of the candidates unresolved (a service outage, `--max-unresolved-share`,
 default 10 percent; `--allow-unresolved` stages anyway on the record), reads its own
 `streamcat_cache.json` on a re-stage so the evidence pass reproduces offline, and

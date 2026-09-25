@@ -719,6 +719,195 @@ def coverage_problems(exceptions: list[dict]) -> list[str]:
     return []
 
 
+# --------------------------------------------------------------------------- #
+# The region's decision files (one decision authority, 2026-09-25)
+#
+# Select final curves is the one place a person answers what a build left open,
+# documents a gap, or adds a candidate. Each answer lands in the region's run
+# folder beside curve_decisions.json, in the shape the next build reads
+# (--reviewer-decisions, --coverage-exceptions, --candidate-register), so the
+# app and the batch runner see one record.
+# --------------------------------------------------------------------------- #
+OWNER_DECISIONS_FILE = "owner_decisions.json"
+COVERAGE_EXCEPTIONS_FILE = "coverage_exceptions.json"
+CANDIDATE_REGISTER_FILE = "candidate_register.json"
+
+
+def _read_json_file(path: Path):
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def _write_json_file(path: Path, doc) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(doc, indent=1, default=str) + "\n", encoding="utf-8")
+
+
+def _answer_key(d: dict) -> tuple:
+    return (d.get("rule_id"), str(d.get("subject")))
+
+
+def read_answers(run_dir) -> list[dict]:
+    """The region's saved reviewer answers (``owner_decisions.json``), or ``[]``."""
+    items = _read_json_file(Path(run_dir) / OWNER_DECISIONS_FILE)
+    return [dict(d) for d in items or [] if isinstance(d, dict)] if isinstance(items, list) else []
+
+
+def save_answer(run_dir, decision: dict) -> Path:
+    """Record one reviewer answer (:func:`build_decision`'s shape) for the region.
+
+    Merged over the region's earlier answers, one per (rule, subject): the
+    next build folds them in through ``--reviewer-decisions``. Returns the file.
+    """
+    if not isinstance(decision, dict) or not decision.get("rule_id") or not decision.get("subject"):
+        raise ValueError("An answer names its rule and its subject.")
+    path = Path(run_dir) / OWNER_DECISIONS_FILE
+    merged = merge_answers(read_answers(run_dir), [decision], key=_answer_key)
+    _write_json_file(path, merged)
+    return path
+
+
+def read_gaps(run_dir) -> list[dict]:
+    """The region's documented gaps (``coverage_exceptions.json``), or ``[]``."""
+    items = _read_json_file(Path(run_dir) / COVERAGE_EXCEPTIONS_FILE)
+    return [dict(g) for g in items or [] if isinstance(g, dict)] if isinstance(items, list) else []
+
+
+def save_gap(run_dir, exception: dict) -> Path:
+    """Record one documented gap (:func:`build_coverage_exception`'s shape) for the
+    region, one per function; the next build reads it through
+    ``--coverage-exceptions``. Returns the file."""
+    if not isinstance(exception, dict) or not exception.get("functionId"):
+        raise ValueError("A documented gap names its function.")
+    path = Path(run_dir) / COVERAGE_EXCEPTIONS_FILE
+    merged = merge_answers(read_gaps(run_dir), [exception], key=lambda g: str(g.get("functionId")))
+    _write_json_file(path, merged)
+    return path
+
+
+def remove_gap(run_dir, function_id: str) -> Path:
+    """Withdraw a documented gap from the region's file (the file stays, so a
+    withdrawn gap never comes back from an older copy). Returns the file."""
+    path = Path(run_dir) / COVERAGE_EXCEPTIONS_FILE
+    kept = [g for g in read_gaps(run_dir) if str(g.get("functionId")) != str(function_id)]
+    _write_json_file(path, kept)
+    return path
+
+
+def save_candidate_register(run_dir, register) -> Path:
+    """Write the session's candidate register (the ``candidate_register`` field:
+    considered candidates and the dispositions a person recorded) beside
+    ``curve_decisions.json``, so a later build reads it back through
+    ``--candidate-register``. ``None`` writes an empty register. Returns the file."""
+    path = Path(run_dir) / CANDIDATE_REGISTER_FILE
+    doc = register if isinstance(register, dict) else {"schema": 1, "considered": [], "dispositions": []}
+    _write_json_file(path, doc)
+    return path
+
+
+def open_queue_items(doc: Optional[dict]) -> list[dict]:
+    """The still-open items of a provenance document's review queue, in the
+    packet's shape (``rule_id`` singular, question, blocking, evidence): what
+    Select final curves lists as the build items left for the owner."""
+    queue = ((doc or {}).get("reviewQueue") or {}) if isinstance(doc, dict) else {}
+    out = []
+    for item in queue.get("items") or []:
+        if not isinstance(item, dict) or item.get("status") != "open":
+            continue
+        rule_id = item.get("rule_id") or (item.get("rule_ids") or [None])[0]
+        out.append({"item_id": item.get("item_id") or f"{rule_id}:{item.get('subject')}",
+                    "rule_id": rule_id, "subject": item.get("subject"),
+                    "trigger": item.get("trigger"), "question": item.get("question") or "",
+                    "blocking": bool(item.get("blocking")),
+                    "evidence": dict(item.get("evidence") or {})})
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# The campaign index: every region a runs root holds
+# --------------------------------------------------------------------------- #
+def _evidence_status(region_dir: Path, staged_path: Optional[str]) -> str:
+    """``ready`` when an evidence manifest with a digest is recorded for the run
+    or its staged version, ``missing`` when none is, ``unreadable`` otherwise."""
+    candidates = [region_dir / "evidence.json"]
+    if staged_path:
+        candidates.append(Path(staged_path) / "evidence.json")
+    candidates += sorted((region_dir / "evidence").rglob("evidence.json")) \
+        if (region_dir / "evidence").is_dir() else []
+    for p in candidates:
+        if not p.is_file():
+            continue
+        doc = _read_json_file(p)
+        if not isinstance(doc, dict):
+            return "unreadable"
+        if any(doc.get(k) for k in ("sha256", "digest", "contentDigest", "packageDigest")):
+            return "ready"
+        return "unreadable"
+    return "missing"
+
+
+def campaign_rows(out_root) -> list[dict]:
+    """One row per region under ``out_root``: what ``batch_summary.json`` and each
+    region's ``review_packet.json``, ``stage_complete.json``,
+    ``standing_decisions_applied.json`` and ``evidence.json`` say, read-only.
+
+    Columns: ``region`` (code), ``name``, ``version`` (staged), ``curves``,
+    ``decisions_applied``, ``open_items``, ``hard_stops``, ``promote_eligible``
+    (staged, nothing open, no hard stop, its stage record intact) and
+    ``evidence`` (ready / missing / unreadable). A region named by the summary
+    with no run folder yet is listed with what the summary knows of it.
+    """
+    root = Path(out_root)
+    if not root.is_dir():
+        return []
+    summary = _read_json_file(root / "batch_summary.json")
+    by_code: dict[str, dict] = {}
+    for r in ((summary or {}).get("regions") or []) if isinstance(summary, dict) else []:
+        if isinstance(r, dict) and r.get("l3") is not None:
+            by_code[str(r["l3"])] = r
+    folders = {p.name[3:]: p for p in sorted(root.iterdir())
+               if p.is_dir() and p.name.startswith("l3-")}
+    rows = []
+    for code in sorted(set(by_code) | set(folders), key=lambda c: (not c.isdigit(), int(c) if c.isdigit() else 0, c)):
+        s = by_code.get(code) or {}
+        folder = folders.get(code)
+        row = {"region": code, "name": s.get("name"), "version": s.get("staged_version"),
+               "curves": s.get("curves"), "decisions_applied": s.get("decisions"),
+               "open_items": s.get("open_items"), "hard_stops": s.get("hard_stops"),
+               "promote_eligible": False, "evidence": "missing", "staged_path": None,
+               "run_dir": str(folder) if folder else None, "stage_complete": False}
+        if folder is None:
+            rows.append(row)
+            continue
+        packet = _read_json_file(folder / "review_packet.json")
+        if isinstance(packet, dict):
+            region = packet.get("region") or {}
+            staged = packet.get("staged") or {}
+            applied = _read_json_file(folder / "standing_decisions_applied.json")
+            decisions = (applied.get("decisions") if isinstance(applied, dict) else None)
+            if decisions is None:
+                decisions = packet.get("decisions_applied") or []
+            row.update(name=region.get("name") or row["name"],
+                       version=staged.get("version"), staged_path=staged.get("path"),
+                       curves=len(packet.get("curves") or []),
+                       decisions_applied=len(decisions),
+                       open_items=len(packet.get("open_items") or []),
+                       hard_stops=len(packet.get("hard_stops") or []))
+        complete = _read_json_file(folder / "stage_complete.json")
+        row["stage_complete"] = isinstance(complete, dict) and bool(complete.get("outputs"))
+        row["evidence"] = _evidence_status(folder, row["staged_path"])
+        # a single stage run (the app's Build) writes no stage_complete.json; only a
+        # stage-many job does, and then the record has to be there
+        batch_run = (root / "batch_summary.json").is_file()
+        row["promote_eligible"] = (bool(row["version"]) and not (row["open_items"] or 0)
+                                   and not (row["hard_stops"] or 0)
+                                   and (row["stage_complete"] or not batch_run))
+        rows.append(row)
+    return rows
+
+
 def promote_command(out_dir, *, maintainer: str, publish_root: str = "apps/library",
                     rebake: bool = True, python: Optional[str] = None) -> list[str]:
     """The argv that confirms a staged run's decisions and publishes it.

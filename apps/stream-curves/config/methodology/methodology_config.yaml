@@ -159,6 +159,14 @@ meta:
     twelve fish metrics of those cycles corrected (they had read the benthic file),
     and 2013-14 chlorophyll now reads the water-column file (scripts/nrsa/
     verify_inputs.py, config/nrsa_cycle_compatibility.yaml).
+    2026-09-25 hygiene (campaign Round 1, no threshold or status changed): the keys
+    no code read were deleted (reference_pool.levels, ladder_rule and review_risks;
+    reference_hierarchy.sources and option_rank; the levels and the order live in
+    config/reference_transfer.yaml); reference_hierarchy.carry_forward is now read
+    (methodology.carry_forward_default, the batch --refit default); the
+    standing_decisions index and the lifecycle block are mirror-checked against
+    config/methodology/standing_decisions.yaml and streamcurves/library.py, and
+    lifecycle.version_statuses gained draft, the status automation publishes.
   authority: "STAF scientific team (human sign-off required for status promotion)"
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
@@ -381,21 +389,16 @@ reference_screen:
 # config/reference_transfer.yaml. The numbers live here.
 # --------------------------------------------------------------------------- #
 reference_pool:
-  levels: ["l3", "l2", "l1"]             # Omernik Level III, then its Level II and Level I parents
-  # The narrowest level whose USABLE n (strict, in frame, comparable, with a
-  # value for this metric) reaches DATA-04. Failing that, the narrowest level
-  # reaching DATA-05, published as exploratory. Failing that, REF-06.
-  ladder_rule: "narrowest_adequate_else_narrowest_exploratory"
+  # The pool levels (Level III, then its Level II and Level I parents) and the
+  # search order live in config/reference_transfer.yaml, which the code reads;
+  # the first pool that passes the acceptance criteria is used (REF-11 to
+  # REF-14, reference_pool.choose_pool). Only the two numbers below are read.
   # A borrowed station must sit inside the central share of the target region's
   # own in-frame stations on every covariate of the metric family's profile.
   envelope_quantiles: [0.025, 0.975]
   # Below this share of its own stations inside its own envelope, a profile is
   # too tight to describe the region it was built from, and is flagged.
   min_self_coverage: 0.80
-  # Widening past the level the national scale analysis supports for a metric
-  # is a transfer risk (REF-05). Moderate, high and unassessed risks are
-  # mandatory review. The caps live at confidence_rules.caps.
-  review_risks: ["moderate", "high", "unassessed"]
 
 # --------------------------------------------------------------------------- #
 # One reference-source hierarchy (v0.14, owner decisions 2026-09-21). Rules
@@ -403,7 +406,10 @@ reference_pool:
 # provinces live in config/reference_transfer.yaml; the numbers live here.
 # --------------------------------------------------------------------------- #
 reference_hierarchy:
-  sources: [local, regional, national, modeled, published]
+  # The search order of the sources (local, regional, national, modeled,
+  # published) and each pool option's transfer-risk rank live in
+  # config/reference_transfer.yaml and the acceptance block below.
+  #
   # Every curve the latest published version scores is carried forward unchanged
   # (its points, class layers, annotations and source), unless a value in its
   # published pool is one the data verification corrected or removed: a pool curve
@@ -411,6 +417,8 @@ reference_hierarchy:
   # (nrsa_dataset.valid_cycle_values), and a curve with no station values of its
   # own (national, modeled) is rebuilt when its metric is listed here, restricted by
   # nrsa_cycle_compatibility.yaml, or a fish metric (failed samples removed).
+  # Read by methodology.carry_forward_default(): the batch runner's --refit
+  # default (published_curves carries; none rebuilds every curve).
   carry_forward: published_curves
   corrected_metrics:
     chem_CHLA: "2013-14 values re-read from EPA's water-column file instead of the periphyton file"
@@ -430,9 +438,6 @@ reference_hierarchy:
   # side by this share of the covariate's national 2.5 to 97.5 percent span, so a
   # compact region does not shut out comparable streams (REF-11, REF-12)
   envelope_widen_fraction: 0.05
-  # a pool option's position in the transfer-risk scale; NARS-9 is as broad as
-  # Level I
-  option_rank: {l3: 0, l2: 1, nars9: 2, l1: 2, national: 3}
 
 # --------------------------------------------------------------------------- #
 # Acceptance (v0.14, ACC-01 to ACC-06), defined before any outcome is seen and
@@ -608,6 +613,9 @@ owner_decisions:
 standing_decisions:
   policy_file: "config/methodology/standing_decisions.yaml"
   pending_reviewer_marker: "(pending owner confirmation)"
+  # default_enabled and enable_per_run_only are an index of the policy file's
+  # enabled flags (mirror-checked by methodology.mirror_drift): the policy file
+  # governs, and an edit to one without the other is reported as drift.
   default_enabled: [curve04-accept-with-flag, data05-exploratory-pool-accepted,
                     red06-instability-is-noise, strat09-defer-floors, select01-complementary-set,
                     ref05-borrowed-pool-accepted, cov01-documented-gap]
@@ -667,8 +675,13 @@ workflow_states:
 # --------------------------------------------------------------------------- #
 # Library lifecycle + publish gate (implemented in library.py).
 # --------------------------------------------------------------------------- #
+# Mirror of streamcurves/library.py (VERSION_STATUSES, DEFAULT_STATUS,
+# VALIDATION_STATES; mirror-checked by methodology.mirror_drift). draft is what
+# automation publishes and what an interactive publish defaults to unless its
+# checklist passes clean; preliminary is what a version with no status record
+# reads as; certified shows as Final.
 lifecycle:
-  version_statuses: [preliminary, under_review, certified, revised, retired]
+  version_statuses: [draft, preliminary, under_review, certified, revised, retired]
   default_status: preliminary
   validation_states: [unvalidated, validated]
   deep_eligible_statuses: [preliminary, certified]

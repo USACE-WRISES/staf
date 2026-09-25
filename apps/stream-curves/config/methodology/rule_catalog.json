@@ -711,21 +711,21 @@
   {
    "id": "CURVE-07",
    "family": "CURVE",
-   "name": "Residual structure",
-   "purpose": "No meaningful systematic residual pattern remains.",
-   "test": "residual diagnostics acceptable",
-   "threshold": "no systematic pattern",
+   "name": "Curve held for review",
+   "purpose": "A curve the build fitted but could not approve on its own is held, unpublished and unscored, until a person decides.",
+   "test": "the proposal's classification is in run_state.CURVE_REVIEW_REQUIRED, every status but auto_ok: insufficient_data, degenerate_curve, unmapped, shape_conflict (CURVE-05), data_review (DATA-03), strat_review (DATA-07, DATA-08), multi_crossing (CURVE-07a) or error",
+   "threshold": "any classification but auto_ok",
    "threshold_status": "provisional",
-   "implementation_status": "partial",
-   "maps_to": "streamcurves/diagnostics.py (Shapiro / Breusch-Pagan on regression, not on the IQR curve)",
+   "implementation_status": "implemented",
+   "maps_to": "streamcurves/run_state.py::classify_curve_proposal and CURVE_REVIEW_REQUIRED; regional_agent.review_curves (headless) and curve_automation.reconcile_review_map (in the app); pressure_evidence.held_for_review writes the bundle's held-for-review record",
    "outcomes": {
-    "pass": "ok",
-    "review": "pattern -> revise/stratify/transform",
-    "fail": "reject"
+    "pass": "auto_ok: published without a decision",
+    "review": "held: accept (finalize), adjust, or drop the metric; its function is scored by its other metrics meanwhile",
+    "fail": "removed from scope by the reviewer"
    },
-   "confidence_effect": "statistical_strength",
+   "confidence_effect": "mandatory_review_open cap while held",
    "override_permission": "human_review",
-   "note": "Owner decision S-01 (2026-08-21): scoped to the regression-candidate track where residual diagnostics exist; not applicable by family for IQR-seed curves. v0.9: accepting a fallback (degenerate) curve as preliminary is a recorded owner decision under class curve07-fallback-curve-preliminary (ECBP v3 precedent); documented here so replay recognizes it, and it stays owner-only.",
+   "note": "Renamed 2026-09-25 (campaign Round 1) from Residual structure: the catalog described a residual-diagnostics test the pipeline does not apply to IQR-seed curves, while the code and the review flow hold any non-auto_ok proposal for a reviewer, which is the rule every published version ran under. Residual structure (Shapiro / Breusch-Pagan in streamcurves/diagnostics.py, on the regression-candidate track only) is kept here as a note; a future CURVE-13 may split it out. Owner decision S-01 (2026-08-21): residual diagnostics are scoped to the regression-candidate track where they exist; not applicable by family for IQR-seed curves. v0.9: accepting a fallback (degenerate) curve as preliminary is a recorded owner decision under class curve07-fallback-curve-preliminary (ECBP v3 precedent); documented here so replay recognizes it, and it stays owner-only.",
    "standing_decision_ids_optional": [
     "curve07-thin-metric-finalized"
    ]

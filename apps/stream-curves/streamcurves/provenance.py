@@ -25,6 +25,7 @@ Pure: dicts in, dicts out. The CLI writes the files.
 from __future__ import annotations
 
 import copy
+import functools
 import logging
 import os
 import platform
@@ -33,7 +34,7 @@ import json
 import re
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Mapping, Optional
 
 import numpy as np
 import pandas as pd
@@ -52,7 +53,25 @@ MANIFEST_SCHEMA_VERSION = 1
 PROVENANCE_SCHEMA_VERSION = 2
 REVIEW_QUEUE_SCHEMA_VERSION = 1
 
-AGENT_VERSION = "regional-agent-1"
+#: regional-agent-2 (2026-09-25, campaign Round 1): the provenance document carries the
+#: per-metric rebuild ledger (``metricLedger``) and the candidate register; a manifest built
+#: with ``digestSchema`` 2 fingerprints the code, the wider config list, the standing-decision
+#: policy, every reviewer and owner input and the refit mode into ``inputsDigest``. The
+#: agent block is outside the digest payload, so the bump moves no published digest.
+AGENT_VERSION = "regional-agent-2"
+
+#: The ``inputsDigest`` rules a manifest declares. Absent: the legacy rules every published
+#: version was digested under, kept verbatim. 2: the legacy payload plus the code fingerprint,
+#: the policy, the decisions digest, the refit mode, the reviewer input files, the NRSA value
+#: policy and the experimental block (:func:`digest_payload_from_manifest`).
+DIGEST_SCHEMA = 2
+
+#: The config files a schema-2 manifest fingerprints beside the five the legacy rules name
+#: (``build_run_manifest``). ``metric_evidence.yaml`` and ``nrsa_harmonization_audit.csv`` are
+#: documentation and stay out.
+DIGEST_SCHEMA_2_CONFIGS = ("staf_metric_library.json", "nrsa_cycle_compatibility.yaml",
+                           "model_registry.yaml", "published_benchmarks.yaml",
+                           "reference_transfer.yaml", "basis_validation.yaml")
 
 #: Every record carries these, so the log is uniformly queryable.
 RULE_RECORD_FIELDS = (
@@ -232,22 +251,61 @@ def _nrsa_dataset_record(result: dict, app_root: Path) -> dict:
     return record
 
 
+def new_manifest_defaults() -> dict:
+    """What a new build's manifest declares beyond the legacy rules: the digest schema
+    (``build_run_manifest(result, defaults=new_manifest_defaults())``). The batch package
+    merges it into the manifests it builds; every manifest built without it keeps the
+    legacy rules verbatim, so every published digest still replays."""
+    return {"digestSchema": DIGEST_SCHEMA}
+
+
 def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=None,
-                       app_root: Path | None = None) -> dict:
-    """The reproducibility record for one regional run."""
+                       app_root: Path | None = None, defaults: Optional[dict] = None) -> dict:
+    """The reproducibility record for one regional run.
+
+    ``defaults`` (:func:`new_manifest_defaults`): what the caller declares for the manifest
+    beyond the legacy rules. With ``digestSchema`` 2 the manifest also records the code
+    fingerprint (``agent.codeFingerprint``), the wider config list, the refit mode
+    (``inputs.refit``: ``defaults["refit"]``, else ``result["refit_mode"]``, else
+    ``missing``), the digest of every reviewer and owner input
+    (``reviewerInputs.decisionsDigest``, :func:`decisions_digest`), the sha of each decision
+    file read (``reviewerInputs.files``: ``defaults["reviewerInputs"]["files"]``, else
+    ``result["reviewer_input_files"]``) and the ``experimental`` block
+    (``defaults["experimental"]``, else ``result["experimental"]``, else null). Without it
+    the manifest is what it always was.
+    """
     app_root = app_root or Path(__file__).resolve().parent.parent
     repo_root = app_root.parent.parent
     git_state = _git_state(repo_root)
     commit, dirty = git_state["commit"], git_state["dirty"]
     region = result.get("region") or {}
+    defaults = dict(defaults or {})
+    schema = defaults.get("digestSchema")
+    if schema is not None and int(schema) != DIGEST_SCHEMA:
+        raise ValueError(f"unknown inputs digest schema {schema!r}; this app writes "
+                         f"{DIGEST_SCHEMA} or the legacy rules")
 
-    configs = methodology.file_fingerprints([
+    # Spelled out path by path: tests/test_line_endings.py reads the fingerprinted set from
+    # this source, so every file a manifest hashes stays LF or pinned in .gitattributes.
+    config_paths = [
         app_root / "config" / "nrsa_response_directions.yaml",
         app_root / "config" / "landscape_response_directions.yaml",
         app_root / "config" / "metric_map.yaml",
         app_root / "config" / "staf_functions.json",
         app_root / "config" / "national_stratifier_registry.yaml",
-    ])
+    ]
+    if schema is not None:
+        # digest schema 2: the configs the legacy rules left out (DIGEST_SCHEMA_2_CONFIGS)
+        config_paths += [
+            app_root / "config" / "staf_metric_library.json",
+            app_root / "config" / "nrsa_cycle_compatibility.yaml",
+            app_root / "config" / "model_registry.yaml",
+            app_root / "config" / "published_benchmarks.yaml",
+            app_root / "config" / "reference_transfer.yaml",
+            app_root / "config" / "basis_validation.yaml",
+        ]
+        assert [p.name for p in config_paths[5:]] == list(DIGEST_SCHEMA_2_CONFIGS)
+    configs = methodology.file_fingerprints(config_paths)
     # Which NRSA data the run read. The legacy default keeps fingerprinting the two
     # bundled files exactly as before, so an unchanged run reproduces its digest;
     # a pooled run adds the archive's manifest digest, the cycles it drew on and the
@@ -439,9 +497,101 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "nIntendedMetrics": len(result.get("intended_metrics") or []),
         },
     }
+    if schema is not None:
+        _declare_digest_schema_2(manifest, result, defaults, app_root=app_root)
     manifest["inputsDigest"] = methodology.inputs_digest(
         digest_payload_from_manifest(manifest))
     return manifest
+
+
+def _declare_digest_schema_2(manifest: dict, result: dict, defaults: dict, *,
+                             app_root: Path) -> None:
+    """Record on ``manifest`` what the schema-2 digest names beyond the legacy rules."""
+    from . import code_identity
+    manifest["digestSchema"] = DIGEST_SCHEMA
+    manifest["agent"]["codeFingerprint"] = code_identity.fingerprint(app_root)
+    carried = result.get("carried_from") or {}
+    mode = str(defaults.get("refit") or result.get("refit_mode") or "missing")
+    manifest["inputs"]["refit"] = {
+        "mode": mode,
+        "carriedFrom": ({"assessmentId": carried.get("assessmentId"),
+                         "version": carried.get("fromVersion"),
+                         "contentDigest": carried.get("contentDigest")}
+                        if carried.get("assessmentId") else None),
+    }
+    files = ((defaults.get("reviewerInputs") or {}).get("files")
+             or result.get("reviewer_input_files") or {})
+    manifest["reviewerInputs"]["files"] = {str(k): v for k, v in sorted(dict(files).items())}
+    manifest["reviewerInputs"]["decisionsDigest"] = decisions_digest(decision_inputs_of(result))
+    manifest["experimental"] = defaults.get("experimental") or result.get("experimental") or None
+
+
+def decision_inputs_of(result: dict) -> dict:
+    """Every reviewer and owner input a build was given, read off the result in the shape
+    :func:`decisions_digest` hashes: the owner's curve decisions (REF-15), the reviewer
+    answers (``result["reviewer_decisions"]``, the batch's owner answers), the finalizations
+    and removals, the SELECT-01 approvals (``result["portfolio_approvals"]`` or the meta's),
+    the documented gaps, the policy entries enabled for the run and the candidates a person
+    added for comparison."""
+    meta = result.get("meta") or {}
+    register = result.get("candidate_register") or {}
+    return {
+        "curveDecisions": list(result.get("curve_decisions") or []),
+        "answers": list(result.get("reviewer_decisions") or []),
+        "finalizations": dict(result.get("finalized_metrics") or {}),
+        "removals": dict(result.get("removed_metrics") or {}),
+        "approvals": list(result.get("portfolio_approvals") or meta.get("portfolioApprovals") or []),
+        "gaps": list(result.get("coverage_exceptions") or []),
+        "enabledPolicyIds": list((result.get("standing_decisions") or {}).get("enabledIds") or []),
+        "consideredCandidates": [c.get("candidateKey") for c in
+                                 (register.get("considered") or []) if isinstance(c, dict)],
+    }
+
+
+def decisions_digest(inputs: dict) -> str:
+    """One canonical sha256 over every reviewer and owner input of a build, so two builds
+    given the same decisions share it and any changed answer moves the inputs digest.
+
+    ``inputs`` (:func:`decision_inputs_of`): ``curveDecisions`` (REF-15 records, hashed as
+    ``owner_curves.requests`` states them: what the owner recorded, never what a build
+    computed), ``answers`` (reviewer decisions: rule, subject, action, rationale, class),
+    ``finalizations`` and ``removals`` (metric to note), ``approvals`` (function and note;
+    who confirmed rides in the manifest, and a standing decision's pending marker is
+    confirmed at promote without re-staging), ``gaps`` (function, reason, justification),
+    ``enabledPolicyIds`` and ``consideredCandidates`` (candidate keys). Missing keys read as
+    empty, so a build with no decisions has a digest too.
+    """
+    from . import owner_curves
+    inputs = dict(inputs or {})
+
+    def clean(text) -> str:
+        return " ".join(str(text or "").split())
+
+    answers = sorted(json.dumps(
+        {"rule_id": str(a.get("rule_id")), "subject": str(a.get("subject")),
+         "action": str(a.get("action") or ""), "rationale": clean(a.get("rationale")),
+         "class": a.get("decision_class")}, sort_keys=True)
+        for a in inputs.get("answers") or [] if isinstance(a, dict))
+    approvals = sorted(json.dumps(
+        {"functionId": str(a.get("functionId")), "note": clean(a.get("note"))}, sort_keys=True)
+        for a in inputs.get("approvals") or [] if isinstance(a, dict))
+    gaps = sorted(json.dumps(
+        {"functionId": str(g.get("functionId")), "reason": str(g.get("reason") or ""),
+         "justification": clean(g.get("justification"))}, sort_keys=True)
+        for g in inputs.get("gaps") or [] if isinstance(g, dict))
+    payload = {
+        "curveDecisions": owner_curves.requests(inputs.get("curveDecisions") or []),
+        "answers": answers,
+        "finalizations": {str(k): clean(v) for k, v in
+                          sorted((inputs.get("finalizations") or {}).items())},
+        "removals": {str(k): clean(v) for k, v in sorted((inputs.get("removals") or {}).items())},
+        "approvals": approvals,
+        "gaps": gaps,
+        "enabledPolicyIds": sorted(str(x) for x in inputs.get("enabledPolicyIds") or []),
+        "consideredCandidates": sorted(str(x) for x in inputs.get("consideredCandidates") or [] if x),
+    }
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _screening_engine_echo(result: dict) -> Optional[str]:
@@ -565,6 +715,31 @@ def digest_payload_from_manifest(manifest: dict) -> dict:
             digest_payload["reference"]["forcedSources"] = ref["forcedSources"]
         if ref.get("heldByOwner"):
             digest_payload["reference"]["heldByOwner"] = ref["heldByOwner"]
+    # A manifest without a digest schema is digested under the legacy rules above,
+    # verbatim: every published version replays. Schema 2 (2026-09-25) ALWAYS adds
+    # what the legacy rules left out, so an unchanged value is a key with a null and
+    # a manifest cannot fall back to a legacy digest by omission.
+    schema = manifest.get("digestSchema")
+    if schema is None:
+        return digest_payload
+    if int(schema) != DIGEST_SCHEMA:
+        raise ValueError(f"unknown inputs digest schema {schema!r}; this app reads "
+                         f"{DIGEST_SCHEMA} or the legacy rules")
+    reviewer = manifest.get("reviewerInputs") or {}
+    policy = manifest.get("standingDecisions") or {}
+    digest_payload["digestSchema"] = DIGEST_SCHEMA
+    digest_payload["code"] = (manifest.get("agent") or {}).get("codeFingerprint")
+    digest_payload["policy"] = {"sha256": policy.get("sha256"),
+                                "version": policy.get("policyVersion")}
+    digest_payload["decisions"] = reviewer.get("decisionsDigest")
+    digest_payload["refit"] = (inputs.get("refit") or {}).get("mode")
+    digest_payload["reviewer_files"] = {str(k): v for k, v in
+                                        sorted(dict(reviewer.get("files") or {}).items())}
+    # the NRSA value policy every manifest records under inputs.nrsa_dataset.policy (the
+    # literal every published version carries is latest_non_null_index_visit; a new build
+    # records the policy it ran under): the one value-policy field, always present here
+    digest_payload["nrsa_value_policy"] = dataset.get("policy")
+    digest_payload["experimental"] = manifest.get("experimental")
     return digest_payload
 
 
@@ -1538,8 +1713,482 @@ def build_review_queue(records, manifest: dict, *, generated_at=None,
     }
 
 
-def build_provenance(result: dict, manifest: dict, *, timestamp=None) -> dict:
-    """Manifest, decision log and review queue as one auditable document."""
+# --------------------------------------------------------------------------- #
+# The per-metric rebuild ledger (rebuild-ledger/1, campaign Round 1)
+# --------------------------------------------------------------------------- #
+#: One document, in the run folder (``rebuild_ledger.json``), in the version's provenance
+#: (``metricLedger``) and in the session (``reference_build.ledger``), that says for every
+#: metric and function what a build did with it and why, so a reopened assessment shows its
+#: own history and a "refitted" claim is backed by engine evidence, never by equal points.
+LEDGER_SCHEMA = "rebuild-ledger/1"
+(REFITTED, CARRIED, FIXED, OWNER_SOURCED, OWNER_HELD, REMOVED, UNSUPPORTED, HELD_FOR_REVIEW,
+ NOT_EVALUATED) = ("refitted", "carried", "fixed", "owner_sourced", "owner_held", "removed",
+                   "unsupported", "held_for_review", "not_evaluated")
+LEDGER_DISPOSITIONS = (REFITTED, CARRIED, FIXED, OWNER_SOURCED, OWNER_HELD, REMOVED, UNSUPPORTED,
+                       HELD_FOR_REVIEW, NOT_EVALUATED)
+#: the dispositions of a curve the version scores: the ledger's selected set (invariant 5)
+LEDGER_SELECTED = (REFITTED, CARRIED, FIXED, OWNER_SOURCED)
+#: a reference_pool option as the ledger names it
+_LEDGER_OPTIONS = {"local": "l3_local", "regional_l3": "l3_regional", "regional_l2": "l2_regional",
+                   "regional_nars9": "nars9_regional", "regional_l1": "l1_regional",
+                   "3c_matched": "national_3c", "3a_envelope": "national_3a",
+                   "modeled": "modeled", "published": "published"}
+#: the option a pool status implies when the support record names none
+_STATUS_OPTIONS = {"local": "local", "local_relaxed": "regional_l3", "borrowed_l2": "regional_l2",
+                   "borrowed_nars9": "regional_nars9", "borrowed_l1": "regional_l1",
+                   "national": "3c_matched", "modeled": "modeled", "published": "published"}
+#: the rule a pool status was admitted under
+_STATUS_RULES = {"local": "REF-05", "local_relaxed": "REF-11", "borrowed_l2": "REF-11",
+                 "borrowed_nars9": "REF-11", "borrowed_l1": "REF-11", "national": "REF-12",
+                 "modeled": "REF-13", "published": "REF-14"}
+#: an owner-chosen source's register kind as the ledger's option
+_OWNER_OPTIONS = {"sqt": "sqt", "owner_entered": "owner_entered", "borrowed": "other_assessment",
+                  "earlier_version": "earlier_version", "published_benchmark": "published",
+                  "carried": "carried"}
+#: register kinds only an owner decision (REF-15) produces
+_OWNER_ONLY_KINDS = ("sqt", "owner_entered", "borrowed", "earlier_version")
+#: the camelCase keys a session's referenceSupport annotation uses for the pool record
+_SUPPORT_KEYS = {"regionCode": "region_code", "regionName": "region_name", "nPool": "n_pool",
+                 "nComparable": "n_comparable", "nUsable": "n_usable", "nLocal": "n_local",
+                 "nHuc12": "n_huc12", "transferRisk": "transfer_risk",
+                 "transferNote": "transfer_note", "selfCoverage": "self_coverage",
+                 "supportedLevel": "supported_level", "levelsTried": "levels_tried",
+                 "optionsTried": "options_tried", "screenDetail": "screen_detail",
+                 "carriedFrom": "carried_from", "stationIds": "station_ids",
+                 "lithGroups": "lith_groups"}
+
+
+def _snake_support(rec: Mapping) -> dict:
+    """A pool record with snake_case keys, whether it came from the result
+    (``PoolDecision.to_dict``) or from a session annotation (camelCase)."""
+    return {_SUPPORT_KEYS.get(str(k), str(k)): v for k, v in dict(rec or {}).items()}
+
+
+def _support_from_build(build: Optional[Mapping]) -> dict:
+    """``{metric: pool record}`` from a session's reference build: the annotations'
+    ``referenceSupport`` and the carried curves' decisions."""
+    out: dict = {}
+    for mk, ann in ((build or {}).get("metricAnnotations") or {}).items():
+        rs = (ann or {}).get("referenceSupport")
+        if rs:
+            out[str(mk)] = _snake_support(rs)
+    for mk, c in ((build or {}).get("carriedMetrics") or {}).items():
+        d = (c or {}).get("decision") or ((c or {}).get("annotations") or {}).get("referenceSupport")
+        if d and str(mk) not in out:
+            out[str(mk)] = _snake_support(d)
+    return out
+
+
+def _pool_option(sup: Mapping) -> Optional[str]:
+    """The reference_pool option a support record was admitted under: the accepted entry
+    of ``options_tried``, else the one its status implies."""
+    for x in sup.get("options_tried") or []:
+        if isinstance(x, Mapping) and (x.get("why") == "accepted" or x.get("accepted") is True):
+            return str(x.get("option") or "") or None
+    detail = sup.get("screen_detail") or {}
+    if isinstance(detail, Mapping) and detail.get("option"):
+        return str(detail["option"])
+    return _STATUS_OPTIONS.get(str(sup.get("status") or ""))
+
+
+def _ledger_frame(ledger) -> Optional[pd.DataFrame]:
+    if ledger is None:
+        return None
+    if isinstance(ledger, pd.DataFrame):
+        return ledger if len(ledger) else None
+    try:
+        df = pd.DataFrame(list(ledger))
+    except (TypeError, ValueError):
+        return None
+    return df if len(df) else None
+
+
+def _pool_block(mk: str, sup: Mapping, option: Optional[str], ledger: Optional[pd.DataFrame],
+                code: Optional[str]) -> dict:
+    """The stations behind a pool: the ledger's in-pool rows for the option the metric was
+    admitted under when the build kept its ledger, else the record's own station ids
+    (the sources after the station pools name their donors), else nothing, said so."""
+    ids: Optional[list] = None
+    donors: list = []
+    cycles: list = []
+    evidence = "not recorded"
+    status = str(sup.get("status") or "")
+    if ledger is not None and option and {"metric", "option", "in_pool", "station_key"} <= set(ledger.columns):
+        mine = ledger[(ledger["metric"].astype(str) == mk) & (ledger["option"].astype(str) == option)
+                      & ledger["in_pool"].astype(bool)]
+        if len(mine):
+            ids = sorted(mine["station_key"].astype(str).unique().tolist())
+            if "l3" in mine.columns:
+                donors = sorted({str(x) for x in mine["l3"].dropna().astype(str).unique()
+                                 if code is None or str(x) != str(code)})
+            if "source_cycle" in mine.columns:
+                cycles = sorted({str(x) for x in mine["source_cycle"].dropna().astype(str).unique()},
+                                reverse=True)
+            evidence = "reference_pool_ledger"
+    if ids is None and sup.get("station_ids"):
+        ids = sorted(str(x) for x in sup["station_ids"])
+        evidence = "reference_support"
+    if status in ("national", "modeled") and not donors:
+        donors = ["national"]
+    level = sup.get("level") or ("national" if status in ("national", "modeled") else None)
+    n = sup.get("n_usable")
+    return {"level": level, "nStations": int(n) if isinstance(n, (int, float)) and n == n else None,
+            "stationIds": ids, "donorRegions": donors, "cyclesUsed": cycles, "evidence": evidence}
+
+
+def _metric_seed(run_seed, mk: str) -> Optional[int]:
+    if run_seed is None:
+        return None
+    from . import regional_agent as ra
+    try:
+        return int(ra._metric_seed(int(run_seed), mk))
+    except (TypeError, ValueError):
+        return None
+
+
+@functools.lru_cache(maxsize=16)
+def _version_digests_cached(vdir: str, stamp: float) -> dict:
+    from . import candidates as C
+    from . import curve_tiles as ct
+    from . import library as lib
+    from . import session_io as sio
+    fields = sio.decode_session_fields(sio.load_session_payload(Path(vdir) / lib.SESSION_FILE))
+    mc = fields.get("metric_config") or {}
+    out: dict = {}
+    for tile in ct.tiles_for_fields(fields):
+        mk = str(tile.get("metric") or "")
+        if mk and mk not in out:
+            out[mk] = C.tile_basis_digest(tile, mc.get(mk))
+    return out
+
+
+def version_basis_digests(vdir) -> dict:
+    """``{metric: basisDigest}`` of every curve a published version's session draws, computed
+    as the register computes it, so a later build can say which curves moved. Empty when the
+    folder holds no session."""
+    from . import library as lib
+    p = Path(vdir) / lib.SESSION_FILE
+    if not p.is_file():
+        return {}
+    return dict(_version_digests_cached(str(Path(vdir)), p.stat().st_mtime))
+
+
+def _previous_digests(carried_from: Optional[Mapping]) -> Optional[dict]:
+    """The basis digests of the version a build carries forward from, read from the
+    canonical library; None when the build carries from nothing or the version is not
+    on this computer."""
+    from . import library as lib
+    cf = carried_from or {}
+    aid, ver = cf.get("assessmentId"), cf.get("fromVersion", cf.get("version"))
+    if not aid or ver in (None, ""):
+        return None
+    try:
+        vdir = lib.canonical_root() / "assessments" / str(aid) / f"v{int(ver)}"
+    except (TypeError, ValueError):
+        return None
+    got = version_basis_digests(vdir)
+    return got or None
+
+
+def build_ledger(result: dict, *, manifest: Optional[dict] = None, register: Optional[dict] = None,
+                 previous: Optional[dict] = None) -> dict:
+    """The ``rebuild-ledger/1`` document of a build: one row per metric and function.
+
+    ``result`` is a stage result (``regional_agent.assemble``) or a dict of session fields
+    (a reopened version, an interactive session: ``curve_tiles.fields_from_result`` tells
+    them apart). The rows are derived from the candidate register the same records produce
+    (``candidates.register_for_result``), so the ledger's selected set, the register's
+    selected pairs and the bundle's ``metricsByFunction`` agree by construction; the engine
+    evidence behind every ``refitted`` row comes from the result's ``reference_support``
+    records, its ``reference_pool_ledger`` (station ids per pool option) and its run seed.
+    Where the build kept no ledger (a published version's session), the row says the
+    stations were not recorded; where a metric has no evidence record at all (a legacy
+    build, a data defect), its disposition is ``not_evaluated`` with the reason.
+
+    ``manifest``: the run manifest (its digest, dates, refit mode, methodology version);
+    ``register``: the register already computed for this result; ``previous``:
+    ``{metric: basisDigest}`` of the version carried forward from (read from the canonical
+    library when None and the build names one).
+    """
+    from . import candidates as C
+    from . import curve_tiles as ct
+    from . import owner_curves as oc
+    from . import pressure_evidence as pe
+    manifest = manifest or {}
+    fields = ct.fields_from_result(result)
+    reg = register if register is not None else C.register_for_result(result)
+    cands = {c["candidateKey"]: c for c in reg.get("candidates") or []}
+    names = {fid: name for fid, name, _ in C._functions()}
+    region = result.get("region") or fields.get("region_of_applicability") or {}
+    code = None if region.get("code") is None else str(region.get("code"))
+    build = fields.get("reference_build") or {}
+    mc = fields.get("metric_config") or {}
+    pressure = bool(build) or bool(result.get("reference_support"))
+    support = {str(k): dict(v or {}) for k, v in (result.get("reference_support") or {}).items()}
+    for mk, rec in _support_from_build(build).items():
+        support.setdefault(mk, rec)
+    ledger_df = _ledger_frame(result.get("reference_pool_ledger"))
+    seed = result.get("run_seed")
+    if seed is None:
+        seed = (manifest.get("diagnostics") or {}).get("runSeed")
+    method_version = (result.get("curve_method_version")
+                      or (manifest.get("methodology") or {}).get("curveMethodVersion")
+                      or run_state.CURVE_METHOD_VERSION)
+    carried_from = build.get("carriedFrom") or result.get("carried_from") or {}
+    if previous is None:
+        previous = _previous_digests(carried_from) or {}
+    decisions = [dict(d) for d in fields.get("owner_curve_decisions") or [] if isinstance(d, Mapping)]
+    held = dict(build.get("ownerHeld") or {})
+    for mk, h in (result.get("held_by_owner") or {}).items():
+        held.setdefault(str(mk), pe.held_summary((h or {}).get("decision") or {}))
+    removed_by = oc.removed(decisions)
+    sourced_by = oc.sourced(decisions)
+    withheld = {str(w.get("metricKey")): w for w in build.get("insufficientReferenceSupport") or []}
+    review = fields.get("curve_review") or {}
+    finished = str(manifest.get("finishedAt") or manifest.get("startedAt") or "")[:10] or None
+    legacy = not pressure
+
+    rows: list[dict] = []
+
+    def base(mk: str, fid: Optional[str], *, disposition: str, rule: Optional[str], reason: str,
+             candidate: Optional[str], basis: Optional[str], option: Optional[str] = None,
+             decided_by: str = "automated", who: Optional[str] = None, when: Optional[str] = None,
+             pool: Optional[dict] = None, engine: Optional[dict] = None, **extra) -> dict:
+        prev = previous.get(mk) if previous else None
+        if disposition == CARRIED and prev is None:
+            prev = basis                      # carried unchanged: the previous curve is this one
+        row = {"metric": mk, "functionId": fid, "function": names.get(fid, fid),
+               "disposition": disposition, "basis": (support.get(mk) or {}).get("basis"),
+               "option": option, "pool": pool, "engine": engine,
+               "basisDigest": basis, "previousBasisDigest": prev,
+               "changed": basis != prev, "rule": rule, "reason": reason,
+               "decidedBy": decided_by, "who": who or "n/a",
+               "when": (str(when)[:10] if when else None) or (finished if decided_by == "automated" else None),
+               "candidateKey": candidate}
+        row.update(extra)
+        return row
+
+    def engine_block(executed: bool, mk: str) -> dict:
+        return {"curveMethodVersion": method_version if executed else None,
+                "seed": _metric_seed(seed, mk) if executed else None, "executed": bool(executed)}
+
+    for r in reg.get("rows") or []:
+        c = cands.get(r["candidateKey"]) or {}
+        ident = c.get("identity") or {}
+        mk = str((ident.get("subject") or {}).get("id") or "")
+        kind = str(ident.get("sourceKind") or "fitted")
+        ref = ident.get("sourceRef") or {}
+        fid = str(r.get("functionId") or "") or None
+        d = r.get("decision") or {}
+        status = r.get("status")
+        basis = c.get("basisDigest")
+        key = r["candidateKey"]
+        person = {"decided_by": d.get("decidedBy") or "automated", "who": d.get("who"),
+                  "when": d.get("when")}
+        placement = d.get("rule")
+        if status == C.SELECTED:
+            # a curve an owner decision put in: a read-only tile carrying the decision, or a
+            # kind only a decision produces (a state SQT curve, an entered or borrowed one)
+            owner_source = bool(ref.get("decision")) or kind in _OWNER_ONLY_KINDS
+            if owner_source and kind != "fixed":
+                option = _OWNER_OPTIONS.get(kind) or _LEDGER_OPTIONS.get(str(ref.get("option") or ""))
+                extra = {"placementRule": placement, "decisionRef": d.get("decisionRef")}
+                if mk in held:
+                    extra["heldFromFit"] = dict(held[mk])
+                rows.append(base(mk, fid, disposition=OWNER_SOURCED, rule="REF-15",
+                                 reason=str(d.get("reason") or ""), candidate=key, basis=basis,
+                                 option=option, decided_by="person", who=d.get("who"),
+                                 when=d.get("when"), pool=None, engine=engine_block(False, mk),
+                                 **extra))
+                continue
+            if kind == "carried":
+                sup = support.get(mk) or {}
+                rows.append(base(mk, fid, disposition=CARRIED, rule="REF-05",
+                                 reason=str(d.get("reason") or ""), candidate=key, basis=basis,
+                                 option="carried", pool=_pool_block(mk, sup, None, None, code),
+                                 engine=engine_block(False, mk), placementRule=placement,
+                                 fromVersion=(carried_from.get("fromVersion") or carried_from.get("version")),
+                                 **person))
+                continue
+            if kind == "fixed":
+                rows.append(base(mk, fid, disposition=FIXED, rule="CURVE-11",
+                                 reason=str(d.get("reason") or ""), candidate=key, basis=basis,
+                                 option="fixed", pool=None, engine=engine_block(False, mk),
+                                 placementRule=placement, **person))
+                continue
+            if kind == "published_benchmark":
+                sup = support.get(mk) or {}
+                rows.append(base(mk, fid, disposition=FIXED, rule="REF-14",
+                                 reason=str(d.get("reason") or ""), candidate=key, basis=basis,
+                                 option="published", pool=_pool_block(mk, sup, None, None, code),
+                                 engine=engine_block(False, mk), placementRule=placement,
+                                 criteriaSource=(sup.get("screen_detail") or None), **person))
+                continue
+            # a curve the engine fitted in this build: local, regional, national or modeled
+            sup = support.get(mk)
+            if sup is None:
+                why = ("The build used the legacy reference method (easi-eci): no reference-support "
+                       "evidence pass ran for this metric." if legacy else
+                       "The build kept no reference-support record for this metric.")
+                rows.append(base(mk, fid, disposition=NOT_EVALUATED, rule=None, reason=why,
+                                 candidate=key, basis=basis, pool=None,
+                                 engine=engine_block(False, mk), placementRule=placement, **person))
+                continue
+            st = str(sup.get("status") or "")
+            raw = _pool_option(sup)
+            rows.append(base(mk, fid, disposition=REFITTED,
+                             rule=_STATUS_RULES.get(st, "REF-11" if st.startswith("borrowed") else "REF-05"),
+                             reason=str(d.get("reason") or ""), candidate=key, basis=basis,
+                             option=_LEDGER_OPTIONS.get(str(raw or ""), raw),
+                             pool=_pool_block(mk, sup, raw, ledger_df, code),
+                             engine=engine_block(True, mk), placementRule=placement, **person))
+        elif status == C.ELIGIBLE:
+            rows.append(base(mk, fid, disposition=REMOVED, rule=placement or "SELECT-04",
+                             reason=str(d.get("reason") or ""), candidate=key, basis=basis,
+                             pool=None, engine=engine_block(False, mk),
+                             decisionRef=d.get("decisionRef"), **person))
+        elif status == C.EXCLUDED:
+            if placement == "REF-06":
+                w = withheld.get(mk) or {}
+                rows.append(base(mk, fid, disposition=UNSUPPORTED, rule="REF-06",
+                                 reason=str(d.get("reason") or ""), candidate=key, basis=None,
+                                 pool=None, engine=engine_block(False, mk),
+                                 levelsTried=list(w.get("levelsTried") or
+                                                  (support.get(mk) or {}).get("levels_tried") or []),
+                                 rungsTried=list(w.get("rungsTried") or []), **person))
+            elif placement == "CURVE-07":
+                rows.append(base(mk, fid, disposition=HELD_FOR_REVIEW, rule="CURVE-07",
+                                 reason=str(d.get("reason") or ""), candidate=key, basis=basis,
+                                 pool=None, engine=engine_block(mk in support, mk),
+                                 reviewItem=f"CURVE-07:{mk}",
+                                 trigger=(review.get(mk) or {}).get("status"), **person))
+            elif placement == "review":
+                entry = review.get(mk) or {}
+                rows.append(base(mk, fid, disposition=REMOVED, rule="CURVE-07",
+                                 reason=str(entry.get("decision_note") or d.get("reason") or ""),
+                                 candidate=key, basis=basis, pool=None,
+                                 engine=engine_block(mk in support, mk),
+                                 decided_by="person", who=entry.get("decided_by") or d.get("who"),
+                                 when=entry.get("decided_at") or d.get("when")))
+            # a considered candidate excluded on applicability is the register's, not a
+            # metric of this build: no ledger row
+        elif status == C.NOT_EVALUATED:
+            if placement == "CURVE-07":
+                entry = review.get(mk) or {}
+                rows.append(base(mk, fid, disposition=HELD_FOR_REVIEW, rule="CURVE-07",
+                                 reason=str(d.get("reason") or ""), candidate=key, basis=basis,
+                                 pool=None, engine=engine_block(mk in support, mk),
+                                 reviewItem=f"CURVE-07:{mk}", trigger=entry.get("status"),
+                                 **person))
+        elif status == C.FAILED:
+            rows.append(base(mk, fid, disposition=NOT_EVALUATED, rule=None,
+                             reason=str(d.get("reason") or "The build produced no usable curve."),
+                             candidate=key, basis=basis, pool=None,
+                             engine=engine_block(mk in support, mk), **person))
+
+    # REF-15, "your choice stands": a metric the owner removed whose station pool would
+    # have supported a curve has no tile and no withheld record, so it is stated here
+    stated = {(r["metric"], r["functionId"]) for r in rows}
+    for mk, summary in sorted(held.items()):
+        d = removed_by.get(mk)
+        if d is None or mk in sourced_by:
+            continue
+        for f in pe._functions_of(mk):
+            fid = str(f.get("functionId") or "") or None
+            if (mk, fid) in stated:
+                continue
+            rows.append(base(mk, fid, disposition=OWNER_HELD, rule="REF-15",
+                             reason=str(d.get("rationale") or ""), candidate=None, basis=None,
+                             pool=None, engine=engine_block(False, mk), decided_by="person",
+                             who=d.get("recordedBy"), when=d.get("recordedAt"),
+                             heldFromFit=dict(summary or {}), decisionRef=d.get("id")))
+
+    rows.sort(key=lambda r: (str(r.get("functionId") or ""), str(r.get("metric") or "")))
+    refit = ((manifest.get("inputs") or {}).get("refit") or {}).get("mode") or result.get("refit_mode")
+    return jsonable({
+        "schema": LEDGER_SCHEMA,
+        "region": {"kind": region.get("kind") or "ecoregion", "code": code},
+        "build": {
+            "inputsDigest": manifest.get("inputsDigest") or result.get("inputs_digest"),
+            "refit": refit or "missing",
+            "carriedFrom": ({"assessmentId": carried_from.get("assessmentId"),
+                             "version": carried_from.get("fromVersion", carried_from.get("version"))}
+                            if carried_from.get("assessmentId") else None),
+            "methodologyVersion": ((manifest.get("methodology") or {}).get("methodology_version")
+                                   or methodology.methodology_version()),
+            "protocolSha256": (manifest.get("protocol") or {}).get("sha256"),
+        },
+        "rows": rows,
+    })
+
+
+def build_ledger_from_version(vdir, *, previous: Optional[dict] = None) -> dict:
+    """The ledger of a published version, from its own three files (``assessment.deep.json``,
+    ``session.streamcurves.json``, ``provenance.json``): the session's reference build and
+    decisions, the pool records the provenance's REF-05/06/11/12/13/14 records kept, the
+    sources the ladder refused, the run seed and the digest. No run folder is read, so a
+    version published before the station panel entered provenance says its station ids
+    were not recorded."""
+    from . import library as lib
+    from . import session_io as sio
+    vdir = Path(vdir)
+    fields = sio.decode_session_fields(sio.load_session_payload(vdir / lib.SESSION_FILE))
+    bundle_path = vdir / lib.BUNDLE_FILE
+    bundle = json.loads(bundle_path.read_text(encoding="utf-8")) if bundle_path.is_file() else None
+    prov_path = vdir / lib.PROVENANCE_FILE
+    doc = json.loads(prov_path.read_text(encoding="utf-8")) if prov_path.is_file() else {}
+    manifest = doc.get("manifest") or {}
+    support: dict = {}
+    attempts: list = []
+    for rec in doc.get("records") or []:
+        rule, subject = str(rec.get("rule_id")), str(rec.get("subject"))
+        if rec.get("subject_kind") != "metric":
+            continue
+        computed = rec.get("computed") or {}
+        if rule in ("REF-05", "REF-06", "REF-11", "REF-12", "REF-13", "REF-14") and rec.get("verdict") != VERDICT_FAIL:
+            support[subject] = dict(computed)
+        elif rule == "REF-06":
+            support[subject] = dict(computed)
+        elif rule in ("REF-12", "REF-13", "REF-14") and rec.get("verdict") == VERDICT_FAIL:
+            attempts.append({"metric": subject, "rung": rule, "admitted": False,
+                             "why": computed.get("why"), "options": computed.get("options"),
+                             "condition": computed.get("condition")})
+    result = dict(fields)
+    result.update({
+        "region": fields.get("region_of_applicability") or manifest.get("region") or {},
+        "reference_support": support,
+        "ladder_attempts": attempts,
+        "run_seed": (manifest.get("diagnostics") or {}).get("runSeed"),
+        "curve_method_version": (manifest.get("methodology") or {}).get("curveMethodVersion"),
+        "carried_from": (fields.get("reference_build") or {}).get("carriedFrom") or {},
+        "bundle": bundle,
+        "inputs_digest": manifest.get("inputsDigest"),
+    })
+    return build_ledger(result, manifest=manifest, previous=previous)
+
+
+def ledger_rows_for_bundle(bundle: Optional[dict], ledger: Optional[dict]) -> dict:
+    """The ledger's selected set beside the bundle's ``metricsByFunction`` pairs (invariant
+    5): ``selected`` and ``bundle`` as sorted ``(metricId, functionId)`` pairs, ``equal``,
+    and what each side lacks (``missing`` in the ledger, ``extra`` in the ledger)."""
+    from .deep_export import deep_slug
+    selected = sorted({("spring-" + deep_slug(r.get("metric")), str(r.get("functionId")))
+                       for r in (ledger or {}).get("rows") or []
+                       if r.get("disposition") in LEDGER_SELECTED and r.get("functionId")})
+    in_bundle = sorted({(str(m.get("metricId")), str(f.get("functionId")))
+                        for f in (bundle or {}).get("metricsByFunction") or []
+                        for m in f.get("metrics") or []})
+    return {"selected": selected, "bundle": in_bundle, "equal": selected == in_bundle,
+            "missing": sorted(set(in_bundle) - set(selected)),
+            "extra": sorted(set(selected) - set(in_bundle))}
+
+
+def build_provenance(result: dict, manifest: dict, *, timestamp=None,
+                     register: Optional[dict] = None) -> dict:
+    """Manifest, decision log, review queue, the candidate register and the per-metric
+    rebuild ledger as one auditable document. ``register``: the register already computed
+    for this result (``candidates.register_for_result``); computed here when absent."""
+    from . import candidates as C
     records = build_records(result, manifest, timestamp=timestamp)
     queue = build_review_queue(records, manifest, generated_at=timestamp,
                                priorities=result.get("review_priorities"))
@@ -1549,6 +2198,8 @@ def build_provenance(result: dict, manifest: dict, *, timestamp=None) -> dict:
         counts_by_family[record["rule_family"]] = (
             counts_by_family.get(record["rule_family"], 0) + 1)
         counts_by_verdict[record["verdict"]] = counts_by_verdict.get(record["verdict"], 0) + 1
+    reg = register if register is not None else C.register_for_result(result)
+    ledger = build_ledger(result, manifest=manifest, register=reg)
     return jsonable({
         "schemaVersion": PROVENANCE_SCHEMA_VERSION,
         "inputsDigest": manifest.get("inputsDigest"),
@@ -1563,6 +2214,8 @@ def build_provenance(result: dict, manifest: dict, *, timestamp=None) -> dict:
             "review_required": sum(1 for r in records if r["review_required"]),
         },
         "reviewQueue": queue,
+        "candidateRegister": C.register_document(reg),
+        "metricLedger": ledger,
     })
 
 
@@ -1571,7 +2224,8 @@ def build_interactive_provenance(bundle: dict, curve_review: Optional[dict], *,
                                  screening_preset: Optional[str] = None,
                                  publisher: str = "",
                                  session_name: Optional[str] = None,
-                                 timestamp=None) -> dict:
+                                 timestamp=None,
+                                 fields: Optional[dict] = None) -> dict:
     """A real, leaner provenance document for an interactive (non-agent) publish.
 
     Records only what the interactive path genuinely applied: the curve-review
@@ -1580,6 +2234,10 @@ def build_interactive_provenance(bundle: dict, curve_review: Optional[dict], *,
     preset when one was run (REF-01). Everything the interactive session did
     not evaluate lands in rules_not_evaluated, so an interactive version never
     fakes an agent-grade audit chain, and never publishes without any chain.
+
+    ``fields``: the session's decoded fields (``session_io.SESSION_FIELDS`` names). With
+    them the document carries the per-metric rebuild ledger (``metricLedger``,
+    :func:`build_ledger`) of the session as it is published; without them it says so.
     """
     run_id = f"interactive:{session_name or 'session'}"
     region_code = (region or {}).get("code")
@@ -1642,7 +2300,7 @@ def build_interactive_provenance(bundle: dict, curve_review: Optional[dict], *,
         "inputsDigestNote": "interactive session; inputs not version-locked",
     }
     queue = build_review_queue(records, manifest, generated_at=timestamp)
-    return jsonable({
+    doc = {
         "schemaVersion": PROVENANCE_SCHEMA_VERSION,
         "inputsDigest": None,
         "manifest": manifest,
@@ -1654,7 +2312,15 @@ def build_interactive_provenance(bundle: dict, curve_review: Optional[dict], *,
             "review_required": sum(1 for r in records if r["review_required"]),
         },
         "reviewQueue": queue,
-    })
+    }
+    if fields is not None:
+        session_like = {**dict(fields), "bundle": bundle,
+                        "region_of_applicability": (fields.get("region_of_applicability")
+                                                    or region)}
+        doc["metricLedger"] = build_ledger(session_like, manifest=manifest)
+    else:
+        doc["metricLedgerNote"] = "no session fields were given, so no rebuild ledger"
+    return jsonable(doc)
 
 
 # --------------------------------------------------------------------------- #

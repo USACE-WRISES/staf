@@ -375,6 +375,78 @@ def test_bundle_omits_region_and_library_when_absent():
 
 
 # --------------------------------------------------------------------------- #
+# nWithheld and nHeldForReview come from the exported list (Round 1, item 4)
+# --------------------------------------------------------------------------- #
+def _withheld(metric_id, reason="insufficient-reference-support"):
+    return {"metricId": metric_id, "metricKey": metric_id.replace("spring-", ""),
+            "reason": reason, "statement": "x"}
+
+
+def test_withheld_counts_are_set_from_the_exported_list():
+    from streamcurves import pressure_evidence as pe
+    rows, mapping = _one_metric_case()
+    meta = {"referenceMethod": {"method": "pressure-screen", "nWithheld": 5},
+            "insufficientReferenceSupport": [
+                _withheld("spring-x"),
+                _withheld("spring-y", pe.HELD_FOR_REVIEW),
+                _withheld("spring-m"),         # scored: the record is stale
+            ]}
+    b = build_deep_assessment_bundle(rows, mapping, {}, meta)
+    assert [w["metricId"] for w in b["insufficientReferenceSupport"]] == ["spring-x", "spring-y"]
+    assert b["referenceMethod"]["nWithheld"] == 2
+    assert b["referenceMethod"]["nHeldForReview"] == 1
+    assert meta["referenceMethod"]["nWithheld"] == 5, "the caller's block is not mutated"
+    assert deep_export.HELD_FOR_REVIEW_REASON == pe.HELD_FOR_REVIEW
+    # nothing withheld: the counts say so instead of keeping the evidence-time count
+    b2 = build_deep_assessment_bundle(rows, mapping, {}, {"referenceMethod": {"nWithheld": 3}})
+    assert "insufficientReferenceSupport" not in b2
+    assert b2["referenceMethod"] == {"nWithheld": 0, "nHeldForReview": 0}
+    # a legacy build has no block, and gains none
+    assert "referenceMethod" not in build_deep_assessment_bundle(rows, mapping, {}, {})
+
+
+def test_the_counts_sit_outside_the_content_digest():
+    from streamcurves import library as lib
+    rows, mapping = _one_metric_case()
+    meta = {"region": {"kind": "ecoregion", "code": "55"},
+            "referenceMethod": {"method": "pressure-screen", "nWithheld": 1},
+            "insufficientReferenceSupport": [_withheld("spring-x")]}
+    b = build_deep_assessment_bundle(rows, mapping, {}, meta)
+    stripped = json.loads(json.dumps(b, default=deep_export._json_default))
+    del stripped["referenceMethod"]["nWithheld"]
+    del stripped["referenceMethod"]["nHeldForReview"]
+    assert lib.content_digest(b) == lib.content_digest(stripped)
+
+
+def test_no_published_version_digest_moves_when_the_counts_are_set():
+    """Every latest DEEP version of the library: its recorded contentDigest is
+    what content_digest computes, before and after the two counts are set."""
+    from streamcurves import library as lib
+    if not lib.exists():
+        pytest.skip("apps/library is absent in this checkout")
+    checked = 0
+    for entry in lib.list_assessments():
+        aid = entry["assessmentId"]
+        if not lib.is_deep(aid):
+            continue
+        ver = lib.latest_version(aid)
+        bundle = lib.load_version_bundle(aid, ver)
+        recorded = lib.version_content_digest(aid, ver)
+        assert recorded and lib.content_digest(bundle) == recorded, (aid, ver)
+        with_counts = json.loads(json.dumps(bundle))
+        if isinstance(with_counts.get("referenceMethod"), dict):
+            withheld = with_counts.get("insufficientReferenceSupport") or []
+            with_counts["referenceMethod"]["nWithheld"] = len(withheld)
+            with_counts["referenceMethod"]["nHeldForReview"] = sum(
+                1 for w in withheld if w.get("reason") == deep_export.HELD_FOR_REVIEW_REASON)
+        else:
+            with_counts["referenceMethod"] = {"nWithheld": 0, "nHeldForReview": 0}
+        assert lib.content_digest(with_counts) == recorded, (aid, ver)
+        checked += 1
+    assert checked >= 7
+
+
+# --------------------------------------------------------------------------- #
 # DataFrame input path (threshold_rows shape from streamcurves/curves.py)
 # --------------------------------------------------------------------------- #
 def threshold_rows_frame():

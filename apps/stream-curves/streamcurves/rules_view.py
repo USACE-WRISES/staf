@@ -82,7 +82,7 @@ RULE_THRESHOLD_PATHS: dict[str, list[str]] = {
     "REF-03": ["reference_tiers.floor_tier"],
     # methodology 0.12: the pressure-screen reference method
     "REF-04": ["reference_screen.strict", "reference_screen.frame"],
-    "REF-05": ["reference_pool.levels", "reference_pool.envelope_quantiles",
+    "REF-05": ["reference_pool.envelope_quantiles",
                "reference_pool.min_self_coverage",
                "confidence_rules.caps.borrowed_reference_low_risk",
                "confidence_rules.caps.borrowed_reference_moderate_risk",
@@ -92,7 +92,7 @@ RULE_THRESHOLD_PATHS: dict[str, list[str]] = {
     "REF-07": ["reference_screen.relaxed"],
     "CURVE-11": ["curve_rules.deep_index_bands"],
     # methodology 0.13: the basis ladder above the ecoregion hierarchy
-    "REF-08": ["reference_pool.levels", "data_rules.exploratory_n_unstratified",
+    "REF-08": ["data_rules.exploratory_n_unstratified",
                "confidence_rules.caps.national_reference"],
     "REF-09": ["confidence_rules.caps.modeled_reference"],
     "REF-10": ["confidence_rules.caps.published_benchmark"],
@@ -123,7 +123,7 @@ RULE_THRESHOLD_PATHS: dict[str, list[str]] = {
 #: only looks like one (no trailing word characters).
 RULE_ID_RE = re.compile(r"\b(?:DATA|RED|STRAT|CURVE|REF|CONF|SELECT|ACC|COV)-\d{2}[a-z]?\b")
 
-#: The page baseline: 36 of 42 rules carry exactly this pair, so a row shows a
+#: The page baseline: 56 of the 71 rules carry exactly this pair, so a row shows a
 #: status mark only when a rule DEPARTS from it (status_exceptions).
 BASELINE_THRESHOLD_STATUS = "provisional"
 BASELINE_IMPLEMENTATION_STATUS = "implemented"

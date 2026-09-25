@@ -5,10 +5,12 @@ Two regressions this pins:
 * The substep chips were registered for a hardcoded ``range(1, 8)`` rather than
   the declared steps, so an eighth wizard step would have shipped with a chip
   that renders and does nothing.
-* The "Document a gap" button and its modal were built inside a module server
-  without ``ns()``, so their DOM ids were bare while the handlers listened on
-  ``discipline_map-*``. The button never fired, and it is the only way to
-  document a deliberate coverage gap, which is what unblocks publish.
+* The "Document a gap" button and its modal were once built inside a module server
+  without ``ns()``, so their DOM ids were bare while the handlers listened on the
+  module's prefix. The button never fired, and it is the only way to document a
+  deliberate coverage gap, which is what unblocks publish. The form lives in
+  Select final curves now (one decision authority, 2026-09-25); the same guard
+  covers it there, and the mapping page no longer carries a form of its own.
 """
 from __future__ import annotations
 
@@ -108,26 +110,57 @@ def test_no_mapping_handler_can_close_the_session():
 
 
 # --------------------------------------------------------------------------- #
-# The coverage-exception form
+# The coverage-exception form (Select final curves since 2026-09-25)
 # --------------------------------------------------------------------------- #
 COVERAGE_INPUTS = [
-    "open_coverage_exception",
-    "exc_function",
-    "exc_reason",
-    "exc_justification",
-    "exc_recorded_by",
-    "exc_save",
+    "fs_gap_reason",
+    "fs_gap_why",
+    "fs_gap_by",
+    "fs_gap_confirm",
 ]
 
 
 def test_the_coverage_exception_inputs_are_namespaced():
-    """Dynamic UI in a module server needs explicit ns(); without it the button
-    renders and does nothing."""
-    src = _src("discipline_map.py")
+    """Dynamic UI built for a module server needs explicit ns(); without it the button
+    renders and does nothing. The form is Select final curves' now."""
+    src = _src("final_selection.py")
     for name in COVERAGE_INPUTS:
         assert f'ns("{name}")' in src, f"{name} is not namespaced"
         assert not re.search(r'input_\w+\(\s*"' + name + r'"', src), \
             f"{name} still has a bare id somewhere"
+
+
+def test_the_mapping_page_takes_no_decision_of_its_own():
+    """One decision authority: the mapping page assigns workbook metrics and shows the
+    owner's decisions; it no longer documents gaps, adds sources, or uses, undoes or
+    unmaps a curve (those are REF-15 and COV-01 decisions, taken in Select final curves)."""
+    src = _src("discipline_map.py")
+    for gone in ("open_coverage_exception", "exc_save", "_sp.act_onclick", "_sp.undo_onclick",
+                 "Add a source", "wb-chip-use", "recorded as your decision"):
+        assert gone not in src, f"the mapping page still carries {gone!r}"
+    # the chips still open where a curve comes from, and say where decisions are taken
+    assert "_sp.open_onclick(mk)" in src and "Select final curves" in src
+
+
+def _bare_input_ids(name: str) -> list[str]:
+    """Every ``ui.input_*`` call in a module whose first argument is a literal id."""
+    tree = ast.parse(_src(name))
+    bare = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not node.args:
+            continue
+        if not ast.unparse(node.func).startswith("ui.input_"):
+            continue
+        first = node.args[0]
+        if isinstance(first, ast.Constant) and isinstance(first.value, str):
+            bare.append(first.value)
+    return bare
+
+
+def test_no_input_of_select_final_curves_has_a_bare_id():
+    """Its dialogs and the build-items list are built for the summary module, so every
+    input id goes through ns(); a bare one renders and never fires."""
+    assert _bare_input_ids("final_selection.py") == []
 
 
 def _bare_ids_inside_server(name: str, server_fn: str) -> list[str]:
@@ -227,8 +260,23 @@ def test_the_strip_is_one_row_and_the_panel_carries_the_steps_and_tools():
     assert "stage-bar-subrow" not in src and "dropdown" not in src
     assert '"data-jump-to": ns("jump")' in src
     panel = _src("project_panel.py")
-    assert '"data-jump": target' in panel and 'rs.STAGE_SUBSTEPS' in panel
+    # the steps a stage lists are the project's (an ecoregion builds in one step)
+    assert '"data-jump": target' in panel and "rs.substeps_for(stage_key, view.get(\"region_kind\"))" in panel
     assert "rs.TOOL_KEYS" in panel
+    assert '"region_kind": snap.get("region_kind")' in src, "the strip's snapshot carries the region kind"
+
+
+def test_the_region_builder_is_no_tool_and_the_strip_needs_no_checkout_rule():
+    """One build path: the builder is an ecoregion project's Build step (stage 3), so
+    "build" left TOOL_KEYS, the strip's tools need no checkout rule, and the panel puts
+    the next action under the project row."""
+    assert "build" not in rs.TOOL_KEYS
+    src = _src("stagebar.py")
+    assert "is_checkout" not in src and 'discard("build")' not in src
+    assert 'snap["reference_method"] = rs.reference_method_of(' in src
+    panel = _src("project_panel.py")
+    assert "def next_action_row(" in panel and "rs.next_action(statuses)" in panel
+    assert "rows.append(next_action_row(statuses))" in panel
     js = io.open(_VIEWS.parent / "www" / "shell.js", encoding="utf-8").read()
     assert 'closest("[data-jump]")' in js and 'closest("[data-jump-to]")' in js
     css = io.open(_VIEWS.parent / "www" / "shell.css", encoding="utf-8").read()

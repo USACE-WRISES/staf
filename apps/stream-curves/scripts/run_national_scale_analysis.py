@@ -82,7 +82,7 @@ def analyze(n_boot: int, seed: int, reference_frame: str, only=None, progress=pr
         "referenceFrame": reference_frame,
         "screen": rscreen.screen_label("strict"),
         "stationScreenSha256": rscreen.station_screen_identity().get("sha256"),
-        "valuePolicy": nrsa_dataset.POLICY_LATEST_NON_NULL,
+        "valuePolicy": inputs["value_policy"],
         "nInFrame": int(len(frame)),
         "nReference": int(frame["pass_strict"].astype(bool).sum()),
         "nBoot": int(n_boot), "seed": int(seed),

@@ -667,3 +667,136 @@ def test_section_values_are_unique_across_stages():
     # request channel is shared, so a value may belong to one stage only.
     values = [v for secs in rs.STAGE_SECTIONS.values() for v, _ in secs]
     assert len(values) == len(set(values))
+
+
+# --- one build path (2026-09-25) --------------------------------------------- #
+def test_an_ecoregion_builds_in_one_step_and_other_regions_keep_the_wizard():
+    """Stage 3 of an ecoregion project is one Build step (the Region builder, the same
+    ``stage`` subprocess the batch runs); a state, polygon or workbook project keeps
+    steps 4 to 7. STAGE_SUBSTEPS still declares every step (the strip registers its
+    inputs from it); substeps_for is the projection a project sees."""
+    assert rs.substeps_for("enrichment_build", "ecoregion") == [(4, "Build")]
+    assert rs.substeps_for("enrichment_build", "ecoregion") == rs.ECOREGION_BUILD_SUBSTEPS
+    for kind in ("state", "polygon", "none", None):
+        assert rs.substeps_for("enrichment_build", kind) == rs.STAGE_SUBSTEPS["enrichment_build"]
+    # every other stage is the same for every region kind
+    for key in rs.STAGE_KEYS:
+        if key != "enrichment_build":
+            assert rs.substeps_for(key, "ecoregion") == rs.substeps_for(key, "state") \
+                == list(rs.STAGE_SUBSTEPS.get(key) or [])
+    # the Build step is a declared wizard step, so the strip still routes to it
+    assert rs.stage_for_wizard_step(4) == "enrichment_build"
+    assert rs.stage_landing("enrichment_build") == ("data", 4)
+
+
+def test_the_region_builder_is_no_tool():
+    """It is an ecoregion project's Build step now; the tools are the side analyses."""
+    assert "build" not in rs.TOOL_KEYS
+    assert "build" not in rs.TOOL_LABELS and "build" not in rs.TOOLS_WITHOUT_DATA
+    assert "build" not in rs.TOOL_TITLES
+    assert rs.current_tool("build") is None
+
+
+def test_next_action_is_the_first_stage_not_done():
+    statuses = {
+        "region_sources": {"status": rs.STAGE_DONE, "detail": "Region set."},
+        "candidate_screening": {"status": rs.STAGE_DONE, "detail": "3 of 41 retained."},
+        "enrichment_build": {"status": rs.STAGE_READY, "detail": "Ready to build this ecoregion."},
+        "refine_map": {"status": rs.STAGE_BLOCKED, "detail": "Build a dataset first."},
+    }
+    assert rs.next_action(statuses) == ("enrichment_build", "Ready to build this ecoregion.")
+    # a running stage is where the work is
+    statuses["enrichment_build"] = {"status": rs.STAGE_RUNNING, "detail": "Building."}
+    assert rs.next_action(statuses) == ("enrichment_build", "Building.")
+    # attention counts as not done, and a missing detail still names the stage
+    statuses["enrichment_build"] = {"status": rs.STAGE_ATTENTION}
+    key, detail = rs.next_action(statuses)
+    assert key == "enrichment_build" and "Build dataset" in detail
+    # nothing known: the first stage; everything done: no stage
+    assert rs.next_action({})[0] == "region_sources"
+    assert rs.next_action(None)[0] == "region_sources"
+    every = {k: {"status": rs.STAGE_DONE, "detail": ""} for k in rs.STAGE_KEYS}
+    assert rs.next_action(every) == (None, "Every stage is done.")
+    # the full derivation feeds it: a fresh snapshot starts at the region
+    assert rs.next_action(rs.derive_stage_status({}, {}))[0] == "region_sources"
+
+
+def test_stage_three_names_the_build_for_an_ecoregion():
+    base = {"has_region": True, "has_screening": True, "n_retained": 5}
+    out = rs.derive_stage_status(dict(base, region_is_ecoregion=True))
+    assert out["enrichment_build"]["status"] == rs.STAGE_READY
+    assert "build this ecoregion" in out["enrichment_build"]["detail"]
+    out = rs.derive_stage_status(dict(base, region_is_ecoregion=False))
+    assert "enrich" in out["enrichment_build"]["detail"]
+
+
+# --- which screen stage 2 shows ---------------------------------------------- #
+ECO = {"kind": "ecoregion", "code": "71", "name": "Interior Plateau"}
+
+
+def test_stage_two_is_the_pressure_screen_for_a_build_or_a_new_ecoregion_project():
+    """Under a pressure-screen reference build, a pressure-screened session, or a new
+    ecoregion project, stage 2 renders the station-screen table only (REF-04)."""
+    assert rs.screening_mode(ECO, {"method": "pressure-screen"}, None) == "pressure-screen"
+    assert rs.screening_mode(ECO, None, {"method": "pressure_screen"}) == "pressure-screen"
+    assert rs.screening_mode(ECO, None, None) == "pressure-screen"
+    # a reference build wins over a legacy method token that rode along
+    assert rs.screening_mode(ECO, {"method": "pressure-screen"},
+                             {"method": "direct_engine"}) == "pressure-screen"
+
+
+def test_the_legacy_easi_panel_renders_only_for_a_replay_or_a_non_ecoregion():
+    """The live EASI screen is the replay of an older EASI-screened version, or the
+    screen of a state or custom region the pressure screen cannot serve."""
+    for method in rs.LEGACY_SCREENING_METHODS:
+        assert rs.screening_mode(ECO, None, {"method": method}) == "easi-eci"
+    assert rs.screening_mode({"kind": "state", "code": "OH"}, None, None) == "easi-eci"
+    assert rs.screening_mode({"kind": "polygon", "code": "USER"}, None, None) == "easi-eci"
+    assert rs.screening_mode(None, None, None) == "easi-eci"
+    # the reference-method vocabulary is the same one the checklist reads
+    assert rs.screening_mode(ECO, None, None) == rs.REFERENCE_METHOD_PRESSURE
+    assert rs.screening_mode(None, None, {"method": "zip_import"}) == rs.REFERENCE_METHOD_EASI
+
+
+def test_reference_method_of_a_session():
+    assert rs.reference_method_of({"method": "pressure-screen"}, None) == "pressure-screen"
+    assert rs.reference_method_of(None, {"method": "pressure_screen"}) == "pressure-screen"
+    assert rs.reference_method_of(None, {"method": "direct_engine"}) == "easi-eci"
+    assert rs.reference_method_of(None, None) is None
+    assert rs.reference_method_of({}, {}) is None
+
+
+def test_the_checklist_names_the_pressure_screen_as_ref04():
+    """A pressure-screen session's screening item is rule REF-04 with its own label;
+    a legacy session keeps REF-01. Seven items either way, same predicate."""
+    base = {"has_region": True, "has_screening": True, "n_retained": 3, "enriched": True,
+            "mapping_confirmed": True, "curve_review": {}, "coverage": {"missing": 0}}
+    pressure = rs.readiness_checklist(dict(base, reference_method="pressure-screen"))
+    item = next(i for i in pressure if i["key"] == "screening")
+    assert item["rule"] == "REF-04"
+    assert item["label"] == "Reference screen complete (fixed pressure screen)"
+    assert item["ok"] is True and len(pressure) == 7
+    legacy = rs.readiness_checklist(dict(base, reference_method="easi-eci"))
+    item = next(i for i in legacy if i["key"] == "screening")
+    assert item["rule"] == "REF-01" and "reference support" in item["label"]
+    absent = rs.readiness_checklist(base)
+    assert next(i for i in absent if i["key"] == "screening")["rule"] == "REF-01"
+    # the predicate is the same: no screen, no item, under either rule
+    none = rs.readiness_checklist(dict(base, reference_method="pressure-screen", has_screening=False))
+    assert next(i for i in none if i["key"] == "screening")["ok"] is False
+
+
+# --- CURVE-07: the triggers that hold a curve -------------------------------- #
+def test_curve_review_required_names_every_trigger_that_holds_a_curve():
+    """The rule catalog's CURVE-07 test text is generated from CURVE_REVIEW_TRIGGERS,
+    so the classifier and the catalog cannot drift: every status but auto_ok holds
+    a curve, each with words, and nothing else does."""
+    assert isinstance(rs.CURVE_REVIEW_REQUIRED, frozenset)
+    assert rs.CURVE_REVIEW_REQUIRED == frozenset(rs.CURVE_STATUSES) - {rs.CURVE_STATUS_AUTO_OK}
+    assert frozenset(s for s, _ in rs.CURVE_REVIEW_TRIGGERS) == rs.CURVE_REVIEW_REQUIRED
+    assert all(words and "-" not in words.split()[0] for _, words in rs.CURVE_REVIEW_TRIGGERS)
+    text = rs.curve_review_triggers_text()
+    assert text.startswith("A curve is held for review when ")
+    for _, words in rs.CURVE_REVIEW_TRIGGERS:
+        assert words in text
+    assert "never published unreviewed" in text and chr(8212) not in text
