@@ -17,7 +17,12 @@ Run it after publishing a library version, then commit ``apps/deep/data/`` and
 local/desktop.
 
 Usage:
-    py scripts/bake_library_into_deep.py [--out data] [--library-root PATH]
+    py scripts/bake_library_into_deep.py [--out data] [--library-root PATH] [--default-only]
+
+``--default-only`` bakes each assessment's ``defaultVersion`` (the catalog pointer: the latest
+certified version, else the latest preliminary one) instead of every eligible version, for a
+smaller deploy; the remote library keeps serving every eligible version to the version
+chooser. Without the flag nothing changes: every eligible version bakes.
 """
 
 from __future__ import annotations
@@ -50,7 +55,7 @@ def _write(path: Path, obj) -> None:
 
 
 def bake(out: Path | None = None, library_root: Path | None = None,
-         www: Path | None = None) -> dict:
+         www: Path | None = None, *, default_only: bool = False) -> dict:
     """Rewrite ``deep-assessments.json`` (v2) authoritatively from the shared library.
 
     The registry becomes ``{schemaVersion: 2, tier, libraryCatalog, assessments}`` where
@@ -60,10 +65,14 @@ def bake(out: Path | None = None, library_root: Path | None = None,
     (the catalog's defaultVersion) are written; stale bundle files are removed. Ordering is
     deterministic (id, then version). Idempotent: same library -> same output.
 
+    ``default_only`` keeps one record per assessment, its ``defaultVersion``; the other
+    eligible versions stay in the library (and on the remote library, which the version
+    chooser reads) and are not baked. ``libraryCatalog`` still lists every pointer.
+
     Returns a summary dict: ``assessments`` (id list), ``records`` (count),
-    ``libraryCount``, and ``calculators`` (``copied`` and ``missing`` refs, see
-    :func:`bake_calculators`). ``www`` is the calculators folder (default: the
-    ``www/calculators`` sibling of ``out``).
+    ``libraryCount`` (every eligible version in the library, baked or not), ``defaultOnly``,
+    and ``calculators`` (``copied`` and ``missing`` refs, see :func:`bake_calculators`).
+    ``www`` is the calculators folder (default: the ``www/calculators`` sibling of ``out``).
     """
     out = Path(out) if out else DEFAULT_OUT
     if library_root is not None:
@@ -71,9 +80,16 @@ def bake(out: Path | None = None, library_root: Path | None = None,
 
     bundles = deep_library.all_eligible_bundles()
     pointers = deep_library.catalog_pointers()
+    default_version = {aid: p.get("defaultVersion") for aid, p in pointers.items()}
 
     # Deterministic ordering: by assessmentId, then version.
     records = sorted(bundles, key=lambda b: (b.get("assessmentId") or "", int(b.get("version") or 0)))
+    if default_only:
+        # The pointer is the latest certified version, else the latest preliminary one; a
+        # draft default (an assessment with no eligible version) is not among the bundles,
+        # so nothing of that assessment bakes, as before.
+        records = [b for b in records
+                   if int(b.get("version") or 0) == default_version.get(b.get("assessmentId"))]
     library_catalog = {aid: pointers[aid] for aid in sorted(pointers)}
 
     doc = {
@@ -91,7 +107,6 @@ def bake(out: Path | None = None, library_root: Path | None = None,
     if bundles_dir.is_dir():
         for old in bundles_dir.glob("*.deep.json"):
             old.unlink()
-    default_version = {aid: p.get("defaultVersion") for aid, p in pointers.items()}
     for bundle in records:
         aid = bundle.get("assessmentId")
         ver = int(bundle.get("version") or 0)
@@ -111,6 +126,7 @@ def bake(out: Path | None = None, library_root: Path | None = None,
         "assessments": assessment_ids,
         "records": len(records),
         "libraryCount": len(bundles),
+        "defaultOnly": bool(default_only),
         "calculators": calculators,
     }
 
@@ -204,12 +220,18 @@ def main(argv=None) -> int:
     )
     parser.add_argument("--www", type=Path, default=None,
                         help="Calculators folder (default: www/calculators beside --out).")
+    parser.add_argument("--default-only", action="store_true",
+                        help="Bake each assessment's default version only (the catalog's "
+                             "defaultVersion); every eligible version is baked otherwise.")
     args = parser.parse_args(argv)
-    result = bake(out=args.out, library_root=args.library_root, www=args.www)
+    result = bake(out=args.out, library_root=args.library_root, www=args.www,
+                  default_only=args.default_only)
     print(
         f"Baked {result['records']} version record(s) from "
         f"{len(result['assessments'])} assessment(s) into "
         f"{args.out / 'deep-assessments.json'}"
+        + (f" (default versions only; the library holds {result['libraryCount']} eligible)"
+           if args.default_only else "")
     )
     if result["assessments"]:
         print(f"  assessments: {', '.join(result['assessments'])}")
