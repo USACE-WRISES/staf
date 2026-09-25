@@ -101,6 +101,14 @@ def _staged_reference_summary(session_path) -> dict:
 _TASK_KEY = "region_build"
 
 
+def _register_file(run_dir) -> Optional[Path]:
+    """The region's saved candidate register (curves a person added for comparison and
+    the reasons recorded in Select final curves), when one exists; a build reads it
+    through ``--candidate-register`` so the staged register is complete."""
+    path = Path(run_dir) / rb.CANDIDATE_REGISTER_FILE
+    return path if path.exists() else None
+
+
 def _maintainer(state=None) -> str:
     """Who to record, derived rather than asked for: the initials views/publish.py records
     (``views.state.recorded_by``; ``n/a`` when none are set, never the login)."""
@@ -473,7 +481,10 @@ def region_builder_server(input, output, session, state: AppState, active=None, 
             coverage_exceptions=gaps if gaps.exists() else None,
             # the owner's standing curve decisions (REF-15), seeded from the
             # published version when the region has recorded none here
-            curve_decisions=rb.curve_decisions_path(out_dir, code))
+            curve_decisions=rb.curve_decisions_path(out_dir, code),
+            # curves a person added for comparison and the reasons recorded in
+            # Select final curves, so the staged register is complete
+            candidate_register=_register_file(out_dir))
         _launch(run_stage(argv, out_dir))
 
     @reactive.effect
@@ -535,7 +546,8 @@ def region_builder_server(input, output, session, state: AppState, active=None, 
             reference_method=kw.get("reference_method"),
             reviewer_decisions=decisions if decisions.exists() else None,
             coverage_exceptions=gaps if gaps.exists() else None,
-            curve_decisions=rb.curve_decisions_path(out_dir, kw["l3_code"]))
+            curve_decisions=rb.curve_decisions_path(out_dir, kw["l3_code"]),
+            candidate_register=_register_file(out_dir))
         _launch(run_stage(argv, out_dir))
 
     # ── the run this page shows ─────────────────────────────────────────────

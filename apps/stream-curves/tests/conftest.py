@@ -2,7 +2,31 @@
 
 from __future__ import annotations
 
+import os
+
+import pytest
+
 from streamcurves import deep_export
+
+
+@pytest.fixture(autouse=True)
+def _restore_process_environment():
+    """Give every test the environment it started with.
+
+    The batch entry points set process-global switches on purpose (``promote`` and
+    ``regional_agent.publish`` set ``STAF_LIBRARY_ROOT``, the stage clears the EASI
+    switches, experimental runs set ``STREAMCURVES_CONFIG_ROOT``); a test that drives
+    them in-process must not leak those into the next module (campaign Round 1: the
+    publish-gate tests failed after the stage-decision tests when run together).
+    """
+    saved = dict(os.environ)
+    yield
+    for key in list(os.environ):
+        if key not in saved:
+            del os.environ[key]
+    for key, value in saved.items():
+        if os.environ.get(key) != value:
+            os.environ[key] = value
 
 
 def documented_exclusions(reason: str = "no-suitable-metric",

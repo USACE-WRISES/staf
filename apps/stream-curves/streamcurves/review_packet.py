@@ -672,6 +672,61 @@ def _screening_comid_lines(s: dict) -> list[str]:
     return lines
 
 
+def _traceability_lines(p: dict) -> list[str]:
+    """Section 5a: what this build refitted or carried, the value policy it read the
+    archive under, the evidence package it wrote and the ledger's dispositions (campaign
+    Round 1). Every key is optional: a packet from an older run renders nothing here."""
+    refit = p.get("refit") or {}
+    evidence = p.get("evidence") or {}
+    ledger = p.get("ledger") or {}
+    policy = p.get("value_policy")
+    if not (refit or evidence or ledger or policy):
+        return []
+    lines = ["## 5a. Refit, value policy, evidence and ledger", ""]
+    if refit:
+        mode = refit.get("mode") or "missing"
+        carried = refit.get("carry_forward") or refit.get("carriedFrom") or {}
+        if isinstance(carried, dict) and carried.get("version"):
+            carried_text = (f"carried from {carried.get('assessmentId') or ''} "
+                            f"version {carried.get('version')}")
+        elif mode == "all":
+            carried_text = "nothing carried (every curve refitted)"
+        else:
+            carried_text = "no published version to carry from"
+        lines.append(f"Refit mode **{mode}**: {carried_text}.")
+        held = refit.get("held") or refit.get("held_metrics") or []
+        if held:
+            names = []
+            for h in held:
+                if isinstance(h, dict):
+                    pool = h.get("pool") or h.get("n_pool")
+                    names.append(f"{h.get('metric')}" + (f" (pool {pool})" if pool else ""))
+                else:
+                    names.append(str(h))
+            lines.append("Held out of the fit by the owner (your choice stands): " + ", ".join(names) + ".")
+        lines.append("")
+    if policy:
+        lines += [f"Archive values read under value policy `{policy}`.", ""]
+    if evidence:
+        pid = evidence.get("packageId") or evidence.get("id") or ""
+        digest = str(evidence.get("packageDigest") or evidence.get("digest") or "")[:19]
+        repro = evidence.get("reproducibility") or ""
+        lines += [f"Development evidence package `{pid}` ({repro}) {digest}: the stations, values, "
+                  "pools, curves and decisions behind every curve of this build, obtainable "
+                  "through the assessment.", ""]
+    if ledger:
+        counts = ledger.get("counts") or {}
+        if not counts and isinstance(ledger.get("rows"), list):
+            counts = {}
+            for row in ledger["rows"]:
+                key = str(row.get("disposition") or "")
+                counts[key] = counts.get(key, 0) + 1
+        if counts:
+            lines += ["Rebuild ledger dispositions: " + ", ".join(
+                f"{k} {v}" for k, v in sorted(counts.items())) + ".", ""]
+    return lines
+
+
 def packet_markdown(p: dict) -> str:
     region = p.get("region") or {}
     lines = [f"# End-review packet: {region.get('name')} (EPA Level III {region.get('code')})", ""]
@@ -767,6 +822,8 @@ def packet_markdown(p: dict) -> str:
         for g in p["uncovered_functions"]:
             lines.append(f"- {g['function']}: {', '.join(g['candidates']) or 'no candidate in the crosswalk'}")
         lines.append("")
+
+    lines += _traceability_lines(p)
 
     if p.get("reference"):
         lines += _reference_sections(p["reference"])
