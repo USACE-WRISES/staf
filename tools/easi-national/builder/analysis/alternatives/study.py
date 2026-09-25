@@ -1,7 +1,14 @@
-"""Snapshot, checkpoints and CLI orchestration for isolated alternatives."""
+"""Snapshot, checkpoints and CLI orchestration for isolated alternatives.
+
+A study starts from a base (``bases.py``): the snapshot checks that the active EASI method
+and its frozen curve artifact are that base's, and the manifest names it (``base_id``).
+A study never changes its base, and a study created by another runner version is never
+rerun by this one.
+"""
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import hashlib
 import json
 import os
@@ -12,7 +19,8 @@ import sys
 import time
 
 from builder import REPO_ROOT
-from . import ALTERNATIVES, BASE_COMMIT, BASE_METHOD, BASE_REFERENCE, STUDY_VERSION
+from . import (ALTERNATIVES, BASE_COMMIT, BASE_METHOD, BASE_REFERENCE, DEFAULT_BASE_ID,
+               STUDY_VERSION, bases)
 from .io import fingerprint, info, now, output_files, read_json, safe_study, sha, write_json
 
 STEPS = ("snapshot", "candidates", "observations", "evidence", "scores", "acquisition", "field", "spatial", "stability", "report")
@@ -35,6 +43,15 @@ def protocol():
             "selection": "Both paired AUC lower bounds >= -0.01, unchanged rating availability, regional/function review; fewer curves then benthic AUC; otherwise Alternative 1"}
 
 
+def resolve_base(base_id=None):
+    """The base a study starts from. The default base reads this module's ``BASE_*``
+    names, which tests patch; any other base is its registry entry."""
+    if base_id in (None, DEFAULT_BASE_ID):
+        return dataclasses.replace(bases.base(DEFAULT_BASE_ID), method_version=BASE_METHOD,
+                                   commit=BASE_COMMIT, reference_sha256=BASE_REFERENCE)
+    return bases.base(base_id)
+
+
 def source_inputs(root):
     names = ["analysis/values_meta.json", "analysis/values.parquet", "analysis/nrsa/nrsa_desktop.parquet",
              "analysis/nrsa/nrsa_frame.parquet", "analysis/nrsa/nrsa_targets.parquet", "analysis/strata.parquet",
@@ -45,16 +62,18 @@ def source_inputs(root):
     return [root / name for name in names if (root / name).is_file()]
 
 
-def snapshot(root: Path, study: Path):
+def snapshot(root: Path, study: Path, base_id=None):
     from easi import config
     from easi.national import method_version
-    if config.criteria_set() != "regional" or method_version() != BASE_METHOD:
-        raise RuntimeError("Alternative 1 must match the preserved regional scoring method")
+    base = resolve_base(base_id)
+    if config.criteria_set() != "regional" or method_version() != base.method_version:
+        raise RuntimeError(f"Alternative 1 must match the preserved regional scoring method "
+                           f"of base {base.id} ({base.method_version})")
     artifact = REPO_ROOT / "apps/easi/data/reference-curves.json"
-    if sha(artifact) != BASE_REFERENCE:
-        raise RuntimeError("Alternative 1 frozen artifact has changed")
+    if sha(artifact) != base.reference_sha256:
+        raise RuntimeError(f"Alternative 1 frozen artifact has changed (base {base.id})")
     completion = read_json(root / "analysis/local-review/completion.json")
-    if completion.get("status") != "complete" or completion.get("method_version") != BASE_METHOD:
+    if completion.get("status") != "complete" or completion.get("method_version") != base.method_version:
         raise RuntimeError("Current Alternative 1 completion is unavailable")
     if read_json(root / "state/queue.json").get("items"):
         raise RuntimeError("Publication queue must remain empty")
@@ -104,15 +123,20 @@ def snapshot(root: Path, study: Path):
         upstream.append({"path": path.relative_to(root).as_posix(), "size": row["bytes"],
                          "mtime_ns": row["mtime_ns"], "sha256": row["sha256"]})
     binding = {"completion_sha256": sha(root / "analysis/local-review/completion.json"),
-               "method_version": BASE_METHOD, "frozen_sha256": BASE_REFERENCE, "source_commit": BASE_COMMIT}
+               "method_version": base.method_version, "frozen_sha256": base.reference_sha256,
+               "source_commit": base.commit}
+    # alternative_1 keeps its 1.0.0 meaning (the study's reference alternative is its base);
+    # base_id and base name the registry entry the study was created on
     data = {"schema_version": 1, "study_id": study.name, "status": "pending", "created_at": now(),
-            "alternative_1": {"method_version": BASE_METHOD, "source_commit": BASE_COMMIT, "frozen_sha": BASE_REFERENCE},
+            "base_id": base.id, "base": base.record(),
+            "alternative_1": {"method_version": base.method_version, "source_commit": base.commit,
+                              "frozen_sha": base.reference_sha256},
             "parent_binding": binding, "alternatives": ALTERNATIVES, "protocol": protocol(),
             "input_files": upstream, "study_only": True}
     data["input_digest"] = hashlib.sha256(json.dumps({"inputs": upstream, "protocol": protocol()}, sort_keys=True).encode()).hexdigest()
     write_json(study / "manifest.json", data)
     write_json(study / "protocol.json", protocol())
-    write_json(marker, {"status": "preserved", "created_at": now(), "source_commit": BASE_COMMIT,
+    write_json(marker, {"status": "preserved", "created_at": now(), "source_commit": base.commit,
                         "files": entries, "bytes": sum(row["bytes"] for row in entries)})
     return {"files": len(entries), "bytes": sum(row["bytes"] for row in entries)}
 
@@ -206,7 +230,7 @@ def _receipt_current(study, step, manifest, checked):
     checked.add(step)
 
 
-def run_stage(root, study, step, *, workers=4):
+def run_stage(root, study, step, *, workers=4, base_id=None):
     manifest = check_inputs(root, study) if (study / "manifest.json").exists() else {}
     dependencies = DEPENDENCIES[step]
     markers = [study / "stages" / f"{name}.json" for name in dependencies]
@@ -230,7 +254,7 @@ def run_stage(root, study, step, *, workers=4):
     start = time.monotonic()
     print(f"Starting {step} at {now()}", flush=True)
     if step == "snapshot":
-        result = snapshot(root, study)
+        result = snapshot(root, study, base_id=base_id)
         outputs = [study / "snapshot/manifest.json"]
     elif step == "candidates":
         from .candidates import build
@@ -284,11 +308,32 @@ def main():
     parser.add_argument("--study-id", required=True)
     parser.add_argument("--steps", nargs="+", choices=STEPS, default=list(STEPS))
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--base", choices=sorted(bases.BASES), default=None,
+                        help="the base method a NEW study starts from (bases.py); an existing "
+                             "study keeps the base its manifest names")
     args = parser.parse_args()
     if Path(sys.executable).resolve() != (REPO_ROOT / ".venv/Scripts/python.exe").resolve():
         raise RuntimeError("Use the workspace .venv/Scripts/python.exe")
     root = args.root.resolve()
     study = safe_study(root, root / "review/alternative-studies" / args.study_id)
+    manifest_path = study / "manifest.json"
+    if manifest_path.is_file():
+        manifest = read_json(manifest_path)
+        created_by = (manifest.get("protocol") or {}).get("version")
+        if created_by not in (None, STUDY_VERSION):
+            raise RuntimeError(f"{study.name} was created by study runner {created_by}; this runner "
+                               f"is {STUDY_VERSION}. A completed study is never rerun: start a new "
+                               f"study ({bases.STUDY_ID_PATTERN.pattern})")
+        base_id = bases.study_base(manifest).id
+        if args.base and args.base != base_id:
+            raise RuntimeError(f"{study.name} was created on base {base_id}; a study never changes "
+                               f"its base")
+    else:
+        base_id = args.base or DEFAULT_BASE_ID
+        if not bases.study_id_ok(study.name):
+            raise RuntimeError(f"a new study is named <date>-<family>-alternatives "
+                               f"({bases.STUDY_ID_PATTERN.pattern}), for example "
+                               f"2026-10-03-low-flow-alternatives; got {study.name!r}")
     study.mkdir(parents=True, exist_ok=True)
     lock = study / "run.lock"
     try:
@@ -298,7 +343,7 @@ def main():
         raise RuntimeError(f"Study runner already has a lock: {lock}")
     try:
         for step in args.steps:
-            run_stage(root, study, step, workers=max(1, min(args.workers, 6)))
+            run_stage(root, study, step, workers=max(1, min(args.workers, 6)), base_id=base_id)
     finally:
         lock.unlink(missing_ok=True)
 
