@@ -167,6 +167,13 @@ meta:
     standing_decisions index and the lifecycle block are mirror-checked against
     config/methodology/standing_decisions.yaml and streamcurves/library.py, and
     lifecycle.version_statuses gained draft, the status automation publishes.
+    2026-09-25 campaign Round 2 knobs (no threshold or status changed; every default
+    is today's behavior, so every published version replays): reference_pool.ladder_rule,
+    reference_hierarchy.regional_screen.enabled, metric_portfolio.second_metric_rule with
+    its two limits, curve12.gate and min_auc, curve10.tail_offsets_iqr,
+    zero_inflated_share and zero_inflated_handling, plus the mirrored curve12.verdict_cuts.
+    A knob set away from its default joins the inputs digest under reference.knobs
+    (absence semantics, methodology.round2_knobs).
   authority: "STAF scientific team (human sign-off required for status promotion)"
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
@@ -301,6 +308,54 @@ curve_rules:
     chem_PH: 0.2
 
 # --------------------------------------------------------------------------- #
+# CURVE-12, the discrimination check (campaign Round 2 candidate C2,
+# 2026-09-25). threshold_status: provisional.
+# --------------------------------------------------------------------------- #
+curve12:
+  # The verdict cuts MIRROR streamcurves/discrimination.py (AUC_DISCRIMINATES,
+  # AUC_WEAK, AUC_INVERTED; mirror-checked by methodology.mirror_drift): an edit
+  # here alone fails every headless run.
+  verdict_cuts: {discriminates: 0.65, weak: 0.55, inverted: 0.45}
+  # The gate. false (the default): the check is advisory, an inverted curve goes
+  # to review. true: a NEW curve (never a carried one) whose verdict is inverted
+  # or whose AUC is below min_auc is withheld with the statement "discrimination
+  # gate" (as REF-06 withholds: no curve, nothing scored, the reason on the
+  # metric); its CURVE-12 record stays for information. Non-default values join
+  # the inputs digest (reference.knobs).
+  gate: false
+  min_auc: 0.55
+
+# --------------------------------------------------------------------------- #
+# CURVE-10, the seed geometry knobs (campaign Round 2 candidates C3a and C3b,
+# 2026-09-25). threshold_status: provisional. The engine keeps today's values
+# as its own defaults, so an absent key or the default value reproduces every
+# published curve byte for byte; a non-default value joins the inputs digest
+# (reference.knobs).
+# --------------------------------------------------------------------------- #
+curve10:
+  # The tail endpoints of the monotone IQR ladders, in IQR units from the
+  # quartile [near, mid, far]: the index steps 1.00 / 0.30 / 0.00 of the falling
+  # seed sit at Q75 + near, Q75 + mid and Q75 + far IQR, the signed-scale rising
+  # seed mirrors them below Q25, and the origin-anchored rising seed ends its
+  # plateau at Q75 + near IQR. Today's values are the engine's own
+  # (curves.MONOTONE_TAIL_OFFSETS_IQR): 0.3, 4/3 and 7/3. A fraction may be
+  # written as a string ("4/3"); the two-sided optimum seed is not governed here.
+  tail_offsets_iqr: [0.3, "4/3", "7/3"]
+  # A zero-inflated reference pool: a higher-is-better metric on a scale that
+  # cannot go negative whose share of reference values at zero is above this.
+  # null (the default) switches the rule off: such a pool takes the engine's
+  # degenerate_q25 three-point fallback, as every published curve did.
+  zero_inflated_share: null
+  # What a zero-inflated pool gets when the share is set (required with it):
+  #   two_part   the positive values seed the curve as the scale-free IQR ladder
+  #              (0.30 at Q25 - mid IQR, 0.70 at Q25, 1.00 from Q75), a point at
+  #              zero scoring 0 is prefixed, the seed is clamped so nothing sits
+  #              below zero, and the zero share rides as a caveat on the curve
+  #   withhold   the metric is withheld with the statement "zero-inflated
+  #              reference pool": no curve, nothing scored
+  zero_inflated_handling: null
+
+# --------------------------------------------------------------------------- #
 # Reference-tier ladder (rule family REF). Encodes the user-authorized ECBP
 # fallback as an explicit, reviewed, provenance-stamped decision mapped onto the
 # EXISTING EASI presets in _vendor/easi/batch/qualify.py. No new screening code.
@@ -390,15 +445,26 @@ reference_screen:
 # --------------------------------------------------------------------------- #
 reference_pool:
   # The pool levels (Level III, then its Level II and Level I parents) and the
-  # search order live in config/reference_transfer.yaml, which the code reads;
-  # the first pool that passes the acceptance criteria is used (REF-11 to
-  # REF-14, reference_pool.choose_pool). Only the two numbers below are read.
+  # search order live in config/reference_transfer.yaml, which the code reads
+  # (a top-level search_order there replaces every family's order; absent by
+  # default, campaign Round 2 candidate B3). The three keys below are read.
   # A borrowed station must sit inside the central share of the target region's
   # own in-frame stations on every covariate of the metric family's profile.
   envelope_quantiles: [0.025, 0.975]
   # Below this share of its own stations inside its own envelope, a profile is
   # too tight to describe the region it was built from, and is flagged.
   min_self_coverage: 0.80
+  # Which passing pool option is used (reference_pool.choose_pool; campaign
+  # Round 2 candidate B1, 2026-09-25). threshold_status: provisional.
+  #   first_pass          the first option in the family's search order with
+  #                       usable n at the exploratory floor that passes
+  #                       acceptance is used (methodology 0.14, the default)
+  #   narrowest_adequate  every option is walked; the narrowest whose usable n
+  #                       reaches data_rules.min_n_unstratified and that passes
+  #                       acceptance is used, else the narrowest exploratory
+  #                       option that passes
+  # A non-default value joins the inputs digest (reference.knobs).
+  ladder_rule: first_pass
 
 # --------------------------------------------------------------------------- #
 # One reference-source hierarchy (v0.14, owner decisions 2026-09-21). Rules
@@ -432,6 +498,13 @@ reference_hierarchy:
     agriculture_floor: 25.0
     min_epa_reference_sites: 5
     base_tier: relaxed
+    # Campaign Round 2 candidate B2 (2026-09-25). threshold_status: provisional.
+    # true (the default, methodology 0.14): the regional pools admit strict
+    # stations and stations passing this screen. false: every regional pool
+    # admits strict-screen stations only; the relaxed tier and the EPA
+    # agriculture limit never apply, and the pool ledger says so per station.
+    # A non-default value joins the inputs digest (reference.knobs).
+    enabled: true
   # comparable national reference, tried in this order (REF-12)
   national_options: [3c_matched, 3a_envelope]
   # the comparability envelope is the target's own central range, widened on each
@@ -566,6 +639,22 @@ metric_portfolio:
   # the rest are recorded as supported, not selected. A reserve candidate joins
   # only a function that would otherwise be unassessed.
   fill_to: 2
+  # How a second (or later) new metric joins a function (campaign Round 2
+  # candidate C1, 2026-09-25). threshold_status: provisional.
+  #   rank                            fill to fill_to by source rank, then score
+  #                                   (methodology 0.14, the default)
+  #   independent_and_discriminating  the first new metric joins by rank; one
+  #                                   more place (at least two in all) goes to the
+  #                                   highest-ranked candidate whose absolute
+  #                                   Spearman with every metric already scored is
+  #                                   below second_metric_max_abs_spearman and
+  #                                   whose CURVE-12 AUC is at least
+  #                                   second_metric_min_auc
+  # select_portfolio records the rule and the numbers per function. A
+  # non-default value joins the inputs digest (reference.knobs).
+  second_metric_rule: rank
+  second_metric_max_abs_spearman: 0.65
+  second_metric_min_auc: 0.55
   source_rank: {local: 0, regional: 1, national: 2, modeled: 3, published: 4}
   metric_score_weights:                  # must sum to 100
     ecological_relevance_coverage: 25

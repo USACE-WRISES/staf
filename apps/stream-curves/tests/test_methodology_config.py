@@ -121,7 +121,7 @@ def test_an_edited_curve_band_mirror_is_reported(monkeypatch):
 # carry_forward is read, and the two describing blocks are mirror-checked.
 # --------------------------------------------------------------------------- #
 @pytest.mark.parametrize("path", [
-    "reference_pool.levels", "reference_pool.ladder_rule", "reference_pool.review_risks",
+    "reference_pool.levels", "reference_pool.review_risks",
     "reference_hierarchy.sources", "reference_hierarchy.option_rank",
 ])
 def test_the_keys_no_code_read_stay_deleted(path):
@@ -133,6 +133,22 @@ def test_the_keys_the_code_reads_are_still_there():
     assert methodology.threshold("reference_pool.min_self_coverage") == 0.80
     assert methodology.threshold("reference_hierarchy.national_options")
     assert methodology.threshold("reference_hierarchy.regional_screen")["id"]
+    # campaign Round 2 (candidate B1): ladder_rule came back as a key the code
+    # reads (reference_pool.choose_pool), default first_pass, today's behavior
+    assert methodology.threshold("reference_pool.ladder_rule") == "first_pass"
+    assert methodology.ladder_rule() == methodology.LADDER_RULE_FIRST_PASS
+
+
+def test_the_curve12_verdict_cuts_are_mirror_checked(monkeypatch):
+    from streamcurves import discrimination as dz
+    cuts = methodology.load_config()["curve12"]["verdict_cuts"]
+    assert (cuts["discriminates"], cuts["weak"], cuts["inverted"]) == (
+        dz.AUC_DISCRIMINATES, dz.AUC_WEAK, dz.AUC_INVERTED)
+    clean = methodology.load_config()
+    tweaked = {**clean, "curve12": {**clean["curve12"],
+                                    "verdict_cuts": {**cuts, "weak": 0.5}}}
+    monkeypatch.setattr(methodology, "load_config", lambda: tweaked)
+    assert any(d.startswith("curve12.verdict_cuts.weak") for d in methodology.mirror_drift())
 
 
 def test_carry_forward_default_is_read_from_the_config(monkeypatch):

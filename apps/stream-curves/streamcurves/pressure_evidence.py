@@ -161,6 +161,17 @@ BORROWED_CAVEAT = ("The reference stations for this curve were borrowed from {wh
 INVERTED_CAVEAT = ("In the discrimination check this curve scored pressured stations above "
                    "reference stations (area under the curve {auc:.2f}), so the score may not "
                    "track condition here. Read it with the other metrics of the function.")
+ZERO_INFLATED_CAVEAT = ("{n_zero} of the {n} reference stations ({share:.0%}) have a value of "
+                        "zero, above the {threshold:.0%} at which the pool counts as "
+                        "zero-inflated, so the curve was fitted to the positive values only and "
+                        "a value of zero scores 0 (the two-part rule).")
+
+
+def is_withheld_record(d) -> bool:
+    """A reference-support record of a metric a rule withheld although its pool
+    exists (the discrimination gate, the zero-inflation rule): counted as
+    withheld, never as a curve."""
+    return bool((d or {}).get("withheld")) if isinstance(d, dict) else False
 
 
 def stratifier_block(record: dict) -> Optional[dict]:
@@ -233,6 +244,16 @@ def reference_annotations(evidence: dict, metrics) -> dict[str, dict]:
             ann["discrimination"] = {k: disc.get(k) for k in DISCRIMINATION_KEYS}
             if disc.get("verdict") == "inverted" and disc.get("aucRefVsPressure") is not None:
                 caveats.append(INVERTED_CAVEAT.format(auc=float(disc["aucRefVsPressure"])))
+        zi = (evidence.get("zero_inflation") or {}).get(mk)
+        if zi and zi.get("handling") == curves.ZERO_INFLATED_TWO_PART \
+                and zi.get("two_part_applicable"):
+            # campaign Round 2 (C3a): the two-part rule states the zero share it set aside
+            ann["zeroInflation"] = {"share": zi.get("share"), "threshold": zi.get("threshold"),
+                                    "nZero": zi.get("n_zero"), "n": zi.get("n"),
+                                    "handling": zi.get("handling")}
+            caveats.append(ZERO_INFLATED_CAVEAT.format(
+                n_zero=int(zi.get("n_zero") or 0), n=int(zi.get("n") or 0),
+                share=float(zi.get("share") or 0.0), threshold=float(zi.get("threshold") or 0.0)))
         if caveats:
             ann["curveCaveats"] = caveats
         # how the metric is measured (the NRSA protocol the curve's data followed)
@@ -280,28 +301,53 @@ def _functions_of(metric: str) -> list[dict]:
     return functions
 
 
+#: The reasons a metric is withheld with no curve. REF-06 is the hierarchy
+#: running out; the two campaign Round 2 rules (config ``curve12.gate`` and
+#: ``curve10.zero_inflated_handling: withhold``) withhold a metric whose pool
+#: exists, and the record on the metric says so. Both are off by default.
+INSUFFICIENT_REFERENCE_SUPPORT = "insufficient-reference-support"
+DISCRIMINATION_GATE = "discrimination-gate"
+ZERO_INFLATED_POOL = "zero-inflated-reference-pool"
+WITHHELD_REASON_WORDS = {INSUFFICIENT_REFERENCE_SUPPORT: "insufficient reference support",
+                         DISCRIMINATION_GATE: "the discrimination gate",
+                         ZERO_INFLATED_POOL: "a zero-inflated reference pool"}
+
+
+def withheld_reason(item: dict) -> str:
+    """The reason of one ``insufficient_support`` item (REF-06 unless the item
+    names another rule)."""
+    return str((item or {}).get("reason") or INSUFFICIENT_REFERENCE_SUPPORT)
+
+
 def withheld_metrics(evidence: dict) -> list[dict]:
-    """The bundle's ``insufficientReferenceSupport`` list (REF-06): every metric
-    withheld because no defensible reference pool exists, with the function it
-    would have scored and what was tried."""
+    """The bundle's ``insufficientReferenceSupport`` list: every metric withheld
+    with no curve, with the function it would have scored and what was tried.
+    Most are REF-06 (no defensible reference pool); a metric withheld by the
+    discrimination gate or the zero-inflation rule carries that reason, its own
+    statement and the numbers behind it (``detail``)."""
     out = []
     for mk, item in sorted((evidence.get("insufficient_support") or {}).items()):
         cfg = item.get("config") or {}
         d = item.get("decision") or {}
         functions = _functions_of(mk)
-        out.append({
+        reason = withheld_reason(item)
+        record = {
             "metricId": "spring-" + deep_slug(mk), "metricKey": mk,
             "metricName": cfg.get("display_name") or mk, "units": cfg.get("units") or "",
             "functions": functions,
             "functionId": functions[0]["functionId"] if functions else None,
-            "reason": "insufficient-reference-support",
-            "statement": _withheld_statement(evidence, mk),
+            "reason": reason,
+            "statement": (item.get("statement") if reason != INSUFFICIENT_REFERENCE_SUPPORT
+                          and item.get("statement") else _withheld_statement(evidence, mk)),
             "levelsTried": d.get("levels_tried") or [],
             "rungsTried": [{"rung": a.get("rung"), "why": a.get("why"),
                             **({"condition": a["condition"]} if a.get("condition") else {})}
                            for a in (evidence.get("ladder_attempts") or [])
                            if a.get("metric") == mk and a.get("rung")],
-        })
+        }
+        if item.get("detail"):
+            record["detail"] = dict(item["detail"])
+        out.append(record)
     return out
 
 
@@ -426,7 +472,9 @@ def reference_method_block(evidence: dict) -> dict:
     """The bundle's top-level ``referenceMethod`` block."""
     screen = evidence.get("reference_screen") or {}
     support = evidence.get("reference_support") or {}
-    statuses = [str(d.get("status")) for d in support.values()]
+    # a metric a rule withheld keeps its pool record and counts as withheld
+    statuses = [rp.STATUS_INSUFFICIENT if is_withheld_record(d) else str(d.get("status"))
+                for d in support.values()]
     pool = evidence.get("reference_pool_summary") or {}
     return {"method": METHOD, "methodVersion": screen.get("methodVersion"),
             "screenId": screen.get("id"), "screenTier": screen.get("tier"),
@@ -454,7 +502,7 @@ def _basis_counts(support: dict) -> dict:
     """How many curves rest on each rung, so the bundle states its own mix."""
     out: dict = {}
     for d in support.values():
-        if str(d.get("status")) == rp.STATUS_INSUFFICIENT:
+        if str(d.get("status")) == rp.STATUS_INSUFFICIENT or is_withheld_record(d):
             continue
         basis = curve_basis.resolve(d.get("basis"))
         out[basis] = out.get(basis, 0) + 1
@@ -470,6 +518,7 @@ def _method_statement(support: dict) -> str:
     is assembled from the curves that were built.
     """
     counts = _basis_counts(support)
+    support = {mk: d for mk, d in support.items() if not is_withheld_record(d)}
     local = sum(1 for d in support.values() if str(d.get("status")) == rp.STATUS_LOCAL)
     borrowed = sum(1 for d in support.values()
                    if str(d.get("status") or "").startswith("borrowed"))
@@ -619,15 +668,28 @@ def coverage_exceptions_draft(result: dict, *, recorded_by: str = "") -> list[di
             f"{w.get('metricName')}, and nothing could be built from it: "
             f"{unbuilt[str(w.get('metricKey'))].get('failedAtBuild')}"
             for w in items if str(w.get("metricKey")) in unbuilt)
+        pools = [w for w in items if withheld_reason(w) == INSUFFICIENT_REFERENCE_SUPPORT]
+        ruled = [w for w in items if withheld_reason(w) != INSUFFICIENT_REFERENCE_SUPPORT]
+        text = f"Every candidate metric for this function ({names}) was withheld."
+        if pools:
+            text += (" No station pool from this ecoregion or a wider region under the "
+                     "regional screen passed acceptance, no comparable national reference "
+                     "passed, no approved modeled reference applies here, and the verified "
+                     "catalog holds no applicable published criterion."
+                     if not ruled else
+                     " For " + ", ".join(sorted(str(w.get("metricName")) for w in pools))
+                     + " no station pool, national reference, modeled reference or published "
+                       "criterion passed acceptance.")
+        for w in ruled:
+            # a metric withheld by a rule that judged an existing pool says which
+            # rule, in the record's own words
+            text += (f" {w.get('metricName')} was withheld by "
+                     f"{WITHHELD_REASON_WORDS.get(withheld_reason(w), withheld_reason(w))}: "
+                     f"{str(w.get('statement') or '').strip()}")
+        text += " No curve was forced." + _blocker_detail(result, pools)
         out.append({
             "functionId": fid, "reason": "insufficient-reference-support",
-            "justification": (
-                f"Every candidate metric for this function ({names}) was withheld. No station "
-                "pool from this ecoregion or a wider region under the regional screen passed "
-                "acceptance, no comparable national reference passed, no approved modeled "
-                "reference applies here, and the verified catalog holds no applicable "
-                "published criterion. No curve was forced." + _blocker_detail(result, items)
-                + (" " + owner if owner else "")),
+            "justification": text + (" " + owner if owner else ""),
             "recordedBy": recorded_by, "recordedAt": None})
     return out
 
@@ -1468,6 +1530,77 @@ def bundle_inputs(evidence: dict, meta: dict, intended_rows: dict,
     return rows, config, mapping
 
 
+def zero_inflation_records(data: pd.DataFrame, metric_config: dict,
+                           geometry: Optional[dict] = None) -> dict[str, dict]:
+    """The zero-inflation record (``curves.zero_inflation_of``) of every metric
+    whose pool is zero-inflated under the configured rule (campaign Round 2
+    candidate C3a); empty when the rule is off, the default. The same function
+    the curve engine applies, on the same masked pool values, so the record and
+    the curve agree by construction."""
+    geo = dict(geometry if geometry is not None else curves.seed_geometry())
+    if geo.get("zero_inflated_share") is None:
+        return {}
+    out: dict[str, dict] = {}
+    for mk, cfg in metric_config.items():
+        if mk not in data.columns:
+            continue
+        rec = curves.zero_inflation_of(data[mk], cfg or {}, geo)
+        if rec:
+            out[mk] = rec
+    return out
+
+
+def zero_inflated_statement(rec: dict) -> str:
+    """Why a zero-inflated pool withholds its metric (``zero_inflated_handling: withhold``)."""
+    return (f"Zero-inflated reference pool. {int(rec.get('n_zero') or 0)} of the "
+            f"{int(rec.get('n') or 0)} reference stations ({float(rec.get('share') or 0):.0%}) "
+            f"have a value of zero, above the {float(rec.get('threshold') or 0):.0%} at which "
+            "a curve seeded on the pool's quartiles would misread the median reference station, "
+            "so the metric is withheld under the zero-inflation rule. No curve was built and "
+            "the metric is not scored.")
+
+
+def discrimination_gate(discrimination: dict, settings: Optional[dict] = None) -> dict[str, dict]:
+    """The curves the CURVE-12 gate withholds (campaign Round 2 candidate C2,
+    ``curve12.gate``; empty when the gate is off, the default): a new curve whose
+    verdict is inverted or whose AUC is below ``curve12.min_auc``. A curve the
+    check could not evaluate passes. Carried curves never have a record here,
+    so the gate never touches them."""
+    st = dict(settings if settings is not None else methodology.curve12_gate())
+    if not st.get("gate"):
+        return {}
+    floor = float(st["min_auc"])
+    out: dict[str, dict] = {}
+    for mk, rec in (discrimination or {}).items():
+        rec = rec or {}
+        verdict = str(rec.get("verdict") or "")
+        auc = rec.get("aucRefVsPressure")
+        inverted = verdict == dz.VERDICT_INVERTED
+        below = auc is not None and float(auc) < floor
+        if not (inverted or below):
+            continue
+        out[mk] = {"verdict": verdict, "auc": None if auc is None else float(auc),
+                   "minAuc": floor, "nRef": rec.get("nRef"), "nPressure": rec.get("nPressure"),
+                   "why": "inverted" if inverted else "below_min_auc"}
+    return out
+
+
+def discrimination_gate_statement(rec: dict) -> str:
+    """Why the discrimination gate withholds a curve, on the metric's record."""
+    auc = rec.get("auc")
+    counts = f"{rec.get('nRef')} reference and {rec.get('nPressure')} pressured stations"
+    if rec.get("why") == "inverted":
+        how = (f"ranked pressured stations above reference stations (area under the curve "
+               f"{auc:.2f}; {counts})")
+    else:
+        how = (f"separated reference from pressured stations too weakly (area under the curve "
+               f"{auc:.2f}, below the gate's floor of {float(rec.get('minAuc') or 0):.2f}; "
+               f"{counts})")
+    return (f"Discrimination gate. In the discrimination check this curve {how}, so it is "
+            "withheld under the discrimination gate instead of being held for review. No "
+            "curve is published and the metric is not scored.")
+
+
 def source_of(decision: Optional[dict]) -> str:
     """Which source of the hierarchy a curve came from, for SELECT-04's ranking:
     local, regional, national, modeled or published."""
@@ -1480,6 +1613,55 @@ def source_of(decision: Optional[dict]) -> str:
     if basis == curve_basis.PUBLISHED:
         return "published"
     return "local" if str(d.get("status")) == rp.STATUS_LOCAL else "regional"
+
+
+def _abs_spearman(evidence: dict, a: str, b: str, *, min_n: int = 5) -> Optional[float]:
+    """The absolute Spearman correlation of two metrics over the stations that
+    carry both, from the pooled frame (``evidence["data"]``), or None when
+    either is not a column of it (a carried curve has no station values here)
+    or fewer than ``min_n`` stations carry both. Computed here rather than read
+    from the redundancy view, which lists only pairs above its report floor."""
+    data = evidence.get("data")
+    if not isinstance(data, pd.DataFrame) or a not in data.columns or b not in data.columns:
+        return None
+    pair = pd.DataFrame({"a": pd.to_numeric(data[a], errors="coerce"),
+                         "b": pd.to_numeric(data[b], errors="coerce")}).dropna()
+    if len(pair) < int(min_n):
+        return None
+    rho = pair["a"].corr(pair["b"], method="spearman")
+    return None if rho is None or rho != rho else abs(float(rho))
+
+
+def second_metric_check(evidence: dict, candidate: str, scored: list[str], ps: dict) -> dict:
+    """The independent-and-discriminating test of one candidate for a function's
+    next place (SELECT-04, ``metric_portfolio.second_metric_rule``): its absolute
+    Spearman with every metric the function already scores must be below
+    ``max_abs_spearman`` and its CURVE-12 AUC at least ``min_auc``. An unknown
+    correlation (no shared station values) or an unevaluable AUC fails the test
+    and the record says which."""
+    rhos = {m: _abs_spearman(evidence, candidate, m) for m in scored}
+    worst = max((r for r in rhos.values() if r is not None), default=None)
+    unknown = sorted(m for m, r in rhos.items() if r is None)
+    independent = bool(scored) and not unknown and (worst is None or worst < ps["max_abs_spearman"])
+    auc = ((evidence.get("discrimination") or {}).get(candidate) or {}).get("aucRefVsPressure")
+    discriminates = auc is not None and float(auc) >= ps["min_auc"]
+    why = []
+    if unknown:
+        why.append("no station values shared with " + ", ".join(unknown))
+    elif worst is not None and worst >= ps["max_abs_spearman"]:
+        why.append(f"absolute Spearman {worst:.2f} with a scored metric, not below "
+                   f"{ps['max_abs_spearman']:.2f}")
+    if auc is None:
+        why.append("no discrimination check could be run")
+    elif not discriminates:
+        why.append(f"discrimination AUC {float(auc):.2f}, below {ps['min_auc']:.2f}")
+    return {"metric": candidate, "against": list(scored),
+            "absSpearman": {m: (None if r is None else round(r, 4)) for m, r in rhos.items()},
+            "maxAbsSpearman": None if worst is None else round(worst, 4),
+            "auc": None if auc is None else float(auc),
+            "independent": bool(independent), "discriminates": bool(discriminates),
+            "joins": bool(independent and discriminates),
+            "why": "; ".join(why) if why else ""}
 
 
 def select_portfolio(evidence: dict, rows: dict, mapping: pd.DataFrame, config: dict,
@@ -1496,9 +1678,18 @@ def select_portfolio(evidence: dict, rows: dict, mapping: pd.DataFrame, config: 
     supported, not selected: its curve exists and its record says why it is not
     scored. Returns the rows and the mapping the exporter should read, and
     records the choice in ``meta["portfolioSelection"]``.
+
+    ``metric_portfolio.second_metric_rule`` (campaign Round 2 candidate C1)
+    governs the places after the first. ``rank`` is the rule above. Under
+    ``independent_and_discriminating`` the first new metric joins by rank and one
+    further place (at least two places in all, ``fill_to`` when larger) goes to
+    the highest-ranked candidate that passes :func:`second_metric_check` against
+    every metric already scored; each candidate's numbers are recorded per
+    function (``secondMetric``), as is the rule (``rule``).
     """
     from . import regional_agent as ra
-    fill_to = int(methodology.threshold("metric_portfolio.fill_to", 2) or 2)
+    ps = methodology.portfolio_settings()
+    fill_to, rule = ps["fill_to"], ps["second_metric_rule"]
     rank = dict(methodology.threshold("metric_portfolio.source_rank", {}) or
                 {"local": 0, "regional": 1, "national": 2, "modeled": 3, "published": 4})
     support = evidence.get("reference_support") or {}
@@ -1526,19 +1717,47 @@ def select_portfolio(evidence: dict, rows: dict, mapping: pd.DataFrame, config: 
 
         regular = sorted([m for m in cands if not (config.get(m) or {}).get("reserve")], key=key)
         reserves = sorted([m for m in cands if (config.get(m) or {}).get("reserve")], key=key)
-        need = max(0, fill_to - len(kept))
-        chosen = regular[:need]
-        if not kept and not chosen:
-            chosen = reserves[:fill_to]
+        second: Optional[dict] = None
+        if rule == methodology.SECOND_METRIC_RANK:
+            need = max(0, fill_to - len(kept))
+            chosen = regular[:need]
+            if not kept and not chosen:
+                chosen = reserves[:fill_to]
+        else:
+            places = max(int(fill_to), 2)
+            chosen = regular[:max(0, 1 - len(kept))]
+            if not kept and not chosen:
+                chosen = reserves[:1]
+            scored = kept + chosen
+            checks: list[dict] = []
+            while scored and len(scored) < places:
+                pick = None
+                for m in regular:
+                    if m in chosen:
+                        continue
+                    rec = second_metric_check(evidence, m, scored, ps)
+                    checks.append(rec)
+                    if rec["joins"]:
+                        pick = m
+                        break
+                if pick is None:
+                    break
+                chosen.append(pick)
+                scored.append(pick)
+            second = {"maxAbsSpearman": ps["max_abs_spearman"], "minAuc": ps["min_auc"],
+                      "places": places, "checks": checks}
         left = [m for m in regular + reserves if m not in chosen]
+        record = {"kept": kept, "selected": chosen, "rule": rule}
+        if second is not None:
+            record["secondMetric"] = second
         if not left and not reserves:
             if len(kept) + len(chosen) > 0:
-                selection[fid] = {"kept": kept, "selected": chosen, "notSelected": []}
+                selection[fid] = {**record, "notSelected": []}
             continue
         for m in left:
             drop_index += list(sub.index[sub["metric_key"].astype(str) == m])
         selection[fid] = {
-            "kept": kept, "selected": chosen,
+            **record,
             "notSelected": [{"metric": m, "source": source_of(support.get(m)),
                              "score": (scores.get(m) or {}).get("total"),
                              "reserve": bool((config.get(m) or {}).get("reserve"))}
@@ -1885,6 +2104,12 @@ def run_evidence(l3_code: str, name: str, *,
     curve is fitted for it."""
     from . import regional_agent as ra
 
+    # campaign Round 2: every knob is read once here, so a misconfigured one
+    # fails before any work; the non-default ones ride to the manifest's
+    # reference block and the inputs digest
+    methodology_knobs = methodology.round2_knobs()
+    geometry = curves.seed_geometry()
+
     dataset_id = nrsa_dataset_id or nrsa_dataset.MULTI_CYCLE_DATASET_ID
     if dataset_id != nrsa_dataset.MULTI_CYCLE_DATASET_ID:
         raise ValueError(
@@ -2027,6 +2252,25 @@ def run_evidence(l3_code: str, name: str, *,
     for mk in ladder_rows:
         metric_config.pop(mk, None)
     data = pools["data"]
+
+    # --- campaign Round 2 (C3a): a zero-inflated pool under the configured rule ---
+    # Off by default. The two-part handling is the curve engine's; the withhold
+    # handling takes the metric out here, as REF-06 does, with its pool decision
+    # kept and marked so the support record still says what the pool was.
+    withheld_by_rule: dict[str, str] = {}
+    rule_withheld_items: dict[str, dict] = {}
+    zero_inflation = zero_inflation_records(data, metric_config, geometry)
+    for mk, rec in zero_inflation.items():
+        if rec.get("handling") != curves.ZERO_INFLATED_WITHHOLD:
+            continue
+        insufficient_config[mk] = metric_config.pop(mk)
+        data = data.drop(columns=[mk], errors="ignore")
+        withheld_by_rule[mk] = ZERO_INFLATED_POOL
+        rule_withheld_items[mk] = {"decision": decisions[mk].to_dict(),
+                                   "config": insufficient_config[mk],
+                                   "reason": ZERO_INFLATED_POOL,
+                                   "statement": zero_inflated_statement(rec),
+                                   "detail": dict(rec)}
     if not len(metric_config) or not len(data):
         raise RuntimeError(
             f"no metric of L3 ecoregion {l3_code} has reference support at any level of "
@@ -2108,6 +2352,29 @@ def run_evidence(l3_code: str, name: str, *,
                                              values, frame)
                       if diagnostics_enabled else {})
 
+    # --- campaign Round 2 (C2): the CURVE-12 gate, off by default ---
+    # A new curve the check finds inverted or below the floor is withheld here,
+    # as REF-06 withholds: it leaves the curves, the review map and the metric
+    # config, its pool decision stays marked, and its CURVE-12 record stays for
+    # information. Carried curves have no record here and are never gated.
+    gated = discrimination_gate(discrimination) if discrimination else {}
+    for mk, rec in gated.items():
+        insufficient_config[mk] = metric_config.pop(mk)
+        curve_rows.pop(mk, None)
+        curve_review.pop(mk, None)
+        stratum_rows.pop(mk, None)
+        strata_applied.pop(mk, None)
+        diagnostics.pop(mk, None)
+        domain_checks.pop(mk, None)
+        deferred_gradients.pop(mk, None)
+        data = data.drop(columns=[mk], errors="ignore")
+        withheld_by_rule[mk] = DISCRIMINATION_GATE
+        rule_withheld_items[mk] = {"decision": decisions[mk].to_dict(),
+                                   "config": insufficient_config[mk],
+                                   "reason": DISCRIMINATION_GATE,
+                                   "statement": discrimination_gate_statement(rec),
+                                   "detail": dict(rec)}
+
     fixed_metrics = {mk: fixed_criteria.curve_row(mk) for mk in fixed_criteria.metric_keys()}
     n_local_reference = len(retained_ids)
 
@@ -2156,7 +2423,12 @@ def run_evidence(l3_code: str, name: str, *,
         "domain_checks": domain_checks, "deferred_gradients": deferred_gradients,
         "redundancy": redundancy, "stratifiers": strat,
         # --- what the pressure method adds ---
-        "reference_support": {**{mk: d.to_dict() for mk, d in decisions.items()},
+        # (a metric a Round 2 rule withheld keeps its pool decision, marked
+        # ``withheld`` with the reason, so the record says what the pool was)
+        "reference_support": {**{mk: {**d.to_dict(),
+                                      **({"withheld": withheld_by_rule[mk]}
+                                         if mk in withheld_by_rule else {})}
+                                 for mk, d in decisions.items()},
                               **{mk: dict(c.get("decision") or {}) for mk, c in carried.items()}},
         "reference_pool_ledger": pools["ledger"],
         "reference_pool_summary": {k: pools[k] for k in ("target_n_frame", "target_n_strict",
@@ -2178,9 +2450,16 @@ def run_evidence(l3_code: str, name: str, *,
         # the published version's SELECT-01 approvals, which carry when their
         # function's metric set is carried unchanged (carry_forward.carried_approvals)
         "carried_approvals": list(prior.get("approvals") or []),
-        "insufficient_support": {mk: {"decision": d.to_dict(),
-                                      "config": insufficient_config.get(mk) or {}}
-                                 for mk, d in insufficient.items()},
+        "insufficient_support": {**{mk: {"decision": d.to_dict(),
+                                         "config": insufficient_config.get(mk) or {}}
+                                    for mk, d in insufficient.items()},
+                                 **rule_withheld_items},
+        # campaign Round 2: the knobs set away from their defaults (the manifest's
+        # reference.knobs and the inputs digest), the zero-inflation records and
+        # the curves the discrimination gate withheld (empty on the defaults)
+        "methodology_knobs": methodology_knobs,
+        "zero_inflation": zero_inflation,
+        "discrimination_gate": gated,
         # REF-15: the refused sources the owner accepted, computed; the requests
         # ride in the manifest so the inputs digest names them
         "forced_metrics": forced,

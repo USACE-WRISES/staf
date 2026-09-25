@@ -1,0 +1,215 @@
+# evaluation_protocol_v1.yaml
+# Pre-registration V: the frozen evaluation protocol of the STAF national assessment campaign,
+# Round 2 (methodology revision). Machine-readable; the prose is EVALUATION_PROTOCOL_V1.md.
+# Both are committed under apps/stream-curves/config/methodology/ and every harness output of
+# Round 2 records this file's sha256 (`--prereg`). Frozen at gate G2, before any candidate
+# result is read. A margin here never moves after G2; one re-specification per family is
+# allowed only before that family's results are read, as a dated addendum in the .md.
+schema: evaluation-protocol/1
+protocol_version: "1.0"
+campaign: national-campaign-2026-09
+baseline:
+  methodology_version: "0.14-provisional"
+  main_commit: "30f57c5"
+  campaign_round1_commit: "6535837"
+  nrsa_dataset: multi-cycle-v1
+  nrsa_manifest_sha256_prefix: "3a6dc372"
+  value_policy_baseline: latest_non_null_index_visit      # what the seven published versions record
+  value_policy_round2: newest-nonnull-v2                   # Round A refits and every arm read under v2
+  reference_method: pressure-screen-1
+  reference_frame: wadeable                                # NHDPlus V2 stream order 1 to 5 (DATA-10)
+  published_versions:
+    central-basin-and-range: 1
+    central-great-plains: 1
+    northern-lakes-and-forests: 1
+    eastern-corn-belt-plains: 8
+    northeastern-highlands: 9
+    southeastern-plains: 2
+    interior-plateau: 6
+
+regions:
+  development:
+    published: ["58", "71", "55", "65", "27", "50", "13"]
+    added: ["43", "17", "1", "59", "47", "75", "45"]
+    testable_cells: ["58", "50", "13", "65", "43", "17", "1"]   # >= 12 strict and >= 25 in frame
+    regime_e_emulation: ["35", "43", "65", "67"]                  # TPL has no testable cell
+  reserved:
+    codes: ["4", "15", "16", "21", "78", "18", "80", "35", "62", "82", "66", "67"]
+    label: retrospective_nested   # rounds III and IV already scored these cells
+    rule: never touched during rounds A, B, C; scored once by the finalist
+  nars9_coverage: [CPL, NAP, NPL, SAP, SPL, TPL, UMW, WMT, XER]
+
+partitions:
+  unit: station_key
+  repeat_visits: precision_only          # visit 2 rows never enter fits or evaluation
+  clusters:
+    bootstrap: huc12                     # HUC8 fallback where HUC12 is missing
+    association_folds: huc8              # matches the EASI alternatives study
+  geography: leave_one_l3_out
+  holdout_exclusion:
+    - local_pool
+    - regional_pools
+    - national_donors
+    - model_training
+    - epa_agriculture_limit_calibration
+    - scale_registry                     # per-fold registry, or the >= 0.95 leave-one-out check
+  target_non_reference_stations: kept    # as production would have them
+  seeds:
+    cell_seed: crc32(metric, region, basis, regime, seed)   # basis_recovery convention
+    dev_eval_split_seed: 11
+    bootstrap_resamples: 200
+
+temporal_sensitivity:
+  label: retrospective                   # 2023-24 informed the 0.14 corrections
+  fit_cycles: ["1314", "1819"]
+  score_cycle: "2324"
+  measures: [quartile_shift_iqr_units, data11_same_visit_vs_mixed_year_flips]
+
+candidates:
+  # one change each against the Round A full-refit baseline
+  B1:
+    family: pool_rule
+    change: "narrowest_adequate (n >= 20) instead of first passing pool"
+    config: {reference_pool.ladder_rule: narrowest_adequate}
+    hypothesis: H1 adequate wider pools classify closer to reference than exploratory narrower ones
+    primary_outcome: O1
+    decision: accuracy_change
+  B2:
+    family: regional_screen
+    change: "regional relaxation off: the strict screen in every pool"
+    config: {reference_hierarchy.regional_screen.enabled: false}
+    hypothesis: H2 relaxed pools promote sites (net optimism)
+    primary_outcome: O2
+    decision: accuracy_change
+  B3:
+    family: search_order
+    change: "one search order (l3, l2, l1, nars9) for every family"
+    config: {reference_transfer.search_order: [l3, l2, l1, nars9]}
+    hypothesis: H3 family-specific orders are no better than noise
+    primary_outcome: O1
+    decision: simplification
+  B4:
+    family: data_floors
+    change: "DATA floors 15/25 (unstratified) and 8/20 (stratum)"
+    config: {data_rules.min_n_unstratified: 25, data_rules.exploratory_n_unstratified: 15, data_rules.min_n_stratum: 20, data_rules.very_small_stratum_n: 8, acceptance.sample_adequacy.exploratory: 15, acceptance.sample_adequacy.adequate: 25}
+    hypothesis: H7 floors change class stability, not agreement
+    primary_outcome: O5
+    decision: simplification
+  C1:
+    family: portfolio_size
+    change: "SELECT-04 fill to 1; a second metric only if abs Spearman < 0.65 and CURVE-12 AUC >= 0.55"
+    config: {metric_portfolio.fill_to: 1, metric_portfolio.second_metric_rule: independent_and_discriminating, metric_portfolio.second_metric_max_abs_spearman: 0.65, metric_portfolio.second_metric_min_auc: 0.55}
+    hypothesis: H4 two-per-function adds redundancy, not accuracy
+    primary_outcome: O3
+    decision: simplification
+  C2:
+    family: discrimination_gate
+    change: "CURVE-12 gate: AUC < 0.55 or inverted withholds a new curve"
+    config: {curve12.gate: true, curve12.min_auc: 0.55}
+    hypothesis: H9 gating removes curves without ecological signal at little coverage cost
+    primary_outcome: O3
+    decision: accuracy_change
+  C3a:
+    family: geometry_zero_inflated
+    change: "declared zero-inflated metrics (reference zero share > 0.25) take a two-part curve or are withheld instead of degenerate_q25"
+    config: {curve10.zero_inflated_share: 0.25, curve10.zero_inflated_handling: two_part}
+    hypothesis: H6a a fallback ramp on a zero-heavy pool misreads the median reference station
+    primary_outcome: O5
+    decision: accuracy_change
+  C3b:
+    family: geometry_endpoints
+    change: "tail endpoints 0.5 / 1.5 / 2.5 IQR instead of the engine's 0.3 / 4/3 / 7/3 IQR (re-specified 2026-09-25 before any result: the first draft named the engine's own default as the alternative)"
+    config: {curve10.tail_offsets_iqr: [0.5, 1.5, 2.5]}
+    hypothesis: H6b endpoints move class boundaries more than sampling noise
+    primary_outcome: O5
+    decision: simplification
+  C4:
+    family: assignment
+    change: "metric and function assignment changes from the evidence table dispositions marked revise"
+    config: {metric_map: evidence_table_revise_set}
+    hypothesis: H11 construct-faithful assignments score functions once and drop covariate-like metrics
+    primary_outcome: O3
+    decision: accuracy_change
+  C5:
+    family: sqt_sources
+    change: "REF-15 extension on: verified state SQT curves compete with fitted curves (experimental config root only)"
+    config: {owner_decisions.alternatives_over_fitted: true}
+    hypothesis: H10 state curves add defensible coverage where verified
+    primary_outcome: O4
+    decision: coverage_only
+    constraint: an unresolved scoring or applicability question blocks adoption (D4a)
+  C6:
+    family: carry_forward
+    change: "carry-forward off (full refit) as the D3 reference arm"
+    config: {refit: all}
+    hypothesis: H8 published carry-forward hides drift
+    primary_outcome: O1
+    decision: reference_arm
+
+outcomes:
+  O1:
+    name: reference_recovery
+    measure: class agreement with the withheld strict reference; A1 exceedance >= 0.10 per cell; paired delta on identical stations, 90 percent HUC12-cluster bootstrap
+    adopt_accuracy_change: interval excludes 0 and median delta >= 0.05
+    adopt_simplification: noninferiority, lower bound >= -0.05
+    basis: "0.10 and the 2/3 cell rule inherited from Pre-registration II; 0.05 is an uncalibrated operating choice"
+  O2:
+    name: directional_bias
+    measure: median net optimism (ACC-06)
+    limit: "<= 0.05 and no worsening beyond 0.02"
+    basis: ACC-06, uncalibrated
+  O3:
+    name: independent_association
+    measure: AUC and Spearman of function score against NRSA benthic MMI, O/E and fish MMI at non-reference in-frame stations, HUC8 folds
+    block: paired AUC delta lower 95 percent bound < -0.01
+    basis: the EASI alternatives study rule, shared so both tiers use one margin; operating choice
+    independence_limit: MMI reference designation shares landscape variables with the screen, so O3 supports association, never validation
+  O4:
+    name: coverage
+    measure: functions supported of 20, curves by basis, withheld count
+    rule: reported; never traded against O1 to O3
+  O5:
+    name: stability
+    measure: bootstrap class-flip rate at reference stations (200 HUC12 resamples) and the ACC-04 shift
+    limit: median flip rate may not rise by more than 0.02
+    basis: operating choice
+  O6:
+    name: usability
+    measure: field metrics per assessment, distinct procedures, runtime, failures
+    rule: reported
+
+multiplicity:
+  families: 10
+  primary_comparisons_per_family: 1
+  structural_protection: ">= 4 cells and the 2/3 rule of Pre-registration IV"
+  supporting: BH q <= 0.10 across the ten primaries, reported
+  subgroups: NARS-9 and metric family, uncorrected, exploratory
+  subgroup_block: any NARS-9 group losing more than 0.10 on O1 blocks adoption
+
+stopping:
+  - stop after the declared families
+  - a family without a passing member is rejected and the baseline kept
+  - one re-specification per family, only before its results are read, as a dated addendum
+  - the reserved cells are scored once, by the finalist
+
+claims:
+  software_verification: digests and golden masters
+  reference_recovery: [O1, O2, O5]
+  association_not_validation: [O3]
+  supports_nothing: agreement with EASI or with fixed criteria (the reference screen is EASI's; pressure metrics carry EASI's bands)
+
+sequence:
+  round_a:
+    - A1 replay the seven published versions with carry-forward; digests match
+    - A2 full refit of the 0.14 rules on the development set under value policy v2, owner holds and REF-15 decisions listed, not applied
+    - A3 baseline O1 to O6 on the development cells (run_hierarchy_test, run_model_test restricted to those cells); basis_validation regenerated from development cells only
+  round_b: [B1, B2, B3, B4]
+  round_c: [C1, C2, C3a, C3b, C4, C5, C6]
+  finalist:
+    - compose the accepted changes
+    - check the composition once on the development cells for interaction
+    - freeze (methodology 0.15-provisional, policy 1.3)
+    - score the reserved cells once
+    - final all-data fits, distinct from the fold fits
+  comparison_rule: paired on identical eligible stations; coverage change reported separately
+  rejection_rule: no candidate meets its margin, or a candidate meets it only by lowering reference quality (O2) or by coverage accounting
