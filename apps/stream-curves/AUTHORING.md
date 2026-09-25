@@ -13,7 +13,7 @@ Every section describes code that exists on the authoring-foundation branch.
 | DEEP bundle `assessment.deep.json` | StreamCurves publish (`library.publish_version`) | DEEP (baked registry, local merge, remote `library` release) |
 | DEEP calculator `calculator.xlsx` | `streamcurves/deep_calculator.py` at publish | DEEP (`www/calculators`), the `library` release |
 | EASI method package | StreamCurves EASI exporter (`streamcurves/easi_method`) | EASI (`EASI_METHOD_PACKAGE`), the `library` release |
-| EASI method files in `apps/easi/data` | today: `apps/easi/scripts/promote_alternative_2.py`, `build_easi_metrics.py` (from `data/source/screening-metrics.tsv`, generated from the metric-library CSV) and `fetch_nars_ecoregions.py`; after adoption: the EASI exporter only | EASI, StreamCurves' vendored copy (`_vendor/easi`), the EASI calculator generator |
+| EASI method files in `apps/easi/data` | today: `apps/easi/scripts/promote_alternative_2.py`, `build_easi_metrics.py` (from `data/source/screening-metrics.tsv`, generated from the metric-library CSV) and `fetch_nars_ecoregions.py`; after adoption: the EASI exporter only (`scripts/export_easi_method.py --write-easi-data`) | EASI, StreamCurves' vendored copy (`_vendor/easi`), the EASI calculator generator |
 | Library catalog and manifests | `library.publish_version` (DEEP) and `library.publish_easi_version` (EASI), maintainer checkout, `STAF_LIBRARY_PUBLISH=1` | StreamCurves, DEEP, `scripts/library_release.py` |
 | Release feeds `library.json` / `library-v2.json` | `scripts/library_release.py` (CI) | StreamCurves gallery, DEEP remote library |
 | Evidence packages | `tools/easi-national/builder/evidence_export.py` (EASI); the NRSA archive builder (DEEP, in-app) | StreamCurves evidence store (`streamcurves/evidence_store.py`), refit (`easi_method/refit.py`) and exploration |
@@ -164,10 +164,19 @@ Activation and isolation:
   `STREAMCURVES_EASI_WORKER=1`; StreamCurves' entry points also clear `EASI_*` switches at start.
 
 Authority. The importer (`scripts/import_easi_method.py`) reads EASI's method files into an
-authored project; the exporter writes packages from it. Neither runs implicitly or writes
-`apps/easi/data`. Until the owner adopts the flip, a round-trip gate proves that import followed by
-export reproduces `apps/easi/data` byte for byte, and a change to `apps/easi/data` is brought in by
-importing it as a new authored version. After adoption, `apps/easi/data/source/active-method.json`
+authored project; the exporter writes packages from it. Neither runs implicitly, and the exporter
+writes `apps/easi/data` only when told to: `export_easi_method.py <project or library version
+folder> --out <pkg.zip> --write-easi-data apps/easi/data` writes the eight method files byte for
+byte and nothing else (the folder must already be an EASI data folder; `--check` compares
+instead and exits 1 listing every difference). Until the owner adopts the flip, a round-trip gate
+proves that import followed by export reproduces `apps/easi/data` byte for byte, and a change to
+`apps/easi/data` is brought in by importing it as a new authored version. The flip itself is
+`apps/easi/easi/method_authority.py` with `apps/easi/tests/test_method_data_matches_library.py`:
+`apps/easi/data` must equal the library's default EASI version (its manifest's `latestVersion`
+unless a `defaultVersion` is named) and `method_version()` the one that version records; while
+that holds, `promote_alternative_2.py`, `build_easi_metrics.py` and `fetch_nars_ecoregions.py`
+refuse to write method files and name the exporter (`--allow-direct-write` is their transition
+escape, removed at adoption). After adoption, `apps/easi/data/source/active-method.json`
 pins the active version (id, version, `packageDigest`), `apps/easi/data` must equal that version's
 files, and only an explicit activation rewrites both. Publishing a new version never changes the
 pin, so publishing does not activate.
@@ -186,6 +195,48 @@ mapping, `basis_transfer` and `published_benchmark`, and every run manifest's `e
 Drafts never load in that copy. Re-vendoring a new EASI method into StreamCurves is a DEEP
 methodology decision: its fingerprints and run manifests change, so it happens only through
 re-vendoring with the drift gates, never through a package or an environment variable.
+
+## Shared evidence contract (DEEP and EASI)
+
+DEEP and EASI read some of the same evidence: a desktop watershed variable can be a DEEP
+predictor or scored metric, an EASI screening input, and a reference-screen variable at the
+same time, and a field measure DEEP scores can be the construct an EASI desktop proxy stands
+for. This section is the durable record of what is shared and what the sharing means; the
+notes folder cannot hold it. The machine-readable sides are `config/metric_registry.yaml` and
+`config/metric_map.yaml` (DEEP; the curated evidence per key in `config/metric_evidence.yaml`,
+projected into `config/metric_evidence_table.csv`) and `easi-metrics.json` and
+`screening-methods.json` (EASI, the method files), joined on the STAF function id and the
+metric library id. Every row states the construct and its meaning, units, spatial support
+(site reach or watershed), protocol (NRSA field or desktop proxy), target population and
+frame, direction, its role in the pressure screen, provenance, applicability and the
+circularity note. The identities the rows are read under:
+
+- DEEP: `curveMethodVersion` `iqr-seed-2`, `screeningMethodVersion` `easi-batch-2`
+  (`streamcurves/run_state.py`; every run manifest carries both), the pressure screen
+  `least-disturbed-v1` (`data/nrsa/station_screen.parquet`, sha256
+  `d9954342f71a959da8d3c7ac74fd0fbb3620dae34f987cdd051cd42f0befefdc`, 4,378 stations, 3,190
+  in the EASI frame, 770 of them strict, built under EASI method `b2e3033116e3`): strict
+  `pctimp2019ws <= 1`, `agriculture_ws <= 10`, `rddensws <= 2`, `dor < 2`, `nabd_densws == 0`,
+  `npdesdensws == 0`, `mines_ws == 0`.
+- EASI: `method_version` `b2e3033116e3`, `evaluatorDigest`
+  `sha256:594bd096fd36bc4060d1023f99379446beeb522364c3ac18a143d55786345845`, `packageDigest`
+  `sha256:5b733a6b7690f7893c6c15357178128a04646595e5d2cff7f8bb69fdbf40246d` (library
+  `easi-screening` v1); its development panels are selected by the same strict and relaxed
+  screens on the same StreamCat variables (`easi_method/fit_recipe.py`, `easi-dev-universe`).
+- Frames: DEEP scores NRSA wadeable stations (the DATA-10 frame; the station table above);
+  EASI scores NHDPlus V2 reaches (the development universe holds 2,691,339). Applicability is
+  CONUS, by NHDPlus V2 COMID, for both.
+- Circularity: an EASI-derived reference screen never counts as validation of DEEP and a DEEP
+  curve never validates EASI; a variable that is both a screen variable and a scored input
+  defines the reference pool it is scored against, so no reference curve can be fitted on it.
+
+First rows (the Round 0 evidence table's dispositions for them are Round 2 hypotheses):
+
+| Shared construct | STAF function | DEEP side | EASI side | Units, direction, support | Circularity note |
+|---|---|---|---|---|---|
+| Watershed impervious cover (NLCD 2019 total impervious area, not effective impervious area) | catchment-hydrology (also DEEP's high-flow-dynamics) | `pctimp2019` (StreamCat `PctImp2019Ws` by station COMID), role both, scored on EASI's fixed criterion (CURVE-11) | `catchment-land-cover-pressure`, input `impervious` (`pctimp2019ws`), bands <10 / 10-25 / >25 %, worst-of with agricultural cover; also an input of `thermal-regulation-vulnerability` | percent of the watershed; lower is better; watershed support, desktop proxy in both tiers | strict screen variable (<= 1 %): the reference pools are defined by it, so DEEP scores a threshold, never a fitted curve; listed under two DEEP functions (one variable, two scores) |
+| Watershed road density | reach-inflow | `rddens` (StreamCat `RdDensWs`), role both, scored on the fixed criterion | `road-density-inflow-pressure`, input `roadDensity` (`rddensws`), bands <1 / 1-<3 / >=3 km per km2 | km per km2; lower is better; watershed support, desktop proxy in both tiers | strict and relaxed screen variable (<= 2): the same pool definition applies; SQT concentrated-flow points stay field-only |
+| Riparian woody cover | light-thermal-regime, carbon-processing, habitat-provision | field measures of the construct: `phab_XCDENMID` (mid-channel canopy density, Light and thermal regime), `phab_XCMGW` (riparian woody cover fraction, Carbon processing), `phab_XFC_NAT` (natural fish cover, Habitat provision); NRSA 10 m riparian plots and densiometer, site reach support | the `corridor-woody` curve set (woody cover in the 100 m corridor, `woody_wsrp100`: forest + shrub + woody wetland, StreamCat rp100 by NARS-9 region with a national fallback) scores `thermal-regulation-vulnerability` and `habitat-support-potential`; `corridor-natural` (forest + shrub + grassland + wetland) scores `organic-matter-supply-potential` | percent of the corridor (EASI) against fraction or percent at the site (DEEP); higher is better in both; watershed-corridor support against site reach | different quantities of one construct: the EASI curves are fitted on panels chosen by the pressure screen, so tier agreement on woody cover is shared input, not validation; one EASI curve family serves three functions and one DEEP measure (XCMGW) is a habitat and shade measure as much as a carbon one (candidate C4) |
 
 ## StreamCurves project files
 

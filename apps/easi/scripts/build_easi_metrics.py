@@ -5,10 +5,18 @@ EASI (Ecosystem Assessment Screening Index) = the 20 screening metrics flagged
 the single source of truth that keeps EASI's metric definitions, Good/Fair/Poor
 criteria, and bin index ranges in lockstep with STAF.
 
-Run:  python scripts/build_easi_metrics.py
+Run:  python scripts/build_easi_metrics.py [--allow-direct-write]
+
+While the library's EASI version is the authority for the method files
+(``easi.method_authority``: the library entry sits beside this EASI and its default version
+equals ``data/``), this script refuses to write ``data/easi-metrics.json``: a changed metric
+definition enters an authored StreamCurves version and reaches EASI through
+``apps/stream-curves/scripts/export_easi_method.py --write-easi-data``.
+``--allow-direct-write`` is the transition escape, removed at adoption.
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import sys
@@ -16,6 +24,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from easi import method_authority
 from easi.config import RATING_INDEX
 SRC_TSV = ROOT / "data" / "source" / "screening-metrics.tsv"
 FUNCTIONS_JSON = ROOT / "data" / "functions.json"
@@ -58,7 +67,15 @@ def load_function_name_to_id() -> dict[str, str]:
     return {f["name"].strip(): f["id"] for f in data}
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(
+        description="Generate data/easi-metrics.json from data/source/screening-metrics.tsv")
+    ap.add_argument("--allow-direct-write", action="store_true",
+                    help="write data/easi-metrics.json although the library's EASI version is "
+                         "the authority for it (transition only; the exporter is the writer)")
+    args = ap.parse_args(argv)
+    if not args.allow_direct_write and method_authority.authority_active():
+        method_authority.refuse_direct_write("build_easi_metrics.py")
     if not SRC_TSV.exists():
         print(f"ERROR: source TSV not found: {SRC_TSV}", file=sys.stderr)
         return 1
