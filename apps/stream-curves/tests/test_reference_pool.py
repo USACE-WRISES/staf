@@ -113,6 +113,19 @@ def test_the_first_option_that_passes_is_used_even_when_exploratory():
     assert d2.status == rp.STATUS_LOCAL and d2.disposition == "exploratory"
 
 
+def test_narrowest_adequate_takes_the_adequate_parent_over_the_exploratory_local_pool():
+    """Campaign Round 2 candidate B1 (reference_pool.ladder_rule narrowest_adequate):
+    the same fixture as the pinned first-pass case, decided the other way, and the
+    exploratory local pool only when no wider option is adequate."""
+    frame = _frame(_stations("T", 12, l3="55", l2="8.2"), _stations("M", 3, l3="56", l2="8.2", flat=True),
+                   _stations("N", 20, l3="57", l2="8.2", flat=True))
+    d, _ = _choose("m_form", frame, "55", ladder_rule="narrowest_adequate")
+    assert d.status == "borrowed_l2" and d.n_usable == 35 and d.disposition == "adequate"
+    thin = _frame(_stations("T", 12, l3="55", l2="8.2"), _stations("M", 3, l3="56", l2="8.2", flat=True))
+    d2, _ = _choose("m_form", thin, "55", ladder_rule="narrowest_adequate")
+    assert d2.status == rp.STATUS_LOCAL and d2.n_usable == 12 and d2.disposition == "exploratory"
+
+
 def test_no_level_supports_the_metric_means_insufficient():
     frame = _frame(_stations("T", 40, l3="55", l2="8.2", strict=False),
                    _stations("M", 4, l3="56", l2="8.2", flat=True))

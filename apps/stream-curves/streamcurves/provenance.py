@@ -397,6 +397,12 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
         # choice stands"): they change what the build fits
         if result.get("owner_hold"):
             inputs["reference"]["heldByOwner"] = sorted(str(k) for k in result["owner_hold"])
+        # campaign Round 2 (2026-09-25): the methodology knobs set away from their
+        # defaults (methodology.round2_knobs, keyed by config path). A run on the
+        # defaults records no key, so every published digest still replays.
+        if result.get("methodology_knobs"):
+            inputs["reference"]["knobs"] = {str(k): v for k, v in
+                                            sorted(dict(result["methodology_knobs"]).items())}
 
     # Predictor source: recorded whenever the run declares one. The DERIVED
     # value (from the predictor columns actually configured) is authoritative;
@@ -715,6 +721,12 @@ def digest_payload_from_manifest(manifest: dict) -> dict:
             digest_payload["reference"]["forcedSources"] = ref["forcedSources"]
         if ref.get("heldByOwner"):
             digest_payload["reference"]["heldByOwner"] = ref["heldByOwner"]
+        # campaign Round 2: a knob away from its default decides pool choice,
+        # portfolio, gate or geometry, so it joins; a manifest that records none
+        # (every published version, and every run on the defaults) adds no key
+        if ref.get("knobs"):
+            digest_payload["reference"]["knobs"] = {str(k): v for k, v in
+                                                    sorted(dict(ref["knobs"]).items())}
     # A manifest without a digest schema is digested under the legacy rules above,
     # verbatim: every published version replays. Schema 2 (2026-09-25) ALWAYS adds
     # what the legacy rules left out, so an unchanged value is a key with a null and

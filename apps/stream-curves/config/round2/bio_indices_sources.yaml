@@ -1,0 +1,82 @@
+# bio_indices_sources.yaml
+# Where the station-level NRSA biological indices of Round 2 (outcome O3) come from:
+# EPA's own published files, the columns read from each, and what a cycle does not
+# publish. scripts/build_bio_indices.py reads this table, checks every file against
+# data/nrsa/sources.lock.json (the sha256 the archive build pinned) and writes one row
+# per station to a data root outside apps/. A cycle that publishes no index for a
+# station leaves the cell empty: nothing is ever filled from another cycle's class or
+# derived from a score.
+#
+# Files are named relative to the raw folder scripts/nrsa/fetch_nrsa_raw.py fills
+# (notes/DEEP_Working/nrsa_raw/<cycle>/). `lock_key` is the entry in sources.lock.json.
+# Class labels are recoded to Good / Fair / Poor exactly as the EASI national builder
+# reads them (tools/easi-national/builder/analysis/nrsa.py, recode_class); "Not
+# Assessed" reads as no class.
+schema: bio-indices-sources/1
+index_visit: "VISIT_NO 1 (the archive's index visit; visit 2 and R rows serve precision only)"
+station_matching: "data/nrsa/site_visits.parquet on (cycle, SITE_ID, VISIT_NO) -> station_key"
+indices:
+  benthic_mmi:
+    label: "Benthic macroinvertebrate MMI"
+    score_column: MMI_BENT
+    class_column: BENT_MMI_COND
+  oe:
+    label: "Benthic O/E (observed over expected taxa)"
+    score_column: OE_SCORE
+    class_column: OE_COND
+    class_recode:
+      "O/E>=0.9": Good
+      "O/E<0.9": Fair
+      "O/E<0.8": Poor
+      "OE<0.5": Poor
+      "O/E<0.5": Poor
+  fish_mmi:
+    label: "Fish assemblage MMI"
+    score_column: MMI_FISH
+    class_column: FISH_MMI_COND
+  chlorophyll:
+    label: "Chlorophyll a condition class"
+    score_column: null
+    class_column: null
+    not_published: "No NRSA cycle publishes a chlorophyll a condition class; the water-column concentration is in the archive as chem_CHLA."
+cycles:
+  "1314":
+    files:
+      - path: 1314/nrsa1314_allcond_05312019_0.csv
+        lock_key: 1314/KEY_VARIABLES/data
+        provides: {benthic_mmi: [MMI_BENT, BENT_MMI_COND], oe: [OE_SCORE, OE_COND], fish_mmi: [MMI_FISH, FISH_MMI_COND]}
+        note: "The key-variables file of the 1,853 population-estimate sites: the only 2013-14 file with condition classes."
+      - path: 1314/nrsa1314_bentmmi_04232019.csv
+        lock_key: 1314/BENTHIC_MMI/data
+        provides: {benthic_mmi: [MMI_BENT], oe: [OE_SCORE]}
+        note: "Scores for every 2013-14 benthic sample (2,069 index visits); no class column."
+      - path: 1314/nrsa1314_fishmmi_04232019.csv
+        lock_key: 1314/FISH_MMI/data
+        provides: {fish_mmi: [MMI_FISH]}
+        note: "Scores for every 2013-14 fish sample; no class column."
+    not_published:
+      - "Benthic MMI, O/E and fish MMI classes exist only for the key-variables sites; a station with a score in the indicator file and no key-variables row carries the score without a class."
+  "1819":
+    files:
+      - path: 1819/nrsa-1819-benthic-macroinvertebrate-mmi-data.csv
+        lock_key: 1819/BENTHIC_MMI/data
+        provides: {benthic_mmi: [MMI_BENT, BENT_MMI_COND]}
+      - path: 1819/nrsa-1819-fish-mmi-data.csv
+        lock_key: 1819/FISH_MMI/data
+        provides: {fish_mmi: [MMI_FISH, FISH_MMI_COND]}
+      - path: 1819/nrsa1819_data_for_populationestimates.csv
+        lock_key: 1819/POPULATION_ESTIMATES/data
+        provides: {oe: [OE_COND]}
+        note: "The population-estimates file carries the O/E class; 2018-19 publishes no O/E score."
+    not_published:
+      - "O/E score: 2018-19 publishes the class only."
+  "2324":
+    files:
+      - path: 2324/nrsa2324_benthicmmi.csv
+        lock_key: 2324/BENTHIC_MMI/data
+        provides: {benthic_mmi: [MMI_BENT, BENT_MMI_COND]}
+      - path: 2324/nrsa2324_fishmmi.csv
+        lock_key: 2324/FISH_MMI/data
+        provides: {fish_mmi: [MMI_FISH, FISH_MMI_COND]}
+    not_published:
+      - "O/E: 2023-24 publishes neither a score nor a class."
