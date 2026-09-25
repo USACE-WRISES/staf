@@ -446,8 +446,9 @@ def cmd_stage(a) -> int:
     # this build reads has to hold that decision, or the metric would silently walk
     # the hierarchy again. Checked before the expensive pass, and only where the
     # published version is an input (a full refit never reads the canonical library).
+    carry_root = _carry_root(a)
     if mode == "missing":
-        unheld = oc.published_vs_standing(published_bundle(a.l3), curve_decisions)
+        unheld = oc.published_vs_standing(published_bundle(a.l3, root=carry_root), curve_decisions)
         if unheld:
             print("[batch] REFUSED: the published version scores "
                   f"{', '.join(unheld)} under an owner decision that "
@@ -506,7 +507,7 @@ def cmd_stage(a) -> int:
         hold=oc.held_metrics(curve_decisions) or None,
         # H1: missing carries the published curves forward (methodology 0.14);
         # all builds every curve afresh and never reads the canonical library
-        carry=(mode == "missing"),
+        carry=carry_argument(mode, a.l3, carry_root),
         # DATA-11: which value policy the archive is read under (recorded as used)
         value_policy=value_policy,
         on_event=ra.event_narrator())
@@ -773,7 +774,10 @@ def cmd_stage(a) -> int:
         encoding="utf-8")
     shutil.copy2(policy["meta"]["path"], out_dir / "standing_decisions.applied.yaml")
     prior = None
-    if mode == "missing":
+    if mode == "missing" and carry_root is not None:
+        # verify: the version the re-stage carried from, read from the same view
+        prior = published_bundle(a.l3, root=carry_root)
+    elif mode == "missing":
         # the packet's diff against the published version; a full refit reads the
         # canonical library for nothing, its comparison is a separate step (D3)
         try:
@@ -895,18 +899,39 @@ def write_evidence_reference(folder: Path, ref: dict) -> Path:
     return p
 
 
-def published_bundle(code: str) -> Optional[dict]:
+def published_bundle(code: str, root: Optional[Path] = None) -> Optional[dict]:
     """The bundle of the region's latest published version in the canonical
-    library (what a build carries forward from), or None."""
-    got = cf.find_published(str(code))
+    library (what a build carries forward from), or in the library view ``root``
+    (a verify re-stage), or None."""
+    got = cf.find_published(str(code), root=root)
     if got is None:
         return None
     aid, ver = got
-    p = ra.CANONICAL_LIBRARY / "assessments" / aid / f"v{ver}" / lib.BUNDLE_FILE
+    base = Path(root) if root is not None else ra.CANONICAL_LIBRARY
+    p = base / "assessments" / aid / f"v{ver}" / lib.BUNDLE_FILE
     try:
         return json.loads(p.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
+
+
+def _carry_root(a) -> Optional[Path]:
+    """The library view a stage carries forward from instead of the canonical
+    library (``verify`` sets it to what the recorded stage could see), or None."""
+    root = getattr(a, "carry_root", None)
+    return Path(root).resolve() if root else None
+
+
+def carry_argument(mode: str, code: str, root: Optional[Path]):
+    """What ``run_evidence`` carries forward: the canonical library's latest
+    published version (True) under ``missing``; under ``missing`` with a library
+    view, the carry prepared from that view (an empty dict when the view holds
+    no published version, so nothing is carried); nothing (False) under ``all``."""
+    if mode != "missing":
+        return False
+    if root is None:
+        return True
+    return cf.prepare(str(code), root=Path(root)) or {}
 
 
 # --------------------------------------------------------------------------- #
@@ -1298,15 +1323,16 @@ def _file_sha(path) -> Optional[str]:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest() if path and Path(path).is_file() else None
 
 
-def carried_from(code: str) -> Optional[dict]:
+def carried_from(code: str, root: Optional[Path] = None) -> Optional[dict]:
     """The canonical library's published version of the region a stage carries forward from
-    (its approvals and curves), or None."""
+    (its approvals and curves), or the library view's under a verify re-stage, or None."""
     from streamcurves import carry_forward as cf
-    got = cf.find_published(str(code))
+    got = cf.find_published(str(code), root=root)
     if got is None:
         return None
     aid, ver = got
-    man = json.loads((ra.CANONICAL_LIBRARY / "assessments" / aid / "manifest.json").read_text(encoding="utf-8"))
+    base = Path(root) if root is not None else ra.CANONICAL_LIBRARY
+    man = json.loads((base / "assessments" / aid / "manifest.json").read_text(encoding="utf-8"))
     row = next((v for v in man.get("versions") or [] if int(v.get("version") or 0) == int(ver)), {})
     return {"assessmentId": aid, "version": int(ver), "contentDigest": row.get("contentDigest")}
 
@@ -1351,7 +1377,8 @@ def carried_for(args, code: str) -> Optional[dict]:
     get = args.get if isinstance(args, dict) else lambda k, d=None: getattr(args, k, d)
     if ra.refit_mode(get("refit")) == "all":
         return None
-    return carried_from(code)
+    root = get("carry_root")
+    return carried_from(code, root=Path(root).resolve() if root else None)
 
 
 def outputs_intact(region_dir: Path, rec: dict) -> bool:
@@ -1706,12 +1733,16 @@ def cmd_replay(a) -> int:
 VERIFY_REPORT = "verify_report.json"
 
 
-def restage_namespace(argv: list, region: dict, root: Path, manifest: Optional[dict] = None):
+def restage_namespace(argv: list, region: dict, root: Path, manifest: Optional[dict] = None,
+                      decisions_root: Optional[str] = None):
     """The stage namespace that re-stages one version from its recorded command
     (``stage`` or ``stage-many``) into ``root``: the same flags and decision files,
     the decisions root, refit mode and value policy the manifest records (an older
     command line without the flags still re-stages as it ran), the region of the
-    version for a stage-many command."""
+    version for a stage-many command. ``decisions_root`` (verify's flag) replaces
+    the recorded root: a decision file the command names by a relative path (the
+    stage ran from a repo root) is read from ``<decisions_root>/l3-<code>/<file>``,
+    else from this checkout's repo root, when it is not where the record says."""
     argv = [str(x) for x in argv or []]
     if not argv or argv[0] not in ("stage", "stage-many"):
         raise SystemExit("the version records no stage command to re-run "
@@ -1719,8 +1750,11 @@ def restage_namespace(argv: list, region: dict, root: Path, manifest: Optional[d
     manifest = manifest or {}
     reviewer = manifest.get("reviewerInputs") or {}
     parsed = build_parser().parse_args(argv)
-    if reviewer.get("decisionsRoot"):
+    if decisions_root:
+        parsed.decisions_root = str(decisions_root)
+    elif reviewer.get("decisionsRoot"):
         parsed.decisions_root = reviewer["decisionsRoot"]
+    resolve_decision_paths(parsed, decisions_root)
     parsed.refit = recorded_refit_mode(manifest)
     parsed.value_policy = recorded_value_policy_of(manifest) or parsed.value_policy
     code = str(region.get("code") or "")
@@ -1739,6 +1773,89 @@ def restage_namespace(argv: list, region: dict, root: Path, manifest: Optional[d
 
 def recorded_value_policy_of(manifest: Optional[dict]) -> Optional[str]:
     return (((manifest or {}).get("inputs") or {}).get("nrsa_dataset") or {}).get("policy")
+
+
+def resolve_decision_paths(parsed, decisions_root: Optional[str] = None) -> dict:
+    """Recorded decision-file paths that are relative and not on disk from here:
+    each resolves to ``<decisions_root>/<its l3-<code>/<file> tail>`` when that
+    file exists, else to the same relative path under this checkout's repo root.
+    Returns ``{attribute: resolved path}`` for the paths it moved."""
+    moved = {}
+    repo_root = _APP_ROOT.parent.parent
+    for attr in DECISION_FILE_ATTRS:
+        value = getattr(parsed, attr, None)
+        if not value or not isinstance(value, str):
+            continue
+        p = Path(value)
+        if p.is_absolute() or p.is_file():
+            continue
+        candidates = []
+        if decisions_root:
+            parts = p.parts
+            for i, part in enumerate(parts):
+                if part.startswith("l3-"):
+                    candidates.append(Path(decisions_root, *parts[i:]))
+                    break
+        candidates.append(repo_root / p)
+        for c in candidates:
+            if c.is_file():
+                setattr(parsed, attr, str(c))
+                moved[attr] = str(c)
+                break
+    return moved
+
+
+def carry_view(vdir: Path, region: dict, manifest: dict, root: Path,
+               library: Optional[Path] = None) -> Optional[dict]:
+    """A library view of what the stage that built ``vdir`` could carry forward
+    from, written under ``root/carry-view``: the region's canonical assessment
+    with only the versions before the one the record carried from
+    (``inputs.reference.carryForward.fromVersion``; else, for a version in the
+    canonical library, the versions before it; else every version), its
+    manifest's ``latestVersion`` cut to match. A re-stage that carried from the
+    canonical library would find the version under test itself there (or a
+    version published since) and carry from it, stamping ``carriedForward``
+    blocks the record never had, so its content digest could never come back
+    equal. None under a full refit (nothing is carried)."""
+    if recorded_refit_mode(manifest) != "missing":
+        return None
+    code = str((region or {}).get("code") or "")
+    base = Path(library) if library is not None else ra.CANONICAL_LIBRARY
+    view = Path(root) / "carry-view"
+    if view.exists():
+        shutil.rmtree(view)
+    (view / "assessments").mkdir(parents=True)
+    out = {"root": str(view), "assessmentId": None, "cutoff": None, "latestVersion": 0}
+    found = cf.find_published(code, root=base) if code else None
+    if found is None:
+        return out
+    aid, latest = found
+    adir = base / "assessments" / aid
+    recorded = (((manifest or {}).get("inputs") or {}).get("reference") or {}).get("carryForward") or {}
+    vdir = Path(vdir).resolve()
+    if recorded.get("fromVersion"):
+        cutoff = int(recorded["fromVersion"]) + 1
+    elif vdir.parent == adir.resolve() and vdir.name[1:].isdigit():
+        cutoff = int(vdir.name[1:])
+    else:
+        cutoff = latest + 1
+    man = json.loads((adir / "manifest.json").read_text(encoding="utf-8"))
+    kept = [v for v in man.get("versions") or [] if int(v.get("version") or 0) < cutoff]
+    man = dict(man)
+    man["versions"] = kept
+    man["latestVersion"] = max((int(v.get("version") or 0) for v in kept), default=0)
+    target = view / "assessments" / aid
+    target.mkdir(parents=True)
+    (target / "manifest.json").write_text(json.dumps(man, indent=1) + "\n", encoding="utf-8")
+    for p in adir.iterdir():
+        if p.is_file() and p.name != "manifest.json":
+            shutil.copy2(p, target / p.name)
+    for v in kept:
+        src = adir / f"v{int(v.get('version') or 0)}"
+        if src.is_dir():
+            shutil.copytree(src, target / src.name)
+    out.update({"assessmentId": aid, "cutoff": cutoff, "latestVersion": man["latestVersion"]})
+    return out
 
 
 def cmd_verify(a) -> int:
@@ -1763,16 +1880,24 @@ def cmd_verify(a) -> int:
     moved = reviewer_inputs_drift(manifest, vdir)
     for m in moved:
         print(f"[verify] decision file {m} since the stage")
-    ns = restage_namespace(argv, region, root, manifest)
+    ns = restage_namespace(argv, region, root, manifest,
+                           decisions_root=getattr(a, "decisions_root", None))
+    # what the recorded stage could carry forward from (never the version under test)
+    view = carry_view(vdir, region, manifest, root)
+    ns.carry_root = view["root"] if view else None
+    carried = ("nothing (full refit)" if view is None
+               else f"nothing (no published version before)" if not view["latestVersion"]
+               else f"{view['assessmentId']} v{view['latestVersion']}")
     print(f"[verify] re-staging L3-{region.get('code')} ({region.get('name')}) from "
-          f"{argv[0]} (refit {ns.refit}, value policy {ns.value_policy or 'default'}) -> {root}")
+          f"{argv[0]} (refit {ns.refit}, value policy {ns.value_policy or 'default'}, "
+          f"carrying from {carried}) -> {root}")
     rc = int(cmd_stage(ns))
     out_dir = Path(ns.out)
     packet_path = out_dir / "review_packet.json"
     staged = (json.loads(packet_path.read_text(encoding="utf-8")).get("staged") or {}
               if packet_path.is_file() else {})
     report = {"versionDir": str(vdir), "root": str(root), "exit": rc,
-              "restagedDir": staged.get("path"), "decisionFiles": moved}
+              "restagedDir": staged.get("path"), "decisionFiles": moved, "carryView": view}
     if rc != 0 or not staged.get("path"):
         report["equal"] = False
         report["reason"] = (f"the re-stage exited {rc}" if rc != 0
@@ -2123,6 +2248,9 @@ def build_parser() -> argparse.ArgumentParser:
                    help="a staged (<out>/library/assessments/<id>/vN) or published version folder")
     v.add_argument("--out", default=None,
                    help="the root to re-stage into (default: a fresh temp folder, kept)")
+    v.add_argument("--decisions-root", default=None, metavar="FOLDER",
+                   help="where the recorded decision files are today (<FOLDER>/l3-<code>/...), "
+                        "when the version records them by a path relative to another checkout")
     v.set_defaults(fn=cmd_verify)
 
     o = sub.add_parser("open", help="print a staged run's project path and the candidate=<key> "

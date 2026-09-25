@@ -203,7 +203,7 @@ def test_cmd_stage_refuses_a_published_owner_decision_with_no_standing_one(tmp_p
         seen.update(kw)
         raise _Stop()
 
-    monkeypatch.setattr(mod, "published_bundle", lambda code: _bundle_with_owner_decisions("chem_TURB"))
+    monkeypatch.setattr(mod, "published_bundle", lambda code, root=None: _bundle_with_owner_decisions("chem_TURB"))
     monkeypatch.setattr(mod.ra, "run_evidence", stop)
     # no file: refused before the expensive pass runs
     assert mod.cmd_stage(_stage_ns(mod, tmp_path, "--refit", "missing")) == 2

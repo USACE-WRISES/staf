@@ -71,7 +71,7 @@ def test_refit_all_passes_carry_false_and_the_value_policy_reaches_the_pass(tmp_
         raise _Stop()
 
     monkeypatch.setattr(mod.ra, "run_evidence", stop)
-    monkeypatch.setattr(mod, "published_bundle", lambda code: None)
+    monkeypatch.setattr(mod, "published_bundle", lambda code, root=None: None)
     with pytest.raises(_Stop):
         mod.cmd_stage(_stage_ns(mod, tmp_path, "--refit", "all", "--value-policy", "newest-nonnull-v1"))
     assert seen["carry"] is False and seen["value_policy"] == "newest-nonnull-v1"
