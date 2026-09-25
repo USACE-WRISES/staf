@@ -1673,7 +1673,8 @@ def run_evidence(l3_code: str, name: str, *,
                  scale_registry: Optional[dict] = None,
                  carry: Any = True,
                  force: Optional[dict] = None,
-                 hold: Optional[list] = None) -> dict:
+                 hold: Optional[list] = None,
+                 value_policy: Optional[str] = None) -> dict:
     """The expensive, decision-free half of a regional run.
 
     ``reference_method`` chooses how reference stations are defined. The
@@ -1684,6 +1685,16 @@ def run_evidence(l3_code: str, name: str, *,
     Under ``pressure-screen`` the pass is :mod:`pressure_evidence`: a fixed
     desktop pressure screen read from the committed station table, per-metric
     pools that borrow only comparable stations, no live service at all.
+
+    ``carry`` (methodology 0.14, pressure screen only): True carries forward every
+    curve the ecoregion's latest published version scores (``--refit missing``);
+    False builds every curve afresh and never reads the canonical library
+    (``--refit all``). ``value_policy`` (rule DATA-11, pressure screen only): the
+    id the pooled archive's values are read under (``nrsa_dataset.resolve_value_policy``;
+    None is the new-build default, ``nrsa_dataset.DEFAULT_VALUE_POLICY``); the evidence
+    records the id actually used (``nrsa_policy``). The legacy ``easi-eci`` pass reads
+    the bundled snapshot, which holds one value per station and no policy, so the
+    argument does not apply there and the evidence records ``nrsa_policy`` None.
 
     Screening, data assembly, the registries, redundancy, the stratifier
     analysis, the curves with their review classification, sample sizes, the
@@ -1708,7 +1719,7 @@ def run_evidence(l3_code: str, name: str, *,
             nrsa_cycles=nrsa_cycles, exclude_sites=exclude_sites,
             nrsa_max_stream_order=nrsa_max_stream_order, nrsa_protocols=nrsa_protocols,
             nrsa_keep_sites=nrsa_keep_sites, scale_registry=scale_registry, carry=carry,
-            force=force, hold=hold)
+            force=force, hold=hold, value_policy=value_policy)
     directions = load_directions()
     protocols = tuple(nrsa_protocols) if nrsa_protocols else None
     candidates, panel_ledger = select_candidates_detailed(
@@ -2441,7 +2452,9 @@ def run(l3_code: str, name: str, *,
         predictor_source: str = "streamcat",
         engine_config: Optional[dict] = None,
         reference_method: str = run_state.REFERENCE_METHOD_EASI,
-        scale_registry: Optional[dict] = None) -> dict:
+        scale_registry: Optional[dict] = None,
+        carry: Any = True,
+        value_policy: Optional[str] = None) -> dict:
     """Run the full regional analysis for one L3 ecoregion. Returns a structured result
     (no files written here; the CLI writes outputs and publishes).
 
@@ -2454,7 +2467,9 @@ def run(l3_code: str, name: str, *,
     with an unchanged result. The reference frame (rule DATA-10), the owner's
     site inclusions and exclusions, and the predictor source pass straight
     through to :func:`run_evidence` (2026-09-19): before that only the batch
-    runner could apply them, so a single run silently skipped the frame.
+    runner could apply them, so a single run silently skipped the frame. The
+    carry-forward switch (``carry``, the ``--refit`` mode) and the value policy
+    (``value_policy``, DATA-11) pass through the same way (campaign Round 1).
 
     ``remove_metrics`` (metric -> rationale) records a named reviewer decision
     that takes a built curve out of scope for this run only (the curve is still
@@ -2480,7 +2495,8 @@ def run(l3_code: str, name: str, *,
         nrsa_max_stream_order=nrsa_max_stream_order, nrsa_protocols=nrsa_protocols,
         nrsa_keep_sites=nrsa_keep_sites, exclude_sites=exclude_sites,
         predictor_source=predictor_source, engine_config=engine_config,
-        reference_method=reference_method, scale_registry=scale_registry)
+        reference_method=reference_method, scale_registry=scale_registry,
+        carry=carry, value_policy=value_policy)
     return assemble(
         evidence, source_citation=source_citation, assessment_id=assessment_id,
         assessment_name=assessment_name, author=author,
@@ -2904,9 +2920,128 @@ def stage_status_for(result: dict) -> dict:
     return status
 
 
+# --------------------------------------------------------------------------- #
+# The stage pipeline's record of how it was run (campaign Round 1): the refit
+# mode, the carry-forward record, the experimental label, the decision files
+# read and the SELECT-01 approvals in the session's shape. Shared by the batch
+# runner and the single-region CLI so the two record the same things.
+# --------------------------------------------------------------------------- #
+#: ``missing`` carries every published curve forward (methodology 0.14) and
+#: builds the rest; ``all`` builds every curve afresh and never reads the
+#: canonical library (the D3 re-derivation arm). Owner holds and forced sources
+#: (REF-15) apply under both.
+REFIT_MODES = ("missing", "all")
+#: ``reference_hierarchy.carry_forward`` -> the refit mode it means.
+_REFIT_OF_CARRY = {"published_curves": "missing", "none": "all"}
+#: A configuration root other than the app's own marks a run experimental (D4a).
+#: Recorded here; ``paths.py`` does not read it, so the run still loads the
+#: app's config and the label is the conservative one.
+CONFIG_ROOT_ENV = "STREAMCURVES_CONFIG_ROOT"
+#: The refit vocabulary of ``inputs.reference.carryForward.mode``.
+CARRY_FORWARD_ON = "published_curves"
+CARRY_FORWARD_OFF = "off"
+
+
+def refit_mode(value: Any = None) -> str:
+    """The refit mode a run uses: the one named (``missing`` or ``all``), else the
+    methodology's ``reference_hierarchy.carry_forward`` default
+    (``methodology.carry_forward_default``). Anything else is refused loudly."""
+    if value is None or str(value).strip() == "":
+        return _REFIT_OF_CARRY[methodology.carry_forward_default()]
+    mode = str(value).strip()
+    if mode not in REFIT_MODES:
+        raise ValueError(f"unknown refit mode {value!r}; one of {', '.join(REFIT_MODES)}")
+    return mode
+
+
+def carry_forward_record(mode: str, evidence: Optional[dict]) -> dict:
+    """``inputs.reference.carryForward`` of a manifest: ``{"mode", "fromVersion"}``,
+    the mode ``published_curves`` with the version carried from under ``missing``,
+    ``off`` with no version under ``all``."""
+    if refit_mode(mode) == "all":
+        return {"mode": CARRY_FORWARD_OFF, "fromVersion": None}
+    carried = (evidence or {}).get("carried_from") or {}
+    return {"mode": CARRY_FORWARD_ON, "fromVersion": carried.get("fromVersion")}
+
+
+def experimental_block() -> Optional[dict]:
+    """The manifest's ``experimental`` block, or None for a canonical run: set
+    whenever :data:`CONFIG_ROOT_ENV` names a root other than the app's config
+    folder or the REF-15 extension flag (``owner_decisions.alternatives_over_fitted``)
+    is on. ``{"configRoot": path or None, "extensionFlag": bool}``; a version whose
+    manifest carries it never reaches the canonical library (D4a)."""
+    import os
+    from . import owner_curves
+    from .paths import CONFIG_DIR
+    raw = os.environ.get(CONFIG_ROOT_ENV, "").strip()
+    other = None
+    if raw:
+        root = Path(raw).expanduser()
+        try:
+            same = root.resolve() == CONFIG_DIR.resolve()
+        except OSError:
+            same = False
+        if not same:
+            other = str(root.resolve())
+    flag = bool(owner_curves.alternatives_enabled())
+    if other is None and not flag:
+        return None
+    return {"configRoot": other, "extensionFlag": flag}
+
+
+def reviewer_input_files(paths: dict, root: Optional[Path | str]) -> dict[str, str]:
+    """``{path relative to root: "sha256:..."}`` of every decision file a build reads
+    (``paths``: role -> path or None; a missing or absent file records nothing). A file
+    outside ``root`` is keyed by its own absolute POSIX path. The map joins the inputs
+    digest (``reviewerInputs.files``), so a changed answer re-stages the region and
+    promote can refuse a file that moved after the stage."""
+    import hashlib
+    base = Path(root).resolve() if root else None
+    out: dict[str, str] = {}
+    for _role, value in sorted((paths or {}).items()):
+        if not value:
+            continue
+        p = Path(value)
+        if not p.is_file():
+            continue
+        full = p.resolve()
+        key = full.as_posix()
+        if base is not None:
+            try:
+                key = full.relative_to(base).as_posix()
+            except ValueError:
+                pass
+        out[key] = "sha256:" + hashlib.sha256(full.read_bytes()).hexdigest()
+    return dict(sorted(out.items()))
+
+
+def session_approvals(approvals) -> list[dict]:
+    """``meta.portfolioApprovals`` entries in the session field's shape
+    (``[{functionId, approver, note, date}]``, ``views.state._approval_entry``):
+    what a reopened build shows as its SELECT-01 approvals. A pending approver
+    (a standing decision's marker) rides as it is; promote confirms it."""
+    out = []
+    for a in approvals or []:
+        if not isinstance(a, dict) or not a.get("functionId"):
+            continue
+        out.append({"functionId": str(a["functionId"]),
+                    "approver": str(a.get("approver") or a.get("approvedBy") or "").strip(),
+                    "note": str(a.get("note") or "").strip(),
+                    "date": str(a.get("date") or a.get("approvedAt")
+                                or a.get("confirmedAt") or "")})
+    return out
+
+
 def session_fields(result: dict) -> dict:
     """The SESSION_FIELDS a reopenable session needs, including the full phase-4 curve
-    artifacts so the workspace renders curves on Open (not a bare 'recompute' state)."""
+    artifacts so the workspace renders curves on Open (not a bare 'recompute' state).
+
+    Campaign Round 1 (additive fields, absent reads as None): ``portfolio_approvals``
+    from the meta's SELECT-01 approvals, ``rule_selections`` from the standing
+    decisions' enabled ids, ``candidate_register`` as the build read it, and inside
+    ``reference_build`` the build's rebuild ``ledger`` (``result["metric_ledger"]``)
+    and its ``evidence`` reference (``result["evidence_reference"]``) when the caller
+    set them."""
     screening = result.get("screening_tables") or {}
     strat = result.get("stratifiers") or {}
     # Every built curve, not just the in-scope ones, so a reviewer can see the flagged
@@ -2949,6 +3084,16 @@ def session_fields(result: dict) -> dict:
                        "committed station table.")
     else:
         screen_note = "Real EASI reference screen."
+    if isinstance(reference_build, dict):
+        # the per-metric rebuild ledger and the evidence package reference the
+        # stage computed (rebuild-ledger/1; campaign Round 1), kept with the
+        # reference statement they describe
+        if result.get("metric_ledger") is not None:
+            reference_build["ledger"] = result["metric_ledger"]
+        if result.get("evidence_reference") is not None:
+            reference_build["evidence"] = result["evidence_reference"]
+    meta = result.get("meta") or {}
+    standing = result.get("standing_decisions")
     return {
         "app_data_loaded": True,
         # These two pair with every phase4_signature above; the restore-side
@@ -3002,6 +3147,13 @@ def session_fields(result: dict) -> dict:
         "reference_build": reference_build,
         # the owner's curve decisions the build applied over it (REF-15)
         "owner_curve_decisions": [dict(d) for d in result.get("curve_decisions") or []],
+        # the SELECT-01 approvals the build was given or carried, in the field's
+        # shape; the policy opt-ins the run enabled; the candidates a person added
+        # for comparison, as the build read them (campaign Round 1)
+        "portfolio_approvals": session_approvals(meta.get("portfolioApprovals")) or None,
+        "rule_selections": (list(standing.get("enabledIds") or [])
+                            if isinstance(standing, dict) else None),
+        "candidate_register": result.get("candidate_register"),
         "easi_screening_sites": screening.get("easi_screening_sites", []),
         "easi_screening_metrics": screening.get("easi_screening_metrics", []),
         "easi_screening_criteria": screening.get("easi_screening_criteria", {}),

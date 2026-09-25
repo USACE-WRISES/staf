@@ -890,6 +890,34 @@ def stale(decisions: Iterable[Mapping], build: Optional[Mapping], *,
     return out
 
 
+def published_vs_standing(published_bundle: Optional[Mapping], decisions_file) -> list[str]:
+    """The metrics a published bundle scores under an owner decision (REF-15: an entry
+    carrying ``ownerDecision``) that the region's standing record names no decision
+    for, as the bundle's metric ids, sorted. Empty when every published choice still
+    stands, which is what lets a rebuild keep "your choice stands": the standing record
+    holds the metric out of the fit and the decision puts the owner's curve back
+    (``carry_forward`` never carries such a curve). ``decisions_file`` is the region's
+    ``curve_decisions.json`` (``load_file``), an already loaded list of decisions, or
+    None (no record: every published choice is missing). A bundle with no owner
+    decisions needs nothing."""
+    from .deep_export import deep_slug
+    if isinstance(decisions_file, (str, Path)):
+        standing = load_file(decisions_file)
+    else:
+        standing = [d for d in decisions_file or [] if isinstance(d, Mapping)]
+    covered = {"spring-" + deep_slug(str(d.get("metric"))) for d in standing
+               if d.get("metric") and d.get("id")}
+    missing: set[str] = set()
+    for fn in (published_bundle or {}).get("metricsByFunction") or []:
+        for m in fn.get("metrics") or []:
+            if not isinstance(m, Mapping) or not m.get("ownerDecision"):
+                continue
+            mid = str(m.get("metricId") or "")
+            if mid and mid not in covered:
+                missing.add(mid)
+    return sorted(missing)
+
+
 __all__ = [
     "RULE", "DECISIONS_FILE", "LEGACY_REMOVALS_FILE", "REMOVE", "UNMAP", "INCLUDE", "SOURCE",
     "EXTENSION_FLAG", "EXTENSION_OFF", "alternatives_enabled", "needs_extension", "bundle_summary",
@@ -900,5 +928,5 @@ __all__ = [
     "applies", "sourced", "chosen", "source_curve", "decision_annotation", "effective_build",
     "apply_to_inputs", "summary", "requests", "decisions_changed", "removed",
     "decisions_for", "coverage_exceptions", "live_exceptions", "with_exceptions", "stale",
-    "held_metrics", "forced_sources", "pending", "with_forced",
+    "held_metrics", "forced_sources", "pending", "with_forced", "published_vs_standing",
 ]

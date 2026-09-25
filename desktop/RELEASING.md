@@ -75,8 +75,11 @@ gh workflow run streamcurves-payload.yml --repo USACE-WRISES/staf
 
 (or Actions > streamcurves-payload > Run workflow, from `main`). The workflow checks the lock,
 builds the apps zip from the tracked tree (`git archive` of `apps/stream-curves` without
-`tests/` and `brand/`, plus `apps/library`), publishes the `streamcurves-payload-*`
-prerelease and refreshes `streamcurves-current`. The archive is taken from the full tree with
+`tests/` and `brand/`, plus `apps/library` as a catalog-only snapshot: `catalog.json` and each
+assessment's `manifest.json`, `status.json`, `validation.json` and `artifacts.json`, never the
+`vN/` version folders, which an installed copy downloads on demand from the rolling `library`
+release; `desktop/scripts/check_payload_records.py` asserts the snapshot is catalog-only),
+publishes the `streamcurves-payload-*` prerelease and refreshes `streamcurves-current`. The archive is taken from the full tree with
 `core.autocrlf` off, so the root `.gitattributes` applies and the zip holds exactly a
 checkout's bytes: LF text, plus the CRLF files that `.gitattributes` pins because a record
 holds their bytes. `desktop/scripts/check_payload_records.py` then compares the staged files

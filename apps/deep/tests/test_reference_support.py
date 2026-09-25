@@ -585,6 +585,68 @@ def test_a_ladder_curve_with_no_sentence_still_names_its_basis():
     assert rs.support_line(bare) == "Modeled reference."
 
 
+# --------------------------------------------------------------------------- #
+# the practitioner's two lines: uncertainty and limitations (campaign Round 1)
+# --------------------------------------------------------------------------- #
+def test_the_uncertainty_line_reads_the_sample_and_the_reviewer_priority():
+    m = _reference(nUsable=24)
+    m.update(referenceN=24, sampleDisposition="adequate", confidenceLabel="Moderate")
+    assert rs.uncertainty_line(m) == "Reference sample: 24 stations, adequate; reviewer priority: moderate"
+    # the builder's label is a review-priority heuristic: Low confidence is a high priority
+    low = dict(m, confidenceLabel="Low", referenceN=9, sampleDisposition="insufficient")
+    assert rs.uncertainty_line(low) == ("Reference sample: 9 stations, insufficient; reviewer priority: high "
+                                        "(builder confidence low)")
+    assert rs.reviewer_priority("High") == "low" and rs.reviewer_priority("Fixed criteria") == ""
+    # what the bundle does not say is not invented
+    assert rs.uncertainty_line(dict(m, confidenceLabel=None)) == "Reference sample: 24 stations, adequate"
+    assert rs.uncertainty_line({"metricId": "m", "referenceN": 94}) == "Reference sample: 94 stations"
+    assert rs.uncertainty_line({"metricId": "m", "sampleDisposition": "exploratory"}) == "Reference sample: exploratory"
+    assert rs.uncertainty_line({"metricId": "m"}) == "" and rs.uncertainty_line(None) == ""
+    # fixed criteria rest on no sample
+    assert rs.uncertainty_line(dict(_fixed(), referenceN=30)) == ""
+    # the modeled and published rungs keep their line (their label still reads as a priority)
+    assert rs.uncertainty_line(dict(MODELED_AS_SHIPPED, confidenceLabel="Low")).endswith("(builder confidence low)")
+
+
+def test_the_limitations_line_joins_the_caveats_and_the_basis_limit_once():
+    m = _reference()
+    assert rs.limitations_line(m) == ""
+    m["curveCaveats"] = ["Built from 66 reference sites.", "Read the condition band, not the point value."]
+    assert rs.limitations_line(m) == "Built from 66 reference sites. Read the condition band, not the point value."
+    limit = "A published criterion is not an estimate of this ecoregion's reference condition."
+    bench = dict(BENCHMARK_AS_SHIPPED, curveCaveats=[limit, "EASI lists the criteria as provisional."],
+                 basisLimit=limit)
+    line = rs.limitations_line(bench)
+    assert line.count(limit) == 1 and line.endswith("EASI lists the criteria as provisional.")
+    # the first 0.13 bundles put basisLimit inside referenceSupport
+    inside = {"metricId": "m", "referenceSupport": {"status": "modeled", "basisLimit": "An extrapolation."}}
+    assert rs.limitations_line(inside) == "An extrapolation."
+    assert rs.limitations_line({"metricId": "m", "curveCaveats": ["", None, "  "]}) == ""
+
+
+def test_the_practitioner_lines_keep_their_order_and_the_old_three_lines():
+    m = _reference("borrowed_l1", level="l1", regionCode="8", regionName="Eastern Temperate Forests",
+                   nUsable=26, nLocal=3, transferRisk="moderate")
+    m.update(referenceN=26, sampleDisposition="adequate", confidenceLabel="Low",
+             curveCaveats=["Borrowed stations."], carriedForward={"fromVersion": 5},
+             ownerDecision={"recordedBy": "GM", "rationale": "Closest match."})
+    lines = rs.practitioner_lines(m)
+    assert lines[0] == rs.support_line(m) and lines[1] == rs.carried_line(m) and lines[2] == rs.owner_line(m)
+    assert lines[3].startswith("Reference sample: 26 stations, adequate; reviewer priority: high")
+    assert lines[4] == "Borrowed stations."
+    assert rs.practitioner_lines({"metricId": "m"}) == [] and rs.practitioner_lines(None) == []
+    for line in lines:
+        assert chr(0x2014) not in line
+    # the hover card and the metric card read the same helpers (source pins)
+    import io as _io, pathlib as _pl
+    src = _io.open(_pl.Path(__file__).resolve().parents[1] / "app.py", encoding="utf-8").read()
+    tip = src[src.index("def _metric_tip_html("):src.index("_BASIS_TAG = {")]
+    assert "reference_support.limitations_line(m)" in tip and "Read with care" in tip
+    card = src[src.index("def fn_panel():"):]
+    assert "reference_support.uncertainty_line(m)" in card and "reference_support.limitations_line(m)" in card
+    assert '"Uncertainty"' in card and "deep-uncertainty-row" in card and "deep-limits-row" in card
+
+
 def test_the_published_ladder_curves_read_as_their_basis():
     """The live registry: no curve above the hierarchy may borrow the pool sentence."""
     for aid in ("northeastern-highlands", "interior-plateau", "eastern-corn-belt-plains"):

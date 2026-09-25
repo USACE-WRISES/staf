@@ -189,6 +189,75 @@ def is_borrowed(metric_spec: Optional[dict]) -> bool:
     return str(sup.get("status") or "").startswith("borrowed")
 
 
+# --------------------------------------------------------------------------- #
+# the practitioner's two lines: uncertainty and limitations (campaign Round 1)
+# --------------------------------------------------------------------------- #
+#: The builder's confidence label read as the priority a reviewer gives the curve. The
+#: label is a review-priority heuristic and never a probability (StreamCurves
+#: ``confidence.review_priority`` weighs Low confidence heaviest), so Low confidence is a
+#: high priority and High confidence a low one.
+_PRIORITY_FROM_CONFIDENCE = {"low": "high", "moderate": "moderate", "medium": "moderate",
+                             "high": "low"}
+
+
+def reviewer_priority(confidence_label: Any) -> str:
+    """``high``, ``moderate`` or ``low`` from the builder's confidence label, ``""`` for a
+    label that is not one of its three words (fixed criteria carry "Fixed criteria")."""
+    return _PRIORITY_FROM_CONFIDENCE.get(str(confidence_label or "").strip().lower(), "")
+
+
+def uncertainty_line(metric_spec: Optional[dict]) -> str:
+    """One plain line on how far to trust the curve, from what the bundle already carries:
+    the reference sample (``referenceN`` and ``sampleDisposition``) and the builder's
+    confidence label as a reviewer priority (``confidenceLabel``). Empty for fixed
+    criteria, which rest on no sample, and for a bundle that records none of it:
+
+    ``Reference sample: 24 stations, adequate; reviewer priority: moderate``
+    """
+    m = metric_spec or {}
+    if is_fixed(m) and not is_ladder(m):
+        return ""
+    n = m.get("referenceN")
+    disp = str(m.get("sampleDisposition") or "").strip()
+    parts: list[str] = []
+    if isinstance(n, (int, float)) and not isinstance(n, bool) and n == n:
+        parts.append(f"Reference sample: {int(n)} stations" + (f", {disp}" if disp else ""))
+    elif disp:
+        parts.append(f"Reference sample: {disp}")
+    conf = str(m.get("confidenceLabel") or "").strip()
+    priority = reviewer_priority(conf)
+    if priority:
+        same = priority == conf.lower()
+        parts.append(f"reviewer priority: {priority}"
+                     + ("" if same else f" (builder confidence {conf.lower()})"))
+    return "; ".join(parts)
+
+
+def limitations_line(metric_spec: Optional[dict]) -> str:
+    """The curve's caveats (``curveCaveats``) and the limit its basis carries
+    (``basisLimit``), one sentence after another, each once; ``""`` when the bundle
+    records neither."""
+    m = metric_spec or {}
+    parts: list[str] = []
+    for c in m.get("curveCaveats") or []:
+        text = str(c or "").strip()
+        if text and text not in parts:
+            parts.append(text)
+    limit = basis_text(m, "basisLimit")
+    if limit and limit not in parts:
+        parts.append(limit)
+    return " ".join(parts)
+
+
+def practitioner_lines(metric_spec: Optional[dict]) -> list[str]:
+    """What a practitioner reads under a metric, in order: what it is scored against
+    (:func:`support_line`), where a carried curve comes from, who chose its source, the
+    uncertainty line and the limitations line, each only when the bundle says it."""
+    return [line for line in (support_line(metric_spec), carried_line(metric_spec),
+                              owner_line(metric_spec), uncertainty_line(metric_spec),
+                              limitations_line(metric_spec)) if line]
+
+
 def comparison_line(metric_spec: Optional[dict]) -> str:
     """The local best-available comparison as text, or ``""``."""
     comp = (metric_spec or {}).get("localComparison")

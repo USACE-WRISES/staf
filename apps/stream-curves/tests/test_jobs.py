@@ -428,7 +428,7 @@ def test_stage_many_skips_a_region_staged_from_the_same_inputs_whatever_the_list
 
     monkeypatch.setattr(jobs, "run", fake_run)
     out_root = tmp_path / "many"
-    staged = out_root / "l3-55-region-a"
+    staged = out_root / "l3-55"                    # one folder per region per root
     staged.mkdir(parents=True)
     (staged / "review_packet.json").write_text("{}", encoding="utf-8")
     rec = {"inputsDigest": rb.region_digest("55", "Region A", {"fixed": 1}, None),

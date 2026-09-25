@@ -148,9 +148,11 @@ def test_stage_many_stages_each_region_and_records_failures(tmp_path):
     out_root = tmp_path / "many"
     proc = subprocess.run(
         # Pinned to the legacy snapshot: the assertions below are calibrated on
-        # the 18-candidate pilot; new builds default to the pooled archive.
+        # the 18-candidate pilot; new builds default to the pooled archive. The
+        # decisions root is the batch's own, so no region file of the checkout is read.
         [sys.executable, str(SCRIPT), "stage-many", "--l3", "55", "--l3", "999",
-         "--out-root", str(out_root), "--nrsa-dataset", "legacy-1819",
+         "--out-root", str(out_root), "--decisions-root", str(out_root),
+         "--nrsa-dataset", "legacy-1819",
          "--no-screen", "--no-streamcat", "--n-boot", "20",
          "--maintainer", "tester", "--coverage-exceptions", str(exceptions),
          "--enable-policy", "curve07-thin-metric-finalized",
@@ -162,6 +164,10 @@ def test_stage_many_stages_each_region_and_records_failures(tmp_path):
     rows = {r["l3"]: r for r in doc["regions"]}
     assert rows["55"]["exit"] == 0 and rows["55"]["staged_version"] == 1 and rows["55"]["curves"] > 0
     assert rows["999"]["exit"] == 1 and "no NRSA candidate sites" in rows["999"]["error"]
-    assert (out_root / "l3-55-eastern-corn-belt-plains" / "review_packet.md").is_file()
-    assert not (out_root / "l3-999-l3-999").exists()
+    # one folder per region per root, the Region builder's own name (campaign Round 1)
+    from streamcurves import region_build as rb
+    assert rb.run_folder(out_root, "55") == out_root / "l3-55"
+    assert (out_root / "l3-55" / "review_packet.md").is_file()
+    assert not (out_root / "l3-55-eastern-corn-belt-plains").exists()
+    assert not (out_root / "l3-999").exists() and not (out_root / "l3-999-l3-999").exists()
     assert "[batch-many] summary" in proc.stdout

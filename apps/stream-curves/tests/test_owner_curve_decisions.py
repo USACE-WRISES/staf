@@ -176,7 +176,11 @@ def test_the_build_command_passes_the_region_decisions(tmp_path):
 def test_the_runner_takes_a_decisions_file_in_stage_and_stage_many():
     src = (APP / "scripts" / "run_region_batch.py").read_text(encoding="utf-8")
     assert '"--curve-decisions"' in src and "curve_decisions=curve_decisions or None" in src
-    assert "curve_decisions=None," in src                  # stage-many's explicit Namespace
+    # stage-many's explicit Namespace hands each region its own file under the
+    # decisions root (campaign Round 1); it no longer pins None
+    assert "curve_decisions=None," not in src
+    assert 'curve_decisions=files["curve_decisions"],' in src
+    assert '"--decisions-root"' in src and "region_decision_files(a.decisions_root, code" in src
 
 
 # --------------------------------------------------------------------------- #
