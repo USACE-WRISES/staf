@@ -11,7 +11,10 @@
 # takes the machine's setting out of it. Two trees ship, as SIBLINGS at the zip root, because
 # the app resolves its library as ..\library (streamcurves/library.py):
 #   stream-curves\   apps/stream-curves minus tests\ and brand\ (development-only)
-#   library\         apps/library (the published assessment library)
+#   library\         apps/library as a catalog-only snapshot: catalog.json and each assessment's
+#                    manifest, status, validation and artifacts records, never a version folder.
+#                    An installed copy reads the gallery from the `library` release and downloads
+#                    the version it opens; offline, the snapshot lists versions as download-only.
 #
 # Output: <OutDir>\streamcurves-<AppsVersion>.zip + .sha256, AppsVersion = apps-YYYY.MM.DD-<sha>.
 [CmdletBinding()]
@@ -39,7 +42,10 @@ $pathspecs = @(
     'apps/stream-curves',
     'apps/library',
     ':(exclude)apps/stream-curves/tests',
-    ':(exclude)apps/stream-curves/brand'
+    ':(exclude)apps/stream-curves/brand',
+    # Version folders (v1, v2, ...) hold the bundles, sessions and calculators an installed copy
+    # downloads on demand. Anchored on a digit: a plain v* would also drop validation.json.
+    ':(exclude)apps/library/assessments/*/v[0-9]*'
 )
 
 Push-Location $RepoRoot
@@ -72,9 +78,10 @@ try {
         if (Test-Path (Join-Path $stage $excluded)) { throw "staged payload must not contain $excluded" }
     }
     # The bytes StreamCurves fingerprints must be the bytes the committed records describe
-    # (data/nrsa_provenance.json, data/nrsa/manifest.json), and the configs must be LF.
+    # (data/nrsa_provenance.json, data/nrsa/manifest.json), the configs must be LF, and the
+    # library snapshot must be catalog-only (no version folder staged).
     & $PythonExe (Join-Path $PSScriptRoot 'check_payload_records.py') --stage $stage
-    if ($LASTEXITCODE -ne 0) { throw "staged payload bytes differ from their records ($LASTEXITCODE)" }
+    if ($LASTEXITCODE -ne 0) { throw "staged payload differs from its records ($LASTEXITCODE)" }
 
     # -- 2. Generate desktop-manifest.json (fixed single-app entry; stdlib-only) --
     $genScript = Join-Path $PSScriptRoot 'gen_desktop_manifest.py'

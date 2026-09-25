@@ -16,6 +16,13 @@ so a client never sees a catalog that names an asset still in flight. A validati
 touches only library.json; a status change also rebuilds that version's pack, whose origin
 block names the status (the old pack stays on the release until `prune --yes`).
 
+A DEEP version whose folder carries evidence.json (the reference to its evidence package:
+packageId, version, packageDigest, dataDigest and the archive's name, sha256 and bytes) is
+listed with that reference as `evidence` in its library-v2.json record only. The package
+itself is hosted elsewhere and is never an asset of this release; library.json, the frozen
+schema-1 feed, never gains the key. The build runs from a full checkout: a catalog-only
+snapshot (no version folders) is refused, since no pack can be built from it.
+
     python apps/stream-curves/scripts/library_release.py build --out build/library [--commit SHA]
     python apps/stream-curves/scripts/library_release.py check --dir build/library
     python apps/stream-curves/scripts/library_release.py upload --dir build/library [--dry-run]
@@ -62,6 +69,37 @@ def _text_bytes(p: Path) -> bytes:
     return p.read_text(encoding="utf-8").encode("utf-8")
 
 
+#: A DEEP version's evidence package reference, written beside its bundle by the evidence
+#: producer; read here as an opaque object and passed through to library-v2.json.
+EVIDENCE_FILE = "evidence.json"
+EVIDENCE_KEYS = ("packageId", "version", "packageDigest", "dataDigest", "archive")
+ARCHIVE_KEYS = ("name", "sha256", "bytes")
+
+
+def evidence_reference(vdir: Path) -> dict | None:
+    """The reference in ``<vdir>/evidence.json``, or None when the version carries none. The
+    object is carried as written; only what a client needs to fetch and verify the package
+    is required, and a reference without it fails the build rather than being published."""
+    p = Path(vdir) / EVIDENCE_FILE
+    if not p.is_file():
+        return None
+    try:
+        doc = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise SystemExit(f"{p}: evidence.json cannot be read ({exc})") from None
+    if not isinstance(doc, dict):
+        raise SystemExit(f"{p}: evidence.json is not a JSON object")
+    missing = [k for k in EVIDENCE_KEYS if not doc.get(k)]
+    archive = doc.get("archive")
+    if isinstance(archive, dict):
+        missing += [f"archive.{k}" for k in ARCHIVE_KEYS if not archive.get(k)]
+    elif archive:
+        missing.append("archive (not an object)")
+    if missing:
+        raise SystemExit(f"{p}: evidence.json lacks {', '.join(missing)}")
+    return doc
+
+
 def build(out: Path, *, commit: str | None = None) -> dict:
     """Write library.json and every asset into `out`; return the catalog."""
     out.mkdir(parents=True, exist_ok=True)
@@ -69,6 +107,10 @@ def build(out: Path, *, commit: str | None = None) -> dict:
     for e in gallery.entries_from_library():
         versions = []
         for v in e.versions:
+            if v.download_only:
+                raise SystemExit(f"{e.id} v{v.version} has no version folder under "
+                                 f"{lib.library_root()}: a catalog-only snapshot cannot build "
+                                 "the release; build it from a full checkout")
             assets = {}
             pack = gallery.pack_bytes(e, v)
             sha = _sha(pack)
@@ -98,7 +140,8 @@ def build(out: Path, *, commit: str | None = None) -> dict:
                 name = f"{e.id}-v{v.version}-calculator-{sha[:8]}.xlsx"
                 (out / name).write_bytes(data)
                 assets["calculator"] = gallery.Asset(name=name, size=len(data), sha256=sha)
-            versions.append(dataclasses.replace(v, assets=assets))
+            evidence = evidence_reference(lib.version_dir(e.id, v.version))
+            versions.append(dataclasses.replace(v, assets=assets, evidence=evidence))
         rebuilt.append(dataclasses.replace(e, versions=tuple(versions)))
     doc = gallery.catalog_doc(rebuilt, source_commit=commit)
     (out / gallery.CATALOG_NAME).write_text(json.dumps(doc, indent=1, ensure_ascii=False),

@@ -260,3 +260,21 @@ contributes a `-p2-` pack (a format-2 project that 1.0.0 refuses with "update th
 method package (`<id>-v<N>-<sha8>.easi-method.zip`), never a DEEP bundle. `check`, `upload` and
 `prune` work on the union of both catalogs, and both catalogs upload last, `library.json` at the
 very end.
+
+A DEEP version whose folder carries `evidence.json` (the reference to its evidence package:
+`packageId`, `version`, `packageDigest`, `dataDigest` and the `archive` name, sha256 and bytes,
+read as written) is listed with that reference as `evidence` in its `library-v2.json` record
+only. The package is hosted elsewhere, never as an asset of this release, and `library.json`
+never gains the key.
+
+## What the consumers carry
+
+The StreamCurves Desktop payload (`desktop/scripts/build-apps-payload.ps1`) ships this folder as
+a catalog-only snapshot: `catalog.json` and each assessment's `manifest.json`, `status.json`,
+`validation.json` and `artifacts.json`, never a version folder (the pathspec
+`:(exclude)apps/library/assessments/*/v[0-9]*`, checked by `desktop/scripts/check_payload_records.py`).
+An installed copy reads the gallery from the `library` release and downloads the version it
+opens; offline, the snapshot lists every version as download-only and opens none of them.
+DEEP's bake (`apps/deep/scripts/bake_library_into_deep.py`) folds in every eligible version by
+default; `--default-only` bakes each assessment's `defaultVersion` alone for a smaller deploy,
+while the remote library keeps serving every eligible version to DEEP's version chooser.
