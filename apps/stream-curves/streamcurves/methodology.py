@@ -336,16 +336,34 @@ def _sha256(path: Path) -> str | None:
         return None
 
 
+def _relative_config_path(path: Path) -> str:
+    """The config file's path relative to the app root, or the absolute path when the
+    config root was pointed elsewhere (``STREAMCURVES_CONFIG_ROOT``)."""
+    try:
+        return str(path.relative_to(CONFIG_DIR.parent)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
+
 def config_fingerprints() -> dict:
-    """What a run record cites so another run can be compared against it."""
-    return {
+    """What a run record cites so another run can be compared against it.
+
+    ``config_root`` appears only when the process runs under another config root
+    (absence semantics: every record written under the app's own root keeps its keys)."""
+    out = {
         "methodology_version": methodology_version(),
-        "config_path": str(CONFIG_PATH.relative_to(CONFIG_DIR.parent)).replace("\\", "/"),
+        "config_path": _relative_config_path(CONFIG_PATH),
         "config_sha256": _sha256(CONFIG_PATH),
-        "rule_catalog_path": str(
-            RULE_CATALOG_PATH.relative_to(CONFIG_DIR.parent)).replace("\\", "/"),
+        "rule_catalog_path": _relative_config_path(RULE_CATALOG_PATH),
         "rule_catalog_sha256": _sha256(RULE_CATALOG_PATH),
     }
+    try:
+        from . import paths as _paths
+        if getattr(_paths, "CONFIG_ROOT_OVERRIDDEN", False):
+            out["config_root"] = str(_paths.CONFIG_DIR).replace("\\", "/")
+    except Exception:  # pragma: no cover - paths always imports
+        pass
+    return out
 
 
 def file_fingerprints(paths) -> list[dict]:

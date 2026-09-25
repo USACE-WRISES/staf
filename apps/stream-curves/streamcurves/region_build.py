@@ -206,6 +206,7 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
                   coverage_exceptions: Optional[Path | str] = None,
                   remove_metrics: Optional[dict] = None,
                   curve_decisions: Optional[Path | str] = None,
+                  candidate_register: Optional[Path | str] = None,
                   source_citation: str = "",
                   python: Optional[str] = None) -> list[str]:
     """The argv for one staged build.
@@ -255,6 +256,10 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
         # The owner's standing decisions on the region's curves (REF-15) are a build
         # input, so the staged version and its record carry them.
         argv += ["--curve-decisions", str(curve_decisions)]
+    if candidate_register:
+        # Curves a person added for comparison and the reasons they recorded ride
+        # into the build, so the staged version's register is complete (Round 1).
+        argv += ["--candidate-register", str(candidate_register)]
     return argv
 
 
