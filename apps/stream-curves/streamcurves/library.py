@@ -225,6 +225,25 @@ def _carries_pending_marker(provenance: dict) -> bool:
     return _PENDING_MARKER in json.dumps(doc, default=str)
 
 
+def experimental_label(provenance: Optional[dict]) -> Optional[str]:
+    """Why a provenance document's run is experimental, or None for a canonical run.
+
+    A run manifest records ``experimental = {configRoot, extensionFlag}`` when it ran
+    under a configuration root other than the app's or with the REF-15 extension flag
+    on (``regional_agent.experimental_block``); such a version is labeled and isolated
+    (campaign decision D4a) and never enters the canonical library."""
+    manifest = (provenance or {}).get("manifest") if isinstance(provenance, dict) else None
+    exp = (manifest or {}).get("experimental") if isinstance(manifest, dict) else None
+    if not isinstance(exp, dict) or not (exp.get("configRoot") or exp.get("extensionFlag")):
+        return None
+    parts = []
+    if exp.get("configRoot"):
+        parts.append(f"configuration root {exp['configRoot']}")
+    if exp.get("extensionFlag"):
+        parts.append("the REF-15 extension flag (owner_decisions.alternatives_over_fitted) on")
+    return " and ".join(parts)
+
+
 def canonical_root() -> Path:
     """The repo's ``apps/library``, whatever STAF_LIBRARY_ROOT says."""
     return (ROOT.parent / "library").resolve()
@@ -989,6 +1008,13 @@ def publish_version(
             f"Refusing to publish '{assessment_id}' to the canonical library: the "
             f"provenance still carries decisions marked '{_PENDING_MARKER}'. Confirm "
             "them with run_region_batch.py promote first.")
+    elif is_canonical_root() and experimental_label(provenance):
+        # An experimental arm (another configuration root, the REF-15 extension
+        # flag) is labeled and isolated (D4a): it publishes into its own root only.
+        raise ValueError(
+            f"Refusing to publish '{assessment_id}' to the canonical library: the run "
+            f"is experimental ({experimental_label(provenance)}). Publish it into an "
+            "isolated library root instead.")
 
     manifest = read_manifest(assessment_id) or {
         "schemaVersion": MANIFEST_SCHEMA_VERSION,

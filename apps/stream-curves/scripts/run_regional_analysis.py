@@ -683,10 +683,24 @@ def main(argv=None) -> int:
                          "stations from the Level II and Level I ecoregion where the region has "
                          "too few, and scores pressure metrics on fixed criteria. 'easi-eci' is "
                          "the legacy ECI gate (the default with --nrsa-dataset legacy-1819)")
+    ap.add_argument("--refit", choices=ra.REFIT_MODES, default=None,
+                    help="missing (the default, the methodology's reference_hierarchy."
+                         "carry_forward) carries every published curve forward and builds the "
+                         "rest; all builds every curve afresh and never reads the canonical "
+                         "library, while owner holds and forced sources still apply")
+    ap.add_argument("--value-policy", default=nrsa_dataset.DEFAULT_VALUE_POLICY,
+                    choices=list(nrsa_dataset.VALUE_POLICY_IDS) + [nrsa_dataset.VALUE_POLICY_V1_ALIAS],
+                    help="the id the pooled archive's values are read under (DATA-11); the "
+                         f"default is {nrsa_dataset.DEFAULT_VALUE_POLICY}; a replay passes the "
+                         "id its version recorded (inputs.nrsa_dataset.policy)")
     args = ap.parse_args(argv)
     try:
         reference_method = reference_screen.resolve_reference_method(
             args.reference_method, args.nrsa_dataset)
+    except ValueError as exc:
+        ap.error(str(exc))
+    try:
+        refit = ra.refit_mode(args.refit)
     except ValueError as exc:
         ap.error(str(exc))
 
@@ -729,7 +743,8 @@ def main(argv=None) -> int:
 
     started_at = datetime.now(timezone.utc).isoformat()
     print(f"[agent] L3-{args.l3} ({args.name}); reference method {reference_method}; "
-          f"screen={args.screen} no_screen={args.no_screen}")
+          f"screen={args.screen} no_screen={args.no_screen}; refit {refit}"
+          + (f"; value policy {args.value_policy}" if args.value_policy else ""))
     coverage_exceptions = None
     if args.coverage_exceptions:
         coverage_exceptions = json.loads(
@@ -738,6 +753,15 @@ def main(argv=None) -> int:
     decisions = None
     if args.reviewer_decisions:
         decisions = json.loads(Path(args.reviewer_decisions).read_text(encoding="utf-8"))
+    # the decision files this run reads, by path relative to the run folder's parent
+    # and sha (reviewerInputs.files, in the inputs digest), and the experimental label
+    decisions_root = out_dir.resolve().parent
+    reviewer_files = ra.reviewer_input_files(
+        {"reviewer_decisions": args.reviewer_decisions,
+         "coverage_exceptions": args.coverage_exceptions}, decisions_root)
+    experimental = ra.experimental_block()
+    if experimental:
+        print("[agent] EXPERIMENTAL run: its version can never reach the canonical library")
     result = ra.run(args.l3, args.name, screen_preset=args.screen,
                     nrsa_dataset_id=args.nrsa_dataset, nrsa_cycles=args.nrsa_cycles,
                     source_citation=args.source_citation, do_screen=not args.no_screen,
@@ -752,7 +776,16 @@ def main(argv=None) -> int:
                     nrsa_keep_sites=site_reasons["--include-site"] or None,
                     exclude_sites=site_reasons["--exclude-site"] or None,
                     reference_method=reference_method,
+                    # H1: missing carries the published curves forward, all never
+                    # reads the canonical library; DATA-11: the value policy, recorded as used
+                    carry=(refit == "missing"), value_policy=args.value_policy,
                     on_event=ra.event_narrator())
+    # what the manifest's digest names beyond the legacy rules (schema 2)
+    result["refit_mode"] = refit
+    result["reviewer_decisions"] = list(decisions or [])
+    result["portfolio_approvals"] = list(portfolio_approvals)
+    result["reviewer_input_files"] = dict(reviewer_files)
+    result["experimental"] = experimental
     print(f"[agent] retained {len(result['retained_site_ids'])} / {result['n_candidates']} "
           f"(tier {result['reference_tier']}, pool {result['reference_pool_disposition']}); "
           f"curves in scope {len(result['intended_metrics'])}, flagged {len(result['flagged_metrics'])}, "
@@ -780,7 +813,15 @@ def main(argv=None) -> int:
     # Built before publishing so the published copy carries the same record.
     manifest = pv.build_run_manifest(
         result, argv=list(argv or sys.argv[1:]), started_at=started_at,
-        finished_at=datetime.now(timezone.utc).isoformat())
+        finished_at=datetime.now(timezone.utc).isoformat(),
+        defaults={**pv.new_manifest_defaults(), "refit": refit,
+                  "reviewerInputs": {"files": dict(reviewer_files)},
+                  "experimental": experimental})
+    # beside the digest: the carry-forward record (a pressure-screen run only) and
+    # where the recorded files are read from (never in the digest)
+    if isinstance(manifest["inputs"].get("reference"), dict):
+        manifest["inputs"]["reference"]["carryForward"] = ra.carry_forward_record(refit, result)
+    manifest.setdefault("reviewerInputs", {})["decisionsRoot"] = str(decisions_root)
     provenance_doc = pv.build_provenance(result, manifest, timestamp=started_at)
     if decisions is not None:
         provenance_doc = pv.apply_reviewer_decisions(

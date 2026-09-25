@@ -98,6 +98,46 @@ def coverage_of(assessment) -> dict:
     }
 
 
+#: The documented reasons a function carries no metric (StreamCurves
+#: ``deep_export.FUNCTION_EXCLUSION_REASONS``), in the words a card shows.
+GAP_REASON_WORDS = {
+    "not-applicable-to-region": "the function does not operate in this setting",
+    "no-suitable-metric": "no suitable metric measures it here",
+    "data-unavailable": "the data source has no coverage here",
+    "direction-unresolved": "the metric's ecological direction is under review",
+    "consolidated-into": "folded into another function",
+    "deferred-to-other-tier": "assessed at another tier instead",
+    "insufficient-reference-support": "insufficient reference support",
+}
+
+
+def documented_gap(assessment, function_id: str) -> dict | None:
+    """The bundle's documented exclusion of a function (``functionCoverage.exclusions``:
+    reason, justification, who recorded it), or None when the function is scored or the
+    bundle records no reason for its absence."""
+    fid = str(function_id or "")
+    for e in coverage_of(assessment).get("exclusions") or []:
+        if isinstance(e, dict) and str(e.get("functionId")) == fid:
+            return dict(e)
+    return None
+
+
+def gap_words(reason) -> str:
+    """The reason in words, or the token itself when it is not one of the seven."""
+    token = str(reason or "").strip()
+    return GAP_REASON_WORDS.get(token, token.replace("-", " "))
+
+
+def gap_line(exclusion: dict | None) -> str:
+    """What the function card says for a documented gap, never a score:
+    ``Not assessed: no suitable metric measures it here``."""
+    e = exclusion or {}
+    words = gap_words(e.get("reason"))
+    if str(e.get("reason")) == "consolidated-into" and e.get("consolidatedInto"):
+        words += f" ({e['consolidatedInto']})"
+    return f"Not assessed: {words}" if words else "Not assessed"
+
+
 def coverage_caption(coverage: dict) -> str:
     """One-line summary for the rail, the picker card, and the report."""
     if not coverage or not coverage.get("total"):

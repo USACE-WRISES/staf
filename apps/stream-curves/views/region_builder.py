@@ -30,6 +30,7 @@ from typing import Optional
 import pandas as pd
 from shiny import module, reactive, render, ui
 
+from streamcurves import curve_basis
 from streamcurves import library as lib
 from streamcurves import methodology
 from streamcurves import engine_names
@@ -144,6 +145,175 @@ def left_for_you_text(packet: Optional[dict], n_gaps: int = 0) -> str:
     if blocking:
         head += f" ({count_text(blocking, 'blocking item')})"
     return head + ". Answer them in Reference curves, Select final curves."
+
+
+# --------------------------------------------------------------------------- #
+# the campaign index: every region a runs root holds, with filters
+# --------------------------------------------------------------------------- #
+#: the filters, in the order the card shows them: (input name, label)
+INDEX_FILTERS = (("ci_region", "Region"), ("ci_function", "Function"), ("ci_metric", "Metric"),
+                 ("ci_source", "Source type"), ("ci_evidence", "Evidence"), ("ci_open", "Open items"))
+EVIDENCE_CHOICES = {"": "Any", "ready": "Ready", "missing": "Missing", "unreadable": "Unreadable"}
+OPEN_CHOICES = {"": "Any", "none": "None open", "some": "Items open"}
+#: the source types a packet's curves rest on (its curve basis), in words
+SOURCE_TYPE_LABELS = {"fitted": "Built here", "carried": "Carried forward", "fixed": "Fixed criteria",
+                      **{t: curve_basis.label_for(t) for t in (*curve_basis.ORDER, curve_basis.OWNER)}}
+
+
+def packet_index_detail(packet: Optional[dict]) -> dict:
+    """What the campaign index filters on, read from a region's review packet: the
+    functions its portfolio covers (``{id: name}``), the metrics its curves and sources
+    name, the source types its curves rest on (the packet's curve basis: built here,
+    carried, a basis of the ladder, fixed criteria) and ``promotion`` (``{eligible,
+    blockers}``) when the packet records it."""
+    p = packet if isinstance(packet, dict) else {}
+    functions: dict[str, str] = {}
+    for row in p.get("portfolio") or []:
+        fid = str(row.get("function_id") or "")
+        if fid:
+            functions[fid] = str(row.get("function") or fid)
+    for fid in (p.get("coverage") or {}).get("coveredFunctionIds") or []:
+        functions.setdefault(str(fid), str(fid))
+    metrics: set[str] = {str(c.get("metric")) for c in p.get("curves") or [] if c.get("metric")}
+    ref = p.get("reference") or {}
+    h = ref.get("hierarchy") or {}
+    metrics |= {str(s.get("metric")) for s in h.get("sources") or [] if s.get("metric")}
+    metrics |= {str(m) for m in h.get("carried") or []}
+    metrics |= {str(f.get("metric")) for f in ref.get("fixed") or [] if f.get("metric")}
+    for row in p.get("portfolio") or []:
+        metrics |= {str(m) for m in row.get("compact_metrics") or []}
+    sources: set[str] = set()
+    if p.get("curves"):
+        sources.add("fitted")
+    for s in h.get("sources") or []:
+        sources.add(str(s.get("basis") or curve_basis.REGIONAL))
+    if h.get("carried") or h.get("carried_curves"):
+        sources.add("carried")
+    if ref.get("fixed"):
+        sources.add("fixed")
+    promotion = p.get("promotion")
+    return {"functions": functions, "metrics": sorted(metrics), "source_types": sorted(sources),
+            "promotion": dict(promotion) if isinstance(promotion, dict) else None}
+
+
+def with_packet_detail(rows: list[dict]) -> list[dict]:
+    """``region_build.campaign_rows`` rows with what each region's packet adds for the
+    filters and the promote column (:func:`packet_index_detail`)."""
+    out = []
+    for r in rows:
+        packet = _read_json(Path(r["run_dir"]) / "review_packet.json") if r.get("run_dir") else None
+        out.append({**r, **packet_index_detail(packet)})
+    return out
+
+
+def index_rows(out_root) -> list[dict]:
+    """The campaign index over a runs root (:func:`with_packet_detail` over
+    ``region_build.campaign_rows``)."""
+    return with_packet_detail(rb.campaign_rows(out_root))
+
+
+def index_choices(rows: list[dict]) -> dict:
+    """The filters' options over the rows: regions (code and name), functions (id and
+    name), metrics and source types (token and words)."""
+    regions = {str(r["region"]): f'{r["region"]}  {r.get("name") or ""}'.strip() for r in rows}
+    functions: dict[str, str] = {}
+    metrics: set[str] = set()
+    sources: set[str] = set()
+    for r in rows:
+        for fid, name in (r.get("functions") or {}).items():
+            functions.setdefault(fid, name)
+        metrics |= set(r.get("metrics") or [])
+        sources |= set(r.get("source_types") or [])
+    return {"region": dict(sorted(regions.items(), key=lambda kv: (not kv[0].isdigit(), int(kv[0]) if kv[0].isdigit() else 0, kv[0]))),
+            "function": dict(sorted(functions.items(), key=lambda kv: kv[1])),
+            "metric": {m: m for m in sorted(metrics)},
+            "source_type": {t: SOURCE_TYPE_LABELS.get(t, t) for t in sorted(sources)}}
+
+
+def filter_index_rows(rows: list[dict], *, region: str = "", function: str = "", metric: str = "",
+                      source_type: str = "", evidence: str = "", open_items: str = "") -> list[dict]:
+    """The rows a filter setting keeps. ``region``: a code, or text matched against the
+    code and the name; ``open_items``: ``none`` or ``some``; the others are exact."""
+    q = str(region or "").strip().lower()
+    out = []
+    for r in rows:
+        if q and q != str(r.get("region")).lower() and q not in f'{r.get("region")} {r.get("name") or ""}'.lower():
+            continue
+        if function and str(function) not in (r.get("functions") or {}):
+            continue
+        if metric and str(metric) not in (r.get("metrics") or []):
+            continue
+        if source_type and str(source_type) not in (r.get("source_types") or []):
+            continue
+        if evidence and str(r.get("evidence") or "") != str(evidence):
+            continue
+        n_open = r.get("open_items")
+        if open_items == "none" and (n_open is None or int(n_open or 0) > 0):
+            continue
+        if open_items == "some" and not int(n_open or 0):
+            continue
+        out.append(r)
+    return out
+
+
+def promote_words(row: dict) -> str:
+    """The promote column: the packet's own eligibility (``review_packet.promotion``) with
+    its blockers when it records one, else what the index derives."""
+    promotion = row.get("promotion")
+    if isinstance(promotion, dict):
+        if promotion.get("eligible"):
+            return "eligible"
+        blockers = [str(b) for b in promotion.get("blockers") or [] if str(b).strip()]
+        return "not yet: " + "; ".join(blockers) if blockers else "not yet"
+    return "eligible" if row.get("promote_eligible") else "not yet"
+
+
+def campaign_filters_ui(choices: dict, *, ns, values: Optional[dict] = None):
+    """The six filters over the index (region, function, metric, source type, evidence
+    status, open items), each keeping its current value across a repaint."""
+    values = values or {}
+    opts = {"ci_region": {"": "Any region", **choices.get("region", {})},
+            "ci_function": {"": "Any function", **choices.get("function", {})},
+            "ci_metric": {"": "Any metric", **choices.get("metric", {})},
+            "ci_source": {"": "Any source type", **choices.get("source_type", {})},
+            "ci_evidence": dict(EVIDENCE_CHOICES), "ci_open": dict(OPEN_CHOICES)}
+    controls = []
+    for name, label in INDEX_FILTERS:
+        cur = str(values.get(name) or "")
+        controls.append(ui.input_select(ns(name), label, opts[name],
+                                        selected=cur if cur in opts[name] else "", width="100%"))
+    return ui.div(*controls, class_="rb-campaign-filters")
+
+
+def campaign_table_ui(rows: list[dict], *, ns, total: int):
+    """The index table: one row per region, Open on the rows that have a run."""
+    if not rows:
+        return ui.div(f"No region matches these filters ({total} in this folder).",
+                      class_="text-muted small")
+    head = ["Region", "Version", "Curves", "Decisions applied", "Open items",
+            "Hard stops", "Promote", "Evidence", ""]
+    body = []
+    for r in rows:
+        label = f'{r["region"]}  {r.get("name") or ""}'.strip()
+        body.append(ui.tags.tr(
+            ui.tags.td(label),
+            ui.tags.td("" if r.get("version") is None else f'v{r["version"]}'),
+            ui.tags.td("" if r.get("curves") is None else str(r["curves"])),
+            ui.tags.td("" if r.get("decisions_applied") is None else str(r["decisions_applied"])),
+            ui.tags.td("" if r.get("open_items") is None else str(r["open_items"])),
+            ui.tags.td("" if r.get("hard_stops") is None else str(r["hard_stops"])),
+            ui.tags.td(promote_words(r)),
+            ui.tags.td(str(r.get("evidence") or "")),
+            ui.tags.td(ui.tags.button(
+                "Open", type="button", class_="btn btn-link btn-sm p-0",
+                title="Open this region's staged assessment on Select final curves",
+                onclick=(f"Shiny.setInputValue('{ns('open_region')}',"
+                         f"{json.dumps(str(r['region']))},{{priority:'event'}})"))
+                if r.get("run_dir") else "")))
+    return ui.TagList(
+        ui.div(f"{len(rows)} of {total} regions", class_="text-muted small mb-1"),
+        ui.tags.table(ui.tags.thead(ui.tags.tr(*[ui.tags.th(h) for h in head])),
+                      ui.tags.tbody(*body), class_="table table-sm rb-facts"))
 
 
 @module.ui
@@ -940,37 +1110,37 @@ def region_builder_server(input, output, session, state: AppState, active=None, 
         else:
             _open_staged_now(land=True)
 
+    def _filter_values() -> dict:
+        return {name: str(_inp(name) or "") for name, _ in INDEX_FILTERS}
+
     @render.ui
     def campaign_index():
-        """Every region this runs root holds, read-only (``rb.campaign_rows``): a
-        row opens that region's staged assessment on Select final curves."""
+        """Every region this runs root holds, read-only (``rb.campaign_rows`` plus what
+        each packet adds): the filters (region, function, metric, source type, evidence
+        status, open items) and the table, on its own output so a filter change never
+        repaints the controls. A row opens that region's staged assessment on Select
+        final curves; the promote column reads the packet's own eligibility."""
         finished()
         running()
-        rows = rb.campaign_rows(out_root())
+        rows = with_packet_detail(rb.campaign_rows(out_root()))
         if not rows:
             return None
-        head = ["Region", "Version", "Curves", "Decisions applied", "Open items",
-                "Hard stops", "Promote", "Evidence", ""]
-        body = []
-        for r in rows:
-            label = f'{r["region"]}  {r.get("name") or ""}'.strip()
-            body.append(ui.tags.tr(
-                ui.tags.td(label),
-                ui.tags.td("" if r.get("version") is None else f'v{r["version"]}'),
-                ui.tags.td("" if r.get("curves") is None else str(r["curves"])),
-                ui.tags.td("" if r.get("decisions_applied") is None else str(r["decisions_applied"])),
-                ui.tags.td("" if r.get("open_items") is None else str(r["open_items"])),
-                ui.tags.td("" if r.get("hard_stops") is None else str(r["hard_stops"])),
-                ui.tags.td("eligible" if r.get("promote_eligible") else "not yet"),
-                ui.tags.td(str(r.get("evidence") or "")),
-                ui.tags.td(ui.tags.button(
-                    "Open", type="button", class_="btn btn-link btn-sm p-0",
-                    onclick=(f"Shiny.setInputValue('{ns('open_region')}',"
-                             f"{json.dumps(str(r['region']))},{{priority:'event'}})"))
-                    if r.get("run_dir") else "")))
+        with reactive.isolate():
+            values = _filter_values()
         return ui.div(
             ui.tags.strong("Regions built in this folder"),
             ui.div(str(out_root()), class_="text-muted small mb-1"),
-            ui.tags.table(ui.tags.thead(ui.tags.tr(*[ui.tags.th(h) for h in head])),
-                          ui.tags.tbody(*body), class_="table table-sm rb-facts"),
+            campaign_filters_ui(index_choices(rows), ns=ns, values=values),
+            ui.output_ui(ns("campaign_table")),
             class_="rb-campaign card card-body mt-3")
+
+    @render.ui
+    def campaign_table():
+        finished()
+        running()
+        values = _filter_values()
+        rows = with_packet_detail(rb.campaign_rows(out_root()))
+        kept = filter_index_rows(rows, region=values["ci_region"], function=values["ci_function"],
+                                 metric=values["ci_metric"], source_type=values["ci_source"],
+                                 evidence=values["ci_evidence"], open_items=values["ci_open"])
+        return campaign_table_ui(kept, ns=ns, total=len(rows))

@@ -286,3 +286,35 @@ def test_stage_many_hands_the_dataset_flags_to_each_stage():
     assert "nrsa_cycles=" in window, "stage-many namespace drops nrsa_cycles"
     assert 'getattr(a, "nrsa_dataset"' not in text, "the silent legacy fallback is back"
     assert 'getattr(a, "nrsa_cycles"' not in text, "the silent cycles fallback is back"
+    # the value policy (DATA-11) and the refit mode (campaign Round 1) ride the same
+    # namespace and are read the same way: directly, never through a fallback
+    assert "value_policy=a.value_policy" in window, "stage-many namespace drops value_policy"
+    assert "refit=a.refit" in window, "stage-many namespace drops refit"
+    assert 'getattr(a, "value_policy"' not in text and 'getattr(a, "refit"' not in text
+    assert "value_policy=value_policy" in _call(text, "ra.run_evidence("), \
+        "stage does not pass the value policy"
+
+
+def _call(text: str, call: str) -> str:
+    """The whole ``call(...)`` expression in ``text``, to its closing parenthesis
+    (a fixed-length window goes blind as the call grows)."""
+    start = text.index(call)
+    depth = 0
+    for i in range(start + len(call) - 1, len(text)):
+        depth += {"(": 1, ")": -1}.get(text[i], 0)
+        if depth == 0:
+            return text[start:i + 1]
+    return text[start:]
+
+
+def test_the_value_policy_flag_reaches_the_agent_in_both_scripts():
+    """``--value-policy`` defaults to the archive's new-build policy and is passed
+    through; a replay names the id its version recorded instead."""
+    from streamcurves import nrsa_dataset as nd
+    for script, call in (("run_region_batch.py", "ra.run_evidence("),
+                         ("run_regional_analysis.py", "ra.run(")):
+        text = _source(script)
+        assert '"--value-policy"' in text, script
+        assert "default=nrsa_dataset.DEFAULT_VALUE_POLICY" in text, script
+        assert "value_policy=" in _call(text, call), f"{script}: {call} does not pass value_policy"
+    assert nd.DEFAULT_VALUE_POLICY == nd.VALUE_POLICY_V2

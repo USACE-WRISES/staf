@@ -55,6 +55,7 @@ from streamcurves import project_meta as pmeta
 from streamcurves import recents
 from streamcurves import region_art
 from streamcurves import region_build as rb
+from streamcurves import run_state as rs
 from streamcurves import session_io as sio
 from streamcurves import workspace as ws
 from streamcurves.easi_method import io as eio
@@ -81,6 +82,11 @@ _START_MODAL_CSS = (
     "max-height:calc(100vh - 2rem);overflow:hidden;display:flex;flex-direction:column;"
     "border-radius:12px;border:0}"
     "#shiny-modal .modal-body{flex:1 1 auto;min-height:0;padding:0;overflow:hidden;display:flex}")
+
+#: What the gallery says of a download-only entry (a catalog-only snapshot, the apps payload)
+#: while the library cannot be reached: the version's files are not here and must be fetched.
+DOWNLOAD_NEEDED_OFFLINE = ("Download needed: this version is not on this computer yet. Connect to "
+                           "the internet and refresh the Assessment library to download it.")
 
 # A tall prose dialog (Help, What's new): capped at the window, the body scrolls.
 _TALL_MODAL_CSS = (
@@ -1145,7 +1151,10 @@ def project_server(input, output, session, state: AppState):
     @reactive.effect
     @reactive.event(input.start_runs)
     def _start_runs():
-        _open_tool("build")
+        # One build path: the Region builder is an ecoregion project's stage-3 Build
+        # substep (views/import_map.py), not a tool of its own, so the link lands there.
+        ui.modal_remove()
+        _request_nav("data", wizard_step=rs.ECOREGION_BUILD_SUBSTEPS[0][0])
 
     @reactive.effect
     @reactive.event(input.start_easi_import)
@@ -1421,6 +1430,8 @@ def project_server(input, output, session, state: AppState):
             ui.div("Versions", class_="sc-sec"),
             ui.div(*versions, class_="sc-gallery-versions"),
             target_row,
+            (ui.div(DOWNLOAD_NEEDED_OFFLINE, class_="sc-form-note")
+             if v.download_only and not v.assets.get("pack") else None),
             ui.div(_gal_error(), class_="sc-gallery-err") if _gal_error() else None,
             ui.div(*actions, class_="sc-gallery-actions"),
             ui.div("An EASI screening method version. EASI keeps the method it ships until "
@@ -1502,8 +1513,12 @@ def project_server(input, output, session, state: AppState):
             else:
                 asset = v.assets.get("pack")
                 if asset is None:
-                    raise gallery.GalleryError("This version has no download in the library "
-                                               "yet. Refresh the library and try again.")
+                    # a download-only entry (the shipped catalog-only snapshot, read offline)
+                    # is not "not published yet": its files are simply not here
+                    raise gallery.GalleryError(
+                        DOWNLOAD_NEEDED_OFFLINE if v.download_only else
+                        "This version has no download in the library yet. Refresh the "
+                        "library and try again.")
                 cancel = threading.Event()
                 _dl.update(active=True, got=0, total=asset.size, name=f"{e.name} v{v.version}",
                            cancel=cancel)

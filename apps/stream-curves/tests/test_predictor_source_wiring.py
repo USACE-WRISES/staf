@@ -86,9 +86,11 @@ def test_the_flag_is_passed_through_not_just_parsed():
 
 def test_stage_many_hands_the_flag_to_each_stage():
     text = (_SCRIPTS / "run_region_batch.py").read_text(encoding="utf-8")
-    # The hand-built stage-many Namespace ends with the flag; without it each
-    # per-region stage would silently revert to the default.
-    assert "predictor_source=a.predictor_source)" in text
+    # The hand-built stage-many Namespace carries the flag; without it each
+    # per-region stage would silently revert to the default. The refit mode and
+    # the value policy (campaign Round 1) close the same Namespace.
+    assert "predictor_source=a.predictor_source," in text
+    assert "refit=a.refit, value_policy=a.value_policy)" in text
     # the reference method (methodology 0.12) rides the same Namespace, and the
     # stage reads it as a direct attribute for the same reason
     assert "reference_method=a.reference_method," in text

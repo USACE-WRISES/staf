@@ -155,6 +155,80 @@ def test_canonical_publish_refuses_a_pending_marker(monkeypatch, tmp_path):
                                provenance=argv_only) == 2
 
 
+def test_canonical_publish_refuses_an_experimental_manifest(monkeypatch, tmp_path):
+    """D4a: a run under another configuration root or the REF-15 extension flag
+    is labeled experimental in its manifest and publishes only into an isolated
+    root; the canonical library refuses it, naming the root."""
+    from conftest import documented_exclusions
+    import numpy as np
+    import pandas as pd
+    from streamcurves import session_io as sio
+    from streamcurves.deep_export import build_deep_assessment_bundle
+
+    rows = {"m": {"metric": "m", "curve_status": "complete", "stratum": np.nan,
+                  "curve_points": pd.DataFrame({"metric_value": [0, 9, 25, 75],
+                                                "index_score": [1, 0.7, 0.3, 0]})}}
+    mapping = pd.DataFrame({"metric_key": ["m"], "discipline": ["Hydrology"],
+                            "function_label": ["Catchment hydrology"], "sort_order": [1]})
+    region = {"kind": "ecoregion", "code": "55", "name": "Eastern Corn Belt Plains"}
+    bundle = build_deep_assessment_bundle(rows, mapping, {}, {
+        "region": region, "functionCoverageExceptions": documented_exclusions()})
+    payload = sio.dump_session_fields({"region_of_applicability": region, "app_data_loaded": True},
+                                      session_name="t")
+    experimental = {"records": [{"reviewer": "owner"}],
+                    "reviewQueue": {"items": [], "counts": {"open": 0}},
+                    "manifest": {"experimental": {"configRoot": str(tmp_path / "cfg"),
+                                                  "extensionFlag": False}}}
+    canonical = {**experimental, "manifest": {"experimental": None}}
+    staging = tmp_path / "staging"
+    (staging / "assessments").mkdir(parents=True)
+    monkeypatch.setenv("STAF_LIBRARY_ROOT", str(staging))
+    assert lib.publish_version("t", {"assessmentName": "T", "region": region}, payload, bundle,
+                               provenance=experimental) == 1
+    monkeypatch.setattr(lib, "is_canonical_root", lambda: True)
+    with pytest.raises(ValueError, match="experimental .*configuration root"):
+        lib.publish_version("t", {"assessmentName": "T", "region": region}, payload, bundle,
+                            provenance=experimental)
+    assert lib.publish_version("t", {"assessmentName": "T", "region": region}, payload, bundle,
+                               provenance=canonical) == 2
+    assert lib.experimental_label(experimental).endswith("cfg") and lib.experimental_label(canonical) is None
+
+
+def test_session_fields_carry_the_round_one_record(assembled, monkeypatch):
+    """The session a build writes names its SELECT-01 approvals (the field's
+    shape), the policy opt-ins it ran with, the candidates it read, and inside a
+    pressure-screen reference build the rebuild ledger and the evidence reference."""
+    from streamcurves import pressure_evidence as pe
+    from streamcurves import session_io as sio
+    result = dict(assembled)
+    result["meta"] = {**assembled["meta"], "portfolioApprovals": [
+        {"functionId": "fn-a", "approvedBy": "GM", "note": "Complementary.", "confirmedAt": "2026-09-25"},
+        {"functionId": "fn-b", "approvedBy": "standing-policy:select01 " + dec.PENDING_SUFFIX}]}
+    result["standing_decisions"] = {"enabledIds": ["curve07-thin-metric-finalized"]}
+    result["candidate_register"] = {"schema": 1, "considered": [], "decisions": []}
+    result["metric_ledger"] = {"schema": "rebuild-ledger/1", "rows": []}
+    result["evidence_reference"] = {"packageId": "deep-dev-l3-55", "version": "x"}
+    fields = ra.session_fields(result)
+    assert fields["portfolio_approvals"] == [
+        {"functionId": "fn-a", "approver": "GM", "note": "Complementary.", "date": "2026-09-25"},
+        {"functionId": "fn-b", "approver": "standing-policy:select01 " + dec.PENDING_SUFFIX,
+         "note": "", "date": ""}]
+    assert fields["rule_selections"] == ["curve07-thin-metric-finalized"]
+    assert fields["candidate_register"] == result["candidate_register"]
+    assert fields["reference_build"] is None                      # a legacy build carries none
+    # a plain run records no approvals and no selections
+    plain = ra.session_fields(assembled)
+    assert plain["portfolio_approvals"] is None and plain["rule_selections"] is None
+    # under the pressure screen the reference build carries both
+    monkeypatch.setattr(pe, "session_reference_build", lambda r: {"method": pe.METHOD})
+    result["reference_method"] = ra.run_state.REFERENCE_METHOD_PRESSURE
+    fields = ra.session_fields(result)
+    assert fields["reference_build"]["ledger"] == result["metric_ledger"]
+    assert fields["reference_build"]["evidence"] == result["evidence_reference"]
+    assert sio.decode_session_fields(sio.dump_session_fields(fields))["reference_build"]["ledger"] == \
+        result["metric_ledger"]
+
+
 @pytest.fixture(scope="module")
 def staged_run(tmp_path_factory):
     from conftest import documented_exclusions
@@ -583,10 +657,22 @@ def test_stage_many_records_the_command_and_binds_a_region_to_its_outputs(tmp_pa
                                    argv=["stage-many", "--workers", "3"])
     assert ns.argv == ["stage-many"] and ns.l3 == "55" and ns.include_site == []
     assert set(rb._STAGE_MANY_FLAGS) <= set(vars(ns))
+    # the refit mode, the value policy and the region's own decision files ride the
+    # same namespace (campaign Round 1); with no decisions root there are no files
+    for attr in ("refit", "value_policy", "decisions_root", "curve_decisions",
+                 "reviewer_decisions", "region_coverage_exceptions", "candidate_register"):
+        assert attr in vars(ns) and getattr(ns, attr) is None, attr
     # a region's digest names what it carries forward from
     d1 = rb.region_digest("55", "n", {"x": 1}, {"assessmentId": "a", "version": 8, "contentDigest": "c"})
     d2 = rb.region_digest("55", "n", {"x": 1}, {"assessmentId": "a", "version": 9, "contentDigest": "d"})
     assert d1 != d2
+    # and the refit mode, resolved, rides in the inputs' flags; a full refit carries nothing
+    args = vars(ns)
+    args["out"] = str(tmp_path / "r")
+    assert rb.region_inputs({**args, "refit": None})["flags"]["refit"] == rb.ra.refit_mode(None)
+    assert rb.region_inputs({**args, "refit": "all"})["flags"]["refit"] == "all"
+    assert rb.carried_for({**args, "refit": "all"}, "55") is None
+    assert "decisions_root" not in rb.region_inputs(args)["flags"]
     # a recorded output that changed makes the region stage again
     region = tmp_path / "r"
     (region / "library").mkdir(parents=True)

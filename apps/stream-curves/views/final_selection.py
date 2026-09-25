@@ -32,16 +32,20 @@ decisions; they no longer take them. Every string is user-visible, so none carri
 """
 from __future__ import annotations
 
+import asyncio
 import csv
 import functools
 import io
 import json
 import re
+from pathlib import Path
 from typing import Any, Iterable, Mapping, Optional
+from urllib.parse import parse_qs
 
 from shiny import reactive, render, ui
 
 from streamcurves import candidates as C
+from streamcurves import compare as cmpv
 from streamcurves import curve_automation as ca
 from streamcurves import curve_svg as cs
 from streamcurves import owner_curves as oc
@@ -258,7 +262,15 @@ def reason_ui(text: str, *, limit: int = 240):
                            ui.div(text), class_="fs-reason fs-reason-long")
 
 
-def alternative_row_ui(row: Mapping, cand: Mapping, *, ns, compare: list, extension_on: bool):
+def linked_row_id(candidate_key: Any) -> str:
+    """The element id of a candidate's row, the target of the ``candidate=<key>`` deep link."""
+    return dom_id("cand_" + str(candidate_key or ""))
+
+
+def alternative_row_ui(row: Mapping, cand: Mapping, *, ns, compare: list, extension_on: bool,
+                       linked: bool = False):
+    """One candidate's row. ``linked``: the row a deep link opened, marked so a reader
+    finds it."""
     d = row.get("decision") or {}
     ident = cand.get("identity") or {}
     return ui.tags.tr(
@@ -269,6 +281,8 @@ def alternative_row_ui(row: Mapping, cand: Mapping, *, ns, compare: list, extens
                    ui.div(rule_words(d.get("rule")), class_="fs-rule")),
         ui.tags.td(_who(d), class_="fs-who"),
         ui.tags.td(_actions(row, cand, ns=ns, compare=compare, extension_on=extension_on)),
+        id=ns(linked_row_id(row["candidateKey"])),
+        class_="is-linked" if linked else None,
     )
 
 
@@ -307,7 +321,8 @@ def select01_status(fn: Mapping, *, limit: int, approvals: Iterable[Mapping] = (
 
 def function_row_ui(fn: Mapping, cands: Mapping, *, ns, compare: list, extension_on: bool,
                     open_: bool = False, sqt_ready: bool = False, select01: Optional[Mapping] = None,
-                    can_source: bool = False, gap_withdrawable: bool = False):
+                    can_source: bool = False, gap_withdrawable: bool = False,
+                    linked_key: Optional[str] = None):
     """One function: the curves that score it on the summary line; the alternatives,
     the gap, what waits on a decision, and the decisions a person can take on it
     (a source, a documented gap, a SELECT-01 approval) inside.
@@ -315,7 +330,7 @@ def function_row_ui(fn: Mapping, cands: Mapping, *, ns, compare: list, extension
     ``select01``: :func:`select01_status` for the function (None under the maximum);
     ``can_source``: a source can be chosen for it (an ecoregion's pressure-screen build);
     ``gap_withdrawable``: its documented gap is the session's own, not one a curve
-    decision carries."""
+    decision carries; ``linked_key``: the candidate a deep link opened, marked on its row."""
     selected = [cands[r["candidateKey"]] for r in fn["selected"] if r["candidateKey"] in cands]
     alts = [r for r in fn["alternatives"] if r["candidateKey"] in cands]
     channel = ns("final_action")
@@ -375,8 +390,9 @@ def function_row_ui(fn: Mapping, cands: Mapping, *, ns, compare: list, extension
         body.append(ui.div(fa("triangle-exclamation"), f" {s['decision'].get('metric')}: {s['why']}", undo,
                            class_="fs-waiting is-stale"))
     rows = [alternative_row_ui(r, cands[r["candidateKey"]], ns=ns, compare=compare,
-                               extension_on=extension_on) for r in fn["selected"] + alts
-            if r["candidateKey"] in cands]
+                               extension_on=extension_on,
+                               linked=bool(linked_key) and r["candidateKey"] == linked_key)
+            for r in fn["selected"] + alts if r["candidateKey"] in cands]
     body.append(ui.tags.table(
         ui.tags.thead(ui.tags.tr(ui.tags.th("Curve"), ui.tags.th("Status"), ui.tags.th("Why"),
                                  ui.tags.th("Decided by"), ui.tags.th(""))),
@@ -484,14 +500,17 @@ def head_ui(register: Mapping, *, extension_on: bool = False, export_id: Optiona
 def functions_ui(register: Mapping, *, ns, compare: Iterable[str] = (), extension_on: bool = False,
                  open_ids: Iterable[str] = (), sqt_ready: bool = False, limit: Optional[int] = None,
                  approvals: Iterable[Mapping] = (), origin_approvals: Iterable[Mapping] = (),
-                 can_source: bool = False, session_gap_ids: Iterable[str] = ()):
+                 can_source: bool = False, session_gap_ids: Iterable[str] = (),
+                 linked_key: Optional[str] = None):
     """The function rows. ``limit``: the portfolio maximum (None: SELECT-01 is not judged);
     ``approvals`` / ``origin_approvals``: the session's and the build's SELECT-01 approvals;
     ``can_source``: a source can be chosen (an ecoregion's pressure-screen build);
-    ``session_gap_ids``: the functions whose documented gap is the session's own."""
+    ``session_gap_ids``: the functions whose documented gap is the session's own;
+    ``linked_key``: the candidate a ``candidate=<key>`` deep link opened (its functions are
+    opened as well, and its row is marked)."""
     cands = {c["candidateKey"]: c for c in register.get("candidates") or []}
     compare = [k for k in compare or [] if k in cands]
-    opened = set(open_ids or ())
+    opened = set(open_ids or ()) | set(candidate_functions(register, linked_key) if linked_key else ())
     own_gaps = {str(x) for x in session_gap_ids or ()}
     rows = []
     for f in register.get("functions") or []:
@@ -500,8 +519,275 @@ def functions_ui(register: Mapping, *, ns, compare: Iterable[str] = (), extensio
         rows.append(function_row_ui(f, cands, ns=ns, compare=compare, extension_on=extension_on,
                                     open_=f["functionId"] in opened, sqt_ready=sqt_ready,
                                     select01=s01, can_source=can_source,
-                                    gap_withdrawable=str(f["functionId"]) in own_gaps))
+                                    gap_withdrawable=str(f["functionId"]) in own_gaps,
+                                    linked_key=linked_key))
     return ui.div(*rows, class_="fs-functions")
+
+
+# --------------------------------------------------------------------------- #
+# the deep link: candidate=<key> opens the candidate's row
+# --------------------------------------------------------------------------- #
+def parse_candidate_link(search: Any) -> Optional[str]:
+    """The candidate key a page URL names (``?candidate=<key>``, what
+    ``run_region_batch.py open --candidate KEY`` prints), or None."""
+    text = str(search or "").strip()
+    if not text:
+        return None
+    if text.startswith("?"):
+        text = text[1:]
+    if text.startswith("#"):
+        text = text[1:]
+    values = parse_qs(text, keep_blank_values=False).get("candidate") or []
+    key = str(values[0]).strip() if values else ""
+    return key or None
+
+
+def candidate_functions(register: Mapping, candidate_key: Any) -> list[str]:
+    """The functions whose rows list a candidate, in the register's order."""
+    key = str(candidate_key or "")
+    if not key:
+        return []
+    out: list[str] = []
+    for fn in (register or {}).get("functions") or []:
+        rows = list(fn.get("selected") or []) + list(fn.get("alternatives") or [])
+        if any(str(r.get("candidateKey")) == key for r in rows):
+            out.append(str(fn["functionId"]))
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# Compare: this version (A, the session's origin) against another (B)
+# --------------------------------------------------------------------------- #
+VERDICT_CLASS = {cmpv.AGREE: "is-selected", cmpv.DIFFER: "is-excluded", cmpv.NOT_APPLICABLE: "is-eligible"}
+
+
+def origin_version_dir(origin: Optional[Mapping]) -> Optional[Path]:
+    """The folder of the version the session was opened from (``state.assessment_source``):
+    a library version, a staged version, or a run folder; None for a project built from
+    scratch."""
+    from streamcurves import library as lib
+    o = origin or {}
+    kind = o.get("kind")
+    try:
+        if kind == "library" and o.get("library_id") and o.get("version"):
+            return lib.version_dir(str(o["library_id"]), int(o["version"]))
+        if kind == "staged" and o.get("staged_path"):
+            return Path(str(o["staged_path"]))
+        if kind == "run" and o.get("run_dir"):
+            return Path(str(o["run_dir"]))
+    except (TypeError, ValueError):
+        return None
+    return None
+
+
+def origin_label(origin: Optional[Mapping]) -> str:
+    o = origin or {}
+    kind = o.get("kind")
+    if kind == "library" and o.get("library_id"):
+        return f"{o['library_id']} v{o.get('version')}"
+    if kind == "staged":
+        return f"staged {cmpv.version_label(o.get('staged_path') or '')}"
+    if kind == "run":
+        return f"run {Path(str(o.get('run_dir') or '')).name}"
+    return "this session's origin"
+
+
+def compare_choices(entries: Iterable[Any]) -> dict[str, str]:
+    """The gallery's list as ``{"<id>@v<n>": "<name> v<n> (<status>)"}``, only the versions
+    whose files are on this computer (a download-only entry cannot be compared)."""
+    out: dict[str, str] = {}
+    for e in entries or []:
+        for v in getattr(e, "versions", ()) or ():
+            if getattr(v, "download_only", False):
+                continue
+            out[f"{e.id}@v{v.version}"] = f"{e.name} v{v.version} ({v.status_label})"
+    return out
+
+
+def compare_target(choice: Any, path_text: Any) -> Optional[Path]:
+    """The folder B names: a staged run folder path when one is typed, else the chosen
+    library version."""
+    from streamcurves import library as lib
+    text = str(path_text or "").strip().strip('"')
+    if text:
+        return Path(text)
+    key = str(choice or "").strip()
+    if "@v" in key:
+        aid, ver = key.rsplit("@v", 1)
+        if aid and ver.isdigit():
+            return lib.version_dir(aid, int(ver))
+    return None
+
+
+def compare_chooser_ui(choices: Mapping, *, ns, a_label: str, selected: Optional[str] = None,
+                       path_value: str = "", can_compare: bool = True):
+    """Version A (the session's origin) against B: a library version from the gallery's
+    list, or a staged run folder's path."""
+    opts = {"": "Choose a version", **dict(choices)}
+    return ui.div(
+        ui.div(ui.tags.strong("A: "), a_label if can_compare else "no version to compare",
+               class_="mb-1"),
+        (ui.div(fa("circle-info"), " This session was not opened from a library version or a "
+                "staged run, so there is no version A. Open one from the Assessment library "
+                "or from the Region builder.", class_="fs-note") if not can_compare else None),
+        ui.div(ui.input_select(ns("fs_cmp_b"), "B: a library version", opts,
+                               selected=selected if selected in opts else ""),
+               ui.input_text(ns("fs_cmp_path"), "or a staged run folder", value=path_value,
+                             placeholder="For example: notes/DEEP_Working/analysis/runs/l3-71"),
+               ui.input_action_button(ns("fs_cmp_run"), "Compare", class_="btn btn-sm btn-primary",
+                                      disabled=not can_compare),
+               class_="fs-cmp-chooser"),
+        class_="fs-cmp-setup")
+
+
+def _pill(text: str, cls: str):
+    return ui.tags.span(text, class_=f"fs-status {cls}")
+
+
+def _kv_table(rows: Iterable[tuple], head: Iterable[str]):
+    return ui.tags.table(
+        ui.tags.thead(ui.tags.tr(*[ui.tags.th(h) for h in head])),
+        ui.tags.tbody(*[ui.tags.tr(*[ui.tags.td(c) for c in r]) for r in rows]),
+        class_="table table-sm fs-table")
+
+
+def _anchor_words(rows: Iterable[Mapping]) -> str:
+    parts = []
+    for a in rows or []:
+        if a.get("deltaIqr") is not None:
+            parts.append(f"band {a['band']:g}: {a['a']:.4g} to {a['b']:.4g} ({a['deltaIqr']:+.2f} IQR)")
+        elif a.get("a") is not None and a.get("b") is not None:
+            parts.append(f"band {a['band']:g}: {a['a']:.4g} to {a['b']:.4g}")
+        else:
+            parts.append(f"band {a['band']:g}: not reached in "
+                         + ("A" if a.get("a") is None else "B"))
+    return "; ".join(parts)
+
+
+def compare_report_ui(rep: Mapping, *, ns, a_label: str, b_label: str, export_id: Optional[str] = None):
+    """The comparison as a reader sees it: curves (largest delta), the register diff, the
+    ledger diff, the reviewer decisions diff, the D3 owner-decision list and the digests."""
+    c = rep.get("curves") or {}
+    d = rep.get("decisions") or {}
+    reg = rep.get("registers") or {}
+    led = rep.get("ledgers") or {}
+    od = rep.get("ownerDecisions") or {}
+    dg = rep.get("digests") or {}
+    man = rep.get("manifest") or {}
+    head = ui.div(
+        ui.div(ui.tags.strong("A: "), a_label, ui.tags.span(" against ", class_="text-muted"),
+               ui.tags.strong("B: "), b_label, class_="fs-cmp-versions"),
+        (ui.download_button(export_id, "Export CSV", class_="btn btn-sm btn-outline-secondary")
+         if export_id else None),
+        class_="fs-head")
+    facts = []
+    for k in ("methodology", "inputsDigest"):
+        v = man.get(k) or {}
+        facts.append((k, "equal" if v.get("equal") else "differs"))
+    sd = (man.get("standingDecisions") or {})
+    facts.append(("standing decisions",
+                  f"A {(sd.get('a') or {}).get('policyVersion')} ({(sd.get('a') or {}).get('appliedCount')} applied), "
+                  f"B {(sd.get('b') or {}).get('policyVersion')} ({(sd.get('b') or {}).get('appliedCount')} applied)"))
+    manifest_block = ui.div(ui.tags.strong("Manifest"), _kv_table(facts, ("what", "A and B")),
+                            class_="fs-cmp-block")
+    curve_rows = []
+    for mid, notes in (c.get("differ") or {}).items():
+        delta = (c.get("max_delta") or {}).get(mid)
+        curve_rows.append((mid, "" if delta is None else f"{delta:.4g}", "; ".join(notes)))
+    for mid in c.get("only_a") or []:
+        curve_rows.append((mid, "", "only in A"))
+    for mid in c.get("only_b") or []:
+        curve_rows.append((mid, "", "only in B"))
+    curves_block = ui.div(
+        ui.tags.strong("Curves"),
+        ui.div(f"{len(c.get('identical') or [])} identical, {len(c.get('differ') or {})} differ, "
+               f"{len(c.get('only_a') or [])} only in A, {len(c.get('only_b') or [])} only in B",
+               class_="fs-sub"),
+        _kv_table(curve_rows, ("metric", "largest delta", "what differs")) if curve_rows else None,
+        class_="fs-cmp-block")
+    if reg.get("note"):
+        reg_body = ui.div(reg["note"], class_="fs-note")
+    else:
+        rows = []
+        for ch in reg.get("changes") or []:
+            if ch.get("change") == "changed":
+                x, y = ch.get("before") or {}, ch.get("after") or {}
+                rows.append((f"{x.get('function') or x.get('functionId')}: {x.get('candidate') or x.get('candidateKey')}",
+                             "changed", "; ".join(f"{f}: {x.get(f)!s} to {y.get(f)!s}" for f in ch.get("fields") or [])))
+            else:
+                rows.append((f"{ch.get('function') or ch.get('functionId')}: {ch.get('candidate') or ch.get('candidateKey')}",
+                             ch.get("change"), str(ch.get("status") or "")))
+        cn = reg.get("counts") or {}
+        reg_body = ui.TagList(
+            ui.div(f"{cn.get('added', 0)} added, {cn.get('removed', 0)} removed, {cn.get('changed', 0)} changed",
+                   class_="fs-sub"),
+            _kv_table(rows, ("candidate", "change", "detail")) if rows else None)
+    register_block = ui.div(ui.tags.strong("Candidate register"), reg_body, class_="fs-cmp-block")
+    if led.get("note"):
+        led_body = ui.div(led["note"], class_="fs-note")
+    else:
+        rows = []
+        for ch in led.get("changes") or []:
+            x, y = ch.get("before") or {}, ch.get("after") or {}
+            rows.append((f"{ch.get('metric')} / {ch.get('function') or ch.get('functionId')}", ch.get("change"),
+                         "; ".join(f"{f}: {x.get(f)!s} to {y.get(f)!s}" for f in ch.get("fields") or [])
+                         if ch.get("change") == "changed" else str((y or x).get("disposition") or "")))
+        cn = led.get("counts") or {}
+        led_body = ui.TagList(
+            ui.div(f"{led.get('same', 0)} unchanged, {cn.get('added', 0)} added, {cn.get('removed', 0)} removed, "
+                   f"{cn.get('changed', 0)} changed", class_="fs-sub"),
+            _kv_table(rows, ("metric / function", "change", "detail")) if rows else None)
+    ledger_block = ui.div(ui.tags.strong("Rebuild ledger"), led_body, class_="fs-cmp-block")
+    dec_rows = []
+    for label, diffs in (d.get("differ") or {}).items():
+        dec_rows.append((label, "; ".join(f"{f}: {va!s} to {vb!s}" for f, (va, vb) in diffs.items())))
+    for side in ("only_a", "only_b"):
+        for label in d.get(side) or []:
+            dec_rows.append((label, f"only in {side[-1].upper()}"))
+    decisions_block = ui.div(
+        ui.tags.strong("Reviewer decisions"),
+        ui.div(f"{d.get('same', 0)} same, {len(d.get('differ') or {})} differ, "
+               f"{len(d.get('only_a') or [])} only in A, {len(d.get('only_b') or [])} only in B", class_="fs-sub"),
+        _kv_table(dec_rows, ("record", "difference")) if dec_rows else None,
+        class_="fs-cmp-block")
+    items = od.get("items") or []
+    cn = od.get("counts") or {}
+    owner_rows = []
+    for it in items:
+        rec = it.get("recorded") or {}
+        who = ", ".join(x for x in (str(rec.get("by") or ""), str(rec.get("when") or "")) if x)
+        owner_rows.append((f"{it.get('rule')}: {it.get('subject')}",
+                           f"{rec.get('action') or ''}" + (f" ({who})" if who else ""),
+                           _pill(cmpv.VERDICT_WORDS.get(it.get("verdict"), str(it.get("verdict"))),
+                                 VERDICT_CLASS.get(it.get("verdict"), "")),
+                           ui.TagList(str(it.get("detail") or ""),
+                                      (ui.div(_anchor_words(it.get("anchors")), class_="fs-kind")
+                                       if it.get("anchors") else None))))
+    owner_block = ui.div(
+        ui.tags.strong("Owner decisions in A, as B decided them"),
+        ui.div((f"{cn.get(cmpv.AGREE, 0)} agree, {cn.get(cmpv.DIFFER, 0)} differ, "
+                f"{cn.get(cmpv.NOT_APPLICABLE, 0)} not applicable") if items else
+               "A records no owner decision (REF-15, CURVE-07, COV-01, SELECT-01).", class_="fs-sub"),
+        _kv_table(owner_rows, ("decision", "recorded", "B", "detail")) if owner_rows else None,
+        class_="fs-cmp-block")
+    digest_rows = []
+    for side in ("a", "b"):
+        one = dg.get(side) or {}
+        for key in ("inputsDigest", "contentDigest"):
+            rec = one.get(key) or {}
+            digest_rows.append((f"{side.upper()} {key}",
+                                _pill("replays", "is-selected") if rec.get("equal")
+                                else _pill(rec.get("problem") or "does not replay", "is-excluded"),
+                                str(rec.get("recorded") or "")))
+    digest_block = ui.div(ui.tags.strong("Digests"),
+                          _kv_table(digest_rows, ("digest", "re-derived", "recorded")) if digest_rows else None,
+                          class_="fs-cmp-block")
+    return ui.div(head, manifest_block, curves_block, register_block, ledger_block, decisions_block,
+                  owner_block, digest_block, class_="fs-compare-versions")
+
+
+def compare_csv(rep: Mapping) -> str:
+    return cmpv.report_csv(rep)
 
 
 def final_selection_ui(register: Mapping, *, ns, compare: Iterable[str] = (), extension_on: bool = False,
@@ -1076,11 +1362,117 @@ def final_selection_server(input, output, session, state, *, tiles):
                           "This version was built before it, so its curves are listed in the Gallery "
                           "and Table.", class_="fs-note")
         return ui.div(ui.output_ui(ns("fs_head")), ui.output_ui(ns("fs_compare")),
-                      ui.output_ui(ns("fs_build_items")), ui.output_ui(ns("fs_list")), class_="fs-page")
+                      ui.output_ui(ns("fs_build_items")), ui.output_ui(ns("fs_list")),
+                      ui.output_ui(ns("fs_versions")), class_="fs-page")
 
     @render.ui
     def fs_head():
         return head_ui(register(), extension_on=oc.alternatives_enabled(), export_id=ns("fs_export"))
+
+    # ── the deep link: candidate=<key> opens the candidate's row ────────────
+    linked = reactive.value(None)        # the key a link named, until its row is opened
+    highlight = reactive.value(None)     # the key whose row is marked
+
+    @reactive.effect
+    def _read_deep_link():
+        # the page URL, as the browser sent it (run_region_batch.py open prints it)
+        try:
+            search = session.clientdata.url_search()
+        except Exception:  # noqa: BLE001 - not sent yet: the read re-runs when it is
+            return
+        key = parse_candidate_link(search)
+        if key:
+            linked.set(key)
+
+    @reactive.effect
+    async def _open_linked_row():
+        key = linked()
+        if not key or state.reference_build() is None:
+            return
+        fids = candidate_functions(register(), key)
+        if not fids:
+            return                      # the open session does not hold it: wait for one that does
+        with reactive.isolate():
+            opened.set(set(opened()) | set(fids))
+            nonce = state.nav_request_nonce() or 0
+            snonce = state.workspace_section_nonce() or 0
+        highlight.set(key)
+        linked.set(None)
+        # Reference curves, Select final curves, then the row itself
+        state.curves_section.set(SECTION)
+        state.nav_request.set("curves")
+        state.nav_request_nonce.set(nonce + 1)
+        state.workspace_section_request.set(SECTION)
+        state.workspace_section_nonce.set(snonce + 1)
+        await session.send_custom_message("scrollToElement", {"id": ns(linked_row_id(key))})
+
+    # ── Compare: A (the session's origin) against B ─────────────────────────
+    cmp_result = reactive.value(None)    # {"report", "a_label", "b_label"}
+    _cmp_inputs: dict = {"choice": "", "path": ""}
+
+    def _gallery_choices() -> dict:
+        try:
+            from streamcurves import gallery
+            return compare_choices(gallery.entries_from_library())
+        except Exception:  # noqa: BLE001 - no library here: the path box still works
+            return {}
+
+    @render.ui
+    def fs_versions():
+        got = cmp_result()
+        with reactive.isolate():
+            origin = state.assessment_source() or {}
+        a_dir = origin_version_dir(origin)
+        body = [compare_chooser_ui(_gallery_choices(), ns=ns, a_label=origin_label(origin),
+                                   selected=_cmp_inputs.get("choice"), path_value=_cmp_inputs.get("path") or "",
+                                   can_compare=a_dir is not None)]
+        if got:
+            body.append(compare_report_ui(got["report"], ns=ns, a_label=got["a_label"],
+                                          b_label=got["b_label"], export_id=ns("fs_cmp_csv")))
+        return ui.tags.details(
+            ui.tags.summary(ui.tags.strong("Compare with another version"),
+                            ui.tags.span(" this version against a library version or a staged run: "
+                                         "curves, register, ledger, decisions, digests", class_="fs-count")),
+            ui.div(*body, class_="fs-fn-body"),
+            class_="fs-fn fs-versions", **({"open": ""} if got else {}))
+
+    @reactive.effect
+    @reactive.event(input.fs_cmp_run)
+    @guard("compare the versions")
+    async def _compare_versions():
+        with reactive.isolate():
+            origin = state.assessment_source() or {}
+            choice = str(input.fs_cmp_b() or "") if "fs_cmp_b" in input else ""
+            path_text = str(input.fs_cmp_path() or "") if "fs_cmp_path" in input else ""
+        a_dir = origin_version_dir(origin)
+        if a_dir is None:
+            ui.notification_show("This session was not opened from a library version or a staged run, "
+                                 "so there is no version A to compare.", type="warning", duration=8)
+            return
+        b_dir = compare_target(choice, path_text)
+        if b_dir is None:
+            ui.notification_show("Choose a version, or enter a staged run folder.", type="warning", duration=6)
+            return
+        _cmp_inputs.update(choice=choice, path=path_text)
+        try:
+            with st.busy(state):
+                rep = await asyncio.to_thread(
+                    cmpv.full_report, a_dir, b_dir, with_registers=True, with_ledger=True,
+                    with_digests=True, with_owner_decisions=True)
+        except FileNotFoundError as exc:
+            ui.notification_show(str(exc), type="warning", duration=10)
+            return
+        except Exception as exc:  # noqa: BLE001 - the report names the problem, never a dead page
+            ui.notification_show(f"The versions could not be compared: {exc}", type="error", duration=12)
+            return
+        cmp_result.set({"report": rep, "a_label": origin_label(origin),
+                        "b_label": cmpv.version_label(b_dir)})
+
+    @render.download(filename=lambda: "version-comparison.csv")
+    def fs_cmp_csv():
+        with reactive.isolate():
+            got = cmp_result()
+        yield compare_csv(got["report"]) if got else "section,subject,field,a,b,note\n"
 
     @render.ui
     def fs_compare():
@@ -1108,7 +1500,8 @@ def final_selection_server(input, output, session, state, *, tiles):
         return functions_ui(register(), ns=ns, compare=compare(), extension_on=oc.alternatives_enabled(),
                             open_ids=open_ids, sqt_ready=_sqt_ready(), limit=portfolio_limit(),
                             approvals=st.portfolio_approvals(state), origin_approvals=_origin_approvals(),
-                            can_source=_can_source(), session_gap_ids=_session_gap_ids())
+                            can_source=_can_source(), session_gap_ids=_session_gap_ids(),
+                            linked_key=highlight())
 
     @reactive.effect
     @reactive.event(input.fs_open)
@@ -1603,4 +1996,6 @@ __all__ = ["SECTION", "candidate_tile", "final_selection_ui", "function_row_ui",
            "edition_choices", "COMPLETE_FIRST", "RULE_WORDS",
            "select01_status", "build_items", "build_items_ui", "review_modal", "gap_modal",
            "approval_modal", "portfolio_limit", "session_register", "unresolved_count",
-           "unapproved_functions", "ROW_ANSWERED_RULES"]
+           "unapproved_functions", "ROW_ANSWERED_RULES", "linked_row_id", "parse_candidate_link",
+           "candidate_functions", "origin_version_dir", "origin_label", "compare_choices",
+           "compare_target", "compare_chooser_ui", "compare_report_ui", "compare_csv", "VERDICT_CLASS"]
