@@ -2417,6 +2417,9 @@ def assemble(evidence: dict, *,
         "portfolio_selection": (meta.get("portfolioSelection") or {}) if pressure else {},
         "moot_reserves": moot,
         "discrimination": evidence.get("discrimination") or {},
+        # campaign Round 2: the knobs set away from their defaults (the manifest's
+        # reference.knobs and the inputs digest; empty on the defaults)
+        "methodology_knobs": dict(evidence.get("methodology_knobs") or {}),
         "stratum_rows": evidence.get("stratum_rows") or {},
         "strata_applied": evidence.get("strata_applied") or {},
         "scale_registry": evidence.get("scale_registry"),

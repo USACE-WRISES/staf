@@ -48,7 +48,11 @@ STATUS_BY_LEVEL = {"l3": STATUS_LOCAL, "l2": "borrowed_l2", "l1": "borrowed_l1"}
 STATUS_LOCAL_RELAXED = "local_relaxed"
 STATUS_BY_OPTION = {("l3", "strict"): STATUS_LOCAL, ("l3", "regional"): STATUS_LOCAL_RELAXED,
                     ("l2", "regional"): "borrowed_l2", ("nars9", "regional"): "borrowed_nars9",
-                    ("l1", "regional"): "borrowed_l1"}
+                    ("l1", "regional"): "borrowed_l1",
+                    # campaign Round 2 (B2): the wider pools under the strict screen
+                    # when the regional screen is off
+                    ("l2", "strict"): "borrowed_l2", ("nars9", "strict"): "borrowed_nars9",
+                    ("l1", "strict"): "borrowed_l1"}
 SCREEN_STRICT = "strict"
 SCREEN_REGIONAL = "regional"
 #: statuses for the rungs above the ecoregion hierarchy (REF-08/09/10). They are
@@ -67,8 +71,10 @@ REVIEW_RISKS = (RISK_MODERATE, RISK_HIGH, RISK_UNASSESSED)
 # coarseness order for the transfer-risk comparison
 _LEVEL_RANK = {"l3": 0, "l2": 1, "nars9": 2, "l1": 2, "national": 3}
 
+#: ``screen`` is the screen the option was tried under; ``admitted_by`` says which
+#: screen admitted each station (strict, regional, or empty when it failed both)
 LEDGER_COLUMNS = ["metric", "station_key", "level", "in_pool", "reason", "value",
-                  "source_cycle", "l3", "l2", "l1", "option", "screen"]
+                  "source_cycle", "l3", "l2", "l1", "option", "screen", "admitted_by"]
 
 
 # --------------------------------------------------------------------------- #
@@ -104,7 +110,13 @@ def family_of(metric_key: str, cfg: Optional[dict] = None) -> Optional[str]:
 
 def family_profile(metric_key: str, cfg: Optional[dict] = None) -> Optional[dict]:
     """The comparability profile of a metric, or None when the metric has no
-    family entry (it may not borrow: a local pool or no curve)."""
+    family entry (it may not borrow: a local pool or no curve).
+
+    A top-level ``search_order`` in the transfer config (campaign Round 2
+    candidate B3; absent by default) replaces every family's own order, and the
+    profile says so (``search_order_source``). The config's hash is already in
+    the inputs digest, so the override adds no digest key of its own.
+    """
     cfg = cfg if cfg is not None else load_transfer_config()
     fam = family_of(metric_key, cfg)
     if not fam:
@@ -113,6 +125,12 @@ def family_profile(metric_key: str, cfg: Optional[dict] = None) -> Optional[dict
     prof["family"] = fam
     prof["covariates"] = list(prof.get("covariates") or [])
     prof["lithology"] = bool(prof.get("lithology"))
+    global_order = cfg.get("search_order")
+    if global_order:
+        prof["search_order"] = [str(o) for o in global_order]
+        prof["search_order_source"] = "global"
+    else:
+        prof["search_order_source"] = "family"
     return prof
 
 
@@ -367,22 +385,42 @@ def hierarchy_settings() -> dict:
         "min_epa_reference_sites": int(rs.get("min_epa_reference_sites", 5)),
         "screen_id": str(rs.get("id") or "least-disturbed-regional-v1"),
         "widen": float(methodology.threshold("reference_hierarchy.envelope_widen_fraction", 0.0)),
+        # campaign Round 2 (B2): false keeps every regional pool to the strict screen
+        "enabled": bool(rs.get("enabled", True)),
     }
 
 
+def _withheld_codes(withhold_l3) -> set[str]:
+    if withhold_l3 is None:
+        return set()
+    if isinstance(withhold_l3, str):
+        return {withhold_l3.strip()} if withhold_l3.strip() else set()
+    return {str(c).strip() for c in withhold_l3 if str(c).strip()}
+
+
 def epa_agriculture_limit(screen_table: pd.DataFrame, nars9: Optional[str],
-                          hs: Optional[dict] = None) -> dict:
+                          hs: Optional[dict] = None, *, withhold_l3=None) -> dict:
     """The regional screen's agriculture limit for one NARS-9 region.
 
     The quantile of watershed agriculture at EPA's own NRSA reference sites
     (``rt_nrsa == "R"``) in the region, never below the floor, because EPA's
     regional designation is the documented statement of what least disturbed
     means there. A region with too few EPA reference sites uses the floor.
+
+    ``withhold_l3`` (a code or codes): stations of those Level III ecoregions
+    leave the calibration, so a recovery test that withholds a region never lets
+    that region's own EPA sites set the limit it is scored under (the campaign's
+    fold rule). Recorded as ``withheld_l3`` only when given.
     """
     hs = hs or hierarchy_settings()
     out = {"nars9": nars9, "floor": hs["agriculture_floor"], "quantile": hs["agriculture_quantile"],
            "n_epa_reference": 0, "epa_quantile_value": None, "limit": hs["agriculture_floor"],
            "rule": "floor"}
+    held = _withheld_codes(withhold_l3)
+    if held:
+        out["withheld_l3"] = sorted(held)
+        if "l3" in screen_table.columns:
+            screen_table = screen_table[~screen_table["l3"].astype(str).isin(held)]
     if not nars9 or "rt_nrsa" not in screen_table.columns:
         return out
     ref = screen_table[(screen_table["nars9"].astype(str) == str(nars9))
@@ -489,8 +527,10 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
                 excluded: Optional[dict] = None, cfg: Optional[dict] = None,
                 settings: Optional[dict] = None, accept=None,
                 withhold: Optional[Iterable[str]] = None,
-                only_option: Optional[str] = None) -> tuple[PoolDecision, pd.DataFrame]:
-    """The first station pool that passes acceptance for ``metric`` (REF-11).
+                only_option: Optional[str] = None,
+                ladder_rule: Optional[str] = None,
+                withhold_l3=None) -> tuple[PoolDecision, pd.DataFrame]:
+    """The station pool that passes acceptance for ``metric`` (REF-11).
 
     The options are the local reference (Level III under the strict screen) and
     then the regional least-disturbed pools, Level III, Level II, NARS-9 and
@@ -502,6 +542,18 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
     option ``"local"``. ``withhold`` removes stations from every pool, which is
     how a recovery test keeps a region's own reference out of what it scores.
 
+    Which passing option is used is ``ladder_rule`` (campaign Round 2 candidate
+    B1; None reads ``reference_pool.ladder_rule``): ``first_pass``, the first
+    option that passes, is methodology 0.14; ``narrowest_adequate`` walks every
+    option and uses the narrowest that passes with usable n at the adequate floor,
+    else the narrowest exploratory option that passes. With the regional screen
+    off (``reference_hierarchy.regional_screen.enabled: false``, candidate B2)
+    every wider pool admits strict-screen stations only, the Level III regional
+    option is the local reference itself and is not tried again, and the ledger's
+    ``admitted_by`` column says which screen admitted each station.
+    ``withhold_l3`` keeps those ecoregions' stations out of the EPA agriculture
+    calibration of the regional screen (the campaign's fold rule).
+
     ``values`` is indexed by station key (the metric's latest compatible value).
     ``frame`` is :func:`national_frame`. Returns the decision and the ledger
     rows for this metric (one per station per option tried).
@@ -509,6 +561,11 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
     cfg = cfg if cfg is not None else load_transfer_config()
     st = settings or floors()
     hs = hierarchy_settings()
+    rule = str(ladder_rule or methodology.ladder_rule())
+    if rule not in methodology.LADDER_RULES:
+        raise ValueError(f"unknown ladder rule {rule!r}; expected one of "
+                         f"{', '.join(methodology.LADDER_RULES)}")
+    regional_on = bool(hs.get("enabled", True))
     excluded = {str(k): str(v) for k, v in (excluded or {}).items()}
     withheld = {str(k) for k in (withhold or ())}
     target_l3 = str(target_l3)
@@ -526,19 +583,31 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
     coverage = self_coverage(target, envelope, lith_groups, use_lithology=use_lith, cfg=cfg)
     supported = (scale_entry or {}).get("supported_level")
     fauna = fauna_groups_of(target, cfg) if (profile or {}).get("fauna") else []
-    # EPA designates reference among all its sites, boatable ones included, so the
-    # calibration reads the whole station table rather than the wadeable frame
-    ag = epa_agriculture_limit(rscreen.load_station_screen(), codes.get("nars9"), hs)
-    regional_ok = regional_screen_mask(frame, ag["limit"])
-    screen_detail = {"id": hs["screen_id"], "agriculture_limit": ag["limit"],
-                     "agriculture_rule": ag["rule"], "nars9": ag["nars9"],
-                     "n_epa_reference": ag["n_epa_reference"],
-                     "epa_quantile_value": ag["epa_quantile_value"],
-                     "base_tier": "relaxed"}
+    if regional_on:
+        # EPA designates reference among all its sites, boatable ones included, so the
+        # calibration reads the whole station table rather than the wadeable frame
+        ag = epa_agriculture_limit(rscreen.load_station_screen(), codes.get("nars9"), hs,
+                                   withhold_l3=withhold_l3)
+        regional_ok = regional_screen_mask(frame, ag["limit"])
+        screen_detail = {"id": hs["screen_id"], "agriculture_limit": ag["limit"],
+                         "agriculture_rule": ag["rule"], "nars9": ag["nars9"],
+                         "n_epa_reference": ag["n_epa_reference"],
+                         "epa_quantile_value": ag["epa_quantile_value"],
+                         "base_tier": "relaxed"}
+        if ag.get("withheld_l3"):
+            screen_detail["calibration_withheld_l3"] = list(ag["withheld_l3"])
+    else:
+        # candidate B2: the relaxed tier and the EPA agriculture limit never apply
+        regional_ok = pd.Series(False, index=frame.index)
+        screen_detail = {"id": hs["screen_id"], "enabled": False, "base_tier": "strict"}
 
     options = [("local", "l3", SCREEN_STRICT)]
     if profile is not None:
-        options += [(f"regional_{g}", g, SCREEN_REGIONAL) for g in search_order(profile)]
+        for g in search_order(profile):
+            if regional_on:
+                options.append((f"regional_{g}", g, SCREEN_REGIONAL))
+            elif g != "l3":
+                options.append((f"regional_{g}", g, SCREEN_STRICT))
     if only_option is not None:
         # one option on its own, as a recovery test scores each separately
         options = [o for o in options if o[0] == only_option]
@@ -546,7 +615,15 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
     vals = pd.to_numeric(values, errors="coerce")
     rows: list[pd.DataFrame] = []
     tried: list[dict] = []
+    if not regional_on and profile is not None and "l3" in search_order(profile) \
+            and only_option in (None, "regional_l3"):
+        tried.append({"option": "regional_l3", "level": "l3", "screen": SCREEN_STRICT,
+                      "why": "the regional screen is off, so this ecoregion's option is "
+                             "the local reference"})
     chosen: Optional[dict] = None
+    #: narrowest_adequate: the narrowest exploratory option that passed, used
+    #: only when no option is adequate
+    fallback: Optional[dict] = None
     for option, level, screen in options:
         code = codes.get(level)
         if code is None:
@@ -559,8 +636,12 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
         # a station the strict screen passes passes every looser screen, so the
         # regional pools admit the strict stations and the regional ones
         strict_ok = members["pass_strict"].astype(bool)
-        passes = (strict_ok if screen == SCREEN_STRICT
-                  else strict_ok | regional_ok.reindex(members.index).fillna(False).astype(bool))
+        regional_here = regional_ok.reindex(members.index).fillna(False).astype(bool)
+        passes = strict_ok if screen == SCREEN_STRICT else strict_ok | regional_here
+        admitted_by = pd.Series("", index=members.index, dtype=object)
+        admitted_by[strict_ok] = SCREEN_STRICT
+        if screen == SCREEN_REGIONAL:
+            admitted_by[~strict_ok & regional_here] = SCREEN_REGIONAL
         comparable, why = comparable_mask(members, envelope, lith_groups,
                                           use_lithology=use_lith, cfg=cfg)
         if fauna:
@@ -599,7 +680,7 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
             "in_pool": in_pool.values, "reason": reason.values, "value": value.values,
             "source_cycle": members.get("source_cycle", pd.Series(None, index=members.index)).values,
             "l3": members["l3"].values, "l2": members["l2"].values, "l1": members["l1"].values,
-            "option": option, "screen": screen})
+            "option": option, "screen": screen, "admitted_by": admitted_by.values})
         rows.append(ledger)
         if n_use < st["exploratory"]:
             tried.append({**info, "why": f"{n_use} usable stations, below the floor of "
@@ -612,10 +693,25 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
             if not ok:
                 tried.append({**info, "why": why_not})
                 continue
-        chosen = {**info, "ids": tuple(keys[in_pool]),
-                  "n_huc12": int(_cluster_ids(members[in_pool]).nunique())}
-        tried.append({**info, "why": "accepted"})
-        break
+        candidate = {**info, "ids": tuple(keys[in_pool]),
+                     "n_huc12": int(_cluster_ids(members[in_pool]).nunique())}
+        if rule == methodology.LADDER_RULE_FIRST_PASS or n_use >= st["adequate"]:
+            chosen = candidate
+            tried.append({**info, "why": "accepted"})
+            break
+        # narrowest_adequate: an exploratory pool that passes is kept in reserve
+        # while a wider adequate pool is looked for
+        tried.append({**info, "why": f"passes acceptance with {n_use} usable stations, "
+                                     f"exploratory; a wider adequate pool (at least "
+                                     f"{st['adequate']}) is looked for first"})
+        if fallback is None:
+            fallback = candidate
+    if chosen is None and fallback is not None:
+        chosen = fallback
+        for x in tried:
+            if x.get("option") == fallback["option"] and "n_usable" in x:
+                x["why"] = ("accepted: the narrowest exploratory pool that passes, since no "
+                            "wider pool is adequate")
 
     ledger_all = (pd.concat(rows, ignore_index=True) if rows
                   else pd.DataFrame(columns=LEDGER_COLUMNS))
