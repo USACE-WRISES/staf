@@ -332,19 +332,25 @@ def decisions_doc(*, curve_decisions: Any = (), records: Any = (), review_queue:
                   standing: Any = None, finalizations: Any = None, removals: Any = None,
                   approvals: Any = (), gaps: Any = (), enabled: Any = (), curve_review: Any = None,
                   register: Any = None) -> dict:
-    """Every human and policy input a build applied, as its record shows them."""
+    """Every human and policy input a build applied, as its record shows them.
+
+    Without the time stamps (``reviewed_at``, ``decided_at``): the package's identity is
+    its content, and a policy answer a batch stamps with the run's clock would give two
+    builds of identical inputs two package digests (the stage gate of 2026-09-25 saw
+    exactly that on Southeastern Plains). The run record and the provenance keep the
+    stamps; the package names when it was written in its own manifest."""
     from . import owner_curves as oc
     answers = []
     for r in records or []:
         if r.get("reviewer_action"):
             answers.append({k: r.get(k) for k in ("rule_id", "subject", "reviewer", "reviewer_action",
-                                                   "reviewer_rationale", "reviewed_at",
+                                                   "reviewer_rationale",
                                                    "reviewer_decision_class", "reviewer_rationale_origin")})
     resolved = [{k: i.get(k) for k in ("item_id", "status", "reviewer", "reviewer_action",
-                                        "reviewer_rationale", "reviewed_at")}
+                                        "reviewer_rationale")}
                 for i in ((review_queue or {}).get("items") or []) if i.get("status") != "open"]
-    review_decisions = {mk: {k: e.get(k) for k in ("status", "decision", "decision_note", "decided_by",
-                                                     "decided_at") if e.get(k) is not None}
+    review_decisions = {mk: {k: e.get(k) for k in ("status", "decision", "decision_note", "decided_by")
+                             if e.get(k) is not None}
                         for mk, e in (curve_review or {}).items() if isinstance(e, Mapping) and e.get("decision")}
     reg = register or {}
     return {"ownerDecisions": [oc.summary(d) for d in curve_decisions or [] if isinstance(d, Mapping)],

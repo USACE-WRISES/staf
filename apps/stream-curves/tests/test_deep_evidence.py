@@ -198,3 +198,27 @@ def test_the_public_base_per_kind_and_the_override(monkeypatch):
     with pytest.raises(ValueError):
         monkeypatch.delenv(evs.ENV_BASE_URL)
         evs.public_base("sqt")
+
+
+def test_the_decisions_payload_carries_no_clock():
+    """Two builds of identical inputs stamp their policy answers with different clocks; the
+    package's identity is its content, so the stamps stay out of decisions.json (the stage
+    gate of 2026-09-25 saw Southeastern Plains' package digest move for that reason alone)."""
+    def doc(stamp):
+        records = [dict(rule_id="CURVE-04", subject="chem_PTL", reviewer="standing-policy:x",
+                        reviewer_action="accept", reviewer_rationale="Accepted under the policy.",
+                        reviewed_at=stamp, reviewer_decision_class="accept_with_flag",
+                        reviewer_rationale_origin="standing_policy:1.2")]
+        queue = dict(items=[dict(item_id="CURVE-04:chem_PTL", status="resolved", reviewer="standing-policy:x",
+                                 reviewer_action="accept", reviewer_rationale="Accepted.", reviewed_at=stamp)])
+        review = dict(chem_PTL=dict(status="review", decision="accept", decision_note="ok",
+                                    decided_by="GM", decided_at=stamp))
+        return de.decisions_doc(records=records, review_queue=queue, curve_review=review)
+    a = doc("2026-09-25T12:56:31+00:00")
+    b = doc("2026-09-25T13:19:53+00:00")
+    assert a == b
+    text = json.dumps(a)
+    assert "reviewed_at" not in text and "decided_at" not in text and "2026-09-25T" not in text
+    assert a["answers"][0]["reviewer_action"] == "accept"
+    assert a["reviewQueueResolved"][0]["item_id"] == "CURVE-04:chem_PTL"
+    assert a["reviewDecisions"]["chem_PTL"]["decided_by"] == "GM"
