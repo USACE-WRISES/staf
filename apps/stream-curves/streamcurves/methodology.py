@@ -99,6 +99,158 @@ def carry_forward_default() -> str:
     return value
 
 
+# --------------------------------------------------------------------------- #
+# Campaign Round 2 knobs (2026-09-25). Every default is today's behavior. A
+# knob joins a run's inputs digest only when it differs from its default
+# (provenance.build_run_manifest, ``reference.knobs``, absence semantics), so
+# every published version still replays. The knobs GOVERN and are not mirror
+# checked: a campaign config root (STREAMCURVES_CONFIG_ROOT) moves them.
+# --------------------------------------------------------------------------- #
+LADDER_RULE_FIRST_PASS = "first_pass"
+LADDER_RULE_NARROWEST_ADEQUATE = "narrowest_adequate"
+LADDER_RULES = (LADDER_RULE_FIRST_PASS, LADDER_RULE_NARROWEST_ADEQUATE)
+SECOND_METRIC_RANK = "rank"
+SECOND_METRIC_INDEPENDENT = "independent_and_discriminating"
+SECOND_METRIC_RULES = (SECOND_METRIC_RANK, SECOND_METRIC_INDEPENDENT)
+ZERO_INFLATED_TWO_PART = "two_part"
+ZERO_INFLATED_WITHHOLD = "withhold"
+ZERO_INFLATED_HANDLINGS = (ZERO_INFLATED_TWO_PART, ZERO_INFLATED_WITHHOLD)
+#: the monotone IQR ladders' tail endpoints in IQR units, the engine's own
+#: (curves.MONOTONE_TAIL_OFFSETS_IQR restates them; a test pins the two equal)
+MONOTONE_TAIL_OFFSETS_IQR = (0.3, 4.0 / 3.0, 7.0 / 3.0)
+
+#: config path -> the default, which is today's behavior
+KNOB_DEFAULTS: dict[str, Any] = {
+    "reference_pool.ladder_rule": LADDER_RULE_FIRST_PASS,
+    "reference_hierarchy.regional_screen.enabled": True,
+    "metric_portfolio.fill_to": 2,
+    "metric_portfolio.second_metric_rule": SECOND_METRIC_RANK,
+    "metric_portfolio.second_metric_max_abs_spearman": 0.65,
+    "metric_portfolio.second_metric_min_auc": 0.55,
+    "curve12.gate": False,
+    "curve12.min_auc": 0.55,
+    "curve10.tail_offsets_iqr": list(MONOTONE_TAIL_OFFSETS_IQR),
+    "curve10.zero_inflated_share": None,
+    "curve10.zero_inflated_handling": None,
+}
+_MISSING = object()
+
+
+def knob(path: str) -> Any:
+    """A Round 2 knob's raw config value, or its default when the key is absent
+    (a config root copied from an older config still runs as today)."""
+    if path not in KNOB_DEFAULTS:
+        raise KeyError(f"Unknown Round 2 knob '{path}'.")
+    value = threshold(path, _MISSING)
+    return KNOB_DEFAULTS[path] if value is _MISSING else value
+
+
+def ladder_rule() -> str:
+    """``reference_pool.ladder_rule`` (candidate B1): which passing pool option
+    ``reference_pool.choose_pool`` uses."""
+    value = str(knob("reference_pool.ladder_rule") or "").strip()
+    if value not in LADDER_RULES:
+        raise ValueError(f"reference_pool.ladder_rule is {value!r}; expected one of "
+                         f"{', '.join(LADDER_RULES)}.")
+    return value
+
+
+def regional_screen_enabled() -> bool:
+    """``reference_hierarchy.regional_screen.enabled`` (candidate B2)."""
+    return bool(knob("reference_hierarchy.regional_screen.enabled"))
+
+
+def portfolio_settings() -> dict:
+    """SELECT-04's knobs (candidate C1): ``fill_to``, ``second_metric_rule`` and
+    the two limits of the independent-and-discriminating rule."""
+    rule = str(knob("metric_portfolio.second_metric_rule") or "").strip()
+    if rule not in SECOND_METRIC_RULES:
+        raise ValueError(f"metric_portfolio.second_metric_rule is {rule!r}; expected one of "
+                         f"{', '.join(SECOND_METRIC_RULES)}.")
+    return {"fill_to": int(knob("metric_portfolio.fill_to") or 2),
+            "second_metric_rule": rule,
+            "max_abs_spearman": float(knob("metric_portfolio.second_metric_max_abs_spearman")),
+            "min_auc": float(knob("metric_portfolio.second_metric_min_auc"))}
+
+
+def curve12_gate() -> dict:
+    """The CURVE-12 gate (candidate C2): ``{"gate": bool, "min_auc": float}``."""
+    return {"gate": bool(knob("curve12.gate")), "min_auc": float(knob("curve12.min_auc"))}
+
+
+def parse_offset(value: Any) -> float:
+    """An IQR offset from the config: a number, or a fraction written as a
+    string such as ``"4/3"`` (YAML reads an unquoted 4/3 as a string too)."""
+    if isinstance(value, str) and "/" in value:
+        num, den = value.split("/", 1)
+        return float(num.strip()) / float(den.strip())
+    return float(value)
+
+
+def seed_geometry() -> dict:
+    """The CURVE-10 knobs (candidates C3a and C3b) as the curve engine reads them.
+
+    ``tail_offsets_iqr`` is the ``(near, mid, far)`` tuple, ``custom_tail_offsets``
+    says whether it differs from the engine's own (the engine keeps its literal
+    arithmetic for the default so every published seed reproduces byte for byte),
+    ``zero_inflated_share`` is the threshold or None (off) and
+    ``zero_inflated_handling`` is ``two_part``, ``withhold`` or None.
+    """
+    raw = knob("curve10.tail_offsets_iqr")
+    raw = MONOTONE_TAIL_OFFSETS_IQR if raw is None else raw
+    try:
+        offsets = tuple(parse_offset(v) for v in raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"curve10.tail_offsets_iqr must be three IQR offsets, got {raw!r}") from exc
+    if len(offsets) != 3 or not (0.0 < offsets[0] <= offsets[1] <= offsets[2]):
+        raise ValueError("curve10.tail_offsets_iqr must be three positive, non-decreasing "
+                         f"IQR offsets [near, mid, far]; got {list(offsets)!r}.")
+    share = knob("curve10.zero_inflated_share")
+    share = None if share is None else float(share)
+    if share is not None and not (0.0 <= share < 1.0):
+        raise ValueError(f"curve10.zero_inflated_share must lie in [0, 1); got {share!r}.")
+    handling = knob("curve10.zero_inflated_handling")
+    handling = None if handling in (None, "") else str(handling).strip()
+    if handling is not None and handling not in ZERO_INFLATED_HANDLINGS:
+        raise ValueError(f"curve10.zero_inflated_handling is {handling!r}; expected one of "
+                         f"{', '.join(ZERO_INFLATED_HANDLINGS)} or null.")
+    if share is not None and handling is None:
+        raise ValueError("curve10.zero_inflated_share is set but curve10.zero_inflated_handling "
+                         "is null; say two_part or withhold.")
+    return {"tail_offsets_iqr": offsets,
+            "custom_tail_offsets": offsets != tuple(MONOTONE_TAIL_OFFSETS_IQR),
+            "zero_inflated_share": share,
+            "zero_inflated_handling": handling if share is not None else None}
+
+
+def round2_knobs() -> dict:
+    """``{config path: value}`` for every Round 2 knob set away from its default,
+    the block a run's manifest records under ``inputs.reference.knobs`` and the
+    inputs digest carries. Empty on the shipped config, so no published digest
+    gains a key. Values are normalized (an offset list to floats), so a fraction
+    written differently is not a different setting."""
+    current: dict[str, Any] = {
+        "reference_pool.ladder_rule": ladder_rule(),
+        "reference_hierarchy.regional_screen.enabled": regional_screen_enabled(),
+    }
+    ps = portfolio_settings()
+    current.update({
+        "metric_portfolio.fill_to": ps["fill_to"],
+        "metric_portfolio.second_metric_rule": ps["second_metric_rule"],
+        "metric_portfolio.second_metric_max_abs_spearman": ps["max_abs_spearman"],
+        "metric_portfolio.second_metric_min_auc": ps["min_auc"],
+    })
+    gate = curve12_gate()
+    current.update({"curve12.gate": gate["gate"], "curve12.min_auc": gate["min_auc"]})
+    geo = seed_geometry()
+    current.update({
+        "curve10.tail_offsets_iqr": list(geo["tail_offsets_iqr"]),
+        "curve10.zero_inflated_share": geo["zero_inflated_share"],
+        "curve10.zero_inflated_handling": geo["zero_inflated_handling"],
+    })
+    return {k: v for k, v in sorted(current.items()) if v != KNOB_DEFAULTS[k]}
+
+
 def missingness_disposition(missing_fraction: Any) -> str:
     """DATA-01/02/03 band for a variable's missing-data fraction.
 
@@ -308,6 +460,24 @@ def mirror_drift() -> list[str]:
                     f"{path} ({declared!r}) differs from the library's {actual!r}.")
     except Exception as exc:  # noqa: BLE001
         problems.append(f"could not compare the lifecycle vocabulary: {exc}")
+
+    # 10. The CURVE-12 verdict cuts mirror discrimination.py (campaign Round 2:
+    #     the gate's min_auc is a knob and is not checked here; the cuts the
+    #     verdict words rest on are the engine's).
+    try:
+        from . import discrimination as _dz
+        cuts = (cfg.get("curve12") or {}).get("verdict_cuts") or {}
+        pairs = [("discriminates", _dz.AUC_DISCRIMINATES), ("weak", _dz.AUC_WEAK),
+                 ("inverted", _dz.AUC_INVERTED)]
+        for name, engine_value in pairs:
+            if name not in cuts:
+                problems.append(f"curve12.verdict_cuts is missing '{name}'.")
+            elif float(cuts[name]) != float(engine_value):
+                problems.append(
+                    f"curve12.verdict_cuts.{name} ({cuts[name]!r}) differs from the "
+                    f"discrimination engine's {engine_value!r}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the CURVE-12 verdict cuts: {exc}")
 
     return problems
 

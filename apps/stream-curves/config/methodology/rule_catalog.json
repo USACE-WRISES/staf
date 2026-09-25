@@ -796,6 +796,7 @@
    "threshold_status": "approved",
    "implementation_status": "implemented",
    "maps_to": "streamcurves/curves.py (seed geometry, CURVE_ENGINE_HARD_FLOOR_N, CURVE_FAMILY); tests/test_golden_masters.py; run_state.CURVE_METHOD_VERSION",
+   "note": "Campaign Round 2 (2026-09-25, candidates C3a and C3b): two governed knobs in methodology_config curve10, each defaulting to today's behavior so the golden masters reproduce byte for byte. tail_offsets_iqr (0.3, 4/3, 7/3, the engine's own) moves the monotone ladders' tail endpoints; zero_inflated_share with zero_inflated_handling (default off: the degenerate_q25 fallback) gives a zero-inflated pool of a higher-is-better metric on a non-negative scale a two-part seed (the positive values' scale-free ladder with a point at zero scoring 0, the zero share as a caveat) or withholds the metric ('zero-inflated reference pool'). A non-default knob joins the inputs digest.",
    "outcomes": {
     "pass": "the engine matches the pinned geometry",
     "review": "n/a",
@@ -834,7 +835,7 @@
    "threshold_status": "provisional",
    "implementation_status": "implemented",
    "maps_to": "streamcurves/discrimination.py",
-   "note": "v0.12 (2026-09-19). Advisory: a weak or absent separation informs the portfolio choice and the report, an inverted one goes to review. Stations that are not reference check a curve here and never fit one.",
+   "note": "v0.12 (2026-09-19). Advisory: a weak or absent separation informs the portfolio choice and the report, an inverted one goes to review. Stations that are not reference check a curve here and never fit one. Campaign Round 2 (2026-09-25, candidate C2): curve12.gate (default false, advisory as above) withholds a NEW curve, never a carried one, whose verdict is inverted or whose AUC is below curve12.min_auc (0.55) with the statement 'discrimination gate' (no curve, nothing scored, the reason on the metric); its CURVE-12 record stays for information. The verdict cuts are mirrored in curve12.verdict_cuts. A non-default knob joins the inputs digest.",
    "outcomes": {
     "pass": "discriminates",
     "review": "inverted",
@@ -958,7 +959,7 @@
    "threshold_status": "approved",
    "implementation_status": "implemented",
    "maps_to": "reference_pool.choose_pool (status insufficient); deep_export insufficientReferenceSupport; coverage exception reason insufficient-reference-support",
-   "note": "v0.12 (2026-09-19, owner decision). No curve is built, the metric is listed in the bundle as withheld with its support record, DEEP shows it as not scored, and a function left without a metric needs a documented coverage exception. Reference quality is never relaxed to reach a sample size. The owner may still give the metric a curve from a source they choose (REF-15), recorded as their decision; the build itself never does.",
+   "note": "v0.12 (2026-09-19, owner decision). No curve is built, the metric is listed in the bundle as withheld with its support record, DEEP shows it as not scored, and a function left without a metric needs a documented coverage exception. Reference quality is never relaxed to reach a sample size. The owner may still give the metric a curve from a source they choose (REF-15), recorded as their decision; the build itself never does. Campaign Round 2 (2026-09-25): the discrimination gate (CURVE-12, curve12.gate) and the zero-inflation rule (CURVE-10, curve10.zero_inflated_handling withhold), both off by default, withhold a metric whose pool exists with the same record shape and their own reason words (discrimination-gate, zero-inflated-reference-pool); the pool decision stays on the support record, marked withheld.",
    "outcomes": {
     "pass": "n/a",
     "review": "n/a",
@@ -1057,7 +1058,7 @@
    "test": "pool options Level III, Level II, NARS-9 and Level I in the family's search_order, each under least-disturbed-regional-v1 (the relaxed tier with agriculture at the 90th percentile of EPA reference sites in the target's NARS-9 region, never below 25 percent); stations inside the widened comparability envelope and, for an assemblage, the target's fauna groups; the first option passing ACC-01 to ACC-06 is used",
    "threshold": "agriculture p90 of rt_nrsa R sites, floor 25, at least 5 EPA sites; envelope widened by 5 percent of the national span; fauna share 0.10",
    "maps_to": "reference_pool.choose_pool, regional_screen_mask, epa_agriculture_limit, widen_envelope, fauna_mask; config/reference_transfer.yaml search_order and fauna_groups; methodology_config reference_hierarchy",
-   "note": "v0.14 (2026-09-21, owner decisions). NARS-9 is EPA's grouping of Level III regions, a separate grouping and not a nested level. The screen is never loosened further for any region or metric.",
+   "note": "v0.14 (2026-09-21, owner decisions). NARS-9 is EPA's grouping of Level III regions, a separate grouping and not a nested level. The screen is never loosened further for any region or metric. Campaign Round 2 (2026-09-25, candidates B1 to B3): reference_pool.ladder_rule (first_pass, the rule above; narrowest_adequate takes the narrowest option passing acceptance with usable n at the adequate floor, else the narrowest exploratory one) and reference_hierarchy.regional_screen.enabled (true; false keeps every wider pool to the strict screen, with no relaxed tier and no EPA agriculture limit, the ledger saying which screen admitted each station) are governed knobs that join the inputs digest when non-default; a top-level search_order in reference_transfer.yaml replaces every family's order when present (that file's hash is already in the digest). The recovery test withholds a region from the agriculture calibration too (epa_agriculture_limit withhold_l3).",
    "outcomes": {
     "pass": "curve built on the pool, its screen and every option tried recorded",
     "review": "n/a: a pool that passes acceptance is the rule's decision",
@@ -1266,9 +1267,9 @@
    "name": "Fill each function to two",
    "purpose": "Assess every function with up to two metrics automatically, and no more without a person.",
    "test": "carried-forward, rebuilt and fixed metrics keep their places; a new curve joins a function only while it holds fewer than two scored metrics, by source rank then SELECT-02 score; a reserve candidate only where the function would otherwise be unassessed",
-   "threshold": "fill_to 2",
+   "threshold": "fill_to 2; second_metric_rule rank (independent_and_discriminating: absolute Spearman below 0.65 and CURVE-12 AUC at least 0.55, both provisional)",
    "maps_to": "pressure_evidence.select_portfolio; methodology_config metric_portfolio",
-   "note": "v0.14 (2026-09-21, owner decision). The curves not selected are recorded as supported, not selected.",
+   "note": "v0.14 (2026-09-21, owner decision). The curves not selected are recorded as supported, not selected. Campaign Round 2 (2026-09-25, candidate C1): metric_portfolio.second_metric_rule with second_metric_max_abs_spearman and second_metric_min_auc are governed knobs, default rank (the rule above); under independent_and_discriminating the first new metric joins by rank and one further place goes to the highest-ranked candidate independent of every scored metric and discriminating. select_portfolio records the rule and each candidate's numbers per function; a non-default knob joins the inputs digest.",
    "outcomes": {
     "pass": "portfolio recorded per function",
     "review": "n/a",
