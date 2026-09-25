@@ -1,0 +1,771 @@
+# metric_evidence.yaml
+# The curated metric and function evidence record of the STAF national assessment
+# campaign (Round 0). Hand-maintained: scripts/build_metric_evidence.py READS this
+# file and projects it, with the generated registries, the NRSA archive and the
+# published assessments, into config/metric_evidence_table.csv. `--init` appends a
+# skeleton entry for every mapped metric key that lacks one and never rewrites an
+# entry, so curated text and comments are kept. Keep `metrics:` the last section.
+#
+# One entry per metric key of config/metric_map.yaml (the code of every metric listed
+# under a function, whichever its source). Fields:
+#   construct_class        direct_function_measure | ecological_response |
+#                          pressure_proxy | natural_setting_covariate
+#   spatial_support        site_reach | riparian_corridor | catchment | watershed
+#   easi_role              list of screen_variable | fixed_criterion_input | proxy | none.
+#                          The per-metric circularity record: a metric whose value
+#                          enters EASI's fixed pressure screen least-disturbed-v1 is a
+#                          screen_variable, one whose value EASI scores on its fixed
+#                          criteria is a fixed_criterion_input, one EASI scores as a
+#                          proxy is a proxy, and none otherwise.
+#   evidence               list of {citation, note}
+#   limitations            list of sentences
+#   disposition            retain | revise | add | replace | omit
+#   disposition_rationale  why, in a sentence or two
+#   status                 hypothesis | reviewed
+#   reviewed_by            n/a until reviewed, then the reviewer's initials
+# A null field is one nobody has curated yet; the generator never fills it in.
+#
+# Curation of 2026-09-25 (Round 0): every entry is a HYPOTHESIS for gate G0. A
+# disposition here changes nothing by itself: revise, replace, add and omit become
+# Round 2 candidate C4 (metric and function assignment), tested under the frozen
+# protocol. Citations are the standard sources behind each construct; the owner
+# checks them against the technical report bibliography at G0.
+schema: metric-evidence/1
+notes: >-
+  Curated evidence per metric key of metric_map.yaml, projected into metric_evidence_table.csv by scripts/build_metric_evidence.py. Null fields are not yet curated. Every disposition is a Round 2 hypothesis until the owner reviews it at gate G0.
+metrics:
+  DRNAREA:
+    construct_class: natural_setting_covariate
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "USGS StreamStats program documentation (Ries et al. 2017, USGS Fact Sheet 2017-3046)", note: "Drainage area delineated on demand per site; a scaling covariate, never a condition."}
+    limitations:
+      - "Pulled per site from a live service, so it is opt-in and slow; the HR reach watershed area (se_wsareasqkm) covers the same role offline."
+      - "A predictor only: it explains channel dimensions and never scores a function."
+    disposition: retain
+    disposition_rationale: "Kept as an opt-in scaling predictor for the regional curve tool; it never enters a reference curve."
+    status: hypothesis
+    reviewed_by: n/a
+  bent_EPT_NTAX:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Stoddard et al. (2008) Ecological Applications 18:1149-1165", note: "Reference condition and multimetric index construction for the national surveys; EPT richness is a core sensitivity metric."}
+      - {citation: "USEPA (2016) NRSA 2008-2009 Technical Report, EPA/841/R-16/008", note: "Benthic MMI metrics and their regional expectations."}
+      - {citation: "Barbour et al. (1999) Rapid Bioassessment Protocols, EPA 841-B-99-002", note: "EPT richness as a sensitivity measure responsive to organic enrichment and habitat loss."}
+    limitations:
+      - "Richness depends on the regional species pool and on sampling effort, so a curve transported across faunal provinces measures the pool as much as condition (fauna rule in reference_transfer.yaml)."
+      - "2018-19 values are aquamet recomputations from counts (origin legacy_r_app), not EPA-published metrics; equivalence with the 2013-14 and 2023-24 definitions is checked by the harmonization audit."
+      - "Correlated with total taxa richness and Shannon diversity (RED-02 in the published builds), so three benthic metrics in one function double count the same sample."
+    disposition: retain
+    disposition_rationale: "A direct, widely used response indicator of community condition; the redundancy with bent_TOTLNTAX and bent_HPRIME is decided by candidate C1 (portfolio size), not by dropping the metric."
+    status: hypothesis
+    reviewed_by: n/a
+  bent_HPRIME:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Stoddard et al. (2008) Ecological Applications 18:1149-1165", note: "Diversity metrics in the national benthic MMI."}
+      - {citation: "USEPA (2016) NRSA 2008-2009 Technical Report, EPA/841/R-16/008", note: "Shannon diversity computed from the fixed-count subsample."}
+    limitations:
+      - "Diversity is not monotone with condition everywhere: mild enrichment can raise diversity before it falls, so a higher-is-better curve can misread an intermediate state."
+      - "Depends on subsample size and taxonomic resolution, which differ between the EPA-published cycles and the 2018-19 recomputation."
+      - "RED-01 partner of bent_TOTLNTAX in a published build: the two carry one signal."
+      - "A modeled reference (REF-13) is approved for this metric; a modeled expectation shares its training stations with other regions' fits."
+    disposition: revise
+    disposition_rationale: "Keep as a candidate but test whether it adds information beyond EPT richness (candidate C1) and whether an optimum form fits better than monotone (candidate C3)."
+    status: hypothesis
+    reviewed_by: n/a
+  bent_TOLRPIND:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Hilsenhoff (1987) Great Lakes Entomologist 20:31-39", note: "Tolerance values and the biotic index the percent-tolerant metric summarizes."}
+      - {citation: "Stoddard et al. (2008) Ecological Applications 18:1149-1165", note: "Tolerance metrics in the national MMI."}
+    limitations:
+      - "Tolerance values are assigned by region and expert judgment; a national tolerance table treats a taxon the same in every setting."
+      - "Percent of individuals is sensitive to a few abundant taxa in one sample."
+    disposition: retain
+    disposition_rationale: "The strongest single discriminator among the benthic metrics in the published builds (CURVE-12 AUC 0.64); keep."
+    status: hypothesis
+    reviewed_by: n/a
+  bent_TOTLNTAX:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Stoddard et al. (2008) Ecological Applications 18:1149-1165", note: "Total richness in the national MMI."}
+    limitations:
+      - "Total richness rises with sampling effort and the regional species pool and responds weakly to moderate disturbance, so it carries the least ecological signal of the benthic set (CURVE-12 AUC 0.39 to 0.45 in the published builds)."
+      - "RED-01 partner of bent_HPRIME; used for Population support while the other benthic metrics score Community dynamics, so one sample feeds two functions."
+    disposition: revise
+    disposition_rationale: "Candidate C4 tests replacing it in Population support with a metric that discriminates (the state biocriteria refusals show no published benchmark applies); if nothing better exists the function keeps it with the caveat."
+    status: hypothesis
+    reviewed_by: n/a
+  bfi:
+    construct_class: natural_setting_covariate
+    spatial_support: watershed
+    easi_role: [proxy]
+    evidence:
+      - {citation: "Wolock (2003) USGS Open-File Report 03-263", note: "The base-flow index grid StreamCat summarizes by watershed."}
+      - {citation: "Hill et al. (2016) JAWRA 52:120-128", note: "StreamCat watershed summaries by NHDPlus V2 COMID."}
+      - {citation: "Poff et al. (1997) BioScience 47:769-784", note: "The natural flow regime as the template a streamflow function is judged against."}
+    limitations:
+      - "The index is set largely by hydrogeology and climate (the registry caveat): a naturally flashy till catchment reads low without being degraded, so a higher-is-better curve scores the setting, not the condition."
+      - "A watershed summary of a national grid; it does not change with a restoration or a new withdrawal, so it cannot detect a change in the function it scores."
+      - "EASI scores the same index as a desktop proxy, so agreement between the two tiers on this metric is shared input, not validation."
+    disposition: revise
+    disposition_rationale: "Candidate C4 tests demoting bfi to a natural-setting covariate (a stratifier or predictor) and scoring Streamflow regime and Low flow with metrics that respond to disturbance; if no such metric is supported the function keeps bfi with an explicit expectation caveat."
+    status: hypothesis
+    reviewed_by: n/a
+  chem_CHLA:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Dodds, Jones and Welch (1998) Water Research 32:1455-1462", note: "Trophic state boundaries for streams from chlorophyll and nutrients."}
+      - {citation: "USEPA (2000) Nutrient Criteria Technical Guidance Manual, Rivers and Streams, EPA-822-B-00-002", note: "Chlorophyll a as a response variable for nutrient enrichment."}
+    limitations:
+      - "Water-column chlorophyll in a wadeable stream is a snapshot of suspended algae, driven by light, flow and season as much as by enrichment; benthic chlorophyll is the more direct light response and is not in the archive."
+      - "A single grab sample; within-season variability is large."
+      - "Placed under Light and thermal regime as a response to canopy loss; it is equally a nutrient response, so it can double count with Nutrient cycling."
+    disposition: revise
+    disposition_rationale: "Candidate C4 tests whether chlorophyll belongs under Light and thermal regime or Nutrient cycling (one function only) and whether canopy density alone carries the light signal."
+    status: hypothesis
+    reviewed_by: n/a
+  chem_COND:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Griffith (2014) Environmental Toxicology and Chemistry 33:1-13", note: "Natural background specific conductance varies by ecoregion and geology, which is why the metric is fitted per region."}
+      - {citation: "USEPA (2011) A field-based aquatic life benchmark for conductivity in central Appalachian streams, EPA/600/R-10/023F", note: "Conductivity as an ionic stress measure with a field-derived benchmark in one setting."}
+    limitations:
+      - "Carries carbonate geology as well as disturbance (registry caveat): a pristine calcareous stream scores low on a lower-is-better curve, which is why the published benchmark catalog refuses a single conductivity criterion."
+      - "A grab sample; conductance moves with flow and season."
+      - "RED-01 partner of pH in a published build."
+    disposition: retain
+    disposition_rationale: "A direct water-quality state with high discrimination in the published builds (CURVE-12 AUC up to 0.83); the geology confound is handled by fitting per region and by the comparability covariates, which candidate B1 and B2 re-test."
+    status: hypothesis
+    reviewed_by: n/a
+  chem_DOC:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Tank et al. (2010) Journal of the North American Benthological Society 29:118-146", note: "Organic matter dynamics in streams: DOC as a carbon supply term."}
+      - {citation: "Vannote et al. (1980) Canadian Journal of Fisheries and Aquatic Sciences 37:130-137", note: "The river continuum: carbon sources shift from riparian inputs to instream production along the network."}
+    limitations:
+      - "The direction registry declares the metric excluded (no scoring direction), so it is mapped to Carbon processing but never scored (discrepancy 10)."
+      - "DOC concentration rises with wetlands and forest cover and with wastewater alike, so neither direction is defensible without context; it measures supply, not processing."
+      - "A grab sample with strong seasonal and hydrologic variation."
+    disposition: revise
+    disposition_rationale: "Candidate C4 decides one of two honest states: an optimum or context-conditioned direction with evidence, or omission from Carbon processing with the gap documented. Mapped-but-unscored is neither."
+    status: hypothesis
+    reviewed_by: n/a
+  chem_NTL:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Herlihy and Sifneos (2008) Journal of the North American Benthological Society 27:932-948", note: "Nutrient reference conditions and regional expectations from the national surveys."}
+      - {citation: "USEPA (2000) Nutrient Criteria Technical Guidance Manual, Rivers and Streams, EPA-822-B-00-002", note: "Total nitrogen as the loading term nutrient criteria address."}
+      - {citation: "NRSA 2018-19 Technical Support Document, Table 7-1 (published_benchmarks.yaml entry nrsa-2018-19-total-nitrogen)", note: "The published total nitrogen benchmark by NARS-9 region the REF-14 rung uses."}
+    limitations:
+      - "The map scores total nitrogen while the published Northeastern Highlands v9 scores chem_NTL_DISS (discrepancy 10); the two fractions differ in meaning and the published benchmark is for total nitrogen."
+      - "A concentration is a state set by loading and retention; it is not a cycling rate."
+      - "No field_methods.yaml entry for chem_NTL (only the superseded dissolved key), so DEEP prints no protocol line."
+    disposition: revise
+    disposition_rationale: "Candidate C4 fixes one fraction for the function on the benchmark's fraction (PB-1) and carries the other only as an unselected candidate; the field-method entry is restored in Round 1."
+    status: hypothesis
+    reviewed_by: n/a
+  chem_PH:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "USEPA (1986) Quality Criteria for Water, EPA 440/5-86-001", note: "The 6.5 to 9.0 aquatic life range that a two-sided curve approximates."}
+    limitations:
+      - "Carries natural geology (calcareous or naturally acidic waters), and a two-sided core narrower than measurement precision is noise rather than condition (registry caveat; CURVE-09 floor 0.2 su x 2)."
+      - "The published benchmark catalog refuses a single pH criterion for the same reason."
+      - "RED-01 partner of conductivity in a published build."
+    disposition: retain
+    disposition_rationale: "A direct state with a physically meaningful optimum; the precision floor and the geology confound are already rules (CURVE-09, comparability covariates)."
+    status: hypothesis
+    reviewed_by: n/a
+  chem_PTL:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Herlihy and Sifneos (2008) Journal of the North American Benthological Society 27:932-948", note: "Phosphorus reference conditions by region."}
+      - {citation: "NRSA 2018-19 Technical Support Document, Table 7-1 (published_benchmarks.yaml entry nrsa-2018-19-total-phosphorus)", note: "The published total phosphorus benchmark by NARS-9 region."}
+    limitations:
+      - "A concentration is a state set by loading and retention, not a cycling rate."
+      - "A grab sample; storm samples and base-flow samples differ by an order of magnitude."
+      - "RED-02 partner of turbidity (particulate phosphorus travels with sediment)."
+    disposition: retain
+    disposition_rationale: "Direct, benchmarked and moderately discriminating; keep."
+    status: hypothesis
+    reviewed_by: n/a
+  chem_TURB:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Bilotta and Brazier (2008) Water Research 42:2849-2861", note: "Suspended solids and turbidity as stressors on aquatic biota."}
+    limitations:
+      - "A grab sample that depends on the flow at sampling time; a single value poorly represents the daily average that state criteria address (the benchmark catalog refuses a turbidity criterion for that reason)."
+      - "A modeled reference (REF-13) is approved for this metric; its training stations overlap other regions' fits."
+    disposition: retain
+    disposition_rationale: "Direct and widely used; keep, with the sampling-time caveat carried to DEEP."
+    status: hypothesis
+    reviewed_by: n/a
+  damdens:
+    construct_class: pressure_proxy
+    spatial_support: watershed
+    easi_role: [screen_variable, proxy]
+    evidence:
+      - {citation: "Poff et al. (2007) Proceedings of the National Academy of Sciences 104:5732-5737", note: "Dams homogenize regional flow regimes."}
+      - {citation: "Hill et al. (2016) JAWRA 52:120-128", note: "StreamCat dam density from the National Inventory of Dams."}
+    limitations:
+      - "The reference screen admits only stations with no mapped dams (screen variable nabd_densws, a different dataset than StreamCat's NID density but the same construct), so every reference pool sits at or near zero and the fitted curve is degenerate by construction (zero-inflated): the score is a pressure threshold, not a reference distribution."
+      - "Dam count per area ignores dam size and operation; a farm pond and a hydropower dam count the same."
+      - "Listed under two functions (Streamflow regime and Watershed connectivity), so one landscape variable feeds two scores."
+    disposition: revise
+    disposition_rationale: "Candidate C4 tests scoring dam pressure once, on a fixed criterion or a storage-weighted measure (se_damnrmstor, degree of regulation), instead of a reference curve fitted on a screened-to-zero pool."
+    status: hypothesis
+    reviewed_by: n/a
+  elev:
+    construct_class: natural_setting_covariate
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "Hill et al. (2016) JAWRA 52:120-128", note: "StreamCat mean watershed elevation."}
+    limitations:
+      - "A predictor only (direction predictor_only); it explains thermal and light expectations and never scores a function."
+    disposition: retain
+    disposition_rationale: "Kept as a comparability covariate and predictor."
+    status: hypothesis
+    reviewed_by: n/a
+  fish_NAT_LITHPIND:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Whittier et al. (2007) Transactions of the American Fisheries Society 136:718-735", note: "Fish index development for the western surveys; lithophil spawners as a habitat-sensitive guild."}
+      - {citation: "Karr (1981) Fisheries 6(6):21-27", note: "Guild proportions in the index of biotic integrity."}
+    limitations:
+      - "A reserve candidate (metric_map.yaml): evaluated in every build but enters a portfolio only where Population support would otherwise be unassessed."
+      - "Fish sampling is incomplete in small or intermittent streams and in 2018-19 the metrics are recomputations from counts; no field_methods.yaml entry."
+    disposition: retain
+    disposition_rationale: "Keep as a reserve; the owner's 2026-09-21 decision preferred proportions over richness counts because they cancel the species-pool difference between regions."
+    status: hypothesis
+    reviewed_by: n/a
+  fish_NAT_NTOLNTAX:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Whittier et al. (2007) Transactions of the American Fisheries Society 136:718-735", note: "Native intolerant richness in the fish index."}
+    limitations:
+      - "A richness count carries the regional species pool (RED-01 partner of native richness in three builds); kept out of the portfolio by the owner on 2026-09-21."
+      - "Reserve candidate; no field_methods.yaml entry."
+    disposition: retain
+    disposition_rationale: "Keep as a reserve only; the proportions are preferred."
+    status: hypothesis
+    reviewed_by: n/a
+  fish_NAT_NTOLPTAX:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Whittier et al. (2007) Transactions of the American Fisheries Society 136:718-735", note: "Percent intolerant native taxa in the fish index."}
+    limitations:
+      - "Reserve candidate; drainage-area class split in the scale registry, so small reaches are scored on their own layer."
+      - "No field_methods.yaml entry."
+    disposition: revise
+    disposition_rationale: "Candidate C4 tests the proportion set (this metric, tolerant individuals, lithophils) as the default Population support metrics in place of native richness, following the owner's 2026-09-21 reasoning."
+    status: hypothesis
+    reviewed_by: n/a
+  fish_NAT_TOLRPIND:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Whittier et al. (2007) Transactions of the American Fisheries Society 136:718-735", note: "Percent tolerant individuals in the fish index."}
+    limitations:
+      - "Reserve candidate; supported at Level II only in the scale registry (thin local pools); no field_methods.yaml entry."
+    disposition: revise
+    disposition_rationale: "Part of the proportion set candidate C4 tests for Population support."
+    status: hypothesis
+    reviewed_by: n/a
+  fish_NAT_TOTLNTAX:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Whittier et al. (2007) Transactions of the American Fisheries Society 136:718-735", note: "Native richness in the fish index."}
+      - {citation: "Karr (1981) Fisheries 6(6):21-27", note: "Native species richness as an integrity measure."}
+    limitations:
+      - "Richness carries the regional species pool and stream size more than condition: the lowest discrimination of any default metric in the published builds (CURVE-12 AUC 0.24 to 0.38), supported only at Level II."
+      - "Zero-heavy where fish sampling is sparse; RED-01 partner of native intolerant richness."
+    disposition: revise
+    disposition_rationale: "Candidate C4 tests replacing it with the proportion set as the default for Population support; keep it as a documented alternative."
+    status: hypothesis
+    reviewed_by: n/a
+  mmw_da_sqmi:
+    construct_class: natural_setting_covariate
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "Model My Watershed (Stroud Water Research Center), watershed delineation API", note: "An on-demand drainage area, key-gated."}
+    limitations:
+      - "Opt-in, slow and key-gated; a predictor only."
+    disposition: retain
+    disposition_rationale: "Kept as an optional predictor; never a scored metric."
+    status: hypothesis
+    reviewed_by: n/a
+  mmw_developed_pct:
+    construct_class: pressure_proxy
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "Model My Watershed land-cover summaries (NLCD)", note: "Developed land percent for an on-demand watershed."}
+    limitations:
+      - "Opt-in and key-gated; the same construct as impervious cover from StreamCat, which every station carries."
+    disposition: retain
+    disposition_rationale: "Kept as an optional alternative source; not a default and never fitted nationally."
+    status: hypothesis
+    reviewed_by: n/a
+  mmw_wetland_pct:
+    construct_class: direct_function_measure
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "Model My Watershed land-cover summaries (NLCD)", note: "Wetland percent for an on-demand watershed."}
+    limitations:
+      - "Opt-in and key-gated; the same construct as pctwet2019, which every station carries."
+    disposition: retain
+    disposition_rationale: "Kept as an optional alternative source; not a default."
+    status: hypothesis
+    reviewed_by: n/a
+  pctcrop2019:
+    construct_class: pressure_proxy
+    spatial_support: watershed
+    easi_role: [screen_variable, proxy]
+    evidence:
+      - {citation: "Allan (2004) Annual Review of Ecology, Evolution, and Systematics 35:257-284", note: "Landscape agriculture as a dominant driver of stream condition."}
+      - {citation: "Dewitz (2021) NLCD 2019 products, USGS data release", note: "The land-cover product behind the cultivated crops class."}
+    limitations:
+      - "The reference screen caps agriculture (crops plus hay, agriculture_ws) at 10 percent, so reference pools carry almost no cropland and a fitted curve on this metric is a threshold set by the screen, not a reference distribution; EASI's fixed criterion uses crops plus hay (pctag2019ws), which the map does not carry (the generator reports the three fixed-criteria keys the map lacks)."
+      - "Crops without hay and pasture understate agricultural pressure in grazing regions."
+    disposition: revise
+    disposition_rationale: "Candidate C4 tests scoring Catchment hydrology's agricultural pressure on the fixed criterion for crops plus hay (the EASI construct) instead of a screened-to-zero reference curve on crops alone."
+    status: hypothesis
+    reviewed_by: n/a
+  pcthbwet2019:
+    construct_class: direct_function_measure
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "Bullock and Acreman (2003) Hydrology and Earth System Sciences 7:358-389", note: "The role of wetlands in the hydrological cycle; storage and flood attenuation."}
+      - {citation: "Wickham et al. (2017) Remote Sensing of Environment 191:328-341", note: "NLCD thematic accuracy; wetland classes are among the least accurate."}
+    limitations:
+      - "Reference bands of hundredths of a percent sit below the land-cover product's wetland-class accuracy (registry caveat); a steep watershed that never held herbaceous wetland reads low without being degraded."
+      - "Not a default (the combined wetland metric is scored); kept pickable."
+    disposition: retain
+    disposition_rationale: "Kept as an optional class metric behind the combined wetland default."
+    status: hypothesis
+    reviewed_by: n/a
+  pctimp2019:
+    construct_class: pressure_proxy
+    spatial_support: watershed
+    easi_role: [screen_variable, fixed_criterion_input, proxy]
+    evidence:
+      - {citation: "Schueler (1994) Watershed Protection Techniques 1:100-111", note: "The impervious cover model: 10 and 25 percent thresholds that the fixed criterion bands mirror."}
+      - {citation: "Booth and Jackson (1997) JAWRA 33:1077-1090", note: "Urbanization, hydrologic change and channel degradation."}
+      - {citation: "Wang et al. (2001) Environmental Management 28:255-266", note: "Impervious cover effects on fish in Wisconsin streams (thresholds near 8 to 12 percent)."}
+    limitations:
+      - "Scored on EASI's fixed criterion (CURVE-11), identical in every region, and it is a reference screen variable (strict limit 1 percent), so the reference pools are defined by it; a reference curve cannot be fitted on it and DEEP scores a threshold."
+      - "Listed under two functions (Catchment hydrology and High flow dynamics): one variable, two scores."
+      - "Total impervious area from NLCD, not effective (connected) impervious area."
+    disposition: retain
+    disposition_rationale: "Keep as a fixed criterion; the double listing is examined by candidate C1 and C4 (score the pressure once, or accept the second function as a documented proxy)."
+    status: hypothesis
+    reviewed_by: n/a
+  pctwdwet2019:
+    construct_class: direct_function_measure
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "Bullock and Acreman (2003) Hydrology and Earth System Sciences 7:358-389", note: "Wetland storage function."}
+    limitations:
+      - "Wetland cover follows terrain: a steep watershed that never held wetland reads low without being degraded (registry caveat)."
+      - "Not a default; kept pickable behind the combined wetland metric."
+    disposition: retain
+    disposition_rationale: "Kept as an optional class metric."
+    status: hypothesis
+    reviewed_by: n/a
+  pctwet2019:
+    construct_class: direct_function_measure
+    spatial_support: watershed
+    easi_role: [proxy]
+    evidence:
+      - {citation: "Bullock and Acreman (2003) Hydrology and Earth System Sciences 7:358-389", note: "Wetlands store water and attenuate floods and low flows; cover is the landscape measure of that capacity."}
+      - {citation: "Mitsch and Gosselink (2015) Wetlands, 5th edition", note: "Wetland hydrologic functions."}
+      - {citation: "Wickham et al. (2017) Remote Sensing of Environment 191:328-341", note: "NLCD wetland class accuracy."}
+    limitations:
+      - "Wetland cover follows terrain (registry caveat): in Interior Plateau 11 of 38 reference stations hold exactly zero, so the curve is zero-inflated and the median reference station can rate Not functioning on a fallback ramp."
+      - "An expectation metric fitted as a reference curve; loss of wetland since settlement is not separable from natural absence without a historical baseline."
+      - "EASI scores the same StreamCat variable, so tier agreement is shared input; the lowest CURVE-12 minimum among landscape metrics (0.16)."
+    disposition: revise
+    disposition_rationale: "Candidate C3a (zero-inflated handling) and C4 decide whether the metric is scored on a two-part curve, on a terrain-conditioned expectation, or withheld where the reference pool is at zero."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_BFWD_RAT:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Rosgen (1994) Catena 22:169-199", note: "Width to depth ratio as a primary channel classification variable."}
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "The NRSA channel morphology measurements and their computation."}
+      - {citation: "Simon (1989) Earth Surface Processes and Landforms 14:11-26", note: "Channel evolution stages that width to depth ratio and incision track."}
+    limitations:
+      - "An optimum metric whose expected value depends on stream type and drainage area (drainage-area class split in the registry); the two-sided reference core is narrow relative to transect measurement error."
+      - "Listed under two functions (Channel evolution and Floodplain connectivity) with bankfull height: two metrics, two functions, one measurement pair."
+    disposition: retain
+    disposition_rationale: "A direct channel-form measurement with a physical interpretation; candidate C1 examines the double listing."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_LRBS_use:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Kaufmann et al. (2009) JAWRA 45:434-459", note: "Relative bed stability as a measure of sedimentation associated with human disturbance."}
+      - {citation: "Kaufmann et al. (2008) Journal of the North American Benthological Society 27:?", note: "Bed stability computation for the national surveys (see the TR bibliography for the exact reference)."}
+    limitations:
+      - "Computed from several measurements (particle sizes, slope, bankfull depth, wood, pools) so its error compounds; a signed logarithmic scale with an optimum near zero."
+      - "Correlated with substrate size, sand and fines and embeddedness (RED-01 and RED-02 partners): four substrate metrics across two functions carry one bed signal."
+    disposition: retain
+    disposition_rationale: "The most process-based sediment metric in the set; keep, and let candidate C1 decide how many substrate metrics one function carries."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_LSUB_DMM:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "Substrate size from the systematic particle count."}
+      - {citation: "Montgomery and Buffington (1997) GSA Bulletin 109:596-611", note: "Reach morphology and substrate expectations by channel type."}
+    limitations:
+      - "Substrate size is set by slope, geology and supply before disturbance: a sand-bed coastal plain stream is not degraded for being fine (comparability covariates carry lithology and slope)."
+      - "A modeled reference (REF-13 candidate) exists; RED-01 partner of sand and fines and embeddedness."
+    disposition: retain
+    disposition_rationale: "Direct and interpretable; the natural-setting dependence is handled by the covariates and the registry split, which Round 2 re-tests."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_LWDeqVolM100:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Wohl et al. (2010) Earth Surface Processes and Landforms 35:618-625", note: "Large instream wood metrics and their comparability."}
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "The wood tally and volume computation."}
+    limitations:
+      - "Pooled only for 2018-19 and 2023-24 (the 2013-14 wood volume computation is incompatible, nrsa_cycle_compatibility.yaml), so its pools are smaller than other metrics'."
+      - "Zero-heavy in grassland and plains regions where wood is naturally absent (the CGP CURVE-07 hard stop); a fallback ramp rates the median reference station Not functioning."
+      - "Placed under Bed composition and bedform dynamics; wood is also habitat (Habitat provision) and a carbon input (Carbon processing)."
+    disposition: revise
+    disposition_rationale: "Candidate C3a (zero-inflated declaration) and C4 (which function wood serves) decide its handling; a natural-absence region should read as not applicable, never as Not functioning."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_PCT_FAST:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "Channel unit classification along the thalweg profile."}
+      - {citation: "Montgomery and Buffington (1997) GSA Bulletin 109:596-611", note: "Riffle and pool structure by channel type and slope."}
+    limitations:
+      - "Fast-water share is set by slope (slope-class split in the registry); low-gradient coastal plain streams have none by nature (the NLF fast-water hard stop), so the metric is zero-inflated there."
+      - "A modeled reference candidate exists; RED-02 partners with substrate and pool metrics."
+    disposition: revise
+    disposition_rationale: "Candidate C3a decides the zero-inflated handling; the metric itself is retained where fast water is expected."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_PCT_SAFN:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Bryce, Lomnicky and Kaufmann (2010) Journal of the North American Benthological Society 29:657-672", note: "Fine sediment thresholds protective of sediment-sensitive biota (about 5 to 13 percent sand and fines in the West)."}
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "The 105-particle systematic count."}
+    limitations:
+      - "Sand-bed streams (coastal plain, sand hills) are naturally near 100 percent fines: the metric reads natural setting unless the pool is comparable in lithology and slope."
+      - "Listed under two functions (Hyporheic connectivity and Sediment continuity) and correlated with embeddedness and bed stability; the substrate signal is counted up to four times."
+    disposition: retain
+    disposition_rationale: "Direct, thresholded in the literature and discriminating; candidate C1 and C4 decide the double listing."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_RP100_cm:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "Residual pool depth from the thalweg profile (Lisle's residual depth concept)."}
+      - {citation: "Lisle (1987) USDA Forest Service Research Note PSW-394", note: "Residual pool depth as a flow-independent measure of pool habitat."}
+    limitations:
+      - "Not published for 2013-14 (pooled 2018-19 and 2023-24 only), so pools are smaller."
+      - "Scales with stream size and slope (slope-class split); the lowest discrimination in the published builds (CURVE-12 AUC 0.13 minimum), which says the reference pools do not separate from pressured stations on it."
+      - "Placed under Low flow and baseflow dynamics as the field measure of refuge at low flow; it is a channel-form measure, not a flow measure."
+    disposition: revise
+    disposition_rationale: "Candidate C2 (discrimination gate) and C4 decide whether residual pool depth stays the field metric of low-flow dynamics or moves to Habitat provision; a CURVE-12 minimum of 0.13 must be explained before the metric is carried into 78 regions."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_SINU:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Rosgen (1994) Catena 22:169-199", note: "Sinuosity as a classification variable with thresholds near 1.2 and 1.4."}
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "Sinuosity from the transect bearings and distances."}
+    limitations:
+      - "Reach-scale sinuosity over 11 transects is a coarse measure with a floor of 1.0; confined and steep channels are straight by nature (comparability covariates carry slope)."
+      - "Present in 2,499 of 3,267 frame stations: boatable-protocol reaches inside the frame lack it."
+    disposition: retain
+    disposition_rationale: "Direct and interpretable; keep."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_XBKA:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "Bank angle by clinometer at both banks of every transect."}
+      - {citation: "Simon and Hupp (1986) Proceedings of the Fourth Federal Interagency Sedimentation Conference", note: "Bank steepening and mass failure in the channel evolution model."}
+    limitations:
+      - "An optimum metric (flat low tail): both undercut and collapsed banks are departures, so the two-sided core is what the reference pool happens to hold."
+      - "Missing on boatable-protocol reaches (2,523 of 3,267)."
+      - "A modeled reference candidate exists."
+    disposition: retain
+    disposition_rationale: "Direct and cheap in the field; keep."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_XBKF_H:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Simon (1989) Earth Surface Processes and Landforms 14:11-26", note: "Incision as a stage of channel evolution; bankfull height above the water surface tracks it."}
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "The bankfull height measurement."}
+    limitations:
+      - "Measured above the water surface at the time of the visit, so flow stage enters the value; the optimum core depends on drainage-area class (registry split)."
+      - "Listed under two functions (Channel evolution and Floodplain connectivity) with the width to depth ratio."
+    disposition: retain
+    disposition_rationale: "Direct measure of incision and floodplain access; keep, with candidate C1 examining the double listing."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_XCDENMID:
+    construct_class: direct_function_measure
+    spatial_support: riparian_corridor
+    easi_role: [none]
+    evidence:
+      - {citation: "Poole and Berman (2001) Environmental Management 27:787-802", note: "Riparian shade and channel geometry as controls on stream temperature."}
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "Mid-channel densiometer readings."}
+    limitations:
+      - "Canopy density over the channel falls with stream width by nature, so wide reaches read low without being degraded (drainage-area class split in the registry)."
+      - "Missing on boatable-protocol reaches; RED-01 partner of natural fish cover."
+      - "EASI proxies the same construct with a landscape woody corridor curve (corridor-woody), a different quantity."
+    disposition: retain
+    disposition_rationale: "The direct field measure of shade; keep."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_XCMGW:
+    construct_class: direct_function_measure
+    spatial_support: riparian_corridor
+    easi_role: [none]
+    evidence:
+      - {citation: "Vannote et al. (1980) Canadian Journal of Fisheries and Aquatic Sciences 37:130-137", note: "Riparian inputs as the carbon base of small streams."}
+      - {citation: "Naiman and Decamps (1997) Annual Review of Ecology and Systematics 28:621-658", note: "Riparian zones and their ecological functions."}
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "Riparian vegetation cover classes in the 10 m plots."}
+    limitations:
+      - "Woody riparian cover is a proxy for allochthonous carbon input, not a measure of carbon processing; grassland and wetland riparian zones supply carbon without woody cover."
+      - "The evidence table's XCMGW disposition was flagged as open by the methodology design: the metric is a habitat and shade measure as much as a carbon one."
+      - "RED-02 partner of EPT richness and canopy density in published builds."
+    disposition: revise
+    disposition_rationale: "Candidate C4 decides whether riparian woody cover scores Carbon processing (with DOC omitted or restored), Light and thermal regime, or Habitat provision, and scores it once."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_XEMBED:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Boulton et al. (1998) Annual Review of Ecology and Systematics 29:59-81", note: "Hyporheic exchange and its dependence on bed sediment permeability."}
+      - {citation: "Brunke and Gonser (1997) Freshwater Biology 37:1-33", note: "Clogging of the hyporheic zone by fine sediment."}
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "Embeddedness estimates at 55 points."}
+    limitations:
+      - "A visual estimate of a structural state that governs exchange; it is not a measured exchange rate."
+      - "Measured only on wadeable-protocol reaches (2,521 of 3,267 frame stations; near half missing on boatable reaches by design)."
+      - "Listed under two functions (Bed composition and Hyporheic connectivity) and correlated with sand and fines and bed stability."
+    disposition: retain
+    disposition_rationale: "The best available field surrogate for hyporheic connectivity with the highest substrate discrimination (CURVE-12 median 0.65); keep, with candidate C1 deciding the double listing."
+    status: hypothesis
+    reviewed_by: n/a
+  phab_XFC_NAT:
+    construct_class: direct_function_measure
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Kaufmann et al. (1999) Quantifying physical habitat in wadeable streams, EPA/620/R-99/003", note: "Fish cover areal estimates in the 10 m plots."}
+      - {citation: "Barbour et al. (1999) Rapid Bioassessment Protocols, EPA 841-B-99-002", note: "Instream cover as a habitat quality component."}
+    limitations:
+      - "A summed areal cover estimate of several cover types; zero-heavy in reaches with no wood, boulders or vegetation by nature (the CBR hard stop was on a related zero-heavy pool)."
+      - "RED-01 partner of canopy density; visual estimates carry observer error."
+    disposition: retain
+    disposition_rationale: "Direct habitat measure with moderate discrimination; keep, subject to the zero-inflated handling of candidate C3a."
+    status: hypothesis
+    reviewed_by: n/a
+  precip8110:
+    construct_class: natural_setting_covariate
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "PRISM Climate Group, 1981-2010 normals, as summarized by StreamCat (Hill et al. 2016)", note: "Mean annual precipitation of the watershed."}
+    limitations:
+      - "Climate context, predictor only (direction predictor_only)."
+    disposition: retain
+    disposition_rationale: "Kept as a comparability covariate and predictor."
+    status: hypothesis
+    reviewed_by: n/a
+  rdcrs:
+    construct_class: pressure_proxy
+    spatial_support: watershed
+    easi_role: [proxy]
+    evidence:
+      - {citation: "Trombulak and Frissell (2000) Conservation Biology 14:18-30", note: "Road effects on aquatic ecosystems, including crossings as barriers and sediment sources."}
+      - {citation: "Hill et al. (2016) JAWRA 52:120-128", note: "StreamCat road-stream crossing density."}
+    limitations:
+      - "Units caution in the registry: the StreamCat API value as served differs by about 100x from a hand-computed crossings per square kilometer; the site engine recomputes crossings on the NHDPlus HR network, a different network density."
+      - "Crossing density counts culverts and bridges alike; passability is not in the data."
+      - "Not a reference screen variable, but road density is, so reference pools are low on crossings too."
+    disposition: retain
+    disposition_rationale: "The only connectivity pressure with national coverage; keep, with the units caveat carried to DEEP and the engine analog kept consistent."
+    status: hypothesis
+    reviewed_by: n/a
+  rddens:
+    construct_class: pressure_proxy
+    spatial_support: watershed
+    easi_role: [screen_variable, fixed_criterion_input, proxy]
+    evidence:
+      - {citation: "Forman and Alexander (1998) Annual Review of Ecology and Systematics 29:207-231", note: "Roads and their major ecological effects."}
+      - {citation: "Trombulak and Frissell (2000) Conservation Biology 14:18-30", note: "Road density as a watershed pressure on streams."}
+    limitations:
+      - "Scored on EASI's fixed criterion (CURVE-11) and a reference screen variable (limit 2 km per square kilometer): the reference pools are defined by it and DEEP scores a threshold, never a reference distribution."
+      - "Listed once, under Reach inflow, as the proxy for concentrated flow paths (memory of the 2026-08 decision); road density is a coarse stand-in for that process."
+    disposition: retain
+    disposition_rationale: "Keep as a fixed criterion; the construct mapping to Reach inflow is documented rather than changed."
+    status: hypothesis
+    reviewed_by: n/a
+  runoff:
+    construct_class: natural_setting_covariate
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "Hill et al. (2016) JAWRA 52:120-128", note: "StreamCat mean annual runoff."}
+    limitations:
+      - "Climate context, predictor only (direction predictor_only); listed under two functions as a predictor."
+    disposition: retain
+    disposition_rationale: "Kept as a comparability covariate and predictor."
+    status: hypothesis
+    reviewed_by: n/a
+  se_agws:
+    construct_class: pressure_proxy
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "STAF site engine (libs/site_engine), agricultural cover over the HR reach watershed", note: "The engine analog of the screen's agriculture_ws, computed on NHDPlus HR."}
+    limitations:
+      - "A predictor, opt-in; computed per site by the engine, so slow; the screen was evaluated on StreamCat values, not on this analog."
+    disposition: retain
+    disposition_rationale: "Kept as the engine-sourced predictor for engine builds."
+    status: hypothesis
+    reviewed_by: n/a
+  se_damnrmstor:
+    construct_class: pressure_proxy
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "STAF site engine, NID normal storage per watershed area", note: "Storage-weighted dam pressure, the engine analog of dam density."}
+    limitations:
+      - "A predictor, opt-in and engine-computed; candidate C4 considers it as the storage-weighted alternative to damdens."
+    disposition: retain
+    disposition_rationale: "Kept as a predictor and as a C4 alternative."
+    status: hypothesis
+    reviewed_by: n/a
+  se_kffactws:
+    construct_class: natural_setting_covariate
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "USDA soil erodibility factor K (SSURGO/STATSGO), engine watershed mean", note: "Soil erodibility as a natural control on sediment supply."}
+    limitations:
+      - "A predictor only; opt-in."
+    disposition: retain
+    disposition_rationale: "Kept as a sediment-supply covariate."
+    status: hypothesis
+    reviewed_by: n/a
+  se_pctimpws:
+    construct_class: pressure_proxy
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "STAF site engine, impervious cover over the HR reach watershed", note: "The engine analog of pctimp2019ws."}
+    limitations:
+      - "A predictor, opt-in; the screen and the fixed criterion read the StreamCat value."
+    disposition: retain
+    disposition_rationale: "Kept as the engine-sourced predictor."
+    status: hypothesis
+    reviewed_by: n/a
+  se_rddensws:
+    construct_class: pressure_proxy
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "STAF site engine, road density over the HR reach watershed", note: "The engine analog of rddensws."}
+    limitations:
+      - "A predictor, opt-in."
+    disposition: retain
+    disposition_rationale: "Kept as the engine-sourced predictor."
+    status: hypothesis
+    reviewed_by: n/a
+  se_runoffmm:
+    construct_class: natural_setting_covariate
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "STAF site engine, EROM-derived runoff depth", note: "The engine analog of StreamCat runoff."}
+    limitations:
+      - "A predictor, opt-in."
+    disposition: retain
+    disposition_rationale: "Kept as a climate covariate for engine builds."
+    status: hypothesis
+    reviewed_by: n/a
+  se_wsareasqkm:
+    construct_class: natural_setting_covariate
+    spatial_support: watershed
+    easi_role: [none]
+    evidence:
+      - {citation: "STAF site engine, HR reach watershed area", note: "Drainage area from the NHDPlus HR walk; the offline scaling covariate."}
+    limitations:
+      - "A predictor only; opt-in."
+    disposition: retain
+    disposition_rationale: "Kept as the scaling predictor for engine builds."
+    status: hypothesis
+    reviewed_by: n/a
