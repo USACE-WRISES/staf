@@ -1,9 +1,19 @@
-"""Isolated, local EASI alternative studies; never a publication pipeline."""
+"""Isolated, local EASI alternative studies; never a publication pipeline.
 
-STUDY_VERSION = "1.0.0"
-BASE_METHOD = "e9f472b31fe5"
-BASE_COMMIT = "6cc77c2c3fbf94d7dc9daf71df9dd3a07b56aaa7"
-BASE_REFERENCE = "ad100b39313af9259bd0628728d50ab87513e2c07955bf24d78e9d107863abdd"
+Study runner 1.1.0 (2026-09-25): the base a study starts from is an entry of the registry
+in ``bases.py``, named by the study manifest's ``base_id``. A manifest without one is a
+1.0.0 study on the 2026-09-15 base, whose constants below keep their values, so the
+2026-09-15 study, its receipts and its completion record read exactly as before and are
+never rewritten. ``protocol()`` records this version in every new study.
+"""
+from .bases import (BASES, DEFAULT_BASE_ID, LEGACY_STUDY_ID, STUDY_ID_PATTERN,  # noqa: F401
+                    Base, base, study_base, study_id_ok)
+
+STUDY_VERSION = "1.1.0"
+_DEFAULT_BASE = base(DEFAULT_BASE_ID)
+BASE_METHOD = _DEFAULT_BASE.method_version
+BASE_COMMIT = _DEFAULT_BASE.commit
+BASE_REFERENCE = _DEFAULT_BASE.reference_sha256
 REGIONAL_SETS = ("corridor-woody", "corridor-natural", "flow-variability")
 ALTERNATIVES = [
     {"id": "alternative-1", "label": "Alternative 1: current regional method", "curve_count": 62, "changes": "None; preserved current method"},
