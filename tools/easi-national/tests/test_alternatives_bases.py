@@ -113,6 +113,52 @@ def test_a_snapshot_on_the_adopted_base_binds_the_manifest_to_it(tmp_path, monke
     assert bases.study_base(manifest).id == ADOPTED
 
 
+def _library_rows():
+    path = REPO_ROOT / "apps/library/assessments/easi-screening/v1/method.json"
+    return read_json(path)["identity"]["validatedUnder"]
+
+
+def test_the_adopted_base_accepts_the_method_versions_the_library_validated(tmp_path, monkeypatch):
+    """The base's method files score the same under a later, validated evaluator: the library
+    records that evaluator's method version, the base accepts it, and a study run under it
+    records the evaluator beside the base. The 2026-09-15 base has no library version."""
+    adopted = bases.base(ADOPTED)
+    rows = _library_rows()
+    versions = [r["methodVersion"] for r in rows]
+    assert adopted.method_version in versions
+    assert bases.library_validated_versions(adopted, REPO_ROOT) == tuple(dict.fromkeys(versions))
+    assert bases.library_validated_versions(bases.base(), REPO_ROOT) == ()
+    assert bases.accepted_method_versions(bases.base()) == (bases.base().method_version,)
+    assert all(bases.accepts(adopted, v, REPO_ROOT) for v in versions)
+    assert not bases.accepts(adopted, "000000000000", REPO_ROOT) and not bases.accepts(adopted, None, REPO_ROOT)
+    # a digest the library never validated is refused, the base's own is accepted without a library
+    assert bases.accepts(adopted, adopted.method_version) and not bases.accepts(adopted, versions[-1] + "x")
+    later = [v for v in versions if v != adopted.method_version]
+    if not later:
+        pytest.skip("the library records no later evaluator for the adopted base")
+    root = _study_root(tmp_path, adopted, monkeypatch)
+    from easi import national
+    monkeypatch.setattr(national, "method_version", lambda: later[-1])
+    # the repo mirror the snapshot reads carries the library's record of the validation
+    target = study.REPO_ROOT / "apps/library/assessments/easi-screening/v1/method.json"
+    target.parent.mkdir(parents=True)
+    shutil.copyfile(REPO_ROOT / "apps/library/assessments/easi-screening/v1/method.json", target)
+    folder = root / "review/alternative-studies/2026-10-04-low-flow-alternatives"
+    study.snapshot(root, folder, base_id=ADOPTED)
+    manifest = read_json(folder / "manifest.json")
+    assert manifest["base_id"] == ADOPTED and manifest["base"]["method_version"] == adopted.method_version
+    assert manifest["alternative_1"]["method_version"] == adopted.method_version
+    assert manifest["base_evaluator"]["method_version"] == later[-1]
+    assert manifest["base_evaluator"]["validated"] is True
+    assert manifest["base_evaluator"]["evaluator_digest"].startswith("sha256:")
+    assert later[-1] in manifest["base_evaluator"]["accepted_method_versions"]
+    assert bases.study_base(manifest).id == ADOPTED
+    # an evaluator the library did not validate is still refused
+    monkeypatch.setattr(national, "method_version", lambda: "000000000000")
+    with pytest.raises(RuntimeError, match="must match"):
+        study.snapshot(root, root / "review/alternative-studies/2026-10-05-low-flow-alternatives", base_id=ADOPTED)
+
+
 def test_a_snapshot_refuses_a_base_the_checkout_does_not_hold(tmp_path, monkeypatch):
     adopted = bases.base(ADOPTED)
     root = _study_root(tmp_path, adopted, monkeypatch)

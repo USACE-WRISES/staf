@@ -127,8 +127,9 @@ def compare(case: dict, got: dict) -> list[str]:
 # gate 1: the engine still reproduces the stored expectations
 # --------------------------------------------------------------------------- #
 def test_engine_reproduces_the_stored_case_expectations(fixture):
-    from easi.national import method_version
-    assert fixture["method_version"] == method_version()
+    # the fixture names the method it was built under: the running evaluator's, or one the
+    # library validated the same method files under (the expectations are then identical)
+    assert fixture["method_version"] in cc.bc.accepted_method_stamps()
     drift = []
     for case in fixture["cases"]:
         report = cc.score_case(case)
@@ -144,8 +145,15 @@ def test_engine_reproduces_the_stored_case_expectations(fixture):
 # --------------------------------------------------------------------------- #
 def test_committed_workbook_equals_the_generated_bytes():
     assert cc.WORKBOOK.exists(), "run scripts/build_calculator.py"
-    generated = cc.bc.generate()
+    # regenerated with the identity the committed file records (a validated method version
+    # of these method files, the generator that built it) and compared byte for byte
+    ok, why = cc.bc.check(str(cc.WORKBOOK))
+    assert ok, why
+    stamps = cc.bc.committed_stamps(str(cc.WORKBOOK))
+    generated = cc.bc.generate(method_stamp=stamps["method"], generator_sha=stamps["generator"])
     assert hashlib.sha256(generated).hexdigest() == hashlib.sha256(cc.WORKBOOK.read_bytes()).hexdigest()
+    # a workbook naming a method the library never validated for these files is refused
+    assert "0" * 12 not in cc.bc.accepted_method_stamps()
 
 
 def test_workbook_structure_and_metadata():
@@ -199,7 +207,8 @@ def test_workbook_structure_and_metadata():
     assert unlocked and all(not c.protection.locked for c in unlocked)
     meta = {r[0].value: r[1].value for r in wb["Metadata"].iter_rows(min_row=3) if r[0].value}
     identity = config.scoring_identity()
-    assert meta["Scoring method digest"] == method_version()
+    assert meta["Scoring method digest"] in cc.bc.accepted_method_stamps()
+    assert method_version() in cc.bc.accepted_method_stamps()
     assert meta["Catalog sha256"] == identity["catalog_sha256"]
     assert meta["Curves sha256"] == identity["curves_sha256"]
     assert meta["Calculator version"] == cc.bc.TEMPLATE_VERSION

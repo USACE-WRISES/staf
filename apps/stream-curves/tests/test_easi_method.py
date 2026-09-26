@@ -1,9 +1,10 @@
 """EASI method projects in StreamCurves: import, export, edit, diff and evaluation.
 
-The unchanged EASI method (release ``b2e3033116e3``) must survive import and export
-byte for byte; a draft edit must change exactly what it says; and evaluation of any
-method version must happen in a worker process, never in the app's own copy of EASI,
-which DEEP builds read (pressure screen, CURVE-11 criteria, CWA mapping).
+The unchanged EASI method (the release method the assessment library records for the
+vendored evaluator, ``b2e3033116e3`` under the evaluator it was published with) must
+survive import and export byte for byte; a draft edit must change exactly what it says;
+and evaluation of any method version must happen in a worker process, never in the app's
+own copy of EASI, which DEEP builds read (pressure screen, CURVE-11 criteria, CWA mapping).
 """
 from __future__ import annotations
 
@@ -14,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from streamcurves._vendor.easi import method_authority as ma
 from streamcurves._vendor.easi import method_package as mp
 from streamcurves.easi_method import edit, evaluate, io as eio, register as reg
 from streamcurves.easi_method.model import EasiProject
@@ -22,7 +24,9 @@ APP = Path(__file__).resolve().parents[1]
 REPO = APP.parent.parent
 EASI_APP = REPO / "apps" / "easi"
 VENDORED_DATA = APP / "streamcurves" / "_vendor" / "easi" / "data"
-RELEASE_METHOD = "b2e3033116e3"
+LIBRARY_ENTRY = REPO / "apps" / "library" / "assessments" / "easi-screening"
+#: the method version the library records for the vendored evaluator (never a literal)
+RELEASE_METHOD = ma.recorded_method_version(LIBRARY_ENTRY)
 
 
 @pytest.fixture(scope="module")

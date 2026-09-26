@@ -64,17 +64,25 @@ def source_inputs(root):
 
 def snapshot(root: Path, study: Path, base_id=None):
     from easi import config
+    from easi import method_package as mp
     from easi.national import method_version
     base = resolve_base(base_id)
-    if config.criteria_set() != "regional" or method_version() != base.method_version:
+    running = method_version()
+    # the running evaluator's method version is the base's own, or one the library validated
+    # the base's method files under (bases.accepts); the manifest then records which
+    if config.criteria_set() != "regional" or not bases.accepts(base, running, REPO_ROOT):
         raise RuntimeError(f"Alternative 1 must match the preserved regional scoring method "
                            f"of base {base.id} ({base.method_version})")
     artifact = REPO_ROOT / "apps/easi/data/reference-curves.json"
     if sha(artifact) != base.reference_sha256:
         raise RuntimeError(f"Alternative 1 frozen artifact has changed (base {base.id})")
     completion = read_json(root / "analysis/local-review/completion.json")
-    if completion.get("status") != "complete" or completion.get("method_version") != base.method_version:
+    if completion.get("status") != "complete" or not bases.accepts(
+            base, completion.get("method_version"), REPO_ROOT):
         raise RuntimeError("Current Alternative 1 completion is unavailable")
+    base_evaluator = {"method_version": running, "evaluator_digest": mp.evaluator_digest(),
+                      "validated": running != base.method_version,
+                      "accepted_method_versions": list(bases.accepted_method_versions(base, REPO_ROOT))}
     if read_json(root / "state/queue.json").get("items"):
         raise RuntimeError("Publication queue must remain empty")
     study.mkdir(parents=True, exist_ok=True)
@@ -126,9 +134,10 @@ def snapshot(root: Path, study: Path, base_id=None):
                "method_version": base.method_version, "frozen_sha256": base.reference_sha256,
                "source_commit": base.commit}
     # alternative_1 keeps its 1.0.0 meaning (the study's reference alternative is its base);
-    # base_id and base name the registry entry the study was created on
+    # base_id and base name the registry entry the study was created on, base_evaluator the
+    # evaluator the study ran the base under (its method version when validated later)
     data = {"schema_version": 1, "study_id": study.name, "status": "pending", "created_at": now(),
-            "base_id": base.id, "base": base.record(),
+            "base_id": base.id, "base": base.record(), "base_evaluator": base_evaluator,
             "alternative_1": {"method_version": base.method_version, "source_commit": base.commit,
                               "frozen_sha": base.reference_sha256},
             "parent_binding": binding, "alternatives": ALTERNATIVES, "protocol": protocol(),
