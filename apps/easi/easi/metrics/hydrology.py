@@ -59,14 +59,21 @@ def impervious(ctx: AnalysisContext) -> MetricResult:
 
     inputs = {x["key"]: x for x in ev.trace["inputs"]}
     governing = ev.trace["governingInput"]
-    gov = inputs[governing]
     available = [x for x in ev.trace["inputs"] if x["available"]]
     comparison = ", ".join(
         f"{x['label'].replace('Watershed ', '')} {float(x['value']):.1f}% ({x.get('rating')})"
         for x in available)
-    value_text = (
-        f"{float(gov['value']):.1f}% {gov['label'].replace('Watershed ', '').lower()} "
-        f"({governing} governs)")
+    if base.mean_composite(ev.trace):
+        # a mean composite (candidate E7): no input governs
+        value, value_text = float(ev.combined_value), base.mean_text(ev.trace)
+        note = f"{comparison}. The composite index is the mean of the inputs' rating indices."
+    else:
+        gov = inputs[governing]
+        value = float(gov["value"])
+        value_text = (
+            f"{float(gov['value']):.1f}% {gov['label'].replace('Watershed ', '').lower()} "
+            f"({governing} governs)")
+        note = f"{comparison}. The more limiting input governs."
     detail = {
         "governing": governing,
         "impervious": (None if imp is None else
@@ -76,10 +83,9 @@ def impervious(ctx: AnalysisContext) -> MetricResult:
     }
     sources = " + ".join(x["source"] for x in available if x.get("source"))
     return MetricResult(
-        IMPERVIOUS_ID, value=float(gov["value"]), value_text=value_text,
+        IMPERVIOUS_ID, value=value, value_text=value_text,
         rating=ev.rating, confidence="H", source=sources,
-        note=f"{comparison}. The more limiting input governs.",
-        detail=detail, scoring=ev.trace)
+        note=note, detail=detail, scoring=ev.trace)
 
 
 def wetlands(ctx: AnalysisContext) -> MetricResult:

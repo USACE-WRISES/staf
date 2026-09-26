@@ -252,10 +252,12 @@ def stream_temperature(ctx: AnalysisContext) -> MetricResult:
         context_note = (
             f" Nearby WQP temperature context: {float(temperature['value']):.1f} °C "
             f"from {temperature.get('observation_count', 0)} observation(s), not scored.")
+    governs = ("mean of both indices" if base.mean_composite(ev.trace)
+               else f"{governing} governs")
     return MetricResult(
         TEMPERATURE_ID, value=float(ev.combined_value),
         value_text=(f"thermal vulnerability: woody riparian {float(woody):.1f}%, "
-                    f"impervious {float(impervious):.1f}% ({governing} governs)"),
+                    f"impervious {float(impervious):.1f}% ({governs})"),
         rating=ev.rating, confidence="L",
         source=watershed.result_source(ctx, "temperature"),
         note=("Vulnerability proxy for thermal loading and shade loss; not stream temperature."

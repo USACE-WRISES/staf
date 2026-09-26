@@ -76,21 +76,59 @@ def library_files(entry: Optional[Path] = None, version: Optional[int] = None) -
     return {name: (folder / name).read_bytes() for name in mp.METHOD_FILES}
 
 
-def recorded_method_version(entry: Optional[Path] = None,
-                            version: Optional[int] = None) -> Optional[str]:
-    """The method version the library recorded for the version: its envelope's
-    ``identity.methodVersion``, else the manifest row's ``methodVersion``."""
+def _identity(entry: Path, version: int) -> dict:
+    envelope = version_dir(entry, version) / mp.ENVELOPE
+    if not envelope.is_file():
+        return {}
+    return json.loads(envelope.read_text(encoding="utf-8")).get("identity") or {}
+
+
+def published_method_version(entry: Optional[Path] = None,
+                             version: Optional[int] = None) -> Optional[str]:
+    """The method version the library published the version under: its envelope's
+    ``identity.methodVersion`` (the catalog, the manifest row and the release feeds list
+    it), else the manifest row's ``methodVersion``. Evaluator-independent."""
     entry = _entry(entry)
     version = int(version if version is not None else default_version(entry))
-    envelope = version_dir(entry, version) / mp.ENVELOPE
-    if envelope.is_file():
-        ident = json.loads(envelope.read_text(encoding="utf-8")).get("identity") or {}
-        if ident.get("methodVersion"):
-            return str(ident["methodVersion"])
+    ident = _identity(entry, version)
+    if ident.get("methodVersion"):
+        return str(ident["methodVersion"])
     for row in read_manifest(entry).get("versions") or []:
         if int(row.get("version") or 0) == version and row.get("methodVersion"):
             return str(row["methodVersion"])
     return None
+
+
+def validated_under(entry: Optional[Path] = None, version: Optional[int] = None) -> list[dict]:
+    """The evaluators the version's method files were validated under, as the envelope
+    records them (``identity.validatedUnder``: evaluator digest, the method version the
+    files give there, and whatever the row notes), the published pair first when the list
+    omits it. A later evaluator adds a row; none is ever rewritten."""
+    entry = _entry(entry)
+    version = int(version if version is not None else default_version(entry))
+    ident = _identity(entry, version)
+    rows = [dict(r) for r in ident.get("validatedUnder") or [] if isinstance(r, dict)]
+    if ident.get("evaluatorDigest") and not any(
+            r.get("evaluatorDigest") == ident["evaluatorDigest"] for r in rows):
+        rows.insert(0, {"evaluatorDigest": ident["evaluatorDigest"],
+                        "methodVersion": ident.get("methodVersion")})
+    return rows
+
+
+def recorded_method_version(entry: Optional[Path] = None, version: Optional[int] = None,
+                            evaluator_digest: Optional[str] = None) -> Optional[str]:
+    """The method version the library records for the running evaluator: the
+    ``validatedUnder`` row whose evaluator digest is this evaluator's
+    (``method_package.evaluator_digest()`` unless ``evaluator_digest`` is given), else the
+    published method version, so that under an evaluator the library has not validated
+    the drift gate reads red, as designed."""
+    entry = _entry(entry)
+    version = int(version if version is not None else default_version(entry))
+    digest = evaluator_digest or mp.evaluator_digest()
+    for row in validated_under(entry, version):
+        if row.get("evaluatorDigest") == digest and row.get("methodVersion"):
+            return str(row["methodVersion"])
+    return published_method_version(entry, version)
 
 
 def differences(entry: Optional[Path] = None, version: Optional[int] = None,

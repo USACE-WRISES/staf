@@ -52,6 +52,7 @@ import json
 import os
 import sys
 import zipfile
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -565,7 +566,10 @@ def lines_for(text: str, width_chars: int) -> int:
 # The generator
 # ---------------------------------------------------------------------------
 class Builder:
-    def __init__(self):
+    def __init__(self, method_stamp: str | None = None):
+        #: the scoring method digest the workbook names in its identity cells: the running
+        #: evaluator's, or the one a committed workbook recorded when it is checked
+        self.method_stamp = method_stamp or method_version()
         self.catalog = sm.catalog()
         self.methods = {m["methodKey"]: m for m in self.catalog["methods"]}
         self.by_metric = {m["metricId"]: m for m in self.catalog["methods"]}
@@ -1852,7 +1856,7 @@ class Builder:
             (3, "", "U.S. Army Engineer Research and Development Center, Environmental Laboratory", None),
             (4, "", "Vicksburg, MS", None),
             (5, "", EMAILS, None),
-            (7, "Model Version", f"EASI calculator v{TEMPLATE_VERSION}, scoring method {method_version()} "
+            (7, "Model Version", f"EASI calculator v{TEMPLATE_VERSION}, scoring method {self.method_stamp} "
                                  f"({self.identity.get('alternative_name')})", body),
             (8, "Date of Last Update", _dt.datetime.strptime(TEMPLATE_DATE, "%Y-%m-%d"), None),
             (10, "Waiver", 'This model is provided for free as part of the USACE Technical Report "Ecosystem '
@@ -1914,7 +1918,7 @@ class Builder:
         rows = [
             ("Calculator version", TEMPLATE_VERSION),
             ("Calculator date", TEMPLATE_DATE),
-            ("Scoring method digest", method_version()),
+            ("Scoring method digest", self.method_stamp),
             ("Scoring identity", f"{self.identity.get('alternative_id')} ({self.identity.get('alternative_name')})"),
             ("Criteria set", config.criteria_set()),
             ("Reference curves", f"{self.identity.get('curve_count')} curves"),
@@ -2009,23 +2013,89 @@ def repack(source: bytes) -> bytes:
     return out.getvalue()
 
 
-def generate() -> bytes:
-    with open(os.path.abspath(__file__), "rb") as f:
-        generator_sha = hashlib.sha256(f.read()).hexdigest()
-    return Builder().build(generator_sha)
+def generate(*, method_stamp: str | None = None, generator_sha: str | None = None) -> bytes:
+    """The workbook bytes. ``method_stamp`` and ``generator_sha`` default to the running
+    evaluator's method version and this file's sha256 (a rebuild); a check passes the ones
+    a committed workbook recorded, so the same arithmetic gives the same bytes."""
+    if generator_sha is None:
+        with open(os.path.abspath(__file__), "rb") as f:
+            generator_sha = hashlib.sha256(f.read()).hexdigest()
+    return Builder(method_stamp=method_stamp).build(generator_sha)
+
+
+def committed_stamps(path: str) -> dict:
+    """The identity a committed workbook records in its Metadata sheet: the scoring method
+    digest it was generated under and the sha256 of the generator that built it."""
+    from openpyxl import load_workbook
+    wb = load_workbook(path, read_only=True)
+    try:
+        rows = {r[0].value: r[1].value for r in wb["Metadata"].iter_rows(min_row=3) if r[0].value}
+    finally:
+        wb.close()
+    return {"method": rows.get("Scoring method digest"), "generator": rows.get("Generator sha256")}
+
+
+def accepted_method_stamps() -> list[str]:
+    """The method versions a committed workbook or the parity fixture may name and still be
+    the active method's: the running evaluator's, and every version the assessment library
+    records for exactly the active method files under an evaluator it validated them with
+    (``method_authority.validated_under``, the version whose package digest is the active
+    files'). An evaluator move that scores identically never changes a cell of the
+    workbook's arithmetic, so the identity cells are compared with the method files'
+    identity instead of forcing a rebuild."""
+    from easi import method_authority as ma
+    from easi import method_package as mp
+    stamps = [method_version()]
+    try:
+        entry = ma.library_entry()
+        if entry is not None:
+            data_dir = Path(config.DATA_DIR)
+            active = mp.package_digest({n: hashlib.sha256((data_dir / n).read_bytes()).hexdigest()
+                                        for n in mp.METHOD_FILES})
+            version = ma.default_version(entry)
+            envelope = json.loads((ma.version_dir(entry, version) / mp.ENVELOPE)
+                                  .read_text(encoding="utf-8"))
+            if (envelope.get("identity") or {}).get("packageDigest") == active:
+                stamps += [str(r["methodVersion"]) for r in ma.validated_under(entry, version)
+                           if r.get("methodVersion")]
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    return list(dict.fromkeys(stamps))
+
+
+def check(path: str) -> tuple[bool, str]:
+    """Whether the committed workbook is what this generator produces from the active
+    method files. Its recorded identity cells are inputs: the workbook is regenerated with
+    the method digest and the generator sha256 it recorded and compared byte for byte, and
+    the recorded method digest must be one of ``accepted_method_stamps()`` (the method
+    files' identity), so an evaluator the library validated never forces a rebuild."""
+    with open(path, "rb") as f:
+        committed = f.read()
+    stamps = committed_stamps(path)
+    accepted = accepted_method_stamps()
+    if stamps["method"] not in accepted:
+        return False, (f"DIFFERS: the committed workbook names method {stamps['method']}, not one "
+                       f"the library records for the active method files ({', '.join(accepted)})")
+    if generate(method_stamp=stamps["method"], generator_sha=stamps["generator"]) != committed:
+        return False, "DIFFERS: the generator's output changed beyond the identity cells; rebuild"
+    note = ("" if stamps["method"] == method_version() else
+            f" (the workbook records method {stamps['method']}; this evaluator computes "
+            f"{method_version()} for the same method files)")
+    return True, "unchanged" + note
 
 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=os.path.join(OUT_DIR, OUT_NAME))
-    ap.add_argument("--check", action="store_true", help="fail if the committed file differs")
+    ap.add_argument("--check", action="store_true",
+                    help="fail if the committed file differs from what the generator produces "
+                         "with the identity the file records")
     args = ap.parse_args()
-    data = generate()
     if args.check:
-        with open(args.out, "rb") as f:
-            same = f.read() == data
-        print("unchanged" if same else "DIFFERS")
-        raise SystemExit(0 if same else 1)
+        ok, why = check(args.out)
+        print(why)
+        raise SystemExit(0 if ok else 1)
+    data = generate()
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     with open(args.out, "wb") as f:
         f.write(data)

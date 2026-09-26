@@ -21,8 +21,10 @@ plan named October as the first month). No study on the adopted base has been ru
 """
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Optional
 
 
@@ -40,10 +42,48 @@ class Base:
     library_version: Optional[str]  # the assessment library version holding it
     adopted: Optional[str]         # the owner's adoption date
     verified: tuple                # where each value was checked
+    #: method versions of the same method files under evaluators the library validated
+    #: later (a static record; the library's own validatedUnder rows are read beside it)
+    validated_method_versions: tuple = ()
 
     def record(self) -> dict:
         """The base as a study manifest records it."""
         return asdict(self)
+
+
+def library_validated_versions(base: Base, repo_root) -> tuple:
+    """The method versions the assessment library records for the base's method files
+    under every evaluator it validated them with: the ``identity.validatedUnder`` rows of
+    the version ``base.library_version`` names (``<id> v<N>``), read only when that
+    version's package digest is the base's. ``()`` for a base without a library version,
+    without a repo root, or whose library version cannot be read."""
+    if repo_root is None or not base.library_version or not base.package_digest:
+        return ()
+    try:
+        assessment_id, version = str(base.library_version).split()
+        path = (Path(repo_root) / "apps" / "library" / "assessments" / assessment_id / version
+                / "method.json")
+        identity = json.loads(path.read_text(encoding="utf-8")).get("identity") or {}
+    except (OSError, ValueError, AttributeError):
+        return ()
+    if identity.get("packageDigest") != base.package_digest:
+        return ()
+    return tuple(dict.fromkeys(str(r["methodVersion"]) for r in identity.get("validatedUnder") or []
+                               if isinstance(r, dict) and r.get("methodVersion")))
+
+
+def accepted_method_versions(base: Base, repo_root=None) -> tuple:
+    """Every method version that is this base: its own, the ones it records statically, and
+    the ones the library validated its method files under (``library_validated_versions``)."""
+    return tuple(dict.fromkeys((base.method_version, *base.validated_method_versions,
+                                *library_validated_versions(base, repo_root))))
+
+
+def accepts(base: Base, method_version, repo_root=None) -> bool:
+    """True when ``method_version`` (the running evaluator's, or a completion's) is the
+    base's method under an evaluator the library validated; a study on the base then
+    records the evaluator it ran under beside the base."""
+    return method_version is not None and str(method_version) in accepted_method_versions(base, repo_root)
 
 
 LEGACY_STUDY_ID = "2026-09-15-controlled-alternatives"

@@ -38,7 +38,7 @@ def floodplain_engagement(ctx: AnalysisContext) -> MetricResult:
     ev = screening_methods.evaluate(
         FLOODPLAIN_ENGAGEMENT_ID, {"bhr": bhr},
         input_meta={"bhr": {"source": source}},
-        confidence=confidence)
+        confidence=confidence, evidence=base.xs_evidence(geom))
     if ev.rating is None:
         return unavailable(
             FLOODPLAIN_ENGAGEMENT_ID,
@@ -84,7 +84,7 @@ def floodplain_access(ctx: AnalysisContext) -> MetricResult:
         ENTRENCHMENT_ID, {"er": er},
         context={"strata": ctx.extras.get("strata") or {}},
         input_meta={"er": {"source": source}},
-        confidence=confidence)
+        confidence=confidence, evidence=base.xs_evidence(geom))
     if ev.rating is None:
         return unavailable(
             ENTRENCHMENT_ID, "3DEP entrenchment ratio unavailable for reach",
@@ -129,6 +129,31 @@ def monthly_flow_cv(erom):
         return None
 
 
+def monthly_flow_min_ratio(erom):
+    """The lowest of the twelve EROM mean monthly flows over the mean annual flow (QE_MA),
+    the national builder's ``q_min_ratio``: all twelve months finite and QE_MA positive,
+    else None. Full precision, as the builder stores it."""
+    if not isinstance(erom, dict):
+        return None
+    try:
+        raw = [erom.get(f"qe_{month:02d}") for month in range(1, 13)]
+        annual = erom.get("qe_ma")
+        if annual is None or isinstance(annual, bool):
+            return None
+        if any(value is None or isinstance(value, bool) for value in raw):
+            return None
+        monthly = [float(value) for value in raw]
+        annual = float(annual)
+        if not all(math.isfinite(value) for value in monthly) or not math.isfinite(annual):
+            return None
+        if annual <= 0:
+            return None
+        ratio = min(monthly) / annual
+        return ratio if math.isfinite(ratio) else None
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
 def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
     # Revisit: remove the legacy catalog, adapter branches and NRSA tier together
     # once the regional criteria are accepted.
@@ -140,19 +165,36 @@ def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
 def _low_flow_connectivity_regional(ctx: AnalysisContext) -> MetricResult:
     erom = ctx.extras.get("erom") or {}
     cv = monthly_flow_cv(erom)
+    ratio = monthly_flow_min_ratio(erom)
     source = "NHDPlus V2 EROM modeled monthly flows"
+    # Both flow quantities are offered; the active method's record says which one it
+    # rates (the shipped record reads flowCv; a candidate package may read flowMinRatio).
     ev = screening_methods.evaluate(
-        LOW_FLOW_ID, {"flowCv": cv, "meanAnnualFlow": erom.get("qe_ma"),
+        LOW_FLOW_ID, {"flowCv": cv, "flowMinRatio": ratio, "meanAnnualFlow": erom.get("qe_ma"),
                       "fcodeContext": ctx.fcode},
         context={"strata": ctx.extras.get("strata") or {}},
         input_meta={"flowCv": {"source": source},
+                    "flowMinRatio": {"source": source + " and QE_MA"},
                     "meanAnnualFlow": {"source": "NHDPlus V2 EROM QE_MA"},
                     "fcodeContext": {"source": "NHDPlus FCODE"}},
         confidence="L", source_tier="published-model", evidence_family="erom_flow",
         used_fallback=False)
+    reads_ratio = "flowMinRatio" in base.rated_keys(ev.trace)
     if ev.rating is None:
-        return unavailable(LOW_FLOW_ID, "twelve finite EROM monthly flows with a positive mean are required",
+        return unavailable(LOW_FLOW_ID,
+                           ("twelve finite EROM monthly flows and a positive mean annual flow are required"
+                            if reads_ratio else
+                            "twelve finite EROM monthly flows with a positive mean are required"),
                            "L", scoring=ev.trace)
+    if reads_ratio:
+        return MetricResult(
+            LOW_FLOW_ID, value=ratio,
+            value_text=f"EROM minimum-month over mean annual flow ratio {ratio:.3f}",
+            rating=ev.rating, confidence="L", source=source,
+            note=("Candidate low-flow proxy: the lowest of the twelve EROM mean monthly flows over "
+                  "the mean annual flow, rated against NARS-9 reference curves with a national "
+                  "fallback. Modeled monthly flows do not measure daily low flow or wetted "
+                  "connectivity."), scoring=ev.trace)
     return MetricResult(
         LOW_FLOW_ID, value=cv, value_text=f"EROM monthly flow variability (CV) {cv:.3f}",
         rating=ev.rating, confidence="L", source=source,
@@ -261,12 +303,25 @@ def hyporheic(ctx: AnalysisContext) -> MetricResult:
         if row.get("value") is not None and row.get("rating"):
             parts.append(f"{spec.format(float(row['value']))} ({row['rating']})")
     partial = ev.trace.get("completeness") == "partial"
-    gov_value = float(gov["value"])
-    gov_text = (f"channel slope {gov_value:.4f} m/m" if governing == "slope"
-                else f"sinuosity {gov_value:.3f}")
     suffix = ", single pathway" if partial else ""
     sources = [x.get("source") for x in ev.trace["inputs"]
                if x.get("available") and x.get("source")]
+    if base.mean_composite(ev.trace):
+        # a mean composite (candidate E7): no pathway governs
+        return MetricResult(
+            HYPORHEIC_ID, value=round(float(ev.combined_value), 4),
+            value_text=f"{base.mean_text(ev.trace)} (mean of the pathway indices{suffix})",
+            rating=ev.rating, confidence="L",
+            source=" + ".join(sources),
+            note=(f"{', '.join(parts)}. The composite index is the mean of the pathway "
+                  "indices. Slope screens vertical bedform-driven exchange and sinuosity "
+                  "screens lateral meander-driven exchange. Bed hydraulic conductivity is "
+                  "unavailable, so steep bedrock or fine-bedded reaches can overpredict "
+                  "exchange."),
+            scoring=ev.trace)
+    gov_value = float(gov["value"])
+    gov_text = (f"channel slope {gov_value:.4f} m/m" if governing == "slope"
+                else f"sinuosity {gov_value:.3f}")
     return MetricResult(
         HYPORHEIC_ID, value=round(gov_value, 4),
         value_text=f"{gov_text} ({governing} pathway governs{suffix})",

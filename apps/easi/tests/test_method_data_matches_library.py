@@ -65,11 +65,23 @@ def test_every_method_file_equals_the_library_version():
 
 
 def test_the_method_version_is_the_one_the_library_records():
+    """The manifest row names the version's published identity; the running evaluator's
+    method version is the one the envelope's validatedUnder records for this evaluator
+    (the published pair first, a later validated evaluator adds a row); under an evaluator
+    the library has not validated the lookup falls back to the published one and this
+    gate reads red, as designed."""
     version = ma.default_version()
+    published = ma.published_method_version()
+    assert published == _manifest_row(version)["methodVersion"]
     recorded = ma.recorded_method_version()
-    assert recorded == _manifest_row(version)["methodVersion"]
     assert method_version() == recorded
     assert mp.method_version_for("regional", ma.library_files()) == recorded
+    rows = ma.validated_under()
+    assert rows[0]["methodVersion"] == published
+    assert any(r.get("evaluatorDigest") == mp.evaluator_digest() and r.get("methodVersion") == recorded
+               for r in rows)
+    # an evaluator the library never validated reads the published version, never a new one
+    assert ma.recorded_method_version(evaluator_digest="sha256:" + "0" * 64) == published
 
 
 def test_the_authority_is_active_in_this_checkout():

@@ -24,6 +24,13 @@ from . import fit_recipe as fr
 
 REGIONAL_SETS = {"corridor-natural": "natural_wsrp100", "corridor-woody": "woody_wsrp100",
                  "flow-variability": "q_cv_monthly"}
+#: The Round 4 candidate sets (``evaluation_protocol_v1_easi_addendum.yaml``, families E2 and
+#: E4): two registry quantities fitted by NARS-9 with a national fallback on the same strict
+#: panels and fit rules as the shipped regional sets. They are grouped by stratum only
+#: (``fit_registry(by_stratum_only=...)``): the registry's own fcode split of ``q_min_ratio``
+#: and the geometry rule of ``bankfull_width_cv`` (national by slope class) are set aside for
+#: these two, which the protocol names as regional sets. Never part of ``operational_curves``.
+CANDIDATE_SETS = {"flow-min-ratio": "q_min_ratio", "width-variability": "bankfull_width_cv"}
 ENTRENCHMENT = ("entrenchment", "er_median")
 SLOPE_CLASSES = ("lt_0.5", "0.5_to_2", "ge_2")
 LEVELS = ("l3", "l2", "l1", "nars9", "national")
@@ -154,8 +161,16 @@ def _row_values(members, values, column: str) -> np.ndarray:
 
 
 def fit_registry(members, values, panels, *, quantities: Optional[Iterable[str]] = None,
-                 levels: Iterable[str] = LEVELS) -> list[dict]:
-    """Every quantity x level x stratum (x split) fit, as the builder's curves step fits it."""
+                 levels: Iterable[str] = LEVELS,
+                 by_stratum_only: Iterable[str] = ()) -> list[dict]:
+    """Every quantity x level x stratum (x split) fit, as the builder's curves step fits it.
+
+    ``by_stratum_only`` names quantities fitted per stratum at every requested level with
+    their registry split and geometry rule set aside (the Round 4 candidate sets: one curve
+    per NARS-9 region and one national); every other quantity is grouped as the builder
+    groups it, so the registry refit is unchanged.
+    """
+    plain = set(by_stratum_only or ())
     tier_of = {(r["level"], r["stratum"]): (r["panel_tier"], r["screen"])
                for r in panels.to_dict("records")}
     pressure = _row_values(members, values, "composite_pressure")
@@ -167,10 +182,12 @@ def fit_registry(members, values, panels, *, quantities: Optional[Iterable[str]]
             continue
         frame = members.assign(_value=_row_values(members, values, q.key), _pressure=pressure)
         for level in levels:
-            if q.geometry and level != "national":
+            if q.geometry and level != "national" and q.key not in plain:
                 continue
             sub = frame[frame["level"] == level]
-            if q.split and q.split in sub.columns:
+            if q.key in plain:
+                groups = sub.groupby(["stratum"], dropna=True, observed=True)
+            elif q.split and q.split in sub.columns:
                 groups = sub.groupby(["stratum", q.split], dropna=True, observed=True)
             elif q.geometry and "slope_class" in sub.columns:
                 groups = sub.groupby(["stratum", "slope_class"], dropna=True, observed=True)
@@ -253,6 +270,37 @@ def operational_curves(rows: list[dict], members, values, panels) -> dict:
         curves["national"] = fr._curve(fallback)
     out[set_id] = curves
     return out
+
+
+def candidate_curves(rows: list[dict], *, sets: Optional[dict] = None) -> tuple[dict, dict]:
+    """The Round 4 candidate curve sets in the method file's shape, ``({set id: definition},
+    diagnostics)``: for each set, the usable unsplit NARS-9 fits of its quantity with the
+    usable national fit as the fallback (``fit_registry(by_stratum_only=...)`` rows). A set
+    without a usable national curve is left out, since EASI requires one; the diagnostics
+    name every stratum that gave no usable curve and the fit rule's reason."""
+    wanted = dict(sets or CANDIDATE_SETS)
+    out: dict = {}
+    diagnostics: dict = {}
+    for set_id, quantity in wanted.items():
+        q = fr.QUANTITIES[quantity]
+        curves: dict = {}
+        skipped: dict = {}
+        for r in rows:
+            if (r["quantity"] != quantity or r.get("split") or
+                    r["level"] not in ("nars9", "national")):
+                continue
+            key = "national" if r["level"] == "national" else r["stratum"].split(":", 1)[1]
+            if r.get("usable"):
+                curves[key] = fr._curve(r)
+            else:
+                skipped[key] = r.get("reason") or "not usable"
+        diagnostics[set_id] = {"quantity": quantity, "curves": sorted(curves), "notUsable": skipped}
+        if "national" not in curves:
+            diagnostics[set_id]["omitted"] = "no usable national curve"
+            continue
+        out[set_id] = {"higherIsBetter": bool(q.higher_is_better), "quantity": quantity,
+                       "stratifier": "nars9", "curves": curves}
+    return out, diagnostics
 
 
 # --------------------------------------------------------------------------- #
@@ -342,4 +390,5 @@ def compare_curves(refit: dict, artifact: dict) -> dict:
 
 __all__ = ["load_members", "regenerate_members", "same_members", "fit_registry", "recipe_check",
            "recipe_code", "recipe_words", "RECIPE_CODE", "national_entrenchment", "operational_curves",
-           "compare_registry", "compare_curves", "REGIONAL_SETS", "ENTRENCHMENT", "SLOPE_CLASSES"]
+           "candidate_curves", "compare_registry", "compare_curves", "REGIONAL_SETS",
+           "CANDIDATE_SETS", "ENTRENCHMENT", "SLOPE_CLASSES"]
