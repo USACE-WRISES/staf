@@ -766,7 +766,7 @@ def _curves_by_basis(result: dict) -> dict:
     from . import reference_pool as rp
     out: dict = {}
     for d in (result.get("reference_support") or {}).values():
-        if str((d or {}).get("status")) == rp.STATUS_INSUFFICIENT:
+        if str((d or {}).get("status")) == rp.STATUS_INSUFFICIENT or (d or {}).get("withheld"):
             continue
         basis = curve_basis.resolve((d or {}).get("basis"))
         out[basis] = out.get(basis, 0) + 1
@@ -874,15 +874,20 @@ def coverage_gaps(result: dict) -> list[dict]:
     for fid in dict.fromkeys(str(f) for f in fids if f):
         cands = [w for w in listed
                  if fid in {f.get("functionId") for f in w.get("functions") or []}]
-        documented = bool(cands) and all(
-            w.get("reason") == "insufficient-reference-support" and w.get("statement")
-            for w in cands)
+        # a candidate is a documented blocker when it was withheld with a
+        # statement, by REF-06 or by a rule that judged its existing pool
+        # (DATA-03 and CURVE-09 since methodology 0.15; the Round 2 rules when
+        # on); a built curve still held for a reviewer is an open review, not a
+        # blocker, so the gap stays with the owner while one is held
+        held = [w.get("metricKey") for w in cands if w.get("reason") == "held-for-review"]
+        documented = bool(cands) and not held and all(w.get("statement") for w in cands)
         names = [str(w.get("metricName") or w.get("metricKey")) for w in cands]
         out.append({"function_id": fid, "candidates": [w.get("metricKey") for w in cands],
                     "candidates_text": ", ".join(names) or "none",
                     "n_candidates": len(cands), "blockers_documented": documented,
-                    "held_for_review": [w.get("metricKey") for w in cands
-                                        if w.get("reason") != "insufficient-reference-support"]})
+                    "held_for_review": held,
+                    "withheld_under": {str(w.get("metricKey")): str(w.get("rule") or "REF-06")
+                                       for w in cands if w.get("reason") != "held-for-review"}})
     return out
 
 
@@ -916,8 +921,9 @@ def _hierarchy_records(result: dict, add) -> None:
                                                         "insufficient-reference-support")},
             computed=rec, verdict=VERDICT_REVIEW, review_required=True,
             review_triggers=["function_unassessed"],
-            recommendation=("Every candidate metric was refused by every source, each for a "
-                            "stated reason: publish as a documented gap." if
+            recommendation=("Every candidate metric was withheld for a stated reason (no "
+                            "source passed acceptance, or a rule withheld its pool): publish "
+                            "as a documented gap." if
                             rec["blockers_documented"] else
                             "Not every candidate metric has a documented blocker; the owner "
                             "decides."))
@@ -1021,8 +1027,10 @@ def _overridden_rule(result: dict, metric: str) -> Optional[str]:
     if held:
         status = str(((held or {}).get("decision") or {}).get("status") or "")
         return "REF-04" if status.startswith("local") else "REF-11"
-    if metric in (result.get("insufficient_support") or {}):
-        return "REF-06"
+    item = (result.get("insufficient_support") or {}).get(metric)
+    if item is not None:
+        # REF-06, or the rule that withheld the metric although its pool exists
+        return str((item or {}).get("rule") or "REF-06")
     status = str(((result.get("reference_support") or {}).get(metric) or {}).get("status") or "")
     return {"national": "REF-12", "modeled": "REF-13", "published": "REF-14"}.get(status)
 
@@ -1049,6 +1057,16 @@ def _pressure_records(result: dict, add) -> None:
     comparisons = result.get("local_comparison") or {}
     for metric, d in (result.get("reference_support") or {}).items():
         status = d.get("status")
+        withheld = d.get("withheld")
+        if withheld:
+            # methodology 0.15: a rule withheld the metric although its pool
+            # exists. The pool record is written for the pool's own status (the
+            # pool passed); the withholding rule's record is written from the
+            # withheld entry, and neither raises a review item.
+            status = d.get("pool_status") or status
+        rule_name = str(d.get("rule") or "the rule its withheld entry names")
+        aside = (f" The metric was withheld under {rule_name}: see that rule's record."
+                 if withheld else "")
         computed = {
             "status": status, "level": d.get("level"),
             "level_label": _LEVEL_LABELS.get(d.get("level") or "", ""),
@@ -1072,6 +1090,9 @@ def _pressure_records(result: dict, add) -> None:
             computed["screen_detail"] = d.get("screen_detail")
         if d.get("options_tried"):
             computed["options_tried"] = d.get("options_tried")
+        if withheld:
+            computed["withheld"] = withheld
+            computed["withheld_rule"] = d.get("rule")
         basis = str(d.get("basis") or "")
         if d.get("carried_from"):
             # a published curve kept unchanged: its pool was decided, and any
@@ -1104,16 +1125,18 @@ def _pressure_records(result: dict, add) -> None:
             # is the rule's decision, not a review item (REF-11, ACC-01 to ACC-06)
             add("REF-11", "metric", metric, thresholds=_acceptance_thresholds(),
                 computed=computed, verdict=VERDICT_PASS,
-                recommendation=d.get("transfer_note"))
+                recommendation=(str(d.get("transfer_note") or "") + aside).strip() or None)
         elif status != "local":
             add("REF-05", "metric", metric, thresholds=thresholds, computed=computed,
-                verdict=VERDICT_REVIEW, review_required=True,
-                review_triggers=["borrowed_reference_pool"],
-                recommendation=d.get("transfer_note"))
+                verdict=VERDICT_REVIEW if not withheld else VERDICT_PASS,
+                review_required=not withheld,
+                review_triggers=[] if withheld else ["borrowed_reference_pool"],
+                recommendation=(str(d.get("transfer_note") or "") + aside).strip() or None)
         else:
             add("REF-05", "metric", metric, thresholds=thresholds, computed=computed,
                 verdict=VERDICT_PASS,
-                recommendation="The ecoregion's own reference stations support this metric.")
+                recommendation="The ecoregion's own reference stations support this metric."
+                               + aside)
         comp = comparisons.get(metric)
         if comp:
             add("REF-07", "metric", metric,
@@ -1346,6 +1369,23 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
             verdict=VERDICT_REVIEW if narrow else VERDICT_PASS,
             review_required=narrow,
             review_triggers=["measurement_precision_floor"] if narrow else [])
+    # methodology 0.15: on the pressure-screen build a narrow core never reaches
+    # the rows above; the metric was withheld at the build, and its record says
+    # so with the numbers and no review item
+    for metric, item in sorted((result.get("insufficient_support") or {}).items()):
+        if str((item or {}).get("reason") or "") != "measurement-precision-floor":
+            continue
+        detail = (item or {}).get("detail") or {}
+        add("CURVE-09", "metric", metric,
+            thresholds={"precision_sd": detail.get("precision_sd"),
+                        "core_multiple": detail.get("core_multiple")},
+            computed={"functioning_core_width": detail.get("functioning_core_width"),
+                      "floor_width": detail.get("floor_width"),
+                      "functioning_min": detail.get("functioning_min"),
+                      "functioning_max": detail.get("functioning_max"),
+                      "withheld": True},
+            verdict=VERDICT_FAIL, review_required=False,
+            recommendation=(item or {}).get("statement"))
 
     for entry in (result.get("flagged_direction") or []):
         if entry.get("documented"):
@@ -1395,19 +1435,31 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
     for metric, info in (result.get("missingness") or {}).items():
         disp = info.get("disposition")
         rule_id = {"auto": "DATA-01", "caution": "DATA-02"}.get(disp, "DATA-03")
+        # methodology 0.15: on the pressure-screen build a review disposition
+        # withheld the metric before any curve was built (the record is flagged
+        # and the withheld entry holds the statement); no review item is raised
+        withheld = bool(info.get("withheld"))
+        item = ((result.get("insufficient_support") or {}).get(metric) or {}) if withheld else {}
+        computed = {"disposition": disp}
+        if withheld:
+            computed.update({"withheld": True, "n_pool_members": info.get("n_pool_members"),
+                             "n_with_value": info.get("n_with_value")})
         add(rule_id, "metric", metric,
             inputs={"missing_fraction": info.get("missing_fraction")},
             thresholds={"max_missingness_auto": methodology.threshold(
                             "data_rules.max_missingness_auto"),
                         "max_missingness_review": methodology.threshold(
                             "data_rules.max_missingness_review")},
-            computed={"disposition": disp},
-            verdict=VERDICT_PASS if disp == "auto" else VERDICT_REVIEW,
-            review_required=disp == "review",
-            review_triggers=(["missingness_review"] if disp == "review"
+            computed=computed,
+            verdict=(VERDICT_FAIL if withheld else VERDICT_PASS if disp == "auto"
+                     else VERDICT_REVIEW),
+            review_required=disp == "review" and not withheld,
+            review_triggers=([] if withheld else ["missingness_review"] if disp == "review"
                              else ["missingness_caution"] if disp == "caution" else []),
             recommendation=(
-                "Do not auto-recommend this curve (DATA-03)." if disp == "review"
+                (item.get("statement") or "Withheld at the build (DATA-03): no curve was "
+                                          "built and the metric is not scored.") if withheld
+                else "Do not auto-recommend this curve (DATA-03)." if disp == "review"
                 else "Analyze with caution; confidence takes a penalty." if disp == "caution"
                 else None))
 
@@ -1538,6 +1590,27 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
             verdict=VERDICT_PASS,
             recommendation="Within-function ranking evidence; never an automatic decision.")
 
+    # --- DATA-12: every build writes the rebuild ledger (methodology 0.15) ---
+    add("DATA-12", "run", "rebuild_ledger",
+        computed={"schema": LEDGER_SCHEMA, "dispositions": list(LEDGER_DISPOSITIONS),
+                  "refit": ((manifest.get("inputs") or {}).get("refit") or {}).get("mode")
+                  or result.get("refit_mode") or "missing"},
+        verdict=VERDICT_PASS,
+        recommendation=("Every metric and function of the build carries one disposition in "
+                        "the rebuild ledger (metricLedger); a refitted row carries this "
+                        "build's engine evidence."))
+
+    # --- EVAL-01: a campaign build records the protocol it was judged under ---
+    protocol = manifest.get("protocol") or {}
+    if protocol.get("sha256"):
+        add("EVAL-01", "run", "evaluation_protocol",
+            inputs={"path": protocol.get("path"), "version": protocol.get("version"),
+                    "sha256": protocol.get("sha256")},
+            computed={"recorded": True},
+            verdict=VERDICT_PASS,
+            recommendation=("Built under the campaign's evaluation protocol; its acceptance "
+                            "thresholds and margins change only with a protocol version."))
+
     return records
 
 
@@ -1545,6 +1618,25 @@ def rules_applied(records) -> list[str]:
     """Derived, so it cannot disagree with what ran. The old hardcoded literal
     listed REF-01 twice and no STRAT rule at all."""
     return sorted({r["rule_id"] for r in records})
+
+
+#: why an implemented rule left no record on a run, where the generic reason
+#: would misdescribe it
+_NOT_EVALUATED_REASONS = {
+    "EVAL-01": "no evaluation protocol was declared for this build (not a campaign build)",
+}
+
+
+def _not_evaluated_reason(rule_id: str, cat: dict) -> str:
+    status = cat.get("implementation_status")
+    if status == "not_yet_implemented":
+        return "not implemented in the analysis pipeline"
+    if status == "superseded":
+        return f"superseded by {cat.get('superseded_by')}"
+    if status == "not_applicable":
+        return ("not applicable to the approved curve family (the IQR seed fits no "
+                "residuals); no code performs it and nothing is routed to review")
+    return _NOT_EVALUATED_REASONS.get(rule_id, "implemented but not applicable to this run")
 
 
 def rules_not_evaluated(records) -> list[dict]:
@@ -1561,13 +1653,7 @@ def rules_not_evaluated(records) -> list[dict]:
             "rule_id": rule_id,
             "family": cat.get("family"),
             "implementation_status": cat.get("implementation_status"),
-            "reason": (
-                "not implemented in the analysis pipeline"
-                if cat.get("implementation_status") == "not_yet_implemented"
-                else f"superseded by {cat.get('superseded_by')}"
-                if cat.get("implementation_status") == "superseded"
-                else "implemented but not applicable to this run"
-            ),
+            "reason": _not_evaluated_reason(rule_id, cat),
         })
     return out
 
@@ -1759,6 +1845,9 @@ _OWNER_OPTIONS = {"sqt": "sqt", "owner_entered": "owner_entered", "borrowed": "o
                   "carried": "carried"}
 #: register kinds only an owner decision (REF-15) produces
 _OWNER_ONLY_KINDS = ("sqt", "owner_entered", "borrowed", "earlier_version")
+#: the rules that withhold a metric although its pool exists (methodology 0.15
+#: and the Round 2 knobs): the register's decision rule of such a row
+_WITHHOLD_RULES = ("DATA-03", "CURVE-09", "CURVE-12", "CURVE-10")
 #: the camelCase keys a session's referenceSupport annotation uses for the pool record
 _SUPPORT_KEYS = {"regionCode": "region_code", "regionName": "region_name", "nPool": "n_pool",
                  "nComparable": "n_comparable", "nUsable": "n_usable", "nLocal": "n_local",
@@ -2060,9 +2149,13 @@ def build_ledger(result: dict, *, manifest: Optional[dict] = None, register: Opt
                              pool=None, engine=engine_block(False, mk),
                              decisionRef=d.get("decisionRef"), **person))
         elif status == C.EXCLUDED:
-            if placement == "REF-06":
+            if placement == "REF-06" or placement in _WITHHOLD_RULES:
+                # unsupported under REF-06, or under the rule that withheld the metric
+                # although its pool exists (DATA-03, CURVE-09; CURVE-12 and CURVE-10
+                # when their knobs are on), which the withheld entry names
                 w = withheld.get(mk) or {}
-                rows.append(base(mk, fid, disposition=UNSUPPORTED, rule="REF-06",
+                rule = str(w.get("rule") or placement)
+                rows.append(base(mk, fid, disposition=UNSUPPORTED, rule=rule,
                                  reason=str(d.get("reason") or ""), candidate=key, basis=None,
                                  pool=None, engine=engine_block(False, mk),
                                  levelsTried=list(w.get("levelsTried") or

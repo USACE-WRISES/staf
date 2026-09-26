@@ -260,7 +260,9 @@ def test_arms_for_every_candidate(tmp_path, protocol_path, source_config):
     assert round2.get_dotted(b4, "data_rules.min_n_unstratified") == 25
     b3 = yaml.safe_load((round2.arm_dir(root, "B3") / "config" / round2.TRANSFER_FILE).read_text(encoding="utf-8"))
     assert b3["search_order"] == ["l3", "l2", "l1", "nars9"]
-    assert b3["families"]["biology"]["search_order"] == ["l3", "l2", "nars9", "l1"], "per-family orders kept"
+    # methodology 0.15 (B3 adopted): the committed file carries the one order and no
+    # per-family order, so the arm's copy carries none either
+    assert "search_order" not in b3["families"]["biology"], "no per-family order since 0.15"
     text = (root / "arms" / "B3" / "config" / round2.TRANSFER_FILE).read_text(encoding="ascii")
     assert "GENERATED" in text.splitlines()[0]
 

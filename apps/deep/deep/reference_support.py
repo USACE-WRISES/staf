@@ -355,35 +355,66 @@ def _num(v: Any) -> str:
 # --------------------------------------------------------------------------- #
 #: A withheld record says why in ``reason``. Most have no defensible reference
 #: pool. A curve that was built and is waiting for a reviewer is a different
-#: finding and reads as one (StreamCurves ``held_for_review``, 2026-09-21).
+#: finding and reads as one (StreamCurves ``held_for_review``, 2026-09-21). Since
+#: StreamCurves methodology 0.15 (2026-09-26) two rules withhold a metric whose
+#: pool exists, at the build: high missingness over the pool (DATA-03) and a
+#: two-sided core narrower than the metric's measurement-precision floor
+#: (CURVE-09). Each reads under its own label; any other reason falls back to
+#: the insufficient-support wording.
 HELD_FOR_REVIEW = "held-for-review"
+HIGH_MISSINGNESS = "high-missingness"
+MEASUREMENT_PRECISION_FLOOR = "measurement-precision-floor"
 INSUFFICIENT_TITLE = "Insufficient reference support, not scored"
 HELD_TITLE = "Held for review, not scored"
+#: reason -> (short label, title) for the reasons that read under their own words
+RULE_LABELS = {
+    HIGH_MISSINGNESS: ("withheld: high missingness (DATA-03)",
+                       "Withheld: high missingness (DATA-03), not scored"),
+    MEASUREMENT_PRECISION_FLOOR: ("withheld: measurement-precision floor (CURVE-09)",
+                                  "Withheld: measurement-precision floor (CURVE-09), not scored"),
+}
+
+
+def _reason(w) -> str:
+    return str((w or {}).get("reason") or "")
 
 
 def is_held(w) -> bool:
     """A curve built and not yet cleared by a reviewer, rather than a missing pool."""
-    return str((w or {}).get("reason") or "") == HELD_FOR_REVIEW
+    return _reason(w) == HELD_FOR_REVIEW
 
 
 def withheld_title(w) -> str:
-    return HELD_TITLE if is_held(w) else INSUFFICIENT_TITLE
+    if is_held(w):
+        return HELD_TITLE
+    return RULE_LABELS.get(_reason(w), ("", INSUFFICIENT_TITLE))[1]
 
 
 def withheld_reason(w) -> str:
     """The reason as a short label, for a table cell."""
-    return "Held for review" if is_held(w) else "Insufficient reference support"
+    if is_held(w):
+        return "Held for review"
+    return RULE_LABELS.get(_reason(w), ("Insufficient reference support", ""))[0]
 
 
 def withheld_note(items) -> str:
     """What a list of withheld metrics means, one sentence per reason present."""
     items = list(items or [])
+    reasons = {_reason(w) for w in items}
     parts = ["These metrics are not scored."]
-    if any(not is_held(w) for w in items):
+    if any(not is_held(w) and _reason(w) not in RULE_LABELS for w in items):
         parts.append("A metric withheld for insufficient reference support has no curve. No "
                      "pool of least-disturbed stations in this ecoregion or its parents "
                      "supports it, no national donor pool was shown to transfer, no modeled "
                      "expectation passed validation, and no published criterion applies.")
+    if HIGH_MISSINGNESS in reasons:
+        parts.append("A metric withheld for high missingness has a reference pool, but more "
+                     "of its stations than the rule allows carry no value for the metric, so "
+                     "no curve was built (rule DATA-03).")
+    if MEASUREMENT_PRECISION_FLOOR in reasons:
+        parts.append("A metric withheld under the measurement-precision floor has a two-sided "
+                     "curve whose Functioning core is narrower than the metric's documented "
+                     "measurement precision, so the curve was not published (rule CURVE-09).")
     if any(is_held(w) for w in items):
         parts.append("A metric held for review has a curve that a reviewer has not yet "
                      "cleared, so the curve is not published.")

@@ -129,7 +129,11 @@ def test_a_region_with_no_reference_station_says_so(evidence):
     assert ecbp["tier"]["review_flags"] == [pe.NO_LOCAL_REFERENCE]
     built = {d["status"] for mk, d in ecbp["reference_support"].items()
              if mk in ecbp["curve_rows"]}
-    assert built == {"borrowed_l1", "borrowed_l2", "borrowed_nars9"}
+    # methodology 0.15: the one pool drawn from the NARS-9 region (large wood
+    # volume, 23 usable of 43 comparable stations) is withheld by DATA-03 before
+    # any curve is built, so the built curves rest on Level II and Level I pools
+    assert built == {"borrowed_l1", "borrowed_l2"}
+    assert ecbp["reference_support"]["phab_LWDeqVolM100"]["status"] == pe.STATUS_WITHHELD
     # most chemistry and the benthic metrics find no source that passes
     withheld = set(ecbp["insufficient_support"])
     assert {"chem_COND", "bent_EPT_NTAX", "fish_NAT_TOTLNTAX"} <= withheld
@@ -161,7 +165,9 @@ def test_population_support_is_scored_by_proportions_and_counts_name_their_block
     ecbp = evidence["55"]
     support = ecbp["reference_support"]
     assert support["fish_NAT_NTOLNTAX"]["status"] == "borrowed_l1"
-    assert support["fish_NAT_NTOLPTAX"]["status"] == "borrowed_nars9"
+    # methodology 0.15 (one search order, Level I before NARS-9): the percent taxa
+    # take the Level I pool of 39 where 0.14 took the NARS-9 pool of 14
+    assert support["fish_NAT_NTOLPTAX"]["status"] == "borrowed_l1"
     rows = {r["function_id"]: r for r in results["55"]["portfolio"] if r.get("function_id")}
     assert rows["population-support"]["coverage"] == "covered"
     assert set(rows["population-support"]["metrics"]) == {"fish_NAT_NTOLNTAX",
@@ -298,11 +304,27 @@ def test_withheld_metrics_are_named_and_stay_out_of_the_scored_blocks(results):
     withheld = {w["metricKey"]: w for w in b["insufficientReferenceSupport"]}
     assert "chem_COND" in withheld
     w = withheld["chem_COND"]
-    assert w["reason"] == "insufficient-reference-support"
+    assert w["reason"] == "insufficient-reference-support" and "rule" not in w
     assert w["functions"] and w["levelsTried"]
     assert w["statement"].startswith("Insufficient reference support.")
+    # methodology 0.15: large wood volume has a pool here, but more than 40 percent
+    # of its stations carry no value, so DATA-03 withholds it at the build with the
+    # numbers in its statement (0.14 held the built curve for a reviewer instead)
+    lwd = withheld["phab_LWDeqVolM100"]
+    assert lwd["reason"] == pe.HIGH_MISSINGNESS and lwd["rule"] == "DATA-03"
+    assert lwd["statement"].startswith("High missingness. ")
+    assert "above the 40% limit of rule DATA-03" in lwd["statement"]
+    assert lwd["statement"].endswith("No curve was built and the metric is not scored.")
+    assert lwd["detail"]["missing_fraction"] > 0.40 and lwd["functions"]
     scored = set(_entries(b))
     assert not {w["metricId"] for w in withheld.values()} & scored
+    # the support record keeps the pool it was judged over, under status withheld
+    sup = results["55"]["reference_support"]["phab_LWDeqVolM100"]
+    assert sup["status"] == pe.STATUS_WITHHELD and sup["withheld"] == pe.HIGH_MISSINGNESS
+    assert sup["rule"] == "DATA-03" and sup["pool_status"].startswith("borrowed")
+    assert sup["n_usable"] == lwd["detail"]["n_with_value"]
+    assert "phab_LWDeqVolM100" not in results["55"]["curve_rows"]
+    assert "phab_LWDeqVolM100" not in results["55"]["metric_config"]
 
 
 def test_coverage_counts_the_fixed_metrics_and_names_what_withholding_left_open(
@@ -407,13 +429,50 @@ def test_the_records_name_the_new_rules(results):
             "DATA-11", "STRAT-10", "CURVE-11", "SELECT-04", "COV-01"} <= set(by_rule)
     assert not {"REF-01", "REF-02", "REF-05", "REF-08", "REF-09", "REF-10"} & set(by_rule)
     assert len(by_rule["CURVE-11"]) == len(FIXED)
-    assert {r["subject"] for r in by_rule["REF-06"]} == set(res["insufficient_support"])
+    # methodology 0.15: every REF-06 subject is a withheld metric, and every
+    # withheld entry names its rule (REF-06 where no source passed, else the rule
+    # that judged its existing pool)
+    ref06 = {r["subject"] for r in by_rule["REF-06"]}
+    assert ref06 <= set(res["insufficient_support"])
+    for mk, item in res["insufficient_support"].items():
+        assert (pe.withheld_rule(item) == "REF-06") == (mk in ref06), mk
     # an accepted regional pool is the rule's decision: recorded, never a review item
     assert by_rule["REF-11"] and not any(r["review_required"] for r in by_rule["REF-11"])
     queue_triggers = {i["trigger"] for i in doc["reviewQueue"]["items"]}
     assert "borrowed_reference_pool" not in queue_triggers
     # a function no source supports reaches the queue as a documented gap
     assert "function_unassessed" in queue_triggers
+
+
+def test_a_rule_withheld_metric_is_recorded_and_raises_no_review_item(results):
+    """Methodology 0.15: the DATA-03 withhold of large wood volume in the Eastern
+    Corn Belt Plains is a failed DATA-03 record with the statement, the pool record
+    says the metric was withheld, and nothing about it reaches the review queue."""
+    res = results["55"]
+    manifest = pv.build_run_manifest(res, argv=["test"], started_at="2026-09-26T00:00:00Z",
+                                     finished_at="2026-09-26T00:01:00Z")
+    doc = pv.build_provenance(res, manifest, timestamp="2026-09-26T00:00:00Z")
+    by = {(r["rule_id"], r["subject"]): r for r in doc["records"]}
+    mk = "phab_LWDeqVolM100"
+    data03 = by[("DATA-03", mk)]
+    assert data03["verdict"] == pv.VERDICT_FAIL and data03["review_required"] is False
+    assert data03["review_triggers"] == [] and data03["computed"]["withheld"] is True
+    assert data03["recommendation"].startswith("High missingness. ")
+    assert data03["inputs"]["missing_fraction"] > 0.40
+    assert ("REF-06", mk) not in by
+    pool = by[("REF-11", mk)]
+    assert pool["computed"]["withheld"] == pe.HIGH_MISSINGNESS
+    assert pool["computed"]["withheld_rule"] == "DATA-03" and not pool["review_required"]
+    assert not any(i["subject"] == mk for i in doc["reviewQueue"]["items"])
+    ledger = {r["metric"]: r for r in doc["metricLedger"]["rows"]}
+    assert ledger[mk]["disposition"] == pv.UNSUPPORTED and ledger[mk]["rule"] == "DATA-03"
+    assert not ledger[mk]["engine"]["executed"]
+    # its function is a documented gap (every candidate withheld with a statement)
+    gaps = {g["function_id"]: g for g in pv.coverage_gaps(res)}
+    fid = ledger[mk]["functionId"]
+    if fid in gaps:
+        assert gaps[fid]["withheld_under"][mk] == "DATA-03"
+        assert mk not in gaps[fid]["held_for_review"]
 
 
 # --------------------------------------------------------------------------- #
@@ -515,8 +574,11 @@ def test_the_support_table_accounts_for_every_metric(results):
     res = results["55"]
     table = pe.support_frame(res)
     assert set(table["metric"]) == set(res["reference_support"]) | FIXED
-    assert set(table.loc[table["status"] == "insufficient", "metric"]) \
+    # a metric with no pool reads insufficient; one a rule withheld although its
+    # pool exists reads withheld (methodology 0.15); together they are the list
+    assert set(table.loc[table["status"].isin(["insufficient", "withheld"]), "metric"]) \
         == set(res["insufficient_support"])
+    assert set(table.loc[table["status"] == "withheld", "metric"]) == {"phab_LWDeqVolM100"}
     # A published criterion is scored like the fixed criteria, so it groups with
     # them. 0.13 adds the two NRSA nutrient criteria to the five EASI ones.
     published = {mk for mk, d in res["reference_support"].items()
@@ -630,14 +692,20 @@ def test_a_held_curve_says_why_in_words_for_every_status():
 
 
 def test_a_finalized_curve_is_scored_and_no_longer_held(evidence):
-    """Built fresh, the Eastern Corn Belt Plains holds two curves for a reviewer,
-    large wood volume and fast-water habitat. Finalizing one scores it."""
+    """Built fresh, the Eastern Corn Belt Plains holds one curve for a reviewer,
+    fast-water habitat (large wood volume, held under 0.14 for its missingness, is
+    withheld at the build by DATA-03 since 0.15). Finalizing it scores it and
+    leaves nothing held."""
+    plain = ra.assemble(evidence["55"])
+    listed = {w["metricKey"]: w for w in plain["bundle"].get("insufficientReferenceSupport") or []}
+    assert {mk for mk, w in listed.items() if w["reason"] == pe.HELD_FOR_REVIEW} == {"phab_PCT_FAST"}
+    assert listed["phab_LWDeqVolM100"]["reason"] == pe.HIGH_MISSINGNESS
     res = ra.assemble(evidence["55"], finalize_metrics={"phab_PCT_FAST": "cleared in test"},
                       finalize_actor="tester")
     assert "spring-phab-pct-fast" in _entries(res["bundle"])
     held = {w["metricKey"] for w in res["bundle"].get("insufficientReferenceSupport") or []
             if w["reason"] == pe.HELD_FOR_REVIEW}
-    assert held == {"phab_LWDeqVolM100"}
+    assert held == set()
 
 
 def test_a_metric_is_never_both_scored_and_withheld(evidence, monkeypatch):

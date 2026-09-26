@@ -10,14 +10,16 @@ Knobs and their config keys:
 
   B1  reference_pool.ladder_rule                       first_pass | narrowest_adequate
   B2  reference_hierarchy.regional_screen.enabled      true | false
-  B3  reference_transfer.yaml search_order             absent | a global list
+  B3  reference_transfer.yaml search_order             a global list (the shipped
+      configuration since methodology 0.15) | absent (a family's own order)
   B4  data_rules.min_n_unstratified, exploratory_n_unstratified, min_n_stratum,
       very_small_stratum_n                             (already keys; config sha in the digest)
   C1  metric_portfolio.fill_to, second_metric_rule, second_metric_max_abs_spearman,
       second_metric_min_auc                            rank | independent_and_discriminating
   C2  curve12.gate, curve12.min_auc                    false | true
   C3a curve10.zero_inflated_share, zero_inflated_handling   null | two_part or withhold
-  C3b curve10.tail_offsets_iqr                         [0.3, 4/3, 7/3] | another triple
+  C3b curve10.tail_offsets_iqr                         [0.5, 1.5, 2.5] (iqr-seed-3, the
+      default since methodology 0.15) | another triple, the iqr-seed-2 [0.3, 4/3, 7/3] included
 """
 from __future__ import annotations
 
@@ -209,7 +211,7 @@ def test_b2_off_keeps_every_wider_pool_to_the_strict_screen(monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
-# B3: one search order for every family
+# B3: one search order for every family (adopted at methodology 0.15)
 # --------------------------------------------------------------------------- #
 def test_b3_a_global_search_order_replaces_every_family_order():
     per_family = rp.family_profile("m_form", CFG)
@@ -225,8 +227,13 @@ def test_b3_a_global_search_order_replaces_every_family_order():
                           settings=SETTINGS)
     assert [t["option"] for t in d.options_tried] == [
         "local", "regional_l3", "regional_nars9", "regional_l2", "regional_l1"]
-    # the shipped transfer config sets no global order: today's per-family orders
-    assert not rp.load_transfer_config().get("search_order")
+    # the shipped transfer config sets the one order of methodology 0.15 (B3
+    # adopted): every family reads it, and no family carries an order of its own
+    shipped = rp.load_transfer_config()
+    assert shipped["search_order"] == ["l3", "l2", "l1", "nars9"]
+    assert all("search_order" not in p for p in shipped["families"].values())
+    assert rp.family_profile("chem_PTL")["search_order_source"] == "global"
+    assert rp.search_order(rp.family_profile("chem_PTL")) == ["l3", "l2", "l1", "nars9"]
 
 
 # --------------------------------------------------------------------------- #
@@ -383,17 +390,20 @@ def test_c2_a_gated_metric_is_withheld_with_its_reason_and_kept_off_the_curve_co
                 "reason": pe.DISCRIMINATION_GATE,
                 "statement": pe.discrimination_gate_statement(gated["inv"]),
                 "detail": gated["inv"]}},
-          "reference_support": {"inv": {**decision, "withheld": pe.DISCRIMINATION_GATE},
+          "reference_support": {"inv": pe.withheld_support_record(decision, pe.DISCRIMINATION_GATE),
                                 "ok": {"status": "local", "basis": "regional-reference"}},
           "reference_screen": {}, "reference_pool_summary": {}}
     w = pe.withheld_metrics(ev)
     assert len(w) == 1 and w[0]["reason"] == pe.DISCRIMINATION_GATE
     assert w[0]["statement"].startswith("Discrimination gate.") and w[0]["detail"]["auc"] == 0.4
-    assert w[0]["metricName"] == "Inverted metric"
+    assert w[0]["metricName"] == "Inverted metric" and w[0]["rule"] == "CURVE-12"
     block = pe.reference_method_block(ev)
     assert block["nCurvesLocal"] == 1 and block["nWithheld"] == 1
     assert block["curvesByBasis"] == {"regional-reference": 1}
     assert pe.is_withheld_record(ev["reference_support"]["inv"])
+    assert ev["reference_support"]["inv"]["status"] == pe.STATUS_WITHHELD
+    assert ev["reference_support"]["inv"]["pool_status"] == "local"
+    assert ev["reference_support"]["inv"]["rule"] == "CURVE-12"
     assert not pe.is_withheld_record(ev["reference_support"]["ok"])
     # a documented gap drafted for its function names the gate, not a missing pool
     result = {"coverage": {"missingFunctionIds": [w[0]["functionId"]]},
@@ -450,8 +460,9 @@ def test_c3a_two_part_seeds_the_positive_part_and_scores_zero_at_zero(monkeypatc
     stats = curves.reference_curve_summary_stats([2.0, 4.0, 6.0, 8.0, 10.0, 12.0])
     q25, q75, iqr = stats["q25"], stats["q75"], stats["iqr"]
     assert status == "complete"
-    # the ladder's two lowest points fell below zero and folded onto the origin
-    assert points == [[0.0, 0.0], [q25, 0.7], [q75, 1.0], [q75 + iqr * 0.3, 1.0]]
+    # the ladder's two lowest points fell below zero and folded onto the origin;
+    # the plateau ends at the iqr-seed-3 near offset (0.5 IQR)
+    assert points == [[0.0, 0.0], [q25, 0.7], [q75, 1.0], [q75 + iqr * 0.5, 1.0]]
     assert curves.interp_curve(points, 0.0) == 0.0
     # a positive part too thin for a seed keeps today's fallback
     status2, points2 = _build([0.0] * 6 + [3.0, 4.0, 5.0])
@@ -493,44 +504,66 @@ def test_c3a_the_two_part_caveat_rides_on_the_annotation():
 
 
 # --------------------------------------------------------------------------- #
-# C3b: the tail endpoints
+# C3b: the tail endpoints (adopted at methodology 0.15: iqr-seed-3)
 # --------------------------------------------------------------------------- #
 RISING = [float(v) for v in range(1, 21)]
 SIGNED = [-8.0, -6.0, -4.0, -2.0, -1.0, 0.0, 1.0, 2.0, 4.0, 6.0]
+IQR_SEED_2 = [0.3, "4/3", "7/3"]
 
 
 def test_c3b_the_default_offsets_are_the_engines_and_reproduce_the_golden_seeds(monkeypatch):
-    # the golden masters of tests/test_golden_masters.py, on the shipped config
+    # the golden masters of tests/test_golden_masters.py (iqr-seed-3), on the shipped config
+    assert curves.MONOTONE_TAIL_OFFSETS_IQR == (0.5, 1.5, 2.5)
+    assert _build(RISING)[1] == [[0.0, 0.0], [2.4642857142857144, 0.3], [5.75, 0.7],
+                                 [15.25, 1.0], [20.0, 1.0]]
+    assert _build(RISING, {**ENTRY, "higher_is_better": False})[1] == [
+        [1.0, 1.0], [5.75, 1.0], [15.25, 0.7], [29.5, 0.3], [39.0, 0.0]]
+    assert _build(SIGNED, {**ENTRY, "signed_scale": True})[1] == [
+        [-16.625, 0.0], [-11.375, 0.3], [-3.5, 0.7], [1.75, 1.0], [4.375, 1.0]]
+    # the same values written as fractions, or as plain floats, are still the default
+    for spelled in (["0.5", "3/2", "5/2"], [0.5, 1.5, 2.5]):
+        _config_with(monkeypatch, **{"curve10.tail_offsets_iqr": spelled})
+        assert methodology.seed_geometry()["custom_tail_offsets"] is False
+        assert methodology.round2_knobs() == {}
+        assert _build(RISING, {**ENTRY, "higher_is_better": False})[1][4] == [39.0, 0.0]
+    assert methodology.parse_offset("4/3") == 4 / 3 and methodology.parse_offset(0.3) == 0.3
+
+
+def test_c3b_the_iqr_seed_2_offsets_are_a_knob_that_reproduces_the_earlier_seeds(monkeypatch):
+    """The endpoints every version published under 0.9 to 0.14 was seeded with
+    stay reachable: set through the knob they join the inputs digest and give
+    the iqr-seed-2 golden seeds back exactly."""
+    _config_with(monkeypatch, **{"curve10.tail_offsets_iqr": IQR_SEED_2})
+    geo = methodology.seed_geometry()
+    assert geo["tail_offsets_iqr"] == curves.LEGACY_TAIL_OFFSETS_IQR_SEED_2
+    assert geo["custom_tail_offsets"] is True
+    assert methodology.round2_knobs() == {
+        "curve10.tail_offsets_iqr": list(curves.LEGACY_TAIL_OFFSETS_IQR_SEED_2)}
     assert _build(RISING)[1] == [[0.0, 0.0], [2.4642857142857144, 0.3], [5.75, 0.7],
                                  [15.25, 1.0], [18.1, 1.0]]
     assert _build(RISING, {**ENTRY, "higher_is_better": False})[1] == [
         [2.9, 1.0], [5.75, 1.0], [15.25, 0.7], [27.916666666666664, 0.3],
         [37.41666666666667, 0.0]]
-    # the same values written as fractions, or as plain floats, are still the default
-    for spelled in (["0.3", "4/3", "7/3"], [0.3, 4 / 3, 7 / 3]):
-        _config_with(monkeypatch, **{"curve10.tail_offsets_iqr": spelled})
-        assert methodology.seed_geometry()["custom_tail_offsets"] is False
-        assert methodology.round2_knobs() == {}
-        assert _build(RISING, {**ENTRY, "higher_is_better": False})[1][4] == [37.41666666666667, 0.0]
-    assert methodology.parse_offset("4/3") == 4 / 3 and methodology.parse_offset(0.3) == 0.3
+    assert _build(SIGNED, {**ENTRY, "signed_scale": True})[1] == [
+        [-15.75, 0.0], [-10.5, 0.3], [-3.5, 0.7], [1.75, 1.0], [3.325, 1.0]]
 
 
 def test_c3b_other_offsets_move_the_tails_and_join_the_digest(monkeypatch):
-    _config_with(monkeypatch, **{"curve10.tail_offsets_iqr": [0.5, 1.5, 2.5]})
-    assert methodology.round2_knobs() == {"curve10.tail_offsets_iqr": [0.5, 1.5, 2.5]}
+    _config_with(monkeypatch, **{"curve10.tail_offsets_iqr": [0.25, 1.0, 2.0]})
+    assert methodology.round2_knobs() == {"curve10.tail_offsets_iqr": [0.25, 1.0, 2.0]}
     stats = curves.reference_curve_summary_stats(RISING)
     q25, q75, iqr = stats["q25"], stats["q75"], stats["iqr"]
     status, falling = _build(RISING, {**ENTRY, "higher_is_better": False})
     assert status == "complete"
-    assert falling == [[max(0.0, q25 - iqr * 0.5), 1.0], [q25, 1.0], [q75, 0.7],
-                       [q75 + iqr * 1.5, 0.3], [q75 + iqr * 2.5, 0.0]]
+    assert falling == [[max(0.0, q25 - iqr * 0.25), 1.0], [q25, 1.0], [q75, 0.7],
+                       [q75 + iqr * 1.0, 0.3], [q75 + iqr * 2.0, 0.0]]
     status, rising = _build(RISING)
     assert rising[:4] == [[0.0, 0.0], [q25 * 3 / 7, 0.3], [q25, 0.7], [q75, 1.0]]
-    assert rising[4] == [q75 + iqr * 0.5, 1.0]
+    assert rising[4] == [q75 + iqr * 0.25, 1.0]
     s = curves.reference_curve_summary_stats(SIGNED)
     status, signed = _build(SIGNED, {**ENTRY, "signed_scale": True})
-    assert signed == [[s["q25"] - s["iqr"] * 2.5, 0.0], [s["q25"] - s["iqr"] * 1.5, 0.3],
-                      [s["q25"], 0.7], [s["q75"], 1.0], [s["q75"] + s["iqr"] * 0.5, 1.0]]
+    assert signed == [[s["q25"] - s["iqr"] * 2.0, 0.0], [s["q25"] - s["iqr"] * 1.0, 0.3],
+                      [s["q25"], 0.7], [s["q75"], 1.0], [s["q75"] + s["iqr"] * 0.25, 1.0]]
     # the two-sided seed is not governed by this knob
     _, optimum = _build([2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0],
                         {"column_name": "m", "curve_form": "optimum"})

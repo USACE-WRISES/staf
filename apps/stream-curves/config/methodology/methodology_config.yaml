@@ -20,9 +20,9 @@
 #   4. Re-run the pilot regression fixtures before promoting any status.
 
 meta:
-  methodology_version: "0.14-provisional"
+  methodology_version: "0.15-provisional"
   threshold_status: "provisional"        # global default; rules may override
-  date: "2026-09-21"
+  date: "2026-09-26"
   calibration_note: >
     v0.3 recalibrated the DATA sample-size floors against the two pilots' REAL
     EASI-screened reference sizes (NH-58 = 33 Functioning sites; ECBP-55 = 0 Functioning,
@@ -174,11 +174,33 @@ meta:
     zero_inflated_share and zero_inflated_handling, plus the mirrored curve12.verdict_cuts.
     A knob set away from its default joins the inputs digest under reference.knobs
     (absence semantics, methodology.round2_knobs).
+    v0.15 (2026-09-26, campaign Round 2 close, evaluation protocol V1 sha256
+    84a5cabc): the verdicts on the frozen margins. Adopted: B3, one search order
+    (l3, l2, l1, nars9) for every metric family (config/reference_transfer.yaml
+    search_order; the per-family orders are gone), and C3b, the monotone ladders'
+    tail endpoints 0.5, 1.5 and 2.5 IQR (curve10.tail_offsets_iqr, now the engine's
+    own default, curve_method_version iqr-seed-3, new golden masters; the iqr-seed-2
+    endpoints stay reachable through the knob). Rejected on the declared margins: B1
+    (narrowest adequate pool: identical pools in every cell but one), B2 (regional
+    screen relaxation off: association and coverage lost), B4 (higher DATA floors:
+    no stability gain), C1 (fill to one: the second metric carries association), C2
+    (CURVE-12 gate: the gated curves carry association), C3a (zero-inflated two-part
+    curves: no change on the frozen primary), C4 (evidence-table assignments: the
+    reassigned map loses association); C5 and C6 were reference-only. New in the
+    catalog: CURVE-13 (residual structure, not applicable to the IQR family),
+    DATA-12 (the rebuild ledger) and EVAL-01 (the evaluation protocol). Withheld at
+    the build, the same in every region: a metric whose missing-data fraction over
+    its pool is above data_rules.max_missingness_review (DATA-03) and a two-sided
+    curve whose Functioning core is narrower than its measurement-precision floor
+    (CURVE-09) leave the build with a statement, like an insufficient-support
+    metric, with no review item; the two per-run standing decisions that used to
+    finalize them are legacy. No threshold value moved and no threshold_status
+    moved to calibrated. The standing_decisions index mirrors policy 1.3.
   authority: "STAF scientific team (human sign-off required for status promotion)"
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
   curve_engine: "apps/stream-curves/streamcurves/curves.py::build_reference_curve"
-  curve_method_version: "iqr-seed-2"     # matches run_state.CURVE_METHOD_VERSION (mirror-checked)
+  curve_method_version: "iqr-seed-3"     # matches run_state.CURVE_METHOD_VERSION (mirror-checked)
   screening_method_version: "easi-batch-2"   # matches run_state.SCREENING_METHOD_VERSION (mirror-checked)
   reference_screen_method_version: "pressure-screen-1"   # matches run_state.REFERENCE_SCREEN_METHOD_VERSION (mirror-checked)
 
@@ -195,7 +217,10 @@ data_rules:
   # the values against external evidence. See meta.calibration_note. Prior
   # provisional values shown in parentheses.
   max_missingness_auto: 0.20             # DATA-01: <=20% eligible for automation
-  max_missingness_review: 0.40           # DATA-03: >40% do not auto-recommend
+  # DATA-03: above 40% a pressure-screen build withholds the metric with its
+  # statement (v0.15, pressure_evidence.run_evidence); the legacy and interactive
+  # paths still route the curve to review (data_review). The value is unchanged.
+  max_missingness_review: 0.40
   min_n_unstratified: 20                 # DATA-04 (was 50): n>=20 eligible for automated curve eval
   exploratory_n_unstratified: 10         # DATA-05 (was 30): 10 <= n < 20 exploratory only
   insufficient_n_unstratified: 10        # DATA-06 (was 30): n < 10 do not auto-fit
@@ -295,9 +320,10 @@ curve_rules:
   deep_function_score_bands: [5, 10]
   deep_function_score_max: 15
   deep_indirect_weight: 0.10             # indirect-metric weight in the DEEP contract
-  # CURVE-09 measurement-precision floor (advisory, v0.9): a two-sided curve
-  # whose Functioning core is narrower than core_multiple times the metric's
-  # documented measurement standard deviation is flagged for review, because
+  # CURVE-09 measurement-precision floor (v0.9 advisory; v0.15 withheld at the
+  # build): a two-sided curve whose Functioning core is narrower than
+  # core_multiple times the metric's documented measurement standard deviation
+  # is withheld with its statement (pressure_evidence.run_evidence), because
   # band assignments inside such a core are measurement noise presented as
   # condition classes (adversarial review 2026-08-21, ECO-2/STAT-13; the ECBP
   # pH curve, core 0.196 su at n = 16, was removed by owner decision pending
@@ -327,20 +353,22 @@ curve12:
 
 # --------------------------------------------------------------------------- #
 # CURVE-10, the seed geometry knobs (campaign Round 2 candidates C3a and C3b,
-# 2026-09-25). threshold_status: provisional. The engine keeps today's values
-# as its own defaults, so an absent key or the default value reproduces every
-# published curve byte for byte; a non-default value joins the inputs digest
-# (reference.knobs).
+# 2026-09-25). threshold_status: provisional. The engine keeps the default
+# values as its own, so an absent key or the default value reproduces every
+# curve built under the current curve method version; a non-default value
+# joins the inputs digest (reference.knobs).
 # --------------------------------------------------------------------------- #
 curve10:
   # The tail endpoints of the monotone IQR ladders, in IQR units from the
   # quartile [near, mid, far]: the index steps 1.00 / 0.30 / 0.00 of the falling
   # seed sit at Q75 + near, Q75 + mid and Q75 + far IQR, the signed-scale rising
   # seed mirrors them below Q25, and the origin-anchored rising seed ends its
-  # plateau at Q75 + near IQR. Today's values are the engine's own
-  # (curves.MONOTONE_TAIL_OFFSETS_IQR): 0.3, 4/3 and 7/3. A fraction may be
-  # written as a string ("4/3"); the two-sided optimum seed is not governed here.
-  tail_offsets_iqr: [0.3, "4/3", "7/3"]
+  # plateau at Q75 + near IQR. v0.15 (candidate C3b adopted, iqr-seed-3): the
+  # engine's own values (curves.MONOTONE_TAIL_OFFSETS_IQR) are 0.5, 1.5 and 2.5;
+  # the iqr-seed-2 values 0.3, 4/3 and 7/3 are a non-default setting that
+  # reproduces the seeds published under 0.9 to 0.14. A fraction may be written
+  # as a string ("4/3"); the two-sided optimum seed is not governed here.
+  tail_offsets_iqr: [0.5, 1.5, 2.5]
   # A zero-inflated reference pool: a higher-is-better metric on a scale that
   # cannot go negative whose share of reference values at zero is above this.
   # null (the default) switches the rule off: such a pool takes the engine's
@@ -445,9 +473,9 @@ reference_screen:
 # --------------------------------------------------------------------------- #
 reference_pool:
   # The pool levels (Level III, then its Level II and Level I parents) and the
-  # search order live in config/reference_transfer.yaml, which the code reads
-  # (a top-level search_order there replaces every family's order; absent by
-  # default, campaign Round 2 candidate B3). The three keys below are read.
+  # search order live in config/reference_transfer.yaml, which the code reads:
+  # one top-level search_order (l3, l2, l1, nars9) for every metric family since
+  # v0.15 (campaign Round 2 candidate B3 adopted). The three keys below are read.
   # A borrowed station must sit inside the central share of the target region's
   # own in-frame stations on every covariate of the metric family's profile.
   envelope_quantiles: [0.025, 0.975]
@@ -706,11 +734,18 @@ standing_decisions:
   # enabled flags (mirror-checked by methodology.mirror_drift): the policy file
   # governs, and an edit to one without the other is reported as drift.
   default_enabled: [curve04-accept-with-flag, data05-exploratory-pool-accepted,
-                    red06-instability-is-noise, strat09-defer-floors, select01-complementary-set,
-                    ref05-borrowed-pool-accepted, cov01-documented-gap]
+                    red06-instability-is-noise, strat09-defer-floors, strat09-advisory-not-applied,
+                    select01-complementary-set, ref05-borrowed-pool-accepted, cov01-documented-gap,
+                    curve07-fallback-accepted, curve12-inverted-thin, red01-keep-both-distinct-axes,
+                    curve06-no-interval-fallback-curve, curve06-no-interval-flagged]
   enable_per_run_only: [ref02-accept-best-available, data03-thin-metric-finalized,
                         data06-insufficient-finalized, curve07-thin-metric-finalized]
-  never_automated: "RED-01 keeper choice, CURVE-07 degenerate / shape_conflict / multi_crossing / insufficient_data, direction_unresolved, a coverage gap without a documented blocker for every candidate (a documented gap runs under cov01-documented-gap and the owner confirms it at promote), portfolio sets off the crosswalk default, a borrowed reference pool at moderate, high or unassessed transfer risk (REF-05, builds before 0.14), an inverted discrimination check (CURVE-12), a candidate model specification, the final publish (promote)"
+  # Policy 1.3 (v0.15): a degenerate fallback curve whose CURVE-12 verdict is not
+  # inverted, an inverted discrimination check with a group under the DATA-04
+  # floor, a redundant pair serving different functions and a fallback curve
+  # without an interval are class decisions applied pending the owner's
+  # confirmation at the first promotion batch. What stays owner-only:
+  never_automated: "RED-01 keeper choice for a same-function pair, CURVE-07 shape_conflict / multi_crossing / insufficient_data / error and an inverted fallback curve (a degenerate seed whose CURVE-12 verdict is inverted; the ones the owner accepted under decision D9 stand as recorded and set no class), direction_unresolved, a well-supported inverted discrimination check (reference and pressured groups both at or above the DATA-04 floor of 20, CURVE-12), a coverage gap without a documented blocker for every candidate (a documented gap runs under cov01-documented-gap and the owner confirms it at promote), portfolio sets off the crosswalk default, a borrowed reference pool at moderate, high or unassessed transfer risk (REF-05, builds before 0.14), a candidate model specification, the owner's curve decisions (REF-15), the final publish (promote)"
   end_review_required_before_promote: true
 
 # --------------------------------------------------------------------------- #

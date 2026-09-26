@@ -21,7 +21,12 @@ from typing import Any, Iterable, Optional
 # iqr-seed-2 (2026-08-21): the degenerate-Q25 origin guard applies only to
 # nonnegative-scale metrics, so signed-scale metrics (log relative bed
 # stability) build the standard seed. Scoring semantics are unchanged.
-CURVE_METHOD_VERSION = "iqr-seed-2"
+# iqr-seed-3 (2026-09-26, methodology 0.15, campaign Round 2 candidate C3b
+# adopted): the monotone ladders' tail endpoints are 0.5, 1.5 and 2.5 IQR
+# (curves.MONOTONE_TAIL_OFFSETS_IQR) instead of 0.3, 4/3 and 7/3; the golden
+# masters of tests/test_golden_masters.py were regenerated, and the iqr-seed-2
+# endpoints stay reachable through the curve10.tail_offsets_iqr knob.
+CURVE_METHOD_VERSION = "iqr-seed-3"
 # easi-batch-2 (2026-09-07): an NRSA site is screened by its archive COMID
 # (the reach the crew sampled) instead of being re-snapped from its
 # coordinate, the screening cache is keyed on this version, the engine pin

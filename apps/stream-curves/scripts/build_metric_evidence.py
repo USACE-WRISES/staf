@@ -53,7 +53,9 @@ COLUMNS AND THEIR SOURCES
       transects, whole reach, desktop), the closest thing to effort in the sources.
   transfer_family, fauna_rule, search_order
       config/reference_transfer.yaml: metric_family, the family's fauna flag
-      (same_faunal_province or none) and its search_order.
+      (same_faunal_province or none) and the search order the family's pools are
+      walked in: the file's one top-level search_order (methodology 0.15), or the
+      family's own where a file still declares one per family.
   fixed_criterion, fixed_bands
       config/fixed_criteria.yaml: the entry key and its Good, Fair and Poor band labels.
   benchmark_entry, benchmark_refusal
@@ -520,9 +522,13 @@ def transfer_columns(code: str, transfer: dict) -> dict:
     if fam is None:
         return {"transfer_family": None, "fauna_rule": None, "search_order": None}
     prof = (transfer.get("families") or {}).get(str(fam)) or {}
+    # one search order for every family since methodology 0.15 (reference_pool
+    # .family_profile reads the top-level key first); a per-family order only
+    # where a file still declares one
+    order = transfer.get("search_order") or prof.get("search_order") or []
     return {"transfer_family": str(fam),
             "fauna_rule": "same_faunal_province" if prof.get("fauna") else "none",
-            "search_order": list(prof.get("search_order") or [])}
+            "search_order": list(order)}
 
 
 def fixed_columns(code: str, fixed: dict) -> dict:
