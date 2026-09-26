@@ -87,8 +87,10 @@ COLUMNS AND THEIR SOURCES
       national frame of reference_pool.national_frame with the governed DATA-10 frame
       (nrsa_dataset.governed_frame: NHDPlus V2 stream order 1 to 5, the WADEABLE
       protocol where the order is unknown, canals out; 3267 stations): the stations
-      with a value under the DATA-11 policy (nrsa_dataset.latest_values, the newest
-      compatible cycle's index visit), and those of them that pass the strict
+      with a value under the DATA-11 policy (nrsa_dataset.latest_values under the
+      default value policy, newest-nonnull-v2 since methodology 0.15: the newest
+      compatible cycle's index visit, the 2013-14 residual pool depth derived from
+      RP100), and those of them that pass the strict
       least-disturbed-v1 screen (pass_strict). For a landscape metric the station
       screen's own column (the key plus ws) is counted over the same frame where the
       screen carries it (the screen variables and the natural-setting covariates:
@@ -636,11 +638,13 @@ def frame_counts(nrsa_keys: list[str], landscape_keys: list[str]) -> dict:
     keys = frame["station_key"].astype(str).tolist()
     out: dict[str, tuple[int, int]] = {}
     if nrsa_keys:
-        # under the policy every published version reads (v1): the table documents
-        # the archive as published builds saw it; a rebuild under another policy
-        # is a new edition of the table, made on purpose
+        # under the policy every build reads (DEFAULT_VALUE_POLICY, v2 since methodology
+        # 0.15: the campaign protocol froze it and the scale registry records it), so
+        # n_strict_values is the registry's n_reference. The 0.14 edition of the table
+        # counted under v1, the policy the published versions read; a rebuild under
+        # another policy is a new edition of the table, made on purpose
         values, _ledger2 = nrsa_dataset.latest_values(keys, metrics=list(nrsa_keys),
-                                                      policy=nrsa_dataset.VALUE_POLICY_V1)
+                                                      policy=nrsa_dataset.DEFAULT_VALUE_POLICY)
         values = values.set_index("site_id").reindex(keys)
         for mk in nrsa_keys:
             if mk in values.columns:
