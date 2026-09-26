@@ -50,9 +50,10 @@ def load_members(package_dir: Path):
 #: The refit's own code, recorded by the members and fits packages (SHA-256 of the LF bytes).
 RECIPE_CODE = {"fit_recipe.py": "fit recipe code", "refit.py": "refit code"}
 
-#: the tail endpoints each curve method version fitted under, for a recipe that names the
-#: version without spelling the endpoints
-GEOMETRY_BY_METHOD_VERSION = {fr.CURVE_METHOD_VERSION: tuple(fr.SEED_TAIL_OFFSETS_IQR),
+#: the tail endpoints each curve method version fitted under (parsed: a fraction keeps its
+#: numerator and denominator, ``curves.IqrOffset``), for a recipe that names the version
+#: without spelling the endpoints
+GEOMETRY_BY_METHOD_VERSION = {fr.CURVE_METHOD_VERSION: fr.seed_tail_offsets(),
                               "iqr-seed-3": (0.5, 1.5, 2.5)}
 #: the ``differences`` entry of :func:`recipe_check` when the package's endpoints are not the
 #: running engine's default (the refit still fits under the package's)
@@ -63,20 +64,21 @@ def recipe_geometry(recipe: Optional[dict]) -> dict:
     """The tail endpoints a package's fits ran under, from its ``recipe`` block:
     ``{"tail_offsets_iqr": (near, mid, far), "curve_method_version", "recorded"}``.
 
-    ``recipe.engine.tailOffsetsIqr`` (three IQR offsets, a fraction spelled "4/3" allowed)
-    and ``recipe.engine.curveMethodVersion`` are what the exporter records; a recipe that
-    names only a known version means that version's endpoints. A recipe written before the
+    ``recipe.engine.tailOffsetsIqr`` (three IQR offsets as the knob spells them, a fraction
+    such as "4/3" kept as a fraction so the fit multiplies then divides) and
+    ``recipe.engine.curveMethodVersion`` are what the exporter records; a recipe that names
+    only a known version means that version's endpoints. A recipe written before the
     endpoints were recorded (neither field) means the method's own, the legacy triple
-    0.3, 4/3 and 7/3 (iqr-seed-2): that is what every such fit ran under.
+    0.3, 4/3 and 7/3 (iqr-seed-2): that is what every such fit ran under. The parsed
+    offsets are kept as parsed (``fit_recipe.parse_tail_offsets``), never as plain floats.
     """
-    from .. import methodology
     doc = recipe or {}
     engine = doc.get("engine") or {}
     raw = engine.get("tailOffsetsIqr", doc.get("tailOffsetsIqr"))
     version = engine.get("curveMethodVersion") or doc.get("curveMethodVersion")
     if raw is None:
         if version is None:
-            return {"tail_offsets_iqr": tuple(fr.SEED_TAIL_OFFSETS_IQR),
+            return {"tail_offsets_iqr": fr.seed_tail_offsets(),
                     "curve_method_version": fr.CURVE_METHOD_VERSION, "recorded": False}
         if str(version) not in GEOMETRY_BY_METHOD_VERSION:
             raise ValueError(f"the package records curve method version {version!r} without its "
@@ -84,12 +86,10 @@ def recipe_geometry(recipe: Optional[dict]) -> dict:
         return {"tail_offsets_iqr": GEOMETRY_BY_METHOD_VERSION[str(version)],
                 "curve_method_version": str(version), "recorded": True}
     try:
-        offsets = tuple(methodology.parse_offset(v) for v in raw)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(f"the package records tail endpoints {raw!r}; expected three IQR offsets") from exc
-    if len(offsets) != 3 or not (0.0 < offsets[0] <= offsets[1] <= offsets[2]):
+        offsets = fr.parse_tail_offsets(raw)
+    except ValueError as exc:
         raise ValueError(f"the package records tail endpoints {raw!r}; expected three positive, "
-                         "non-decreasing IQR offsets [near, mid, far]")
+                         "non-decreasing IQR offsets [near, mid, far]") from exc
     return {"tail_offsets_iqr": offsets,
             "curve_method_version": str(version) if version else fr.curve_method_version_for(offsets),
             "recorded": True}
@@ -108,21 +108,25 @@ def package_geometry(package_dir: Path) -> dict:
 def fit_geometry_of(members, tail_offsets_iqr=None) -> tuple:
     """The tail endpoints a fit from ``members`` runs under: the caller's, else the
     package's (``members.attrs["fit_geometry"]``, set by :func:`load_members`), else
-    the method's own."""
+    the method's own; parsed as the engine takes them (a fraction stays a fraction)."""
     if tail_offsets_iqr is not None:
-        return tuple(float(v) for v in tail_offsets_iqr)
+        return fr.parse_tail_offsets(tail_offsets_iqr)
     geometry = getattr(members, "attrs", {}).get("fit_geometry") or {}
-    return tuple(float(v) for v in geometry.get("tail_offsets_iqr") or fr.SEED_TAIL_OFFSETS_IQR)
+    return fr.parse_tail_offsets(geometry.get("tail_offsets_iqr") or fr.SEED_TAIL_OFFSETS_IQR)
 
 
 def _offsets_words(offsets) -> str:
     """``0.3, 4/3 and 7/3`` for the legacy triple, ``0.5, 1.5 and 2.5`` otherwise."""
-    def one(v: float) -> str:
+    def one(v) -> str:
+        ratio = getattr(v, "ratio", None)
+        if ratio:
+            return f"{ratio[0]}/{ratio[1]}"
+        x = float(v)                                    # for the words only
         for num, den in ((4, 3), (7, 3), (2, 3), (5, 3), (1, 3)):
-            if abs(v - num / den) < 1e-9:
+            if abs(x - num / den) < 1e-9:
                 return f"{num}/{den}"
-        return f"{v:g}"
-    items = [one(float(v)) for v in offsets or ()]
+        return f"{x:g}"
+    items = [one(v) for v in offsets or ()]
     return _listed(items, "and") if items else "unknown"
 
 
@@ -161,15 +165,15 @@ def recipe_check(package_dir: Path) -> dict:
     elif engine["sha256_lf"] != running:
         diffs.append("curve engine")
     package_geometry_ = recipe_geometry(recipe)
-    running_offsets = tuple(float(v) for v in methodology.seed_geometry()["tail_offsets_iqr"])
-    fits_under = tuple(float(v) for v in package_geometry_["tail_offsets_iqr"])
+    running_offsets = tuple(methodology.seed_geometry()["tail_offsets_iqr"])
+    fits_under = tuple(package_geometry_["tail_offsets_iqr"])
     geometry = {"recorded": package_geometry_["recorded"],
                 "package": list(fits_under),
                 "packageCurveMethodVersion": package_geometry_["curve_method_version"],
                 "running": list(running_offsets),
                 "runningCurveMethodVersion": str(run_state.CURVE_METHOD_VERSION),
                 "refitUnder": list(fits_under)}
-    if any(abs(a - b) > 1e-9 for a, b in zip(fits_under, running_offsets)):
+    if not fr.same_tail_offsets(fits_under, running_offsets):
         diffs.append(ENDPOINTS_DIFFERENCE)
     recorded_code = recipe.get("code") or {}
     for name, sha_now in recipe_code().items():

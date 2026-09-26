@@ -406,28 +406,45 @@ def test_the_refit_groups_members_like_the_builder():
 # an EASI method's curves are the method's: the fit runs under its own tail endpoints
 # --------------------------------------------------------------------------- #
 LEGACY = (0.3, 4 / 3, 7 / 3)
+SPELLED = (0.3, "4/3", "7/3")
 
 
 def _knots(values, q, **kw) -> list:
     return fr.fit_curve(values, q, "t", **kw)["points"]
 
 
+def _ratios(offsets) -> list:
+    return [getattr(v, "ratio", None) for v in offsets]
+
+
 def test_the_fit_recipe_pins_the_methods_tail_endpoints():
     """The engine's default moved to 0.5, 1.5 and 2.5 IQR at methodology 0.15
     (iqr-seed-3); the method was fitted under 0.3, 4/3 and 7/3 (iqr-seed-2). A fit
     runs the engine under the method's endpoints unless the caller says otherwise,
-    records them with the curve method version, and leaves the engine as it found it."""
+    with the fractions' own arithmetic (iqr * 4 / 3: multiply, then divide), records
+    them as plain numbers with the curve method version, and leaves the engine as it
+    found it."""
     q = fr.QUANTITIES["q_cv_monthly"]                    # lower is better, unbounded: both tails move
     values = np.linspace(0.2, 1.5, 300)
     stats = engine.reference_curve_summary_stats(values)
-    q25, q75, iqr = stats["q25"], stats["q75"], stats["iqr"]
-    assert fr.SEED_TAIL_OFFSETS_IQR == LEGACY and fr.CURVE_METHOD_VERSION == "iqr-seed-2"
+    q25, q75, iqr = float(stats["q25"]), float(stats["q75"]), float(stats["iqr"])
+    assert fr.SEED_TAIL_OFFSETS_IQR == SPELLED and fr.CURVE_METHOD_VERSION == "iqr-seed-2"
+    parsed = fr.seed_tail_offsets()
+    assert parsed == LEGACY and _ratios(parsed) == [None, (4, 3), (7, 3)]
+    assert isinstance(parsed[1], engine.IqrOffset) and parsed == engine.LEGACY_TAIL_OFFSETS_IQR_SEED_2
     fit = fr.fit_curve(values, q, "t")
-    np.testing.assert_allclose(fit["points"], [[max(0.0, q25 - iqr * 0.3), 1.0], [q25, 1.0], [q75, 0.7],
-                                               [q75 + iqr * (4 / 3), 0.3], [q75 + iqr * (7 / 3), 0.0]],
-                               rtol=1e-12)
-    assert (fit["tail_near_iqr"], fit["tail_mid_iqr"], fit["tail_far_iqr"]) == LEGACY
+    assert fit["points"] == [[max(0.0, q25 - iqr * 0.3), 1.0], [q25, 1.0], [q75, 0.7],
+                             [q75 + iqr * 4 / 3, 0.3], [q75 + iqr * 7 / 3, 0.0]]
+    recorded = (fit["tail_near_iqr"], fit["tail_mid_iqr"], fit["tail_far_iqr"])
+    assert recorded == LEGACY and all(type(v) is float for v in recorded)
     assert fit["curve_method_version"] == "iqr-seed-2"
+    # a parsed offset is kept as parsed by every path that takes endpoints
+    for given in (SPELLED, parsed, ("0.3", "4/3", "7/3")):
+        assert _ratios(fr.parse_tail_offsets(given)) == [None, (4, 3), (7, 3)]
+    assert _ratios(fr.parse_tail_offsets(LEGACY)) == [None, None, None]     # pre-rounded floats stay floats
+    with fr.engine_tail_offsets(SPELLED) as inside:
+        assert _ratios(inside) == [None, (4, 3), (7, 3)]
+        assert _ratios(engine.seed_geometry()["tail_offsets_iqr"]) == [None, (4, 3), (7, 3)]
     # the engine's own default is another triple, and it is back in force after the fit
     assert engine.MONOTONE_TAIL_OFFSETS_IQR == (0.5, 1.5, 2.5)
     assert methodology.seed_geometry()["tail_offsets_iqr"] == engine.MONOTONE_TAIL_OFFSETS_IQR
@@ -442,9 +459,13 @@ def test_the_fit_recipe_pins_the_methods_tail_endpoints():
     assert default["curve_method_version"] == run_state.CURVE_METHOD_VERSION == "iqr-seed-3"
     assert default["points"] != fit["points"] and default["x39"] != fit["x39"]
     assert fr.curve_method_version_for((0.25, 1.0, 2.0)) == "custom"
+    assert fr.curve_method_version_for(SPELLED) == fr.curve_method_version_for(LEGACY) == "iqr-seed-2"
+    assert fr.curve_method_version_for(("1/2", "3/2", "5/2")) == "iqr-seed-3"
     with pytest.raises(ValueError, match="non-decreasing"):
         with fr.engine_tail_offsets((0.5, 0.2, 1.0)):
             pass
+    with pytest.raises(ValueError):
+        fr.parse_tail_offsets(("a", "b", "c"))
 
 
 def test_a_pinned_fit_does_not_move_the_geometry_another_thread_reads():
@@ -473,12 +494,21 @@ def test_a_recipe_without_endpoints_means_the_methods_own(package, tmp_path):
     legacy = {"tail_offsets_iqr": LEGACY, "curve_method_version": "iqr-seed-2", "recorded": False}
     assert refit.recipe_geometry(None) == refit.recipe_geometry({}) == legacy
     assert refit.recipe_geometry({"engine": {"sha256_lf": "0" * 64}}) == legacy
+    # the legacy triple is parsed, its fractions kept (the fit multiplies then divides)
+    for geometry in (refit.recipe_geometry(None), refit.recipe_geometry({"engine": {"sha256_lf": "0" * 64}}),
+                     refit.recipe_geometry({"engine": {"curveMethodVersion": "iqr-seed-2"}})):
+        assert _ratios(geometry["tail_offsets_iqr"]) == [None, (4, 3), (7, 3)]
+    assert _ratios(refit.GEOMETRY_BY_METHOD_VERSION["iqr-seed-2"]) == [None, (4, 3), (7, 3)]
     new = refit.recipe_geometry({"engine": {"tailOffsetsIqr": [0.5, 1.5, 2.5],
                                             "curveMethodVersion": "iqr-seed-3"}})
     assert new == {"tail_offsets_iqr": (0.5, 1.5, 2.5), "curve_method_version": "iqr-seed-3",
                    "recorded": True}
     spelled = refit.recipe_geometry({"engine": {"tailOffsetsIqr": ["0.3", "4/3", "7/3"]}})
     assert spelled == {"tail_offsets_iqr": LEGACY, "curve_method_version": "iqr-seed-2", "recorded": True}
+    assert _ratios(spelled["tail_offsets_iqr"]) == [None, (4, 3), (7, 3)]
+    # a package that recorded pre-rounded floats gets exactly those (one multiplication)
+    rounded = refit.recipe_geometry({"engine": {"tailOffsetsIqr": [0.3, 4 / 3, 7 / 3]}})
+    assert rounded["tail_offsets_iqr"] == LEGACY and _ratios(rounded["tail_offsets_iqr"]) == [None] * 3
     named = refit.recipe_geometry({"engine": {"curveMethodVersion": "iqr-seed-3"}})
     assert named["tail_offsets_iqr"] == (0.5, 1.5, 2.5) and named["recorded"]
     assert refit.recipe_geometry({"engine": {"tailOffsetsIqr": [0.25, 1.0, 2.0]}})["curve_method_version"] == "custom"
@@ -499,6 +529,7 @@ def test_the_refit_fits_under_the_packages_recorded_endpoints():
     q = "woody_wsrp100"                                   # rising, domain 0 to 100: the plateau end moves
     rows = refit.fit_registry(members, values, panels, quantities=[q])    # no package: the method's own
     assert refit.fit_geometry_of(members) == LEGACY
+    assert _ratios(refit.fit_geometry_of(members)) == [None, (4, 3), (7, 3)]
     for r in rows:
         assert r["curve_method_version"] == "iqr-seed-2"
         assert r["points"][4][0] == pytest.approx(min(100.0, r["q75"] + r["iqr"] * 0.3))
@@ -509,48 +540,42 @@ def test_the_refit_fits_under_the_packages_recorded_endpoints():
     for r in rows3:
         assert r["curve_method_version"] == "iqr-seed-3"
         assert r["points"][4][0] == pytest.approx(min(100.0, r["q75"] + r["iqr"] * 0.5))
-    # the caller's endpoints win over the package's
-    forced = refit.fit_registry(members, values, panels, quantities=[q], tail_offsets_iqr=LEGACY)
+    # the caller's endpoints win over the package's, parsed as the engine takes them
+    forced = refit.fit_registry(members, values, panels, quantities=[q], tail_offsets_iqr=SPELLED)
     assert [r["points"] for r in forced] == [r["points"] for r in rows]
     assert refit.fit_geometry_of(members, (0.25, 1.0, 2.0)) == (0.25, 1.0, 2.0)
+    assert _ratios(refit.fit_geometry_of(members, SPELLED)) == [None, (4, 3), (7, 3)]
 
 
 EVIDENCE_DIR = os.environ.get("STAF_EVIDENCE_DIR", "")
-
-#: The recorded engine (main's curves.py) evaluated the falling seed's mid and far knots as
-#: ``iqr * 4 / 3`` and ``iqr * 7 / 3``; since fcd555f the engine multiplies by the offsets
-#: themselves (``iqr * mid``), which rounds differently in the last place for some pools.
-#: Knots are compared within this, far below the six decimals the method file carries.
-KNOT_TOL = 1e-12
 
 
 @pytest.mark.skipif(not EVIDENCE_DIR or not (Path(EVIDENCE_DIR) / "easi-dev-members").is_dir(),
                     reason="the exported evidence packages are not present (STAF_EVIDENCE_DIR)")
 def test_refitting_the_members_package_reproduces_the_registry_and_the_34_curves():
+    """Every registry fit and every operational curve, knot for knot, bit for bit: the
+    package records no endpoints, so the refit runs under the method's own (0.3, 4/3 and
+    7/3 IQR) with the fractions' arithmetic, whatever the engine's default is here."""
     import pyarrow.parquet as pq
     base = Path(EVIDENCE_DIR)
-    # the package records no endpoints: it was fitted under the method's own, and the
-    # refit runs under them whatever the engine's default is here
     check = refit.recipe_check(base / "easi-dev-members")
     assert check["geometry"]["recorded"] is False and check["geometry"]["refitUnder"] == list(LEGACY)
     assert (refit.ENDPOINTS_DIFFERENCE in check["differences"]) == (
         tuple(methodology.seed_geometry()["tail_offsets_iqr"]) != LEGACY)
     members, values, panels = refit.load_members(base / "easi-dev-members")
     assert refit.fit_geometry_of(members) == LEGACY
+    assert _ratios(refit.fit_geometry_of(members)) == [None, (4, 3), (7, 3)]
     rows = refit.fit_registry(members, values, panels)
     assert all(r["curve_method_version"] == "iqr-seed-2" for r in rows if r.get("points"))
     stored = pq.read_table(base / "easi-dev-fits" / "data" / "curve_registry.parquet").to_pylist()
-    cmp_ = refit.compare_registry(rows, stored, tol=KNOT_TOL)
+    cmp_ = refit.compare_registry(rows, stored)
     assert cmp_["identical"], cmp_["differing"][:5]
-    # what the exact comparison still finds is that last-place rounding, on falling knots only
-    exact = refit.compare_registry(rows, stored)
-    stored_by = {(r["quantity"], r["level"], r["stratum"], r.get("split") or ""): r for r in stored}
-    assert all(d["fields"] == ["points"] and stored_by[tuple(d["key"])]["higher_is_better"] is False
-               for d in exact["differing"]), exact["differing"][:5]
+    assert cmp_["compared"] == len(stored) == 2752 and cmp_["differing"] == []
     curves = refit.operational_curves(rows, members, values, panels)
     artifact = json.loads((VENDORED_DATA / "reference-curves.json").read_text(encoding="utf-8"))
     got = refit.compare_curves(curves, artifact)
     assert got["allIdentical"], got["differing"][:5]
+    assert got["identical"] == got["curves"] == 34
 
 
 # --------------------------------------------------------------------------- #
