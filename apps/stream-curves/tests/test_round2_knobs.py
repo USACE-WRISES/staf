@@ -605,3 +605,39 @@ def test_the_manifest_records_the_knobs_a_run_carried(monkeypatch):
     assert knobbed["inputsDigest"] != plain["inputsDigest"]
     assert pv.digest_payload_from_manifest(knobbed)["reference"]["knobs"]["curve12.gate"] is True
     assert methodology.inputs_digest(pv.digest_payload_from_manifest(plain)) == plain["inputsDigest"]
+
+
+def test_a_fraction_offset_multiplies_then_divides_like_the_iqr_seed_2_literals(monkeypatch):
+    """The iqr-seed-2 engine wrote the falling seed's mid and far knots as ``iqr * 4 / 3``
+    and ``iqr * 7 / 3`` (multiply, then divide); a pre-rounded 4/3 differs from that in
+    the last place, which 88 of the EASI members refits showed on 2026-09-26. A fraction
+    spelled in the knob keeps its numerator and denominator and the seed reproduces the
+    literals bit for bit; a decimal offset is one multiplication, as before."""
+    import json
+    import pickle
+    rng = np.random.default_rng(7)
+    iqrs = [float(v) for v in rng.uniform(0.001, 500.0, size=2000)] + [
+        0.1, 0.3, 1.0, 2.0, 3.0, 7.0, 9.5, 1e-6, 12345.678]
+    mid, far = methodology.parse_offset("4/3"), methodology.parse_offset("7/3")
+    assert isinstance(mid, curves.IqrOffset) and mid.ratio == (4, 3) and mid == 4 / 3
+    assert pickle.loads(pickle.dumps(mid)).ratio == (4, 3)
+    assert json.dumps(mid) == json.dumps(4 / 3)
+    assert methodology.parse_offset(0.3) == 0.3 and not hasattr(methodology.parse_offset(0.3), "ratio")
+    for iqr in iqrs:
+        assert curves.offset_times(iqr, mid) == iqr * 4 / 3
+        assert curves.offset_times(iqr, far) == iqr * 7 / 3
+        # the iqr-seed-3 default is one multiplication whichever way it is spelled
+        assert curves.offset_times(iqr, 1.5) == iqr * 1.5 == curves.offset_times(iqr, methodology.parse_offset("3/2"))
+        assert curves.offset_times(iqr, 2.5) == iqr * 2.5 == curves.offset_times(iqr, methodology.parse_offset("5/2"))
+        assert curves.offset_times(iqr, 0.5) == iqr * 0.5 == curves.offset_times(iqr, methodology.parse_offset("1/2"))
+    # the distinction is not idle: the pre-rounded product differs somewhere in the sample
+    assert any(iqr * (4 / 3) != iqr * 4 / 3 for iqr in iqrs)
+    # through the knob, a falling seed's knots are the literals' arithmetic
+    _config_with(monkeypatch, **{"curve10.tail_offsets_iqr": IQR_SEED_2})
+    frame = pd.DataFrame({"site_id": [f"s{i}" for i in range(20)], "m": [float(v) for v in range(1, 21)]})
+    res = curves.build_reference_curve(frame, "m", {"m": {"column_name": "m", "higher_is_better": False}},
+                                       build_plots=False)
+    pts = res["curve_row"]["curve_points"].iloc[0]
+    xs = [float(x) for x in pts["metric_value"]]
+    q25, q75, iqr = 5.75, 15.25, 9.5
+    assert xs[3] == q75 + iqr * 4 / 3 and xs[4] == q75 + iqr * 7 / 3 and xs[0] == max(0.0, q25 - iqr * 0.3)
