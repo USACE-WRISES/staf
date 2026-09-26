@@ -419,7 +419,7 @@ def _many_args(rb, out_root: Path, codes: dict) -> argparse.Namespace:
 def test_stage_many_skips_a_region_staged_from_the_same_inputs_whatever_the_list(tmp_path, monkeypatch):
     rb = _batch_module()
     monkeypatch.setattr(rb, "region_inputs", lambda args: {"fixed": 1})
-    monkeypatch.setattr(rb, "carried_from", lambda code: None)
+    monkeypatch.setattr(rb, "carried_from", lambda code, root=None: None)
     seen = []
 
     def fake_run(js, campaign, **kw):
@@ -481,7 +481,7 @@ def test_a_stage_holds_its_folders_lock_and_a_busy_one_says_so(tmp_path, monkeyp
 def test_a_stage_job_holds_the_region_lock_and_never_records_it(tmp_path, monkeypatch):
     rb = _batch_module()
     monkeypatch.setattr(rb, "region_inputs", lambda args: {"fixed": 1})
-    monkeypatch.setattr(rb, "carried_from", lambda code: None)
+    monkeypatch.setattr(rb, "carried_from", lambda code, root=None: None)
     monkeypatch.setattr(rb, "code_fingerprint", lambda: "code")
     region = tmp_path / "l3-55"
 
