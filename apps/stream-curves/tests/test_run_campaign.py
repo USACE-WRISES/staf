@@ -297,6 +297,7 @@ def test_index_writes_every_state(runner, tmp_path):
     assert by["55"]["stagedVersion"] == 1 and by["55"]["functionsCovered"] == 3 and by["55"]["promoteEligible"] is None
     assert by["55"]["inputsDigest"] == digest_for("55") and by["55"]["promoteCommand"].endswith("--rebake-deep")
     assert by["65"]["openItems"] == 1 and by["65"]["stateDetail"] == "1 open item(s), 0 hard stop(s)"
+    assert by["65"]["openBlocking"] == 0 and by["65"]["openAdvisory"] == 1      # promotion policy 1.1
     assert by["13"]["exit"] == 2 and by["13"]["stateDetail"].startswith("exit 2 after 2 attempt(s): 40 of 100")
     assert by["27"]["exit"] == 1 and "after 2 attempt(s)" in by["27"]["stateDetail"]
     assert by["58"]["stateDetail"] == "no metric survived the hierarchy"
@@ -334,7 +335,7 @@ def test_eligibility_batch_summary_and_confirm(runner, tmp_path, capsys):
     out = capsys.readouterr().out
     assert "L3-55 Eastern Corn Belt Plains: eligible" in out and "L3-65 Northern Lakes and Forests: not eligible" in out
     doc = camp.read_json(root / camp.ELIGIBILITY_FILE)
-    assert doc["schema"] == camp.ELIGIBILITY_SCHEMA and doc["policy"]["version"] == "1.0"
+    assert doc["schema"] == camp.ELIGIBILITY_SCHEMA and doc["policy"]["version"] == "1.1"
     assert doc["policy"]["sha256"] == camp.load_promotion_policy()["meta"]["sha256"]
     assert doc["campaignId"] == fx["manifest"]["identity"]["campaignId"]
     assert doc["regions"]["55"]["eligible"] is True and doc["regions"]["55"]["blockers"] == []
@@ -342,8 +343,9 @@ def test_eligibility_batch_summary_and_confirm(runner, tmp_path, capsys):
     r65 = doc["regions"]["65"]
     assert r65["eligible"] is False
     assert any(b.startswith("frozen-record: n-boot 200 is not the campaign's 1000") for b in r65["blockers"])
-    assert any(b.startswith("rules-applied: 1 open item(s): CURVE-07:phab_SINU") for b in r65["blockers"])
+    assert any(b.startswith("rules-applied: 1 blocking open item(s): CURVE-07:phab_SINU") for b in r65["blockers"])
     assert r65["gates"]["equivalence-proven"]["passed"] is True
+    assert doc["regions"]["55"]["advisoryOpen"] == [] and r65["advisoryOpen"] == []
     # the index reads the verdicts back
     assert runner.main(["index", "--root", str(root)]) == 0
     by = {r["l3"]: r for r in camp.read_json(root / camp.INDEX_JSON)["regions"]}
@@ -366,7 +368,7 @@ def test_eligibility_batch_summary_and_confirm(runner, tmp_path, capsys):
     assert runner.main(["batch-summary", "--root", str(root), "--batch", "b two"]) == 2
     # the confirmation, written by hand
     confirmation = root / "promotion_batch_b1.confirmation.json"
-    good = {"batchId": "b1", "policyVersion": "1.0", "campaignId": fx["manifest"]["identity"]["campaignId"],
+    good = {"batchId": "b1", "policyVersion": "1.1", "campaignId": fx["manifest"]["identity"]["campaignId"],
             "regions": ["55"], "confirmedBy": TESTER, "confirmedAt": "2026-09-26",
             "statement": "Confirmed in chat on 2026-09-26."}
     camp.write_json(confirmation, dict(good, campaignId="r3-frozen-00000000-b1"))
@@ -395,7 +397,7 @@ def test_promote_status_policy_resolves_from_the_gates(runner, tmp_path, monkeyp
     fx = standard_root(tmp_path)
     rrb = runner.rrb
     status, res = rrb.resolve_policy_status(fx["run_dir"])
-    assert status == "preliminary" and res["blockers"] == [] and res["policyVersion"] == "1.0"
+    assert status == "preliminary" and res["blockers"] == [] and res["policyVersion"] == "1.1"
     assert res["campaignManifest"] == str(fx["root"] / camp.MANIFEST_FILE)
     assert res["gates"]["equivalence-proven"]["passed"] is True       # the manifest names the gate report
     assert res["expectation"].startswith("campaign manifest r3-frozen-")

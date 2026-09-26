@@ -564,12 +564,15 @@ index, the stage log): `staged` (record intact, staged path present, nothing ope
 folder exists), `unsupported` (no bundle, or the coverage gate refused the publish), `incomplete`
 (a packet with no staged version, or a staged version without an intact stage record), `refused`
 (exit 2 or 3), `failed`, `not-started`. `eligibility` applies `config/methodology/promotion_policy.yaml`
-(version 1.0, provisional; owner decision D2, Preliminary by policy) gate by gate from the same
-artifacts and never refits: frozen-record, rules-applied, pending-confirmable (a deep copy of the
-provenance is confirmed and discarded), owner-decisions-honored, portfolio-approvals,
-equivalence-proven (the gate report the manifest names, at the campaign's commit) and
-record-complete. The policy's sha rides in the manifest, `index.json`, `eligibility.json`, the batch
-summary and the promote record. `promote --status policy` reads the same gates: preliminary when
+(version 1.1, provisional; owner decision D2, Preliminary by policy) gate by gate from the same
+artifacts and never refits: frozen-record, rules-applied (no hard stop and no blocking open item;
+an open item blocks when its trigger blocks in the queue's tiers or is an uncovered hard-stop
+trigger, and every other open item is advisory: listed per region as `advisoryOpen` in
+`eligibility.json`, counted as `openAdvisory` in the index and named in the batch summary's
+eligible table, never hidden), pending-confirmable (a deep copy of the provenance is confirmed and
+discarded), owner-decisions-honored, portfolio-approvals, equivalence-proven (the gate report the
+manifest names, at the campaign's commit) and record-complete. The policy's sha rides in the
+manifest, `index.json`, `eligibility.json`, the batch summary and the promote record. `promote --status policy` reads the same gates: preliminary when
 every gate the run folder can answer passes (the equivalence gate needs `--gate-report` or the
 campaign manifest), else draft with the blockers on `promote_record.json`.
 

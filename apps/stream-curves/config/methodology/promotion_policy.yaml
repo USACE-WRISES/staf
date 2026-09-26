@@ -20,7 +20,22 @@
 #     it; the runner refuses a policy whose gates and checks do not match.
 
 meta:
-  version: "1.0"
+  # 1.1 (2026-09-26, methodology 0.15-provisional, campaign Round 2 close): the
+  # rules-applied gate reads "no hard stop and no blocking open item" instead of
+  # "nothing open". An open item blocks when its trigger blocks in the queue's
+  # own tiers (provenance._TRIGGER_TIERS) or is an uncovered hard-stop trigger
+  # (provenance.UNCOVERED_HARD_STOP_TRIGGERS: a reference tier fallback, a curve
+  # held for review, an unresolved direction); every other open item is advisory
+  # (an inverted discrimination check, a redundant pair, a missing interval, a
+  # stratifier candidate, a precision floor, a missingness review). Why: the
+  # owner published Central Basin and Range v1, Northern Lakes and Forests v1 and
+  # Interior Plateau v6 as Preliminary with such items open, and the fast pass
+  # left advisory items in most regions. Advisory open items are never hidden:
+  # eligibility.json lists them per region (advisoryOpen), the index counts them
+  # (openAdvisory beside openBlocking), and the batch summary's eligible table
+  # names them, so the owner confirms a batch knowing what stays open.
+  # 1.0 (2026-09-25): the seven gates, owner decision D2.
+  version: "1.1"
   status: provisional
   approved_under: "methodology 0.15-provisional (pending)"
   owner_decision: "D2 Preliminary by policy (2026-09-24)"
@@ -37,10 +52,13 @@ gates:
     check: streamcurves.campaign.gate_frozen_record
 
   - id: rules-applied
-    title: Every rule applied or recorded
+    title: No hard stop and no blocking open item
     evidence: >-
-      standing_decisions_applied.json open_items and hard_stops empty; review_packet.open_items
-      empty (no CURVE-07 or CURVE-13 item left open).
+      standing_decisions_applied.json and review_packet.json: hard_stops empty, and no open
+      item whose trigger blocks in the queue's tiers or is an uncovered hard-stop trigger (no
+      CURVE-07, CURVE-13, CURVE-05 or REF-02 item left open). Advisory open items pass the
+      gate and are listed per region in eligibility.json (advisoryOpen) and in the batch
+      summary's eligible table.
     check: streamcurves.campaign.gate_rules_applied
 
   - id: pending-confirmable
