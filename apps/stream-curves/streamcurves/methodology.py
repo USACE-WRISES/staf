@@ -182,10 +182,15 @@ def curve12_gate() -> dict:
 
 def parse_offset(value: Any) -> float:
     """An IQR offset from the config: a number, or a fraction written as a
-    string such as ``"4/3"`` (YAML reads an unquoted 4/3 as a string too)."""
+    string such as ``"4/3"`` (YAML reads an unquoted 4/3 as a string too). An
+    integer fraction keeps its numerator and denominator (``curves.IqrOffset``, a
+    float) so the seed multiplies then divides, as the iqr-seed-2 literals did."""
     if isinstance(value, str) and "/" in value:
-        num, den = value.split("/", 1)
-        return float(num.strip()) / float(den.strip())
+        num, den = (part.strip() for part in value.split("/", 1))
+        if num.lstrip("-").isdigit() and den.isdigit():
+            from .curves import IqrOffset
+            return IqrOffset(int(num), int(den))
+        return float(num) / float(den)
     return float(value)
 
 

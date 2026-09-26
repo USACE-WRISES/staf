@@ -99,9 +99,45 @@ def curve_form_of(metric_entry: Mapping | None) -> str:
 # test pins that they reproduce the iqr-seed-2 golden seeds.
 # --------------------------------------------------------------------------- #
 MONOTONE_TAIL_OFFSETS_IQR = (0.5, 1.5, 2.5)
+
+
+class IqrOffset(float):
+    """An IQR offset spelled as a fraction in the knob (``"4/3"``): a float for every
+    comparison, record and JSON, carrying its numerator and denominator so the seed
+    evaluates ``iqr * 4 / 3`` (multiply, then divide), the arithmetic of the iqr-seed-2
+    literals, bit for bit. A pre-rounded ``iqr * 1.3333333333333333`` differs from it in
+    the last place on falling knots (found 2026-09-26 at the 0.15 regeneration: 88 of the
+    EASI members refits), which a published curve's replay must never show."""
+
+    ratio: tuple[int, int]
+
+    def __new__(cls, num: int, den: int):
+        if int(den) == 0:
+            raise ValueError("an IQR offset's denominator cannot be zero")
+        self = float.__new__(cls, int(num) / int(den))
+        self.ratio = (int(num), int(den))
+        return self
+
+    def __reduce__(self):
+        return (IqrOffset, self.ratio)
+
+
+def offset_times(iqr, offset):
+    """``iqr`` scaled by a tail offset with the arithmetic its spelling implies: a
+    fraction (:class:`IqrOffset`) multiplies then divides, a decimal multiplies once.
+    ``iqr * 3 / 2`` and ``iqr * 1.5`` agree bit for bit (halving commutes with rounding),
+    so the iqr-seed-3 default is unchanged whichever way it is spelled."""
+    ratio = getattr(offset, "ratio", None)
+    if ratio:
+        num, den = ratio
+        return iqr * num / den
+    return iqr * offset
+
+
 #: the endpoints of iqr-seed-2 (methodology 0.9 to 0.14), for a build that
-#: must reproduce a published seed geometry; never the default again
-LEGACY_TAIL_OFFSETS_IQR_SEED_2 = (0.3, 4.0 / 3.0, 7.0 / 3.0)
+#: must reproduce a published seed geometry; never the default again. The
+#: fractions keep their spelling so the seed reproduces the literals' arithmetic.
+LEGACY_TAIL_OFFSETS_IQR_SEED_2 = (0.3, IqrOffset(4, 3), IqrOffset(7, 3))
 DEFAULT_SEED_GEOMETRY = {"tail_offsets_iqr": MONOTONE_TAIL_OFFSETS_IQR,
                          "custom_tail_offsets": False,
                          "zero_inflated_share": None, "zero_inflated_handling": None}
@@ -176,7 +212,8 @@ def two_part_curve_points(positive_values: Any, geometry: Mapping | None = None)
     q25, q75, iqr = float(stats["q25"]), float(stats["q75"]), float(stats["iqr"])
     return pd.DataFrame({
         "point_order": [1, 2, 3, 4, 5, 6],
-        "metric_value": [0.0, q25 - iqr * far, q25 - iqr * mid, q25, q75, q75 + iqr * near],
+        "metric_value": [0.0, q25 - offset_times(iqr, far), q25 - offset_times(iqr, mid), q25, q75,
+                         q75 + offset_times(iqr, near)],
         "index_score": [0.00, 0.00, 0.30, 0.70, 1.00, 1.00],
     })
 
@@ -224,6 +261,8 @@ __all__ = [
     "reference_curve_score_value",
     "MONOTONE_TAIL_OFFSETS_IQR",
     "LEGACY_TAIL_OFFSETS_IQR_SEED_2",
+    "IqrOffset",
+    "offset_times",
     "seed_geometry",
     "zero_inflation_of",
     "two_part_curve_points",
@@ -1851,11 +1890,11 @@ def build_reference_curve(
             # lower-is-better seed below. Nonnegative scales keep the R port's
             # origin-anchored form unchanged.
             rising_x = [
-                stats["q25"] - stats["iqr"] * far,
-                stats["q25"] - stats["iqr"] * mid,
+                stats["q25"] - offset_times(stats["iqr"], far),
+                stats["q25"] - offset_times(stats["iqr"], mid),
                 stats["q25"],
                 stats["q75"],
-                stats["q75"] + stats["iqr"] * near,
+                stats["q75"] + offset_times(stats["iqr"], near),
             ]
         else:
             rising_x = [
@@ -1863,7 +1902,7 @@ def build_reference_curve(
                 stats["q25"] * 3 / 7,
                 stats["q25"],
                 stats["q75"],
-                stats["q75"] + stats["iqr"] * near,
+                stats["q75"] + offset_times(stats["iqr"], near),
             ]
         auto_points = pd.DataFrame(
             {
@@ -1878,11 +1917,11 @@ def build_reference_curve(
             {
                 "point_order": [1, 2, 3, 4, 5],
                 "metric_value": [
-                    max(0, stats["q25"] - stats["iqr"] * near),
+                    max(0, stats["q25"] - offset_times(stats["iqr"], near)),
                     stats["q25"],
                     stats["q75"],
-                    stats["q75"] + stats["iqr"] * mid,
-                    stats["q75"] + stats["iqr"] * far,
+                    stats["q75"] + offset_times(stats["iqr"], mid),
+                    stats["q75"] + offset_times(stats["iqr"], far),
                 ],
                 "index_score": [1.00, 1.00, 0.70, 0.30, 0.00],
             }
