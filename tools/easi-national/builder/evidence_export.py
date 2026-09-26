@@ -400,11 +400,18 @@ def export_members(root, out: Path, records: dict, producer: dict, universe_dige
 
 
 def engine_block() -> dict:
+    """The curve engine a fit ran through, and the tail endpoints and curve method
+    version it ran under (the method's own, ``curves.SEED_TAIL_OFFSETS_IQR``: a
+    refit fits under what is recorded here, whatever the engine's current default;
+    a recipe without these two fields means the same legacy triple)."""
+    from builder.analysis import curves
     engine = STREAM_CURVES_APP / "streamcurves" / "curves.py"
     raw = engine.read_bytes()
     lf = raw.replace(b"\r\n", b"\n")
     return {"path": "apps/stream-curves/streamcurves/curves.py", "sha256": sha(raw),
             "sha256_lf": sha(lf), "sha256_crlf": sha(lf.replace(b"\n", b"\r\n")),
+            "tailOffsetsIqr": [float(v) for v in curves.SEED_TAIL_OFFSETS_IQR],
+            "curveMethodVersion": curves.CURVE_METHOD_VERSION,
             "frozenArtifactEngineSha256": "a44a89f86edff23ed46fda2dfbd79b34ce41a334c2221436f49116b8eb9e1adb"}
 
 

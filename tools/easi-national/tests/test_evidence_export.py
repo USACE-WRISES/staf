@@ -122,3 +122,14 @@ def test_the_recorded_recipe_code_is_what_the_refit_computes_and_stays_out_of_da
     assert "code" not in ee.engine_block()
     for export in (ee.export_members, ee.export_fits):
         assert '"code": recipe_code()' in inspect.getsource(export)
+
+
+def test_the_engine_block_records_the_tail_endpoints_the_fits_ran_under():
+    """A refit fits under what the recipe records, whatever the engine's current default;
+    the exporter writes the method's own endpoints (iqr-seed-2), never the engine's."""
+    from builder.analysis import curves
+    from streamcurves import curves as engine
+    block = ee.engine_block()
+    assert block["tailOffsetsIqr"] == [0.3, 4 / 3, 7 / 3] == list(curves.SEED_TAIL_OFFSETS_IQR)
+    assert block["curveMethodVersion"] == "iqr-seed-2" == curves.CURVE_METHOD_VERSION
+    assert tuple(block["tailOffsetsIqr"]) != engine.MONOTONE_TAIL_OFFSETS_IQR
