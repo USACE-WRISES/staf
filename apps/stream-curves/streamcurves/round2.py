@@ -57,6 +57,10 @@ CONFIG_DIR_NAME = "config"
 VERDICT_ADOPT = "adopt"
 VERDICT_REJECT = "reject"
 VERDICT_REFERENCE = "reference-only"
+#: an arm whose primary outcome or a blocking outcome has no data: never adopted, never
+#: rejected, evaluated again (C3b, 2026-09-26: the hierarchy harness crashed and the compare
+#: step had written adopt on the stability outcome alone)
+VERDICT_INCONCLUSIVE = "inconclusive"
 DECISION_TYPES = ("accuracy_change", "simplification", "coverage_only", "reference_arm")
 OUTCOME_IDS = ("O1", "O2", "O3", "O4", "O5", "O6")
 
@@ -898,18 +902,28 @@ def subgroup_block(deltas_by_group: Mapping[str, Optional[float]], *,
 
 def adoption(decision: str, *, primary: Optional[Mapping], limits: Iterable[Mapping],
              constraint_resolved: Optional[bool] = None,
-             coverage_gain: Optional[float] = None) -> dict:
-    """The verdict of one candidate: adopt, reject or reference-only.
+             coverage_gain: Optional[float] = None,
+             missing: Iterable[str] = ()) -> dict:
+    """The verdict of one candidate: adopt, reject, reference-only or inconclusive.
 
     A reference arm is never adopted. A coverage-only candidate is adopted only with
     no block, a recorded resolution of its constraint (D4a) and a coverage gain; it is
     reference-only while the constraint stands. An accuracy change or a simplification
-    is adopted on its primary rule with no block, and rejected otherwise.
+    is adopted on its primary rule with no block, and rejected otherwise. ``missing``
+    names the outcomes that have no data (the primary, or one that could block: O1, O2,
+    O3, O5): with any of them missing the verdict is inconclusive for every candidate
+    but a reference arm, because an absent block is not a passed one.
     """
     limits = [dict(x) for x in limits]
     blocking = [x for x in limits if x.get("blocks")]
     reasons = [f"{x.get('outcome')}: {x.get('why')}" for x in blocking]
     test = primary_test(decision, primary)
+    missing = [str(m) for m in missing]
+    if missing and decision != "reference_arm":
+        return {"verdict": VERDICT_INCONCLUSIVE, "decision": decision, "primaryRule": test,
+                "reasons": [f"no data for {', '.join(missing)}: evaluate the arm again before a verdict"]
+                + reasons,
+                "blocks": [x.get("outcome") for x in blocking], "missing": missing}
     if decision == "reference_arm":
         verdict = VERDICT_REFERENCE
         reasons = ["a reference arm is reported and never adopted"] + reasons
