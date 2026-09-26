@@ -620,3 +620,18 @@ def test_a_missing_outcome_makes_the_verdict_inconclusive():
     assert round2.adoption("accuracy_change", primary=passing, limits=[], missing=["O3"])["verdict"] == round2.VERDICT_INCONCLUSIVE
     assert round2.adoption("coverage_only", primary=None, limits=[], constraint_resolved=True, coverage_gain=3,
                            missing=["O5"])["verdict"] == round2.VERDICT_INCONCLUSIVE
+
+
+def test_the_finalist_composition_is_judged_as_a_simplification():
+    """compose_finalist records decision "composition"; the first finalist compare of
+    2026-09-26 raised on it. The composition passes on noninferiority with every block."""
+    passing = dict(estimate=0.0, lo=0.0, hi=0.0, n=229, n_clusters=14, level=0.9)
+    test = round2.primary_test("composition", passing)
+    assert test["rule"] == "composition" and test["passes"] is True
+    assert round2.adoption("composition", primary=passing, limits=[])["verdict"] == round2.VERDICT_ADOPT
+    failing = dict(estimate=-0.1, lo=-0.2, hi=0.0, n=229, n_clusters=14, level=0.9)
+    assert round2.adoption("composition", primary=failing, limits=[])["verdict"] == round2.VERDICT_REJECT
+    blocked = round2.adoption("composition", primary=passing,
+                              limits=[dict(outcome="O3", blocks=True, why="association lost")])
+    assert blocked["verdict"] == round2.VERDICT_REJECT and blocked["blocks"] == ["O3"]
+    assert round2.adoption("composition", primary=None, limits=[], missing=["O1"])["verdict"] == round2.VERDICT_INCONCLUSIVE

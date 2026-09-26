@@ -61,7 +61,10 @@ VERDICT_REFERENCE = "reference-only"
 #: rejected, evaluated again (C3b, 2026-09-26: the hierarchy harness crashed and the compare
 #: step had written adopt on the stability outcome alone)
 VERDICT_INCONCLUSIVE = "inconclusive"
-DECISION_TYPES = ("accuracy_change", "simplification", "coverage_only", "reference_arm")
+#: ``composition`` is the finalist (``compose_finalist``): the accepted changes together,
+#: checked once on the development cells the way a simplification is (noninferior on the
+#: primary, every block in force), since each member was adopted on its own margin.
+DECISION_TYPES = ("accuracy_change", "simplification", "coverage_only", "reference_arm", "composition")
 OUTCOME_IDS = ("O1", "O2", "O3", "O4", "O5", "O6")
 
 #: The margins of Pre-registration V, section 6, as constants. O1 and O3 name the
@@ -839,7 +842,7 @@ def primary_test(decision: str, delta: Optional[Mapping]) -> dict:
                         f"interval excludes 0 and the median delta is at least "
                         f"{m['accuracy_change_min_delta']:+.2f}")}
     ok = float(d["lo"]) >= m["simplification_lower_bound"]
-    return {"rule": "simplification", "passes": ok,
+    return {"rule": "composition" if decision == "composition" else "simplification", "passes": ok,
             "why": (f"lower bound {float(d['lo']):+.4f} of the {int(d.get('level', 0.9) * 100)} percent "
                     f"interval; noninferior when at least {m['simplification_lower_bound']:+.2f}")}
 
