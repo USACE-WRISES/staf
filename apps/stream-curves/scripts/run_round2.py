@@ -77,6 +77,16 @@ def _protocol(a) -> Path:
     return p
 
 
+def _failed_evaluate_steps(arm_dir: Path) -> list[str]:
+    """The evaluation steps ``evaluate.json`` records with a non-zero exit (a skipped
+    step records None and is not a failure); empty when there is no record."""
+    p = Path(arm_dir) / EVALUATION_DIR / "evaluate.json"
+    if not p.is_file():
+        return []
+    exits = (_read_json(p).get("exits") or {})
+    return sorted(str(k) for k, v in exits.items() if v not in (0, None))
+
+
 def _arm(out_root: Path, arm_id: str, protocol: Path) -> tuple[Path, dict]:
     """The arm folder and its record, refused when it was built under another protocol."""
     d = round2.arm_dir(out_root, arm_id)
@@ -369,6 +379,15 @@ def cmd_compare(a) -> int:
     out_root = Path(a.out).resolve()
     base_dir, base_rec = _arm(out_root, a.baseline, protocol)
     arm_dir, arm_rec = _arm(out_root, a.arm, protocol)
+    # an evaluation that failed leaves an outcome without data; a verdict on the rest would
+    # read an absent block as a passed one (C3b, 2026-09-26), so the arm is evaluated again
+    failed = {label: _failed_evaluate_steps(d) for label, d in ((a.arm, arm_dir), (a.baseline, base_dir))}
+    failed = {k: v for k, v in failed.items() if v}
+    if failed and not getattr(a, "allow_failed_evaluate", False):
+        raise SystemExit("refusing to compare: the evaluation of "
+                         + "; ".join(f"{k} failed at {', '.join(v)}" for k, v in failed.items())
+                         + ". Run evaluate again for the failed step(s) (or pass --allow-failed-evaluate "
+                           "for an inconclusive record).")
     cand = arm_rec.get("candidate") or {}
     decision = str(cand.get("decision") or "accuracy_change")
     primary_outcome = str(cand.get("primary_outcome") or "O1")
@@ -504,9 +523,14 @@ def cmd_compare(a) -> int:
     elif primary_outcome == "O4" and coverage:
         primary.update({"unit": "coverage (reported)", "n": None, "delta": {}})
 
+    # an outcome recorded as a note alone has no data; the primary without a delta likewise
+    missing = [oid for oid in ("O1", "O2", "O3", "O5")
+               if set(outcomes.get(oid) or {}) <= {"note", "blocks"}]
+    if primary_outcome not in ("O4",) and not primary.get("delta") and primary_outcome not in missing:
+        missing.append(primary_outcome)
     adoption = round2.adoption(decision, primary=primary.get("delta") or None, limits=limits,
                                constraint_resolved=bool(a.constraint_resolved) if a.constraint_resolved else None,
-                               coverage_gain=coverage_gain)
+                               coverage_gain=coverage_gain, missing=missing)
     verdict = {
         "schema": "round2-verdict/1", "arm": a.arm, "baseline": a.baseline, "candidate": cand,
         "decision": decision, "primaryOutcome": primary_outcome, "primary": primary,
@@ -620,6 +644,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--all-cells", action="store_true", help="every cell, not only the development testable cells")
     p.add_argument("--constraint-resolved", default=None, metavar="NOTE",
                    help="for a coverage-only candidate: the record that its constraint (D4a) is resolved")
+    p.add_argument("--allow-failed-evaluate", action="store_true",
+                   help="compare although a step of the evaluation failed (the verdict is then "
+                        "inconclusive for the outcomes without data)")
 
     p = sub.add_parser("finalist", help="compose the accepted arms into one config root")
     common(p)

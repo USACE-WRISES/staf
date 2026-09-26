@@ -601,3 +601,20 @@ def test_compare_and_finalist_end_to_end(tmp_path, protocol_path, source_config,
     sup = json.loads((round2.arm_dir(root, round2.FINALIST_ARM) / "supporting.json").read_text(encoding="utf-8"))
     assert sup["verdicts"] == {"B1": "adopt", "C6": "reference-only"}
     assert sup["benjamini_hochberg"]["q_values"]["B1"] == 0.0 and "B1" in sup["benjamini_hochberg"]["passing"]
+
+
+def test_a_missing_outcome_makes_the_verdict_inconclusive():
+    """An absent block is not a passed one: C3b's hierarchy harness crashed on 2026-09-26 and
+    the compare step had adopted on the stability outcome alone."""
+    passing = dict(estimate=0.0, lo=0.0, hi=0.0, n=229, n_clusters=14)
+    got = round2.adoption("simplification", primary=passing, limits=[], missing=["O1", "O2"])
+    assert got["verdict"] == round2.VERDICT_INCONCLUSIVE
+    assert got["missing"] == ["O1", "O2"]
+    assert "no data for O1, O2" in got["reasons"][0]
+    # with the data present the same primary adopts, and a reference arm stays reference-only
+    assert round2.adoption("simplification", primary=passing, limits=[])["verdict"] == round2.VERDICT_ADOPT
+    assert round2.adoption("reference_arm", primary=passing, limits=[], missing=["O1"])["verdict"] == round2.VERDICT_REFERENCE
+    # an accuracy change and a coverage-only candidate are inconclusive too
+    assert round2.adoption("accuracy_change", primary=passing, limits=[], missing=["O3"])["verdict"] == round2.VERDICT_INCONCLUSIVE
+    assert round2.adoption("coverage_only", primary=None, limits=[], constraint_resolved=True, coverage_gain=3,
+                           missing=["O5"])["verdict"] == round2.VERDICT_INCONCLUSIVE
