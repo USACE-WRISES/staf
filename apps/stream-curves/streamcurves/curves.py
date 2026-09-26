@@ -87,12 +87,21 @@ def curve_form_of(metric_entry: Mapping | None) -> str:
 # quartiles, in IQR units (near, mid, far): the falling seed's 1.00 / 0.30 /
 # 0.00 steps sit at Q75 + near, Q75 + mid, Q75 + far IQR; the signed-scale
 # rising seed mirrors them below Q25; the origin-anchored rising seed ends its
-# plateau at Q75 + near IQR. The literal arithmetic in build_reference_curve
-# (iqr * 7 / 3, iqr * 0.3) is the parity anchor and stays for the default, so
-# a config that restates these values reproduces every published seed byte
-# for byte; only a different value takes the general expression.
+# plateau at Q75 + near IQR.
+#
+# iqr-seed-3 (methodology 0.15, 2026-09-26, campaign Round 2 candidate C3b
+# adopted): the endpoints are 0.5, 1.5 and 2.5 IQR. The development set showed
+# no class change against the engine's earlier 0.3, 4/3 and 7/3 (O1 delta
+# 0.0000 over 1,157 cells, O5 identical), so the plainer values are the
+# default and the ladders below are written as one expression of the offsets.
+# The iqr-seed-2 endpoints stay reachable through curve10.tail_offsets_iqr
+# ([0.3, "4/3", "7/3"], a non-default knob that joins the inputs digest), and a
+# test pins that they reproduce the iqr-seed-2 golden seeds.
 # --------------------------------------------------------------------------- #
-MONOTONE_TAIL_OFFSETS_IQR = (0.3, 4.0 / 3.0, 7.0 / 3.0)
+MONOTONE_TAIL_OFFSETS_IQR = (0.5, 1.5, 2.5)
+#: the endpoints of iqr-seed-2 (methodology 0.9 to 0.14), for a build that
+#: must reproduce a published seed geometry; never the default again
+LEGACY_TAIL_OFFSETS_IQR_SEED_2 = (0.3, 4.0 / 3.0, 7.0 / 3.0)
 DEFAULT_SEED_GEOMETRY = {"tail_offsets_iqr": MONOTONE_TAIL_OFFSETS_IQR,
                          "custom_tail_offsets": False,
                          "zero_inflated_share": None, "zero_inflated_handling": None}
@@ -214,6 +223,7 @@ __all__ = [
     "interp_curve",
     "reference_curve_score_value",
     "MONOTONE_TAIL_OFFSETS_IQR",
+    "LEGACY_TAIL_OFFSETS_IQR_SEED_2",
     "seed_geometry",
     "zero_inflation_of",
     "two_part_curve_points",
@@ -1709,12 +1719,12 @@ def build_reference_curve(
     "optimum" seed), validated; invalid seeds keep their points but get
     "degenerate_curve".
 
-    Campaign Round 2 knobs (config ``curve10``, every default today's behavior):
-    a zero-inflated pool under ``zero_inflated_handling: two_part`` takes the
-    two-part seed (:func:`two_part_curve_points`, status "complete") before the
-    degenerate-Q25 guard is reached; ``withhold`` is applied upstream by the
-    evidence pass, so here it changes nothing; ``tail_offsets_iqr`` moves the
-    monotone tails when it differs from the engine's own values.
+    Campaign Round 2 knobs (config ``curve10``): a zero-inflated pool under
+    ``zero_inflated_handling: two_part`` takes the two-part seed
+    (:func:`two_part_curve_points`, status "complete") before the degenerate-Q25
+    guard is reached; ``withhold`` is applied upstream by the evidence pass, so
+    here it changes nothing; ``tail_offsets_iqr`` sets the monotone ladders' tail
+    endpoints (iqr-seed-3: 0.5, 1.5 and 2.5 IQR, the engine's own default).
     """
     mc = metric_config.get(metric_key) or {}
     col_name = mc.get("column_name")
@@ -1830,30 +1840,10 @@ def build_reference_curve(
             non_negative=not signed_scale,
             low_tail=str(mc.get("low_tail") or "penalized"),
         )
-    elif geometry.get("custom_tail_offsets"):
-        # Campaign Round 2 (C3b): the configured tail endpoints, the general form
-        # of the literal ladders below. Never taken on the default config.
-        near, mid, far = geometry["tail_offsets_iqr"]
-        if higher_is_better and signed_scale:
-            rising_x = [stats["q25"] - stats["iqr"] * far, stats["q25"] - stats["iqr"] * mid,
-                        stats["q25"], stats["q75"], stats["q75"] + stats["iqr"] * near]
-            auto_points = pd.DataFrame({"point_order": [1, 2, 3, 4, 5],
-                                        "metric_value": rising_x,
-                                        "index_score": [0.00, 0.30, 0.70, 1.00, 1.00]})
-        elif higher_is_better:
-            rising_x = [0.0, stats["q25"] * 3 / 7, stats["q25"], stats["q75"],
-                        stats["q75"] + stats["iqr"] * near]
-            auto_points = pd.DataFrame({"point_order": [1, 2, 3, 4, 5],
-                                        "metric_value": rising_x,
-                                        "index_score": [0.00, 0.30, 0.70, 1.00, 1.00]})
-        else:
-            auto_points = pd.DataFrame({
-                "point_order": [1, 2, 3, 4, 5],
-                "metric_value": [max(0, stats["q25"] - stats["iqr"] * near), stats["q25"],
-                                 stats["q75"], stats["q75"] + stats["iqr"] * mid,
-                                 stats["q75"] + stats["iqr"] * far],
-                "index_score": [1.00, 1.00, 0.70, 0.30, 0.00]})
     elif higher_is_better:
+        # The monotone ladders' tail endpoints are the configured offsets
+        # (iqr-seed-3: 0.5, 1.5 and 2.5 IQR; campaign Round 2 candidate C3b).
+        near, mid, far = geometry["tail_offsets_iqr"]
         if signed_scale:
             # iqr-seed-2 (2026-08-21): a signed scale (log relative bed
             # stability) has no meaningful origin, so the rising seed uses the
@@ -1861,11 +1851,11 @@ def build_reference_curve(
             # lower-is-better seed below. Nonnegative scales keep the R port's
             # origin-anchored form unchanged.
             rising_x = [
-                stats["q25"] - stats["iqr"] * 7 / 3,
-                stats["q25"] - stats["iqr"] * 4 / 3,
+                stats["q25"] - stats["iqr"] * far,
+                stats["q25"] - stats["iqr"] * mid,
                 stats["q25"],
                 stats["q75"],
-                stats["q75"] + stats["iqr"] * 0.3,
+                stats["q75"] + stats["iqr"] * near,
             ]
         else:
             rising_x = [
@@ -1873,7 +1863,7 @@ def build_reference_curve(
                 stats["q25"] * 3 / 7,
                 stats["q25"],
                 stats["q75"],
-                stats["q75"] + stats["iqr"] * 0.3,
+                stats["q75"] + stats["iqr"] * near,
             ]
         auto_points = pd.DataFrame(
             {
@@ -1883,15 +1873,16 @@ def build_reference_curve(
             }
         )
     else:
+        near, mid, far = geometry["tail_offsets_iqr"]
         auto_points = pd.DataFrame(
             {
                 "point_order": [1, 2, 3, 4, 5],
                 "metric_value": [
-                    max(0, stats["q25"] - stats["iqr"] * 0.3),
+                    max(0, stats["q25"] - stats["iqr"] * near),
                     stats["q25"],
                     stats["q75"],
-                    stats["q75"] + stats["iqr"] * 4 / 3,
-                    stats["q75"] + stats["iqr"] * 7 / 3,
+                    stats["q75"] + stats["iqr"] * mid,
+                    stats["q75"] + stats["iqr"] * far,
                 ],
                 "index_score": [1.00, 1.00, 0.70, 0.30, 0.00],
             }

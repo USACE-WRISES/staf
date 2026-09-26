@@ -445,6 +445,25 @@ MISSING_POOL = {"metricId": "spring-chem-chla", "metricName": "Chlorophyll a",
                 "statement": "Insufficient reference support. Too few stations."}
 
 
+#: StreamCurves methodology 0.15: two rules withhold a metric whose pool exists,
+#: at the build, and each reads under its own label
+HIGH_MISSING = {"metricId": "spring-phab-lwdeqvolm100", "metricName": "Large wood volume",
+                "reason": "high-missingness", "rule": "DATA-03",
+                "functions": [{"functionId": "habitat-provision", "functionName": "Habitat provision"}],
+                "statement": ("High missingness. 55% of the 40 comparable reference stations of "
+                              "this ecoregion's own reference pool have no value for this metric "
+                              "(18 carry one), above the 40% limit of rule DATA-03, so the metric "
+                              "is withheld at the build. No curve was built and the metric is "
+                              "not scored.")}
+NARROW_CORE = {"metricId": "spring-chem-ph", "metricName": "pH",
+               "reason": "measurement-precision-floor", "rule": "CURVE-09",
+               "functions": [{"functionId": "water-soil-quality", "functionName": "Water and soil quality"}],
+               "statement": ("Measurement-precision floor. The Functioning core of this two-sided "
+                             "curve spans 0.153 su, narrower than 0.4 su, so the metric is "
+                             "withheld at the build under rule CURVE-09. No curve was built and "
+                             "the metric is not scored.")}
+
+
 def test_a_held_curve_is_titled_as_held_not_as_a_missing_pool():
     assert rs.is_held(HELD) and not rs.is_held(MISSING_POOL)
     assert rs.withheld_title(HELD) == "Held for review, not scored"
@@ -454,6 +473,24 @@ def test_a_held_curve_is_titled_as_held_not_as_a_missing_pool():
     assert rs.withheld_reason(HELD) == "Held for review"
 
 
+def test_a_metric_withheld_by_a_rule_reads_under_that_rule():
+    """Methodology 0.15: DATA-03 and CURVE-09 withhold at the build; the label
+    names the rule. Any other reason keeps the insufficient-support wording."""
+    assert not rs.is_held(HIGH_MISSING) and not rs.is_held(NARROW_CORE)
+    assert rs.withheld_reason(HIGH_MISSING) == "withheld: high missingness (DATA-03)"
+    assert rs.withheld_title(HIGH_MISSING) == "Withheld: high missingness (DATA-03), not scored"
+    assert rs.withheld_reason(NARROW_CORE) == "withheld: measurement-precision floor (CURVE-09)"
+    assert rs.withheld_title(NARROW_CORE) == \
+        "Withheld: measurement-precision floor (CURVE-09), not scored"
+    other = {**MISSING_POOL, "reason": "discrimination-gate"}
+    assert rs.withheld_reason(other) == "Insufficient reference support"
+    assert rs.withheld_title(other) == rs.INSUFFICIENT_TITLE
+    note = rs.withheld_note([HIGH_MISSING, NARROW_CORE])
+    assert "rule DATA-03" in note and "rule CURVE-09" in note
+    assert "national donor" not in note and "held for review" not in note
+    assert chr(0x2014) not in note
+
+
 def test_the_note_explains_only_the_reasons_present():
     held_only = rs.withheld_note([HELD])
     assert "held for review" in held_only and "national donor" not in held_only
@@ -461,6 +498,7 @@ def test_the_note_explains_only_the_reasons_present():
     assert "no national donor pool" in pool_only and "held for review" not in pool_only
     both = rs.withheld_note([HELD, MISSING_POOL])
     assert "held for review" in both and "no modeled expectation" in both
+    assert "rule DATA-03" not in both and "rule CURVE-09" not in both
     for text in (held_only, pool_only, both):
         assert "modelled" not in text and chr(0x2014) not in text
 
