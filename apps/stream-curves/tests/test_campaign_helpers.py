@@ -356,7 +356,7 @@ def test_the_promotion_policy_names_every_gate_and_its_check():
     policy = camp.load_promotion_policy()
     assert camp.validate_promotion_policy(policy) == []
     assert [g["id"] for g in policy["gates"]] == list(camp.GATE_IDS)
-    assert policy["meta"]["version"] == "1.0" and policy["meta"]["status"] == "provisional"
+    assert policy["meta"]["version"] == "1.1" and policy["meta"]["status"] == "provisional"
     assert policy["meta"]["sha256"].startswith("sha256:")
     broken = copy.deepcopy(policy)
     broken["gates"][0]["check"] = "nowhere"
@@ -507,6 +507,7 @@ def test_index_rows_and_csv_on_the_standard_root(tmp_path):
     assert r["stagedVersion"] == 1 and r["contentDigest"] == fx["bundle"]["contentDigest"]
     assert r["functionsCovered"] == 3 and r["withheld"] == 1 and r["curves"] == 6 and r["decisionsApplied"] == 1
     assert r["openItems"] == 0 and r["hardStops"] == 0 and r["promoteEligible"] is None
+    assert r["openBlocking"] == 0 and r["openAdvisory"] == 0
     assert r["inputsDigest"] == digest_for("55") and r["promoteCommand"].startswith("promote ")
     assert r["sourceMix"]["l2"] == 2 and r["perFunction"]["water-soil-quality"] == "fixed"
     text = camp.index_csv_text(rows)
@@ -515,7 +516,7 @@ def test_index_rows_and_csv_on_the_standard_root(tmp_path):
     assert '""l2"": 2' in text and "staged" in text
     doc = camp.index_document(fx["manifest"], rows, inputs={"manifest.json": "sha256:x"}, generated_at="t")
     assert doc["schema"] == camp.INDEX_SCHEMA and doc["counts"] == {"staged": 1}
-    assert doc["promotionPolicy"]["version"] == "1.0" and doc["campaign"]["campaignId"].startswith("r3-frozen-")
+    assert doc["promotionPolicy"]["version"] == "1.1" and doc["campaign"]["campaignId"].startswith("r3-frozen-")
 
 
 # --------------------------------------------------------------------------- #
@@ -529,7 +530,7 @@ def test_every_gate_passes_on_the_standard_root(tmp_path):
                               policy=policy)
     assert res["eligible"] is True and res["blockers"] == [], res
     assert set(res["gates"]) == set(camp.GATE_IDS) and res["skipped"] == []
-    assert res["stagedPath"] == str(fx["vdir"])
+    assert res["stagedPath"] == str(fx["vdir"]) and res["advisoryOpen"] == []
     # the run folder alone: the equivalence gate is skipped and does not count
     partial = camp.evaluate_gates(fx["run_dir"], expect=camp.expectation_from_run(fx["run_dir"]),
                                   decisions_file=decisions_file, policy=policy, skip=("equivalence-proven",))
@@ -560,22 +561,53 @@ def test_gate_frozen_record_fails_on_each_moved_value(tmp_path):
     assert not ok and "stage_complete.json is missing" in detail
 
 
-def test_gate_rules_applied_fails_on_an_open_item_or_a_hard_stop(tmp_path):
+def test_gate_rules_applied_passes_advisory_items_and_fails_blocking_ones(tmp_path):
+    """Promotion policy 1.1: no hard stop and no blocking open item; advisory open items
+    pass and are named, never hidden."""
     fx = standard_root(tmp_path)
     run_dir = fx["run_dir"]
-    assert camp.gate_rules_applied(run_dir)[0] is True
-    applied = camp.read_json(run_dir / camp.APPLIED_FILE)
-    applied["hard_stops"] = [{"item_id": "CURVE-07:phab_SINU", "trigger": "curve_needs_review"}]
-    camp.write_json(run_dir / camp.APPLIED_FILE, applied)
     ok, detail = camp.gate_rules_applied(run_dir)
-    assert not ok and "1 hard stop(s): CURVE-07:phab_SINU" in detail
+    assert ok and detail.endswith("no hard stop and no blocking open item; nothing left open")
     packet = camp.read_json(run_dir / camp.PACKET_FILE)
-    packet["open_items"] = [{"item_id": "SELECT-01:habitat-provision"}]
+    advisory = [{"item_id": "CURVE-12:chem_PH", "trigger": "inverted_discrimination", "blocking": False,
+                 "question": "?"},
+                {"item_id": "RED-01:a|b", "trigger": "redundant_pair", "blocking": False, "question": "?"}]
+    packet["open_items"] = list(advisory)
     camp.write_json(run_dir / camp.PACKET_FILE, packet)
     ok, detail = camp.gate_rules_applied(run_dir)
-    assert not ok and "1 open item(s): SELECT-01:habitat-provision" in detail
+    assert ok and detail.endswith("2 advisory open item(s) listed: CURVE-12:chem_PH, RED-01:a|b")
+    assert camp.advisory_open_items(run_dir) == ["CURVE-12:chem_PH", "RED-01:a|b"]
+    # a curve held for review blocks through its trigger even with the item's own flag off
+    packet["open_items"] = advisory + [{"item_id": "CURVE-07:phab_SINU", "trigger": "curve_needs_review",
+                                        "blocking": False, "question": "?"}]
+    camp.write_json(run_dir / camp.PACKET_FILE, packet)
+    ok, detail = camp.gate_rules_applied(run_dir)
+    assert not ok and detail == "1 blocking open item(s): CURVE-07:phab_SINU"
+    # the queue's own blocking flag blocks too
+    packet["open_items"] = [{"item_id": "SELECT-01:habitat-provision", "trigger": "more_than_two_metrics",
+                             "blocking": True, "question": "?"}]
+    camp.write_json(run_dir / camp.PACKET_FILE, packet)
+    ok, detail = camp.gate_rules_applied(run_dir)
+    assert not ok and "1 blocking open item(s): SELECT-01:habitat-provision" in detail
+    # a hard stop fails regardless of what is open
+    packet["open_items"] = []
+    camp.write_json(run_dir / camp.PACKET_FILE, packet)
+    applied = camp.read_json(run_dir / camp.APPLIED_FILE)
+    applied["hard_stops"] = [{"item_id": "REF-02:reference_screen", "trigger": "reference_tier_fallback"}]
+    camp.write_json(run_dir / camp.APPLIED_FILE, applied)
+    ok, detail = camp.gate_rules_applied(run_dir)
+    assert not ok and detail == "1 hard stop(s): REF-02:reference_screen"
+    split = camp.split_open_items(applied, packet)
+    assert split == {"blocking": ["REF-02:reference_screen"], "advisory": [], "hardStops": ["REF-02:reference_screen"]}
     (run_dir / camp.APPLIED_FILE).unlink()
     assert "missing" in camp.gate_rules_applied(run_dir)[1]
+    # the vocabulary: the queue's blocking tier plus the uncovered hard-stop triggers
+    for trigger in ("reference_tier_fallback", "curve_needs_review", "direction_unresolved"):
+        assert camp.blocking_trigger(trigger), trigger
+    for trigger in ("inverted_discrimination", "redundant_pair", "no_interval", "advisory_stratifier_not_applied",
+                    "measurement_precision_floor", "missingness_review", "function_unassessed"):
+        assert not camp.blocking_trigger(trigger), trigger
+    assert camp.item_blocks({"item_id": "x", "trigger": "no_interval", "blocking": True})
 
 
 def test_gate_pending_confirmable_confirms_a_copy_and_fails_on_a_survivor(tmp_path):
@@ -706,17 +738,34 @@ def test_batch_summary_text_and_commands(tmp_path):
     assert "| 55 | Eastern Corn Belt Plains | noLocal |" in text and "l2 2" in text
     assert "curve04-accept-with-flag" in text and "No script" not in text.split("## Confirmation")[0]
     assert chr(0x2014) not in text
-    # with open items the region is an exception, its items verbatim
+    assert e["advisoryOpen"] == [] and "| advisory open |" in text
+    # promotion policy 1.1: an advisory open item leaves the region eligible and is
+    # listed in the eligible table, never hidden
+    advisory = make_staged_region(fx["root"], "55", "Eastern Corn Belt Plains", expect=digest_for("55"),
+                                  decisions_root=fx["decisions_root"],
+                                  open_items=[{"item_id": "CURVE-12:chem_PH", "trigger": "inverted_discrimination",
+                                               "blocking": False, "question": "Direction wrong?"}])
+    index_doc, elig = _docs_for_batch(fx)
+    assert elig["regions"]["55"]["eligible"] is True and elig["regions"]["55"]["advisoryOpen"] == ["CURVE-12:chem_PH"]
+    doc = camp.batch_summary_document(batch_id="adv", manifest=fx["manifest"], index_doc=index_doc,
+                                      eligibility_doc=elig, codes=["55"], python="py", script="b.py", inputs={},
+                                      facts=camp.region_batch_facts, generated_at="t")
+    assert doc["eligible"][0]["advisoryOpen"] == ["CURVE-12:chem_PH"] and doc["exceptions"] == []
+    assert "| CURVE-12:chem_PH |" in camp.batch_summary_markdown(doc)
+    assert {r["l3"]: (r["openBlocking"], r["openAdvisory"]) for r in index_doc["regions"]}["55"] == (0, 1)
+    assert advisory["run_dir"].is_dir()
+    # with a blocking open item the region is an exception, its items verbatim
     opened = make_staged_region(fx["root"], "55", "Eastern Corn Belt Plains", expect=digest_for("55"),
                                 decisions_root=fx["decisions_root"],
-                                open_items=[{"item_id": "SELECT-01:habitat-provision", "trigger": "more_than_two_metrics",
-                                             "blocking": False, "question": "Approve or trim?"}])
+                                open_items=[{"item_id": "CURVE-07:phab_SINU", "trigger": "curve_needs_review",
+                                             "blocking": False, "question": "Accept, adjust, or drop?"}])
     index_doc, elig = _docs_for_batch(fx)
     doc = camp.batch_summary_document(batch_id="two", manifest=fx["manifest"], index_doc=index_doc,
                                       eligibility_doc=elig, codes=["55"], python="py", script="b.py", inputs={},
                                       facts=camp.region_batch_facts, generated_at="t")
-    assert doc["eligible"] == [] and doc["exceptions"][0]["openItems"][0]["question"] == "Approve or trim?"
-    assert "SELECT-01:habitat-provision (more_than_two_metrics): Approve or trim?" in camp.batch_summary_markdown(doc)
+    assert doc["eligible"] == [] and doc["exceptions"][0]["openItems"][0]["question"] == "Accept, adjust, or drop?"
+    assert doc["exceptions"][0]["openItems"][0]["blocking"] is True
+    assert "CURVE-07:phab_SINU (curve_needs_review, blocking): Accept, adjust, or drop?" in camp.batch_summary_markdown(doc)
     assert doc["promoteCommands"] == []
     assert opened["run_dir"].is_dir()
 
@@ -727,7 +776,7 @@ def test_confirmation_validation_and_the_confirmed_commands(tmp_path):
     batch = camp.batch_summary_document(batch_id="one", manifest=fx["manifest"], index_doc=index_doc,
                                         eligibility_doc=elig, codes=["55"], python="py", script="b.py", inputs={},
                                         facts=camp.region_batch_facts, generated_at="t")
-    good = {"batchId": "one", "policyVersion": "1.0", "campaignId": fx["manifest"]["identity"]["campaignId"],
+    good = {"batchId": "one", "policyVersion": "1.1", "campaignId": fx["manifest"]["identity"]["campaignId"],
             "regions": ["55"], "confirmedBy": TESTER, "confirmedAt": "2026-09-26",
             "statement": "Confirmed in chat on 2026-09-26: promote batch one."}
     assert camp.validate_confirmation(good, batch=batch, manifest=fx["manifest"]) == []

@@ -17,7 +17,13 @@ DEFAULT_IDS = {"curve04-accept-with-flag", "data05-exploratory-pool-accepted",
                # 1.1 (methodology 0.12): a low-risk borrowed reference pool
                "ref05-borrowed-pool-accepted",
                # 1.2 (methodology 0.14): a documented gap, pending the owner
-               "cov01-documented-gap"}
+               "cov01-documented-gap",
+               # 1.3 (methodology 0.15, campaign Round 2 close): the fast pass's
+               # recurring classes, every application pending the owner
+               "strat09-advisory-not-applied", "curve07-fallback-accepted",
+               "curve12-inverted-thin", "red01-keep-both-distinct-axes",
+               "curve06-no-interval-fallback-curve", "curve06-no-interval-flagged"}
+#: legacy under 0.15: replay the pilots only
 OPTIONAL_IDS = {"ref02-accept-best-available", "data03-thin-metric-finalized",
                 "data06-insufficient-finalized", "curve07-thin-metric-finalized"}
 
@@ -30,11 +36,11 @@ def policy():
 def test_policy_file_loads_and_validates(policy):
     assert dec.validate_policy(policy) == []
     assert policy["meta"]["sha256"].startswith("sha256:")
-    assert dec.policy_version(policy) == "1.2"
+    assert dec.policy_version(policy) == "1.3"
     assert policy["meta"]["methodology_version"] == methodology.methodology_version()
 
 
-def test_default_enabled_set_is_the_seven_routine_classes(policy):
+def test_default_enabled_set_is_the_routine_classes(policy):
     enabled = {e["id"] for e in dec.enabled_entries(policy)}
     assert enabled == DEFAULT_IDS
     everything = {e["id"] for e in dec.enabled_entries(policy, sorted(OPTIONAL_IDS))}
@@ -94,7 +100,7 @@ def test_curve04_entry_matches_only_without_decision_flip(policy):
     assert [d["subject"] for d in res.decisions] == ["m1"]
     d = res.decisions[0]
     assert d["decision_class"] == "curve04-accept-with-flag"
-    assert d["rationale_origin"] == "standing_policy:1.2"
+    assert d["rationale_origin"] == "standing_policy:1.3"
     assert d["reviewer"].startswith("standing-policy:curve04-accept-with-flag")
     assert dec.PENDING_SUFFIX in d["reviewer"]
     assert d["asserts"] == {"decision_flip": False, "driver": "S1"}
@@ -107,16 +113,21 @@ def test_strat09_entry_needs_a_stratum_below_the_floor(policy):
     floor = int(methodology.threshold("data_rules.min_n_stratum"))
     manifest = {"stratifiers": {"candidates": [
         {"stratification": "Small", "level_counts": f"{floor - 2}|{floor + 1}|{floor + 3}"},
-        {"stratification": "Big", "level_counts": f"{floor}|{floor + 5}|{floor + 9}"}]}}
+        {"stratification": "Big", "level_counts": f"{floor}|{floor + 5}|{floor + 9}"},
+        {"stratification": "Other", "level_counts": f"{floor}|{floor + 5}|{floor + 9}"}]}}
     ev = {"n_metrics_tested": 10, "n_significant": 6, "consistency_score": 0.6,
           "tier": "Broad-Use Candidate"}
     items = [_queue_item("STRAT-09", "Small", "advisory_stratifier_not_applied", dict(ev)),
-             _queue_item("STRAT-09", "Big", "advisory_stratifier_not_applied", dict(ev))]
+             _queue_item("STRAT-09", "Big", "advisory_stratifier_not_applied", dict(ev)),
+             _queue_item("STRAT-09", "Other", "advisory_stratifier_not_applied",
+                         dict(ev, tier="Supporting Candidate"))]
     res = dec.apply_policy(_doc(items, manifest=manifest), policy)
-    assert [d["subject"] for d in res.decisions] == ["Small"]
-    assert res.decisions[0]["action"] == "reject"
-    assert f"{floor - 2}" in res.decisions[0]["rationale"]
-    assert [u["subject"] for u in res.uncovered] == ["Big"]
+    by = {d["subject"]: d for d in res.decisions}
+    assert by["Small"]["decision_class"] == "strat09-defer-floors" and by["Small"]["action"] == "reject"
+    assert f"{floor - 2}" in by["Small"]["rationale"]
+    # policy 1.3: a broad-use candidate above the floor is the complement entry's
+    assert by["Big"]["decision_class"] == "strat09-advisory-not-applied" and by["Big"]["action"] == "reject"
+    assert [u["subject"] for u in res.uncovered] == ["Other"]
 
 
 def test_select01_entry_requires_default_set_and_no_strong_pair(policy):
@@ -160,9 +171,17 @@ def test_curve07_thin_metric_finalization_is_a_side_effect_only_for_data_review(
                        {"curve_status": "data_review", "reasons": ["x"], "domain_violations": 0})
     degenerate = _queue_item("CURVE-07", "phab_PCT_FAST", "curve_needs_review",
                              {"curve_status": "degenerate", "reasons": ["y"], "domain_violations": 0})
-    res = dec.apply_policy(_doc([thin, degenerate]), policy, enabled=["curve07-thin-metric-finalized"])
+    conflict = _queue_item("CURVE-07", "chem_PH", "curve_needs_review",
+                           {"curve_status": "shape_conflict", "reasons": ["z"], "domain_violations": 0})
+    res = dec.apply_policy(_doc([thin, degenerate, conflict]), policy,
+                           enabled=["curve07-thin-metric-finalized"])
     assert list(res.finalize_metrics) == ["phab_SINU"]
-    assert [h["subject"] for h in res.hard_stops] == ["phab_PCT_FAST"]
+    # policy 1.3: a fallback curve no discrimination check contradicts is accepted
+    # with conditions and no side effect; a shape conflict stays a hard stop
+    by = {d["subject"]: d for d in res.decisions}
+    assert by["phab_PCT_FAST"]["decision_class"] == "curve07-fallback-accepted"
+    assert by["phab_PCT_FAST"]["action"] == "accept_with_conditions"
+    assert [h["subject"] for h in res.hard_stops] == ["chem_PH"]
 
 
 def test_asserts_round_trip_through_apply_reviewer_decisions(policy):
@@ -176,7 +195,7 @@ def test_asserts_round_trip_through_apply_reviewer_decisions(policy):
     res = dec.apply_policy(doc, policy)
     out = pv.apply_reviewer_decisions(doc, res.decisions, default_reviewer="owner")
     assert out["records"][0]["reviewer_decision_class"] == "curve04-accept-with-flag"
-    assert out["records"][0]["reviewer_rationale_origin"] == "standing_policy:1.2"
+    assert out["records"][0]["reviewer_rationale_origin"] == "standing_policy:1.3"
     assert dec.PENDING_SUFFIX in out["records"][0]["reviewer"]
     assert out["reviewQueue"]["counts"]["open"] == 0
     assert dec.is_pending(out)
@@ -195,7 +214,7 @@ def test_confirm_decisions_replaces_the_pending_reviewer_and_keeps_the_origin(po
     confirmed = dec.confirm_decisions(res.decisions, reviewer="gtmenichino", date="2026-08-22")
     assert confirmed[0]["reviewer"] == "gtmenichino"
     assert confirmed[0]["confirmed_by"] == "gtmenichino"
-    assert confirmed[0]["rationale_origin"] == "standing_policy:1.2"
+    assert confirmed[0]["rationale_origin"] == "standing_policy:1.3"
     assert not dec.is_pending(confirmed)
     with pytest.raises(ValueError):
         dec.confirm_decisions(res.decisions, reviewer="", date="2026-08-22")

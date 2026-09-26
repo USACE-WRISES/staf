@@ -88,8 +88,8 @@ SOURCE_BASES = ("local", "l2", "nars9", "l1", "national", "modeled", "published"
 INDEX_COLUMNS = ("l3", "name", "nars9", "l2", "supportClass", "state", "exit", "seconds",
                  "peakMemoryMB", "stagedVersion", "contentDigest", "functionsCovered",
                  "perFunction", "sourceMix", "withheld", "curves", "decisionsApplied",
-                 "openItems", "hardStops", "promoteEligible", "promoteReasons", "inputsDigest",
-                 "runFolder", "promoteCommand", "stateDetail")
+                 "openItems", "openBlocking", "openAdvisory", "hardStops", "promoteEligible",
+                 "promoteReasons", "inputsDigest", "runFolder", "promoteCommand", "stateDetail")
 BUNDLE_FILE = "assessment.deep.json"
 PROVENANCE_FILE = "provenance.json"
 SESSION_FILE = "session.streamcurves.json"
@@ -913,6 +913,7 @@ def index_row(root, region: Mapping, *, jobs: Mapping, batch: Mapping, eligibili
     elif isinstance(bundle, dict):
         withheld = len(bundle.get("insufficientReferenceSupport") or [])
     elig = (eligibility or {}).get("regions", {}).get(code) if eligibility else None
+    open_split = split_open_items(None, packet) if packet else None
     exit_code = (batch_row or {}).get("exit")
     if job and job.get("exit") is not None:
         exit_code = job.get("exit")
@@ -936,6 +937,8 @@ def index_row(root, region: Mapping, *, jobs: Mapping, batch: Mapping, eligibili
         "curves": len(packet.get("curves") or []) if packet else None,
         "decisionsApplied": len(packet.get("decisions_applied") or []) if packet else None,
         "openItems": len(packet.get("open_items") or []) if packet else None,
+        "openBlocking": len(open_split["blocking"]) if open_split else None,
+        "openAdvisory": len(open_split["advisory"]) if open_split else None,
         "hardStops": len(packet.get("hard_stops") or []) if packet else None,
         "promoteEligible": (bool(elig.get("eligible")) if isinstance(elig, dict) else None),
         "promoteReasons": (list(elig.get("blockers") or []) if isinstance(elig, dict) else None),
@@ -1041,9 +1044,56 @@ def gate_frozen_record(run_dir, expect: Mapping) -> tuple[bool, str]:
                   f"{short(code.get('end'))}, {n_boot} resamples")
 
 
+def blocking_trigger(trigger) -> bool:
+    """Whether an open item with this trigger blocks promotion (promotion policy 1.1):
+    the queue's own blocking flag for the trigger (``provenance._TRIGGER_TIERS``) or an
+    uncovered hard-stop trigger (``provenance.UNCOVERED_HARD_STOP_TRIGGERS``). Everything
+    else is advisory: listed, never hidden, never a blocker."""
+    from . import provenance as pv
+    name = str(trigger or "")
+    tiers = getattr(pv, "_TRIGGER_TIERS", {}) or {}
+    entry = tiers.get(name)
+    if entry and bool(entry[1]):
+        return True
+    return name in pv.UNCOVERED_HARD_STOP_TRIGGERS
+
+
+def item_blocks(item: Mapping) -> bool:
+    """An open item blocks when it carries the queue's blocking flag or its trigger blocks."""
+    return bool((item or {}).get("blocking")) or blocking_trigger((item or {}).get("trigger"))
+
+
+def split_open_items(applied: Optional[Mapping], packet: Optional[Mapping]) -> dict:
+    """``{"blocking": [ids], "advisory": [ids], "hardStops": [ids]}`` over the applied file
+    and the packet together (sorted, de-duplicated). A hard stop is never advisory."""
+    blocking: set = set()
+    advisory: set = set()
+    hard: set = set()
+    for src in (applied, packet):
+        if not isinstance(src, Mapping):
+            continue
+        for i in src.get("hard_stops") or []:
+            if isinstance(i, Mapping):
+                hard.add(str(i.get("item_id")))
+        for i in src.get("open_items") or []:
+            if not isinstance(i, Mapping):
+                continue
+            (blocking if item_blocks(i) else advisory).add(str(i.get("item_id")))
+    blocking |= hard
+    advisory -= blocking
+    return {"blocking": sorted(blocking), "advisory": sorted(advisory), "hardStops": sorted(hard)}
+
+
+def advisory_open_items(run_dir) -> list[str]:
+    """The advisory open item ids of a run folder, from the applied file and the packet."""
+    run_dir = Path(run_dir)
+    return split_open_items(read_json(run_dir / APPLIED_FILE), read_json(run_dir / PACKET_FILE))["advisory"]
+
+
 def gate_rules_applied(run_dir) -> tuple[bool, str]:
-    """``standing_decisions_applied.json`` open_items and hard_stops empty; the packet's
-    open_items empty."""
+    """Promotion policy 1.1: ``standing_decisions_applied.json`` and the packet carry no
+    hard stop and no blocking open item (``item_blocks``). Advisory open items pass and
+    are named in the detail, never hidden."""
     run_dir = Path(run_dir)
     applied = read_json(run_dir / APPLIED_FILE)
     packet = read_json(run_dir / PACKET_FILE)
@@ -1051,16 +1101,21 @@ def gate_rules_applied(run_dir) -> tuple[bool, str]:
         return False, f"{APPLIED_FILE} is missing"
     if not isinstance(packet, dict):
         return False, f"{PACKET_FILE} is missing"
-    open_ids = sorted({str(i.get("item_id")) for src in (applied, packet) for i in (src.get("open_items") or [])})
-    hard_ids = sorted({str(i.get("item_id")) for src in (applied, packet) for i in (src.get("hard_stops") or [])})
+    split = split_open_items(applied, packet)
+    hard_ids = split["hardStops"]
+    blocking_ids = [i for i in split["blocking"] if i not in hard_ids]
+    advisory_ids = split["advisory"]
     problems = []
-    if open_ids:
-        problems.append(f"{len(open_ids)} open item(s): {', '.join(open_ids[:6])}")
+    if blocking_ids:
+        problems.append(f"{len(blocking_ids)} blocking open item(s): {', '.join(blocking_ids[:6])}")
     if hard_ids:
         problems.append(f"{len(hard_ids)} hard stop(s): {', '.join(hard_ids[:6])}")
     if problems:
         return False, "; ".join(problems)
-    return True, f"{len(applied.get('decisions') or [])} standing decision(s) applied, nothing left open"
+    advisory = (f"{len(advisory_ids)} advisory open item(s) listed: {', '.join(advisory_ids[:6])}"
+                if advisory_ids else "nothing left open")
+    return True, (f"{len(applied.get('decisions') or [])} standing decision(s) applied, no hard stop "
+                  f"and no blocking open item; {advisory}")
 
 
 def gate_pending_confirmable(run_dir) -> tuple[bool, str]:
@@ -1257,6 +1312,9 @@ def evaluate_gates(run_dir, *, expect: Mapping, decisions_file, policy: Mapping,
     return {"eligible": not blockers, "gates": gates, "blockers": blockers,
             "evaluated": [g for g, r in gates.items() if r["evaluated"]],
             "skipped": [g for g, r in gates.items() if not r["evaluated"]],
+            # promotion policy 1.1: the advisory open items the rules-applied gate let
+            # through, listed per region so a batch summary can show them
+            "advisoryOpen": advisory_open_items(run_dir),
             "runFolder": str(run_dir), "stagedPath": str(vdir) if vdir else None}
 
 
@@ -1319,7 +1377,7 @@ def region_batch_facts(run_dir) -> dict:
                                        if isinstance(a, Mapping) and a.get("carriedFrom") is not None),
             "approvals": sorted(str(a.get("functionId")) for a in approvals if isinstance(a, Mapping)),
             "openItems": [{"item_id": i.get("item_id"), "trigger": i.get("trigger"),
-                           "blocking": bool(i.get("blocking")), "question": i.get("question")}
+                           "blocking": item_blocks(i), "question": i.get("question")}
                           for i in packet.get("open_items") or [] if isinstance(i, Mapping)],
             "hardStops": [str(i.get("item_id")) for i in packet.get("hard_stops") or [] if isinstance(i, Mapping)]}
 
@@ -1357,6 +1415,9 @@ def batch_summary_document(*, batch_id: str, manifest: Mapping, index_doc: Mappi
                              "functionsCovered": row.get("functionsCovered"), "gaps": gaps,
                              "policyDecisionIds": f["policyDecisionIds"],
                              "carriedApprovals": f["carriedApprovals"],
+                             # promotion policy 1.1: what stays open under an eligible
+                             # region is listed, never hidden
+                             "advisoryOpen": [str(i) for i in (e.get("advisoryOpen") or [])],
                              "contentDigest": row.get("contentDigest"),
                              "stagedVersion": row.get("stagedVersion"),
                              "inputsDigest": row.get("inputsDigest")})
@@ -1428,11 +1489,12 @@ def batch_summary_markdown(doc: Mapping) -> str:
     eligible = doc.get("eligible") or []
     if eligible:
         lines += _md_table(["L3", "region", "support", "source mix", "functions", "gaps", "policy decisions",
-                            "carried approvals", "content digest"],
+                            "carried approvals", "advisory open", "content digest"],
                            [[r["l3"], r.get("name"), r.get("supportClass"), _mix_text(r.get("sourceMix")),
                              f"{r.get('functionsCovered')} of 20", ", ".join(r.get("gaps") or []) or "none",
                              ", ".join(r.get("policyDecisionIds") or []) or "none",
                              ", ".join(r.get("carriedApprovals") or []) or "none",
+                             ", ".join(r.get("advisoryOpen") or []) or "none",
                              short(r.get("contentDigest"))] for r in eligible])
     else:
         lines.append("None.")
@@ -1609,7 +1671,8 @@ __all__ = [
     "region_of", "manifest_drift", "commands_markdown", "state_markdown", "staged_version_dir",
     "record_intact", "stage_refusal", "campaign_jobs", "batch_rows", "classify_region",
     "per_function", "source_mix", "index_rows", "index_document", "index_csv_text",
-    "region_state_document", "gate_frozen_record", "gate_rules_applied", "gate_pending_confirmable",
+    "region_state_document", "blocking_trigger", "item_blocks", "split_open_items",
+    "advisory_open_items", "gate_frozen_record", "gate_rules_applied", "gate_pending_confirmable",
     "gate_owner_decisions_honored", "gate_portfolio_approvals", "gate_equivalence_proven",
     "gate_record_complete", "evaluate_gates", "expectation_from_manifest", "expectation_from_run",
     "campaign_manifest_for_run", "region_batch_facts", "batch_summary_document",
