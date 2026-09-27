@@ -142,4 +142,15 @@ never a silent edit. Adoption of a finalist into the operational EASI is the own
 
 ## Addenda
 
-(none)
+**Addendum 1 (2026-09-27, before any Round 4 result was read): E2 fits and rates perennial
+reaches.** The K3 refit of `q_min_ratio` grouped by stratum only gave no usable curve for
+SPL (q25 = 0), XER (q25 = q50 = 0) and the national fallback (q25 = 0): in those panels more
+than a quarter of the reference members have a zero minimum month, and the fit rule refuses
+a degenerate lower quartile. E2 as written cannot be built. E2 is re-specified as: the
+minimum-month over annual-mean EROM ratio (higher is better) with NARS-9 curves and a
+national fallback refitted on the strict panels' perennial members (the registry's own
+`fcode_class` split of `q_min_ratio`), rating perennial reaches; naturally intermittent and
+ephemeral reaches (NHDPlus FCODE 46003, 46007) are withheld with E1's documented-gap
+statement. The paired comparison against the base therefore runs on perennial reaches, the
+ratio against monthly flow variability; the withheld share is reported under P3. Owner-
+reserved decision taken under the standing instruction of 2026-09-25, listed for the owner.

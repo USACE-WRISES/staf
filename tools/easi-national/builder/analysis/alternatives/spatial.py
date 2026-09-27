@@ -19,7 +19,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from .. import artifact, curves, panels, screens, stats
-from . import ALTERNATIVES
+from . import ALTERNATIVES, study_candidates
 from . import field_evaluation, scorer
 from .io import info, now, read_json, safe_study, sha, write_json, write_parquet
 
@@ -104,14 +104,28 @@ def _member_hucs(row, landscape_hucs) -> tuple[str, ...]:
     return tuple(sorted(hucs))
 
 
-def _read_reference(original: Path, members: pd.DataFrame):
-    """Read necessary columns once, filtered to original reference COMIDs."""
+def set_quantities(extra=()) -> list[str]:
+    """The quantities the fold refits read: the shipped sets' (``artifact.SET_SPECS``) and
+    every quantity a candidate set names (a 1.2.0 study), in a stable order."""
+    out = [q for q, _ in artifact.SET_SPECS.values()]
+    for q in extra or ():
+        if q not in out:
+            if q not in curves.QUANTITIES:
+                raise ValueError(f"a candidate set names a quantity the registry lacks: {q!r}")
+            out.append(q)
+    return out
+
+
+def _read_reference(original: Path, members: pd.DataFrame, quantities=()):
+    """Read necessary columns once, filtered to original reference COMIDs: the shipped sets'
+    quantities and every quantity ``quantities`` names (the candidate sets')."""
     ids = sorted(set(int(value) for value in members.comid))
+    wanted_quantities = set_quantities(quantities)
     landscape_path, values_path = original / "landscape.parquet", original / "values.parquet"
     landscape_columns = ["comid", "huc8", *screens.PRESSURE_VARIABLES,
-                         *(curves.QUANTITIES[q].column for q, _ in artifact.SET_SPECS.values()
+                         *(curves.QUANTITIES[q].column for q in wanted_quantities
                            if curves.QUANTITIES[q].source == "landscape")]
-    value_columns = ["comid", *(curves.QUANTITIES[q].column for q, _ in artifact.SET_SPECS.values()
+    value_columns = ["comid", *(curves.QUANTITIES[q].column for q in wanted_quantities
                                if curves.QUANTITIES[q].source == "values")]
     frames = {}
     receipts = []
@@ -139,7 +153,7 @@ def _read_reference(original: Path, members: pd.DataFrame):
     frame = members.copy()
     landscape_hucs = frames["landscape"].huc8.to_dict()
     frame["_hucs"] = [_member_hucs(row, landscape_hucs) for row in frame.to_dict("records")]
-    for quantity, _ in artifact.SET_SPECS.values():
+    for quantity in wanted_quantities:
         q = curves.QUANTITIES[quantity]
         source = frames[q.source]
         frame[quantity] = source[q.column].reindex(frame.comid).to_numpy(dtype=float) if q.column in source else np.nan
@@ -149,19 +163,49 @@ def _read_reference(original: Path, members: pd.DataFrame):
     return frame, receipts
 
 
+def split_column(quantity: str) -> str:
+    """The member column a fit identity's split value filters: the quantity's own registry
+    split (``fcode_class`` for the flow ratios), else the geometry split ``slope_class``."""
+    return curves.QUANTITIES[quantity].split or "slope_class"
+
+
+def definition_split(definition) -> str:
+    """The split value a set was fitted with (E2, Addendum 1: ``{"fcode_class": "perennial"}``
+    recorded in the definition), '' for a set fitted on whole strata. The split must be the
+    quantity's own registry split."""
+    split = definition.get("split")
+    if not split:
+        return ""
+    if not isinstance(split, dict) or len(split) != 1:
+        raise ValueError(f"a set's split names one column and value: {split!r}")
+    (column, value), = split.items()
+    expected = curves.QUANTITIES[definition["quantity"]].split
+    if column != expected:
+        raise ValueError(f"set of {definition['quantity']} split by {column!r}; its registry split is {expected!r}")
+    return str(value)
+
+
 def _fit_key(definition, key):
+    """The identity of one fit: quantity, level, stratum and the split value (a slope class
+    of the entrenchment set, or the value a candidate set was fitted with)."""
     stratifier = definition["stratifier"]
+    split = definition_split(definition)
     if stratifier == "slope_class":
         return definition["quantity"], "national", "national:national", "" if key == "national" else key
     if key == "national":
-        return definition["quantity"], "national", "national:national", ""
+        return definition["quantity"], "national", "national:national", split
     if stratifier not in {"l2", "nars9"}:
         raise ValueError(f"Unexpected candidate reference stratifier: {stratifier}")
-    return definition["quantity"], stratifier, f"{stratifier}:{key}", ""
+    return definition["quantity"], stratifier, f"{stratifier}:{key}", split
 
 
 def refit_fold(frame: pd.DataFrame, definitions: dict, excluded_hucs: set[str], heldout_comids: set[int]):
-    """Fit every distinct requested reference, with no frozen-fit substitution."""
+    """Fit every distinct requested reference, with no frozen-fit substitution. A fit
+    identity's split value filters the fold's group by the quantity's split column: the
+    entrenchment slope classes by ``slope_class`` as before, a candidate set fitted on one
+    ``fcode_class`` value (E2) by ``fcode_class``. Every fit runs under the builder's default
+    tail endpoints (``curves.SEED_TAIL_OFFSETS_IQR``, the method's own), as the frozen artifact
+    was fitted."""
     excluded_huc = frame._hucs.map(lambda values: bool(excluded_hucs.intersection(values)))
     unresolved = frame._hucs.map(lambda values: not values)
     heldout = frame.comid.isin(heldout_comids)
@@ -177,8 +221,11 @@ def refit_fold(frame: pd.DataFrame, definitions: dict, excluded_hucs: set[str], 
         original = frame.loc[frame.level.eq(level) & frame.stratum.eq(stratum)]
         group = retained.loc[retained.level.eq(level) & retained.stratum.eq(stratum)]
         if split:
-            original = original.loc[original.slope_class.eq(split)]
-            group = group.loc[group.slope_class.eq(split)]
+            column = split_column(quantity)
+            if column not in frame.columns:
+                raise ValueError(f"the reference members carry no {column!r} column to split {identity} on")
+            original = original.loc[original[column].astype(str).eq(split)]
+            group = group.loc[group[column].astype(str).eq(split)]
         if group.comid.duplicated().any():
             raise ValueError(f"Duplicate reference COMID within {identity}")
         n_members = len(group)
@@ -187,6 +234,7 @@ def refit_fold(frame: pd.DataFrame, definitions: dict, excluded_hucs: set[str], 
         values = group[quantity].to_numpy(dtype=float)
         finite = values[np.isfinite(values)]
         row = {"quantity": quantity, "level": level, "stratum": stratum, "split": split,
+               "split_column": split_column(quantity) if split else "",
                "screen": "strict", "panel_tier": tier, "n_members": n_members, "n": len(finite),
                "original_members": len(original), "excluded_members": len(original) - n_members,
                "training_huc8_count": len({huc for values in group._hucs for huc in values}),
@@ -297,20 +345,25 @@ def run(root: Path, study: Path) -> dict:
     ledgers, observation_summary = fold_ledger(observations)
     if not observation_summary["eligible_heldout_comids"]:
         raise ValueError("No eligible field COMIDs have resolved spatial folds")
+    manifest_path = study / "manifest.json"
+    arms = study_candidates(read_json(manifest_path) if manifest_path.is_file() else {}, ALTERNATIVES)
     candidates = {}
     definitions = {}
     candidate_inputs = []
-    for alternative in ALTERNATIVES:
+    extra_quantities = []
+    for alternative in arms:
         aid = alternative["id"]
         path = study / "candidates" / aid / "app-data"
         candidate_inputs.extend(info(p) for p in sorted(path.glob("*.json")))
         candidate = read_json(path / "reference-curves.json")
         candidates[aid] = candidate
         for definition in candidate["sets"].values():
+            if definition["quantity"] not in extra_quantities:
+                extra_quantities.append(definition["quantity"])
             for key in definition["curves"]:
                 definitions[_fit_key(definition, key)] = True
     members = pq.read_table(members_path, filters=[("level", "in", ["l2", "nars9", "national"])]).to_pandas()
-    frame, reference_inputs = _read_reference(original, members)
+    frame, reference_inputs = _read_reference(original, members, extra_quantities)
     evidence_stamps = [_stamp(path) for path in sorted((study / "evidence").rglob("*.parquet"))]
     source_paths = [Path(module.__file__) for module in (curves, artifact, panels, screens, field_evaluation, scorer)]
     source_paths += [Path(__file__), artifact.ENGINE_PATH]
@@ -345,7 +398,7 @@ def run(root: Path, study: Path) -> dict:
         fitted, fits, exclusions = refit_fold(frame, definitions, set(ledger["excluded_huc8"]), set(ledger["evaluation_comids"]))
         _write_json(fold_dir / "fits.json", {"fold": fold, "exclusions": exclusions, "fits": fits})
         reports = []
-        for alternative in ALTERNATIVES:
+        for alternative in arms:
             aid = alternative["id"]
             source = study / "candidates" / aid / "app-data"
             data_dir = fold_dir / "candidates" / aid / "app-data"
@@ -374,7 +427,7 @@ def run(root: Path, study: Path) -> dict:
         fold_receipts.append({**ledger, "available_evidence_comids": len(heldout), "exclusions": exclusions,
                               "usable_fits": len(fitted), "unusable_fits": len(fits) - len(fitted), "alternatives": reports})
     outputs = []
-    for alternative in ALTERNATIVES:
+    for alternative in arms:
         aid = alternative["id"]
         scores = pd.concat(all_scores[aid], ignore_index=True).sort_values("comid") if all_scores[aid] else pd.DataFrame({"comid": pd.Series(dtype="int64"), "fold": pd.Series(dtype="int64")})
         if scores.comid.duplicated().any():

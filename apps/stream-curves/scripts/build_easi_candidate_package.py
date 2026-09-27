@@ -111,6 +111,10 @@ def build(family: str, base: Path, out: Path, *, curve_sets: Path | None = None,
                       "label": pkg.envelope["label"], "version": pkg.envelope["version"]},
         "edits": built["edits"], "unchangedFiles": built["unchangedFiles"],
         "curveSets": {**built["curveSets"], **({"provenance": provenance} if provenance else {})},
+        # the dated re-specification the family was built under (the prose addendum's
+        # "Addenda" section), None for a family built as frozen
+        "respecified": built.get("respecified"),
+        "respecification": spec.get("respecified"),
         "label": "rehearsal", "builtAt": _now(),
         "builder": "apps/stream-curves/scripts/build_easi_candidate_package.py",
     }
@@ -130,7 +134,8 @@ def main(argv=None) -> int:
     ap.add_argument("--version", type=int, default=1, help="the envelope's version number (default 1)")
     a = ap.parse_args(argv)
     record = build(a.family, a.base, a.out, curve_sets=a.curve_sets, version=a.version)
-    summary = {k: record[k] for k in ("family", "familyName", "addendum", "base", "candidate", "edits")}
+    summary = {k: record[k] for k in ("family", "familyName", "addendum", "base", "candidate", "edits",
+                                      "respecified")}
     summary["out"] = str(Path(a.out).resolve())
     print(json.dumps(summary, indent=1, sort_keys=True, default=str))
     return 0

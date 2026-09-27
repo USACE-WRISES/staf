@@ -397,34 +397,49 @@ def operational_curves(rows: list[dict], members, values, panels, *, tail_offset
     return out
 
 
-def candidate_curves(rows: list[dict], *, sets: Optional[dict] = None) -> tuple[dict, dict]:
+def candidate_curves(rows: list[dict], *, sets: Optional[dict] = None,
+                     splits: Optional[dict] = None) -> tuple[dict, dict]:
     """The Round 4 candidate curve sets in the method file's shape, ``({set id: definition},
-    diagnostics)``: for each set, the usable unsplit NARS-9 fits of its quantity with the
-    usable national fit as the fallback (``fit_registry(by_stratum_only=...)`` rows). A set
-    without a usable national curve is left out, since EASI requires one; the diagnostics
-    name every stratum that gave no usable curve and the fit rule's reason."""
+    diagnostics)``: for each set, the usable NARS-9 fits of its quantity with the usable
+    national fit as the fallback. A set is assembled from the unsplit rows
+    (``fit_registry(by_stratum_only=...)``) unless ``splits`` names a split value for it
+    (``{"flow-min-ratio": "perennial"}``, Addendum 1 of the EASI addendum): then the rows of
+    the quantity's own registry split with that value are selected, and the definition
+    records the split (``"split": {"fcode_class": "perennial"}``) so a fold refit and a
+    stability resample filter their panels the same way. A set without a usable national
+    curve is left out, since EASI requires one; the diagnostics name every stratum that gave
+    no usable curve and the fit rule's reason, and the split the set was assembled from."""
     wanted = dict(sets or CANDIDATE_SETS)
+    chosen = dict(splits or {})
     out: dict = {}
     diagnostics: dict = {}
     for set_id, quantity in wanted.items():
         q = fr.QUANTITIES[quantity]
+        split_value = chosen.get(set_id)
+        if split_value is not None and not q.split:
+            raise ValueError(f"{set_id}: {quantity} has no registry split to select {split_value!r} from")
         curves: dict = {}
         skipped: dict = {}
         for r in rows:
-            if (r["quantity"] != quantity or r.get("split") or
-                    r["level"] not in ("nars9", "national")):
+            if r["quantity"] != quantity or r["level"] not in ("nars9", "national"):
+                continue
+            if (r.get("split") or "") != (str(split_value) if split_value is not None else ""):
                 continue
             key = "national" if r["level"] == "national" else r["stratum"].split(":", 1)[1]
             if r.get("usable"):
                 curves[key] = fr._curve(r)
             else:
                 skipped[key] = r.get("reason") or "not usable"
-        diagnostics[set_id] = {"quantity": quantity, "curves": sorted(curves), "notUsable": skipped}
+        diagnostics[set_id] = {"quantity": quantity, "curves": sorted(curves), "notUsable": skipped,
+                               "split": ({q.split: str(split_value)} if split_value is not None else None)}
         if "national" not in curves:
             diagnostics[set_id]["omitted"] = "no usable national curve"
             continue
-        out[set_id] = {"higherIsBetter": bool(q.higher_is_better), "quantity": quantity,
-                       "stratifier": "nars9", "curves": curves}
+        definition = {"higherIsBetter": bool(q.higher_is_better), "quantity": quantity,
+                      "stratifier": "nars9", "curves": curves}
+        if split_value is not None:
+            definition["split"] = {q.split: str(split_value)}
+        out[set_id] = definition
     return out, diagnostics
 
 

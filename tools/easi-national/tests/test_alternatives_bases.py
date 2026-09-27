@@ -48,9 +48,10 @@ def test_the_adopted_base_is_the_method_this_checkout_ships():
     assert identity["curve_count"] == adopted.curve_count
 
 
-def test_the_study_version_and_the_protocol_moved_to_1_1_0():
-    assert alts.STUDY_VERSION == "1.1.0"
-    assert study.protocol()["version"] == "1.1.0"
+def test_the_study_version_and_the_protocol_moved_to_1_2_0():
+    assert alts.STUDY_VERSION == "1.2.0"
+    assert study.protocol()["version"] == "1.2.0"
+    assert study.protocol()["addendum"]["sha256"].startswith("8a48de98")
 
 
 def test_a_manifest_names_its_base_and_a_1_0_0_manifest_is_the_legacy_base():
@@ -108,9 +109,16 @@ def test_a_snapshot_on_the_adopted_base_binds_the_manifest_to_it(tmp_path, monke
     assert manifest["alternative_1"] == {"method_version": "b2e3033116e3", "source_commit": adopted.commit,
                                          "frozen_sha": adopted.reference_sha256}
     assert manifest["parent_binding"]["method_version"] == "b2e3033116e3"
-    assert manifest["protocol"]["version"] == "1.1.0"
+    assert manifest["protocol"]["version"] == "1.2.0"
     assert read_json(folder / "snapshot/manifest.json")["source_commit"] == adopted.commit
     assert bases.study_base(manifest).id == ADOPTED
+    # a study created without --candidate is a base-only 1.2.0 study: the block holds the base
+    assert [row["id"] for row in manifest["candidates"]] == ["alternative-1"]
+    assert manifest["candidates"][0]["label"] == adopted.label and manifest["candidates"][0]["role"] == "base"
+    assert manifest["alternatives"][0]["curve_count"] == 34
+    assert manifest["runner_version"] == "1.2.0" and manifest["seeds"] == {"sample": 17, "reference_bootstrap": 7, "paired_bootstrap": 20260915}
+    assert manifest["addendum"]["sha256"].startswith("8a48de98") and manifest["command_line"]
+    assert manifest["candidate_package_digests"] == {"alternative-1": adopted.package_digest}
 
 
 def _library_rows():

@@ -21,11 +21,12 @@ import pyarrow.parquet as pq
 
 from .. import nrsa, stats
 from ..validation import TARGETS
-from .io import write_json as _write_json, write_parquet as _write_parquet
+from . import REFERENCE_ID, study_candidates
+from .io import read_json as _read_json, write_json as _write_json, write_parquet as _write_parquet
 
 NRSA_DIR = nrsa.NRSA_DIR
 NRSA_RAW = nrsa.NRSA_RAW
-REFERENCE = "alternative-1"
+REFERENCE = REFERENCE_ID
 ALTERNATIVES = tuple(f"alternative-{i}" for i in range(1, 5))
 MARGIN = 0.01
 SEED = 20260915
@@ -34,9 +35,44 @@ LOW = "low_flow_baseflow_dynamics"
 BED = "bed_composition_bedform_dynamics"
 CATCHMENT = "catchment_hydrology"
 BIO = "population_support"
+#: T3, the campaign's O3 targets: the fish MMI classes (FISH_MMI_COND: 1314 allcond, 1819
+#: population estimates, 2324 fishmmi) and O/E (OE_COND: 1314 allcond, 1819 population
+#: estimates) where a raw file carries them, recoded by nrsa.CLASS_TARGETS; exploratory,
+#: reported never deciding (the ECI-level AUC rows beside T1 and T2)
+T3_TARGETS = ("t__fish_mmi", "t__oe")
+T3_CONTINUOUS = ("x__mmi_fish", "x__oe_score")
+#: The field targets the EASI addendum names for the families that name them, all from
+#: apps/stream-curves/data/nrsa/values.parquet by station and visit (as XWIDTH and XBKF_W are
+#: read): the same-visit low-flow ratio (E1, E2), XFC_NAT and PCT_FAST for habitat provision
+#: (E4), XBKF_H and BFWD_RAT for the four channel geometry functions (E5). The sign orients
+#: the Spearman so a positive rho is agreement: a taller bankfull height reads as a deeper,
+#: more incised channel (-1, the convention of inc_ratio and XBKA), a wider-than-deep channel
+#: as one connected to its floodplain (+1); both are operating choices recorded here.
+FIELD_TARGETS = {
+    LOW: [("wetted_bankfull_ratio", 1)],
+    "habitat_provision": [("a__phab_XFC_NAT", 1), ("a__phab_PCT_FAST", 1)],
+    "high_flow_dynamics": [("a__phab_XBKF_H", -1), ("a__phab_BFWD_RAT", 1)],
+    "floodplain_connectivity": [("a__phab_XBKF_H", -1), ("a__phab_BFWD_RAT", 1)],
+    "channel_evolution": [("a__phab_XBKF_H", -1), ("a__phab_BFWD_RAT", 1)],
+    "channel_floodplain_dynamics": [("a__phab_XBKF_H", -1), ("a__phab_BFWD_RAT", 1)],
+}
+#: A field observation that is a scoring input of a function is excluded from that
+#: function's comparison. No NRSA archive target is a desktop scoring input: EASI's scoring
+#: inputs are StreamCat, EROM, 3DEP and the point services, and a station's function is
+#: scored from an observation only through a user-supplied override (observed__<function>,
+#: the eroding/armored bank percentages of the bank-erosion method and the channel-stage
+#: class of channel evolution), which ``_compare`` excludes for that function and from every
+#: aggregate row. The table names the pairs the rule would also exclude were such a target
+#: added; extend it with the target column and the function whose input it is.
+SCORING_INPUT_TARGETS: dict[str, tuple[str, ...]] = {}
 FUNCTION_TARGETS = {k: (c, list(v)) for k, (c, v) in TARGETS.items()}
 FUNCTION_TARGETS[LOW] = (None, [("a__phab_PCT_DR", -1), ("wetted_bankfull_ratio", 1),
                                ("a__phab_XWD_RAT", 1)])
+for _function, _targets in FIELD_TARGETS.items():
+    _cls, _continuous = FUNCTION_TARGETS.setdefault(_function, (None, []))
+    for _target in _targets:
+        if _target[0] not in {c for c, _ in _continuous}:
+            _continuous.append(_target)
 LIMITATIONS = [
     "Alternative 1 and its frozen curves are preserved; these are local comparisons only.",
     "2023-24 is retrospective temporal evaluation, not an untouched prospective holdout.",
@@ -47,7 +83,18 @@ LIMITATIONS = [
     "AUC noninferiority uses a 0.01 margin and paired delta intervals; inconclusive is not equivalent.",
     "Multiple targets and regions are exploratory comparisons without multiplicity adjustment.",
     "Shared agriculture association and contribution removal do not establish independent validity.",
+    "T3 (fish MMI classes and O/E) is exploratory and never decides; the signs of XBKF_H (-1) and BFWD_RAT (+1) are operating choices.",
 ]
+
+
+def target_roles() -> dict:
+    """Every target the ledger carries with its role: the deciding targets, the field targets
+    per function with their sign, the T3 exploratory targets, the scoring-input pairs."""
+    return {"deciding": {"T1": "reference_2013", "T2": "t__bent_mmi"},
+            "exploratory_t3": list(T3_TARGETS) + list(T3_CONTINUOUS),
+            "field_targets": {function: [list(t) for t in targets] for function, targets in FIELD_TARGETS.items()},
+            "scoring_input_targets": {target: list(functions) for target, functions in SCORING_INPUT_TARGETS.items()},
+            "observed_override_rule": "a station whose function was scored from a user observation (observed__<function>) is excluded from that function's comparison and from every aggregate row"}
 
 
 def _text(value) -> str:
@@ -191,6 +238,10 @@ def _role(target: str) -> str:
         return "secondary_morphology"
     if target in ("a__phab_PCT_DR", "wetted_bankfull_ratio"):
         return "primary_separate"
+    if target in T3_TARGETS or target in T3_CONTINUOUS:
+        return "exploratory_t3"
+    if target in ("reference_2013", "t__bent_mmi"):
+        return "deciding_target"
     return "field_target"
 
 
@@ -400,6 +451,7 @@ def build_observations(root: Path, study: Path) -> dict:
     _write_parquet(directory / "observations.parquet", pa.Table.from_pylist(output))
     summary = {"schema_version": 1, "rows": len(output), "status_counts": dict(sorted(Counter(r["status"] for r in output).items())),
                "targets": dict(sorted(Counter(r["target"] for r in output).items())),
+               "target_roles": target_roles(),
                "stations": len({r["station_key"] for r in output if r["station_key"]}),
                "inputs": inputs, "fold_definition": "Connected station/COMID/HUC8 components; hash the smallest component HUC8, first 8 SHA256 bytes modulo 5",
                "duplicate_policy": "Collapse identical targets; exclude conflicting targets and visit metadata.",
@@ -486,6 +538,7 @@ def paired_statistics(reference, alternative, target, huc8, statistic="auc", *, 
 
     base, candidate = values(full)
     differences = []
+    base_draws, candidate_draws = [], []
     rng = np.random.default_rng(seed)
     # Multiplicity weights reproduce the expanded watershed sample exactly,
     # while preparing tie/category ranks only once per paired comparison.
@@ -510,6 +563,8 @@ def paired_statistics(reference, alternative, target, huc8, statistic="auc", *, 
                 c = b if identical else prepared[1].evaluate(multiplicities)
             if b is not None and c is not None and math.isfinite(b) and math.isfinite(c):
                 differences.append(c - b)
+                base_draws.append(b)
+                candidate_draws.append(c)
     lo, hi = stats.interval(differences)
     auc_endpoint = statistic.startswith("auc")
     positive_n = int(target.sum()) if auc_endpoint else None
@@ -518,9 +573,26 @@ def paired_statistics(reference, alternative, target, huc8, statistic="auc", *, 
     enough = supported and len(differences) >= max(30, math.ceil(boot * .8)) and boot >= 30
     ni = ("noninferior" if lo is not None and lo >= -MARGIN else
           "inferior" if hi is not None and hi < -MARGIN else "inconclusive") if enough and auc_endpoint else "inconclusive" if auc_endpoint else "not_applicable"
+    # the bootstrap median of the paired delta (the addendum's accuracy rule reads it), a
+    # two-sided bootstrap p-value (the share of draws on the other side of zero, doubled, with
+    # the +1 correction; the finalist step's BH q-values read it) and the value intervals of
+    # each arm's own statistic over the same draws (a base-only study reports its absolute AUCs
+    # as value_ci); None where the draws do not support them
+    draws = np.asarray(differences, dtype=float)
+    median = float(np.median(draws)) if enough else None
+    if enough:
+        below, above = int(np.sum(draws <= 0)), int(np.sum(draws >= 0))
+        p_two_sided = min(1.0, 2.0 * (min(below, above) + 1) / (len(draws) + 1))
+    else:
+        p_two_sided = None
+    ref_lo, ref_hi = stats.interval(base_draws) if enough else (None, None)
+    alt_lo, alt_hi = stats.interval(candidate_draws) if enough else (None, None)
     result = {"statistic": statistic, "reference": base, "alternative": candidate,
             "delta": candidate - base if base is not None and candidate is not None else None,
+            "delta_median": median, "p_two_sided": p_two_sided,
             "ci_low": lo, "ci_high": hi, "n": len(ref), "n_huc8": len(labels),
+            "reference_ci_low": ref_lo, "reference_ci_high": ref_hi,
+            "alternative_ci_low": alt_lo, "alternative_ci_high": alt_hi,
             "boot_requested": boot, "boot_valid": len(differences),
             "n_positive": positive_n, "n_negative": negative_n, "support_floor_met": supported,
             "noninferiority_margin": MARGIN if auc_endpoint else None, "noninferiority_status": ni,
@@ -544,7 +616,7 @@ def _groups(rows):
 def _unique_scores(path: Path, comids: set[int] | None = None) -> dict[int, dict]:
     """Read field COMIDs and numeric scoring columns, excluding bulky curve traces."""
     columns = [name for name in pq.read_schema(path).names if name in ("comid", "eci", "physical", "chemical", "biological")
-               or name.startswith(("rating__", "score__", "index__", "route__", "observed__"))]
+               or name.startswith(("rating__", "score__", "index__", "route__", "observed__", "completeness__"))]
     filters = [("comid", "in", sorted(comids))] if comids is not None else None
     rows = pq.read_table(path, columns=columns, filters=filters).to_pylist()
     result = {}
@@ -609,9 +681,24 @@ def _compare(rows, base, candidate, column, statistic, *, boot, positive=None, r
     return result
 
 
-def _agreement(cohort, observations, scores, boot):
+def _scoped(rows, scope, candidate):
+    """The observations a candidate's comparison is paired on when a re-specification narrows
+    them (E2, Addendum 1: the reaches the candidate rates the family function on, its
+    completeness column 'rated'); every row otherwise."""
+    if not scope:
+        return rows
+    column = "completeness__" + str(scope["function"])
+    return [r for r in rows if (candidate.get(r["comid"]) or {}).get(column) == "rated"]
+
+
+def _agreement(cohort, observations, scores, boot, arms=None, scopes=None):
+    """The paired agreement rows of every arm against the reference (``arms``, the candidate
+    ids; a base-only study passes the reference itself, whose rows then carry its absolute
+    values with value intervals)."""
     rows = []
     base = scores[REFERENCE]
+    arms = list(arms) if arms is not None else list(ALTERNATIVES[1:])
+    scopes = scopes or {}
     specs = []
     for function, (cls, continuous) in FUNCTION_TARGETS.items():
         if cls:
@@ -621,6 +708,8 @@ def _agreement(cohort, observations, scores, boot):
     for function in ("eci", "physical", "chemical", "biological"):
         specs.extend(((function, "t__bent_mmi", "auc_good_vs_poor", {"Good"}),
                       (function, "reference_2013", "auc_reference_vs_impaired", {"R"})))
+        # T3, exploratory: the fish MMI classes and O/E where the station carries them
+        specs.extend((function, target, "auc_good_vs_poor", {"Good"}) for target in T3_TARGETS)
     by_target = defaultdict(list)
     for row in observations:
         by_target[row["target"]].append(row)
@@ -634,10 +723,13 @@ def _agreement(cohort, observations, scores, boot):
         if not target_rows:
             continue
         for region, group in _groups(target_rows):
-            for alternative in ALTERNATIVES[1:]:
+            for alternative in arms:
+                scoped = _scoped(group, scopes.get(alternative), scores[alternative])
                 row = {"alternative_id": alternative, "reference_id": REFERENCE, "function": function,
-                       "target": target, "role": _role(target), "cohort": cohort, "region": region}
-                row.update(_compare(group, base, scores[alternative], column, statistic, boot=boot,
+                       "target": target, "role": _role(target), "cohort": cohort, "region": region,
+                       "comparison_scope": json.dumps(scopes[alternative], sort_keys=True) if scopes.get(alternative) else "",
+                       "scope_excluded_n": len(group) - len(scoped)}
+                row.update(_compare(scoped, base, scores[alternative], column, statistic, boot=boot,
                                     positive=positive, rating_column="rating__" + function if statistic == "weighted_kappa" else None))
                 rows.append(row)
     return rows
@@ -822,7 +914,16 @@ def evaluate(root: Path, study: Path, boot=1000, *, scores_dir: Path | None = No
             raise ValueError("Evaluation directories must remain inside the study")
     if cohort_prefix and results.resolve() == (study / "results").resolve():
         raise ValueError("A separate cohort evaluation must not overwrite the frozen comparison results")
-    score_paths = {alternative: score_directory / f"{alternative}.parquet" for alternative in ALTERNATIVES}
+    # the arms: the manifest's candidates block (a 1.2.0 study), else the four alternatives
+    manifest_path = study / "manifest.json"
+    manifest = _read_json(manifest_path) if manifest_path.is_file() else {}
+    arm_rows = study_candidates(manifest, [{"id": a} for a in ALTERNATIVES])
+    arm_ids = [row["id"] for row in arm_rows]
+    if arm_ids[0] != REFERENCE:
+        raise ValueError("The study's first arm must be the reference")
+    candidate_ids = arm_ids[1:] or [REFERENCE]      # a base-only study pairs the base with itself
+    scopes = {row["id"]: row.get("comparison_scope") for row in arm_rows if row.get("comparison_scope")}
+    score_paths = {alternative: score_directory / f"{alternative}.parquet" for alternative in arm_ids}
     inputs = [_input(path) for path in (observation_path, desktop_path, *score_paths.values())]
     observations = _read(observation_path)
     reaches_path = study / "cohorts/reaches.parquet"
@@ -847,7 +948,7 @@ def evaluate(root: Path, study: Path, boot=1000, *, scores_dir: Path | None = No
     agreement, lowflow, agriculture, model = [], [], [], []
     for cohort, rows in _cohorts(observations):
         cohort = cohort_prefix + cohort
-        agreement.extend(_agreement(cohort, rows, scores, boot))
+        agreement.extend(_agreement(cohort, rows, scores, boot, arms=candidate_ids, scopes=scopes))
         lowflow.extend(_lowflow(cohort, rows, raw, boot))
         agriculture.extend(_agriculture(cohort, rows, scores[REFERENCE], boot))
         model.extend(_model(cohort, rows, scores[REFERENCE], raw, boot))
@@ -856,7 +957,9 @@ def evaluate(root: Path, study: Path, boot=1000, *, scores_dir: Path | None = No
               "field_agriculture.csv": agriculture, "field_model.csv": model}
     for filename, rows in tables.items():
         _csv(results / filename, rows)
-    summary = {"schema_version": 1, "reference_id": REFERENCE, "alternatives": list(ALTERNATIVES),
+    summary = {"schema_version": 1, "reference_id": REFERENCE, "alternatives": list(arm_ids),
+               "compared": list(candidate_ids), "comparison_scopes": scopes,
+               "target_roles": target_roles(), "deciding_cohort": "latest_visit1",
                "boot_requested": boot, "bootstrap_unit": "HUC8", "seed": SEED,
                "confidence_level": .95, "noninferiority_margin_auc": MARGIN,
                "cohort_prefix": cohort_prefix, "scores_directory": str(score_directory.resolve()),

@@ -47,7 +47,10 @@ def _set(quantity: str) -> dict:
             "curves": {"national": _curve(0.2, 0.5), "TPL": _curve(0.25, 0.55)}}
 
 
-SETS = {"flow-min-ratio": _set("q_min_ratio"), "width-variability": _set("bankfull_width_cv")}
+# E2 as re-specified (Addendum 1, 2026-09-27): its set records the registry's fcode_class split
+SETS = {"flow-min-ratio": {**_set("q_min_ratio"), "split": {"fcode_class": "perennial"}},
+        "width-variability": _set("bankfull_width_cv")}
+REFIT_SCRIPT = APP / "scripts" / "refit_easi_candidate_sets.py"
 
 
 @pytest.fixture(scope="module")
@@ -103,16 +106,37 @@ def test_every_family_builds_a_verified_package(base):
         assert "rehearsal" in back.envelope["label"] and family in back.envelope["label"]
         req = back.envelope["evaluator"]["requires"]
         extras = [b for b in req["behaviors"] if b not in mp.BEHAVIORS]
-        if family in ("E1", "E5"):
+        if family in ("E1", "E2", "E5"):
+            # E2 carries E1's rule since Addendum 1 (intermittent reaches withheld)
             assert extras == ["applicability-rules"]
         elif family == "E8":
             assert extras == ["rollup-completeness-interval"]
         else:
             assert extras == []
         assert ("mean_index" in req["operators"]) == (family == "E7")
+        assert built["respecified"] == ("2026-09-27" if family == "E2" else None)
         if family in round4.FAMILY_SETS:
-            assert round4.FAMILY_SETS[family] in json.loads(built["files"]["reference-curves.json"])["sets"]
+            sets = json.loads(built["files"]["reference-curves.json"])["sets"]
+            assert round4.FAMILY_SETS[family] in sets
             assert built["curveSets"][round4.FAMILY_SETS[family]]["curves"] == ["TPL", "national"]
+            if family == "E2":
+                assert sets["flow-min-ratio"]["split"] == {"fcode_class": "perennial"}
+                assert built["curveSets"]["flow-min-ratio"]["split"] == {"fcode_class": "perennial"}
+
+
+def test_family_spec_reports_the_e2_respecification():
+    spec = round4.family_spec("E2")
+    assert spec["respecified"]["date"] == "2026-09-27" and spec["respecified"]["addendum"] == 1
+    assert spec["respecified"]["split"] == "fcode_class"
+    assert "perennial" in spec["respecified"]["summary"]
+    assert spec["respecified"]["comparisonScope"] == {"function": "low-flow-baseflow-dynamics",
+                                                       "rule": "candidate-rated"}
+    assert "respecified" not in round4.family_spec("E1")
+    # the prose addendum carries Addendum 1 and the frozen yaml is untouched
+    prose = (round4.ADDENDUM_PATH.parent / "EVALUATION_PROTOCOL_V1_EASI_ADDENDUM.md").read_text(encoding="utf-8")
+    assert "Addendum 1 (2026-09-27, before any Round 4 result was read)" in prose
+    assert "(none)" not in prose.split("## Addenda")[1]
+    assert round4.addendum_sha256() == round4.ADDENDUM_SHA256
 
 
 def test_the_edits_say_what_each_family_changes(base):
@@ -130,9 +154,15 @@ def test_the_edits_say_what_each_family_changes(base):
     e1 = method(cat(round4.build_candidate(base, "E1")), "erom-flow-variability")
     assert e1["applicability"] == {"input": "fcodeContext", "exclude": ["46003", "46007"],
                                    "statement": round4.E1_STATEMENT}
-    e2 = method(cat(round4.build_candidate(base, "E2", curve_sets=SETS)), "erom-flow-min-ratio")
+    e2_built = round4.build_candidate(base, "E2", curve_sets=SETS)
+    e2 = method(cat(e2_built), "erom-flow-min-ratio")
     assert [i["key"] for i in e2["inputs"]] == ["flowMinRatio", "meanAnnualFlow", "fcodeContext"]
     assert e2["curve"]["set"] == "flow-min-ratio" and e2["metricId"] == LOW_FLOW
+    # Addendum 1: E1's rule and statement on the E2 method, the re-specification named
+    assert e2["applicability"] == {"input": "fcodeContext", "exclude": ["46003", "46007"],
+                                   "statement": round4.E1_STATEMENT}
+    assert any("Addendum 1, 2026-09-27" in t and "perennial members" in t for t in e2["limitations"])
+    assert any(e.get("field") == "applicability" and e.get("respecified") == "2026-09-27" for e in e2_built["edits"])
     e3 = method(cat(round4.build_candidate(base, "E3")), "streamcat-integrity-products")
     assert e3["operator"] == "unscored" and e3["statement"] == round4.E3_STATEMENT
     e4 = method(cat(round4.build_candidate(base, "E4", curve_sets=SETS)), "habitat-width-variability")
@@ -163,6 +193,12 @@ def test_e2_and_e4_refuse_without_their_curve_set(base):
     del no_national["width-variability"]["curves"]["national"]
     with pytest.raises(round4.CandidateError, match="national curve"):
         round4.build_candidate(base, "E4", curve_sets=no_national)
+    # E2 as written (a set assembled without the perennial split) cannot be built
+    as_written = copy.deepcopy(SETS)
+    del as_written["flow-min-ratio"]["split"]
+    with pytest.raises(round4.CandidateError, match="Addendum 1") as exc:
+        round4.build_candidate(base, "E2", curve_sets=as_written)
+    assert "--registry-split flow-min-ratio=perennial" in str(exc.value)
 
 
 def test_the_cli_writes_the_folder_the_zip_and_candidate_json(tmp_path):
@@ -260,11 +296,31 @@ def test_the_candidate_sets_are_fitted_by_stratum_only_and_assembled_for_the_met
     # a set without a usable national curve is left out and said
     partial, diag = refit.candidate_curves([r for r in rows if r["level"] != "national"])
     assert partial == {} and all(d["omitted"] == "no usable national curve" for d in diag.values())
-    # the refit output builds the E2 and E4 packages
-    for family in ("E2", "E4"):
-        built = round4.build_candidate(base, family, curve_sets=sets)
-        assert mp.validate_files(built["files"]) == []
-        mp.read_package(mp.to_zip(round4.package(built["files"], family, built["spec"])))
+    # the by-stratum output builds E4; E2 (Addendum 1) needs the set from the registry split
+    built = round4.build_candidate(base, "E4", curve_sets=sets)
+    assert mp.validate_files(built["files"]) == []
+    mp.read_package(mp.to_zip(round4.package(built["files"], "E4", built["spec"])))
+    with pytest.raises(round4.CandidateError, match="Addendum 1"):
+        round4.build_candidate(base, "E2", curve_sets=sets)
+    # the split-aware assembly: the registry rows of q_min_ratio's own fcode_class split
+    # (every synthetic member is "stream"), the split recorded in the definition
+    split_sets, split_diag = refit.candidate_curves(registry, sets={"flow-min-ratio": "q_min_ratio"},
+                                                    splits={"flow-min-ratio": "stream"})
+    assert sorted(split_sets) == ["flow-min-ratio"]
+    assert split_sets["flow-min-ratio"]["split"] == {"fcode_class": "stream"}
+    assert sorted(split_sets["flow-min-ratio"]["curves"]) == ["CPL", "NAP", "national"]
+    assert split_diag["flow-min-ratio"]["split"] == {"fcode_class": "stream"}
+    # the rows of another split value select nothing, and a quantity without a split refuses
+    none_sets, none_diag = refit.candidate_curves(registry, sets={"flow-min-ratio": "q_min_ratio"},
+                                                  splits={"flow-min-ratio": "perennial"})
+    assert none_sets == {} and none_diag["flow-min-ratio"]["omitted"] == "no usable national curve"
+    with pytest.raises(ValueError, match="no registry split"):
+        refit.candidate_curves(rows, sets={"width-variability": "bankfull_width_cv"},
+                               splits={"width-variability": "ge_2"})
+    e2 = round4.build_candidate(base, "E2", curve_sets=split_sets)
+    assert mp.validate_files(e2["files"]) == [] and e2["respecified"] == "2026-09-27"
+    assert json.loads(e2["files"]["reference-curves.json"])["sets"]["flow-min-ratio"]["split"] == {"fcode_class": "stream"}
+    mp.read_package(mp.to_zip(round4.package(e2["files"], "E2", e2["spec"])))
     # the campaign fits the same rows, one job per quantity, with the grouping in the spec
     from streamcurves import evidence_store as es
     digest = es.read_manifest(folder)["dataDigest"]
@@ -280,6 +336,35 @@ def test_the_candidate_sets_are_fitted_by_stratum_only_and_assembled_for_the_met
     norm = lambda rs: json.loads(json.dumps(sorted(rs, key=lambda r: (r["quantity"], r["level"],  # noqa: E731
                                                                        r["stratum"])), default=float))
     assert norm(got) == norm(rows)
+
+
+def test_the_refit_cli_fits_a_set_on_its_registry_split(tmp_path):
+    """``--registry-split flow-min-ratio=<value>`` fits q_min_ratio with its fcode_class split
+    (a plain registry refit of the quantity), assembles the set from that split's rows, records
+    the split and the per-stratum quantiles, and refuses a split for a quantity without one."""
+    folder = _members_package(tmp_path)
+    out = tmp_path / "curve-sets.json"
+    proc = subprocess.run([sys.executable, "-B", str(REFIT_SCRIPT), "--members", str(folder),
+                           "--campaign", str(tmp_path / "campaign"), "--out", str(out),
+                           "--sets", "flow-min-ratio", "--registry-split", "flow-min-ratio=stream",
+                           "--workers", "1"], cwd=str(APP), capture_output=True, text=True, timeout=900)
+    assert proc.returncode == 0, proc.stderr[-2000:] + proc.stdout[-2000:]
+    doc = json.loads(out.read_text(encoding="utf-8"))
+    definition = doc["sets"]["flow-min-ratio"]
+    assert definition["split"] == {"fcode_class": "stream"}
+    assert sorted(definition["curves"]) == ["CPL", "NAP", "national"]
+    assert doc["provenance"]["registrySplits"] == {"flow-min-ratio": "stream"}
+    assert "registry split for flow-min-ratio (stream)" in doc["provenance"]["groupedBy"]
+    quantiles = doc["provenance"]["stratumQuantiles"]
+    assert {(q["stratum"], q["split"]) for q in quantiles} == {("nars9:CPL", "stream"), ("nars9:NAP", "stream"),
+                                                               ("national:national", "stream")}
+    assert all(q["q25"] is not None and q["status"] == "complete" for q in quantiles)
+    assert "q25" in proc.stdout and "split {'fcode_class': 'stream'}" in proc.stdout
+    proc = subprocess.run([sys.executable, "-B", str(REFIT_SCRIPT), "--members", str(folder),
+                           "--campaign", str(tmp_path / "campaign2"), "--out", str(tmp_path / "x.json"),
+                           "--sets", "width-variability", "--registry-split", "width-variability=ge_2"],
+                          cwd=str(APP), capture_output=True, text=True, timeout=900)
+    assert proc.returncode != 0 and "has no registry split" in proc.stderr
 
 
 # --------------------------------------------------------------------------- #
