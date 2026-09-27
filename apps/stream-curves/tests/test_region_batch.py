@@ -420,8 +420,14 @@ def test_a_curve07_answer_publishes_or_drops_the_curve(evidence):
          "rationale": "Dropped: the curve cannot be defended for this region."},
         {"rule_id": "CURVE-07", "subject": "not_fitted_here", "action": "accept",
          "rationale": "An answer left from an earlier build."},
-        {"rule_id": "CURVE-06", "subject": keep, "action": "accept", "rationale": "Other rule."}])
+        {"rule_id": "CURVE-06", "subject": keep, "action": "accept", "rationale": "Other rule.",
+         "asserts": {"evaluable": False, "n_matched": 0, "n_boot": 1000, "seed": 822564383,
+                     "structure_stability": 0.0, "shape_stability": 0.0,
+                     "point_intervals": [{"x": 0.0, "x_lo": None}]}}])
     assert answers[0]["asserts"] == {"curve_status": "x"}
+    # the run's identity and its bootstrap diagnostics are never asserted (a refit at
+    # another seed computes other values); what the decision rested on stays
+    assert answers[3]["asserts"] == {"evaluable": False, "n_matched": 0}
     finalize, remove = mod.curve07_answers(answers, fitted=review)
     assert finalize == {keep: why} and list(remove) == [drop]
 

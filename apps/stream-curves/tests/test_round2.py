@@ -260,7 +260,9 @@ def test_arms_for_every_candidate(tmp_path, protocol_path, source_config):
     assert round2.get_dotted(b4, "data_rules.min_n_unstratified") == 25
     b3 = yaml.safe_load((round2.arm_dir(root, "B3") / "config" / round2.TRANSFER_FILE).read_text(encoding="utf-8"))
     assert b3["search_order"] == ["l3", "l2", "l1", "nars9"]
-    assert b3["families"]["biology"]["search_order"] == ["l3", "l2", "nars9", "l1"], "per-family orders kept"
+    # methodology 0.15 (B3 adopted): the committed file carries the one order and no
+    # per-family order, so the arm's copy carries none either
+    assert "search_order" not in b3["families"]["biology"], "no per-family order since 0.15"
     text = (root / "arms" / "B3" / "config" / round2.TRANSFER_FILE).read_text(encoding="ascii")
     assert "GENERATED" in text.splitlines()[0]
 
@@ -601,3 +603,35 @@ def test_compare_and_finalist_end_to_end(tmp_path, protocol_path, source_config,
     sup = json.loads((round2.arm_dir(root, round2.FINALIST_ARM) / "supporting.json").read_text(encoding="utf-8"))
     assert sup["verdicts"] == {"B1": "adopt", "C6": "reference-only"}
     assert sup["benjamini_hochberg"]["q_values"]["B1"] == 0.0 and "B1" in sup["benjamini_hochberg"]["passing"]
+
+
+def test_a_missing_outcome_makes_the_verdict_inconclusive():
+    """An absent block is not a passed one: C3b's hierarchy harness crashed on 2026-09-26 and
+    the compare step had adopted on the stability outcome alone."""
+    passing = dict(estimate=0.0, lo=0.0, hi=0.0, n=229, n_clusters=14)
+    got = round2.adoption("simplification", primary=passing, limits=[], missing=["O1", "O2"])
+    assert got["verdict"] == round2.VERDICT_INCONCLUSIVE
+    assert got["missing"] == ["O1", "O2"]
+    assert "no data for O1, O2" in got["reasons"][0]
+    # with the data present the same primary adopts, and a reference arm stays reference-only
+    assert round2.adoption("simplification", primary=passing, limits=[])["verdict"] == round2.VERDICT_ADOPT
+    assert round2.adoption("reference_arm", primary=passing, limits=[], missing=["O1"])["verdict"] == round2.VERDICT_REFERENCE
+    # an accuracy change and a coverage-only candidate are inconclusive too
+    assert round2.adoption("accuracy_change", primary=passing, limits=[], missing=["O3"])["verdict"] == round2.VERDICT_INCONCLUSIVE
+    assert round2.adoption("coverage_only", primary=None, limits=[], constraint_resolved=True, coverage_gain=3,
+                           missing=["O5"])["verdict"] == round2.VERDICT_INCONCLUSIVE
+
+
+def test_the_finalist_composition_is_judged_as_a_simplification():
+    """compose_finalist records decision "composition"; the first finalist compare of
+    2026-09-26 raised on it. The composition passes on noninferiority with every block."""
+    passing = dict(estimate=0.0, lo=0.0, hi=0.0, n=229, n_clusters=14, level=0.9)
+    test = round2.primary_test("composition", passing)
+    assert test["rule"] == "composition" and test["passes"] is True
+    assert round2.adoption("composition", primary=passing, limits=[])["verdict"] == round2.VERDICT_ADOPT
+    failing = dict(estimate=-0.1, lo=-0.2, hi=0.0, n=229, n_clusters=14, level=0.9)
+    assert round2.adoption("composition", primary=failing, limits=[])["verdict"] == round2.VERDICT_REJECT
+    blocked = round2.adoption("composition", primary=passing,
+                              limits=[dict(outcome="O3", blocks=True, why="association lost")])
+    assert blocked["verdict"] == round2.VERDICT_REJECT and blocked["blocks"] == ["O3"]
+    assert round2.adoption("composition", primary=None, limits=[], missing=["O1"])["verdict"] == round2.VERDICT_INCONCLUSIVE

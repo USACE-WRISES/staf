@@ -485,6 +485,9 @@ def deep_register(*, tiles: Iterable[Mapping], build: Optional[Mapping],
         if not mk or mk in have:
             continue
         held = w.get("reason") == "held-for-review"
+        # the rule that withheld the metric: REF-06 unless the record names another
+        # (a rule that judged an existing pool: DATA-03, CURVE-09, CURVE-12, CURVE-10)
+        rule = "CURVE-07" if held else str(w.get("rule") or "REF-06")
         key = add(_deep_identity(mk, "fitted", {"build": "this session"}, region),
                   label=str(w.get("metricName") or mk), basis=None, build_status="not_run",
                   eligibility={"status": "excluded", "reasons": [str(w.get("statement") or "")],
@@ -492,8 +495,7 @@ def deep_register(*, tiles: Iterable[Mapping], build: Optional[Mapping],
         for f in w.get("functions") or [{"functionId": w.get("functionId")}]:
             fid = str((f or {}).get("functionId") or "")
             if fid:
-                row(key, fid, EXCLUDED, _decision(key, fid, "not_selected",
-                                                  rule="CURVE-07" if held else "REF-06",
+                row(key, fid, EXCLUDED, _decision(key, fid, "not_selected", rule=rule,
                                                   reason=str(w.get("statement") or ""), by=AUTOMATED))
     # the candidates added for comparison
     chosen = {}

@@ -14,10 +14,10 @@
 
 version: 1
 analysis_version: scale-1
-decided_on: '2026-09-21'
+decided_on: '2026-09-26'
 inputs: {dataset: multi-cycle-v1, referenceFrame: wadeable, screen: 'least-disturbed-v1 (strict), wadeable
     non-canal frame', stationScreenSha256: d9954342f71a959da8d3c7ac74fd0fbb3620dae34f987cdd051cd42f0befefdc,
-  valuePolicy: latest_non_null_index_visit, nInFrame: 3267, nReference: 770, nBoot: 200, seed: 7, methodologyVersion: 0.14-provisional}
+  valuePolicy: newest-nonnull-v2, nInFrame: 3267, nReference: 770, nBoot: 200, seed: 7, methodologyVersion: 0.15-provisional}
 rule: {eta2: rank_adjusted, level_ratio: 0.8, national_floor: 0.02, tie: 0.02, split_incremental_min: 0.05,
   stratum_min_n: 15, flip_accept: 0.1, flip_exploratory: 0.2, min_group: 5, min_reference_n: 50, yardstick_max_auc_loss: 0.02}
 stratifiers:
@@ -178,13 +178,13 @@ metrics:
         n_by_class: {10_to_100: 343, le_10: 213, gt_100: 208}
     split_evaluated: NhdSlopeClass
     stability:
-      worst_flip_mean: 0.0583
+      worst_flip_mean: 0.0586
       verdict: accept
       by_class:
-        0.5_to_2: {flip_mean: 0.0583, flip_p90: 0.1307, n_boot_valid: 200, n_eval: 681, verdict: not_evaluable}
-        ge_2: {flip_mean: 0.0365, flip_p90: 0.069, n_boot_valid: 200, n_eval: 481, verdict: not_evaluable}
-        lt_0.5: {flip_mean: 0.0432, flip_p90: 0.092, n_boot_valid: 200, n_eval: 2010, verdict: not_evaluable}
-    yardstick: {auc_unsplit: 0.6701, auc_split: 0.6492, verdict: split_lowers_agreement}
+        0.5_to_2: {flip_mean: 0.0586, flip_p90: 0.1367, n_boot_valid: 200, n_eval: 681, verdict: not_evaluable}
+        ge_2: {flip_mean: 0.0372, flip_p90: 0.0707, n_boot_valid: 200, n_eval: 481, verdict: not_evaluable}
+        lt_0.5: {flip_mean: 0.0422, flip_p90: 0.0901, n_boot_valid: 200, n_eval: 2010, verdict: not_evaluable}
+    yardstick: {auc_unsplit: 0.6718, auc_split: 0.6487, verdict: split_lowers_agreement}
     decision_basis: Level III adjusted eta-squared 0.2777; supported level l3. NhdSlopeClass adds 0.0677
       but was not adopted (stability accept, yardstick lower).
     display_name: Chlorophyll a
@@ -424,16 +424,16 @@ metrics:
         n_by_class: {10_to_100: 300, le_10: 163, gt_100: 149}
     split_evaluated: NhdSlopeClass
     stability:
-      worst_flip_mean: 0.1078
+      worst_flip_mean: 0.112
       verdict: exploratory
       by_class:
-        0.5_to_2: {flip_mean: 0.1078, flip_p90: 0.2375, n_boot_valid: 200, n_eval: 590, verdict: not_evaluable}
+        0.5_to_2: {flip_mean: 0.112, flip_p90: 0.2578, n_boot_valid: 200, n_eval: 590, verdict: not_evaluable}
         ge_2: {flip_mean: 0.0, flip_p90: 0.0, n_boot_valid: 200, n_eval: 385, verdict: not_evaluable}
-        lt_0.5: {flip_mean: 0.0486, flip_p90: 0.1074, n_boot_valid: 200, n_eval: 1750, verdict: not_evaluable}
-    yardstick: {auc_unsplit: 0.6408, auc_split: 0.6492, verdict: ok}
+        lt_0.5: {flip_mean: 0.0645, flip_p90: 0.1063, n_boot_valid: 200, n_eval: 1750, verdict: not_evaluable}
+    yardstick: {auc_unsplit: 0.642, auc_split: 0.65, verdict: ok}
     split_status: exploratory
     decision_basis: Level III adjusted eta-squared 0.5538; supported level l2. NhdSlopeClass adds 0.099
-      of adjusted eta-squared, resampling flip rate 0.1078 (exploratory).
+      of adjusted eta-squared, resampling flip rate 0.112 (exploratory).
     display_name: Tolerant native fish individuals
     family: biology
   fish_NAT_TOTLNTAX:
@@ -527,7 +527,7 @@ metrics:
       verdict: accept
       by_class:
         10_to_100: {flip_mean: 0.0429, flip_p90: 0.0717, n_boot_valid: 200, n_eval: 1019, verdict: not_evaluable}
-        gt_100: {flip_mean: 0.0644, flip_p90: 0.1756, n_boot_valid: 200, n_eval: 1617, verdict: not_evaluable}
+        gt_100: {flip_mean: 0.0644, flip_p90: 0.1757, n_boot_valid: 200, n_eval: 1616, verdict: not_evaluable}
         le_10: {flip_mean: 0.0428, flip_p90: 0.0744, n_boot_valid: 200, n_eval: 539, verdict: not_evaluable}
     yardstick: {auc_unsplit: 0.4644, auc_split: 0.4947, verdict: ok}
     split_status: accept
@@ -672,35 +672,35 @@ metrics:
     family: substrate
   phab_RP100_cm:
     status: decided
-    n_reference: 552
+    n_reference: 763
     supported_level: l3
     split: NhdSlopeClass
     eta2:
-      l3: {raw: 0.2423, adj: 0.1937, k: 30, n: 482, p: 0.0}
-      l2: {raw: 0.1502, adj: 0.1312, k: 13, n: 549, p: 0.0}
-      l1: {raw: 0.074, adj: 0.0621, k: 8, n: 551, p: 1.0e-06}
-      nars9: {raw: 0.096, adj: 0.0843, k: 8, n: 552, p: 0.0}
+      l3: {raw: 0.2465, adj: 0.2022, k: 40, n: 704, p: 0.0}
+      l2: {raw: 0.158, adj: 0.1443, k: 13, n: 755, p: 0.0}
+      l1: {raw: 0.076, adj: 0.0674, k: 8, n: 761, p: 0.0}
+      nars9: {raw: 0.1032, adj: 0.0948, k: 8, n: 760, p: 0.0}
     incremental:
       NhdSlopeClass:
-        increment: 0.2755
-        combined: 0.4692
-        n_by_class: {ge_2: 262, 0.5_to_2: 150, lt_0.5: 140}
+        increment: 0.2779
+        combined: 0.4801
+        n_by_class: {ge_2: 344, 0.5_to_2: 222, lt_0.5: 197}
       NhdDrainageAreaClass:
-        increment: 0.226
-        combined: 0.4198
-        n_by_class: {10_to_100: 256, le_10: 164, gt_100: 132}
+        increment: 0.2242
+        combined: 0.4264
+        n_by_class: {10_to_100: 344, le_10: 214, gt_100: 205}
     split_evaluated: NhdSlopeClass
     stability:
-      worst_flip_mean: 0.0394
+      worst_flip_mean: 0.0313
       verdict: accept
       by_class:
-        0.5_to_2: {flip_mean: 0.0394, flip_p90: 0.0837, n_boot_valid: 200, n_eval: 454, verdict: not_evaluable}
-        ge_2: {flip_mean: 0.0305, flip_p90: 0.0593, n_boot_valid: 200, n_eval: 371, verdict: not_evaluable}
-        lt_0.5: {flip_mean: 0.0303, flip_p90: 0.0581, n_boot_valid: 200, n_eval: 1467, verdict: not_evaluable}
-    yardstick: {auc_unsplit: 0.4782, auc_split: 0.5587, verdict: ok}
+        0.5_to_2: {flip_mean: 0.0313, flip_p90: 0.0608, n_boot_valid: 200, n_eval: 676, verdict: not_evaluable}
+        ge_2: {flip_mean: 0.0299, flip_p90: 0.0582, n_boot_valid: 200, n_eval: 481, verdict: not_evaluable}
+        lt_0.5: {flip_mean: 0.0283, flip_p90: 0.0608, n_boot_valid: 200, n_eval: 1991, verdict: not_evaluable}
+    yardstick: {auc_unsplit: 0.4974, auc_split: 0.5875, verdict: ok}
     split_status: accept
-    decision_basis: Level III adjusted eta-squared 0.1937; supported level l3. NhdSlopeClass adds 0.2755
-      of adjusted eta-squared, resampling flip rate 0.0394 (accept).
+    decision_basis: Level III adjusted eta-squared 0.2022; supported level l3. NhdSlopeClass adds 0.2779
+      of adjusted eta-squared, resampling flip rate 0.0313 (accept).
     display_name: Residual pool depth
     family: channel_form
   phab_SINU:
@@ -709,20 +709,20 @@ metrics:
     supported_level: l3
     split: null
     eta2:
-      l3: {raw: 0.1757, adj: 0.1253, k: 37, n: 626, p: 0.0}
-      l2: {raw: 0.0713, adj: 0.0547, k: 13, n: 683, p: 2.0e-06}
-      l1: {raw: 0.0274, adj: 0.0174, k: 8, n: 689, p: 0.008781}
-      nars9: {raw: 0.063, adj: 0.0533, k: 8, n: 688, p: 0.0}
+      l3: {raw: 0.1786, adj: 0.1284, k: 37, n: 626, p: 0.0}
+      l2: {raw: 0.0731, adj: 0.0565, k: 13, n: 683, p: 1.0e-06}
+      l1: {raw: 0.0289, adj: 0.0189, k: 8, n: 689, p: 0.005795}
+      nars9: {raw: 0.0652, adj: 0.0556, k: 8, n: 688, p: 0.0}
     incremental:
       NhdSlopeClass:
-        increment: -0.0435
-        combined: 0.0819
+        increment: -0.0432
+        combined: 0.0852
         n_by_class: {ge_2: 342, 0.5_to_2: 207, lt_0.5: 142}
       NhdDrainageAreaClass:
-        increment: -0.0074
-        combined: 0.118
+        increment: -0.0076
+        combined: 0.1208
         n_by_class: {10_to_100: 336, le_10: 209, gt_100: 146}
-    decision_basis: Level III adjusted eta-squared 0.1253; supported level l3. No class split adds the
+    decision_basis: Level III adjusted eta-squared 0.1284; supported level l3. No class split adds the
       required 0.05 with two classes of 15 or more.
     display_name: Sinuosity
     family: channel_form

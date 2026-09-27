@@ -153,3 +153,46 @@ def test_panels_and_curves_steps_run_over_the_tables(tmp_path):
     assert entry["x39"] < entry["x69"] and len(entry["points"]) == 5
     points = pq.read_table(curves.points_path(root)).to_pandas()
     assert (points["quantity"] == "woody_wsrp100").sum() >= 5
+    # every fit says which tail endpoints it ran under: the method's own, iqr-seed-2
+    fitted = registry[registry["status"] == "complete"]
+    assert set(fitted["curve_method_version"]) == {"iqr-seed-2"}
+    assert set(fitted["tail_near_iqr"]) == {0.3} and set(fitted["tail_mid_iqr"]) == {4 / 3}
+
+
+def test_fit_curve_runs_the_engine_under_the_methods_endpoints_and_records_them():
+    """The engine's default endpoints moved to 0.5, 1.5 and 2.5 IQR at methodology 0.15
+    (iqr-seed-3); the national dataset and the operational method were fitted under 0.3,
+    4/3 and 7/3 (iqr-seed-2, ``seed_points``). A fit runs the engine under the method's
+    endpoints unless told otherwise, with the fractions' own arithmetic (iqr * 4 / 3:
+    multiply, then divide), records them as plain numbers, and leaves the engine as it
+    found it."""
+    from streamcurves import curves as engine
+    from streamcurves import methodology, run_state
+    q = curves.QUANTITIES["q_cv_monthly"]
+    values = RNG.uniform(0.2, 1.5, size=300)
+    fit = curves.fit_curve(values, q, "national")
+    assert curves.SEED_TAIL_OFFSETS_IQR == (0.3, "4/3", "7/3") and curves.CURVE_METHOD_VERSION == "iqr-seed-2"
+    parsed = curves.seed_tail_offsets()
+    assert parsed == (0.3, 4 / 3, 7 / 3) == engine.LEGACY_TAIL_OFFSETS_IQR_SEED_2
+    assert [getattr(v, "ratio", None) for v in parsed] == [None, (4, 3), (7, 3)]
+    recorded = (fit["tail_near_iqr"], fit["tail_mid_iqr"], fit["tail_far_iqr"])
+    assert recorded == (0.3, 4 / 3, 7 / 3) and all(type(v) is float for v in recorded)
+    assert fit["curve_method_version"] == "iqr-seed-2"
+    # the closed form and the engine agree bit for bit (both multiply, then divide)
+    assert fit["points"] == curves.seed_points(fit["q25"], fit["q75"], False, q.domain)
+    iqr = fit["q75"] - fit["q25"]
+    assert fit["points"][3][0] == fit["q75"] + iqr * 4 / 3 and fit["points"][4][0] == fit["q75"] + iqr * 7 / 3
+    rising = curves.QUANTITIES["woody_wsrp100"]
+    fit_r = curves.fit_curve(RNG.uniform(20, 90, size=400), rising, "l3:1")
+    assert fit_r["points"] == curves.seed_points(fit_r["q25"], fit_r["q75"], True, rising.domain)
+    # the engine's own default is another triple, and it is back in force after the fit
+    assert engine.MONOTONE_TAIL_OFFSETS_IQR == (0.5, 1.5, 2.5)
+    assert methodology.seed_geometry()["tail_offsets_iqr"] == engine.MONOTONE_TAIL_OFFSETS_IQR
+    assert curves._TAIL_PIN_STATE["active"] == 0 and methodology.seed_geometry is not curves._pinned_seed_geometry
+    default = curves.fit_curve(values, q, "national", tail_offsets_iqr=engine.MONOTONE_TAIL_OFFSETS_IQR)
+    assert default["curve_method_version"] == run_state.CURVE_METHOD_VERSION == "iqr-seed-3"
+    assert default["points"] != fit["points"] and default["points"][3][0] == pytest.approx(fit["q75"] + (fit["q75"] - fit["q25"]) * 1.5)
+    assert curves.curve_method_version_for((0.25, 1.0, 2.0)) == "custom"
+    with pytest.raises(ValueError):
+        with curves.engine_tail_offsets((0.5, 0.2, 1.0)):
+            pass

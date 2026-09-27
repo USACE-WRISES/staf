@@ -122,3 +122,20 @@ def test_the_recorded_recipe_code_is_what_the_refit_computes_and_stays_out_of_da
     assert "code" not in ee.engine_block()
     for export in (ee.export_members, ee.export_fits):
         assert '"code": recipe_code()' in inspect.getsource(export)
+
+
+def test_the_engine_block_records_the_tail_endpoints_the_fits_ran_under():
+    """A refit fits under what the recipe records, whatever the engine's current default;
+    the exporter writes the method's own endpoints (iqr-seed-2) in the knob's spelling,
+    a fraction as a fraction, never the engine's and never a pre-rounded float."""
+    from builder.analysis import curves
+    from streamcurves import curves as engine
+    from streamcurves.easi_method import refit
+    block = ee.engine_block()
+    assert block["tailOffsetsIqr"] == [0.3, "4/3", "7/3"] == list(curves.SEED_TAIL_OFFSETS_IQR)
+    assert block["curveMethodVersion"] == "iqr-seed-2" == curves.CURVE_METHOD_VERSION
+    assert json.loads(json.dumps(block))["tailOffsetsIqr"] == [0.3, "4/3", "7/3"]
+    parsed = refit.recipe_geometry({"engine": block})["tail_offsets_iqr"]
+    assert parsed == (0.3, 4 / 3, 7 / 3) == engine.LEGACY_TAIL_OFFSETS_IQR_SEED_2
+    assert [getattr(v, "ratio", None) for v in parsed] == [None, (4, 3), (7, 3)]
+    assert tuple(parsed) != engine.MONOTONE_TAIL_OFFSETS_IQR

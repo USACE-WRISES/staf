@@ -113,11 +113,17 @@ def test_the_committed_calibration_matches_pre_registration_iv():
 
 
 def test_every_family_searches_nars9_as_a_separate_grouping():
+    """Methodology 0.15 (campaign Round 2, candidate B3 adopted): one search
+    order for every family, the Omernik nesting first and NARS-9, a separate
+    grouping, last; no family carries an order of its own any more."""
     cfg = rp.load_transfer_config()
+    assert cfg["search_order"] == ["l3", "l2", "l1", "nars9"]
     for fam, prof in (cfg.get("families") or {}).items():
-        order = rp.search_order(prof)
-        assert order[0] == "l3" and sorted(order) == ["l1", "l2", "l3", "nars9"], fam
-    assert rp.search_order(rp.family_profile("chem_PTL"))[1] == "nars9"
+        assert "search_order" not in prof, fam
+        order = rp.search_order(rp.family_profile(next(
+            mk for mk, f in cfg["metric_family"].items() if f == fam)))
+        assert order == ["l3", "l2", "l1", "nars9"], fam
+    assert rp.search_order(rp.family_profile("chem_PTL"))[-1] == "nars9"
 
 
 def test_the_envelope_widens_by_a_share_of_the_national_span():

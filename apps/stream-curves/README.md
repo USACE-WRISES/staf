@@ -419,6 +419,28 @@ basin: NLCD land cover came back empty for an 8,096 km2 basin, the road query wa
 truncated on a large Corn Belt basin, and two Indiana basins exceed 40,000 reaches,
 so the first engine-sourced drafts exclude those sites on the record.
 
+The national campaign runs the batch mode over every Level III code through
+`scripts/run_campaign.py` (campaign Round 3). `plan` freezes a campaign root: a
+`manifest.json` naming the worktree and commit (a dirty tree is refused), the code
+fingerprint, every input a stage reads (`region_inputs`), the stage-many flags and,
+per region from the census and the station screen, the support class, the decision
+files by sha and the inputs digest the stage is expected to record; `commands.md`
+carries the exact stage-many line. `run` recomputes every recorded value and refuses
+on any difference before starting that line (the same line resumes). `index` writes
+`index.json` and `index.csv` from the run folders' artifacts alone, one row per region
+with its state (staged, staged-open, no-data, unsupported, incomplete, refused,
+failed, not-started). `eligibility` evaluates the promotion policy
+(`config/methodology/promotion_policy.yaml`, owner decision D2: Preliminary by
+policy) gate by gate from the same artifacts, never refitting; `batch-summary` writes
+the owner's `promotion_batch_<id>.md` with the eligible table, the exceptions and
+their open items, and the promote commands with placeholders; `confirm` validates a
+hand-written `promotion_batch_<id>.confirmation.json` (no script fills
+`confirmedBy`) and prints the commands with the confirming maintainer and date;
+`compare` and `package` write the comparison against the published versions and a
+zip of the record. `promote --status policy` resolves the status from the same gates
+(preliminary when every gate the run folder can answer passes, else draft, with the
+blockers on `promote_record.json`).
+
 The import wizard and cross-sections tab pull from public REST services (USGS
 NLDI/3DEP, the StreamCat lookup engine, USGS StreamStats, and Model My Watershed);
 each source fails to NA rather than aborting. The STAF site engine (vendored) is

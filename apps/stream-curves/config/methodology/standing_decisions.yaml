@@ -16,20 +16,64 @@
 #   - Entries marked enabled: false are policy-enableable only: the owner passes
 #     --enable-policy <id> on the record for one run. Everything no entry covers
 #     stays an open item the owner decides at the end review (the region-specific
-#     RED-01 keeper choice, a flagged curve whose status is degenerate, shape
-#     conflict, multi-crossing or insufficient data, an unresolved direction, a
-#     coverage gap, and a portfolio set that differs from the crosswalk default).
+#     RED-01 keeper choice within a function, a flagged curve whose status is
+#     shape conflict, multi-crossing or insufficient data, a fallback curve the
+#     discrimination check contradicts, a well-supported inverted discrimination,
+#     an unresolved direction, a coverage gap without documented blockers, and a
+#     portfolio set that differs from the crosswalk default).
 #   - Match conditions read the queue item's computed evidence plus the derived
 #     fields decisions.enrich_evidence adds. Thresholds may reference the
 #     methodology config as "$methodology:<dotted path>" so a threshold edit
 #     cannot leave a stale copy here.
+#   - An entry approved under a version carries approved_on; an entry added by a
+#     campaign package carries approved_on null and says in approved_under that
+#     the owner's confirmation is pending. Such an entry binds the owner only
+#     through a promotion batch confirmation (owner decision D2, 2026-09-24):
+#     every application is stamped pending, listed by id with its count in the
+#     batch summary, and confirmed by the hand-written confirmation file.
 #
-# Replay (`run_region_batch.py replay`) applies this file to both published pilots
-# offline: every policy decision must match the recorded class and action, and
-# the items the policy leaves open are the owner-only decisions listed in
+# Replay (`run_region_batch.py replay`) applies this file to every published
+# version offline: every policy decision must match the recorded class and action
+# (an alias names an earlier class name for the same decision), an item the
+# record left open that the policy now decides is reported as policy_decides_open,
+# and the items the policy leaves open are the owner-only decisions listed in
 # tests/test_standing_decisions_replay.py.
 
 meta:
+  # 1.4 (2026-09-27, methodology 0.15-provisional, campaign Round 3): one entry
+  # amended, no new class decision. The frozen national pass under 1.3 showed
+  # that curve07-fallback-accepted decided its item (accept with conditions,
+  # "publishes as preliminary") but carried no finalize_metric side effect, so
+  # the accepted curve stayed held and unscored: where it was the function's only
+  # candidate the gap was undocumented and the staged publish refused (18
+  # regions), and elsewhere the accepted curve was missing from the bundle. The
+  # owner's own answer to the same item publishes the curve (run_region_batch
+  # curve07_answers), so the entry now finalizes what it accepts. Still pending
+  # the owner's confirmation at the first promotion batch, like the rest of 1.3.
+  # 1.3 (2026-09-26, methodology 0.15-provisional, campaign Round 2 close): the
+  # fast pass over all 85 Level III regions (0.14 rules, policy 1.2) staged every
+  # region and left open items in 77 of them, most of one of five recurring
+  # kinds: a fallback curve held for review (CURVE-07), an inverted discrimination
+  # check on a thin group (CURVE-12), a redundant pair (RED-01), a missing
+  # bootstrap interval on a fallback curve (CURVE-06) and a broad-use stratifier
+  # candidate above the stratum floor (STRAT-09). Six entries below turn those
+  # into class decisions, each consistent with the owner's recorded actions on
+  # the published versions (the pilots' classes curve07-fallback-curve-preliminary,
+  # curve06-no-interval-fallback-curve and red01-keep-both-distinct-axes, and the
+  # owner's 2026-09-22 D9 decisions on Central Basin and Range v1, Central Great
+  # Plains v1 and Northern Lakes and Forests v1): a fallback curve the
+  # discrimination check does not contradict publishes as preliminary with its
+  # condition; an inverted verdict on fewer stations than the DATA-04 floor is
+  # noise, so the curve stays flagged; a pair serving different functions keeps
+  # both metrics; a missing interval on a fallback curve is reported as not
+  # estimable; a broad-use candidate above the floor is recorded and not applied.
+  # Every application of these entries is pending until a promotion batch
+  # confirmation; approved_on stays null until the owner confirms one.
+  # data03-thin-metric-finalized, data06-insufficient-finalized and
+  # curve07-thin-metric-finalized are legacy: under 0.15 a DATA-03 or DATA-06
+  # curve is withheld at the build with its statement, so a new build never
+  # raises them; they replay the published versions that carry them. Every
+  # earlier entry carries over with its approval and a reaffirmed_under line.
   # 1.2 (2026-09-21, methodology 0.14): one new class decision,
   # cov01-documented-gap (owner decision 2026-09-21: of the 0.14 workflow, only a
   # documented gap runs automatically; hard stops and new model specifications
@@ -39,7 +83,7 @@ meta:
   # earlier entry carries over unchanged. ref02-accept-best-available is legacy:
   # it can only match under the easi-eci method, which the pressure screen
   # replaced, and it stays so the published pilots still replay.
-  policy_version: "1.2"
+  policy_version: "1.4"
   # Re-affirmed unchanged under 0.9 (2026-08-27): the governance-capture release
   # moved no threshold and added only advisory machinery, so every entry's
   # conditions and rationale templates carry over as approved.
@@ -49,9 +93,9 @@ meta:
   # re-affirmed unchanged under 0.11-provisional: v0.11 moved the function
   # coverage gate, a publish rule rather than a review-queue class decision.
   # Accepting a flagged curve stays an owner-only decision, recorded per run.
-  methodology_version: "0.14-provisional"
+  methodology_version: "0.15-provisional"
   approved_on: "2026-08-22"
-  authority: "Owner class decisions at the DEEP project gates (2026-08-21), promoted to standing decisions; confirmed per region at the end review before promote."
+  authority: "Owner class decisions at the DEEP project gates (2026-08-21), promoted to standing decisions; confirmed per region at the end review before promote. Entries added under 1.3, and the one amended under 1.4, are pending the owner's confirmation at the first promotion batch that applies them."
   rationale_origin: "standing_policy"
   pending_reviewer_suffix: "(pending owner confirmation)"
 
@@ -62,6 +106,7 @@ entries:
     enabled: true
     approved_under: "0.6-provisional"
     approved_on: "2026-08-21"
+    reaffirmed_under: "0.15-provisional"
     match:
       decision_flip: {eq: false}
     action: accept
@@ -83,6 +128,7 @@ entries:
     enabled: true
     approved_under: "0.6-provisional"
     approved_on: "2026-08-21"
+    reaffirmed_under: "0.15-provisional"
     match:
       disposition: {eq: exploratory}
       n_reference: {gte: "$methodology:data_rules.exploratory_n_unstratified"}
@@ -102,6 +148,7 @@ entries:
     enabled: true
     approved_under: "0.6-provisional"
     approved_on: "2026-08-21"
+    reaffirmed_under: "0.15-provisional"
     aliases: [red06-instability-is-noise-at-n16]
     match:
       stability: {lt: "$methodology:redundancy_rules.bootstrap_stability"}
@@ -120,6 +167,7 @@ entries:
     enabled: true
     approved_under: "0.6-provisional"
     approved_on: "2026-08-21"
+    reaffirmed_under: "0.15-provisional"
     match:
       min_level_n: {lt: "$methodology:data_rules.min_n_stratum"}
     action: reject
@@ -133,12 +181,46 @@ entries:
       STRAT-06 floors takes the deferred-gradient deduction and carries the
       caveat into the published bundle.
 
+  # Policy 1.3: the complement of strat09-defer-floors. Stratified reference
+  # curves (STRAT-07) are not part of this methodology version, so a broad-use
+  # candidate whose classes all clear the floor is recorded and not applied.
+  # Alias: policy 1.2 read the class sizes by scanning the digits of the
+  # labelled level_counts string ("<= 10 km2", "0.5%"), so its records name
+  # strat09-defer-floors with the labels' numbers as class sizes even where
+  # every class clears the floor (Northeastern Highlands v9, Interior Plateau
+  # v6, Eastern Corn Belt Plains v8, Southeastern Plains v2). The recorded
+  # action (not applied) is this entry's; the replay reads those records here.
+  - id: strat09-advisory-not-applied
+    rule_id: STRAT-09
+    trigger: advisory_stratifier_not_applied
+    enabled: true
+    approved_under: "0.15-provisional (pending owner confirmation at the first promotion batch)"
+    approved_on: null
+    aliases: [strat09-defer-floors]
+    match:
+      tier: {eq: "Broad-Use Candidate"}
+      min_level_n: {gte: "$methodology:data_rules.min_n_stratum"}
+    action: reject
+    asserts: [tier]
+    rationale: >-
+      Not applied under standing decision {policy_id} (policy {policy_version}):
+      this candidate is a {tier} ({n_significant} of {n_metrics_tested} metrics
+      tested respond to it, consistency {consistency_score}) and its smallest
+      populated class holds {min_level_n} sites (classes {level_counts}), so
+      the DATA-07 floor is not what stops it. Stratified reference curves
+      (STRAT-07) are not part of this methodology version: the curves stay
+      unstratified, the candidate is recorded in the stratifier evaluation
+      table, and every metric whose candidate clears the STRAT-01 and STRAT-06
+      floors takes the deferred-gradient deduction and carries the caveat into
+      the published bundle.
+
   - id: select01-complementary-set
     rule_id: SELECT-01
     trigger: more_than_two_metrics
     enabled: true
     approved_under: "0.6-provisional"
     approved_on: "2026-08-21"
+    reaffirmed_under: "0.15-provisional"
     match:
       equals_default_portfolio: {eq: true}
       max_within_function_abs_spearman: {lt: "$methodology:redundancy_rules.strong_abs_spearman"}
@@ -159,6 +241,7 @@ entries:
     enabled: true
     approved_under: "0.12-provisional"
     approved_on: "2026-09-19"
+    reaffirmed_under: "0.15-provisional"
     match:
       transfer_risk: {eq: low}
       n_usable: {gte: "$methodology:data_rules.min_n_unstratified"}
@@ -182,6 +265,7 @@ entries:
     enabled: true
     approved_under: "0.14-provisional"
     approved_on: "2026-09-21"
+    reaffirmed_under: "0.15-provisional"
     match:
       blockers_documented: {eq: true}
       n_candidates: {gte: 1}
@@ -196,6 +280,150 @@ entries:
       carries those blockers. No curve was forced, and the ecosystem condition
       index is stated as an interval.
 
+  # ---- policy 1.3 (campaign Round 2 close): pending owner confirmation ----
+  # A fallback curve (a non-positive or non-finite lower quartile produced a
+  # two-point ramp on a zero-heavy pool) publishes as preliminary with its
+  # condition when no anchor sits outside the declared domain and the
+  # discrimination check does not read inverted. A build before CURVE-12 has no
+  # record for the metric and counts as not inverted (the pilots). An inverted
+  # fallback curve stays open for the owner. Aliases: the two class names the
+  # pilots recorded for accepted fallback curves (curve07-fallback-curve-
+  # preliminary on Eastern Corn Belt Plains v3 and Interior Plateau v1); the
+  # thin-metric name also rides data_review records, which the legacy entry
+  # curve07-thin-metric-finalized replays when enabled.
+  - id: curve07-fallback-accepted
+    rule_id: CURVE-07
+    trigger: curve_needs_review
+    enabled: true
+    approved_under: "0.15-provisional (pending owner confirmation at the first promotion batch)"
+    approved_on: null
+    aliases: [curve07-thin-metric-finalized, curve07-fallback-curve-preliminary]
+    match:
+      curve_status: {eq: degenerate}
+      domain_violations: {eq: 0}
+      curve12_inverted: {eq: false}
+    action: accept_with_conditions
+    # 1.4: the acceptance publishes the curve as preliminary (finalize_metric),
+    # as the owner's answer to the same item does; under 1.3 the entry decided
+    # the item and left the curve held and unscored
+    side_effect: finalize_metric
+    asserts: [curve_status, domain_violations]
+    rationale: >-
+      Accepted with conditions under standing decision {policy_id} (policy
+      {policy_version}), expanded from this record's own evidence. Curve status
+      on the record: {curve_status} ({reasons}), with {domain_violations}
+      anchors outside the declared domain. The curve is a fallback ramp on a
+      pool whose lower quartile sits at the floor of the metric, and the
+      discrimination check does not contradict it (CURVE-12 verdict
+      {curve12_verdict}, AUC {curve12_auc}). Condition: it publishes as
+      preliminary with the flag, its published entry states the pool it rests
+      on, and it is marked for verification against field data before it
+      carries weight in a decision.
+
+  # An inverted discrimination verdict that rests on fewer stations than the
+  # DATA-04 automated floor in either group (the smaller group, min_group_n)
+  # cannot resolve the direction, so the curve stays flagged with its verdict.
+  # A well-supported inversion (both groups at the floor or above) stays open
+  # for the owner.
+  - id: curve12-inverted-thin
+    rule_id: CURVE-12
+    trigger: inverted_discrimination
+    enabled: true
+    approved_under: "0.15-provisional (pending owner confirmation at the first promotion batch)"
+    approved_on: null
+    match:
+      verdict: {eq: inverted}
+      min_group_n: {lt: "$methodology:data_rules.min_n_unstratified"}
+    action: accept_with_conditions
+    asserts: [verdict, n_ref, n_pressure]
+    rationale: >-
+      Accepted with conditions under standing decision {policy_id} (policy
+      {policy_version}), expanded from this record's own evidence: the
+      discrimination check reads {verdict} (AUC {auc_ref_vs_pressure};
+      reference median index {median_ref_index} against pressured median
+      {median_pressure_index}), but it rests on {n_ref} reference and
+      {n_pressure} pressured stations, and a group of {min_group_n} stations,
+      below the DATA-04 automated floor of {group_floor_n}, cannot resolve the
+      direction. Condition: the curve stays flagged with the verdict and the
+      group sizes on its published entry, is marked for verification against
+      field data before it carries weight in a decision, and is re-examined
+      when the pool grows.
+
+  # A strongly correlated pair whose two metrics serve different functions is
+  # not redundancy within a function: both metrics stay, each on its own axis.
+  # A pair serving one function stays with the owner (the region-specific
+  # keeper choice), and SELECT-01 and SELECT-04 govern the function's portfolio.
+  - id: red01-keep-both-distinct-axes
+    rule_id: RED-01
+    trigger: redundant_pair
+    enabled: true
+    approved_under: "0.15-provisional (pending owner confirmation at the first promotion batch)"
+    approved_on: null
+    match:
+      same_function: {eq: false}
+    action: accept
+    asserts: [same_function]
+    rationale: >-
+      Both metrics stay under standing decision {policy_id} (policy
+      {policy_version}), expanded from this record's own evidence: the pair
+      correlates at Spearman {spearman_text} (Pearson {pearson}), but the two
+      metrics serve different functions, so the shared signal is not
+      redundancy within a function and each keeps its own axis. A pair serving
+      one function stays with the owner, and SELECT-01 and SELECT-04 govern the
+      function's portfolio.
+
+  # A fallback curve has no bootstrap interval: no resample reproduces a
+  # two-point ramp's structure. Two entries carry the two recorded eras. A
+  # build before CURVE-12 (the pilots: Eastern Corn Belt Plains v3, Interior
+  # Plateau v1) accepted such a curve under this class name; a build that
+  # records the discrimination check accepts it with the owner's D9 condition
+  # (curve06-no-interval-flagged, below). A curve the discrimination check
+  # contradicts stays open with its CURVE-07 item.
+  - id: curve06-no-interval-fallback-curve
+    rule_id: CURVE-06
+    trigger: no_interval
+    enabled: true
+    approved_under: "0.15-provisional (pending owner confirmation at the first promotion batch)"
+    approved_on: null
+    match:
+      evaluable: {eq: false}
+      curve07_status: {eq: degenerate}
+      curve12_verdict: {eq: not_recorded}
+    action: accept
+    asserts: [evaluable, n_matched]
+    rationale: >-
+      Accepted under standing decision {policy_id} (policy {policy_version}),
+      expanded from this record's own evidence: no bootstrap interval could be
+      derived ({n_matched} of {n_boot} resamples matched the curve's
+      structure) because the curve is a fallback ramp on a pool whose lower
+      quartile sits at the floor of the metric, and no discrimination check was
+      recorded for it (a build before CURVE-12). The interval is not estimable
+      for such a curve, and the published entry reports it as such.
+
+  - id: curve06-no-interval-flagged
+    rule_id: CURVE-06
+    trigger: no_interval
+    enabled: true
+    approved_under: "0.15-provisional (pending owner confirmation at the first promotion batch)"
+    approved_on: null
+    match:
+      evaluable: {eq: false}
+      curve07_status: {eq: degenerate}
+      curve12_inverted: {eq: false}
+      curve12_verdict: {ne: not_recorded}
+    action: accept_with_conditions
+    asserts: [evaluable, n_matched]
+    rationale: >-
+      Accepted with conditions under standing decision {policy_id} (policy
+      {policy_version}), expanded from this record's own evidence: no bootstrap
+      interval could be derived ({n_matched} of {n_boot} resamples matched the
+      curve's structure), which a fallback ramp on a pool whose lower quartile
+      sits at the floor of the metric does not have, and the discrimination
+      check does not contradict the curve (CURVE-12 verdict {curve12_verdict},
+      AUC {curve12_auc}). Condition: the published entry reports the interval
+      as not estimable, and the curve is marked for verification against field
+      data before it carries weight in a decision.
+
   # ---- policy-enableable, default off: the owner opts in per run on the record ----
   # Legacy (easi-eci reference method only). Under the pressure screen reference
   # quality is never relaxed, so this entry cannot match a pressure-screen run.
@@ -203,6 +431,7 @@ entries:
     rule_id: REF-02
     trigger: reference_tier_fallback
     enabled: false
+    legacy: true
     approved_under: "0.6-provisional"
     approved_on: "2026-08-21"
     match:
@@ -220,10 +449,15 @@ entries:
       streams rather than a selective reference. The 0.39 cutoff stays
       provisional.
 
+  # Legacy under 0.15: a metric above the DATA-03 review threshold is withheld
+  # at the build with its statement (REF-06), the same in every region, so a
+  # new build never raises this item. The entry replays the published versions
+  # that carry it (Eastern Corn Belt Plains v3, Interior Plateau v1).
   - id: data03-thin-metric-finalized
     rule_id: DATA-03
     trigger: missingness_review
     enabled: false
+    legacy: true
     approved_under: "0.6-provisional"
     approved_on: "2026-08-21"
     match:
@@ -239,10 +473,14 @@ entries:
       satisfied by this recorded decision, and the published entry states the
       reference sample and carries the band-only advisory.
 
+  # Legacy under 0.15: an insufficient reference band is withheld at the build
+  # with its statement (REF-06), so a new build never raises this item. The
+  # entry replays the published versions that carry it.
   - id: data06-insufficient-finalized
     rule_id: DATA-06
     trigger: n_insufficient
     enabled: false
+    legacy: true
     approved_under: "0.6-provisional"
     approved_on: "2026-08-21"
     match:
@@ -257,10 +495,15 @@ entries:
       the curve publishes flagged, at Low confidence, with the reference sample
       and the band-only advisory on the published entry.
 
+  # Legacy under 0.15: a data_review curve (DATA-03) is withheld at the build,
+  # so a new build never raises this item. The entry replays the published
+  # versions that carry it; a degenerate fallback curve is
+  # curve07-fallback-accepted's.
   - id: curve07-thin-metric-finalized
     rule_id: CURVE-07
     trigger: curve_needs_review
     enabled: false
+    legacy: true
     approved_under: "0.6-provisional"
     approved_on: "2026-08-21"
     match:

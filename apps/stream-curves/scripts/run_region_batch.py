@@ -343,13 +343,30 @@ def curve07_resolutions(curve_review, finalize, remove, answered, *, reviewer: s
     return out
 
 
+#: Asserts a recorded owner decision may carry that are the run's identity or its
+#: bootstrap diagnostics, never evidence the decision rested on: a refit at another
+#: seed computes other values for every one of them, and the consistency check would
+#: refuse the whole run (the frozen pass of 2026-09-27: two regions whose CURVE-06
+#: records asserted the published run's seed).
+VOLATILE_ASSERTS = ("seed", "run_seed", "runSeed", "n_boot", "nBoot", "structure_stability",
+                    "shape_stability", "point_intervals")
+
+
 def _without_outcome_asserts(decisions: list[dict]) -> list[dict]:
-    """A CURVE-07 answer never asserts the curve's review decision: the answer sets
-    it, so the build it feeds records a different value from the run it was written
-    against, and the consistency check would refuse the whole run."""
+    """A recorded decision's asserts are kept to the evidence it rested on. A CURVE-07
+    answer never asserts the curve's review decision: the answer sets it, so the build
+    it feeds records a different value from the run it was written against. No decision
+    asserts the run's identity or its bootstrap diagnostics (:data:`VOLATILE_ASSERTS`);
+    what it rested on (the curve's status, its domain violations, whether an interval
+    was evaluable and how many resamples matched) stays asserted and is still refused
+    when the refit contradicts it."""
     for d in decisions or []:
-        if str(d.get("rule_id")) == "CURVE-07" and isinstance(d.get("asserts"), dict):
-            d["asserts"] = {k: v for k, v in d["asserts"].items() if k != "reviewer_decision"}
+        if not isinstance(d.get("asserts"), dict):
+            continue
+        drop = set(VOLATILE_ASSERTS)
+        if str(d.get("rule_id")) == "CURVE-07":
+            drop.add("reviewer_decision")
+        d["asserts"] = {k: v for k, v in d["asserts"].items() if k not in drop}
     return decisions
 
 
@@ -989,6 +1006,44 @@ def _decisions_file(out_dir: Path, argv, manifest: Optional[dict] = None) -> Pat
     return out_dir / oc.DECISIONS_FILE
 
 
+#: The same helper as a plain function, for the campaign runner (``run_campaign.py``).
+decisions_file_of = _decisions_file
+
+
+def resolve_policy_status(out_dir: Path, *, gate_report: Optional[str] = None,
+                          policy_path: Optional[str] = None) -> tuple[str, dict]:
+    """``promote --status policy``: ``preliminary`` when the run folder passes every gate
+    of the promotion policy (``config/methodology/promotion_policy.yaml``) that can be
+    checked from the run folder, else ``draft``, with the blockers. The equivalence gate
+    needs a gate report (``--gate-report``, or the campaign manifest's) and is not evaluated
+    without one. The expectations (inputs digest, code fingerprint, n-boot, commit) come
+    from the campaign manifest when the run folder is ``<root>/runs/l3-<code>``, else from
+    the run's own record. Nothing is refitted and nothing is written."""
+    from streamcurves import campaign as camp
+    out_dir = Path(out_dir).resolve()
+    policy = camp.load_promotion_policy(policy_path)
+    problems = camp.validate_promotion_policy(policy)
+    if problems:
+        raise SystemExit("the promotion policy is not usable: " + "; ".join(problems))
+    found = camp.campaign_manifest_for_run(out_dir)
+    code = str(out_dir.name[3:]) if out_dir.name.startswith("l3-") else ""
+    expect = camp.expectation_from_manifest(found[1], code) if found else None
+    if expect is None:
+        expect = camp.expectation_from_run(out_dir)
+    vdir = camp.staged_version_dir(out_dir)
+    man = ((camp.read_json(vdir / lib.PROVENANCE_FILE) or {}).get("manifest") if vdir else None) or {}
+    decisions_file = _decisions_file(out_dir, (man.get("agent") or {}).get("argv"), man)
+    report = gate_report or expect.get("gateReport")
+    skip = () if report else ("equivalence-proven",)
+    res = camp.evaluate_gates(out_dir, expect=expect, decisions_file=decisions_file, policy=policy,
+                              gate_report=report, skip=skip)
+    status = "preliminary" if res["eligible"] else "draft"
+    return status, {"policyVersion": policy["meta"].get("version"), "sha256": policy["meta"].get("sha256"),
+                    "status": status, "blockers": res["blockers"], "gates": res["gates"],
+                    "expectation": expect.get("source"),
+                    "campaignManifest": str(found[0]) if found else None}
+
+
 def reviewer_inputs_drift(manifest: dict, out_dir: Path) -> list[str]:
     """Every decision file the manifest records (``reviewerInputs.files``, path
     relative to ``reviewerInputs.decisionsRoot``) that is not on disk today with
@@ -1048,6 +1103,17 @@ def cmd_promote(a) -> int:
     meta = json.loads((vdir / lib.META_FILE).read_text(encoding="utf-8"))
     doc = json.loads((vdir / lib.PROVENANCE_FILE).read_text(encoding="utf-8"))
     slug = meta.get("assessmentId") or slug
+
+    # --status policy: preliminary when every promotion-policy gate the run folder can
+    # answer passes, else draft with the blockers on the record (owner decision D2)
+    policy_status = None
+    if a.status == "policy":
+        a.status, policy_status = resolve_policy_status(out_dir, gate_report=getattr(a, "gate_report", None))
+        print(f"[promote] promotion policy {policy_status['policyVersion']} "
+              f"({str(policy_status['sha256'])[:19]}) resolves the status to {a.status}"
+              + (f"; {len(policy_status['blockers'])} blocker(s):" if policy_status["blockers"] else ""))
+        for b in policy_status["blockers"]:
+            print(f"[promote]   {b}")
 
     # nothing may have drifted since the stage: methodology, catalog, policy
     man = doc.get("manifest") or {}
@@ -1143,7 +1209,9 @@ def cmd_promote(a) -> int:
               "confirmedBy": a.maintainer,
               "confirmedAt": date, "overrides": applied,
               "contentDigest": published.get("contentDigest"),
-              "contentDigestMatchesStaged": digest_ok}
+              "contentDigestMatchesStaged": digest_ok,
+              # --status policy: the policy that resolved the status and its blockers
+              "policyStatus": policy_status}
     (out_dir / "promote_record.json").write_text(json.dumps(record, indent=1) + "\n",
                                                  encoding="utf-8")
     print(f"[promote] published {slug} v{new_version} as {a.status} -> {publish_root} "
@@ -2228,10 +2296,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--override", action="append", default=[], metavar="ITEM=ACTION:RATIONALE")
     p.add_argument("--date", default=None)
     p.add_argument("--rebake-deep", action="store_true")
-    p.add_argument("--status", choices=("draft", "preliminary"), default="draft",
+    p.add_argument("--status", choices=("draft", "preliminary", "policy"), default="draft",
                    help="lifecycle status for the promoted version: draft (default; the "
                         "decisions are confirmed but no one reviewed the curves in the "
-                        "app) or preliminary (the packet was reviewed exhaustively)")
+                        "app), preliminary (the packet was reviewed exhaustively), or "
+                        "policy (preliminary when the run folder passes every gate of "
+                        "config/methodology/promotion_policy.yaml it can answer, else "
+                        "draft with the blockers on promote_record.json)")
+    p.add_argument("--gate-report", default=None, metavar="REPORT_JSON",
+                   help="with --status policy: the equivalence gate's report.json, so that "
+                        "gate counts too (without it the gate is not evaluated)")
     p.set_defaults(fn=cmd_promote)
 
     r = sub.add_parser("replay", help="apply the policy to published versions offline")

@@ -1,0 +1,100 @@
+# StreamCurves promotion policy: the gates a staged region passes before the campaign
+# runner may promote it to Preliminary by policy (owner decision D2, 2026-09-24:
+# "a region where every gate passes and the standing decisions apply cleanly is promoted
+# to Preliminary under the owner's name after a batch summary; every exception stays
+# Draft with its open items listed").
+#
+# Governance:
+#   - `scripts/run_campaign.py eligibility` evaluates every gate from a run folder's
+#     recorded artifacts (stage_complete.json, the review packet, the staged version's
+#     provenance, session, meta and bundle, standing_decisions_applied.json, the gate
+#     report) and never refits. `run_region_batch.py promote --status policy` reads the
+#     same gates and resolves the status to preliminary when every gate it can check from
+#     the run folder passes, else draft, with the blockers on the promote record.
+#   - Every eligible region is promoted only after a batch summary the owner reads and a
+#     hand-written confirmation (promotion_batch_<id>.confirmation.json) that names who
+#     confirmed and when. No script fills confirmedBy.
+#   - The file's sha256 is recorded wherever the policy is applied: the campaign manifest,
+#     index.json, eligibility.json, the batch summary and the promote record.
+#   - Each gate's `check` names the function in streamcurves/campaign.py that implements
+#     it; the runner refuses a policy whose gates and checks do not match.
+
+meta:
+  # 1.1 (2026-09-26, methodology 0.15-provisional, campaign Round 2 close): the
+  # rules-applied gate reads "no hard stop and no blocking open item" instead of
+  # "nothing open". An open item blocks when its trigger blocks in the queue's
+  # own tiers (provenance._TRIGGER_TIERS) or is an uncovered hard-stop trigger
+  # (provenance.UNCOVERED_HARD_STOP_TRIGGERS: a reference tier fallback, a curve
+  # held for review, an unresolved direction); every other open item is advisory
+  # (an inverted discrimination check, a redundant pair, a missing interval, a
+  # stratifier candidate, a precision floor, a missingness review). Why: the
+  # owner published Central Basin and Range v1, Northern Lakes and Forests v1 and
+  # Interior Plateau v6 as Preliminary with such items open, and the fast pass
+  # left advisory items in most regions. Advisory open items are never hidden:
+  # eligibility.json lists them per region (advisoryOpen), the index counts them
+  # (openAdvisory beside openBlocking), and the batch summary's eligible table
+  # names them, so the owner confirms a batch knowing what stays open.
+  # 1.0 (2026-09-25): the seven gates, owner decision D2.
+  version: "1.1"
+  status: provisional
+  approved_under: "methodology 0.15-provisional (pending)"
+  owner_decision: "D2 Preliminary by policy (2026-09-24)"
+  promoted_status: preliminary
+  fallback_status: draft
+
+gates:
+  - id: frozen-record
+    title: Frozen campaign, intact record
+    evidence: >-
+      stage_complete.json present; its inputsDigest equals the manifest's expectation for
+      the region; code.start == code.end equals the manifest's code fingerprint; n-boot
+      equals the manifest's.
+    check: streamcurves.campaign.gate_frozen_record
+
+  - id: rules-applied
+    title: No hard stop and no blocking open item
+    evidence: >-
+      standing_decisions_applied.json and review_packet.json: hard_stops empty, and no open
+      item whose trigger blocks in the queue's tiers or is an uncovered hard-stop trigger (no
+      CURVE-07, CURVE-13, CURVE-05 or REF-02 item left open). Advisory open items pass the
+      gate and are listed per region in eligibility.json (advisoryOpen) and in the batch
+      summary's eligible table.
+    check: streamcurves.campaign.gate_rules_applied
+
+  - id: pending-confirmable
+    title: No pending decision the policy cannot confirm
+    evidence: >-
+      decisions.confirm_pending_decisions on a copy of the staged provenance with no
+      overrides succeeds and leaves nothing pending.
+    check: streamcurves.campaign.gate_pending_confirmable
+
+  - id: owner-decisions-honored
+    title: No REF-15 conflict
+    evidence: >-
+      owner_curves.decisions_changed(staged, now) false against the decision file the record
+      names; every recorded decision applied (the staged session's owner_curve_decisions cover
+      the file's).
+    check: streamcurves.campaign.gate_owner_decisions_honored
+
+  - id: portfolio-approvals
+    title: SELECT-01 and SELECT-03 satisfied
+    evidence: >-
+      meta.portfolioApprovals covers every function block with more than two metrics; the
+      staged publish succeeded (review_packet.staged.path exists with a bundle, so the
+      coverage gate ran).
+    check: streamcurves.campaign.gate_portfolio_approvals
+
+  - id: equivalence-proven
+    title: Equivalence proven at the campaign's commit
+    evidence: >-
+      <gate root>/report.json has gatePassed true for the campaign's commit (the path is the
+      manifest field gateReport).
+    check: streamcurves.campaign.gate_equivalence_proven
+
+  - id: record-complete
+    title: Register and evidence complete
+    evidence: >-
+      provenance candidateRegister present; metricLedger rows without an unknown
+      disposition; stage_complete.outputs names every file review_packet and the ledger cite;
+      evidence.json present in the staged version.
+    check: streamcurves.campaign.gate_record_complete

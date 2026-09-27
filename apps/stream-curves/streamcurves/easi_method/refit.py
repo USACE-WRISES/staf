@@ -9,6 +9,11 @@ reproduces its curve registry; ``operational_curves`` then assembles the 34 curv
 with (the NARS-9 fits of the three regional families with their national curves, and the
 entrenchment slope classes with the pooled national fallback) in the method file's own shape.
 
+An EASI method's curves are the method's: every fit runs the curve engine under the tail
+endpoints the package's recipe records (``recipe_geometry``), never under DEEP's current
+default. A recipe written before the endpoints were recorded means the method's own, the
+legacy triple 0.3, 4/3 and 7/3 IQR (iqr-seed-2), which is what every such fit ran under.
+
 Nothing here reads a developer path: only package folders.
 """
 from __future__ import annotations
@@ -37,17 +42,99 @@ LEVELS = ("l3", "l2", "l1", "nars9", "national")
 
 
 def load_members(package_dir: Path):
-    """``(members, values, panels)`` pandas frames from an ``easi-dev-members`` folder."""
+    """``(members, values, panels)`` pandas frames from an ``easi-dev-members`` folder.
+    ``members.attrs["fit_geometry"]`` carries the tail endpoints the package's fits ran
+    under (:func:`package_geometry`), which every fit from these frames then uses."""
     import pyarrow.parquet as pq
     d = Path(package_dir) / "data"
     members = pq.read_table(d / "panel_members.parquet").to_pandas()
     values = pq.read_table(d / "member_values.parquet").to_pandas()
     panels = pq.read_table(d / "reference_panels.parquet").to_pandas()
+    members.attrs["fit_geometry"] = package_geometry(package_dir)
     return members, values, panels
 
 
 #: The refit's own code, recorded by the members and fits packages (SHA-256 of the LF bytes).
 RECIPE_CODE = {"fit_recipe.py": "fit recipe code", "refit.py": "refit code"}
+
+#: the tail endpoints each curve method version fitted under (parsed: a fraction keeps its
+#: numerator and denominator, ``curves.IqrOffset``), for a recipe that names the version
+#: without spelling the endpoints
+GEOMETRY_BY_METHOD_VERSION = {fr.CURVE_METHOD_VERSION: fr.seed_tail_offsets(),
+                              "iqr-seed-3": (0.5, 1.5, 2.5)}
+#: the ``differences`` entry of :func:`recipe_check` when the package's endpoints are not the
+#: running engine's default (the refit still fits under the package's)
+ENDPOINTS_DIFFERENCE = "curve tail endpoints"
+
+
+def recipe_geometry(recipe: Optional[dict]) -> dict:
+    """The tail endpoints a package's fits ran under, from its ``recipe`` block:
+    ``{"tail_offsets_iqr": (near, mid, far), "curve_method_version", "recorded"}``.
+
+    ``recipe.engine.tailOffsetsIqr`` (three IQR offsets as the knob spells them, a fraction
+    such as "4/3" kept as a fraction so the fit multiplies then divides) and
+    ``recipe.engine.curveMethodVersion`` are what the exporter records; a recipe that names
+    only a known version means that version's endpoints. A recipe written before the
+    endpoints were recorded (neither field) means the method's own, the legacy triple
+    0.3, 4/3 and 7/3 (iqr-seed-2): that is what every such fit ran under. The parsed
+    offsets are kept as parsed (``fit_recipe.parse_tail_offsets``), never as plain floats.
+    """
+    doc = recipe or {}
+    engine = doc.get("engine") or {}
+    raw = engine.get("tailOffsetsIqr", doc.get("tailOffsetsIqr"))
+    version = engine.get("curveMethodVersion") or doc.get("curveMethodVersion")
+    if raw is None:
+        if version is None:
+            return {"tail_offsets_iqr": fr.seed_tail_offsets(),
+                    "curve_method_version": fr.CURVE_METHOD_VERSION, "recorded": False}
+        if str(version) not in GEOMETRY_BY_METHOD_VERSION:
+            raise ValueError(f"the package records curve method version {version!r} without its "
+                             "tail endpoints (tailOffsetsIqr), so the refit cannot fit under them")
+        return {"tail_offsets_iqr": GEOMETRY_BY_METHOD_VERSION[str(version)],
+                "curve_method_version": str(version), "recorded": True}
+    try:
+        offsets = fr.parse_tail_offsets(raw)
+    except ValueError as exc:
+        raise ValueError(f"the package records tail endpoints {raw!r}; expected three positive, "
+                         "non-decreasing IQR offsets [near, mid, far]") from exc
+    return {"tail_offsets_iqr": offsets,
+            "curve_method_version": str(version) if version else fr.curve_method_version_for(offsets),
+            "recorded": True}
+
+
+def package_geometry(package_dir: Path) -> dict:
+    """:func:`recipe_geometry` of a package folder's manifest (a folder with no manifest
+    is taken as written before the endpoints were recorded)."""
+    from .. import evidence_store as evs
+    folder = Path(package_dir)
+    if not (folder / evs.MANIFEST).is_file():
+        return recipe_geometry(None)
+    return recipe_geometry(evs.read_manifest(folder).get("recipe") or {})
+
+
+def fit_geometry_of(members, tail_offsets_iqr=None) -> tuple:
+    """The tail endpoints a fit from ``members`` runs under: the caller's, else the
+    package's (``members.attrs["fit_geometry"]``, set by :func:`load_members`), else
+    the method's own; parsed as the engine takes them (a fraction stays a fraction)."""
+    if tail_offsets_iqr is not None:
+        return fr.parse_tail_offsets(tail_offsets_iqr)
+    geometry = getattr(members, "attrs", {}).get("fit_geometry") or {}
+    return fr.parse_tail_offsets(geometry.get("tail_offsets_iqr") or fr.SEED_TAIL_OFFSETS_IQR)
+
+
+def _offsets_words(offsets) -> str:
+    """``0.3, 4/3 and 7/3`` for the legacy triple, ``0.5, 1.5 and 2.5`` otherwise."""
+    def one(v) -> str:
+        ratio = getattr(v, "ratio", None)
+        if ratio:
+            return f"{ratio[0]}/{ratio[1]}"
+        x = float(v)                                    # for the words only
+        for num, den in ((4, 3), (7, 3), (2, 3), (5, 3), (1, 3)):
+            if abs(x - num / den) < 1e-9:
+                return f"{num}/{den}"
+        return f"{x:g}"
+    items = [one(v) for v in offsets or ()]
+    return _listed(items, "and") if items else "unknown"
 
 
 def recipe_code() -> dict:
@@ -61,12 +148,18 @@ def recipe_code() -> dict:
 
 
 def recipe_check(package_dir: Path) -> dict:
-    """The running curve engine, refit code and fit constants against those a package records
-    (its ``recipe`` block): ``{"same", "differences", "notRecorded", "engine": {"recorded",
-    "running"}}``. A refit is expected to be exact only when they are the same; a package that
-    records no engine or code hash is never taken to match."""
+    """The running curve engine, refit code, fit constants and tail endpoints against those a
+    package records (its ``recipe`` block): ``{"same", "differences", "notRecorded", "engine":
+    {"recorded", "running"}, "geometry": {...}}``. A refit is expected to be exact only when
+    they are the same; a package that records no engine or code hash is never taken to match.
+
+    The tail endpoints are reported like the engine (``geometry``: the package's, recorded or
+    assumed legacy, and the running engine's default, with their curve method versions), and
+    a difference is listed as :data:`ENDPOINTS_DIFFERENCE`; the refit fits under the package's
+    endpoints whatever the running default, so this difference alone leaves it exact."""
     import hashlib
     from .. import evidence_store as evs
+    from .. import methodology, run_state
     from ..paths import ROOT
     from . import fit_recipe as fr
     recipe = evs.read_manifest(Path(package_dir)).get("recipe") or {}
@@ -78,6 +171,17 @@ def recipe_check(package_dir: Path) -> dict:
         missing.append("the curve engine")
     elif engine["sha256_lf"] != running:
         diffs.append("curve engine")
+    package_geometry_ = recipe_geometry(recipe)
+    running_offsets = tuple(methodology.seed_geometry()["tail_offsets_iqr"])
+    fits_under = tuple(package_geometry_["tail_offsets_iqr"])
+    geometry = {"recorded": package_geometry_["recorded"],
+                "package": list(fits_under),
+                "packageCurveMethodVersion": package_geometry_["curve_method_version"],
+                "running": list(running_offsets),
+                "runningCurveMethodVersion": str(run_state.CURVE_METHOD_VERSION),
+                "refitUnder": list(fits_under)}
+    if not fr.same_tail_offsets(fits_under, running_offsets):
+        diffs.append(ENDPOINTS_DIFFERENCE)
     recorded_code = recipe.get("code") or {}
     for name, sha_now in recipe_code().items():
         if not recorded_code.get(name):
@@ -104,7 +208,7 @@ def recipe_check(package_dir: Path) -> dict:
             diffs.append(key)
     return {"same": not diffs and not missing, "differences": diffs, "notRecorded": missing,
             "engine": {"recorded": engine.get("sha256_lf"), "running": running},
-            "checkedConstants": bool(recorded)}
+            "geometry": geometry, "checkedConstants": bool(recorded)}
 
 
 def _listed(items: list, last: str) -> str:
@@ -113,17 +217,30 @@ def _listed(items: list, last: str) -> str:
 
 
 def recipe_words(check: dict) -> Optional[str]:
-    """A recipe check as one sentence, or None when the refit is expected to be exact."""
+    """A recipe check in words, or None when the refit is expected to be exact. An endpoint
+    difference is said on its own: the refit fits under the package's endpoints, so by itself
+    it does not make the refit inexact."""
     if not check or check.get("same"):
         return None
     parts = []
-    diffs = check.get("differences") or []
+    diffs = [d for d in check.get("differences") or [] if d != ENDPOINTS_DIFFERENCE]
     if diffs:
         parts.append(f"the {_listed(diffs, 'and')} here {'differs' if len(diffs) == 1 else 'differ'} "
                      "from what the package records")
     if check.get("notRecorded"):
         parts.append("the package does not record " + _listed(check["notRecorded"], "or"))
-    return "The refit is not expected to match exactly: " + "; ".join(parts) + "."
+    sentences = []
+    if parts:
+        sentences.append("The refit is not expected to match exactly: " + "; ".join(parts) + ".")
+    if ENDPOINTS_DIFFERENCE in (check.get("differences") or []):
+        geo = check.get("geometry") or {}
+        whose = ("the tail endpoints the package records" if geo.get("recorded") else
+                 "the method's own tail endpoints, which a package that records none was fitted under")
+        sentences.append(
+            f"The refit fits under {whose} ({_offsets_words(geo.get('package'))} IQR, "
+            f"{geo.get('packageCurveMethodVersion')}), not the curve engine's current default "
+            f"({_offsets_words(geo.get('running'))}, {geo.get('runningCurveMethodVersion')}).")
+    return " ".join(sentences) if sentences else None
 
 
 def regenerate_members(universe_dir: Path):
@@ -161,15 +278,19 @@ def _row_values(members, values, column: str) -> np.ndarray:
 
 
 def fit_registry(members, values, panels, *, quantities: Optional[Iterable[str]] = None,
-                 levels: Iterable[str] = LEVELS,
+                 levels: Iterable[str] = LEVELS, tail_offsets_iqr=None,
                  by_stratum_only: Iterable[str] = ()) -> list[dict]:
-    """Every quantity x level x stratum (x split) fit, as the builder's curves step fits it.
+    """Every quantity x level x stratum (x split) fit, as the builder's curves step fits it,
+    under the tail endpoints of :func:`fit_geometry_of` (the package's unless the caller
+    says otherwise).
 
     ``by_stratum_only`` names quantities fitted per stratum at every requested level with
     their registry split and geometry rule set aside (the Round 4 candidate sets: one curve
     per NARS-9 region and one national); every other quantity is grouped as the builder
-    groups it, so the registry refit is unchanged.
+    groups it, so the registry refit is unchanged. The candidate sets fit under the same
+    endpoints as every other fit from these members.
     """
+    offsets = fit_geometry_of(members, tail_offsets_iqr)
     plain = set(by_stratum_only or ())
     tier_of = {(r["level"], r["stratum"]): (r["panel_tier"], r["screen"])
                for r in panels.to_dict("records")}
@@ -207,7 +328,8 @@ def fit_registry(members, values, panels, *, quantities: Optional[Iterable[str]]
                                points=[])
                     rows.append(row)
                     continue
-                fit = fr.fit_curve(vals_ok, q, f"{stratum}|{split}" if split else stratum)
+                fit = fr.fit_curve(vals_ok, q, f"{stratum}|{split}" if split else stratum,
+                                   tail_offsets_iqr=offsets)
                 rho = fr.spearman(group["_value"].to_numpy(dtype=float),
                                   group["_pressure"].to_numpy(dtype=float))
                 row.update(fit)
@@ -219,9 +341,11 @@ def fit_registry(members, values, panels, *, quantities: Optional[Iterable[str]]
     return rows
 
 
-def national_entrenchment(members, values, panels) -> dict:
+def national_entrenchment(members, values, panels, *, tail_offsets_iqr=None) -> dict:
     """The unsplit national entrenchment curve: every national panel member with an
-    entrenchment ratio, members without a slope class included (the artifact's fallback)."""
+    entrenchment ratio, members without a slope class included (the artifact's fallback),
+    under the tail endpoints of :func:`fit_geometry_of`."""
+    offsets = fit_geometry_of(members, tail_offsets_iqr)
     q = fr.QUANTITIES["er_median"]
     nat = members[(members["level"] == "national") & (members["stratum"] == "national:national")]
     comids = np.asarray(sorted(nat["comid"].to_numpy()), dtype=np.int64)
@@ -233,7 +357,7 @@ def national_entrenchment(members, values, panels) -> dict:
            for v in fr.PRESSURE_VARIABLES if f"screen__{v}" in lookup.columns}
     pres, _ = fr.composite_pressure(raw)
     finite = np.isfinite(vals)
-    fit = fr.fit_curve(vals[finite], q, "national:national")
+    fit = fr.fit_curve(vals[finite], q, "national:national", tail_offsets_iqr=offsets)
     panel = panels[(panels["level"] == "national") & (panels["stratum"] == "national:national")]
     panel = panel.to_dict("records")[0]
     row = {"quantity": q.key, "level": "national", "stratum": "national:national", "split": "",
@@ -244,9 +368,10 @@ def national_entrenchment(members, values, panels) -> dict:
     return row
 
 
-def operational_curves(rows: list[dict], members, values, panels) -> dict:
+def operational_curves(rows: list[dict], members, values, panels, *, tail_offsets_iqr=None) -> dict:
     """The 34 curves EASI scores with, ``{set: {curve key: curve}}`` in the method file's
-    shape (six-decimal rounding included)."""
+    shape (six-decimal rounding included); the pooled national entrenchment fallback is
+    fitted here, under the tail endpoints of :func:`fit_geometry_of`."""
     def usable_rows(quantity, level):
         return [r for r in rows if r["quantity"] == quantity and r["level"] == level and r.get("usable")]
 
@@ -265,7 +390,7 @@ def operational_curves(rows: list[dict], members, values, panels) -> dict:
     for r in usable_rows(quantity, "national"):
         if r.get("split") in SLOPE_CLASSES and r["stratum"] == "national:national":
             curves[r["split"]] = fr._curve(r)
-    fallback = national_entrenchment(members, values, panels)
+    fallback = national_entrenchment(members, values, panels, tail_offsets_iqr=tail_offsets_iqr)
     if fallback["usable"]:
         curves["national"] = fr._curve(fallback)
     out[set_id] = curves
@@ -389,6 +514,7 @@ def compare_curves(refit: dict, artifact: dict) -> dict:
 
 
 __all__ = ["load_members", "regenerate_members", "same_members", "fit_registry", "recipe_check",
-           "recipe_code", "recipe_words", "RECIPE_CODE", "national_entrenchment", "operational_curves",
-           "candidate_curves", "compare_registry", "compare_curves", "REGIONAL_SETS",
-           "CANDIDATE_SETS", "ENTRENCHMENT", "SLOPE_CLASSES"]
+           "recipe_code", "recipe_words", "recipe_geometry", "package_geometry", "fit_geometry_of",
+           "RECIPE_CODE", "GEOMETRY_BY_METHOD_VERSION", "ENDPOINTS_DIFFERENCE",
+           "national_entrenchment", "operational_curves", "candidate_curves", "compare_registry",
+           "compare_curves", "REGIONAL_SETS", "CANDIDATE_SETS", "ENTRENCHMENT", "SLOPE_CLASSES"]

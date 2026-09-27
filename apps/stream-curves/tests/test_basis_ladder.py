@@ -251,7 +251,10 @@ def test_the_committed_evidence_is_readable_and_every_verdict_says_whether_it_ac
 def test_the_evidence_names_the_preregistration_it_came_from():
     prov = bl.validation_provenance()
     assert prov.get("preregistration_sha256"), "a verdict with no pre-registration is not evidence"
-    assert prov.get("preregistration") == "PREREGISTRATION_IV.md"
+    # methodology 0.15: the last run listed is the campaign's protocol IV model test under
+    # the frozen evaluation protocol V1 (the 0.14 file named PREREGISTRATION_IV.md)
+    assert prov.get("preregistration") == "evaluation_protocol_v1.yaml"
+    assert prov["preregistration_sha256"].startswith("84a5cabc")
 
 
 def test_a_missing_evidence_file_admits_nothing_rather_than_everything(tmp_path):
