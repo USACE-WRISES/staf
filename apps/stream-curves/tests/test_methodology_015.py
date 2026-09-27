@@ -118,7 +118,7 @@ def test_the_rules_view_knows_the_eval_family_and_reads_the_policy_counts():
     counts = rv.policy_counts()
     assert counts["total"] == counts["default"] + counts["optional"]
     assert counts["optional"] == 4 and counts["default"] >= 13
-    assert counts["version"] == "1.3"
+    assert counts["version"] == "1.4"
 
 
 # --------------------------------------------------------------------------- #

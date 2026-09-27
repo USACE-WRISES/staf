@@ -343,13 +343,30 @@ def curve07_resolutions(curve_review, finalize, remove, answered, *, reviewer: s
     return out
 
 
+#: Asserts a recorded owner decision may carry that are the run's identity or its
+#: bootstrap diagnostics, never evidence the decision rested on: a refit at another
+#: seed computes other values for every one of them, and the consistency check would
+#: refuse the whole run (the frozen pass of 2026-09-27: two regions whose CURVE-06
+#: records asserted the published run's seed).
+VOLATILE_ASSERTS = ("seed", "run_seed", "runSeed", "n_boot", "nBoot", "structure_stability",
+                    "shape_stability", "point_intervals")
+
+
 def _without_outcome_asserts(decisions: list[dict]) -> list[dict]:
-    """A CURVE-07 answer never asserts the curve's review decision: the answer sets
-    it, so the build it feeds records a different value from the run it was written
-    against, and the consistency check would refuse the whole run."""
+    """A recorded decision's asserts are kept to the evidence it rested on. A CURVE-07
+    answer never asserts the curve's review decision: the answer sets it, so the build
+    it feeds records a different value from the run it was written against. No decision
+    asserts the run's identity or its bootstrap diagnostics (:data:`VOLATILE_ASSERTS`);
+    what it rested on (the curve's status, its domain violations, whether an interval
+    was evaluable and how many resamples matched) stays asserted and is still refused
+    when the refit contradicts it."""
     for d in decisions or []:
-        if str(d.get("rule_id")) == "CURVE-07" and isinstance(d.get("asserts"), dict):
-            d["asserts"] = {k: v for k, v in d["asserts"].items() if k != "reviewer_decision"}
+        if not isinstance(d.get("asserts"), dict):
+            continue
+        drop = set(VOLATILE_ASSERTS)
+        if str(d.get("rule_id")) == "CURVE-07":
+            drop.add("reviewer_decision")
+        d["asserts"] = {k: v for k, v in d["asserts"].items() if k not in drop}
     return decisions
 
 

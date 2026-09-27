@@ -78,7 +78,7 @@ def _decided(res):
 # --------------------------------------------------------------------------- #
 def test_policy_1_3_validates_and_carries_the_new_entries(policy):
     assert dec.validate_policy(policy) == []
-    assert dec.policy_version(policy) == "1.3"
+    assert dec.policy_version(policy) == "1.4"
     by_id = dec.entries_by_id(policy)
     assert set(NEW_IDS) <= set(by_id)
     enabled = {e["id"] for e in dec.enabled_entries(policy)}
@@ -134,7 +134,7 @@ def test_curve07_fallback_accepted_unless_inverted_or_outside_the_domain(policy)
     d = by["phab_PCT_FAST"]
     assert d["decision_class"] == "curve07-fallback-accepted" and d["action"] == "accept_with_conditions"
     assert d["reviewer"] == "standing-policy:curve07-fallback-accepted (pending owner confirmation)"
-    assert d["rationale_origin"] == "standing_policy:1.3"
+    assert d["rationale_origin"] == "standing_policy:1.4"
     assert d["asserts"] == {"curve_status": "degenerate", "domain_violations": 0}
     assert "verdict none, AUC 0.499" in d["rationale"] and "marked for verification" in d["rationale"]
     assert "Non-positive or non-finite Q25" in d["rationale"]
@@ -143,7 +143,10 @@ def test_curve07_fallback_accepted_unless_inverted_or_outside_the_domain(policy)
     # the thin metric (legacy entry off) and the shape conflict
     assert [h["item_id"] for h in res.hard_stops] == [
         "CURVE-07:fish_NAT_TOTLNTAX", "CURVE-07:phab_XBKA", "CURVE-07:phab_SINU", "CURVE-07:chem_PH"]
-    assert res.finalize_metrics == {}
+    # policy 1.4: the two accepted fallback curves publish as preliminary (finalized), as
+    # the owner's own answer to the item does; nothing else is finalized
+    assert set(res.finalize_metrics) == {"phab_PCT_FAST", "pctwet2019ws"}
+    assert res.finalize_metrics["phab_PCT_FAST"] == d["rationale"]
 
 
 # --------------------------------------------------------------------------- #
@@ -306,7 +309,7 @@ def test_new_entries_round_trip_through_apply_reviewer_decisions(tmp_path, polic
     assert dec.is_pending(out)
     for rec in out["records"]:
         if rec.get("reviewer_action"):
-            assert rec["reviewer_rationale_origin"] == "standing_policy:1.3"
+            assert rec["reviewer_rationale_origin"] == "standing_policy:1.4"
             assert dec.PENDING_SUFFIX in rec["reviewer"]
             assert chr(0x2014) not in rec["reviewer_rationale"]
     # a tampered evidence value is refused by the same check a human decision faces
