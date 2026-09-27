@@ -37,7 +37,8 @@ ADDENDUM_SHA256 = "8a48de98a4205c5eab1e423e69fdce2f238a76df8cbafca860bb032696625
 ADDENDUM_FILE = "evaluation_protocol_v1_easi_addendum.yaml"
 ADDENDUM_PATH = Path(__file__).resolve().parents[2] / "config" / "methodology" / ADDENDUM_FILE
 REFIT_COMMAND = ("python apps/stream-curves/scripts/refit_easi_candidate_sets.py "
-                 "--members <easi-dev-members folder> --campaign <folder> --out <curve-sets.json>")
+                 "--members <easi-dev-members folder> --campaign <folder> --out <curve-sets.json> "
+                 "[--registry-split flow-min-ratio=perennial]")
 FAMILIES = ("E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8")
 CATALOG, CURVES, IDENTITY = "screening-methods.json", "reference-curves.json", "scoring-identity.json"
 #: the curve set each refit family needs, and the record's input that reads it
@@ -50,6 +51,22 @@ CROSS_SECTION_METHODS = ("bank-height-ratio", "entrenchment-ratio",
 
 E1_STATEMENT = ("Naturally intermittent or ephemeral reach (NHDPlus FCODE {value}); low-flow "
                 "condition is not rated from flow variability.")
+#: The dated re-specifications of the prose addendum's "Addenda" section (one per family, only
+#: before that family's results are read). E2 (Addendum 1, 2026-09-27): the K3 refit of
+#: q_min_ratio grouped by stratum only gave no usable curve for SPL, XER and the national
+#: fallback (a zero lower quartile), so E2 fits the flow-min-ratio set on the strict panels'
+#: perennial members (the registry's own fcode_class split) and rates perennial reaches;
+#: intermittent and ephemeral reaches are withheld with E1's documented-gap statement.
+RESPECIFIED = {
+    "E2": {"date": "2026-09-27", "addendum": 1, "split": "fcode_class",
+           "summary": ("E2 fits and rates perennial reaches: the flow-min-ratio set is refitted on "
+                       "the strict panels' perennial members (the registry's own fcode_class split "
+                       "of q_min_ratio) and naturally intermittent and ephemeral reaches (NHDPlus "
+                       "FCODE 46003, 46007) are withheld with E1's documented-gap statement; the "
+                       "paired comparison against the base runs on perennial reaches and the "
+                       "withheld share is reported under P3."),
+           "comparisonScope": {"function": "low-flow-baseflow-dynamics", "rule": "candidate-rated"}},
+}
 E3_STATEMENT = ("Population support is not rated where the benthic model has no value: the ICI and "
                 "IWI landscape fallback reuses landscape evidence rated by other functions and is "
                 "withheld (candidate E3).")
@@ -98,7 +115,10 @@ def family_spec(family: str, path: Path = ADDENDUM_PATH) -> dict:
     spec = (doc.get("candidates") or {}).get(family)
     if not isinstance(spec, dict):
         raise CandidateError(f"the addendum has no candidate {family}")
-    return dict(spec, id=family)
+    out = dict(spec, id=family)
+    if family in RESPECIFIED:
+        out["respecified"] = dict(RESPECIFIED[family])
+    return out
 
 
 # --------------------------------------------------------------------------- #
@@ -159,11 +179,36 @@ def _require_set(family: str, sets: Optional[dict]) -> dict:
     return copy.deepcopy(definition)
 
 
+def _e2_split(definition: dict) -> str:
+    """The perennial split value the E2 set records (Addendum 1): a flow-min-ratio set
+    assembled without the registry's fcode_class split is E2 as written, which cannot be
+    built, and is refused."""
+    split = definition.get("split")
+    key = RESPECIFIED["E2"]["split"]
+    if not isinstance(split, dict) or not split.get(key):
+        raise CandidateError(
+            "E2 (Addendum 1, 2026-09-27) fits the flow-min-ratio set on the strict panels' perennial "
+            f"members: the set must record its {key} split (candidate_curves(splits=...), "
+            f"refit_easi_candidate_sets.py --registry-split flow-min-ratio=perennial); the set given "
+            "records none, which is E2 as written and cannot be built")
+    return str(split[key])
+
+
 def _e2(cat: dict, curves: dict, sets: Optional[dict]) -> list[dict]:
     definition = _require_set("E2", sets)
+    split_value = _e2_split(definition)
+    respec = RESPECIFIED["E2"]
     m = _method(cat, "erom-flow-variability")
     before = copy.deepcopy(m)
     context = [i for i in m.get("inputs") or [] if i.get("contextOnly")]
+    rule = {"input": "fcodeContext", "exclude": ["46003", "46007"], "statement": E1_STATEMENT}
+    for i in context:
+        if i.get("key") == "fcodeContext":
+            i["rationale"] = (
+                "Flow classification provides context for natural intermittency. Under candidate "
+                "E2 as re-specified (Addendum 1) an intermittent (46003) or ephemeral (46007) "
+                "classification withholds the rating as a documented gap; a perennial reach is "
+                "rated by the minimum-month flow ratio.")
     m.update({
         "methodKey": "erom-flow-min-ratio",
         "title": "Low-flow condition (minimum-month flow ratio)",
@@ -177,27 +222,37 @@ def _e2(cat: dict, curves: dict, sets: Optional[dict]) -> list[dict]:
                     "required": True, "slider": {"max": 1, "min": 0, "step": 0.01},
                     "sourceField": "NHDPlus V2 EROM QE_01 through QE_12 over QE_MA",
                     "symbol": "Qmin/Qma", "units": "ratio"}, *context],
+        "applicability": rule,
         "limitations": [
             "Candidate low-flow proxy (E2): the minimum-month over annual-mean EROM ratio, higher "
             "is better, replaces monthly flow variability.",
+            f"Candidate E2 as re-specified (Addendum 1, {respec['date']}): the NARS-9 curves and "
+            f"the national fallback are refitted on the strict panels' {split_value} members (the "
+            "registry's own fcode_class split of q_min_ratio) and rate perennial reaches; "
+            "naturally intermittent (FCODE 46003) and ephemeral (FCODE 46007) reaches are not "
+            "rated and low-flow condition is a documented gap there.",
             "Modeled monthly flows are not a measurement of daily low flow, baseflow contribution "
             "or wetted connectivity.",
             "NARS-9 curves compare the ratio with regional reference expectations; a national "
-            "curve is the fallback. Natural intermittent and ephemeral streams require "
-            "interpretation.",
+            "curve is the fallback.",
             "All twelve months and a positive mean annual flow are required. Missing months are "
             "unknown, not zero."],
         "plot": {"direction": "higher_better", "domain": [0, 1], "mode": "scalar"},
         "sourceHierarchy": [{
             "description": "Use the lowest of the twelve modeled monthly flows over the mean "
-                           "annual flow; a missing month or a nonpositive mean annual flow "
-                           "remains unscored.",
+                           "annual flow on a perennial reach; a missing month or a nonpositive "
+                           "mean annual flow remains unscored, and an intermittent or ephemeral "
+                           "reach is a documented gap (Addendum 1).",
             "label": "EROM minimum-month flow ratio", "methodKey": "erom-flow-min-ratio"}],
     })
     curves.setdefault("sets", {})["flow-min-ratio"] = definition
     return [{"methodKey": "erom-flow-min-ratio", "field": "method", "replaces": before["methodKey"],
-             "reads": "flowMinRatio", "curveSet": "flow-min-ratio"},
-            {"file": CURVES, "set": "flow-min-ratio", "curves": sorted(definition["curves"])}]
+             "reads": "flowMinRatio", "curveSet": "flow-min-ratio",
+             "respecified": respec["date"], "fittedOn": {respec["split"]: split_value}},
+            {"methodKey": "erom-flow-min-ratio", "field": "applicability", "after": rule,
+             "respecified": respec["date"]},
+            {"file": CURVES, "set": "flow-min-ratio", "curves": sorted(definition["curves"]),
+             "split": dict(definition["split"])}]
 
 
 def _e3(cat: dict, curves: dict, sets: Optional[dict]) -> list[dict]:
@@ -430,11 +485,14 @@ def build_candidate(files: dict[str, bytes], family: str, *, curve_sets: Optiona
         set_id = FAMILY_SETS[family]
         used[set_id] = {"curves": sorted(curves["sets"][set_id]["curves"]),
                         "quantity": curves["sets"][set_id].get("quantity")}
+        if curves["sets"][set_id].get("split"):
+            used[set_id]["split"] = dict(curves["sets"][set_id]["split"])
     return {"files": out, "edits": edits, "spec": spec, "scoringIdentity": identity,
             "identity": {"methodVersion": mp.method_version_for("regional", out),
                          "packageDigest": mp.package_digest({n: _sha(b) for n, b in out.items()}),
                          "evaluatorDigest": mp.evaluator_digest()},
             "curveSets": used,
+            "respecified": (spec.get("respecified") or {}).get("date"),
             "unchangedFiles": sorted(n for n in files if out[n] == files[n])}
 
 
@@ -447,5 +505,6 @@ def package(files: dict[str, bytes], family: str, spec: dict, *, version: int = 
 
 
 __all__ = ["ADDENDUM_SHA256", "ADDENDUM_PATH", "FAMILIES", "FAMILY_SETS", "COMPOSITES",
-           "CROSS_SECTION_METHODS", "REFIT_COMMAND", "CandidateError", "addendum", "addendum_sha256",
-           "family_spec", "base_files", "recorded_base_identity", "build_candidate", "package"]
+           "CROSS_SECTION_METHODS", "REFIT_COMMAND", "RESPECIFIED", "CandidateError", "addendum",
+           "addendum_sha256", "family_spec", "base_files", "recorded_base_identity", "build_candidate",
+           "package"]

@@ -9,7 +9,9 @@ import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 
-from . import ALTERNATIVES
+from . import ALTERNATIVES, REFERENCE_ID, STUDY_VERSION, is_round4, study_candidates
+from . import outcomes as oc
+from . import round4 as r4
 from .io import now, read_json, sha, write_json
 from builder import REPO_ROOT
 
@@ -159,8 +161,137 @@ def transition(before, after, weights, label, design, population_n):
             "sample_n": len(frame), "population_n": population_n, "rows": clean(rows.to_dict("records"))}
 
 
+def curve_changes(base_artifact, artifact):
+    """The curve sets and curves an arm adds, removes or replaces against the base."""
+    changes = []
+    base_sets, sets = base_artifact.get("sets") or {}, artifact.get("sets") or {}
+    for set_id in sorted(base_sets.keys() | sets.keys()):
+        before, after = (base_sets.get(set_id) or {}).get("curves") or {}, (sets.get(set_id) or {}).get("curves") or {}
+        if set_id not in base_sets:
+            changes.append({"set": set_id, "stratum": None, "change": "set added", "curves": sorted(after),
+                            "quantity": sets[set_id].get("quantity"), "split": sets[set_id].get("split")})
+            continue
+        if set_id not in sets:
+            changes.append({"set": set_id, "stratum": None, "change": "set removed"})
+            continue
+        for key in sorted(before.keys() | after.keys()):
+            if before.get(key) != after.get(key):
+                changes.append({"set": set_id, "stratum": key,
+                                "change": "removed" if key not in after else "added" if key not in before else "replaced"})
+    return changes
+
+
+def _scores(study, arm_id):
+    return pq.read_table(study / f"scores/{arm_id}.parquet").to_pandas().set_index("comid")
+
+
+def build_round4(root: Path, study: Path, manifest: dict):
+    """A 1.2.0 study's summary: per candidate the addendum's P1 to P6 and the decision by
+    its margins; the base's own P1 value intervals, P3 availability and P6 beside them."""
+    verification = read_json(study / "scores/verification.json")
+    if verification.get("status") != "passed":
+        raise RuntimeError("A passing replay and candidate-scope receipt is required")
+    arms = study_candidates(manifest)
+    cohorts = pq.read_table(study / "cohorts/reaches.parquet").to_pandas().set_index("comid")
+    sampling = read_json(study / "cohorts/sampling.json")
+    field = csv_rows(study / "results/field_agreement.csv")
+    spatial = csv_rows(study / "spatial/results/field_agreement.csv")
+    diagnostics = {key: csv_rows(study / f"results/field_{filename}.csv") for key, filename in
+                   (("low_flow", "lowflow"), ("agriculture", "agriculture"), ("model", "model"))}
+    stability = read_json(study / "set-stability/result.json") if (study / "set-stability/result.json").is_file() else {}
+    receipts = {p.stem: read_json(p) for p in sorted((study / "stages").glob("*.json")) if p.stem != "report"}
+    scores_elapsed = (receipts.get("scores") or {}).get("elapsed_seconds")
+    base_artifact = read_json(study / "candidates" / REFERENCE_ID / "app-data/reference-curves.json")
+    metrics = read_json(study / "candidates" / REFERENCE_ID / "app-data/easi-metrics.json")
+    base = _scores(study, REFERENCE_ID)
+    base_record = read_json(study / f"scores/{REFERENCE_ID}.json") if (study / f"scores/{REFERENCE_ID}.json").is_file() else {}
+    base_catalog = read_json(study / "candidates" / REFERENCE_ID / "app-data/screening-methods.json")
+    base_summary = {"id": REFERENCE_ID, "role": "base", "label": arms[0].get("label"),
+                    "package_digest": arms[0].get("package_digest"), "method_version": base_record.get("method_version"),
+                    "curve_count": arms[0].get("curve_count"),
+                    "P1_value_ci": oc.p1(field, spatial, REFERENCE_ID) if len(arms) == 1 else None,
+                    "P3": oc.p3(base, base, cohorts), "P6": oc.p6(base_catalog, metrics, base_record, scores_elapsed),
+                    "route": {k: v for k, v in base_record.items() if k in ("route", "package_digest", "asset_fallbacks", "seconds")}}
+    candidates = []
+    for arm in arms[1:]:
+        aid = arm["id"]
+        spec = r4.family_spec(aid)
+        artifact = read_json(study / "candidates" / aid / "app-data/reference-curves.json")
+        catalog = read_json(study / "candidates" / aid / "app-data/screening-methods.json")
+        scores = _scores(study, aid)
+        record = read_json(study / f"scores/{aid}.json") if (study / f"scores/{aid}.json").is_file() else {}
+        functions = r4.function_ids(spec)
+        result = {"P1": oc.p1(field, spatial, aid), "P2": oc.p2(field, spatial, aid, functions),
+                  "P3": oc.p3(base, scores, cohorts), "P4": oc.p4(stability, aid),
+                  "P5": oc.p5(scores, cohorts) if aid == "E8" or "functions_rated" in scores.columns and scores["functions_rated"].notna().any()
+                  else {"status": "not applicable", "note": "E8 only"},
+                  "P6": oc.p6(catalog, metrics, record, scores_elapsed)}
+        decision = oc.decide(spec, result)
+        candidates.append({"id": aid, "family": arm.get("family"), "label": arm.get("label"),
+                           "change": spec.get("change"), "hypothesis": spec.get("hypothesis"),
+                           "mechanism": spec.get("mechanism"), "primary_outcome": spec.get("primary_outcome"),
+                           "decision_rule": spec.get("decision"), "coverage_effect": spec.get("coverage_effect"),
+                           "functions": functions, "respecified": arm.get("respecified"),
+                           "comparison_scope": arm.get("comparison_scope"),
+                           "package_digest": arm.get("package_digest"), "method_version": arm.get("method_version"),
+                           "evaluator_digest": arm.get("evaluator_digest"), "curve_count": arm.get("curve_count"),
+                           "curve_changes": curve_changes(base_artifact, artifact),
+                           "route": {k: v for k, v in record.items() if k in ("route", "package_digest", "asset_fallbacks", "seconds")},
+                           **result, "decision": decision})
+    summary = clean({"schema_version": 2, "study_id": study.name, "input_digest": manifest["input_digest"],
+                     "runner_version": STUDY_VERSION, "protocol_version": (manifest.get("protocol") or {}).get("version"),
+                     "addendum": manifest.get("addendum"), "base_id": manifest.get("base_id"),
+                     "base_evaluator": manifest.get("base_evaluator"), "seeds": manifest.get("seeds"),
+                     "command_line": manifest.get("command_line"), "reference_id": REFERENCE_ID,
+                     "deciding_cohort": r4.DECIDING_COHORT, "margins": r4.MARGINS,
+                     "margins_in_addendum": r4.margins_in_addendum(),
+                     "base": base_summary, "candidates": candidates,
+                     "decisions": {c["id"]: {"adopted": c["decision"]["adopted"], "rule": c["decision_rule"],
+                                            "reasons": c["decision"]["reasons"]} for c in candidates},
+                     "verification": verification, "observation_ledger": read_json(study / "cohorts/cohort_summary.json"),
+                     "acquisition": read_json(study / "acquisition/summary.json") if (study / "acquisition/summary.json").exists() else {},
+                     "diagnostics": {key: [r for r in rows if r.get("region") == "US"] for key, rows in diagnostics.items()},
+                     "stability": {k: v for k, v in stability.items() if k in ("applicable", "not_applicable", "note", "settings")},
+                     "runtime_seconds": {step: rec.get("elapsed_seconds") for step, rec in receipts.items()},
+                     "limitations": [
+                         "No scoring method is changed automatically: a decision here is an adoption candidate for the owner (D4c, Round 5).",
+                         "P1, P2 and the field agreements support proxy meaning and association, never validation; T3 is exploratory.",
+                         "The BH q-values across the eight primaries are the finalist step's (round4_finalist.py), not this study's.",
+                         "2023-24 results are retrospective temporal evaluation because the project has already used those observations.",
+                         "Frozen alternatives and watershed-excluded refitted reference-method validation are reported separately.",
+                         "Stored-footprint totals estimated from the fixed 100,000-reach sample are not observed national counts.",
+                         "Reference-sampling uncertainty is not independent biological validation."]})
+    write_json(study / "summary.json", summary)
+    if (study / "summary.json").stat().st_size > 4 * 1024 * 1024:
+        raise RuntimeError("Local review summary exceeds its bounded read contract")
+    manifest["status"] = "complete"
+    manifest["completed_at"] = now()
+    manifest["source_files"], manifest["source_digest"] = source_inventory(root, study)
+    write_json(study / "manifest.json", manifest)
+    outputs = [study / "summary.json", study / "manifest.json", study / "protocol.json",
+               *sorted((study / "results").glob("*")), *sorted((study / "traces").glob("*.json")),
+               study / "scores/verification.json", study / "set-stability/result.json", study / "source-inventory.json",
+               *sorted((study / "spatial/results").glob("*")), study / "acquisition/summary.json",
+               study / "acquisition/gage-comparison.csv", study / "acquisition/annual-record-coverage.csv"]
+    for arm in arms:
+        outputs += [study / "candidates" / arm["id"] / "app-data/reference-curves.json",
+                    study / "candidates" / arm["id"] / "app-data/screening-methods.json",
+                    study / "candidates" / arm["id"] / f"{arm['id']}.easi-method.zip",
+                    study / f"scores/{arm['id']}.json"]
+    write_json(study / "completion.json", {"schema_version": 1, "study_id": study.name, "status": "complete",
+               "completed_at": now(), "input_digest": manifest["input_digest"], "parent_binding": manifest["parent_binding"],
+               "source_digest": manifest["source_digest"], "runner_version": STUDY_VERSION,
+               "addendum_sha256": r4.ADDENDUM_SHA256,
+               "candidate_package_digests": manifest.get("candidate_package_digests"),
+               "output_hashes": {p.relative_to(study).as_posix(): sha(p) for p in outputs if p.is_file()}})
+    return {"status": "complete", "candidates": len(candidates),
+            "decisions": {c["id"]: c["decision"]["adopted"] for c in candidates}}
+
+
 def build(root: Path, study: Path):
     manifest = read_json(study / "manifest.json")
+    if is_round4(manifest):
+        return build_round4(root, study, manifest)
     verification = read_json(study / "scores/verification.json")
     if verification.get("status") != "passed":
         raise RuntimeError("A passing replay and candidate-scope receipt is required")
