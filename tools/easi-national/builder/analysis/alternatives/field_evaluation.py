@@ -22,6 +22,7 @@ import pyarrow.parquet as pq
 from .. import nrsa, stats
 from ..validation import TARGETS
 from . import REFERENCE_ID, study_candidates
+from . import round4 as _r4
 from .io import read_json as _read_json, write_json as _write_json, write_parquet as _write_parquet
 
 NRSA_DIR = nrsa.NRSA_DIR
@@ -46,8 +47,9 @@ T3_CONTINUOUS = ("x__mmi_fish", "x__oe_score")
 #: read): the same-visit low-flow ratio (E1, E2), XFC_NAT and PCT_FAST for habitat provision
 #: (E4), XBKF_H and BFWD_RAT for the four channel geometry functions (E5). The sign orients
 #: the Spearman so a positive rho is agreement: a taller bankfull height reads as a deeper,
-#: more incised channel (-1, the convention of inc_ratio and XBKA), a wider-than-deep channel
-#: as one connected to its floodplain (+1); both are operating choices recorded here.
+#: more incised channel (-1, the convention of inc_ratio and XBKA; confirmed 2026-09-27, may
+#: block), a wider-than-deep channel as one connected to its floodplain (+1; its P2 rows are
+#: exploratory and never block, round4.EXPLORATORY_FIELD_TARGETS).
 FIELD_TARGETS = {
     LOW: [("wetted_bankfull_ratio", 1)],
     "habitat_provision": [("a__phab_XFC_NAT", 1), ("a__phab_PCT_FAST", 1)],
@@ -83,17 +85,22 @@ LIMITATIONS = [
     "AUC noninferiority uses a 0.01 margin and paired delta intervals; inconclusive is not equivalent.",
     "Multiple targets and regions are exploratory comparisons without multiplicity adjustment.",
     "Shared agriculture association and contribution removal do not establish independent validity.",
-    "T3 (fish MMI classes and O/E) is exploratory and never decides; the signs of XBKF_H (-1) and BFWD_RAT (+1) are operating choices.",
+    "T3 (fish MMI classes and O/E) is exploratory and never decides; the sign of XBKF_H (-1) stands and may block; BFWD_RAT (+1) is exploratory and never blocks.",
+    "Family decisions read the development cohort (2013-19); latest visit 1 and the retrospective 2023-24 cohort are reported beside it and never decide.",
 ]
 
 
 def target_roles() -> dict:
     """Every target the ledger carries with its role: the deciding targets, the field targets
-    per function with their sign, the T3 exploratory targets, the scoring-input pairs."""
+    per function with their sign, the exploratory targets (T3 and the exploratory field
+    targets, which never block), the scoring-input pairs."""
     return {"deciding": {"T1": "reference_2013", "T2": "t__bent_mmi"},
             "exploratory_t3": list(T3_TARGETS) + list(T3_CONTINUOUS),
+            "exploratory_field": list(_r4.EXPLORATORY_FIELD_TARGETS),
+            "never_block": list(_r4.NEVER_BLOCK_TARGETS),
             "field_targets": {function: [list(t) for t in targets] for function, targets in FIELD_TARGETS.items()},
             "scoring_input_targets": {target: list(functions) for target, functions in SCORING_INPUT_TARGETS.items()},
+            "deciding_cohort": _r4.DECIDING_COHORT, "reported_cohorts": list(_r4.REPORTED_COHORTS),
             "observed_override_rule": "a station whose function was scored from a user observation (observed__<function>) is excluded from that function's comparison and from every aggregate row"}
 
 
@@ -240,6 +247,8 @@ def _role(target: str) -> str:
         return "primary_separate"
     if target in T3_TARGETS or target in T3_CONTINUOUS:
         return "exploratory_t3"
+    if target in _r4.EXPLORATORY_FIELD_TARGETS:
+        return "exploratory_field"
     if target in ("reference_2013", "t__bent_mmi"):
         return "deciding_target"
     return "field_target"
@@ -959,7 +968,8 @@ def evaluate(root: Path, study: Path, boot=1000, *, scores_dir: Path | None = No
         _csv(results / filename, rows)
     summary = {"schema_version": 1, "reference_id": REFERENCE, "alternatives": list(arm_ids),
                "compared": list(candidate_ids), "comparison_scopes": scopes,
-               "target_roles": target_roles(), "deciding_cohort": "latest_visit1",
+               "target_roles": target_roles(), "deciding_cohort": _r4.DECIDING_COHORT,
+               "reported_cohorts": list(_r4.REPORTED_COHORTS),
                "boot_requested": boot, "bootstrap_unit": "HUC8", "seed": SEED,
                "confidence_level": .95, "noninferiority_margin_auc": MARGIN,
                "cohort_prefix": cohort_prefix, "scores_directory": str(score_directory.resolve()),

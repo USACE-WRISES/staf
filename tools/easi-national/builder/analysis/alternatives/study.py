@@ -28,6 +28,7 @@ import time
 from builder import REPO_ROOT
 from . import (ALTERNATIVES, BASE_COMMIT, BASE_METHOD, BASE_REFERENCE, DEFAULT_BASE_ID, REFERENCE_ID,
                STUDY_VERSION, bases, is_round4, study_candidates)
+from . import base_scores as bs
 from . import round4 as r4
 from .io import fingerprint, info, now, output_files, read_json, safe_study, sha, write_json
 
@@ -39,6 +40,23 @@ DEPENDENCIES = {"snapshot": [], "candidates": ["snapshot"], "observations": ["sn
                 "report": ["field", "spatial", "stability"]}
 #: the seeds every study records (the sample, the reference-panel resamples, the paired bootstrap)
 SEEDS = {"sample": 17, "reference_bootstrap": 7, "paired_bootstrap": 20260915}
+#: how each scoring step reaches the evaluator (recorded in the manifest, coordinator's answer Q7)
+SCORING_ROUTES = {
+    "scores": "package: each arm scores its own method package (EASI_METHOD_PACKAGE, EASI_DATA_DIR unset)",
+    "spatial": ("data-dir: a fold-local refit artifact is not a method package (its identity file would have to be "
+                "restamped per fold), so the fold arms point the same evaluator at their app-data folder "
+                "(EASI_DATA_DIR); both routes score identically (the runner's tests prove it on library records)"),
+}
+
+
+def _input_digest(upstream, base_scores=None) -> str:
+    """The study's input digest: the upstream inputs, the protocol and, when the base arm is
+    verified against base scores, their files' sha256."""
+    doc = {"inputs": upstream, "protocol": protocol()}
+    if base_scores:
+        doc["base_scores"] = {"manifest_sha256": base_scores.get("manifest_sha256"),
+                              "files": [f["sha256"] for f in base_scores.get("files", [])]}
+    return hashlib.sha256(json.dumps(doc, sort_keys=True).encode()).hexdigest()
 
 
 def protocol():
@@ -58,8 +76,13 @@ def protocol():
             "decision": ("a study with candidate packages is decided per candidate by the EASI addendum's "
                          "outcomes P1 to P6 and margins (outcomes.py); a study without a candidates block "
                          "keeps the 2026-09-15 selection rule"),
-            "deciding_cohort": r4.DECIDING_COHORT,
-            "candidate_scoring": "each arm scores an isolated method package (EASI_METHOD_PACKAGE)"}
+            "deciding_cohort": r4.DECIDING_COHORT, "reported_cohorts": list(r4.REPORTED_COHORTS),
+            "retrospective_rule": ("no family decision reads the retrospective cohort; the finalist step reads it once, "
+                                   "in its separate retrospective report"),
+            "candidate_scoring": "each arm scores an isolated method package (EASI_METHOD_PACKAGE)",
+            "base_scores": ("when the stored analysis is another registry base's, the base arm is verified against "
+                            "--base-scores, a national build of the study base; the stored analysis then supplies "
+                            "inputs only")}
 
 
 def resolve_base(base_id=None):
@@ -131,6 +154,7 @@ def candidate_block(base, candidates: dict | None, running_evaluator: str) -> li
                  "package_digest": found["package_digest"], "method_version": found["method_version"],
                  "evaluator_digest": found["evaluator_digest"], "validated_under": found["validated_under"],
                  "requires": found["requires"], "base": found["base"], "curve_sets": found["curve_sets"],
+                 "curve_set_findings": found["curve_set_findings"],
                  "respecified": found["respecified"] or (spec.get("respecified") or {}).get("date"),
                  "comparison_scope": r4.comparison_scope(spec)}
         check_candidate(entry, base, running_evaluator)
@@ -138,7 +162,26 @@ def candidate_block(base, candidates: dict | None, running_evaluator: str) -> li
     return block
 
 
-def snapshot(root: Path, study: Path, base_id=None, candidates: dict | None = None, command_line=None):
+def stored_analysis_record(root: Path, base, completion: dict) -> tuple:
+    """``(stored base, record)`` for the stored analysis the study snapshots: the registry base
+    whose method scored it (its local-review completion), and what the study uses it for. A
+    completion under no known base, or not complete, is refused."""
+    if completion.get("status") != "complete":
+        raise RuntimeError("Current Alternative 1 completion is unavailable")
+    stored = bs.stored_analysis_base(completion.get("method_version"), REPO_ROOT)
+    if stored is None:
+        raise RuntimeError(f"Current Alternative 1 completion is unavailable: its method version "
+                           f"{completion.get('method_version')!r} is no registry base's")
+    same = stored.id == base.id
+    record = {"method_version": completion.get("method_version"), "base_id": stored.id,
+              "is_study_base": same, "completion_sha256": sha(root / "analysis/local-review/completion.json"),
+              "used_for": list(bs.STORED_ANALYSIS_USES) + (["the base arm's reference scores (scorer.verify's replay)"] if same else []),
+              "never": None if same else bs.STORED_ANALYSIS_NEVER}
+    return stored, record
+
+
+def snapshot(root: Path, study: Path, base_id=None, candidates: dict | None = None, command_line=None,
+             base_scores=None):
     from easi import config
     from easi import method_package as mp
     from easi.national import method_version
@@ -153,9 +196,16 @@ def snapshot(root: Path, study: Path, base_id=None, candidates: dict | None = No
     if sha(artifact) != base.reference_sha256:
         raise RuntimeError(f"Alternative 1 frozen artifact has changed (base {base.id})")
     completion = read_json(root / "analysis/local-review/completion.json")
-    if completion.get("status") != "complete" or not bases.accepts(
-            base, completion.get("method_version"), REPO_ROOT):
-        raise RuntimeError("Current Alternative 1 completion is unavailable")
+    # the stored analysis is accepted when its completion is under a known registry base: the
+    # study base's (its scores are then the base arm's reference), or another base's (its
+    # inputs are used, never its scores, and the base arm is verified against --base-scores)
+    stored, stored_analysis = stored_analysis_record(root, base, completion)
+    if not stored_analysis["is_study_base"] and base_scores is None:
+        raise RuntimeError(f"the stored analysis under {root / 'analysis'} is base {stored.id} "
+                           f"(method {completion.get('method_version')}), not the study base {base.id}: pass "
+                           f"--base-scores <staging folder of the base's national build> so the base arm is "
+                           f"verified against the base's own scores")
+    base_scores_record = bs.read_base_scores(base_scores, base, root) if base_scores is not None else None
     base_evaluator = {"method_version": running, "evaluator_digest": mp.evaluator_digest(),
                       "validated": running != base.method_version,
                       "accepted_method_versions": list(bases.accepted_method_versions(base, REPO_ROOT))}
@@ -175,8 +225,7 @@ def snapshot(root: Path, study: Path, base_id=None, candidates: dict | None = No
         if current.get("protocol") != protocol():
             current["protocol"] = protocol()
             current["status"] = "pending"
-            current["input_digest"] = hashlib.sha256(json.dumps(
-                {"inputs": current["input_files"], "protocol": protocol()}, sort_keys=True).encode()).hexdigest()
+            current["input_digest"] = _input_digest(current["input_files"], current.get("base_scores"))
             write_json(study / "protocol.json", protocol())
             write_json(study / "manifest.json", current)
         return {"files": len(saved["files"]), "reused": True}
@@ -228,8 +277,10 @@ def snapshot(root: Path, study: Path, base_id=None, candidates: dict | None = No
                          "sha256": r4.ADDENDUM_SHA256, "prose": "apps/stream-curves/config/methodology/" + r4.PROSE_FILE},
             "candidate_package_digests": {row["id"]: row.get("package_digest") for row in block},
             "command_line": list(command_line) if command_line is not None else list(sys.argv),
+            "stored_analysis": stored_analysis, "base_scores": base_scores_record,
+            "scoring_routes": dict(SCORING_ROUTES),
             "input_files": upstream, "study_only": True}
-    data["input_digest"] = hashlib.sha256(json.dumps({"inputs": upstream, "protocol": protocol()}, sort_keys=True).encode()).hexdigest()
+    data["input_digest"] = _input_digest(upstream, base_scores_record)
     write_json(study / "manifest.json", data)
     write_json(study / "protocol.json", protocol())
     write_json(marker, {"status": "preserved", "created_at": now(), "source_commit": base.commit,
@@ -245,13 +296,19 @@ def check_inputs(root, study):
         stat = path.stat()
         if stat.st_size != row["size"] or stat.st_mtime_ns != row["mtime_ns"]:
             raise RuntimeError(f"Study input changed; create a new study: {path}")
+    for row in (manifest.get("base_scores") or {}).get("files", []):
+        path = Path(row["path"])
+        stat = path.stat()
+        if stat.st_size != row["bytes"] or stat.st_mtime_ns != row["mtime_ns"]:
+            raise RuntimeError(f"Base scores changed; create a new study: {path}")
     return manifest
 
 
 def stage_sources(step):
     package = Path(__file__).parent
-    files = {"snapshot": ["study.py", "io.py", "__init__.py", "round4.py"], "candidates": ["candidates.py", "round4.py"],
-             "observations": ["field_evaluation.py"], "evidence": ["evidence.py"], "scores": ["scorer.py"],
+    files = {"snapshot": ["study.py", "io.py", "__init__.py", "round4.py", "base_scores.py"],
+             "candidates": ["candidates.py", "round4.py"],
+             "observations": ["field_evaluation.py"], "evidence": ["evidence.py"], "scores": ["scorer.py", "base_scores.py"],
              "acquisition": ["acquisition.py", "gage_diagnostics.py"],
              "field": ["field_evaluation.py", "bootstrap_metrics.py", "round4.py"],
              "spatial": ["spatial.py", "bootstrap_metrics.py"],
@@ -338,7 +395,7 @@ def _receipt_current(study, step, manifest, checked):
     checked.add(step)
 
 
-def run_stage(root, study, step, *, workers=4, base_id=None, candidates=None, command_line=None):
+def run_stage(root, study, step, *, workers=4, base_id=None, candidates=None, command_line=None, base_scores=None):
     manifest = check_inputs(root, study) if (study / "manifest.json").exists() else {}
     dependencies = DEPENDENCIES[step]
     markers = [study / "stages" / f"{name}.json" for name in dependencies]
@@ -362,7 +419,8 @@ def run_stage(root, study, step, *, workers=4, base_id=None, candidates=None, co
     start = time.monotonic()
     print(f"Starting {step} at {now()}", flush=True)
     if step == "snapshot":
-        result = snapshot(root, study, base_id=base_id, candidates=candidates, command_line=command_line)
+        result = snapshot(root, study, base_id=base_id, candidates=candidates, command_line=command_line,
+                          base_scores=base_scores)
         outputs = [study / "snapshot/manifest.json"]
     elif step == "candidates":
         from .candidates import build
@@ -443,6 +501,10 @@ def main():
                         help="a built candidate package for a NEW study (E1 to E8 = the builder's output "
                              "folder holding candidate.json, or its .easi-method.zip); an existing study "
                              "keeps the candidates its manifest names")
+    parser.add_argument("--base-scores", type=Path, default=None, metavar="STAGING",
+                        help="the staging folder of a national build of the study base (its manifest names the "
+                             "base's method version and alternative id); required for a NEW study when the "
+                             "stored analysis is another base's, and the base arm is verified against it")
     args = parser.parse_args()
     if Path(sys.executable).resolve() != (REPO_ROOT / ".venv/Scripts/python.exe").resolve():
         raise RuntimeError("Use the workspace .venv/Scripts/python.exe")
@@ -471,6 +533,11 @@ def main():
                 if found["package_digest"] != recorded[family].get("package_digest"):
                     raise RuntimeError(f"{study.name}: candidate {family} was recorded as package "
                                        f"{str(recorded[family].get('package_digest'))[:15]}, not {found['package_digest'][:15]}")
+        if args.base_scores is not None:
+            recorded_folder = (manifest.get("base_scores") or {}).get("folder")
+            if recorded_folder is None or Path(recorded_folder).resolve() != args.base_scores.resolve():
+                raise RuntimeError(f"{study.name} was created with base scores {recorded_folder}; a study never "
+                                   f"changes its base scores (got {args.base_scores})")
     else:
         base_id = args.base or DEFAULT_BASE_ID
         if not bases.study_id_ok(study.name):
@@ -487,7 +554,7 @@ def main():
     try:
         for step in args.steps:
             run_stage(root, study, step, workers=max(1, min(args.workers, 6)), base_id=base_id,
-                      candidates=candidates or None, command_line=sys.argv)
+                      candidates=candidates or None, command_line=sys.argv, base_scores=args.base_scores)
     finally:
         lock.unlink(missing_ok=True)
 

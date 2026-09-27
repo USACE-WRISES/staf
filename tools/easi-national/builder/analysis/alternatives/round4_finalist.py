@@ -67,10 +67,35 @@ def report(summaries: list[dict]) -> dict:
             "complete": not missing}
 
 
+def retrospective_report(summaries: list[dict]) -> dict:
+    """The finalist's one read of the retrospective cohort (2023-24), kept apart from the
+    family decisions (which read the development cohort only): per family the P1 rows of the
+    retrospective cohort on T1 and T2 in both designs, beside the decision the study made."""
+    rows = []
+    for doc in summaries:
+        for candidate in doc.get("candidates") or []:
+            cohorts = (candidate.get("P1") or {}).get("cohorts") or {}
+            block = cohorts.get(r4.RETROSPECTIVE_COHORT) or {}
+            rows.append({"family": candidate["id"], "study": doc.get("study_id"),
+                         "adopted_by_margins": (candidate.get("decision") or {}).get("adopted"),
+                         "deciding_cohort": (candidate.get("decision") or {}).get("deciding_cohort"),
+                         "retrospective": {design: {t: {k: v for k, v in (block.get(design, {}).get(t) or {}).items()
+                                                        if k in ("reference", "alternative", "delta", "delta_median", "ci_low",
+                                                                 "ci_high", "n", "boot_valid", "supported", "present")}
+                                                    for t in ("T1", "T2")}
+                                           for design in ("frozen", "watershed-held-out")}})
+    return {"cohort": r4.RETROSPECTIVE_COHORT, "rows": sorted(rows, key=lambda r: r["family"]),
+            "note": ("The retrospective cohort is read once, here, after the family decisions were taken on the "
+                     "development cohort; nothing here changes a decision or a margin.")}
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--summary", action="append", required=True, type=Path, help="a study's summary.json (repeat)")
     ap.add_argument("--out", type=Path)
+    ap.add_argument("--retrospective", type=Path, metavar="OUT",
+                    help="also write the separate retrospective-cohort report to OUT (refused when OUT exists: "
+                         "the retrospective cohort is read once)")
     a = ap.parse_args(argv)
     summaries = [json.loads(Path(p).read_text(encoding="utf-8")) for p in a.summary]
     out = report(summaries)
@@ -78,6 +103,13 @@ def main(argv=None) -> int:
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(out, indent=1, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps(out, indent=1, sort_keys=True))
+    if a.retrospective is not None:
+        if a.retrospective.exists():
+            raise SystemExit(f"{a.retrospective} exists: the retrospective cohort is read once")
+        retro = retrospective_report(summaries)
+        a.retrospective.parent.mkdir(parents=True, exist_ok=True)
+        a.retrospective.write_text(json.dumps(retro, indent=1, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+        print(json.dumps({"retrospective": str(a.retrospective), "families": [r["family"] for r in retro["rows"]]}))
     return 0
 
 

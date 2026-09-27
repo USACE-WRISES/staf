@@ -272,8 +272,17 @@ def _changes(fields, baseline, other):
 def verify(study):
     reaches = pq.read_table(study / "cohorts/reaches.parquet").to_pandas().set_index("comid")
     baseline = pq.read_table(study / "scores/alternative-1.parquet").to_pandas().set_index("comid")
-    fields, original, stations, mismatches, station_mismatches = _replay_base(study, reaches, baseline)
     manifest = read_json(study / "manifest.json") if (study / "manifest.json").is_file() else {}
+    replayed = None
+    if manifest.get("base_scores"):
+        # the stored analysis is another base's: the base arm is compared with the base scores
+        # (a national build of the study base), never with the stored analysis's scores
+        from . import base_scores as bs
+        replayed = bs.replay(study, reaches, baseline, manifest["base_scores"])
+        fields, original, stations = bs.score_fields(baseline), None, None
+        mismatches, station_mismatches = replayed["mismatches"], {}
+    else:
+        fields, original, stations, mismatches, station_mismatches = _replay_base(study, reaches, baseline)
     checks = []
     if is_round4(manifest):
         # a candidate package's changes are the family's to explain: the cohort must be the
@@ -322,10 +331,22 @@ def verify(study):
                     raise RuntimeError(f"Rating availability changed: alternative-{number} {name}")
                 changes[name] = int(changed.sum())
             checks.append({"alternative": f"alternative-{number}", "changed": changes})
-    result = {"status": "passed", "replayed_stored_reaches": len(original), "fields_per_reach": len(fields),
-              "replayed_nrsa_stations": len(stations), "nrsa_mismatches": station_mismatches,
-              "mismatches": mismatches, "candidate_scope": checks}
+    if replayed is not None:
+        result = {"status": "passed", "replay": "base-scores", "fields_per_reach": len(fields),
+                  "replayed_stored_reaches": replayed["replayed_stored_reaches"],
+                  "replayed_nrsa_stations": replayed["replayed_nrsa_stations"],
+                  "compared": replayed["compared"], "absent_from_base_scores": replayed["absent_from_base_scores"],
+                  "base_scores": {k: manifest["base_scores"].get(k) for k in ("build_id", "method_version", "alternative_id", "folder")},
+                  "nrsa_mismatches": {}, "mismatches": mismatches, "candidate_scope": checks}
+    else:
+        # the legacy result keeps exactly its 1.0.0 shape: verify rewrites verification.json only
+        # when the content differs, and the 2026-09-15 study's must stay the bytes its
+        # completion record hashes
+        result = {"status": "passed", "replayed_stored_reaches": len(original), "fields_per_reach": len(fields),
+                  "replayed_nrsa_stations": len(stations), "nrsa_mismatches": station_mismatches,
+                  "mismatches": mismatches, "candidate_scope": checks}
     if is_round4(manifest):
+        result["replay"] = "base-scores" if replayed is not None else "stored-analysis"
         result["routes"] = {row["id"]: {k: v for k, v in read_json(study / f"scores/{row['id']}.json").items()
                                         if k in ("route", "package_digest", "method_version", "evaluator_digest",
                                                  "asset_fallbacks", "seconds", "rows", "unrated_reaches")}

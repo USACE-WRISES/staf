@@ -236,6 +236,7 @@ def build_round4(root: Path, study: Path, manifest: dict):
                            "package_digest": arm.get("package_digest"), "method_version": arm.get("method_version"),
                            "evaluator_digest": arm.get("evaluator_digest"), "curve_count": arm.get("curve_count"),
                            "curve_changes": curve_changes(base_artifact, artifact),
+                           "curve_set_findings": arm.get("curve_set_findings") or {},
                            "route": {k: v for k, v in record.items() if k in ("route", "package_digest", "asset_fallbacks", "seconds")},
                            **result, "decision": decision})
     summary = clean({"schema_version": 2, "study_id": study.name, "input_digest": manifest["input_digest"],
@@ -243,7 +244,12 @@ def build_round4(root: Path, study: Path, manifest: dict):
                      "addendum": manifest.get("addendum"), "base_id": manifest.get("base_id"),
                      "base_evaluator": manifest.get("base_evaluator"), "seeds": manifest.get("seeds"),
                      "command_line": manifest.get("command_line"), "reference_id": REFERENCE_ID,
-                     "deciding_cohort": r4.DECIDING_COHORT, "margins": r4.MARGINS,
+                     "deciding_cohort": r4.DECIDING_COHORT, "reported_cohorts": list(r4.REPORTED_COHORTS),
+                     "stored_analysis": manifest.get("stored_analysis"),
+                     "base_scores": ({k: v for k, v in manifest["base_scores"].items() if k != "files"}
+                                     | {"files_n": len(manifest["base_scores"].get("files", []))}
+                                     if manifest.get("base_scores") else None),
+                     "scoring_routes": manifest.get("scoring_routes"), "margins": r4.MARGINS,
                      "margins_in_addendum": r4.margins_in_addendum(),
                      "base": base_summary, "candidates": candidates,
                      "decisions": {c["id"]: {"adopted": c["decision"]["adopted"], "rule": c["decision_rule"],
