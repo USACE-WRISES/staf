@@ -66,8 +66,11 @@ def _summary(row) -> dict:
 def p1(field, spatial, candidate, *, cohort=r4.DECIDING_COHORT) -> dict:
     """P1 independent association: the paired AUC deltas (candidate minus base; a base-only
     study pairs the base with itself and the value intervals carry its absolute AUCs) on T1
-    and T2 in both designs, T3 reported, for the deciding cohort and, beside it, every cohort."""
-    out = {"deciding_cohort": cohort, "designs": {}, "cohorts": {}}
+    and T2 in both designs, T3 reported, for the deciding cohort (the development cohort) in
+    ``designs``, which is all the decision reads; every cohort, the retrospective one
+    included, beside it in ``cohorts`` for reporting only."""
+    out = {"deciding_cohort": cohort, "decision_reads": "designs (the deciding cohort only)",
+           "designs": {}, "cohorts": {}}
     for design, prefix in DESIGNS:
         rows = field if design == "frozen" else spatial
         block = {}
@@ -96,10 +99,11 @@ def p2(field, spatial, candidate, functions, *, cohort=r4.DECIDING_COHORT) -> di
     """P2 function and regional review: per function (the family's, and the ECI) and per
     NARS-9 region, the paired AUC, signed Spearman and weighted-kappa deltas; a finding is a
     supported AUC interval wholly below -0.01, or a supported Spearman or kappa interval wholly
-    below zero. Population support against the benthic MMI never decides (independence rule);
-    T3 rows are exploratory."""
+    below zero. Exploratory rows are counted and never block: population support against the
+    benthic MMI (independence rule), the T3 targets and the exploratory field targets
+    (``round4.NEVER_BLOCK_TARGETS``, the width to depth ratio)."""
     wanted = set(functions or []) | {"eci"}
-    findings, reviewed, supported_n, regions = [], 0, 0, set()
+    findings, reviewed, supported_n, exploratory, regions = [], 0, 0, 0, set()
     for design, prefix in DESIGNS:
         rows = field if design == "frozen" else spatial
         for row in rows:
@@ -110,12 +114,11 @@ def p2(field, spatial, candidate, functions, *, cohort=r4.DECIDING_COHORT) -> di
                 continue
             if str(row.get("region")).startswith("woody_L2"):
                 continue
-            if function == "population_support" and target == "t__bent_mmi":
-                continue
-            if target in r4.T3_TARGETS_FLAT:
-                continue
             statistic = str(row.get("statistic", ""))
             if not (statistic.startswith("auc") or statistic in ("spearman", "weighted_kappa")):
+                continue
+            if (function == "population_support" and target == "t__bent_mmi") or target in r4.NEVER_BLOCK_TARGETS:
+                exploratory += 1
                 continue
             reviewed += 1
             regions.add(str(row.get("region")))
@@ -133,10 +136,12 @@ def p2(field, spatial, candidate, functions, *, cohort=r4.DECIDING_COHORT) -> di
                                  "statistic": statistic, "delta": summary["delta"], "ci_low": summary["ci_low"],
                                  "ci_high": summary["ci_high"], "n": summary["n"], "boot_valid": summary["boot_valid"],
                                  "reason": finding})
-    return {"functions": sorted(wanted), "rows_reviewed": reviewed, "rows_supported": supported_n,
+    return {"functions": sorted(wanted), "cohort": cohort, "rows_reviewed": reviewed, "rows_supported": supported_n,
+            "rows_exploratory": exploratory,
             "regions": sorted(regions), "findings": findings, "blocks": bool(findings),
             "support_rule": f"sample floor and at least {r4.MARGINS['support_draws']} of {r4.MARGINS['bootstrap_draws']} valid draws",
-            "independence": "population_support against t__bent_mmi and the T3 targets are exploratory and never block"}
+            "independence": ("population_support against t__bent_mmi, the T3 targets and the exploratory field targets "
+                             f"({', '.join(r4.EXPLORATORY_FIELD_TARGETS)}) are exploratory and never block")}
 
 
 def _labels(series):
@@ -374,7 +379,8 @@ def decide(spec, outcomes) -> dict:
                                      "the addendum names none for this family; T1 (the 2013-14 designations) taken, both readings reported"),
             "adopted": adopted, "primary_rule_passes": bool(passes), "p2_blocks": bool(p2_block.get("blocks")),
             "p4_within_margin": bool(p4_ok), "reasons": reasons, "readings": readings,
-            "margins": dict(r4.MARGINS), "deciding_cohort": p1_block.get("deciding_cohort")}
+            "margins": dict(r4.MARGINS), "deciding_cohort": p1_block.get("deciding_cohort"),
+            "reads": "P1 designs of the deciding cohort, P2 of the same cohort, P3, P4, P5; never the retrospective rows"}
 
 
 __all__ = ["p1", "p2", "p3", "p4", "p5", "p6", "decide", "SEED", "DESIGNS", "COHORTS", "P1_TARGETS"]

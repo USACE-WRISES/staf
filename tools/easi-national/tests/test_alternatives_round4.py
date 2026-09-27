@@ -125,6 +125,11 @@ def test_the_addendum_helpers_agree_with_the_frozen_yaml_and_the_builder():
     assert r4.comparison_scope(r4.family_spec("E1")) is None
     assert r4.function_ids(r4.family_spec("E8")) is None
     assert r4.function_ids(r4.family_spec("E6")) == ["sediment_continuity", "bed_composition_bedform_dynamics"]
+    # the coordinator's answers of 2026-09-27: the development cohort decides, the width to
+    # depth ratio and the T3 targets never block
+    assert r4.DECIDING_COHORT == "development_1314_1819" and r4.RETROSPECTIVE_COHORT == "retrospective_2324"
+    assert r4.REPORTED_COHORTS == ("latest_visit1", "retrospective_2324")
+    assert set(r4.NEVER_BLOCK_TARGETS) == {"t__fish_mmi", "t__oe", "a__phab_BFWD_RAT"}
     with pytest.raises(r4.AddendumError, match="unknown family"):
         r4.family_spec("E9")
     assert study.parse_candidates(["E1=a", "E8=b"]) == {"E1": "a", "E8": "b"}
@@ -135,6 +140,9 @@ def test_the_addendum_helpers_agree_with_the_frozen_yaml_and_the_builder():
     protocol = study.protocol()
     assert protocol["version"] == "1.2.0" and protocol["addendum"]["sha256"] == r4.ADDENDUM_SHA256
     assert protocol["paired_bootstrap_seed"] == 20260915 and protocol["reference_bootstrap_seed"] == 7
+    assert protocol["deciding_cohort"] == "development_1314_1819"
+    assert protocol["reported_cohorts"] == ["latest_visit1", "retrospective_2324"]
+    assert "reads it once" in protocol["retrospective_rule"] and "--base-scores" in protocol["base_scores"]
 
 
 def test_the_candidates_block_refuses_the_wrong_base_evaluator_and_family(tmp_path):
@@ -151,7 +159,27 @@ def test_the_candidates_block_refuses_the_wrong_base_evaluator_and_family(tmp_pa
     entry = block[1]
     assert entry["package_digest"] == found["package_digest"] and entry["family"] == "low_flow_intermittence"
     assert entry["decision"] == "simplification" and entry["curve_count"] == 34 and entry["respecified"] is None
-    assert entry["base"]["packageDigest"] == base.package_digest
+    assert entry["base"]["packageDigest"] == base.package_digest and entry["curve_set_findings"] == {}
+    # a refit family's own findings ride into the block (E2: XER's degenerate perennial pool)
+    e2_set = {"flow-min-ratio": {"higherIsBetter": True, "quantity": "q_min_ratio", "stratifier": "nars9",
+                                 "split": {"fcode_class": "perennial"},
+                                 "curves": {key: {"points": [[0.0, 0.0], [0.2, 0.39], [0.5, 0.69], [1.0, 1.0]], "n": 40,
+                                                  "nMembers": 40, "q25": .2, "q50": .35, "q75": .5, "x39": .2, "x69": .5,
+                                                  "status": "complete", "panelTier": "complete", "screen": "strict"}
+                                            for key in ("national", "TPL")}}}
+    e2 = _candidate_folder(tmp_path, "E2", curve_sets=e2_set)
+    record = json.loads((e2 / "candidate.json").read_text(encoding="utf-8"))
+    record["curveSets"] = {"provenance": {"diagnostics": {"flow-min-ratio": {
+        "notUsable": {"XER": "engine status degenerate_q25"}, "split": {"fcode_class": "perennial"}}}}}
+    (e2 / "candidate.json").write_text(json.dumps(record), encoding="utf-8")
+    found_e2 = r4.read_candidate_source(e2)
+    assert found_e2["curve_set_findings"] == {"flow-min-ratio": {"not_usable": {"XER": "engine status degenerate_q25"},
+                                                                 "split": {"fcode_class": "perennial"},
+                                                                 "served_by": "the national fallback"}}
+    assert found_e2["respecified"] == "2026-09-27" and found_e2["curve_sets"]["flow-min-ratio"]["split"] == {"fcode_class": "perennial"}
+    e2_entry = study.candidate_block(base, {"E2": str(e2)}, running)[1]
+    assert e2_entry["curve_set_findings"]["flow-min-ratio"]["not_usable"] == {"XER": "engine status degenerate_q25"}
+    assert e2_entry["comparison_scope"]["function"] == LOW
     # the same zip, as a bare file: the record beside it is read
     assert r4.read_candidate_source(folder / "E1.easi-method.zip")["family"] == "E1"
     # refusals: another base, another evaluator, the wrong family, a base without a package
@@ -366,7 +394,9 @@ def test_the_ledger_carries_the_addendum_targets_with_their_roles(ledger):
     assert fast["target_value"] == 20. and fast["role"] == "field_target" and fast["status"] == "eligible"
     assert {s["column"] for s in json.loads(fast["source_json"])} == {"phab_PCT_FAST"}
     height = next(r for r in by_target["a__phab_XBKF_H"] if r["comid"] == 2)
-    assert height["sign"] == -1 and next(r for r in by_target["a__phab_BFWD_RAT"] if r["comid"] == 2)["sign"] == 1
+    ratio = next(r for r in by_target["a__phab_BFWD_RAT"] if r["comid"] == 2)
+    assert height["sign"] == -1 and height["role"] == "field_target"
+    assert ratio["sign"] == 1 and ratio["role"] == "exploratory_field"
     fish = next(r for r in by_target["t__fish_mmi"] if r["comid"] == 2)
     assert fish["target_class"] == "Poor" and fish["role"] == "exploratory_t3" and fish["kind"] == "class"
     oe = next(r for r in by_target["t__oe"] if r["comid"] == 3)
@@ -376,7 +406,9 @@ def test_the_ledger_carries_the_addendum_targets_with_their_roles(ledger):
     assert roles["deciding"] == {"T1": "reference_2013", "T2": "t__bent_mmi"}
     assert roles["field_targets"]["habitat_provision"] == [["a__phab_XFC_NAT", 1], ["a__phab_PCT_FAST", 1]]
     assert roles["field_targets"]["channel_evolution"] == [["a__phab_XBKF_H", -1], ["a__phab_BFWD_RAT", 1]]
-    assert "t__fish_mmi" in roles["exploratory_t3"]
+    assert "t__fish_mmi" in roles["exploratory_t3"] and roles["exploratory_field"] == ["a__phab_BFWD_RAT"]
+    assert set(roles["never_block"]) == {"t__fish_mmi", "t__oe", "a__phab_BFWD_RAT"}
+    assert roles["deciding_cohort"] == "development_1314_1819"
     # the function table carries the targets where the agreement rows read them
     assert ("a__phab_PCT_FAST", 1) in field_evaluation.FUNCTION_TARGETS["habitat_provision"][1]
     assert ("a__phab_BFWD_RAT", 1) in field_evaluation.FUNCTION_TARGETS["floodplain_connectivity"][1]
@@ -712,11 +744,15 @@ def _p1_block(t1, t2, held=None, t1_median=None, t2_median=None):
         return {"supported": lo is not None, "ci_low": lo, "ci_high": hi, "delta_median": median,
                 "delta": median, "present": True}
     held = held or (t1, t2)
-    return {"deciding_cohort": "latest_visit1", "designs": {
+    # a retrospective row that would fail every rule rides in the cohorts block: no decision reads it
+    failing = row(-.5, -.4, -.45)
+    return {"deciding_cohort": r4.DECIDING_COHORT, "designs": {
         "frozen": {"T1": row(*t1, t1_median), "T2": row(*t2, t2_median),
                    "T3_fish_mmi": row(None, None, None), "T3_oe": row(None, None, None)},
         "watershed-held-out": {"T1": row(*held[0], t1_median), "T2": row(*held[1], t2_median),
-                               "T3_fish_mmi": row(None, None, None), "T3_oe": row(None, None, None)}}}
+                               "T3_fish_mmi": row(None, None, None), "T3_oe": row(None, None, None)}},
+        "cohorts": {"retrospective_2324": {"frozen": {"T1": failing, "T2": failing},
+                                           "watershed-held-out": {"T1": failing, "T2": failing}}}}
 
 
 def _outcomes(p1, *, findings=(), documented=True, unchanged=False, p4=None, p5=None):
@@ -761,9 +797,10 @@ def test_the_decision_applies_the_yaml_margins_for_each_rule():
     unstable = outcomes.decide(accuracy, _outcomes(passing, p4={"status": "computed", "within_margin": False}))
     assert not unstable["adopted"] and any(r.startswith("P4") for r in unstable["reasons"])
     assert decision["margins"] == r4.MARGINS
+    assert decision["deciding_cohort"] == "development_1314_1819" and "never the retrospective rows" in decision["reads"]
 
 
-def _agreement_row(alternative, function, target, statistic, region="US", cohort="latest_visit1", **values):
+def _agreement_row(alternative, function, target, statistic, region="US", cohort=r4.DECIDING_COHORT, **values):
     row = {"alternative_id": alternative, "function": function, "target": target, "statistic": statistic, "region": region,
            "cohort": cohort, "support_floor_met": True, "boot_requested": 1000, "boot_valid": 950,
            "reference": .7, "alternative": .72, "delta": .02, "delta_median": .02, "ci_low": .005, "ci_high": .04,
@@ -772,31 +809,44 @@ def _agreement_row(alternative, function, target, statistic, region="US", cohort
     return row
 
 
-def test_p1_and_p2_read_the_agreement_tables_by_design_cohort_and_rule():
+def test_p1_and_p2_read_the_development_cohort_and_never_block_on_exploratory_rows():
     field = [_agreement_row("E4", "eci", "reference_2013", "auc_reference_vs_impaired"),
              _agreement_row("E4", "eci", "t__bent_mmi", "auc_good_vs_poor", ci_low=-.005),
              _agreement_row("E4", "eci", "t__fish_mmi", "auc_good_vs_poor", ci_low=-.03, ci_high=.01),
              _agreement_row("E4", "eci", "reference_2013", "auc_reference_vs_impaired", cohort="retrospective_2324", delta=.05),
+             _agreement_row("E4", "eci", "reference_2013", "auc_reference_vs_impaired", cohort="latest_visit1", delta=.07),
              _agreement_row("E4", "habitat_provision", "a__phab_XFC_NAT", "spearman", region="SAP", ci_low=-.3, ci_high=-.1),
              _agreement_row("E4", "population_support", "t__bent_mmi", "auc_good", ci_low=-.3, ci_high=-.1),
              _agreement_row("E4", "habitat_provision", "t__instrmcvr", "auc_good", ci_low=-.3, ci_high=-.02, boot_valid=700),
-             _agreement_row("E4", "light_thermal_regime", "t__ripveg", "auc_good", ci_low=-.3, ci_high=-.02)]
-    spatial_rows = [_agreement_row("E4", "eci", "reference_2013", "auc_reference_vs_impaired", cohort="spatial_refit:latest_visit1"),
-                    _agreement_row("E4", "eci", "t__bent_mmi", "auc_good_vs_poor", cohort="spatial_refit:latest_visit1")]
+             _agreement_row("E4", "light_thermal_regime", "t__ripveg", "auc_good", ci_low=-.3, ci_high=-.02),
+             _agreement_row("E5", "channel_evolution", "a__phab_BFWD_RAT", "spearman", ci_low=-.3, ci_high=-.1),
+             _agreement_row("E5", "channel_evolution", "a__phab_XBKF_H", "spearman", ci_low=-.3, ci_high=-.1),
+             # a latest-visit finding that would block: not the deciding cohort
+             _agreement_row("E5", "channel_evolution", "inc_ratio", "spearman", cohort="latest_visit1", ci_low=-.3, ci_high=-.1)]
+    spatial_rows = [_agreement_row("E4", "eci", "reference_2013", "auc_reference_vs_impaired", cohort="spatial_refit:development_1314_1819"),
+                    _agreement_row("E4", "eci", "t__bent_mmi", "auc_good_vs_poor", cohort="spatial_refit:development_1314_1819")]
     p1 = outcomes.p1(field, spatial_rows, "E4")
+    assert p1["deciding_cohort"] == "development_1314_1819"
     assert p1["designs"]["frozen"]["T1"]["supported"] and p1["designs"]["frozen"]["T1"]["delta_median"] == .02
     assert p1["designs"]["frozen"]["T3_fish_mmi"]["role"] == "exploratory" and p1["designs"]["frozen"]["T3_oe"]["present"] is False
     assert p1["designs"]["watershed-held-out"]["T2"]["supported"]
     assert p1["cohorts"]["retrospective_2324"]["frozen"]["T1"]["delta"] == .05
+    assert p1["cohorts"]["latest_visit1"]["frozen"]["T1"]["delta"] == .07
     assert p1["cohorts"]["retrospective_2324"]["watershed-held-out"]["T1"]["present"] is False
     p2 = outcomes.p2(field, spatial_rows, "E4", ["habitat_provision"])
-    assert p2["blocks"] and len(p2["findings"]) == 1
+    assert p2["blocks"] and len(p2["findings"]) == 1 and p2["cohort"] == "development_1314_1819"
     finding = p2["findings"][0]
     assert finding["region"] == "SAP" and finding["statistic"] == "spearman" and "below zero" in finding["reason"]
-    # supported: T1 and T2 in both designs and the SAP Spearman row; the 700-draw row is reviewed, not supported
-    assert p2["rows_reviewed"] == 6 and p2["rows_supported"] == 5 and "light_thermal_regime" not in p2["functions"]
+    # supported: T1 and T2 in both designs and the SAP Spearman row; the 700-draw row is reviewed, not
+    # supported; the fish MMI row is exploratory (the population-support row is another function's)
+    assert p2["rows_reviewed"] == 6 and p2["rows_supported"] == 5 and p2["rows_exploratory"] == 1
+    assert outcomes.p2(field, spatial_rows, "E4", None)["rows_exploratory"] == 2
+    assert "light_thermal_regime" not in p2["functions"]
     every = outcomes.p2(field, spatial_rows, "E4", None)
     assert len(every["findings"]) == 2 and {f["function"] for f in every["findings"]} == {"habitat_provision", "light_thermal_regime"}
+    # E5: the width to depth ratio never blocks, the bankfull height may; latest-visit rows never decide
+    e5 = outcomes.p2(field, spatial_rows, "E5", ["channel_evolution"])
+    assert [f["target"] for f in e5["findings"]] == ["a__phab_XBKF_H"] and e5["rows_exploratory"] == 1
     assert not outcomes.p2(field, spatial_rows, "E1", ["low_flow_baseflow_dynamics"])["blocks"]
 
 
@@ -824,6 +874,32 @@ def test_the_finalist_report_gives_bh_q_values_across_the_primaries():
     assert got["families_missing"] == ["E4", "E5", "E6", "E7"] and got["complete"] is False
     assert next(row for row in got["rows"] if row["family"] == "E8")["primary"].startswith("P5")
     assert round4_finalist.benjamini_hochberg({"a": .01, "b": None}) == {"a": .01}
+
+
+def test_the_finalist_reads_the_retrospective_cohort_once_and_apart(tmp_path):
+    retro = {"frozen": {"T1": {"delta": .03, "ci_low": .01, "ci_high": .05, "supported": True, "present": True, "n": 200},
+                        "T2": {"delta": -.01, "ci_low": -.03, "ci_high": .01, "supported": True, "present": True, "n": 200}},
+             "watershed-held-out": {"T1": {"present": False}, "T2": {"present": False}}}
+    summaries = [{"study_id": "2026-09-27-low-flow-intermittence-alternatives", "candidates": [
+        {"id": "E1", "family": "low_flow_intermittence", "decision_rule": "simplification",
+         "decision": {"adopted": True, "deciding_cohort": "development_1314_1819", "primary_target": "T1", "reasons": []},
+         "P1": {"designs": {"frozen": {"T1": {"p_two_sided": .02}}}, "cohorts": {"retrospective_2324": retro}}}]}]
+    got = round4_finalist.retrospective_report(summaries)
+    assert got["cohort"] == "retrospective_2324" and "read once" in got["note"]
+    row, = got["rows"]
+    assert row["family"] == "E1" and row["adopted_by_margins"] is True and row["deciding_cohort"] == "development_1314_1819"
+    assert row["retrospective"]["frozen"]["T1"]["delta"] == .03 and row["retrospective"]["watershed-held-out"]["T2"] == {"present": False}
+    # the multiplicity report never carries the retrospective rows
+    assert "retrospective" not in json.dumps(round4_finalist.report(summaries))
+    # the CLI writes it apart and refuses a second write
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text(json.dumps(summaries[0]), encoding="utf-8")
+    out = tmp_path / "retro.json"
+    assert round4_finalist.main(["--summary", str(summary_path), "--out", str(tmp_path / "bh.json"), "--retrospective", str(out)]) == 0
+    assert json.loads(out.read_text(encoding="utf-8"))["rows"][0]["family"] == "E1"
+    assert "retrospective" not in json.loads((tmp_path / "bh.json").read_text(encoding="utf-8"))["rows"][0]
+    with pytest.raises(SystemExit, match="read once"):
+        round4_finalist.main(["--summary", str(summary_path), "--retrospective", str(out)])
 
 
 # --------------------------------------------------------------------------- #

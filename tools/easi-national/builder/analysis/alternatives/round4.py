@@ -33,8 +33,17 @@ T2 = ("t__bent_mmi", "auc_good_vs_poor")
 T3 = (("t__fish_mmi", "auc_good_vs_poor"), ("t__oe", "auc_good_vs_poor"))
 T3_TARGETS_FLAT = tuple(target for target, _ in T3)
 TARGET_NAMES = {"T1": T1, "T2": T2}
-#: the cohort the decision reads (development and retrospective rows are reported beside it)
-DECIDING_COHORT = "latest_visit1"
+#: field targets whose P2 rows are exploratory and never block (the coordinator's answer of
+#: 2026-09-27: the width to depth ratio keeps its sign but never retains the base)
+EXPLORATORY_FIELD_TARGETS = ("a__phab_BFWD_RAT",)
+#: every target whose per-function or regional row never blocks: T3 and the exploratory field targets
+NEVER_BLOCK_TARGETS = T3_TARGETS_FLAT + EXPLORATORY_FIELD_TARGETS
+#: the cohort every family decision reads: the development cohort (2013-19); latest_visit1
+#: and the retrospective cohort are reported beside it and never decide (the retrospective
+#: cohort is read once, by the finalist step's separate retrospective report)
+DECIDING_COHORT = "development_1314_1819"
+REPORTED_COHORTS = ("latest_visit1", "retrospective_2324")
+RETROSPECTIVE_COHORT = "retrospective_2324"
 #: the addendum's margins as numbers (section 6 and 7; the yaml spells them in words, and
 #: ``margins_in_addendum`` checks every number appears there)
 MARGINS = {
@@ -178,8 +187,17 @@ def read_candidate_source(source: Path) -> dict:
         if recorded and recorded != pkg.digest:
             raise ValueError(f"{source}: candidate.json names package {recorded[:15]} but the zip is {pkg.digest[:15]}")
     family = (record or {}).get("family")
+    # the refit's own findings the study reports (E2: XER's degenerate perennial pool, served
+    # by the national fallback): every stratum of a candidate set that gave no usable curve
+    diagnostics = (((record or {}).get("curveSets") or {}).get("provenance") or {}).get("diagnostics") or {}
+    findings = {}
+    for set_id, item in diagnostics.items():
+        if set_id in (curves.get("sets") or {}) and (item.get("notUsable") or item.get("split")):
+            findings[set_id] = {"not_usable": dict(item.get("notUsable") or {}), "split": item.get("split"),
+                                "served_by": "the national fallback" if item.get("notUsable") else None}
     return {
         "source": str(source), "zip": str(zip_path), "zip_sha256": zip_sha, "zip_bytes": len(blob),
+        "curve_set_findings": findings,
         "record": record, "family": family, "label": pkg.envelope.get("label"),
         "package_digest": pkg.digest, "method_version": identity.get("methodVersion"),
         "evaluator_digest": identity.get("evaluatorDigest"),
@@ -197,6 +215,7 @@ def read_candidate_source(source: Path) -> dict:
 
 
 __all__ = ["ADDENDUM_FILE", "ADDENDUM_PATH", "PROSE_PATH", "ADDENDUM_SHA256", "FAMILIES", "T1", "T2", "T3",
-           "TARGET_NAMES", "DECIDING_COHORT", "MARGINS", "AddendumError", "addendum_sha256", "addendum",
+           "TARGET_NAMES", "DECIDING_COHORT", "REPORTED_COHORTS", "RETROSPECTIVE_COHORT", "NEVER_BLOCK_TARGETS",
+           "EXPLORATORY_FIELD_TARGETS", "MARGINS", "AddendumError", "addendum_sha256", "addendum",
            "respecifications", "family_spec", "function_ids", "deciding_targets", "comparison_scope",
            "margins_in_addendum", "read_candidate_source"]
