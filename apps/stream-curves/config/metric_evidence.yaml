@@ -676,11 +676,12 @@ metrics:
   runoff:
     construct_class: natural_setting_covariate
     spatial_support: watershed
-    easi_role: [none]
+    easi_role: [proxy]
     evidence:
       - {citation: "Hill et al. (2016) JAWRA 52:120-128", note: "StreamCat mean annual runoff."}
     limitations:
       - "Climate context, predictor only (direction predictor_only); listed under two functions as a predictor."
+      - "Shared with EASI: runoffws is the divisor of the degree-of-regulation method (Streamflow regime), so the variable is an EASI proxy input even though DEEP uses it as a predictor only."
     disposition: retain
     disposition_rationale: "Kept as a comparability covariate and predictor."
     status: hypothesis
