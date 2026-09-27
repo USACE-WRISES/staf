@@ -28,7 +28,10 @@ Written by `scripts/nrsa/verify_inputs.py`. Do not edit by hand.
 | chem_PH | 1314,1819,2324 | 1314,1819,2324 | 1314:epa_published; 1819:epa_published; 2324:epa_published | ok |
 | chem_PTL | 1314,1819,2324 | 1314,1819,2324 | 1314:epa_published; 1819:epa_published; 2324:epa_published | ok |
 | chem_TURB | 1314,1819,2324 | 1314,1819,2324 | 1314:epa_published; 1819:epa_published; 2324:epa_published | ok |
+| fish_NAT_LITHPIND | 1314,1819,2324 | 1314,1819,2324 | 1314:epa_published; 1819:legacy_r_app; 2324:epa_published | ok |
 | fish_NAT_NTOLNTAX | 1314,1819,2324 | 1314,1819,2324 | 1314:epa_published; 1819:legacy_r_app; 2324:epa_published | ok |
+| fish_NAT_NTOLPTAX | 1314,1819,2324 | 1314,1819,2324 | 1314:epa_published; 1819:legacy_r_app; 2324:epa_published | ok |
+| fish_NAT_TOLRPIND | 1314,1819,2324 | 1314,1819,2324 | 1314:epa_published; 1819:legacy_r_app; 2324:epa_published | ok |
 | fish_NAT_TOTLNTAX | 1314,1819,2324 | 1314,1819,2324 | 1314:epa_published; 1819:legacy_r_app; 2324:epa_published | ok |
 | phab_BFWD_RAT | 1314,1819,2324 | 1314,1819,2324 | 1314:epa_published; 1819:epa_published; 2324:epa_published | ok |
 | phab_LRBS_use | 1314,1819,2324 | 1314,1819,2324 | 1314:epa_published; 1819:epa_published; 2324:epa_published | ok |

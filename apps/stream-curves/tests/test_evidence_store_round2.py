@@ -283,10 +283,18 @@ def _recipe_package(tmp_path, name, **recipe) -> Path:
     return folder
 
 
+def _running_engine() -> dict:
+    """An engine block that records what runs here: the engine's hash and its tail endpoints."""
+    from streamcurves import methodology, run_state
+    from streamcurves.paths import ROOT
+    return {"sha256_lf": _sha((ROOT / "streamcurves" / "curves.py").read_bytes().replace(b"\r\n", b"\n")),
+            "tailOffsetsIqr": list(methodology.seed_geometry()["tail_offsets_iqr"]),
+            "curveMethodVersion": run_state.CURVE_METHOD_VERSION}
+
+
 def test_the_recipe_check_needs_the_engine_and_the_refits_code_on_record(tmp_path):
     from streamcurves.easi_method import refit
-    from streamcurves.paths import ROOT
-    engine = {"sha256_lf": _sha((ROOT / "streamcurves" / "curves.py").read_bytes().replace(b"\r\n", b"\n"))}
+    engine = _running_engine()
     code = refit.recipe_code()
     same = refit.recipe_check(_recipe_package(tmp_path, "same", engine=engine, code=code))
     assert same["same"] and same["differences"] == [] and same["notRecorded"] == []
@@ -309,6 +317,47 @@ def test_the_recipe_check_needs_the_engine_and_the_refits_code_on_record(tmp_pat
     assert refit.recipe_words(both) == ("The refit is not expected to match exactly: the curve engine and "
                                         "refit code here differ from what the package records; the "
                                         "package does not record the fit recipe code.")
+
+
+def test_the_recipe_check_reports_the_packages_tail_endpoints_like_the_engine(tmp_path):
+    """The engine's default endpoints moved at methodology 0.15; a package fitted under
+    others says so beside the engine hash, and the words say the refit fits under the
+    package's, which is why that difference alone does not make the refit inexact."""
+    from streamcurves import run_state
+    from streamcurves.easi_method import refit
+    engine = _running_engine()
+    code = refit.recipe_code()
+    assert engine["tailOffsetsIqr"] == [0.5, 1.5, 2.5] and run_state.CURVE_METHOD_VERSION == "iqr-seed-3"
+    # written before the endpoints were recorded: the method's own, against the running default
+    legacy = refit.recipe_check(_recipe_package(tmp_path, "legacy", engine={"sha256_lf": engine["sha256_lf"]},
+                                               code=code))
+    geo = legacy["geometry"]
+    assert geo["recorded"] is False and geo["package"] == geo["refitUnder"] == [0.3, 4 / 3, 7 / 3]
+    assert geo["packageCurveMethodVersion"] == "iqr-seed-2" and geo["running"] == [0.5, 1.5, 2.5]
+    assert geo["runningCurveMethodVersion"] == "iqr-seed-3"
+    assert legacy["differences"] == [refit.ENDPOINTS_DIFFERENCE] and legacy["notRecorded"] == []
+    assert not legacy["same"]
+    assert refit.recipe_words(legacy) == (
+        "The refit fits under the method's own tail endpoints, which a package that records none was "
+        "fitted under (0.3, 4/3 and 7/3 IQR, iqr-seed-2), not the curve engine's current default "
+        "(0.5, 1.5 and 2.5, iqr-seed-3).")
+    # recorded, as the exporter writes them now
+    recorded = refit.recipe_check(_recipe_package(
+        tmp_path, "recorded", code=code,
+        engine={"sha256_lf": engine["sha256_lf"], "tailOffsetsIqr": ["0.3", "4/3", "7/3"],
+                "curveMethodVersion": "iqr-seed-2"}))
+    assert recorded["geometry"]["recorded"] is True and recorded["differences"] == [refit.ENDPOINTS_DIFFERENCE]
+    assert refit.recipe_words(recorded) == (
+        "The refit fits under the tail endpoints the package records (0.3, 4/3 and 7/3 IQR, iqr-seed-2), "
+        "not the curve engine's current default (0.5, 1.5 and 2.5, iqr-seed-3).")
+    # with the engine moved as well, both are said, the engine first
+    both = refit.recipe_check(_recipe_package(tmp_path, "both", engine={"sha256_lf": "0" * 64}, code=code))
+    assert both["differences"] == ["curve engine", refit.ENDPOINTS_DIFFERENCE]
+    assert refit.recipe_words(both) == (
+        "The refit is not expected to match exactly: the curve engine here differs from what the package "
+        "records. The refit fits under the method's own tail endpoints, which a package that records none "
+        "was fitted under (0.3, 4/3 and 7/3 IQR, iqr-seed-2), not the curve engine's current default "
+        "(0.5, 1.5 and 2.5, iqr-seed-3).")
 
 
 def test_a_recorded_check_reads_the_same_with_or_without_its_duration():

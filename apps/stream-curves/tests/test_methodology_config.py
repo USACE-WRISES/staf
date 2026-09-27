@@ -48,16 +48,21 @@ def test_unknown_rules_and_thresholds_raise():
 def test_the_catalog_covers_every_rule_family():
     families = {rule_id.split("-")[0] for rule_id in methodology.rule_ids()}
     assert families == {"DATA", "RED", "STRAT", "CURVE", "REF", "CONF", "SELECT",
-                        "ACC", "COV"}
+                        "ACC", "COV", "EVAL"}
 
 
 def test_every_rule_declares_both_statuses():
+    legend = methodology.load_rule_catalog()["meta"]["status_legend"]
     for rule_id in methodology.rule_ids():
         rule = methodology.rule(rule_id)
         assert rule.get("threshold_status") in (
             "provisional", "calibrated", "approved"), rule_id
+        # not_applicable (v0.15): a diagnostic the approved curve family does not
+        # need; the legend states it beside the other four
         assert rule.get("implementation_status") in (
-            "implemented", "partial", "not_yet_implemented", "superseded"), rule_id
+            "implemented", "partial", "not_yet_implemented", "superseded",
+            "not_applicable"), rule_id
+        assert rule.get("implementation_status") in legend["implementation_status"], rule_id
         if rule.get("implementation_status") == "superseded":
             assert rule.get("superseded_by") in methodology.rule_ids(), rule_id
 
@@ -193,10 +198,11 @@ def test_the_lifecycle_block_mirrors_the_library(monkeypatch):
     assert any(d.startswith("lifecycle.version_statuses") for d in methodology.mirror_drift())
 
 
-def test_the_calibration_note_records_the_hygiene_pass():
+def test_the_calibration_note_records_the_hygiene_pass_and_the_round_2_close():
     note = methodology.load_config()["meta"]["calibration_note"]
     assert "2026-09-25 hygiene" in note
-    assert methodology.methodology_version() == "0.14-provisional"
+    assert "v0.15 (2026-09-26" in note and "B3" in note and "C3b" in note
+    assert methodology.methodology_version() == "0.15-provisional"
 
 
 # --------------------------------------------------------------------------- #

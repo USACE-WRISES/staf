@@ -22,8 +22,8 @@
       "sha256": "sha256:d9e2fde1f0e3b676677cb338270e9c8c02b7eea10b2c23de4bb44cab74ca5b0f"
     },
     "cycle_compatibility.csv": {
-      "bytes": 9038,
-      "sha256": "sha256:0952342bec8abf6bd62b5d493829220855c52ec2fcea0e2545ff67e032690c77"
+      "bytes": 10034,
+      "sha256": "sha256:28728aa5a7a6b937ad4fc7320b87bfc6a681694ecda2259d2f6575e0b3cfa78a"
     },
     "fish_counts.parquet": {
       "bytes": 622430,
@@ -118,9 +118,9 @@
       "sha256": "sha256:ee7ac06598848451f3104b7b1f5e39765c7c2d719eb6a54ec4928408e881ac60"
     },
     "verification_report.md": {
-      "bytes": 4373,
-      "sha256": "sha256:50234c36cf824fc57d3c20032553efc5867378424d4063bffc1ff45f8649dd38"
+      "bytes": 4739,
+      "sha256": "sha256:f1dac3484260fb23c1cc5a56f59e811be81b14b5119a494ed58d06d158dbc793"
     }
   },
-  "totalBytes": 15451058
+  "totalBytes": 15452420
 }

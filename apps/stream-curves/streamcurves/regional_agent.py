@@ -1197,8 +1197,12 @@ def review_curves(curve_rows_by_metric: dict, column_functions: dict,
     ``curve_automation`` (which pulls Shiny + views). mapping_ok is whether the metric
     has a STAF function. ``missingness`` (from :func:`metric_missingness`) routes a
     metric whose missing-data fraction exceeds the DATA-03 review threshold to the
-    flagged queue instead of letting it auto-finalize, and ``metric_config`` lets the
-    CURVE-05 shape check compare each built curve against its approved expectation."""
+    flagged queue instead of letting it auto-finalize (the legacy easi-eci path and
+    the interactive classification; since methodology 0.15 the pressure-screen build
+    withholds such a metric before any curve is built, ``pressure_evidence.run_evidence``,
+    so no ``data_review`` status reaches this classification there), and
+    ``metric_config`` lets the CURVE-05 shape check compare each built curve against
+    its approved expectation."""
     review: dict = {}
     missingness = missingness or {}
     metric_config = metric_config or {}

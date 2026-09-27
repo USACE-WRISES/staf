@@ -159,3 +159,14 @@ top-level `search_order` (B3), `data_rules.*` floors together with `acceptance.s
   0.3 / 4/3 / 7/3 IQR as the alternative and 0.5 / 1.5 / 2.5 as the baseline; the engine's
   actual default is 0.3 / 4/3 / 7/3 (the golden masters pin it), so the candidate is now the
   wider 0.5 / 1.5 / 2.5 set. Hypothesis, outcome and decision type unchanged.
+- 2026-09-25, after A2's first six regions were staged and before any outcome was read
+  (operational, no hypothesis, outcome, margin or candidate changes): every experimental arm
+  stages with the same blanket documented-gap file
+  (`pilot\round2\coverage_exceptions.experimental.json`, all 20 STAF functions, reason
+  `no-suitable-metric`, recorded by the rehearsal label), because a full refit that supports
+  no metric for a function (A2, Eastern Corn Belt Plains: Habitat provision) is otherwise
+  refused at the staged publish and drops out of the paired comparisons. The publish drops an
+  exception that names a covered function, so curves, pools and choices are unchanged; O4
+  counts a documented gap as unsupported; the file's sha rides in every arm's inputs digest,
+  so A2's already-staged regions are staged again under the same flags. No arm's staged
+  version can be promoted (experimental root, rehearsal label).

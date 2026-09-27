@@ -250,7 +250,9 @@ def main(argv=None) -> int:
         same = have == text
         print(f"[basis] {'up to date' if same else 'STALE'}: {out}")
         return 0 if same else 1
-    out.write_text(text, encoding="utf-8")
+    # LF on every platform: the file is fingerprinted into every run manifest, and
+    # Windows write_text would otherwise write CRLF (tests/test_line_endings.py)
+    out.write_text(text, encoding="utf-8", newline="\n")
     n = sum(len(v) for v in doc["metrics"].values())
     n_acc = sum(1 for v in doc["metrics"].values() for r in v.values()
                 if (r.get("acceptance") or {}).get("accepted"))

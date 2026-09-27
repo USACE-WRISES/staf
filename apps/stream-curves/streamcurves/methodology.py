@@ -116,8 +116,10 @@ ZERO_INFLATED_TWO_PART = "two_part"
 ZERO_INFLATED_WITHHOLD = "withhold"
 ZERO_INFLATED_HANDLINGS = (ZERO_INFLATED_TWO_PART, ZERO_INFLATED_WITHHOLD)
 #: the monotone IQR ladders' tail endpoints in IQR units, the engine's own
-#: (curves.MONOTONE_TAIL_OFFSETS_IQR restates them; a test pins the two equal)
-MONOTONE_TAIL_OFFSETS_IQR = (0.3, 4.0 / 3.0, 7.0 / 3.0)
+#: (curves.MONOTONE_TAIL_OFFSETS_IQR restates them; a test pins the two equal).
+#: iqr-seed-3 (methodology 0.15, candidate C3b adopted): 0.5, 1.5 and 2.5; the
+#: iqr-seed-2 values 0.3, 4/3 and 7/3 are a non-default setting from here on
+MONOTONE_TAIL_OFFSETS_IQR = (0.5, 1.5, 2.5)
 
 #: config path -> the default, which is today's behavior
 KNOB_DEFAULTS: dict[str, Any] = {
@@ -180,10 +182,15 @@ def curve12_gate() -> dict:
 
 def parse_offset(value: Any) -> float:
     """An IQR offset from the config: a number, or a fraction written as a
-    string such as ``"4/3"`` (YAML reads an unquoted 4/3 as a string too)."""
+    string such as ``"4/3"`` (YAML reads an unquoted 4/3 as a string too). An
+    integer fraction keeps its numerator and denominator (``curves.IqrOffset``, a
+    float) so the seed multiplies then divides, as the iqr-seed-2 literals did."""
     if isinstance(value, str) and "/" in value:
-        num, den = value.split("/", 1)
-        return float(num.strip()) / float(den.strip())
+        num, den = (part.strip() for part in value.split("/", 1))
+        if num.lstrip("-").isdigit() and den.isdigit():
+            from .curves import IqrOffset
+            return IqrOffset(int(num), int(den))
+        return float(num) / float(den)
     return float(value)
 
 
@@ -191,8 +198,8 @@ def seed_geometry() -> dict:
     """The CURVE-10 knobs (candidates C3a and C3b) as the curve engine reads them.
 
     ``tail_offsets_iqr`` is the ``(near, mid, far)`` tuple, ``custom_tail_offsets``
-    says whether it differs from the engine's own (the engine keeps its literal
-    arithmetic for the default so every published seed reproduces byte for byte),
+    says whether it differs from the engine's own (iqr-seed-3: 0.5, 1.5, 2.5;
+    a different triple joins the inputs digest through :func:`round2_knobs`),
     ``zero_inflated_share`` is the threshold or None (off) and
     ``zero_inflated_handling`` is ``two_part``, ``withhold`` or None.
     """

@@ -1,12 +1,14 @@
 """The one read-only join the Rules page renders: catalog + policy + live values.
 
 Three files govern a build and none of them knows the others' display concerns:
-``rule_catalog.json`` (the 42 rules with their dual status tags),
-``standing_decisions.yaml`` (the 9 owner class decisions, 5 standing and 4
-per-run opt-ins), and ``methodology_config.yaml`` (the numeric thresholds the
-rules cite). ``rule_entries`` joins them through the same accessors the
-pipeline itself uses (``methodology.threshold``, ``decisions.load_policy``), so
-what the page shows is by construction what a run applies.
+``rule_catalog.json`` (the rules with their dual status tags, 74 under
+methodology 0.15), ``standing_decisions.yaml`` (the owner's class decisions:
+under policy 1.4, 13 applied on every build and 4 legacy per-run opt-ins;
+``policy_counts`` reads the live numbers), and ``methodology_config.yaml`` (the
+numeric thresholds the rules cite). ``rule_entries`` joins them through the same
+accessors the pipeline itself uses (``methodology.threshold``,
+``decisions.load_policy``), so what the page shows is by construction what a
+run applies.
 
 Pure module: no Shiny. The page (views/rules.py) renders these structures; the
 chips (views/uihelpers.rule_chip / linkify_rule_ids) use the id vocabulary.
@@ -35,6 +37,7 @@ FAMILY_LABELS = {
     "SELECT": "Metric selection",
     "ACC": "Source acceptance",
     "COV": "Function coverage",
+    "EVAL": "Evaluation",
 }
 
 #: Rule id -> the dotted config paths its numeric thresholds live at. Resolved
@@ -121,12 +124,22 @@ RULE_THRESHOLD_PATHS: dict[str, list[str]] = {
 
 #: Matches every catalog id, including CURVE-07a and STRAT-00, and nothing that
 #: only looks like one (no trailing word characters).
-RULE_ID_RE = re.compile(r"\b(?:DATA|RED|STRAT|CURVE|REF|CONF|SELECT|ACC|COV)-\d{2}[a-z]?\b")
+RULE_ID_RE = re.compile(r"\b(?:DATA|RED|STRAT|CURVE|REF|CONF|SELECT|ACC|COV|EVAL)-\d{2}[a-z]?\b")
 
-#: The page baseline: 56 of the 71 rules carry exactly this pair, so a row shows a
+#: The page baseline: most rules carry exactly this pair, so a row shows a
 #: status mark only when a rule DEPARTS from it (status_exceptions).
 BASELINE_THRESHOLD_STATUS = "provisional"
 BASELINE_IMPLEMENTATION_STATUS = "implemented"
+
+
+def policy_counts(policy: Optional[dict] = None) -> dict:
+    """``{"total", "default", "optional", "version"}`` of the standing-decision
+    policy, read from the file so the page never restates a count."""
+    policy = policy or dec.load_policy()
+    entries = [e for e in policy.get("entries") or [] if e.get("id")]
+    default = sum(1 for e in entries if e.get("enabled", False))
+    return {"total": len(entries), "default": default, "optional": len(entries) - default,
+            "version": dec.policy_version(policy)}
 
 _MATCH_OPS = {"eq": "is", "ne": "is not", "lt": "below", "lte": "at most",
               "gt": "above", "gte": "at least", "in": "one of"}

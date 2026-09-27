@@ -21,6 +21,10 @@ What differs from the legacy pass:
   still get reference curves, read from the station table.
 * A registry split becomes real curves where the pool supports it (STRAT-10).
 * Every curve is checked for discrimination (CURVE-12).
+* Methodology 0.15: a metric whose pool is mostly unmeasured for it (DATA-03)
+  and a two-sided curve narrower than its measurement-precision floor
+  (CURVE-09) are withheld at the build with a statement, under REF-06's record
+  shape, the same in every region, with no review item raised.
 
 The curve engine is untouched.
 """
@@ -302,21 +306,50 @@ def _functions_of(metric: str) -> list[dict]:
 
 
 #: The reasons a metric is withheld with no curve. REF-06 is the hierarchy
-#: running out; the two campaign Round 2 rules (config ``curve12.gate`` and
-#: ``curve10.zero_inflated_handling: withhold``) withhold a metric whose pool
-#: exists, and the record on the metric says so. Both are off by default.
+#: running out. The others withhold a metric whose pool exists, and the record
+#: on the metric says so: the two campaign Round 2 rules (config
+#: ``curve12.gate`` and ``curve10.zero_inflated_handling: withhold``, both off
+#: by default) and, since methodology 0.15, the two rules that used to hold a
+#: built curve for a reviewer: DATA-03 (the pool is mostly unmeasured for the
+#: metric) and CURVE-09 (a two-sided core narrower than the metric's
+#: measurement-precision floor).
 INSUFFICIENT_REFERENCE_SUPPORT = "insufficient-reference-support"
 DISCRIMINATION_GATE = "discrimination-gate"
 ZERO_INFLATED_POOL = "zero-inflated-reference-pool"
+HIGH_MISSINGNESS = "high-missingness"
+MEASUREMENT_PRECISION_FLOOR = "measurement-precision-floor"
 WITHHELD_REASON_WORDS = {INSUFFICIENT_REFERENCE_SUPPORT: "insufficient reference support",
                          DISCRIMINATION_GATE: "the discrimination gate",
-                         ZERO_INFLATED_POOL: "a zero-inflated reference pool"}
+                         ZERO_INFLATED_POOL: "a zero-inflated reference pool",
+                         HIGH_MISSINGNESS: "high missingness over its reference pool",
+                         MEASUREMENT_PRECISION_FLOOR: "the measurement-precision floor"}
+#: the ``reference_support`` status of a metric a rule withheld although its
+#: pool exists (methodology 0.15); the pool's own status rides beside it
+STATUS_WITHHELD = "withheld"
 
 
 def withheld_reason(item: dict) -> str:
     """The reason of one ``insufficient_support`` item (REF-06 unless the item
     names another rule)."""
     return str((item or {}).get("reason") or INSUFFICIENT_REFERENCE_SUPPORT)
+
+
+def withheld_rule(item: dict) -> str:
+    """The rule a withheld entry or ``insufficient_support`` item was withheld
+    under: the ``rule`` it names, else the rule its reason implies."""
+    rule = (item or {}).get("rule")
+    return str(rule) if rule else WITHHELD_RULES.get(withheld_reason(item), "REF-06")
+
+
+def withheld_support_record(decision: dict, reason: str) -> dict:
+    """The ``reference_support`` record of a metric a rule withheld although its
+    pool exists (methodology 0.15): status ``withheld``, the pool's own status
+    beside it (``pool_status``), the reason and the rule. The pool's numbers,
+    the options tried and the station ids stay, so the record still says what
+    the pool was; :func:`is_withheld_record` keys on ``withheld``."""
+    d = dict(decision or {})
+    return {**d, "status": STATUS_WITHHELD, "pool_status": d.get("status"),
+            "withheld": str(reason), "rule": WITHHELD_RULES.get(str(reason), "REF-06")}
 
 
 def withheld_metrics(evidence: dict) -> list[dict]:
@@ -345,6 +378,10 @@ def withheld_metrics(evidence: dict) -> list[dict]:
                            for a in (evidence.get("ladder_attempts") or [])
                            if a.get("metric") == mk and a.get("rung")],
         }
+        if reason != INSUFFICIENT_REFERENCE_SUPPORT:
+            # the rule that judged the existing pool (DATA-03, CURVE-09, CURVE-12,
+            # CURVE-10); a REF-06 entry keeps its shape and implies REF-06
+            record["rule"] = withheld_rule(item)
         if item.get("detail"):
             record["detail"] = dict(item["detail"])
         out.append(record)
@@ -395,6 +432,14 @@ HELD_REASONS = {
     run_state.CURVE_STATUS_ERROR: "the build raised an error",
 }
 HELD_FOR_REVIEW = "held-for-review"
+#: reason -> the rule a withheld entry is recorded under (the ledger row, the
+#: register's decision and the REF-15 override name read it)
+WITHHELD_RULES = {INSUFFICIENT_REFERENCE_SUPPORT: "REF-06",
+                  DISCRIMINATION_GATE: "CURVE-12",
+                  ZERO_INFLATED_POOL: "CURVE-10",
+                  HIGH_MISSINGNESS: "DATA-03",
+                  MEASUREMENT_PRECISION_FLOOR: "CURVE-09",
+                  HELD_FOR_REVIEW: "CURVE-07"}
 
 
 def held_for_review(evidence: dict, curve_review: dict, *, scored) -> list[dict]:
@@ -1601,6 +1646,115 @@ def discrimination_gate_statement(rec: dict) -> str:
             "curve is published and the metric is not scored.")
 
 
+# --------------------------------------------------------------------------- #
+# Methodology 0.15: DATA-03 and CURVE-09 withhold at the build
+# --------------------------------------------------------------------------- #
+def missingness_withheld(missingness: dict) -> dict[str, dict]:
+    """The metrics DATA-03 withholds at the build (methodology 0.15): those
+    whose missing-data fraction over their own pool (:func:`pool_missingness`)
+    has the disposition ``review``, each with the numbers the statement names.
+    Judged before any curve is built, so the same fraction gives the same
+    outcome in every region; until 0.14 the built curve was held for a
+    reviewer instead."""
+    limit = float(methodology.threshold("data_rules.max_missingness_review"))
+    out: dict[str, dict] = {}
+    for mk, rec in sorted((missingness or {}).items()):
+        rec = rec or {}
+        if rec.get("disposition") != "review":
+            continue
+        out[mk] = {"missing_fraction": rec.get("missing_fraction"), "threshold": limit,
+                   "n_pool_members": rec.get("n_pool_members"),
+                   "n_with_value": rec.get("n_with_value"), "disposition": "review"}
+    return out
+
+
+def _pool_words(decision) -> str:
+    """A pool in words for a statement: the ecoregion's own, or the wider pool
+    with its level, code and name."""
+    d = decision.to_dict() if isinstance(decision, rp.PoolDecision) else dict(decision or {})
+    status = str(d.get("status") or "")
+    if status.startswith("local") or str(d.get("level") or "") == "l3":
+        return "this ecoregion's own reference pool"
+    level = rp.LEVEL_LABELS.get(str(d.get("level") or ""), "")
+    where = " ".join(x for x in (level, str(d.get("region_code") or "")) if x)
+    name = f" ({d['region_name']})" if d.get("region_name") else ""
+    return f"the {where} pool{name}" if where else "the reference pool"
+
+
+def missingness_statement(rec: dict, decision=None) -> str:
+    """Why DATA-03 withholds a metric, with the numbers: the fraction and the
+    pool it is measured over, the limit, and that nothing is scored."""
+    frac = float(rec.get("missing_fraction") or 0.0)
+    n = int(rec.get("n_pool_members") or 0)
+    have = int(rec.get("n_with_value") or 0)
+    limit = float(rec.get("threshold") or 0.0)
+    return (f"High missingness. {frac:.0%} of the {n} comparable reference stations of "
+            f"{_pool_words(decision)} have no value for this metric ({have} carry one), above "
+            f"the {limit:.0%} limit of rule DATA-03, so the metric is withheld at the build. "
+            "No curve was built and the metric is not scored.")
+
+
+def _finite(v) -> Optional[float]:
+    try:
+        x = float(v)
+    except (TypeError, ValueError):
+        return None
+    return x if x == x and abs(x) != float("inf") else None
+
+
+def precision_floor_records(curve_rows: dict, metric_config: dict, *,
+                            floors: Optional[dict] = None,
+                            core_multiple: Optional[float] = None) -> dict[str, dict]:
+    """The curves CURVE-09 withholds at the build (methodology 0.15): a
+    two-sided curve of a metric with a declared measurement-precision floor
+    (``curve_rules.measurement_precision_floors``) whose fitted Functioning core
+    is narrower than ``core_multiple`` times the floor. The test provenance
+    applied as an advisory record from v0.9, moved in front of the build; the
+    numbers the statement names ride in the record."""
+    floors = dict(floors if floors is not None
+                  else methodology.threshold("curve_rules.measurement_precision_floors", {}) or {})
+    mult = float(core_multiple if core_multiple is not None
+                 else methodology.threshold("curve_rules.measurement_precision_core_multiple", 2.0))
+    out: dict[str, dict] = {}
+    for mk, row in sorted((curve_rows or {}).items()):
+        precision = floors.get(mk)
+        if precision is None:
+            continue
+        mc = (metric_config or {}).get(mk) or {}
+        if curves.curve_form_of(mc) != curves.CURVE_FORM_OPTIMUM:
+            continue
+        lo, hi = _finite((row or {}).get("functioning_min")), _finite((row or {}).get("functioning_max"))
+        if lo is None or hi is None:
+            continue
+        core = hi - lo
+        floor_width = mult * float(precision)
+        if core >= floor_width:
+            continue
+        n = _finite((row or {}).get("n_reference"))
+        out[mk] = {"precision_sd": float(precision), "core_multiple": mult,
+                   "floor_width": floor_width, "functioning_core_width": core,
+                   "functioning_min": lo, "functioning_max": hi,
+                   "units": str(mc.get("units") or ""),
+                   "n_reference": None if n is None else int(n)}
+    return out
+
+
+def precision_floor_statement(rec: dict) -> str:
+    """Why CURVE-09 withholds a curve, with the numbers: the core, the floor it
+    is narrower than and the precision behind it."""
+    units = f" {rec['units']}" if rec.get("units") else ""
+    n = rec.get("n_reference")
+    at_n = f" at n = {int(n)}" if isinstance(n, (int, float)) else ""
+    return (f"Measurement-precision floor. The Functioning core of this two-sided curve spans "
+            f"{float(rec['functioning_core_width']):.3g}{units} ({float(rec['functioning_min']):.3g} "
+            f"to {float(rec['functioning_max']):.3g}{units}{at_n}), narrower than "
+            f"{float(rec['floor_width']):.3g}{units}, {float(rec['core_multiple']):g} times the "
+            f"metric's documented measurement precision of {float(rec['precision_sd']):.3g}{units}, "
+            "so band assignments inside it would present measurement noise as condition classes "
+            "and the metric is withheld at the build under rule CURVE-09. No curve was built and "
+            "the metric is not scored.")
+
+
 def source_of(decision: Optional[dict]) -> str:
     """Which source of the hierarchy a curve came from, for SELECT-04's ranking:
     local, regional, national, modeled or published."""
@@ -2253,24 +2407,42 @@ def run_evidence(l3_code: str, name: str, *,
         metric_config.pop(mk, None)
     data = pools["data"]
 
-    # --- campaign Round 2 (C3a): a zero-inflated pool under the configured rule ---
-    # Off by default. The two-part handling is the curve engine's; the withhold
-    # handling takes the metric out here, as REF-06 does, with its pool decision
-    # kept and marked so the support record still says what the pool was.
+    # --- a rule that withholds a metric whose pool exists (REF-06's record shape) ---
+    # The metric leaves the fit here, as REF-06 takes a metric with no pool out;
+    # its pool decision is kept and marked so the support record still says
+    # what the pool was, and the withheld entry carries the rule, a statement
+    # naming the numbers, and the detail behind it. No review item is raised.
     withheld_by_rule: dict[str, str] = {}
     rule_withheld_items: dict[str, dict] = {}
-    zero_inflation = zero_inflation_records(data, metric_config, geometry)
-    for mk, rec in zero_inflation.items():
-        if rec.get("handling") != curves.ZERO_INFLATED_WITHHOLD:
-            continue
+
+    def _withhold(mk: str, reason: str, statement: str, detail: dict) -> None:
+        nonlocal data
         insufficient_config[mk] = metric_config.pop(mk)
         data = data.drop(columns=[mk], errors="ignore")
-        withheld_by_rule[mk] = ZERO_INFLATED_POOL
+        withheld_by_rule[mk] = reason
         rule_withheld_items[mk] = {"decision": decisions[mk].to_dict(),
                                    "config": insufficient_config[mk],
-                                   "reason": ZERO_INFLATED_POOL,
-                                   "statement": zero_inflated_statement(rec),
-                                   "detail": dict(rec)}
+                                   "reason": reason, "rule": WITHHELD_RULES[reason],
+                                   "statement": statement, "detail": dict(detail)}
+
+    # --- campaign Round 2 (C3a): a zero-inflated pool under the configured rule ---
+    # Off by default. The two-part handling is the curve engine's; the withhold
+    # handling takes the metric out here.
+    zero_inflation = zero_inflation_records(data, metric_config, geometry)
+    for mk, rec in zero_inflation.items():
+        if rec.get("handling") == curves.ZERO_INFLATED_WITHHOLD:
+            _withhold(mk, ZERO_INFLATED_POOL, zero_inflated_statement(rec), rec)
+
+    # --- methodology 0.15 (DATA-03): a pool mostly unmeasured for the metric ---
+    # The missing-data fraction over the metric's own pool is judged before any
+    # curve is built; above data_rules.max_missingness_review the metric is
+    # withheld with its statement, the same in every region, where 0.14 held a
+    # built curve for a reviewer. The fraction stays in the record, flagged, so
+    # the DATA-03 record of the build states it.
+    missingness = pool_missingness({mk: decisions[mk] for mk in metric_config})
+    for mk, rec in missingness_withheld(missingness).items():
+        _withhold(mk, HIGH_MISSINGNESS, missingness_statement(rec, decisions[mk]), rec)
+        missingness[mk] = {**missingness[mk], "withheld": True, "rule": "DATA-03"}
     if not len(metric_config) or not len(data):
         raise RuntimeError(
             f"no metric of L3 ecoregion {l3_code} has reference support at any level of "
@@ -2300,12 +2472,27 @@ def run_evidence(l3_code: str, name: str, *,
     strat = ra.run_stratifier_analysis(data, metric_config, predictor_config, on_event=on_event)
     data = strat["data"]
 
-    missingness = pool_missingness({mk: decisions[mk] for mk in metric_cols})
-
     # --- curves (the engine is unchanged) and the review classification ---
     curve_rows = ra.build_curves(data, metric_config)
     curve_review = ra.review_curves(curve_rows, column_functions,
                                     missingness=missingness, metric_config=metric_config)
+
+    # --- methodology 0.15 (CURVE-09): the measurement-precision floor ---
+    # A two-sided curve whose fitted Functioning core is narrower than the
+    # metric's floor is withheld here with the core width and the floor in its
+    # statement, the same in every region, where 0.9 to 0.14 raised an advisory
+    # review item. The curve leaves the rows, the review map, the pooled frame
+    # and the redundancy table before any diagnostic runs on it.
+    narrow = precision_floor_records(curve_rows, metric_config)
+    for mk, rec in narrow.items():
+        _withhold(mk, MEASUREMENT_PRECISION_FLOOR, precision_floor_statement(rec), rec)
+        curve_rows.pop(mk, None)
+        curve_review.pop(mk, None)
+    if narrow and redundancy is not None and len(redundancy) and "metric_a" in redundancy.columns:
+        gone = set(narrow)
+        keep = ~(redundancy["metric_a"].astype(str).isin(gone)
+                 | redundancy["metric_b"].astype(str).isin(gone))
+        redundancy = redundancy[keep].reset_index(drop=True)
     stratum_rows, strata_applied = stratified_rows(data, metric_config, decisions, registry)
 
     sample_sizes = {mk: {"n": row.get("n_reference"),
@@ -2372,6 +2559,7 @@ def run_evidence(l3_code: str, name: str, *,
         rule_withheld_items[mk] = {"decision": decisions[mk].to_dict(),
                                    "config": insufficient_config[mk],
                                    "reason": DISCRIMINATION_GATE,
+                                   "rule": WITHHELD_RULES[DISCRIMINATION_GATE],
                                    "statement": discrimination_gate_statement(rec),
                                    "detail": dict(rec)}
 
@@ -2423,11 +2611,11 @@ def run_evidence(l3_code: str, name: str, *,
         "domain_checks": domain_checks, "deferred_gradients": deferred_gradients,
         "redundancy": redundancy, "stratifiers": strat,
         # --- what the pressure method adds ---
-        # (a metric a Round 2 rule withheld keeps its pool decision, marked
-        # ``withheld`` with the reason, so the record says what the pool was)
-        "reference_support": {**{mk: {**d.to_dict(),
-                                      **({"withheld": withheld_by_rule[mk]}
-                                         if mk in withheld_by_rule else {})}
+        # (a metric a rule withheld although its pool exists keeps its pool
+        # decision under status ``withheld``, the pool's own status beside it,
+        # with the reason and the rule, so the record says what the pool was)
+        "reference_support": {**{mk: (withheld_support_record(d.to_dict(), withheld_by_rule[mk])
+                                      if mk in withheld_by_rule else d.to_dict())
                                  for mk, d in decisions.items()},
                               **{mk: dict(c.get("decision") or {}) for mk, c in carried.items()}},
         "reference_pool_ledger": pools["ledger"],
@@ -2478,5 +2666,6 @@ def run_evidence(l3_code: str, name: str, *,
                            "present": bool((registry or {}).get("metrics"))},
         "value_selection": {"policy": value_policy,
                             "byMetricCycle": nrsa_dataset.latest_values_summary(
-                                value_ledger[value_ledger["metric"].isin(metric_cols)])},
+                                value_ledger[value_ledger["metric"].isin(
+                                    [c for c in metric_cols if c in metric_config])])},
     }
