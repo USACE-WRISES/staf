@@ -59,6 +59,18 @@ def source_inventory(root, study):
     from .io import info
     captured.extend(info(path) for path in sorted(Path(__file__).parent.glob("*.py")))
     captured.extend(info(REPO_ROOT / "apps/easi" / name) for name in ("local_review.py", "alternative_review.py"))
+    # a Round 4 study's candidate packages are declared inputs that live outside the data
+    # root and the workspace (the manifest's candidates block records each package's folder,
+    # zip sha256 and package digest), so each package folder is a declared root of its own
+    candidate_roots = []
+    manifest_path = study / "manifest.json"
+    if manifest_path.is_file():
+        for entry in read_json(manifest_path).get("candidates") or []:
+            source = entry.get("source")
+            if entry.get("role") == "candidate" and source:
+                folder = Path(source)
+                folder = folder.parent if folder.suffix else folder
+                candidate_roots.append((str(entry.get("id")), folder.resolve()))
     by_path = {}
     for row in captured:
         path = Path(row["path"]).resolve()
@@ -66,10 +78,14 @@ def source_inventory(root, study):
         expected = row.get("bytes", row.get("size"))
         if stat.st_size != expected or stat.st_mtime_ns != row["mtime_ns"]:
             raise RuntimeError(f"Captured study source changed: {path}")
+        candidate_scope = next(((family, folder) for family, folder in candidate_roots
+                                if path.is_relative_to(folder)), None)
         if path.is_relative_to(root.resolve()):
             scope, relative = "data", path.relative_to(root.resolve()).as_posix()
         elif path.is_relative_to(REPO_ROOT.resolve()):
             scope, relative = "workspace", path.relative_to(REPO_ROOT.resolve()).as_posix()
+        elif candidate_scope is not None:
+            scope, relative = f"candidate:{candidate_scope[0]}", path.relative_to(candidate_scope[1]).as_posix()
         else:
             raise RuntimeError(f"Source is outside the study's declared roots: {path}")
         previous = by_path.get((scope, relative), {})
