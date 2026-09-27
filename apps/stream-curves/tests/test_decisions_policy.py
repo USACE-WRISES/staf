@@ -36,7 +36,7 @@ def policy():
 def test_policy_file_loads_and_validates(policy):
     assert dec.validate_policy(policy) == []
     assert policy["meta"]["sha256"].startswith("sha256:")
-    assert dec.policy_version(policy) == "1.3"
+    assert dec.policy_version(policy) == "1.4"
     assert policy["meta"]["methodology_version"] == methodology.methodology_version()
 
 
@@ -100,7 +100,7 @@ def test_curve04_entry_matches_only_without_decision_flip(policy):
     assert [d["subject"] for d in res.decisions] == ["m1"]
     d = res.decisions[0]
     assert d["decision_class"] == "curve04-accept-with-flag"
-    assert d["rationale_origin"] == "standing_policy:1.3"
+    assert d["rationale_origin"] == "standing_policy:1.4"
     assert d["reviewer"].startswith("standing-policy:curve04-accept-with-flag")
     assert dec.PENDING_SUFFIX in d["reviewer"]
     assert d["asserts"] == {"decision_flip": False, "driver": "S1"}
@@ -175,13 +175,17 @@ def test_curve07_thin_metric_finalization_is_a_side_effect_only_for_data_review(
                            {"curve_status": "shape_conflict", "reasons": ["z"], "domain_violations": 0})
     res = dec.apply_policy(_doc([thin, degenerate, conflict]), policy,
                            enabled=["curve07-thin-metric-finalized"])
-    assert list(res.finalize_metrics) == ["phab_SINU"]
-    # policy 1.3: a fallback curve no discrimination check contradicts is accepted
-    # with conditions and no side effect; a shape conflict stays a hard stop
+    # policy 1.4: a fallback curve no discrimination check contradicts is accepted
+    # with conditions AND finalized (it publishes as preliminary, as the owner's own
+    # answer does; under 1.3 it stayed held and unscored, the frozen pass's defect);
+    # a shape conflict stays a hard stop
+    assert list(res.finalize_metrics) == ["phab_SINU", "phab_PCT_FAST"]
     by = {d["subject"]: d for d in res.decisions}
     assert by["phab_PCT_FAST"]["decision_class"] == "curve07-fallback-accepted"
     assert by["phab_PCT_FAST"]["action"] == "accept_with_conditions"
     assert [h["subject"] for h in res.hard_stops] == ["chem_PH"]
+    without_legacy = dec.apply_policy(_doc([thin, degenerate, conflict]), policy)
+    assert list(without_legacy.finalize_metrics) == ["phab_PCT_FAST"]
 
 
 def test_asserts_round_trip_through_apply_reviewer_decisions(policy):
@@ -195,7 +199,7 @@ def test_asserts_round_trip_through_apply_reviewer_decisions(policy):
     res = dec.apply_policy(doc, policy)
     out = pv.apply_reviewer_decisions(doc, res.decisions, default_reviewer="owner")
     assert out["records"][0]["reviewer_decision_class"] == "curve04-accept-with-flag"
-    assert out["records"][0]["reviewer_rationale_origin"] == "standing_policy:1.3"
+    assert out["records"][0]["reviewer_rationale_origin"] == "standing_policy:1.4"
     assert dec.PENDING_SUFFIX in out["records"][0]["reviewer"]
     assert out["reviewQueue"]["counts"]["open"] == 0
     assert dec.is_pending(out)
@@ -214,7 +218,7 @@ def test_confirm_decisions_replaces_the_pending_reviewer_and_keeps_the_origin(po
     confirmed = dec.confirm_decisions(res.decisions, reviewer="gtmenichino", date="2026-08-22")
     assert confirmed[0]["reviewer"] == "gtmenichino"
     assert confirmed[0]["confirmed_by"] == "gtmenichino"
-    assert confirmed[0]["rationale_origin"] == "standing_policy:1.3"
+    assert confirmed[0]["rationale_origin"] == "standing_policy:1.4"
     assert not dec.is_pending(confirmed)
     with pytest.raises(ValueError):
         dec.confirm_decisions(res.decisions, reviewer="", date="2026-08-22")

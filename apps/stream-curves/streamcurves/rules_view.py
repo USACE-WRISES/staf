@@ -3,7 +3,7 @@
 Three files govern a build and none of them knows the others' display concerns:
 ``rule_catalog.json`` (the rules with their dual status tags, 74 under
 methodology 0.15), ``standing_decisions.yaml`` (the owner's class decisions:
-under policy 1.3, 13 applied on every build and 4 legacy per-run opt-ins;
+under policy 1.4, 13 applied on every build and 4 legacy per-run opt-ins;
 ``policy_counts`` reads the live numbers), and ``methodology_config.yaml`` (the
 numeric thresholds the rules cite). ``rule_entries`` joins them through the same
 accessors the pipeline itself uses (``methodology.threshold``,
