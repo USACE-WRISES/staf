@@ -25,6 +25,12 @@ to the same base files (``composition_spec`` names the components, the union of 
 functions, decision ``composition`` and primary outcome P1); the single-family builds are
 untouched by it, so a family built alone is byte for byte what it was.
 
+An owner's adoption refinement of a family (``REFINEMENTS``: E5b, owner decision D15 of
+2026-09-28, Addendum 2 of the prose addendum) is built like a family (``build_candidate``)
+from its parent's addendum record plus the refinement's own text; it exists after the
+families' results were read and is evaluated by the protocol's outcomes, never by a re-read
+of its parent's margins. The frozen yaml is untouched by it.
+
 Every string a person reads is plain ASCII with no em dash. The label of a built package is
 the rehearsal label: no approval and no reviewer is recorded here.
 """
@@ -82,6 +88,63 @@ E3_STATEMENT = ("Population support is not rated where the benthic model has no 
                 "withheld (candidate E3).")
 E5_STATEMENT = ("3DEP cross-section geometry withheld ({value}); the ratio is not rated from "
                 "uncertain DEM geometry (candidate E5).")
+E5B_STATEMENT = ("3DEP cross-section geometry withheld ({value}); the ratio is not rated from "
+                 "unreliable DEM sections (candidate E5b).")
+E5B_LIMITATION = ("Candidate E5b (Addendum 2, 2026-09-28, owner decision D15): the rating is withheld "
+                  "where the 3DEP cross-section record is unreliable on its own terms (fewer than three "
+                  "sections carry the ratio, bankfull is extrapolated outside the Bieger fit range, every "
+                  "section found its bank by the crest scan, or the reach median bank-height ratio sits at "
+                  "the cap only with sections the DEM cannot resolve: bankfull depth at or below 0.15 m on a "
+                  "10 m or 3 m model, 0.05 m on lidar) or the ratio is physically impossible (a bank-height "
+                  "ratio at or below 0, an entrenchment ratio below 1). A bank-height ratio at the floodprone "
+                  "cap on resolved sections reads at least 2, severe incision, and is rated. Geometry is "
+                  "otherwise a documented gap.")
+E5B_REFIT_LIMITATION = ("Candidate E5b: the entrenchment curves by slope class and the national fallback are "
+                        "refitted on the least-disturbed reference members whose cross sections are reliable "
+                        "under the same rules (K2b); the shipped fit rules and tail endpoints are unchanged.")
+#: The owner's adoption refinements (Addendum 2 of the prose addendum, 2026-09-28): each rides
+#: its parent family's mechanism with a stated change, exists after the families' results were
+#: read, and is evaluated by the protocol's outcomes (P1 to P6, the parent's decision rule).
+#: E5b (owner decision D15): E5's applicability rule on the corrected quality flags (K2b:
+#: ``easi.geomorph.cross_section_quality``, where a bank-height ratio at the cap is severe
+#: incision and a valid Poor, ``out_of_range`` is physically impossible only, and
+#: ``low_quality`` keeps too few sections, extrapolated bankfull and the crest scan and adds
+#: the cap-as-detector-floor rule), plus the ``entrenchment`` set replaced in place by the
+#: refit on the reliable least-disturbed members where that refit was material.
+REFINEMENTS = {
+    "E5b": {"parent": "E5", "date": "2026-09-28", "addendum": 2, "decision_record": "D15",
+            "family": "dem_geometry_reliable_sections", "curveSet": "entrenchment",
+            "change": ("E5's applicability rule on the corrected cross-section quality flags (K2b): BHR "
+                       "and ER ratings are withheld where the 3DEP record is unreliable on its own terms "
+                       "(fewer than three sections carry the ratio, bankfull extrapolated outside the "
+                       "Bieger fit range, every section by the crest scan, or the median bank-height ratio "
+                       "at the cap only with sections the DEM cannot resolve) or the ratio is physically "
+                       "impossible (BHR at or below 0, ER below 1); a bank-height ratio at the cap on "
+                       "resolved sections is rated as severe incision (at least 2, Poor); the curve sets "
+                       "are the shipped ones: the entrenchment curves were evaluated on the reliable "
+                       "least-disturbed members and the refit was not adopted (its study's P2 finding, "
+                       "WP-R6c), so a refit set is applied only when one is handed in"),
+            "mechanism": ("E5's applicability rule (engine knob K1) on the 3DEP provider's K2b quality record "
+                          "(the evidence flags corrected in easi.geomorph.cross_section_quality); the "
+                          "entrenchment set replaced in place only when a refit set is handed in (evaluated "
+                          "and not adopted, WP-R6c)"),
+            "hypothesis": ("H-E5b withholding only unreliable sections keeps E5's association and returns "
+                           "the capped reaches, severe incision, to the rating"),
+            "coverage_effect": ("geometry functions unrated where the sections are unreliable; reaches at "
+                                "the cap on resolved sections rated (reported under P3)"),
+            "curves": ("curves: the shipped sets; the reliable-member refit evaluated and not adopted, "
+                       "see WP-R6c"),
+            "summary": ("E5b is E5 with the quality checks corrected so a model cap never excludes genuine "
+                        "severe incision (owner decision D15): the K2b flags, with the entrenchment curves "
+                        "evaluated on the reliable reference members (the refit was studied as "
+                        "2026-09-28-dem-geometry-refit-alternatives and not adopted: P2 retained the base "
+                        "on channel evolution in WMT against relative bed stability, a finding the refit "
+                        "curves caused, so the shipped sets stand). It was specified on 2026-09-28, after "
+                        "the Round 4 families' results were read, as the owner's adoption refinement of the "
+                        "accepted E5; the protocol's outcomes P1 to P6 and E5's simplification rule are "
+                        "computed for it, and no margin moves.")},
+}
+REFINEMENT_IDS = tuple(REFINEMENTS)
 E6_STATEMENT = ("Bed composition is not rated: watershed agricultural cover enters the assessment "
                 "once, through sediment supply and catchment hydrology (candidate E6).")
 E7_LIMITATION = ("Candidate E7: the composite index is the mean of the inputs' rating indices, "
@@ -118,9 +181,25 @@ def addendum(path: Path = ADDENDUM_PATH) -> dict:
 
 
 def family_spec(family: str, path: Path = ADDENDUM_PATH) -> dict:
-    """The addendum's record of one family (its name, function, change, mechanism)."""
+    """The addendum's record of one family (its name, function, change, mechanism), or of an
+    owner's adoption refinement (``REFINEMENTS``): its parent's record with the refinement's
+    own family name, change, mechanism, hypothesis and coverage effect, the parent's function,
+    primary outcome and decision rule, and a ``refinement`` block that names the parent, the
+    date and the addendum, so a study record always says it came after the results."""
+    if family in REFINEMENTS:
+        ref = REFINEMENTS[family]
+        parent = family_spec(ref["parent"], path)
+        out = dict(parent, id=family)
+        for key in ("family", "change", "mechanism", "hypothesis", "coverage_effect"):
+            out[key] = ref[key]
+        out.pop("supporting", None)
+        out["refinement"] = {"parent": ref["parent"], "date": ref["date"], "addendum": ref["addendum"],
+                             "decisionRecord": ref["decision_record"], "curveSet": ref["curveSet"],
+                             "curves": ref["curves"], "summary": ref["summary"], "afterResults": True}
+        return out
     if family not in FAMILIES:
-        raise CandidateError(f"unknown family {family!r}; the addendum names {', '.join(FAMILIES)}")
+        raise CandidateError(f"unknown family {family!r}; the addendum names {', '.join(FAMILIES)}"
+                             + (f" and the refinements are {', '.join(REFINEMENT_IDS)}" if REFINEMENT_IDS else ""))
     doc = addendum(path)
     spec = (doc.get("candidates") or {}).get(family)
     if not isinstance(spec, dict):
@@ -140,7 +219,8 @@ def composition_members(families) -> list[str]:
     unknown = [f for f in given if f not in FAMILIES]
     if unknown:
         raise CandidateError(f"a composition is made of the addendum's families {', '.join(FAMILIES)}; "
-                             f"got {', '.join(unknown)}")
+                             f"got {', '.join(unknown)}"
+                             + ("; a refinement is built alone" if any(f in REFINEMENTS for f in unknown) else ""))
     if len(set(given)) != len(given):
         raise CandidateError(f"a family enters a composition once; got {', '.join(given)}")
     if len(given) < 2:
@@ -393,6 +473,52 @@ def _e5(cat: dict, curves: dict, sets: Optional[dict]) -> list[dict]:
     return edits
 
 
+def _e5b(cat: dict, curves: dict, sets: Optional[dict]) -> list[dict]:
+    """E5's rule on the four cross-section methods with the E5b statement and limitation (the
+    tokens are E5's, ``low_quality`` and ``out_of_range``; their meaning is the corrected K2b
+    record's), and the ``entrenchment`` set replaced in place when the refit campaign handed
+    one in (``sets["entrenchment"]``: the reliable-member refit with the slope classes and the
+    national fallback, the shipped quantity, stratifier and direction). Without a set the
+    shipped curves stand and the edits say so."""
+    rule = {"evidence": "crossSectionQuality", "withhold_when": ["low_quality", "out_of_range"],
+            "statement": E5B_STATEMENT}
+    edits = []
+    for key in CROSS_SECTION_METHODS:
+        m = _method(cat, key)
+        m["applicability"] = copy.deepcopy(rule)
+        m.setdefault("limitations", []).append(E5B_LIMITATION)
+        edits.append({"methodKey": key, "field": "applicability", "after": rule, "refinement": "E5b"})
+    set_id = REFINEMENTS["E5b"]["curveSet"]
+    definition = (sets or {}).get(set_id)
+    if definition is None:
+        # the adoption candidate: the shipped curve sets byte for byte, the refit on record as
+        # evaluated and not adopted (its study's P2 finding, WP-R6c)
+        edits.append({"file": CURVES, "set": set_id, "replaced": [], "kept": REFINEMENTS["E5b"]["curves"],
+                      "refinement": "E5b"})
+        return edits
+    definition = copy.deepcopy(definition)
+    current = (curves.get("sets") or {}).get(set_id) or {}
+    keys = set(definition.get("curves") or {})
+    if "national" not in keys or not (keys - {"national"}) <= set(mp.SLOPE_CLASSES):
+        raise CandidateError(f"E5b: the {set_id} set given must hold the national fallback and slope-class "
+                             f"curves only ({', '.join(mp.SLOPE_CLASSES)}); got {sorted(keys)}")
+    for field in ("quantity", "stratifier", "higherIsBetter"):
+        if definition.get(field) != current.get(field):
+            raise CandidateError(f"E5b: the {set_id} set given changes {field} ({definition.get(field)!r} against the "
+                                 f"shipped {current.get(field)!r}); a refit keeps the shipped quantity, stratifier and "
+                                 "direction")
+    replaced = sorted(k for k in keys if definition["curves"][k] != (current.get("curves") or {}).get(k))
+    dropped = sorted(set(current.get("curves") or {}) - keys)
+    if not replaced and not dropped:
+        raise CandidateError(f"E5b: the {set_id} set given equals the shipped set; there is no refit to apply")
+    curves.setdefault("sets", {})[set_id] = definition
+    for key in ("entrenchment-ratio", "channel-adjustment-susceptibility"):
+        _method(cat, key).setdefault("limitations", []).append(E5B_REFIT_LIMITATION)
+    edits.append({"file": CURVES, "set": set_id, "replaced": replaced, "dropped": dropped, "curves": sorted(keys),
+                  "refinement": "E5b"})
+    return edits
+
+
 def _e6(cat: dict, curves: dict, sets: Optional[dict]) -> list[dict]:
     sediment = _method(cat, "sediment-supply-potential")
     sediment["inputs"] = [i for i in sediment.get("inputs") or [] if i.get("key") != "agriculture"]
@@ -464,7 +590,8 @@ def _e8(cat: dict, curves: dict, sets: Optional[dict]) -> list[dict]:
              "reports": ["functionsRated", "ecosystemConditionIndexInterval"]}]
 
 
-EDITS = {"E1": _e1, "E2": _e2, "E3": _e3, "E4": _e4, "E5": _e5, "E6": _e6, "E7": _e7, "E8": _e8}
+EDITS = {"E1": _e1, "E2": _e2, "E3": _e3, "E4": _e4, "E5": _e5, "E6": _e6, "E7": _e7, "E8": _e8,
+         "E5b": _e5b}
 
 
 # --------------------------------------------------------------------------- #
@@ -520,17 +647,23 @@ def _restamp(files: dict[str, bytes], family: str, spec: dict, name: Optional[st
     return ident
 
 
-def _used_sets(families, curves: dict) -> dict:
-    """The refit sets the built files carry for ``families`` (E2, E4), as the record lists them."""
+def _used_sets(edits, curves: dict) -> dict:
+    """The curve sets the edits added or replaced in the built files (E2 and E4 add theirs, E5b
+    replaces the entrenchment set in place), as the record lists them: an edit on the curves
+    file naming a set, read from the built curves; a kept set (E5b without a refit) is not a
+    used set."""
     used = {}
-    for family in families:
-        if family not in FAMILY_SETS:
+    for edit in edits:
+        if edit.get("file") != CURVES or not edit.get("set") or edit.get("kept"):
             continue
-        set_id = FAMILY_SETS[family]
-        used[set_id] = {"curves": sorted(curves["sets"][set_id]["curves"]),
-                        "quantity": curves["sets"][set_id].get("quantity")}
-        if curves["sets"][set_id].get("split"):
-            used[set_id]["split"] = dict(curves["sets"][set_id]["split"])
+        set_id = edit["set"]
+        definition = curves["sets"][set_id]
+        used[set_id] = {"curves": sorted(definition["curves"]), "quantity": definition.get("quantity")}
+        if definition.get("split"):
+            used[set_id]["split"] = dict(definition["split"])
+        if edit.get("replaced") is not None:
+            used[set_id]["replaced"] = list(edit["replaced"])
+            used[set_id]["dropped"] = list(edit.get("dropped") or [])
     return used
 
 
@@ -560,8 +693,9 @@ def build_candidate(files: dict[str, bytes], family: str, *, curve_sets: Optiona
             "identity": {"methodVersion": mp.method_version_for("regional", out),
                          "packageDigest": mp.package_digest({n: _sha(b) for n, b in out.items()}),
                          "evaluatorDigest": mp.evaluator_digest()},
-            "curveSets": _used_sets([family], curves),
+            "curveSets": _used_sets(edits, curves),
             "respecified": (spec.get("respecified") or {}).get("date"),
+            "refinement": spec.get("refinement"),
             "unchangedFiles": sorted(n for n in files if out[n] == files[n])}
 
 
@@ -606,7 +740,8 @@ def build_composition(files: dict[str, bytes], families, *, curve_sets: Optional
             "identity": {"methodVersion": mp.method_version_for("regional", out),
                          "packageDigest": mp.package_digest({n: _sha(b) for n, b in out.items()}),
                          "evaluatorDigest": mp.evaluator_digest()},
-            "curveSets": _used_sets(members, curves), "composition": list(members),
+            "curveSets": _used_sets([e for entry in edits for e in entry["edits"]], curves),
+            "composition": list(members),
             "respecified": respecified or None,
             "unchangedFiles": sorted(n for n in files if out[n] == files[n])}
 
@@ -616,13 +751,53 @@ def _now() -> str:
     return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def candidate_project(folder: Path, *, version: Optional[int] = None):
+def calculator_stamps(blob: bytes) -> dict:
+    """The identity an EASI calculator workbook records in its Metadata sheet (rows from the
+    third: label, value): the scoring method digest it was generated under and the sha256 of
+    the generator that built it (``apps/easi/scripts/build_calculator.py``)."""
+    import io
+    from openpyxl import load_workbook
+    wb = load_workbook(io.BytesIO(blob), read_only=True)
+    try:
+        if "Metadata" not in wb.sheetnames:
+            raise CandidateError("the workbook has no Metadata sheet; it is not an EASI calculator")
+        rows = {r[0].value: r[1].value for r in wb["Metadata"].iter_rows(min_row=3) if r and r[0].value}
+    finally:
+        wb.close()
+    return {"method": rows.get("Scoring method digest"), "generator": rows.get("Generator sha256")}
+
+
+def candidate_calculator(path: Path, *, method_version: str) -> tuple[str, bytes]:
+    """``(name, bytes)`` of a calculator workbook generated from exactly the candidate's files:
+    its recorded scoring method digest must be the candidate's method version under this
+    evaluator (the generator stamps ``method_version()`` of the active package), and its name
+    the package's calculator name (``EASI_Calculator_<template>.xlsx``); anything else is
+    refused before anything is exported."""
+    path = Path(path)
+    if not path.is_file():
+        raise CandidateError(f"calculator not found: {path}")
+    if not (path.name.startswith("EASI_Calculator_") and path.suffix == ".xlsx"):
+        raise CandidateError(f"{path.name}: a package calculator is named EASI_Calculator_<template>.xlsx")
+    blob = path.read_bytes()
+    stamps = calculator_stamps(blob)
+    if stamps.get("method") != method_version:
+        raise CandidateError(f"{path.name} records scoring method {stamps.get('method')!r}, not the candidate's "
+                             f"{method_version!r} under this evaluator; a calculator rides only with the files it "
+                             "was generated from (run apps/easi/scripts/build_calculator.py with "
+                             "EASI_METHOD_PACKAGE set to the candidate's zip)")
+    return path.name, blob
+
+
+def candidate_project(folder: Path, *, version: Optional[int] = None, calculator: Optional[Path] = None):
     """``(project, record)``: a built candidate package folder (``candidate.json`` beside
     ``method/<the eight files>``) as the EasiProject the exporter packages, so a candidate
     leaves StreamCurves the one way every method does. The files are the folder's, byte for
     byte, and must be the package the record names; the label is the record's rehearsal label;
     the version is the base library version's successor (or ``version``); the lineage names the
-    base as the origin and the candidate's family, composition and builder beside it."""
+    base as the origin and the candidate's family, composition and builder beside it.
+    ``calculator`` is a workbook generated from exactly these files (``candidate_calculator``):
+    the project then carries it as its calculator (``calculatorFor`` the package digest), so
+    the exported package and version candidate hold it as the library's versions do."""
     from . import stages
     from .model import EasiProject
     folder = Path(folder)
@@ -638,20 +813,23 @@ def candidate_project(folder: Path, *, version: Optional[int] = None):
     if candidate.get("packageDigest") != digest:
         raise CandidateError(f"{folder}: candidate.json names package {str(candidate.get('packageDigest'))[:15]} "
                              f"but the method files are {digest[:15]}; nothing is exported from a changed candidate")
+    calc = None
+    if calculator is not None:
+        calc = candidate_calculator(calculator, method_version=mp.method_version_for("regional", files))
     base = record.get("base") or {}
     base_recorded = base.get("recorded") or {}
     base_version = int(base_recorded.get("version") or 0)
     proposed = int(version) if version is not None else (base_version + 1 if base_version else 1)
     label = candidate.get("label") or f"Round 4 candidate {record.get('family')} (rehearsal)"
     now = _now()
-    project = EasiProject(meta={}, files=files)
+    project = EasiProject(meta={}, files=files, calculator=calc)
     project.meta = {
         "methodId": "easi-screening", "version": proposed, "status": "draft",
         "label": label, "labelSetByAuthor": True, "criteriaSet": "regional",
         "geography": {"kind": "national", "code": "CONUS", "name": "Contiguous United States",
                       "strata": stages.strata_names(project.curves()),
                       "note": "One national method; its strata and their national fallbacks are inside the method."},
-        "created": now, "updated": now, "calculatorFor": None,
+        "created": now, "updated": now, "calculatorFor": digest if calc else None,
         "lineage": {
             "origin": {"kind": "revision", "methodId": "easi-screening",
                        "version": base_version or None, "label": base_recorded.get("label"),
@@ -662,8 +840,13 @@ def candidate_project(folder: Path, *, version: Optional[int] = None):
                           "composition": record.get("composition"), "label": record.get("label"),
                           "builder": record.get("builder"), "builtAt": record.get("builtAt"),
                           "addendum": record.get("addendum"), "respecified": record.get("respecified"),
+                          "refinement": record.get("refinement"),
                           "source": str(folder)}},
     }
+    if calc is not None:
+        project.meta["calculator"] = {"name": calc[0], "bytes": len(calc[1]), "sha256": _sha(calc[1]),
+                                      "generatedFor": mp.method_version_for("regional", files),
+                                      "source": str(Path(calculator).resolve())}
     project.history = [{"action": "candidate", "at": now, "kind": "round4",
                         "detail": (f"Round 4 candidate {record.get('family')} "
                                    f"({'+'.join(record.get('composition') or []) or record.get('familyName')}) built by "
@@ -686,6 +869,7 @@ def package(files: dict[str, bytes], family: str, spec: dict, *, version: int = 
 
 __all__ = ["ADDENDUM_SHA256", "ADDENDUM_PATH", "FAMILIES", "FAMILY_SETS", "COMPOSITES", "COMPOSITION",
            "COMPOSITION_FAMILY_NAME", "CROSS_SECTION_METHODS", "REFIT_COMMAND", "RESPECIFIED",
+           "REFINEMENTS", "REFINEMENT_IDS", "E5B_STATEMENT", "E5B_LIMITATION", "E5B_REFIT_LIMITATION",
            "CandidateError", "addendum", "addendum_sha256", "family_spec", "composition_members",
            "composition_spec", "base_files", "recorded_base_identity", "build_candidate",
-           "build_composition", "candidate_project", "package"]
+           "build_composition", "candidate_project", "candidate_calculator", "calculator_stamps", "package"]

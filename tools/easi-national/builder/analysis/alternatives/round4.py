@@ -100,10 +100,58 @@ def respecifications() -> dict:
     return {k: dict(v) for k, v in getattr(sc, "RESPECIFIED", {}).items()}
 
 
+#: The owner's adoption refinements (Addendum 2 of the prose addendum, 2026-09-28): each rides
+#: its parent family's mechanism with a stated change, exists after the families' results were
+#: read, and is evaluated by the protocol's outcomes under the parent's decision rule. The
+#: ids and parents are pinned here; the record's text is StreamCurves' (``round4.REFINEMENTS``),
+#: the builder that writes the package, so the two never drift (a test keeps them equal).
+REFINEMENT_PARENTS = {"E5b": "E5"}
+REFINEMENT_IDS = tuple(REFINEMENT_PARENTS)
+#: the keys a refinement takes from its own record; every other key is the parent's
+REFINEMENT_TEXT_KEYS = ("family", "change", "mechanism", "hypothesis", "coverage_effect")
+
+
+def refinements() -> dict:
+    """The refinement records StreamCurves' builder writes into a package (``round4.REFINEMENTS``);
+    empty when StreamCurves is not importable, and a refinement's spec is then refused."""
+    try:
+        from streamcurves.easi_method import round4 as sc  # noqa: WPS433 - the builder's peer app
+    except Exception:  # noqa: BLE001
+        return {}
+    return {k: dict(v) for k, v in getattr(sc, "REFINEMENTS", {}).items()}
+
+
+def refinement_spec(family: str, path: Path = ADDENDUM_PATH) -> dict:
+    """The record of an owner's adoption refinement: its parent's addendum record with the
+    refinement's own family name, change, mechanism, hypothesis and coverage effect, the
+    parent's function, primary outcome and decision rule, and a ``refinement`` block naming
+    the parent, the date, the addendum and that it came after the results."""
+    if family not in REFINEMENT_PARENTS:
+        raise AddendumError(f"unknown refinement {family!r}; the refinements are {', '.join(REFINEMENT_IDS)}")
+    ref = refinements().get(family)
+    if not ref:
+        raise AddendumError(f"{family}: the refinement's record is StreamCurves' (streamcurves.easi_method.round4"
+                            ".REFINEMENTS), which is not importable here")
+    if ref.get("parent") != REFINEMENT_PARENTS[family]:
+        raise AddendumError(f"{family}: StreamCurves records parent {ref.get('parent')!r}, the runner "
+                            f"{REFINEMENT_PARENTS[family]!r}")
+    parent = family_spec(ref["parent"], path)
+    out = dict(parent, id=family)
+    for key in REFINEMENT_TEXT_KEYS:
+        out[key] = ref[key]
+    out.pop("supporting", None)
+    out["refinement"] = {"parent": ref["parent"], "date": ref["date"], "addendum": ref["addendum"],
+                         "decisionRecord": ref.get("decision_record"), "curveSet": ref.get("curveSet"),
+                         "curves": ref.get("curves"), "summary": ref.get("summary"), "afterResults": True}
+    return out
+
+
 def family_spec(family: str, path: Path = ADDENDUM_PATH, *, composition=None) -> dict:
     """The addendum's record of one family plus its dated re-specification when one exists;
     for the composition (``COMPOSITION``) the record ``composition_spec`` builds from the
-    components given (a composition without its components is refused)."""
+    components given (a composition without its components is refused); for an owner's
+    adoption refinement (``REFINEMENT_IDS``) the record ``refinement_spec`` builds from its
+    parent's."""
     if family == COMPOSITION:
         if not composition:
             raise AddendumError(f"{COMPOSITION} is a composition: name its components (a built package "
@@ -111,8 +159,11 @@ def family_spec(family: str, path: Path = ADDENDUM_PATH, *, composition=None) ->
         return composition_spec(composition, path)
     if composition:
         raise AddendumError(f"{family} is one family of the addendum; a composition is candidate {COMPOSITION}")
+    if family in REFINEMENT_PARENTS:
+        return refinement_spec(family, path)
     if family not in FAMILIES:
-        raise AddendumError(f"unknown family {family!r}; the addendum names {', '.join(FAMILIES)}")
+        raise AddendumError(f"unknown family {family!r}; the addendum names {', '.join(FAMILIES)}"
+                            f" and the refinements are {', '.join(REFINEMENT_IDS)}")
     spec = (addendum(path).get("candidates") or {}).get(family)
     if not isinstance(spec, dict):
         raise AddendumError(f"the addendum has no candidate {family}")
@@ -313,8 +364,10 @@ def read_candidate_source(source: Path) -> dict:
 
 
 __all__ = ["ADDENDUM_FILE", "ADDENDUM_PATH", "PROSE_PATH", "ADDENDUM_SHA256", "FAMILIES", "COMPOSITION",
-           "COMPOSITION_FAMILY_NAME", "T1", "T2", "T3", "TARGET_NAMES", "DECIDING_COHORT", "REPORTED_COHORTS",
+           "COMPOSITION_FAMILY_NAME", "REFINEMENT_PARENTS", "REFINEMENT_IDS", "T1", "T2", "T3", "TARGET_NAMES",
+           "DECIDING_COHORT", "REPORTED_COHORTS",
            "RETROSPECTIVE_COHORT", "NEVER_BLOCK_TARGETS", "EXPLORATORY_FIELD_TARGETS", "MARGINS", "AddendumError",
-           "addendum_sha256", "addendum", "respecifications", "family_spec", "composition_members",
+           "addendum_sha256", "addendum", "respecifications", "refinements", "refinement_spec", "family_spec",
+           "composition_members",
            "composition_spec", "arm_spec", "function_ids", "deciding_targets", "comparison_scope",
            "margins_in_addendum", "read_candidate_source"]

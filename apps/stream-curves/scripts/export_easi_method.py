@@ -35,6 +35,17 @@ evaluator), the package zip with its ``.sha256`` beside it, and ``candidate.json
 candidate's record with a ``versionCandidate`` block). It is never written under
 ``apps/library`` or ``apps/easi/data`` and registers nothing: publishing, activation and
 redeploy stay the owner's.
+
+    python apps/stream-curves/scripts/export_easi_method.py <candidate folder> \\
+        --version-dir <folder> --calculator <EASI_Calculator_<template>.xlsx>
+
+``--calculator`` carries the workbook generated from exactly the candidate's files (EASI's
+``scripts/build_calculator.py --out <xlsx>`` run with ``EASI_METHOD_PACKAGE`` set to the
+candidate's zip, so the generator reads the candidate's method files and stamps their method
+version): its recorded scoring method digest must be the candidate's method version under
+this evaluator or it is refused; it then rides in the package zip, the envelope's
+``calculator`` block and the version candidate's ``calculator/`` folder, as a published
+library version holds its own.
 """
 from __future__ import annotations
 
@@ -84,16 +95,17 @@ def is_candidate_folder(source: Path) -> bool:
     return source.is_dir() and (source / CANDIDATE_RECORD).is_file() and (source / mp.METHOD_DIR).is_dir()
 
 
-def load_project(source: Path, *, version: int | None = None):
+def load_project(source: Path, *, version: int | None = None, calculator: Path | None = None):
     """The EasiProject of a project file, a library version folder or its project.easi.json,
-    or a Round 4 candidate package folder (``round4.candidate_project``)."""
+    or a Round 4 candidate package folder (``round4.candidate_project``; ``calculator`` a
+    workbook generated from exactly the candidate's files, carried with them)."""
     source = Path(source)
     if source.is_file() and source.name == PROJECT_RECORD:
         source = source.parent
     if is_candidate_folder(source):
         from streamcurves.easi_method import round4
         try:
-            project, _ = round4.candidate_project(source, version=version)
+            project, _ = round4.candidate_project(source, version=version, calculator=calculator)
         except round4.CandidateError as exc:
             raise SystemExit(str(exc))
         return project
@@ -121,7 +133,8 @@ def check_version_dir(folder: Path) -> Path:
     return folder
 
 
-def write_version_dir(project, folder: Path, *, source: Path | None = None) -> dict:
+def write_version_dir(project, folder: Path, *, source: Path | None = None,
+                      calculator_note: str | None = None) -> dict:
     """Write ``project`` as a library version candidate into ``folder``: ``method/<the eight
     files>``, ``method.json`` (the envelope the exporter computes), the package zip (through
     ``export_zip``, the exporter's own writer) with its ``.sha256`` beside it, and
@@ -138,6 +151,16 @@ def write_version_dir(project, folder: Path, *, source: Path | None = None) -> d
     method_dir.mkdir(parents=True, exist_ok=True)
     for name in mp.METHOD_FILES:
         (method_dir / name).write_bytes(pkg.files[name])
+    calculator = None
+    if pkg.calculator is not None:
+        # as a published library version holds it: calculator/<name> beside method/, the
+        # envelope's calculator block naming its bytes and sha256
+        (folder / mp.CALCULATOR_DIR).mkdir(parents=True, exist_ok=True)
+        (folder / mp.CALCULATOR_DIR / pkg.calculator[0]).write_bytes(pkg.calculator[1])
+        calculator = {**(pkg.envelope.get("calculator") or {}), "path": f"{mp.CALCULATOR_DIR}/{pkg.calculator[0]}",
+                      "generatedFor": (project.meta.get("calculator") or {}).get("generatedFor")}
+        if calculator_note:
+            calculator["note"] = str(calculator_note)
     envelope_text = json.dumps(pkg.envelope, indent=1, sort_keys=True) + "\n"
     (folder / mp.ENVELOPE).write_text(envelope_text, encoding="utf-8", newline="\n")
     (folder / (zip_name + ".sha256")).write_text(f"{ident['zipSha256']}  {zip_name}\n", encoding="utf-8", newline="\n")
@@ -148,6 +171,7 @@ def write_version_dir(project, folder: Path, *, source: Path | None = None) -> d
         "methodId": method_id, "proposedVersion": version, "label": pkg.envelope.get("label"),
         "identity": pkg.envelope.get("identity"), "requires": (pkg.envelope.get("evaluator") or {}).get("requires"),
         "files": pkg.envelope.get("files"), "zip": zip_name, "zipSha256": ident["zipSha256"], "zipBytes": ident["zipBytes"],
+        "calculator": calculator,
         "registered": False, "folder": str(folder), "lineage": project.meta.get("lineage"),
         "writtenBy": "apps/stream-curves/scripts/export_easi_method.py --version-dir", "writtenAt": _now(),
         "note": ("a library version candidate written by the exporter (the sole writer of EASI method packages): "
@@ -156,8 +180,9 @@ def write_version_dir(project, folder: Path, *, source: Path | None = None) -> d
     (folder / CANDIDATE_RECORD).write_text(json.dumps(record, indent=1, sort_keys=True, ensure_ascii=True) + "\n",
                                            encoding="utf-8", newline="\n")
     return {"folder": str(folder), "zip": zip_name, **ident, "label": pkg.envelope.get("label"), "version": version,
-            "files": sorted(mp.METHOD_FILES) + [mp.ENVELOPE, zip_name, zip_name + ".sha256", CANDIDATE_RECORD],
-            "registered": False}
+            "files": sorted(mp.METHOD_FILES) + [mp.ENVELOPE, zip_name, zip_name + ".sha256", CANDIDATE_RECORD]
+            + ([calculator["path"]] if calculator else []),
+            "calculator": calculator, "registered": False}
 
 
 def open_version_dir(vdir: Path):
@@ -226,26 +251,39 @@ def main(argv=None) -> int:
     ap.add_argument("--version", type=int, default=None,
                     help="with a candidate folder: the proposed version number (default: the base library "
                          "version's successor)")
+    ap.add_argument("--calculator", metavar="XLSX", default=None,
+                    help="with a candidate folder: the calculator workbook generated from exactly its files "
+                         "(apps/easi/scripts/build_calculator.py under EASI_METHOD_PACKAGE), carried in the "
+                         "package, the envelope and the version candidate's calculator/ folder; refused when its "
+                         "recorded method digest is not the candidate's")
+    ap.add_argument("--calculator-note", metavar="TEXT", default=None,
+                    help="with --calculator and --version-dir: a note recorded beside the calculator in the "
+                         "version candidate's record (for example the template version the workbook takes at "
+                         "adoption); never inside the workbook or the package")
     a = ap.parse_args(argv)
+    if a.calculator_note and not (a.calculator and a.version_dir):
+        ap.error("--calculator-note needs --calculator and --version-dir")
     if a.check and not a.write_easi_data:
         ap.error("--check needs --write-easi-data <folder>")
     if a.check and (a.out or a.version_dir):
         ap.error("--check writes nothing; leave out --out and --version-dir")
     if not a.out and not a.write_easi_data and not a.version_dir:
         ap.error("give --out <method.zip>, --write-easi-data <folder>, --version-dir <folder>, or several")
-    if a.version is not None and not is_candidate_folder(Path(a.project)):
-        ap.error("--version applies to a candidate package folder")
+    if (a.version is not None or a.calculator is not None) and not is_candidate_folder(Path(a.project)):
+        ap.error("--version and --calculator apply to a candidate package folder")
     if a.write_easi_data:
         check_data_folder(Path(a.write_easi_data))    # refused before anything is written
     if a.version_dir:
         check_version_dir(Path(a.version_dir))        # refused before anything is written
-    project = load_project(Path(a.project), version=a.version)
+    project = load_project(Path(a.project), version=a.version,
+                           calculator=Path(a.calculator) if a.calculator else None)
     _, ident = eio.export_zip(project, Path(a.out) if a.out else None)
     out = {"out": a.out, **ident} if a.out else dict(ident)
     if a.write_easi_data:
         out["easiData"] = write_easi_data(project, Path(a.write_easi_data), check=a.check)
     if a.version_dir:
-        out["versionDir"] = write_version_dir(project, Path(a.version_dir), source=Path(a.project))
+        out["versionDir"] = write_version_dir(project, Path(a.version_dir), source=Path(a.project),
+                                              calculator_note=a.calculator_note)
     print(json.dumps(out, indent=1))
     if a.check and out["easiData"]["differences"]:
         return 1

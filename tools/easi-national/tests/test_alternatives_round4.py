@@ -145,6 +145,62 @@ def test_the_addendum_helpers_agree_with_the_frozen_yaml_and_the_builder():
     assert "reads it once" in protocol["retrospective_rule"] and "--base-scores" in protocol["base_scores"]
 
 
+def test_the_refinement_e5b_reads_streamcurves_record_and_its_parents_rule(tmp_path):
+    """E5b (WP-R6c, Addendum 2): the runner's record is StreamCurves' text on E5's function,
+    primary outcome and decision rule, it is accepted as a candidate, and its block entry
+    carries the refinement record so a study always says it came after the results."""
+    from streamcurves.easi_method import round4 as sc
+    spec = r4.family_spec("E5b")
+    theirs = sc.family_spec("E5b")
+    for key in ("id", "family", "function", "change", "mechanism", "hypothesis", "primary_outcome", "decision",
+                "coverage_effect", "refinement"):
+        assert spec[key] == theirs[key], key
+    assert spec["decision"] == "simplification" and spec["refinement"]["parent"] == "E5"
+    assert spec["refinement"]["afterResults"] is True and spec["refinement"]["addendum"] == 2
+    assert r4.deciding_targets(spec) == ("T1", ["T1", "T2"]) and r4.comparison_scope(spec) is None
+    assert r4.function_ids(spec) == ["high_flow_dynamics", "floodplain_connectivity", "channel_evolution",
+                                     "channel_floodplain_dynamics"]
+    assert r4.REFINEMENT_IDS == ("E5b",) == sc.REFINEMENT_IDS and "E5b" not in r4.FAMILIES
+    assert study.parse_candidates(["E5b=a"]) == {"E5b": "a"}
+    with pytest.raises(RuntimeError, match="refinements are E5b"):
+        study.parse_candidates(["E5c=a"])
+    with pytest.raises(RuntimeError, match="the addendum names"):
+        study.parse_component_summaries(["E5b=a"])
+    with pytest.raises(r4.AddendumError, match="unknown refinement"):
+        r4.refinement_spec("E5c")
+    with pytest.raises(r4.AddendumError, match="one family of the addendum"):
+        r4.family_spec("E5b", composition=["E1", "E3"])
+    # an E5b package with a refit entrenchment set is taken by the candidates block with its record
+    from easi import method_package as mp
+    shipped = json.loads((LIBRARY_V1 / "method" / "reference-curves.json").read_text(encoding="utf-8"))["sets"]["entrenchment"]
+    definition = deepcopy(shipped)
+    definition["curves"]["national"]["q75"] = round(definition["curves"]["national"]["q75"] + 0.5, 6)
+    folder = _candidate_folder(tmp_path, "E5b", curve_sets={"entrenchment": definition})
+    base = bases.base(ADOPTED)
+    block = study.candidate_block(base, {"E5b": str(folder)}, mp.evaluator_digest())
+    entry = block[1]
+    assert entry["id"] == "E5b" and entry["family"] == "dem_geometry_reliable_sections"
+    assert entry["decision"] == "simplification" and entry["refinement"]["parent"] == "E5"
+    assert entry["curve_sets"]["entrenchment"]["curves"] == ["0.5_to_2", "ge_2", "lt_0.5", "national"]
+    assert entry["composition"] is None and entry["comparison_scope"] is None
+    assert r4.arm_spec(entry)["refinement"]["date"] == "2026-09-28"
+    # the report's curve changes name the replaced national curve only
+    pkg = mp.read_package(folder / "E5b.easi-method.zip")
+    built_sets = json.loads(pkg.files["reference-curves.json"])["sets"]
+    changes = report.curve_changes({"sets": {"entrenchment": shipped}}, {"sets": {"entrenchment": built_sets["entrenchment"]}})
+    assert changes == [{"set": "entrenchment", "stratum": "national", "change": "replaced"}]
+    # the K2b-only E5b (WP-R6c-2): the shipped curves byte for byte, no curve change, the record's
+    # curves note in the refinement block the study manifest carries
+    plain = _candidate_folder(tmp_path / "plain", "E5b")
+    entry = study.candidate_block(base, {"E5b": str(plain)}, mp.evaluator_digest())[1]
+    assert entry["refinement"]["curves"] == "curves: the shipped sets; the reliable-member refit evaluated and not adopted, see WP-R6c"
+    plain_pkg = mp.read_package(plain / "E5b.easi-method.zip")
+    assert plain_pkg.files["reference-curves.json"] == (LIBRARY_V1 / "method" / "reference-curves.json").read_bytes()
+    assert report.curve_changes({"sets": {"entrenchment": shipped}},
+                                {"sets": {"entrenchment": json.loads(plain_pkg.files["reference-curves.json"])["sets"]["entrenchment"]}}) == []
+    assert plain_pkg.digest != pkg.digest
+
+
 def test_the_candidates_block_refuses_the_wrong_base_evaluator_and_family(tmp_path):
     from easi import method_package as mp
     base = bases.base(ADOPTED)

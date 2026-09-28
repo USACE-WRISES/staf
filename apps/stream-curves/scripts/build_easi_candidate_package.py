@@ -8,14 +8,17 @@
         --out D:/Data/staf-campaign-2026-09/easi/candidates/FINALIST
 
 ``--family`` names one family of E1 to E8 (``config/methodology/evaluation_protocol_v1_easi_addendum.yaml``,
-frozen: its sha256 is checked before anything is built), or several: the composition of the
-addendum's "Finalist" step, each family's own edit applied in the addendum's order to the same
-base files (``round4.build_composition``), written as candidate ``FINALIST``. A family built
-alone is byte for byte what it was before compositions existed. ``--base`` is the base method:
-a folder holding the eight method files, a published library version folder
+frozen: its sha256 is checked before anything is built), one owner's adoption refinement
+(``E5b``, ``round4.REFINEMENTS``, Addendum 2 of the prose addendum), or several families: the
+composition of the addendum's "Finalist" step, each family's own edit applied in the addendum's
+order to the same base files (``round4.build_composition``), written as candidate ``FINALIST``.
+A family built alone is byte for byte what it was before compositions existed. ``--base`` is
+the base method: a folder holding the eight method files, a published library version folder
 (``<library>/assessments/easi-screening/v<N>``) or a method package zip. ``--curve-sets`` is
-the refit campaign's output (``scripts/refit_easi_candidate_sets.py``), which E2 and E4 need;
-without it they refuse and say so.
+the refit campaign's output (``scripts/refit_easi_candidate_sets.py``), which E2 and E4 need
+(without it they refuse and say so), or the reliable-member refit
+(``scripts/refit_easi_reliable_geometry.py``) whose ``entrenchment`` set E5b replaces in place
+when it is given.
 
 The output folder receives ``method/<the eight method files>`` (the variant files, the
 untouched ones byte for byte), ``<family>.easi-method.zip`` (the ``EASI_METHOD_PACKAGE`` an
@@ -134,12 +137,19 @@ def build(families, base: Path, out: Path, *, curve_sets: Path | None = None,
                       "requires": pkg.envelope["evaluator"]["requires"],
                       "label": pkg.envelope["label"], "version": pkg.envelope["version"]},
         "edits": built["edits"], "unchangedFiles": built["unchangedFiles"],
-        "curveSets": {**built["curveSets"], **({"provenance": provenance} if provenance else {})},
+        # the sets the edits added or replaced, the refit's provenance when one was handed in, and
+        # the note of a set kept as shipped (E5b without a refit: evaluated and not adopted)
+        "curveSets": {**built["curveSets"], **({"provenance": provenance} if provenance else {}),
+                      **({"note": [e["kept"] for e in built["edits"] if e.get("kept")][0]}
+                         if any(e.get("kept") for e in built["edits"]) else {})},
         # the dated re-specification the family was built under (the prose addendum's
         # "Addenda" section), None for a family built as frozen; a composition records the
         # date per re-specified component, None when none of its components is
         "respecified": built.get("respecified"),
         "respecification": spec.get("respecified"),
+        # an owner's adoption refinement (E5b): its parent, date and addendum, and that it was
+        # specified after the families' results were read; None for a family of the yaml
+        "refinement": built.get("refinement"),
         "label": "rehearsal", "builtAt": _now(),
         "builder": "apps/stream-curves/scripts/build_easi_candidate_package.py",
     }
@@ -158,8 +168,9 @@ def build(families, base: Path, out: Path, *, curve_sets: Path | None = None,
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--family", required=True, nargs="+", choices=round4.FAMILIES,
-                    help="one family (E1 to E8), or several for their composition (candidate FINALIST)")
+    ap.add_argument("--family", required=True, nargs="+", choices=round4.FAMILIES + round4.REFINEMENT_IDS,
+                    help="one family (E1 to E8) or refinement (E5b), or several families for their "
+                         "composition (candidate FINALIST)")
     ap.add_argument("--base", required=True, type=Path,
                     help="the base method: a folder of the eight method files, a library version "
                          "folder, or a method package zip")
@@ -172,6 +183,8 @@ def main(argv=None) -> int:
     keys = ["family", "familyName", "addendum", "base", "candidate", "edits", "respecified"]
     if "composition" in record:
         keys.insert(2, "composition")
+    if record.get("refinement"):
+        keys.append("refinement")
     summary = {k: record[k] for k in keys}
     summary["out"] = str(Path(a.out).resolve())
     print(json.dumps(summary, indent=1, sort_keys=True, default=str))
