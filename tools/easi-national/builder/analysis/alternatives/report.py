@@ -231,7 +231,7 @@ def build_round4(root: Path, study: Path, manifest: dict):
     candidates = []
     for arm in arms[1:]:
         aid = arm["id"]
-        spec = r4.family_spec(aid)
+        spec = r4.arm_spec(arm)
         artifact = read_json(study / "candidates" / aid / "app-data/reference-curves.json")
         catalog = read_json(study / "candidates" / aid / "app-data/screening-methods.json")
         scores = _scores(study, aid)
@@ -243,18 +243,32 @@ def build_round4(root: Path, study: Path, manifest: dict):
                   else {"status": "not applicable", "note": "E8 only"},
                   "P6": oc.p6(catalog, metrics, record, scores_elapsed)}
         decision = oc.decide(spec, result)
-        candidates.append({"id": aid, "family": arm.get("family"), "label": arm.get("label"),
-                           "change": spec.get("change"), "hypothesis": spec.get("hypothesis"),
-                           "mechanism": spec.get("mechanism"), "primary_outcome": spec.get("primary_outcome"),
-                           "decision_rule": spec.get("decision"), "coverage_effect": spec.get("coverage_effect"),
-                           "functions": functions, "respecified": arm.get("respecified"),
-                           "comparison_scope": arm.get("comparison_scope"),
-                           "package_digest": arm.get("package_digest"), "method_version": arm.get("method_version"),
-                           "evaluator_digest": arm.get("evaluator_digest"), "curve_count": arm.get("curve_count"),
-                           "curve_changes": curve_changes(base_artifact, artifact),
-                           "curve_set_findings": arm.get("curve_set_findings") or {},
-                           "route": {k: v for k, v in record.items() if k in ("route", "package_digest", "asset_fallbacks", "seconds")},
-                           **result, "decision": decision})
+        entry = {"id": aid, "family": arm.get("family"), "label": arm.get("label"),
+                 "change": spec.get("change"), "hypothesis": spec.get("hypothesis"),
+                 "mechanism": spec.get("mechanism"), "primary_outcome": spec.get("primary_outcome"),
+                 "decision_rule": spec.get("decision"), "coverage_effect": spec.get("coverage_effect"),
+                 "functions": functions, "respecified": arm.get("respecified"),
+                 "comparison_scope": arm.get("comparison_scope"),
+                 "package_digest": arm.get("package_digest"), "method_version": arm.get("method_version"),
+                 "evaluator_digest": arm.get("evaluator_digest"), "curve_count": arm.get("curve_count"),
+                 "curve_changes": curve_changes(base_artifact, artifact),
+                 "curve_set_findings": arm.get("curve_set_findings") or {},
+                 "route": {k: v for k, v in record.items() if k in ("route", "package_digest", "asset_fallbacks", "seconds")},
+                 **result, "decision": decision}
+        if spec.get("composition"):
+            # the finalist: the components, each one's rule on the composed arm, the
+            # single-family studies the snapshot recorded, and the interaction check
+            studies = arm.get("component_studies") or {}
+            entry["composition"] = {
+                "components": list(spec["composition"]),
+                "component_rules": decision.get("components"),
+                "component_studies": {fid: {k: cs.get(k) for k in ("study_id", "summary", "summary_sha256", "input_digest",
+                                                                   "package_digest", "method_version", "functions",
+                                                                   "decision_rule", "decision")}
+                                      for fid, cs in studies.items()},
+                "interaction": oc.interaction(result["P1"], result["P3"], studies),
+                "rule": decision.get("rule")}
+        candidates.append(entry)
     summary = clean({"schema_version": 2, "study_id": study.name, "input_digest": manifest["input_digest"],
                      "runner_version": STUDY_VERSION, "protocol_version": (manifest.get("protocol") or {}).get("version"),
                      "addendum": manifest.get("addendum"), "base_id": manifest.get("base_id"),
@@ -269,7 +283,11 @@ def build_round4(root: Path, study: Path, manifest: dict):
                      "margins_in_addendum": r4.margins_in_addendum(),
                      "base": base_summary, "candidates": candidates,
                      "decisions": {c["id"]: {"adopted": c["decision"]["adopted"], "rule": c["decision_rule"],
-                                            "reasons": c["decision"]["reasons"]} for c in candidates},
+                                            "reasons": c["decision"]["reasons"],
+                                            **({"composition": c["composition"]["components"],
+                                                "components": {fid: r["passes"] for fid, r in
+                                                               (c["composition"]["component_rules"] or {}).items()}}
+                                               if c.get("composition") else {})} for c in candidates},
                      "verification": verification, "observation_ledger": read_json(study / "cohorts/cohort_summary.json"),
                      "acquisition": read_json(study / "acquisition/summary.json") if (study / "acquisition/summary.json").exists() else {},
                      "diagnostics": {key: [r for r in rows if r.get("region") == "US"] for key, rows in diagnostics.items()},

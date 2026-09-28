@@ -11,6 +11,11 @@ The snapshot records them in the manifest's ``candidates`` block beside the base
 (``alternative-1``); the ``candidates`` step verifies and assembles them (``candidates.py``);
 every later step enumerates ``study_candidates(manifest)``. A study created without
 ``--candidate`` is a base-only study (Round EA).
+
+The finalist composition (``--candidate FINALIST=<folder>``, a package whose candidate.json
+names its ``composition``) also takes ``--component-summary E1=<summary.json>`` for each
+component: the single-family studies' summaries, whose decisions and figures the snapshot
+records (``component_study_record``) so the report can state the interaction check.
 """
 from __future__ import annotations
 
@@ -82,7 +87,12 @@ def protocol():
             "candidate_scoring": "each arm scores an isolated method package (EASI_METHOD_PACKAGE)",
             "base_scores": ("when the stored analysis is another registry base's, the base arm is verified against "
                             "--base-scores, a national build of the study base; the stored analysis then supplies "
-                            "inputs only")}
+                            "inputs only"),
+            "composition": ("a composed candidate (FINALIST) holds when every component's own rule holds on the "
+                            "composed arm, with P2 read on the union of the components' functions; its interaction "
+                            "with the single-family studies (the composed P1 delta against the sum of the single "
+                            "deltas, the composed P3 availability against the single figures) is reported, never "
+                            "judged: the addendum names no margin for it")}
 
 
 def resolve_base(base_id=None):
@@ -128,23 +138,112 @@ def check_candidate(entry: dict, base, running_evaluator: str) -> None:
     if entry.get("evaluator_digest") != running_evaluator:
         raise CandidateRefused(f"{family}: built under evaluator {str(entry.get('evaluator_digest'))[:15]}, "
                                f"not the running evaluator {running_evaluator[:15]}; rebuild the package")
-    record_family = (entry.get("record") or {}).get("family")
+    record = entry.get("record") or {}
+    record_family = record.get("family")
     if record_family and record_family != family:
         raise CandidateRefused(f"{family}: the package's candidate.json is family {record_family}")
+    # a composed package (the addendum's "Finalist" step) names its components; the recorded
+    # base is checked above like any candidate's
+    composition = record.get("composition")
+    if family == r4.COMPOSITION:
+        if not composition:
+            raise CandidateRefused(f"{family}: the package's candidate.json names no composition (a composition "
+                                   "is built with --family <E..> <E..>)")
+        try:
+            members = r4.composition_members(composition)
+        except r4.AddendumError as exc:
+            raise CandidateRefused(f"{family}: {exc}") from exc
+        if [str(c) for c in composition] != members:
+            raise CandidateRefused(f"{family}: the package records its components as {list(composition)}, "
+                                   f"not in the addendum's order {members}")
+        if entry.get("composition") is not None and [str(c) for c in entry["composition"]] != members:
+            raise CandidateRefused(f"{family}: the study's entry names components {list(entry['composition'])}, "
+                                   f"the package {members}")
+    elif composition:
+        raise CandidateRefused(f"{family}: the package is a composition of {', '.join(str(c) for c in composition)}; "
+                               f"a composition is candidate {r4.COMPOSITION}")
 
 
-def candidate_block(base, candidates: dict | None, running_evaluator: str) -> list[dict]:
+def component_study_record(family: str, path, base) -> dict:
+    """What the composition study records of one component's own study (its ``summary.json``):
+    the identities, the decision (which must have adopted the family: a composition takes
+    accepted changes only), the P1 rows of the deciding cohort in both designs and the P3
+    coverage per function, so the report can state the interaction check without reading
+    the study again. The summary must be a completed 1.2.0 study of that one family on the
+    study base."""
+    path = Path(path)
+    if not path.is_file():
+        raise CandidateRefused(f"{family}: component study summary not found: {path}")
+    doc = read_json(path)
+    if doc.get("schema_version") != 2 or doc.get("runner_version") != STUDY_VERSION:
+        raise CandidateRefused(f"{family}: {path} is not a runner {STUDY_VERSION} study summary (schema 2)")
+    if doc.get("base_id") != base.id or (doc.get("base") or {}).get("package_digest") != base.package_digest:
+        raise CandidateRefused(f"{family}: {path} is a study on base {doc.get('base_id')} (package "
+                               f"{str((doc.get('base') or {}).get('package_digest'))[:15]}), not the study base "
+                               f"{base.id} ({str(base.package_digest)[:15]})")
+    if doc.get("deciding_cohort") != r4.DECIDING_COHORT:
+        raise CandidateRefused(f"{family}: {path} decided on cohort {doc.get('deciding_cohort')!r}, not {r4.DECIDING_COHORT}")
+    if (doc.get("verification") or {}).get("status") != "passed":
+        raise CandidateRefused(f"{family}: {path} records no passing verification")
+    candidates = doc.get("candidates") or []
+    if len(candidates) != 1 or candidates[0].get("id") != family:
+        raise CandidateRefused(f"{family}: {path} is the summary of {[c.get('id') for c in candidates]}, not of a "
+                               f"single {family} study")
+    cand = candidates[0]
+    if cand.get("decision_rule") == "composition":
+        raise CandidateRefused(f"{family}: {path} is a composition's summary; a component is one family's study")
+    decision = cand.get("decision") or {}
+    if not decision.get("adopted"):
+        raise CandidateRefused(f"{family}: its study {doc.get('study_id')} did not adopt it "
+                               f"({'; '.join(decision.get('reasons') or []) or 'no reason recorded'}); a composition "
+                               "takes accepted changes only")
+    stamp = info(path)
+    p1 = {design: {target: {k: row.get(k) for k in ("delta", "delta_median", "ci_low", "ci_high", "n",
+                                                   "supported", "present", "role")}
+                   for target, row in (block or {}).items()}
+          for design, block in ((cand.get("P1") or {}).get("designs") or {}).items()}
+    p3_block = cand.get("P3") or {}
+    p3 = {"functions": {fn: {k: row.get(k) for k in ("availability_base", "availability_candidate", "withheld_share",
+                                                    "lost_share", "gained_share", "changed_share", "n_withheld",
+                                                    "documented_gaps_only")}
+                        for fn, row in (p3_block.get("functions") or {}).items()},
+          **{k: p3_block.get(k) for k in ("eci_mean_delta_paired", "changed_ratings_share", "documented_gaps_only",
+                                          "availability_unchanged", "n_sample")}}
+    return {"family": family, "study_id": doc.get("study_id"), "summary": str(path),
+            "summary_sha256": stamp["sha256"], "summary_bytes": stamp["bytes"], "summary_mtime_ns": stamp["mtime_ns"],
+            "input_digest": doc.get("input_digest"), "runner_version": doc.get("runner_version"),
+            "base_id": doc.get("base_id"), "deciding_cohort": doc.get("deciding_cohort"),
+            "package_digest": cand.get("package_digest"), "method_version": cand.get("method_version"),
+            "evaluator_digest": cand.get("evaluator_digest"), "functions": cand.get("functions"),
+            "decision_rule": cand.get("decision_rule"),
+            "decision": {k: decision.get(k) for k in ("adopted", "reasons", "primary_target", "deciding_targets")},
+            "P1": p1, "P2": {"blocks": (cand.get("P2") or {}).get("blocks"),
+                             "findings_n": len((cand.get("P2") or {}).get("findings") or [])},
+            "P3": p3}
+
+
+def candidate_block(base, candidates: dict | None, running_evaluator: str,
+                    component_summaries: dict | None = None) -> list[dict]:
     """The manifest's ``candidates`` block: the base as ``alternative-1`` (labelled by its
-    registry entry) and one entry per built candidate package, each verified."""
+    registry entry) and one entry per built candidate package, each verified. A composition
+    (``FINALIST``) also needs ``component_summaries`` (``{family: summary.json}``) for each of
+    its components, recorded under ``component_studies``."""
+    summaries = {str(k): v for k, v in (component_summaries or {}).items()}
     block = [{"id": REFERENCE_ID, "role": "base", "label": base.label, "curve_count": base.curve_count,
               "changes": f"None; the study's base ({base.id})", "family": None,
               "package_digest": base.package_digest, "library_version": base.library_version,
               "method_version": base.method_version}]
     for family, source in sorted((candidates or {}).items()):
-        spec = r4.family_spec(family)
         found = r4.read_candidate_source(Path(source))
         if found["family"] and found["family"] != family:
             raise CandidateRefused(f"{family}: {source} holds candidate {found['family']}")
+        if family == r4.COMPOSITION and not found.get("composition"):
+            raise CandidateRefused(f"{family}: {source} names no composition in its candidate.json (a composition "
+                                   "is built with --family <E..> <E..>)")
+        try:
+            spec = r4.family_spec(family, composition=found.get("composition"))
+        except r4.AddendumError as exc:
+            raise CandidateRefused(f"{family}: {exc}") from exc
         entry = {"id": family, "role": "candidate", "label": found["label"], "curve_count": found["curve_count"],
                  "changes": spec.get("change"), "family": spec.get("family"), "function": spec.get("function"),
                  "decision": spec.get("decision"), "primary_outcome": spec.get("primary_outcome"),
@@ -156,9 +255,22 @@ def candidate_block(base, candidates: dict | None, running_evaluator: str) -> li
                  "requires": found["requires"], "base": found["base"], "curve_sets": found["curve_sets"],
                  "curve_set_findings": found["curve_set_findings"],
                  "respecified": found["respecified"] or (spec.get("respecified") or {}).get("date"),
-                 "comparison_scope": r4.comparison_scope(spec)}
+                 "comparison_scope": r4.comparison_scope(spec),
+                 "composition": found.get("composition")}
+        if spec.get("composition"):
+            members = list(spec["composition"])
+            missing = [c for c in members if c not in summaries]
+            if missing:
+                raise CandidateRefused(f"{family}: the interaction check reads the component studies' summaries; "
+                                       f"give --component-summary {' '.join(f'{c}=<summary.json>' for c in missing)}")
+            entry["component_studies"] = {c: component_study_record(c, summaries[c], base) for c in members}
         check_candidate(entry, base, running_evaluator)
         block.append(entry)
+    named = {c for row in block for c in (row.get("composition") or [])}
+    extra = sorted(c for c in summaries if c not in named)
+    if extra:
+        raise CandidateRefused(f"--component-summary {', '.join(extra)}: no composition among the candidates names "
+                               f"{'them' if len(extra) > 1 else 'it'}")
     return block
 
 
@@ -181,7 +293,7 @@ def stored_analysis_record(root: Path, base, completion: dict) -> tuple:
 
 
 def snapshot(root: Path, study: Path, base_id=None, candidates: dict | None = None, command_line=None,
-             base_scores=None):
+             base_scores=None, component_summaries: dict | None = None):
     from easi import config
     from easi import method_package as mp
     from easi.national import method_version
@@ -212,7 +324,7 @@ def snapshot(root: Path, study: Path, base_id=None, candidates: dict | None = No
     if read_json(root / "state/queue.json").get("items"):
         raise RuntimeError("Publication queue must remain empty")
     # the candidates are verified before anything is copied (a refused package costs no snapshot)
-    block = candidate_block(base, candidates, mp.evaluator_digest())
+    block = candidate_block(base, candidates, mp.evaluator_digest(), component_summaries)
     study.mkdir(parents=True, exist_ok=True)
     marker = study / "snapshot/manifest.json"
     if marker.is_file():
@@ -276,6 +388,10 @@ def snapshot(root: Path, study: Path, base_id=None, candidates: dict | None = No
             "addendum": {"file": "apps/stream-curves/config/methodology/" + r4.ADDENDUM_FILE,
                          "sha256": r4.ADDENDUM_SHA256, "prose": "apps/stream-curves/config/methodology/" + r4.PROSE_FILE},
             "candidate_package_digests": {row["id"]: row.get("package_digest") for row in block},
+            # the single-family studies a composition's interaction check reads (their full
+            # records ride in the composition's block entry under component_studies)
+            "component_studies": {c: {k: rec.get(k) for k in ("study_id", "summary", "summary_sha256", "package_digest")}
+                                  for row in block for c, rec in (row.get("component_studies") or {}).items()},
             "command_line": list(command_line) if command_line is not None else list(sys.argv),
             "stored_analysis": stored_analysis, "base_scores": base_scores_record,
             "scoring_routes": dict(SCORING_ROUTES),
@@ -395,7 +511,8 @@ def _receipt_current(study, step, manifest, checked):
     checked.add(step)
 
 
-def run_stage(root, study, step, *, workers=4, base_id=None, candidates=None, command_line=None, base_scores=None):
+def run_stage(root, study, step, *, workers=4, base_id=None, candidates=None, command_line=None, base_scores=None,
+              component_summaries=None):
     manifest = check_inputs(root, study) if (study / "manifest.json").exists() else {}
     dependencies = DEPENDENCIES[step]
     markers = [study / "stages" / f"{name}.json" for name in dependencies]
@@ -420,7 +537,7 @@ def run_stage(root, study, step, *, workers=4, base_id=None, candidates=None, co
     print(f"Starting {step} at {now()}", flush=True)
     if step == "snapshot":
         result = snapshot(root, study, base_id=base_id, candidates=candidates, command_line=command_line,
-                          base_scores=base_scores)
+                          base_scores=base_scores, component_summaries=component_summaries)
         outputs = [study / "snapshot/manifest.json"]
     elif step == "candidates":
         from .candidates import build
@@ -480,10 +597,27 @@ def parse_candidates(items) -> dict:
         family, sep, source = str(item).partition("=")
         if not sep or not family or not source:
             raise RuntimeError(f"--candidate takes <family>=<folder with candidate.json or .easi-method.zip>, got {item!r}")
-        if family not in r4.FAMILIES:
-            raise RuntimeError(f"--candidate {family}: the addendum names {', '.join(r4.FAMILIES)}")
+        if family not in r4.FAMILIES and family != r4.COMPOSITION:
+            raise RuntimeError(f"--candidate {family}: the addendum names {', '.join(r4.FAMILIES)}, and "
+                               f"{r4.COMPOSITION} is their composition")
         if family in out:
             raise RuntimeError(f"--candidate {family} given twice")
+        out[family] = source
+    return out
+
+
+def parse_component_summaries(items) -> dict:
+    """``["E1=<summary.json>", ...]`` -> ``{"E1": "<summary.json>"}``: the single-family studies
+    a composition's interaction check reads; a family named twice or unknown is refused."""
+    out: dict = {}
+    for item in items or ():
+        family, sep, source = str(item).partition("=")
+        if not sep or not family or not source:
+            raise RuntimeError(f"--component-summary takes <family>=<that family's study summary.json>, got {item!r}")
+        if family not in r4.FAMILIES:
+            raise RuntimeError(f"--component-summary {family}: the addendum names {', '.join(r4.FAMILIES)}")
+        if family in out:
+            raise RuntimeError(f"--component-summary {family} given twice")
         out[family] = source
     return out
 
@@ -505,12 +639,17 @@ def main():
                         help="the staging folder of a national build of the study base (its manifest names the "
                              "base's method version and alternative id); required for a NEW study when the "
                              "stored analysis is another base's, and the base arm is verified against it")
+    parser.add_argument("--component-summary", action="append", default=[], metavar="FAMILY=SUMMARY",
+                        help="for a NEW study whose candidate is the composition FINALIST: each component "
+                             "family's own study summary.json (its decision and figures are recorded for the "
+                             "interaction check); an existing study keeps the summaries its manifest records")
     args = parser.parse_args()
     if Path(sys.executable).resolve() != (REPO_ROOT / ".venv/Scripts/python.exe").resolve():
         raise RuntimeError("Use the workspace .venv/Scripts/python.exe")
     root = args.root.resolve()
     study = safe_study(root, root / "review/alternative-studies" / args.study_id)
     candidates = parse_candidates(args.candidate)
+    component_summaries = parse_component_summaries(args.component_summary)
     manifest_path = study / "manifest.json"
     if manifest_path.is_file():
         manifest = read_json(manifest_path)
@@ -538,6 +677,13 @@ def main():
             if recorded_folder is None or Path(recorded_folder).resolve() != args.base_scores.resolve():
                 raise RuntimeError(f"{study.name} was created with base scores {recorded_folder}; a study never "
                                    f"changes its base scores (got {args.base_scores})")
+        if component_summaries:
+            recorded_summaries = manifest.get("component_studies") or {}
+            for family, source in component_summaries.items():
+                recorded_sum = recorded_summaries.get(family)
+                if recorded_sum is None or sha(Path(source)) != recorded_sum.get("summary_sha256"):
+                    raise RuntimeError(f"{study.name} was created with component summaries {sorted(recorded_summaries)}; "
+                                       f"a study never changes them (got {family}={source})")
     else:
         base_id = args.base or DEFAULT_BASE_ID
         if not bases.study_id_ok(study.name):
@@ -554,7 +700,8 @@ def main():
     try:
         for step in args.steps:
             run_stage(root, study, step, workers=max(1, min(args.workers, 6)), base_id=base_id,
-                      candidates=candidates or None, command_line=sys.argv, base_scores=args.base_scores)
+                      candidates=candidates or None, command_line=sys.argv, base_scores=args.base_scores,
+                      component_summaries=component_summaries or None)
     finally:
         lock.unlink(missing_ok=True)
 

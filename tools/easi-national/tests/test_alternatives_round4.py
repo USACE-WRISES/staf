@@ -942,3 +942,340 @@ def test_replay_base_scores_the_case_set_through_the_campaign_and_matches_the_st
     again = replay_base.replay(study_dir, zip_path, tmp_path / "campaign", workers=1)
     assert again["identical"] is False and again["differences"][0]["field"] == "eci"
     assert again["chunks"][0]["jobs"]["skipped"] == 1
+
+
+# --------------------------------------------------------------------------- #
+# the finalist composition (WP-R4s-3)
+# --------------------------------------------------------------------------- #
+COMPOSED_FUNCTIONS = ["low_flow_baseflow_dynamics", "population_support", "high_flow_dynamics",
+                      "floodplain_connectivity", "channel_evolution", "channel_floodplain_dynamics"]
+
+
+def _composition_folder(tmp_path, families=("E1", "E3", "E5")) -> Path:
+    """A composed package folder as build_easi_candidate_package.py --family E1 E3 E5 writes it."""
+    from streamcurves._vendor.easi import method_package as vmp
+    from streamcurves.easi_method import round4 as sc
+    files = sc.base_files(LIBRARY_V1)
+    recorded = sc.recorded_base_identity(LIBRARY_V1)
+    built = sc.build_composition(files, list(families))
+    pkg = sc.package(built["files"], sc.COMPOSITION, built["spec"])
+    folder = tmp_path / "candidates" / sc.COMPOSITION
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "FINALIST.easi-method.zip").write_bytes(vmp.to_zip(pkg))
+    record = {"schema": "staf-easi-candidate", "family": sc.COMPOSITION, "familyName": built["spec"]["family"],
+              "composition": built["composition"],
+              "components": {f: {"familyName": c.get("family"), "decision": c.get("decision")}
+                             for f, c in built["spec"]["components"].items()},
+              "base": {"packageDigest": vmp.package_digest({n: vmp._sha(b) for n, b in files.items()}),
+                       "methodVersion": recorded.get("methodVersion"), "recorded": recorded},
+              "candidate": {**built["identity"], "zip": "FINALIST.easi-method.zip"},
+              "edits": built["edits"], "respecified": built.get("respecified"), "label": "rehearsal"}
+    (folder / "candidate.json").write_text(json.dumps(record, indent=1, sort_keys=True, default=str) + "\n", encoding="utf-8")
+    return folder
+
+
+def _component_summary(tmp_path, family, functions, *, adopted=True, t1=(.001, -.001, .003), t2=(.0005, -.0005, .002),
+                       availability=None, eci_delta=0.0, base_digest=None) -> Path:
+    """A single-family study summary as report.build_round4 writes it, reduced to what a
+    composition study reads from it."""
+    base = bases.base(ADOPTED)
+
+    def row(d, lo, hi):
+        return {"delta": d, "delta_median": d, "ci_low": lo, "ci_high": hi, "n": 900, "supported": True,
+                "present": True, "role": "deciding", "p_two_sided": .3}
+    designs = {design: {"T1": row(*t1), "T2": row(*t2), "T3_fish_mmi": row(0, -.001, .001), "T3_oe": row(0, -.001, .001)}
+               for design in ("frozen", "watershed-held-out")}
+    p3_functions = {fn: {"availability_base": .99, "availability_candidate": .99, "withheld_share": 0.0, "lost_share": 0.0,
+                         "gained_share": 0.0, "changed_share": 0.0, "n_withheld": 0, "documented_gaps_only": True}
+                    for fn in COMPOSED_FUNCTIONS + ["habitat_provision"]}
+    for fn, avail in (availability or {}).items():
+        p3_functions[fn].update({"availability_candidate": avail, "withheld_share": .99 - avail, "lost_share": .99 - avail,
+                                 "n_withheld": 100})
+    retro = {"frozen": {"T1": {"present": False}, "T2": row(.001, .0, .002)},
+             "watershed-held-out": {"T1": {"present": False}, "T2": row(.001, .0, .002)}}
+    doc = {"schema_version": 2, "study_id": f"2026-09-27-{family.lower()}-alternatives", "runner_version": "1.2.0",
+           "base_id": ADOPTED, "deciding_cohort": r4.DECIDING_COHORT, "input_digest": "digest-" + family,
+           "base": {"package_digest": base_digest or base.package_digest, "method_version": base.method_version},
+           "verification": {"status": "passed"},
+           "candidates": [{"id": family, "family": r4.family_spec(family)["family"], "functions": functions,
+                           "decision_rule": "simplification", "package_digest": "sha256:" + family[-1] * 64,
+                           "method_version": "abcdef" + family, "evaluator_digest": "sha256:e",
+                           "P1": {"designs": designs, "cohorts": {"retrospective_2324": retro}},
+                           "P2": {"blocks": False, "findings": []},
+                           "P3": {"functions": p3_functions, "eci_mean_delta_paired": eci_delta, "changed_ratings_share": .1,
+                                  "documented_gaps_only": True, "availability_unchanged": not availability, "n_sample": 100000},
+                           "decision": {"adopted": adopted, "reasons": [] if adopted else ["P2 retains the base: 1 supported finding(s)"],
+                                        "primary_target": "T1", "deciding_targets": ["T1", "T2"],
+                                        "deciding_cohort": r4.DECIDING_COHORT}}]}
+    path = tmp_path / "summaries" / f"{family}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    write_json(path, doc)
+    return path
+
+
+def test_the_composition_spec_unions_the_components_and_needs_them():
+    from streamcurves.easi_method import round4 as sc
+    spec = r4.family_spec("FINALIST", composition=["E5", "E1", "E3"])
+    assert spec["id"] == r4.COMPOSITION == "FINALIST" and spec["composition"] == ["E1", "E3", "E5"]
+    assert spec["decision"] == "composition" and spec["primary_outcome"] == "P1"
+    assert spec["family"] == "finalist_composition" == r4.COMPOSITION_FAMILY_NAME
+    assert r4.function_ids(spec) == COMPOSED_FUNCTIONS
+    assert r4.deciding_targets(spec) == ("T1", ["T1", "T2"])
+    assert r4.comparison_scope(spec) is None and "respecified" not in spec
+    assert sorted(spec["components"]) == ["E1", "E3", "E5"] and spec["components"]["E3"]["decision"] == "simplification"
+    assert r4.deciding_targets(spec["components"]["E3"]) == ("T1", ["T1"])
+    # the same record StreamCurves' builder writes into a composed package
+    theirs = sc.composition_spec(["E1", "E3", "E5"])
+    for key in ("id", "family", "composition", "function", "decision", "primary_outcome", "hypothesis", "change"):
+        assert theirs[key] == spec[key], key
+    assert r4.arm_spec({"id": "FINALIST", "composition": ["E1", "E3", "E5"]})["composition"] == ["E1", "E3", "E5"]
+    assert r4.arm_spec({"id": "FINALIST", "record": {"composition": ["E1", "E5"]}})["composition"] == ["E1", "E5"]
+    assert r4.arm_spec({"id": "E1"})["id"] == "E1" and "composition" not in r4.arm_spec({"id": "E1"})
+    # a composition with E2 takes E2's scope and carries its re-specification, dated
+    with_e2 = r4.family_spec("FINALIST", composition=["E1", "E2"])
+    assert r4.comparison_scope(with_e2) == {**r4.comparison_scope(r4.family_spec("E2")), "component": "E2"}
+    assert with_e2["respecified"]["E2"]["date"] == "2026-09-27"
+    # refusals
+    with pytest.raises(r4.AddendumError, match="name its components"):
+        r4.family_spec("FINALIST")
+    with pytest.raises(r4.AddendumError, match="is one family"):
+        r4.family_spec("E1", composition=["E1", "E3"])
+    with pytest.raises(r4.AddendumError, match="at least two"):
+        r4.composition_spec(["E1"])
+    with pytest.raises(r4.AddendumError, match="once"):
+        r4.composition_spec(["E1", "E1"])
+    with pytest.raises(r4.AddendumError, match="addendum's families"):
+        r4.composition_spec(["E1", "E9"])
+    with pytest.raises(r4.AddendumError, match="name its components"):
+        r4.arm_spec({"id": "FINALIST"})
+    with pytest.raises(r4.AddendumError, match="none was given"):
+        r4.composition_members([])
+    assert study.parse_candidates(["FINALIST=x"]) == {"FINALIST": "x"}
+    assert study.parse_component_summaries(["E1=a", "E3=b"]) == {"E1": "a", "E3": "b"}
+    with pytest.raises(RuntimeError, match="given twice"):
+        study.parse_component_summaries(["E1=a", "E1=b"])
+    with pytest.raises(RuntimeError, match="names E1"):
+        study.parse_component_summaries(["FINALIST=a"])
+    assert "every component" in study.protocol()["composition"] and "never judged" in study.protocol()["composition"]
+
+
+def test_the_candidates_block_takes_a_composition_with_its_component_studies(tmp_path):
+    from easi import method_package as mp
+    base = bases.base(ADOPTED)
+    running = mp.evaluator_digest()
+    folder = _composition_folder(tmp_path)
+    found = r4.read_candidate_source(folder)
+    assert found["family"] == "FINALIST" and found["composition"] == ["E1", "E3", "E5"] and found["curve_count"] == 34
+    assert found["requires"]["behaviors"][-1] == "applicability-rules" and "unscored" in found["requires"]["operators"]
+    assert sorted(found["components"]) == ["E1", "E3", "E5"] and found["evaluator_digest"] == running
+    summaries = {"E1": _component_summary(tmp_path, "E1", ["low_flow_baseflow_dynamics"],
+                                          availability={"low_flow_baseflow_dynamics": .54}, eci_delta=-.003),
+                 "E3": _component_summary(tmp_path, "E3", ["population_support"],
+                                          availability={"population_support": .41}, eci_delta=.004),
+                 "E5": _component_summary(tmp_path, "E5", ["high_flow_dynamics"],
+                                          availability={"high_flow_dynamics": .43}, eci_delta=.021)}
+    given = {k: str(v) for k, v in summaries.items()}
+    block = study.candidate_block(base, {"FINALIST": str(folder)}, running, component_summaries=given)
+    assert [row["id"] for row in block] == ["alternative-1", "FINALIST"]
+    entry = block[1]
+    assert entry["family"] == "finalist_composition" and entry["decision"] == "composition"
+    assert entry["composition"] == ["E1", "E3", "E5"] and entry["primary_outcome"] == "P1"
+    assert entry["function"] == ["low-flow-baseflow-dynamics", "population-support", "high-flow-dynamics",
+                                 "floodplain-connectivity", "channel-evolution", "channel-floodplain-dynamics"]
+    assert entry["comparison_scope"] is None and entry["respecified"] is None
+    assert entry["package_digest"] == found["package_digest"] and entry["base"]["packageDigest"] == base.package_digest
+    assert sorted(entry["component_studies"]) == ["E1", "E3", "E5"]
+    e1 = entry["component_studies"]["E1"]
+    assert e1["study_id"] == "2026-09-27-e1-alternatives" and e1["summary_sha256"] == sha(summaries["E1"])
+    assert e1["decision"] == {"adopted": True, "reasons": [], "primary_target": "T1", "deciding_targets": ["T1", "T2"]}
+    assert e1["P1"]["frozen"]["T1"]["delta"] == .001 and e1["P1"]["watershed-held-out"]["T2"]["ci_low"] == -.0005
+    assert e1["P3"]["functions"]["low_flow_baseflow_dynamics"]["availability_candidate"] == .54
+    assert e1["P3"]["eci_mean_delta_paired"] == -.003 and e1["functions"] == ["low_flow_baseflow_dynamics"]
+    assert e1["P2"] == {"blocks": False, "findings_n": 0} and e1["package_digest"] == "sha256:" + "1" * 64
+    study.check_candidate(entry, base, running)
+    # refusals at the block: no summaries, a missing component, an extra family, a rejected component,
+    # a study on another base, another family's summary, summaries for a single-family study
+    with pytest.raises(study.CandidateRefused, match="component studies"):
+        study.candidate_block(base, {"FINALIST": str(folder)}, running)
+    with pytest.raises(study.CandidateRefused, match="E5=<summary.json>"):
+        study.candidate_block(base, {"FINALIST": str(folder)}, running,
+                              component_summaries={k: v for k, v in given.items() if k != "E5"})
+    with pytest.raises(study.CandidateRefused, match="no composition among the candidates names it"):
+        study.candidate_block(base, {"FINALIST": str(folder)}, running,
+                              component_summaries={**given, "E8": str(_component_summary(tmp_path / "e8", "E8", None))})
+    with pytest.raises(study.CandidateRefused, match="did not adopt it"):
+        study.candidate_block(base, {"FINALIST": str(folder)}, running, component_summaries={
+            **given, "E5": str(_component_summary(tmp_path / "rej", "E5", ["high_flow_dynamics"], adopted=False))})
+    with pytest.raises(study.CandidateRefused, match="not the study base"):
+        study.candidate_block(base, {"FINALIST": str(folder)}, running, component_summaries={
+            **given, "E5": str(_component_summary(tmp_path / "ob", "E5", ["high_flow_dynamics"], base_digest="sha256:" + "0" * 64))})
+    with pytest.raises(study.CandidateRefused, match="not of a single E5 study"):
+        study.candidate_block(base, {"FINALIST": str(folder)}, running, component_summaries={**given, "E5": given["E1"]})
+    e1_folder = _candidate_folder(tmp_path, "E1")
+    with pytest.raises(study.CandidateRefused, match="no composition among the candidates names it"):
+        study.candidate_block(base, {"E1": str(e1_folder)}, running, component_summaries={"E1": given["E1"]})
+    # the record's composition is checked: none, out of order, one member, a family carrying one
+    record = json.loads((folder / "candidate.json").read_text(encoding="utf-8"))
+    without = deepcopy(entry)
+    without["record"] = {**record, "composition": None}
+    with pytest.raises(study.CandidateRefused, match="names no composition"):
+        study.check_candidate(without, base, running)
+    disordered = deepcopy(entry)
+    disordered["record"] = {**record, "composition": ["E5", "E1", "E3"]}
+    with pytest.raises(study.CandidateRefused, match="addendum's order"):
+        study.check_candidate(disordered, base, running)
+    single = deepcopy(entry)
+    single["record"] = {**record, "composition": ["E1"]}
+    with pytest.raises(study.CandidateRefused, match="at least two"):
+        study.check_candidate(single, base, running)
+    family_entry = study.candidate_block(base, {"E1": str(e1_folder)}, running)[1]
+    carrying = deepcopy(family_entry)
+    carrying["record"] = {**family_entry["record"], "composition": ["E1", "E3"]}
+    with pytest.raises(study.CandidateRefused, match="is a composition of E1, E3"):
+        study.check_candidate(carrying, base, running)
+    # a FINALIST folder whose record names no composition is refused before its summaries are read
+    bare = tmp_path / "candidates" / "bare"
+    shutil.copytree(folder, bare)
+    rec = json.loads((bare / "candidate.json").read_text(encoding="utf-8"))
+    rec.pop("composition")
+    (bare / "candidate.json").write_text(json.dumps(rec), encoding="utf-8")
+    with pytest.raises(study.CandidateRefused, match="names no composition"):
+        study.candidate_block(base, {"FINALIST": str(bare)}, running, component_summaries=given)
+    # the composition's recorded base is checked like any candidate's
+    wrong_base = deepcopy(entry)
+    wrong_base["base"] = {**entry["base"], "packageDigest": "sha256:" + "0" * 64}
+    with pytest.raises(study.CandidateRefused, match="not the study's base"):
+        study.check_candidate(wrong_base, base, running)
+
+
+def test_the_decision_for_a_composition_reads_every_components_rule():
+    spec = r4.family_spec("FINALIST", composition=["E1", "E3", "E5"])
+    ok = _p1_block((-.001, .003), (-.0005, .002), t1_median=.001, t2_median=.0005)
+    verdict = outcomes.decide(spec, _outcomes(ok))
+    assert verdict["adopted"] and verdict["decision_rule"] == "composition" and verdict["composition"] == ["E1", "E3", "E5"]
+    assert verdict["deciding_targets"] == ["T1", "T2"] and verdict["primary_target"] == "T1"
+    assert {fid: r["passes"] for fid, r in verdict["components"].items()} == {"E1": True, "E3": True, "E5": True}
+    assert verdict["components"]["E3"]["deciding_targets"] == ["T1"] and verdict["components"]["E1"]["decision_rule"] == "simplification"
+    assert verdict["reasons"] == [] and "every component" in verdict["rule"] and "composed arm" in verdict["primary_target_basis"]
+    assert "never the retrospective rows" in verdict["reads"]
+    # T2's lower bound below the margin fails E1 and E5 (both targets) but not E3 (T1 only)
+    bad_t2 = _p1_block((-.001, .003), (-.02, .002), t1_median=.001, t2_median=-.005)
+    failing = outcomes.decide(spec, _outcomes(bad_t2))
+    assert not failing["adopted"] and not failing["primary_rule_passes"]
+    assert {fid: r["passes"] for fid, r in failing["components"].items()} == {"E1": False, "E3": True, "E5": False}
+    assert "E1: frozen: the T2 lower bound is below -0.01" in failing["reasons"]
+    assert "E5: watershed-held-out: the T2 lower bound is below -0.01" in failing["reasons"]
+    assert not any(r.startswith("E3:") for r in failing["reasons"])
+    # availability changed other than by documented gaps fails every simplification component
+    undocumented = outcomes.decide(spec, _outcomes(ok, documented=False))
+    assert not undocumented["adopted"] and all(not r["passes"] for r in undocumented["components"].values())
+    # a P2 block on the union retains the base although every component passes
+    finding = {"design": "frozen", "function": "population_support", "statistic": "spearman", "ci_high": -.01}
+    blocked = outcomes.decide(spec, _outcomes(ok, findings=[finding]))
+    assert not blocked["adopted"] and blocked["p2_blocks"] and all(r["passes"] for r in blocked["components"].values())
+    # the single-family decisions are unchanged by the refactoring
+    assert outcomes.decide(r4.family_spec("E1"), _outcomes(ok))["adopted"]
+    assert not outcomes.decide(r4.family_spec("E1"), _outcomes(bad_t2))["adopted"]
+    assert outcomes.decide(r4.family_spec("E3"), _outcomes(bad_t2))["adopted"]
+    # the interaction check: the composed arm against the sum of the singles, reported without a verdict
+    studies = {"E1": {"functions": ["low_flow_baseflow_dynamics"],
+                      "P1": {"frozen": {"T1": {"delta": .0004, "ci_low": -.0003, "ci_high": .0009}}},
+                      "P3": {"functions": {"low_flow_baseflow_dynamics": {"availability_base": .99, "availability_candidate": .54, "withheld_share": .45}},
+                             "eci_mean_delta_paired": -.003, "changed_ratings_share": .45}},
+               "E3": {"functions": ["population_support"],
+                      "P1": {"frozen": {"T1": {"delta": .0013, "ci_low": -.0004, "ci_high": .0032}}},
+                      "P3": {"functions": {"population_support": {"availability_base": .98, "availability_candidate": .41, "withheld_share": .59}},
+                             "eci_mean_delta_paired": .004, "changed_ratings_share": .57}},
+               "E5": {"functions": ["high_flow_dynamics"],
+                      "P1": {"frozen": {"T1": {"delta": .0123, "ci_low": .005, "ci_high": .02}}},
+                      "P3": {"functions": {"high_flow_dynamics": {"availability_base": .99, "availability_candidate": .43, "withheld_share": .56}},
+                             "eci_mean_delta_paired": .021, "changed_ratings_share": .56}}}
+    p1 = {"deciding_cohort": r4.DECIDING_COHORT,
+          "designs": {"frozen": {"T1": {"delta": .015, "ci_low": .008, "ci_high": .022, "n": 932, "role": "deciding"}}}}
+    p3 = {"functions": {"low_flow_baseflow_dynamics": {"availability_base": .99, "availability_candidate": .54, "withheld_share": .45, "documented_gaps_only": True},
+                        "population_support": {"availability_base": .98, "availability_candidate": .40, "withheld_share": .60, "documented_gaps_only": True},
+                        "high_flow_dynamics": {"availability_base": .99, "availability_candidate": .43, "withheld_share": .56, "documented_gaps_only": True},
+                        "habitat_provision": {"availability_base": .99, "availability_candidate": .99, "withheld_share": 0., "documented_gaps_only": True}},
+          "eci_mean_delta_paired": .0215, "changed_ratings_share": .8}
+    got = outcomes.interaction(p1, p3, studies)
+    t1 = got["P1"]["frozen"]["T1"]
+    assert t1["composed_delta"] == .015 and t1["sum_of_single_deltas"] == pytest.approx(.014)
+    assert t1["difference"] == pytest.approx(.001) and t1["composed_ci"] == [.008, .022] and t1["composed_n"] == 932
+    assert t1["single_family_deltas"] == {"E1": .0004, "E3": .0013, "E5": .0123}
+    assert t1["single_family_ci"]["E5"] == [.005, .02]
+    assert set(got["P3"]) == {"low_flow_baseflow_dynamics", "population_support", "high_flow_dynamics"}
+    pop = got["P3"]["population_support"]
+    assert pop["declared_by"] == ["E3"] and pop["changed_by_single_family"] == ["E3"]
+    assert pop["expected_without_interaction"] == .41 and pop["difference"] == pytest.approx(-.01)
+    # a single study without a row for the function (the synthetic blocks carry their own only) reads None
+    assert pop["single_family_availability"] == {"E1": None, "E3": .41, "E5": None} and pop["composed_availability"] == .40
+    assert got["eci_mean_delta_paired"]["sum_of_single"] == pytest.approx(.022)
+    assert got["eci_mean_delta_paired"]["difference"] == pytest.approx(-.0005)
+    assert got["changed_ratings_share"] == {"composed": .8, "single_family": {"E1": .45, "E3": .57, "E5": .56}}
+    assert got["components"] == ["E1", "E3", "E5"] and "not judged" in got["rule"] and got["cohort"] == r4.DECIDING_COHORT
+
+
+def test_the_finalist_report_lists_the_composition_apart_and_the_retrospective_covers_it(tmp_path):
+    summaries = []
+    retro = {"frozen": {"T1": {"present": False}, "T2": {"delta": .001, "ci_low": .0, "ci_high": .002, "present": True, "supported": True}},
+             "watershed-held-out": {"T1": {"present": False}, "T2": {"delta": .001, "ci_low": .0, "ci_high": .002, "present": True, "supported": True}}}
+    for family, p in (("E1", .26), ("E2", .05), ("E3", .15), ("E4", .002), ("E5", .002), ("E6", .35), ("E7", .2), ("E8", .002)):
+        rule = "presentation" if family == "E8" else "simplification" if family in ("E1", "E3", "E5", "E6") else "accuracy_change"
+        summaries.append({"study_id": f"2026-09-27-{family.lower()}-alternatives", "candidates": [
+            {"id": family, "family": family.lower(), "decision_rule": rule,
+             "P1": {"designs": {"frozen": {"T1": {"p_two_sided": p}}}, "cohorts": {"retrospective_2324": retro}},
+             "P5": {"p_two_sided": p},
+             "decision": {"primary_target": "T1", "adopted": family in ("E1", "E3", "E5"), "reasons": [],
+                          "deciding_cohort": r4.DECIDING_COHORT}}]})
+    composed = {"study_id": "2026-09-28-finalist-composition-alternatives", "candidates": [
+        {"id": "FINALIST", "family": "finalist_composition", "decision_rule": "composition",
+         "P1": {"designs": {"frozen": {"T1": {"p_two_sided": .001, "delta": .015, "ci_low": .008, "ci_high": .022, "n": 932},
+                                       "T2": {"delta": .006, "ci_low": .001, "ci_high": .011, "n": 2010}},
+                            "watershed-held-out": {"T1": {"delta": .015}, "T2": {"delta": .006}}},
+                "cohorts": {"retrospective_2324": {
+                    "frozen": {"T1": {"present": False}, "T2": {"delta": .006, "ci_low": .0, "ci_high": .012, "present": True}},
+                    "watershed-held-out": {"T1": {"present": False}, "T2": {"delta": .006, "present": True}}}}},
+         "P2": {"blocks": False}, "P3": {"documented_gaps_only": True},
+         "composition": {"components": ["E1", "E3", "E5"],
+                         "component_rules": {"E1": {"decision_rule": "simplification", "passes": True, "reasons": [],
+                                                    "deciding_targets": ["T1", "T2"]}},
+                         "interaction": {"P1": {}, "rule": "reported"},
+                         "component_studies": {"E1": {"study_id": "2026-09-27-e1-alternatives", "summary_sha256": "x",
+                                                      "decision": {"adopted": True}}}},
+         "decision": {"adopted": True, "reasons": [], "primary_target": "T1", "deciding_cohort": r4.DECIDING_COHORT}}]}
+    got = round4_finalist.report(summaries + [composed])
+    assert got["complete"] and got["families_read"] == list(r4.FAMILIES)
+    assert [r["family"] for r in got["rows"]] == list(r4.FAMILIES)
+    comp, = got["compositions"]
+    assert comp["id"] == "FINALIST" and comp["components"] == ["E1", "E3", "E5"] and comp["adopted_by_margins"] is True
+    assert comp["component_rules"]["E1"]["passes"] is True and comp["interaction"]["rule"] == "reported"
+    assert comp["P1_development"]["frozen"]["T1"]["delta"] == .015 and comp["P2_blocks"] is False
+    assert comp["study"] == "2026-09-28-finalist-composition-alternatives" and "apart" in comp["note"]
+    # the BH set is the eight primaries: the q-values are those of the eight-family report
+    eight = round4_finalist.report(summaries)
+    assert [r["q"] for r in got["rows"]] == [r["q"] for r in eight["rows"]] and eight["compositions"] == []
+    assert "apart" in got["note"]
+    retro_doc = round4_finalist.retrospective_report(summaries + [composed])
+    assert retro_doc["families"] == list(r4.FAMILIES) and retro_doc["compositions"] == ["FINALIST"]
+    assert retro_doc["read_once"] is True and retro_doc["cohort"] == "retrospective_2324"
+    last = retro_doc["rows"][-1]
+    assert last["family"] == "FINALIST" and last["composition"] == ["E1", "E3", "E5"] and last["adopted_by_margins"] is True
+    assert last["retrospective"]["frozen"]["T2"]["delta"] == .006 and last["retrospective"]["frozen"]["T1"] == {"present": False}
+    assert last["present_targets"] == {"frozen": ["T2"], "watershed-held-out": ["T2"]}
+    assert retro_doc["rows"][0]["family"] == "E1" and retro_doc["rows"][0]["composition"] is None
+    assert "every decision" in retro_doc["note"] and "read once" in retro_doc["note"]
+    # the CLI with nine summaries writes the retrospective once; a second write is refused before anything is written
+    paths = []
+    for doc in summaries + [composed]:
+        path = tmp_path / f"{doc['study_id']}.json"
+        path.write_text(json.dumps(doc), encoding="utf-8")
+        paths.append(str(path))
+    args = [item for path in paths for item in ("--summary", path)]
+    out, retro_out = tmp_path / "bh.json", tmp_path / "retro.json"
+    assert round4_finalist.main([*args, "--out", str(out), "--retrospective", str(retro_out)]) == 0
+    assert json.loads(retro_out.read_text(encoding="utf-8"))["compositions"] == ["FINALIST"]
+    assert json.loads(out.read_text(encoding="utf-8"))["compositions"][0]["id"] == "FINALIST"
+    again = tmp_path / "bh2.json"
+    with pytest.raises(SystemExit, match="read once"):
+        round4_finalist.main([*args, "--out", str(again), "--retrospective", str(retro_out)])
+    assert not again.exists()

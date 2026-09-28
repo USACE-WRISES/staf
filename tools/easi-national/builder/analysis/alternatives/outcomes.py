@@ -326,15 +326,13 @@ def _accuracy_reading(p1_block, primary, other):
     return {"primary": primary, "other": other, "passes": not reasons, "reasons": reasons}
 
 
-def decide(spec, outcomes) -> dict:
-    """The decision by the yaml's margins exactly as written: an accuracy change, a
-    simplification or E8's presentation rule on P1 or P5, the P2 block, the P4 margin for a
-    refitted family, with every reason listed."""
+def _primary_reading(spec, p1_block, p3_block, p5_block) -> tuple:
+    """``(passes, reasons, readings)`` of one family's own primary rule (an accuracy change, a
+    simplification or E8's presentation rule) on the P1, P3 and P5 blocks given: the family's
+    own when it is studied alone, the composed arm's when it is a composition's component."""
     decision = str(spec.get("decision") or "")
     primary, deciding = r4.deciding_targets(spec)
-    p1_block, p2_block, p3_block, p4_block, p5_block = (outcomes[k] for k in ("P1", "P2", "P3", "P4", "P5"))
-    reasons = []
-    readings = {}
+    reasons, readings = [], {}
     if decision == "accuracy_change":
         other = "T2" if primary == "T1" else "T1"
         readings = {f"primary_{primary}": _accuracy_reading(p1_block, primary, other),
@@ -368,19 +366,122 @@ def decide(spec, outcomes) -> dict:
     else:
         reasons.append(f"unknown decision rule {decision!r}")
         passes = False
+    return bool(passes), reasons, readings
+
+
+def decide(spec, outcomes) -> dict:
+    """The decision by the yaml's margins exactly as written: an accuracy change, a
+    simplification or E8's presentation rule on P1 or P5, the P2 block, the P4 margin for a
+    refitted family, with every reason listed. A composition (the finalist) holds when every
+    component's own rule holds on the composed arm's outcomes, with P2 read on the union of
+    the components' functions and P4 for any refitted component; each component's reading
+    is listed under ``components``."""
+    decision = str(spec.get("decision") or "")
+    primary, deciding = r4.deciding_targets(spec)
+    p1_block, p2_block, p3_block, p4_block, p5_block = (outcomes[k] for k in ("P1", "P2", "P3", "P4", "P5"))
+    components = {}
+    if decision == "composition":
+        passes, reasons, readings = True, [], {}
+        for fid, comp in (spec.get("components") or {}).items():
+            c_passes, c_reasons, c_readings = _primary_reading(comp, p1_block, p3_block, p5_block)
+            c_primary, c_deciding = r4.deciding_targets(comp)
+            components[fid] = {"decision_rule": comp.get("decision"), "primary_target": c_primary,
+                               "deciding_targets": c_deciding, "passes": c_passes, "reasons": c_reasons,
+                               "readings": c_readings}
+            passes &= c_passes
+            reasons.extend(f"{fid}: {r}" for r in c_reasons)
+        if not components:
+            reasons.append("the composition names no components")
+            passes = False
+        basis = "each component's own rule and targets, read on the composed arm"
+    else:
+        passes, reasons, readings = _primary_reading(spec, p1_block, p3_block, p5_block)
+        basis = ("named by the addendum" if "T1" in str(spec.get("primary_outcome", "")) else
+                 "the addendum names none for this family; T1 (the 2013-14 designations) taken, both readings reported")
     if p2_block.get("blocks"):
         reasons.append(f"P2 retains the base: {len(p2_block['findings'])} supported finding(s) in the function and regional review")
     p4_ok = p4_block.get("status") != "computed" or p4_block.get("within_margin")
     if not p4_ok:
         reasons.append(f"P4: the refitted family's flip share rises by more than {r4.MARGINS['p4_flip_rise']}")
     adopted = bool(passes and not p2_block.get("blocks") and p4_ok)
-    return {"decision_rule": decision, "primary_target": primary, "deciding_targets": deciding,
-            "primary_target_basis": ("named by the addendum" if "T1" in str(spec.get("primary_outcome", "")) else
-                                     "the addendum names none for this family; T1 (the 2013-14 designations) taken, both readings reported"),
-            "adopted": adopted, "primary_rule_passes": bool(passes), "p2_blocks": bool(p2_block.get("blocks")),
-            "p4_within_margin": bool(p4_ok), "reasons": reasons, "readings": readings,
-            "margins": dict(r4.MARGINS), "deciding_cohort": p1_block.get("deciding_cohort"),
-            "reads": "P1 designs of the deciding cohort, P2 of the same cohort, P3, P4, P5; never the retrospective rows"}
+    out = {"decision_rule": decision, "primary_target": primary, "deciding_targets": deciding,
+           "primary_target_basis": basis,
+           "adopted": adopted, "primary_rule_passes": bool(passes), "p2_blocks": bool(p2_block.get("blocks")),
+           "p4_within_margin": bool(p4_ok), "reasons": reasons, "readings": readings,
+           "margins": dict(r4.MARGINS), "deciding_cohort": p1_block.get("deciding_cohort"),
+           "reads": "P1 designs of the deciding cohort, P2 of the same cohort, P3, P4, P5; never the retrospective rows"}
+    if decision == "composition":
+        out["composition"] = list(spec.get("composition") or [])
+        out["components"] = components
+        out["rule"] = ("the composition holds when every component's own rule holds on the composed arm "
+                       "(P1 on its own targets in both designs, P3 documented gaps only for a simplification), "
+                       "with no P2 block on the union of the components' functions and P4 within margin for a "
+                       "refitted component; its interaction with the single-family studies is reported, not judged")
+    return out
 
 
-__all__ = ["p1", "p2", "p3", "p4", "p5", "p6", "decide", "SEED", "DESIGNS", "COHORTS", "P1_TARGETS"]
+def _sum(values):
+    finite = [v for v in values if v is not None]
+    return float(sum(finite)) if finite else None
+
+
+def interaction(p1_block, p3_block, component_studies) -> dict:
+    """The finalist's interaction check, reported and never judged (the addendum names no
+    margin for it): the composed arm's P1 delta against the sum of its components' single-
+    family deltas on the same targets and designs (the deciding cohort), and the composed P3
+    availability per function against the single-family figures. ``component_studies`` is
+    the block the snapshot recorded from the components' own summaries."""
+    p1 = {}
+    for design, block in (p1_block.get("designs") or {}).items():
+        p1[design] = {}
+        for target, row in block.items():
+            singles = {fid: ((cs.get("P1") or {}).get(design) or {}).get(target) or {}
+                       for fid, cs in component_studies.items()}
+            deltas = {fid: s.get("delta") for fid, s in singles.items()}
+            total = _sum(deltas.values())
+            composed = row.get("delta")
+            p1[design][target] = {
+                "composed_delta": composed, "composed_ci": [row.get("ci_low"), row.get("ci_high")],
+                "composed_n": row.get("n"), "role": row.get("role"),
+                "single_family_deltas": deltas,
+                "single_family_ci": {fid: [s.get("ci_low"), s.get("ci_high")] for fid, s in singles.items()},
+                "sum_of_single_deltas": total,
+                "difference": (composed - total) if composed is not None and total is not None else None}
+    p3 = {}
+    for fn, row in (p3_block.get("functions") or {}).items():
+        singles = {fid: ((cs.get("P3") or {}).get("functions") or {}).get(fn) or {}
+                   for fid, cs in component_studies.items()}
+        declared = [fid for fid, cs in component_studies.items() if fn in (cs.get("functions") or [])]
+        changed_by = [fid for fid, s in singles.items()
+                      if s.get("availability_base") is not None and s.get("availability_candidate") is not None
+                      and abs(s["availability_candidate"] - s["availability_base"]) > 1e-12]
+        composed_changed = (row.get("availability_base") is not None and row.get("availability_candidate") is not None
+                            and abs(row["availability_candidate"] - row["availability_base"]) > 1e-12)
+        if not declared and not changed_by and not composed_changed:
+            continue
+        expected = singles[changed_by[0]].get("availability_candidate") if len(changed_by) == 1 else None
+        p3[fn] = {"availability_base": row.get("availability_base"),
+                  "composed_availability": row.get("availability_candidate"),
+                  "composed_withheld_share": row.get("withheld_share"),
+                  "composed_documented_gaps_only": row.get("documented_gaps_only"),
+                  "single_family_availability": {fid: s.get("availability_candidate") for fid, s in singles.items()},
+                  "single_family_withheld_share": {fid: s.get("withheld_share") for fid, s in singles.items()},
+                  "declared_by": declared, "changed_by_single_family": changed_by,
+                  "expected_without_interaction": expected,
+                  "difference": ((row.get("availability_candidate") - expected)
+                                 if expected is not None and row.get("availability_candidate") is not None else None)}
+    eci_singles = {fid: (cs.get("P3") or {}).get("eci_mean_delta_paired") for fid, cs in component_studies.items()}
+    eci_total = _sum(eci_singles.values())
+    eci = p3_block.get("eci_mean_delta_paired")
+    changed_singles = {fid: (cs.get("P3") or {}).get("changed_ratings_share") for fid, cs in component_studies.items()}
+    return {"cohort": p1_block.get("deciding_cohort"), "components": sorted(component_studies),
+            "P1": p1, "P3": p3,
+            "eci_mean_delta_paired": {"composed": eci, "single_family": eci_singles, "sum_of_single": eci_total,
+                                      "difference": (eci - eci_total) if eci is not None and eci_total is not None else None},
+            "changed_ratings_share": {"composed": p3_block.get("changed_ratings_share"), "single_family": changed_singles},
+            "rule": ("reported, not judged: the addendum names no margin for the interaction of accepted changes; "
+                     "a paired AUC delta is not additive and a function's availability is set by the components that "
+                     "withhold it, so each difference describes the composed arm and decides nothing")}
+
+
+__all__ = ["p1", "p2", "p3", "p4", "p5", "p6", "decide", "interaction", "SEED", "DESIGNS", "COHORTS", "P1_TARGETS"]

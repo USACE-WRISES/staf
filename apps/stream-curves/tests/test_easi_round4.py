@@ -11,7 +11,9 @@ exactly as it did.
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -423,3 +425,209 @@ def test_the_packages_score_as_their_families_say(base):
         assert res["functionsRated"] == res["rated"]
         lo, hi = res["ecosystemConditionIndexInterval"]
         assert lo <= res["eci"] <= hi
+
+
+# --------------------------------------------------------------------------- #
+# the finalist composition (WP-R4s-3)
+# --------------------------------------------------------------------------- #
+#: the package digests of the single-family packages the Round 4 studies scored (the
+#: candidate.json of E1, E3 and E5 under D:/Data/staf-campaign-2026-09/easi/candidates,
+#: built from the same base files): a composition must leave the single builds byte for byte
+SINGLE_FAMILY_DIGESTS = {
+    "E1": "sha256:41b3ae6c4163b8900f9f8300baf2de2b2a04eb15f5676aec64659676a8f48fbf",
+    "E3": "sha256:4558f32fe1b53baa2ee43f109b4a1c748cc367e4bb71daec383a0bc5643c0ac7",
+    "E5": "sha256:6530e461132d890f86c75c5faa86e4ba96c930ad6cd1d706c37739baf170a89f",
+}
+
+
+def _method_of(doc: dict, key: str) -> dict:
+    for m in doc["methods"]:
+        if m["methodKey"] == key:
+            return m
+        for v in m.get("variants") or []:
+            if v["methodKey"] == key:
+                return v
+    raise KeyError(key)
+
+
+def test_the_composition_applies_the_families_in_addendum_order(base):
+    built = round4.build_composition(base, ["E5", "E1", "E3"])
+    spec = built["spec"]
+    assert spec["id"] == "FINALIST" == round4.COMPOSITION and spec["family"] == "finalist_composition"
+    assert spec["composition"] == ["E1", "E3", "E5"] == built["composition"]
+    assert spec["decision"] == "composition" and spec["primary_outcome"] == "P1"
+    assert spec["function"] == ["low-flow-baseflow-dynamics", "population-support", "high-flow-dynamics",
+                                "floodplain-connectivity", "channel-evolution", "channel-floodplain-dynamics"]
+    assert sorted(spec["components"]) == ["E1", "E3", "E5"]
+    assert spec["components"]["E3"]["family"] == "biological_fallback" and spec["components"]["E3"]["id"] == "E3"
+    assert "E1:" in spec["change"] and "E5:" in spec["coverage_effect"]
+    assert "respecified" not in spec and built["respecified"] is None
+    # each component's edit is exactly what its single build applies, in the addendum's order
+    assert [e["family"] for e in built["edits"]] == ["E1", "E3", "E5"]
+    for entry in built["edits"]:
+        assert entry["edits"] == round4.build_candidate(base, entry["family"])["edits"]
+        assert entry["familyName"] == round4.family_spec(entry["family"])["family"]
+    assert mp.validate_files(built["files"]) == []
+    cat = json.loads(built["files"]["screening-methods.json"])
+    assert _method_of(cat, "erom-flow-variability")["applicability"]["exclude"] == ["46003", "46007"]
+    assert _method_of(cat, "streamcat-integrity-products")["operator"] == "unscored"
+    for key in round4.CROSS_SECTION_METHODS:
+        assert _method_of(cat, key)["applicability"]["withhold_when"] == ["low_quality", "out_of_range"]
+    assert _method_of(cat, "sediment-supply-potential")["operator"] == "worst_index"   # E6 and E7 absent
+    assert "rollupReporting" not in cat                                                # E8 absent
+    ident = built["scoringIdentity"]
+    assert ident["alternative_id"] == "round4-FINALIST" and ident["derived_from"]["alternative_id"] == "alternative-2"
+    assert ident["alternative_name"] == "Round 4 finalist composition E1+E3+E5, rehearsal"
+    assert built["identity"]["evaluatorDigest"] == mp.evaluator_digest()
+    assert built["identity"]["packageDigest"] not in set(SINGLE_FAMILY_DIGESTS.values())
+    # no accepted family refits a curve set: the curves file is the base's
+    assert {"reference-curves.json", "easi-metrics.json", "cwa-mapping.json", "functions.json",
+            "ecoregion-crosswalk.json", "nars-ecoregions-9.geojson.gz"} == set(built["unchangedFiles"])
+    assert built["curveSets"] == {}
+    pkg = round4.package(built["files"], "FINALIST", spec)
+    back = mp.read_package(mp.to_zip(pkg))
+    assert back.digest == built["identity"]["packageDigest"]
+    assert back.envelope["label"] == "Round 4 finalist composition E1+E3+E5 (rehearsal)"
+    extras = [b for b in back.envelope["evaluator"]["requires"]["behaviors"] if b not in mp.BEHAVIORS]
+    assert extras == ["applicability-rules"] and "mean_index" not in back.envelope["evaluator"]["requires"]["operators"]
+    # the same composition however its families are given
+    assert round4.build_composition(base, ("E1", "E3", "E5"))["files"] == built["files"]
+
+
+def test_single_family_builds_are_untouched_by_the_composition(base):
+    for family, digest in SINGLE_FAMILY_DIGESTS.items():
+        built = round4.build_candidate(base, family)
+        assert built["identity"]["packageDigest"] == digest, family
+        assert "composition" not in built and "composition" not in built["spec"]
+        pkg = round4.package(built["files"], family, built["spec"])
+        assert pkg.envelope["label"].startswith(f"Round 4 candidate {family}:")
+
+
+def test_the_composition_refuses_what_it_cannot_compose(base):
+    with pytest.raises(round4.CandidateError, match="at least two"):
+        round4.build_composition(base, ["E1"])
+    with pytest.raises(round4.CandidateError, match="once"):
+        round4.build_composition(base, ["E1", "E1", "E3"])
+    with pytest.raises(round4.CandidateError, match="addendum's families"):
+        round4.build_composition(base, ["E1", "E9"])
+    with pytest.raises(round4.CandidateError, match="addendum's families"):
+        round4.composition_spec(["FINALIST", "E1"])
+    with pytest.raises(round4.CandidateError, match="none was given"):
+        round4.composition_spec([])
+    assert round4.composition_members(["E8", "E3"]) == ["E3", "E8"]
+    # a refit family needs its set inside a composition as it does alone
+    with pytest.raises(round4.CandidateError, match="flow-min-ratio"):
+        round4.build_composition(base, ["E1", "E2"])
+    # a re-specified component rides into the composition's record, dated
+    spec = round4.composition_spec(["E2", "E1"])
+    assert spec["composition"] == ["E1", "E2"] and spec["respecified"] == {"E2": round4.RESPECIFIED["E2"]}
+    built = round4.build_composition(base, ["E2", "E1"], curve_sets=SETS)
+    assert built["respecified"] == {"E2": "2026-09-27"} and built["composition"] == ["E1", "E2"]
+    assert built["curveSets"]["flow-min-ratio"]["split"] == {"fcode_class": "perennial"}
+    assert mp.validate_files(built["files"]) == []
+
+
+def test_the_cli_builds_a_composition_as_candidate_finalist(tmp_path):
+    source = LIBRARY_V1 if (LIBRARY_V1 / mp.ENVELOPE).is_file() else VENDORED_DATA
+    out = tmp_path / "FINALIST"
+    proc = subprocess.run([sys.executable, "-B", str(SCRIPT), "--family", "E5", "E1", "E3", "--base", str(source),
+                           "--out", str(out)], cwd=str(APP), capture_output=True, text=True, timeout=600)
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    record = json.loads((out / "candidate.json").read_text(encoding="utf-8"))
+    assert record["family"] == "FINALIST" and record["familyName"] == "finalist_composition"
+    assert record["composition"] == ["E1", "E3", "E5"] and record["decision"] == "composition"
+    assert record["primaryOutcome"] == "P1" and sorted(record["components"]) == ["E1", "E3", "E5"]
+    assert record["components"]["E5"]["decision"] == "simplification"
+    assert record["components"]["E5"]["function"] == ["high-flow-dynamics", "floodplain-connectivity",
+                                                      "channel-evolution", "channel-floodplain-dynamics"]
+    assert record["respecified"] is None and record["respecification"] is None
+    assert [e["family"] for e in record["edits"]] == ["E1", "E3", "E5"] and record["label"] == "rehearsal"
+    assert record["candidate"]["zip"] == "FINALIST.easi-method.zip"
+    assert record["candidate"]["label"] == "Round 4 finalist composition E1+E3+E5 (rehearsal)"
+    assert record["candidate"]["scoringIdentity"]["alternative_id"] == "round4-FINALIST"
+    assert record["addendum"]["sha256"] == round4.ADDENDUM_SHA256
+    pkg = mp.read_package(out / "FINALIST.easi-method.zip")
+    assert pkg.digest == record["candidate"]["packageDigest"] != record["base"]["packageDigest"]
+    if source == LIBRARY_V1:
+        assert record["base"]["methodVersion"] == "b2e3033116e3"
+    for name in mp.METHOD_FILES:
+        assert (out / "method" / name).read_bytes() == pkg.files[name]
+    printed = json.loads(proc.stdout)
+    assert printed["composition"] == ["E1", "E3", "E5"] and printed["family"] == "FINALIST"
+    # a family given twice is refused before anything is written
+    proc = subprocess.run([sys.executable, "-B", str(SCRIPT), "--family", "E1", "E1", "--base", str(source),
+                           "--out", str(tmp_path / "twice")], cwd=str(APP), capture_output=True, text=True,
+                          timeout=600)
+    assert proc.returncode != 0 and "once" in proc.stderr and not (tmp_path / "twice").exists()
+
+
+EXPORT_SCRIPT = APP / "scripts" / "export_easi_method.py"
+
+
+def test_the_exporter_writes_a_library_version_candidate_from_a_candidate_folder(tmp_path):
+    """The adoption candidate leaves StreamCurves through the exporter, the sole writer: a
+    candidate package folder is a project it packages; --version-dir writes the version
+    candidate folder outside every library, registering nothing."""
+    source = LIBRARY_V1 if (LIBRARY_V1 / mp.ENVELOPE).is_file() else VENDORED_DATA
+    cand = tmp_path / "FINALIST"
+    proc = subprocess.run([sys.executable, "-B", str(SCRIPT), "--family", "E1", "E3", "E5", "--base", str(source),
+                           "--out", str(cand)], cwd=str(APP), capture_output=True, text=True, timeout=600)
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    record = json.loads((cand / "candidate.json").read_text(encoding="utf-8"))
+    vdir = tmp_path / "finalist-version"
+    proc = subprocess.run([sys.executable, "-B", str(EXPORT_SCRIPT), str(cand), "--version-dir", str(vdir)],
+                          cwd=str(APP), capture_output=True, text=True, timeout=600)
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    out = json.loads(proc.stdout)
+    expected_version = 2 if source == LIBRARY_V1 else 1
+    assert out["versionDir"]["version"] == expected_version and out["versionDir"]["registered"] is False
+    assert out["packageDigest"] == record["candidate"]["packageDigest"] == out["versionDir"]["packageDigest"]
+    zip_name = f"easi-screening-v{expected_version}.easi-method.zip"
+    envelope = json.loads((vdir / "method.json").read_text(encoding="utf-8"))
+    assert envelope["label"] == "Round 4 finalist composition E1+E3+E5 (rehearsal)"
+    assert envelope["version"] == expected_version and envelope["methodId"] == "easi-screening"
+    assert envelope["identity"]["packageDigest"] == record["candidate"]["packageDigest"]
+    assert envelope["identity"]["methodVersion"] == record["candidate"]["methodVersion"]
+    assert envelope["identity"]["evaluatorDigest"] == mp.evaluator_digest()
+    assert envelope["evaluator"]["requires"]["behaviors"][-1] == "applicability-rules" and "calculator" not in envelope
+    pkg = mp.read_package(vdir / zip_name)
+    assert pkg.digest == record["candidate"]["packageDigest"] and pkg.envelope == envelope
+    sha_text = (vdir / (zip_name + ".sha256")).read_text(encoding="utf-8")
+    assert sha_text.split()[0] == hashlib.sha256((vdir / zip_name).read_bytes()).hexdigest() == out["versionDir"]["zipSha256"]
+    assert zip_name in sha_text
+    for name in mp.METHOD_FILES:
+        assert (vdir / "method" / name).read_bytes() == pkg.files[name] == (cand / "method" / name).read_bytes()
+    written = json.loads((vdir / "candidate.json").read_text(encoding="utf-8"))
+    assert written["composition"] == ["E1", "E3", "E5"] and written["family"] == "FINALIST"
+    vc = written["versionCandidate"]
+    assert vc["registered"] is False and vc["proposedVersion"] == expected_version and vc["zip"] == zip_name
+    assert vc["identity"] == envelope["identity"] and vc["lineage"]["candidate"]["composition"] == ["E1", "E3", "E5"]
+    assert vc["lineage"]["origin"]["packageDigest"] == record["base"]["packageDigest"]
+    assert vc["lineage"]["origin"]["methodVersion"] == record["base"]["methodVersion"]
+    assert "owner" in vc["note"] and "registered in no manifest" in vc["note"]
+    assert sorted(p.name for p in vdir.iterdir()) == sorted(["method", "method.json", zip_name, zip_name + ".sha256",
+                                                             "candidate.json"])
+    # never under the library, never a library layout, never EASI's data folder
+    for bad in (REPO / "apps" / "library" / "assessments" / "easi-screening" / "v9",
+                tmp_path / "lib" / "assessments" / "easi-screening" / "v2",
+                REPO / "apps" / "easi" / "data" / "v2"):
+        proc = subprocess.run([sys.executable, "-B", str(EXPORT_SCRIPT), str(cand), "--version-dir", str(bad)],
+                              cwd=str(APP), capture_output=True, text=True, timeout=600)
+        assert proc.returncode != 0 and ("never written there" in proc.stderr or "registered nowhere" in proc.stderr), bad
+        assert not bad.exists()
+    # a candidate whose method files no longer match its record is refused
+    tampered = tmp_path / "tampered"
+    shutil.copytree(cand, tampered)
+    path = tampered / "method" / "cwa-mapping.json"
+    path.write_bytes(path.read_bytes() + b"\n")
+    proc = subprocess.run([sys.executable, "-B", str(EXPORT_SCRIPT), str(tampered), "--version-dir", str(tmp_path / "never")],
+                          cwd=str(APP), capture_output=True, text=True, timeout=600)
+    assert proc.returncode != 0 and "names package" in proc.stderr and not (tmp_path / "never").exists()
+    # the project the exporter packages is the candidate byte for byte, a revision of the base
+    project, rec = round4.candidate_project(cand)
+    assert project.files == pkg.files and project.meta["label"] == envelope["label"] and project.is_revision()
+    assert project.meta["lineage"]["origin"]["methodVersion"] == rec["base"]["methodVersion"]
+    assert project.package_digest == rec["candidate"]["packageDigest"] and project.meta["version"] == expected_version
+    assert round4.candidate_project(cand, version=7)[0].meta["version"] == 7
+    with pytest.raises(round4.CandidateError, match="no candidate.json"):
+        round4.candidate_project(tmp_path / "nowhere")
