@@ -249,6 +249,17 @@ def reference_annotations(evidence: dict, metrics) -> dict[str, dict]:
                 limitation = rp.flagged_limitation(rec)
                 if limitation and limitation not in caveats:
                     caveats.append(limitation)
+        kept_rec = (evidence.get("missingness") or {}).get(mk) or {}
+        if kept_rec.get("keptForCoverage"):
+            # methodology 0.16 (D18): a pool DATA-03 would have withheld, kept as its
+            # function's last candidate, carries its missingness as a limitation
+            meta = staf_library.staf_function_meta()
+            by_id = dict(zip(meta["id"].astype(str), meta["name"].astype(str)))
+            names = [by_id.get(str(fid), str(fid)) for fid in kept_rec["keptForCoverage"]]
+            caveat = missingness_kept_caveat(
+                kept_rec, names, float(methodology.threshold("data_rules.max_missingness_review")))
+            if caveat not in caveats:
+                caveats.append(caveat)
         if comparisons.get(mk):
             ann["localComparison"] = dict(comparisons[mk])
         block = stratifier_block(applied.get(mk) or {})
@@ -2178,6 +2189,80 @@ CENSUS_COLUMNS = ["l3", "region", "metric", "display_name", "family", "status", 
                   "supported_level", "transfer_risk", "zero_inflated", "q25"]
 
 
+def _metric_function_ids(keys, configs: dict) -> dict:
+    """``{metric: {canonical function ids}}`` by the build's own mapping (every
+    assignment, scaffold rows aside)."""
+    keys = [str(k) for k in keys]
+    if not keys:
+        return {}
+    cfg = {k: configs.get(k) or {} for k in keys}
+    frame = staf_library.default_discipline_function_mapping(keys, cfg)
+    got: dict = {}
+    if isinstance(frame, pd.DataFrame) and len(frame) and "metric_key" in frame.columns:
+        wanted = set(keys)
+        for mk, label in zip(frame["metric_key"], frame["function_label"]):
+            # the frame's scaffold rows (one per function, no metric) cover nothing
+            if not isinstance(mk, str) or mk not in wanted:
+                continue
+            canon = staf_library.staf_canonical_function(label)
+            if canon is not None:
+                got.setdefault(mk, set()).add(str(canon["id"]))
+    return got
+
+
+def _fixed_functions() -> set:
+    """The functions the fixed criteria score in every region."""
+    out: set = set()
+    fixed_map = fixed_criteria.mapping_rows()
+    for label in (list(fixed_map["function_label"]) if len(fixed_map) else []):
+        canon = staf_library.staf_canonical_function(label)
+        if canon is not None:
+            out.add(str(canon["id"]))
+    return out
+
+
+def missingness_kept_for_coverage(to_withhold: dict, missingness: dict, *,
+                                  covered_metrics: Iterable[str], configs: dict) -> dict:
+    """Methodology 0.16 (owner decision D18): the metrics DATA-03 would withhold
+    that are the last candidate of a function, kept with their missingness stated.
+
+    DATA-03 withholds a pool most of whose comparable stations carry no value.
+    Where that would leave a function with no other metric holding a curve (the
+    build's own, ladder, carried, fixed, owner-accepted or owner-held), the
+    candidate with the smallest missing fraction (then the most stations with a
+    value, then the key) keeps its validated pool, as REF-16 keeps a pool the
+    recovery test refused: the failed criterion becomes a stated limitation, never
+    a gap. Returns ``{metric: [the function ids it keeps covered]}``."""
+    covered: set = set(_fixed_functions())
+    for fids in _metric_function_ids(covered_metrics, configs).values():
+        covered |= fids
+    cand_functions = _metric_function_ids(to_withhold, configs)
+
+    def order(mk):
+        rec = missingness.get(mk) or {}
+        return (float(rec.get("missing_fraction") if rec.get("missing_fraction") is not None else 1.0),
+                -int(rec.get("n_with_value") or 0), mk)
+
+    kept: dict = {}
+    for mk in sorted(to_withhold, key=order):
+        empty = sorted(f for f in cand_functions.get(mk, set()) if f not in covered)
+        if empty:
+            kept[mk] = empty
+            covered |= cand_functions.get(mk, set())
+    return kept
+
+
+def missingness_kept_caveat(rec: dict, function_names: list, limit: float) -> str:
+    """The limitation a pool kept for coverage carries (DEEP prints it with the metric)."""
+    frac = float(rec.get("missing_fraction") or 0.0)
+    n_val, n_pool = int(rec.get("n_with_value") or 0), int(rec.get("n_pool_members") or 0)
+    names = ", ".join(function_names) or "its function"
+    return (f"Kept although {n_pool - n_val} of the pool's {n_pool} comparable stations carry "
+            f"no value for this metric (missing fraction {frac:.2f}, above the {limit:.2f} "
+            f"review level): no other source scores {names} in this ecoregion, so the "
+            f"curve rests on the {n_val} stations that do.")
+
+
 def last_resort_fills(l3_code: str, name: str, *, covered_metrics: Iterable[str],
                       candidate_metrics: dict, configs: dict, carried: Optional[dict] = None,
                       withheld_statements: Optional[dict] = None) -> dict:
@@ -2198,35 +2283,12 @@ def last_resort_fills(l3_code: str, name: str, *, covered_metrics: Iterable[str]
     if not methodology.last_resort().get("enabled") or not fixed_criteria.last_resort_keys():
         return {}
 
-    def functions_of(keys) -> dict:
-        keys = [str(k) for k in keys]
-        if not keys:
-            return {}
-        cfg = {k: configs.get(k) or {} for k in keys}
-        frame = staf_library.default_discipline_function_mapping(keys, cfg)
-        got: dict = {}
-        if isinstance(frame, pd.DataFrame) and len(frame) and "metric_key" in frame.columns:
-            wanted = set(keys)
-            for mk, label in zip(frame["metric_key"], frame["function_label"]):
-                # the frame's scaffold rows (one per function, no metric) cover nothing
-                if not isinstance(mk, str) or mk not in wanted:
-                    continue
-                canon = staf_library.staf_canonical_function(label)
-                if canon is not None:
-                    got.setdefault(mk, set()).add(str(canon["id"]))
-        return got
-
-    covered: set = set()
-    for fids in functions_of(covered_metrics).values():
+    covered: set = set(_fixed_functions())
+    for fids in _metric_function_ids(covered_metrics, configs).values():
         covered |= fids
-    fixed_map = fixed_criteria.mapping_rows()
-    for label in (list(fixed_map["function_label"]) if len(fixed_map) else []):
-        canon = staf_library.staf_canonical_function(label)
-        if canon is not None:
-            covered.add(str(canon["id"]))
     for c in (carried or {}).values():
         covered |= {str(f) for f in (c.get("functions") or []) if f}
-    cand_functions = functions_of(candidate_metrics)
+    cand_functions = _metric_function_ids(candidate_metrics, configs)
     statements = withheld_statements or {}
     out: dict = {}
     for mk in fixed_criteria.last_resort_keys():
@@ -2716,7 +2778,21 @@ def run_evidence(l3_code: str, name: str, *,
     # built curve for a reviewer. The fraction stays in the record, flagged, so
     # the DATA-03 record of the build states it.
     missingness = pool_missingness({mk: decisions[mk] for mk in metric_config})
-    for mk, rec in missingness_withheld(missingness).items():
+    to_withhold = missingness_withheld(missingness)
+    # methodology 0.16 (owner decision D18): DATA-03 never empties a function by
+    # itself; the last candidate keeps its pool with the missingness stated
+    kept_for_coverage = missingness_kept_for_coverage(
+        to_withhold, missingness,
+        covered_metrics=([mk for mk in metric_config if mk not in to_withhold] + list(ladder_rows)
+                         + list(carried) + list(held)
+                         + [mk for mk, f in (forced or {}).items()
+                            if isinstance(f, dict) and f.get("row") is not None]),
+        configs={**metric_config, **ladder_config})
+    for mk, rec in to_withhold.items():
+        if mk in kept_for_coverage:
+            missingness[mk] = {**missingness[mk], "withheld": False, "rule": "DATA-03",
+                               "keptForCoverage": kept_for_coverage[mk]}
+            continue
         _withhold(mk, HIGH_MISSINGNESS, missingness_statement(rec, decisions[mk]), rec)
         missingness[mk] = {**missingness[mk], "withheld": True, "rule": "DATA-03"}
     if not len(metric_config) or not len(data):

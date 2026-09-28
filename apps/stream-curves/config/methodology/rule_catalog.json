@@ -12,11 +12,11 @@
     "sha256": "84a5cabca0b08d403c44164b130500173451aa0d14ae11704abeeece014a1cfd"
    },
    "verdicts": "B3 (one search order) and C3b (tail endpoints 0.5, 1.5 and 2.5 IQR) adopted; B1 (narrowest adequate pool), B2 (regional screen relaxation off), B4 (floors 15/25 and 8/20), C1 (fill to one), C2 (CURVE-12 gate), C3a (zero-inflated two-part curves) and C4 (evidence-table assignments) rejected on their declared margins; C5 (REF-15 extension) and C6 (carry-forward off) reference-only.",
-   "threshold_status_review": "Every rule's threshold_status was re-stated at 0.15 and none moved to calibrated by this round: calibrated needs external evidence (independent field data or the blind benchmark) that does not exist; a candidate meeting its margin on the development regions changes a default, not a status. 62 rules provisional, 12 approved, 0 calibrated at 0.15; 0.16 adds REF-16 as provisional: 63 rules provisional, 12 approved, 0 calibrated.",
+   "threshold_status_review": "Every rule's threshold_status was re-stated at 0.15 and none moved to calibrated by this round: calibrated needs external evidence (independent field data or the blind benchmark) that does not exist; a candidate meeting its margin on the development regions changes a default, not a status. 62 rules provisional, 12 approved, 0 calibrated at 0.15; 0.16 adds REF-16 as provisional: 63 rules provisional, 12 approved, 0 calibrated; REF-17 (the last resort, owner decision D19) joins as provisional: 64 rules provisional, 12 approved, 0 calibrated.",
    "round6": {
     "opened": "2026-09-28",
-    "owner_decisions": ["D11", "D13", "D14"],
-    "rules": ["REF-16"],
+    "owner_decisions": ["D11", "D13", "D14", "D18", "D19"],
+    "rules": ["REF-16", "REF-17"],
     "policies": {"standing_decisions": "1.5", "promotion_policy": "1.2"},
     "note": "Round 6 changes the methodology on the owner's decisions of 2026-09-28, not on a protocol verdict: the frozen 0.15 pass scored 20 functions in 9 of 84 regions, and the owner decided that publishing a region with fewer than 20 scored functions is not acceptable. The evaluation protocol V1 and its margins stand for any later candidate."
    }
@@ -102,7 +102,7 @@
    "outcomes": {
     "pass": "n/a",
     "review": "legacy and interactive paths only: the built curve is held (data_review)",
-    "fail": "withheld at the build with the statement (0.15): no curve in the bundle, the metric listed as withheld, its function scored by its other metrics or reported as a documented gap"
+    "fail": "withheld at the build with the statement (0.15): no curve in the bundle, the metric listed as withheld, its function scored by its other metrics or reported as a documented gap. v0.16 (owner decision D18): where the withhold would leave a function with no other metric holding a curve, the candidate with the smallest missing fraction keeps its validated pool instead, the missingness stated on the curve as a limitation (pressure_evidence.missingness_kept_for_coverage, missingness_kept_caveat), as REF-16 states a recovery verdict"
    },
    "confidence_effect": "n/a (no curve is built)",
    "override_permission": "human_review",

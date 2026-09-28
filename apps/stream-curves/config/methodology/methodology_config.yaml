@@ -233,7 +233,9 @@ meta:
     (config/fixed_criteria.yaml, block last_resort), labelled as adopted and
     provisional, capped at 39, and never joining a function that holds any other
     curve; promotion policy 1.2 gains the gate all-functions-scored, so a documented
-    gap does not complete an assessment. No numeric threshold moved and no
+    gap does not complete an assessment; and DATA-03 never empties a function by
+    itself: its last candidate keeps a validated pool with the missingness stated as
+    a limitation. No numeric threshold moved and no
     threshold_status moved to calibrated. The standing_decisions index mirrors
     policy 1.5.
   authority: "STAF scientific team (human sign-off required for status promotion)"

@@ -189,3 +189,34 @@ def test_the_all_functions_scored_gate(tmp_path, monkeypatch):
     stage(_bundle(wanted, entry={"metricId": "spring-x", "methodContext": "m",
                                  "curve": {"points": [{"x": 0, "y": 0}]}}))
     assert not camp.gate_all_functions_scored(tmp_path)[0]
+
+
+# --------------------------------------------------------------------------- #
+# DATA-03 never empties a function by itself (methodology 0.16, owner decision D18)
+# --------------------------------------------------------------------------- #
+def test_the_last_candidate_of_a_function_keeps_its_pool_with_its_missingness_stated():
+    """Northern Minnesota Wetlands (49) in the six-region check: embeddedness held a
+    validated Level II pool of 25 stations with a value out of 42 comparable, DATA-03
+    withheld it, and hyporheic connectivity lost its last metric. The rule keeps the
+    candidate with the smallest missing fraction and states the fraction."""
+    to_withhold = {"phab_XEMBED": {}, "phab_PCT_SAFN": {}, "phab_XBKA": {}}
+    missing = {"phab_XEMBED": {"missing_fraction": 0.405, "n_pool_members": 42, "n_with_value": 25},
+               "phab_PCT_SAFN": {"missing_fraction": 0.5, "n_pool_members": 40, "n_with_value": 20},
+               "phab_XBKA": {"missing_fraction": 0.45, "n_pool_members": 40, "n_with_value": 22}}
+    kept = pe.missingness_kept_for_coverage(
+        to_withhold, missing, covered_metrics=["phab_SINU", "phab_LSUB_DMM", "phab_LRBS_use"],
+        configs={})
+    # embeddedness keeps hyporheic connectivity (and bed composition was covered);
+    # sand and fines is not needed once embeddedness keeps it; bank angle's function
+    # is covered by sinuosity, so bank angle is withheld as before
+    assert kept == {"phab_XEMBED": ["hyporheic-connectivity"]}
+    caveat = pe.missingness_kept_caveat(missing["phab_XEMBED"], ["Hyporheic connectivity"], 0.4)
+    assert "17 of the pool's 42 comparable stations" in caveat and "25 stations" in caveat
+    assert "—" not in caveat
+    # with nothing else in the function, the smaller fraction wins the place
+    kept = pe.missingness_kept_for_coverage(
+        {"phab_XBKA": {}, "phab_SINU": {}},
+        {"phab_XBKA": {"missing_fraction": 0.45, "n_with_value": 22},
+         "phab_SINU": {"missing_fraction": 0.42, "n_with_value": 24}},
+        covered_metrics=[], configs={})
+    assert kept == {"phab_SINU": ["channel-floodplain-dynamics"]}
