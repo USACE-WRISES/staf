@@ -42,17 +42,18 @@ def test_the_catalog_carries_74_rules_under_0_15_and_no_calibrated_threshold():
     assert methodology.load_config()["meta"]["methodology_version"] == VERSION
     assert cat["meta"]["date"] == "2026-09-28"
     ids = methodology.rule_ids()
-    # the 74 rules of 0.15 and REF-16 of 0.16
-    assert len(ids) == 75
+    # the 74 rules of 0.15, and REF-16 and REF-17 of 0.16
+    assert len(ids) == 76
     assert {"CURVE-13", "DATA-12", "EVAL-01", "REF-16"} <= set(ids)
     campaign = cat["meta"]["campaign"]
     assert campaign["protocol"]["sha256"] == PROTOCOL_SHA and campaign["round"] == 2
     assert "B3" in campaign["verdicts"] and "C3b" in campaign["verdicts"]
     assert "none moved to calibrated" in campaign["threshold_status_review"]
     counts = collections.Counter(r["threshold_status"] for r in cat["rules"])
-    assert counts == {"provisional": 63, "approved": 12}
+    assert counts == {"provisional": 64, "approved": 12}
     assert "62 rules provisional, 12 approved, 0 calibrated" in campaign["threshold_status_review"]
     assert "63 rules provisional, 12 approved, 0 calibrated" in campaign["threshold_status_review"]
+    assert "64 rules provisional, 12 approved, 0 calibrated" in campaign["threshold_status_review"]
     assert "v0.15" in cat["meta"]["description"] and "v0.16" in cat["meta"]["description"]
 
 
