@@ -154,8 +154,11 @@ def test_the_ohio_biocriteria_finding_is_recorded_and_checkable():
 
 
 def test_the_archive_carries_no_index_the_ohio_criteria_could_be_read_against():
-    """PB-1 for Ohio turns on whether the actual index can be evaluated. It
-    cannot: the archive publishes component metrics, never an index."""
+    """PB-1 for Ohio turns on whether Ohio's actual indices can be evaluated. They
+    cannot: the archive carries none of the IBI, ICI, MIwb or QHEI columns. EPA's
+    own NRSA indices (MMI_BENT, MMI_FISH, OE_SCORE) do enter the archive under
+    methodology 0.16, as metrics of their own with EPA's own benchmarks; they are
+    not Ohio's indices and never lend a threshold to a component metric."""
     import pandas as pd
     from pathlib import Path
     values = Path(__file__).resolve().parents[1] / "data" / "nrsa" / "values.parquet"
@@ -164,9 +167,213 @@ def test_the_archive_carries_no_index_the_ohio_criteria_could_be_read_against():
     cols = pd.read_parquet(values, columns=None).columns
     # whole tokens only: land_PCTSILICICWS contains "ICI" and is a lithology share
     import re
-    for token in ("IBI", "ICI", "MIWB", "QHEI", "MMI"):
+    for token in ("IBI", "ICI", "MIWB", "QHEI"):
         pattern = re.compile(r"(^|_)" + token + r"($|_)", re.I)
         assert not [c for c in cols if pattern.search(c)], token
+    indices = [c for c in cols if re.search(r"(^|_)MMI($|_)", c, re.I)]
+    assert sorted(indices) == ["bent_MMI_BENT", "fish_MMI_FISH"]
+
+
+# --------------------------------------------------------------------------- #
+# Methodology 0.16: EPA's NRSA benchmarks for the indices and salinity
+# --------------------------------------------------------------------------- #
+NRSA_REGIONS = ("CPL", "NAP", "NPL", "SAP", "SPL", "TPL", "UMW", "WMT", "XER")
+
+
+def test_the_nrsa_index_and_salinity_benchmarks_are_admissible_in_every_region():
+    for metric in ("bent_MMI_BENT", "fish_MMI_FISH", "chem_COND"):
+        assert pb.is_held(metric), metric
+        for region in NRSA_REGIONS:
+            got = pb.fitness(metric, region=region)
+            assert got["admissible"], (metric, region, got["conditions"])
+            assert "reproduces EPA's published condition class" in got["conditions"]["PB-1"]["why"]
+    assert not pb.is_held("chem_PTL")
+
+
+def test_a_held_benchmark_without_a_verified_class_check_is_not_admitted(monkeypatch):
+    """The brief's rule: a benchmark that does not reproduce EPA's classes is not
+    adopted as EPA's. PB-1 reads the recorded verification, so an unverified entry
+    fails identity rather than passing on the strength of its citation."""
+    spec = dict(pb.REGISTRY["bent_MMI_BENT"])
+    spec["verification"] = {**spec["verification"], "result": {"n": 100, "agree": 90, "share": 0.9}}
+    monkeypatch.setitem(pb.REGISTRY, "bent_MMI_BENT", spec)
+    got = pb.fitness("bent_MMI_BENT", region="CPL")
+    assert not got["admissible"] and not got["conditions"]["PB-1"]["pass"]
+    assert "not been shown to reproduce" in got["conditions"]["PB-1"]["why"]
+
+
+def test_the_index_bands_are_the_technical_support_documents_and_higher_is_better():
+    # Table 5-3 of the 2018-19 TSD (Coastal Plains: good at or above 54.9, poor below 40.7)
+    assert pb.bands("bent_MMI_BENT", "CPL") == pytest.approx((40.7, 54.9))
+    assert pb.bands("bent_MMI_BENT", "UMW") == pytest.approx((22.7, 36.9))
+    # Table 6-15: the Xeric West poor bound is EPA's applied 66.3, not the printed 63.7
+    assert pb.bands("fish_MMI_FISH", "XER") == pytest.approx((66.3, 76.8))
+    assert pb.bands("fish_MMI_FISH", "UMW") == pytest.approx((29.3, 39.8))
+    pts = pb.curve_points("bent_MMI_BENT", "CPL")
+    xs, ys = [p["x"] for p in pts], [p["y"] for p in pts]
+    assert xs == sorted(xs) and ys == sorted(ys), "a higher index scores higher"
+    assert ys[0] == 0.0 and ys[-1] == 1.0
+    assert 0.0 <= xs[0] and xs[-1] <= 100.0, "the index lives on 0 to 100"
+    # the breakpoints sit at the DEEP class boundaries, a boundary value in EPA's class
+    assert any(abs(p["x"] - 54.9) < 0.02 and abs(p["y"] - 0.69) < 1e-6 for p in pts)
+    assert any(abs(p["x"] - 40.7) < 0.02 and abs(p["y"] - 0.39) < 1e-6 for p in pts)
+    from streamcurves import curves as cv
+    assert cv.interp_curve(pts, 54.9) > 0.69 and cv.interp_curve(pts, 54.89) < 0.69
+    assert cv.interp_curve(pts, 40.7) > 0.39 and cv.interp_curve(pts, 40.69) < 0.39
+
+
+def test_the_salinity_bands_are_table_7_1_with_good_owning_the_boundary():
+    # Table 7-1: 500 and 1000 uS/cm in six regions, 1000 and 2000 in the three Plains regions
+    assert pb.bands("chem_COND", "CPL") == pytest.approx((500.0, 1000.0))
+    assert pb.bands("chem_COND", "SPL") == pytest.approx((1000.0, 2000.0))
+    assert pb.bands("chem_COND", "TPL") == pytest.approx((1000.0, 2000.0))
+    pts = pb.curve_points("chem_COND", "SPL")
+    ys = [p["y"] for p in pts]
+    assert ys[0] == 1.0 and ys[-1] == 0.0, "higher conductance is worse"
+    from streamcurves import curves as cv
+    # EPA classes a site at exactly 1000 in the Plains as Good and one at exactly 2000 as Fair
+    assert cv.interp_curve(pts, 1000.0) > 0.69 and cv.interp_curve(pts, 1000.2) < 0.69
+    assert cv.interp_curve(pts, 2000.0) > 0.39 and cv.interp_curve(pts, 2000.2) < 0.39
+
+
+def test_a_held_entry_carries_its_own_provenance_into_the_bundle():
+    src = pb.criteria_source("fish_MMI_FISH", "XER")
+    assert src["catalogEntry"] == "nrsa-2018-19-fish-mmi" and src["easiMethod"] is None
+    assert [b["rating"] for b in src["bands"]] == ["Good", "Fair", "Poor"]
+    assert "76.8" in src["bands"][0]["label"] and "66.3" in src["bands"][2]["label"]
+    assert [c["key"] for c in src["citations"]] == ["nrsa-2018-19", "nars-regions"]
+    assert any("66.3" in x for x in src["limitations"])
+    prov = pb.provenance("bent_MMI_BENT")
+    assert prov["thresholdsSource"]["table"].startswith("Table 5-3") and prov["thresholdsSource"]["page"] == 41
+    assert prov["verification"]["share"] == 1.0 and prov["verification"]["epaClassColumn"] == "BENT_MMI_COND"
+    assert prov["sourceTier"] and prov["citations"] == ["nrsa-2018-19", "nars-regions"]
+    assert pb.citation_line("chem_COND", "SPL") == (
+        "USEPA NRSA 2018-19 specific conductance benchmarks, NARS-9 region SPL")
+    d = pb.pool_decision("bent_MMI_BENT", "CPL", region_code="34", region_name="Western Gulf Coastal Plain")
+    assert "40.7 and 54.9 MMI points" in d.transfer_note
+
+
+def test_every_held_entry_records_a_complete_verification_against_epas_classes():
+    """The catalog's own record of deliverable 2: thousands of classified visits per
+    entry, every one reproduced, per region and per cycle, with the EPA class column
+    and the script named, so a reader can rerun it from the raw files."""
+    held = [e for e in pb.load_catalog()["entries"]
+            if str((e.get("thresholds_source") or {}).get("catalog") or pb.EASI_SOURCE) != pb.EASI_SOURCE]
+    assert sorted(e["metric"] for e in held) == ["bent_MMI_BENT", "chem_COND", "fish_MMI_FISH"]
+    for e in held:
+        ver = e["verification"]
+        assert ver["epa_class_column"] and ver["script"].endswith("verify_benchmark_classes.py")
+        res = ver["result"]
+        assert res["n"] > 3000 and res["agree"] == res["n"] and res["share"] == 1.0, e["id"]
+        assert set(res["per_region"]) == set(NRSA_REGIONS), e["id"]
+        assert sum(r["n"] for r in res["per_region"].values()) == res["n"], e["id"]
+        assert all(r["agree"] == r["n"] for r in res["per_region"].values()), e["id"]
+        assert sum(c["n"] for c in res["per_cycle"].values()) == res["n"], e["id"]
+        src = e["thresholds_source"]
+        assert src["document"] and src["table"] and isinstance(src["page"], int) and src["url"], e["id"]
+        assert set(e["thresholds"]) == set(NRSA_REGIONS), e["id"]
+        for pair in e["thresholds"].values():
+            assert float(pair[0]) < float(pair[1]), e["id"]
+
+
+def test_the_verification_script_classifies_boundary_values_the_way_epa_does():
+    import importlib.util
+    from pathlib import Path
+    script = Path(__file__).resolve().parents[1] / "scripts" / "nrsa" / "verify_benchmark_classes.py"
+    spec = importlib.util.spec_from_file_location("verify_benchmark_classes", script)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    up = {"good": "at_or_above", "poor": "below"}
+    # an MMI equal to the good bound is Good, equal to the poor bound is Fair
+    assert mod.classify(54.9, 40.7, 54.9, "higher_is_better", up) == "Good"
+    assert mod.classify(54.89, 40.7, 54.9, "higher_is_better", up) == "Fair"
+    assert mod.classify(40.7, 40.7, 54.9, "higher_is_better", up) == "Fair"
+    assert mod.classify(40.69, 40.7, 54.9, "higher_is_better", up) == "Poor"
+    down = {"good": "at_or_below", "poor": "above"}
+    # a conductance equal to the lower bound is Good, equal to the upper bound is Fair
+    assert mod.classify(1000.0, 1000.0, 2000.0, "lower_is_better", down) == "Good"
+    assert mod.classify(1000.1, 1000.0, 2000.0, "lower_is_better", down) == "Fair"
+    assert mod.classify(2000.0, 1000.0, 2000.0, "lower_is_better", down) == "Fair"
+    assert mod.classify(2000.1, 1000.0, 2000.0, "lower_is_better", down) == "Poor"
+    # and the module's own bands agree with the script at the same boundaries
+    from streamcurves import curves as cv
+    pts = pb.curve_points("fish_MMI_FISH", "XER")
+    assert cv.interp_curve(pts, 66.3) > 0.39 > cv.interp_curve(pts, 66.29)
+    assert cv.interp_curve(pts, 76.8) > 0.69 > cv.interp_curve(pts, 76.79)
+
+
+def test_every_input_pathway_names_its_measurements_source_entry_and_disclosure():
+    """Owner decision D18: a documented gap does not complete a function. Each pathway
+    the catalog states must be actionable: the measurement and protocol, at least one
+    scoring source for any state, how the value enters DEEP, and the disclosure."""
+    import json
+    from pathlib import Path
+    functions = {f["id"] for f in json.loads(
+        (Path(__file__).resolve().parents[1] / "config" / "staf_functions.json").read_text(encoding="utf-8"))["functions"]}
+    paths = pb.input_pathways()
+    assert {p["function"] for p in paths} == {"channel-floodplain-dynamics", "surface-water-storage"}
+    for p in paths:
+        assert p["function"] in functions, p["id"]
+        assert p["applies_when"] and p["deep_entry"] and p["disclosure"], p["id"]
+        assert "Provisional" in p["disclosure"], p["id"]
+        for m in p["measurements"]:
+            for key in ("key", "name", "units", "direction", "protocol"):
+                assert m.get(key), (p["id"], key)
+            assert m["direction"] in ("higher_is_better", "lower_is_better")
+        assert any(str(s.get("states")).lower() == "any" for s in p["scoring"]), p["id"]
+        for s in p["scoring"]:
+            assert s.get("source"), p["id"]
+    text = pb.catalog_path().read_text(encoding="utf-8")
+    assert "\u2014" not in text
+
+
+def test_the_channel_pathway_picks_the_state_tool_where_one_covers_the_target():
+    import json
+    from pathlib import Path
+    registry = json.loads((Path(__file__).resolve().parents[1] / "data" / "sqt" / "registry.json")
+                          .read_text(encoding="utf-8"))
+    by_key = {r["key"]: r for r in registry["records"]}
+    mn = pb.pathway_for("channel-floodplain-dynamics", states=["MN"])
+    assert mn["scoring"]["states"] == ["MN"]
+    for key in mn["scoring"]["registry_keys"]:
+        rec = by_key[key]
+        assert rec["state"] == "MN" and rec["eligible"], key
+        assert rec["verification"]["status"] in ("verified", "partially-verified"), key
+    wi = pb.pathway_for("channel-floodplain-dynamics", states=["wi", "MI"])
+    assert wi["scoring"]["states"] == ["WI"]
+    for key in wi["scoring"]["registry_keys"]:
+        assert by_key[key]["verification"]["status"] == "verified", key
+    # a state with no tool (Nebraska) falls to the national standard, two thresholds
+    ne = pb.pathway_for("channel-floodplain-dynamics", states=["NE"])
+    assert ne["scoring"]["states"] == "any"
+    assert ne["scoring"]["thresholds"] == {"good": 1.2, "poor": 1.5}
+    assert "EPA 843-K-12-006" in ne["scoring"]["source"] and "Table 7.2" in ne["scoring"]["source"]
+    assert ne["scoring"]["measurement"] == "sqt_bank_height_ratio"
+    assert [m["key"] for m in ne["measurements"]][0] == "sqt_bank_height_ratio"
+    sentence = pb.pathway_sentence("channel-floodplain-dynamics", states=["NE"])
+    assert sentence.startswith("This function is completed by an additional input: Bank height ratio")
+    assert "Functioning 1.0 to 1.2" in sentence and "Provisional." in sentence
+    assert pb.pathway_for("hyporheic-connectivity") is None
+    assert pb.pathway_sentence("hyporheic-connectivity") == ""
+    # the wetland pathway needs no new input and names the method that completes it
+    wet = pb.pathway_for("surface-water-storage", states=["ID", "MT"])
+    assert wet["measurements"][0]["key"] == "pctwet2019ws"
+    assert "two-part" in wet["scoring"]["source"] and "zero_inflated_share" in wet["scoring"]["note"]
+    assert "_" not in pb.pathway_sentence("surface-water-storage"), "a card speaks in plain words"
+    # the channel refusal on a DEEP card already points at the pathway
+    assert "bank height ratio" in pb.refusal("phab_XBKA", "44")
+
+
+def test_the_oe_ratio_and_the_habitat_metrics_are_documented_refusals_not_gaps():
+    for metric, words in (("bent_OE_SCORE", "taxa-loss categories"),
+                          ("phab_XCMGW", "expected value modeled"),
+                          ("phab_XFC_NAT", "expected value modeled"),
+                          ("phab_LRBS_use", "expected value modeled"),
+                          ("phab_XBKA", "bank angle"), ("phab_SINU", "sinuosity")):
+        why = pb.refusal(metric, "44")
+        assert why != pb.NO_CRITERION and words in why, (metric, why)
+        assert not pb.fitness(metric, region="SPL")["admissible"]
+    assert "chem_COND" not in pb.REFUSED, "salinity now has an entry, not a refusal"
 
 
 def test_no_refusal_text_names_a_code_constant():

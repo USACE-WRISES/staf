@@ -165,6 +165,11 @@ metric_family:
   fish_NAT_NTOLPTAX: biology
   fish_NAT_TOLRPIND: biology
   fish_NAT_LITHPIND: biology
+  # EPA's NRSA indices (methodology 0.16, owner decision D12, 2026-09-28): the
+  # same assemblage samples as their component metrics, so the same family
+  bent_MMI_BENT: biology
+  fish_MMI_FISH: biology
+  bent_OE_SCORE: biology
   # landscape expectation metrics (scored against reference, never fixed criteria)
   pctwet2019ws: hydrology
   pctwdwet2019ws: hydrology
