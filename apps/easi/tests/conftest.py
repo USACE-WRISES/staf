@@ -1,3 +1,9 @@
+import os
+
+# owner decision D20: the suite scores with the bundled method and never reaches the
+# library release at import (tests/test_adopted_method.py drives the loader itself)
+os.environ.setdefault("EASI_ADOPTED_METHOD", "0")
+
 import pytest
 
 
