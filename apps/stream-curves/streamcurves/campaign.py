@@ -60,8 +60,8 @@ STATES = ("staged", "staged-open", "no-data", "unsupported", "incomplete", "refu
           "not-started")
 GATE_IDS = ("frozen-record", "rules-applied", "pending-confirmable", "owner-decisions-honored",
             "portfolio-approvals", "equivalence-proven", "record-complete",
-            # promotion policy 1.2 (methodology 0.16, REF-16)
-            "flagged-transfer-disclosed")
+            # promotion policy 1.2 (methodology 0.16, REF-16; owner decision D18)
+            "flagged-transfer-disclosed", "all-functions-scored")
 #: the gates a run folder answers on its own (``promote --status policy`` without a gate report)
 RUN_FOLDER_GATES = tuple(g for g in GATE_IDS if g != "equivalence-proven")
 #: the label every rehearsal, test, pilot and gate run records as its maintainer
@@ -1171,7 +1171,9 @@ def gate_owner_decisions_honored(run_dir, decisions_file) -> tuple[bool, str]:
         return False, "no staged session to read the applied decisions from"
     staged = [d for d in (session_fields(session).get("owner_curve_decisions") or []) if isinstance(d, Mapping)]
     now = oc.load_file(decisions_file) if decisions_file else []
-    where = str(decisions_file) if decisions_file else "no decision file"
+    # R5-04: a region with no recorded decision has no file to name
+    where = (str(decisions_file) if decisions_file and Path(str(decisions_file)).is_file()
+             else "no decision file for this region")
     if oc.decisions_changed(staged, now):
         return False, f"the region's curve decisions ({where}) are not the ones the staged build applied"
     staged_ids = {str(d.get("id")) for d in staged}
@@ -1333,6 +1335,55 @@ def gate_flagged_transfer_disclosed(run_dir) -> tuple[bool, str]:
                   "transferValidation, transferNote, confidenceCap and the limitation caveat")
 
 
+def gate_all_functions_scored(run_dir) -> tuple[bool, str]:
+    """Promotion policy 1.2 (owner decision D18, 2026-09-28): the staged bundle
+    supplies a scoring method and its input for every one of the 20 STAF
+    functions. ``functionCoverage`` must read all covered with nothing excluded or
+    missing (a documented gap does not complete a function), and every function
+    block must hold a metric entry with an executable curve (two or more points)
+    and a documented input (``howToMeasure`` or ``methodContext``)."""
+    from . import deep_export as dx
+    vdir = staged_version_dir(run_dir)
+    bundle = read_json(vdir / BUNDLE_FILE) if vdir else None
+    if not isinstance(bundle, dict):
+        return False, "no staged version with a bundle to read the function coverage from"
+    wanted = [str(f.get("id")) for f in dx.deep_read_staf_crosswalk() if f.get("id")]
+    cov = bundle.get("functionCoverage") or {}
+    problems: list[str] = []
+    covered = {str(x) for x in cov.get("coveredFunctionIds") or []}
+    missing = [f for f in wanted if f not in covered]
+    if missing:
+        problems.append(f"not covered: {', '.join(missing)}")
+    if int(cov.get("excluded") or 0):
+        problems.append(f"{int(cov['excluded'])} function(s) excluded as documented gaps")
+    usable: set = set()
+    adopted = flagged = 0
+    for block in bundle.get("metricsByFunction") or []:
+        fid = str(block.get("functionId") or "")
+        for m in block.get("metrics") or []:
+            pts = ((m.get("curve") or {}).get("points") or [])
+            documented = bool(str(m.get("howToMeasure") or "").strip()
+                              or str(m.get("methodContext") or "").strip())
+            if len(pts) >= 2 and documented:
+                usable.add(fid)
+            if str(m.get("basis") or "") == "easi-screening-method":
+                adopted += 1
+        flagged += sum(1 for item in dx.flagged_entries({"metricsByFunction": [block]}))
+    lacking = [f for f in wanted if f not in usable]
+    if lacking:
+        problems.append("no entry with an executable curve and a documented input: "
+                        + ", ".join(lacking))
+    if problems:
+        return False, "; ".join(problems)
+    extra = []
+    if flagged:
+        extra.append(f"{flagged} flagged transfer(s)")
+    if adopted:
+        extra.append(f"{adopted} adopted EASI screening method(s)")
+    return True, (f"all {len(wanted)} functions scoreable, each with an executable curve and a "
+                  "documented input" + (f" ({', '.join(extra)}, disclosed)" if extra else ""))
+
+
 def evaluate_gates(run_dir, *, expect: Mapping, decisions_file, policy: Mapping,
                    gate_report=None, skip: Iterable[str] = ()) -> dict:
     """Every gate of the promotion policy on one run folder, from its artifacts alone,
@@ -1352,6 +1403,7 @@ def evaluate_gates(run_dir, *, expect: Mapping, decisions_file, policy: Mapping,
         "equivalence-proven": lambda: gate_equivalence_proven(report, expect.get("commit")),
         "record-complete": lambda: gate_record_complete(run_dir),
         "flagged-transfer-disclosed": lambda: gate_flagged_transfer_disclosed(run_dir),
+        "all-functions-scored": lambda: gate_all_functions_scored(run_dir),
     }
     gates: dict[str, dict] = {}
     for gate in policy.get("gates") or []:

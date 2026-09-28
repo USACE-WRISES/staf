@@ -327,39 +327,40 @@ def test_every_input_pathway_names_its_measurements_source_entry_and_disclosure(
     assert "\u2014" not in text
 
 
-def test_the_channel_pathway_picks_the_state_tool_where_one_covers_the_target():
+def test_the_pathways_adopt_easis_national_methods_in_every_state():
+    """Owner decision D19 (2026-09-28): one national method, EASI's, completes each
+    function in every state (the state tools' curves are a named follow-up), and the
+    pathway states the same bands the last-resort curve is generated from."""
     import json
     from pathlib import Path
+    from streamcurves import fixed_criteria as fc
     registry = json.loads((Path(__file__).resolve().parents[1] / "data" / "sqt" / "registry.json")
                           .read_text(encoding="utf-8"))
-    by_key = {r["key"]: r for r in registry["records"]}
-    mn = pb.pathway_for("channel-floodplain-dynamics", states=["MN"])
-    assert mn["scoring"]["states"] == ["MN"]
-    for key in mn["scoring"]["registry_keys"]:
-        rec = by_key[key]
-        assert rec["state"] == "MN" and rec["eligible"], key
-        assert rec["verification"]["status"] in ("verified", "partially-verified"), key
-    wi = pb.pathway_for("channel-floodplain-dynamics", states=["wi", "MI"])
-    assert wi["scoring"]["states"] == ["WI"]
-    for key in wi["scoring"]["registry_keys"]:
-        assert by_key[key]["verification"]["status"] == "verified", key
-    # a state with no tool (Nebraska) falls to the national standard, two thresholds
-    ne = pb.pathway_for("channel-floodplain-dynamics", states=["NE"])
-    assert ne["scoring"]["states"] == "any"
-    assert ne["scoring"]["thresholds"] == {"good": 1.2, "poor": 1.5}
-    assert "EPA 843-K-12-006" in ne["scoring"]["source"] and "Table 7.2" in ne["scoring"]["source"]
-    assert ne["scoring"]["measurement"] == "sqt_bank_height_ratio"
-    assert [m["key"] for m in ne["measurements"]][0] == "sqt_bank_height_ratio"
+    keys = {r["key"] for r in registry["records"]}
+    for states in (["MN"], ["wi", "MI"], ["NE"], []):
+        p = pb.pathway_for("channel-floodplain-dynamics", states=states)
+        assert p["scoring"]["states"] == "any"
+        assert p["scoring"]["measurement"] == "bank_height_ratio"
+        assert p["measurements"][0]["key"] == "bank_height_ratio"
+    ch = pb.pathway_for("channel-floodplain-dynamics", states=["NE"])
+    for key in [k.strip(" ,.;()") for k in ch["follow_up"].split() if k.startswith("sqt:")]:
+        assert key in keys, key
+    bands = {b["rating"]: b for b in fc.last_resort_entry("bank_height_ratio")["bands"]}
+    assert bands["Good"]["max"] == 1.3 and bands["Poor"]["min"] == 1.5
+    assert "1.3" in ch["scoring"]["classes"] and "1.5" in ch["scoring"]["classes"]
     sentence = pb.pathway_sentence("channel-floodplain-dynamics", states=["NE"])
     assert sentence.startswith("This function is completed by an additional input: Bank height ratio")
-    assert "Functioning 1.0 to 1.2" in sentence and "Provisional." in sentence
+    assert "Provisional." in sentence and "_" not in sentence
     assert pb.pathway_for("hyporheic-connectivity") is None
     assert pb.pathway_sentence("hyporheic-connectivity") == ""
-    # the wetland pathway needs no new input and names the method that completes it
     wet = pb.pathway_for("surface-water-storage", states=["ID", "MT"])
     assert wet["measurements"][0]["key"] == "pctwet2019ws"
-    assert "two-part" in wet["scoring"]["source"] and "zero_inflated_share" in wet["scoring"]["note"]
+    assert "Poor below 1 percent" in wet["scoring"]["classes"]
+    assert "two-part" not in wet["scoring"]["source"]
+    wbands = {b["rating"]: b for b in fc.last_resort_entry("pctwet2019ws")["bands"]}
+    assert wbands["Poor"]["max"] == 1 and wbands["Good"]["min"] == 5
     assert "_" not in pb.pathway_sentence("surface-water-storage"), "a card speaks in plain words"
+    assert "natural absence from loss" in wet["disclosure"]
     # the channel refusal on a DEEP card already points at the pathway
     assert "bank height ratio" in pb.refusal("phab_XBKA", "44")
 

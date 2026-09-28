@@ -830,7 +830,10 @@ def build_deep_assessment_bundle(
                     "sqt",
                     # methodology 0.16 (REF-16): a flagged transfer's four disclosure
                     # fields, at the metric where DEEP and the calculator read them
-                    "transferRisk", "transferValidation", "transferNote", "confidenceCap"):
+                    "transferRisk", "transferValidation", "transferNote", "confidenceCap",
+                    # methodology 0.16 (REF-17): the EASI screening method a
+                    # last-resort curve adopts, with its status, citations and input
+                    "adoptedMethod"):
             if key in annotations and annotations[key] is not None:
                 base_entry[key] = annotations[key]
 

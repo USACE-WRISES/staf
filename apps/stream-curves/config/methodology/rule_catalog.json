@@ -1234,6 +1234,25 @@
    "override_permission": "human_review"
   },
   {
+   "id": "REF-17",
+   "family": "REF",
+   "name": "Last resort: adopted EASI screening method",
+   "purpose": "Complete a function that no source supports in the ecoregion with EASI's published national screening method for the same quantity, disclosed as provisional, instead of leaving the function unassessed (owner decisions D18 and D19).",
+   "test": "run at the end of the build, after the station pools, comparable national reference, the approved models, the verified catalog, the flagged transfers, the owner's accepted sources, carried curves and the fixed criteria: a canonical function none of whose metrics holds a curve or a standing owner decision, and for which config/fixed_criteria.yaml names a last_resort entry, takes that entry's metric scored on the EASI method's bands through the CURVE-11 construction (the curve passes through index 0.69 and 0.39 at EASI's boundaries, a boundary value landing in EASI's own class); every candidate metric the function had is named in the record with the reason it was refused or withheld",
+   "threshold": "reference_hierarchy.last_resort: enabled true; config/fixed_criteria.yaml last_resort: pctwet2019ws on watershed-wetland-extent (Poor below 1 percent, Fair 1 to 5, Good above 5) for surface water storage, bank_height_ratio on bhr-bank-instability-susceptibility (Good at or below 1.3, Fair to 1.5, Poor above) for channel and floodplain dynamics",
+   "threshold_status": "provisional",
+   "implementation_status": "implemented",
+   "maps_to": "fixed_criteria.LAST_RESORT_SPEC, generate (the last_resort block), last_resort_keys, last_resort_entry, last_resort_config, last_resort_curve_row, last_resort_mapping_rows, last_resort_provenance; pressure_evidence.last_resort_fills and run_evidence (the step, last_resort_metrics), bundle_inputs (criteriaBasis fixed, criteriaSource, sourceCitation, adoptedMethod, methodContext, the caveats), ladder_confidence, source_of (pathway, ranked last by SELECT-04); curve_basis.EASI_SCREENING (label, statement, limit, cap 39); provenance._pressure_records (the REF-17 record) and build_ledger (rule REF-17); deep_export (adoptedMethod); apps/deep/deep/reference_support.py (the label); apps/deep/deep/metrics/computed.py (the bank height ratio prefill under spring-bank-height-ratio)",
+   "note": "v0.16 (2026-09-28, owner decision D19 of 2026-09-28: \"use EASI thresholds with a label in stream-curves that it is adopted from national criteria\"; the label reads \"Adopted from EASI's national screening method (provisional)\" after the accuracy review the owner accepted, since EASI lists the wetland bands as a provisional screening judgment and the bank height ratio bands as a provisional directional relationship). The wetland bands rate a watershed with no mapped wetland Poor, so where least-disturbed watersheds carry none the rating cannot tell natural absence from loss; the caveat says so and a regional method is a StreamCurves follow-up. The two-part zero-inflated seed (Round 2 candidate C3a) is not used: it also scores zero wetland as 0, and its study found no accuracy gain.",
+   "outcomes": {
+    "pass": "the function is scored on the adopted EASI method, labelled, cited and capped; the candidates refused ride in the record",
+    "review": "n/a: a rule decision with its disclosure; the follow-up is non-blocking",
+    "fail": "no last_resort entry names the function: it stays unassessed and the promotion policy's all-functions-scored gate refuses the region"
+   },
+   "confidence_effect": "a label and no number (EASI screening method, provisional); basis cap 39",
+   "override_permission": "human_review"
+  },
+  {
    "id": "CONF-01",
    "family": "CONF",
    "name": "0-100 confidence score",

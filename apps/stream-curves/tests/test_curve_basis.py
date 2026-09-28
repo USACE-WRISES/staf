@@ -14,7 +14,9 @@ def test_every_basis_has_a_label_a_statement_and_a_place_on_the_ladder():
         assert cb.label_for(basis), basis
         assert cb.statement_for(basis), basis
         assert cb.rank(basis) < len(cb.ORDER)
-    assert len(set(cb.LABELS.values())) == len(cb.LABELS) == len(cb.ORDER) + 1
+    # the ladder's four, and the two bases outside it: owner-entered (REF-15) and the
+    # adopted EASI screening method (REF-17, methodology 0.16)
+    assert len(set(cb.LABELS.values())) == len(cb.LABELS) == len(cb.ORDER) + 2
 
 
 def test_an_owner_entered_curve_has_its_own_words_and_no_place_on_the_ladder():

@@ -29,9 +29,13 @@ BASIS_PUBLISHED = "published-benchmark"
 #: a curve the assessment's owner entered (StreamCurves REF-15): not a rung of
 #: the ladder, and it claims no reference condition
 BASIS_OWNER = "owner-entered"
+#: StreamCurves methodology 0.16 (REF-17): EASI's national screening method for the
+#: same quantity, adopted only where no other source supported the function
+BASIS_EASI_SCREENING = "easi-screening-method"
 _BASIS_LABELS = {BASIS_REGIONAL: "Regional reference", BASIS_NATIONAL: "National reference",
                  BASIS_MODELED: "Modeled reference", BASIS_PUBLISHED: "Published benchmark",
-                 BASIS_OWNER: "Owner-entered"}
+                 BASIS_OWNER: "Owner-entered",
+                 BASIS_EASI_SCREENING: "Adopted from EASI's national screening method (provisional)"}
 _LEVEL_WORDS = {"l3": "Level III", "l2": "Level II", "l1": "Level I",
                 "nars9": "NARS-9 region"}
 #: StreamCurves methodology 0.16 (REF-16): "unvalidated" is a flagged transfer, a

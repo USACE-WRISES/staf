@@ -204,6 +204,15 @@ def flagged_transfer() -> dict:
     return out
 
 
+def last_resort() -> dict:
+    """REF-17 (methodology 0.16, owner decision D19): ``reference_hierarchy.last_resort``
+    as the build reads it, ``enabled``. An absent block reads as disabled, so a
+    config root copied from an older methodology never adds a last-resort curve."""
+    block = threshold("reference_hierarchy.last_resort", _MISSING)
+    block = {} if block is _MISSING or not isinstance(block, dict) else block
+    return {"enabled": bool(block.get("enabled", False))}
+
+
 def parse_offset(value: Any) -> float:
     """An IQR offset from the config: a number, or a fraction written as a
     string such as ``"4/3"`` (YAML reads an unquoted 4/3 as a string too). An

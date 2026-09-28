@@ -499,7 +499,11 @@ def test_a_flagged_curve_ranks_last_in_a_functions_portfolio():
     assert pe.source_of({"basis": cb.REGIONAL, "status": "borrowed_l2", "transfer_risk": "low"}) == "regional"
     assert pe.source_of({"basis": cb.NATIONAL, "status": "national", "transfer_risk": "moderate"}) == "national"
     rank = methodology.threshold("metric_portfolio.source_rank")
-    assert rank["flagged"] == 5 and rank["flagged"] > max(v for k, v in rank.items() if k != "flagged")
+    # a flagged curve ranks after every validated source; only the last resort
+    # (REF-17, which completes an otherwise empty function) ranks after it
+    assert rank["flagged"] == 5 and rank["flagged"] > max(
+        v for k, v in rank.items() if k not in ("flagged", "pathway"))
+    assert rank["pathway"] > rank["flagged"]
     national = {"basis": cb.NATIONAL, "status": rp.STATUS_NATIONAL, "transfer_risk": "moderate"}
     published = {"basis": cb.PUBLISHED, "status": rp.STATUS_PUBLISHED, "transfer_risk": "none"}
     evidence = {"reference_support": {"m_flag": flagged, "m_nat": national, "m_pub": published},
@@ -690,7 +694,7 @@ def test_promotion_policy_1_2_and_the_disclosure_gate(tmp_path, monkeypatch):
     assert camp.accepted_support_classes(policy) == ["noLocal", "frameUnder10"]
     assert "D14" in policy["meta"]["owner_decision"]
     assert "no local reference station" in policy["acceptance"]["statement"]
-    assert [g["id"] for g in policy["gates"]][-1] == "flagged-transfer-disclosed"
+    assert "flagged-transfer-disclosed" in [g["id"] for g in policy["gates"]]
     assert "flagged-transfer-disclosed" in camp.GATE_IDS and "flagged-transfer-disclosed" in camp.RUN_FOLDER_GATES
     vdir = tmp_path / "v1"
     vdir.mkdir()
@@ -722,7 +726,7 @@ def test_promotion_policy_1_2_and_the_disclosure_gate(tmp_path, monkeypatch):
     ok, detail = camp.gate_flagged_transfer_disclosed(tmp_path)
     assert ok and "no curve on a flagged transfer" in detail
     broken = copy.deepcopy(policy)
-    broken["gates"] = broken["gates"][:-1]
+    broken["gates"] = [g for g in broken["gates"] if g["id"] != "flagged-transfer-disclosed"]
     assert any("no gate flagged-transfer-disclosed" in p for p in camp.validate_promotion_policy(broken))
     broken2 = copy.deepcopy(policy)
     broken2["acceptance"]["preliminary_eligible_support_classes"] = ["nope"]

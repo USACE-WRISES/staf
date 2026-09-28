@@ -82,4 +82,6 @@ def test_a_version_that_cannot_be_read_judges_the_metric(tmp_path, monkeypatch):
         pytest.skip("Interior Plateau has moved past v6")
     # v5 is not in this library: the metric's archive values decide
     assert "carried from version 5" in prior["rebuilt"][target]["why"]
-    assert set(recarried) - {target} <= set(prior["carried"])
+    # methodology 0.16 (D13): a published fallback curve is rebuilt, never carried
+    fallback = {mk for mk, r in prior["rebuilt"].items() if "owner decision D13" in r["why"]}
+    assert set(recarried) - {target} - fallback <= set(prior["carried"])
