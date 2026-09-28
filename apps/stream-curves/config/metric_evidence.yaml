@@ -770,3 +770,51 @@ metrics:
     disposition_rationale: "Kept as the scaling predictor for engine builds."
     status: hypothesis
     reviewed_by: n/a
+  # Methodology 0.16 (owner decision D12, 2026-09-28): EPA's NRSA indices, added by
+  # the published-benchmark review (notes/2026-09-25_National_Campaign/reports/
+  # R6_benchmark_review.md). Each is a metric of its own with EPA's own benchmarks.
+  bent_MMI_BENT:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "Stoddard et al. (2008) Journal of the North American Benthological Society 27:878-891", note: "The process that built the WSA benthic MMI: six metric classes, regional metric selection and scoring, rescaled to 0 to 100."}
+      - {citation: "USEPA (2023, updated 2024) NRSA 2018-2019 Technical Support Document, Version 1.1, EPA 841-R-22-005, section 5.3.2 and Table 5-3", note: "Condition benchmarks per NARS-9 region, the hindcast 25th and 5th reference percentiles, the same in 2008-09, 2013-14 and 2018-19; verified against EPA's class calls for 6083 of 6083 visits (2026-09-28)."}
+      - {citation: "Herlihy et al. (2008) Journal of the North American Benthological Society 27:860-877", note: "The disturbance-adjusted (hindcast) reference percentiles the benchmarks rest on."}
+    limitations:
+      - "EPA's index and scoring define the metric: a benthic sample not taken, subsampled, identified and scored the NRSA way is not comparable with the archive's values or with the benchmarks."
+      - "The benchmarks rest on EPA's reference designation and its hindcast percentiles, a definition of reference that need not match this assessment's pressure screen."
+      - "One value per site and cycle; 2018-19 values come from EPA's MMI file, the one cycle EPA publishes no component metrics for."
+    disposition: add
+    disposition_rationale: "A reserve candidate for Community dynamics: it enters a portfolio only where the three component metrics have no supporting pool, scored on EPA's own benchmarks where no pool supports it either; the component metrics keep their places and never inherit the index benchmarks."
+    status: hypothesis
+    reviewed_by: n/a
+  fish_MMI_FISH:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "USEPA (2023, updated 2024) NRSA 2018-2019 Technical Support Document, Version 1.1, EPA 841-R-22-005, chapter 6 and Table 6-15", note: "Eight metrics per NARS-9 region, several adjusted for watershed area; condition benchmarks set in 2013-14 and applied unchanged in 2018-19; verified against EPA's class calls for 4892 of 4892 visits (2026-09-28), the Xeric West poor bound being EPA's applied 66.3 rather than the printed 63.7."}
+      - {citation: "Stoddard et al. (2008) Journal of the North American Benthological Society 27:878-891", note: "The metric selection and scoring process the fish MMI follows."}
+    limitations:
+      - "EPA's index and scoring define the metric: an electrofishing sample not taken and scored the NRSA way, including the watershed-area adjustments, is not comparable; sites sampled by seining carry no index."
+      - "The benchmarks rest on EPA's reference designation and hindcast percentiles, with fewer than 30 reference sites in three regions."
+      - "The printed Xeric West poor bound (63.7) does not reproduce EPA's own classes; the applied value 66.3 does and is the one adopted."
+    disposition: add
+    disposition_rationale: "A reserve candidate for Population support: it enters a portfolio only where the function would otherwise be unassessed, scored on EPA's own benchmarks where no pool supports it; the component metrics keep their places and never inherit the index benchmarks. The state SQTs place their fish indices under this function."
+    status: hypothesis
+    reviewed_by: n/a
+  bent_OE_SCORE:
+    construct_class: ecological_response
+    spatial_support: site_reach
+    easi_role: [none]
+    evidence:
+      - {citation: "USEPA (2016) NRSA 2008-2009 Technical Report, EPA/841/R-16/008, section 9.4 and Table 9.4", note: "Three regional RIVPACS-type predictive models; the standard deviation of O/E at reference sites is 0.18 to 0.23, and EPA warns that a ratio is read against that spread rather than as a taxa loss on its own."}
+      - {citation: "Hawkins et al. (2000) Ecological Applications 10:1456-1477", note: "The predictive-model (O/E) approach to biological integrity."}
+    limitations:
+      - "EPA publishes the ratio in four taxa-loss categories, never as good, fair or poor, so no condition benchmark exists to adopt; a quarter of EPA's own reference sites fall below 0.8."
+      - "Scores are published for 2013-14 only (the 2018-19 files carry the class and not the score), and the expectation needs EPA's predictive model, which a new site cannot run."
+    disposition: add
+    disposition_rationale: "Carried in the archive and mapped to Population support so an assessment that has an O/E score can use it; never selected by default and not a reserve, because a curve on it would ask a site for a value it cannot produce and no published benchmark serves it."
+    status: hypothesis
+    reviewed_by: n/a

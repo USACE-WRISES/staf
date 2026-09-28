@@ -57,6 +57,7 @@ bent_INTLPTAX,% Intolerant (PTV<=3) taxa,% Intolerant (PTV<=3) taxa,% Intolerant
 bent_MITENTAX,No. of Mite taxa,No. of Mite taxa,No. of Mite taxa,,Benthic macroinvertebrates,MITENTAX,2324,epa_metadata
 bent_MITEPIND,% Mite individuals,% Mite individuals,% Mite individuals,,Benthic macroinvertebrates,MITEPIND,2324,epa_metadata
 bent_MITEPTAX,% Mite taxa,% Mite taxa,% Mite taxa,,Benthic macroinvertebrates,MITEPTAX,2324,epa_metadata
+bent_MMI_BENT,Benthic macroinvertebrate MMI,Benthic macroinvertebrate MMI,"EPA's NRSA benthic macroinvertebrate multimetric index, six metrics of composition, diversity, feeding, habit, richness and tolerance scored per NARS-9 region and rescaled to 0 to 100; higher is better.",MMI points,Benthic macroinvertebrates,MMI_BENT,2324,curated
 bent_MOLLNTAX,No. of Mollusca taxa,No. of Mollusca taxa,No. of Mollusca taxa,,Benthic macroinvertebrates,MOLLNTAX,2324,epa_metadata
 bent_MOLLPIND,% Mollusca individuals,% Mollusca individuals,% Mollusca individuals,,Benthic macroinvertebrates,MOLLPIND,2324,epa_metadata
 bent_MOLLPTAX,% Mollusca taxa,% Mollusca taxa,% Mollusca taxa,,Benthic macroinvertebrates,MOLLPTAX,2324,epa_metadata
@@ -69,6 +70,7 @@ bent_NTOLPTAX,% non-tolerants (PTV<6) taxa,% non-tolerants (PTV<6) taxa,% non-to
 bent_ODONNTAX,No. of Odonata taxa,No. of Odonata taxa,No. of Odonata taxa,,Benthic macroinvertebrates,ODONNTAX,2324,epa_metadata
 bent_ODONPIND,% Odonata individuals,% Odonata individuals,% Odonata individuals,,Benthic macroinvertebrates,ODONPIND,2324,epa_metadata
 bent_ODONPTAX,% Odonata taxa,% Odonata taxa,% Odonata taxa,,Benthic macroinvertebrates,ODONPTAX,2324,epa_metadata
+bent_OE_SCORE,Benthic O/E taxa loss ratio,Benthic O/E taxa loss ratio,EPA's NRSA observed-to-expected ratio for benthic macroinvertebrates: the taxa observed at a site as a share of those a predictive model expects under least-disturbed conditions. A ratio of 1.0 is the expectation; published for the 2013-14 survey only.,ratio,Benthic macroinvertebrates,OE_SCORE,1314,curated
 bent_OLLENTAX,No. of Oligochaete and leech taxa,No. of Oligochaete and leech taxa,No. of Oligochaete and leech taxa,,Benthic macroinvertebrates,OLLENTAX,2324,epa_metadata
 bent_OLLEPIND,% Oligochaete and leech individuals,% Oligochaete and leech...,% Oligochaete and leech individuals,,Benthic macroinvertebrates,OLLEPIND,2324,epa_metadata
 bent_OLLEPTAX,% Oligochaete and leech taxa,% Oligochaete and leech taxa,% Oligochaete and leech taxa,,Benthic macroinvertebrates,OLLEPTAX,2324,epa_metadata
@@ -212,6 +214,7 @@ fish_LOTPTAX,% lotic taxa,% lotic taxa,% lotic taxa,,Fish,LOTPTAX,2324,epa_metad
 fish_MIGRNTAX,Number of migratory taxa,Number of migratory taxa,Number of migratory taxa,,Fish,MIGRNTAX,2324,epa_metadata
 fish_MIGRPIND,% migratory individuals,% migratory individuals,% migratory individuals,,Fish,MIGRPIND,2324,epa_metadata
 fish_MIGRPTAX,% migratory taxa,% migratory taxa,% migratory taxa,,Fish,MIGRPTAX,2324,epa_metadata
+fish_MMI_FISH,Fish MMI,Fish MMI,"EPA's NRSA fish multimetric index, eight metrics per NARS-9 region, several adjusted for watershed area, scored from an electrofishing sample and rescaled to 0 to 100; higher is better.",MMI points,Fish,MMI_FISH,2324,curated
 fish_MTOLNTAX,No. distinct intermediate tolerant taxa based on TOLERANCE_NRSA,No. distinct intermediate tolerant...,No. distinct intermediate tolerant taxa based on TOLERANCE_NRSA,,Fish,MTOLNTAX,2324,epa_metadata
 fish_MTOLPIND,% Intermediate tolerant individuals based on TOLERANCE_NRSA,% Intermediate tolerant...,% Intermediate tolerant individuals based on TOLERANCE_NRSA,,Fish,MTOLPIND,2324,epa_metadata
 fish_MTOLPTAX,% intermediate tolerant taxa based on TOLERANCE_NRSA,% intermediate tolerant taxa based...,% intermediate tolerant taxa based on TOLERANCE_NRSA,,Fish,MTOLPTAX,2324,epa_metadata

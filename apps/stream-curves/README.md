@@ -95,6 +95,22 @@ touching this code: the files are latin-1 rather than UTF-8, some carry a UTF-8
 BOM on top of that, and `VISIT_NO` is not always a number (`R` marks a repeat
 sample and must not be coerced onto visit 1).
 
+The archive also carries EPA's three NRSA indices as metrics of their own
+(`bent_MMI_BENT`, `fish_MMI_FISH`, `bent_OE_SCORE`, methodology 0.16), read from
+EPA's MMI files in every cycle (the O/E score is published for 2013-14 only).
+The two MMIs and specific conductance have EPA's own condition benchmarks in
+`config/published_benchmarks.yaml`; those entries hold their thresholds in the
+catalog (copied from the 2018-19 technical support document, table and page
+named) and `scripts/nrsa/verify_benchmark_classes.py` re-applies them to EPA's
+own station values and compares with EPA's published class for the same visit.
+A benchmark is adopted only where that agreement is complete, and the catalog's
+`verification` blocks record the counts. Adding an NRSA metric touches five
+configs beside the catalog CSV: `nrsa_response_directions.yaml`,
+`reference_transfer.yaml` (the family), `metric_map.yaml`, `metric_names.yaml`
+and `field_methods.yaml`, plus a curated entry in `metric_evidence.yaml` for a
+mapped metric; then rebuild the dictionary, the values table, the verification
+report and the manifest, in that order.
+
 ### Using it in a run
 
 `--nrsa-dataset multi-cycle-v1` on `scripts/run_regional_analysis.py` or
