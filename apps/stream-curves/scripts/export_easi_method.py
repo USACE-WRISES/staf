@@ -233,6 +233,63 @@ def write_easi_data(project, folder: Path, *, check: bool = False) -> dict:
             "unchanged": unchanged, "differences": differences}
 
 
+#: The pin EASI loads its adopted method by (owner decision D20, 2026-09-28): written
+#: beside the method files, under the data folder's ``source/``, by this exporter only.
+PIN_RELATIVE = Path("source") / "adopted-method.json"
+
+
+def library_version_of(source: Path):
+    """``(assessment id, version)`` of a published library version folder (or its
+    project record) inside the library this checkout reads, else None."""
+    from streamcurves import library as lib
+    vdir = Path(source)
+    if vdir.is_file() and vdir.name == PROJECT_RECORD:
+        vdir = vdir.parent
+    vdir = vdir.resolve()
+    if not (vdir.name.startswith("v") and vdir.name[1:].isdigit()
+            and vdir.parent.parent.name == "assessments"):
+        return None
+    if vdir.parent.parent.parent != Path(lib.library_root()).resolve():
+        raise SystemExit(f"{vdir} is not a version of the library this checkout reads "
+                         f"({lib.library_root()}); the pin names the published package")
+    return vdir.parent.name, int(vdir.name[1:])
+
+
+def pin_record(source: Path, ident: dict) -> dict:
+    """The pin of a published version: the id, the version, its package digest and method
+    version, and the package file the library release publishes for it (the same bytes
+    and name ``scripts/library_release.py`` writes)."""
+    from streamcurves import library as lib
+    got = library_version_of(source)
+    if got is None:
+        raise SystemExit("--pin needs a published library version folder "
+                         "(.../assessments/<id>/v<N>): a pin names what the library publishes")
+    aid, version = got
+    blob = lib.easi_package_bytes(aid, version)
+    sha = hashlib.sha256(blob).hexdigest()
+    return {"schema": 1, "assessmentId": aid, "version": version,
+            "packageDigest": ident["packageDigest"], "methodVersion": ident["methodVersion"],
+            "evaluatorDigest": ident.get("evaluatorDigest"),
+            "package": {"name": f"{aid}-v{version}-{sha[:8]}.easi-method.zip",
+                        "sha256": sha, "bytes": len(blob)},
+            "feed": "library-v2.json"}
+
+
+def write_pin(pin: dict, folder: Path, *, check: bool = False) -> dict:
+    """Write (or with ``check`` compare) the pin under the EASI data folder."""
+    target = Path(folder) / PIN_RELATIVE
+    text = json.dumps(pin, indent=1, sort_keys=True) + "\n"
+    current = target.read_text(encoding="utf-8") if target.is_file() else None
+    same = current == text
+    if not check and not same:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        tmp = target.with_name(target.name + ".export.tmp")
+        tmp.write_text(text, encoding="utf-8", newline="\n")
+        os.replace(tmp, target)
+    return {"path": str(target), "check": bool(check), "unchanged": same,
+            "version": f"{pin['assessmentId']} v{pin['version']}"}
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("project", help="an EASI method project (.streamcurves), a published library "
@@ -260,7 +317,13 @@ def main(argv=None) -> int:
                     help="with --calculator and --version-dir: a note recorded beside the calculator in the "
                          "version candidate's record (for example the template version the workbook takes at "
                          "adoption); never inside the workbook or the package")
+    ap.add_argument("--pin", action="store_true",
+                    help="with --write-easi-data and a published library version: also write (or with "
+                         "--check compare) data/source/adopted-method.json, the pin EASI loads its adopted "
+                         "method by (owner decision D20)")
     a = ap.parse_args(argv)
+    if a.pin and not a.write_easi_data:
+        ap.error("--pin needs --write-easi-data <folder>")
     if a.calculator_note and not (a.calculator and a.version_dir):
         ap.error("--calculator-note needs --calculator and --version-dir")
     if a.check and not a.write_easi_data:
@@ -281,11 +344,15 @@ def main(argv=None) -> int:
     out = {"out": a.out, **ident} if a.out else dict(ident)
     if a.write_easi_data:
         out["easiData"] = write_easi_data(project, Path(a.write_easi_data), check=a.check)
+        if a.pin:
+            out["pin"] = write_pin(pin_record(Path(a.project), ident), Path(a.write_easi_data),
+                                   check=a.check)
     if a.version_dir:
         out["versionDir"] = write_version_dir(project, Path(a.version_dir), source=Path(a.project),
                                               calculator_note=a.calculator_note)
     print(json.dumps(out, indent=1))
-    if a.check and out["easiData"]["differences"]:
+    if a.check and (out["easiData"]["differences"]
+                    or (out.get("pin") and not out["pin"]["unchanged"])):
         return 1
     return 0
 

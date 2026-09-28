@@ -214,7 +214,7 @@ def test_workbook_structure_and_metadata():
     assert meta["Calculator version"] == cc.bc.TEMPLATE_VERSION
     # one version: the generator reads it from the module that serves the workbook
     from easi import calculator
-    assert cc.bc.TEMPLATE_VERSION == calculator.TEMPLATE_VERSION == "1.0"
+    assert cc.bc.TEMPLATE_VERSION == calculator.TEMPLATE_VERSION == "1.1"
     assert cc.bc.OUT_NAME == calculator.blank_filename() == cc.WORKBOOK.name
     ref = wb["Reference"]
     keys = [c.value for c in ref["A"] if isinstance(c.value, str) and "|" in c.value]

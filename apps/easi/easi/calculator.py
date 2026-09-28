@@ -35,7 +35,7 @@ from pathlib import Path
 #: The committed calculator. Part of the filename so a returned workbook can be
 #: traced to the release it came from. ``scripts/build_calculator.py`` reads the
 #: version from here, so the generator and the served file cannot disagree.
-TEMPLATE_VERSION = "1.0"
+TEMPLATE_VERSION = "1.1"
 
 TEMPLATE_PATH = (Path(__file__).resolve().parent.parent
                  / "www" / "calculator" / f"EASI_Calculator_{TEMPLATE_VERSION}.xlsx")
