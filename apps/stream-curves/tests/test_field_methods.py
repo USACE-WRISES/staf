@@ -19,7 +19,9 @@ REGIONAL_METRICS = [
     "chem_NTL_DISS", "chem_PH", "chem_PTL", "chem_TURB", "fish_NAT_TOTLNTAX", "phab_BFWD_RAT",
     "phab_LRBS_use", "phab_LSUB_DMM", "phab_LWDeqVolM100", "phab_PCT_FAST", "phab_PCT_SAFN",
     "phab_RP100_cm", "phab_SINU", "phab_XBKA", "phab_XBKF_H", "phab_XCDENMID", "phab_XCMGW",
-    "phab_XEMBED", "phab_XFC_NAT", "bfiws", "pctwet2019ws"]
+    "phab_XEMBED", "phab_XFC_NAT", "bfiws", "pctwet2019ws",
+    # methodology 0.16: EPA's NRSA indices (the two MMIs as reserve candidates)
+    "bent_MMI_BENT", "fish_MMI_FISH", "bent_OE_SCORE"]
 
 
 def test_every_metric_a_regional_build_scores_has_an_entry():

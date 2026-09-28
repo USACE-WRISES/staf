@@ -43,3 +43,19 @@ notes:
     Until 2026-09-21 twelve fish metrics of these cycles resolved to the benthic
     file (the two share column names) and the matching benthic metrics were
     empty. Each assemblage now reads only its own file.
+  bent_MMI_BENT: >-
+    EPA's benthic MMI, read from EPA's own MMI files in every cycle (2018-19
+    included, the one cycle EPA publishes no component metrics for). The 2018-19
+    technical support document states that the same analyses and benchmarks were
+    used in 2008-09, 2013-14 and 2018-19, and the 2023-24 file's condition
+    classes fall on the same benchmarks (verified 2026-09-28), so the cycles pool.
+  fish_MMI_FISH: >-
+    EPA's fish MMI, read from EPA's own MMI files in every cycle. The index and
+    its benchmarks were revised for 2013-14 and applied unchanged in 2018-19 and
+    2023-24 (the condition classes of all three cycles fall on the same
+    benchmarks, verified 2026-09-28), so the three cycles pool; no 2008-09 values
+    are in the archive.
+  bent_OE_SCORE: >-
+    EPA's benthic observed-to-expected ratio, published as a score for 2013-14
+    only (the 2018-19 files carry the class and not the score), so there is one
+    cycle and nothing to pool.

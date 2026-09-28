@@ -87,6 +87,14 @@ metrics:
   fish_NAT_LITHPIND: {higher_is_better: true, metric_family: continuous, domain_min: 0, domain_max: 100, source: expert, confidence: medium, note: "Percent of native fish individuals that are simple lithophils, spawning on clean coarse substrate without nest building; higher is better. Reproduction depends on substrate that fine sediment smothers."}
   fish_NAT_NTOLNTAX: {higher_is_better: true, metric_family: count, domain_min: 0,     source: expert, confidence: high,     note: "Native non-tolerant fish taxa richness (TOLERANCE_NRSA); higher is better. Total richness need not fall under disturbance, because tolerant species replace intolerant ones; this counts only the taxa that do not tolerate it."}
 
+  # --- Biology, EPA's NRSA indices (methodology 0.16, owner decision D12, 2026-09-28) ---
+  # An index is a metric of its own with its own benchmarks; its thresholds are
+  # never applied to the component metrics above. Direction follows the index
+  # construction: EPA scores every component so that a higher index is better.
+  bent_MMI_BENT:   {higher_is_better: true,  metric_family: continuous, domain_min: 0, domain_max: 100, source: expert, confidence: high, note: "NRSA benthic macroinvertebrate multimetric index (0 to 100); higher is better. EPA's Wadeable Streams Assessment MMI of six metrics scored per NARS-9 region, the same index in every survey cycle; EPA's own condition benchmarks are the published criterion it can be scored against."}
+  fish_MMI_FISH:   {higher_is_better: true,  metric_family: continuous, domain_min: 0, domain_max: 100, source: expert, confidence: high, note: "NRSA fish multimetric index (0 to 100); higher is better. Eight metrics per NARS-9 region, several adjusted for watershed area, scored from an electrofishing sample; sites sampled by seining carry no index."}
+  bent_OE_SCORE:   {higher_is_better: true,  metric_family: continuous, domain_min: 0, source: expert, confidence: high, note: "NRSA benthic observed-to-expected taxa ratio from EPA's predictive model; higher is better and 1.0 is the reference expectation. Published for 2013-14 only, and the expectation needs EPA's model, so the ratio enters no automated build and has no adopted benchmark."}
+
   # --- Physicochemistry ---
   chem_PTL:        {higher_is_better: false, metric_family: continuous, domain_min: 0, source: pilot,  confidence: high,     note: "Total phosphorus; higher indicates nutrient enrichment (worse)."}
   chem_NTL:        {higher_is_better: false, metric_family: continuous, domain_min: 0, source: expert, confidence: high,     note: "Total nitrogen; higher indicates nutrient enrichment (worse). The total fraction, reported in every NRSA cycle, and the fraction published nitrogen criteria are written against."}
