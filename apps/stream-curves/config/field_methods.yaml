@@ -31,6 +31,15 @@ sources:
   staf-engines:
     citation: STAF computation engines (StreamCat lookup engine and STAF site engine).
     url: https://usace-wrises.github.io/staf/computation-engines/
+  nrsa-tsd-2018-19:
+    citation: >-
+      USEPA. 2023 (updated 2024). National Rivers and Streams Assessment 2018-2019
+      Technical Support Document. Version 1.1. EPA 841-R-22-005. U.S. Environmental
+      Protection Agency, Office of Water and Office of Research and Development,
+      Washington, DC. Chapter 5 (benthic macroinvertebrate MMI), chapter 6 (fish
+      MMI) and section 5.1 (the observed to expected ratio).
+    url: https://www.epa.gov/system/files/documents/2024-12/nrsa-2018-19-tsd-final-11252024.pdf
+    checked: "2026-09-28"
 
 # The layout every physical habitat entry assumes, printed once on the worksheet.
 reach_layout: >-
@@ -251,6 +260,34 @@ metrics:
       transects, with every fish identified and counted. The value is the percent of
       native individuals that are simple lithophils, spawning on clean coarse
       substrate without building a nest.
+  # ---- EPA's NRSA indices (methodology 0.16, owner decision D12, 2026-09-28) ----
+  # Computed indices: the sample is the same as the component metrics above, the
+  # scoring is EPA's, from the technical support document named as the source.
+  bent_MMI_BENT:
+    where: 11 transects
+    method: >-
+      Computed, not read in the field. From the 11-transect composite D-frame net
+      sample (500 micrometer mesh) and its fixed count laboratory subsample, score
+      EPA's six regional benthic metrics with the published floor and ceiling values
+      and rescale the sum to 0 to 100, as the 2018-19 technical support document
+      describes.
+    source: nrsa-tsd-2018-19
+  fish_MMI_FISH:
+    where: whole reach
+    method: >-
+      Computed, not read in the field. From the upstream electrofishing pass over
+      every habitat between the transects, with every fish identified and counted,
+      score EPA's eight regional fish metrics, several adjusted for watershed area,
+      and rescale to 0 to 100, as the 2018-19 technical support document describes.
+    source: nrsa-tsd-2018-19
+  bent_OE_SCORE:
+    where: 11 transects
+    method: >-
+      Computed, not read in the field. From the 11-transect composite D-frame net
+      sample, the taxa EPA's predictive model expects under least-disturbed
+      conditions that were observed, as a share of the number expected. The
+      expectation needs EPA's model, which a new site cannot run.
+    source: nrsa-tsd-2018-19
   # ---- desktop metrics -------------------------------------------------------
   bfiws:
     where: desktop

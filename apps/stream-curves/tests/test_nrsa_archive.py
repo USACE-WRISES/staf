@@ -182,15 +182,45 @@ def test_the_cycles_are_complementary_not_redundant(values):
     assert filled("2324", "land_") <= 1
     # EPA publishes no site-level benthic or fish metrics for 2018-19; those columns
     # are backfilled from the legacy snapshot instead of recomputed, so they are
-    # present and value_origins.csv says where they came from
-    assert filled("1819", "bent_") == 125
-    assert filled("1819", "fish_") == 180
+    # present and value_origins.csv says where they came from. The one benthic and
+    # the one fish column EPA does publish for 2018-19 are its two multimetric
+    # indices (methodology 0.16), read from EPA's own MMI files: 125 + 1 and 180 + 1.
+    assert filled("1819", "bent_") == 126
+    assert filled("1819", "fish_") == 181
     assert filled("1314", "bent_") >= 110
     assert filled("2324", "bent_") >= 110
     assert filled("2324", "fish_") >= 170
     # physical habitat is complete in the two newer cycles
     assert filled("1819", "phab_") == 155
     assert filled("2324", "phab_") == 155
+
+
+def test_the_nrsa_indices_come_from_epas_own_mmi_files(values):
+    """Methodology 0.16 (owner decision D12): EPA's benthic and fish MMIs and the
+    benthic O/E ratio enter the archive as metrics of their own, read from the MMI
+    files EPA publishes (never computed here, never backfilled): the two MMIs in
+    every cycle, the O/E score in 2013-14 only (later cycles publish the class
+    without the score)."""
+    def n_values(cycle: str, column: str) -> int:
+        return int(values.loc[values.cycle == cycle, column].notna().sum())
+
+    for column in ("bent_MMI_BENT", "fish_MMI_FISH"):
+        for cycle in CYCLES:
+            assert n_values(cycle, column) > 1000, (column, cycle)
+        assert values[column].dropna().between(0, 100).all(), column
+    assert n_values("1314", "bent_OE_SCORE") > 1500
+    assert n_values("1819", "bent_OE_SCORE") == 0 and n_values("2324", "bent_OE_SCORE") == 0
+    assert (values["bent_OE_SCORE"].dropna() >= 0).all()
+
+    crosswalk = pd.read_csv(NRSA_DIR / "metric_crosswalk.csv", dtype={"cycle": str})
+    by = crosswalk.set_index(["metric_key", "cycle"])["dataset_id"]
+    for cycle in CYCLES:
+        assert by[("bent_MMI_BENT", cycle)] == "BENTHIC_MMI"
+        assert by[("fish_MMI_FISH", cycle)] == "FISH_MMI"
+    assert by[("bent_OE_SCORE", "1314")] == "BENTHIC_MMI"
+    origins = pd.read_csv(NRSA_DIR / "value_origins.csv", dtype={"cycle": str})
+    mine = origins[origins.metric_key.isin(["bent_MMI_BENT", "fish_MMI_FISH", "bent_OE_SCORE"])]
+    assert len(mine) == 7 and mine.origin.eq("epa_published").all()
 
 
 def test_the_2018_19_biology_is_backfilled_not_invented():

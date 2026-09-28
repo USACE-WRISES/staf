@@ -173,6 +173,9 @@ bent_MITEPIND,2324,epa_published,2094
 bent_MITEPTAX,1314,epa_published,2255
 bent_MITEPTAX,1819,legacy_r_app,2105
 bent_MITEPTAX,2324,epa_published,2094
+bent_MMI_BENT,1314,epa_published,2255
+bent_MMI_BENT,1819,epa_published,2104
+bent_MMI_BENT,2324,epa_published,2094
 bent_MOLLNTAX,1314,epa_published,2255
 bent_MOLLNTAX,1819,legacy_r_app,2105
 bent_MOLLNTAX,2324,epa_published,2094
@@ -209,6 +212,7 @@ bent_ODONPIND,2324,epa_published,2094
 bent_ODONPTAX,1314,epa_published,2255
 bent_ODONPTAX,1819,legacy_r_app,2105
 bent_ODONPTAX,2324,epa_published,2094
+bent_OE_SCORE,1314,epa_published,2255
 bent_OLLENTAX,1314,epa_published,2255
 bent_OLLENTAX,1819,legacy_r_app,2105
 bent_OLLENTAX,2324,epa_published,2094
@@ -615,6 +619,9 @@ fish_MIGRPIND,2324,epa_published,1673
 fish_MIGRPTAX,1314,epa_published,1871
 fish_MIGRPTAX,1819,legacy_r_app,1714
 fish_MIGRPTAX,2324,epa_published,1673
+fish_MMI_FISH,1314,epa_published,1874
+fish_MMI_FISH,1819,epa_published,1748
+fish_MMI_FISH,2324,epa_published,1650
 fish_MTOLNTAX,1314,epa_published,1871
 fish_MTOLNTAX,1819,legacy_r_app,1714
 fish_MTOLNTAX,2324,epa_published,1673

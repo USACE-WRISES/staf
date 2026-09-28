@@ -95,3 +95,30 @@ metrics:
       NRSA's tolerance assignment. Total richness can hold steady under
       disturbance because tolerant species replace intolerant ones, so this
       counts only the taxa that do not tolerate it.
+
+  # ── EPA's NRSA indices (methodology 0.16, owner decision D12, 2026-09-28) ──
+  # EPA's metadata names them by their database mnemonics. Each index is a metric
+  # of its own, scored against EPA's own condition benchmarks where no station
+  # pool supports it.
+  bent_MMI_BENT:
+    display_name: "Benthic macroinvertebrate MMI"
+    units: "MMI points"
+    description: >-
+      EPA's NRSA benthic macroinvertebrate multimetric index, six metrics of
+      composition, diversity, feeding, habit, richness and tolerance scored per
+      NARS-9 region and rescaled to 0 to 100; higher is better.
+  fish_MMI_FISH:
+    display_name: "Fish MMI"
+    units: "MMI points"
+    description: >-
+      EPA's NRSA fish multimetric index, eight metrics per NARS-9 region, several
+      adjusted for watershed area, scored from an electrofishing sample and
+      rescaled to 0 to 100; higher is better.
+  bent_OE_SCORE:
+    display_name: "Benthic O/E taxa loss ratio"
+    units: "ratio"
+    description: >-
+      EPA's NRSA observed-to-expected ratio for benthic macroinvertebrates: the
+      taxa observed at a site as a share of those a predictive model expects
+      under least-disturbed conditions. A ratio of 1.0 is the expectation;
+      published for the 2013-14 survey only.
