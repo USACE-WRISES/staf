@@ -95,9 +95,19 @@ def test_the_three_pilots_read_the_screen_the_station_table_pins(evidence):
 
 def test_a_region_with_enough_reference_stations_stays_local(evidence):
     support = evidence["58"]["reference_support"]
-    assert support and {d["status"] for d in support.values()} == {"local"}
-    assert all(d["transfer_risk"] == "none" for d in support.values())
-    assert not evidence["58"]["insufficient_support"]
+    statuses = {mk: d["status"] for mk, d in support.items()}
+    # methodology 0.16 (owner decision D13): a local curve the checks refuse (a fallback
+    # ramp or an inverted curve) walks on. Five metrics leave the 66-station local pool:
+    # native fish richness and residual pool depth are withheld, native non-tolerant fish
+    # taxa and wetland cover rest on flagged national pools (REF-16), bank angle on the
+    # Level II pool. Everything else stays local at no transfer risk.
+    assert {mk: s for mk, s in statuses.items() if s != "local"} == {
+        "fish_NAT_NTOLNTAX": "national", "fish_NAT_TOTLNTAX": "insufficient",
+        "phab_RP100_cm": "insufficient", "phab_XBKA": "borrowed_l2", "pctwet2019ws": "national"}
+    assert all(d["transfer_risk"] == "none" for mk, d in support.items() if statuses[mk] == "local")
+    assert sorted(evidence["58"]["insufficient_support"]) == ["fish_NAT_TOTLNTAX", "phab_RP100_cm"]
+    assert evidence["58"]["flagged_metrics"] == {"fish_NAT_NTOLNTAX": "national",
+                                                 "pctwet2019ws": "national"}
 
 
 def test_a_thin_region_borrows_per_metric_and_withholds_what_nothing_supports(evidence):
@@ -113,9 +123,9 @@ def test_a_thin_region_borrows_per_metric_and_withholds_what_nothing_supports(ev
     # relative bed stability lost its Level II acceptance and takes the Level I
     # pool, and tolerant fish individuals and large wood volume take matched
     # national donors (3c_matched accepted), so two statuses join the set.
+    # 0.16: nothing is withheld here any more (REF-17 scores wetland cover, below)
     assert set(statuses.values()) == {"local_relaxed", "borrowed_l2", "borrowed_l1",
-                                      "borrowed_nars9", "national", "modeled", "published",
-                                      "insufficient"}
+                                      "borrowed_nars9", "national", "modeled", "published"}
     assert statuses["phab_LRBS_use"] == "borrowed_l1"
     assert statuses["fish_NAT_TOLRPIND"] == statuses["phab_LWDeqVolM100"] == rp.STATUS_NATIONAL
     # regenerated evidence: tolerant fish individuals (national donors) and natural
@@ -127,10 +137,11 @@ def test_a_thin_region_borrows_per_metric_and_withholds_what_nothing_supports(ev
     # verdict recorded and the confidence capped; wetland cover alone stays withheld,
     # every option refused for a stated reason (a fallback ramp or an inverted curve,
     # owner decision D13)
-    assert sorted(ip["insufficient_support"]) == ["pctwet2019ws"]
+    assert sorted(ip["insufficient_support"]) == []
     flagged = ip["flagged_metrics"]
+    # conductivity left the flagged pools for EPA's salinity benchmark (owner decision D12)
     assert sorted(mk for mk, src in flagged.items() if src == "pool") == [
-        "bent_EPT_NTAX", "bent_TOLRPIND", "bent_TOTLNTAX", "chem_CHLA", "chem_COND",
+        "bent_EPT_NTAX", "bent_TOLRPIND", "bent_TOTLNTAX", "chem_CHLA",
         "phab_BFWD_RAT", "phab_LSUB_DMM", "phab_PCT_FAST", "phab_RP100_cm", "phab_XBKF_H",
         "phab_XCDENMID", "phab_XCMGW", "phab_XEMBED"]
     assert flagged["bfiws"] == "national"
@@ -139,9 +150,17 @@ def test_a_thin_region_borrows_per_metric_and_withholds_what_nothing_supports(ev
         assert d["transfer_risk"] == rp.RISK_UNVALIDATED and d["confidence_cap"] == 39, mk
         assert d["transfer_validation"]["accepted"] is False and "recovery test" in d["transfer_note"], mk
     # a validated source of any kind replaced the flagged pool of these metrics
-    assert sorted(ip["flagged_replaced"]) == ["chem_NTL", "chem_PTL", "chem_TURB",
-                                              "fish_NAT_TOLRPIND", "phab_LWDeqVolM100", "phab_SINU"]
-    wet = ip["insufficient_support"]["pctwet2019ws"]["decision"]
+    # (0.16 with the published-benchmark review: the two MMIs and conductivity on
+    # EPA's benchmarks)
+    assert sorted(ip["flagged_replaced"]) == ["bent_MMI_BENT", "chem_COND", "chem_NTL", "chem_PTL",
+                                              "chem_TURB", "fish_MMI_FISH", "fish_NAT_TOLRPIND",
+                                              "phab_LWDeqVolM100", "phab_SINU"]
+    # every station pool refused wetland cover (a fallback ramp or an inverted curve,
+    # D13), so REF-17 scores surface water storage on EASI's wetland-extent method, and
+    # the pools' refusals stay on the metric's record
+    wet = ip["reference_support"]["pctwet2019ws"]
+    assert wet["basis"] == "easi-screening-method" and wet["status"] == "published"
+    assert ip["last_resort_metrics"]["pctwet2019ws"]["functionId"] == "surface-water-storage"
     refused = {t["option"]: t for t in wet["options_tried"]}
     assert refused["regional_l2"]["refused_by"] == "curve"
     assert refused["regional_l2"]["curve"]["curve12"]["verdict"] == "inverted"
@@ -184,7 +203,12 @@ def test_a_region_with_no_reference_station_says_so(evidence):
     lwd = ecbp["reference_support"]["phab_LWDeqVolM100"]
     assert lwd["status"] == rp.STATUS_NATIONAL and lwd["basis"] == "national-reference"
     assert lwd["n_usable"] == lwd["n_comparable"] == 71 and lwd["n_local"] == 0
-    assert lwd["options_tried"] == [{"option": "3c_matched", "accepted": True, "n": 71, "why": ""}]
+    assert [{k: t[k] for k in ("option", "accepted", "n", "why")} for t in lwd["options_tried"]] \
+        == [{"option": "3c_matched", "accepted": True, "n": 71, "why": ""}]
+    # 0.16: every option tried records every check it faced, the curve checks included
+    assert [c["check"] for c in lwd["options_tried"][0]["checks"]] == [
+        "ACC-01", "ACC-04", "CURVE-07", "ACC-05/06", "ACC-03"]
+    assert lwd["options_tried"][0]["curve"]["curve_status"] == "complete"
     assert "phab_LWDeqVolM100" in ecbp["ladder_metrics"]
     assert "phab_LWDeqVolM100" not in ecbp["curve_rows"]
     # 0.15: most chemistry and the benthic metrics found no source that passed.
@@ -194,9 +218,10 @@ def test_a_region_with_no_reference_station_says_so(evidence):
     withheld = set(ecbp["insufficient_support"])
     assert withheld == {"phab_PCT_FAST"}
     flagged = ecbp["flagged_metrics"]
-    assert {"chem_COND", "bent_EPT_NTAX", "fish_NAT_TOTLNTAX"} <= set(flagged)
-    assert set(flagged.values()) == {"pool"} and len(flagged) == 17
-    for mk in ("chem_COND", "bent_EPT_NTAX", "fish_NAT_TOTLNTAX"):
+    # (conductivity left them for EPA's salinity benchmark, owner decision D12)
+    assert {"bent_EPT_NTAX", "fish_NAT_TOTLNTAX"} <= set(flagged) and "chem_COND" not in flagged
+    assert set(flagged.values()) == {"pool"} and len(flagged) == 16
+    for mk in ("bent_EPT_NTAX", "fish_NAT_TOTLNTAX"):
         d = ecbp["reference_support"][mk]
         assert d["status"] == "borrowed_l1" and d["transfer_risk"] == rp.RISK_UNVALIDATED
         assert d["confidence_cap"] == 39 and d["transfer_validation"]["basis"] == "2r_l1"
@@ -214,6 +239,10 @@ def test_a_region_with_no_reference_station_says_so(evidence):
               if mk in (ecbp.get("ladder_metrics") or {})}
     assert ladder == {"chem_PTL": "published-benchmark",
                       "chem_NTL": "published-benchmark",
+                      # 0.16 (D12): EPA's salinity and the two MMI benchmarks
+                      "chem_COND": "published-benchmark",
+                      "bent_MMI_BENT": "published-benchmark",
+                      "fish_MMI_FISH": "published-benchmark",
                       "phab_LWDeqVolM100": "national-reference",
                       "fish_NAT_TOLRPIND": "national-reference"}
     assert ecbp["reference_support"]["fish_NAT_TOLRPIND"]["n_usable"] == 29
@@ -246,7 +275,11 @@ def test_population_support_is_scored_by_proportions_and_counts_name_their_block
     assert support["fish_NAT_NTOLNTAX"]["transfer_risk"] != rp.RISK_UNVALIDATED
     rows = {r["function_id"]: r for r in results["55"]["portfolio"] if r.get("function_id")}
     assert rows["population-support"]["coverage"] == "covered"
-    assert set(rows["population-support"]["metrics"]) == {"fish_NAT_NTOLNTAX",
+    # 0.16: the two default metrics are flagged, so SELECT-04 fills the function from the
+    # validated reserves by source and score; the fish MMI (a new reserve on EPA's
+    # benchmark, ranked as published) joins the candidates and moves the redundancy
+    # scores, so lithophil individuals take the place non-tolerant taxa held
+    assert set(rows["population-support"]["metrics"]) == {"fish_NAT_LITHPIND",
                                                           "fish_NAT_NTOLPTAX"}
     selection = results["55"]["meta"]["portfolioSelection"]["population-support"]
     left = {x["metric"]: x["source"] for x in selection["notSelected"]}
@@ -301,11 +334,12 @@ def test_the_bundle_states_its_reference_method(results):
     b = results["58"]["bundle"]
     ref = b["referenceMethod"]
     assert ref["method"] == "pressure-screen" and ref["screenId"] == rscreen.SCREEN_ID
-    assert ref["nLocalReference"] == 66 and ref["nCurvesBorrowed"] == 0
-    # every metric has a local pool here, and none is held: the two benthic curves
-    # DATA-03 held under 0.13 carry a value at 65 of the 66 stations since the
-    # archive's empty cycles were restored (methodology 0.14)
-    assert not b.get("insufficientReferenceSupport")
+    # 0.16 (D13): bank angle takes the Level II pool and two metrics every source refused
+    # are withheld; the two flagged national pools are not borrowed station pools
+    assert ref["nLocalReference"] == 66 and ref["nCurvesBorrowed"] == 1
+    assert ref["nCurvesFlagged"] == 2 and ref["nCurvesEasiScreening"] == 0
+    assert {x["metricKey"] for x in b.get("insufficientReferenceSupport") or []} == {
+        "fish_NAT_TOTLNTAX", "phab_RP100_cm"}
     assert b["sourceCitation"].endswith(
         "StreamCurves regional analysis, methodology " + methodology.methodology_version())
 
@@ -369,7 +403,9 @@ def test_every_reference_curve_carries_where_its_stations_came_from(results):
                 assert sup["nUsable"] >= 10 and sup["nLocal"] == 0
                 assert "national pool" in sup["transferNote"]
                 assert "none inside this ecoregion" in sup["transferNote"]
-                assert m.get("referenceN") is None
+                # R5-12 (the 0.16 commit): the donors behind the curve, as a pool
+                # curve states its stations
+                assert m.get("referenceN") == sup["nUsable"]
                 assert any("outside this ecoregion" in c for c in m["curveCaveats"])
                 continue
             if sup.get("screenId"):
@@ -457,7 +493,8 @@ def test_coverage_counts_the_fixed_metrics_and_names_what_withholding_left_open(
     assert [d["functionId"] for d in draft] == ["habitat-provision"]
     assert all(d["reason"] == "insufficient-reference-support" and d["recordedBy"] == ""
                for d in draft)
-    assert "fallback ramp" in draft[0]["justification"]
+    assert "Fast-water / riffle habitat" in draft[0]["justification"]
+    assert "withheld" in draft[0]["justification"]
 
 
 def test_the_portfolio_counts_fixed_metrics_in_their_functions(results):
@@ -535,14 +572,18 @@ def test_the_records_name_the_new_rules(results):
     by_rule: dict[str, list[dict]] = {}
     for r in doc["records"]:
         by_rule.setdefault(r["rule_id"], []).append(r)
-    assert {"REF-04", "REF-06", "REF-07", "REF-11", "REF-12", "REF-13", "REF-14",
-            "DATA-11", "STRAT-10", "CURVE-11", "SELECT-04", "COV-01"} <= set(by_rule)
+    # 0.16: REF-16 (the flagged pools) and REF-17 (wetland cover on EASI's method) record
+    # their decisions; nothing is withheld and no function is left unassessed, so
+    # REF-06 and COV-01 raise nothing here
+    assert {"REF-04", "REF-07", "REF-11", "REF-12", "REF-13", "REF-14", "REF-16", "REF-17",
+            "DATA-11", "STRAT-10", "CURVE-11", "SELECT-04"} <= set(by_rule)
+    assert not {"REF-06", "COV-01"} & set(by_rule)
     assert not {"REF-01", "REF-02", "REF-05", "REF-08", "REF-09", "REF-10"} & set(by_rule)
     assert len(by_rule["CURVE-11"]) == len(FIXED)
     # methodology 0.15: every REF-06 subject is a withheld metric, and every
     # withheld entry names its rule (REF-06 where no source passed, else the rule
     # that judged its existing pool)
-    ref06 = {r["subject"] for r in by_rule["REF-06"]}
+    ref06 = {r["subject"] for r in by_rule.get("REF-06", [])}
     assert ref06 <= set(res["insufficient_support"])
     for mk, item in res["insufficient_support"].items():
         assert (pe.withheld_rule(item) == "REF-06") == (mk in ref06), mk
@@ -550,8 +591,8 @@ def test_the_records_name_the_new_rules(results):
     assert by_rule["REF-11"] and not any(r["review_required"] for r in by_rule["REF-11"])
     queue_triggers = {i["trigger"] for i in doc["reviewQueue"]["items"]}
     assert "borrowed_reference_pool" not in queue_triggers
-    # a function no source supports reaches the queue as a documented gap
-    assert "function_unassessed" in queue_triggers
+    # every function is scored (owner decision D18), so none reaches the queue unassessed
+    assert "function_unassessed" not in queue_triggers
 
 
 def _provenance(res: dict) -> dict:
@@ -580,7 +621,9 @@ def test_a_rule_withheld_metric_is_recorded_and_raises_no_review_item(results, m
     mk = "phab_LWDeqVolM100"
     withheld = {k: v for k, v in ev["insufficient_support"].items()
                 if v.get("reason") == pe.HIGH_MISSINGNESS}
-    assert list(withheld) == [mk] and ev["insufficient_support"].keys() == {mk}
+    # 0.16: beside it, the two metrics every source refused here (D13)
+    assert list(withheld) == [mk]
+    assert set(ev["insufficient_support"]) == {mk, "fish_NAT_TOTLNTAX", "phab_RP100_cm"}
     item = withheld[mk]
     rec = ev["missingness"][mk]
     assert rec["withheld"] is True and rec["rule"] == "DATA-03"
@@ -653,7 +696,8 @@ def test_the_session_carries_the_reference_statement(results):
     build = fields["reference_build"]
     assert build["method"] == "pressure-screen"
     assert set(build["fixedMetrics"]) == FIXED
-    assert build["insufficientReferenceSupport"]
+    # 0.16: nothing is withheld here (REF-17 scores wetland cover); the list is kept
+    assert build["insufficientReferenceSupport"] == []
     assert fields["screening_run"]["method"] == rscreen.METHOD
     assert fields["screening_run"]["method_version"] == run_state.REFERENCE_SCREEN_METHOD_VERSION
     # it survives a save and a reopen
@@ -682,7 +726,7 @@ def test_an_interactive_republish_keeps_the_fixed_metrics_and_the_support(result
             assert got[mid].get(key) == m.get(key), (mid, key)
         assert got[mid]["curve"]["points"] == m["curve"]["points"]
     assert bundle["referenceMethod"] == res["bundle"]["referenceMethod"]
-    assert bundle["insufficientReferenceSupport"] == res["bundle"]["insufficientReferenceSupport"]
+    assert bundle.get("insufficientReferenceSupport") == res["bundle"].get("insufficientReferenceSupport")
 
 
 def test_a_legacy_session_passes_through_untouched():
@@ -733,8 +777,10 @@ def test_the_packet_shows_the_reference_statement(results):
                     "## 6e. Discrimination check"):
         assert heading in text
     assert "REF-02" not in text.split("## 6.")[1].split("## 7.")[0]
-    # 0.16: wetland cover is the one metric every source refused here
-    assert "pctwet2019ws" in text.split("## 6b.")[1].split("## 6c.")[0]
+    # 0.16: every station pool refused wetland cover here and REF-17 scores it on EASI's
+    # method, so nothing is withheld; the metric is still listed with its support
+    assert "None." in text.split("## 6b.")[1].split("## 6c.")[0]
+    assert "pctwet2019ws" in text.split("## 6.")[1].split("## 7.")[0]
     borrowed_flag = [r for r in packet["curves"]
                      if any("pool borrowed from" in f for f in r["flags"])]
     assert borrowed_flag
@@ -757,7 +803,8 @@ def test_the_support_table_accounts_for_every_metric(results):
     # them. 0.13 adds the two NRSA nutrient criteria to the five EASI ones.
     published = {mk for mk, d in res["reference_support"].items()
                  if d.get("basis") == "published-benchmark"}
-    assert published == {"chem_PTL", "chem_NTL"}
+    # 0.16 (D12): EPA's salinity and the two MMI benchmarks join the nutrient criteria
+    assert published == {"chem_PTL", "chem_NTL", "chem_COND", "bent_MMI_BENT", "fish_MMI_FISH"}
     assert set(table.loc[table["criteria_basis"] == "fixed", "metric"]) == FIXED | published
 
 
@@ -894,7 +941,9 @@ def test_a_metric_is_never_both_scored_and_withheld(evidence, monkeypatch):
     monkeypatch.setattr(pe, "held_for_review", lambda *a, **k: [stale])
     res = ra.assemble(evidence["58"])
     assert "spring-chem-cond" in _entries(res["bundle"])
-    assert not res["bundle"].get("insufficientReferenceSupport")
+    # the stale record is dropped; the two metrics every source refused here (D13) stay
+    withheld = {x["metricKey"] for x in res["bundle"].get("insufficientReferenceSupport") or []}
+    assert withheld == {"fish_NAT_TOTLNTAX", "phab_RP100_cm"}
 
 
 
