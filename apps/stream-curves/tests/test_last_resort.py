@@ -86,13 +86,30 @@ def test_the_config_enables_the_rung_and_ranks_it_last():
 # --------------------------------------------------------------------------- #
 # which functions the rung completes
 # --------------------------------------------------------------------------- #
-def _insufficient(mk: str) -> rp.PoolDecision:
+def _insufficient(mk: str, tried=()) -> rp.PoolDecision:
     return rp.PoolDecision(metric=mk, status=rp.STATUS_INSUFFICIENT, level=None, region_code="71",
                            region_name="Interior Plateau", family=None, n_pool=0,
                            n_comparable=0, n_usable=0, n_local=0, n_huc12=0,
                            disposition="insufficient", supported_level=None,
                            transfer_risk=rp.RISK_NONE, transfer_note="", station_ids=(),
-                           levels_tried=[])
+                           levels_tried=["l3", "l2"], options_tried=list(tried))
+
+
+def test_the_replaced_metrics_own_refusals_stay_on_its_record():
+    """Traceable on reopen: the pools the wetland metric tried, and why each was refused,
+    ride on the REF-17 decision and in the sentence that says why the rung was reached."""
+    tried = [{"option": "regional_l2", "level": "l2", "region_code": "8.3", "refused_by": "curve",
+              "why": "The curve on this pool would rank pressured stations above reference stations"},
+             {"option": "regional_l1", "level": "l1", "region_code": "8",
+              "why": "The curve on this pool would be the engine's fallback ramp"}]
+    got = pe.last_resort_fills("71", "Interior Plateau", covered_metrics=[],
+                               candidate_metrics={"pctwet2019ws": _insufficient("pctwet2019ws", tried)},
+                               configs={})
+    d = got["pctwet2019ws"]["decision"]
+    assert [x["option"] for x in d.options_tried] == ["regional_l2", "regional_l1"]
+    assert d.levels_tried == ["l3", "l2"]
+    why = got["pctwet2019ws"]["attempt"]["why"]
+    assert "rank pressured stations above reference stations" in why and "fallback ramp" in why
 
 
 def test_the_rung_completes_only_a_function_nothing_else_covers():

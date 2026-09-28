@@ -2263,6 +2263,15 @@ def missingness_kept_caveat(rec: dict, function_names: list, limit: float) -> st
             f"curve rests on the {n_val} stations that do.")
 
 
+def _tried_of(decision) -> list:
+    """A decision's ``options_tried`` (a PoolDecision or its dict), copied."""
+    if decision is None:
+        return []
+    got = (decision.get("options_tried") if isinstance(decision, dict)
+           else getattr(decision, "options_tried", None))
+    return [dict(x) for x in (got or []) if isinstance(x, dict)]
+
+
 def last_resort_fills(l3_code: str, name: str, *, covered_metrics: Iterable[str],
                       candidate_metrics: dict, configs: dict, carried: Optional[dict] = None,
                       withheld_statements: Optional[dict] = None) -> dict:
@@ -2302,6 +2311,10 @@ def last_resort_fills(l3_code: str, name: str, *, covered_metrics: Iterable[str]
         words = []
         for m in refused:
             said = str(statements.get(m) or "").strip().rstrip(".")
+            if not said:
+                # each station pool the metric tried, with the reason it was refused
+                said = "; ".join(_pool_sentence(x).rstrip(".") for x in _tried_of(
+                    candidate_metrics.get(m)) if not x.get("accepted"))
             words.append(f"{m} ({said})" if said else
                          f"{m} (no source in the hierarchy passed acceptance)")
         why = (f"No source supports {label} in this ecoregion: "
@@ -2314,7 +2327,13 @@ def last_resort_fills(l3_code: str, name: str, *, covered_metrics: Iterable[str]
             n_local=0, n_huc12=0, disposition="exploratory", supported_level=None,
             transfer_risk=rp.RISK_NONE,
             transfer_note=f"{curve_basis.statement_for(curve_basis.EASI_SCREENING)} {why}",
-            station_ids=(), levels_tried=[], basis=curve_basis.EASI_SCREENING,
+            station_ids=(),
+            # the replaced metric's own refusals stay on its record (traceable on reopen)
+            levels_tried=list((candidate_metrics.get(mk).get("levels_tried")
+                               if isinstance(candidate_metrics.get(mk), dict)
+                               else getattr(candidate_metrics.get(mk), "levels_tried", None)) or []),
+            options_tried=_tried_of(candidate_metrics.get(mk)),
+            basis=curve_basis.EASI_SCREENING,
             screen_detail={"rule": fixed_criteria.LAST_RESORT_RULE,
                            "easiMethod": entry.get("easi_method"), "functionId": fid,
                            "refusedCandidates": refused})
