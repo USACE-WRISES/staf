@@ -1114,6 +1114,21 @@ def _pressure_records(result: dict, add) -> None:
                     "Insufficient reference support: no source in the hierarchy "
                     "passed acceptance, so no curve is built and the metric is "
                     "not scored. No curve is forced."))
+        elif str(d.get("transfer_risk") or "") == "unvalidated":
+            # methodology 0.16 (REF-16): a flagged transfer, a regional pool or a
+            # national pool taken after every validated source refused. The
+            # methodology's decision (owner decision D11): the recovery verdict is
+            # recorded here as a limitation and raises no review item; the
+            # promotion policy's flagged-transfer-disclosed gate checks the bundle
+            computed["transfer_validation"] = d.get("transfer_validation")
+            computed["confidence_cap"] = d.get("confidence_cap")
+            computed["basis"] = basis
+            add("REF-16", "metric", metric,
+                thresholds={**_acceptance_thresholds(),
+                            "flagged_transfer": methodology.threshold(
+                                "reference_hierarchy.flagged_transfer", {})},
+                computed=computed, verdict=VERDICT_PASS,
+                recommendation=(str(d.get("transfer_note") or "") + aside).strip() or None)
         elif basis in ("national-reference", "modeled-reference", "published-benchmark"):
             rule = {"national-reference": "REF-12", "modeled-reference": "REF-13",
                     "published-benchmark": "REF-14"}[basis]
@@ -2137,12 +2152,20 @@ def build_ledger(result: dict, *, manifest: Optional[dict] = None, register: Opt
                 continue
             st = str(sup.get("status") or "")
             raw = _pool_option(sup)
+            # methodology 0.16 (REF-16): a flagged transfer is recorded under its
+            # own rule, with the verdict it was refused with and its cap
+            flagged = str(sup.get("transfer_risk") or "") == "unvalidated"
+            extra = ({"transferRisk": "unvalidated",
+                      "transferValidation": dict(sup.get("transfer_validation") or {}),
+                      "confidenceCap": sup.get("confidence_cap")} if flagged else {})
             rows.append(base(mk, fid, disposition=REFITTED,
-                             rule=_STATUS_RULES.get(st, "REF-11" if st.startswith("borrowed") else "REF-05"),
+                             rule=("REF-16" if flagged else
+                                   _STATUS_RULES.get(st, "REF-11" if st.startswith("borrowed") else "REF-05")),
                              reason=str(d.get("reason") or ""), candidate=key, basis=basis,
                              option=_LEDGER_OPTIONS.get(str(raw or ""), raw),
                              pool=_pool_block(mk, sup, raw, ledger_df, code),
-                             engine=engine_block(True, mk), placementRule=placement, **person))
+                             engine=engine_block(True, mk), placementRule=placement, **person,
+                             **extra))
         elif status == C.ELIGIBLE:
             rows.append(base(mk, fid, disposition=REMOVED, rule=placement or "SELECT-04",
                              reason=str(d.get("reason") or ""), candidate=key, basis=basis,
@@ -2250,7 +2273,7 @@ def build_ledger_from_version(vdir, *, previous: Optional[dict] = None) -> dict:
         if rec.get("subject_kind") != "metric":
             continue
         computed = rec.get("computed") or {}
-        if rule in ("REF-05", "REF-06", "REF-11", "REF-12", "REF-13", "REF-14") and rec.get("verdict") != VERDICT_FAIL:
+        if rule in ("REF-05", "REF-06", "REF-11", "REF-12", "REF-13", "REF-14", "REF-16") and rec.get("verdict") != VERDICT_FAIL:
             support[subject] = dict(computed)
         elif rule == "REF-06":
             support[subject] = dict(computed)

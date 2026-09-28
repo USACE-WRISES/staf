@@ -59,7 +59,9 @@ SUPPORT_CLASSES = ("local20plus", "local10to19", "local1to9", "noLocal", "frameU
 STATES = ("staged", "staged-open", "no-data", "unsupported", "incomplete", "refused", "failed",
           "not-started")
 GATE_IDS = ("frozen-record", "rules-applied", "pending-confirmable", "owner-decisions-honored",
-            "portfolio-approvals", "equivalence-proven", "record-complete")
+            "portfolio-approvals", "equivalence-proven", "record-complete",
+            # promotion policy 1.2 (methodology 0.16, REF-16)
+            "flagged-transfer-disclosed")
 #: the gates a run folder answers on its own (``promote --status policy`` without a gate report)
 RUN_FOLDER_GATES = tuple(g for g in GATE_IDS if g != "equivalence-proven")
 #: the label every rehearsal, test, pilot and gate run records as its maintainer
@@ -216,7 +218,18 @@ def promotion_policy_record(policy: Mapping) -> dict:
     """What every document that applies the policy records of it."""
     meta = policy.get("meta") or {}
     return {"version": promotion_policy_version(policy), "sha256": meta.get("sha256"),
-            "status": meta.get("status"), "path": meta.get("path")}
+            "status": meta.get("status"), "path": meta.get("path"),
+            # promotion policy 1.2 (D14): the support classes the owner accepted as
+            # Preliminary-eligible, so a batch summary can cite the clause
+            "acceptedSupportClasses": accepted_support_classes(policy)}
+
+
+def accepted_support_classes(policy: Mapping) -> list[str]:
+    """The support classes promotion policy 1.2's acceptance clause names as
+    Preliminary-eligible (``acceptance.preliminary_eligible_support_classes``);
+    empty under an older policy file."""
+    block = policy.get("acceptance") or {}
+    return [str(c) for c in (block.get("preliminary_eligible_support_classes") or [])]
 
 
 def validate_promotion_policy(policy: Mapping) -> list[str]:
@@ -226,6 +239,18 @@ def validate_promotion_policy(policy: Mapping) -> list[str]:
     for key in ("version", "status", "approved_under", "owner_decision"):
         if not meta.get(key):
             problems.append(f"meta.{key} is missing")
+    # promotion policy 1.2 (D14): the acceptance clause names known support classes
+    # and the owner's decision it quotes
+    block = policy.get("acceptance")
+    if isinstance(block, Mapping):
+        for c in accepted_support_classes(policy):
+            if c not in SUPPORT_CLASSES:
+                problems.append(f"acceptance names an unknown support class {c!r}")
+        for key in ("owner_decision", "statement"):
+            if not block.get(key):
+                problems.append(f"acceptance.{key} is missing")
+    elif block is not None:
+        problems.append("acceptance must be a mapping")
     gates = policy.get("gates") or []
     if not gates:
         problems.append("gates is empty")
@@ -1274,6 +1299,40 @@ def gate_record_complete(run_dir) -> tuple[bool, str]:
     return True, "register, ledger, evidence reference and the output record are complete and intact"
 
 
+def gate_flagged_transfer_disclosed(run_dir) -> tuple[bool, str]:
+    """Promotion policy 1.2 (methodology 0.16, REF-16): every scoring entry of the
+    staged bundle on a flagged transfer carries the four disclosure fields at the
+    entry (``transferRisk`` unvalidated, ``transferValidation``, ``transferNote``,
+    ``confidenceCap``) and a caveat stating that the transfer was not confirmed by
+    the recovery test and that confidence is capped, the words DEEP prints. A
+    bundle with no flagged curve passes."""
+    from . import deep_export as dx
+    vdir = staged_version_dir(run_dir)
+    bundle = read_json(vdir / BUNDLE_FILE) if vdir else None
+    if not isinstance(bundle, dict):
+        return False, "no staged version with a bundle to read the flagged transfers from"
+    flagged = dx.flagged_entries(bundle)
+    problems = []
+    for item in flagged:
+        m = item["entry"]
+        label = f"{item['functionId']}: {item['metricId']}"
+        missing = [k for k in dx.FLAGGED_ENTRY_KEYS if m.get(k) in (None, "", {})]
+        if str(m.get("transferRisk") or "") != dx.UNVALIDATED_RISK:
+            missing.append("transferRisk=unvalidated")
+        caveats = [str(c) for c in (m.get("curveCaveats") or [])]
+        if not any("not confirmed by the recovery test" in c and "confidence capped" in c
+                   for c in caveats):
+            missing.append("limitation caveat")
+        if missing:
+            problems.append(f"{label} lacks {', '.join(dict.fromkeys(missing))}")
+    if problems:
+        return False, f"{len(problems)} flagged curve(s) not fully disclosed: " + "; ".join(problems[:6])
+    if not flagged:
+        return True, "no curve on a flagged transfer in the staged bundle"
+    return True, (f"{len(flagged)} flagged curve(s), every one carrying transferRisk, "
+                  "transferValidation, transferNote, confidenceCap and the limitation caveat")
+
+
 def evaluate_gates(run_dir, *, expect: Mapping, decisions_file, policy: Mapping,
                    gate_report=None, skip: Iterable[str] = ()) -> dict:
     """Every gate of the promotion policy on one run folder, from its artifacts alone,
@@ -1292,6 +1351,7 @@ def evaluate_gates(run_dir, *, expect: Mapping, decisions_file, policy: Mapping,
         "portfolio-approvals": lambda: gate_portfolio_approvals(run_dir),
         "equivalence-proven": lambda: gate_equivalence_proven(report, expect.get("commit")),
         "record-complete": lambda: gate_record_complete(run_dir),
+        "flagged-transfer-disclosed": lambda: gate_flagged_transfer_disclosed(run_dir),
     }
     gates: dict[str, dict] = {}
     for gate in policy.get("gates") or []:

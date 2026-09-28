@@ -202,7 +202,9 @@ def test_the_calibration_note_records_the_hygiene_pass_and_the_round_2_close():
     note = methodology.load_config()["meta"]["calibration_note"]
     assert "2026-09-25 hygiene" in note
     assert "v0.15 (2026-09-26" in note and "B3" in note and "C3b" in note
-    assert methodology.methodology_version() == "0.15-provisional"
+    # v0.16 (campaign Round 6, owner decisions D11, D13 and D14 of 2026-09-28)
+    assert "v0.16 (2026-09-28" in note and "REF-16" in note and "D13" in note
+    assert methodology.methodology_version() == "0.16-provisional"
 
 
 # --------------------------------------------------------------------------- #

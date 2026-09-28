@@ -42,8 +42,13 @@ POLICY_PATH = CONFIG_DIR / "methodology" / "standing_decisions.yaml"
 PENDING_SUFFIX = "(pending owner confirmation)"
 ALLOWED_ACTIONS = ("accept", "accept_with_conditions", "modify", "reject",
                    "request_additional_analysis")
-SIDE_EFFECTS = ("portfolio_approval", "finalize_metric", "coverage_exception")
+#: policy 1.5 adds remove_metric: a reject that takes the curve out of scoring
+#: (the batch runner feeds it to assembly as a removal)
+SIDE_EFFECTS = ("portfolio_approval", "finalize_metric", "coverage_exception", "remove_metric")
 _OPS = ("eq", "ne", "lt", "lte", "gt", "gte", "in")
+#: the policy era of a document that recorded none (the pilots): every entry a
+#: later policy retired still applies to it, nothing introduced later does
+ERA_UNRECORDED = "0"
 
 
 # --------------------------------------------------------------------------- #
@@ -72,6 +77,33 @@ def entries_by_id(policy: dict) -> dict[str, dict]:
 
 def _version_tuple(v: str) -> tuple:
     return tuple(int(x) for x in re.findall(r"\d+", str(v))[:3])
+
+
+def entry_applies(entry: dict, era: Optional[str], current: str) -> bool:
+    """Whether an entry belongs to the policy era a document was decided under.
+
+    Policy 1.5 (methodology 0.16): an entry may carry ``introduced_in_policy``
+    and ``retired_in_policy``. It applies to a document recorded under policy
+    ``era`` when the era is at or after its introduction and before its
+    retirement. ``era`` None is a new build under ``current``; a document that
+    recorded no policy (the pilots) is :data:`ERA_UNRECORDED`, so every entry a
+    later policy retired still replays it and nothing introduced later touches it.
+    """
+    at = _version_tuple(current if era is None else era)
+    intro = entry.get("introduced_in_policy")
+    retired = entry.get("retired_in_policy")
+    if intro and at < _version_tuple(intro):
+        return False
+    if retired and at >= _version_tuple(retired):
+        return False
+    return True
+
+
+def recorded_policy_version(doc: Optional[dict]) -> str:
+    """The policy version a provenance document recorded
+    (``manifest.standingDecisions.policyVersion``), else :data:`ERA_UNRECORDED`."""
+    sd = ((doc or {}).get("manifest") or {}).get("standingDecisions") or {}
+    return str(sd.get("policyVersion") or ERA_UNRECORDED)
 
 
 def validate_policy(policy: dict) -> list[str]:
@@ -121,6 +153,20 @@ def validate_policy(policy: dict) -> list[str]:
         if approved and _version_tuple(approved) > _version_tuple(current):
             problems.append(f"{where}: approved_under {approved!r} is newer than the "
                             f"current methodology {current!r}")
+        # policy 1.5: the era keys are policy versions no newer than this file's
+        this_policy = str(meta.get("policy_version") or "")
+        for key in ("introduced_in_policy", "retired_in_policy"):
+            value = e.get(key)
+            if value is None:
+                continue
+            if not _version_tuple(str(value)):
+                problems.append(f"{where}: {key} {value!r} is not a policy version")
+            elif this_policy and _version_tuple(str(value)) > _version_tuple(this_policy):
+                problems.append(f"{where}: {key} {value!r} is newer than this policy "
+                                f"{this_policy!r}")
+        if e.get("retired_in_policy") and not e.get("enabled", False):
+            problems.append(f"{where}: a retired entry stays enabled, so the replay of the "
+                            "versions decided under it still applies it")
         # No fabricated approvals (campaign Round 2 close): an entry with no approval
         # date must say in approved_under that the owner's confirmation is pending,
         # and a legacy entry is never enabled by default.
@@ -475,28 +521,37 @@ def pending_reviewer(entry_id: str, policy: dict) -> str:
     return f"standing-policy:{entry_id} {suffix}"
 
 
-def enabled_entries(policy: dict, enabled: Optional[list[str]] = None) -> list[dict]:
+def enabled_entries(policy: dict, enabled: Optional[list[str]] = None, *,
+                    era: Optional[str] = None) -> list[dict]:
+    """The entries that apply: the enabled ones plus ``enabled`` (the per-run
+    opt-ins), kept to the policy era ``era`` (:func:`entry_applies`; None is a
+    new build under this policy's version)."""
     extra = {str(e) for e in (enabled or [])}
     known = entries_by_id(policy)
     unknown = extra - set(known)
     if unknown:
         raise ValueError(f"--enable-policy names unknown entries: {', '.join(sorted(unknown))}")
+    current = policy_version(policy)
     return [e for e in policy.get("entries") or []
-            if e.get("enabled", False) or str(e.get("id")) in extra]
+            if (e.get("enabled", False) or str(e.get("id")) in extra)
+            and entry_applies(e, era, current)]
 
 
 def apply_policy(doc: dict, policy: dict, *, bundle: Optional[dict] = None,
                  result: Optional[dict] = None, enabled: Optional[list[str]] = None,
-                 date: Optional[str] = None, include_resolved: bool = False) -> PolicyResult:
+                 date: Optional[str] = None, include_resolved: bool = False,
+                 era: Optional[str] = None) -> PolicyResult:
     """Expand the enabled entries over the document's open queue items.
 
     Returns every decision made, every open item no entry covered (the owner's
     work), the hard stops among them (blocking items and the statuses the policy
     never finalizes), and the side effects the batch runner must feed back into
-    assembly (finalizations, portfolio approvals).
+    assembly (finalizations, removals, portfolio approvals). ``era`` is the
+    policy version the document was decided under (:func:`replay` passes the
+    recorded one); None is a new build under this policy.
     """
     from . import provenance as pv  # local, matching the lint import in _confirm
-    active = enabled_entries(policy, enabled)
+    active = enabled_entries(policy, enabled, era=era)
     version = policy_version(policy)
     origin = f"{(policy.get('meta') or {}).get('rationale_origin') or 'standing_policy'}:{version}"
     out = PolicyResult()
@@ -539,6 +594,8 @@ def apply_policy(doc: dict, policy: dict, *, bundle: Optional[dict] = None,
         effect = entry.get("side_effect")
         if effect == "finalize_metric":
             out.finalize_metrics[str(item.get("subject"))] = rationale
+        elif effect == "remove_metric":
+            out.remove_metrics[str(item.get("subject"))] = rationale
         elif effect == "portfolio_approval":
             out.portfolio_approvals.append({
                 "functionId": str(item.get("subject")),
@@ -805,7 +862,10 @@ def replay(version_dir: Path | str, policy: dict, *,
     bundle = json.loads((vdir / "assessment.deep.json").read_text(encoding="utf-8"))
     meta = json.loads((vdir / "meta.json").read_text(encoding="utf-8")) \
         if (vdir / "meta.json").exists() else {}
-    res = apply_policy(doc, policy, bundle=bundle, enabled=enabled, include_resolved=True)
+    # policy 1.5: a version is replayed under the policy era it recorded, so an
+    # entry retired since still decides the items it decided then
+    res = apply_policy(doc, policy, bundle=bundle, enabled=enabled, include_resolved=True,
+                       era=recorded_policy_version(doc))
     by_key = {(str(d["rule_id"]), str(d["subject"])): d for d in res.decisions}
     aliases = {str(e.get("id")): set(e.get("aliases") or []) for e in policy.get("entries") or []}
     records = _records_by_key(doc)

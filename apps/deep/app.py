@@ -2773,6 +2773,14 @@ def server(input, output, session_):  # noqa: C901
         # reference pool exists, so there is no curve and nothing to enter.
         for w in reference_support.withheld_for_function(la_now, fid):
             metric_blocks.append(_withheld_card(w))
+        # StreamCurves methodology 0.16 (REF-16): a function rated on a flagged
+        # transfer says so once more at the function, under its metrics
+        function_flag = reference_support.function_flag_line(la_now, fid)
+        if function_flag:
+            metric_blocks.append(
+                ui.div(ui.span("Read with care", class_="deep-source-key"),
+                       ui.span(function_flag, class_="deep-source-val"),
+                       class_="deep-source-row deep-limits-row deep-function-flag"))
 
         score = fr.score if fr else None
         if score is not None:

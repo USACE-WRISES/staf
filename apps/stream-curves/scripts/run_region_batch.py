@@ -623,6 +623,8 @@ def cmd_stage(a) -> int:
     # 2. assemble, apply the policy, and repeat until the queue stops changing
     policy_decisions: list[dict] = []
     policy_finalize: dict[str, str] = {}
+    # policy 1.5 (D13): a fallback curve the policy refuses leaves scoring
+    policy_remove: dict[str, str] = {}
     approvals: list[dict] = list(owner_approvals)
     # COV-01: documented gaps the standing decision records, pending the owner
     policy_exceptions: list[dict] = []
@@ -630,8 +632,13 @@ def cmd_stage(a) -> int:
     pr = None
     for it in range(1, a.max_iterations + 1):
         finalize = {**policy_finalize, **owner_finalize}
-        actor = a.maintainer if owner_finalize or owner_remove else dec.pending_reviewer(
-            "curve07-thin-metric-finalized", policy)
+        remove = {**policy_remove, **owner_remove}
+        if owner_finalize or owner_remove:
+            actor = a.maintainer
+        elif policy_remove and not policy_finalize:
+            actor = dec.pending_reviewer("curve07-degenerate-refused", policy)
+        else:
+            actor = dec.pending_reviewer("curve07-thin-metric-finalized", policy)
         owner_fids = {str(x.get("functionId")) for x in coverage_exceptions or []}
         merged_exceptions = (list(coverage_exceptions or [])
                              + [x for x in policy_exceptions
@@ -640,8 +647,8 @@ def cmd_stage(a) -> int:
             evidence, source_citation=a.source_citation,
             coverage_exceptions=merged_exceptions,
             finalize_metrics=finalize or None,
-            finalize_actor=actor if finalize or owner_remove else "",
-            remove_metrics=owner_remove or None,
+            finalize_actor=actor if finalize or remove else "",
+            remove_metrics=remove or None,
             reviewer_decisions=(owner_decisions + policy_decisions) or None,
             curve_decisions=curve_decisions or None)
         result["standing_decisions"] = {
@@ -685,6 +692,8 @@ def cmd_stage(a) -> int:
         have = {(d["rule_id"], d["subject"]) for d in policy_decisions}
         new = [d for d in pr.decisions if (d["rule_id"], d["subject"]) not in have]
         new_finalize = {k: v for k, v in pr.finalize_metrics.items() if k not in policy_finalize}
+        new_remove = {k: v for k, v in pr.remove_metrics.items()
+                      if k not in policy_remove and k not in owner_remove}
         known_fids = {x["functionId"] for x in approvals}
         new_approvals = [x for x in pr.portfolio_approvals if x["functionId"] not in known_fids]
         known_gaps = {str(x.get("functionId")) for x in policy_exceptions} | {
@@ -693,10 +702,13 @@ def cmd_stage(a) -> int:
                     if str(x.get("functionId")) not in known_gaps]
         print(f"[batch] pass {it}: queue open {doc['reviewQueue']['counts']['open']}, "
               f"policy decided {len(new)} new item(s), {len(pr.uncovered)} left open")
-        if not new and not new_finalize and not new_approvals and not new_gaps:
+        for mk in sorted(new_remove):
+            print(f"[batch] policy 1.5 (D13): {mk} is refused as a fallback curve and leaves scoring")
+        if not new and not new_finalize and not new_remove and not new_approvals and not new_gaps:
             break
         policy_decisions.extend(new)
         policy_finalize.update(new_finalize)
+        policy_remove.update(new_remove)
         approvals.extend(new_approvals)
         policy_exceptions.extend(new_gaps)
     else:
@@ -785,6 +797,7 @@ def cmd_stage(a) -> int:
     (out_dir / "standing_decisions_applied.json").write_text(
         json.dumps({"policy": policy["meta"], "enabled": enabled,
                     "decisions": policy_decisions, "finalize_metrics": policy_finalize,
+                    "remove_metrics": policy_remove,
                     "portfolio_approvals": approvals, "coverage_exceptions": policy_exceptions,
                     "open_items": pr.uncovered,
                     "hard_stops": pr.hard_stops}, indent=1, default=_json_default) + "\n",
@@ -811,7 +824,8 @@ def cmd_stage(a) -> int:
     # decides nothing new once the queue has settled) and the items still open.
     policy_summary = {
         "decisions": policy_decisions, "uncovered": pr.uncovered, "hard_stops": pr.hard_stops,
-        "finalize_metrics": policy_finalize, "portfolio_approvals": approvals,
+        "finalize_metrics": policy_finalize, "remove_metrics": policy_remove,
+        "portfolio_approvals": approvals,
         "applied_ids": sorted({d["decision_class"] for d in policy_decisions}),
     }
     packet = rp.build_packet(

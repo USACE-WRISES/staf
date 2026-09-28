@@ -34,8 +34,13 @@ _BASIS_LABELS = {BASIS_REGIONAL: "Regional reference", BASIS_NATIONAL: "National
                  BASIS_OWNER: "Owner-entered"}
 _LEVEL_WORDS = {"l3": "Level III", "l2": "Level II", "l1": "Level I",
                 "nars9": "NARS-9 region"}
+#: StreamCurves methodology 0.16 (REF-16): "unvalidated" is a flagged transfer, a
+#: pool the recovery test did not confirm for the ecoregion, used because no
+#: validated source supported the metric there
+UNVALIDATED = "unvalidated"
 _RISK_WORDS = {"low": "low", "moderate": "moderate", "high": "high",
-               "unassessed": "not yet assessed"}
+               "unassessed": "not yet assessed",
+               UNVALIDATED: "unvalidated (transfer not confirmed by the recovery test)"}
 
 
 def is_fixed(metric_spec: Optional[dict]) -> bool:
@@ -234,9 +239,10 @@ def uncertainty_line(metric_spec: Optional[dict]) -> str:
 
 
 def limitations_line(metric_spec: Optional[dict]) -> str:
-    """The curve's caveats (``curveCaveats``) and the limit its basis carries
-    (``basisLimit``), one sentence after another, each once; ``""`` when the bundle
-    records neither."""
+    """The curve's caveats (``curveCaveats``), the limit its basis carries
+    (``basisLimit``) and, for a flagged transfer, the limitation the flag carries
+    (:func:`flag_line`), one sentence after another, each once; ``""`` when the
+    bundle records none of them."""
     m = metric_spec or {}
     parts: list[str] = []
     for c in m.get("curveCaveats") or []:
@@ -246,7 +252,111 @@ def limitations_line(metric_spec: Optional[dict]) -> str:
     limit = basis_text(m, "basisLimit")
     if limit and limit not in parts:
         parts.append(limit)
+    flag = flag_line(m)
+    if flag and flag not in parts:
+        parts.append(flag)
     return " ".join(parts)
+
+
+# --------------------------------------------------------------------------- #
+# flagged transfers (StreamCurves methodology 0.16, REF-16)
+# --------------------------------------------------------------------------- #
+def is_flagged(metric_spec: Optional[dict]) -> bool:
+    """A curve on a flagged transfer: its transfer risk reads unvalidated at the
+    metric or inside ``referenceSupport``."""
+    m = metric_spec or {}
+    return UNVALIDATED in (str(m.get("transferRisk") or ""),
+                           str(_support(m).get("transferRisk") or ""))
+
+
+def transfer_validation(metric_spec: Optional[dict]) -> dict:
+    """The recovery verdict a flagged transfer was refused with, wherever the
+    bundle put it (at the metric, or inside ``referenceSupport``), or ``{}``."""
+    m = metric_spec or {}
+    got = m.get("transferValidation")
+    if not isinstance(got, dict):
+        got = _support(m).get("transferValidation")
+    return got if isinstance(got, dict) else {}
+
+
+def confidence_cap(metric_spec: Optional[dict]):
+    """The confidence cap a flagged transfer carries, or None."""
+    m = metric_spec or {}
+    cap = m.get("confidenceCap")
+    if cap is None:
+        cap = _support(m).get("confidenceCap")
+    return cap
+
+
+def flag_line(metric_spec: Optional[dict]) -> str:
+    """The limitation a flagged transfer carries, in the words the StreamCurves
+    bundle, the calculator and this app all print: what the recovery test found
+    against what it requires, and that the confidence is capped. ``""`` for a
+    curve that is not flagged."""
+    m = metric_spec or {}
+    if not is_flagged(m):
+        return ""
+    v = transfer_validation(m)
+    a1, n, net = v.get("a1_share"), v.get("n_cells"), v.get("net_opt")
+    min_cells = int(v.get("min_cells") or 4)
+    max_net = float(v.get("max_net_optimism") or 0.05)
+    if a1 is None or a1 != a1:
+        found = ("no recovery evidence for this source and metric; class agreement in two "
+                 "thirds of evaluation regions required")
+    else:
+        found = f"class agreement {float(a1):.2f} of evaluation regions; two thirds required"
+        if n is not None and int(n) < min_cells:
+            found += f", over {int(n)} evaluation regions where {min_cells} are required"
+        if net is not None and net == net and float(net) > max_net:
+            found += f"; net optimism {float(net):+.2f}, at most {max_net:.2f} allowed"
+    cap = confidence_cap(m)
+    tail = f"; confidence capped at {int(cap)}" if cap is not None else "; confidence capped"
+    return ("Scored on a reference pool whose transfer to this ecoregion was not confirmed by "
+            f"the recovery test ({found}){tail}.")
+
+
+def flagged_functions(assessment) -> list[dict]:
+    """The functions the assessment scores on at least one flagged transfer:
+    ``[{functionId, functionName, metrics: [metricName, ...]}]`` in bundle order.
+    A flagged function is rated and enters the index like any other; this names
+    it so the report and the card can say so."""
+    out: list[dict] = []
+    for fn in _raw(assessment).get("metricsByFunction") or []:
+        names = [str(m.get("metricName") or m.get("metricId")) for m in fn.get("metrics") or []
+                 if is_flagged(m)]
+        if names:
+            out.append({"functionId": fn.get("functionId"),
+                        "functionName": fn.get("functionName") or fn.get("functionId"),
+                        "metrics": names})
+    return out
+
+
+def function_flag_line(assessment, function_id: str) -> str:
+    """The function's own limitation line when any of its metrics is flagged:
+    which metrics, and what the flag means for the score. ``""`` otherwise."""
+    fid = str(function_id or "")
+    for f in flagged_functions(assessment):
+        if str(f.get("functionId")) == fid:
+            names = ", ".join(f["metrics"])
+            one = len(f["metrics"]) == 1
+            return (f"This function is rated on {'a curve' if one else 'curves'} whose reference "
+                    f"pool transfer to this ecoregion was not confirmed by the recovery test "
+                    f"({names}); the score enters the index with confidence capped.")
+    return ""
+
+
+def flagged_summary(assessment) -> str:
+    """One line for the report: how many of the rated functions rest on a flagged
+    transfer, or ``""`` when none does."""
+    flagged = flagged_functions(assessment)
+    if not flagged:
+        return ""
+    rated = len([fn for fn in _raw(assessment).get("metricsByFunction") or [] if fn.get("metrics")])
+    n = len(flagged)
+    names = ", ".join(str(f["functionName"]) for f in flagged)
+    return (f"{n} of the {rated} rated functions rest on a reference pool whose transfer to this "
+            f"ecoregion was not confirmed by the recovery test ({names}); each is rated with "
+            "confidence capped and flagged on its metric row.")
 
 
 def practitioner_lines(metric_spec: Optional[dict]) -> list[str]:

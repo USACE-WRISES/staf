@@ -27,7 +27,9 @@ from streamcurves import rules_view as rv
 from tests.test_reference_pool import CFG, SETTINGS, _frame, _stations, _values
 
 PROTOCOL_SHA = "84a5cabca0b08d403c44164b130500173451aa0d14ae11704abeeece014a1cfd"
-VERSION = "0.15-provisional"
+#: the current version: 0.16-provisional (campaign Round 6) carries every 0.15 fact
+#: pinned here, plus REF-16 (tests/test_methodology_016.py)
+VERSION = "0.16-provisional"
 
 
 # --------------------------------------------------------------------------- #
@@ -38,18 +40,20 @@ def test_the_catalog_carries_74_rules_under_0_15_and_no_calibrated_threshold():
     assert methodology.methodology_version() == VERSION
     assert cat["meta"]["methodology_version"] == VERSION
     assert methodology.load_config()["meta"]["methodology_version"] == VERSION
-    assert cat["meta"]["date"] == "2026-09-26"
+    assert cat["meta"]["date"] == "2026-09-28"
     ids = methodology.rule_ids()
-    assert len(ids) == 74
-    assert {"CURVE-13", "DATA-12", "EVAL-01"} <= set(ids)
+    # the 74 rules of 0.15 and REF-16 of 0.16
+    assert len(ids) == 75
+    assert {"CURVE-13", "DATA-12", "EVAL-01", "REF-16"} <= set(ids)
     campaign = cat["meta"]["campaign"]
     assert campaign["protocol"]["sha256"] == PROTOCOL_SHA and campaign["round"] == 2
     assert "B3" in campaign["verdicts"] and "C3b" in campaign["verdicts"]
     assert "none moved to calibrated" in campaign["threshold_status_review"]
     counts = collections.Counter(r["threshold_status"] for r in cat["rules"])
-    assert counts == {"provisional": 62, "approved": 12}
+    assert counts == {"provisional": 63, "approved": 12}
     assert "62 rules provisional, 12 approved, 0 calibrated" in campaign["threshold_status_review"]
-    assert "v0.15" in cat["meta"]["description"]
+    assert "63 rules provisional, 12 approved, 0 calibrated" in campaign["threshold_status_review"]
+    assert "v0.15" in cat["meta"]["description"] and "v0.16" in cat["meta"]["description"]
 
 
 def test_the_new_rules_say_what_they_are():
@@ -116,9 +120,10 @@ def test_the_rules_view_knows_the_eval_family_and_reads_the_policy_counts():
     assert rv.status_exceptions(by_id["CURVE-13"]) == [("implementation", "not_applicable")]
     assert rv.status_exceptions(by_id["EVAL-01"]) == [("threshold", "approved")]
     counts = rv.policy_counts()
-    assert counts["total"] == counts["default"] + counts["optional"]
-    assert counts["optional"] == 4 and counts["default"] >= 13
-    assert counts["version"] == "1.4"
+    # policy 1.5: the retired entry (replay only) is counted apart from the defaults
+    assert counts["total"] == counts["default"] + counts["optional"] + counts["retired"]
+    assert counts["optional"] == 4 and counts["default"] >= 13 and counts["retired"] == 1
+    assert counts["version"] == "1.5"
 
 
 # --------------------------------------------------------------------------- #

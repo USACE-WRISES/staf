@@ -246,6 +246,9 @@ def _header_pairs(delin, assessment, sc, region=None, measured=None):
         # anything is unassessed the index is an interval and says so.
         ("Condition claim", scoring.index_claim(sc)),
         ("STAF function coverage", _coverage_label(assessment)),
+        # StreamCurves methodology 0.16 (REF-16): how many rated functions rest on a
+        # flagged transfer; "none" when the bundle carries no flag
+        ("Flagged transfers", reference_support.flagged_summary(assessment) or "none"),
         ("Physical sub-index", si.get("physical")),
         ("Chemical sub-index", si.get("chemical")),
         ("Biological sub-index", si.get("biological")),
@@ -266,6 +269,14 @@ def _coverage_label(assessment) -> str:
 
 def _function_rows(assessment, sc):
     """Yield ``(functionName, score|None, condition)`` once per assessment function."""
+    for name, s, cond, _limit in _function_rows_with_limits(assessment, sc):
+        yield name, s, cond
+
+
+def _function_rows_with_limits(assessment, sc):
+    """Yield ``(functionName, score|None, condition, limitation)`` once per assessment
+    function. The limitation is the function's flagged-transfer line (StreamCurves
+    methodology 0.16, REF-16), empty for a function scored on validated sources."""
     fscores = sc.get("functionScores", {})
     seen = set()
     for fn in _mbf(assessment):
@@ -275,7 +286,8 @@ def _function_rows(assessment, sc):
         seen.add(fid)
         s = fscores.get(fid)
         cond = scoring.function_score_band_label(s) if s is not None else "Not scored"
-        yield fn.get("functionName", fid), s, cond
+        yield (fn.get("functionName", fid), s, cond,
+               reference_support.function_flag_line(assessment, fid))
 
 
 def build_csv(delin, assessment, measured, sc, region=None) -> str:
@@ -309,9 +321,9 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
         for row in withheld:
             w.writerow(row)
     w.writerow([])
-    w.writerow(["Function", "Function score (0-15)", "Condition"])
-    for name, s, cond in _function_rows(assessment, sc):
-        w.writerow([name, "" if s is None else round(s, 1), cond])
+    w.writerow(["Function", "Function score (0-15)", "Condition", "Limitation"])
+    for name, s, cond, limit in _function_rows_with_limits(assessment, sc):
+        w.writerow([name, "" if s is None else round(s, 1), cond, limit])
     w.writerow([])
     w.writerow(["Outcome", "Sub-index"])
     for k in ("physical", "chemical", "biological"):
@@ -425,7 +437,10 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
            ["StreamCat reach", streamcat_reach_label(delin)],
            ["Content digest", digest or "(none)"],
            ["Ecosystem Condition Index", scoring.index_claim(sc)],
-           ["STAF function coverage", _coverage_label(assessment)]]
+           ["STAF function coverage", _coverage_label(assessment)],
+           ["Flagged transfers", Paragraph(reference_support.flagged_summary(assessment) or "none",
+                                          ParagraphStyle("hdr", parent=styles["BodyText"],
+                                                         fontSize=9, leading=10.5))]]
     if dl.get("watershed_area_sqkm") is not None:
         hdr.insert(7, ["HR reach watershed area", f"{dl.get('watershed_area_sqkm')} km2"])
     t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
@@ -453,7 +468,16 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
     ft = Table(data, colWidths=[3.9 * inch, 0.8 * inch, 1.8 * inch])
     ft.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 8), ("GRID", (0, 0), (-1, -1), 0.3, grid),
                             ("BACKGROUND", (0, 0), (-1, 0), head_bg)] + bg))
-    story += [ft, Spacer(1, 10), Paragraph("Outcome sub-indices", styles["Heading3"])]
+    story += [ft, Spacer(1, 6)]
+    # StreamCurves methodology 0.16 (REF-16): the functions rated on a flagged
+    # transfer, one limitation line each, under the scores they qualify
+    limits = [(name, limit) for name, _s, _c, limit in _function_rows_with_limits(assessment, sc)
+              if limit]
+    if limits:
+        story += [Paragraph("Function limitations", styles["Heading4"])]
+        story += [Paragraph(f"<b>{name}</b>: {limit}", small) for name, limit in limits]
+        story += [Spacer(1, 6)]
+    story += [Spacer(1, 4), Paragraph("Outcome sub-indices", styles["Heading3"])]
 
     si = sc.get("subIndices", {})
     # "not assessed" rather than a blank cell: an outcome with no direct contributor

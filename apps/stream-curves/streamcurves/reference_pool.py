@@ -29,6 +29,7 @@ from typing import Any, Iterable, Optional
 import numpy as np
 import pandas as pd
 
+from . import acceptance
 from . import curve_basis
 from . import methodology
 from . import nrsa_dataset
@@ -66,8 +67,19 @@ LADDER_STATUSES = (STATUS_NATIONAL, STATUS_MODELED, STATUS_PUBLISHED)
 
 RISK_NONE, RISK_LOW, RISK_MODERATE, RISK_HIGH = "none", "low", "moderate", "high"
 RISK_UNASSESSED = "unassessed"
+#: methodology 0.16 (REF-16): a pool taken under the flagged-transfer rung, whose
+#: transfer the recovery test did not confirm (or never covered). The verdict rides
+#: on the decision as a limitation, never as a gate (owner decision D11).
+RISK_UNVALIDATED = "unvalidated"
+RISKS = (RISK_NONE, RISK_LOW, RISK_MODERATE, RISK_HIGH, RISK_UNASSESSED, RISK_UNVALIDATED)
+#: the words a reader sees for each risk, wherever a risk is spelled out
+RISK_WORDS = {RISK_NONE: "none", RISK_LOW: "low", RISK_MODERATE: "moderate", RISK_HIGH: "high",
+              RISK_UNASSESSED: "not yet assessed",
+              RISK_UNVALIDATED: "unvalidated (transfer not confirmed by the recovery test)"}
 #: risks that send a borrowed curve to mandatory review (REF-05)
 REVIEW_RISKS = (RISK_MODERATE, RISK_HIGH, RISK_UNASSESSED)
+#: the rule a flagged transfer is recorded under
+RULE_FLAGGED = "REF-16"
 # coarseness order for the transfer-risk comparison
 _LEVEL_RANK = {"l3": 0, "l2": 1, "nars9": 2, "l1": 2, "national": 3}
 
@@ -309,6 +321,16 @@ class PoolDecision:
     screen_detail: dict = field(default_factory=dict)
     #: v0.14: every source option tried before this one, with why it refused
     options_tried: list = field(default_factory=list)
+    #: v0.16 (REF-16): the recovery verdict a flagged transfer was refused with in
+    #: the first pass (acceptance.validation_record), and the confidence cap the
+    #: curve carries; empty and None on every other decision
+    transfer_validation: dict = field(default_factory=dict)
+    confidence_cap: Optional[int] = None
+
+    @property
+    def flagged(self) -> bool:
+        """A pool taken under the flagged-transfer rung (REF-16)."""
+        return self.transfer_risk == RISK_UNVALIDATED
 
     def to_dict(self) -> dict:
         out = asdict(self)
@@ -363,6 +385,42 @@ def _transfer_note(decision_level: str, region_name: Optional[str], region_code:
     elif risk == RISK_UNASSESSED:
         text += " The national scale analysis holds no decision for this metric, so the transfer risk is unassessed."
     return text
+
+
+def _flagged_note(where_text: str, validation: Optional[dict], cap: Optional[int],
+                  disposition: str, st: dict) -> str:
+    """The transfer note of a pool taken under the flagged-transfer rung (REF-16):
+    where the stations come from (``where_text``, the ordinary transfer note with
+    no risk sentence), that the recovery test did not confirm the source and with
+    what numbers against what the test requires, and that the curve carries a
+    confidence cap. Plain words, no rule code a DEEP reader has to look up."""
+    v = validation or {}
+    why = str(v.get("why") or "").strip()
+    if not why:
+        why = "The recovery test holds no evidence for this source and metric."
+    if not why.endswith("."):
+        why += "."
+    numbers = []
+    a1, n, net = v.get("a1_share"), v.get("n_cells"), v.get("net_opt")
+    min_cells = int(v.get("min_cells") or st.get("min_cells") or 4)
+    max_net = float(v.get("max_net_optimism") or 0.05)
+    if a1 is not None and a1 == a1:
+        cells = f" of {int(n)} evaluation regions" if n is not None else " of evaluation regions"
+        numbers.append(f"class agreement {float(a1):.2f}{cells}, where two thirds over at least "
+                       f"{min_cells} regions is required")
+    if net is not None and net == net:
+        numbers.append(f"net optimism {float(net):+.2f}, where at most {max_net:.2f} is allowed")
+    found = (" The test found " + "; ".join(numbers) + ".") if numbers else ""
+    floor_words = ("at least the adequate floor of usable comparable stations" if disposition == "adequate"
+                   else "at least the exploratory floor of usable comparable stations")
+    cap_words = (f"its confidence is capped at {int(cap)}" if cap is not None
+                 else "its confidence is capped")
+    return (f"{where_text} Flagged transfer: the recovery test did not confirm this source for this "
+            f"ecoregion. {why}{found} No source passed the validated acceptance criteria for this "
+            f"metric here, so the pool is used under the flagged-transfer rung as the narrowest "
+            f"comparable pool with {floor_words} that passes the sample, stability and "
+            f"comparability checks. The curve carries transfer risk unvalidated and {cap_words}; "
+            "read the condition band with that limitation in mind.")
 
 
 _COVARIATE_WORDS = {
@@ -529,7 +587,9 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
                 withhold: Optional[Iterable[str]] = None,
                 only_option: Optional[str] = None,
                 ladder_rule: Optional[str] = None,
-                withhold_l3=None) -> tuple[PoolDecision, pd.DataFrame]:
+                withhold_l3=None,
+                curve_check=None,
+                flagged: Optional[dict] = None) -> tuple[PoolDecision, pd.DataFrame]:
     """The station pool that passes acceptance for ``metric`` (REF-11).
 
     The options are the local reference (Level III under the strict screen) and
@@ -538,9 +598,29 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
     target's regional screen. A pool must hold at least the exploratory floor of
     independent stations (ACC-01) and pass ``accept`` (the stability and evidence
     criteria, ACC-04 to ACC-06), a callable ``(option, pool_values) -> (ok,
-    why)``; the local reference needs no recovery evidence and is passed as
-    option ``"local"``. ``withhold`` removes stations from every pool, which is
-    how a recovery test keeps a region's own reference out of what it scores.
+    why)`` or ``(ok, why, detail)`` (``acceptance.pool_acceptor``: ``detail``
+    carries every criterion's verdict); the local reference needs no recovery
+    evidence and is passed as option ``"local"``. ``withhold`` removes stations
+    from every pool, which is how a recovery test keeps a region's own reference
+    out of what it scores.
+
+    Methodology 0.16 (owner decisions D11 and D13, 2026-09-28). ``curve_check``,
+    a callable ``(option, pool_values, context) -> (ok, why, record)``
+    (``acceptance.curve_checker``), refuses an option whose curve would be the
+    engine's degenerate fallback or would read as inverted against the option's
+    own in-frame pressured stations (``context["pressure_values"]``); a refused
+    option is recorded with the reason and the ladder moves on, so no fallback
+    ramp is ever published. ``flagged`` (``reference_hierarchy.flagged_transfer``;
+    None reads the config) governs the flagged-transfer rung, REF-16: when no
+    option passes, a second pass over the options that failed the recovery
+    evidence ALONE (ACC-05/06; the sample, stability, comparability and curve
+    checks all passed) takes the narrowest with usable n at the adequate floor
+    (``prefer_adequate``), else the narrowest with at least ``min_usable``; the
+    decision carries transfer risk ``unvalidated``, the verdict it was refused
+    with (``transfer_validation``), the ``confidence_cap`` and a note that says
+    so. The caller keeps a validated source of any kind ahead of a flagged one
+    (``pressure_evidence.run_evidence`` tries the national, modeled and published
+    sources for a flagged metric first).
 
     Which passing option is used is ``ladder_rule`` (campaign Round 2 candidate
     B1; None reads ``reference_pool.ladder_rule``): ``first_pass``, the first
@@ -561,6 +641,7 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
     cfg = cfg if cfg is not None else load_transfer_config()
     st = settings or floors()
     hs = hierarchy_settings()
+    fl = dict(flagged) if flagged is not None else acceptance.flagged_settings()
     rule = str(ladder_rule or methodology.ladder_rule())
     if rule not in methodology.LADDER_RULES:
         raise ValueError(f"unknown ladder rule {rule!r}; expected one of "
@@ -624,6 +705,9 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
     #: narrowest_adequate: the narrowest exploratory option that passed, used
     #: only when no option is adequate
     fallback: Optional[dict] = None
+    #: REF-16: the options refused by the recovery evidence alone, in search
+    #: order, each with the verdict it was refused with
+    flaggable: list[dict] = []
     for option, level, screen in options:
         code = codes.get(level)
         if code is None:
@@ -688,22 +772,64 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
             continue
         pool_values = pd.Series(value[in_pool].to_numpy(dtype="float64"),
                                 index=keys[in_pool].to_numpy())
+        accepted, why_not, detail = True, "", None
         if accept is not None:
-            ok, why_not = accept("local" if option == "local" else option, pool_values)
-            if not ok:
-                tried.append({**info, "why": why_not})
+            got = accept("local" if option == "local" else option, pool_values)
+            accepted, why_not = bool(got[0]), str(got[1] or "")
+            detail = got[2] if len(got) > 2 and isinstance(got[2], dict) else None
+        # REF-16: an option refused by the recovery evidence alone is a candidate
+        # for the flagged rung, so it faces the curve checks like an accepted one
+        evidence_only = (not accepted) and acceptance.evidence_only_refusal(detail)
+        checks = list((detail or {}).get("checks") or [])
+        curve_rec: dict = {}
+        if curve_check is not None and (accepted or evidence_only):
+            # D13: the option's own in-frame pressured stations, for the inverted check
+            pressure_values = None
+            if "pass_relaxed" in members.columns:
+                evaluable = (members["screen_evaluable"].astype(bool)
+                             if "screen_evaluable" in members.columns
+                             else pd.Series(True, index=members.index))
+                pressured = evaluable & ~members["pass_relaxed"].astype(bool) & value.notna()
+                pressure_values = pd.Series(value[pressured].to_numpy(dtype="float64"),
+                                            index=keys[pressured].to_numpy())
+            curve_ok, curve_why, curve_rec = curve_check(
+                option, pool_values, {"level": level, "region_code": str(code), "option": option,
+                                      "pressure_values": pressure_values})
+            curve_rec = dict(curve_rec or {})
+            checks = checks + [{"check": acceptance.CURVE_CHECK, "pass": bool(curve_ok),
+                                "why": "" if curve_ok else str(curve_why)}]
+            if not curve_ok:
+                tried.append({**info, "why": str(curve_why), "refused_by": "curve",
+                              "checks": checks, "curve": curve_rec})
                 continue
+        if not accepted:
+            entry = {**info, "why": why_not}
+            if checks:
+                entry["checks"] = checks
+            if evidence_only and fl.get("enabled") and n_use >= int(fl.get("min_usable") or 0):
+                entry["flag_eligible"] = True
+                flaggable.append({**info, "ids": tuple(keys[in_pool]),
+                                  "n_huc12": int(_cluster_ids(members[in_pool]).nunique()),
+                                  "validation": dict((detail or {}).get("validation") or {}),
+                                  "curve": curve_rec, "tried_index": len(tried)})
+            tried.append(entry)
+            continue
         candidate = {**info, "ids": tuple(keys[in_pool]),
                      "n_huc12": int(_cluster_ids(members[in_pool]).nunique())}
+        record = {**info, "why": "accepted"}
+        if checks:
+            record["checks"] = checks
+        if curve_rec:
+            record["curve"] = curve_rec
         if rule == methodology.LADDER_RULE_FIRST_PASS or n_use >= st["adequate"]:
             chosen = candidate
-            tried.append({**info, "why": "accepted"})
+            tried.append(record)
             break
         # narrowest_adequate: an exploratory pool that passes is kept in reserve
         # while a wider adequate pool is looked for
-        tried.append({**info, "why": f"passes acceptance with {n_use} usable stations, "
-                                     f"exploratory; a wider adequate pool (at least "
-                                     f"{st['adequate']}) is looked for first"})
+        tried.append({**record, "why": f"passes acceptance with {n_use} usable stations, "
+                                       f"exploratory; a wider adequate pool (at least "
+                                       f"{st['adequate']}) is looked for first"})
         if fallback is None:
             fallback = candidate
     if chosen is None and fallback is not None:
@@ -712,6 +838,23 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
             if x.get("option") == fallback["option"] and "n_usable" in x:
                 x["why"] = ("accepted: the narrowest exploratory pool that passes, since no "
                             "wider pool is adequate")
+    # --- REF-16, the flagged-transfer rung: the second pass ---
+    # No option passed the validated acceptance. Of the options the recovery
+    # evidence alone refused, the narrowest holding the adequate floor of usable
+    # comparable stations is taken (prefer_adequate), else the narrowest at all;
+    # the verdict rides on the decision and the curve is flagged, never a gap.
+    flagged_pick: Optional[dict] = None
+    if chosen is None and flaggable and fl.get("enabled"):
+        adequate = [c for c in flaggable if c["n_usable"] >= st["adequate"]]
+        flagged_pick = adequate[0] if (fl.get("prefer_adequate", True) and adequate) else flaggable[0]
+        chosen = flagged_pick
+        mark = tried[flagged_pick["tried_index"]]
+        mark["accepted"] = True
+        mark["flagged"] = True
+        mark["why"] = ("accepted under the flagged-transfer rung (REF-16): no option passed the "
+                       "validated acceptance, and this is the narrowest comparable pool with "
+                       f"{flagged_pick['n_usable']} usable stations that passes every check but "
+                       "the recovery evidence, which refused it: " + str(mark.get("why") or ""))
 
     ledger_all = (pd.concat(rows, ignore_index=True) if rows
                   else pd.DataFrame(columns=LEDGER_COLUMNS))
@@ -744,22 +887,35 @@ def choose_pool(metric: str, values: pd.Series, frame: pd.DataFrame, target_l3: 
     screen = chosen["screen"]
     risk = transfer_risk(level, supported)
     name = _level_name(frame, level, chosen["region_code"])
-    note = ("" if chosen["option"] == "local" else _transfer_note(
-        level, name, chosen["region_code"], chosen["n_usable"], chosen["n_local"],
-        covariates, use_lith and bool(lith_groups), risk, supported,
-        screen_detail=screen_detail if screen == SCREEN_REGIONAL else None, fauna=fauna))
+    disposition = "adequate" if chosen["n_usable"] >= st["adequate"] else "exploratory"
+    validation: dict = {}
+    cap: Optional[int] = None
+    if flagged_pick is not None:
+        risk = RISK_UNVALIDATED
+        validation = dict(flagged_pick.get("validation") or {})
+        cap = fl.get("confidence_cap")
+        where = _transfer_note(
+            level, name, chosen["region_code"], chosen["n_usable"], chosen["n_local"],
+            covariates, use_lith and bool(lith_groups), RISK_UNVALIDATED, supported,
+            screen_detail=screen_detail if screen == SCREEN_REGIONAL else None, fauna=fauna)
+        note = _flagged_note(where, validation, cap, disposition, acceptance.settings())
+    else:
+        note = ("" if chosen["option"] == "local" else _transfer_note(
+            level, name, chosen["region_code"], chosen["n_usable"], chosen["n_local"],
+            covariates, use_lith and bool(lith_groups), risk, supported,
+            screen_detail=screen_detail if screen == SCREEN_REGIONAL else None, fauna=fauna))
     decision = PoolDecision(
         metric=metric, status=STATUS_BY_OPTION[(level, screen)], level=level,
         region_code=chosen["region_code"], region_name=name,
         family=(profile or {}).get("family"), n_pool=chosen["n_pool"],
         n_comparable=chosen["n_comparable"], n_usable=chosen["n_usable"],
         n_local=chosen["n_local"], n_huc12=chosen["n_huc12"],
-        disposition="adequate" if chosen["n_usable"] >= st["adequate"] else "exploratory",
+        disposition=disposition,
         covariates=covariates, envelope=_envelope_record(envelope), lith_groups=lith_groups,
         self_coverage=_round(coverage), supported_level=supported, transfer_risk=risk,
         transfer_note=note, station_ids=chosen["ids"], levels_tried=levels_tried,
         screen=screen, screen_detail=screen_detail if screen == SCREEN_REGIONAL else {},
-        options_tried=tried)
+        options_tried=tried, transfer_validation=validation, confidence_cap=cap)
     # only the option used is the pool; the others were tried or never needed
     ledger_all.loc[ledger_all["option"] != chosen["option"], "in_pool"] = False
     return decision, ledger_all
@@ -836,7 +992,8 @@ def local_comparison(metric: str, values: pd.Series, target_frame: pd.DataFrame,
 def build_pools(metrics: Iterable[str], values_wide: pd.DataFrame, frame: pd.DataFrame,
                 target_l3: str, *, scale_registry: Optional[dict] = None,
                 excluded: Optional[dict] = None, cfg: Optional[dict] = None,
-                accept_for=None) -> dict:
+                accept_for=None, curve_check_for=None,
+                flagged: Optional[dict] = None) -> dict:
     """Pools for every metric of one region.
 
     ``values_wide`` is keyed by ``site_id`` (the station key), one column per
@@ -849,7 +1006,10 @@ def build_pools(metrics: Iterable[str], values_wide: pd.DataFrame, frame: pd.Dat
 
     ``accept_for`` (metric -> the ``accept`` callable of :func:`choose_pool`)
     applies the acceptance criteria of methodology 0.14 to every pool option;
-    without it a pool is taken on the sample floor alone.
+    without it a pool is taken on the sample floor alone. ``curve_check_for``
+    (metric -> the ``curve_check`` callable) applies the curve checks of
+    methodology 0.16 (D13), and ``flagged`` governs the flagged-transfer rung
+    (REF-16), both as :func:`choose_pool` describes.
     """
     cfg = cfg if cfg is not None else load_transfer_config()
     settings = floors()
@@ -865,29 +1025,47 @@ def build_pools(metrics: Iterable[str], values_wide: pd.DataFrame, frame: pd.Dat
         decision, ledger = choose_pool(
             mk, series, frame, target_l3, profile=family_profile(mk, cfg),
             scale_entry=reg.get(mk), excluded=excluded, cfg=cfg, settings=settings,
-            accept=accept_for(mk) if accept_for is not None else None)
+            accept=accept_for(mk) if accept_for is not None else None,
+            curve_check=curve_check_for(mk) if curve_check_for is not None else None,
+            flagged=flagged)
         decisions[mk] = decision
         ledgers.append(ledger)
         comp = local_comparison(mk, series, target, cfg)
         if comp:
             comparisons[mk] = comp
 
-    union = sorted({sid for d in decisions.values() for sid in d.station_ids})
+    ledger = (pd.concat(ledgers, ignore_index=True) if ledgers
+              else pd.DataFrame(columns=LEDGER_COLUMNS))
+    return {"decisions": decisions, "ledger": ledger, "local_comparison": comparisons,
+            "data": pool_data(decisions, values_wide, frame),
+            "target_n_frame": int(len(target)),
+            "target_n_strict": int(target["pass_strict"].astype(bool).sum()),
+            "target_n_relaxed": int(target["pass_relaxed"].astype(bool).sum())}
+
+
+def pool_data(decisions: dict, values_wide: pd.DataFrame, frame: pd.DataFrame) -> pd.DataFrame:
+    """The masked pooled frame of a set of station-pool decisions: one row per
+    station in ANY pool, each metric column holding a value only inside that
+    metric's pool. A decision with no pool (insufficient, or a source after the
+    station pools) contributes no column and no station. Recomputed by the build
+    after the sources after the station pools have decided, so a flagged pool a
+    validated source replaced leaves the frame and the run seed (REF-16)."""
+    wide = values_wide.set_index(values_wide["site_id"].astype(str)) \
+        if "site_id" in values_wide.columns else values_wide
+    pools = {mk: d for mk, d in decisions.items()
+             if d.status != STATUS_INSUFFICIENT and d.status not in LADDER_STATUSES
+             and curve_basis.resolve(d.basis) == curve_basis.REGIONAL}
+    union = sorted({sid for d in pools.values() for sid in d.station_ids})
     base = frame[frame["station_key"].astype(str).isin(union)].copy()
     base["site_id"] = base["station_key"].astype(str)
     base = base.sort_values("site_id").reset_index(drop=True)
-    for mk, d in decisions.items():
-        if d.status == STATUS_INSUFFICIENT or mk not in wide.columns:
+    for mk, d in pools.items():
+        if mk not in wide.columns:
             continue
         members = set(d.station_ids)
         col = base["site_id"].map(pd.to_numeric(wide[mk], errors="coerce"))
         base[mk] = col.where(base["site_id"].isin(members))
-    ledger = (pd.concat(ledgers, ignore_index=True) if ledgers
-              else pd.DataFrame(columns=LEDGER_COLUMNS))
-    return {"decisions": decisions, "ledger": ledger, "local_comparison": comparisons,
-            "data": base, "target_n_frame": int(len(target)),
-            "target_n_strict": int(target["pass_strict"].astype(bool).sum()),
-            "target_n_relaxed": int(target["pass_relaxed"].astype(bool).sum())}
+    return base
 
 
 def support_table(decisions: dict[str, PoolDecision]) -> pd.DataFrame:
@@ -901,8 +1079,30 @@ def support_table(decisions: dict[str, PoolDecision]) -> pd.DataFrame:
             "n_usable": d.n_usable, "n_local": d.n_local, "n_huc12": d.n_huc12,
             "disposition": d.disposition, "covariates": ", ".join(d.covariates),
             "lithology": ", ".join(d.lith_groups), "self_coverage": d.self_coverage,
-            "supported_level": d.supported_level, "transfer_risk": d.transfer_risk})
+            "supported_level": d.supported_level, "transfer_risk": d.transfer_risk,
+            "transfer_validation": validation_words(d.transfer_validation),
+            "confidence_cap": d.confidence_cap})
     return pd.DataFrame(rows)
+
+
+def validation_words(validation: Optional[dict]) -> str:
+    """A flagged transfer's recovery verdict as one table cell: the evidence key,
+    the verdict, class agreement, net optimism and the cell count (REF-16);
+    empty for a decision that carries none."""
+    v = validation or {}
+    if not v:
+        return ""
+    parts = [str(v.get("basis") or ""), str(v.get("verdict") or "not evaluated")]
+    a1, net, n = v.get("a1_share"), v.get("net_opt"), v.get("n_cells")
+    if a1 is not None:
+        parts.append(f"a1_share {float(a1):.4f}")
+    if net is not None:
+        parts.append(f"net_opt {float(net):+.4f}")
+    if n is not None:
+        parts.append(f"n_cells {int(n)}")
+    if v.get("evidence"):
+        parts.append(f"evidence {v['evidence']}")
+    return "; ".join(p for p in parts if p)
 
 
 def regional_screen_label(detail: dict) -> str:
@@ -928,6 +1128,7 @@ def reference_support_record(d, *, screen_tier: str = "strict") -> dict:
     regional = d.get("screen") == SCREEN_REGIONAL
     screen = (regional_screen_label(detail) if regional
               else rscreen.screen_label(screen_tier))
+    flagged = str(d.get("transfer_risk") or "") == RISK_UNVALIDATED
     return {
         "status": d.get("status"), "level": level,
         "levelLabel": LEVEL_LABELS.get(level or "", ""),
@@ -944,7 +1145,28 @@ def reference_support_record(d, *, screen_tier: str = "strict") -> dict:
                       + (["lith_group"] if d.get("lith_groups") else []),
         "selfCoverage": d.get("self_coverage"), "supportedLevel": d.get("supported_level"),
         "transferRisk": d.get("transfer_risk"), "transferNote": d.get("transfer_note"),
+        # REF-16 (methodology 0.16): the verdict a flagged transfer was refused
+        # with and the cap it carries; absent on every other record, so no
+        # published record changes shape
+        **({"transferValidation": dict(d.get("transfer_validation") or {}),
+            "confidenceCap": d.get("confidence_cap"),
+            "rule": RULE_FLAGGED} if flagged else {}),
         "basis": basis, "basisLabel": curve_basis.label_for(basis),
         "basisStatement": curve_basis.statement_for(basis),
         "basisLimit": curve_basis.limit_for(basis),
     }
+
+
+def flagged_limitation(d, st: Optional[dict] = None) -> str:
+    """The limitation sentence a flagged transfer's curve carries (REF-16), from a
+    :class:`PoolDecision`, its ``to_dict`` form or the bundle's ``referenceSupport``
+    record; empty for anything not flagged. The same words DEEP and the
+    calculator print (``acceptance.transfer_limitation``)."""
+    if isinstance(d, PoolDecision):
+        d = d.to_dict()
+    d = d or {}
+    if str(d.get("transfer_risk") or d.get("transferRisk") or "") != RISK_UNVALIDATED:
+        return ""
+    validation = d.get("transfer_validation") or d.get("transferValidation") or {}
+    cap = d.get("confidence_cap") if "confidence_cap" in d else d.get("confidenceCap")
+    return acceptance.transfer_limitation(validation, cap, st)

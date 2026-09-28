@@ -335,7 +335,7 @@ def test_eligibility_batch_summary_and_confirm(runner, tmp_path, capsys):
     out = capsys.readouterr().out
     assert "L3-55 Eastern Corn Belt Plains: eligible" in out and "L3-65 Northern Lakes and Forests: not eligible" in out
     doc = camp.read_json(root / camp.ELIGIBILITY_FILE)
-    assert doc["schema"] == camp.ELIGIBILITY_SCHEMA and doc["policy"]["version"] == "1.1"
+    assert doc["schema"] == camp.ELIGIBILITY_SCHEMA and doc["policy"]["version"] == "1.2"
     assert doc["policy"]["sha256"] == camp.load_promotion_policy()["meta"]["sha256"]
     assert doc["campaignId"] == fx["manifest"]["identity"]["campaignId"]
     assert doc["regions"]["55"]["eligible"] is True and doc["regions"]["55"]["blockers"] == []
@@ -368,7 +368,7 @@ def test_eligibility_batch_summary_and_confirm(runner, tmp_path, capsys):
     assert runner.main(["batch-summary", "--root", str(root), "--batch", "b two"]) == 2
     # the confirmation, written by hand
     confirmation = root / "promotion_batch_b1.confirmation.json"
-    good = {"batchId": "b1", "policyVersion": "1.1", "campaignId": fx["manifest"]["identity"]["campaignId"],
+    good = {"batchId": "b1", "policyVersion": "1.2", "campaignId": fx["manifest"]["identity"]["campaignId"],
             "regions": ["55"], "confirmedBy": TESTER, "confirmedAt": "2026-09-26",
             "statement": "Confirmed in chat on 2026-09-26."}
     camp.write_json(confirmation, dict(good, campaignId="r3-frozen-00000000-b1"))
@@ -397,7 +397,7 @@ def test_promote_status_policy_resolves_from_the_gates(runner, tmp_path, monkeyp
     fx = standard_root(tmp_path)
     rrb = runner.rrb
     status, res = rrb.resolve_policy_status(fx["run_dir"])
-    assert status == "preliminary" and res["blockers"] == [] and res["policyVersion"] == "1.1"
+    assert status == "preliminary" and res["blockers"] == [] and res["policyVersion"] == "1.2"
     assert res["campaignManifest"] == str(fx["root"] / camp.MANIFEST_FILE)
     assert res["gates"]["equivalence-proven"]["passed"] is True       # the manifest names the gate report
     assert res["expectation"].startswith("campaign manifest r3-frozen-")
