@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Iterable, Optional
 
 import re
 
@@ -511,7 +511,9 @@ RUNG_LABELS = {"REF-08": curve_basis.label_for(curve_basis.NATIONAL),
                "REF-13": curve_basis.label_for(curve_basis.MODELED),
                "REF-14": curve_basis.label_for(curve_basis.PUBLISHED),
                # methodology 0.16: the flagged-transfer rung, after every validated source
-               rp.RULE_FLAGGED: "Flagged transfer"}
+               rp.RULE_FLAGGED: "Flagged transfer",
+               # methodology 0.16: the last resort, EASI's screening method (D19)
+               fixed_criteria.LAST_RESORT_RULE: curve_basis.label_for(curve_basis.EASI_SCREENING)}
 
 
 def _pool_sentence(x: dict) -> str:
@@ -551,6 +553,11 @@ def reference_method_block(evidence: dict) -> dict:
             "nCurvesFlagged": sum(1 for d in support.values()
                                   if str(d.get("transfer_risk") or "") == rp.RISK_UNVALIDATED
                                   and not is_withheld_record(d)),
+            # methodology 0.16 (REF-17): curves on an adopted EASI screening method
+            "nCurvesEasiScreening": sum(1 for d in support.values()
+                                        if curve_basis.resolve(d.get("basis"))
+                                        == curve_basis.EASI_SCREENING
+                                        and not is_withheld_record(d)),
             # the evidence-time count: metrics with no defensible pool. The bundle's
             # own nWithheld and nHeldForReview are set at assembly from the list it
             # exports (deep_export.build_deep_assessment_bundle), which differs once
@@ -617,6 +624,12 @@ def _method_statement(support: dict) -> str:
                      "comparable least-disturbed pool the recovery test did not confirm for this "
                      "ecoregion, used because no validated source supports the metric here, "
                      "with transfer risk unvalidated and confidence capped.")
+    adopted = counts.get(curve_basis.EASI_SCREENING, 0)
+    if adopted:
+        parts.append(f"{adopted} {'function rests' if adopted == 1 else 'functions rest'} on "
+                     "a method adopted from EASI's national screening method (provisional), "
+                     "because no reference pool, national donor, model, published benchmark or "
+                     "flagged transfer supported the function in this ecoregion.")
     parts.append("A metric that no basis supports is not scored, and the function it would "
                  "have scored is reported as unassessed.")
     return " ".join(parts)
@@ -792,6 +805,22 @@ def _with_fixed_mapping(mapping, fixed_keys: list[str]) -> pd.DataFrame:
              if "sort_order" in base.columns else pd.Series(dtype="float64"))
     start = int(order.max()) if order.notna().any() else 0
     extra = fixed_criteria.mapping_rows(fixed_keys)
+    extra["sort_order"] = range(start + 1, start + 1 + len(extra))
+    return pd.concat([base, extra], ignore_index=True)
+
+
+def _with_last_resort_mapping(mapping, keys: list[str]) -> pd.DataFrame:
+    """The mapping with each last-resort metric's own function appended (REF-17):
+    the function it completes is part of the method, so an earlier row for the
+    metric is replaced, never merged."""
+    base = mapping if isinstance(mapping, pd.DataFrame) else pd.DataFrame(
+        columns=["metric_key", "discipline", "function_label", "sort_order"])
+    if len(base) and "metric_key" in base.columns:
+        base = base[~base["metric_key"].astype(str).isin(keys)]
+    order = (pd.to_numeric(base["sort_order"], errors="coerce")
+             if "sort_order" in base.columns else pd.Series(dtype="float64"))
+    start = int(order.max()) if order.notna().any() else 0
+    extra = fixed_criteria.last_resort_mapping_rows(keys)
     extra["sort_order"] = range(start + 1, start + 1 + len(extra))
     return pd.concat([base, extra], ignore_index=True)
 
@@ -1492,6 +1521,12 @@ def ladder_confidence(evidence: dict, ladder_config: dict) -> dict[str, dict]:
             out[mk] = {"label": curve_basis.label_for(basis), "total": None,
                        "caps_applied": []}
             continue
+        if basis == curve_basis.EASI_SCREENING:
+            # REF-17: a national screening method, no sample: a label, no number,
+            # and the basis cap named so a reader sees why the label is low
+            out[mk] = {"label": "EASI screening method (provisional)", "total": None,
+                       "caps_applied": [curve_basis.CAP_REASONS[curve_basis.EASI_SCREENING]]}
+            continue
         cfg = ladder_config.get(mk) or {}
         got = conf.curve_confidence({
             "basis": basis,
@@ -1560,6 +1595,13 @@ def bundle_inputs(evidence: dict, meta: dict, intended_rows: dict,
             merged["basisStatement"] = curve_basis.statement_for(basis)
             merged["basisLimit"] = limit or ""
 
+            if basis == curve_basis.NATIONAL and merged.get("referenceN") is None:
+                # R5-12: the donors behind a national-reference curve, as a pool
+                # curve states its stations (referenceSupport keeps nPool beside it)
+                sup = (evidence.get("reference_support") or {}).get(mk) or {}
+                n_ref = (ladder_rows.get(mk) or {}).get("n_reference") or sup.get("n_usable")
+                if n_ref:
+                    merged["referenceN"] = int(n_ref)
             got = ladder_conf.get(mk) or {}
             if got.get("label"):
                 merged["confidenceLabel"] = got["label"]
@@ -1587,6 +1629,24 @@ def bundle_inputs(evidence: dict, meta: dict, intended_rows: dict,
                     merged["criteriaSource"] = (prov.get("benchmark")
                                                 or merged.get("criteriaSource"))
                 merged["publishedBenchmark"] = prov
+            elif basis == curve_basis.EASI_SCREENING:
+                # REF-17 (owner decision D19): an adopted EASI screening method
+                # behaves like the fixed criteria downstream (no training
+                # population, no pairing check) and carries the method's own
+                # evidentiary status, citations and limitations, the input the
+                # user supplies and the limitation of this use
+                entry = fixed_criteria.last_resort_entry(mk)
+                merged["criteriaBasis"] = fixed_criteria.CRITERIA_BASIS
+                merged["criteriaSource"] = fixed_criteria.criteria_source(entry)
+                merged["sourceCitation"] = fixed_criteria.last_resort_citation_line(entry)
+                merged["metricRole"] = fixed_criteria.LAST_RESORT_ROLE
+                merged["adoptedMethod"] = fixed_criteria.last_resort_provenance(entry)
+                if entry.get("required_input"):
+                    merged["methodContext"] = entry["required_input"]
+                for text in [entry.get("limitation")] + list(entry.get("limitations") or []):
+                    if text and text not in caveats:
+                        caveats.append(text)
+                merged["curveCaveats"] = caveats
             annotations[mk] = merged
     carried = dict(evidence.get("carried") or {})
     if carried:
@@ -1794,6 +1854,10 @@ def source_of(decision: Optional[dict]) -> str:
     if str(d.get("transfer_risk") or "") == rp.RISK_UNVALIDATED:
         return "flagged"
     basis = curve_basis.resolve(d.get("basis"))
+    if basis == curve_basis.EASI_SCREENING:
+        # methodology 0.16 (REF-17): the last resort ranks after everything,
+        # flagged transfers included; it only ever completes an empty function
+        return "pathway"
     if basis == curve_basis.NATIONAL:
         return "national"
     if basis == curve_basis.MODELED:
@@ -1879,7 +1943,8 @@ def select_portfolio(evidence: dict, rows: dict, mapping: pd.DataFrame, config: 
     ps = methodology.portfolio_settings()
     fill_to, rule = ps["fill_to"], ps["second_metric_rule"]
     rank = dict(methodology.threshold("metric_portfolio.source_rank", {}) or
-                {"local": 0, "regional": 1, "national": 2, "modeled": 3, "published": 4})
+                {"local": 0, "regional": 1, "national": 2, "modeled": 3, "published": 4,
+                 "flagged": 5, "pathway": 6})
     support = evidence.get("reference_support") or {}
     kept_keys = (set(evidence.get("carried") or {}) | set(evidence.get("carry_rebuilt") or {})
                  | set(evidence.get("fixed_metrics") or {}))
@@ -2113,6 +2178,93 @@ CENSUS_COLUMNS = ["l3", "region", "metric", "display_name", "family", "status", 
                   "supported_level", "transfer_risk", "zero_inflated", "q25"]
 
 
+def last_resort_fills(l3_code: str, name: str, *, covered_metrics: Iterable[str],
+                      candidate_metrics: dict, configs: dict, carried: Optional[dict] = None,
+                      withheld_statements: Optional[dict] = None) -> dict:
+    """REF-17 (methodology 0.16, owner decision D19): the functions no source
+    supports, each completed by EASI's national screening method for the same
+    quantity where ``config/fixed_criteria.yaml`` names one under ``last_resort``.
+
+    ``covered_metrics`` are the metrics that hold a curve or a standing owner
+    decision (built, ladder, carried, fixed, owner-accepted, owner-held): any
+    function one of them maps to is covered and never reaches the last resort.
+    ``candidate_metrics`` maps each refused or withheld metric to its decision,
+    ``configs`` every metric config known to the build (for the function
+    mapping) and ``withheld_statements`` a withheld metric's statement. Returns,
+    per metric added, ``decision``, ``row``, ``config``, ``attempt``,
+    ``function_id``, ``function_label`` and ``candidates``; empty when the rung
+    is off.
+    """
+    if not methodology.last_resort().get("enabled") or not fixed_criteria.last_resort_keys():
+        return {}
+
+    def functions_of(keys) -> dict:
+        keys = [str(k) for k in keys]
+        if not keys:
+            return {}
+        cfg = {k: configs.get(k) or {} for k in keys}
+        frame = staf_library.default_discipline_function_mapping(keys, cfg)
+        got: dict = {}
+        if isinstance(frame, pd.DataFrame) and len(frame) and "metric_key" in frame.columns:
+            wanted = set(keys)
+            for mk, label in zip(frame["metric_key"], frame["function_label"]):
+                # the frame's scaffold rows (one per function, no metric) cover nothing
+                if not isinstance(mk, str) or mk not in wanted:
+                    continue
+                canon = staf_library.staf_canonical_function(label)
+                if canon is not None:
+                    got.setdefault(mk, set()).add(str(canon["id"]))
+        return got
+
+    covered: set = set()
+    for fids in functions_of(covered_metrics).values():
+        covered |= fids
+    fixed_map = fixed_criteria.mapping_rows()
+    for label in (list(fixed_map["function_label"]) if len(fixed_map) else []):
+        canon = staf_library.staf_canonical_function(label)
+        if canon is not None:
+            covered.add(str(canon["id"]))
+    for c in (carried or {}).values():
+        covered |= {str(f) for f in (c.get("functions") or []) if f}
+    cand_functions = functions_of(candidate_metrics)
+    statements = withheld_statements or {}
+    out: dict = {}
+    for mk in fixed_criteria.last_resort_keys():
+        entry = fixed_criteria.last_resort_entry(mk)
+        labels = list(entry.get("functions") or [])
+        canon = staf_library.staf_canonical_function(labels[0]) if labels else None
+        if canon is None or str(canon["id"]) in covered:
+            continue
+        fid, label = str(canon["id"]), str(canon["name"])
+        refused = sorted(m for m, fids in cand_functions.items() if fid in fids)
+        words = []
+        for m in refused:
+            said = str(statements.get(m) or "").strip().rstrip(".")
+            words.append(f"{m} ({said})" if said else
+                         f"{m} (no source in the hierarchy passed acceptance)")
+        why = (f"No source supports {label} in this ecoregion: "
+               + ("; ".join(words) if words else "the function has no candidate metric here")
+               + f". Completed by EASI's national screening method, {entry.get('easi_title')}, "
+               f"adopted under {fixed_criteria.LAST_RESORT_RULE} (owner decision D19).")
+        decision = rp.PoolDecision(
+            metric=mk, status=rp.STATUS_PUBLISHED, level=None, region_code=str(l3_code),
+            region_name=name, family=rp.family_of(mk), n_pool=0, n_comparable=0, n_usable=0,
+            n_local=0, n_huc12=0, disposition="exploratory", supported_level=None,
+            transfer_risk=rp.RISK_NONE,
+            transfer_note=f"{curve_basis.statement_for(curve_basis.EASI_SCREENING)} {why}",
+            station_ids=(), levels_tried=[], basis=curve_basis.EASI_SCREENING,
+            screen_detail={"rule": fixed_criteria.LAST_RESORT_RULE,
+                           "easiMethod": entry.get("easi_method"), "functionId": fid,
+                           "refusedCandidates": refused})
+        out[mk] = {"decision": decision, "row": fixed_criteria.last_resort_curve_row(mk),
+                   "config": fixed_criteria.last_resort_config(mk),
+                   "attempt": {"metric": mk, "rung": fixed_criteria.LAST_RESORT_RULE,
+                               "admitted": True, "basis": curve_basis.EASI_SCREENING,
+                               "why": why},
+                   "function_id": fid, "function_label": label, "candidates": refused}
+    return out
+
+
 def forced_sources(force: Optional[dict], *, metric_config: dict, carried: dict,
                    insufficient: dict, ladder_rows: dict, frame: pd.DataFrame,
                    values: pd.DataFrame, l3_code: str, name: str,
@@ -2203,6 +2355,17 @@ def census(l3_codes, *, max_stream_order: Optional[int] = None, protocols=None,
             for mk, got in (walked.get("flagged_national") or {}).items():
                 if mk in short and mk not in walked["decisions"]:
                     pools["decisions"][mk] = got["decision"]
+        # methodology 0.16 (REF-17): the last resort completes a function no source
+        # supports, as the build decides (the build-time withholds aside)
+        fills = last_resort_fills(
+            code, name,
+            covered_metrics=[mk for mk, d in pools["decisions"].items()
+                             if d.status != rp.STATUS_INSUFFICIENT],
+            candidate_metrics={mk: d for mk, d in pools["decisions"].items()
+                               if d.status == rp.STATUS_INSUFFICIENT},
+            configs=metric_config)
+        for mk, fill in fills.items():
+            pools["decisions"][mk] = fill["decision"]
         statuses = [d.status for d in pools["decisions"].values()]
         regions.append({"l3": code, "region": name,
                         "n_frame": pools["target_n_frame"], "n_strict": pools["target_n_strict"],
@@ -2676,6 +2839,40 @@ def run_evidence(l3_code: str, name: str, *,
                                    "statement": discrimination_gate_statement(rec),
                                    "detail": dict(rec)}
 
+    # --- methodology 0.16 (REF-17, owner decision D19): the last resort ---
+    # A function every source above left without a curve (each candidate metric
+    # refused or withheld) is scored on EASI's national screening method for the
+    # same quantity, where config/fixed_criteria.yaml names one. It never
+    # replaces a curve and never joins a function that holds any other curve or
+    # an owner's standing decision.
+    covered_metrics = (set(curve_rows) | set(ladder_rows) | set(carried) | set(held)
+                       | {mk for mk, f in (forced or {}).items()
+                          if isinstance(f, dict) and f.get("row") is not None})
+    last_resort = last_resort_fills(
+        l3_code, name, covered_metrics=covered_metrics,
+        candidate_metrics={**insufficient,
+                           **{mk: rec.get("decision") for mk, rec in rule_withheld_items.items()}},
+        configs={**insufficient_config, **metric_config, **ladder_config},
+        carried=carried,
+        withheld_statements={mk: rec.get("statement") for mk, rec in rule_withheld_items.items()})
+    for mk, fill in last_resort.items():
+        decisions[mk] = fill["decision"]
+        ladder_rows[mk] = fill["row"]
+        ladder_config[mk] = fill["config"]
+        ladder["attempts"].append(fill["attempt"])
+        insufficient.pop(mk, None)
+        insufficient_config.pop(mk, None)
+        withheld_by_rule.pop(mk, None)
+        rule_withheld_items.pop(mk, None)
+        if mk in missingness:
+            missingness[mk] = {**missingness[mk], "withheld": False,
+                               "replacedBy": fixed_criteria.LAST_RESORT_RULE}
+        column_functions[mk] = fill["function_label"]
+    if last_resort:
+        mapping_df = _with_last_resort_mapping(mapping_df, sorted(last_resort))
+        _emit(on_event, "last_resort", {"n_functions": len(last_resort),
+                                        "metrics": sorted(last_resort)})
+
     fixed_metrics = {mk: fixed_criteria.curve_row(mk) for mk in fixed_criteria.metric_keys()}
     n_local_reference = len(retained_ids)
 
@@ -2748,6 +2945,12 @@ def run_evidence(l3_code: str, name: str, *,
         "flagged_metrics": flagged_metrics,
         "flagged_replaced": sorted(replaced_flagged),
         "flagged_transfer_settings": dict(flagged_settings),
+        # methodology 0.16 (REF-17): the functions completed by an adopted EASI
+        # screening method, the metric that completes each and the candidates refused
+        "last_resort_metrics": {mk: {"functionId": f["function_id"],
+                                     "function": f["function_label"],
+                                     "candidates": f["candidates"]}
+                                for mk, f in last_resort.items()},
         # methodology 0.14: the published curves carried forward unchanged, the
         # version they come from, and the published curves rebuilt and why
         "carried": carried,

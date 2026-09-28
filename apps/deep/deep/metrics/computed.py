@@ -477,7 +477,10 @@ def _entrenchment(ctx):
             if er is not None else None)
 
 
-@adapter("channel-and-floodplain-dynamics-bank-height-ratio-bhr")
+# StreamCurves methodology 0.16 (REF-17): a regional assessment whose channel and
+# floodplain dynamics no other source supports scores the bank height ratio on EASI's
+# bands under the metric id spring-bank-height-ratio; the value is the same measurement
+@adapter("channel-and-floodplain-dynamics-bank-height-ratio-bhr", "spring-bank-height-ratio")
 def _bank_height(ctx):
     bhr = _reach_geom(ctx).get("bank_height_ratio")
     return (ComputedValue(round(float(bhr), 2),

@@ -139,3 +139,14 @@ gates:
       transfer was not confirmed by the recovery test and that confidence is capped (the text
       DEEP prints as the metric's limitation). A bundle with no flagged curve passes.
     check: streamcurves.campaign.gate_flagged_transfer_disclosed
+
+  - id: all-functions-scored
+    title: All 20 functions scoreable (owner decision D18)
+    evidence: >-
+      In the staged bundle, functionCoverage reads every one of the 20 STAF functions covered,
+      none excluded and none missing, and every function block holds at least one metric entry
+      with an executable curve (two or more points) and a documented input (howToMeasure or
+      methodContext). A documented gap does not complete a function (D18, 2026-09-28), so a
+      coverage exception fails this gate. A site still needs the measurements its methods ask
+      for; the gate asks that the assessment supply a method and its input for every function.
+    check: streamcurves.campaign.gate_all_functions_scored

@@ -294,7 +294,7 @@ def test_index_writes_every_state(runner, tmp_path):
     assert doc["counts"] == {"failed": 1, "incomplete": 1, "no-data": 1, "not-started": 1, "refused": 1, "staged": 1,
                              "staged-open": 1, "unsupported": 2}
     assert by["55"]["exit"] == 0 and by["55"]["seconds"] == 300.0 and by["55"]["peakMemoryMB"] == 310.0
-    assert by["55"]["stagedVersion"] == 1 and by["55"]["functionsCovered"] == 3 and by["55"]["promoteEligible"] is None
+    assert by["55"]["stagedVersion"] == 1 and by["55"]["functionsCovered"] == 20 and by["55"]["promoteEligible"] is None
     assert by["55"]["inputsDigest"] == digest_for("55") and by["55"]["promoteCommand"].endswith("--rebake-deep")
     assert by["65"]["openItems"] == 1 and by["65"]["stateDetail"] == "1 open item(s), 0 hard stop(s)"
     assert by["65"]["openBlocking"] == 0 and by["65"]["openAdvisory"] == 1      # promotion policy 1.1
@@ -499,7 +499,8 @@ def test_compare_and_package_on_the_synthetic_root(runner, tmp_path, capsys):
     assert f"L3-55 {fx['slug']} v3 vs staged" in out and "owner decisions" in out
     report = camp.read_json(root / camp.COMPARE_DIR / f"{fx['slug']}.json")
     assert report["schema"] == camp.COMPARE_SCHEMA and report["published"]["version"] == 3
-    assert report["report"]["curves"]["only_b"] == ["spring-phab-xcdenmid"] and len(report["report"]["curves"]["identical"]) == 5
+    # five BLOCKS curves and the seventeen synthetic ones (the standard region scores all 20)
+    assert report["report"]["curves"]["only_b"] == ["spring-phab-xcdenmid"] and len(report["report"]["curves"]["identical"]) == 22
     assert report["inputs"]["published/assessment.deep.json"] == camp.sha256_file(
         library / "assessments" / fx["slug"] / "v3" / camp.BUNDLE_FILE)
     diff = camp.read_json(root / camp.COMPARE_DIR / f"{fx['slug']}.owner_decision_diff.json")

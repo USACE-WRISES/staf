@@ -50,8 +50,15 @@ def digest_for(code: str) -> str:
 
 def _metric(mk: str) -> dict:
     return {"metricId": "spring-" + deep_slug(mk), "metricName": mk, "referenceN": 20,
+            "howToMeasure": "synthetic protocol",
             "curve": {"form": "monotonic_increasing",
                       "points": [{"x": 0.0, "y": 0.0}, {"x": 10.0, "y": 1.0}]}}
+
+
+def _fixture_metric(fid: str) -> str:
+    """The one synthetic metric that scores a function outside BLOCKS (owner decision D18:
+    the standard region scores all 20 functions, so it passes every gate of policy 1.2)."""
+    return "fixture_" + fid.replace("-", "_")
 
 
 BLOCKS = (("catchment-hydrology", ("phab_XCMGW", "phab_XCDENMID")),
@@ -61,6 +68,9 @@ BLOCKS = (("catchment-hydrology", ("phab_XCMGW", "phab_XCDENMID")),
 
 def make_bundle(code: str, name: str, slug: str, *, undocumented=()) -> dict:
     blocks = [{"functionId": fid, "metrics": [_metric(m) for m in metrics]} for fid, metrics in BLOCKS]
+    listed = {fid for fid, _ in BLOCKS}
+    blocks += [{"functionId": f, "metrics": [_metric(_fixture_metric(f))]}
+               for f in FUNCTIONS if f not in listed and f not in undocumented]
     covered = [b["functionId"] for b in blocks]
     exclusions = [{"functionId": f, "reason": "no-suitable-metric",
                    "justification": "Out of scope for this synthetic fixture; documented so the gate passes.",
@@ -95,6 +105,8 @@ def make_ledger(expect: str, *, ok: bool = True) -> dict:
             _ledger_row("phab_LSUB_DMM", "low-flow-baseflow-dynamics", "refitted", "national_3c", None),
             _ledger_row("pctimp2019ws", "water-soil-quality", "fixed", "fixed"),
             _ledger_row("chem_CHLA", "nutrient-cycling", "unsupported" if ok else "unknown", None)]
+    listed = {fid for fid, _ in BLOCKS}
+    rows += [_ledger_row(_fixture_metric(f), f, "fixed", "fixed") for f in FUNCTIONS if f not in listed]
     return {"schema": "rebuild-ledger/1", "region": {"kind": "ecoregion", "code": "x"},
             "build": {"inputsDigest": expect, "refit": "all", "carriedFrom": None,
                       "methodologyVersion": "0.14-provisional", "protocolSha256": None},
@@ -359,7 +371,7 @@ def test_the_promotion_policy_names_every_gate_and_its_check():
     assert policy["meta"]["version"] == "1.2" and policy["meta"]["status"] == "provisional"
     # promotion policy 1.2 (owner decision D14): the acceptance clause and the new gate
     assert camp.accepted_support_classes(policy) == ["noLocal", "frameUnder10"]
-    assert camp.GATE_IDS[-1] == "flagged-transfer-disclosed"
+    assert camp.GATE_IDS[-1] == "all-functions-scored" and "flagged-transfer-disclosed" in camp.GATE_IDS
     assert camp.promotion_policy_record(policy)["acceptedSupportClasses"] == ["noLocal", "frameUnder10"]
     assert policy["meta"]["sha256"].startswith("sha256:")
     broken = copy.deepcopy(policy)
@@ -368,8 +380,8 @@ def test_the_promotion_policy_names_every_gate_and_its_check():
     broken["gates"].append({"id": "made-up", "title": "x", "evidence": "y", "check": "z"})
     problems = camp.validate_promotion_policy(broken)
     assert any("must name streamcurves.campaign.gate_frozen_record" in p for p in problems)
-    # the last gate is promotion policy 1.2's flagged-transfer-disclosed
-    assert any("no gate flagged-transfer-disclosed" in p for p in problems)
+    # the last gate is promotion policy 1.2's all-functions-scored (owner decision D18)
+    assert any("no gate all-functions-scored" in p for p in problems)
     assert any("no check implements it" in p for p in problems)
 
 
@@ -492,13 +504,16 @@ def test_per_function_and_source_mix_read_the_ledger(tmp_path):
     per = camp.per_function(ledger, fx["bundle"], FUNCTIONS)
     assert per["catchment-hydrology"] == "fitted+carried"
     assert per["low-flow-baseflow-dynamics"] == "fitted" and per["water-soil-quality"] == "fixed"
-    assert per["nutrient-cycling"] == "documented-gap"
-    assert sum(1 for v in per.values() if v == "documented-gap") == len(FUNCTIONS) - 3
+    # owner decision D18: the standard region scores every function, so it has no gap
+    assert per["nutrient-cycling"] == "fixed"
+    assert not any(v.endswith("gap") for v in per.values())
     undocumented = make_bundle("55", "x", "x", undocumented=("population-support",))
-    assert camp.per_function(ledger, undocumented, FUNCTIONS)["population-support"] == "undocumented-gap"
+    unscored = {**ledger, "rows": [r for r in ledger["rows"] if r["functionId"] != "population-support"]}
+    assert camp.per_function(unscored, undocumented, FUNCTIONS)["population-support"] == "undocumented-gap"
     assert camp.per_function(None, fx["bundle"], FUNCTIONS)["catchment-hydrology"] == "scored"
     mix = camp.source_mix(ledger, fx["packet"])
-    assert mix == {"local": 1, "l2": 2, "nars9": 1, "l1": 0, "national": 1, "modeled": 0, "published": 0, "fixed": 1}
+    assert mix == {"local": 1, "l2": 2, "nars9": 1, "l1": 0, "national": 1, "modeled": 0, "published": 0,
+                   "fixed": 1 + len(FUNCTIONS) - len(BLOCKS)}
     assert camp.source_mix(None, fx["packet"]) == {"local": 6, "l2": 0, "nars9": 0, "l1": 0, "national": 0,
                                                     "modeled": 0, "published": 0}
 
@@ -510,7 +525,9 @@ def test_index_rows_and_csv_on_the_standard_root(tmp_path):
     r = rows[0]
     assert r["state"] == "staged" and r["exit"] == 0 and r["seconds"] == 321.5 and r["peakMemoryMB"] == 310.2
     assert r["stagedVersion"] == 1 and r["contentDigest"] == fx["bundle"]["contentDigest"]
-    assert r["functionsCovered"] == 3 and r["withheld"] == 1 and r["curves"] == 6 and r["decisionsApplied"] == 1
+    # the standard region scores all 20 functions (owner decision D18); "curves" counts the
+    # run record's built curves, which the synthetic bundle blocks do not add to
+    assert r["functionsCovered"] == 20 and r["withheld"] == 1 and r["curves"] == 6 and r["decisionsApplied"] == 1
     assert r["openItems"] == 0 and r["hardStops"] == 0 and r["promoteEligible"] is None
     assert r["openBlocking"] == 0 and r["openAdvisory"] == 0
     assert r["inputsDigest"] == digest_for("55") and r["promoteCommand"].startswith("promote ")
@@ -731,7 +748,7 @@ def test_batch_summary_text_and_commands(tmp_path):
     assert [r["l3"] for r in doc["eligible"]] == ["55"] and [r["l3"] for r in doc["exceptions"]] == ["65"]
     e = doc["eligible"][0]
     assert e["policyDecisionIds"] == ["curve04-accept-with-flag"] and e["carriedApprovals"] == ["catchment-hydrology"]
-    assert e["functionsCovered"] == 3 and len(e["gaps"]) == 17 and e["contentDigest"] == fx["bundle"]["contentDigest"]
+    assert e["functionsCovered"] == 20 and len(e["gaps"]) == 0 and e["contentDigest"] == fx["bundle"]["contentDigest"]
     assert doc["exceptions"][0]["state"] == "not-started" and doc["exceptions"][0]["blockers"] == ["not evaluated by eligibility"]
     assert len(doc["promoteCommands"]) == 1
     cmd = doc["promoteCommands"][0]

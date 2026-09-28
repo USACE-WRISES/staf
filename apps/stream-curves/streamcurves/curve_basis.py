@@ -41,7 +41,12 @@ ALL = frozenset(ORDER)
 #: judgment (REF-15, owner decision 2026-09-22). Not a rung of the ladder:
 #: nothing ranks it and it claims no reference condition.
 OWNER = "owner-entered"
-KNOWN = ALL | {OWNER}
+#: EASI's published national screening method for the same quantity, adopted by
+#: the last-resort rung (REF-17, methodology 0.16, owner decision D19 of
+#: 2026-09-28) only for a function no other source supports in the ecoregion.
+#: Not a rung of the reference ladder either: it claims no reference condition.
+EASI_SCREENING = "easi-screening-method"
+KNOWN = ALL | {OWNER, EASI_SCREENING}
 
 LABELS = {
     REGIONAL: "Regional reference",
@@ -49,6 +54,7 @@ LABELS = {
     MODELED: "Modeled reference",
     PUBLISHED: "Published benchmark",
     OWNER: "Owner-entered",
+    EASI_SCREENING: "Adopted from EASI's national screening method (provisional)",
 }
 
 #: CONF-02 caps keyed by basis (CONF-03). None means this basis imposes no cap
@@ -58,6 +64,9 @@ CAPS = {
     NATIONAL: 79,
     MODELED: 59,
     PUBLISHED: 59,
+    # a provisional national screening judgment: the ceiling of high transfer
+    # risk, the same cap a flagged transfer carries (REF-16)
+    EASI_SCREENING: 39,
 }
 
 #: why each cap is what it is, recorded so a reader is not left guessing
@@ -65,6 +74,7 @@ CAP_REASONS = {
     NATIONAL: "national_reference",
     MODELED: "modeled_reference",
     PUBLISHED: "published_benchmark",
+    EASI_SCREENING: "easi_screening_method",
 }
 
 #: one sentence per basis, for the bundle, the report, the card and the
@@ -84,6 +94,9 @@ STATEMENTS = {
                 "not match this assessment's."),
     OWNER: ("Scored against a curve this assessment's owner entered, on a cited source or "
             "on professional judgment, rather than against reference stations."),
+    EASI_SCREENING: ("Scored on EASI's national screening method for this quantity, adopted "
+                     "because no reference pool, national donor, model or published benchmark "
+                     "supported a curve for this function in this ecoregion."),
 }
 
 #: what a basis does NOT claim, carried beside the statement where it matters
@@ -97,6 +110,9 @@ LIMITS = {
                 "and may disagree with a reference curve where one exists."),
     OWNER: ("An owner-entered curve is not an estimate of this ecoregion's reference condition. "
             "It rests on the source and the rationale the owner recorded."),
+    EASI_SCREENING: ("An EASI screening method is a provisional national judgment that rates the "
+                     "quantity the same way in every region. It is not an estimate of this "
+                     "ecoregion's reference condition, and its confidence is capped."),
 }
 
 

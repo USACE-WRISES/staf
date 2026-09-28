@@ -225,3 +225,100 @@ metrics:
         of a barrier., 'NID carries about 91,000 regulated dams while the National Aquatic Barrier Inventory
         maps over 500,000 barriers of all sizes, so zero mapped dams is frequently a false negative for
         passage.', 'Query failure is unscored, not Good.']
+last_resort:
+  pctwet2019ws:
+    display_name: Wetland cover of the watershed
+    units: '%'
+    metric_family: proportion
+    easi_method: watershed-wetland-extent
+    easi_metric_id: surface-water-storage-percent-wetlands-in-watershed
+    easi_input: null
+    easi_title: Wetland extent
+    provisional: true
+    resolution: 0.01
+    domain: [0.0, 100.0]
+    streamcat: pctwet2019
+    functions: [Surface water storage]
+    bands:
+    - {rating: Good, label: '>5%', min: 5, max: null, minInclusive: false, maxInclusive: false}
+    - {rating: Fair, label: 1-5%, min: 1, max: 5, minInclusive: true, maxInclusive: true}
+    - {rating: Poor, label: <1%, min: null, max: 1, minInclusive: false, maxInclusive: false}
+    direction: higher_better
+    good_fair: 5.0
+    fair_poor: 1.0
+    anchor_good_fair: 5.0
+    anchor_fair_poor: 0.995
+    points:
+    - [0.0, 0.315468]
+    - [0.995, 0.39]
+    - [5.0, 0.69]
+    - [9.1385, 1.0]
+    citations:
+    - {key: streamcat, text: EPA StreamCat Metrics and Definitions, url: 'https://www.epa.gov/national-aquatic-resource-surveys/streamcat-metrics-and-definitions'}
+    - {key: cbp-wetland-review, text: 'Chesapeake Bay Program 2016, Wetland Expert Panel literature review
+        (Appendix B)', url: 'https://d18lev1ok5leia.cloudfront.net/chesapeakebay/documents/appendix_b_wetlands_expert_panel_literature_review_habitat_benefits_mar2016.pdf'}
+    breakpoints:
+    - {label: 1%, description: 'Lower national screening transition. Watershed wetland extents of 1 to
+        5 percent are associated with water-quality benefit and about 7 percent with flood attenuation
+        (Mitsch and Gosselink, as reviewed by the Chesapeake Bay Program 2016).'}
+    - {label: 5%, description: 'Upper national screening transition, the top of the same reviewed 1 to
+        5 percent benefit range.'}
+    limitations: [Natural wetland abundance varies substantially among regions.]
+    method_basis_class: provisional STAF screening judgment
+    required_input: Watershed wetland cover (NLCD 2019 woody plus herbaceous wetland, percent of the watershed)
+      from the StreamCat lookup engine or the STAF site engine; DEEP fills it from the desktop analysis
+      and the user may correct it.
+    limitation: 'Rated on EASI''s national wetland-extent bands, which rate a watershed with no mapped
+      wetland Poor. Least-disturbed watersheds of this ecoregion carry little or no wetland, so the rating
+      cannot tell natural absence from loss: read a Fair or Poor rating with that in mind.'
+    rule: REF-17
+  bank_height_ratio:
+    display_name: Bank height ratio
+    units: ratio
+    metric_family: continuous
+    easi_method: bhr-bank-instability-susceptibility
+    easi_metric_id: channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition
+    easi_input: null
+    easi_title: Bank erosion and armoring
+    provisional: true
+    resolution: 0.01
+    domain: [1.0, null]
+    streamcat: null
+    functions: [Channel and floodplain dynamics]
+    bands:
+    - {rating: Good, label: ≤1.3, min: null, max: 1.3, minInclusive: false, maxInclusive: true}
+    - {rating: Fair, label: '>1.3-≤1.5', min: 1.3, max: 1.5, minInclusive: false, maxInclusive: true}
+    - {rating: Poor, label: '>1.5', min: 1.5, max: null, minInclusive: false, maxInclusive: false}
+    direction: lower_better
+    good_fair: 1.3
+    fair_poor: 1.5
+    anchor_good_fair: 1.305
+    anchor_fair_poor: 1.505
+    points:
+    - [1.0, 1.0]
+    - [1.305, 0.69]
+    - [1.505, 0.39]
+    - [1.765, 0.0]
+    citations:
+    - {key: mnsqt, text: Scientific Support for the Minnesota Stream Quantification Tool v1.0, url: 'https://www.mvp.usace.army.mil/Portals/57/docs/regulatory/Mitigation/MN_SQT/Scientific_Support_for_the_MNSQT_v1.0.pdf'}
+    - {key: function-framework, text: EPA Function-Based Framework for Stream Assessment and Restoration
+        Projects, url: 'https://www.epa.gov/sites/production/files/2015-08/documents/a_function_based_framework_for_stream_assessment_3.pdf'}
+    breakpoints:
+    - {label: BHR 1.3, description: 'Upper published functioning boundary, used here as the Good/Fair
+        susceptibility transition.'}
+    - {label: BHR 1.5, description: 'Published non-functioning floodplain-connectivity boundary, used
+        here as the Fair/Poor susceptibility transition.'}
+    limitations: [BHR does not detect existing armoring and does not directly measure erosion rate or
+        eroding-bank extent., The DEM-derived cross section is a susceptibility screen and may require
+        surveyed geometry., BHR is reused by floodplain engagement and channel adjustment and is therefore
+        correlated evidence.]
+    method_basis_class: published directional relationship
+    required_input: 'Bank height ratio at a representative riffle of the assessment reach: the height
+      of the lower top of bank above the thalweg divided by the maximum bankfull depth (the stream quantification
+      tools'' field procedure, after Rosgen 2006). Measure it in the field; DEEP offers a DEM-derived
+      value only where the cross sections pass the quality checks, and leaves the function unassessed
+      until a value is entered.'
+    limitation: Rated on EASI's bank-instability bands for the bank height ratio (1.3 and 1.5), a provisional
+      screening relationship rather than a measured erosion rate or an estimate of this ecoregion's reference
+      condition.
+    rule: REF-17

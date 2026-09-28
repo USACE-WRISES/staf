@@ -654,7 +654,9 @@ def cmd_stage(a) -> int:
         result["standing_decisions"] = {
             "policyVersion": dec.policy_version(policy),
             "sha256": policy["meta"]["sha256"],
-            "path": policy["meta"]["path"],
+            # R5-03: repository-relative when the file is the checkout's own, so a
+            # re-derivation from another checkout records the same path
+            "path": _portable_path(policy["meta"]["path"]),
             "enabledIds": enabled,
             "appliedIds": sorted({d["decision_class"] for d in policy_decisions}),
             "appliedCount": len(policy_decisions),
@@ -944,6 +946,15 @@ def published_bundle(code: str, root: Optional[Path] = None) -> Optional[dict]:
         return json.loads(p.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
+
+
+def _portable_path(path) -> str:
+    """``path`` relative to the app root (POSIX separators) when it lies inside
+    it, else as given: what a record names without the checkout's location."""
+    try:
+        return Path(path).resolve().relative_to(_APP_ROOT.resolve()).as_posix()
+    except (ValueError, OSError, TypeError):
+        return str(path)
 
 
 def _carry_root(a) -> Optional[Path]:

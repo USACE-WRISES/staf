@@ -225,8 +225,17 @@ meta:
     regions with no local reference station or fewer than ten stations in frame
     publish as Preliminary by policy, and a new gate requires every flagged curve
     of a staged bundle to carry its four disclosure fields and DEEP's limitation
-    text. No numeric threshold moved and no threshold_status moved to calibrated.
-    The standing_decisions index mirrors policy 1.5.
+    text. (4) The published-benchmark review (D12): EPA's NRSA benthic and fish MMI
+    and salinity (specific conductance) benchmarks, each reproducing EPA's own
+    condition classes, enter the verified catalog, the two indices as reserve
+    metrics. (5) REF-17, the last resort (D18 and D19): a function no source above
+    supports is scored on EASI's national screening method for the same quantity
+    (config/fixed_criteria.yaml, block last_resort), labelled as adopted and
+    provisional, capped at 39, and never joining a function that holds any other
+    curve; promotion policy 1.2 gains the gate all-functions-scored, so a documented
+    gap does not complete an assessment. No numeric threshold moved and no
+    threshold_status moved to calibrated. The standing_decisions index mirrors
+    policy 1.5.
   authority: "STAF scientific team (human sign-off required for status promotion)"
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
@@ -594,6 +603,22 @@ reference_hierarchy:
     min_usable: 10
     prefer_adequate: true
     confidence_cap: 39
+  # REF-17, the last resort (v0.16, owner decision D19, 2026-09-28). A function none
+  # of whose candidate metrics any source above supports (the station pools, the
+  # national, modeled and published rungs, the flagged transfers, the owner's
+  # accepted sources, carried curves and the fixed criteria) is scored on EASI's
+  # published national screening method for the same quantity, where
+  # config/fixed_criteria.yaml names one under last_resort (generated from the
+  # vendored EASI catalog by scripts/build_fixed_criteria.py): surface water
+  # storage on watershed wetland cover, channel and floodplain dynamics on the
+  # bank height ratio. The curve carries the basis easi-screening-method, labelled
+  # "Adopted from EASI's national screening method (provisional)", the method's
+  # own citations and limitations, the input it needs and the confidence cap of
+  # curve_basis (39). It never replaces a curve and never enters a function that
+  # holds any other scored metric. enabled: false reproduces the 0.16 ladder
+  # without it.
+  last_resort:
+    enabled: true
 
 # --------------------------------------------------------------------------- #
 # Acceptance (v0.14, ACC-01 to ACC-06), defined before any outcome is seen and
@@ -701,6 +726,10 @@ confidence_rules:
     national_reference: 79
     modeled_reference: 59
     published_benchmark: 59
+    # v0.16 (REF-17, owner decision D19): EASI's national screening method adopted as
+    # the last resort for a function no other source supports: a provisional national
+    # judgment, capped at the ceiling of high transfer risk, as a flagged transfer is
+    easi_screening_method: 39
     # v0.14 (REF-11): a pool admitted under the relaxed regional screen is not the
     # least-disturbed condition of the strict screen, the same ceiling as
     # best-available reference
@@ -744,7 +773,7 @@ metric_portfolio:
   second_metric_min_auc: 0.55
   # v0.16 (REF-16): a curve on a flagged transfer ranks last, whatever pool it
   # rests on, so a validated source of any kind wins a function's place over it
-  source_rank: {local: 0, regional: 1, national: 2, modeled: 3, published: 4, flagged: 5}
+  source_rank: {local: 0, regional: 1, national: 2, modeled: 3, published: 4, flagged: 5, pathway: 6}
   metric_score_weights:                  # must sum to 100
     ecological_relevance_coverage: 25
     data_quality_support_coverage: 20

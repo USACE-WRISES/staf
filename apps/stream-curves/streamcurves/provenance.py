@@ -1129,6 +1129,16 @@ def _pressure_records(result: dict, add) -> None:
                                 "reference_hierarchy.flagged_transfer", {})},
                 computed=computed, verdict=VERDICT_PASS,
                 recommendation=(str(d.get("transfer_note") or "") + aside).strip() or None)
+        elif basis == "easi-screening-method":
+            # methodology 0.16 (REF-17, owner decision D19): the function had no
+            # other source, so EASI's national screening method completes it; the
+            # rule's decision, recorded with the candidates refused, no review item
+            computed["basis"] = basis
+            add("REF-17", "metric", metric,
+                thresholds={"last_resort": methodology.threshold(
+                    "reference_hierarchy.last_resort", {})},
+                computed=computed, verdict=VERDICT_PASS,
+                recommendation=d.get("transfer_note"))
         elif basis in ("national-reference", "modeled-reference", "published-benchmark"):
             rule = {"national-reference": "REF-12", "modeled-reference": "REF-13",
                     "published-benchmark": "REF-14"}[basis]
@@ -2160,6 +2170,7 @@ def build_ledger(result: dict, *, manifest: Optional[dict] = None, register: Opt
                       "confidenceCap": sup.get("confidence_cap")} if flagged else {})
             rows.append(base(mk, fid, disposition=REFITTED,
                              rule=("REF-16" if flagged else
+                                   "REF-17" if str(sup.get("basis") or "") == "easi-screening-method" else
                                    _STATUS_RULES.get(st, "REF-11" if st.startswith("borrowed") else "REF-05")),
                              reason=str(d.get("reason") or ""), candidate=key, basis=basis,
                              option=_LEDGER_OPTIONS.get(str(raw or ""), raw),
@@ -2273,7 +2284,7 @@ def build_ledger_from_version(vdir, *, previous: Optional[dict] = None) -> dict:
         if rec.get("subject_kind") != "metric":
             continue
         computed = rec.get("computed") or {}
-        if rule in ("REF-05", "REF-06", "REF-11", "REF-12", "REF-13", "REF-14", "REF-16") and rec.get("verdict") != VERDICT_FAIL:
+        if rule in ("REF-05", "REF-06", "REF-11", "REF-12", "REF-13", "REF-14", "REF-16", "REF-17") and rec.get("verdict") != VERDICT_FAIL:
             support[subject] = dict(computed)
         elif rule == "REF-06":
             support[subject] = dict(computed)

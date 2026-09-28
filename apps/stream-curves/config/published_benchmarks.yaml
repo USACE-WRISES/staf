@@ -501,115 +501,74 @@ refusals:
       protocol and are not carried by the NRSA archive, and they are Ohio water
       quality standards while half this ecoregion's stations lie in Indiana.
 
-# Methodology 0.16, owner decision D18 (2026-09-28): a documented gap does not
-# complete a function. Where no station pool, national donor, approved model or
-# published benchmark serves a function, the catalog states the additional input
-# pathway that completes it: the measurement and its protocol, the published curve
-# it is scored on (verified against the original where the source is a state
-# stream quantification tool; the SQT registry keys name the records), the states
-# the curve applies to, how the value enters DEEP, and the disclosure. A build
-# reads these through published_benchmark.pathway_for to state the pathway in place
-# of "no suitable curve". Nothing here is fetched or fitted at build time.
+# Methodology 0.16, owner decisions D18 and D19 (2026-09-28): a documented gap does
+# not complete a function. Where no station pool, national donor, approved model,
+# published benchmark or flagged transfer serves a function, the last-resort rung
+# (REF-17) scores it on EASI's national screening method for the same quantity, the
+# curves generated from the vendored EASI catalog into config/fixed_criteria.yaml
+# (block last_resort) by scripts/build_fixed_criteria.py. The entries below state the
+# measurement and its protocol, how the value enters DEEP, the scoring source and the
+# disclosure, for a reader and for a DEEP card (published_benchmark.pathway_for and
+# pathway_sentence). Nothing here is fetched or fitted at build time.
 input_pathways:
-  - id: channel-floodplain-dynamics-field-bank-measures
+  - id: channel-floodplain-dynamics-bank-height-ratio
     function: channel-floodplain-dynamics
+    implemented_by: config/fixed_criteria.yaml last_resort bank_height_ratio (REF-17)
     applies_when: >-
       No pool of ten comparable least-disturbed stations at any level carries bank
       angle or sinuosity, the national donors fail the comparability or stability
-      checks, and no published benchmark exists for the NRSA channel-form metrics
-      (the Nebraska Sand Hills, 44, in the 0.15 pass and the census; the Northern
-      Minnesota Wetlands, 49, where the missingness rule withheld the Level II pool).
+      checks, no published benchmark exists for the NRSA channel-form metrics and no
+      flagged transfer passes (the Nebraska Sand Hills, 44, in the 0.15 pass and the
+      census; the Northern Minnesota Wetlands, 49, where the missingness rule withheld
+      the Level II pools).
     measurements:
-      - key: sqt_bank_height_ratio
+      - key: bank_height_ratio
         name: Bank height ratio
         units: ratio
         direction: lower_is_better
         domain: [1.0, null]
         protocol: >-
-          The height of the low bank above the thalweg divided by the maximum bankfull
-          depth, both at a representative riffle cross section of the assessment
+          The height of the lower top of bank above the thalweg divided by the maximum
+          bankfull depth, both at a representative riffle cross section of the assessment
           reach, the field procedure of the stream quantification tools and of Rosgen
           (2006); a ratio of 1.0 means flows above bankfull spread onto the floodplain.
-      - key: sqt_percent_streambank_erosion
-        name: Percent streambank erosion
-        units: "%"
-        direction: lower_is_better
-        domain: [0, 100]
-        protocol: >-
-          The share of the reach's bank length that is actively eroding, from a bank
-          erosion hazard and near-bank stress survey of both banks, the lateral
-          migration procedure of the stream quantification tools.
-      - key: sqt_percent_armoring
-        name: Percent streambank armoring
-        units: "%"
-        direction: lower_is_better
-        domain: [0, 100]
-        protocol: >-
-          The share of the reach's bank length that is armored (riprap, walls or other
-          hard protection), from the same bank survey.
     scoring:
-      - states: [MN]
-        source: >-
-          Minnesota Stream Quantification Tool, version 2.0 (2020), list of metrics,
-          Performance Standards sheet (rows for bank height ratio, percent streambank
-          erosion and percent armoring).
-        registry_keys: [sqt:mn:percent-streambank-erosion:default, sqt:mn:percent-armoring:default, sqt:mn:bank-height-ratio-bhr:default]
-        verification: >-
-          Percent streambank erosion (5 scores 1.0, 10 scores 0.7, 75 scores 0.0) and
-          percent armoring (0 scores 1.0, 50 scores 0.0) are verified against the
-          original workbook; the bank height ratio curve (1.0 scores 1.0, 1.2 scores
-          0.7, 1.5 scores 0.3, 1.71 and above scores 0.0) is partially verified, the
-          original's 1.21 and 1.493 being rounded in the record.
-      - states: [WI]
-        source: >-
-          Wisconsin Stream Quantification Tool (2022), reference curves sheet (rows for
-          bank height ratio, percent streambank erosion and percent streambank
-          armoring).
-        registry_keys: [sqt:wi:bank-height-ratio-bhr:default, sqt:wi:percent-streambank-erosion:default, sqt:wi:percent-streambank-armoring:default]
-        verification: >-
-          All three verified against the original: bank height ratio 1.0 scores 1.0 and
-          1.5 scores 0.3, extended linearly beyond; percent streambank erosion 5 scores
-          1.0, 11 scores 0.7, 50 scores 0.0; percent streambank armoring 0 scores 1.0,
-          50 scores 0.0.
       - states: any
-        measurement: sqt_bank_height_ratio
+        measurement: bank_height_ratio
         source: >-
-          Harman, W., R. Starr, M. Carter, K. Tweedy, M. Clemmons, K. Suggs and C.
-          Miller. 2012. A Function-Based Framework for Stream Assessment and
-          Restoration Projects. EPA 843-K-12-006. US Environmental Protection Agency,
-          Office of Wetlands, Oceans and Watersheds, Washington, DC. Table 7.2,
-          Floodplain Connectivity Performance Standards (printed page 103, PDF page
-          105), bank height ratio standards adapted from Rosgen (2006).
-        url: https://www.epa.gov/sites/default/files/2015-08/documents/a_function_based_framework_for_stream_assessment_3.pdf
-        classes: "Functioning 1.0 to 1.2, Functioning-at-Risk 1.3 to 1.5, Not Functioning above 1.5"
-        thresholds: {good: 1.2, poor: 1.5}
-        scoring: >-
-          Two thresholds through the same construction as the fixed criteria
-          (CURVE-11): the Good threshold 1.2 scores 0.69, the Poor threshold 1.5 scores
-          0.39, a ratio of 1.0 scores 1.0 and the line runs on to 0 near 1.9; entered as
-          an owner-entered cited curve (REF-15) until a state tool covers the target.
+          EASI's bank-instability screening method, Good at or below 1.3, Fair above 1.3
+          to 1.5, Poor above 1.5, the bands EASI takes from the Minnesota Stream
+          Quantification Tool and the function-based framework of Harman and others
+          (2012), adopted as the last resort for this function.
+        classes: "Good at or below 1.3, Fair above 1.3 to 1.5, Poor above 1.5"
+    follow_up: >-
+      The state tools' own curves (Minnesota SQT v2.0 and Wisconsin SQT 2022 for the
+      bank height ratio, percent streambank erosion and percent armoring; registry keys
+      sqt:mn:bank-height-ratio-bhr:default, sqt:mn:percent-streambank-erosion:default,
+      sqt:mn:percent-armoring:default, sqt:wi:bank-height-ratio-bhr:default,
+      sqt:wi:percent-streambank-erosion:default, sqt:wi:percent-streambank-armoring:default)
+      can replace the national bands where the target lies in that state, once D4a's
+      verification and adoption conditions are met.
     deep_entry: >-
-      The measurement is a required field input of the function in DEEP: the value
-      entered on the worksheet is scored on the curve like any other metric, the
-      calculator computes the index from it, and the report and the metric row carry
-      the source citation and the provisional flag. The curve enters the bundle
-      through the source mechanism of REF-15: the published state tool's curve where
-      the target ecoregion lies in that state (the SQT registry's geography check),
-      the cited national standard entered as two thresholds otherwise.
+      The measurement is the function's input in DEEP: the value measured at the reach is
+      scored on the curve like any other metric, DEEP offers a DEM-derived value only
+      where the cross sections pass the quality checks and otherwise leaves the function
+      unassessed until a value is entered, the calculator computes the index from the same
+      value, and the report and the metric row carry the label, the citation and the
+      provisional flag.
     disclosure: >-
-      Provisional. The curve is a published performance standard, not an estimate of
-      this ecoregion's reference condition; the state tools' curves were built for
-      their state's streams, and the national standard is a channel stability rating
-      recategorized into three classes. The value is a field measurement the NRSA
-      archive does not carry, so no station of this ecoregion informs the curve.
-  - id: surface-water-storage-zero-inflated-wetland
+      Provisional. Adopted from EASI's national screening method, a published directional
+      relationship EASI applies in every region; it is not an estimate of this ecoregion's
+      reference condition, and the bank height ratio does not measure erosion rate or
+      armoring directly.
+  - id: surface-water-storage-easi-wetland-extent
     function: surface-water-storage
+    implemented_by: config/fixed_criteria.yaml last_resort pctwet2019ws (REF-17)
     applies_when: >-
-      The reference pool's lower quartile of watershed wetland cover is zero, so the
-      one-sided seed is degenerate (the Northern Rockies, 15: 31 percent of the
-      region's in-frame watersheds and 24 percent of the Level II least-disturbed
-      pool hold no wetland; the pool's lower quartile is 0.0 locally and 0.01
-      percent at Level II).
+      Least-disturbed watersheds of the ecoregion carry little or no wetland, so every
+      reference pool's curve is a fallback or reads as inverted and no other source
+      serves the function (the Northern Rockies, 15: 31 percent of the region's in-frame
+      watersheds hold no wetland; the Interior Plateau, 71).
     measurements:
       - key: pctwet2019ws
         name: Wetland cover of the watershed
@@ -623,23 +582,22 @@ input_pathways:
       - states: any
         measurement: pctwet2019ws
         source: >-
-          The two-part zero-inflated reference seed of methodology 0.15: the share of
-          least-disturbed watersheds with no wetland is scored as its own step and the
-          positive values seed the rising ladder, so a watershed with no wetland where
-          reference watersheds have none scores at the reference step rather than on a
-          degenerate curve.
-        note: >-
-          The engine setting (curve rules zero_inflated_share with zero_inflated_handling
-          two_part in methodology_config.yaml) is off by default; turning it on is the
-          coordinator's methodology decision, recorded here as the method that completes
-          the function.
+          EASI's wetland-extent screening method, national transitions at 1 and 5 percent
+          taken from the reviewed wetland-benefit range (Mitsch and Gosselink, as reviewed
+          by the Chesapeake Bay Program 2016), adopted as the last resort for this function.
+        classes: "Poor below 1 percent, Fair 1 to 5 percent, Good above 5 percent"
+    follow_up: >-
+      A regional storage indicator for wetland-poor ecoregions. The two-part
+      zero-inflated seed (Round 2 candidate C3a) was examined and not adopted: it also
+      scores zero wetland as 0, and its study found no accuracy gain.
     deep_entry: >-
-      No new input: DEEP reads the wetland share it already computes for the reach;
-      the curve changes shape and its note says why.
+      No new input: DEEP reads the watershed wetland share it already computes, and the
+      curve's label says which method scores it.
     disclosure: >-
-      Provisional. The curve rests on the region's own least-disturbed pool split at
-      zero; where the pool is small the positive part rests on few stations and the
-      confidence cap of an exploratory or borrowed pool applies.
+      Provisional. Adopted from EASI's national screening method, a provisional screening
+      judgment that rates the quantity the same way in every region: a watershed with no
+      mapped wetland rates Poor, so where least-disturbed watersheds carry none the rating
+      cannot tell natural absence from loss.
 
 # What a refusal says for a metric the catalog holds nothing on at all.
 no_entry: The published criteria STAF draws on include none for this metric.
