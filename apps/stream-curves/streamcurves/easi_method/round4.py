@@ -19,6 +19,12 @@ Each family rides one engine knob of the vendored EASI evaluator (WP-R4k):
 - E7: the ``mean_index`` operator on the five composite methods (K4);
 - E8: the catalog's ``rollupReporting`` flag (K5).
 
+The addendum's "Finalist" step composes the accepted families into one method package:
+``build_composition`` applies each component's own edit function, in the addendum's order,
+to the same base files (``composition_spec`` names the components, the union of their
+functions, decision ``composition`` and primary outcome P1); the single-family builds are
+untouched by it, so a family built alone is byte for byte what it was.
+
 Every string a person reads is plain ASCII with no em dash. The label of a built package is
 the rehearsal label: no approval and no reviewer is recorded here.
 """
@@ -40,6 +46,10 @@ REFIT_COMMAND = ("python apps/stream-curves/scripts/refit_easi_candidate_sets.py
                  "--members <easi-dev-members folder> --campaign <folder> --out <curve-sets.json> "
                  "[--registry-split flow-min-ratio=perennial]")
 FAMILIES = ("E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8")
+#: the id of a composed package (the addendum's "Finalist" step) and its family name; its
+#: components are the accepted families, recorded in the package's ``candidate.json``
+COMPOSITION = "FINALIST"
+COMPOSITION_FAMILY_NAME = "finalist_composition"
 CATALOG, CURVES, IDENTITY = "screening-methods.json", "reference-curves.json", "scoring-identity.json"
 #: the curve set each refit family needs, and the record's input that reads it
 FAMILY_SETS = {"E2": "flow-min-ratio", "E4": "width-variability"}
@@ -118,6 +128,58 @@ def family_spec(family: str, path: Path = ADDENDUM_PATH) -> dict:
     out = dict(spec, id=family)
     if family in RESPECIFIED:
         out["respecified"] = dict(RESPECIFIED[family])
+    return out
+
+
+def composition_members(families) -> list[str]:
+    """The components of a composition in the addendum's order: at least two distinct
+    families of the addendum, however they were given."""
+    given = [str(f) for f in (families or ())]
+    if not given:
+        raise CandidateError("a composition names its component families; none was given")
+    unknown = [f for f in given if f not in FAMILIES]
+    if unknown:
+        raise CandidateError(f"a composition is made of the addendum's families {', '.join(FAMILIES)}; "
+                             f"got {', '.join(unknown)}")
+    if len(set(given)) != len(given):
+        raise CandidateError(f"a family enters a composition once; got {', '.join(given)}")
+    if len(given) < 2:
+        raise CandidateError(f"a composition names at least two families; {given[0]} alone is the "
+                             f"single-family build (--family {given[0]})")
+    return [f for f in FAMILIES if f in given]
+
+
+def composition_spec(families, path: Path = ADDENDUM_PATH) -> dict:
+    """The record of a composition of accepted families (the addendum's "Finalist" step): the
+    components in the addendum's order, the union of their functions, their texts joined,
+    decision ``composition`` (each component's own rule, read on the composed arm), primary
+    outcome P1, and each component's own spec under ``components``."""
+    members = composition_members(families)
+    components = {f: family_spec(f, path) for f in members}
+    functions: list = []
+    for spec in components.values():
+        raw = spec.get("function")
+        for f in (raw if isinstance(raw, list) else [raw]):
+            if f not in functions:
+                functions.append(f)
+    joined = lambda key: "; ".join(f"{f}: {components[f].get(key)}" for f in members)  # noqa: E731
+    out = {
+        "id": COMPOSITION, "family": COMPOSITION_FAMILY_NAME, "composition": members,
+        "function": "all" if "all" in functions else functions,
+        "change": ("The finalist composition of the accepted Round 4 families, each applied as its own "
+                   "edit to the base method in the addendum's order. " + joined("change")),
+        "mechanism": joined("mechanism"),
+        "hypothesis": ("H-FINALIST the accepted changes compose without interaction: the composed "
+                       "method keeps the association each single-family study found and its rating "
+                       "availability changes by their documented gaps only"),
+        "primary_outcome": "P1",
+        "decision": "composition",
+        "coverage_effect": joined("coverage_effect"),
+        "components": components,
+    }
+    respecified = {f: dict(s["respecified"]) for f, s in components.items() if s.get("respecified")}
+    if respecified:
+        out["respecified"] = respecified
     return out
 
 
@@ -441,7 +503,7 @@ def recorded_base_identity(source: Path) -> dict:
             "version": envelope.get("version")}
 
 
-def _restamp(files: dict[str, bytes], family: str, spec: dict) -> dict:
+def _restamp(files: dict[str, bytes], family: str, spec: dict, name: Optional[str] = None) -> dict:
     raw = files[IDENTITY]
     ident = json.loads(raw.decode("utf-8"))
     base = {k: ident.get(k) for k in ("alternative_id", "catalog_sha256", "curves_sha256")
@@ -452,10 +514,24 @@ def _restamp(files: dict[str, bytes], family: str, spec: dict) -> dict:
     ident["nars_geography_sha256"] = _sha(files["nars-ecoregions-9.geojson.gz"])
     ident["curve_count"] = sum(len(s.get("curves") or {}) for s in (curves.get("sets") or {}).values())
     ident["alternative_id"] = f"round4-{family}"
-    ident["alternative_name"] = f"Round 4 candidate {family} ({spec.get('family')}), rehearsal"
+    ident["alternative_name"] = name or f"Round 4 candidate {family} ({spec.get('family')}), rehearsal"
     ident["derived_from"] = base
     files[IDENTITY] = dump_like(raw, ident)
     return ident
+
+
+def _used_sets(families, curves: dict) -> dict:
+    """The refit sets the built files carry for ``families`` (E2, E4), as the record lists them."""
+    used = {}
+    for family in families:
+        if family not in FAMILY_SETS:
+            continue
+        set_id = FAMILY_SETS[family]
+        used[set_id] = {"curves": sorted(curves["sets"][set_id]["curves"]),
+                        "quantity": curves["sets"][set_id].get("quantity")}
+        if curves["sets"][set_id].get("split"):
+            used[set_id]["split"] = dict(curves["sets"][set_id]["split"])
+    return used
 
 
 def build_candidate(files: dict[str, bytes], family: str, *, curve_sets: Optional[dict] = None,
@@ -480,31 +556,136 @@ def build_candidate(files: dict[str, bytes], family: str, *, curve_sets: Optiona
     problems = mp.validate_files(out)
     if problems:
         raise CandidateError(f"{family}: the variant files are not consistent: " + "; ".join(problems[:6]))
-    used = {}
-    if family in FAMILY_SETS:
-        set_id = FAMILY_SETS[family]
-        used[set_id] = {"curves": sorted(curves["sets"][set_id]["curves"]),
-                        "quantity": curves["sets"][set_id].get("quantity")}
-        if curves["sets"][set_id].get("split"):
-            used[set_id]["split"] = dict(curves["sets"][set_id]["split"])
     return {"files": out, "edits": edits, "spec": spec, "scoringIdentity": identity,
             "identity": {"methodVersion": mp.method_version_for("regional", out),
                          "packageDigest": mp.package_digest({n: _sha(b) for n, b in out.items()}),
                          "evaluatorDigest": mp.evaluator_digest()},
-            "curveSets": used,
+            "curveSets": _used_sets([family], curves),
             "respecified": (spec.get("respecified") or {}).get("date"),
             "unchangedFiles": sorted(n for n in files if out[n] == files[n])}
 
 
+def build_composition(files: dict[str, bytes], families, *, curve_sets: Optional[dict] = None,
+                      addendum_path: Path = ADDENDUM_PATH) -> dict:
+    """The composition of several families on one base file set (the addendum's "Finalist"
+    step): each component's own edit function is applied, in the addendum's order, to the
+    same parsed catalog and curves, so a component's edit is exactly the edit its single
+    build applies today; a component that changes nothing where it lands is refused (a
+    composition never loses a change silently). Returns what ``build_candidate`` returns,
+    the edits grouped per component under ``edits``, plus ``composition`` (the components in
+    order) and ``respecified`` per re-specified component (None when none is)."""
+    spec = composition_spec(families, addendum_path)
+    members = spec["composition"]
+    if set(files) != set(mp.METHOD_FILES):
+        raise CandidateError("a base needs exactly the eight method files")
+    out = dict(files)
+    cat = json.loads(files[CATALOG].decode("utf-8"))
+    curves = json.loads(files[CURVES].decode("utf-8"))
+    edits, applied = [], []
+    catalog_bytes, curves_bytes = files[CATALOG], files[CURVES]
+    for family in members:
+        family_edits = EDITS[family](cat, curves, curve_sets)
+        after_catalog, after_curves = dump_like(files[CATALOG], cat), dump_like(files[CURVES], curves)
+        if after_catalog == catalog_bytes and after_curves == curves_bytes:
+            raise CandidateError(f"{family} changed nothing when applied after "
+                                 f"{', '.join(applied) if applied else 'the base'}; the composition "
+                                 "is not built")
+        catalog_bytes, curves_bytes = after_catalog, after_curves
+        applied.append(family)
+        edits.append({"family": family, "familyName": spec["components"][family].get("family"),
+                      "edits": family_edits})
+    out[CATALOG], out[CURVES] = catalog_bytes, curves_bytes
+    identity = _restamp(out, COMPOSITION, spec,
+                        name=f"Round 4 finalist composition {'+'.join(members)}, rehearsal")
+    problems = mp.validate_files(out)
+    if problems:
+        raise CandidateError(f"{COMPOSITION} ({'+'.join(members)}): the composed files are not consistent: "
+                             + "; ".join(problems[:6]))
+    respecified = {f: r.get("date") for f, r in (spec.get("respecified") or {}).items()}
+    return {"files": out, "edits": edits, "spec": spec, "scoringIdentity": identity,
+            "identity": {"methodVersion": mp.method_version_for("regional", out),
+                         "packageDigest": mp.package_digest({n: _sha(b) for n, b in out.items()}),
+                         "evaluatorDigest": mp.evaluator_digest()},
+            "curveSets": _used_sets(members, curves), "composition": list(members),
+            "respecified": respecified or None,
+            "unchangedFiles": sorted(n for n in files if out[n] == files[n])}
+
+
+def _now() -> str:
+    import datetime as _dt
+    return _dt.datetime.now(_dt.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def candidate_project(folder: Path, *, version: Optional[int] = None):
+    """``(project, record)``: a built candidate package folder (``candidate.json`` beside
+    ``method/<the eight files>``) as the EasiProject the exporter packages, so a candidate
+    leaves StreamCurves the one way every method does. The files are the folder's, byte for
+    byte, and must be the package the record names; the label is the record's rehearsal label;
+    the version is the base library version's successor (or ``version``); the lineage names the
+    base as the origin and the candidate's family, composition and builder beside it."""
+    from . import stages
+    from .model import EasiProject
+    folder = Path(folder)
+    record_path = folder / "candidate.json"
+    if not record_path.is_file():
+        raise CandidateError(f"{folder} holds no candidate.json (a candidate is the builder's output folder)")
+    record = json.loads(record_path.read_text(encoding="utf-8"))
+    if (record.get("schema") or "") != "staf-easi-candidate":
+        raise CandidateError(f"{record_path} is not a candidate record (schema {record.get('schema')!r})")
+    files = base_files(folder / mp.METHOD_DIR)
+    digest = mp.package_digest({n: _sha(b) for n, b in files.items()})
+    candidate = record.get("candidate") or {}
+    if candidate.get("packageDigest") != digest:
+        raise CandidateError(f"{folder}: candidate.json names package {str(candidate.get('packageDigest'))[:15]} "
+                             f"but the method files are {digest[:15]}; nothing is exported from a changed candidate")
+    base = record.get("base") or {}
+    base_recorded = base.get("recorded") or {}
+    base_version = int(base_recorded.get("version") or 0)
+    proposed = int(version) if version is not None else (base_version + 1 if base_version else 1)
+    label = candidate.get("label") or f"Round 4 candidate {record.get('family')} (rehearsal)"
+    now = _now()
+    project = EasiProject(meta={}, files=files)
+    project.meta = {
+        "methodId": "easi-screening", "version": proposed, "status": "draft",
+        "label": label, "labelSetByAuthor": True, "criteriaSet": "regional",
+        "geography": {"kind": "national", "code": "CONUS", "name": "Contiguous United States",
+                      "strata": stages.strata_names(project.curves()),
+                      "note": "One national method; its strata and their national fallbacks are inside the method."},
+        "created": now, "updated": now, "calculatorFor": None,
+        "lineage": {
+            "origin": {"kind": "revision", "methodId": "easi-screening",
+                       "version": base_version or None, "label": base_recorded.get("label"),
+                       "methodVersion": base.get("methodVersion"), "packageDigest": base.get("packageDigest"),
+                       "evaluatorDigest": base_recorded.get("evaluatorDigest"),
+                       "scoringIdentity": (candidate.get("scoringIdentity") or {}).get("derived_from")},
+            "candidate": {"family": record.get("family"), "familyName": record.get("familyName"),
+                          "composition": record.get("composition"), "label": record.get("label"),
+                          "builder": record.get("builder"), "builtAt": record.get("builtAt"),
+                          "addendum": record.get("addendum"), "respecified": record.get("respecified"),
+                          "source": str(folder)}},
+    }
+    project.history = [{"action": "candidate", "at": now, "kind": "round4",
+                        "detail": (f"Round 4 candidate {record.get('family')} "
+                                   f"({'+'.join(record.get('composition') or []) or record.get('familyName')}) built by "
+                                   f"{record.get('builder')} from base method {base.get('methodVersion')}; "
+                                   "the label is the rehearsal label, no approval is recorded")}]
+    return project, record
+
+
 def package(files: dict[str, bytes], family: str, spec: dict, *, version: int = 1) -> mp.MethodPackage:
-    """The ``EASI_METHOD_PACKAGE`` of a built family: the envelope names the family with the
-    rehearsal label; no calculator (none was generated from these files)."""
-    label = f"Round 4 candidate {family}: {spec.get('family')} (rehearsal)"
+    """The ``EASI_METHOD_PACKAGE`` of a built family or composition: the envelope names the
+    family (or the components) with the rehearsal label; no calculator (none was generated
+    from these files)."""
+    if spec.get("composition"):
+        label = f"Round 4 finalist composition {'+'.join(spec['composition'])} (rehearsal)"
+    else:
+        label = f"Round 4 candidate {family}: {spec.get('family')} (rehearsal)"
     env = mp.build_envelope(files, method_id="easi-screening", version=int(version), label=label)
     return mp.MethodPackage(envelope=env, files=dict(files))
 
 
-__all__ = ["ADDENDUM_SHA256", "ADDENDUM_PATH", "FAMILIES", "FAMILY_SETS", "COMPOSITES",
-           "CROSS_SECTION_METHODS", "REFIT_COMMAND", "RESPECIFIED", "CandidateError", "addendum",
-           "addendum_sha256", "family_spec", "base_files", "recorded_base_identity", "build_candidate",
-           "package"]
+__all__ = ["ADDENDUM_SHA256", "ADDENDUM_PATH", "FAMILIES", "FAMILY_SETS", "COMPOSITES", "COMPOSITION",
+           "COMPOSITION_FAMILY_NAME", "CROSS_SECTION_METHODS", "REFIT_COMMAND", "RESPECIFIED",
+           "CandidateError", "addendum", "addendum_sha256", "family_spec", "composition_members",
+           "composition_spec", "base_files", "recorded_base_identity", "build_candidate",
+           "build_composition", "candidate_project", "package"]

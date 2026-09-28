@@ -7,6 +7,12 @@ package, the deciding targets and functions of a family, the margins as numbers 
 against the yaml's own text by ``margins_in_addendum``), and the reader of a candidate
 package folder (``candidate.json`` beside ``<family>.easi-method.zip``) or a bare zip.
 
+The addendum's "Finalist" step composes the accepted families into one package (candidate
+``FINALIST``, ``COMPOSITION``): ``composition_spec`` gives the runner its record from the
+components the package names (their order the addendum's, the union of their functions,
+decision ``composition``, primary outcome P1, each component's own spec under
+``components``); ``arm_spec`` resolves either kind of arm from a manifest entry.
+
 Nothing here scores or decides; ``outcomes.py`` computes P1 to P6 and applies the rule.
 """
 from __future__ import annotations
@@ -27,6 +33,10 @@ PROSE_PATH = STREAM_CURVES_APP / "config" / "methodology" / PROSE_FILE
 #: literal; a test keeps them equal)
 ADDENDUM_SHA256 = "8a48de98a4205c5eab1e423e69fdce2f238a76df8cbafca860bb032696625e6a"
 FAMILIES = ("E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8")
+#: the id of a composed package (the addendum's "Finalist" step) and its family name; the
+#: components are the accepted families the package's candidate.json names (``composition``)
+COMPOSITION = "FINALIST"
+COMPOSITION_FAMILY_NAME = "finalist_composition"
 #: the P1 targets as the field evaluation names them: (target column, statistic)
 T1 = ("reference_2013", "auc_reference_vs_impaired")
 T2 = ("t__bent_mmi", "auc_good_vs_poor")
@@ -90,8 +100,17 @@ def respecifications() -> dict:
     return {k: dict(v) for k, v in getattr(sc, "RESPECIFIED", {}).items()}
 
 
-def family_spec(family: str, path: Path = ADDENDUM_PATH) -> dict:
-    """The addendum's record of one family plus its dated re-specification when one exists."""
+def family_spec(family: str, path: Path = ADDENDUM_PATH, *, composition=None) -> dict:
+    """The addendum's record of one family plus its dated re-specification when one exists;
+    for the composition (``COMPOSITION``) the record ``composition_spec`` builds from the
+    components given (a composition without its components is refused)."""
+    if family == COMPOSITION:
+        if not composition:
+            raise AddendumError(f"{COMPOSITION} is a composition: name its components (a built package "
+                                "records them in candidate.json under 'composition')")
+        return composition_spec(composition, path)
+    if composition:
+        raise AddendumError(f"{family} is one family of the addendum; a composition is candidate {COMPOSITION}")
     if family not in FAMILIES:
         raise AddendumError(f"unknown family {family!r}; the addendum names {', '.join(FAMILIES)}")
     spec = (addendum(path).get("candidates") or {}).get(family)
@@ -102,6 +121,65 @@ def family_spec(family: str, path: Path = ADDENDUM_PATH) -> dict:
     if respec:
         out["respecified"] = respec
     return out
+
+
+def composition_members(families) -> list[str]:
+    """The components of a composition in the addendum's order: at least two distinct
+    families of the addendum, however they were given."""
+    given = [str(f) for f in (families or ())]
+    if not given:
+        raise AddendumError("a composition names its component families; none was given")
+    unknown = [f for f in given if f not in FAMILIES]
+    if unknown:
+        raise AddendumError(f"a composition is made of the addendum's families {', '.join(FAMILIES)}; "
+                            f"got {', '.join(unknown)}")
+    if len(set(given)) != len(given):
+        raise AddendumError(f"a family enters a composition once; got {', '.join(given)}")
+    if len(given) < 2:
+        raise AddendumError(f"a composition names at least two families; {given[0]} alone is its own study")
+    return [f for f in FAMILIES if f in given]
+
+
+def composition_spec(families, path: Path = ADDENDUM_PATH) -> dict:
+    """The runner's record of a composition (the addendum's "Finalist" step): the components
+    in the addendum's order, the union of their functions, their texts joined, decision
+    ``composition`` (every component's own rule, read on the composed arm), primary outcome
+    P1, and each component's own spec under ``components``. The same record StreamCurves'
+    builder writes into the package (``streamcurves.easi_method.round4.composition_spec``)."""
+    members = composition_members(families)
+    components = {f: family_spec(f, path) for f in members}
+    functions: list = []
+    for spec in components.values():
+        raw = spec.get("function")
+        for f in (raw if isinstance(raw, list) else [raw]):
+            if f not in functions:
+                functions.append(f)
+    joined = lambda key: "; ".join(f"{f}: {components[f].get(key)}" for f in members)  # noqa: E731
+    out = {
+        "id": COMPOSITION, "family": COMPOSITION_FAMILY_NAME, "composition": members,
+        "function": "all" if "all" in functions else functions,
+        "change": ("The finalist composition of the accepted Round 4 families, each applied as its own "
+                   "edit to the base method in the addendum's order. " + joined("change")),
+        "mechanism": joined("mechanism"),
+        "hypothesis": ("H-FINALIST the accepted changes compose without interaction: the composed "
+                       "method keeps the association each single-family study found and its rating "
+                       "availability changes by their documented gaps only"),
+        "primary_outcome": "P1",
+        "decision": "composition",
+        "coverage_effect": joined("coverage_effect"),
+        "components": components,
+    }
+    respecified = {f: dict(s["respecified"]) for f, s in components.items() if s.get("respecified")}
+    if respecified:
+        out["respecified"] = respecified
+    return out
+
+
+def arm_spec(entry: dict, path: Path = ADDENDUM_PATH) -> dict:
+    """The spec of a study arm from its manifest entry: a family's, or the composition's from
+    the components the entry (or its candidate.json record) names."""
+    composition = entry.get("composition") or ((entry.get("record") or {}).get("composition"))
+    return family_spec(str(entry["id"]), path, composition=composition)
 
 
 def function_ids(spec: dict) -> Optional[list[str]]:
@@ -118,7 +196,12 @@ def deciding_targets(spec: dict) -> tuple[str, list[str]]:
     """``(primary, deciding)``: the P1 target the accuracy rule reads first and the targets a
     simplification's lower bounds are read on. The yaml names a target only for E3 ("P1 on T1",
     T2 exploratory for population support); for every other family both targets decide and T1
-    (the 2013-14 designations) is taken as the primary, recorded as such in the summary."""
+    (the 2013-14 designations) is taken as the primary, recorded as such in the summary. A
+    composition's deciding targets are the union of its components' (each component's own
+    rule reads its own targets on the composed arm)."""
+    if spec.get("components"):
+        union = [t for comp in spec["components"].values() for t in deciding_targets(comp)[1]]
+        return "T1", [t for t in ("T1", "T2") if t in union]
     text = str(spec.get("primary_outcome") or "")
     named = re.findall(r"\bT([12])\b", text.split("(")[0])
     if named:
@@ -130,7 +213,19 @@ def deciding_targets(spec: dict) -> tuple[str, list[str]]:
 def comparison_scope(spec: dict) -> Optional[dict]:
     """The rows a candidate's P1 and P2 comparisons are paired on, when a re-specification
     narrows them (E2, Addendum 1: reaches the candidate rates the family function on):
-    ``{"function": <snake_case function>, "rule": "candidate-rated"}`` or None."""
+    ``{"function": <snake_case function>, "rule": "candidate-rated"}`` or None. A composition
+    takes its one re-specified component's scope; two components each narrowing the
+    comparison would need a rule the addendum does not give, and are refused."""
+    if spec.get("components"):
+        scopes = {fid: comparison_scope(comp) for fid, comp in spec["components"].items()}
+        scopes = {fid: s for fid, s in scopes.items() if s}
+        if not scopes:
+            return None
+        if len(scopes) > 1:
+            raise AddendumError("the runner pairs a candidate's comparisons on one scope; components "
+                                f"{', '.join(sorted(scopes))} each narrow it")
+        (fid, scope), = scopes.items()
+        return {**scope, "component": fid}
     scope = (spec.get("respecified") or {}).get("comparisonScope")
     if not scope:
         return None
@@ -211,11 +306,15 @@ def read_candidate_source(source: Path) -> dict:
         "requires": (pkg.envelope.get("evaluator") or {}).get("requires"),
         "base": (record or {}).get("base"),
         "respecified": (record or {}).get("respecified"),
+        # a composed package names its components (the addendum's "Finalist" step)
+        "composition": (record or {}).get("composition"),
+        "components": (record or {}).get("components"),
     }
 
 
-__all__ = ["ADDENDUM_FILE", "ADDENDUM_PATH", "PROSE_PATH", "ADDENDUM_SHA256", "FAMILIES", "T1", "T2", "T3",
-           "TARGET_NAMES", "DECIDING_COHORT", "REPORTED_COHORTS", "RETROSPECTIVE_COHORT", "NEVER_BLOCK_TARGETS",
-           "EXPLORATORY_FIELD_TARGETS", "MARGINS", "AddendumError", "addendum_sha256", "addendum",
-           "respecifications", "family_spec", "function_ids", "deciding_targets", "comparison_scope",
+__all__ = ["ADDENDUM_FILE", "ADDENDUM_PATH", "PROSE_PATH", "ADDENDUM_SHA256", "FAMILIES", "COMPOSITION",
+           "COMPOSITION_FAMILY_NAME", "T1", "T2", "T3", "TARGET_NAMES", "DECIDING_COHORT", "REPORTED_COHORTS",
+           "RETROSPECTIVE_COHORT", "NEVER_BLOCK_TARGETS", "EXPLORATORY_FIELD_TARGETS", "MARGINS", "AddendumError",
+           "addendum_sha256", "addendum", "respecifications", "family_spec", "composition_members",
+           "composition_spec", "arm_spec", "function_ids", "deciding_targets", "comparison_scope",
            "margins_in_addendum", "read_candidate_source"]
