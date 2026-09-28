@@ -20,6 +20,17 @@
 #     it; the runner refuses a policy whose gates and checks do not match.
 
 meta:
+  # 1.2 (2026-09-28, methodology 0.16-provisional, campaign Round 6, owner decision
+  # D14): an explicit acceptance clause and one new gate. The acceptance block
+  # below records the owner's decision that regions with no local reference
+  # station or a thin frame publish as Preliminary by policy: they were always
+  # eligible on the gates alone, and the policy now says so in the owner's words
+  # instead of leaving it implied. The gate flagged-transfer-disclosed reads the
+  # staged bundle: every curve on a flagged transfer (methodology 0.16, REF-16,
+  # owner decision D11) carries its four disclosure fields (transferRisk
+  # unvalidated, transferValidation, transferNote, confidenceCap) and the
+  # limitation text DEEP prints, so a reader is never shown a flagged score
+  # without the flag.
   # 1.1 (2026-09-26, methodology 0.15-provisional, campaign Round 2 close): the
   # rules-applied gate reads "no hard stop and no blocking open item" instead of
   # "nothing open". An open item blocks when its trigger blocks in the queue's
@@ -35,12 +46,32 @@ meta:
   # (openAdvisory beside openBlocking), and the batch summary's eligible table
   # names them, so the owner confirms a batch knowing what stays open.
   # 1.0 (2026-09-25): the seven gates, owner decision D2.
-  version: "1.1"
+  version: "1.2"
   status: provisional
-  approved_under: "methodology 0.15-provisional (pending)"
-  owner_decision: "D2 Preliminary by policy (2026-09-24)"
+  approved_under: "methodology 0.16-provisional (pending)"
+  owner_decision: "D2 Preliminary by policy (2026-09-24); D14 thin-support regions Preliminary by policy (2026-09-28)"
   promoted_status: preliminary
   fallback_status: draft
+
+# Owner decision D14 (2026-09-28), quoted from notes/2026-09-25_National_Campaign/DECISIONS.md:
+# "all ten promotion batches are confirmed as Preliminary by policy (the seven
+# pending policy entries included), carried over to the re-derived pass; the
+# regions with no local reference station or a thin frame publish as Preliminary
+# by policy (promotion policy 1.2 records the explicit acceptance)". The support
+# classes are the plan's (streamcurves.campaign.support_class): noLocal is a
+# region with no station passing the strict reference screen, frameUnder10 a
+# region with fewer than ten stations in the reference frame. A region in either
+# class is Preliminary-eligible on the gates below like any other; nothing here
+# relaxes a gate for it, and its support class stays on the index, the batch
+# summary and the bundle's referenceMethod block.
+acceptance:
+  preliminary_eligible_support_classes: [noLocal, frameUnder10]
+  owner_decision: "D14 (2026-09-28)"
+  statement: >-
+    Regions with no local reference station (noLocal) or fewer than ten stations
+    in the reference frame (frameUnder10) publish as Preliminary by policy when
+    every gate below passes. Their curves rest on comparable regional, national
+    or flagged pools and say so on every metric entry.
 
 gates:
   - id: frozen-record
@@ -98,3 +129,13 @@ gates:
       disposition; stage_complete.outputs names every file review_packet and the ledger cite;
       evidence.json present in the staged version.
     check: streamcurves.campaign.gate_record_complete
+
+  - id: flagged-transfer-disclosed
+    title: Every flagged transfer disclosed (REF-16)
+    evidence: >-
+      In the staged bundle, every metric entry whose transfer risk reads unvalidated (its own
+      transferRisk or its referenceSupport.transferRisk) carries transferRisk, transferValidation,
+      transferNote and confidenceCap at the entry, and a curveCaveats sentence stating that the
+      transfer was not confirmed by the recovery test and that confidence is capped (the text
+      DEEP prints as the metric's limitation). A bundle with no flagged curve passes.
+    check: streamcurves.campaign.gate_flagged_transfer_disclosed

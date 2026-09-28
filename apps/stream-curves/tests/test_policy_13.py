@@ -78,11 +78,17 @@ def _decided(res):
 # --------------------------------------------------------------------------- #
 def test_policy_1_3_validates_and_carries_the_new_entries(policy):
     assert dec.validate_policy(policy) == []
-    assert dec.policy_version(policy) == "1.4"
+    assert dec.policy_version(policy) == "1.5"
     by_id = dec.entries_by_id(policy)
     assert set(NEW_IDS) <= set(by_id)
-    enabled = {e["id"] for e in dec.enabled_entries(policy)}
+    # the 1.3 entries all apply to a version recorded under 1.4; under 1.5 the
+    # retired curve07-fallback-accepted gives way to curve07-degenerate-refused
+    enabled = {e["id"] for e in dec.enabled_entries(policy, era="1.4")}
     assert set(NEW_IDS) <= enabled and not (set(LEGACY_IDS) & enabled)
+    now = {e["id"] for e in dec.enabled_entries(policy)}
+    assert "curve07-fallback-accepted" not in now and "curve07-degenerate-refused" in now
+    assert by_id["curve07-fallback-accepted"]["retired_in_policy"] == "1.5"
+    assert by_id["curve07-degenerate-refused"]["introduced_in_policy"] == "1.5"
     for eid in NEW_IDS:
         e = by_id[eid]
         assert e.get("approved_on") is None, eid
@@ -120,6 +126,9 @@ def test_validate_refuses_an_unapproved_entry_that_claims_no_pending_status(poli
 # CURVE-07: a fallback curve the discrimination check does not contradict
 # --------------------------------------------------------------------------- #
 def test_curve07_fallback_accepted_unless_inverted_or_outside_the_domain(policy):
+    """The 1.4 era's rule, which the replay of the versions recorded under 1.3 and
+    1.4 still applies (policy 1.5 retired the entry for new builds: see
+    test_methodology_016 for the refusal that replaced it)."""
     items = [_fallback_item("phab_PCT_FAST"),            # CURVE-12 none
              _fallback_item("fish_NAT_TOTLNTAX"),        # CURVE-12 inverted: the owner's
              _fallback_item("pctwet2019ws"),             # no CURVE-12 record: a build before 0.12
@@ -128,13 +137,13 @@ def test_curve07_fallback_accepted_unless_inverted_or_outside_the_domain(policy)
              _fallback_item("chem_PH", status="shape_conflict")]
     records = [_curve12("phab_PCT_FAST", "none", 0.499), _curve12("fish_NAT_TOTLNTAX", "inverted", 0.375),
                _curve12("phab_XBKA", "weak", 0.58), _curve12("phab_SINU", "weak", 0.57)]
-    res = dec.apply_policy(_doc(items, records=records), policy)
+    res = dec.apply_policy(_doc(items, records=records), policy, era="1.4")
     by = _decided(res)
     assert set(by) == {"phab_PCT_FAST", "pctwet2019ws"}
     d = by["phab_PCT_FAST"]
     assert d["decision_class"] == "curve07-fallback-accepted" and d["action"] == "accept_with_conditions"
     assert d["reviewer"] == "standing-policy:curve07-fallback-accepted (pending owner confirmation)"
-    assert d["rationale_origin"] == "standing_policy:1.4"
+    assert d["rationale_origin"] == "standing_policy:1.5"
     assert d["asserts"] == {"curve_status": "degenerate", "domain_violations": 0}
     assert "verdict none, AUC 0.499" in d["rationale"] and "marked for verification" in d["rationale"]
     assert "Non-positive or non-finite Q25" in d["rationale"]
@@ -300,16 +309,21 @@ def _synthetic_version(tmp_path):
 
 def test_new_entries_round_trip_through_apply_reviewer_decisions(tmp_path, policy):
     doc = _synthetic_version(tmp_path)
-    res = dec.apply_policy(doc, policy)
+    # the 1.4 era: the fallback curve is accepted (a 1.5 build refuses it instead)
+    res = dec.apply_policy(doc, policy, era="1.4")
     assert {d["decision_class"] for d in res.decisions} == {
         "curve07-fallback-accepted", "curve12-inverted-thin", "curve06-no-interval-flagged",
+        "red01-keep-both-distinct-axes"}
+    now = dec.apply_policy(_synthetic_version(tmp_path), policy)
+    assert {d["decision_class"] for d in now.decisions} == {
+        "curve07-degenerate-refused", "curve12-inverted-thin", "curve06-no-interval-flagged",
         "red01-keep-both-distinct-axes"}
     out = pv.apply_reviewer_decisions(doc, res.decisions, default_reviewer="owner")
     assert out["reviewQueue"]["counts"]["open"] == 0
     assert dec.is_pending(out)
     for rec in out["records"]:
         if rec.get("reviewer_action"):
-            assert rec["reviewer_rationale_origin"] == "standing_policy:1.4"
+            assert rec["reviewer_rationale_origin"] == "standing_policy:1.5"
             assert dec.PENDING_SUFFIX in rec["reviewer"]
             assert chr(0x2014) not in rec["reviewer_rationale"]
     # a tampered evidence value is refused by the same check a human decision faces

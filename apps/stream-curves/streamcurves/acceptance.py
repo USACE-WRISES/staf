@@ -23,6 +23,17 @@ frozen in ``config/basis_validation.yaml``; where a metric has fewer evaluation
 regions than the minimum, its family's pooled evidence stands in. Exact anchor
 recovery (containment, C1) is carried as a diagnostic and never gates. The local
 reference is the definition of reference and needs no recovery evidence.
+
+Methodology 0.16 (owner decisions D11 and D13, 2026-09-28) adds two things here.
+The curve checks (:func:`curve_checks`): a source option whose curve would be
+the engine's degenerate fallback, or whose curve the discrimination check reads
+as inverted, fails acceptance with the reason stated, so the ladder moves on and
+no fallback ramp is ever published. And the flagged-transfer rung (REF-16): when
+no option passes, a second pass takes an option that passes every criterion but
+the recovery evidence, records the verdict it was refused with
+(:func:`validation_record`) and states it as a limitation
+(:func:`transfer_limitation`); ``pool_acceptor`` therefore returns the verdict of
+every criterion, not only the first refusal.
 """
 from __future__ import annotations
 
@@ -201,21 +212,195 @@ def transport_ok(metric: str, option: str, validation: Optional[dict], *,
                    "This ecoregion lies outside the conditions the recovery test covered.")
 
 
+def validation_record(metric: str, option: str, validation: Optional[dict], *,
+                      family: Optional[str] = None, st: Optional[dict] = None) -> dict:
+    """The recovery verdict a source option was judged by (ACC-05 and ACC-06), as
+    the flagged-transfer rung records it on a decision (``transfer_validation``,
+    REF-16): the evidence key (``basis``), whose record decided (``evidence``:
+    ``metric``, ``family`` or ``none``), the verdict word, ``a1_share``,
+    ``net_opt`` and ``n_cells`` of that record, the thresholds the test requires,
+    whether it accepted, and the words the first pass refused it with."""
+    st = st or settings()
+    basis = OPTION_BASIS.get(option, option)
+    table = validation or {}
+    rec, source = None, "none"
+    own = (table.get(metric) or {}).get(basis)
+    if own:
+        rec, source = own, "metric"
+        if _judge(own, st)[0] is None and st["evidence_fallback"] == "family" and family:
+            fam = ((table.get(FAMILIES_KEY) or {}).get(family) or {}).get(basis)
+            if fam:
+                rec, source = fam, "family"
+    elif st["evidence_fallback"] == "family" and family:
+        fam = ((table.get(FAMILIES_KEY) or {}).get(family) or {}).get(basis)
+        if fam:
+            rec, source = fam, "family"
+    ok, why = evidence(metric, option, validation, family=family, st=st)
+    rec = rec or {}
+    acc = rec.get("acceptance") or {}
+    out = {"basis": basis, "evidence": source, "accepted": bool(ok), "why": why,
+           "min_cells": int(st["min_cells"]), "min_share": round(float(st["min_share"]), 4),
+           "max_net_optimism": float(st["max_net_optimism"])}
+    for key in ("verdict", "a1_share", "net_opt", "n_cells", "c1_share"):
+        value = rec.get(key)
+        if value is None:
+            value = acc.get(key)
+        out[key] = _plain(value)
+    return out
+
+
+def _plain(value):
+    """A JSON-plain scalar: numpy numbers to Python, NaN to None."""
+    if value is None or isinstance(value, (bool, str)):
+        return value
+    if isinstance(value, int):
+        return int(value)
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return value
+    if f != f:
+        return None
+    if isinstance(value, float):
+        return f
+    return int(f) if f.is_integer() else f
+
+
+def transfer_limitation(validation: Optional[dict], cap: Optional[int] = None,
+                        st: Optional[dict] = None) -> str:
+    """The limitation a flagged transfer carries (REF-16), in the words DEEP and
+    the calculator print beside the metric: what the recovery test found against
+    what it requires, and that the confidence is capped. Plain ASCII."""
+    st = st or settings()
+    v = validation or {}
+    a1, n, net = v.get("a1_share"), v.get("n_cells"), v.get("net_opt")
+    min_cells = int(v.get("min_cells") or st["min_cells"])
+    max_net = float(v.get("max_net_optimism") or st["max_net_optimism"])
+    if a1 is None or a1 != a1:
+        found = ("no recovery evidence for this source and metric; class agreement in two "
+                 "thirds of evaluation regions required")
+    else:
+        found = f"class agreement {float(a1):.2f} of evaluation regions; two thirds required"
+        if n is not None and int(n) < min_cells:
+            found += f", over {int(n)} evaluation regions where {min_cells} are required"
+        if net is not None and net == net and float(net) > max_net:
+            found += f"; net optimism {float(net):+.2f}, at most {max_net:.2f} allowed"
+    tail = f"; confidence capped at {int(cap)}" if cap is not None else "; confidence capped"
+    return ("Scored on a reference pool whose transfer to this ecoregion was not confirmed by "
+            f"the recovery test ({found}){tail}.")
+
+
 def pool_acceptor(metric: str, entry: dict, validation: Optional[dict], *,
-                  family: Optional[str] = None) -> Callable[[str, pd.Series], tuple[bool, str]]:
+                  family: Optional[str] = None
+                  ) -> Callable[[str, pd.Series], tuple[bool, str, dict]]:
     """The ``accept`` callable ``reference_pool.choose_pool`` takes: stability for
-    every pool, and the recovery evidence for every pool but the local one."""
+    every pool, and the recovery evidence for every pool but the local one.
+
+    Returns ``(ok, why, detail)``: ``why`` is the first refusal, in words, and
+    ``detail`` carries every criterion's verdict (``checks``: ACC-04, then
+    ACC-05/06 for a pool that is not the local reference) and the recovery record
+    (``validation``, :func:`validation_record`), which the flagged-transfer rung
+    reads to take an option refused by the evidence alone (REF-16)."""
     st = settings()
 
-    def accept(option: str, values: pd.Series) -> tuple[bool, str]:
+    def accept(option: str, values: pd.Series) -> tuple[bool, str, dict]:
         ok, why, _ = stability(values, entry, st)
+        checks = [{"check": "ACC-04", "pass": bool(ok),
+                   "why": "" if ok else f"The pool is not stable, since {why}."}]
+        detail: dict = {"checks": checks, "validation": None}
         if not ok:
-            return False, f"The pool is not stable, since {why}."
+            return False, checks[0]["why"], detail
         if option == "local":
-            return True, ""
-        return evidence(metric, option, validation, family=family, st=st)
+            return True, "", detail
+        ev_ok, ev_why = evidence(metric, option, validation, family=family, st=st)
+        checks.append({"check": "ACC-05/06", "pass": bool(ev_ok), "why": ev_why})
+        detail["validation"] = validation_record(metric, option, validation, family=family, st=st)
+        return bool(ev_ok), ("" if ev_ok else ev_why), detail
 
     return accept
+
+
+def flagged_settings() -> dict:
+    """REF-16's governed settings (``methodology.flagged_transfer``)."""
+    return methodology.flagged_transfer()
+
+
+def evidence_only_refusal(detail: Optional[dict]) -> bool:
+    """Whether an acceptor's refusal rests on the recovery evidence alone (ACC-05
+    and ACC-06), every other criterion having passed: the condition under which
+    the flagged-transfer rung may take the option (REF-16)."""
+    checks = list((detail or {}).get("checks") or [])
+    if not checks:
+        return False
+    failed = [c for c in checks if not c.get("pass")]
+    return bool(failed) and all(str(c.get("check")) == "ACC-05/06" for c in failed)
+
+
+# --------------------------------------------------------------------------- #
+# the curve checks (methodology 0.16, owner decision D13)
+# --------------------------------------------------------------------------- #
+#: the engine statuses of a curve that is a fallback or has no usable shape
+DEGENERATE_STATUSES = ("degenerate_q25", "degenerate_curve")
+#: the check id the refusal is recorded under: it replaces the CURVE-07 review a
+#: fallback curve used to be held for
+CURVE_CHECK = "CURVE-07"
+
+
+def curve_checks(metric: str, entry: dict, values: Any, pressure_values: Any = None
+                 ) -> tuple[bool, str, dict]:
+    """Whether the curve a source option would build is one the methodology
+    publishes (owner decision D13, methodology 0.16).
+
+    Refused with the reason stated: a curve the engine can only draw as its
+    degenerate fallback (a non-positive lower quartile on a scale that cannot go
+    negative, or no interquartile spread), a pool below the engine's hard floor,
+    and, where in-frame pressured stations of the option's geography carry the
+    metric (``pressure_values``), a curve the discrimination check (CURVE-12)
+    reads as inverted. Returns ``(ok, why, record)``; the record carries the
+    engine status and the CURVE-12 numbers where the check ran, so the decision
+    can state them."""
+    from . import curve_stability as cs
+    from . import discrimination as dz
+    vals = cs._clean(values)
+    pts, status = cs._build_points(vals, entry)
+    record: dict = {"curve_status": status}
+    if status == "degenerate_q25":
+        return False, ("The curve on this pool would be the engine's fallback ramp: the pool's "
+                       "lower quartile sits at or below zero on a scale that cannot go negative "
+                       "(curve status degenerate_q25), and a fallback curve is refused under "
+                       "methodology 0.16 (owner decision D13)."), record
+    if status == "degenerate_curve" or pts is None:
+        return False, ("The curve on this pool has no usable shape (curve status "
+                       f"{status or 'unknown'}: the pool's interquartile range is zero or undefined), "
+                       "so no valid curve can be built from it and the option is refused "
+                       "(owner decision D13)."), record
+    if pressure_values is not None:
+        pres = cs._clean(pressure_values)
+        if len(pres) >= dz.MIN_GROUP:
+            disc = dz.curve_discrimination(metric, entry, pts, vals, pres)
+            record["curve12"] = {k: disc.get(k) for k in
+                                 ("aucRefVsPressure", "nRef", "nPressure", "medianRefIndex",
+                                  "medianPressureIndex", "verdict")}
+            if disc.get("verdict") == dz.VERDICT_INVERTED:
+                auc = disc.get("aucRefVsPressure")
+                return False, ("The curve on this pool would rank pressured stations above "
+                               "reference stations (discrimination check inverted, area under the "
+                               f"curve {float(auc):.2f} over {disc.get('nRef')} reference and "
+                               f"{disc.get('nPressure')} pressured stations), so it is refused under "
+                               "methodology 0.16 (owner decision D13)."), record
+    return True, "", record
+
+
+def curve_checker(metric: str, entry: dict) -> Callable[[str, Any, Optional[dict]], tuple[bool, str, dict]]:
+    """The ``curve_check`` callable ``reference_pool.choose_pool`` takes:
+    ``(option, pool_values, context) -> (ok, why, record)``, ``context`` carrying
+    the option's ``pressure_values`` (in-frame stations of the same geography that
+    fail the relaxed screen) when the caller has them."""
+
+    def check(option: str, values: Any, context: Optional[dict] = None) -> tuple[bool, str, dict]:
+        return curve_checks(metric, entry, values, (context or {}).get("pressure_values"))
+
+    return check
 
 
 def all_checks(metric: str, option: str, values: Any, entry: dict,
@@ -239,6 +424,12 @@ def all_checks(metric: str, option: str, values: Any, entry: dict,
     if option != "local":
         ok, why = evidence(metric, option, validation, family=family, st=st)
         out.append({"check": "ACC-05/06", "pass": ok, "why": why})
+    # methodology 0.16 (D13): a fallback curve is a refusal, recorded like any
+    # other failed check on a source the owner accepted anyway (the build still
+    # refuses to publish a fallback ramp: _row_from_values returns no row for it)
+    if len(vals) >= 5:
+        ok, why, _ = curve_checks(metric, entry, vals)
+        out.append({"check": CURVE_CHECK, "pass": ok, "why": why})
     if option in ("3c_matched", "3a_envelope"):
         ok, why = transport_ok(metric, option, validation, family=family, measure=measure, st=st)
         out.append({"check": "ACC-03", "pass": ok, "why": why})

@@ -113,8 +113,11 @@ def curve_registry(result: dict) -> pd.DataFrame:
     domain_checks = result.get("domain_checks") or {}
     gradients = result.get("deferred_gradients") or {}
     mandatory = result.get("mandatory_review") or {}
+    support = result.get("reference_support") or {}
+    from streamcurves import reference_pool as _rp
     for mk, row in result["curve_rows"].items():
         entry = cr.get(mk, {})
+        sup = support.get(mk) or {}
         d = diags.get(mk) or {}
         loo = d.get("loo") or {}
         boot = d.get("bootstrap") or {}
@@ -142,6 +145,11 @@ def curve_registry(result: dict) -> pd.DataFrame:
             "not_functioning_max": row.get("not_functioning_max"),
             "reference_tier": result["reference_tier"],
             "sample_size_disposition": result["sample_sizes"].get(mk, {}).get("disposition"),
+            # methodology 0.16 (REF-16): the transfer risk, the verdict a flagged
+            # transfer was refused with, and its confidence cap, on the register
+            "transfer_risk": sup.get("transfer_risk"),
+            "transfer_validation": _rp.validation_words(sup.get("transfer_validation")),
+            "confidence_cap": sup.get("confidence_cap"),
             # DEEP-contract bands (0.39 / 0.69 breaks), one-sided for monotone
             # curves. The six scalars above keep the R-parity seed-segment
             # semantics; these say what a DEEP score actually means (ECO-8).

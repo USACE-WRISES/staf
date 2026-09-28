@@ -238,6 +238,17 @@ def reference_annotations(evidence: dict, metrics) -> dict[str, dict]:
                     f" ({rec.get('regionName')})" if rec.get("regionName") else "")
                 caveats.append(BORROWED_CAVEAT.format(
                     where=where, note=str(rec.get("transferNote") or "")).strip())
+            if str(rec.get("transferRisk") or "") == rp.RISK_UNVALIDATED:
+                # methodology 0.16 (REF-16): the four disclosure fields ride at the
+                # metric, where DEEP, the calculator and the promotion gate read
+                # them, and the limitation rides as a caveat an older DEEP prints
+                ann["transferRisk"] = rp.RISK_UNVALIDATED
+                ann["transferValidation"] = dict(rec.get("transferValidation") or {})
+                ann["transferNote"] = str(rec.get("transferNote") or "")
+                ann["confidenceCap"] = rec.get("confidenceCap")
+                limitation = rp.flagged_limitation(rec)
+                if limitation and limitation not in caveats:
+                    caveats.append(limitation)
         if comparisons.get(mk):
             ann["localComparison"] = dict(comparisons[mk])
         block = stratifier_block(applied.get(mk) or {})
@@ -498,7 +509,9 @@ RUNG_LABELS = {"REF-08": curve_basis.label_for(curve_basis.NATIONAL),
                "REF-10": curve_basis.label_for(curve_basis.PUBLISHED),
                "REF-12": curve_basis.label_for(curve_basis.NATIONAL),
                "REF-13": curve_basis.label_for(curve_basis.MODELED),
-               "REF-14": curve_basis.label_for(curve_basis.PUBLISHED)}
+               "REF-14": curve_basis.label_for(curve_basis.PUBLISHED),
+               # methodology 0.16: the flagged-transfer rung, after every validated source
+               rp.RULE_FLAGGED: "Flagged transfer"}
 
 
 def _pool_sentence(x: dict) -> str:
@@ -534,6 +547,10 @@ def reference_method_block(evidence: dict) -> dict:
             "nCurvesBorrowed": sum(1 for s in statuses if s.startswith("borrowed")),
             "nCurvesRegionalScreen": statuses.count(rp.STATUS_LOCAL_RELAXED),
             "nCurvesCarried": sum(1 for d in support.values() if d.get("carried_from")),
+            # methodology 0.16 (REF-16): curves on a flagged transfer
+            "nCurvesFlagged": sum(1 for d in support.values()
+                                  if str(d.get("transfer_risk") or "") == rp.RISK_UNVALIDATED
+                                  and not is_withheld_record(d)),
             # the evidence-time count: metrics with no defensible pool. The bundle's
             # own nWithheld and nHeldForReview are set at assembly from the list it
             # exports (deep_export.build_deep_assessment_bundle), which differs once
@@ -593,6 +610,13 @@ def _method_statement(support: dict) -> str:
     if n_carried:
         parts.append(f"{n_carried} of these {_curves(n_carried).split()[0]} carried forward "
                      f"unchanged from version {', '.join(str(v) for v in carried)}.")
+    flagged = sum(1 for d in support.values()
+                  if str(d.get("transfer_risk") or "") == rp.RISK_UNVALIDATED)
+    if flagged:
+        parts.append(f"{flagged} {'rests' if flagged == 1 else 'rest'} on a flagged transfer: a "
+                     "comparable least-disturbed pool the recovery test did not confirm for this "
+                     "ecoregion, used because no validated source supports the metric here, "
+                     "with transfer risk unvalidated and confidence capped.")
     parts.append("A metric that no basis supports is not scored, and the function it would "
                  "have scored is reported as unassessed.")
     return " ".join(parts)
@@ -668,6 +692,10 @@ def support_frame(result: dict) -> pd.DataFrame:
             "self_coverage": d.get("self_coverage"),
             "supported_level": rp.LEVEL_LABELS.get(d.get("supported_level") or "", ""),
             "transfer_risk": d.get("transfer_risk"),
+            # methodology 0.16 (REF-16): the flag, its recovery verdict and its cap
+            "flagged": str(d.get("transfer_risk") or "") == rp.RISK_UNVALIDATED,
+            "transfer_validation": rp.validation_words(d.get("transfer_validation")),
+            "confidence_cap": d.get("confidence_cap"),
             "split_applied": bool((applied.get(mk) or {}).get("applied")),
             "auc_ref_vs_pressure": disc.get("aucRefVsPressure"),
             "discrimination": disc.get("verdict"),
@@ -770,7 +798,9 @@ def _with_fixed_mapping(mapping, fixed_keys: list[str]) -> pd.DataFrame:
 
 SESSION_ANNOTATION_KEYS = ("criteriaBasis", "basis", "basisLabel", "basisStatement",
                            "basisLimit", "referenceSupport", "localComparison",
-                           "stratifier", "discrimination", "methodContext")
+                           "stratifier", "discrimination", "methodContext",
+                           # methodology 0.16 (REF-16): a flagged transfer's disclosure
+                           "transferRisk", "transferValidation", "transferNote", "confidenceCap")
 
 #: What the headless build writes on a curve it fitted and an interactive
 #: republish cannot recompute (``regional_agent.metric_annotations``): the
@@ -1757,8 +1787,12 @@ def precision_floor_statement(rec: dict) -> str:
 
 def source_of(decision: Optional[dict]) -> str:
     """Which source of the hierarchy a curve came from, for SELECT-04's ranking:
-    local, regional, national, modeled or published."""
+    local, regional, national, modeled, published, or flagged for a curve on a
+    flagged transfer (REF-16), which ranks last whatever pool it rests on, so a
+    validated source of any kind wins a function's place over it."""
     d = decision or {}
+    if str(d.get("transfer_risk") or "") == rp.RISK_UNVALIDATED:
+        return "flagged"
     basis = curve_basis.resolve(d.get("basis"))
     if basis == curve_basis.NATIONAL:
         return "national"
@@ -1869,19 +1903,39 @@ def select_portfolio(evidence: dict, rows: dict, mapping: pd.DataFrame, config: 
             score = float(((scores.get(m) or {}).get("total")) or 0.0)
             return (int(rank.get(src, 9)), -score, m)
 
-        regular = sorted([m for m in cands if not (config.get(m) or {}).get("reserve")], key=key)
-        reserves = sorted([m for m in cands if (config.get(m) or {}).get("reserve")], key=key)
+        # methodology 0.16 (REF-16): a curve on a flagged transfer is the last
+        # resort of a function's portfolio, as it is of a metric's ladder. A
+        # validated reserve candidate (one that joins only a function that would
+        # otherwise be unassessed by a validated source) still wins the place over
+        # a flagged regular candidate; a flagged curve fills only what is left.
+        is_reserve = {m: bool((config.get(m) or {}).get("reserve")) for m in cands}
+        is_flagged = {m: source_of(support.get(m)) == "flagged" for m in cands}
+        regular_ok = sorted([m for m in cands if not is_reserve[m] and not is_flagged[m]], key=key)
+        regular_flagged = sorted([m for m in cands if not is_reserve[m] and is_flagged[m]], key=key)
+        reserves_ok = sorted([m for m in cands if is_reserve[m] and not is_flagged[m]], key=key)
+        reserves_flagged = sorted([m for m in cands if is_reserve[m] and is_flagged[m]], key=key)
+        regular = regular_ok + regular_flagged
+        reserves = reserves_ok + reserves_flagged
         second: Optional[dict] = None
         if rule == methodology.SECOND_METRIC_RANK:
             need = max(0, fill_to - len(kept))
-            chosen = regular[:need]
+            chosen = regular_ok[:need]
             if not kept and not chosen:
-                chosen = reserves[:fill_to]
+                chosen = reserves_ok[:fill_to]
+            left_places = max(0, fill_to - len(kept) - len(chosen))
+            if left_places:
+                chosen = chosen + regular_flagged[:left_places]
+            if not kept and not chosen:
+                chosen = reserves_flagged[:fill_to]
         else:
             places = max(int(fill_to), 2)
-            chosen = regular[:max(0, 1 - len(kept))]
+            chosen = regular_ok[:max(0, 1 - len(kept))]
             if not kept and not chosen:
-                chosen = reserves[:1]
+                chosen = reserves_ok[:1]
+            if not kept and not chosen:
+                chosen = regular_flagged[:1]
+            if not kept and not chosen:
+                chosen = reserves_flagged[:1]
             scored = kept + chosen
             checks: list[dict] = []
             while scored and len(scored) < places:
@@ -2114,10 +2168,14 @@ def census(l3_codes, *, max_stream_order: Optional[int] = None, protocols=None,
     registry = scale_registry if scale_registry is not None else scale_analysis.load_registry()
     wide = values.set_index(values["site_id"].astype(str))
     validation = basis_ladder.load_validation()
+    flagged_settings = acceptance.flagged_settings()
 
     def accept_for(mk):
         return acceptance.pool_acceptor(mk, metric_config.get(mk) or {}, validation,
                                         family=rp.family_of(mk))
+
+    def curve_check_for(mk):
+        return acceptance.curve_checker(mk, metric_config.get(mk) or {})
 
     rows: list[dict] = []
     regions: list[dict] = []
@@ -2128,15 +2186,23 @@ def census(l3_codes, *, max_stream_order: Optional[int] = None, protocols=None,
         # must not say a metric is withheld that the build will go on to score
         pools = rp.build_pools(list(metric_config), values, frame, code,
                                scale_registry=registry, excluded=excluded,
-                               accept_for=accept_for)
+                               accept_for=accept_for, curve_check_for=curve_check_for,
+                               flagged=flagged_settings)
         short = [mk for mk, d in pools["decisions"].items()
                  if d.status == rp.STATUS_INSUFFICIENT]
-        if short:
+        flagged_pools = [mk for mk, d in pools["decisions"].items() if d.flagged]
+        if short or flagged_pools:
+            # methodology 0.16: a validated source of any kind wins over a flagged
+            # pool, and a flagged national pool stands last, as the build decides
             walked = basis_ladder.resolve(
-                sorted(short), frame=frame, values_wide=values, target_l3=code,
-                metric_config=metric_config, validation=validation,
-                region_name=name, fit=False)
+                sorted(set(short) | set(flagged_pools)), frame=frame, values_wide=values,
+                target_l3=code, metric_config=metric_config, validation=validation,
+                region_name=name, fit=False, flagged=flagged_settings,
+                flag_national=sorted(short))
             pools["decisions"].update(walked["decisions"])
+            for mk, got in (walked.get("flagged_national") or {}).items():
+                if mk in short and mk not in walked["decisions"]:
+                    pools["decisions"][mk] = got["decision"]
         statuses = [d.status for d in pools["decisions"].values()]
         regions.append({"l3": code, "region": name,
                         "n_frame": pools["target_n_frame"], "n_strict": pools["target_n_strict"],
@@ -2347,22 +2413,31 @@ def run_evidence(l3_code: str, name: str, *,
     # (ACC-01, ACC-04, and ACC-05/06 from the committed recovery evidence).
     validation = basis_ladder.load_validation()
     registry = scale_registry if scale_registry is not None else scale_analysis.load_registry()
+    # methodology 0.16: the flagged-transfer rung's settings (REF-16), read once
+    flagged_settings = acceptance.flagged_settings()
 
     def accept_for(mk):
         return acceptance.pool_acceptor(mk, metric_config.get(mk) or {}, validation,
                                         family=rp.family_of(mk))
+
+    def curve_check_for(mk):
+        # D13: a pool option whose curve would be a fallback ramp, or would read
+        # as inverted against its own pressured stations, is refused
+        return acceptance.curve_checker(mk, metric_config.get(mk) or {})
 
     # REF-15, "your choice stands": a metric the owner removed or chose a source
     # for stays out of the build's own fit while the decision stands
     held = sorted(str(mk) for mk in (hold or ()) if str(mk) in metric_config)
     pools = rp.build_pools([mk for mk in metric_config if mk not in held], values, frame,
                            l3_code, scale_registry=registry, excluded=exclude_sites,
-                           accept_for=accept_for)
+                           accept_for=accept_for, curve_check_for=curve_check_for,
+                           flagged=flagged_settings)
     held_by_owner: dict = {}
     if held:
         # judged apart: the pooled frame, and so the run seed, never sees them
         side = rp.build_pools(held, values, frame, l3_code, scale_registry=registry,
-                              excluded=exclude_sites, accept_for=accept_for)
+                              excluded=exclude_sites, accept_for=accept_for,
+                              curve_check_for=curve_check_for, flagged=flagged_settings)
         pools["ledger"] = pd.concat([pools["ledger"], side["ledger"]], ignore_index=True)
         pools["local_comparison"].update(side["local_comparison"])
         for mk, d in side["decisions"].items():
@@ -2377,18 +2452,56 @@ def run_evidence(l3_code: str, name: str, *,
     decisions = pools["decisions"]
     insufficient = {mk: d for mk, d in decisions.items()
                     if d.status == rp.STATUS_INSUFFICIENT}
+    # REF-16: the station pools taken under the flagged rung. A validated source
+    # of any kind wins over a flagged one, so these metrics walk the national,
+    # modeled and published rungs first and keep the flagged pool only when
+    # every one of them refuses.
+    flagged_pools = {mk: d for mk, d in decisions.items() if d.flagged}
 
     # --- then national, modeled and published (REF-12, REF-13, REF-14) ---
     # Judged by the same criteria, on evidence fixed before the build ran
     # (config/basis_validation.yaml, config/model_registry.yaml, the verified
     # catalog), so nothing here is admitted by the build's own judgement.
     ladder = basis_ladder.resolve(
-        sorted(insufficient), frame=frame, values_wide=values, target_l3=l3_code,
-        metric_config=metric_config, validation=validation, region_name=name)
+        sorted(set(insufficient) | set(flagged_pools)), frame=frame, values_wide=values,
+        target_l3=l3_code, metric_config=metric_config, validation=validation,
+        region_name=name, flagged=flagged_settings,
+        # a flagged national pool is taken only where no flagged station pool exists
+        flag_national=sorted(insufficient))
     ladder_rows = ladder["curve_rows"]
+    replaced_flagged: list[str] = []
     for mk, d in ladder["decisions"].items():
         decisions[mk] = d
         insufficient.pop(mk, None)
+        if flagged_pools.pop(mk, None) is not None:
+            replaced_flagged.append(mk)
+    # REF-16, last: the flagged national pools of the metrics with neither a
+    # validated source nor a flagged station pool
+    flagged_national: dict[str, dict] = {}
+    for mk, got in (ladder.get("flagged_national") or {}).items():
+        if mk in insufficient and got.get("row") is not None:
+            decisions[mk] = got["decision"]
+            ladder_rows[mk] = got["row"]
+            insufficient.pop(mk, None)
+            flagged_national[mk] = {"option": got.get("option")}
+    if replaced_flagged:
+        # the pooled frame, and so the run seed, hold only the pools that stand
+        pools["data"] = rp.pool_data(decisions, values, frame)
+    flagged_metrics = {**{mk: "pool" for mk in sorted(flagged_pools)},
+                       **{mk: "national" for mk in sorted(flagged_national)}}
+    for mk in sorted(flagged_pools):
+        ladder["attempts"].append({
+            "metric": mk, "rung": rp.RULE_FLAGGED, "admitted": True,
+            "basis": curve_basis.REGIONAL,
+            "why": (f"{flagged_pools[mk].n_usable} usable stations of the "
+                    f"{rp.LEVEL_LABELS.get(flagged_pools[mk].level or '', '')} pool "
+                    f"{flagged_pools[mk].region_code}, taken under the flagged-transfer rung "
+                    "after every validated source refused: the recovery test did not confirm "
+                    "the source.")})
+    if flagged_metrics:
+        _emit(on_event, "flagged_transfer",
+              {"n_pools": len(flagged_pools), "n_national": len(flagged_national),
+               "n_replaced_by_validated": len(replaced_flagged)})
 
     # REF-15: the refused sources the owner accepted, each computed on its own
     # stations or donors, never through the pooled frame, so the run seed and
@@ -2451,7 +2564,7 @@ def run_evidence(l3_code: str, name: str, *,
           {"n_metrics": len(decisions), "n_insufficient": len(insufficient),
            "n_borrowed": sum(1 for d in decisions.values()
                              if d.status.startswith("borrowed")),
-           "n_ladder": len(ladder_rows),
+           "n_ladder": len(ladder_rows), "n_flagged": len(flagged_metrics),
            "n_pool_stations": int(len(data))})
     metric_cols = list(metric_config)
 
@@ -2629,6 +2742,12 @@ def run_evidence(l3_code: str, name: str, *,
         "ladder_config": ladder_config,
         "ladder_attempts": ladder["attempts"],
         "ladder_populations": ladder["populations"],
+        # methodology 0.16 (REF-16): the metrics scored on a flagged transfer, by
+        # source (a station pool or a national pool), the flagged pools a
+        # validated source replaced, and the rung's settings as read
+        "flagged_metrics": flagged_metrics,
+        "flagged_replaced": sorted(replaced_flagged),
+        "flagged_transfer_settings": dict(flagged_settings),
         # methodology 0.14: the published curves carried forward unchanged, the
         # version they come from, and the published curves rebuilt and why
         "carried": carried,

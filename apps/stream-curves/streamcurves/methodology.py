@@ -180,6 +180,30 @@ def curve12_gate() -> dict:
     return {"gate": bool(knob("curve12.gate")), "min_auc": float(knob("curve12.min_auc"))}
 
 
+#: the cap a flagged transfer takes when the config block names none: the
+#: ceiling of high transfer risk (confidence_rules.caps.borrowed_reference_high_risk)
+FLAGGED_TRANSFER_DEFAULT_CAP = 39
+
+
+def flagged_transfer() -> dict:
+    """REF-16 (methodology 0.16): ``reference_hierarchy.flagged_transfer`` as the
+    ladder reads it: ``enabled``, ``min_usable``, ``prefer_adequate`` and
+    ``confidence_cap``. An absent block reads as disabled, so a config root copied
+    from an older methodology reproduces the validated-only ladder of 0.15."""
+    block = threshold("reference_hierarchy.flagged_transfer", _MISSING)
+    block = {} if block is _MISSING or not isinstance(block, dict) else block
+    cap = block.get("confidence_cap", FLAGGED_TRANSFER_DEFAULT_CAP)
+    out = {"enabled": bool(block.get("enabled", False)),
+           "min_usable": int(block.get("min_usable", 10)),
+           "prefer_adequate": bool(block.get("prefer_adequate", True)),
+           "confidence_cap": None if cap is None else int(cap)}
+    if out["min_usable"] < 1:
+        raise ValueError("reference_hierarchy.flagged_transfer.min_usable must be at least 1.")
+    if out["confidence_cap"] is not None and not (0 <= out["confidence_cap"] <= 100):
+        raise ValueError("reference_hierarchy.flagged_transfer.confidence_cap must lie in 0 to 100.")
+    return out
+
+
 def parse_offset(value: Any) -> float:
     """An IQR offset from the config: a number, or a fraction written as a
     string such as ``"4/3"`` (YAML reads an unquoted 4/3 as a string too). An
@@ -446,6 +470,14 @@ def mirror_drift() -> list[str]:
             problems.append(
                 f"standing_decisions.enable_per_run_only {declared_off} differs from "
                 f"the policy file's opt-in entries {off}.")
+        # policy 1.5 (v0.16): the entries a policy version retired, which apply
+        # only to the replay of versions recorded under an earlier policy
+        retired = sorted(str(e["id"]) for e in entries if e.get("retired_in_policy"))
+        declared_retired = sorted(str(i) for i in index.get("retired") or [])
+        if declared_retired != retired:
+            problems.append(
+                f"standing_decisions.retired {declared_retired} differs from the policy "
+                f"file's retired entries {retired}.")
     except Exception as exc:  # noqa: BLE001
         problems.append(f"could not compare the standing-decisions index: {exc}")
 

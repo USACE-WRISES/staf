@@ -3203,6 +3203,16 @@ def publish(result: dict, publish_root: Path | str, *, maintainer: str = "region
     import os
     if result.get("bundle") is None:
         raise RuntimeError(f"nothing to publish: {result.get('bundle_error')}")
+    # methodology 0.16 (owner decision D13): no fallback ramp is written into a
+    # bundle. A pool whose curve would be one is refused at acceptance, so this
+    # is the last guard, for a curve that reached the bundle another way (a
+    # finalization by flag, an owner source the engine drew degenerate).
+    fallback = deep_export.fallback_entries(result["bundle"])
+    if fallback:
+        raise RuntimeError(
+            "REFUSED (methodology 0.16, D13): the bundle carries a fallback curve, which is "
+            "never published: " + "; ".join(fallback) + ". The interactive workspace keeps "
+            "the engine's labelled fallback; a staged version does not.")
     root = Path(publish_root)
     root.mkdir(parents=True, exist_ok=True)
     os.environ["STAF_LIBRARY_ROOT"] = str(root)

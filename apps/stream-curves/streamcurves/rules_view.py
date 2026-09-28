@@ -137,8 +137,12 @@ def policy_counts(policy: Optional[dict] = None) -> dict:
     policy, read from the file so the page never restates a count."""
     policy = policy or dec.load_policy()
     entries = [e for e in policy.get("entries") or [] if e.get("id")]
-    default = sum(1 for e in entries if e.get("enabled", False))
-    return {"total": len(entries), "default": default, "optional": len(entries) - default,
+    # policy 1.5: an entry retired in a later policy replays the earlier versions
+    # and never applies to a new build, so it is counted apart from the defaults
+    retired = sum(1 for e in entries if e.get("enabled", False) and e.get("retired_in_policy"))
+    default = sum(1 for e in entries if e.get("enabled", False)) - retired
+    return {"total": len(entries), "default": default, "retired": retired,
+            "optional": len(entries) - default - retired,
             "version": dec.policy_version(policy)}
 
 _MATCH_OPS = {"eq": "is", "ne": "is not", "lt": "below", "lte": "at most",

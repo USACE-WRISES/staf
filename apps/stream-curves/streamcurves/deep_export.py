@@ -261,6 +261,41 @@ def function_coverage(metrics_by_function, crosswalk: list[dict],
     }
 
 
+#: the curve statuses of the engine's fallback and shapeless curves, which no
+#: bundle carries under methodology 0.16 (owner decision D13)
+FALLBACK_CURVE_STATUSES = ("degenerate_q25", "degenerate_curve")
+#: a flagged transfer's transfer risk (StreamCurves reference_pool.RISK_UNVALIDATED)
+UNVALIDATED_RISK = "unvalidated"
+#: the metric-entry fields a flagged transfer must carry (REF-16)
+FLAGGED_ENTRY_KEYS = ("transferRisk", "transferValidation", "transferNote", "confidenceCap")
+
+
+def fallback_entries(bundle: Optional[dict]) -> list[str]:
+    """``"<functionId>: <metricId>"`` for every scoring entry of a bundle whose
+    ``curveStatus`` is a fallback or shapeless curve (D13): what the stage
+    refuses to publish. Empty for a clean bundle."""
+    out = []
+    for block in (bundle or {}).get("metricsByFunction") or []:
+        for m in block.get("metrics") or []:
+            if str(m.get("curveStatus") or "complete") in FALLBACK_CURVE_STATUSES:
+                out.append(f"{block.get('functionId')}: {m.get('metricId')}")
+    return out
+
+
+def flagged_entries(bundle: Optional[dict]) -> list[dict]:
+    """Every scoring entry of a bundle on a flagged transfer (REF-16): the
+    entry's own ``transferRisk`` or its ``referenceSupport.transferRisk`` reads
+    ``unvalidated``. Each item: ``functionId``, ``metricId``, ``entry``."""
+    out = []
+    for block in (bundle or {}).get("metricsByFunction") or []:
+        for m in block.get("metrics") or []:
+            sup = m.get("referenceSupport") if isinstance(m.get("referenceSupport"), dict) else {}
+            if UNVALIDATED_RISK in (str(m.get("transferRisk") or ""), str(sup.get("transferRisk") or "")):
+                out.append({"functionId": block.get("functionId"), "metricId": m.get("metricId"),
+                            "entry": m})
+    return out
+
+
 def coverage_gap_message(coverage: dict, crosswalk: list[dict]) -> str:
     """Human-readable naming of the uncovered functions, for the publish error."""
     names = {str(f.get("id")): f.get("name") for f in crosswalk}
@@ -792,7 +827,10 @@ def build_deep_assessment_bundle(
                     # and the checks a refused source the owner accepted failed
                     "ownerException",
                     # a state SQT curve's registry record and how its rule was written out
-                    "sqt"):
+                    "sqt",
+                    # methodology 0.16 (REF-16): a flagged transfer's four disclosure
+                    # fields, at the metric where DEEP and the calculator read them
+                    "transferRisk", "transferValidation", "transferNote", "confidenceCap"):
             if key in annotations and annotations[key] is not None:
                 base_entry[key] = annotations[key]
 

@@ -153,6 +153,14 @@ def curve_confidence(evidence: dict) -> dict:
     if borrowed_cap and borrowed_cap in caps:
         total = min(total, float(caps[borrowed_cap]))
         applied.append(borrowed_cap)
+    # REF-16 (methodology 0.16): a flagged transfer, whose recovery verdict did
+    # not confirm the source, is capped at the flagged_transfer block's cap (one
+    # acting copy of the number), recorded as flagged_transfer_unvalidated
+    if risk == "unvalidated":
+        cap = methodology.flagged_transfer().get("confidence_cap")
+        if cap is not None:
+            total = min(total, float(cap))
+            applied.append("flagged_transfer_unvalidated")
     # CONF-03 (methodology 0.13): a curve that does not rest on a pool of
     # least-disturbed stations from this ecoregion or a parent cannot read as
     # high as one that does. The cap is by basis and applies on top of the

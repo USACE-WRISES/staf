@@ -20,9 +20,14 @@ DEFAULT_IDS = {"curve04-accept-with-flag", "data05-exploratory-pool-accepted",
                "cov01-documented-gap",
                # 1.3 (methodology 0.15, campaign Round 2 close): the fast pass's
                # recurring classes, every application pending the owner
-               "strat09-advisory-not-applied", "curve07-fallback-accepted",
+               "strat09-advisory-not-applied",
                "curve12-inverted-thin", "red01-keep-both-distinct-axes",
-               "curve06-no-interval-fallback-curve", "curve06-no-interval-flagged"}
+               "curve06-no-interval-fallback-curve", "curve06-no-interval-flagged",
+               # 1.5 (methodology 0.16, owner decision D13): a fallback curve is refused
+               "curve07-degenerate-refused"}
+#: retired in 1.5: enabled for the replay of versions recorded under 1.3 and 1.4
+#: (and the pilots), never applied to a new build
+RETIRED_IDS = {"curve07-fallback-accepted"}
 #: legacy under 0.15: replay the pilots only
 OPTIONAL_IDS = {"ref02-accept-best-available", "data03-thin-metric-finalized",
                 "data06-insufficient-finalized", "curve07-thin-metric-finalized"}
@@ -36,7 +41,7 @@ def policy():
 def test_policy_file_loads_and_validates(policy):
     assert dec.validate_policy(policy) == []
     assert policy["meta"]["sha256"].startswith("sha256:")
-    assert dec.policy_version(policy) == "1.4"
+    assert dec.policy_version(policy) == "1.5"
     assert policy["meta"]["methodology_version"] == methodology.methodology_version()
 
 
@@ -45,6 +50,11 @@ def test_default_enabled_set_is_the_routine_classes(policy):
     assert enabled == DEFAULT_IDS
     everything = {e["id"] for e in dec.enabled_entries(policy, sorted(OPTIONAL_IDS))}
     assert everything == DEFAULT_IDS | OPTIONAL_IDS
+    # policy 1.5: the retired entry applies to the eras it decided, never to a new build
+    under_1_4 = {e["id"] for e in dec.enabled_entries(policy, era="1.4")}
+    assert under_1_4 == (DEFAULT_IDS - {"curve07-degenerate-refused"}) | RETIRED_IDS
+    pilots = {e["id"] for e in dec.enabled_entries(policy, era=dec.ERA_UNRECORDED)}
+    assert pilots == under_1_4
     with pytest.raises(ValueError, match="unknown entries"):
         dec.enabled_entries(policy, ["no-such-entry"])
 
@@ -100,7 +110,7 @@ def test_curve04_entry_matches_only_without_decision_flip(policy):
     assert [d["subject"] for d in res.decisions] == ["m1"]
     d = res.decisions[0]
     assert d["decision_class"] == "curve04-accept-with-flag"
-    assert d["rationale_origin"] == "standing_policy:1.4"
+    assert d["rationale_origin"] == "standing_policy:1.5"
     assert d["reviewer"].startswith("standing-policy:curve04-accept-with-flag")
     assert dec.PENDING_SUFFIX in d["reviewer"]
     assert d["asserts"] == {"decision_flip": False, "driver": "S1"}
@@ -175,17 +185,24 @@ def test_curve07_thin_metric_finalization_is_a_side_effect_only_for_data_review(
                            {"curve_status": "shape_conflict", "reasons": ["z"], "domain_violations": 0})
     res = dec.apply_policy(_doc([thin, degenerate, conflict]), policy,
                            enabled=["curve07-thin-metric-finalized"])
-    # policy 1.4: a fallback curve no discrimination check contradicts is accepted
-    # with conditions AND finalized (it publishes as preliminary, as the owner's own
-    # answer does; under 1.3 it stayed held and unscored, the frozen pass's defect);
-    # a shape conflict stays a hard stop
-    assert list(res.finalize_metrics) == ["phab_SINU", "phab_PCT_FAST"]
+    # policy 1.5 (methodology 0.16, owner decision D13): a fallback curve is refused
+    # and leaves scoring (remove_metric); only the thin metric is finalized, and a
+    # shape conflict stays a hard stop
+    assert list(res.finalize_metrics) == ["phab_SINU"]
+    assert list(res.remove_metrics) == ["phab_PCT_FAST"]
     by = {d["subject"]: d for d in res.decisions}
-    assert by["phab_PCT_FAST"]["decision_class"] == "curve07-fallback-accepted"
-    assert by["phab_PCT_FAST"]["action"] == "accept_with_conditions"
+    assert by["phab_PCT_FAST"]["decision_class"] == "curve07-degenerate-refused"
+    assert by["phab_PCT_FAST"]["action"] == "reject"
     assert [h["subject"] for h in res.hard_stops] == ["chem_PH"]
     without_legacy = dec.apply_policy(_doc([thin, degenerate, conflict]), policy)
-    assert list(without_legacy.finalize_metrics) == ["phab_PCT_FAST"]
+    assert list(without_legacy.finalize_metrics) == []
+    assert list(without_legacy.remove_metrics) == ["phab_PCT_FAST"]
+    # under the 1.4 era the same item was accepted with conditions and finalized
+    # (the frozen pass's rule, which the replay of those versions still applies)
+    era = dec.apply_policy(_doc([thin, degenerate, conflict]), policy, era="1.4")
+    assert list(era.finalize_metrics) == ["phab_PCT_FAST"] and era.remove_metrics == {}
+    assert {d["subject"]: d["decision_class"] for d in era.decisions} == {
+        "phab_PCT_FAST": "curve07-fallback-accepted"}
 
 
 def test_asserts_round_trip_through_apply_reviewer_decisions(policy):
@@ -199,7 +216,7 @@ def test_asserts_round_trip_through_apply_reviewer_decisions(policy):
     res = dec.apply_policy(doc, policy)
     out = pv.apply_reviewer_decisions(doc, res.decisions, default_reviewer="owner")
     assert out["records"][0]["reviewer_decision_class"] == "curve04-accept-with-flag"
-    assert out["records"][0]["reviewer_rationale_origin"] == "standing_policy:1.4"
+    assert out["records"][0]["reviewer_rationale_origin"] == "standing_policy:1.5"
     assert dec.PENDING_SUFFIX in out["records"][0]["reviewer"]
     assert out["reviewQueue"]["counts"]["open"] == 0
     assert dec.is_pending(out)
@@ -218,7 +235,7 @@ def test_confirm_decisions_replaces_the_pending_reviewer_and_keeps_the_origin(po
     confirmed = dec.confirm_decisions(res.decisions, reviewer="gtmenichino", date="2026-08-22")
     assert confirmed[0]["reviewer"] == "gtmenichino"
     assert confirmed[0]["confirmed_by"] == "gtmenichino"
-    assert confirmed[0]["rationale_origin"] == "standing_policy:1.4"
+    assert confirmed[0]["rationale_origin"] == "standing_policy:1.5"
     assert not dec.is_pending(confirmed)
     with pytest.raises(ValueError):
         dec.confirm_decisions(res.decisions, reviewer="", date="2026-08-22")

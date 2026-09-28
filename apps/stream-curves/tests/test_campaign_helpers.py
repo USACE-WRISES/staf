@@ -356,7 +356,11 @@ def test_the_promotion_policy_names_every_gate_and_its_check():
     policy = camp.load_promotion_policy()
     assert camp.validate_promotion_policy(policy) == []
     assert [g["id"] for g in policy["gates"]] == list(camp.GATE_IDS)
-    assert policy["meta"]["version"] == "1.1" and policy["meta"]["status"] == "provisional"
+    assert policy["meta"]["version"] == "1.2" and policy["meta"]["status"] == "provisional"
+    # promotion policy 1.2 (owner decision D14): the acceptance clause and the new gate
+    assert camp.accepted_support_classes(policy) == ["noLocal", "frameUnder10"]
+    assert camp.GATE_IDS[-1] == "flagged-transfer-disclosed"
+    assert camp.promotion_policy_record(policy)["acceptedSupportClasses"] == ["noLocal", "frameUnder10"]
     assert policy["meta"]["sha256"].startswith("sha256:")
     broken = copy.deepcopy(policy)
     broken["gates"][0]["check"] = "nowhere"
@@ -364,7 +368,8 @@ def test_the_promotion_policy_names_every_gate_and_its_check():
     broken["gates"].append({"id": "made-up", "title": "x", "evidence": "y", "check": "z"})
     problems = camp.validate_promotion_policy(broken)
     assert any("must name streamcurves.campaign.gate_frozen_record" in p for p in problems)
-    assert any("no gate record-complete" in p for p in problems)
+    # the last gate is promotion policy 1.2's flagged-transfer-disclosed
+    assert any("no gate flagged-transfer-disclosed" in p for p in problems)
     assert any("no check implements it" in p for p in problems)
 
 
@@ -516,7 +521,7 @@ def test_index_rows_and_csv_on_the_standard_root(tmp_path):
     assert '""l2"": 2' in text and "staged" in text
     doc = camp.index_document(fx["manifest"], rows, inputs={"manifest.json": "sha256:x"}, generated_at="t")
     assert doc["schema"] == camp.INDEX_SCHEMA and doc["counts"] == {"staged": 1}
-    assert doc["promotionPolicy"]["version"] == "1.1" and doc["campaign"]["campaignId"].startswith("r3-frozen-")
+    assert doc["promotionPolicy"]["version"] == "1.2" and doc["campaign"]["campaignId"].startswith("r3-frozen-")
 
 
 # --------------------------------------------------------------------------- #
@@ -776,7 +781,7 @@ def test_confirmation_validation_and_the_confirmed_commands(tmp_path):
     batch = camp.batch_summary_document(batch_id="one", manifest=fx["manifest"], index_doc=index_doc,
                                         eligibility_doc=elig, codes=["55"], python="py", script="b.py", inputs={},
                                         facts=camp.region_batch_facts, generated_at="t")
-    good = {"batchId": "one", "policyVersion": "1.1", "campaignId": fx["manifest"]["identity"]["campaignId"],
+    good = {"batchId": "one", "policyVersion": "1.2", "campaignId": fx["manifest"]["identity"]["campaignId"],
             "regions": ["55"], "confirmedBy": TESTER, "confirmedAt": "2026-09-26",
             "statement": "Confirmed in chat on 2026-09-26: promote batch one."}
     assert camp.validate_confirmation(good, batch=batch, manifest=fx["manifest"]) == []

@@ -31,15 +31,33 @@
 #     through a promotion batch confirmation (owner decision D2, 2026-09-24):
 #     every application is stamped pending, listed by id with its count in the
 #     batch summary, and confirmed by the hand-written confirmation file.
+#   - Policy 1.5: an entry may carry introduced_in_policy and retired_in_policy.
+#     A retired entry stays enabled and applies only when a document recorded an
+#     earlier policy (or none, the pilots), so the versions decided under it
+#     still replay; it never applies to a new build. An introduced entry applies
+#     from its policy on. decisions.entry_applies reads both.
 #
 # Replay (`run_region_batch.py replay`) applies this file to every published
-# version offline: every policy decision must match the recorded class and action
-# (an alias names an earlier class name for the same decision), an item the
-# record left open that the policy now decides is reported as policy_decides_open,
-# and the items the policy leaves open are the owner-only decisions listed in
+# version offline under the policy era the version recorded: every policy
+# decision must match the recorded class and action (an alias names an earlier
+# class name for the same decision), an item the record left open that the
+# policy now decides is reported as policy_decides_open, and the items the
+# policy leaves open are the owner-only decisions listed in
 # tests/test_standing_decisions_replay.py.
 
 meta:
+  # 1.5 (2026-09-28, methodology 0.16-provisional, campaign Round 6, owner
+  # decision D13): no inverted curve is retained and no threshold is invented.
+  # A pool option whose curve would be the engine's fallback ramp, or would read
+  # as inverted, is refused at acceptance and the ladder moves on, so a new build
+  # never publishes a fallback curve. curve07-fallback-accepted is retired
+  # (retired_in_policy 1.5): it stays in the file, enabled, so the scorecard
+  # replays the versions decided under 1.3 and 1.4 and the pilots' recorded
+  # classes, and it never applies to a 1.5 build. curve07-degenerate-refused
+  # records the refusal as the methodology's for a fallback curve that reaches
+  # the review by another path (the interactive workspace's labelled fallback,
+  # a legacy build): the item is rejected and the metric leaves scoring.
+  # cov01-documented-gap stays. Every other entry carries over unchanged.
   # 1.4 (2026-09-27, methodology 0.15-provisional, campaign Round 3): one entry
   # amended, no new class decision. The frozen national pass under 1.3 showed
   # that curve07-fallback-accepted decided its item (accept with conditions,
@@ -83,7 +101,7 @@ meta:
   # earlier entry carries over unchanged. ref02-accept-best-available is legacy:
   # it can only match under the easi-eci method, which the pressure screen
   # replaced, and it stays so the published pilots still replay.
-  policy_version: "1.4"
+  policy_version: "1.5"
   # Re-affirmed unchanged under 0.9 (2026-08-27): the governance-capture release
   # moved no threshold and added only advisory machinery, so every entry's
   # conditions and rationale templates carry over as approved.
@@ -93,9 +111,9 @@ meta:
   # re-affirmed unchanged under 0.11-provisional: v0.11 moved the function
   # coverage gate, a publish rule rather than a review-queue class decision.
   # Accepting a flagged curve stays an owner-only decision, recorded per run.
-  methodology_version: "0.15-provisional"
+  methodology_version: "0.16-provisional"
   approved_on: "2026-08-22"
-  authority: "Owner class decisions at the DEEP project gates (2026-08-21), promoted to standing decisions; confirmed per region at the end review before promote. Entries added under 1.3, and the one amended under 1.4, are pending the owner's confirmation at the first promotion batch that applies them."
+  authority: "Owner class decisions at the DEEP project gates (2026-08-21), promoted to standing decisions; confirmed per region at the end review before promote. Entries added under 1.3, the one amended under 1.4 and the one added under 1.5 (owner decision D13, 2026-09-28) are pending the owner's confirmation at the first promotion batch that applies them."
   rationale_origin: "standing_policy"
   pending_reviewer_suffix: "(pending owner confirmation)"
 
@@ -291,10 +309,15 @@ entries:
   # preliminary on Eastern Corn Belt Plains v3 and Interior Plateau v1); the
   # thin-metric name also rides data_review records, which the legacy entry
   # curve07-thin-metric-finalized replays when enabled.
+  # Policy 1.5 (methodology 0.16, owner decision D13): RETIRED. A fallback curve is
+  # refused at acceptance and never published, so this entry applies only to the
+  # replay of versions recorded under policy 1.3 or 1.4 (and the pilots' recorded
+  # classes it aliases); a 1.5 build never reaches it (decisions.entry_applies).
   - id: curve07-fallback-accepted
     rule_id: CURVE-07
     trigger: curve_needs_review
     enabled: true
+    retired_in_policy: "1.5"
     approved_under: "0.15-provisional (pending owner confirmation at the first promotion batch)"
     approved_on: null
     aliases: [curve07-thin-metric-finalized, curve07-fallback-curve-preliminary]
@@ -319,6 +342,38 @@ entries:
       preliminary with the flag, its published entry states the pool it rests
       on, and it is marked for verification against field data before it
       carries weight in a decision.
+
+  # ---- policy 1.5 (campaign Round 6, owner decision D13): pending owner confirmation ----
+  # A fallback curve (a non-positive or non-finite lower quartile produced a
+  # two-point ramp) is the methodology's refusal since 0.16: a pool whose curve
+  # would be one is refused before it is built, so a new build raises this item
+  # only for a curve that reached the review by another path. The item is
+  # rejected and the metric leaves scoring; its function falls to its other
+  # candidates, the benchmark rung or a documented gap. Never an acceptance.
+  - id: curve07-degenerate-refused
+    rule_id: CURVE-07
+    trigger: curve_needs_review
+    enabled: true
+    introduced_in_policy: "1.5"
+    # owner decision D13 of 2026-09-28 (DECISIONS.md); the confirmation of the class
+    # decision itself waits for the first promotion batch
+    approved_under: "0.16-provisional (pending owner confirmation at the first promotion batch)"
+    approved_on: null
+    match:
+      curve_status: {eq: degenerate}
+    action: reject
+    side_effect: remove_metric
+    asserts: [curve_status]
+    rationale: >-
+      Refused under standing decision {policy_id} (policy {policy_version}), the
+      methodology's own rule since 0.16 (owner decision D13, 2026-09-28): the
+      curve built for this metric is the engine's fallback ramp (curve status
+      {curve_status}: {reasons}), and no fallback curve is published and no
+      threshold is invented for it. The metric leaves scoring in this region,
+      and its function falls to its other candidate metrics, the published
+      benchmark rung or a documented gap. A pool whose curve would be a fallback
+      is refused before it is built, so this decision records the refusal for a
+      curve that reached the review by another path.
 
   # An inverted discrimination verdict that rests on fewer stations than the
   # DATA-04 automated floor in either group (the smaller group, min_group_n)
