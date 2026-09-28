@@ -248,6 +248,7 @@ def build_round4(root: Path, study: Path, manifest: dict):
                  "mechanism": spec.get("mechanism"), "primary_outcome": spec.get("primary_outcome"),
                  "decision_rule": spec.get("decision"), "coverage_effect": spec.get("coverage_effect"),
                  "functions": functions, "respecified": arm.get("respecified"),
+                 "refinement": spec.get("refinement"),
                  "comparison_scope": arm.get("comparison_scope"),
                  "package_digest": arm.get("package_digest"), "method_version": arm.get("method_version"),
                  "evaluator_digest": arm.get("evaluator_digest"), "curve_count": arm.get("curve_count"),

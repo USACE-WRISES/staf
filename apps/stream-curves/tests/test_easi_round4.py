@@ -561,6 +561,217 @@ def test_the_cli_builds_a_composition_as_candidate_finalist(tmp_path):
     assert proc.returncode != 0 and "once" in proc.stderr and not (tmp_path / "twice").exists()
 
 
+# --------------------------------------------------------------------------- #
+# E5b, the owner's adoption refinement of E5 (WP-R6c, Addendum 2, 2026-09-28)
+# --------------------------------------------------------------------------- #
+def _entrenchment_refit(base) -> dict:
+    """A reliable-member refit of the shipped entrenchment set: the shipped curves with the
+    lt_0.5 and national quartiles moved, the shipped quantity, stratifier and direction."""
+    shipped = json.loads(base["reference-curves.json"])["sets"]["entrenchment"]
+    definition = copy.deepcopy(shipped)
+    for key in ("lt_0.5", "national"):
+        curve = definition["curves"][key]
+        curve["q25"] = round(curve["q25"] + 0.17, 6)
+        curve["q75"] = round(curve["q75"] + 0.38, 6)
+        curve["x39"] = round(curve["x39"] + 0.09, 6)
+        curve["x69"] = round(curve["x69"] + 0.17, 6)
+        curve["points"] = [[round(x + (0.1 if 0 < x else 0.0), 6), y] for x, y in curve["points"]]
+        curve["n"] = curve["n"] - 1000
+    return definition
+
+
+def test_e5b_is_e5s_rule_on_the_k2b_flags_with_its_own_record(base):
+    spec = round4.family_spec("E5b")
+    parent = round4.family_spec("E5")
+    assert spec["id"] == "E5b" and spec["family"] == "dem_geometry_reliable_sections"
+    assert spec["function"] == parent["function"] and spec["decision"] == "simplification" == parent["decision"]
+    assert spec["primary_outcome"] == parent["primary_outcome"] == "P1"
+    assert spec["refinement"] == {"parent": "E5", "date": "2026-09-28", "addendum": 2, "decisionRecord": "D15",
+                                  "curveSet": "entrenchment", "curves": round4.REFINEMENTS["E5b"]["curves"],
+                                  "summary": round4.REFINEMENTS["E5b"]["summary"], "afterResults": True}
+    assert "K2b" in spec["change"] and "supporting" not in spec and "respecified" not in spec
+    assert round4.REFINEMENT_IDS == ("E5b",) and "E5b" not in round4.FAMILIES
+    # the prose addendum carries Addendum 2 and says it came after the results; the yaml is frozen
+    prose = (round4.ADDENDUM_PATH.parent / "EVALUATION_PROTOCOL_V1_EASI_ADDENDUM.md").read_text(encoding="utf-8")
+    assert "Addendum 2 (2026-09-28): E5b, the owner's adoption refinement of E5" in prose
+    assert "after the families were read" in prose and prose.isascii() and chr(8212) not in prose
+    assert round4.addendum_sha256() == round4.ADDENDUM_SHA256
+    # without a refit the shipped curves stand: only the catalog changes
+    built = round4.build_candidate(base, "E5b")
+    cat = json.loads(built["files"]["screening-methods.json"])
+    for key in round4.CROSS_SECTION_METHODS:
+        m = _method_of(cat, key)
+        assert m["applicability"] == {"evidence": "crossSectionQuality", "withhold_when": ["low_quality", "out_of_range"],
+                                      "statement": round4.E5B_STATEMENT}
+        assert round4.E5B_LIMITATION in m["limitations"] and round4.E5B_REFIT_LIMITATION not in m["limitations"]
+    assert "reference-curves.json" in built["unchangedFiles"] and built["curveSets"] == {}
+    assert built["files"]["reference-curves.json"] == base["reference-curves.json"]
+    assert built["refinement"]["parent"] == "E5" and built["respecified"] is None
+    # the adoption candidate (WP-R6c-2): the kept edit names the shipped sets and the refit as
+    # evaluated and not adopted, and the record carries that note beside the refinement
+    kept = [e for e in built["edits"] if e.get("file") == "reference-curves.json" and e.get("kept")]
+    assert len(kept) == 1 and kept[0]["kept"] == round4.REFINEMENTS["E5b"]["curves"] and kept[0]["replaced"] == []
+    assert kept[0]["kept"] == "curves: the shipped sets; the reliable-member refit evaluated and not adopted, see WP-R6c"
+    assert built["refinement"]["curves"] == kept[0]["kept"] and "not adopted" in spec["change"]
+    assert built["scoringIdentity"]["alternative_id"] == "round4-E5b"
+    # the statement differs from E5's, so the two packages are never confused
+    e5 = round4.build_candidate(base, "E5")
+    assert built["identity"]["packageDigest"] != e5["identity"]["packageDigest"]
+    assert built["identity"]["methodVersion"] != e5["identity"]["methodVersion"]
+    pkg = round4.package(built["files"], "E5b", built["spec"])
+    back = mp.read_package(mp.to_zip(pkg))
+    assert back.envelope["label"] == "Round 4 candidate E5b: dem_geometry_reliable_sections (rehearsal)"
+    extras = [b for b in back.envelope["evaluator"]["requires"]["behaviors"] if b not in mp.BEHAVIORS]
+    assert extras == ["applicability-rules"]
+
+
+def test_e5b_replaces_the_entrenchment_set_in_place_when_a_refit_is_given(base):
+    definition = _entrenchment_refit(base)
+    built = round4.build_candidate(base, "E5b", curve_sets={"entrenchment": definition})
+    curves = json.loads(built["files"]["reference-curves.json"])
+    assert curves["sets"]["entrenchment"] == definition
+    assert sorted(curves["sets"]) == ["corridor-natural", "corridor-woody", "entrenchment", "flow-variability"]
+    assert built["curveSets"] == {"entrenchment": {"curves": ["0.5_to_2", "ge_2", "lt_0.5", "national"],
+                                                    "quantity": "er_median", "replaced": ["lt_0.5", "national"],
+                                                    "dropped": []}}
+    assert "reference-curves.json" not in built["unchangedFiles"]
+    cat = json.loads(built["files"]["screening-methods.json"])
+    for key in ("entrenchment-ratio", "channel-adjustment-susceptibility"):
+        assert round4.E5B_REFIT_LIMITATION in _method_of(cat, key)["limitations"]
+    assert round4.E5B_REFIT_LIMITATION not in _method_of(cat, "bank-height-ratio")["limitations"]
+    assert mp.validate_files(built["files"]) == []
+    assert json.loads(built["files"]["scoring-identity.json"])["curve_count"] == 34
+    mp.read_package(mp.to_zip(round4.package(built["files"], "E5b", built["spec"])))
+    # a set that changes the shipped quantity, direction or strata, or equals it, is refused
+    wrong = copy.deepcopy(definition)
+    wrong["quantity"] = "bhr_median"
+    with pytest.raises(round4.CandidateError, match="changes quantity"):
+        round4.build_candidate(base, "E5b", curve_sets={"entrenchment": wrong})
+    odd = copy.deepcopy(definition)
+    odd["curves"]["TPL"] = odd["curves"]["national"]
+    with pytest.raises(round4.CandidateError, match="slope-class curves only"):
+        round4.build_candidate(base, "E5b", curve_sets={"entrenchment": odd})
+    shipped = json.loads(base["reference-curves.json"])["sets"]["entrenchment"]
+    with pytest.raises(round4.CandidateError, match="no refit to apply"):
+        round4.build_candidate(base, "E5b", curve_sets={"entrenchment": copy.deepcopy(shipped)})
+    # a refinement is built alone, never composed
+    with pytest.raises(round4.CandidateError, match="built alone"):
+        round4.build_composition(base, ["E1", "E5b"])
+    with pytest.raises(round4.CandidateError, match="unknown family"):
+        round4.family_spec("E5c")
+
+
+def test_the_cli_builds_the_k2b_only_e5b_on_the_shipped_sets(tmp_path, base):
+    """WP-R6c-2: the adoption candidate is E5b without --curve-sets; the curves file is the
+    base's byte for byte and candidate.json says the refit was evaluated and not adopted."""
+    source = LIBRARY_V1 if (LIBRARY_V1 / mp.ENVELOPE).is_file() else VENDORED_DATA
+    out = tmp_path / "E5b-k2b"
+    proc = subprocess.run([sys.executable, "-B", str(SCRIPT), "--family", "E5b", "--base", str(source), "--out", str(out)],
+                          cwd=str(APP), capture_output=True, text=True, timeout=600)
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    record = json.loads((out / "candidate.json").read_text(encoding="utf-8"))
+    assert record["family"] == "E5b" and record["curveSets"] == {"note": round4.REFINEMENTS["E5b"]["curves"]}
+    assert "reference-curves.json" in record["unchangedFiles"]
+    assert record["refinement"]["curves"] == round4.REFINEMENTS["E5b"]["curves"] and record["refinement"]["afterResults"] is True
+    pkg = mp.read_package(out / "E5b.easi-method.zip")
+    assert pkg.files["reference-curves.json"] == round4.base_files(source)["reference-curves.json"]
+    assert pkg.digest == record["candidate"]["packageDigest"]
+    cat = json.loads(pkg.files["screening-methods.json"])
+    for key in round4.CROSS_SECTION_METHODS:
+        m = _method_of(cat, key)
+        assert m["applicability"]["statement"] == round4.E5B_STATEMENT
+        assert round4.E5B_REFIT_LIMITATION not in m["limitations"]
+    # the same build with a refit set is a different package: the two are never confused
+    with_refit = round4.build_candidate(base, "E5b", curve_sets={"entrenchment": _entrenchment_refit(base)})
+    assert with_refit["identity"]["packageDigest"] != pkg.digest
+    assert with_refit["identity"]["methodVersion"] != record["candidate"]["methodVersion"]
+
+
+def test_the_cli_builds_e5b_with_the_refit_set(tmp_path, base):
+    source = LIBRARY_V1 if (LIBRARY_V1 / mp.ENVELOPE).is_file() else VENDORED_DATA
+    sets_path = tmp_path / "curve-sets.json"
+    sets_path.write_text(json.dumps({"schema": "staf-easi-candidate-curves", "schemaVersion": 1,
+                                     "sets": {"entrenchment": _entrenchment_refit(base)},
+                                     "provenance": {"reliability": "K2b", "material": True}}), encoding="utf-8")
+    out = tmp_path / "E5b"
+    proc = subprocess.run([sys.executable, "-B", str(SCRIPT), "--family", "E5b", "--base", str(source),
+                           "--out", str(out), "--curve-sets", str(sets_path)], cwd=str(APP), capture_output=True,
+                          text=True, timeout=600)
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    record = json.loads((out / "candidate.json").read_text(encoding="utf-8"))
+    assert record["family"] == "E5b" and record["familyName"] == "dem_geometry_reliable_sections"
+    assert record["refinement"]["parent"] == "E5" and record["refinement"]["afterResults"] is True
+    assert record["curveSets"]["entrenchment"]["replaced"] == ["lt_0.5", "national"]
+    assert record["curveSets"]["provenance"] == {"reliability": "K2b", "material": True}
+    assert record["decision"] == "simplification" and record["respecified"] is None
+    pkg = mp.read_package(out / "E5b.easi-method.zip")
+    assert pkg.digest == record["candidate"]["packageDigest"]
+    printed = json.loads(proc.stdout)
+    assert printed["refinement"]["addendum"] == 2 and printed["family"] == "E5b"
+
+
+def _fake_calculator(path: Path, method_version: str) -> Path:
+    from openpyxl import Workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Metadata"
+    ws.append(["EASI calculator metadata"])
+    ws.append(["Item", "Value"])
+    ws.append(["Scoring method digest", method_version])
+    ws.append(["Generator sha256", "0" * 64])
+    wb.save(path)
+    return path
+
+
+def test_the_exporter_carries_a_calculator_generated_for_the_candidates_files(tmp_path):
+    source = LIBRARY_V1 if (LIBRARY_V1 / mp.ENVELOPE).is_file() else VENDORED_DATA
+    cand = tmp_path / "E5b"
+    proc = subprocess.run([sys.executable, "-B", str(SCRIPT), "--family", "E5b", "--base", str(source), "--out", str(cand)],
+                          cwd=str(APP), capture_output=True, text=True, timeout=600)
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    record = json.loads((cand / "candidate.json").read_text(encoding="utf-8"))
+    version = record["candidate"]["methodVersion"]
+    good = _fake_calculator(tmp_path / "EASI_Calculator_test.xlsx", version)
+    assert round4.calculator_stamps(good.read_bytes()) == {"method": version, "generator": "0" * 64}
+    name, blob = round4.candidate_calculator(good, method_version=version)
+    assert name == "EASI_Calculator_test.xlsx" and blob == good.read_bytes()
+    project, _ = round4.candidate_project(cand, calculator=good)
+    assert project.calculator == (name, blob) and project.meta["calculatorFor"] == project.package_digest
+    assert project.meta["calculator"]["generatedFor"] == version
+    vdir = tmp_path / "version"
+    proc = subprocess.run([sys.executable, "-B", str(EXPORT_SCRIPT), str(cand), "--version-dir", str(vdir),
+                           "--calculator", str(good), "--calculator-note", "template 1.1 at adoption"],
+                          cwd=str(APP), capture_output=True, text=True, timeout=600)
+    assert proc.returncode == 0, proc.stderr[-2000:]
+    out = json.loads(proc.stdout)
+    envelope = json.loads((vdir / "method.json").read_text(encoding="utf-8"))
+    assert envelope["calculator"] == {"name": name, "bytes": len(blob), "sha256": hashlib.sha256(blob).hexdigest()}
+    assert (vdir / "calculator" / name).read_bytes() == blob
+    assert out["versionDir"]["calculator"]["path"] == f"calculator/{name}" and f"calculator/{name}" in out["versionDir"]["files"]
+    # the note rides in the version candidate's record only, never in the workbook or the envelope
+    assert out["versionDir"]["calculator"]["note"] == "template 1.1 at adoption" and "note" not in envelope["calculator"]
+    proc = subprocess.run([sys.executable, "-B", str(EXPORT_SCRIPT), str(cand), "--out", str(tmp_path / "x.zip"),
+                           "--calculator-note", "orphan"], cwd=str(APP), capture_output=True, text=True, timeout=600)
+    assert proc.returncode != 0 and "--calculator-note needs" in proc.stderr
+    zip_name = out["versionDir"]["zip"]
+    pkg = mp.read_package(vdir / zip_name)
+    assert pkg.calculator == (name, blob) and pkg.digest == record["candidate"]["packageDigest"]
+    written = json.loads((vdir / "candidate.json").read_text(encoding="utf-8"))
+    assert written["versionCandidate"]["calculator"]["generatedFor"] == version
+    assert written["versionCandidate"]["lineage"]["candidate"]["refinement"]["parent"] == "E5"
+    # a workbook stamped with another method never rides along; nothing is written
+    bad = _fake_calculator(tmp_path / "EASI_Calculator_other.xlsx", "000000000000")
+    with pytest.raises(round4.CandidateError, match="records scoring method"):
+        round4.candidate_calculator(bad, method_version=version)
+    proc = subprocess.run([sys.executable, "-B", str(EXPORT_SCRIPT), str(cand), "--version-dir", str(tmp_path / "never"),
+                           "--calculator", str(bad)], cwd=str(APP), capture_output=True, text=True, timeout=600)
+    assert proc.returncode != 0 and "records scoring method" in proc.stderr and not (tmp_path / "never").exists()
+    with pytest.raises(round4.CandidateError, match="EASI_Calculator_"):
+        round4.candidate_calculator(cand / "candidate.json", method_version=version)
+    with pytest.raises(round4.CandidateError, match="not found"):
+        round4.candidate_calculator(tmp_path / "EASI_Calculator_missing.xlsx", method_version=version)
+
+
 EXPORT_SCRIPT = APP / "scripts" / "export_easi_method.py"
 
 

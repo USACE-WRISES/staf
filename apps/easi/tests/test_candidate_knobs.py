@@ -61,17 +61,21 @@ def _ctx(**overrides):
 
 
 def _reach_geom(bhr: float = 1.1, er: float = 2.5, *, n: int = 9, capped: int = 0,
-                detection: str = "slope_break", widths=None, extrapolated: bool = False) -> dict:
+                detection: str = "slope_break", widths=None, extrapolated: bool = False,
+                depth: float = 0.5, depths=None, dem_res: int = 10) -> dict:
     """A stored-evidence geometry the way the builder slims it: the reach medians and
-    statistics on top, the sections' scalars under ``candidate_scalars``."""
+    statistics on top, the sections' scalars under ``candidate_scalars``. The first
+    ``capped`` sections hit the floodprone cap; each section carries its bankfull depth
+    (``depth`` for all, or ``depths`` per section) and the reach its DEM resolution."""
     widths = list(widths) if widths is not None else [10.0 + i for i in range(n)]
+    depths = list(depths) if depths is not None else [depth] * len(widths)
     scalars = [{"bank_height_ratio": bhr, "entrenchment_ratio": er, "bankfull_width_m": w,
-                "low_bank_capped": i < capped, "edge_limited": False,
+                "bankfull_depth_m": d, "low_bank_capped": i < capped, "edge_limited": False,
                 "bank_detection": detection, "position_frac": (i + 1) / (n + 1)}
-               for i, w in enumerate(widths)]
+               for i, (w, d) in enumerate(zip(widths, depths))]
     median_capped = bool(capped and bhr >= geomorph.BHR_CAP - 1e-9)
     return {"entrenchment_ratio": er, "bank_height_ratio": bhr, "edge_limited": False,
-            "dem_resolution_m": 10, "n_transects": n, "selected": 0,
+            "dem_resolution_m": dem_res, "n_transects": n, "selected": 0,
             "bankfull_extrapolated": extrapolated,
             "reach": {"n": n,
                       "entrenchment_ratio": {"median": er, "min": er, "max": er, "n": n},
@@ -240,34 +244,134 @@ def test_an_unscored_method_with_a_statement_is_a_documented_gap(catalog):
 # --------------------------------------------------------------------------- #
 def test_cross_section_quality_reads_what_the_provider_records():
     clean = geomorph.cross_section_quality(_reach_geom())
-    assert clean["flags"] == [] and clean["reasons"] == {}
+    assert clean["quality"] == "K2b" == geomorph.QUALITY_RULES
+    assert clean["flags"] == [] and clean["reasons"] == {} and clean["matched"] == {}
     assert clean["sections"] == 9 and clean["bhrSections"] == 9 and clean["erSections"] == 9
     assert clean["detection"] == "slope_break" and clean["bhrInRange"] and clean["erInRange"]
     assert clean["demResolutionM"] == 10 and clean["profilePoints"] is None
-    out = geomorph.cross_section_quality(_reach_geom(bhr=2.5))
+    assert clean["capUnreachableDepthM"] == 0.15 and clean["capUnreachableSections"] == 0
+    # K2b: a median at the floodprone cap is severe incision ("at least 2"), never a flag ...
+    at_cap = geomorph.cross_section_quality(_reach_geom(bhr=2.0, capped=5))
+    assert at_cap["flags"] == [] and at_cap["bhrAtCap"] and at_cap["medianCapped"]
+    assert at_cap["cappedSections"] == 5 and at_cap["bhrInRange"] is True and at_cap["capIsFloor"] is False
+    # ... and a ratio above the cap (a hand-set low bank) is inside the physical range too
+    assert geomorph.cross_section_quality(_reach_geom(bhr=2.5))["flags"] == []
+    # physically impossible: a bank-height ratio at or below zero, an entrenchment ratio below 1
+    out = geomorph.cross_section_quality(_reach_geom(bhr=0.0))
     assert out["flags"] == ["out_of_range_bhr"] and out["bhrInRange"] is False
-    assert "2.50" in out["reasons"]["out_of_range_bhr"]
+    assert out["matched"] == {"out_of_range_bhr": ["bhr_at_or_below_0"]}
+    assert "0.00" in out["reasons"]["out_of_range_bhr"]
     out = geomorph.cross_section_quality(_reach_geom(er=0.8))
     assert out["flags"] == ["out_of_range_er"] and out["erInRange"] is False
-    out = geomorph.cross_section_quality(_reach_geom(bhr=2.0, capped=5))
-    assert out["flags"] == ["low_quality"] and out["medianCapped"] and out["cappedSections"] == 5
-    assert "2 cap" in out["reasons"]["low_quality"]
+    assert out["matched"] == {"out_of_range_er": ["er_below_1"]}
+    # low quality on the reach's own terms: too few sections, extrapolated bankfull, the
+    # crest scan everywhere
     out = geomorph.cross_section_quality(_reach_geom(n=2))
     assert out["flags"] == ["low_quality"] and "only 2 of 2" in out["reasons"]["low_quality"]
+    assert out["matched"]["low_quality"] == ["few_sections:bhr", "few_sections:er"]
     out = geomorph.cross_section_quality(_reach_geom(extrapolated=True))
-    assert out["flags"] == ["low_quality"] and "Bieger" in out["reasons"]["low_quality"]
+    assert out["flags"] == ["low_quality"] and out["matched"]["low_quality"] == ["bankfull_extrapolated"]
+    assert "Bieger" in out["reasons"]["low_quality"]
     out = geomorph.cross_section_quality(_reach_geom(detection="crest_scan"))
     assert out["flags"] == ["low_quality"] and out["detection"] == "crest_scan"
+    assert out["matched"]["low_quality"] == ["crest_scan"]
+    # several flags at once, the composition listed
     out = geomorph.cross_section_quality(_reach_geom(bhr=0.0, er=0.5, n=1))
     assert out["flags"] == ["out_of_range_bhr", "out_of_range_er", "low_quality"]
     # a legacy single-section stub (the parity fixture): one section, method unknown
     stub = geomorph.cross_section_quality({"entrenchment_ratio": 2.5, "bank_height_ratio": 1.1,
                                            "edge_limited": False, "dem_resolution_m": 10})
     assert stub["sections"] == 1 and stub["detection"] == "unknown"
-    assert stub["flags"] == ["low_quality"]
+    assert stub["flags"] == ["low_quality"] and stub["capUnreachableSections"] == 0
     assert geomorph.cross_section_quality({}) is None and geomorph.cross_section_quality(None) is None
     assert base.xs_evidence({}) is None
     assert base.xs_evidence(_reach_geom())["crossSectionQuality"]["flags"] == []
+
+
+def test_the_cap_is_a_flag_only_where_the_dem_cannot_place_a_bank_below_it():
+    """The bank detector considers a bank only after the profile has climbed the DEM's
+    noise floor (0.3 m on a 10 m model, 0.1 m on lidar); the cap is twice the bankfull
+    depth, so a section at or below half the floor (0.15 m, 0.05 m) reads 2.00 by
+    construction. A median at the cap carried only by such sections is low quality; one the
+    deeper capped sections reach on their own is the channel's incision, rated."""
+    assert geomorph.cap_unreachable_depth(10) == pytest.approx(0.15)
+    assert geomorph.cap_unreachable_depth(3) == pytest.approx(0.15)
+    assert geomorph.cap_unreachable_depth(1) == pytest.approx(0.05)
+    assert geomorph.cap_unreachable_depth(None) == pytest.approx(0.15)
+    floor = geomorph.cross_section_quality(_reach_geom(bhr=2.0, capped=5, depth=0.12))
+    assert floor["flags"] == ["low_quality"] and floor["matched"]["low_quality"] == ["cap_unreachable"]
+    assert floor["capUnreachableSections"] == 5 and floor["capIsFloor"] and floor["bhrAtCap"]
+    assert "0.15 m" in floor["reasons"]["low_quality"] and "10 m DEM" in floor["reasons"]["low_quality"]
+    assert "5 of 5 capped sections" in floor["reasons"]["low_quality"]
+    # nine sections: five capped values put the median at the cap; four shallow and one
+    # deep capped section leave one genuine section, fewer than the five it takes
+    depths = [0.12, 0.12, 0.12, 0.12, 0.5, 0.5, 0.5, 0.5, 0.5]
+    mixed = geomorph.cross_section_quality(_reach_geom(bhr=2.0, capped=5, depths=depths))
+    assert mixed["flags"] == ["low_quality"] and mixed["capUnreachableSections"] == 4
+    # six capped sections of which one is shallow: five genuine, the cap is the channel's
+    depths = [0.12, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+    genuine = geomorph.cross_section_quality(_reach_geom(bhr=2.0, capped=6, depths=depths))
+    assert genuine["flags"] == [] and genuine["capUnreachableSections"] == 1 and genuine["bhrAtCap"]
+    # an even count needs both middle values at the cap: eight sections, five capped
+    even = geomorph.cross_section_quality(_reach_geom(bhr=2.0, n=8, capped=5, depths=[0.12] * 4 + [0.5] * 4))
+    assert even["flags"] == ["low_quality"]          # one genuine capped section, five needed
+    even = geomorph.cross_section_quality(_reach_geom(bhr=2.0, n=8, capped=5, depths=[0.5] * 8))
+    assert even["flags"] == []
+    # lidar resolves the same 0.12 m sections: its floor is 0.05 m
+    lidar = geomorph.cross_section_quality(_reach_geom(bhr=2.0, capped=5, depth=0.12, dem_res=1))
+    assert lidar["flags"] == [] and lidar["capUnreachableDepthM"] == 0.05
+    # a median below the cap never trips the rule, however shallow the capped sections
+    assert geomorph.cross_section_quality(_reach_geom(bhr=1.4, capped=2, depth=0.12))["flags"] == []
+    # a section without a recorded depth is never counted as unreachable
+    no_depth = _reach_geom(bhr=2.0, capped=5)
+    for s in no_depth["candidate_scalars"]:
+        s.pop("bankfull_depth_m")
+    assert geomorph.cross_section_quality(no_depth)["flags"] == []
+    # the floor rule stacks with the others and the composition is recorded in order
+    both = geomorph.cross_section_quality(_reach_geom(bhr=2.0, capped=5, depth=0.12, extrapolated=True))
+    assert both["matched"]["low_quality"] == ["bankfull_extrapolated", "cap_unreachable"]
+
+
+def test_a_hand_entered_section_is_valid_by_definition(catalog):
+    """An edited or scrolled cross section (``rate_metrics_from_stages``) carries no
+    evidence record, so no K2b flag applies even with the E5b rule installed: a low bank
+    set at the floodprone stage is a bank-height ratio of 2.0, rated Poor."""
+    from easi import assessment
+    rule = {"evidence": "crossSectionQuality", "withhold_when": ["low_quality", "out_of_range"],
+            "statement": "3DEP cross-section geometry withheld ({value})."}
+    for key in ("bank-height-ratio", "entrenchment-ratio", "bhr-bank-instability-susceptibility",
+                "channel-adjustment-susceptibility"):
+        _method(catalog, key)["applicability"] = dict(rule)
+    block = {"stations": [-10.0, -5.0, 0.0, 5.0, 10.0], "elevs": [102.0, 101.0, 100.0, 101.0, 102.0],
+             "thalweg": 100.0, "fcode": 46006, "label": "700 ft"}
+    out = assessment.rate_metrics_from_stages(block, 100.5, 101.0)
+    assert out[BHR_METHOD]["rating"] == "Poor" and "bank-height ratio 2.0" in out[BHR_METHOD]["valueText"]
+    assert out[hydraulics.ENTRENCHMENT_ID]["rating"] == "Good"
+    assert out[CHANNEL]["rating"] == "Poor"
+    for item in out.values():
+        trace = item["scoring"]
+        assert trace["completeness"] == "complete" and "statement" not in trace
+        assert trace["applicability"]["withheld"] is False and "checked" not in trace["applicability"]
+    # the same value on a stored record scores the same rating whether or not a rule exists
+    # when the record is clean; the rule reads only the evidence record
+    ctx = _ctx()
+    ctx.extras["reach_geomorph"] = _reach_geom(bhr=2.0, capped=6, depth=0.5)
+    assert hydraulics.floodplain_engagement(ctx).rating == "Poor"
+
+
+def test_the_quality_record_never_moves_a_score_without_a_rule():
+    """Parity: with no applicability rule in the catalog the K2b record is inert; a stored
+    record whose median sits at the cap on unresolvable sections still rates Poor, and no
+    trace carries the record."""
+    geom = _reach_geom(bhr=2.0, capped=9, depth=0.12)
+    report = client.score_record(_record(geomorph=geom), cross_section=False)
+    rows = {r["metricId"]: r for r in report["metricRows"]}
+    assert rows[BHR_METHOD]["rating"] == "Poor" and rows[CHANNEL]["rating"] == "Poor"
+    for row in report["metricRows"]:
+        trace = row.get("scoring") or {}
+        assert "applicability" not in trace and "statement" not in trace
+    quality = geomorph.cross_section_quality(geom)
+    assert quality["flags"] == ["low_quality"] and quality["capIsFloor"]
 
 
 def test_summarize_profile_records_how_the_bank_was_found():
@@ -299,13 +403,35 @@ def test_the_cross_section_adapters_offer_the_quality_record(catalog):
             "evidence": "crossSectionQuality", "withhold_when": ["low_quality", "out_of_range"],
             "statement": "3DEP cross-section geometry withheld ({value})."}
     ctx = _ctx()
-    ctx.extras["reach_geomorph"] = _reach_geom(bhr=2.5)
-    for adapter in (hydraulics.floodplain_engagement, geomorphology.bank_erosion,
-                    geomorphology.channel_evolution):
+    bhr_adapters = (hydraulics.floodplain_engagement, geomorphology.bank_erosion,
+                    geomorphology.channel_evolution)
+    # K2b: a median at the cap on sections the DEM resolves is severe incision, rated Poor
+    # by the three BHR methods ("at least 2.00"), never withheld
+    ctx.extras["reach_geomorph"] = _reach_geom(bhr=2.0, capped=6, depth=0.5)
+    for adapter in bhr_adapters:
+        res = adapter(ctx)
+        assert res.rating == "Poor" and res.scoring["completeness"] == "complete"
+        assert res.scoring["applicability"]["withheld"] is False
+        assert res.scoring["applicability"]["checked"]["flags"] == []
+        assert "at least 2.00" in res.value_text
+    assert hydraulics.floodplain_access(ctx).rating == "Good"
+    # the same median carried only by sections the DEM cannot resolve is low quality: every
+    # cross-section method is withheld with the reason in its note
+    ctx.extras["reach_geomorph"] = _reach_geom(bhr=2.0, capped=6, depth=0.12)
+    for adapter in (*bhr_adapters, hydraulics.floodplain_access):
         res = adapter(ctx)
         assert res.rating is None and res.scoring["completeness"] == sm.WITHHELD
-        assert res.note.startswith("3DEP cross-section geometry withheld (bank-height ratio 2.50")
-    # the entrenchment ratio of the same reach is inside its range: rated
+        assert res.note.startswith("3DEP cross-section geometry withheld (the reach median bank-height "
+                                   "ratio sits at the 2 cap only with sections whose bankfull depth")
+        assert res.scoring["applicability"]["matched"]["flags"] == ["low_quality"]
+        assert res.scoring["applicability"]["matched"]["record"]["matched"]["low_quality"] == ["cap_unreachable"]
+    # an impossible bank-height ratio withholds the BHR methods; the entrenchment ratio of
+    # the same reach is inside its range and rated
+    ctx.extras["reach_geomorph"] = _reach_geom(bhr=0.0)
+    for adapter in bhr_adapters:
+        res = adapter(ctx)
+        assert res.rating is None and res.scoring["completeness"] == sm.WITHHELD
+        assert res.note.startswith("3DEP cross-section geometry withheld (bank-height ratio 0.00 is at or below zero")
     assert hydraulics.floodplain_access(ctx).rating == "Good"
     ctx.extras["reach_geomorph"] = _reach_geom(bhr=1.1, er=2.5)
     assert hydraulics.floodplain_engagement(ctx).rating == "Good"

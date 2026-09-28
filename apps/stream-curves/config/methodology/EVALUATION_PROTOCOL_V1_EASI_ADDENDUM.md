@@ -154,3 +154,45 @@ ephemeral reaches (NHDPlus FCODE 46003, 46007) are withheld with E1's documented
 statement. The paired comparison against the base therefore runs on perennial reaches, the
 ratio against monthly flow variability; the withheld share is reported under P3. Owner-
 reserved decision taken under the standing instruction of 2026-09-25, listed for the owner.
+
+**Addendum 2 (2026-09-28): E5b, the owner's adoption refinement of E5, evaluated by the
+protocol's outcomes after the families were read.** This addendum is written after every Round
+4 family's results were read and after the finalist composition study; it re-specifies no
+family and moves no margin. Owner decision D15 (DECISIONS.md, 2026-09-28) takes the accepted E5
+as the starting candidate and asks for its quality checks to be corrected so a model cap never
+excludes genuine severe incision, for the reliable cross sections of the qualifying
+least-disturbed reaches to evaluate the existing geometry curves and refit them where
+warranted, and for the reference counts and coverage to be reported by stream class. E5b is
+that refinement: E5's applicability rule on the four cross-section methods, read on the
+corrected quality flags K2b (`easi.geomorph.cross_section_quality`): `out_of_range` names a
+physically impossible section only (a bank-height ratio at or below 0, an entrenchment ratio
+below 1); a bank-height ratio at the floodprone cap on sections the DEM resolves reads at least
+2, severe incision, a valid Poor; `low_quality` keeps fewer than three sections carrying the
+ratio, bankfull extrapolated outside the Bieger fit range and every section found by the crest
+scan, drops the capped median, and adds the cap-as-detector-floor rule (a median at the cap
+carried only by sections whose bankfull depth is at or below 0.15 m on a 10 m or 3 m model,
+0.05 m on lidar, where the slope-break detector cannot place a bank below the cap). The
+`entrenchment` set is refit on the least-disturbed members whose sections are reliable under
+the same rules where a shipped curve moved materially (a quartile by more than the ACC-04 shift
+of 0.20 IQR, or a class boundary by at least the 0.01 rounding); the bank-height ratio keeps its
+published bands, its reliable-member fits being censored at the cap in two of three slope
+classes and without a usable national fallback. E5b is studied with E5's design (base
+`alternative-2-b2e3033116e3`, the development cohort, both designs, P1 to P6) and E5's
+simplification rule; because it was specified after the results were read, its study is an
+adoption-candidate evaluation for the owner and never a Round 4 family decision; the frozen
+yaml is untouched (sha256 8a48de98). In the held-out design the fold refits of the
+`entrenchment` set run on the original strict panels, as for every arm, so that design carries
+the K2b withholding and not the reliable-member refit; the frozen design carries both. Taken
+under the standing instruction of 2026-09-25 and owner decision D15, listed for the owner.
+
+*Outcome (2026-09-28, after the E5b study was read).* The study of E5b with the refit
+`entrenchment` set (`2026-09-28-dem-geometry-refit-alternatives`) did not adopt it: P1 held in
+both designs and P3 changed availability by documented gaps only, but P2 retained the base on
+one supported finding (channel evolution in WMT against NRSA relative bed stability), which the
+refit curves cause (in the held-out design, where both arms share the fold curves, the same row
+is zero). Under D15's "refit them where warranted" the refit is not warranted by this evidence:
+the shipped `entrenchment` set stands, the refit comparison stays on record as evaluated and not
+adopted, and E5b as the adoption candidate is the K2b correction alone (E5's rule on the corrected
+flags, the shipped curve sets), studied as `2026-09-28-dem-geometry-quality-alternatives` under
+the same design and rule. The bank-height reference-curve question (the reliable-member
+distribution on flat reaches against the published bands) is an owner follow-up item, not opened.

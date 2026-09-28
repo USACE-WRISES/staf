@@ -256,7 +256,10 @@ def candidate_block(base, candidates: dict | None, running_evaluator: str,
                  "curve_set_findings": found["curve_set_findings"],
                  "respecified": found["respecified"] or (spec.get("respecified") or {}).get("date"),
                  "comparison_scope": r4.comparison_scope(spec),
-                 "composition": found.get("composition")}
+                 "composition": found.get("composition"),
+                 # an owner's adoption refinement (E5b): its parent, date and addendum, and that
+                 # it was specified after the families' results were read
+                 "refinement": spec.get("refinement")}
         if spec.get("composition"):
             members = list(spec["composition"])
             missing = [c for c in members if c not in summaries]
@@ -597,9 +600,10 @@ def parse_candidates(items) -> dict:
         family, sep, source = str(item).partition("=")
         if not sep or not family or not source:
             raise RuntimeError(f"--candidate takes <family>=<folder with candidate.json or .easi-method.zip>, got {item!r}")
-        if family not in r4.FAMILIES and family != r4.COMPOSITION:
-            raise RuntimeError(f"--candidate {family}: the addendum names {', '.join(r4.FAMILIES)}, and "
-                               f"{r4.COMPOSITION} is their composition")
+        if family not in r4.FAMILIES and family != r4.COMPOSITION and family not in r4.REFINEMENT_IDS:
+            raise RuntimeError(f"--candidate {family}: the addendum names {', '.join(r4.FAMILIES)}, "
+                               f"{r4.COMPOSITION} is their composition, and the owner's refinements are "
+                               f"{', '.join(r4.REFINEMENT_IDS)}")
         if family in out:
             raise RuntimeError(f"--candidate {family} given twice")
         out[family] = source
