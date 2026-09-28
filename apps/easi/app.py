@@ -60,6 +60,9 @@ if method_package.active().get("source") == "package":
           + ("" if _verified.get("sameEvaluator") else
              "; validated under another evaluator (the method version recomputed here matches)"),
           file=sys.stderr, flush=True)
+# owner decision D20: which adopted library version scores, and where it was loaded from
+from easi import adopted_method  # noqa: E402
+print("EASI: " + adopted_method.status_line(), file=sys.stderr, flush=True)
 
 FT_PER_M = 3.28083989501312
 LOCAL_REVIEW_ROOT = local_review.review_root()
