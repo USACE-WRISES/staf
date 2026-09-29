@@ -9,9 +9,9 @@
   "nrsa-2018-19-evidence.json.gz": "3455b2f855696c5fe8b59ba1b98e754dff5114e9d5e63a23791370ade49770aa",
   "physio_divisions.geojson": "41f147243333c1b37f448ea4cbade3c7411424794899bdaafc1017a4804b1ff7",
   "reference-curves.json": "a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887",
-  "scoring-identity.json": "9d0603bb3aa4248e81371ab240936a89bb0f7f79746f95442887ebef3bde8e90",
+  "scoring-identity.json": "af33a61a5cb2a0a27c23adc1c76f96db5c61053cf9d40f2e8f2be109cd10a851",
   "screening-methods-legacy.json": "7d2fbe10a4649683fe7922a3245c16dbbdbabbf44b575f5cec3c34a36a34b887",
-  "screening-methods.json": "78c1e2921198905ee6e53f18147e2aa33f9a6ffd87ff3e7a23844238b3fb73f3"
+  "screening-methods.json": "e754bf570291e0231d11e127e594a7fa375b3f227ee2f0d6591c45f9faa4ac49"
  },
  "engine_api_version": 1,
  "manifest": {

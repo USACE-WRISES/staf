@@ -1,0 +1,14 @@
+{
+ "assessmentId": "easi-screening",
+ "evaluatorDigest": "sha256:08f960b5b0d71fab84f8b865f134633c14cd8a357e489563f5ae4caf4e5e4a8a",
+ "feed": "library-v2.json",
+ "methodVersion": "e91118cc821c",
+ "package": {
+  "bytes": 2999220,
+  "name": "easi-screening-v2-dc7f4cfe.easi-method.zip",
+  "sha256": "dc7f4cfe79d9ae3281c0e18d494c2439b136d2fee8ef1745be0c6291236552d5"
+ },
+ "packageDigest": "sha256:7e44b19d4ad8415da0e0216f19c9d03a9e5bd021136439f8c43931e0fc44933d",
+ "schema": 1,
+ "version": 2
+}
