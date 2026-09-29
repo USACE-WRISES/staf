@@ -28,6 +28,10 @@ APP = Path(__file__).resolve().parents[1]
 REPO = APP.parent.parent
 VENDORED_DATA = APP / "streamcurves" / "_vendor" / "easi" / "data"
 LIBRARY_V1 = REPO / "apps" / "library" / "assessments" / "easi-screening" / "v1"
+#: the Round 4 studies ran on Alternative 2 (easi-screening v1); the vendored data is EASI v2
+#: (E5b) since 2026-09-29, so the base is v1's method files where the library is present
+A2_DATA = (LIBRARY_V1 / "method" if (LIBRARY_V1 / "method" / "scoring-identity.json").is_file()
+           else VENDORED_DATA)
 SCRIPT = APP / "scripts" / "build_easi_candidate_package.py"
 LOW_FLOW = "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity"
 CATCHMENT = "catchment-hydrology-impervious-surface-cover"
@@ -57,7 +61,7 @@ REFIT_SCRIPT = APP / "scripts" / "refit_easi_candidate_sets.py"
 
 @pytest.fixture(scope="module")
 def base():
-    return round4.base_files(VENDORED_DATA)
+    return round4.base_files(A2_DATA)
 
 
 # --------------------------------------------------------------------------- #
@@ -388,7 +392,7 @@ def test_the_packages_score_as_their_families_say(base):
     mixed["streamcat"] = {**mixed["streamcat"], "pctimp2019ws": 2.0, "pctcrop2019ws": 60.0, "pcthay2019ws": 5.0}
     cases = {"cases": [{"id": "perennial", "record": perennial}, {"id": "intermittent", "record": intermittent},
                        {"id": "mixed", "record": mixed}]}
-    packages = {"base": mp.package_from_dir(VENDORED_DATA, version=1, label="base")}
+    packages = {"base": mp.package_from_dir(A2_DATA, version=1, label="base")}
     for family in ("E1", "E7", "E8"):
         built = round4.build_candidate(base, family)
         packages[family] = round4.package(built["files"], family, built["spec"])

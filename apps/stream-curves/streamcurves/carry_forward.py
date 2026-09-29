@@ -58,7 +58,11 @@ ANNOTATION_KEYS = ("referenceN", "sampleDisposition", "metricRole", "curveCaveat
                    "confidenceLabel", "confidenceTotal", "referenceRange", "criteriaBasis",
                    "criteriaSource", "referenceSupport", "localComparison", "stratifier",
                    "discrimination", "basis", "basisLabel", "basisStatement", "basisLimit",
-                   "publishedBenchmark", "methodContext", "sourceCitation")
+                   "publishedBenchmark", "methodContext", "sourceCitation",
+                   # methodology 0.16: a flagged transfer's disclosure (REF-16) and the
+                   # EASI screening method a last-resort curve adopts (REF-17)
+                   "transferRisk", "transferValidation", "transferNote", "confidenceCap",
+                   "adoptedMethod")
 #: camelCase bundle record -> the decision dict a run's reference support holds
 _SUPPORT_FIELDS = {"status": "status", "level": "level", "regionCode": "region_code",
                    "regionName": "region_name", "nPool": "n_pool",

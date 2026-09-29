@@ -11,6 +11,7 @@ a national or modeled curve's is.
 """
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 
@@ -70,7 +71,12 @@ def test_a_version_that_cannot_be_read_judges_the_metric(tmp_path, monkeypatch):
     root = tmp_path / "library"
     dest = root / "assessments" / "interior-plateau"
     (dest / "v6").mkdir(parents=True)
-    shutil.copy(src / "manifest.json", dest / "manifest.json")
+    # the library as it stood at v6: a later version (the national campaign's v7) is not part
+    # of this test
+    manifest = json.loads((src / "manifest.json").read_text(encoding="utf-8"))
+    manifest["versions"] = [v for v in manifest.get("versions") or [] if int(v.get("version") or 0) <= 6]
+    manifest["latestVersion"] = 6
+    (dest / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     for name in (lib.BUNDLE_FILE, lib.SESSION_FILE, lib.META_FILE):
         shutil.copy(src / "v6" / name, dest / "v6" / name)
     recarried = sorted(fields["reference_build"]["carriedMetrics"])
