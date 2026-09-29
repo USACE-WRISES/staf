@@ -29,6 +29,9 @@ from .units import list_chunks
 
 BASE_METHOD = "e9f472b31fe5"
 ALTERNATIVE = "alternative-2"
+#: the scoring identities a rollout accepts: Alternative 2 and its adopted revision E5b (EASI
+#: v2, easi-screening v2; the same 34 curves with the cross-section applicability rule)
+ALTERNATIVES = (ALTERNATIVE, "alternative-2-e5b")
 EXPECTED_REACHES = 1_357_265
 EXPECTED_HUC8S = 1169
 META = ("comid", "huc4", "huc8", "vpu", "gnis_name", "streamorde", "totdasqkm",
@@ -113,8 +116,8 @@ def current_identity(expected_method):
     from easi import config
     from easi.national import method_version
     identity = config.scoring_identity()
-    if config.criteria_set() != "regional" or identity.get("alternative_id") != ALTERNATIVE or identity.get("curve_count") != 34:
-        raise RolloutError("The active scorer is not the 34-curve regional Alternative 2")
+    if config.criteria_set() != "regional" or identity.get("alternative_id") not in ALTERNATIVES or identity.get("curve_count") != 34:
+        raise RolloutError("The active scorer is not the 34-curve regional Alternative 2 or its adopted revision")
     method_version.cache_clear()
     if method_version() != expected_method:
         raise RolloutError("Active scoring method differs from the explicit expected method")
@@ -387,7 +390,7 @@ def validate_tile_inputs(root, huc8s, build):
 
 def verify_completed(staging, expected_method):
     manifest = read_json(staging/"manifest.json")
-    if manifest.get("build_status") != "complete" or manifest.get("alternative_id") != ALTERNATIVE or manifest.get("method_version") != expected_method:
+    if manifest.get("build_status") != "complete" or manifest.get("alternative_id") not in ALTERNATIVES or manifest.get("method_version") != expected_method:
         raise RolloutError("Dataset is incomplete or belongs to another method/alternative")
     assets = asset_inventory(manifest)
     if "completion.json" not in assets:
