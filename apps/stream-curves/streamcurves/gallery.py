@@ -11,7 +11,10 @@ people two ways:
   scripts/library_release.py rebuilds from `apps/library` whenever the library changes:
   `library.json` (the catalog, :func:`catalog_doc`) plus immutable per-version assets, among
   them the pack `<id>-v<N>-p1.streamcurves` a download fetches (:func:`fetch_pack`). The
-  library snapshot the app payload ships stands in for the catalog when there is no network.
+  library snapshot the app payload ships stands in for the catalog when there is no network:
+  it is catalog-only (the catalog and each assessment's records, never a version folder), so
+  every version it lists is download-only (:attr:`Version.download_only`) and
+  :func:`pack_bytes` refuses it with :data:`DOWNLOAD_NEEDED` instead of a file error.
 
 A pack is a project file (streamcurves.project_file) with `desktop_project: false`; opening
 one imports it into a project folder.
@@ -58,6 +61,10 @@ _CHUNK = 256 * 1024
 STATUS_ORDER = ("certified", "preliminary", "draft")
 #: The statuses DEEP serves (apps/deep/deep/library.py _ELIGIBLE).
 DEEP_STATUSES = ("preliminary", "certified")
+#: Why a download-only version cannot be opened from its library files (a catalog-only
+#: snapshot, or a version whose folder is gone): the pack the release publishes is the way.
+DOWNLOAD_NEEDED = ("This version is not on this computer. Connect to the internet, refresh "
+                   "the Assessment library and download it.")
 
 
 class GalleryError(Exception):
@@ -95,6 +102,12 @@ class Version:
     assets: dict = field(default_factory=dict)       # kind -> Asset
     assessment_type: str = "deep"
     method_version: str | None = None                # an EASI version: the identity EASI reports
+    #: Read from library files that hold no version folder (the catalog-only snapshot the
+    #: apps payload ships): nothing here builds its pack, the release's pack opens it.
+    download_only: bool = False
+    #: A DEEP version's reference to its evidence package (evidence.json beside the bundle),
+    #: carried as written; listed in library-v2.json only, never in the schema-1 feed.
+    evidence: dict | None = None
 
     @property
     def in_deep(self) -> bool:
@@ -129,6 +142,11 @@ class Entry:
     def deep_hidden(self) -> bool:
         """DEEP does not list this assessment, whatever its versions' statuses."""
         return self.type == "deep" and str(self.id).endswith(DEEP_HIDDEN_SUFFIXES)
+
+    @property
+    def download_only(self) -> bool:
+        """No version of this assessment is on this computer (a catalog-only snapshot)."""
+        return bool(self.versions) and all(v.download_only for v in self.versions)
 
     @property
     def group(self) -> str:
@@ -191,9 +209,18 @@ def _easi_counts(aid: str, v: int) -> tuple[int | None, int | None]:
     return len(cat.get("methods") or []), len(fids)
 
 
+def version_files_present(aid: str, version: int, assessment_type: str = "deep") -> bool:
+    """True when the version folder holds what its pack is built from: the session (DEEP) or
+    the method envelope (EASI). A catalog-only snapshot holds neither."""
+    name = lib.EASI_ENVELOPE if assessment_type == "easi" else lib.SESSION_FILE
+    return (lib.version_dir(aid, int(version)) / name).is_file()
+
+
 def version_from_library(aid: str, row: dict, *, assets: dict | None = None,
                          assessment_type: str = "deep") -> Version:
-    """One version's catalog row from its library files."""
+    """One version's catalog row from its library files. A version whose folder is absent
+    (the catalog-only snapshot) still lists, from the manifest and the assessment's records:
+    no metric counts, no assets, and ``download_only`` set."""
     v = int(row.get("version") or 0)
     status = lib.version_status(aid, v)
     validation = lib.version_validation_state(aid, v)
@@ -213,7 +240,8 @@ def version_from_library(aid: str, row: dict, *, assets: dict | None = None,
         metrics=n_metrics, functions_covered=covered,
         revision_notes=(row.get("revisionNotes") or None),
         assets=dict(assets or {}), assessment_type=assessment_type,
-        method_version=(row.get("methodVersion") or None) if assessment_type == "easi" else None)
+        method_version=(row.get("methodVersion") or None) if assessment_type == "easi" else None,
+        download_only=not version_files_present(aid, v, assessment_type))
 
 
 def entries_from_library(*, assets_for: Callable[[str, int], dict] | None = None) -> list[Entry]:
@@ -264,7 +292,10 @@ def origin_meta(entry: Entry, version: Version, *, source: str) -> dict:
 
 
 def pack_bytes(entry: Entry, version: Version, *, source: str = "release") -> bytes:
-    """The byte-deterministic pack of one library version."""
+    """The byte-deterministic pack of one library version. A download-only version (its
+    folder is not here) is refused with :data:`DOWNLOAD_NEEDED`, never a file error."""
+    if not version_files_present(entry.id, version.version, entry.type):
+        raise GalleryError(DOWNLOAD_NEEDED)
     if entry.type == "easi":
         return _easi_pack_bytes(entry, version, source=source)
     vdir = lib.version_dir(entry.id, version.version)
@@ -305,7 +336,8 @@ def sha256_bytes(data: bytes) -> str:
 def catalog_doc(entries: Iterable[Entry], *, source_commit: str | None = None,
                 schema: int = CATALOG_SCHEMA) -> dict:
     """library.json (schema 1): every DEEP assessment, every version, every asset; or
-    library-v2.json (schema 2): every assessment of every type, each entry typed."""
+    library-v2.json (schema 2): every assessment of every type, each entry typed, and a
+    version's evidence package reference where it has one (the schema-1 feed is frozen)."""
     doc = {"schema": int(schema),
            "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "source": {"repo": REPO, "commit": source_commit},
@@ -326,6 +358,8 @@ def catalog_doc(entries: Iterable[Entry], *, source_commit: str | None = None,
                 "assets": {k: ({"name": a.name, "size": a.size, "sha256": a.sha256}
                                if a is not None else None) for k, a in v.assets.items()},
                 **({"methodVersion": v.method_version} if e.type == "easi" else {}),
+                **({"evidence": v.evidence}
+                   if schema >= CATALOG_SCHEMA_V2 and v.evidence is not None else {}),
             } for v in e.versions],
         })
     return doc
@@ -386,7 +420,9 @@ def parse_catalog(text: str) -> list[Entry]:
                     assets={k: x for k, x in assets.items() if x is not None},
                     assessment_type=atype,
                     method_version=(str(v.get("methodVersion")) if atype == "easi"
-                                    and v.get("methodVersion") else None)))
+                                    and v.get("methodVersion") else None),
+                    evidence=(dict(v["evidence"]) if isinstance(v.get("evidence"), dict)
+                              else None)))
             if not versions:
                 continue
             versions.sort(key=lambda x: -x.version)
@@ -521,7 +557,10 @@ def _read_catalog_text(base: str, name: str) -> str | None:
 
 
 def snapshot_entries() -> list[Entry]:
-    """The catalog of the library this app ships (the offline fallback), or []."""
+    """The catalog of the library this app ships (the offline fallback), or []. The apps
+    payload ships a catalog-only snapshot, so offline every version lists as download-only
+    (``Version.download_only``, no assets): the start page says a download is needed, and
+    nothing fails for want of a version folder."""
     try:
         return entries_from_library()
     except Exception:  # noqa: BLE001
@@ -630,8 +669,9 @@ def fetch_pack(asset: Asset, *, progress: ProgressFn | None = None,
 
 __all__ = ["CATALOG_SCHEMA", "CATALOG_SCHEMA_V2", "CATALOG_NAME_V2", "pack_name",
            "RELEASE_TAG", "CATALOG_NAME", "PUBLIC_BASE_URL", "BASE_URL_ENV",
-           "DEEP_STATUSES", "GalleryError", "GalleryGone", "GalleryCancelled", "Asset",
-           "Version", "Entry", "entries_from_library", "version_from_library", "origin_files",
+           "DEEP_STATUSES", "DOWNLOAD_NEEDED", "GalleryError", "GalleryGone",
+           "GalleryCancelled", "Asset", "Version", "Entry", "entries_from_library",
+           "version_from_library", "version_files_present", "origin_files",
            "origin_meta", "pack_bytes", "sha256_bytes", "catalog_doc", "parse_catalog",
            "http_get", "base_url", "cache_dir", "cached_catalog", "catalog_stale",
            "refresh_catalog", "snapshot_entries", "load_catalog", "packs_dir", "cached_pack",

@@ -67,8 +67,17 @@ def session_view(state: AppState) -> dict:
             "provenance": provenance,
             "entries": pe.reference_rows(effective, mapping, built=built),
             "not_selected": pe.not_selected_pairs(effective),
-            "withheld": {str(w.get("metricKey")) for w in
+            # metric -> the reason it was withheld (REF-06 unless the entry names another)
+            "withheld": {str(w.get("metricKey")): pe.withheld_reason(w) for w in
                          (effective or {}).get("insufficientReferenceSupport") or []}}
+
+
+#: how a withheld metric reads in the dialog's metric list, by reason; any other
+#: reason (REF-06, the Round 2 rules) keeps the no-reference-support wording
+WITHHELD_STATE_WORDS = {
+    pe.HIGH_MISSINGNESS: "withheld: high missingness (DATA-03)",
+    pe.MEASUREMENT_PRECISION_FLOOR: "withheld: measurement-precision floor (CURVE-09)",
+}
 
 
 def metric_name(metric: str, view: Mapping) -> str:
@@ -97,8 +106,12 @@ def metric_state(metric: str, function_id: Optional[str], view: Mapping) -> tupl
         if entry.get("owner") and entry.get("kind") not in ("owner_entered", "owner_exception"):
             label = f"{label}, chosen by the owner"
         return (f"{label}, scores this function" if here else label), True
-    if mk in view["withheld"]:
-        return "withheld, no reference support", True
+    withheld = view["withheld"]
+    if mk in withheld:
+        # the reason rides with the key (dialog_view); a plain set of keys, as an
+        # older caller builds it, reads as the no-reference-support wording
+        reason = withheld[mk] if isinstance(withheld, Mapping) else None
+        return WITHHELD_STATE_WORDS.get(str(reason or ""), "withheld, no reference support"), True
     return "not in this version", True
 
 

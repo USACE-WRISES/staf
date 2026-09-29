@@ -154,3 +154,44 @@ def test_a_session_written_before_redundancy_reads_as_not_computed():
     payload["fields"].pop("metric_redundancy", None)
     back = sio.decode_session_fields(json.loads(sio.dumps_session(payload)))
     assert back.get("metric_redundancy") is None
+
+
+# --- campaign Round 1: SELECT-01 approvals and the rebuild ledger ------------- #
+def test_portfolio_approvals_survive_save_and_reopen_and_read_as_none_before():
+    approvals = [{"functionId": "habitat-provision", "approver": "GM",
+                  "note": "Three complementary metrics.", "date": "2026-09-25"}]
+    assert "portfolio_approvals" in sio.SESSION_FIELDS
+    payload = sio.dump_session_fields({"portfolio_approvals": approvals}, session_name="a")
+    back = sio.decode_session_fields(json.loads(sio.dumps_session(payload)))
+    assert back["portfolio_approvals"] == approvals
+    old = sio.dump_session_fields({"session_name": "old"}, session_name="old")
+    old["fields"].pop("portfolio_approvals", None)
+    assert sio.decode_session_fields(json.loads(sio.dumps_session(old)))["portfolio_approvals"] is None
+    assert sio.decode_session_fields({})["portfolio_approvals"] is None
+
+
+def test_the_reference_build_ledger_is_an_additive_key():
+    from streamcurves import provenance as pv
+    ledger = {"schema": pv.LEDGER_SCHEMA, "region": {"kind": "ecoregion", "code": "58"},
+              "build": {"inputsDigest": None, "refit": "missing", "carriedFrom": None,
+                        "methodologyVersion": "0.14-provisional", "protocolSha256": None},
+              "rows": [{"metric": "phab_XEMBED", "functionId": "hyporheic-connectivity",
+                        "disposition": "refitted", "changed": True}]}
+    build = {"method": "pressure-screen", "fixedMetrics": [], "ledger": ledger}
+    payload = sio.dump_session_fields({"reference_build": build}, session_name="b")
+    back = sio.decode_session_fields(json.loads(sio.dumps_session(payload)))
+    assert back["reference_build"]["ledger"] == ledger
+    older = sio.dump_session_fields({"reference_build": {"method": "pressure-screen"}}, session_name="c")
+    back = sio.decode_session_fields(json.loads(sio.dumps_session(older)))
+    assert back["reference_build"].get("ledger") is None
+
+
+def test_a_project_holding_approvals_writes_format_2_and_a_pack_keeps_format_1():
+    from streamcurves import project_file as pf
+    approvals = [{"functionId": "habitat-provision", "approver": "GM", "note": "n", "date": "2026-09-25"}]
+    assert pf.required_format({"portfolio_approvals": approvals}) == 2
+    assert pf.required_format({"portfolio_approvals": approvals}, pack=True) == 1
+    assert pf.required_format({"portfolio_approvals": []}) == 1
+    assert pf.required_format({"portfolio_approvals": None}) == 1
+    text = pf.session_text_from_fields({"portfolio_approvals": approvals}, session_name="t")
+    assert pf.session_text_format(text) == 2 and pf.session_text_format(text, pack=True) == 1

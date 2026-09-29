@@ -21,6 +21,10 @@ What differs from the legacy pass:
   still get reference curves, read from the station table.
 * A registry split becomes real curves where the pool supports it (STRAT-10).
 * Every curve is checked for discrimination (CURVE-12).
+* Methodology 0.15: a metric whose pool is mostly unmeasured for it (DATA-03)
+  and a two-sided curve narrower than its measurement-precision floor
+  (CURVE-09) are withheld at the build with a statement, under REF-06's record
+  shape, the same in every region, with no review item raised.
 
 The curve engine is untouched.
 """
@@ -29,7 +33,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable, Iterable, Optional
 
 import re
 
@@ -161,6 +165,17 @@ BORROWED_CAVEAT = ("The reference stations for this curve were borrowed from {wh
 INVERTED_CAVEAT = ("In the discrimination check this curve scored pressured stations above "
                    "reference stations (area under the curve {auc:.2f}), so the score may not "
                    "track condition here. Read it with the other metrics of the function.")
+ZERO_INFLATED_CAVEAT = ("{n_zero} of the {n} reference stations ({share:.0%}) have a value of "
+                        "zero, above the {threshold:.0%} at which the pool counts as "
+                        "zero-inflated, so the curve was fitted to the positive values only and "
+                        "a value of zero scores 0 (the two-part rule).")
+
+
+def is_withheld_record(d) -> bool:
+    """A reference-support record of a metric a rule withheld although its pool
+    exists (the discrimination gate, the zero-inflation rule): counted as
+    withheld, never as a curve."""
+    return bool((d or {}).get("withheld")) if isinstance(d, dict) else False
 
 
 def stratifier_block(record: dict) -> Optional[dict]:
@@ -223,6 +238,28 @@ def reference_annotations(evidence: dict, metrics) -> dict[str, dict]:
                     f" ({rec.get('regionName')})" if rec.get("regionName") else "")
                 caveats.append(BORROWED_CAVEAT.format(
                     where=where, note=str(rec.get("transferNote") or "")).strip())
+            if str(rec.get("transferRisk") or "") == rp.RISK_UNVALIDATED:
+                # methodology 0.16 (REF-16): the four disclosure fields ride at the
+                # metric, where DEEP, the calculator and the promotion gate read
+                # them, and the limitation rides as a caveat an older DEEP prints
+                ann["transferRisk"] = rp.RISK_UNVALIDATED
+                ann["transferValidation"] = dict(rec.get("transferValidation") or {})
+                ann["transferNote"] = str(rec.get("transferNote") or "")
+                ann["confidenceCap"] = rec.get("confidenceCap")
+                limitation = rp.flagged_limitation(rec)
+                if limitation and limitation not in caveats:
+                    caveats.append(limitation)
+        kept_rec = (evidence.get("missingness") or {}).get(mk) or {}
+        if kept_rec.get("keptForCoverage"):
+            # methodology 0.16 (D18): a pool DATA-03 would have withheld, kept as its
+            # function's last candidate, carries its missingness as a limitation
+            meta = staf_library.staf_function_meta()
+            by_id = dict(zip(meta["id"].astype(str), meta["name"].astype(str)))
+            names = [by_id.get(str(fid), str(fid)) for fid in kept_rec["keptForCoverage"]]
+            caveat = missingness_kept_caveat(
+                kept_rec, names, float(methodology.threshold("data_rules.max_missingness_review")))
+            if caveat not in caveats:
+                caveats.append(caveat)
         if comparisons.get(mk):
             ann["localComparison"] = dict(comparisons[mk])
         block = stratifier_block(applied.get(mk) or {})
@@ -233,6 +270,16 @@ def reference_annotations(evidence: dict, metrics) -> dict[str, dict]:
             ann["discrimination"] = {k: disc.get(k) for k in DISCRIMINATION_KEYS}
             if disc.get("verdict") == "inverted" and disc.get("aucRefVsPressure") is not None:
                 caveats.append(INVERTED_CAVEAT.format(auc=float(disc["aucRefVsPressure"])))
+        zi = (evidence.get("zero_inflation") or {}).get(mk)
+        if zi and zi.get("handling") == curves.ZERO_INFLATED_TWO_PART \
+                and zi.get("two_part_applicable"):
+            # campaign Round 2 (C3a): the two-part rule states the zero share it set aside
+            ann["zeroInflation"] = {"share": zi.get("share"), "threshold": zi.get("threshold"),
+                                    "nZero": zi.get("n_zero"), "n": zi.get("n"),
+                                    "handling": zi.get("handling")}
+            caveats.append(ZERO_INFLATED_CAVEAT.format(
+                n_zero=int(zi.get("n_zero") or 0), n=int(zi.get("n") or 0),
+                share=float(zi.get("share") or 0.0), threshold=float(zi.get("threshold") or 0.0)))
         if caveats:
             ann["curveCaveats"] = caveats
         # how the metric is measured (the NRSA protocol the curve's data followed)
@@ -280,28 +327,86 @@ def _functions_of(metric: str) -> list[dict]:
     return functions
 
 
+#: The reasons a metric is withheld with no curve. REF-06 is the hierarchy
+#: running out. The others withhold a metric whose pool exists, and the record
+#: on the metric says so: the two campaign Round 2 rules (config
+#: ``curve12.gate`` and ``curve10.zero_inflated_handling: withhold``, both off
+#: by default) and, since methodology 0.15, the two rules that used to hold a
+#: built curve for a reviewer: DATA-03 (the pool is mostly unmeasured for the
+#: metric) and CURVE-09 (a two-sided core narrower than the metric's
+#: measurement-precision floor).
+INSUFFICIENT_REFERENCE_SUPPORT = "insufficient-reference-support"
+DISCRIMINATION_GATE = "discrimination-gate"
+ZERO_INFLATED_POOL = "zero-inflated-reference-pool"
+HIGH_MISSINGNESS = "high-missingness"
+MEASUREMENT_PRECISION_FLOOR = "measurement-precision-floor"
+WITHHELD_REASON_WORDS = {INSUFFICIENT_REFERENCE_SUPPORT: "insufficient reference support",
+                         DISCRIMINATION_GATE: "the discrimination gate",
+                         ZERO_INFLATED_POOL: "a zero-inflated reference pool",
+                         HIGH_MISSINGNESS: "high missingness over its reference pool",
+                         MEASUREMENT_PRECISION_FLOOR: "the measurement-precision floor"}
+#: the ``reference_support`` status of a metric a rule withheld although its
+#: pool exists (methodology 0.15); the pool's own status rides beside it
+STATUS_WITHHELD = "withheld"
+
+
+def withheld_reason(item: dict) -> str:
+    """The reason of one ``insufficient_support`` item (REF-06 unless the item
+    names another rule)."""
+    return str((item or {}).get("reason") or INSUFFICIENT_REFERENCE_SUPPORT)
+
+
+def withheld_rule(item: dict) -> str:
+    """The rule a withheld entry or ``insufficient_support`` item was withheld
+    under: the ``rule`` it names, else the rule its reason implies."""
+    rule = (item or {}).get("rule")
+    return str(rule) if rule else WITHHELD_RULES.get(withheld_reason(item), "REF-06")
+
+
+def withheld_support_record(decision: dict, reason: str) -> dict:
+    """The ``reference_support`` record of a metric a rule withheld although its
+    pool exists (methodology 0.15): status ``withheld``, the pool's own status
+    beside it (``pool_status``), the reason and the rule. The pool's numbers,
+    the options tried and the station ids stay, so the record still says what
+    the pool was; :func:`is_withheld_record` keys on ``withheld``."""
+    d = dict(decision or {})
+    return {**d, "status": STATUS_WITHHELD, "pool_status": d.get("status"),
+            "withheld": str(reason), "rule": WITHHELD_RULES.get(str(reason), "REF-06")}
+
+
 def withheld_metrics(evidence: dict) -> list[dict]:
-    """The bundle's ``insufficientReferenceSupport`` list (REF-06): every metric
-    withheld because no defensible reference pool exists, with the function it
-    would have scored and what was tried."""
+    """The bundle's ``insufficientReferenceSupport`` list: every metric withheld
+    with no curve, with the function it would have scored and what was tried.
+    Most are REF-06 (no defensible reference pool); a metric withheld by the
+    discrimination gate or the zero-inflation rule carries that reason, its own
+    statement and the numbers behind it (``detail``)."""
     out = []
     for mk, item in sorted((evidence.get("insufficient_support") or {}).items()):
         cfg = item.get("config") or {}
         d = item.get("decision") or {}
         functions = _functions_of(mk)
-        out.append({
+        reason = withheld_reason(item)
+        record = {
             "metricId": "spring-" + deep_slug(mk), "metricKey": mk,
             "metricName": cfg.get("display_name") or mk, "units": cfg.get("units") or "",
             "functions": functions,
             "functionId": functions[0]["functionId"] if functions else None,
-            "reason": "insufficient-reference-support",
-            "statement": _withheld_statement(evidence, mk),
+            "reason": reason,
+            "statement": (item.get("statement") if reason != INSUFFICIENT_REFERENCE_SUPPORT
+                          and item.get("statement") else _withheld_statement(evidence, mk)),
             "levelsTried": d.get("levels_tried") or [],
             "rungsTried": [{"rung": a.get("rung"), "why": a.get("why"),
                             **({"condition": a["condition"]} if a.get("condition") else {})}
                            for a in (evidence.get("ladder_attempts") or [])
                            if a.get("metric") == mk and a.get("rung")],
-        })
+        }
+        if reason != INSUFFICIENT_REFERENCE_SUPPORT:
+            # the rule that judged the existing pool (DATA-03, CURVE-09, CURVE-12,
+            # CURVE-10); a REF-06 entry keeps its shape and implies REF-06
+            record["rule"] = withheld_rule(item)
+        if item.get("detail"):
+            record["detail"] = dict(item["detail"])
+        out.append(record)
     return out
 
 
@@ -349,6 +454,14 @@ HELD_REASONS = {
     run_state.CURVE_STATUS_ERROR: "the build raised an error",
 }
 HELD_FOR_REVIEW = "held-for-review"
+#: reason -> the rule a withheld entry is recorded under (the ledger row, the
+#: register's decision and the REF-15 override name read it)
+WITHHELD_RULES = {INSUFFICIENT_REFERENCE_SUPPORT: "REF-06",
+                  DISCRIMINATION_GATE: "CURVE-12",
+                  ZERO_INFLATED_POOL: "CURVE-10",
+                  HIGH_MISSINGNESS: "DATA-03",
+                  MEASUREMENT_PRECISION_FLOOR: "CURVE-09",
+                  HELD_FOR_REVIEW: "CURVE-07"}
 
 
 def held_for_review(evidence: dict, curve_review: dict, *, scored) -> list[dict]:
@@ -407,7 +520,11 @@ RUNG_LABELS = {"REF-08": curve_basis.label_for(curve_basis.NATIONAL),
                "REF-10": curve_basis.label_for(curve_basis.PUBLISHED),
                "REF-12": curve_basis.label_for(curve_basis.NATIONAL),
                "REF-13": curve_basis.label_for(curve_basis.MODELED),
-               "REF-14": curve_basis.label_for(curve_basis.PUBLISHED)}
+               "REF-14": curve_basis.label_for(curve_basis.PUBLISHED),
+               # methodology 0.16: the flagged-transfer rung, after every validated source
+               rp.RULE_FLAGGED: "Flagged transfer",
+               # methodology 0.16: the last resort, EASI's screening method (D19)
+               fixed_criteria.LAST_RESORT_RULE: curve_basis.label_for(curve_basis.EASI_SCREENING)}
 
 
 def _pool_sentence(x: dict) -> str:
@@ -426,7 +543,9 @@ def reference_method_block(evidence: dict) -> dict:
     """The bundle's top-level ``referenceMethod`` block."""
     screen = evidence.get("reference_screen") or {}
     support = evidence.get("reference_support") or {}
-    statuses = [str(d.get("status")) for d in support.values()]
+    # a metric a rule withheld keeps its pool record and counts as withheld
+    statuses = [rp.STATUS_INSUFFICIENT if is_withheld_record(d) else str(d.get("status"))
+                for d in support.values()]
     pool = evidence.get("reference_pool_summary") or {}
     return {"method": METHOD, "methodVersion": screen.get("methodVersion"),
             "screenId": screen.get("id"), "screenTier": screen.get("tier"),
@@ -441,6 +560,19 @@ def reference_method_block(evidence: dict) -> dict:
             "nCurvesBorrowed": sum(1 for s in statuses if s.startswith("borrowed")),
             "nCurvesRegionalScreen": statuses.count(rp.STATUS_LOCAL_RELAXED),
             "nCurvesCarried": sum(1 for d in support.values() if d.get("carried_from")),
+            # methodology 0.16 (REF-16): curves on a flagged transfer
+            "nCurvesFlagged": sum(1 for d in support.values()
+                                  if str(d.get("transfer_risk") or "") == rp.RISK_UNVALIDATED
+                                  and not is_withheld_record(d)),
+            # methodology 0.16 (REF-17): curves on an adopted EASI screening method
+            "nCurvesEasiScreening": sum(1 for d in support.values()
+                                        if curve_basis.resolve(d.get("basis"))
+                                        == curve_basis.EASI_SCREENING
+                                        and not is_withheld_record(d)),
+            # the evidence-time count: metrics with no defensible pool. The bundle's
+            # own nWithheld and nHeldForReview are set at assembly from the list it
+            # exports (deep_export.build_deep_assessment_bundle), which differs once
+            # owner sources and finalizations move metrics back into scoring blocks.
             "nWithheld": statuses.count(rp.STATUS_INSUFFICIENT),
             "curvesByBasis": _basis_counts(support),
             "statement": _method_statement(support)}
@@ -450,7 +582,7 @@ def _basis_counts(support: dict) -> dict:
     """How many curves rest on each rung, so the bundle states its own mix."""
     out: dict = {}
     for d in support.values():
-        if str(d.get("status")) == rp.STATUS_INSUFFICIENT:
+        if str(d.get("status")) == rp.STATUS_INSUFFICIENT or is_withheld_record(d):
             continue
         basis = curve_basis.resolve(d.get("basis"))
         out[basis] = out.get(basis, 0) + 1
@@ -466,6 +598,7 @@ def _method_statement(support: dict) -> str:
     is assembled from the curves that were built.
     """
     counts = _basis_counts(support)
+    support = {mk: d for mk, d in support.items() if not is_withheld_record(d)}
     local = sum(1 for d in support.values() if str(d.get("status")) == rp.STATUS_LOCAL)
     borrowed = sum(1 for d in support.values()
                    if str(d.get("status") or "").startswith("borrowed"))
@@ -495,6 +628,19 @@ def _method_statement(support: dict) -> str:
     if n_carried:
         parts.append(f"{n_carried} of these {_curves(n_carried).split()[0]} carried forward "
                      f"unchanged from version {', '.join(str(v) for v in carried)}.")
+    flagged = sum(1 for d in support.values()
+                  if str(d.get("transfer_risk") or "") == rp.RISK_UNVALIDATED)
+    if flagged:
+        parts.append(f"{flagged} {'rests' if flagged == 1 else 'rest'} on a flagged transfer: a "
+                     "comparable least-disturbed pool the recovery test did not confirm for this "
+                     "ecoregion, used because no validated source supports the metric here, "
+                     "with transfer risk unvalidated and confidence capped.")
+    adopted = counts.get(curve_basis.EASI_SCREENING, 0)
+    if adopted:
+        parts.append(f"{adopted} {'function rests' if adopted == 1 else 'functions rest'} on "
+                     "a method adopted from EASI's national screening method (provisional), "
+                     "because no reference pool, national donor, model, published benchmark or "
+                     "flagged transfer supported the function in this ecoregion.")
     parts.append("A metric that no basis supports is not scored, and the function it would "
                  "have scored is reported as unassessed.")
     return " ".join(parts)
@@ -570,6 +716,10 @@ def support_frame(result: dict) -> pd.DataFrame:
             "self_coverage": d.get("self_coverage"),
             "supported_level": rp.LEVEL_LABELS.get(d.get("supported_level") or "", ""),
             "transfer_risk": d.get("transfer_risk"),
+            # methodology 0.16 (REF-16): the flag, its recovery verdict and its cap
+            "flagged": str(d.get("transfer_risk") or "") == rp.RISK_UNVALIDATED,
+            "transfer_validation": rp.validation_words(d.get("transfer_validation")),
+            "confidence_cap": d.get("confidence_cap"),
             "split_applied": bool((applied.get(mk) or {}).get("applied")),
             "auc_ref_vs_pressure": disc.get("aucRefVsPressure"),
             "discrimination": disc.get("verdict"),
@@ -615,15 +765,28 @@ def coverage_exceptions_draft(result: dict, *, recorded_by: str = "") -> list[di
             f"{w.get('metricName')}, and nothing could be built from it: "
             f"{unbuilt[str(w.get('metricKey'))].get('failedAtBuild')}"
             for w in items if str(w.get("metricKey")) in unbuilt)
+        pools = [w for w in items if withheld_reason(w) == INSUFFICIENT_REFERENCE_SUPPORT]
+        ruled = [w for w in items if withheld_reason(w) != INSUFFICIENT_REFERENCE_SUPPORT]
+        text = f"Every candidate metric for this function ({names}) was withheld."
+        if pools:
+            text += (" No station pool from this ecoregion or a wider region under the "
+                     "regional screen passed acceptance, no comparable national reference "
+                     "passed, no approved modeled reference applies here, and the verified "
+                     "catalog holds no applicable published criterion."
+                     if not ruled else
+                     " For " + ", ".join(sorted(str(w.get("metricName")) for w in pools))
+                     + " no station pool, national reference, modeled reference or published "
+                       "criterion passed acceptance.")
+        for w in ruled:
+            # a metric withheld by a rule that judged an existing pool says which
+            # rule, in the record's own words
+            text += (f" {w.get('metricName')} was withheld by "
+                     f"{WITHHELD_REASON_WORDS.get(withheld_reason(w), withheld_reason(w))}: "
+                     f"{str(w.get('statement') or '').strip()}")
+        text += " No curve was forced." + _blocker_detail(result, pools)
         out.append({
             "functionId": fid, "reason": "insufficient-reference-support",
-            "justification": (
-                f"Every candidate metric for this function ({names}) was withheld. No station "
-                "pool from this ecoregion or a wider region under the regional screen passed "
-                "acceptance, no comparable national reference passed, no approved modeled "
-                "reference applies here, and the verified catalog holds no applicable "
-                "published criterion. No curve was forced." + _blocker_detail(result, items)
-                + (" " + owner if owner else "")),
+            "justification": text + (" " + owner if owner else ""),
             "recordedBy": recorded_by, "recordedAt": None})
     return out
 
@@ -657,9 +820,27 @@ def _with_fixed_mapping(mapping, fixed_keys: list[str]) -> pd.DataFrame:
     return pd.concat([base, extra], ignore_index=True)
 
 
+def _with_last_resort_mapping(mapping, keys: list[str]) -> pd.DataFrame:
+    """The mapping with each last-resort metric's own function appended (REF-17):
+    the function it completes is part of the method, so an earlier row for the
+    metric is replaced, never merged."""
+    base = mapping if isinstance(mapping, pd.DataFrame) else pd.DataFrame(
+        columns=["metric_key", "discipline", "function_label", "sort_order"])
+    if len(base) and "metric_key" in base.columns:
+        base = base[~base["metric_key"].astype(str).isin(keys)]
+    order = (pd.to_numeric(base["sort_order"], errors="coerce")
+             if "sort_order" in base.columns else pd.Series(dtype="float64"))
+    start = int(order.max()) if order.notna().any() else 0
+    extra = fixed_criteria.last_resort_mapping_rows(keys)
+    extra["sort_order"] = range(start + 1, start + 1 + len(extra))
+    return pd.concat([base, extra], ignore_index=True)
+
+
 SESSION_ANNOTATION_KEYS = ("criteriaBasis", "basis", "basisLabel", "basisStatement",
                            "basisLimit", "referenceSupport", "localComparison",
-                           "stratifier", "discrimination", "methodContext")
+                           "stratifier", "discrimination", "methodContext",
+                           # methodology 0.16 (REF-16): a flagged transfer's disclosure
+                           "transferRisk", "transferValidation", "transferNote", "confidenceCap")
 
 #: What the headless build writes on a curve it fitted and an interactive
 #: republish cannot recompute (``regional_agent.metric_annotations``): the
@@ -1351,6 +1532,12 @@ def ladder_confidence(evidence: dict, ladder_config: dict) -> dict[str, dict]:
             out[mk] = {"label": curve_basis.label_for(basis), "total": None,
                        "caps_applied": []}
             continue
+        if basis == curve_basis.EASI_SCREENING:
+            # REF-17: a national screening method, no sample: a label, no number,
+            # and the basis cap named so a reader sees why the label is low
+            out[mk] = {"label": "EASI screening method (provisional)", "total": None,
+                       "caps_applied": [curve_basis.CAP_REASONS[curve_basis.EASI_SCREENING]]}
+            continue
         cfg = ladder_config.get(mk) or {}
         got = conf.curve_confidence({
             "basis": basis,
@@ -1419,6 +1606,13 @@ def bundle_inputs(evidence: dict, meta: dict, intended_rows: dict,
             merged["basisStatement"] = curve_basis.statement_for(basis)
             merged["basisLimit"] = limit or ""
 
+            if basis == curve_basis.NATIONAL and merged.get("referenceN") is None:
+                # R5-12: the donors behind a national-reference curve, as a pool
+                # curve states its stations (referenceSupport keeps nPool beside it)
+                sup = (evidence.get("reference_support") or {}).get(mk) or {}
+                n_ref = (ladder_rows.get(mk) or {}).get("n_reference") or sup.get("n_usable")
+                if n_ref:
+                    merged["referenceN"] = int(n_ref)
             got = ladder_conf.get(mk) or {}
             if got.get("label"):
                 merged["confidenceLabel"] = got["label"]
@@ -1446,6 +1640,24 @@ def bundle_inputs(evidence: dict, meta: dict, intended_rows: dict,
                     merged["criteriaSource"] = (prov.get("benchmark")
                                                 or merged.get("criteriaSource"))
                 merged["publishedBenchmark"] = prov
+            elif basis == curve_basis.EASI_SCREENING:
+                # REF-17 (owner decision D19): an adopted EASI screening method
+                # behaves like the fixed criteria downstream (no training
+                # population, no pairing check) and carries the method's own
+                # evidentiary status, citations and limitations, the input the
+                # user supplies and the limitation of this use
+                entry = fixed_criteria.last_resort_entry(mk)
+                merged["criteriaBasis"] = fixed_criteria.CRITERIA_BASIS
+                merged["criteriaSource"] = fixed_criteria.criteria_source(entry)
+                merged["sourceCitation"] = fixed_criteria.last_resort_citation_line(entry)
+                merged["metricRole"] = fixed_criteria.LAST_RESORT_ROLE
+                merged["adoptedMethod"] = fixed_criteria.last_resort_provenance(entry)
+                if entry.get("required_input"):
+                    merged["methodContext"] = entry["required_input"]
+                for text in [entry.get("limitation")] + list(entry.get("limitations") or []):
+                    if text and text not in caveats:
+                        caveats.append(text)
+                merged["curveCaveats"] = caveats
             annotations[mk] = merged
     carried = dict(evidence.get("carried") or {})
     if carried:
@@ -1464,11 +1676,199 @@ def bundle_inputs(evidence: dict, meta: dict, intended_rows: dict,
     return rows, config, mapping
 
 
+def zero_inflation_records(data: pd.DataFrame, metric_config: dict,
+                           geometry: Optional[dict] = None) -> dict[str, dict]:
+    """The zero-inflation record (``curves.zero_inflation_of``) of every metric
+    whose pool is zero-inflated under the configured rule (campaign Round 2
+    candidate C3a); empty when the rule is off, the default. The same function
+    the curve engine applies, on the same masked pool values, so the record and
+    the curve agree by construction."""
+    geo = dict(geometry if geometry is not None else curves.seed_geometry())
+    if geo.get("zero_inflated_share") is None:
+        return {}
+    out: dict[str, dict] = {}
+    for mk, cfg in metric_config.items():
+        if mk not in data.columns:
+            continue
+        rec = curves.zero_inflation_of(data[mk], cfg or {}, geo)
+        if rec:
+            out[mk] = rec
+    return out
+
+
+def zero_inflated_statement(rec: dict) -> str:
+    """Why a zero-inflated pool withholds its metric (``zero_inflated_handling: withhold``)."""
+    return (f"Zero-inflated reference pool. {int(rec.get('n_zero') or 0)} of the "
+            f"{int(rec.get('n') or 0)} reference stations ({float(rec.get('share') or 0):.0%}) "
+            f"have a value of zero, above the {float(rec.get('threshold') or 0):.0%} at which "
+            "a curve seeded on the pool's quartiles would misread the median reference station, "
+            "so the metric is withheld under the zero-inflation rule. No curve was built and "
+            "the metric is not scored.")
+
+
+def discrimination_gate(discrimination: dict, settings: Optional[dict] = None) -> dict[str, dict]:
+    """The curves the CURVE-12 gate withholds (campaign Round 2 candidate C2,
+    ``curve12.gate``; empty when the gate is off, the default): a new curve whose
+    verdict is inverted or whose AUC is below ``curve12.min_auc``. A curve the
+    check could not evaluate passes. Carried curves never have a record here,
+    so the gate never touches them."""
+    st = dict(settings if settings is not None else methodology.curve12_gate())
+    if not st.get("gate"):
+        return {}
+    floor = float(st["min_auc"])
+    out: dict[str, dict] = {}
+    for mk, rec in (discrimination or {}).items():
+        rec = rec or {}
+        verdict = str(rec.get("verdict") or "")
+        auc = rec.get("aucRefVsPressure")
+        inverted = verdict == dz.VERDICT_INVERTED
+        below = auc is not None and float(auc) < floor
+        if not (inverted or below):
+            continue
+        out[mk] = {"verdict": verdict, "auc": None if auc is None else float(auc),
+                   "minAuc": floor, "nRef": rec.get("nRef"), "nPressure": rec.get("nPressure"),
+                   "why": "inverted" if inverted else "below_min_auc"}
+    return out
+
+
+def discrimination_gate_statement(rec: dict) -> str:
+    """Why the discrimination gate withholds a curve, on the metric's record."""
+    auc = rec.get("auc")
+    counts = f"{rec.get('nRef')} reference and {rec.get('nPressure')} pressured stations"
+    if rec.get("why") == "inverted":
+        how = (f"ranked pressured stations above reference stations (area under the curve "
+               f"{auc:.2f}; {counts})")
+    else:
+        how = (f"separated reference from pressured stations too weakly (area under the curve "
+               f"{auc:.2f}, below the gate's floor of {float(rec.get('minAuc') or 0):.2f}; "
+               f"{counts})")
+    return (f"Discrimination gate. In the discrimination check this curve {how}, so it is "
+            "withheld under the discrimination gate instead of being held for review. No "
+            "curve is published and the metric is not scored.")
+
+
+# --------------------------------------------------------------------------- #
+# Methodology 0.15: DATA-03 and CURVE-09 withhold at the build
+# --------------------------------------------------------------------------- #
+def missingness_withheld(missingness: dict) -> dict[str, dict]:
+    """The metrics DATA-03 withholds at the build (methodology 0.15): those
+    whose missing-data fraction over their own pool (:func:`pool_missingness`)
+    has the disposition ``review``, each with the numbers the statement names.
+    Judged before any curve is built, so the same fraction gives the same
+    outcome in every region; until 0.14 the built curve was held for a
+    reviewer instead."""
+    limit = float(methodology.threshold("data_rules.max_missingness_review"))
+    out: dict[str, dict] = {}
+    for mk, rec in sorted((missingness or {}).items()):
+        rec = rec or {}
+        if rec.get("disposition") != "review":
+            continue
+        out[mk] = {"missing_fraction": rec.get("missing_fraction"), "threshold": limit,
+                   "n_pool_members": rec.get("n_pool_members"),
+                   "n_with_value": rec.get("n_with_value"), "disposition": "review"}
+    return out
+
+
+def _pool_words(decision) -> str:
+    """A pool in words for a statement: the ecoregion's own, or the wider pool
+    with its level, code and name."""
+    d = decision.to_dict() if isinstance(decision, rp.PoolDecision) else dict(decision or {})
+    status = str(d.get("status") or "")
+    if status.startswith("local") or str(d.get("level") or "") == "l3":
+        return "this ecoregion's own reference pool"
+    level = rp.LEVEL_LABELS.get(str(d.get("level") or ""), "")
+    where = " ".join(x for x in (level, str(d.get("region_code") or "")) if x)
+    name = f" ({d['region_name']})" if d.get("region_name") else ""
+    return f"the {where} pool{name}" if where else "the reference pool"
+
+
+def missingness_statement(rec: dict, decision=None) -> str:
+    """Why DATA-03 withholds a metric, with the numbers: the fraction and the
+    pool it is measured over, the limit, and that nothing is scored."""
+    frac = float(rec.get("missing_fraction") or 0.0)
+    n = int(rec.get("n_pool_members") or 0)
+    have = int(rec.get("n_with_value") or 0)
+    limit = float(rec.get("threshold") or 0.0)
+    return (f"High missingness. {frac:.0%} of the {n} comparable reference stations of "
+            f"{_pool_words(decision)} have no value for this metric ({have} carry one), above "
+            f"the {limit:.0%} limit of rule DATA-03, so the metric is withheld at the build. "
+            "No curve was built and the metric is not scored.")
+
+
+def _finite(v) -> Optional[float]:
+    try:
+        x = float(v)
+    except (TypeError, ValueError):
+        return None
+    return x if x == x and abs(x) != float("inf") else None
+
+
+def precision_floor_records(curve_rows: dict, metric_config: dict, *,
+                            floors: Optional[dict] = None,
+                            core_multiple: Optional[float] = None) -> dict[str, dict]:
+    """The curves CURVE-09 withholds at the build (methodology 0.15): a
+    two-sided curve of a metric with a declared measurement-precision floor
+    (``curve_rules.measurement_precision_floors``) whose fitted Functioning core
+    is narrower than ``core_multiple`` times the floor. The test provenance
+    applied as an advisory record from v0.9, moved in front of the build; the
+    numbers the statement names ride in the record."""
+    floors = dict(floors if floors is not None
+                  else methodology.threshold("curve_rules.measurement_precision_floors", {}) or {})
+    mult = float(core_multiple if core_multiple is not None
+                 else methodology.threshold("curve_rules.measurement_precision_core_multiple", 2.0))
+    out: dict[str, dict] = {}
+    for mk, row in sorted((curve_rows or {}).items()):
+        precision = floors.get(mk)
+        if precision is None:
+            continue
+        mc = (metric_config or {}).get(mk) or {}
+        if curves.curve_form_of(mc) != curves.CURVE_FORM_OPTIMUM:
+            continue
+        lo, hi = _finite((row or {}).get("functioning_min")), _finite((row or {}).get("functioning_max"))
+        if lo is None or hi is None:
+            continue
+        core = hi - lo
+        floor_width = mult * float(precision)
+        if core >= floor_width:
+            continue
+        n = _finite((row or {}).get("n_reference"))
+        out[mk] = {"precision_sd": float(precision), "core_multiple": mult,
+                   "floor_width": floor_width, "functioning_core_width": core,
+                   "functioning_min": lo, "functioning_max": hi,
+                   "units": str(mc.get("units") or ""),
+                   "n_reference": None if n is None else int(n)}
+    return out
+
+
+def precision_floor_statement(rec: dict) -> str:
+    """Why CURVE-09 withholds a curve, with the numbers: the core, the floor it
+    is narrower than and the precision behind it."""
+    units = f" {rec['units']}" if rec.get("units") else ""
+    n = rec.get("n_reference")
+    at_n = f" at n = {int(n)}" if isinstance(n, (int, float)) else ""
+    return (f"Measurement-precision floor. The Functioning core of this two-sided curve spans "
+            f"{float(rec['functioning_core_width']):.3g}{units} ({float(rec['functioning_min']):.3g} "
+            f"to {float(rec['functioning_max']):.3g}{units}{at_n}), narrower than "
+            f"{float(rec['floor_width']):.3g}{units}, {float(rec['core_multiple']):g} times the "
+            f"metric's documented measurement precision of {float(rec['precision_sd']):.3g}{units}, "
+            "so band assignments inside it would present measurement noise as condition classes "
+            "and the metric is withheld at the build under rule CURVE-09. No curve was built and "
+            "the metric is not scored.")
+
+
 def source_of(decision: Optional[dict]) -> str:
     """Which source of the hierarchy a curve came from, for SELECT-04's ranking:
-    local, regional, national, modeled or published."""
+    local, regional, national, modeled, published, or flagged for a curve on a
+    flagged transfer (REF-16), which ranks last whatever pool it rests on, so a
+    validated source of any kind wins a function's place over it."""
     d = decision or {}
+    if str(d.get("transfer_risk") or "") == rp.RISK_UNVALIDATED:
+        return "flagged"
     basis = curve_basis.resolve(d.get("basis"))
+    if basis == curve_basis.EASI_SCREENING:
+        # methodology 0.16 (REF-17): the last resort ranks after everything,
+        # flagged transfers included; it only ever completes an empty function
+        return "pathway"
     if basis == curve_basis.NATIONAL:
         return "national"
     if basis == curve_basis.MODELED:
@@ -1476,6 +1876,55 @@ def source_of(decision: Optional[dict]) -> str:
     if basis == curve_basis.PUBLISHED:
         return "published"
     return "local" if str(d.get("status")) == rp.STATUS_LOCAL else "regional"
+
+
+def _abs_spearman(evidence: dict, a: str, b: str, *, min_n: int = 5) -> Optional[float]:
+    """The absolute Spearman correlation of two metrics over the stations that
+    carry both, from the pooled frame (``evidence["data"]``), or None when
+    either is not a column of it (a carried curve has no station values here)
+    or fewer than ``min_n`` stations carry both. Computed here rather than read
+    from the redundancy view, which lists only pairs above its report floor."""
+    data = evidence.get("data")
+    if not isinstance(data, pd.DataFrame) or a not in data.columns or b not in data.columns:
+        return None
+    pair = pd.DataFrame({"a": pd.to_numeric(data[a], errors="coerce"),
+                         "b": pd.to_numeric(data[b], errors="coerce")}).dropna()
+    if len(pair) < int(min_n):
+        return None
+    rho = pair["a"].corr(pair["b"], method="spearman")
+    return None if rho is None or rho != rho else abs(float(rho))
+
+
+def second_metric_check(evidence: dict, candidate: str, scored: list[str], ps: dict) -> dict:
+    """The independent-and-discriminating test of one candidate for a function's
+    next place (SELECT-04, ``metric_portfolio.second_metric_rule``): its absolute
+    Spearman with every metric the function already scores must be below
+    ``max_abs_spearman`` and its CURVE-12 AUC at least ``min_auc``. An unknown
+    correlation (no shared station values) or an unevaluable AUC fails the test
+    and the record says which."""
+    rhos = {m: _abs_spearman(evidence, candidate, m) for m in scored}
+    worst = max((r for r in rhos.values() if r is not None), default=None)
+    unknown = sorted(m for m, r in rhos.items() if r is None)
+    independent = bool(scored) and not unknown and (worst is None or worst < ps["max_abs_spearman"])
+    auc = ((evidence.get("discrimination") or {}).get(candidate) or {}).get("aucRefVsPressure")
+    discriminates = auc is not None and float(auc) >= ps["min_auc"]
+    why = []
+    if unknown:
+        why.append("no station values shared with " + ", ".join(unknown))
+    elif worst is not None and worst >= ps["max_abs_spearman"]:
+        why.append(f"absolute Spearman {worst:.2f} with a scored metric, not below "
+                   f"{ps['max_abs_spearman']:.2f}")
+    if auc is None:
+        why.append("no discrimination check could be run")
+    elif not discriminates:
+        why.append(f"discrimination AUC {float(auc):.2f}, below {ps['min_auc']:.2f}")
+    return {"metric": candidate, "against": list(scored),
+            "absSpearman": {m: (None if r is None else round(r, 4)) for m, r in rhos.items()},
+            "maxAbsSpearman": None if worst is None else round(worst, 4),
+            "auc": None if auc is None else float(auc),
+            "independent": bool(independent), "discriminates": bool(discriminates),
+            "joins": bool(independent and discriminates),
+            "why": "; ".join(why) if why else ""}
 
 
 def select_portfolio(evidence: dict, rows: dict, mapping: pd.DataFrame, config: dict,
@@ -1492,11 +1941,21 @@ def select_portfolio(evidence: dict, rows: dict, mapping: pd.DataFrame, config: 
     supported, not selected: its curve exists and its record says why it is not
     scored. Returns the rows and the mapping the exporter should read, and
     records the choice in ``meta["portfolioSelection"]``.
+
+    ``metric_portfolio.second_metric_rule`` (campaign Round 2 candidate C1)
+    governs the places after the first. ``rank`` is the rule above. Under
+    ``independent_and_discriminating`` the first new metric joins by rank and one
+    further place (at least two places in all, ``fill_to`` when larger) goes to
+    the highest-ranked candidate that passes :func:`second_metric_check` against
+    every metric already scored; each candidate's numbers are recorded per
+    function (``secondMetric``), as is the rule (``rule``).
     """
     from . import regional_agent as ra
-    fill_to = int(methodology.threshold("metric_portfolio.fill_to", 2) or 2)
+    ps = methodology.portfolio_settings()
+    fill_to, rule = ps["fill_to"], ps["second_metric_rule"]
     rank = dict(methodology.threshold("metric_portfolio.source_rank", {}) or
-                {"local": 0, "regional": 1, "national": 2, "modeled": 3, "published": 4})
+                {"local": 0, "regional": 1, "national": 2, "modeled": 3, "published": 4,
+                 "flagged": 5, "pathway": 6})
     support = evidence.get("reference_support") or {}
     kept_keys = (set(evidence.get("carried") or {}) | set(evidence.get("carry_rebuilt") or {})
                  | set(evidence.get("fixed_metrics") or {}))
@@ -1520,21 +1979,69 @@ def select_portfolio(evidence: dict, rows: dict, mapping: pd.DataFrame, config: 
             score = float(((scores.get(m) or {}).get("total")) or 0.0)
             return (int(rank.get(src, 9)), -score, m)
 
-        regular = sorted([m for m in cands if not (config.get(m) or {}).get("reserve")], key=key)
-        reserves = sorted([m for m in cands if (config.get(m) or {}).get("reserve")], key=key)
-        need = max(0, fill_to - len(kept))
-        chosen = regular[:need]
-        if not kept and not chosen:
-            chosen = reserves[:fill_to]
+        # methodology 0.16 (REF-16): a curve on a flagged transfer is the last
+        # resort of a function's portfolio, as it is of a metric's ladder. A
+        # validated reserve candidate (one that joins only a function that would
+        # otherwise be unassessed by a validated source) still wins the place over
+        # a flagged regular candidate; a flagged curve fills only what is left.
+        is_reserve = {m: bool((config.get(m) or {}).get("reserve")) for m in cands}
+        is_flagged = {m: source_of(support.get(m)) == "flagged" for m in cands}
+        regular_ok = sorted([m for m in cands if not is_reserve[m] and not is_flagged[m]], key=key)
+        regular_flagged = sorted([m for m in cands if not is_reserve[m] and is_flagged[m]], key=key)
+        reserves_ok = sorted([m for m in cands if is_reserve[m] and not is_flagged[m]], key=key)
+        reserves_flagged = sorted([m for m in cands if is_reserve[m] and is_flagged[m]], key=key)
+        regular = regular_ok + regular_flagged
+        reserves = reserves_ok + reserves_flagged
+        second: Optional[dict] = None
+        if rule == methodology.SECOND_METRIC_RANK:
+            need = max(0, fill_to - len(kept))
+            chosen = regular_ok[:need]
+            if not kept and not chosen:
+                chosen = reserves_ok[:fill_to]
+            left_places = max(0, fill_to - len(kept) - len(chosen))
+            if left_places:
+                chosen = chosen + regular_flagged[:left_places]
+            if not kept and not chosen:
+                chosen = reserves_flagged[:fill_to]
+        else:
+            places = max(int(fill_to), 2)
+            chosen = regular_ok[:max(0, 1 - len(kept))]
+            if not kept and not chosen:
+                chosen = reserves_ok[:1]
+            if not kept and not chosen:
+                chosen = regular_flagged[:1]
+            if not kept and not chosen:
+                chosen = reserves_flagged[:1]
+            scored = kept + chosen
+            checks: list[dict] = []
+            while scored and len(scored) < places:
+                pick = None
+                for m in regular:
+                    if m in chosen:
+                        continue
+                    rec = second_metric_check(evidence, m, scored, ps)
+                    checks.append(rec)
+                    if rec["joins"]:
+                        pick = m
+                        break
+                if pick is None:
+                    break
+                chosen.append(pick)
+                scored.append(pick)
+            second = {"maxAbsSpearman": ps["max_abs_spearman"], "minAuc": ps["min_auc"],
+                      "places": places, "checks": checks}
         left = [m for m in regular + reserves if m not in chosen]
+        record = {"kept": kept, "selected": chosen, "rule": rule}
+        if second is not None:
+            record["secondMetric"] = second
         if not left and not reserves:
             if len(kept) + len(chosen) > 0:
-                selection[fid] = {"kept": kept, "selected": chosen, "notSelected": []}
+                selection[fid] = {**record, "notSelected": []}
             continue
         for m in left:
             drop_index += list(sub.index[sub["metric_key"].astype(str) == m])
         selection[fid] = {
-            "kept": kept, "selected": chosen,
+            **record,
             "notSelected": [{"metric": m, "source": source_of(support.get(m)),
                              "score": (scores.get(m) or {}).get("total"),
                              "reserve": bool((config.get(m) or {}).get("reserve"))}
@@ -1632,13 +2139,20 @@ def _add_carried(carried: dict, rows: dict, config: dict, annotations: dict) -> 
 # --------------------------------------------------------------------------- #
 def national_inputs(*, dataset_id: Optional[str] = None, cycles=None,
                     max_stream_order: Optional[int] = None, protocols=None,
-                    keep_stations: Optional[dict] = None) -> dict:
+                    keep_stations: Optional[dict] = None,
+                    value_policy: Optional[str] = None) -> dict:
     """The national frame, the DATA-11 values of every metric a build could
     fit, and the metric configs. One function, so the census a reviewer reads
-    before a build and the build itself can never see different inputs."""
+    before a build and the build itself can never see different inputs.
+
+    ``value_policy`` is the id the archive is read under
+    (``nrsa_dataset.resolve_value_policy``; ``None`` is the new-build default);
+    the id actually used rides back as ``value_policy`` so every record of the
+    run names it."""
     from . import regional_agent as ra
     from . import stratifiers
     dataset_id = dataset_id or nrsa_dataset.MULTI_CYCLE_DATASET_ID
+    policy = nrsa_dataset.resolve_value_policy(value_policy)
     directions = ra.load_directions()
     landscape_directions = ra.load_landscape_directions()
     frame, frame_ledger = rp.national_frame(
@@ -1652,7 +2166,7 @@ def national_inputs(*, dataset_id: Optional[str] = None, cycles=None,
     wanted = list(dict.fromkeys(list(metric_config) + registry_cols))
     values, value_ledger = nrsa_dataset.latest_values(
         frame["station_key"], dataset=dataset, metrics=wanted,
-        cycles=cycles or nrsa_dataset.CYCLES_NEWEST_FIRST)
+        cycles=cycles or nrsa_dataset.CYCLES_NEWEST_FIRST, policy=policy)
     landscape_config, landscape_missing = ra.build_landscape_metric_config(
         list(frame.columns), landscape_directions, expectation_only=True)
     by_key = frame.set_index(frame["station_key"].astype(str))
@@ -1665,13 +2179,175 @@ def national_inputs(*, dataset_id: Optional[str] = None, cycles=None,
             "landscape_config": landscape_config,
             "flagged_direction": flagged_direction + landscape_missing,
             "predictor_config": ra.build_predictor_config(list(frame.columns),
-                                                          landscape_directions)}
+                                                          landscape_directions),
+            "value_policy": policy}
 
 
 CENSUS_COLUMNS = ["l3", "region", "metric", "display_name", "family", "status", "level",
                   "region_code", "region_name", "n_pool", "n_comparable", "n_usable", "n_local",
                   "n_huc12", "disposition", "covariates", "lithology", "self_coverage",
                   "supported_level", "transfer_risk", "zero_inflated", "q25"]
+
+
+def _metric_function_ids(keys, configs: dict) -> dict:
+    """``{metric: {canonical function ids}}`` by the build's own mapping (every
+    assignment, scaffold rows aside)."""
+    keys = [str(k) for k in keys]
+    if not keys:
+        return {}
+    cfg = {k: configs.get(k) or {} for k in keys}
+    frame = staf_library.default_discipline_function_mapping(keys, cfg)
+    got: dict = {}
+    if isinstance(frame, pd.DataFrame) and len(frame) and "metric_key" in frame.columns:
+        wanted = set(keys)
+        for mk, label in zip(frame["metric_key"], frame["function_label"]):
+            # the frame's scaffold rows (one per function, no metric) cover nothing
+            if not isinstance(mk, str) or mk not in wanted:
+                continue
+            canon = staf_library.staf_canonical_function(label)
+            if canon is not None:
+                got.setdefault(mk, set()).add(str(canon["id"]))
+    return got
+
+
+def _fixed_functions() -> set:
+    """The functions the fixed criteria score in every region."""
+    out: set = set()
+    fixed_map = fixed_criteria.mapping_rows()
+    for label in (list(fixed_map["function_label"]) if len(fixed_map) else []):
+        canon = staf_library.staf_canonical_function(label)
+        if canon is not None:
+            out.add(str(canon["id"]))
+    return out
+
+
+def missingness_kept_for_coverage(to_withhold: dict, missingness: dict, *,
+                                  covered_metrics: Iterable[str], configs: dict) -> dict:
+    """Methodology 0.16 (owner decision D18): the metrics DATA-03 would withhold
+    that are the last candidate of a function, kept with their missingness stated.
+
+    DATA-03 withholds a pool most of whose comparable stations carry no value.
+    Where that would leave a function with no other metric holding a curve (the
+    build's own, ladder, carried, fixed, owner-accepted or owner-held), the
+    candidate with the smallest missing fraction (then the most stations with a
+    value, then the key) keeps its validated pool, as REF-16 keeps a pool the
+    recovery test refused: the failed criterion becomes a stated limitation, never
+    a gap. Returns ``{metric: [the function ids it keeps covered]}``."""
+    covered: set = set(_fixed_functions())
+    for fids in _metric_function_ids(covered_metrics, configs).values():
+        covered |= fids
+    cand_functions = _metric_function_ids(to_withhold, configs)
+
+    def order(mk):
+        rec = missingness.get(mk) or {}
+        return (float(rec.get("missing_fraction") if rec.get("missing_fraction") is not None else 1.0),
+                -int(rec.get("n_with_value") or 0), mk)
+
+    kept: dict = {}
+    for mk in sorted(to_withhold, key=order):
+        empty = sorted(f for f in cand_functions.get(mk, set()) if f not in covered)
+        if empty:
+            kept[mk] = empty
+            covered |= cand_functions.get(mk, set())
+    return kept
+
+
+def missingness_kept_caveat(rec: dict, function_names: list, limit: float) -> str:
+    """The limitation a pool kept for coverage carries (DEEP prints it with the metric)."""
+    frac = float(rec.get("missing_fraction") or 0.0)
+    n_val, n_pool = int(rec.get("n_with_value") or 0), int(rec.get("n_pool_members") or 0)
+    names = ", ".join(function_names) or "its function"
+    return (f"Kept although {n_pool - n_val} of the pool's {n_pool} comparable stations carry "
+            f"no value for this metric (missing fraction {frac:.2f}, above the {limit:.2f} "
+            f"review level): no other source scores {names} in this ecoregion, so the "
+            f"curve rests on the {n_val} stations that do.")
+
+
+def _tried_of(decision) -> list:
+    """A decision's ``options_tried`` (a PoolDecision or its dict), copied."""
+    if decision is None:
+        return []
+    got = (decision.get("options_tried") if isinstance(decision, dict)
+           else getattr(decision, "options_tried", None))
+    return [dict(x) for x in (got or []) if isinstance(x, dict)]
+
+
+def last_resort_fills(l3_code: str, name: str, *, covered_metrics: Iterable[str],
+                      candidate_metrics: dict, configs: dict, carried: Optional[dict] = None,
+                      withheld_statements: Optional[dict] = None,
+                      nars9: Optional[str] = None) -> dict:
+    """REF-17 (methodology 0.16, owner decision D19): the functions no source
+    supports, each completed by EASI's national screening method for the same
+    quantity where ``config/fixed_criteria.yaml`` names one under ``last_resort``.
+
+    ``covered_metrics`` are the metrics that hold a curve or a standing owner
+    decision (built, ladder, carried, fixed, owner-accepted, owner-held): any
+    function one of them maps to is covered and never reaches the last resort.
+    ``candidate_metrics`` maps each refused or withheld metric to its decision,
+    ``configs`` every metric config known to the build (for the function
+    mapping) and ``withheld_statements`` a withheld metric's statement. Returns,
+    per metric added, ``decision``, ``row``, ``config``, ``attempt``,
+    ``function_id``, ``function_label`` and ``candidates``; empty when the rung
+    is off.
+    """
+    if not methodology.last_resort().get("enabled") or not fixed_criteria.last_resort_keys():
+        return {}
+
+    covered: set = set(_fixed_functions())
+    for fids in _metric_function_ids(covered_metrics, configs).values():
+        covered |= fids
+    for c in (carried or {}).values():
+        covered |= {str(f) for f in (c.get("functions") or []) if f}
+    cand_functions = _metric_function_ids(candidate_metrics, configs)
+    statements = withheld_statements or {}
+    out: dict = {}
+    for mk in fixed_criteria.last_resort_keys():
+        entry = fixed_criteria.last_resort_entry(mk)
+        labels = list(entry.get("functions") or [])
+        canon = staf_library.staf_canonical_function(labels[0]) if labels else None
+        if canon is None or str(canon["id"]) in covered:
+            continue
+        fid, label = str(canon["id"]), str(canon["name"])
+        refused = sorted(m for m, fids in cand_functions.items() if fid in fids)
+        words = []
+        for m in refused:
+            said = str(statements.get(m) or "").strip().rstrip(".")
+            if not said:
+                # each station pool the metric tried, with the reason it was refused
+                said = "; ".join(_pool_sentence(x).rstrip(".") for x in _tried_of(
+                    candidate_metrics.get(m)) if not x.get("accepted"))
+            words.append(f"{m} ({said})" if said else
+                         f"{m} (no source in the hierarchy passed acceptance)")
+        layer = fixed_criteria.last_resort_stratum(entry, nars9)
+        method_words = (f"EASI's {entry.get('easi_title')} reference curve for NARS-9 region {layer}"
+                        if layer else f"EASI's national screening method, {entry.get('easi_title')}")
+        why = (f"No source supports {label} in this ecoregion: "
+               + ("; ".join(words) if words else "the function has no candidate metric here")
+               + f". Completed by {method_words}, "
+               f"adopted under {fixed_criteria.LAST_RESORT_RULE} (owner decision D19).")
+        decision = rp.PoolDecision(
+            metric=mk, status=rp.STATUS_PUBLISHED, level=None, region_code=str(l3_code),
+            region_name=name, family=rp.family_of(mk), n_pool=0, n_comparable=0, n_usable=0,
+            n_local=0, n_huc12=0, disposition="exploratory", supported_level=None,
+            transfer_risk=rp.RISK_NONE,
+            transfer_note=f"{curve_basis.statement_for(curve_basis.EASI_SCREENING)} {why}",
+            station_ids=(),
+            # the replaced metric's own refusals stay on its record (traceable on reopen)
+            levels_tried=list((candidate_metrics.get(mk).get("levels_tried")
+                               if isinstance(candidate_metrics.get(mk), dict)
+                               else getattr(candidate_metrics.get(mk), "levels_tried", None)) or []),
+            options_tried=_tried_of(candidate_metrics.get(mk)),
+            basis=curve_basis.EASI_SCREENING,
+            screen_detail={"rule": fixed_criteria.LAST_RESORT_RULE,
+                           "easiMethod": entry.get("easi_method"), "functionId": fid,
+                           "refusedCandidates": refused, "stratum": layer})
+        out[mk] = {"decision": decision, "row": fixed_criteria.last_resort_curve_row(mk, nars9),
+                   "config": fixed_criteria.last_resort_config(mk),
+                   "attempt": {"metric": mk, "rung": fixed_criteria.LAST_RESORT_RULE,
+                               "admitted": True, "basis": curve_basis.EASI_SCREENING,
+                               "why": why},
+                   "function_id": fid, "function_label": label, "candidates": refused}
+    return out
 
 
 def forced_sources(force: Optional[dict], *, metric_config: dict, carried: dict,
@@ -1712,25 +2388,31 @@ def forced_sources(force: Optional[dict], *, metric_config: dict, carried: dict,
 
 def census(l3_codes, *, max_stream_order: Optional[int] = None, protocols=None,
            keep_stations: Optional[dict] = None, excluded: Optional[dict] = None,
-           scale_registry: Optional[dict] = None) -> dict:
+           scale_registry: Optional[dict] = None,
+           value_policy: Optional[str] = None) -> dict:
     """Reference support per region and metric, before any curve is fitted.
 
     Returns ``{"table": DataFrame, "regions": [...]}``. ``zero_inflated`` marks
     a higher-is-better metric whose pool's lower quartile is at or below zero:
     the curve engine can only draw a degenerate seed from such a pool, so the
-    reviewer sees it here and not first in a flagged curve.
+    reviewer sees it here and not first in a flagged curve. ``value_policy`` is
+    the build's (``national_inputs``), so the census counts what the build reads.
     """
     from . import regional_agent as ra
     inputs = national_inputs(max_stream_order=max_stream_order, protocols=protocols,
-                             keep_stations=keep_stations)
+                             keep_stations=keep_stations, value_policy=value_policy)
     frame, values, metric_config = inputs["frame"], inputs["values"], inputs["metric_config"]
     registry = scale_registry if scale_registry is not None else scale_analysis.load_registry()
     wide = values.set_index(values["site_id"].astype(str))
     validation = basis_ladder.load_validation()
+    flagged_settings = acceptance.flagged_settings()
 
     def accept_for(mk):
         return acceptance.pool_acceptor(mk, metric_config.get(mk) or {}, validation,
                                         family=rp.family_of(mk))
+
+    def curve_check_for(mk):
+        return acceptance.curve_checker(mk, metric_config.get(mk) or {})
 
     rows: list[dict] = []
     regions: list[dict] = []
@@ -1741,15 +2423,36 @@ def census(l3_codes, *, max_stream_order: Optional[int] = None, protocols=None,
         # must not say a metric is withheld that the build will go on to score
         pools = rp.build_pools(list(metric_config), values, frame, code,
                                scale_registry=registry, excluded=excluded,
-                               accept_for=accept_for)
+                               accept_for=accept_for, curve_check_for=curve_check_for,
+                               flagged=flagged_settings)
         short = [mk for mk, d in pools["decisions"].items()
                  if d.status == rp.STATUS_INSUFFICIENT]
-        if short:
+        flagged_pools = [mk for mk, d in pools["decisions"].items() if d.flagged]
+        if short or flagged_pools:
+            # methodology 0.16: a validated source of any kind wins over a flagged
+            # pool, and a flagged national pool stands last, as the build decides
             walked = basis_ladder.resolve(
-                sorted(short), frame=frame, values_wide=values, target_l3=code,
-                metric_config=metric_config, validation=validation,
-                region_name=name, fit=False)
+                sorted(set(short) | set(flagged_pools)), frame=frame, values_wide=values,
+                target_l3=code, metric_config=metric_config, validation=validation,
+                region_name=name, fit=False, flagged=flagged_settings,
+                flag_national=sorted(short))
             pools["decisions"].update(walked["decisions"])
+            for mk, got in (walked.get("flagged_national") or {}).items():
+                if mk in short and mk not in walked["decisions"]:
+                    pools["decisions"][mk] = got["decision"]
+        # methodology 0.16 (REF-17): the last resort completes a function no source
+        # supports, as the build decides (the build-time withholds aside)
+        fills = last_resort_fills(
+            code, name,
+            covered_metrics=[mk for mk, d in pools["decisions"].items()
+                             if d.status != rp.STATUS_INSUFFICIENT],
+            candidate_metrics={mk: d for mk, d in pools["decisions"].items()
+                               if d.status == rp.STATUS_INSUFFICIENT},
+            configs=metric_config,
+            nars9=published_benchmark.majority_region(
+                frame[frame["l3"].astype(str) == str(code)], "nars9")[0])
+        for mk, fill in fills.items():
+            pools["decisions"][mk] = fill["decision"]
         statuses = [d.status for d in pools["decisions"].values()]
         regions.append({"l3": code, "region": name,
                         "n_frame": pools["target_n_frame"], "n_strict": pools["target_n_strict"],
@@ -1840,8 +2543,16 @@ def run_evidence(l3_code: str, name: str, *,
                  scale_registry: Optional[dict] = None,
                  carry: Any = True,
                  force: Optional[dict] = None,
-                 hold: Optional[list] = None) -> dict:
+                 hold: Optional[list] = None,
+                 value_policy: Optional[str] = None) -> dict:
     """The decision-free half of a regional run under the pressure screen.
+
+    ``value_policy`` (rule DATA-11): the id the archive's values are read under
+    (``nrsa_dataset.resolve_value_policy``). ``None`` is the new-build default;
+    a replay of a published version passes the id that version's manifest
+    records (``inputs.nrsa_dataset.policy``), and the evidence records the id
+    actually used (``nrsa_policy``, ``value_selection.policy``), which the
+    inputs digest carries.
 
     ``carry`` (methodology 0.14): True carries forward every curve the
     ecoregion's latest published version scores unless its data were found
@@ -1862,6 +2573,12 @@ def run_evidence(l3_code: str, name: str, *,
     withheld metric does, but no held station joins the pooled frame and no
     curve is fitted for it."""
     from . import regional_agent as ra
+
+    # campaign Round 2: every knob is read once here, so a misconfigured one
+    # fails before any work; the non-default ones ride to the manifest's
+    # reference block and the inputs digest
+    methodology_knobs = methodology.round2_knobs()
+    geometry = curves.seed_geometry()
 
     dataset_id = nrsa_dataset_id or nrsa_dataset.MULTI_CYCLE_DATASET_ID
     if dataset_id != nrsa_dataset.MULTI_CYCLE_DATASET_ID:
@@ -1918,8 +2635,10 @@ def run_evidence(l3_code: str, name: str, *,
     # --- the national frame the pools draw from, and the values (DATA-11) ---
     inputs = national_inputs(dataset_id=dataset_id, cycles=cycles,
                              max_stream_order=nrsa_max_stream_order, protocols=protocols,
-                             keep_stations=nrsa_keep_sites or None)
+                             keep_stations=nrsa_keep_sites or None,
+                             value_policy=value_policy)
     frame, values, value_ledger = inputs["frame"], inputs["values"], inputs["value_ledger"]
+    value_policy = inputs["value_policy"]      # the id actually read under
     metric_config = inputs["metric_config"]
     landscape_config = inputs["landscape_config"]
     flagged_direction = inputs["flagged_direction"]
@@ -1944,22 +2663,31 @@ def run_evidence(l3_code: str, name: str, *,
     # (ACC-01, ACC-04, and ACC-05/06 from the committed recovery evidence).
     validation = basis_ladder.load_validation()
     registry = scale_registry if scale_registry is not None else scale_analysis.load_registry()
+    # methodology 0.16: the flagged-transfer rung's settings (REF-16), read once
+    flagged_settings = acceptance.flagged_settings()
 
     def accept_for(mk):
         return acceptance.pool_acceptor(mk, metric_config.get(mk) or {}, validation,
                                         family=rp.family_of(mk))
+
+    def curve_check_for(mk):
+        # D13: a pool option whose curve would be a fallback ramp, or would read
+        # as inverted against its own pressured stations, is refused
+        return acceptance.curve_checker(mk, metric_config.get(mk) or {})
 
     # REF-15, "your choice stands": a metric the owner removed or chose a source
     # for stays out of the build's own fit while the decision stands
     held = sorted(str(mk) for mk in (hold or ()) if str(mk) in metric_config)
     pools = rp.build_pools([mk for mk in metric_config if mk not in held], values, frame,
                            l3_code, scale_registry=registry, excluded=exclude_sites,
-                           accept_for=accept_for)
+                           accept_for=accept_for, curve_check_for=curve_check_for,
+                           flagged=flagged_settings)
     held_by_owner: dict = {}
     if held:
         # judged apart: the pooled frame, and so the run seed, never sees them
         side = rp.build_pools(held, values, frame, l3_code, scale_registry=registry,
-                              excluded=exclude_sites, accept_for=accept_for)
+                              excluded=exclude_sites, accept_for=accept_for,
+                              curve_check_for=curve_check_for, flagged=flagged_settings)
         pools["ledger"] = pd.concat([pools["ledger"], side["ledger"]], ignore_index=True)
         pools["local_comparison"].update(side["local_comparison"])
         for mk, d in side["decisions"].items():
@@ -1974,18 +2702,56 @@ def run_evidence(l3_code: str, name: str, *,
     decisions = pools["decisions"]
     insufficient = {mk: d for mk, d in decisions.items()
                     if d.status == rp.STATUS_INSUFFICIENT}
+    # REF-16: the station pools taken under the flagged rung. A validated source
+    # of any kind wins over a flagged one, so these metrics walk the national,
+    # modeled and published rungs first and keep the flagged pool only when
+    # every one of them refuses.
+    flagged_pools = {mk: d for mk, d in decisions.items() if d.flagged}
 
     # --- then national, modeled and published (REF-12, REF-13, REF-14) ---
     # Judged by the same criteria, on evidence fixed before the build ran
     # (config/basis_validation.yaml, config/model_registry.yaml, the verified
     # catalog), so nothing here is admitted by the build's own judgement.
     ladder = basis_ladder.resolve(
-        sorted(insufficient), frame=frame, values_wide=values, target_l3=l3_code,
-        metric_config=metric_config, validation=validation, region_name=name)
+        sorted(set(insufficient) | set(flagged_pools)), frame=frame, values_wide=values,
+        target_l3=l3_code, metric_config=metric_config, validation=validation,
+        region_name=name, flagged=flagged_settings,
+        # a flagged national pool is taken only where no flagged station pool exists
+        flag_national=sorted(insufficient))
     ladder_rows = ladder["curve_rows"]
+    replaced_flagged: list[str] = []
     for mk, d in ladder["decisions"].items():
         decisions[mk] = d
         insufficient.pop(mk, None)
+        if flagged_pools.pop(mk, None) is not None:
+            replaced_flagged.append(mk)
+    # REF-16, last: the flagged national pools of the metrics with neither a
+    # validated source nor a flagged station pool
+    flagged_national: dict[str, dict] = {}
+    for mk, got in (ladder.get("flagged_national") or {}).items():
+        if mk in insufficient and got.get("row") is not None:
+            decisions[mk] = got["decision"]
+            ladder_rows[mk] = got["row"]
+            insufficient.pop(mk, None)
+            flagged_national[mk] = {"option": got.get("option")}
+    if replaced_flagged:
+        # the pooled frame, and so the run seed, hold only the pools that stand
+        pools["data"] = rp.pool_data(decisions, values, frame)
+    flagged_metrics = {**{mk: "pool" for mk in sorted(flagged_pools)},
+                       **{mk: "national" for mk in sorted(flagged_national)}}
+    for mk in sorted(flagged_pools):
+        ladder["attempts"].append({
+            "metric": mk, "rung": rp.RULE_FLAGGED, "admitted": True,
+            "basis": curve_basis.REGIONAL,
+            "why": (f"{flagged_pools[mk].n_usable} usable stations of the "
+                    f"{rp.LEVEL_LABELS.get(flagged_pools[mk].level or '', '')} pool "
+                    f"{flagged_pools[mk].region_code}, taken under the flagged-transfer rung "
+                    "after every validated source refused: the recovery test did not confirm "
+                    "the source.")})
+    if flagged_metrics:
+        _emit(on_event, "flagged_transfer",
+              {"n_pools": len(flagged_pools), "n_national": len(flagged_national),
+               "n_replaced_by_validated": len(replaced_flagged)})
 
     # REF-15: the refused sources the owner accepted, each computed on its own
     # stations or donors, never through the pooled frame, so the run seed and
@@ -2003,6 +2769,57 @@ def run_evidence(l3_code: str, name: str, *,
     for mk in ladder_rows:
         metric_config.pop(mk, None)
     data = pools["data"]
+
+    # --- a rule that withholds a metric whose pool exists (REF-06's record shape) ---
+    # The metric leaves the fit here, as REF-06 takes a metric with no pool out;
+    # its pool decision is kept and marked so the support record still says
+    # what the pool was, and the withheld entry carries the rule, a statement
+    # naming the numbers, and the detail behind it. No review item is raised.
+    withheld_by_rule: dict[str, str] = {}
+    rule_withheld_items: dict[str, dict] = {}
+
+    def _withhold(mk: str, reason: str, statement: str, detail: dict) -> None:
+        nonlocal data
+        insufficient_config[mk] = metric_config.pop(mk)
+        data = data.drop(columns=[mk], errors="ignore")
+        withheld_by_rule[mk] = reason
+        rule_withheld_items[mk] = {"decision": decisions[mk].to_dict(),
+                                   "config": insufficient_config[mk],
+                                   "reason": reason, "rule": WITHHELD_RULES[reason],
+                                   "statement": statement, "detail": dict(detail)}
+
+    # --- campaign Round 2 (C3a): a zero-inflated pool under the configured rule ---
+    # Off by default. The two-part handling is the curve engine's; the withhold
+    # handling takes the metric out here.
+    zero_inflation = zero_inflation_records(data, metric_config, geometry)
+    for mk, rec in zero_inflation.items():
+        if rec.get("handling") == curves.ZERO_INFLATED_WITHHOLD:
+            _withhold(mk, ZERO_INFLATED_POOL, zero_inflated_statement(rec), rec)
+
+    # --- methodology 0.15 (DATA-03): a pool mostly unmeasured for the metric ---
+    # The missing-data fraction over the metric's own pool is judged before any
+    # curve is built; above data_rules.max_missingness_review the metric is
+    # withheld with its statement, the same in every region, where 0.14 held a
+    # built curve for a reviewer. The fraction stays in the record, flagged, so
+    # the DATA-03 record of the build states it.
+    missingness = pool_missingness({mk: decisions[mk] for mk in metric_config})
+    to_withhold = missingness_withheld(missingness)
+    # methodology 0.16 (owner decision D18): DATA-03 never empties a function by
+    # itself; the last candidate keeps its pool with the missingness stated
+    kept_for_coverage = missingness_kept_for_coverage(
+        to_withhold, missingness,
+        covered_metrics=([mk for mk in metric_config if mk not in to_withhold] + list(ladder_rows)
+                         + list(carried) + list(held)
+                         + [mk for mk, f in (forced or {}).items()
+                            if isinstance(f, dict) and f.get("row") is not None]),
+        configs={**metric_config, **ladder_config})
+    for mk, rec in to_withhold.items():
+        if mk in kept_for_coverage:
+            missingness[mk] = {**missingness[mk], "withheld": False, "rule": "DATA-03",
+                               "keptForCoverage": kept_for_coverage[mk]}
+            continue
+        _withhold(mk, HIGH_MISSINGNESS, missingness_statement(rec, decisions[mk]), rec)
+        missingness[mk] = {**missingness[mk], "withheld": True, "rule": "DATA-03"}
     if not len(metric_config) or not len(data):
         raise RuntimeError(
             f"no metric of L3 ecoregion {l3_code} has reference support at any level of "
@@ -2011,7 +2828,7 @@ def run_evidence(l3_code: str, name: str, *,
           {"n_metrics": len(decisions), "n_insufficient": len(insufficient),
            "n_borrowed": sum(1 for d in decisions.values()
                              if d.status.startswith("borrowed")),
-           "n_ladder": len(ladder_rows),
+           "n_ladder": len(ladder_rows), "n_flagged": len(flagged_metrics),
            "n_pool_stations": int(len(data))})
     metric_cols = list(metric_config)
 
@@ -2032,12 +2849,27 @@ def run_evidence(l3_code: str, name: str, *,
     strat = ra.run_stratifier_analysis(data, metric_config, predictor_config, on_event=on_event)
     data = strat["data"]
 
-    missingness = pool_missingness({mk: decisions[mk] for mk in metric_cols})
-
     # --- curves (the engine is unchanged) and the review classification ---
     curve_rows = ra.build_curves(data, metric_config)
     curve_review = ra.review_curves(curve_rows, column_functions,
                                     missingness=missingness, metric_config=metric_config)
+
+    # --- methodology 0.15 (CURVE-09): the measurement-precision floor ---
+    # A two-sided curve whose fitted Functioning core is narrower than the
+    # metric's floor is withheld here with the core width and the floor in its
+    # statement, the same in every region, where 0.9 to 0.14 raised an advisory
+    # review item. The curve leaves the rows, the review map, the pooled frame
+    # and the redundancy table before any diagnostic runs on it.
+    narrow = precision_floor_records(curve_rows, metric_config)
+    for mk, rec in narrow.items():
+        _withhold(mk, MEASUREMENT_PRECISION_FLOOR, precision_floor_statement(rec), rec)
+        curve_rows.pop(mk, None)
+        curve_review.pop(mk, None)
+    if narrow and redundancy is not None and len(redundancy) and "metric_a" in redundancy.columns:
+        gone = set(narrow)
+        keep = ~(redundancy["metric_a"].astype(str).isin(gone)
+                 | redundancy["metric_b"].astype(str).isin(gone))
+        redundancy = redundancy[keep].reset_index(drop=True)
     stratum_rows, strata_applied = stratified_rows(data, metric_config, decisions, registry)
 
     sample_sizes = {mk: {"n": row.get("n_reference"),
@@ -2084,6 +2916,66 @@ def run_evidence(l3_code: str, name: str, *,
                                              values, frame)
                       if diagnostics_enabled else {})
 
+    # --- campaign Round 2 (C2): the CURVE-12 gate, off by default ---
+    # A new curve the check finds inverted or below the floor is withheld here,
+    # as REF-06 withholds: it leaves the curves, the review map and the metric
+    # config, its pool decision stays marked, and its CURVE-12 record stays for
+    # information. Carried curves have no record here and are never gated.
+    gated = discrimination_gate(discrimination) if discrimination else {}
+    for mk, rec in gated.items():
+        insufficient_config[mk] = metric_config.pop(mk)
+        curve_rows.pop(mk, None)
+        curve_review.pop(mk, None)
+        stratum_rows.pop(mk, None)
+        strata_applied.pop(mk, None)
+        diagnostics.pop(mk, None)
+        domain_checks.pop(mk, None)
+        deferred_gradients.pop(mk, None)
+        data = data.drop(columns=[mk], errors="ignore")
+        withheld_by_rule[mk] = DISCRIMINATION_GATE
+        rule_withheld_items[mk] = {"decision": decisions[mk].to_dict(),
+                                   "config": insufficient_config[mk],
+                                   "reason": DISCRIMINATION_GATE,
+                                   "rule": WITHHELD_RULES[DISCRIMINATION_GATE],
+                                   "statement": discrimination_gate_statement(rec),
+                                   "detail": dict(rec)}
+
+    # --- methodology 0.16 (REF-17, owner decision D19): the last resort ---
+    # A function every source above left without a curve (each candidate metric
+    # refused or withheld) is scored on EASI's national screening method for the
+    # same quantity, where config/fixed_criteria.yaml names one. It never
+    # replaces a curve and never joins a function that holds any other curve or
+    # an owner's standing decision.
+    covered_metrics = (set(curve_rows) | set(ladder_rows) | set(carried) | set(held)
+                       | {mk for mk, f in (forced or {}).items()
+                          if isinstance(f, dict) and f.get("row") is not None})
+    last_resort = last_resort_fills(
+        l3_code, name, covered_metrics=covered_metrics,
+        candidate_metrics={**insufficient,
+                           **{mk: rec.get("decision") for mk, rec in rule_withheld_items.items()}},
+        configs={**insufficient_config, **metric_config, **ladder_config},
+        carried=carried,
+        withheld_statements={mk: rec.get("statement") for mk, rec in rule_withheld_items.items()},
+        nars9=published_benchmark.majority_region(
+            frame[frame["l3"].astype(str) == str(l3_code)], "nars9")[0])
+    for mk, fill in last_resort.items():
+        decisions[mk] = fill["decision"]
+        ladder_rows[mk] = fill["row"]
+        ladder_config[mk] = fill["config"]
+        ladder["attempts"].append(fill["attempt"])
+        insufficient.pop(mk, None)
+        insufficient_config.pop(mk, None)
+        withheld_by_rule.pop(mk, None)
+        rule_withheld_items.pop(mk, None)
+        if mk in missingness:
+            missingness[mk] = {**missingness[mk], "withheld": False,
+                               "replacedBy": fixed_criteria.LAST_RESORT_RULE}
+        column_functions[mk] = fill["function_label"]
+    if last_resort:
+        mapping_df = _with_last_resort_mapping(mapping_df, sorted(last_resort))
+        _emit(on_event, "last_resort", {"n_functions": len(last_resort),
+                                        "metrics": sorted(last_resort)})
+
     fixed_metrics = {mk: fixed_criteria.curve_row(mk) for mk in fixed_criteria.metric_keys()}
     n_local_reference = len(retained_ids)
 
@@ -2103,7 +2995,7 @@ def run_evidence(l3_code: str, name: str, *,
         "tier": tier, "screening": screening, "retained_ids": retained_ids,
         "nrsa_dataset": dataset_id,
         "nrsa_cycles": list(nrsa_cycles) if nrsa_cycles else None,
-        "nrsa_policy": nrsa_dataset.POLICY_LATEST_NON_NULL,
+        "nrsa_policy": value_policy,
         "nrsa_max_stream_order": nrsa_max_stream_order,
         "nrsa_protocols": list(protocols) if protocols else None,
         "nrsa_frame_overrides": frame_overrides,
@@ -2132,7 +3024,12 @@ def run_evidence(l3_code: str, name: str, *,
         "domain_checks": domain_checks, "deferred_gradients": deferred_gradients,
         "redundancy": redundancy, "stratifiers": strat,
         # --- what the pressure method adds ---
-        "reference_support": {**{mk: d.to_dict() for mk, d in decisions.items()},
+        # (a metric a rule withheld although its pool exists keeps its pool
+        # decision under status ``withheld``, the pool's own status beside it,
+        # with the reason and the rule, so the record says what the pool was)
+        "reference_support": {**{mk: (withheld_support_record(d.to_dict(), withheld_by_rule[mk])
+                                      if mk in withheld_by_rule else d.to_dict())
+                                 for mk, d in decisions.items()},
                               **{mk: dict(c.get("decision") or {}) for mk, c in carried.items()}},
         "reference_pool_ledger": pools["ledger"],
         "reference_pool_summary": {k: pools[k] for k in ("target_n_frame", "target_n_strict",
@@ -2145,6 +3042,18 @@ def run_evidence(l3_code: str, name: str, *,
         "ladder_config": ladder_config,
         "ladder_attempts": ladder["attempts"],
         "ladder_populations": ladder["populations"],
+        # methodology 0.16 (REF-16): the metrics scored on a flagged transfer, by
+        # source (a station pool or a national pool), the flagged pools a
+        # validated source replaced, and the rung's settings as read
+        "flagged_metrics": flagged_metrics,
+        "flagged_replaced": sorted(replaced_flagged),
+        "flagged_transfer_settings": dict(flagged_settings),
+        # methodology 0.16 (REF-17): the functions completed by an adopted EASI
+        # screening method, the metric that completes each and the candidates refused
+        "last_resort_metrics": {mk: {"functionId": f["function_id"],
+                                     "function": f["function_label"],
+                                     "candidates": f["candidates"]}
+                                for mk, f in last_resort.items()},
         # methodology 0.14: the published curves carried forward unchanged, the
         # version they come from, and the published curves rebuilt and why
         "carried": carried,
@@ -2154,9 +3063,16 @@ def run_evidence(l3_code: str, name: str, *,
         # the published version's SELECT-01 approvals, which carry when their
         # function's metric set is carried unchanged (carry_forward.carried_approvals)
         "carried_approvals": list(prior.get("approvals") or []),
-        "insufficient_support": {mk: {"decision": d.to_dict(),
-                                      "config": insufficient_config.get(mk) or {}}
-                                 for mk, d in insufficient.items()},
+        "insufficient_support": {**{mk: {"decision": d.to_dict(),
+                                         "config": insufficient_config.get(mk) or {}}
+                                    for mk, d in insufficient.items()},
+                                 **rule_withheld_items},
+        # campaign Round 2: the knobs set away from their defaults (the manifest's
+        # reference.knobs and the inputs digest), the zero-inflation records and
+        # the curves the discrimination gate withheld (empty on the defaults)
+        "methodology_knobs": methodology_knobs,
+        "zero_inflation": zero_inflation,
+        "discrimination_gate": gated,
         # REF-15: the refused sources the owner accepted, computed; the requests
         # ride in the manifest so the inputs digest names them
         "forced_metrics": forced,
@@ -2173,7 +3089,8 @@ def run_evidence(l3_code: str, name: str, *,
                            "version": (registry or {}).get("version"),
                            "analysis_version": (registry or {}).get("analysis_version"),
                            "present": bool((registry or {}).get("metrics"))},
-        "value_selection": {"policy": nrsa_dataset.POLICY_LATEST_NON_NULL,
+        "value_selection": {"policy": value_policy,
                             "byMetricCycle": nrsa_dataset.latest_values_summary(
-                                value_ledger[value_ledger["metric"].isin(metric_cols)])},
+                                value_ledger[value_ledger["metric"].isin(
+                                    [c for c in metric_cols if c in metric_config])])},
     }

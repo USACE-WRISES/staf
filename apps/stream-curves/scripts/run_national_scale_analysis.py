@@ -14,9 +14,19 @@ depth.
     py -3.12 scripts/run_national_scale_analysis.py --out <evidence folder>
     py -3.12 scripts/run_national_scale_analysis.py --out <folder> --dry-run   # no registry write
     py -3.12 scripts/run_national_scale_analysis.py --check                    # exit 1 when stale
+    py -3.12 scripts/run_national_scale_analysis.py --out <folder> --withhold-l3 58   # a fold
 
 The registry is a decision of record: regenerate it only when the station table,
 the archive, or the rule changes, and review the evidence before committing it.
+
+A per-fold registry (campaign Round 2, the leave-one-region-out rule): ``--withhold-l3
+CODE`` (repeatable) drops every station of those Level III ecoregions from the analysis
+and writes the registry to ``<out>/registry_candidate.yaml`` only, never to the committed
+file, beside ``fold_agreement.json``: the share of per-metric decisions (supported level
+and split) identical to the committed full registry. The evaluation protocol allows the
+full registry to stand in for a fold when that share is at least 0.95, so the file says
+whether it may; ``scripts/run_hierarchy_test.py --registry CODE=<out>/registry_candidate.yaml``
+scores the cell on its own fold registry either way.
 """
 
 from __future__ import annotations
@@ -56,12 +66,54 @@ HEADER = """\
 """
 
 LEVEL_WORDS = {"l3": "Level III", "l2": "Level II", "l1": "Level I", "national": "national"}
+#: the leave-one-region-out shortcut of the evaluation protocol: a fold registry
+#: reproducing at least this share of the full registry's decisions lets the full
+#: registry stand in for the fold
+AGREEMENT_SHORTCUT = 0.95
 
 
-def analyze(n_boot: int, seed: int, reference_frame: str, only=None, progress=print) -> dict:
+def withhold_regions(frame: pd.DataFrame, values: pd.DataFrame, codes) -> tuple:
+    """``(frame, values)`` without every station of the Level III ecoregions in
+    ``codes``: what a fold registry is computed from, so a withheld region never
+    informs the scale decisions it is later evaluated under. ``values`` is the
+    wide table keyed by ``site_id``."""
+    held = {str(c).strip() for c in (codes or ()) if str(c).strip()}
+    if not held:
+        return frame, values
+    keep = ~frame["l3"].astype(str).isin(held)
+    kept_frame = frame.loc[keep].reset_index(drop=True)
+    kept_keys = set(kept_frame["station_key"].astype(str))
+    kept_values = values[values["site_id"].astype(str).isin(kept_keys)].reset_index(drop=True)
+    return kept_frame, kept_values
+
+
+def registry_agreement(fold: dict, full: dict, *, shortcut: float = AGREEMENT_SHORTCUT) -> dict:
+    """How far a per-fold registry agrees with the full one: the share of metrics
+    whose decisions (``supported_level`` and ``split``) are identical, the metrics
+    that differ, and whether the share reaches the shortcut."""
+    a = (fold or {}).get("metrics") or {}
+    b = (full or {}).get("metrics") or {}
+    metrics = sorted(set(a) | set(b))
+
+    def decision(rec):
+        rec = rec or {}
+        return (str(rec.get("supported_level")), rec.get("split") or None)
+
+    differ = [m for m in metrics if decision(a.get(m)) != decision(b.get(m))]
+    share = None if not metrics else round(1.0 - len(differ) / len(metrics), 4)
+    return {"nMetrics": len(metrics), "nIdentical": len(metrics) - len(differ),
+            "share": share, "differ": differ, "shortcut": float(shortcut),
+            "fullRegistryMayStandIn": bool(share is not None and share >= float(shortcut))}
+
+
+def analyze(n_boot: int, seed: int, reference_frame: str, only=None, progress=print,
+            withhold_l3=None) -> dict:
     max_order, protocols = nrsa_dataset.governed_frame(reference_frame)
     inputs = pe.national_inputs(max_stream_order=max_order, protocols=protocols)
     frame, values, metric_config = inputs["frame"], inputs["values"], inputs["metric_config"]
+    withheld = sorted({str(c).strip() for c in (withhold_l3 or ()) if str(c).strip()})
+    if withheld:
+        frame, values = withhold_regions(frame, values, withheld)
     wide = values.set_index(values["site_id"].astype(str))
     keys = frame["station_key"].astype(str)
     results: dict[str, dict] = {}
@@ -82,12 +134,15 @@ def analyze(n_boot: int, seed: int, reference_frame: str, only=None, progress=pr
         "referenceFrame": reference_frame,
         "screen": rscreen.screen_label("strict"),
         "stationScreenSha256": rscreen.station_screen_identity().get("sha256"),
-        "valuePolicy": nrsa_dataset.POLICY_LATEST_NON_NULL,
+        "valuePolicy": inputs["value_policy"],
         "nInFrame": int(len(frame)),
         "nReference": int(frame["pass_strict"].astype(bool).sum()),
         "nBoot": int(n_boot), "seed": int(seed),
         "methodologyVersion": methodology.methodology_version(),
     }
+    if withheld:
+        # a fold registry says which regions it never saw
+        meta["withheldL3"] = withheld
     return {"results": results, "inputs": meta, "frame": frame}
 
 
@@ -228,14 +283,28 @@ def main(argv=None) -> int:
     ap.add_argument("--check", action="store_true",
                     help="recompute and compare with the committed registry; write nothing")
     ap.add_argument("--decided-on", default=date.today().isoformat())
+    ap.add_argument("--withhold-l3", action="append", default=None, metavar="CODE",
+                    help="repeatable; a per-fold registry without these Level III ecoregions' "
+                         "stations, written to --out only (never the committed registry)")
     a = ap.parse_args(argv)
 
+    withheld = [c.strip() for c in (a.withhold_l3 or []) if c.strip()]
+    if withheld and not a.out:
+        print("[scale] --withhold-l3 needs --out: a fold registry is written there, never "
+              "to the committed file")
+        return 2
+    if withheld and a.check:
+        print("[scale] --withhold-l3 and --check do not combine: a fold registry is compared "
+              "with the committed one in fold_agreement.json instead")
+        return 2
     if not rscreen.station_screen_available():
         print("data/nrsa/station_screen.parquet is not built; run "
               "scripts/nrsa/build_station_screen.py")
         return 2
-    print(f"[scale] analyzing (n_boot {a.n_boot}, seed {a.seed}, frame {a.reference_frame})")
-    got = analyze(a.n_boot, a.seed, a.reference_frame, only=set(a.metric) if a.metric else None)
+    print(f"[scale] analyzing (n_boot {a.n_boot}, seed {a.seed}, frame {a.reference_frame}"
+          + (f", withholding L3 {', '.join(withheld)}" if withheld else "") + ")")
+    got = analyze(a.n_boot, a.seed, a.reference_frame, only=set(a.metric) if a.metric else None,
+                  withhold_l3=withheld)
     registry = _plain(sa.build_registry(got["results"], inputs=got["inputs"],
                                         decided_on=a.decided_on))
 
@@ -256,6 +325,17 @@ def main(argv=None) -> int:
         (out / "registry_summary.md").write_text(summary_markdown(registry), encoding="utf-8")
         (out / "registry_candidate.yaml").write_text(render(registry), encoding="utf-8",
                                                      newline="\n")
+        if withheld:
+            sa.clear_cache()
+            agreement = registry_agreement(registry, sa.load_registry())
+            agreement["withheldL3"] = withheld
+            (out / "fold_agreement.json").write_text(
+                json.dumps(agreement, indent=1) + "\n", encoding="utf-8", newline="\n")
+            print(f"[scale] fold without L3 {', '.join(withheld)}: {agreement['nIdentical']} of "
+                  f"{agreement['nMetrics']} decisions identical to the committed registry "
+                  f"(share {agreement['share']}; the full registry "
+                  f"{'may' if agreement['fullRegistryMayStandIn'] else 'may not'} stand in "
+                  f"at the {AGREEMENT_SHORTCUT:g} shortcut)")
         print(f"[scale] evidence -> {out}")
 
     levels: dict[str, int] = {}
@@ -266,6 +346,9 @@ def main(argv=None) -> int:
           + ", ".join(f"{LEVEL_WORDS.get(k, k)} {v}" for k, v in sorted(levels.items())))
     print(f"[scale] class splits adopted: {splits or 'none'}")
 
+    if withheld:
+        print("[scale] --withhold-l3 given: a fold registry never replaces the committed one")
+        return 0
     if a.metric:
         print("[scale] --metric given: the registry file was not written")
         return 0

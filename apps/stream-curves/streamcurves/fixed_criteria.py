@@ -95,6 +95,74 @@ SPEC: dict[str, dict] = {
     },
 }
 
+# The last resort (REF-17, methodology 0.16, owner decision D19 of 2026-09-28).
+# EASI's published national screening method for the same quantity, used ONLY for
+# a function that no other source supports in the ecoregion: every station pool,
+# national donor, approved model, published benchmark and flagged transfer
+# refused each of its candidate metrics. The curve is generated from the vendored
+# EASI catalog by the same construction as the fixed criteria above, but the
+# metric joins a bundle only through ``pressure_evidence.run_evidence``'s
+# last-resort step, never unconditionally. ``function`` is the STAF function the
+# entry completes; ``required_input`` is what a DEEP user supplies or checks.
+LAST_RESORT_RULE = "REF-17"
+LAST_RESORT_ROLE = "last_resort"
+LAST_RESORT_SPEC: dict[str, dict] = {
+    "pctwet2019ws": {
+        "easi_method": "watershed-wetland-extent", "input": None,
+        "display_name": "Wetland cover of the watershed", "units": "%", "resolution": 0.01,
+        "domain": [0.0, 100.0], "metric_family": "proportion",
+        "streamcat": "pctwet2019",
+        "functions": ["Surface water storage"],
+        "required_input": (
+            "Watershed wetland cover (NLCD 2019 woody plus herbaceous wetland, percent of the "
+            "watershed) from the StreamCat lookup engine or the STAF site engine; DEEP fills "
+            "it from the desktop analysis and the user may correct it."),
+        "limitation": (
+            "Rated on EASI's national wetland-extent bands, which rate a watershed with no "
+            "mapped wetland Poor. Least-disturbed watersheds of this ecoregion carry little or "
+            "no wetland, so the rating cannot tell natural absence from loss: read a Fair or "
+            "Poor rating with that in mind."),
+    },
+    "bank_height_ratio": {
+        "easi_method": "bhr-bank-instability-susceptibility", "input": None,
+        "display_name": "Bank height ratio", "units": "ratio", "resolution": 0.01,
+        "domain": [1.0, None], "metric_family": "continuous",
+        "streamcat": None,
+        "functions": ["Channel and floodplain dynamics"],
+        "required_input": (
+            "Bank height ratio at a representative riffle of the assessment reach: the height "
+            "of the lower top of bank above the thalweg divided by the maximum bankfull depth "
+            "(the stream quantification tools' field procedure, after Rosgen 2006). Measure it "
+            "in the field; DEEP offers a DEM-derived value only where the cross sections pass "
+            "the quality checks, and leaves the function unassessed until a value is entered."),
+        "limitation": (
+            "Rated on EASI's bank-instability bands for the bank height ratio (1.3 and 1.5), a "
+            "provisional screening relationship rather than a measured erosion rate or an "
+            "estimate of this ecoregion's reference condition."),
+    },
+    # EASI's carbon-processing method scores V (forest, shrub, grassland and wetland in
+    # the 100 m riparian corridor, capped at 100) on its reference curve of the site's
+    # NARS-9 region (curve set corridor-natural, national fallback): the curve, not bands
+    "natural_riparian_cover": {
+        "easi_method": "organic-matter-supply-potential", "input": None,
+        "curve_set": "corridor-natural",
+        "display_name": "Natural cover of the riparian corridor", "units": "%", "resolution": 0.01,
+        "domain": [0.0, 100.0], "metric_family": "proportion",
+        "streamcat": "pctconif2019, pctdecid2019, pctmxfst2019, pctshrb2019, pctgrs2019, "
+                     "pctwdwet2019, pcthbwet2019 (wsrp100)",
+        "functions": ["Carbon processing"],
+        "required_input": (
+            "Natural cover of the 100 m riparian corridor of the watershed: forest, shrub, "
+            "grassland and wetland, percent (NLCD 2019 through StreamCat's riparian buffers), "
+            "the input EASI's organic-matter supply method reads; DEEP fills it from the desktop "
+            "analysis and the user may correct it."),
+        "limitation": (
+            "Rated on EASI's organic-matter supply reference curve for this NARS-9 region: a "
+            "provisional screening estimate of the riparian supply of organic matter, not a "
+            "measurement of organic-matter retention or processing in the stream."),
+    },
+}
+
 _RANK = {"Good": 0, "Fair": 1, "Poor": 2}
 
 
@@ -188,45 +256,97 @@ def _points(entry: dict, rating_index: dict) -> list[list[float]]:
     return [[round(x, 6), round(y, 6)] for x, y in pts]
 
 
-def generate(catalog: Optional[dict] = None) -> dict:
-    """The full ``fixed_criteria.yaml`` document, from the vendored catalog."""
-    catalog = catalog if catalog is not None else _vendored_catalog()
+REFERENCE_CURVES_PATH = VENDORED_CATALOG_PATH.parent / "reference-curves.json"
+
+
+def _curve_set_entry(spec: dict, catalog: dict) -> dict:
+    """A last-resort entry scored on one of EASI's reference-curve sets: the curve of
+    every stratum (NARS-9 region) and the national fallback, as EASI draws them."""
     citations = catalog.get("citations") or {}
+    method = _method(catalog, spec["easi_method"])
+    sets = json.loads(REFERENCE_CURVES_PATH.read_text(encoding="utf-8")).get("sets") or {}
+    curves = (sets.get(spec["curve_set"]) or {}).get("curves") or {}
+    layers = {str(k): [[round(float(x), 6), round(float(y), 6)] for x, y in (v.get("points") or [])]
+              for k, v in sorted(curves.items()) if v.get("points")}
+    if not layers:
+        raise KeyError(f"the vendored EASI curves hold no set {spec['curve_set']!r}")
+    fallback = next((k for k in ("national", "NATIONAL", "national_fallback") if k in layers), None)
+    return {
+        "display_name": spec["display_name"], "units": spec["units"],
+        "metric_family": spec["metric_family"],
+        "easi_method": spec["easi_method"], "easi_metric_id": method.get("metricId"),
+        "easi_input": None, "easi_title": method.get("title"),
+        "provisional": bool(method.get("provisional")),
+        "resolution": spec["resolution"], "domain": list(spec["domain"]),
+        "streamcat": spec.get("streamcat"),
+        "functions": list(spec.get("functions") or []),
+        "curve_set": spec["curve_set"], "stratifier": "nars9",
+        "direction": "higher_better", "bands": [],
+        "curve_layers": layers, "fallback_stratum": fallback,
+        "points": layers[fallback] if fallback else next(iter(layers.values())),
+        "citations": [{"key": c, "text": (citations.get(c) or {}).get("title"),
+                       "url": (citations.get(c) or {}).get("url")}
+                      for c in (method.get("citations") or [])],
+        "breakpoints": [{"label": b.get("label"), "description": b.get("description")}
+                        for b in (method.get("breakpoints") or [])],
+        "limitations": list(method.get("limitations") or []),
+    }
+
+
+def _generate_entry(spec: dict, catalog: dict, rating_index: dict) -> dict:
+    """One criterion of the file, from its spec and the vendored catalog."""
+    if spec.get("curve_set"):
+        return _curve_set_entry(spec, catalog)
+    citations = catalog.get("citations") or {}
+    method = _method(catalog, spec["easi_method"])
+    bands, _src = _bands_of(method, spec.get("input"))
+    entry: dict[str, Any] = {
+        "display_name": spec["display_name"], "units": spec["units"],
+        "metric_family": spec["metric_family"],
+        "easi_method": spec["easi_method"], "easi_metric_id": method.get("metricId"),
+        "easi_input": spec.get("input"), "easi_title": method.get("title"),
+        "provisional": bool(method.get("provisional")),
+        "resolution": spec["resolution"], "domain": list(spec["domain"]),
+        "streamcat": spec.get("streamcat"),
+        "functions": list(spec.get("functions") or []),
+        "bands": [{"rating": b["rating"], "label": b.get("label"), "min": b.get("min"),
+                   "max": b.get("max"), "minInclusive": bool(b.get("minInclusive")),
+                   "maxInclusive": bool(b.get("maxInclusive"))}
+                  for b in sorted(bands, key=lambda b: _RANK[b["rating"]])],
+    }
+    if spec.get("count"):
+        entry["count"] = True
+        entry["direction"] = "lower_better"
+    else:
+        entry.update(_anchors(bands, spec["resolution"]))
+    entry["points"] = _points(entry, rating_index)
+    entry["citations"] = [{"key": c, "text": (citations.get(c) or {}).get("title"),
+                           "url": (citations.get(c) or {}).get("url")}
+                          for c in (method.get("citations") or [])]
+    entry["breakpoints"] = [
+        {"label": b.get("label"), "description": b.get("description")}
+        for b in (method.get("breakpoints") or [])
+        if not spec.get("input") or b.get("input") in (None, spec.get("input"))]
+    entry["limitations"] = list(method.get("limitations") or [])
+    return entry
+
+
+def generate(catalog: Optional[dict] = None) -> dict:
+    """The full ``fixed_criteria.yaml`` document, from the vendored catalog: the
+    fixed criteria (``metrics``) and the last-resort methods (``last_resort``,
+    REF-17), each generated by the same construction."""
+    catalog = catalog if catalog is not None else _vendored_catalog()
     rating_index = catalog.get("ratingIndex") or {"Good": 0.85, "Fair": 0.545, "Poor": 0.195}
     lo, hi = _index_bands()
-    metrics: dict[str, dict] = {}
-    for key, spec in SPEC.items():
-        method = _method(catalog, spec["easi_method"])
-        bands, _src = _bands_of(method, spec.get("input"))
-        entry: dict[str, Any] = {
-            "display_name": spec["display_name"], "units": spec["units"],
-            "metric_family": spec["metric_family"],
-            "easi_method": spec["easi_method"], "easi_metric_id": method.get("metricId"),
-            "easi_input": spec.get("input"), "easi_title": method.get("title"),
-            "provisional": bool(method.get("provisional")),
-            "resolution": spec["resolution"], "domain": list(spec["domain"]),
-            "streamcat": spec.get("streamcat"),
-            "functions": list(spec.get("functions") or []),
-            "bands": [{"rating": b["rating"], "label": b.get("label"), "min": b.get("min"),
-                       "max": b.get("max"), "minInclusive": bool(b.get("minInclusive")),
-                       "maxInclusive": bool(b.get("maxInclusive"))}
-                      for b in sorted(bands, key=lambda b: _RANK[b["rating"]])],
-        }
-        if spec.get("count"):
-            entry["count"] = True
-            entry["direction"] = "lower_better"
-        else:
-            entry.update(_anchors(bands, spec["resolution"]))
-        entry["points"] = _points(entry, rating_index)
-        entry["citations"] = [{"key": c, "text": (citations.get(c) or {}).get("title"),
-                               "url": (citations.get(c) or {}).get("url")}
-                              for c in (method.get("citations") or [])]
-        entry["breakpoints"] = [
-            {"label": b.get("label"), "description": b.get("description")}
-            for b in (method.get("breakpoints") or [])
-            if not spec.get("input") or b.get("input") in (None, spec.get("input"))]
-        entry["limitations"] = list(method.get("limitations") or [])
-        metrics[key] = entry
+    metrics = {key: _generate_entry(spec, catalog, rating_index) for key, spec in SPEC.items()}
+    last_resort: dict[str, dict] = {}
+    for key, spec in LAST_RESORT_SPEC.items():
+        entry = _generate_entry(spec, catalog, rating_index)
+        entry["method_basis_class"] = _method(catalog, spec["easi_method"]).get("basisClass")
+        entry["required_input"] = " ".join(str(spec.get("required_input") or "").split())
+        entry["limitation"] = " ".join(str(spec.get("limitation") or "").split())
+        entry["rule"] = LAST_RESORT_RULE
+        last_resort[key] = entry
     return {
         "version": 1,
         "source": {"catalog": "streamcurves/_vendor/easi/data/screening-methods.json",
@@ -235,6 +355,7 @@ def generate(catalog: Optional[dict] = None) -> dict:
                          "zero": "linear_extension_of_fair_segment",
                          "boundary_rule": "half_resolution_shift_when_better_class_owns"},
         "metrics": metrics,
+        "last_resort": last_resort,
     }
 
 
@@ -434,3 +555,124 @@ def mapping_rows(metric_keys=None) -> pd.DataFrame:
     out = pd.DataFrame(rows, columns=["metric_key", "discipline", "function_label"])
     out["sort_order"] = range(1, len(out) + 1)
     return out
+
+
+# --------------------------------------------------------------------------- #
+# the last resort (REF-17, methodology 0.16, owner decision D19)
+# --------------------------------------------------------------------------- #
+def last_resort_keys() -> list[str]:
+    """The metrics the last-resort rung can add, in file order."""
+    return list((load_fixed_criteria().get("last_resort") or {}).keys())
+
+
+def is_last_resort(metric_key: str) -> bool:
+    return str(metric_key) in (load_fixed_criteria().get("last_resort") or {})
+
+
+def last_resort_entry(metric_key: str) -> dict:
+    block = load_fixed_criteria().get("last_resort") or {}
+    if metric_key not in block:
+        raise KeyError(f"{metric_key!r} is not a last-resort metric")
+    return block[metric_key]
+
+
+def last_resort_for_function(function_id: str) -> Optional[str]:
+    """The last-resort metric that completes a canonical STAF function, or None."""
+    from .staf_library import staf_canonical_function
+    for key, e in (load_fixed_criteria().get("last_resort") or {}).items():
+        for label in e.get("functions") or []:
+            canon = staf_canonical_function(label)
+            if canon is not None and str(canon.get("id")) == str(function_id):
+                return key
+    return None
+
+
+def last_resort_config(metric_key: str) -> dict:
+    """The ``metric_config`` entry a last-resort metric joins the bundle with."""
+    e = last_resort_entry(metric_key)
+    return {"column_name": metric_key, "display_name": e["display_name"], "units": e["units"],
+            "metric_family": e["metric_family"],
+            "higher_is_better": e.get("direction") == "higher_better",
+            "metric_role": LAST_RESORT_ROLE, "criteria_basis": CRITERIA_BASIS,
+            "domain_min": (e.get("domain") or [None, None])[0],
+            "domain_max": (e.get("domain") or [None, None])[1],
+            "notes": last_resort_sentence(e)}
+
+
+def last_resort_sentence(entry: dict) -> str:
+    """The criterion in one plain sentence, for the metric's tooltip."""
+    if entry.get("curve_layers"):
+        return (f"{entry['display_name']} ({entry.get('units')}) is scored on EASI's "
+                f"{entry.get('easi_title')} reference curve for the region's NARS-9 class, adopted "
+                "because no other source supports this function here.")
+    by = {b["rating"]: b.get("label") for b in entry.get("bands") or []}
+    return (f"{entry['display_name']} ({entry.get('units')}) is scored on EASI's national "
+            f"screening method, {entry.get('easi_title')}, adopted because no other source "
+            f"supports this function here. Good {by.get('Good')}, Fair {by.get('Fair')}, "
+            f"Poor {by.get('Poor')}.")
+
+
+def last_resort_citation_line(entry: dict) -> str:
+    """What a last-resort metric cites in place of the regional analysis."""
+    return f"Adopted EASI screening method (provisional), {entry.get('easi_title')}"
+
+
+def last_resort_stratum(entry: dict, stratum: Optional[str]) -> Optional[str]:
+    """The curve layer a curve-set entry uses for a region (its NARS-9 class, else
+    the national fallback); None for a banded entry."""
+    layers = entry.get("curve_layers") or {}
+    if not layers:
+        return None
+    return str(stratum) if stratum is not None and str(stratum) in layers \
+        else entry.get("fallback_stratum") or next(iter(layers))
+
+
+def last_resort_curve_row(metric_key: str, stratum: Optional[str] = None) -> dict:
+    """The curve row of a last-resort metric, shaped like the engine's.
+    ``n_reference`` is None by design: no station informs the curve. A curve-set
+    entry takes the curve of the region's NARS-9 class (``stratum``)."""
+    e = last_resort_entry(metric_key)
+    layer = last_resort_stratum(e, stratum)
+    pts = e["curve_layers"][layer] if layer else None
+    return {"metric": metric_key, "display_name": e["display_name"],
+            "stratum": f"NARS-9 {layer}" if layer else "",
+            "curve_status": "complete", "curve_source": "easi_screening_method",
+            "n_reference": None,
+            "curve_points": curve_points({"points": pts}) if pts else curve_points(e)}
+
+
+def last_resort_mapping_rows(metric_keys) -> pd.DataFrame:
+    """The function assignment of each last-resort metric: the function the entry
+    completes, which is part of the method and never an editable choice."""
+    from .staf_library import staf_canonical_function
+    rows = []
+    block = load_fixed_criteria().get("last_resort") or {}
+    for key in metric_keys:
+        for label in (block.get(key) or {}).get("functions") or []:
+            canon = staf_canonical_function(label)
+            if canon is None:
+                raise KeyError(f"last-resort metric {key!r} names an unknown function {label!r}")
+            rows.append({"metric_key": key, "discipline": canon["discipline"],
+                         "function_label": canon["name"]})
+    out = pd.DataFrame(rows, columns=["metric_key", "discipline", "function_label"])
+    out["sort_order"] = range(1, len(out) + 1)
+    return out
+
+
+def last_resort_provenance(entry: dict) -> dict:
+    """What the bundle carries beside a last-resort curve (``adoptedMethod``): the
+    EASI method it adopts, that method's own evidentiary status, citations and
+    limitations, the rule and the owner's decision, and the input it needs."""
+    return {"rule": LAST_RESORT_RULE, "ownerDecision": "D19 (2026-09-28)",
+            "curveSet": entry.get("curve_set"),
+            "easiMethod": entry.get("easi_method"), "easiMetricId": entry.get("easi_metric_id"),
+            "title": entry.get("easi_title"), "basisClass": entry.get("method_basis_class"),
+            "provisional": bool(entry.get("provisional")),
+            "bands": [{"rating": b["rating"], "label": b.get("label")}
+                      for b in entry.get("bands") or []],
+            "citations": [{"key": c.get("key"), "text": c.get("text")}
+                          for c in entry.get("citations") or []],
+            "limitations": list(entry.get("limitations") or []),
+            "requiredInput": entry.get("required_input"),
+            "followUp": ("Provisional: a regional method for this function in this ecoregion "
+                         "is an open follow-up in StreamCurves.")}

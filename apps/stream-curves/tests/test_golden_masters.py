@@ -6,10 +6,14 @@ screening cuts are deliberately code, not config (the owner's capture decision,
 tuning. The trade is that any change to those internals must be LOUD, which is
 this file's job: fixed synthetic inputs pinned to exact outputs. If one of
 these fails, the engine changed; that requires a methodology version bump and a
-rule-catalog note (CURVE-09), never a silent commit.
+rule-catalog note (CURVE-10), never a silent commit.
 
 Values were generated from the engine itself on 2026-08-27; every operation on
-the path is deterministic, so exact equality is intended.
+the path is deterministic, so exact equality is intended. The monotone seeds
+were regenerated on 2026-09-26 for iqr-seed-3 (methodology 0.15, campaign Round
+2 candidate C3b adopted: tail endpoints 0.5, 1.5 and 2.5 IQR instead of 0.3,
+4/3 and 7/3); tests/test_round2_knobs.py pins that the iqr-seed-2 endpoints,
+set through curve10.tail_offsets_iqr, still reproduce the earlier seeds.
 """
 from __future__ import annotations
 
@@ -36,15 +40,22 @@ def _status(res):
 
 
 # --------------------------------------------------------------------------- #
-# Curve seed geometry (CURVE-09): one case per structural branch of the seed.
+# Curve seed geometry (CURVE-10): one case per structural branch of the seed.
+# iqr-seed-3: the monotone tails sit 0.5, 1.5 and 2.5 IQR from the quartiles.
 # --------------------------------------------------------------------------- #
+def test_the_engine_stamps_iqr_seed_3():
+    from streamcurves import run_state
+    assert run_state.CURVE_METHOD_VERSION == "iqr-seed-3"
+    assert curves.MONOTONE_TAIL_OFFSETS_IQR == (0.5, 1.5, 2.5)
+
+
 def test_rising_non_negative_seed_geometry():
     res = curves.build_reference_curve(
         _frame([float(v) for v in range(1, 21)]), "m",
         {"m": {"column_name": "m", "higher_is_better": True}}, build_plots=False)
     assert _status(res) == "complete"
     assert _points(res) == [[0.0, 0.0], [2.4642857142857144, 0.3],
-                            [5.75, 0.7], [15.25, 1.0], [18.1, 1.0]]
+                            [5.75, 0.7], [15.25, 1.0], [20.0, 1.0]]
 
 
 def test_rising_signed_scale_seed_geometry():
@@ -53,8 +64,8 @@ def test_rising_signed_scale_seed_geometry():
         {"m": {"column_name": "m", "higher_is_better": True, "signed_scale": True}},
         build_plots=False)
     assert _status(res) == "complete"
-    assert _points(res) == [[-15.75, 0.0], [-10.5, 0.3], [-3.5, 0.7],
-                            [1.75, 1.0], [3.325, 1.0]]
+    assert _points(res) == [[-16.625, 0.0], [-11.375, 0.3], [-3.5, 0.7],
+                            [1.75, 1.0], [4.375, 1.0]]
 
 
 def test_falling_seed_geometry():
@@ -62,8 +73,8 @@ def test_falling_seed_geometry():
         _frame([float(v) for v in range(1, 21)]), "m",
         {"m": {"column_name": "m", "higher_is_better": False}}, build_plots=False)
     assert _status(res) == "complete"
-    assert _points(res) == [[2.9, 1.0], [5.75, 1.0], [15.25, 0.7],
-                            [27.916666666666664, 0.3], [37.41666666666667, 0.0]]
+    assert _points(res) == [[1.0, 1.0], [5.75, 1.0], [15.25, 0.7],
+                            [29.5, 0.3], [39.0, 0.0]]
 
 
 def test_optimum_two_sided_seed_geometry():

@@ -31,6 +31,11 @@ from .paths import CONFIG_DIR
 
 logger = logging.getLogger("streamcurves")
 
+#: The ``reason`` of a withheld record for a curve that was built and is still
+#: held for a reviewer (``pressure_evidence.HELD_FOR_REVIEW`` writes it); the
+#: bundle counts those records apart from the metrics with no defensible pool.
+HELD_FOR_REVIEW_REASON = "held-for-review"
+
 # The DEEP scoring contract's numeric constants, stated once. They mirror
 # apps/deep/deep/config.py (INDEX_BANDS thresholds, FUNCTION_SCORE_BANDS,
 # FUNCTION_SCORE_MAX, indirect weight); the methodology mirror check
@@ -254,6 +259,41 @@ def function_coverage(metrics_by_function, crosswalk: list[dict],
         "missingFunctionIds": missing,
         "exclusions": excluded,
     }
+
+
+#: the curve statuses of the engine's fallback and shapeless curves, which no
+#: bundle carries under methodology 0.16 (owner decision D13)
+FALLBACK_CURVE_STATUSES = ("degenerate_q25", "degenerate_curve")
+#: a flagged transfer's transfer risk (StreamCurves reference_pool.RISK_UNVALIDATED)
+UNVALIDATED_RISK = "unvalidated"
+#: the metric-entry fields a flagged transfer must carry (REF-16)
+FLAGGED_ENTRY_KEYS = ("transferRisk", "transferValidation", "transferNote", "confidenceCap")
+
+
+def fallback_entries(bundle: Optional[dict]) -> list[str]:
+    """``"<functionId>: <metricId>"`` for every scoring entry of a bundle whose
+    ``curveStatus`` is a fallback or shapeless curve (D13): what the stage
+    refuses to publish. Empty for a clean bundle."""
+    out = []
+    for block in (bundle or {}).get("metricsByFunction") or []:
+        for m in block.get("metrics") or []:
+            if str(m.get("curveStatus") or "complete") in FALLBACK_CURVE_STATUSES:
+                out.append(f"{block.get('functionId')}: {m.get('metricId')}")
+    return out
+
+
+def flagged_entries(bundle: Optional[dict]) -> list[dict]:
+    """Every scoring entry of a bundle on a flagged transfer (REF-16): the
+    entry's own ``transferRisk`` or its ``referenceSupport.transferRisk`` reads
+    ``unvalidated``. Each item: ``functionId``, ``metricId``, ``entry``."""
+    out = []
+    for block in (bundle or {}).get("metricsByFunction") or []:
+        for m in block.get("metrics") or []:
+            sup = m.get("referenceSupport") if isinstance(m.get("referenceSupport"), dict) else {}
+            if UNVALIDATED_RISK in (str(m.get("transferRisk") or ""), str(sup.get("transferRisk") or "")):
+                out.append({"functionId": block.get("functionId"), "metricId": m.get("metricId"),
+                            "entry": m})
+    return out
 
 
 def coverage_gap_message(coverage: dict, crosswalk: list[dict]) -> str:
@@ -787,7 +827,13 @@ def build_deep_assessment_bundle(
                     # and the checks a refused source the owner accepted failed
                     "ownerException",
                     # a state SQT curve's registry record and how its rule was written out
-                    "sqt"):
+                    "sqt",
+                    # methodology 0.16 (REF-16): a flagged transfer's four disclosure
+                    # fields, at the metric where DEEP and the calculator read them
+                    "transferRisk", "transferValidation", "transferNote", "confidenceCap",
+                    # methodology 0.16 (REF-17): the EASI screening method a
+                    # last-resort curve adopts, with its status, citations and input
+                    "adoptedMethod"):
             if key in annotations and annotations[key] is not None:
                 base_entry[key] = annotations[key]
 
@@ -944,7 +990,7 @@ def build_deep_assessment_bundle(
     # an older reader is unaffected. Both are absent on a legacy build.
     reference_method = meta.get("referenceMethod")
     if reference_method:
-        bundle["referenceMethod"] = reference_method
+        bundle["referenceMethod"] = dict(reference_method)
     # A metric is never both scored and withheld: a record whose metric made it
     # into a scoring block (a reviewer finalized it on republish) is stale.
     scored_ids = {m.get("metricId") for fn in bundle.get("metricsByFunction") or []
@@ -953,6 +999,18 @@ def build_deep_assessment_bundle(
                 if w.get("metricId") not in scored_ids]
     if withheld:
         bundle["insufficientReferenceSupport"] = withheld
+    # The counts a reader sets against that list come from the list as exported.
+    # The evidence-time count (pressure_evidence.reference_method_block) no longer
+    # matched once owner sources and finalizations moved metrics back into scoring
+    # blocks (CGP 15 against 9, ECBP 7 against 6, IP 4 against 3, SEP 6 against 5,
+    # read 2026-09-24), and a curve held for a reviewer is listed with its own
+    # reason, so it is counted apart. Both sit in the top-level referenceMethod
+    # block, outside the content digest (metricsByFunction and the region code),
+    # so setting them cannot re-mint a published version's fingerprint.
+    if isinstance(bundle.get("referenceMethod"), dict):
+        bundle["referenceMethod"]["nWithheld"] = len(withheld)
+        bundle["referenceMethod"]["nHeldForReview"] = sum(
+            1 for w in withheld if w.get("reason") == HELD_FOR_REVIEW_REASON)
     # REF-15: the owner's decisions on the curves the build did not fit (what was
     # removed, taken out of a function or put back, by whom and why). Outside
     # metricsByFunction, like the withheld list; absent when there are none.

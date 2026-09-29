@@ -31,7 +31,7 @@
 # (reference_pool.*) so the Rules page resolves them. This file holds the
 # structure: which covariates, which metrics.
 
-version: 2
+version: 3
 
 # --------------------------------------------------------------------------- #
 # Methodology 0.14 (2026-09-21): one reference-source hierarchy.
@@ -40,12 +40,25 @@ version: 2
 # screen), then the regional least-disturbed pools, then comparable national
 # reference, a modeled reference, and a published benchmark. The regional pools
 # use the documented regional screen (methodology_config.yaml,
-# reference_hierarchy.regional_screen) and are searched in each family's fixed
-# `search_order` below. NARS-9 is EPA's grouping of Level III regions for
-# condition reporting, a separate grouping and not another nested level, so each
-# family places it where its drivers put it. The first source that passes the
-# acceptance criteria (methodology_config.yaml, acceptance) is used.
+# reference_hierarchy.regional_screen) and are searched in the one
+# `search_order` below. The first source that passes the acceptance criteria
+# (methodology_config.yaml, acceptance) is used.
+#
+# Methodology 0.15 (2026-09-26, campaign Round 2 candidate B3 adopted): one
+# search order for every metric family. Until 0.14 each family carried its own
+# order, placing NARS-9 (EPA's grouping of Level III regions for condition
+# reporting, a separate grouping and not another nested level) where the
+# family's drivers put it: water chemistry tried it second, the assemblages and
+# riparian cover third, channel form, substrate and hydrology last. On the 14
+# development regions the one order below chose the same pool in every cell
+# (O1 median delta 0.0000 with lower bound 0.0000; coverage, association and
+# stability identical; 14,053 s against 18,167 s of runtime), so the family
+# orders were removed rather than kept as an unused distinction. The order is
+# the Omernik nesting first, NARS-9 last. reference_pool.family_profile reads
+# it for every family (search_order_source: global).
 # --------------------------------------------------------------------------- #
+
+search_order: [l3, l2, l1, nars9]
 
 envelope:
   basis: target_frame_stations
@@ -67,22 +80,16 @@ families:
     why: "Bankfull dimensions, pool depth, sinuosity and bank form scale with stream size and slope, and the material the channel is cut into."
     covariates: [drainage_area_sqkm, nhd_slope]
     lithology: true
-    search_order: [l3, l2, l1, nars9]
-    search_why: "Channel geometry follows physiography, which the Omernik hierarchy nests. NARS-9 groups regions for condition reporting across physiographic lines, so it comes last."
   substrate:
     label: "Bed material and sediment"
     why: "Particle size, fines, embeddedness and bed stability follow slope, stream size and the rock and deposits that supply the sediment."
     covariates: [drainage_area_sqkm, nhd_slope]
     lithology: true
-    search_order: [l3, l2, l1, nars9]
-    search_why: "Bed material follows the physiography and deposits the hierarchy nests. NARS-9 crosses those lines, so it comes last."
   water_chemistry:
     label: "Water chemistry"
     why: "Conductivity, pH, nutrients and turbidity in least-disturbed streams follow geology and how much of the flow is groundwater."
     covariates: [bfiws, runoffws]
     lithology: true
-    search_order: [l3, nars9, l2, l1]
-    search_why: "EPA assesses chemical and nutrient condition by NARS-9 region, so the grouping built for that purpose is tried before the wider levels of the hierarchy."
   biology:
     label: "Benthic and fish assemblages"
     why: "Taxa richness and tolerance follow stream size, gradient and temperature."
@@ -90,15 +97,11 @@ families:
     lithology: false
     # every pool keeps to the target's faunal province (fauna_groups below)
     fauna: true
-    search_order: [l3, l2, nars9, l1]
-    search_why: "Assemblages follow climate and landform, which NARS-9 draws more closely than Level I, and every option keeps to the target's faunal province."
   riparian:
     label: "Riparian cover, shade, wood and fish cover"
     why: "Canopy, woody cover and wood loading follow stream size and the climate that sets the natural vegetation."
     covariates: [drainage_area_sqkm, precip8110ws]
     lithology: false
-    search_order: [l3, l2, nars9, l1]
-    search_why: "Riparian vegetation follows the climate that sets natural vegetation, which NARS-9 draws more closely than Level I."
   hydrology:
     label: "Watershed storage and base flow"
     why: "Natural wetland extent and base flow follow how permeable the watershed is and its climate."
@@ -107,8 +110,6 @@ families:
     # reach slope is a weak stand-in for watershed relief anyway.
     covariates: [hydrlcondws, precip8110ws]
     lithology: true
-    search_order: [l3, l2, l1, nars9]
-    search_why: "Watershed storage follows physiography and climate as the hierarchy nests them. NARS-9 crosses those lines, so it comes last."
 
 # Which streams share a regional species pool (families with `fauna: true`).
 # The distance-matched check of 2026-09-21 found donors matched on size, slope
@@ -164,6 +165,11 @@ metric_family:
   fish_NAT_NTOLPTAX: biology
   fish_NAT_TOLRPIND: biology
   fish_NAT_LITHPIND: biology
+  # EPA's NRSA indices (methodology 0.16, owner decision D12, 2026-09-28): the
+  # same assemblage samples as their component metrics, so the same family
+  bent_MMI_BENT: biology
+  fish_MMI_FISH: biology
+  bent_OE_SCORE: biology
   # landscape expectation metrics (scored against reference, never fixed criteria)
   pctwet2019ws: hydrology
   pctwdwet2019ws: hydrology

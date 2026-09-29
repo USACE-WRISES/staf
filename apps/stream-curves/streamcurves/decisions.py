@@ -42,8 +42,13 @@ POLICY_PATH = CONFIG_DIR / "methodology" / "standing_decisions.yaml"
 PENDING_SUFFIX = "(pending owner confirmation)"
 ALLOWED_ACTIONS = ("accept", "accept_with_conditions", "modify", "reject",
                    "request_additional_analysis")
-SIDE_EFFECTS = ("portfolio_approval", "finalize_metric", "coverage_exception")
+#: policy 1.5 adds remove_metric: a reject that takes the curve out of scoring
+#: (the batch runner feeds it to assembly as a removal)
+SIDE_EFFECTS = ("portfolio_approval", "finalize_metric", "coverage_exception", "remove_metric")
 _OPS = ("eq", "ne", "lt", "lte", "gt", "gte", "in")
+#: the policy era of a document that recorded none (the pilots): every entry a
+#: later policy retired still applies to it, nothing introduced later does
+ERA_UNRECORDED = "0"
 
 
 # --------------------------------------------------------------------------- #
@@ -72,6 +77,33 @@ def entries_by_id(policy: dict) -> dict[str, dict]:
 
 def _version_tuple(v: str) -> tuple:
     return tuple(int(x) for x in re.findall(r"\d+", str(v))[:3])
+
+
+def entry_applies(entry: dict, era: Optional[str], current: str) -> bool:
+    """Whether an entry belongs to the policy era a document was decided under.
+
+    Policy 1.5 (methodology 0.16): an entry may carry ``introduced_in_policy``
+    and ``retired_in_policy``. It applies to a document recorded under policy
+    ``era`` when the era is at or after its introduction and before its
+    retirement. ``era`` None is a new build under ``current``; a document that
+    recorded no policy (the pilots) is :data:`ERA_UNRECORDED`, so every entry a
+    later policy retired still replays it and nothing introduced later touches it.
+    """
+    at = _version_tuple(current if era is None else era)
+    intro = entry.get("introduced_in_policy")
+    retired = entry.get("retired_in_policy")
+    if intro and at < _version_tuple(intro):
+        return False
+    if retired and at >= _version_tuple(retired):
+        return False
+    return True
+
+
+def recorded_policy_version(doc: Optional[dict]) -> str:
+    """The policy version a provenance document recorded
+    (``manifest.standingDecisions.policyVersion``), else :data:`ERA_UNRECORDED`."""
+    sd = ((doc or {}).get("manifest") or {}).get("standingDecisions") or {}
+    return str(sd.get("policyVersion") or ERA_UNRECORDED)
 
 
 def validate_policy(policy: dict) -> list[str]:
@@ -121,6 +153,32 @@ def validate_policy(policy: dict) -> list[str]:
         if approved and _version_tuple(approved) > _version_tuple(current):
             problems.append(f"{where}: approved_under {approved!r} is newer than the "
                             f"current methodology {current!r}")
+        # policy 1.5: the era keys are policy versions no newer than this file's
+        this_policy = str(meta.get("policy_version") or "")
+        for key in ("introduced_in_policy", "retired_in_policy"):
+            value = e.get(key)
+            if value is None:
+                continue
+            if not _version_tuple(str(value)):
+                problems.append(f"{where}: {key} {value!r} is not a policy version")
+            elif this_policy and _version_tuple(str(value)) > _version_tuple(this_policy):
+                problems.append(f"{where}: {key} {value!r} is newer than this policy "
+                                f"{this_policy!r}")
+        if e.get("retired_in_policy") and not e.get("enabled", False):
+            problems.append(f"{where}: a retired entry stays enabled, so the replay of the "
+                            "versions decided under it still applies it")
+        # No fabricated approvals (campaign Round 2 close): an entry with no approval
+        # date must say in approved_under that the owner's confirmation is pending,
+        # and a legacy entry is never enabled by default.
+        if not e.get("approved_on") and "pending" not in approved.lower():
+            problems.append(f"{where}: approved_on is empty, so approved_under must state "
+                            "that owner confirmation is pending")
+        if e.get("legacy") and e.get("enabled", False):
+            problems.append(f"{where}: a legacy entry cannot be enabled by default")
+        aliases = e.get("aliases")
+        if aliases is not None and (not isinstance(aliases, list)
+                                    or not all(isinstance(a, str) and a for a in aliases)):
+            problems.append(f"{where}: aliases must be a list of class names")
         if not e.get("rationale"):
             problems.append(f"{where}: rationale template is missing")
         else:
@@ -146,7 +204,14 @@ def _sample_evidence() -> dict:
             "blockers_documented",
             # REF-05 (v0.12): a borrowed reference pool
             "transfer_risk", "n_usable", "n_local", "self_coverage", "level", "level_label",
-            "region_code", "region_name")
+            "region_code", "region_name",
+            # policy 1.3 (campaign Round 2 close): CURVE-07 fallback curves, CURVE-12
+            # thin inversions, RED-01 pairs, CURVE-06 intervals, STRAT-09 candidates
+            "reasons", "domain_min", "domain_max", "curve12_verdict", "curve12_auc",
+            "curve12_inverted", "curve07_status", "verdict", "auc_ref_vs_pressure", "n_ref",
+            "n_pressure", "min_group_n", "group_floor_n", "median_ref_index",
+            "median_pressure_index", "same_function", "pearson", "evaluable", "n_boot",
+            "n_matched", "n_metrics_tested", "n_significant", "consistency_score")
     return _derived({k: 0 for k in keys})
 
 
@@ -213,18 +278,25 @@ def _records_by_key(doc: dict) -> dict[tuple[str, str], dict]:
 
 
 def _parse_level_counts(value) -> list[int]:
+    """The populated class sizes of a stratifier candidate. The manifest writes
+    them as ``label=count|label=count`` (``Headwater (<= 10 km2)=72|...``), so a
+    labelled string is split on ``|`` and read after each ``=``; a digit scan of
+    the whole string would read the labels' own numbers (10, 100, 0.5) as
+    counts, which is what policy 1.2 did (see ``enrich_evidence``)."""
     if value is None:
         return []
     if isinstance(value, dict):
         vals = value.values()
     elif isinstance(value, (list, tuple)):
         vals = value
+    elif "=" in str(value):
+        vals = [part.rsplit("=", 1)[1] for part in str(value).split("|") if "=" in part]
     else:
         vals = re.findall(r"\d+", str(value))
     out = []
     for v in vals:
         try:
-            out.append(int(v))
+            out.append(int(str(v).strip()))
         except (TypeError, ValueError):
             continue
     return out
@@ -304,12 +376,46 @@ def enrich_evidence(item: dict, doc: dict, *, bundle: Optional[dict] = None,
         if rec:
             ev.setdefault("n_retained", (rec.get("computed") or {}).get("n_retained"))
     if rule_id == "STRAT-09":
+        # The candidate's smallest populated class: the manifest's own
+        # ``min_populated_n`` where the build recorded it, else the counts parsed
+        # from ``level_counts``. Policy 1.2 scanned the digits of the labelled
+        # string, so its records name the labels' numbers as class sizes; the
+        # replay reads those records under strat09-advisory-not-applied's alias.
         for cand in ((manifest.get("stratifiers") or {}).get("candidates") or []):
             if str(cand.get("stratification")) == subject:
                 counts = _parse_level_counts(cand.get("level_counts"))
                 ev["level_counts"] = "/".join(str(c) for c in counts) if counts else None
-                ev["min_level_n"] = min(counts) if counts else None
+                recorded_min = cand.get("min_populated_n")
+                if isinstance(recorded_min, (int, float)) and not isinstance(recorded_min, bool):
+                    ev["min_level_n"] = int(recorded_min)
+                else:
+                    ev["min_level_n"] = min(counts) if counts else None
                 break
+    if rule_id in ("CURVE-06", "CURVE-07"):
+        # Policy 1.3: a fallback curve is accepted only when the discrimination
+        # check does not contradict it. A build before CURVE-12 (methodology 0.12)
+        # has no record for the metric: ``not_recorded`` and not inverted.
+        rec = records.get(("CURVE-12", subject))
+        comp = (rec.get("computed") or {}) if rec else {}
+        verdict = comp.get("verdict") if rec else None
+        ev.setdefault("curve12_verdict", str(verdict) if verdict is not None else "not_recorded")
+        ev.setdefault("curve12_auc", comp.get("auc_ref_vs_pressure") if rec else None)
+        ev["curve12_inverted"] = str(ev.get("curve12_verdict")) == "inverted"
+    if rule_id == "CURVE-06":
+        # the curve's own status, so a missing interval is read on a fallback ramp
+        # (CURVE-07 degenerate) and on nothing else
+        rec = records.get(("CURVE-07", subject))
+        status = (rec.get("computed") or {}).get("curve_status") if rec else None
+        if status is not None:
+            ev.setdefault("curve07_status", str(status))
+    if rule_id == "CURVE-12":
+        # the smaller of the two groups the AUC rests on, against the DATA-04
+        # automated floor (the value the rationale cites)
+        sizes = [float(ev[k]) for k in ("n_ref", "n_pressure")
+                 if isinstance(ev.get(k), (int, float)) and not isinstance(ev.get(k), bool)]
+        if sizes:
+            ev["min_group_n"] = int(min(sizes))
+        ev["group_floor_n"] = methodology.threshold("data_rules.min_n_unstratified")
     if rule_id == "SELECT-01":
         by_fid = _bundle_function_metrics(bundle if bundle is not None
                                           else (result or {}).get("bundle"))
@@ -415,28 +521,37 @@ def pending_reviewer(entry_id: str, policy: dict) -> str:
     return f"standing-policy:{entry_id} {suffix}"
 
 
-def enabled_entries(policy: dict, enabled: Optional[list[str]] = None) -> list[dict]:
+def enabled_entries(policy: dict, enabled: Optional[list[str]] = None, *,
+                    era: Optional[str] = None) -> list[dict]:
+    """The entries that apply: the enabled ones plus ``enabled`` (the per-run
+    opt-ins), kept to the policy era ``era`` (:func:`entry_applies`; None is a
+    new build under this policy's version)."""
     extra = {str(e) for e in (enabled or [])}
     known = entries_by_id(policy)
     unknown = extra - set(known)
     if unknown:
         raise ValueError(f"--enable-policy names unknown entries: {', '.join(sorted(unknown))}")
+    current = policy_version(policy)
     return [e for e in policy.get("entries") or []
-            if e.get("enabled", False) or str(e.get("id")) in extra]
+            if (e.get("enabled", False) or str(e.get("id")) in extra)
+            and entry_applies(e, era, current)]
 
 
 def apply_policy(doc: dict, policy: dict, *, bundle: Optional[dict] = None,
                  result: Optional[dict] = None, enabled: Optional[list[str]] = None,
-                 date: Optional[str] = None, include_resolved: bool = False) -> PolicyResult:
+                 date: Optional[str] = None, include_resolved: bool = False,
+                 era: Optional[str] = None) -> PolicyResult:
     """Expand the enabled entries over the document's open queue items.
 
     Returns every decision made, every open item no entry covered (the owner's
     work), the hard stops among them (blocking items and the statuses the policy
     never finalizes), and the side effects the batch runner must feed back into
-    assembly (finalizations, portfolio approvals).
+    assembly (finalizations, removals, portfolio approvals). ``era`` is the
+    policy version the document was decided under (:func:`replay` passes the
+    recorded one); None is a new build under this policy.
     """
     from . import provenance as pv  # local, matching the lint import in _confirm
-    active = enabled_entries(policy, enabled)
+    active = enabled_entries(policy, enabled, era=era)
     version = policy_version(policy)
     origin = f"{(policy.get('meta') or {}).get('rationale_origin') or 'standing_policy'}:{version}"
     out = PolicyResult()
@@ -479,6 +594,8 @@ def apply_policy(doc: dict, policy: dict, *, bundle: Optional[dict] = None,
         effect = entry.get("side_effect")
         if effect == "finalize_metric":
             out.finalize_metrics[str(item.get("subject"))] = rationale
+        elif effect == "remove_metric":
+            out.remove_metrics[str(item.get("subject"))] = rationale
         elif effect == "portfolio_approval":
             out.portfolio_approvals.append({
                 "functionId": str(item.get("subject")),
@@ -694,6 +811,16 @@ MATCH = "match"
 ALIAS_MATCH = "alias_match"
 STRICTER_OPEN = "stricter_open"
 MISMATCH = "mismatch"
+#: Policy 1.3 (campaign Round 2 close): the policy decides an item the published
+#: record left open. Not a mismatch (the record contradicts nothing), counted on
+#: its own so the acceptance tests pin every such item with the entry that
+#: decided it.
+POLICY_DECIDES_OPEN = "policy_decides_open"
+#: The record carries an owner-written decision (a per-item rationale, no class)
+#: with the same action the policy takes. The class comparison has nothing to
+#: compare, so the agreement in action is reported under its own name.
+OWNER_ACTION_MATCH = "owner_action_match"
+OWNER_WRITTEN_ORIGIN = "owner_written"
 
 
 @dataclass
@@ -709,8 +836,16 @@ class ReplayReport:
             out[r["outcome"]] = out.get(r["outcome"], 0) + 1
         return out
 
+    def rows_with(self, outcome: str) -> list[dict]:
+        return [r for r in self.rows if r["outcome"] == outcome]
+
     def mismatches(self) -> list[dict]:
-        return [r for r in self.rows if r["outcome"] == MISMATCH]
+        return self.rows_with(MISMATCH)
+
+    def policy_decides_open(self) -> dict[str, str]:
+        """``{item_id: policy entry}`` of every item the record left open and the
+        policy decides, so a test can state each one."""
+        return {r["item_id"]: r["policy_class"] for r in self.rows_with(POLICY_DECIDES_OPEN)}
 
     def as_dict(self) -> dict:
         return {"version_dir": self.version_dir, "counts": self.counts(), "rows": self.rows,
@@ -727,7 +862,10 @@ def replay(version_dir: Path | str, policy: dict, *,
     bundle = json.loads((vdir / "assessment.deep.json").read_text(encoding="utf-8"))
     meta = json.loads((vdir / "meta.json").read_text(encoding="utf-8")) \
         if (vdir / "meta.json").exists() else {}
-    res = apply_policy(doc, policy, bundle=bundle, enabled=enabled, include_resolved=True)
+    # policy 1.5: a version is replayed under the policy era it recorded, so an
+    # entry retired since still decides the items it decided then
+    res = apply_policy(doc, policy, bundle=bundle, enabled=enabled, include_resolved=True,
+                       era=recorded_policy_version(doc))
     by_key = {(str(d["rule_id"]), str(d["subject"])): d for d in res.decisions}
     aliases = {str(e.get("id")): set(e.get("aliases") or []) for e in policy.get("entries") or []}
     records = _records_by_key(doc)
@@ -737,23 +875,29 @@ def replay(version_dir: Path | str, policy: dict, *,
         rec = records.get(key) or {}
         published_class = rec.get("reviewer_decision_class")
         published_action = rec.get("reviewer_action")
+        published_origin = rec.get("reviewer_rationale_origin")
         d = by_key.get(key)
         if d is None:
             outcome = STRICTER_OPEN
             policy_class = policy_action = None
         else:
             policy_class, policy_action = d["decision_class"], d["action"]
-            if published_action != policy_action:
+            if not published_action:
+                outcome = POLICY_DECIDES_OPEN
+            elif published_action != policy_action:
                 outcome = MISMATCH
             elif published_class == policy_class:
                 outcome = MATCH
             elif published_class in aliases.get(policy_class, set()):
                 outcome = ALIAS_MATCH
+            elif not published_class and str(published_origin) == OWNER_WRITTEN_ORIGIN:
+                outcome = OWNER_ACTION_MATCH
             else:
                 outcome = MISMATCH
         report.rows.append({
             "item_id": item.get("item_id"), "trigger": item.get("trigger"),
             "published_class": published_class, "published_action": published_action,
+            "published_origin": published_origin,
             "policy_class": policy_class, "policy_action": policy_action,
             "outcome": outcome,
         })
@@ -825,8 +969,9 @@ def main(argv=None) -> int:
         print(f"{rep.version_dir}: {rep.counts()}")
         for r in rep.rows:
             if r["outcome"] != MATCH:
-                print(f"  {r['outcome']:13s} {r['item_id']} published={r['published_class']}"
-                      f"/{r['published_action']} policy={r['policy_class']}/{r['policy_action']}")
+                print(f"  {r['outcome']:19s} {r['item_id']} published={r['published_class']}"
+                      f"/{r['published_action']} ({r['published_origin']}) "
+                      f"policy={r['policy_class']}/{r['policy_action']}")
         if rep.owner_only_records:
             print(f"  owner-only records: {[o['rule_id'] + ':' + o['subject'] for o in rep.owner_only_records]}")
         if rep.portfolio_approvals_not_derived:

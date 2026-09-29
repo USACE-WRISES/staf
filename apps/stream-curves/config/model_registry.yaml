@@ -109,9 +109,9 @@ entries:
     procedure: mixed_local
     status: candidate
     evidence:
-      preregistration: PREREGISTRATION_IV.md
-      preregistration_sha256: 8f2865cd2f7ff4a11ba8a7bb0edb371c9fa75a14d782e6f70d27d73586486947
-      run: ../../notes/2026-07-23_StreamCurves_Methodology/basis_validation/2026-09-21/round_four
+      preregistration: evaluation_protocol_v1.yaml
+      preregistration_sha256: 84a5cabca0b08d403c44164b130500173451aa0d14ae11704abeeece014a1cfd
+      run: D:/Data/staf-campaign-2026-09/regeneration/fcd555f/model-iv
       regime: I
       verdict: validated
       n_cells: 19
@@ -150,9 +150,9 @@ entries:
     procedure: mixed_local
     status: candidate
     evidence:
-      preregistration: PREREGISTRATION_IV.md
-      preregistration_sha256: 8f2865cd2f7ff4a11ba8a7bb0edb371c9fa75a14d782e6f70d27d73586486947
-      run: ../../notes/2026-07-23_StreamCurves_Methodology/basis_validation/2026-09-21/round_four
+      preregistration: evaluation_protocol_v1.yaml
+      preregistration_sha256: 84a5cabca0b08d403c44164b130500173451aa0d14ae11704abeeece014a1cfd
+      run: D:/Data/staf-campaign-2026-09/regeneration/fcd555f/model-iv
       regime: I
       verdict: promising
       n_cells: 19
@@ -187,9 +187,9 @@ entries:
     procedure: mixed_local
     status: candidate
     evidence:
-      preregistration: PREREGISTRATION_IV.md
-      preregistration_sha256: 8f2865cd2f7ff4a11ba8a7bb0edb371c9fa75a14d782e6f70d27d73586486947
-      run: ../../notes/2026-07-23_StreamCurves_Methodology/basis_validation/2026-09-21/round_four
+      preregistration: evaluation_protocol_v1.yaml
+      preregistration_sha256: 84a5cabca0b08d403c44164b130500173451aa0d14ae11704abeeece014a1cfd
+      run: D:/Data/staf-campaign-2026-09/regeneration/fcd555f/model-iv
       regime: I
       verdict: promising
       n_cells: 19
@@ -226,9 +226,9 @@ entries:
     procedure: mixed_local
     status: candidate
     evidence:
-      preregistration: PREREGISTRATION_IV.md
-      preregistration_sha256: 8f2865cd2f7ff4a11ba8a7bb0edb371c9fa75a14d782e6f70d27d73586486947
-      run: ../../notes/2026-07-23_StreamCurves_Methodology/basis_validation/2026-09-21/round_four
+      preregistration: evaluation_protocol_v1.yaml
+      preregistration_sha256: 84a5cabca0b08d403c44164b130500173451aa0d14ae11704abeeece014a1cfd
+      run: D:/Data/staf-campaign-2026-09/regeneration/fcd555f/model-iv
       regime: I
       verdict: validated
       n_cells: 19
@@ -265,9 +265,9 @@ entries:
     procedure: mixed_local
     status: candidate
     evidence:
-      preregistration: PREREGISTRATION_IV.md
-      preregistration_sha256: 8f2865cd2f7ff4a11ba8a7bb0edb371c9fa75a14d782e6f70d27d73586486947
-      run: ../../notes/2026-07-23_StreamCurves_Methodology/basis_validation/2026-09-21/round_four
+      preregistration: evaluation_protocol_v1.yaml
+      preregistration_sha256: 84a5cabca0b08d403c44164b130500173451aa0d14ae11704abeeece014a1cfd
+      run: D:/Data/staf-campaign-2026-09/regeneration/fcd555f/model-iv
       regime: I
       verdict: promising
       n_cells: 19
@@ -304,14 +304,14 @@ entries:
     procedure: mixed_local
     status: candidate
     evidence:
-      preregistration: PREREGISTRATION_IV.md
-      preregistration_sha256: 8f2865cd2f7ff4a11ba8a7bb0edb371c9fa75a14d782e6f70d27d73586486947
-      run: ../../notes/2026-07-23_StreamCurves_Methodology/basis_validation/2026-09-21/round_four
+      preregistration: evaluation_protocol_v1.yaml
+      preregistration_sha256: 84a5cabca0b08d403c44164b130500173451aa0d14ae11704abeeece014a1cfd
+      run: D:/Data/staf-campaign-2026-09/regeneration/fcd555f/model-iv
       regime: I
       verdict: promising
       n_cells: 19
       a1_share: 0.7895
-      net_opt: 0.0405
+      net_opt: 0.0
       c3_share: 0.6842
       passing_cells:
       - '1'

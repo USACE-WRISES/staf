@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import csv
 import json
+import threading
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -37,6 +39,112 @@ from .values import values_path
 INDEX_BANDS = (0.39, 0.69)
 PRESSURE_RHO_MAX = 0.30
 SPLIT_FLOOR = 30
+
+#: The EASI method's tail endpoints, spelled as the engine's knob spells them.
+#: The engine's monotone IQR ladders end their tails this many IQR from the
+#: quartiles (near, mid, far): 0.3, 4/3 and 7/3, StreamCurves' iqr-seed-2, the
+#: engine's default when every panel here was fitted and the operational curves
+#: were exported. Methodology 0.15 moved the engine's own default to 0.5, 1.5
+#: and 2.5 (iqr-seed-3); the method's curves stay the method's, so every fit
+#: here runs the engine under these endpoints (``engine_tail_offsets``), never
+#: under its current default, and records them. ``seed_tail_offsets`` parses the
+#: spelling through ``methodology.parse_offset``, which keeps a fraction's
+#: numerator and denominator (``curves.IqrOffset``) so the seed multiplies then
+#: divides (``iqr * 4 / 3``), the arithmetic of the iqr-seed-2 literals, bit
+#: for bit; ``seed_points`` places the same knots in closed form.
+SEED_TAIL_OFFSETS_IQR = (0.3, "4/3", "7/3")
+#: the curve method version those endpoints belong to (``run_state.CURVE_METHOD_VERSION``
+#: names the engine's current one)
+CURVE_METHOD_VERSION = "iqr-seed-2"
+
+
+def parse_tail_offsets(offsets) -> tuple:
+    """Three tail endpoints as the engine takes them: a spelling such as ``"4/3"``
+    is parsed through ``methodology.parse_offset`` (a fraction keeps its numerator
+    and denominator), a number stays a number, and an offset already parsed is
+    kept as it is, never re-made as a plain float, which would lose the fraction's
+    arithmetic. Validated by float comparison only."""
+    from streamcurves import methodology
+    try:
+        parsed = tuple(v if hasattr(v, "ratio") else methodology.parse_offset(v) for v in offsets)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"tail endpoints must be three IQR offsets; got {offsets!r}") from exc
+    if len(parsed) != 3 or not (0.0 < parsed[0] <= parsed[1] <= parsed[2]):
+        raise ValueError(f"tail endpoints must be three positive, non-decreasing IQR offsets; got {offsets!r}")
+    return parsed
+
+
+def seed_tail_offsets() -> tuple:
+    """``SEED_TAIL_OFFSETS_IQR`` parsed: ``(0.3, IqrOffset(4, 3), IqrOffset(7, 3))``."""
+    return parse_tail_offsets(SEED_TAIL_OFFSETS_IQR)
+
+
+def same_tail_offsets(a, b) -> bool:
+    """Two endpoint triples equal as numbers (float comparison, no coercion)."""
+    a, b = tuple(a), tuple(b)
+    return len(a) == len(b) and all(abs(x - y) < 1e-9 for x, y in zip(a, b))
+
+#: the pin ``engine_tail_offsets`` installs: per thread the endpoints in force,
+#: and the swap of ``methodology.seed_geometry`` while any pin is alive
+_TAIL_PIN = threading.local()
+_TAIL_PIN_STATE = {"active": 0, "original": None, "lock": threading.Lock()}
+
+
+def _pinned_seed_geometry() -> dict:
+    """``streamcurves.methodology.seed_geometry`` with this thread's pinned tail
+    endpoints in place of the configured ones; a thread with no pin reads the
+    configured geometry unchanged."""
+    from streamcurves import methodology
+    geometry = dict(_TAIL_PIN_STATE["original"]())
+    offsets = getattr(_TAIL_PIN, "offsets", None)
+    if offsets is not None:
+        geometry["tail_offsets_iqr"] = tuple(offsets)
+        geometry["custom_tail_offsets"] = tuple(offsets) != tuple(methodology.MONOTONE_TAIL_OFFSETS_IQR)
+    return geometry
+
+
+@contextmanager
+def engine_tail_offsets(offsets=SEED_TAIL_OFFSETS_IQR):
+    """Run the curve engine with the monotone ladders' tail endpoints at
+    ``offsets`` (near, mid, far, in IQR units) on this thread, whatever the
+    engine's configured default. ``build_reference_curve`` reads
+    ``methodology.seed_geometry`` on every call, so the swap is installed while
+    any pin is alive and answered per thread: a fit on another thread keeps the
+    configured geometry, and the module is left as found when the last pin ends."""
+    from streamcurves import methodology
+    near, mid, far = parse_tail_offsets(offsets)
+    state = _TAIL_PIN_STATE
+    with state["lock"]:
+        if state["active"] == 0:
+            state["original"] = methodology.seed_geometry
+            methodology.seed_geometry = _pinned_seed_geometry
+        state["active"] += 1
+    previous = getattr(_TAIL_PIN, "offsets", None)
+    _TAIL_PIN.offsets = (near, mid, far)
+    try:
+        yield (near, mid, far)
+    finally:
+        _TAIL_PIN.offsets = previous
+        with state["lock"]:
+            state["active"] -= 1
+            # restore only what this module installed: another copy of this recipe
+            # (the vendored one) may have installed its own wrapper over it since,
+            # and that wrapper answers the engine's geometry when it holds no pin
+            if state["active"] == 0 and methodology.seed_geometry is _pinned_seed_geometry:
+                methodology.seed_geometry = state["original"]
+
+
+def curve_method_version_for(offsets) -> str:
+    """The curve method version the tail endpoints belong to: the method's own
+    (iqr-seed-2), the engine's current default (``run_state.CURVE_METHOD_VERSION``),
+    otherwise ``custom``."""
+    from streamcurves import methodology, run_state
+    got = parse_tail_offsets(offsets)
+    if same_tail_offsets(got, seed_tail_offsets()):
+        return CURVE_METHOD_VERSION
+    if same_tail_offsets(got, methodology.MONOTONE_TAIL_OFFSETS_IQR):
+        return str(run_state.CURVE_METHOD_VERSION)
+    return "custom"
 
 
 @dataclass(frozen=True)
@@ -147,19 +255,26 @@ def crossings(points, target: float) -> list[float]:
     return engine.reference_curve_threshold_crossings(points, target)
 
 
-def fit_curve(values, q: Quantity, stratum: str) -> dict:
-    """One fit: the engine's status, stats, points and the two class crossings."""
+def fit_curve(values, q: Quantity, stratum: str, *, tail_offsets_iqr=SEED_TAIL_OFFSETS_IQR) -> dict:
+    """One fit: the engine's status, stats, points and the two class crossings,
+    fitted with the engine's tails at ``tail_offsets_iqr`` (the method's own unless
+    the caller says otherwise) and recording them as plain numbers (``tail_near_iqr``,
+    ``tail_mid_iqr``, ``tail_far_iqr``) with the ``curve_method_version``."""
     import pandas as pd
     from streamcurves import curves as engine
     arr = np.asarray(values, dtype=float)
     arr = arr[np.isfinite(arr)]
-    result = engine.build_reference_curve(pd.DataFrame({q.column: arr}), q.key, metric_config(q),
-                                          stratum_label=stratum, build_plots=False)
+    with engine_tail_offsets(tail_offsets_iqr) as offsets:
+        result = engine.build_reference_curve(pd.DataFrame({q.column: arr}), q.key, metric_config(q),
+                                              stratum_label=stratum, build_plots=False)
     row = result["curve_row"]
     points = result["curve_points"]
     status = str(row["curve_status"].iloc[0])
     out = {
         "status": status,
+        "tail_near_iqr": float(offsets[0]), "tail_mid_iqr": float(offsets[1]),
+        "tail_far_iqr": float(offsets[2]),
+        "curve_method_version": curve_method_version_for(offsets),
         "n": int(arr.size),
         "q05": float(np.quantile(arr, 0.05)) if arr.size else None,
         "q25": float(row["q25"].iloc[0]) if arr.size else None,
@@ -182,15 +297,20 @@ def fit_curve(values, q: Quantity, stratum: str) -> dict:
 
 def seed_points(q25: float, q75: float, higher_is_better: bool, domain: tuple = (None, None)) -> list[list[float]]:
     """The engine's monotone seed in closed form (for the bootstraps): the
-    same five anchors ``build_reference_curve`` places, clamped to the domain."""
+    same five anchors ``build_reference_curve`` places under the method's tail
+    endpoints (``SEED_TAIL_OFFSETS_IQR``), with the same arithmetic
+    (``engine.offset_times``: ``iqr * 4 / 3``, multiply then divide), clamped to
+    the domain."""
     import pandas as pd
     from streamcurves import curves as engine
     iqr = q75 - q25
+    near, mid, far = seed_tail_offsets()
     if higher_is_better:
-        xs = [0.0, q25 * 3 / 7, q25, q75, q75 + iqr * 0.3]
+        xs = [0.0, q25 * 3 / 7, q25, q75, q75 + engine.offset_times(iqr, near)]
         ys = [0.0, 0.30, 0.70, 1.0, 1.0]
     else:
-        xs = [max(0.0, q25 - iqr * 0.3), q25, q75, q75 + iqr * 4 / 3, q75 + iqr * 7 / 3]
+        xs = [max(0.0, q25 - engine.offset_times(iqr, near)), q25, q75,
+              q75 + engine.offset_times(iqr, mid), q75 + engine.offset_times(iqr, far)]
         ys = [1.0, 1.0, 0.70, 0.30, 0.0]
     frame = pd.DataFrame({"point_order": [1, 2, 3, 4, 5], "metric_value": xs, "index_score": ys})
     frame = engine.clamp_points_to_domain(frame, domain[0], domain[1])

@@ -31,7 +31,7 @@ import uuid
 import zipfile
 import zlib
 from pathlib import Path, PurePosixPath
-from typing import Callable, Optional
+from typing import Callable, Mapping, Optional
 
 from .desktop_env import data_root
 
@@ -437,6 +437,75 @@ def _short(digest) -> str:
     return str(digest or "").split(":", 1)[-1][:12]
 
 
+# --------------------------------------------------------------------------- #
+# a reference to a package (what a project, a version or a provenance document names)
+# --------------------------------------------------------------------------- #
+def reference(source, *, archive: Optional[dict] = None, package_digest: Optional[str] = None) -> dict:
+    """A reference to the package ``source`` describes: its id, version, data digest and
+    package digest (the identity a project pins), title, roles, reproducibility, size,
+    coverage and dependencies, and ``archive`` (``{name, sha256, bytes}``) when a copy's
+    location is known. ``source`` is a manifest dict, a package folder (``evidence.json``
+    inside), a manifest file or a package archive (``.evidence.zip``). The package digest
+    is computed from the manifest when the caller does not give it. The same shape
+    ``easi_method.evidence.reference`` writes into an EASI project, so one reader serves
+    both."""
+    if isinstance(source, Mapping):
+        doc = dict(source)
+    else:
+        p = Path(source)
+        if p.is_dir():
+            doc = read_manifest(p)
+        elif p.suffix.lower() == ".zip":
+            with zipfile.ZipFile(p) as zf:
+                doc = check_manifest(loads(zf.read(MANIFEST).decode("utf-8")))
+        else:
+            doc = check_manifest(loads(p.read_text(encoding="utf-8")))
+    digest = package_digest or package_digest_of(doc)
+    return {"packageId": doc["packageId"], "version": doc["version"],
+            "dataDigest": doc["dataDigest"], "packageDigest": digest,
+            "title": doc.get("title") or doc["packageId"],
+            "roles": list(doc.get("roles") or []),
+            "reproducibility": doc.get("reproducibility"),
+            "bytes": sum(int(r.get("bytes") or 0) for r in (doc.get("files") or {}).values()),
+            "coverage": doc.get("coverage") or {},
+            "dependsOn": doc.get("dependsOn") or [],
+            **({"archive": dict(archive)} if archive else {})}
+
+
+def package_digest_of(doc: Mapping) -> str:
+    """:func:`package_digest` of a manifest (the same value, named for callers that hold a
+    ``package_digest`` variable of their own)."""
+    return package_digest(dict(doc))
+
+
+# --------------------------------------------------------------------------- #
+# where the public packages are hosted
+# --------------------------------------------------------------------------- #
+#: The rolling prereleases that host the public evidence packages, one per kind: EASI's
+#: development evidence (the four packages derived from public federal data, the owner's
+#: decision of 2026-09-24) and DEEP's development evidence (one package per region build,
+#: campaign Round 1). A location, never an identity: projects and versions pin packages by
+#: digest. ``STREAMCURVES_EVIDENCE_BASE_URL`` (a folder or an https base) overrides both.
+PUBLIC_BASES = {
+    "easi": "https://github.com/USACE-WRISES/staf/releases/download/easi-evidence/",
+    "deep": "https://github.com/USACE-WRISES/staf/releases/download/deep-evidence/",
+}
+ENV_BASE_URL = "STREAMCURVES_EVIDENCE_BASE_URL"
+
+
+def public_base(kind: str = "easi") -> str:
+    """Where packages of ``kind`` (``easi`` or ``deep``) are fetched from: the override
+    when it is set, else that kind's rolling prerelease."""
+    override = os.environ.get(ENV_BASE_URL, "").strip()
+    if override:
+        return override
+    try:
+        return PUBLIC_BASES[str(kind)]
+    except KeyError:
+        raise ValueError(f"no public evidence host for {kind!r}; one of "
+                         f"{', '.join(sorted(PUBLIC_BASES))}") from None
+
+
 def matches(rec: dict, ref: dict) -> bool:
     """True when an installed package (or a check result) is the one ``ref`` names: its package
     digest when the reference records one, else its data digest. A store folder installed under
@@ -761,5 +830,6 @@ __all__ = ["SCHEMA", "SCHEMA_VERSION", "MANIFEST", "STAMP", "INDEX", "DATA_SUFFI
            "EvidenceCancelled", "EvidenceMissing", "EvidenceMismatch", "store_root",
            "check_manifest", "read_manifest", "verify_folder", "check", "install_zip",
            "install_folder", "installed", "matches", "find", "ready", "download", "read_index",
-           "fetch_reference", "data_digest", "package_digest", "http_get", "nrsa_archive_record",
+           "fetch_reference", "data_digest", "package_digest", "package_digest_of", "reference",
+           "PUBLIC_BASES", "ENV_BASE_URL", "public_base", "http_get", "nrsa_archive_record",
            "sha_file", "loads", "usable_package_id", "pick"]

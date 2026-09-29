@@ -48,6 +48,7 @@ from streamcurves.easi_method import io as eio
 from streamcurves.easi_method import register as reg
 from streamcurves.easi_method import stages as es
 from streamcurves.easi_method.model import parsed
+from views import evidence_panel as evp
 from views import final_selection as fs
 from views import state as st
 from views.state import AppState
@@ -115,11 +116,8 @@ def _sentence(text) -> str:
     return text if text.endswith((".", "!", "?")) else text + "."
 
 
-def _unavailable_line(i: dict) -> str:
-    """One item a package does not carry: what, why, and what to do."""
-    head = str(i.get("item") or "").strip()
-    head = head[:1].upper() + head[1:]
-    return " ".join(x for x in (f"{head}:", _sentence(i.get("why")), _sentence(i.get("remedy"))) if x.strip(": "))
+# the package words live with the shared Evidence panel (views/evidence_panel.py)
+_unavailable_line = evp.unavailable_line
 
 
 def _fmt(v) -> str:
@@ -338,44 +336,10 @@ def renumber_offer(version: int, latest: int, origin_version=None) -> tuple:
     return offer, warning
 
 
-def covers(coverage: dict) -> str:
-    """One line for what a package covers."""
-    c = coverage or {}
-    parts = []
-    for key, noun in (("memberRows", "member rows"), ("reaches", "reaches"), ("fits", "fits"),
-                      ("operationalCurves", "operational curves")):
-        if isinstance(c.get(key), int):
-            parts.append(f"{c[key]:,} {noun}")
-    if isinstance(c.get("studyReceipts"), list):
-        parts.append(f"{len(c['studyReceipts'])} study receipts")
-    if c.get("build"):
-        parts.append(f"build {str(c['build'])[:8]}")
-    return ", ".join(parts)
-
-
-def check_lines(checks: dict) -> list[str]:
-    """A package's recorded checks in words (an unknown check stays as its JSON)."""
-    out = []
-    for key, c in (checks or {}).items():
-        if key == "eromMonthsReproduceStoredCv" and isinstance(c, dict):
-            out.append(f"The 12 monthly EROM flows reproduce the stored flow CV of "
-                       f"{c.get('identicalAtStoredPrecision', 0):,} of {c.get('comparable', 0):,} "
-                       f"members exactly at its stored precision ({c.get('storedType')}); "
-                       f"missing values agree: {'yes' if c.get('nullsAgree') else 'no'}.")
-        elif key == "panelsRegenerateMembers" and isinstance(c, dict):
-            # packages exported before 2026-09-24 also recorded how long the check took
-            took = f" ({c['seconds']} s)" if c.get("seconds") is not None else ""
-            out.append(f"Drawing the panels again from this package gives "
-                       f"{'the same' if c.get('identical') else 'different'} "
-                       f"{c.get('memberRows', 0):,} member rows{took}.")
-        else:
-            out.append(f"{key}: {json.dumps(c, sort_keys=True)}")
-    return out
-
-
-def size_text(n) -> str:
-    n = int(n or 0)
-    return f"{n / 1e6:,.1f} MB" if n >= 100_000 else f"{n / 1e3:,.0f} KB"
+# shared with the DEEP source panel's Evidence section (views/evidence_panel.py)
+covers = evp.covers
+check_lines = evp.check_lines
+size_text = evp.size_text
 
 
 #: The rolling prerelease that hosts EASI's public development evidence: the four packages
@@ -690,16 +654,23 @@ def easi_page_server(input, output, session, state: AppState):
             ui.output_ui(ns("refit_box")))
 
     # ── development data packages ───────────────────────────────────────────────
-    _store_tick = reactive.value(0)
-    _jobs: dict = {"busy": None}
-    _refit = reactive.value(None)
+    # The table, the viewer's body, the table preview, the CSV chunks and the download job
+    # are the shared Evidence panel's (views/evidence_panel.py, also behind a DEEP curve's
+    # source panel). This page registers its four handlers itself (handlers=()), each a
+    # thin call into the panel, and keeps what is its own: naming a package in the
+    # project (import, attach, replace, remove).
+    def _project_refs() -> list[dict]:
+        with reactive.isolate():
+            p = state.easi_project()
+        return list((p.evidence if p is not None else None) or [])
 
-    def _installed() -> list[dict]:
-        _store_tick()
-        try:
-            return evs.installed()
-        except Exception:  # noqa: BLE001 - an unreadable store lists nothing
-            return []
+    _packages = evp.evidence_panel_server(input, output, session, state, prefix="pkg",
+                                          kind="easi", refs=_project_refs, handlers=())
+    _store_tick = _packages.tick
+    _jobs = _packages.jobs
+    _installed = _packages.installed
+    _viewing = _packages.viewing
+    _refit = reactive.value(None)
 
     @render.ui
     def packages():
@@ -708,51 +679,13 @@ def easi_page_server(input, output, session, state: AppState):
             return None
         inst = _installed()
         refs = list(p.evidence or [])
-        rows = []
-        for i, ref in enumerate(refs):
-            st = ev.status(ref, inst)
-            fetchable = bool(evidence_base())
-            if st == "installed":
-                here = ui.span(fa("circle-check"), " Verified", class_="easi-ok")
-                action = ui.tags.button("View", type="button", class_="btn btn-outline-secondary btn-sm",
-                                        onclick=_evt(ns("pkg_view"), i=i))
-            else:
-                words = {"damaged": "Damaged: download or import it again",
-                         "other": "Another version is here", "missing": "Not on this computer"}[st]
-                here = ui.div(ui.span(fa("triangle-exclamation"), " ", words, class_="easi-bad")
-                              if st == "damaged" else ui.span(words, class_="easi-muted"),
-                              None if fetchable else ui.div("Import its package file.", class_="easi-muted"))
-                action = (ui.tags.button("Download", type="button", class_="btn btn-outline-primary btn-sm",
-                                         onclick=_evt(ns("pkg_download"), i=i))
-                          if fetchable else None)
-            roles = ", ".join(ev.ROLE_LABELS.get(r, r) for r in ref.get("roles") or [])
-            repro = ref.get("reproducibility") or ""
-            rows.append(ui.tags.tr(
-                ui.tags.td(ui.div(ref.get("title") or ref["packageId"], class_="easi-strong"),
-                           ui.div(f"{ref['packageId']}, {ref.get('version')}", class_="easi-muted")),
-                ui.tags.td(roles),
-                ui.tags.td(ev.REPRODUCIBILITY_LABELS.get(repro, repro),
-                           title=ev.REPRODUCIBILITY_HELP.get(repro, "")),
-                ui.tags.td(covers(ref.get("coverage"))),
-                ui.tags.td(size_text(ref.get("bytes")), class_="easi-right easi-nowrap",
-                           title=(f"Unpacked. The download is {size_text((ref.get('archive') or {}).get('bytes'))}."
-                                  if (ref.get("archive") or {}).get("bytes") else "Unpacked")),
-                ui.tags.td(here, class_="easi-nowrap"),
-                ui.tags.td(action, ui.tags.button("Remove", type="button", class_="btn btn-link btn-sm",
-                                                  title="Stop naming this package in the project",
-                                                  onclick=_evt(ns("pkg_detach"), i=i)),
-                           class_="easi-right easi-nowrap")))
+        table = evp.packages_table(
+            refs, inst, prefix="pkg", ns=ns, kind="easi",
+            extra=lambda i, ref: ui.tags.button(
+                "Remove", type="button", class_="btn btn-link btn-sm",
+                title="Stop naming this package in the project", onclick=_evt(ns("pkg_detach"), i=i)),
+            empty_text="This project names no development data packages yet.")
         spare = ev.spare_packages(inst, refs)
-        if rows:
-            table = ui.tags.table(
-                ui.tags.thead(ui.tags.tr(ui.tags.th("Package"), ui.tags.th("Role"),
-                                         ui.tags.th("Reproducible"), ui.tags.th("Covers"),
-                                         ui.tags.th("Size", class_="easi-right"),
-                                         ui.tags.th("Here"), ui.tags.th(""))),
-                ui.tags.tbody(*rows), class_="table table-sm easi-table")
-        else:
-            table = ui.div(fa("box-open"), ui.span(" This project names no development data "
-                                                   "packages yet."), class_="easi-empty")
         tools = [ui.tags.button(ui.TagList(fa("file-import"), " Import a package"), type="button",
                                 class_="btn btn-outline-secondary btn-sm",
                                 onclick=_evt(ns("pkg_import")))]
@@ -768,6 +701,53 @@ def easi_page_server(input, output, session, state: AppState):
         p = _get()
         refs = list((p.evidence if p else None) or [])
         return (p, refs[i]) if 0 <= i < len(refs) else (p, None)
+
+    @reactive.effect
+    @reactive.event(input.pkg_download)
+    @guard("download the package")
+    def _pkg_download():
+        p, ref = _ref_at(int((input.pkg_download() or {}).get("i", -1)))
+        if ref is None or _jobs.get("busy"):
+            return                      # one package job at a time
+        _launch(_packages.download(ref))
+
+    @reactive.effect
+    @reactive.event(input.pkg_view)
+    @guard("open the package")
+    async def _pkg_view():
+        p, ref = _ref_at(int((input.pkg_view() or {}).get("i", -1)))
+        if ref is None:
+            return
+        await _packages.view(ref, preview_output=ui.output_ui(ns("pkg_preview")))
+
+    def _table_path():
+        return _packages.table_path()
+
+    # suspend_when_hidden=False: dialog outputs bind while the modal is still hidden
+    # (Bootstrap fade) and a suspended output never resumes (DEEP documents the same trap)
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def pkg_preview():
+        path = _table_path()
+        if path is None:
+            return None
+        return evp.preview_ui(path)
+
+    @render.download(filename=lambda: (_table_path() or Path("table.csv")).stem + ".csv")
+    def pkg_csv():
+        path = _table_path()
+        if path is None:
+            return
+        rel = str(path.relative_to(Path(_viewing["folder"]))).replace("\\", "/")
+        # the manifest that was verified when the viewer opened, never one read again from disk
+        rec = ((_viewing.get("doc") or {}).get("files") or {}).get(rel) or {}
+        if evs.sha_file(path) != rec.get("sha256"):
+            why = f"{rel} no longer matches its package. Download or import the package again."
+            ui.notification_show(why, type="error", duration=10)
+            # raised, not returned: a download that ends without a byte would be saved as an empty
+            # file, while an error mid-stream leaves the transfer unfinished and the browser drops it
+            raise evs.EvidenceError(why)
+        yield from evp.csv_chunks(path)
 
     @reactive.effect
     @reactive.event(input.pkg_detach)
@@ -826,17 +806,17 @@ def easi_page_server(input, output, session, state: AppState):
 
     _replacing: dict = {"ref": None, "old": None}
 
-    async def _run_install(path: Path | None, *, ref: dict | None = None):
-        label = (ref.get("title") or ref["packageId"]) if ref is not None else path.name
-        _jobs["busy"] = f" Downloading {label}..." if ref is not None else f" Checking {label}..."
+    async def _run_install(path: Path):
+        """Import a package file or folder into the store and name it in the project (a
+        download goes through the shared panel's job instead)."""
+        label = path.name
+        _jobs["busy"] = f" Checking {label}..."
         _store_tick.set(_store_tick() + 1)
         await st.task_flush()
         try:
             with st.busy(state):
                 archive = None
-                if ref is not None:
-                    target = await asyncio.to_thread(evs.fetch_reference, evidence_base(), ref)
-                elif path.is_file():
+                if path.is_file():
                     target = await asyncio.to_thread(evs.install_zip, path)
                     archive = {"name": path.name, "sha256": await asyncio.to_thread(evs.sha_file, path),
                                "bytes": path.stat().st_size}
@@ -844,9 +824,6 @@ def easi_page_server(input, output, session, state: AppState):
                     target = await asyncio.to_thread(evs.install_folder, path)
                 doc = evs.read_manifest(target)
             title = doc.get("title") or doc["packageId"]
-            if ref is not None:
-                ui.notification_show(f"{title} is on this computer and verified.", type="message", duration=5)
-                return
             with reactive.isolate():
                 p = state.easi_project()
             if p is None:
@@ -908,167 +885,8 @@ def easi_page_server(input, output, session, state: AppState):
         _apply(ev.attach(p, new_ref, by=person(state), reason=why),
                f"The project names {new_ref.get('title') or new_ref['packageId']} {new_ref.get('version')}.")
 
-    @reactive.effect
-    @reactive.event(input.pkg_download)
-    @guard("download the package")
-    def _pkg_download():
-        p, ref = _ref_at(int((input.pkg_download() or {}).get("i", -1)))
-        if ref is None or _jobs.get("busy"):
-            return
-        _launch(_run_install(None, ref=ref))
-
-    # the package viewer
-    _viewing: dict = {"folder": None, "files": [], "doc": None}
-
-    @reactive.effect
-    @reactive.event(input.pkg_view)
-    @guard("open the package")
-    async def _pkg_view():
-        p, ref = _ref_at(int((input.pkg_view() or {}).get("i", -1)))
-        if ref is None:
-            return
-        try:
-            folder = await asyncio.to_thread(evs.ready, ref)
-        except evs.EvidenceError as exc:
-            _store_tick.set(_store_tick() + 1)
-            ui.notification_show(str(exc), type="error", duration=10)
-            return
-        doc = evs.read_manifest(folder)
-        tables = [rel for rel, rec in doc["files"].items() if rel.endswith((".parquet", ".csv"))]
-        _viewing.update(folder=folder, files=tables, doc=doc)
-        files = ui.tags.table(
-            ui.tags.thead(ui.tags.tr(ui.tags.th("File"), ui.tags.th("Rows", class_="easi-right"),
-                                     ui.tags.th("Columns", class_="easi-right"),
-                                     ui.tags.th("Size", class_="easi-right"))),
-            ui.tags.tbody(*[ui.tags.tr(ui.tags.td(ui.tags.code(rel.split("/", 1)[-1])),
-                                       ui.tags.td(f"{rec['rows']:,}" if isinstance(rec.get("rows"), int) else "",
-                                                  class_="easi-right"),
-                                       ui.tags.td(str(len(rec.get("columns") or [])) if rec.get("columns")
-                                                  else "", class_="easi-right"),
-                                       ui.tags.td(size_text(rec["bytes"]), class_="easi-right"))
-                            for rel, rec in sorted(doc["files"].items())]),
-            class_="table table-sm easi-table")
-        repro = doc.get("reproducibility") or ""
-        facts = _facts([
-            ("Version", doc.get("version")),
-            ("Role", ", ".join(ev.ROLE_LABELS.get(r, r) for r in doc.get("roles") or [])),
-            ("Reproducible", f"{ev.REPRODUCIBILITY_LABELS.get(repro, repro)}: "
-                             f"{ev.REPRODUCIBILITY_HELP.get(repro, '')}" if repro else None),
-            ("Covers", covers(doc.get("coverage"))),
-            ("Shared as", (doc.get("redistribution") or {}).get("status")),
-        ])
-        sources = [s for s in doc.get("sources") or [] if isinstance(s, dict)]
-        technical = ui.tags.details(ui.tags.summary("Technical record", class_="easi-muted"), _facts([
-            ("Data digest", doc["dataDigest"]),
-            ("Package digest", evs.package_digest(doc)),
-            ("Depends on", ", ".join(f"{d.get('packageId')} ({short(d.get('dataDigest'))})"
-                                     for d in doc.get("dependsOn") or [])),
-        ]))
-        lists = []
-        for key, title in (("limitations", "Limitations"), ("unavailable", "Not in this package")):
-            items = doc.get(key) or []
-            if items:
-                lists.append(ui.div(title, class_="sc-sec"))
-                lists.append(ui.tags.ul(*[ui.tags.li(i if isinstance(i, str) else _unavailable_line(i))
-                                          for i in items], class_="easi-list"))
-        checks = doc.get("checks") or {}
-        preview = None
-        if tables:
-            preview = ui.TagList(
-                ui.div("Data", class_="sc-sec"),
-                ui.div(ui.input_select(ns("pkg_table"), None,
-                                       {t: t.split("/", 1)[-1] for t in tables}, width="320px"),
-                       ui.download_button(ns("pkg_csv"), ui.TagList(fa("file-csv"), " Export as CSV"),
-                                          class_="btn btn-outline-secondary btn-sm"),
-                       class_="easi-tools"),
-                ui.output_ui(ns("pkg_preview")))
-        ui.modal_show(ui.modal(
-            ui.p(doc.get("description") or "", class_="mb-2"), facts, technical,
-            ui.div("Sources", class_="sc-sec") if sources else None,
-            ui.tags.ul(*[ui.tags.li(" ".join(str(x) for x in (s.get("citation") or s.get("id"),
-                                                             f"({s['path']})" if s.get("path") else "") if x))
-                         for s in sources], class_="easi-list") if sources else None,
-            ui.div("Checks", class_="sc-sec") if checks else None,
-            ui.tags.ul(*[ui.tags.li(x) for x in check_lines(checks)], class_="easi-list")
-            if checks else None,
-            *lists, ui.div("Files", class_="sc-sec"), files, preview,
-            title=doc.get("title") or doc["packageId"], size="xl", easy_close=True,
-            footer=ui.modal_button("Close", class_="btn btn-outline-secondary")))
-
-    def _table_path():
-        try:
-            rel = input.pkg_table()
-        except Exception:  # noqa: BLE001 - no viewer open
-            return None
-        folder = _viewing.get("folder")
-        if not folder or rel not in _viewing.get("files", []):
-            return None
-        return Path(folder) / rel
-
-    # suspend_when_hidden=False: dialog outputs bind while the modal is still hidden
-    # (Bootstrap fade) and a suspended output never resumes (DEEP documents the same trap)
-    @output(suspend_when_hidden=False)
-    @render.ui
-    def pkg_preview():
-        path = _table_path()
-        if path is None:
-            return None
-        import pyarrow.parquet as pq
-        if path.suffix == ".parquet":
-            pf = pq.ParquetFile(path)
-            cols = pf.schema_arrow.names
-            head = pf.read_row_group(0, columns=cols[:14]).slice(0, 15).to_pylist()
-            n = pf.metadata.num_rows
-        else:
-            import csv
-            with path.open(encoding="utf-8") as fh:
-                reader = csv.DictReader(fh)
-                cols = reader.fieldnames or []
-                head = [dict(r) for _, r in zip(range(15), reader)]
-            n = None
-        shown = cols[:14]
-
-        def cell(v):
-            if isinstance(v, float):
-                return "" if v != v else f"{v:.6g}"
-            return "" if v is None else str(v)
-
-        return ui.TagList(
-            ui.div(f"First {len(head)} of {n:,} rows" if n is not None else f"First {len(head)} rows",
-                   (f", {len(shown)} of {len(cols)} columns" if len(cols) > len(shown) else ""),
-                   class_="easi-muted mb-1"),
-            ui.div(ui.tags.table(ui.tags.thead(ui.tags.tr(*[ui.tags.th(c) for c in shown])),
-                                 ui.tags.tbody(*[ui.tags.tr(*[ui.tags.td(cell(r.get(c))) for c in shown])
-                                                 for r in head]),
-                                 class_="table table-sm easi-table easi-preview"),
-                   class_="easi-scroll"))
-
-    @render.download(filename=lambda: (_table_path() or Path("table.csv")).stem + ".csv")
-    def pkg_csv():
-        path = _table_path()
-        if path is None:
-            return
-        rel = str(path.relative_to(Path(_viewing["folder"]))).replace("\\", "/")
-        # the manifest that was verified when the viewer opened, never one read again from disk
-        rec = ((_viewing.get("doc") or {}).get("files") or {}).get(rel) or {}
-        if evs.sha_file(path) != rec.get("sha256"):
-            why = f"{rel} no longer matches its package. Download or import the package again."
-            ui.notification_show(why, type="error", duration=10)
-            # raised, not returned: a download that ends without a byte would be saved as an empty
-            # file, while an error mid-stream leaves the transfer unfinished and the browser drops it
-            raise evs.EvidenceError(why)
-        import pyarrow.csv as pacsv
-        import pyarrow.parquet as pq
-        import io as _io
-        if path.suffix == ".csv":
-            yield path.read_bytes()
-            return
-        pf = pq.ParquetFile(path)
-        for i in range(pf.num_row_groups):
-            buf = _io.BytesIO()
-            pacsv.write_csv(pf.read_row_group(i), buf,
-                            write_options=pacsv.WriteOptions(include_header=(i == 0)))
-            yield buf.getvalue()
+    # Download, View, the table preview and the CSV export: the shared Evidence panel's
+    # (pkg_download, pkg_view, pkg_preview, pkg_csv), registered above.
 
     # refitting the operational curves from the packages
     @render.ui

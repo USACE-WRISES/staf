@@ -468,6 +468,33 @@ def _road_crossings(ctx):
 # --------------------------------------------------------------------------- #
 # Adapters: reach geomorphic ratios (3DEP DEM cross-section)
 # --------------------------------------------------------------------------- #
+#: StreamCat's 100 m riparian-buffer classes EASI's organic-matter supply method sums
+_RP100_NATURAL = ("pctconif2019", "pctdecid2019", "pctmxfst2019", "pctshrb2019", "pctgrs2019",
+                  "pctwdwet2019", "pcthbwet2019")
+
+
+@adapter("spring-natural-riparian-cover")
+def _natural_riparian_cover(ctx):
+    """Natural cover of the watershed's 100 m riparian corridor (forest, shrub, grassland
+    and wetland, capped at 100): the input of EASI's organic-matter supply method, which
+    StreamCurves methodology 0.16 adopts for carbon processing where no other source
+    supports it (REF-17). StreamCat's riparian-buffer classes, as EASI reads them."""
+    if not ctx.comid:
+        return None
+    if "streamcat_rp100" not in ctx.extras:
+        from ..datasources import streamcat
+        ctx.extras["streamcat_rp100"] = streamcat.metrics_by_comid(
+            ctx.comid, list(_RP100_NATURAL), aoi="riparian_watershed") or {}
+    got = ctx.extras["streamcat_rp100"]
+    vals = [_as_float(got.get(n + "wsrp100")) for n in _RP100_NATURAL]
+    if not vals or any(v is None for v in vals):
+        return None
+    return ComputedValue(round(min(100.0, sum(vals)), 2),
+                         _streamcat_source(ctx, "natural cover of the 100 m riparian corridor "
+                                                "(forest, shrub, grassland, wetland)"),
+                         "M", basis=BASIS_STREAMCAT)
+
+
 @adapter("floodplain-connectivity-entrenchment-ratio-er")
 def _entrenchment(ctx):
     er = _reach_geom(ctx).get("entrenchment_ratio")
@@ -477,7 +504,10 @@ def _entrenchment(ctx):
             if er is not None else None)
 
 
-@adapter("channel-and-floodplain-dynamics-bank-height-ratio-bhr")
+# StreamCurves methodology 0.16 (REF-17): a regional assessment whose channel and
+# floodplain dynamics no other source supports scores the bank height ratio on EASI's
+# bands under the metric id spring-bank-height-ratio; the value is the same measurement
+@adapter("channel-and-floodplain-dynamics-bank-height-ratio-bhr", "spring-bank-height-ratio")
 def _bank_height(ctx):
     bhr = _reach_geom(ctx).get("bank_height_ratio")
     return (ComputedValue(round(float(bhr), 2),

@@ -287,13 +287,14 @@ def test_a_curve07_item_offers_the_outcomes_its_question_names():
     # every other rule keeps the reviewer's five answers
     assert set(rb.action_choices("CURVE-04")) == set(rb.REVIEWER_ACTIONS)
     assert set(rb.action_choices(None)) == set(rb.REVIEWER_ACTIONS)
-    src = (Path(__file__).resolve().parents[1] / "views" / "region_builder.py").read_text(
+    # the list that offers them is Select final curves' (one decision authority)
+    src = (Path(__file__).resolve().parents[1] / "views" / "final_selection.py").read_text(
         encoding="utf-8")
     assert 'rb.action_choices(item.get("rule_id"))' in src
 
 
 def test_saving_keeps_the_answers_an_earlier_build_resolved():
-    """A build resolves what it was answered, so the form shows only what is still
+    """A build resolves what it was answered, so the list shows only what is still
     open; saving must add to the region's answers, not replace them."""
     def key(d):
         return d.get("rule_id"), str(d.get("subject"))
@@ -305,9 +306,181 @@ def test_saving_keeps_the_answers_an_earlier_build_resolved():
     assert [(d["rule_id"], d["action"]) for d in merged] == [
         ("CURVE-07", "accept"), ("CURVE-06", "reject"), ("CURVE-12", "accept")]
     assert rb.merge_answers(None, new, key=key) == new
-    src = (Path(__file__).resolve().parents[1] / "views" / "region_builder.py").read_text(
-        encoding="utf-8")
-    assert src.count("rb.merge_answers(_read_json(path)") == 2
+    # the writers (save_answer, save_gap) merge the same way
+    src = Path(rb.__file__).read_text(encoding="utf-8")
+    assert "merge_answers(read_answers(run_dir), [decision], key=_answer_key)" in src
+    assert "merge_answers(read_gaps(run_dir), [exception]" in src
+
+
+# --------------------------------------------------------------------------- #
+# The region's decision files: what Select final curves writes, what the next
+# build reads (one decision authority, 2026-09-25)
+# --------------------------------------------------------------------------- #
+def test_an_answer_reaches_owner_decisions_json_one_per_rule_and_subject(tmp_path):
+    run_dir = tmp_path / "l3-71"
+    d = rb.build_decision(DOC, ITEM, "accept", "Accepted with the flag.", reviewer="GM")
+    path = rb.save_answer(run_dir, d)
+    assert path == run_dir / rb.OWNER_DECISIONS_FILE and path.is_file()
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    assert saved == [d]
+    assert rb.read_answers(run_dir) == [d]
+    # a second answer to the same item replaces it; another item is added
+    again = rb.build_decision(DOC, ITEM, "reject", "On reflection, no.", reviewer="GM")
+    other = rb.build_decision(DOC, {"rule_id": "REF-02", "subject": "reference_screen",
+                                    "evidence": {"reference_tier": "best_available"}},
+                              "accept", "Best available accepted.", reviewer="GM")
+    rb.save_answer(run_dir, again)
+    rb.save_answer(run_dir, other)
+    answers = rb.read_answers(run_dir)
+    assert [(a["rule_id"], a["action"]) for a in answers] == [("CURVE-04", "reject"), ("REF-02", "accept")]
+    # the shape --reviewer-decisions reads: the same keys build_decision writes
+    assert set(answers[0]) == {"rule_id", "subject", "action", "rationale", "reviewer",
+                               "rationale_origin", "asserts"}
+    with pytest.raises(ValueError):
+        rb.save_answer(run_dir, {"action": "accept"})
+    assert rb.read_answers(tmp_path / "nowhere") == []
+
+
+def test_a_gap_reaches_coverage_exceptions_json_and_can_be_withdrawn(tmp_path):
+    run_dir = tmp_path / "l3-52"
+    gap = rb.build_coverage_exception(
+        "channel-floodplain-dynamics", "no-suitable-metric",
+        "Sinuosity and bank angle both failed their curve checks in this region.",
+        recorded_by="GM")
+    path = rb.save_gap(run_dir, gap)
+    assert path == run_dir / rb.COVERAGE_EXCEPTIONS_FILE
+    assert rb.read_gaps(run_dir) == [gap]
+    # one per function: recording again replaces; another function is added
+    rb.save_gap(run_dir, dict(gap, justification="A fuller justification of the same gap."))
+    rb.save_gap(run_dir, rb.build_coverage_exception(
+        "hyporheic-connectivity", "no-suitable-metric",
+        "No hyporheic metric is measured at NRSA stations.", recorded_by="GM"))
+    gaps = rb.read_gaps(run_dir)
+    assert [g["functionId"] for g in gaps] == ["channel-floodplain-dynamics", "hyporheic-connectivity"]
+    assert gaps[0]["justification"].startswith("A fuller")
+    # the shape the build's --coverage-exceptions validator accepts
+    assert rb.coverage_problems(gaps) == []
+    rb.remove_gap(run_dir, "channel-floodplain-dynamics")
+    assert [g["functionId"] for g in rb.read_gaps(run_dir)] == ["hyporheic-connectivity"]
+    # withdrawing everything leaves an empty file, never a missing one
+    rb.remove_gap(run_dir, "hyporheic-connectivity")
+    assert path.is_file() and rb.read_gaps(run_dir) == []
+    with pytest.raises(ValueError):
+        rb.save_gap(run_dir, {"reason": "no-suitable-metric"})
+
+
+def test_the_candidate_register_is_written_beside_the_curve_decisions(tmp_path):
+    from streamcurves import owner_curves as oc
+    run_dir = tmp_path / "l3-58"
+    register = {"schema": 1, "considered": [{"candidateKey": "sqt:mn:x", "label": "X"}],
+                "dispositions": []}
+    path = rb.save_candidate_register(run_dir, register)
+    assert path == run_dir / rb.CANDIDATE_REGISTER_FILE
+    assert json.loads(path.read_text(encoding="utf-8")) == register
+    # beside curve_decisions.json, in the same folder a build reads its decisions from
+    assert (run_dir / oc.DECISIONS_FILE).parent == path.parent
+    assert path.name == "candidate_register.json"
+    # an empty register is a register, not an absent file
+    rb.save_candidate_register(run_dir, None)
+    assert json.loads(path.read_text(encoding="utf-8"))["considered"] == []
+
+
+def test_the_open_queue_items_read_as_the_packet_shapes_them():
+    """The build's provenance carries rule_ids (a list) and a status per item; the
+    list Select final curves shows uses the packet's shape (rule_id, question,
+    blocking, evidence) and only the open ones."""
+    doc = {"records": [], "reviewQueue": {"items": [
+        {"item_id": "REF-02:reference_screen", "rule_ids": ["REF-02"], "subject": "reference_screen",
+         "trigger": "reference_tier_fallback", "blocking": True, "status": "open",
+         "question": "Accept the best-available tier?", "evidence": {"reference_tier": "best_available"}},
+        {"item_id": "STRAT-09:DrainageAreaClass", "rule_ids": ["STRAT-09"], "subject": "DrainageAreaClass",
+         "trigger": "advisory_stratifier_not_applied", "blocking": False, "status": "resolved",
+         "question": "Split by it?", "evidence": {}},
+        {"item_id": "CURVE-07:phab_X", "rule_ids": ["CURVE-07"], "subject": "phab_X",
+         "trigger": "curve_needs_review", "blocking": False, "status": "open",
+         "question": "Accept, adjust or drop?", "evidence": {"curve_status": "degenerate"}},
+    ]}}
+    items = rb.open_queue_items(doc)
+    assert [i["item_id"] for i in items] == ["REF-02:reference_screen", "CURVE-07:phab_X"]
+    assert items[0]["rule_id"] == "REF-02" and items[0]["blocking"] is True
+    assert items[0]["evidence"] == {"reference_tier": "best_available"}
+    assert {"item_id", "rule_id", "subject", "trigger", "question", "blocking", "evidence"} <= set(items[0])
+    assert rb.open_queue_items(None) == [] and rb.open_queue_items({}) == []
+    # an answer built from a queue item is one the pipeline accepts
+    d = rb.build_decision({"records": [{"rule_id": "REF-02", "subject": "reference_screen",
+                                        "computed": {"reference_tier": "best_available"}}]},
+                          items[0], "accept", "Accepted for this region.", reviewer="GM")
+    assert d["asserts"] == {"reference_tier": "best_available"}
+
+
+# --------------------------------------------------------------------------- #
+# The campaign index over a runs root
+# --------------------------------------------------------------------------- #
+def _fake_region(root: Path, code: str, name: str, *, staged=True, open_items=0, hard_stops=0,
+                 complete=True, evidence=None):
+    d = root / f"l3-{code}"
+    d.mkdir(parents=True)
+    staged_dir = d / "library" / "assessments" / "x" / "v2"
+    staged_dir.mkdir(parents=True)
+    packet = {"region": {"code": code, "name": name},
+              "curves": [{"metric": "a"}, {"metric": "b"}],
+              "decisions_applied": [{"rule_id": "CURVE-06"}] * 3,
+              "open_items": [{"item_id": f"X:{i}"} for i in range(open_items)],
+              "hard_stops": [{"item_id": f"H:{i}"} for i in range(hard_stops)],
+              "staged": {"version": 2, "path": str(staged_dir)} if staged else None}
+    (d / "review_packet.json").write_text(json.dumps(packet), encoding="utf-8")
+    (d / "standing_decisions_applied.json").write_text(
+        json.dumps({"decisions": [{"rule_id": "CURVE-06"}] * 4}), encoding="utf-8")
+    if complete:
+        (d / "stage_complete.json").write_text(
+            json.dumps({"l3": code, "outputs": {"review_packet.json": "sha"}}), encoding="utf-8")
+    if evidence is not None:
+        (d / "evidence.json").write_text(json.dumps(evidence), encoding="utf-8")
+    return d
+
+
+def test_campaign_rows_read_every_region_of_a_runs_root(tmp_path):
+    root = tmp_path / "runs"
+    _fake_region(root, "71", "Interior Plateau", evidence={"id": "deep-dev-l3-71", "sha256": "abc"})
+    _fake_region(root, "9", "Thin Region", staged=False, open_items=2, hard_stops=1, complete=False)
+    _fake_region(root, "55", "Eastern Corn Belt Plains", complete=False, evidence={"id": "x"})
+    (root / "batch_summary.json").write_text(json.dumps({"schemaVersion": 1, "regions": [
+        {"l3": "71", "name": "Interior Plateau", "exit": 0, "curves": 2, "decisions": 3,
+         "open_items": 0, "hard_stops": 0, "staged_version": 2},
+        {"l3": "80", "name": "Never staged", "exit": 2, "error": "landscape source failed"},
+    ]}), encoding="utf-8")
+    rows = {r["region"]: r for r in rb.campaign_rows(root)}
+    # numeric order, the summary's regions included even without a folder
+    assert list(rows) == ["9", "55", "71", "80"]
+    ip = rows["71"]
+    assert ip["name"] == "Interior Plateau" and ip["version"] == 2 and ip["curves"] == 2
+    # decisions applied come from the applied file when it is there
+    assert ip["decisions_applied"] == 4 and ip["open_items"] == 0 and ip["hard_stops"] == 0
+    assert ip["promote_eligible"] is True and ip["evidence"] == "ready"
+    assert ip["stage_complete"] is True and ip["run_dir"].endswith("l3-71")
+    thin = rows["9"]
+    assert thin["version"] is None and thin["open_items"] == 2 and thin["hard_stops"] == 1
+    assert thin["promote_eligible"] is False and thin["evidence"] == "missing"
+    # staged and clean, but a batch region whose stage record is missing is not eligible
+    ecbp = rows["55"]
+    assert ecbp["version"] == 2 and ecbp["promote_eligible"] is False
+    assert ecbp["evidence"] == "unreadable"          # a manifest with no digest
+    never = rows["80"]
+    assert never["run_dir"] is None and never["version"] is None and never["promote_eligible"] is False
+    # no root, or an empty one: no rows
+    assert rb.campaign_rows(tmp_path / "missing") == []
+    (tmp_path / "empty").mkdir()
+    assert rb.campaign_rows(tmp_path / "empty") == []
+
+
+def test_campaign_rows_without_a_batch_summary_judge_single_runs(tmp_path):
+    """The app's Build writes no stage_complete.json (only a stage-many job does), so a
+    single staged run with nothing open is eligible on its packet alone."""
+    root = tmp_path / "runs"
+    _fake_region(root, "58", "Northeastern Highlands", complete=False)
+    rows = rb.campaign_rows(root)
+    assert len(rows) == 1 and rows[0]["promote_eligible"] is True
+    assert rows[0]["name"] == "Northeastern Highlands" and rows[0]["decisions_applied"] == 4
 
 
 # --------------------------------------------------------------------------- #
@@ -558,7 +731,7 @@ def test_the_packet_view_rerenders_when_the_run_ends():
     import io as _io, pathlib as _pl
     src = _io.open(_pl.Path(__file__).resolve().parents[1] / "views"
                    / "region_builder.py", encoding="utf-8").read()
-    body = src[src.index("def packet_view():"):src.index("def _open_items(")]
+    body = src[src.index("def packet_view():"):src.index("def _curves_fact(")]
     assert "finished()" in body, "must depend on the run ending"
 
 
@@ -568,9 +741,62 @@ def test_the_staged_row_does_not_print_none_when_a_gate_refused():
     import io as _io, pathlib as _pl
     src = _io.open(_pl.Path(__file__).resolve().parents[1] / "views"
                    / "region_builder.py", encoding="utf-8").read()
-    body = src[src.index("def packet_view():"):src.index("def _open_items(")]
+    body = src[src.index("def packet_view():"):src.index("def _curves_fact(")]
     assert 'if staged' in body, "the Staged row must branch on whether anything staged"
     assert "a gate refused this run" in body
+
+
+# --------------------------------------------------------------------------- #
+# One build path (2026-09-25): the builder is the ecoregion's Build step
+# --------------------------------------------------------------------------- #
+def test_the_builder_takes_the_region_from_stage_one_and_lands_on_select_final_curves():
+    """The module accepts the region chosen in Region & data (no select of its own
+    then), a finished stage run opens its assessment by itself, and the landing is
+    Reference curves' Select final curves section."""
+    from views import final_selection as fs
+    from views import region_builder as view
+    src = _view_src()
+    assert "def region_builder_server(input, output, session, state: AppState, active=None, region=None)" in src
+    assert "def _region_code()" in src and "code, _name = region()" in src
+    assert view.FINAL_SECTION == fs.SECTION == "final"
+    run = src[src.index("async def run_stage("):src.index("@reactive.event(input.build_run)")]
+    assert 'if log_name == "stage.log" and code == 0:' in run
+    assert "_open_staged_now(land=True)" in run
+    land = src[src.index("def _land_on_final_selection("):src.index("def _open_staged_now(")]
+    assert 'state.nav_request.set("curves")' in land
+    assert "state.workspace_section_request.set(FINAL_SECTION)" in land
+
+
+def test_the_predictor_source_control_renders_only_under_the_legacy_method():
+    src = _view_src()
+    control = src[src.index("def predictor_source_control():"):src.index("def frame_summary():")]
+    assert "!= rs.REFERENCE_METHOD_EASI" in control and "return None" in control
+    assert '"streamcat":' in control and '"site-engine":' in control
+    # the build reads it only under that method, and never raises when it is off the page
+    build = src[src.index("def _build():"):src.index("def _poll():")]
+    assert 'if method == rs.REFERENCE_METHOD_EASI else "streamcat"' in build
+    assert '_inp("build_predictor_source")' in build and "input.build_predictor_source()" not in src
+
+
+def test_the_builder_answers_nothing_itself_any_more():
+    """Undo, the gap cards and "Items left for you" moved to Select final curves; the
+    page counts what is left and jumps there. The one-flag REF-02 re-stage stays,
+    because it is a build, not a decision."""
+    from views import region_builder as view
+    src = _view_src()
+    for gone in ("def _undo_decision", "def _decisions_block", "def _save_decisions",
+                 "def _gap_cards", "def _open_items", "Items left for you", "input.undo_decision",
+                 'ns(f"act_{i}")', 'ns(f"gap_r_{j}")'):
+        assert gone not in src, f"the builder still carries {gone!r}"
+    assert "def _left_for_you(" in src and "def _decisions_line(" in src
+    assert "def _restage_ref02" in src and 'ns("restage_ref02")' in src
+    assert "campaign_rows(out_root())" in src
+    packet = {"open_items": [{"item_id": "a", "blocking": True}, {"item_id": "b", "blocking": False}]}
+    text = view.left_for_you_text(packet, 1)
+    assert text.startswith("3 items left for you (1 blocking item).")
+    assert "Select final curves" in text
+    assert "Nothing is left for you to answer" in view.left_for_you_text({}, 0)
+    assert chr(8212) not in text
 
 
 # --------------------------------------------------------------------------- #
@@ -807,8 +1033,8 @@ def test_opening_uses_the_validating_loader():
     """Every other restore path validates the schema and migrates a v1 file; a raw
     json.loads here would skip both."""
     src = _view_src()
-    body = src[src.index("def _open_staged("):src.index("# ── publish")] \
-        if "# ── publish" in src else src[src.index("def _open_staged("):]
+    body = src[src.index("def _open_staged_now("):src.index("# ── publish")] \
+        if "# ── publish" in src else src[src.index("def _open_staged_now("):]
     assert "sio.load_session_payload" in body
 
 

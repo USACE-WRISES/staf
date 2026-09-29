@@ -11,12 +11,16 @@ from __future__ import annotations
 import json
 from typing import Any, Iterable, Mapping, Optional
 
-import pandas as pd
 from shiny import reactive, ui
 
 from streamcurves import curve_sources as src
 from streamcurves import curve_svg as cs
 from streamcurves import run_state as rs
+# The pure tile builders live in streamcurves.curve_tiles (2026-09-25) so the headless
+# register and the rebuild ledger build the same tiles; the page keeps its names.
+from streamcurves.curve_tiles import (  # noqa: F401  (re-exported)
+    assign_functions, mark_not_selected, not_selected_here, owner_included,
+    reference_tiles_for, tile_row)
 from views import source_panel as sp
 from views import summary_state as ss
 from views.state import AppState
@@ -38,103 +42,6 @@ TILE_W, TILE_H = 240, 150
 
 def curves_sections() -> list[str]:
     return [v for v, _ in rs.STAGE_SECTIONS.get("curve_review", [])]
-
-
-def tile_row(metric: str, curve_rows: Any, *, metric_entry: Mapping | None,
-             review_entry: Mapping | None, function_label: str | None) -> dict:
-    """One gallery tile from a metric's curve rows (a DataFrame with one row per
-    stratum, a list of row dicts, or nothing)."""
-    if isinstance(curve_rows, pd.DataFrame):
-        rows = curve_rows.to_dict("records") if len(curve_rows) else []
-    elif curve_rows is None:
-        rows = []
-    else:
-        rows = [dict(r) for r in curve_rows]
-    return cs.tile_from_curve_rows(metric, rows, metric_entry=metric_entry,
-                                   review_entry=review_entry, function_label=function_label)
-
-
-def assign_functions(rows: Iterable[Mapping], mapping: Any = None) -> list[dict]:
-    """Discipline and function keys on every tile from the session's
-    discipline-function mapping (every function a metric serves, primary
-    first), falling back to the tile's own label."""
-    return cs.assign_functions(rows, mapping)
-
-
-def reference_tiles_for(build, mapping, *, built=(), decisions=()) -> list[dict]:
-    """Tiles for every curve a session scores without having fitted it
-    (``pressure_evidence.reference_rows``): carried forward, from a rung above
-    the hierarchy, or a fixed criterion, each placed in the functions the bundle
-    places it in under the owner's decisions (REF-15). Each can be removed; a
-    removed one stays on the page, dimmed, with the decision to undo."""
-    from streamcurves import owner_curves as oc
-    from streamcurves import pressure_evidence as pe
-    decisions = list(decisions or [])
-    effective = oc.effective_build(build, decisions, built=built)
-    tiles, placement = [], []
-    for mk, entry in pe.reference_rows(effective, mapping, built=built).items():
-        tile = cs.reference_tile(mk, entry)
-        tile["source_title"] = src.source_title(mk, entry, build=effective)
-        tile["removable"] = True
-        if entry.get("owner"):
-            # a curve the owner chose: its undo gives the build's choice back
-            tile["owner_decision"] = entry["owner"].get("id")
-            tile["owner_note"] = (f"Chosen by {entry['owner'].get('recordedBy')}: "
-                                  f"{entry['owner'].get('rationale')}")
-        tiles.append(tile)
-        placement.extend(entry["mapping"])
-    removed = oc.removed(decisions)
-    if removed:
-        base = pe.reference_rows(build, mapping, built=built)
-        for mk, d in removed.items():
-            entry = base.get(mk)
-            if entry is None:
-                continue
-            tile = cs.reference_tile(mk, entry)
-            tile["source_title"] = src.source_title(mk, entry, build=build)
-            tile["status_text"] = "Removed by the owner"
-            tile["removed_decision"] = d.get("id")
-            tile["in_scope"] = False
-            tiles.append(tile)
-            placement.extend(entry["mapping"])
-    return cs.assign_functions(tiles, placement)
-
-
-def mark_not_selected(tiles: Iterable[dict], build) -> list[dict]:
-    """Set ``not_selected_fids`` on every tile the session fitted: the functions
-    SELECT-04 left it out of (``pressure_evidence.not_selected_pairs``). The
-    gallery reads each placement against it, so a curve drawn under a function
-    it does not score reads "Not selected here"."""
-    from streamcurves import pressure_evidence as pe
-    by_metric: dict[str, set] = {}
-    for m, fid in pe.not_selected_pairs(build):
-        by_metric.setdefault(str(m), set()).add(str(fid))
-    included = owner_included(build)
-    out = []
-    for t in tiles:
-        if not t.get("read_only"):
-            mk = str(t.get("metric") or "")
-            t["not_selected_fids"] = sorted(by_metric.get(mk, ()))
-            t["owner_included"] = dict(included.get(mk) or {})
-        out.append(t)
-    return out
-
-
-def owner_included(build) -> dict:
-    """``{metric: {function id: decision id}}`` of the fitted curves the owner put
-    back into a function the portfolio left them out of (REF-15)."""
-    out: dict[str, dict] = {}
-    for d in (build or {}).get("ownerDecisions") or []:
-        if d.get("action") == "include":
-            for fid in d.get("functions") or []:
-                out.setdefault(str(d.get("metric")), {})[str(fid)] = d.get("id")
-    return out
-
-
-def not_selected_here(row: Mapping, here) -> bool:
-    """The tile placed under function ``here`` (a function id) is a curve the
-    portfolio left out of that function."""
-    return here is not None and str(here) in {str(f) for f in row.get("not_selected_fids") or ()}
 
 
 def reference_tiles(state: AppState) -> list[dict]:

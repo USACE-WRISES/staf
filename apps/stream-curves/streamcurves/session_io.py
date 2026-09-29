@@ -129,7 +129,17 @@ SESSION_FIELDS = [
     # The reference statement of a pressure-screen build (methodology 0.12,
     # schema v2, additive): the fixed-criteria metrics, each curve's reference
     # support, the withheld list. Absent reads as None, which is a legacy build.
+    # Its ``ledger`` key (campaign Round 1, additive inside the dict) holds the
+    # build's per-metric rebuild ledger (provenance.build_ledger, rebuild-ledger/1);
+    # a build written before it reads the key as absent, never as a migration.
     "reference_build",
+    # SELECT-01 approvals recorded in the session (campaign Round 1, schema v2,
+    # additive): ``[{functionId, approver, note, date}]`` for every function whose
+    # more-than-two-metric set a person approved as complementary. The publish
+    # gate (library._require_portfolio_approval) still reads meta.portfolioApprovals;
+    # this field is where the approvals live between sessions. Absent reads as None,
+    # which is no approval recorded.
+    "portfolio_approvals",
     # The owner's decisions on the curves the build did not fit (REF-15, schema
     # v2, additive): applied over reference_build, which stays as the build wrote
     # it so a decision can be undone. Absent reads as None, which is no decision.

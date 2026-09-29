@@ -423,7 +423,8 @@ decided, "Use in this function" and "Undo" (REF-15's own form), "Record why not"
 panel for up to three curves. An interactive publish writes the register's export
 (`candidateRegister`) into the version's provenance, and says so when it cannot.
 
-**EASI** keeps its register in the project (`easi/register.json`). `easi_method/alternatives.py`
+**EASI** keeps its register in the project (the candidate register part of `easi/package.json`,
+see StreamCurves project files above). `easi_method/alternatives.py`
 imports the 2026-09-15 controlled study (verified by its completion record, sha256 97a24b44..., and
 each candidate's catalog and curve hashes): a candidate only where an alternative's definition
 differs from the method's. Alternative 2 differs nowhere; Alternatives 1, 3 and 4 differ in low
@@ -431,8 +432,8 @@ flow, light and thermal regime, carbon processing and habitat provision; the leg
 (an evaluator asset, read from the vendored copy) in eight functions. Each carries its definition,
 so the register is complete without the study folder, and its reason quotes the study (whose rule
 recommended Alternative 1) and the owner's adoption of Alternative 2 on 2026-09-16 (commit 02f39a8);
-history before the import is stated as missing. The Final selection stage (**Select final
-methods**) compares up to three definitions curve family by curve family and, in a draft revision,
+history before the import is stated as missing. The **Final selection** stage (the label
+`easi_method/stages.py` gives it) compares up to three definitions curve family by curve family and, in a draft revision,
 adopts one: every function reading a curve family it rewrites moves with it (the woody curves
 serve light and thermal regime and habitat provision), the replaced method stays as eligible, not
 selected, and adopting the method the draft started from restores its exact bytes. Where
@@ -540,6 +541,54 @@ versions republish unchanged. A state SQT choice saved before the adoption check
 checks, with an Undo, and the curve is selected again. Every other kind of source keeps applying as
 it did. The bundle carries the owner's decision summary (never `replaces`)
 and the chosen curve; it never names a replaced or unselected candidate.
+
+## Campaign runner
+
+A national campaign is a batch of `run_region_batch.py stage-many` over every Level III code,
+driven by `scripts/run_campaign.py` from a clean worktree (campaign Round 3). Its record is the
+campaign root: `manifest.json` (schema `staf-campaign-manifest/1`: the worktree and commit, the
+code fingerprint, every input `region_inputs` names, the promotion policy's version and sha, the
+stage-many flags and one row per region with its support class, its decision files by sha and the
+inputs digest its stage is expected to record), `commands.md` (the exact stage-many line), a copy
+of `standing_decisions.yaml` and `promotion_policy.yaml`, and `STATE.md`. `plan` writes it and
+never runs anything; `run` recomputes every recorded value against the live tree and refuses on
+any difference. Under `--refit missing`, computing a region's expectation seeds its
+`curve_decisions.json` from the published version exactly as stage-many would, so the two digests
+agree. The pure helpers live in `streamcurves/campaign.py`; the runner is the only writer of a
+campaign root.
+
+`index` classifies each region from artifacts alone (`review_packet.json`, `stage_complete.json`,
+`run_manifest.json`, the staged `meta.json`, `batch_summary.json`, the `.campaign` summary and
+index, the stage log): `staged` (record intact, staged path present, nothing open), `staged-open`,
+`no-data` (no NRSA candidate sites; the index writes `runs/l3-<code>/region_state.json` so the
+folder exists), `unsupported` (no bundle, or the coverage gate refused the publish), `incomplete`
+(a packet with no staged version, or a staged version without an intact stage record), `refused`
+(exit 2 or 3), `failed`, `not-started`. `eligibility` applies `config/methodology/promotion_policy.yaml`
+(version 1.1, provisional; owner decision D2, Preliminary by policy) gate by gate from the same
+artifacts and never refits: frozen-record, rules-applied (no hard stop and no blocking open item;
+an open item blocks when its trigger blocks in the queue's tiers or is an uncovered hard-stop
+trigger, and every other open item is advisory: listed per region as `advisoryOpen` in
+`eligibility.json`, counted as `openAdvisory` in the index and named in the batch summary's
+eligible table, never hidden), pending-confirmable (a deep copy of the provenance is confirmed and
+discarded), owner-decisions-honored, portfolio-approvals, equivalence-proven (the gate report the
+manifest names, at the campaign's commit) and record-complete. The policy's sha rides in the
+manifest, `index.json`, `eligibility.json`, the batch summary and the promote record. `promote --status policy` reads the same gates: preliminary when
+every gate the run folder can answer passes (the equivalence gate needs `--gate-report` or the
+campaign manifest), else draft with the blockers on `promote_record.json`.
+
+`batch-summary` writes `promotion_batch_<id>.md` and `.json` for the owner (the eligible table with
+source mix, functions covered and gaps, policy decision ids and carried approvals, the exceptions
+with their open items verbatim, the promote commands in order with `<to be confirmed>` in place of
+the maintainer and the date). The operator then writes `promotion_batch_<id>.confirmation.json` by
+hand (`batchId`, `policyVersion`, `campaignId`, `regions`, `confirmedBy`, `confirmedAt`,
+`statement`: the owner's words and date); `confirm` validates it and prints the promote commands
+with the confirming maintainer and date, `--rebake-deep` on the last. No script fills
+`confirmedBy`; every campaign stage records a label (`Rehearsal (not an owner decision)` or
+`policy-candidate (pending owner confirmation)`), never a person, and `plan` refuses a bare name.
+`compare` writes `compare/<assessment id>.json` per staged region with a published version and the
+owner-decision diff where the published record carries owner inputs; `package` zips the record
+with `package.json` inside (every member by sha256, and the evidence archives still to download by
+digest).
 
 ## Who is recorded
 
