@@ -495,9 +495,35 @@ def _natural_riparian_cover(ctx):
                          "M", basis=BASIS_STREAMCAT)
 
 
+#: The flags of EASI's cross-section quality record (K2b, owner decision D15) on which EASI v2
+#: withholds a geometry rating: a weak reach median, or the ratio outside its physical range.
+_XS_WITHHOLD = {"bhr": ("low_quality", "out_of_range_bhr"), "er": ("low_quality", "out_of_range_er")}
+
+
+def _xs_withheld(ctx, geom: dict, ratio: str) -> bool:
+    """True when the 3DEP sections are no basis for this ratio under the rule EASI v2 applies
+    (the vendored extract's ``cross_section_quality``, EASI's own module): the desktop prefill
+    then steps aside and the worksheet asks for a measured value. A value entered in the field
+    never passes through here, so it is never withheld. The reasons are kept on the context."""
+    try:
+        from .._vendor.site_engine._extracted import geomorph
+        record = geomorph.cross_section_quality(geom) or {}
+    except Exception:  # noqa: BLE001
+        return False
+    hit = [f for f in record.get("flags") or [] if f in _XS_WITHHOLD[ratio]]
+    if hit:
+        reasons = record.get("reasons") or {}
+        ctx.extras.setdefault("xs_prefill_withheld", {})[ratio] = "; ".join(
+            str(reasons.get(f) or f) for f in hit)
+    return bool(hit)
+
+
 @adapter("floodplain-connectivity-entrenchment-ratio-er")
 def _entrenchment(ctx):
-    er = _reach_geom(ctx).get("entrenchment_ratio")
+    geom = _reach_geom(ctx)
+    er = geom.get("entrenchment_ratio")
+    if er is None or _xs_withheld(ctx, geom, "er"):
+        return None
     return (ComputedValue(round(float(er), 2),
                           "3DEP DEM cross-sections, reach median ER of the sampled sections "
                           "(modeled)", "M", basis=BASIS_3DEP)
@@ -509,7 +535,10 @@ def _entrenchment(ctx):
 # bands under the metric id spring-bank-height-ratio; the value is the same measurement
 @adapter("channel-and-floodplain-dynamics-bank-height-ratio-bhr", "spring-bank-height-ratio")
 def _bank_height(ctx):
-    bhr = _reach_geom(ctx).get("bank_height_ratio")
+    geom = _reach_geom(ctx)
+    bhr = geom.get("bank_height_ratio")
+    if bhr is None or _xs_withheld(ctx, geom, "bhr"):
+        return None
     return (ComputedValue(round(float(bhr), 2),
                           "3DEP DEM cross-sections, reach median bank-height ratio of the "
                           "sampled sections (modeled)", "M",
