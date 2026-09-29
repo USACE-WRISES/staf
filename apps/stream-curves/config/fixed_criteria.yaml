@@ -322,3 +322,98 @@ last_resort:
       screening relationship rather than a measured erosion rate or an estimate of this ecoregion's reference
       condition.
     rule: REF-17
+  natural_riparian_cover:
+    display_name: Natural cover of the riparian corridor
+    units: '%'
+    metric_family: proportion
+    easi_method: organic-matter-supply-potential
+    easi_metric_id: carbon-processing-detrital-processing-cpom-retention-shredders
+    easi_input: null
+    easi_title: Organic-matter supply potential proxy
+    provisional: true
+    resolution: 0.01
+    domain: [0.0, 100.0]
+    streamcat: pctconif2019, pctdecid2019, pctmxfst2019, pctshrb2019, pctgrs2019, pctwdwet2019, pcthbwet2019
+      (wsrp100)
+    functions: [Carbon processing]
+    curve_set: corridor-natural
+    stratifier: nars9
+    direction: higher_better
+    bands: []
+    curve_layers:
+      CPL:
+      - [0.0, 0.0]
+      - [39.775713, 0.3]
+      - [92.809998, 0.7]
+      - [99.220001, 1.0]
+      - [100.0, 1.0]
+      NAP:
+      - [0.0, 0.0]
+      - [38.549999, 0.3]
+      - [89.949997, 0.7]
+      - [98.457499, 1.0]
+      - [100.0, 1.0]
+      NPL:
+      - [0.0, 0.0]
+      - [41.7225, 0.3]
+      - [97.352499, 0.7]
+      - [100.0, 1.0]
+      SAP:
+      - [0.0, 0.0]
+      - [37.654286, 0.3]
+      - [87.860001, 0.7]
+      - [99.099998, 1.0]
+      - [100.0, 1.0]
+      SPL:
+      - [0.0, 0.0]
+      - [41.138571, 0.3]
+      - [95.989998, 0.7]
+      - [99.949997, 1.0]
+      - [100.0, 1.0]
+      TPL:
+      - [0.0, 0.0]
+      - [38.562858, 0.3]
+      - [89.980001, 0.7]
+      - [98.800003, 1.0]
+      - [100.0, 1.0]
+      UMW:
+      - [0.0, 0.0]
+      - [39.462856, 0.3]
+      - [92.079998, 0.7]
+      - [98.514999, 1.0]
+      - [100.0, 1.0]
+      WMT:
+      - [0.0, 0.0]
+      - [41.807144, 0.3]
+      - [97.550003, 0.7]
+      - [100.0, 1.0]
+      XER:
+      - [0.0, 0.0]
+      - [41.952857, 0.3]
+      - [97.889999, 0.7]
+      - [100.0, 1.0]
+      national: &id001
+      - [0.0, 0.0]
+      - [40.675716, 0.3]
+      - [94.910004, 0.7]
+      - [100.0, 1.0]
+    fallback_stratum: national
+    points: *id001
+    citations:
+    - {key: streamcat, text: EPA StreamCat Metrics and Definitions, url: 'https://www.epa.gov/national-aquatic-resource-surveys/streamcat-metrics-and-definitions'}
+    - {key: easi-reference-curves, text: 'EASI regional reference criteria, September 2026', url: 'https://usace-wrises.github.io/staf/walkthroughs/easi/#regional-reference-criteria'}
+    breakpoints:
+    - {label: Reference index 0.39, description: Fair begins at an interpolated reference index of 0.39.}
+    - {label: Reference index 0.69, description: Good begins at an interpolated reference index of 0.69.
+        Physical crossings depend on the reference stratum.}
+    limitations: ['This estimates organic-matter supply potential, not CPOM retention or shredder condition.',
+      'All four source classes are required; missing classes are unknown. The capped sum is compared with
+        NARS-9 reference expectations, with a national fallback.']
+    method_basis_class: provisional STAF screening judgment
+    required_input: 'Natural cover of the 100 m riparian corridor of the watershed: forest, shrub, grassland
+      and wetland, percent (NLCD 2019 through StreamCat''s riparian buffers), the input EASI''s organic-matter
+      supply method reads; DEEP fills it from the desktop analysis and the user may correct it.'
+    limitation: 'Rated on EASI''s organic-matter supply reference curve for this NARS-9 region: a provisional
+      screening estimate of the riparian supply of organic matter, not a measurement of organic-matter
+      retention or processing in the stream.'
+    rule: REF-17

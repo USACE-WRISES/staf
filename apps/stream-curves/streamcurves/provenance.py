@@ -1464,11 +1464,16 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
         # withheld the metric before any curve was built (the record is flagged
         # and the withheld entry holds the statement); no review item is raised
         withheld = bool(info.get("withheld"))
+        # methodology 0.16 (D18): kept as its function's last candidate, the rule's
+        # decision with its missingness stated on the curve; no review item
+        kept = list(info.get("keptForCoverage") or [])
         item = ((result.get("insufficient_support") or {}).get(metric) or {}) if withheld else {}
         computed = {"disposition": disp}
-        if withheld:
-            computed.update({"withheld": True, "n_pool_members": info.get("n_pool_members"),
+        if withheld or kept:
+            computed.update({"withheld": withheld, "n_pool_members": info.get("n_pool_members"),
                              "n_with_value": info.get("n_with_value")})
+        if kept:
+            computed["keptForCoverage"] = kept
         add(rule_id, "metric", metric,
             inputs={"missing_fraction": info.get("missing_fraction")},
             thresholds={"max_missingness_auto": methodology.threshold(
@@ -1476,14 +1481,17 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
                         "max_missingness_review": methodology.threshold(
                             "data_rules.max_missingness_review")},
             computed=computed,
-            verdict=(VERDICT_FAIL if withheld else VERDICT_PASS if disp == "auto"
+            verdict=(VERDICT_FAIL if withheld else VERDICT_PASS if (disp == "auto" or kept)
                      else VERDICT_REVIEW),
-            review_required=disp == "review" and not withheld,
-            review_triggers=([] if withheld else ["missingness_review"] if disp == "review"
+            review_required=disp == "review" and not withheld and not kept,
+            review_triggers=([] if (withheld or kept) else ["missingness_review"] if disp == "review"
                              else ["missingness_caution"] if disp == "caution" else []),
             recommendation=(
                 (item.get("statement") or "Withheld at the build (DATA-03): no curve was "
                                           "built and the metric is not scored.") if withheld
+                else ("Kept although the pool is mostly unmeasured (DATA-03), because no other "
+                      "metric scores " + ", ".join(kept) + " in this ecoregion; the curve states "
+                      "the missingness as a limitation (owner decision D18).") if kept
                 else "Do not auto-recommend this curve (DATA-03)." if disp == "review"
                 else "Analyze with caution; confidence takes a penalty." if disp == "caution"
                 else None))

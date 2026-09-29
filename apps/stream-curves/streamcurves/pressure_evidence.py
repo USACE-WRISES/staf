@@ -2274,7 +2274,8 @@ def _tried_of(decision) -> list:
 
 def last_resort_fills(l3_code: str, name: str, *, covered_metrics: Iterable[str],
                       candidate_metrics: dict, configs: dict, carried: Optional[dict] = None,
-                      withheld_statements: Optional[dict] = None) -> dict:
+                      withheld_statements: Optional[dict] = None,
+                      nars9: Optional[str] = None) -> dict:
     """REF-17 (methodology 0.16, owner decision D19): the functions no source
     supports, each completed by EASI's national screening method for the same
     quantity where ``config/fixed_criteria.yaml`` names one under ``last_resort``.
@@ -2317,9 +2318,12 @@ def last_resort_fills(l3_code: str, name: str, *, covered_metrics: Iterable[str]
                     candidate_metrics.get(m)) if not x.get("accepted"))
             words.append(f"{m} ({said})" if said else
                          f"{m} (no source in the hierarchy passed acceptance)")
+        layer = fixed_criteria.last_resort_stratum(entry, nars9)
+        method_words = (f"EASI's {entry.get('easi_title')} reference curve for NARS-9 region {layer}"
+                        if layer else f"EASI's national screening method, {entry.get('easi_title')}")
         why = (f"No source supports {label} in this ecoregion: "
                + ("; ".join(words) if words else "the function has no candidate metric here")
-               + f". Completed by EASI's national screening method, {entry.get('easi_title')}, "
+               + f". Completed by {method_words}, "
                f"adopted under {fixed_criteria.LAST_RESORT_RULE} (owner decision D19).")
         decision = rp.PoolDecision(
             metric=mk, status=rp.STATUS_PUBLISHED, level=None, region_code=str(l3_code),
@@ -2336,8 +2340,8 @@ def last_resort_fills(l3_code: str, name: str, *, covered_metrics: Iterable[str]
             basis=curve_basis.EASI_SCREENING,
             screen_detail={"rule": fixed_criteria.LAST_RESORT_RULE,
                            "easiMethod": entry.get("easi_method"), "functionId": fid,
-                           "refusedCandidates": refused})
-        out[mk] = {"decision": decision, "row": fixed_criteria.last_resort_curve_row(mk),
+                           "refusedCandidates": refused, "stratum": layer})
+        out[mk] = {"decision": decision, "row": fixed_criteria.last_resort_curve_row(mk, nars9),
                    "config": fixed_criteria.last_resort_config(mk),
                    "attempt": {"metric": mk, "rung": fixed_criteria.LAST_RESORT_RULE,
                                "admitted": True, "basis": curve_basis.EASI_SCREENING,
@@ -2444,7 +2448,9 @@ def census(l3_codes, *, max_stream_order: Optional[int] = None, protocols=None,
                              if d.status != rp.STATUS_INSUFFICIENT],
             candidate_metrics={mk: d for mk, d in pools["decisions"].items()
                                if d.status == rp.STATUS_INSUFFICIENT},
-            configs=metric_config)
+            configs=metric_config,
+            nars9=published_benchmark.majority_region(
+                frame[frame["l3"].astype(str) == str(code)], "nars9")[0])
         for mk, fill in fills.items():
             pools["decisions"][mk] = fill["decision"]
         statuses = [d.status for d in pools["decisions"].values()]
@@ -2949,7 +2955,9 @@ def run_evidence(l3_code: str, name: str, *,
                            **{mk: rec.get("decision") for mk, rec in rule_withheld_items.items()}},
         configs={**insufficient_config, **metric_config, **ladder_config},
         carried=carried,
-        withheld_statements={mk: rec.get("statement") for mk, rec in rule_withheld_items.items()})
+        withheld_statements={mk: rec.get("statement") for mk, rec in rule_withheld_items.items()},
+        nars9=published_benchmark.majority_region(
+            frame[frame["l3"].astype(str) == str(l3_code)], "nars9")[0])
     for mk, fill in last_resort.items():
         decisions[mk] = fill["decision"]
         ladder_rows[mk] = fill["row"]

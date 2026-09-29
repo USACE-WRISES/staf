@@ -140,6 +140,27 @@ LAST_RESORT_SPEC: dict[str, dict] = {
             "provisional screening relationship rather than a measured erosion rate or an "
             "estimate of this ecoregion's reference condition."),
     },
+    # EASI's carbon-processing method scores V (forest, shrub, grassland and wetland in
+    # the 100 m riparian corridor, capped at 100) on its reference curve of the site's
+    # NARS-9 region (curve set corridor-natural, national fallback): the curve, not bands
+    "natural_riparian_cover": {
+        "easi_method": "organic-matter-supply-potential", "input": None,
+        "curve_set": "corridor-natural",
+        "display_name": "Natural cover of the riparian corridor", "units": "%", "resolution": 0.01,
+        "domain": [0.0, 100.0], "metric_family": "proportion",
+        "streamcat": "pctconif2019, pctdecid2019, pctmxfst2019, pctshrb2019, pctgrs2019, "
+                     "pctwdwet2019, pcthbwet2019 (wsrp100)",
+        "functions": ["Carbon processing"],
+        "required_input": (
+            "Natural cover of the 100 m riparian corridor of the watershed: forest, shrub, "
+            "grassland and wetland, percent (NLCD 2019 through StreamCat's riparian buffers), "
+            "the input EASI's organic-matter supply method reads; DEEP fills it from the desktop "
+            "analysis and the user may correct it."),
+        "limitation": (
+            "Rated on EASI's organic-matter supply reference curve for this NARS-9 region: a "
+            "provisional screening estimate of the riparian supply of organic matter, not a "
+            "measurement of organic-matter retention or processing in the stream."),
+    },
 }
 
 _RANK = {"Good": 0, "Fair": 1, "Poor": 2}
@@ -235,8 +256,47 @@ def _points(entry: dict, rating_index: dict) -> list[list[float]]:
     return [[round(x, 6), round(y, 6)] for x, y in pts]
 
 
+REFERENCE_CURVES_PATH = VENDORED_CATALOG_PATH.parent / "reference-curves.json"
+
+
+def _curve_set_entry(spec: dict, catalog: dict) -> dict:
+    """A last-resort entry scored on one of EASI's reference-curve sets: the curve of
+    every stratum (NARS-9 region) and the national fallback, as EASI draws them."""
+    citations = catalog.get("citations") or {}
+    method = _method(catalog, spec["easi_method"])
+    sets = json.loads(REFERENCE_CURVES_PATH.read_text(encoding="utf-8")).get("sets") or {}
+    curves = (sets.get(spec["curve_set"]) or {}).get("curves") or {}
+    layers = {str(k): [[round(float(x), 6), round(float(y), 6)] for x, y in (v.get("points") or [])]
+              for k, v in sorted(curves.items()) if v.get("points")}
+    if not layers:
+        raise KeyError(f"the vendored EASI curves hold no set {spec['curve_set']!r}")
+    fallback = next((k for k in ("national", "NATIONAL", "national_fallback") if k in layers), None)
+    return {
+        "display_name": spec["display_name"], "units": spec["units"],
+        "metric_family": spec["metric_family"],
+        "easi_method": spec["easi_method"], "easi_metric_id": method.get("metricId"),
+        "easi_input": None, "easi_title": method.get("title"),
+        "provisional": bool(method.get("provisional")),
+        "resolution": spec["resolution"], "domain": list(spec["domain"]),
+        "streamcat": spec.get("streamcat"),
+        "functions": list(spec.get("functions") or []),
+        "curve_set": spec["curve_set"], "stratifier": "nars9",
+        "direction": "higher_better", "bands": [],
+        "curve_layers": layers, "fallback_stratum": fallback,
+        "points": layers[fallback] if fallback else next(iter(layers.values())),
+        "citations": [{"key": c, "text": (citations.get(c) or {}).get("title"),
+                       "url": (citations.get(c) or {}).get("url")}
+                      for c in (method.get("citations") or [])],
+        "breakpoints": [{"label": b.get("label"), "description": b.get("description")}
+                        for b in (method.get("breakpoints") or [])],
+        "limitations": list(method.get("limitations") or []),
+    }
+
+
 def _generate_entry(spec: dict, catalog: dict, rating_index: dict) -> dict:
     """One criterion of the file, from its spec and the vendored catalog."""
+    if spec.get("curve_set"):
+        return _curve_set_entry(spec, catalog)
     citations = catalog.get("citations") or {}
     method = _method(catalog, spec["easi_method"])
     bands, _src = _bands_of(method, spec.get("input"))
@@ -541,6 +601,10 @@ def last_resort_config(metric_key: str) -> dict:
 
 def last_resort_sentence(entry: dict) -> str:
     """The criterion in one plain sentence, for the metric's tooltip."""
+    if entry.get("curve_layers"):
+        return (f"{entry['display_name']} ({entry.get('units')}) is scored on EASI's "
+                f"{entry.get('easi_title')} reference curve for the region's NARS-9 class, adopted "
+                "because no other source supports this function here.")
     by = {b["rating"]: b.get("label") for b in entry.get("bands") or []}
     return (f"{entry['display_name']} ({entry.get('units')}) is scored on EASI's national "
             f"screening method, {entry.get('easi_title')}, adopted because no other source "
@@ -553,13 +617,28 @@ def last_resort_citation_line(entry: dict) -> str:
     return f"Adopted EASI screening method (provisional), {entry.get('easi_title')}"
 
 
-def last_resort_curve_row(metric_key: str) -> dict:
+def last_resort_stratum(entry: dict, stratum: Optional[str]) -> Optional[str]:
+    """The curve layer a curve-set entry uses for a region (its NARS-9 class, else
+    the national fallback); None for a banded entry."""
+    layers = entry.get("curve_layers") or {}
+    if not layers:
+        return None
+    return str(stratum) if stratum is not None and str(stratum) in layers \
+        else entry.get("fallback_stratum") or next(iter(layers))
+
+
+def last_resort_curve_row(metric_key: str, stratum: Optional[str] = None) -> dict:
     """The curve row of a last-resort metric, shaped like the engine's.
-    ``n_reference`` is None by design: no station informs the curve."""
+    ``n_reference`` is None by design: no station informs the curve. A curve-set
+    entry takes the curve of the region's NARS-9 class (``stratum``)."""
     e = last_resort_entry(metric_key)
-    return {"metric": metric_key, "display_name": e["display_name"], "stratum": "",
+    layer = last_resort_stratum(e, stratum)
+    pts = e["curve_layers"][layer] if layer else None
+    return {"metric": metric_key, "display_name": e["display_name"],
+            "stratum": f"NARS-9 {layer}" if layer else "",
             "curve_status": "complete", "curve_source": "easi_screening_method",
-            "n_reference": None, "curve_points": curve_points(e)}
+            "n_reference": None,
+            "curve_points": curve_points({"points": pts}) if pts else curve_points(e)}
 
 
 def last_resort_mapping_rows(metric_keys) -> pd.DataFrame:
@@ -585,6 +664,7 @@ def last_resort_provenance(entry: dict) -> dict:
     EASI method it adopts, that method's own evidentiary status, citations and
     limitations, the rule and the owner's decision, and the input it needs."""
     return {"rule": LAST_RESORT_RULE, "ownerDecision": "D19 (2026-09-28)",
+            "curveSet": entry.get("curve_set"),
             "easiMethod": entry.get("easi_method"), "easiMetricId": entry.get("easi_metric_id"),
             "title": entry.get("easi_title"), "basisClass": entry.get("method_basis_class"),
             "provisional": bool(entry.get("provisional")),

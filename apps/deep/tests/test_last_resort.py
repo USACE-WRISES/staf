@@ -20,3 +20,19 @@ def test_the_bank_height_ratio_is_offered_under_the_last_resort_metric_id():
     assert "spring-bank-height-ratio" in ids
     assert computed._ADAPTERS["spring-bank-height-ratio"] is computed._ADAPTERS[
         "channel-and-floodplain-dynamics-bank-height-ratio-bhr"]
+
+
+def test_the_corridor_natural_cover_sums_streamcats_riparian_classes(monkeypatch):
+    """EASI's organic-matter supply input, as StreamCurves' carbon last resort asks for it."""
+    from deep.metrics import computed as c
+
+    class Ctx:
+        comid = 123
+        extras = {"streamcat_rp100": {n + "wsrp100": 10.0 for n in c._RP100_NATURAL}}
+
+    got = c._ADAPTERS["spring-natural-riparian-cover"](Ctx())
+    assert got is not None and abs(got.value - 70.0) < 1e-9
+    Ctx.extras = {"streamcat_rp100": {n + "wsrp100": 20.0 for n in c._RP100_NATURAL}}
+    assert c._ADAPTERS["spring-natural-riparian-cover"](Ctx()).value == 100.0   # capped
+    Ctx.extras = {"streamcat_rp100": {}}
+    assert c._ADAPTERS["spring-natural-riparian-cover"](Ctx()) is None
