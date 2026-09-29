@@ -170,8 +170,13 @@ def _remote_catch_up() -> bool:
 def library_catalog() -> dict[str, dict]:
     """``{id: {defaultVersion, latestCertified, latestPreliminary}}`` derived from the
     live registry records (certified wins the default, else latest preliminary)."""
+    return _catalog_of(_registry_records())
+
+
+def _catalog_of(records) -> dict[str, dict]:
+    """:func:`library_catalog` of records already read."""
     by_id: dict[str, dict] = {}
-    for r in _registry_records():
+    for r in records:
         aid = r.get("assessmentId")
         if not aid:
             continue
@@ -214,17 +219,23 @@ def load_ref(ref: str) -> dict | None:
 
 def assessments() -> list[dict]:
     """One record per assessment at its default version (back-compat surface for the
-    picker, coverage, and region features). Ordered by first appearance in the registry."""
-    by_ref = assessments_by_ref()
-    cat = library_catalog()
+    picker, coverage, and region features). Ordered by first appearance in the registry.
+
+    The registry records are read once and every default comes from that one catalog: read
+    per assessment, a checkout with the live library beside it re-read every version bundle
+    for each of the 85 regional assessments (36 s a load, 2026-09-29)."""
+    records = _registry_records()
+    by_ref = {r["assessmentRef"]: r for r in records}
+    cat = _catalog_of(records)
     seen: list[str] = []
-    for r in _registry_records():
+    for r in records:
         aid = r.get("assessmentId")
         if aid and aid not in seen:
             seen.append(aid)
     out: list[dict] = []
     for aid in seen:
-        ref = default_ref_for(aid)
+        c = cat.get(aid)
+        ref = f"{aid}@v{c['defaultVersion']}" if c else default_ref_for(aid)
         if ref and ref in by_ref:
             out.append(by_ref[ref])
     return out
