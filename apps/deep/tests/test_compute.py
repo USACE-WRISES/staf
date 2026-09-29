@@ -77,9 +77,13 @@ def test_reach_geom_uses_the_vendored_transect_code(monkeypatch):
 
     def fake(reach_geojson, da, **kw):
         seen.update(kw)
+        # the reach statistics the provider records: nine sections carry each ratio, so the
+        # quality record EASI v2 rates by (K2b) lets the prefill through
         return {"entrenchment_ratio": 1.47, "bank_height_ratio": 2.0,
                 "bankfull_width_m": 10.0, "bankfull_depth_m": 0.5,
-                "reach": {"n": 9}, "n_transects": 9}
+                "reach": {"n": 9, "entrenchment_ratio": {"median": 1.47, "n": 9},
+                          "bank_height_ratio": {"median": 2.0, "n": 9}},
+                "n_transects": 9}
 
     monkeypatch.setattr(threedep, "reach_geomorphology", fake)
     monkeypatch.setattr(computed, "site_engine_available", lambda: True)
