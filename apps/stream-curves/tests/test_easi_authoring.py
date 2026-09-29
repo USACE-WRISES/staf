@@ -18,6 +18,7 @@ import pytest
 
 from streamcurves import library as lib
 from streamcurves import run_state as rs
+from streamcurves._vendor.easi import method_authority as ma
 from streamcurves._vendor.easi import method_package as mp
 from streamcurves.easi_method import edit, evaluate, io as eio, register as reg, stages as es
 from streamcurves.easi_method.model import EasiProject
@@ -26,7 +27,9 @@ APP = pathlib.Path(__file__).resolve().parents[1]
 REPO = APP.parent.parent
 EASI_APP = REPO / "apps" / "easi"
 VENDORED_DATA = APP / "streamcurves" / "_vendor" / "easi" / "data"
-RELEASE_METHOD = "b2e3033116e3"
+LIBRARY_ENTRY = REPO / "apps" / "library" / "assessments" / "easi-screening"
+#: the method version the library records for the vendored evaluator (never a literal)
+RELEASE_METHOD = ma.recorded_method_version(LIBRARY_ENTRY)
 ROAD = "road-density-inflow-pressure"
 
 

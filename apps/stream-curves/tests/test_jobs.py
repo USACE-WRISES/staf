@@ -160,7 +160,9 @@ def test_many_methods_are_scored_at_once_each_in_its_own_process(tmp_path):
     cases_path.write_text(json.dumps({"cases": full["cases"][:40]}), encoding="utf-8")
     results, summary = campaigns.evaluation_campaign(pkgs, cases_path, tmp_path / "c", workers=2)
     assert summary["counts"]["completed"] == 2
-    assert results["release"]["identity"]["methodVersion"] == "b2e3033116e3"
+    from streamcurves._vendor.easi import method_authority as ma
+    recorded = ma.recorded_method_version(APP.parent.parent / "apps" / "library" / "assessments" / "easi-screening")
+    assert results["release"]["identity"]["methodVersion"] == recorded
     assert results["draft"]["identity"]["packageDigest"] == draft.package_digest
     assert set(results["release"]["results"]) == set(results["draft"]["results"])
     again, summary = campaigns.evaluation_campaign(pkgs, cases_path, tmp_path / "c", workers=2)

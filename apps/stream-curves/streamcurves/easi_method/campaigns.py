@@ -40,10 +40,13 @@ def _locked(campaign: Path, kw: dict):
 # refits
 # --------------------------------------------------------------------------- #
 def fit_quantity(spec: dict, out_dir: Path) -> dict:
-    """Job target: every fit of one quantity from a members package folder."""
+    """Job target: every fit of one quantity from a members package folder (grouped by
+    stratum only when the spec says ``byStratumOnly``, the Round 4 candidate sets)."""
     from . import refit
     members, values, panels = refit.load_members(Path(spec["members"]))
-    rows = refit.fit_registry(members, values, panels, quantities=[spec["quantity"]])
+    plain = [spec["quantity"]] if spec.get("byStratumOnly") else ()
+    rows = refit.fit_registry(members, values, panels, quantities=[spec["quantity"]],
+                              by_stratum_only=plain)
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     (Path(out_dir) / "rows.json").write_text(json.dumps(rows, sort_keys=True, default=float) + "\n",
                                              encoding="utf-8")
@@ -52,26 +55,38 @@ def fit_quantity(spec: dict, out_dir: Path) -> dict:
 
 
 def refit_jobs(members_dir: Path, *, members_digest: str,
-               quantities: Optional[Iterable[str]] = None) -> list[jobs.Job]:
+               quantities: Optional[Iterable[str]] = None,
+               by_stratum_only: Iterable[str] = ()) -> list[jobs.Job]:
+    """One job per quantity. A quantity in ``by_stratum_only`` is fitted per stratum at every
+    level (its spec says so, and so its job id differs from the registry fit of the same
+    quantity); every other spec is exactly what it was."""
     from .. import evidence_store as evs
     from . import fit_recipe as fr
     got = evs.verify_folder(Path(members_dir))
     if not got["ok"] or got["dataDigest"] != members_digest:
         raise ValueError("the members package does not verify as the one named")
     wanted = list(quantities) if quantities is not None else list(fr.QUANTITIES)
+    plain = set(by_stratum_only or ())
     code = jobs.tree_fingerprint(jobs.APP_ROOT, ("streamcurves",))
-    return [jobs.Job(kind="python", target="streamcurves.easi_method.campaigns:fit_quantity",
-                     spec={"task": "easi-refit", "quantity": q, "members": str(members_dir),
-                           "membersDigest": got["dataDigest"], "membersPackageDigest": got["packageDigest"],
-                           "code": code},
-                     label=f"refit {q}") for q in wanted]
+    out = []
+    for q in wanted:
+        spec = {"task": "easi-refit", "quantity": q, "members": str(members_dir),
+                "membersDigest": got["dataDigest"], "membersPackageDigest": got["packageDigest"],
+                "code": code}
+        if q in plain:
+            spec["byStratumOnly"] = True
+        out.append(jobs.Job(kind="python", target="streamcurves.easi_method.campaigns:fit_quantity",
+                            spec=spec, label=f"refit {q}" + (" by stratum" if q in plain else "")))
+    return out
 
 
 def refit_campaign(members_dir: Path, campaign: Path, *, members_digest: str, workers: int = 2,
-                   quantities: Optional[Iterable[str]] = None, **kw) -> tuple[list[dict], dict]:
+                   quantities: Optional[Iterable[str]] = None,
+                   by_stratum_only: Iterable[str] = (), **kw) -> tuple[list[dict], dict]:
     """``(rows, summary)``: the registry rows of every quantity, in the registry's order."""
     from . import fit_recipe as fr
-    js = refit_jobs(members_dir, members_digest=members_digest, quantities=quantities)
+    js = refit_jobs(members_dir, members_digest=members_digest, quantities=quantities,
+                    by_stratum_only=by_stratum_only)
     rows: list[dict] = []
     with _locked(campaign, kw) as kw:
         summary = jobs.run(js, campaign, workers=workers,

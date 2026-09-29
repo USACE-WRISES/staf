@@ -8,6 +8,7 @@ operator set; it never evaluates arbitrary expressions.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import copy
 import functools
 import math
 from collections.abc import Mapping
@@ -22,11 +23,19 @@ VALID_OPERATORS = {
     "minimum_of_products",
     "worst_index",
     "best_index",
+    "mean_index",
     "weighted_capped_sum",
     "sum_capped",
     "categorical_lookup",
     "unscored",
 }
+#: The composites over the inputs' rating indices: the worst, the best or the mean of them.
+COMPOSITE_OPERATORS = frozenset({"worst_index", "best_index", "mean_index"})
+#: The completeness of a rating withheld as a documented gap: an applicability rule
+#: matched (a context input or an evidence quality flag), or an unscored method that
+#: carries a ``statement`` saying why it is not rated. Never a rating, never favorable.
+WITHHELD = "withheld"
+DEFAULT_GAP_STATEMENT = "Rating withheld: the method does not apply to this reach."
 VALID_STATUSES = {"computed", "conditional", "field_only"}
 VALID_BASIS = {
     "published threshold",
@@ -240,6 +249,12 @@ def _resolved_method(parent: dict, variant_key: str | None = None) -> dict:
         merged.pop("bands", None)
     elif "bands" in variant:
         merged.pop("curve", None)
+    # An applicability rule or a withheld statement belongs to the record that carries
+    # it: a variant never inherits the parent's (a canal classification is not withheld
+    # because the parent's cross-section geometry is flagged).
+    for key in ("applicability", "statement"):
+        if key not in variant:
+            merged.pop(key, None)
     merged["metricId"] = parent["metricId"]
     merged["title"] = parent["title"]
     merged["catalogMethodKey"] = parent["methodKey"]
@@ -317,9 +332,11 @@ def _base_equation_for(method: dict) -> str:
         result = formula.get("resultSymbol", "V")
         products.append(f"{result} = min({', '.join(names)})")
         return "; ".join(products)
-    if operator in {"worst_index", "best_index"}:
+    if operator in COMPOSITE_OPERATORS:
         symbols = [i.get("indexSymbol", f"I{i['key']}") for i in method.get("inputs", [])
                    if not i.get("contextOnly")]
+        if operator == "mean_index":
+            return f"Icombined = mean({', '.join(symbols)})"
         pick = "min" if operator == "worst_index" else "max"
         return f"Icombined = {pick}({', '.join(symbols)})"
     if operator == "sum_capped":
@@ -389,7 +406,7 @@ def criteria_for(method: dict, context: dict | None = None) -> dict:
         return {b["rating"]: b["label"] + suffix for b in bands}
 
     auto: list[dict] = []
-    if method["operator"] in {"worst_index", "best_index"}:
+    if method["operator"] in COMPOSITE_OPERATORS:
         for inp in method.get("inputs", []):
             bands = bands_for_input(method, inp, context)
             if bands:
@@ -436,6 +453,86 @@ def criteria_for(method: dict, context: dict | None = None) -> dict:
 
 def _normal_category(value: Any) -> str:
     return str(value or "").strip().upper().replace(" ", "")
+
+
+def _index_rating(index: float) -> str:
+    """The rating of an index on the 0.39 and 0.69 edges (the curve-index bands)."""
+    return "Good" if index >= 0.69 else "Fair" if index >= 0.39 else "Poor"
+
+
+# --------------------------------------------------------------------------- #
+# applicability rules (a documented gap, never a rating)
+# --------------------------------------------------------------------------- #
+def _match_token(value: Any) -> str:
+    """A value as the token an applicability rule names: an integer without its decimal
+    point (an FCODE read back as 46003.0 matches "46003"), anything else as stripped text."""
+    if isinstance(value, bool):
+        return str(value).lower()
+    number = _number(value)
+    if number is not None and float(number).is_integer():
+        return str(int(number))
+    return str(value).strip()
+
+
+def _withhold_flags(rule: dict, method: dict) -> set[str]:
+    """The evidence flags the rule withholds on. ``out_of_range`` stands for the range flag
+    of every quantity the method rates (``out_of_range_<input key>``), so a method reading
+    only the bank-height ratio is never withheld for an entrenchment ratio out of range."""
+    rated = [i["key"] for i in method.get("inputs", []) if not i.get("contextOnly")]
+    out: set[str] = set()
+    for flag in rule.get("withhold_when") or []:
+        flag = str(flag)
+        if flag == "out_of_range":
+            out.update(f"out_of_range_{key}" for key in rated)
+        else:
+            out.add(flag)
+    return out
+
+
+def applicability_check(method: dict, values: dict, evidence: dict | None = None
+                        ) -> Optional[dict]:
+    """The outcome of a method's ``applicability`` rule, or None when it carries none.
+
+    A rule on a context input (``{"input": "fcodeContext", "exclude": ["46003", "46007"]}``)
+    matches when the input's value is one of the excluded tokens; a rule on a named
+    evidence quality record (``{"evidence": "crossSectionQuality", "withhold_when":
+    ["low_quality", "out_of_range"]}``) matches when the record carries one of the named
+    flags. A matched rule withholds the rating with the rule's ``statement`` (``{value}`` is
+    the matched token, or the matched flags' reasons). A missing input or record never
+    matches: the method is then evaluated as if it carried no rule.
+    """
+    rule = method.get("applicability")
+    if not isinstance(rule, dict):
+        return None
+    statement = str(rule.get("statement") or DEFAULT_GAP_STATEMENT)
+    out = {"rule": copy.deepcopy(rule), "withheld": False, "matched": None}
+    if rule.get("input"):
+        value = values.get(rule["input"])
+        if value is None:
+            return out
+        token = _match_token(value)
+        if token not in {_match_token(v) for v in rule.get("exclude") or []}:
+            return out
+        out.update(withheld=True, matched={"input": rule["input"], "value": value},
+                   statement=statement.replace("{value}", token))
+        return out
+    if rule.get("evidence"):
+        name = str(rule["evidence"])
+        record = (evidence or {}).get(name)
+        if not isinstance(record, dict):
+            return out
+        flags = [str(f) for f in record.get("flags") or []]
+        out["checked"] = {"evidence": name, "flags": flags}
+        hit = sorted(set(flags) & _withhold_flags(rule, method))
+        if not hit:
+            return out
+        reasons = record.get("reasons") or {}
+        words = "; ".join(str(reasons.get(f) or f) for f in hit)
+        out.update(withheld=True,
+                   matched={"evidence": name, "flags": hit, "record": copy.deepcopy(record)},
+                   statement=statement.replace("{value}", words))
+        return out
+    return out
 
 
 def _input_trace(method: dict, values: dict, input_meta: dict | None) -> list[dict]:
@@ -507,6 +604,16 @@ def _finish(method: dict, values: dict, input_meta: dict | None, confidence: str
               if rule.get("curve")}
     if curves:
         trace["curves"] = curves
+    # A documented gap: the rule that withheld the rating and what it matched (never a
+    # fallback), or the unscored method's own statement. Absent from every other trace.
+    check = method.get("_applicability")
+    if check is not None:
+        trace["applicability"] = check
+        if check.get("withheld"):
+            trace["statement"] = check["statement"]
+            trace["usedFallback"] = False
+    elif completeness == WITHHELD and method.get("statement"):
+        trace["statement"] = str(method["statement"])
     return Evaluation(rating=rating, index=index, combined_value=combined, trace=trace)
 
 
@@ -514,8 +621,14 @@ def evaluate(metric_id: str, values: dict[str, Any], *, context: dict | None = N
              input_meta: dict | None = None, confidence: str | None = None,
              variant_key: str | None = None, source_tier: str | None = None,
              evidence_family: str | None = None, used_fallback: bool | None = None,
-             observed_overrides_proxy: bool | None = None) -> Evaluation:
-    """Evaluate one catalog method and return its rating plus full scoring trace."""
+             observed_overrides_proxy: bool | None = None,
+             evidence: dict | None = None) -> Evaluation:
+    """Evaluate one catalog method and return its rating plus full scoring trace.
+
+    ``evidence`` is the named quality records of the evidence behind the values (for
+    example ``{"crossSectionQuality": {...}}``): a method's ``applicability`` rule may
+    withhold the rating on their flags. They never enter the trace unless a rule read them.
+    """
     method = dict(_resolved_method(method_for(metric_id), variant_key))
     if source_tier is not None:
         method["_sourceTierOverride"] = source_tier
@@ -532,11 +645,20 @@ def evaluate(metric_id: str, values: dict[str, Any], *, context: dict | None = N
                 if i.get("required") and not i.get("contextOnly")]
     available_required = [i for i in required if values.get(i["key"]) is not None]
 
+    check = applicability_check(method, values, evidence)
+    if check is not None:
+        method["_applicability"] = check
+        if check["withheld"]:
+            return _finish(method, values, input_meta, confidence, rating=None,
+                           completeness=WITHHELD, context=context)
+
     if operator == "unscored":
         any_context = any(values.get(i["key"]) is not None for i in method.get("inputs", []))
+        completeness = ("context_only" if any_context else "not_assessed")
+        if method.get("statement"):
+            completeness = WITHHELD      # a documented gap, not an absent method
         return _finish(method, values, input_meta, confidence, rating=None,
-                       completeness="context_only" if any_context else "not_assessed",
-                       context=context)
+                       completeness=completeness, context=context)
 
     if operator == "categorical_lookup":
         key = (method.get("formula") or {}).get("input")
@@ -552,7 +674,7 @@ def evaluate(metric_id: str, values: dict[str, Any], *, context: dict | None = N
                        completeness="complete" if rating else "context_only",
                        context=context)
 
-    if operator in {"worst_index", "best_index"}:
+    if operator in COMPOSITE_OPERATORS:
         allow_partial = bool((method.get("formula") or {}).get("allowPartial"))
         rated: list[tuple[float, str, str]] = []
         input_ratings: dict[str, str] = {}
@@ -567,8 +689,14 @@ def evaluate(metric_id: str, values: dict[str, Any], *, context: dict | None = N
             return _finish(method, values, input_meta, confidence, rating=None,
                            completeness="not_assessed", input_ratings=input_ratings,
                            context=context)
-        pick = min if operator == "worst_index" else max
-        idx, governing, rating = pick(rated, key=lambda x: x[0])
+        if operator == "mean_index":
+            # the mean of the rated inputs' anchor indices, banded like a curve index; no
+            # single input governs
+            idx = round(sum(item[0] for item in rated) / len(rated), 12)
+            governing, rating = None, _index_rating(idx)
+        else:
+            pick = min if operator == "worst_index" else max
+            idx, governing, rating = pick(rated, key=lambda x: x[0])
         completeness = "complete" if len(rated) == len(required) else "partial"
         return _finish(method, values, input_meta, confidence, rating=rating,
                        combined=idx, governing=governing, completeness=completeness,
@@ -680,6 +808,8 @@ def validate_catalog() -> list[str]:
             problems.append(f"catalog has unknown metric IDs: {extra}")
     if len(method_keys) != len(set(method_keys)):
         problems.append("methodKey values must be unique")
+    if "rollupReporting" in data and not isinstance(data.get("rollupReporting"), bool):
+        problems.append("rollupReporting must be true or false")
 
     citation_ids = set((data.get("citations") or {}).keys())
 
@@ -733,7 +863,7 @@ def validate_catalog() -> list[str]:
         validate_curve(mid, "method", method)
         for inp in method.get("inputs", []):
             validate_curve(mid, inp.get("key", "input"), inp)
-        if method.get("operator") in {"worst_index", "best_index"}:
+        if method.get("operator") in COMPOSITE_OPERATORS:
             for inp in method.get("inputs", []):
                 if inp.get("required") and not inp.get("contextOnly"):
                     rule = rule_for_input(method, inp)
@@ -743,6 +873,38 @@ def validate_catalog() -> list[str]:
         elif method.get("operator") not in {"categorical_lookup", "unscored"}:
             if not any(rule_for_method(method).get(k) for k in ("bands", "curve")):
                 problems.append(f"{mid}: method requires bands or curve")
+        validate_applicability(mid, method)
+
+    def validate_applicability(mid: str, method: dict) -> None:
+        if "statement" in method and not isinstance(method.get("statement"), str):
+            problems.append(f"{mid}: statement must be text")
+        rule = method.get("applicability")
+        if rule is None:
+            return
+        if not isinstance(rule, dict):
+            problems.append(f"{mid}: applicability must be an object")
+            return
+        keys = [i.get("key") for i in method.get("inputs", [])]
+        on_input, on_evidence = bool(rule.get("input")), bool(rule.get("evidence"))
+        if on_input == on_evidence:
+            problems.append(f"{mid}: applicability names exactly one of input or evidence")
+        if on_input:
+            if rule["input"] not in keys:
+                problems.append(f"{mid}: applicability input {rule['input']!r} is not an "
+                                "input of the method")
+            exclude = rule.get("exclude")
+            if (not isinstance(exclude, list) or not exclude
+                    or any(v is None or isinstance(v, (bool, dict, list)) for v in exclude)):
+                problems.append(f"{mid}: applicability exclude must be a non-empty list of values")
+        if on_evidence:
+            if not isinstance(rule["evidence"], str):
+                problems.append(f"{mid}: applicability evidence must name a record")
+            when = rule.get("withhold_when")
+            if not isinstance(when, list) or not when or any(not isinstance(f, str) for f in when):
+                problems.append(f"{mid}: applicability withhold_when must be a non-empty list "
+                                "of flag names")
+        if rule.get("statement") is not None and not isinstance(rule["statement"], str):
+            problems.append(f"{mid}: applicability statement must be text")
 
     def validate_bands(mid: str, label: str, bands: list[dict],
                        *, integer: bool = False) -> None:

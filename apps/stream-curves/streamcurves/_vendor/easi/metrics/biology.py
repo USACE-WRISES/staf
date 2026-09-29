@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 
-from .. import config, screening_methods, watershed
+from .. import config, geomorph, screening_methods, watershed
 from ..datasources import nas, nid_barriers
 from . import base
 from .base import AnalysisContext, MetricResult, unavailable
@@ -82,22 +82,41 @@ def habitat_complexity(ctx: AnalysisContext) -> MetricResult:
     context-only input in the scoring trace."""
     woody = base.riparian_woody_pct(ctx)
     sinuosity = ctx.sinuosity
+    geom = ctx.extras.get("reach_geomorph") or {}
+    width_cv = geomorph.bankfull_width_cv(geom)
+    # Both quantities are offered; the active method's record says which one it rates
+    # (the shipped record reads woodyRiparian; a candidate package may read widthCv).
     ev = screening_methods.evaluate(
         HABITAT_ID,
-        {"woodyRiparian": woody, "sinuosity": sinuosity},
+        {"woodyRiparian": woody, "sinuosity": sinuosity, "widthCv": width_cv},
         context={"strata": ctx.extras.get("strata") or {}},
         input_meta={
             "woodyRiparian": {"source": watershed.input_source(ctx, "habitat.woodyRiparian")},
             "sinuosity": {"source": "selected reach geometry"},
+            "widthCv": {"source": base.xs_source(geom)},
         },
         confidence="L")
+    reads_width = "widthCv" in base.rated_keys(ev.trace)
     if ev.rating is None:
         return unavailable(
-            HABITAT_ID, watershed.guidance(ctx, "woody riparian cover is required"),
+            HABITAT_ID,
+            ("bankfull width variability across at least two 3DEP cross-sections is required"
+             if reads_width else watershed.guidance(ctx, "woody riparian cover is required")),
             "L", scoring=ev.trace)
     value = float(ev.combined_value)
     sin_txt = ("" if sinuosity is None
                else f" (sinuosity {float(sinuosity):.2f} shown as context)")
+    if reads_width:
+        n = len(geomorph._sections(geom))
+        return MetricResult(
+            HABITAT_ID, value=round(value, 4),
+            value_text=f"bankfull width variability (CV) {value:.3f} across {n} sections{sin_txt}",
+            rating=ev.rating, confidence="L", source=base.xs_source(geom),
+            note=("Candidate channel-form proxy for habitat support: the variability of the "
+                  "DEM-derived bankfull width across the sampled sections, rated against "
+                  "NARS-9 reference curves with a national fallback. Not a field inventory "
+                  "of pools, wood, cover or bedforms."),
+            scoring=ev.trace)
     return MetricResult(
         HABITAT_ID, value=round(value, 1),
         value_text=f"woody riparian cover {value:.1f}%{sin_txt}",

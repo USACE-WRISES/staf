@@ -14,9 +14,15 @@ is the convenience entry point that pulls metric/mapping data from ``config``.
 """
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 
 from . import config
+
+#: ``1`` reports the rollup's completeness fields (``functionsRated`` and the ECI interval)
+#: whatever the active catalog says; ``0`` keeps the legacy report shape even when the
+#: catalog's ``rollupReporting`` flag asks for them. Unset: the catalog decides.
+ENV_ROLLUP_REPORTING = "EASI_ROLLUP_REPORTING"
 
 
 # --------------------------------------------------------------------------- #
@@ -58,21 +64,15 @@ class RollupResult:
     outcomes: dict[str, OutcomeResult]
     ecosystem_condition_index: float | None
     sub_indices: dict[str, float | None] = field(default_factory=dict)
+    #: the functions of the mapping that carry a score (of the twenty)
+    functions_rated: int = 0
+    #: the ECI with every unrated function taken as Poor (lower) and as Good (upper);
+    #: None when the mapping is empty. Equal to the point ECI when every function is rated.
+    eci_interval: tuple[float, float] | None = None
 
 
-def rollup(
-    function_scores: dict[str, int],
-    mapping: dict[str, dict[str, str]] | None = None,
-    weights: dict[str, float] | None = None,
-) -> RollupResult:
-    """Roll function scores up to outcome sub-indices and the Ecosystem index.
-
-    ``function_scores``: functionId -> score (0-15).
-    ``mapping``: functionId -> {physical, chemical, biological} contribution code.
-    """
-    mapping = mapping if mapping is not None else config.cwa_mapping()
-    weights = weights if weights is not None else config.WEIGHTS
-
+def _accumulate(function_scores: dict[str, int], mapping: dict, weights: dict):
+    """The outcome accumulators, sub-indices and ECI of a score set (the STAF rollup)."""
     outcomes = {key: OutcomeResult() for key in config.OUTCOMES}
 
     for fid, score in function_scores.items():
@@ -93,12 +93,70 @@ def rollup(
     sub_indices = {key: outcomes[key].sub_index for key in config.OUTCOMES}
     available = [value for value in sub_indices.values() if value is not None]
     eci = sum(available) / len(available) if available else None
+    return outcomes, sub_indices, eci
+
+
+def rollup(
+    function_scores: dict[str, int],
+    mapping: dict[str, dict[str, str]] | None = None,
+    weights: dict[str, float] | None = None,
+) -> RollupResult:
+    """Roll function scores up to outcome sub-indices and the Ecosystem index.
+
+    ``function_scores``: functionId -> score (0-15).
+    ``mapping``: functionId -> {physical, chemical, biological} contribution code.
+
+    The point ECI is the mean of the available sub-indices, unrated functions omitted.
+    Beside it the result carries how many functions are rated and the interval the ECI
+    would span if every unrated function were Poor (index 0.195, the lower bound) or
+    Good (index 0.85, the upper bound); neither changes the point ECI or any sub-index.
+    """
+    mapping = mapping if mapping is not None else config.cwa_mapping()
+    weights = weights if weights is not None else config.WEIGHTS
+
+    outcomes, sub_indices, eci = _accumulate(function_scores, mapping, weights)
+    rated = [fid for fid in function_scores if fid in mapping]
+    interval = None
+    if mapping:
+        bounds = []
+        for anchor in (config.RATING_INDEX["Poor"], config.RATING_INDEX["Good"]):
+            filled = dict(function_scores)
+            fill = function_score(anchor)
+            for fid in mapping:
+                filled.setdefault(fid, fill)
+            bounds.append(_accumulate(filled, mapping, weights)[2])
+        if bounds[0] is not None and bounds[1] is not None:
+            interval = (bounds[0], bounds[1])
     return RollupResult(
         function_scores=dict(function_scores),
         outcomes=outcomes,
         ecosystem_condition_index=eci,
         sub_indices=sub_indices,
+        functions_rated=len(rated),
+        eci_interval=interval,
     )
+
+
+def rollup_reporting_enabled() -> bool:
+    """Whether a report carries the rollup's completeness fields: the process flag
+    (``EASI_ROLLUP_REPORTING``) when set, else the active catalog's ``rollupReporting``
+    (a package asks for them); off by default, so the legacy report shape is unchanged."""
+    flag = os.environ.get(ENV_ROLLUP_REPORTING)
+    if flag is not None and flag.strip():
+        return flag.strip().lower() in ("1", "true", "yes", "on")
+    try:
+        return bool(config.screening_methods().get("rollupReporting"))
+    except (OSError, ValueError, KeyError, AttributeError):
+        return False
+
+
+def reporting_fields(result: RollupResult) -> dict:
+    """``functionsRated`` and ``ecosystemConditionIndexInterval`` (display rounding, like
+    the point ECI) for a report that asks for them."""
+    interval = result.eci_interval
+    return {"functionsRated": result.functions_rated,
+            "ecosystemConditionIndexInterval": (
+                None if interval is None else [round2(interval[0]), round2(interval[1])])}
 
 
 # --------------------------------------------------------------------------- #
@@ -185,7 +243,7 @@ def score_assessment(ratings: dict[str, str]) -> dict:
         })
 
     result = rollup(function_scores)
-    return {
+    out = {
         "metrics": metric_rows,
         "functionScores": result.function_scores,
         "subIndices": {k: round2(v) for k, v in result.sub_indices.items()},
@@ -199,3 +257,6 @@ def score_assessment(ratings: dict[str, str]) -> dict:
         "ecosystemConditionIndex": round2(result.ecosystem_condition_index),
         "ecosystemConditionIndexRaw": result.ecosystem_condition_index,
     }
+    if rollup_reporting_enabled():
+        out.update(reporting_fields(result))
+    return out

@@ -530,7 +530,7 @@ full rebuild, which regenerates methods and validation assets.
 
 ## Excel calculator
 
-`www/calculator/EASI_Calculator_1.0.xlsx` is an offline implementation of the
+`www/calculator/EASI_Calculator_1.1.xlsx` is an offline implementation of the
 same methodology: the user enters the desktop quantities, the NARS-9 region and
 the channel slope, and the workbook rates the 20 metrics, applies the reference
 curves and the STAF rollup, and reports the sub-indices and the ECI. Every
@@ -554,7 +554,7 @@ each was rated from and offers three downloads: that list as a PDF
 completed from the screening), and the **blank workbook**. The report footer
 offers the completed workbook too, after GeoJSON, and the batch per-site report
 offers that site's. The blank is also reachable directly at
-`calculator/EASI_Calculator_1.0.xlsx`.
+`calculator/EASI_Calculator_1.1.xlsx`.
 
 `calculator.build_filled(result)` completes the workbook without a spreadsheet
 library (openpyxl drops the charts on a round trip and is not a runtime

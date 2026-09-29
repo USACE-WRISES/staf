@@ -119,10 +119,11 @@ def import_from_checkout(repo_root: Path, *, imported_by: str, version: int = 1,
     easi = easi_source(repo_root)
     if easi is None:
         raise RuntimeError("apps/easi is not in this checkout; importing needs the EASI source")
-    calc = easi / "www" / "calculator" / "EASI_Calculator_1.0.xlsx"
+    # the one committed workbook, whatever its template version (EASI serves only one)
+    calc = next(iter(sorted((easi / "www" / "calculator").glob("EASI_Calculator_*.xlsx"))), None)
     project = import_from_easi(easi / "data", imported_by=imported_by, version=version,
                                cases=export_cases(easi),
-                               calculator=calc if calc.is_file() else None,
+                               calculator=calc if calc is not None and calc.is_file() else None,
                                promotion_receipt=easi / "data" / "source" / "alternative-2-promotion.json",
                                release=release)
     if evidence_dir is not None:

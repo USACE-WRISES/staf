@@ -17,12 +17,12 @@ def test_the_blank_is_the_committed_workbook():
     data = calculator.blank_bytes()
     assert data[:2] == b"PK" and len(data) > 20_000
     assert hashlib.sha256(data).hexdigest() == hashlib.sha256(calculator.TEMPLATE_PATH.read_bytes()).hexdigest()
-    assert calculator.TEMPLATE_VERSION == "1.0"
-    assert calculator.blank_filename() == "EASI_Calculator_1.0.xlsx"
+    assert calculator.TEMPLATE_VERSION == "1.1"
+    assert calculator.blank_filename() == "EASI_Calculator_1.1.xlsx"
     assert calculator.TEMPLATE_PATH.parent.name == "calculator"
     assert calculator.TEMPLATE_PATH.parent.parent.name == "www"     # a static asset, never vendored
     # one calculator is served: no other workbook sits beside it
-    assert [p.name for p in calculator.TEMPLATE_PATH.parent.iterdir()] == ["EASI_Calculator_1.0.xlsx"]
+    assert [p.name for p in calculator.TEMPLATE_PATH.parent.iterdir()] == ["EASI_Calculator_1.1.xlsx"]
 
 
 def test_the_app_serves_the_calculator_from_get_forms_and_the_report_and_not_the_header():

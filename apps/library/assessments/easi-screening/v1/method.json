@@ -83,6 +83,13 @@
    {
     "evaluatorDigest": "sha256:594bd096fd36bc4060d1023f99379446beeb522364c3ac18a143d55786345845",
     "methodVersion": "b2e3033116e3"
+   },
+   {
+    "evaluatorDigest": "sha256:08f960b5b0d71fab84f8b865f134633c14cd8a357e489563f5ae4caf4e5e4a8a",
+    "evidence": "WP-R4k, candidate branch easi-candidate: under the evaluator carrying the Round 4 knobs K1 to K5 the 792 parity cases score identically by three routes (the built-in package, this library version as a package, the bare built-in method), and the base method scores identically with every knob absent. Recorded on the candidate branch only; not an owner adoption.",
+    "methodVersion": "0ab411ad0326",
+    "recordedBy": "rehearsal",
+    "validatedOn": "2026-09-26"
    }
   ]
  },

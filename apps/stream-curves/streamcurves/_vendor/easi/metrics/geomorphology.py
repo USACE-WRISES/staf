@@ -58,7 +58,8 @@ def channel_evolution(ctx: AnalysisContext) -> MetricResult:
             "fcodeContext": {"source": "NHDPlus FCODE"},
         },
         confidence=confidence, source_tier="screening-proxy",
-        evidence_family="incision_geometry", used_fallback=True)
+        evidence_family="incision_geometry", used_fallback=True,
+        evidence=base.xs_evidence(geom))
     if ev.rating is None:
         return unavailable(
             CHANNEL_EVOL_ID,
@@ -75,10 +76,12 @@ def channel_evolution(ctx: AnalysisContext) -> MetricResult:
         note += " Flood-prone width reached the DEM buffer edge; ER may be underestimated."
     reach_txt = f", reach medians of {reach_n} sections" if reach_n >= 2 else ""
     bhr_txt = geomorph.fmt_bhr(bhr, bhr_stats.get("median_capped"), words=True)
+    governs = ("mean of the BHR and ER indices" if base.mean_composite(ev.trace)
+               else f"{ev.trace.get('governingInput')} governs")
     return MetricResult(
         CHANNEL_EVOL_ID, value={"bhr": bhr, "er": er},
         value_text=(f"channel-adjustment susceptibility (BHR {bhr_txt}, "
-                    f"ER {float(er):.2f}{reach_txt}), {ev.trace.get('governingInput')} governs"),
+                    f"ER {float(er):.2f}{reach_txt}), {governs}"),
         rating=ev.rating, confidence=confidence,
         source=f"{source} + NHDPlus FCODE",
         note=note,
@@ -116,6 +119,17 @@ def sediment_supply(ctx: AnalysisContext) -> MetricResult:
         v = (inputs.get(key) or {}).get("value")
         if v is not None:
             parts.append(spec.format(float(v)))
+    if base.mean_composite(ev.trace):
+        # a mean composite (candidate E7): no source indicator governs
+        return MetricResult(
+            SEDIMENT_ID, value=float(ev.combined_value),
+            value_text=f"{base.mean_text(ev.trace)} ({', '.join(parts)})",
+            rating=ev.rating, confidence="M",
+            source=watershed.result_source(ctx, "sediment"),
+            note=("The composite index is the mean of the source indicators' rating indices. "
+                  "K-factor is intrinsic erodibility and can lower the rating without "
+                  "disturbance."),
+            scoring=ev.trace)
     gov_label = {"agriculture": "agricultural cover",
                  "kFactor": "soil erodibility",
                  "roadDensity": "road density"}.get(governing, governing)
@@ -221,7 +235,8 @@ def bank_erosion(ctx: AnalysisContext) -> MetricResult:
         BANK_EROSION_ID, {"bhr": bhr},
         input_meta={"bhr": {"source": source}},
         confidence="L", source_tier="screening-proxy",
-        evidence_family="incision_geometry", used_fallback=True)
+        evidence_family="incision_geometry", used_fallback=True,
+        evidence=base.xs_evidence(geom))
     if ev.rating is None:
         return unavailable(
             BANK_EROSION_ID,
