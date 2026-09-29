@@ -230,5 +230,7 @@ def test_fork_records_its_origin_and_restamps_the_identity(project):
     edited = _road_edit(draft)
     ident = json.loads(edited.files["scoring-identity.json"].decode("utf-8"))
     assert ident["alternative_id"] == "easi-screening-v2"
-    assert ident["derived_from"]["alternative_id"] == "alternative-2"
+    # the identity the imported method carries (alternative-2-e5b since EASI v2, 2026-09-29)
+    imported = json.loads((VENDORED_DATA / "scoring-identity.json").read_text(encoding="utf-8"))
+    assert ident["derived_from"]["alternative_id"] == imported["alternative_id"]
     assert not mp.validate_files(edited.files)

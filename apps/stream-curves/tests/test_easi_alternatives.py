@@ -69,9 +69,15 @@ def study(tmp_path_factory):
     return root
 
 
+#: the 2026-09-15 study's candidates were written against Alternative 2 (easi-screening v1); the
+#: vendored data is EASI v2 (E5b) since 2026-09-29, so a draft adopting them starts from v1's files
+A2_DATA = next((p for p in (APP.parent / "library" / "assessments" / "easi-screening" / "v1" / "method",)
+                if (p / "scoring-identity.json").is_file()), VENDORED_DATA)
+
+
 @pytest.fixture(scope="module")
 def plain():
-    return eio.import_from_easi(VENDORED_DATA, imported_by="test", cases={"cases": []})
+    return eio.import_from_easi(A2_DATA, imported_by="test", cases={"cases": []})
 
 
 @pytest.fixture(scope="module")

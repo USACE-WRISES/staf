@@ -1608,9 +1608,11 @@ def bundle_inputs(evidence: dict, meta: dict, intended_rows: dict,
 
             if basis == curve_basis.NATIONAL and merged.get("referenceN") is None:
                 # R5-12: the donors behind a national-reference curve, as a pool
-                # curve states its stations (referenceSupport keeps nPool beside it)
+                # curve states its stations (referenceSupport keeps nPool beside it):
+                # the distinct donors, never the values drawn from them (a donor
+                # matched to several target streams is drawn several times; D22)
                 sup = (evidence.get("reference_support") or {}).get(mk) or {}
-                n_ref = (ladder_rows.get(mk) or {}).get("n_reference") or sup.get("n_usable")
+                n_ref = sup.get("n_usable") or (ladder_rows.get(mk) or {}).get("n_reference")
                 if n_ref:
                     merged["referenceN"] = int(n_ref)
             got = ladder_conf.get(mk) or {}
