@@ -355,7 +355,11 @@ def test_the_packet_shows_the_frame_its_exclusions_and_any_override():
 #: sha256 of latest_values over every archive station and metric under v1,
 #: rendered with to_csv(index=False, float_format="%.6g"), measured on
 #: 2026-09-25 with the code as it stood before the value policies existed.
-V1_SELECTION_SHA256 = "428b5e21edf92143b2889ab78d264a6c3b9164e3df771f18ea5079c451b57011"
+V1_SELECTION_SHA256 = "9a957cf9ada7efa1d3d8db43d9d64134e3f1d4e1da83401bd79346758772dc31"
+#: the same selection without EPA's three index metrics the published-benchmark review added
+#: (R6b, 2026-09-28): every other value is the one earlier published versions were built from
+R6B_METRICS = ["bent_MMI_BENT", "bent_OE_SCORE", "fish_MMI_FISH"]
+V1_SELECTION_BEFORE_R6B = "428b5e21edf92143b2889ab78d264a6c3b9164e3df771f18ea5079c451b57011"
 CORRECTED = ["phab_BFWD_RAT", "phab_XWD_RAT", "phab_SINU", "chem_PTL", "phab_XCDENMID",
              "phab_RP100_cm"]
 
@@ -396,6 +400,7 @@ def test_v1_reproduces_todays_selection_on_the_whole_archive():
     keys = sorted(ds.stations["station_key"].astype(str))
     values, ledger = nd.latest_values(keys, dataset=ds, policy=nd.VALUE_POLICY_V1)
     assert _selection_sha256(values) == V1_SELECTION_SHA256
+    assert _selection_sha256(values.drop(columns=R6B_METRICS)) == V1_SELECTION_BEFORE_R6B
     assert list(ledger.columns) == nd.LATEST_LEDGER_COLUMNS
     assert (ledger["derived_from"] == "").all(), "v1 derives nothing"
     # the alias reads the same

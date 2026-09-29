@@ -9,7 +9,7 @@
 # (field metrics, wetland cover, base flow index) keep regional reference curves.
 
 version: 1
-source: {catalog: streamcurves/_vendor/easi/data/screening-methods.json, catalog_sha256: 'sha256:78c1e2921198905ee6e53f18147e2aa33f9a6ffd87ff3e7a23844238b3fb73f3'}
+source: {catalog: streamcurves/_vendor/easi/data/screening-methods.json, catalog_sha256: 'sha256:e754bf570291e0231d11e127e594a7fa375b3f227ee2f0d6591c45f9faa4ac49'}
 construction: {good_fair_index: 0.69, fair_poor_index: 0.39, best_index: 1.0, zero: linear_extension_of_fair_segment,
   boundary_rule: half_resolution_shift_when_better_class_owns}
 metrics:
@@ -311,7 +311,14 @@ last_resort:
     limitations: [BHR does not detect existing armoring and does not directly measure erosion rate or
         eroding-bank extent., The DEM-derived cross section is a susceptibility screen and may require
         surveyed geometry., BHR is reused by floodplain engagement and channel adjustment and is therefore
-        correlated evidence.]
+        correlated evidence., 'Candidate E5b (Addendum 2, 2026-09-28, owner decision D15): the rating
+        is withheld where the 3DEP cross-section record is unreliable on its own terms (fewer than three
+        sections carry the ratio, bankfull is extrapolated outside the Bieger fit range, every section
+        found its bank by the crest scan, or the reach median bank-height ratio sits at the cap only with
+        sections the DEM cannot resolve: bankfull depth at or below 0.15 m on a 10 m or 3 m model, 0.05
+        m on lidar) or the ratio is physically impossible (a bank-height ratio at or below 0, an entrenchment
+        ratio below 1). A bank-height ratio at the floodprone cap on resolved sections reads at least
+        2, severe incision, and is rated. Geometry is otherwise a documented gap.']
     method_basis_class: published directional relationship
     required_input: 'Bank height ratio at a representative riffle of the assessment reach: the height
       of the lower top of bank above the thalweg divided by the maximum bankfull depth (the stream quantification

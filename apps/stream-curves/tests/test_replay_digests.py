@@ -3,7 +3,8 @@ the version stores.
 
 ``inputsDigest`` is recomputed from each version's own manifest with
 ``provenance.digest_payload_from_manifest`` (a manifest without ``digestSchema`` keeps the
-legacy rules verbatim); ``contentDigest`` from the bundle with ``library.content_digest``.
+legacy rules verbatim; the national campaign's versions, published 2026-09-29, carry schema 2
+and replay under it); ``contentDigest`` from the bundle with ``library.content_digest``.
 A version that stores no provenance, or one whose provenance is not a run manifest (an EASI
 method version, a state SQT transcription), is skipped by name, never silently.
 """
@@ -62,11 +63,11 @@ def test_inputs_digest_replays_from_the_stored_manifest(label, vdir):
     assert expected, f"{label}: no inputsDigest in the stored manifest"
     if label in PRE_DEPTH:
         pytest.skip(f"{label}: published at nBoot 200 before v0.9 carried the depth")
-    assert "digestSchema" not in manifest, f"{label}: a published manifest is a legacy one"
     payload = pv.digest_payload_from_manifest(manifest)
-    for key in ("digestSchema", "code", "policy", "decisions", "refit", "reviewer_files",
-                "experimental", "nrsa_value_policy"):
-        assert key not in payload, f"{label}: the legacy rules gained a key"
+    if "digestSchema" not in manifest:
+        for key in ("digestSchema", "code", "policy", "decisions", "refit", "reviewer_files",
+                    "experimental", "nrsa_value_policy"):
+            assert key not in payload, f"{label}: the legacy rules gained a key"
     assert methodology.inputs_digest(payload) == expected, f"{label}: digest does not replay"
     assert doc.get("inputsDigest") == expected
 
