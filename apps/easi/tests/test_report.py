@@ -162,11 +162,12 @@ def test_exports_name_the_scoring_method_and_the_live_acquisition_code():
     recorded = ma.recorded_method_version() if ma.library_entry() is not None else method_version()
     result = _result()
     csv = report.build_csv(result).decode("utf-8-sig")
-    assert f"Scoring method,Alternative 2: NARS-9 references (method {recorded})" in csv
+    from easi import config
+    assert f"Scoring method,{config.scoring_alternative_name()} (method {recorded})" in csv
     assert "Evidence acquisition code,sha256:" in csv
     props = json.loads(report.build_geojson(result))["features"][0]["properties"]
     assert props["scoring_method"]["method_version"] == recorded
-    assert props["scoring_method"]["alternative_id"] == "alternative-2"
+    assert props["scoring_method"]["alternative_id"] == config.scoring_alternative_id()
     assert props["scoring_method"]["acquisition_digest"].startswith("sha256:")
     assert "package" not in props["scoring_method"]
     # a precomputed national result was gathered by the builder: it names its build instead

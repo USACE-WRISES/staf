@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import copy
 import json
+from pathlib import Path
 
 import pytest
 
@@ -88,7 +89,22 @@ def _reach_geom(bhr: float = 1.1, er: float = 2.5, *, n: int = 9, capped: int = 
 # --------------------------------------------------------------------------- #
 # parity: nothing moves while every knob is absent
 # --------------------------------------------------------------------------- #
-def test_the_base_package_carries_no_knob_and_its_traces_are_unchanged():
+#: Alternative 2 as published (easi-screening v1): the base package every knob is defined
+#: against. EASI v2 (E5b) adopted the K2b applicability rule, so the live data is no longer it.
+A2_METHOD = Path(__file__).resolve().parents[2] / "library" / "assessments" / "easi-screening" / "v1" / "method"
+
+
+@pytest.fixture
+def a2_base(monkeypatch):
+    if not (A2_METHOD / "screening-methods.json").is_file():
+        pytest.skip("no assessment library beside this EASI")
+    monkeypatch.setattr(config, "DATA_DIR", A2_METHOD)
+    config.reset_caches()
+    yield A2_METHOD
+    config.reset_caches()
+
+
+def test_the_base_package_carries_no_knob_and_its_traces_are_unchanged(a2_base):
     data = config.screening_methods()
     for m in data["methods"]:
         for record in (m, *(m.get("variants") or [])):
@@ -103,7 +119,7 @@ def test_the_base_package_carries_no_knob_and_its_traces_are_unchanged():
         trace = row.get("scoring") or {}
         assert "applicability" not in trace and "statement" not in trace
         assert trace.get("completeness") in KNOWN_COMPLETENESS
-    files = mp.package_from_dir(mp.builtin_data_dir()).files
+    files = mp.package_from_dir(a2_base).files
     assert mp.requirements(files)["behaviors"] == list(mp.BEHAVIORS)
     assert "mean_index" not in mp.requirements(files)["operators"]
 
@@ -359,7 +375,7 @@ def test_a_hand_entered_section_is_valid_by_definition(catalog):
     assert hydraulics.floodplain_engagement(ctx).rating == "Poor"
 
 
-def test_the_quality_record_never_moves_a_score_without_a_rule():
+def test_the_quality_record_never_moves_a_score_without_a_rule(a2_base):
     """Parity: with no applicability rule in the catalog the K2b record is inert; a stored
     record whose median sits at the cap on unresolvable sections still rates Poor, and no
     trace carries the record."""

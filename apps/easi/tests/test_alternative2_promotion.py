@@ -1,4 +1,9 @@
-"""Frozen A2 promotion, regional selection and full composite regression gates."""
+"""Frozen A2 promotion, regional selection and full composite regression gates.
+
+Alternative 2 is published as easi-screening v1 (the library's ``v1/method`` files, the
+history these gates freeze). EASI v2 (candidate E5b, owner decisions D15 and D20) is live: it
+keeps every curve and adds the cross-section applicability rule and its limitation to the
+four DEM geometry methods, nothing else."""
 from __future__ import annotations
 
 import copy
@@ -17,6 +22,13 @@ REGIONS = ("CPL", "NAP", "NPL", "SAP", "SPL", "TPL", "UMW", "WMT", "XER")
 FAMILIES = ("corridor-natural", "corridor-woody", "flow-variability")
 CURVES_SHA = "a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887"
 CATALOG_SHA = "64c0a49da530879ed7c0bb329ace1f12c4b386fa1f02378865c0e882c5331d6e"
+#: Alternative 2 as published (easi-screening v1) and the adopted method live since v2
+A2_METHOD = ROOT.parent / "library" / "assessments" / "easi-screening" / "v1" / "method"
+ADOPTED = "alternative-2-e5b"
+E5B_METHODS = {"high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
+               "floodplain-connectivity-floodplain-access-entrenchment",
+               "channel-evolution-channel-evolution-stage-and-trends",
+               "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition"}
 
 
 @pytest.fixture(autouse=True)
@@ -26,7 +38,9 @@ def active(criteria_set):
 
 def original_catalog():
     # The promoted candidate changes only these four inherited prose strings.
-    raw = (config.DATA_DIR / "screening-methods.json").read_bytes()
+    if not (A2_METHOD / "screening-methods.json").is_file():
+        pytest.skip("no assessment library beside this EASI")
+    raw = (A2_METHOD / "screening-methods.json").read_bytes()
     assert raw.count(b"NARS-9") == 4
     original = raw.replace(b"NARS-9", b"Level II")
     assert hashlib.sha256(original).hexdigest() == CATALOG_SHA
@@ -40,13 +54,16 @@ def spec(family):
 
 def test_live_assets_match_preserved_candidate_and_identity():
     original_catalog()
-    raw = (config.DATA_DIR / "reference-curves.json").read_bytes()
-    assert hashlib.sha256(raw).hexdigest() == CURVES_SHA
+    for base in (A2_METHOD, config.DATA_DIR):      # v2 keeps every Alternative 2 curve
+        raw = (base / "reference-curves.json").read_bytes()
+        assert hashlib.sha256(raw).hexdigest() == CURVES_SHA
     curves = json.loads(raw)["sets"]
     assert set(curves) == {*FAMILIES, "entrenchment"}
     assert sum(len(value["curves"]) for value in curves.values()) == 34
+    a2 = json.loads((A2_METHOD / "scoring-identity.json").read_text(encoding="utf-8"))
+    assert a2["alternative_id"] == "alternative-2" and a2["curve_count"] == 34
     identity = config.scoring_identity()
-    assert identity["alternative_id"] == config.scoring_alternative_id() == "alternative-2"
+    assert identity["alternative_id"] == config.scoring_alternative_id() == ADOPTED
     assert identity["alternative_name"] == config.scoring_alternative_name()
     assert identity["criteria_family"] == "regional" and identity["curve_count"] == 34
     for field, name in [("catalog_sha256", "screening-methods.json"),
@@ -54,6 +71,23 @@ def test_live_assets_match_preserved_candidate_and_identity():
                         ("nars_geography_sha256", "nars-ecoregions-9.geojson.gz")]:
         assert identity[field] == hashlib.sha256((config.DATA_DIR / name).read_bytes()).hexdigest()
     assert sm.validate_catalog() == []
+
+
+def test_e5b_adds_only_the_cross_section_applicability_to_alternative2():
+    original_catalog()
+    a2 = json.loads((A2_METHOD / "screening-methods.json").read_text(encoding="utf-8"))
+    live = json.loads((config.DATA_DIR / "screening-methods.json").read_text(encoding="utf-8"))
+    assert {k for k in set(a2) | set(live) if k != "methods" and a2.get(k) != live.get(k)} == set()
+    before = {m["metricId"]: m for m in a2["methods"]}
+    after = {m["metricId"]: m for m in live["methods"]}
+    assert set(before) == set(after)
+    changed = {mid for mid in before if before[mid] != after[mid]}
+    assert changed == E5B_METHODS
+    for mid in changed:
+        keys = {k for k in set(before[mid]) | set(after[mid]) if before[mid].get(k) != after[mid].get(k)}
+        assert keys == {"applicability", "limitations"}, (mid, keys)
+        rule = after[mid]["applicability"]
+        assert rule["evidence"] == "crossSectionQuality" and "low_quality" in rule["withhold_when"]
 
 
 def test_only_four_permitted_functions_differ_from_alternative1_catalog():
@@ -179,7 +213,7 @@ def test_digest_binds_nars_geography_and_scoring_identity(tmp_path, monkeypatch)
 def test_legacy_identity_is_separate_and_frozen_metadata_is_not_mutated(monkeypatch):
     active_identity = config.scoring_identity()
     active_identity["alternative_id"] = "changed"
-    assert config.scoring_alternative_id() == "alternative-2"
+    assert config.scoring_alternative_id() == ADOPTED
     monkeypatch.setenv("EASI_CRITERIA_SET", "legacy")
     identity = config.scoring_identity()
     assert identity["alternative_id"] == "legacy" and identity["curve_count"] == 0

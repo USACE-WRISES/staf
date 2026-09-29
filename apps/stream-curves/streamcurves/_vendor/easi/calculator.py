@@ -168,6 +168,11 @@ def _text(value) -> str:
     return str(value)
 
 
+def _withheld(row: dict) -> bool:
+    """A row whose method's applicability rule withheld the rating (a documented gap)."""
+    return bool(((row.get("scoring") or {}).get("applicability") or {}).get("withheld"))
+
+
 def entries_from_result(result: dict) -> tuple[dict, list[str]]:
     """Calculator entries for a screening, and what a reader should know about them.
 
@@ -182,7 +187,10 @@ def entries_from_result(result: dict) -> tuple[dict, list[str]]:
     quantity, so rows are read in the order that makes the cell agree with the
     ratings on screen: rows re-rated from an edited or scrolled cross-section
     first, then the other computed rows, then rows the assessor re-rated (their
-    trace is the one the rating replaced).
+    trace is the one the rating replaced). A row a method's applicability rule
+    withheld (EASI v2: unreliable DEM cross sections) was never rated with its
+    traced values, so they are not entered and the disclosure says why; a value
+    measured in the field and typed into the workbook rates the function.
     """
     result = result or {}
     report = result.get("report") or {}
@@ -198,6 +206,8 @@ def entries_from_result(result: dict) -> tuple[dict, list[str]]:
     ordered_for_values = sorted(ordered, key=lambda item: rank.get(item[1].get("status"), 1))  # stable
     for mkey, row in ordered_for_values:
         function = row.get("functionName") or row.get("name") or mkey
+        if _withheld(row):
+            continue
         for item in (row.get("scoring") or {}).get("inputs") or []:
             key = ALIASES.get(item.get("key"), item.get("key"))
             value = item.get("value")
@@ -250,7 +260,7 @@ def entries_from_result(result: dict) -> tuple[dict, list[str]]:
 
     # the override scores (every function has the entry, as every function card of the
     # Assessment page has the rating select), and what the application left unrated
-    assessed, unrated = [], []
+    assessed, unrated, withheld = [], [], []
     for mkey, row in ordered:
         function = row.get("functionName") or row.get("name") or mkey
         rating = row.get("rating")
@@ -263,10 +273,16 @@ def entries_from_result(result: dict) -> tuple[dict, list[str]]:
             else:       # a workbook without the entry: say so rather than drop the override silently
                 disclosures.append(f"{function}: the application's rating {rating} is a user override, and "
                                    "this workbook has no Override Score entry for the function.")
+        elif rating not in VALID and _withheld(row):
+            reason = str((row.get("scoring") or {}).get("statement") or "").strip().rstrip(".")
+            withheld.append(f"{function} ({reason})" if reason else function)
         elif rating not in VALID and row.get("status") != "excluded":
             unrated.append(function)
     if assessed:
         disclosures.insert(0, "Override scores: " + "; ".join(assessed) + ".")
+    if withheld:
+        disclosures.append("Withheld by the application: " + "; ".join(withheld) + ". Their values are not "
+                           "entered; a measured value typed into the workbook rates them.")
     if unrated:
         disclosures.append("Not rated by the application: " + ", ".join(unrated) + ". The workbook rates a "
                            "function whenever its entries are present.")

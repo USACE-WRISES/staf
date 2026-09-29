@@ -64,6 +64,9 @@ REACH_GEOMORPH = {
     "edge_limited": False,
     "dem_resolution_m": 10,
     # deliberately no "profile"/"thalweg" -> _build_cross_section returns None
+    # three sections in the stored-evidence form, so EASI v2's quality record (K2b, owner
+    # decision D15) finds the reach medians on enough sections and rates them
+    "candidate_scalars": [{"entrenchment_ratio": 2.5, "bank_height_ratio": 1.1} for _ in range(3)],
 }
 
 BIEGER = {"width_m": 5.0, "depth_m": 1.0, "area_m2": 5.0,

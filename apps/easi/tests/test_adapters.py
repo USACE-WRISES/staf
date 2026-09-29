@@ -166,7 +166,7 @@ def test_substrate_prefers_nrsa_then_uses_sed_integrity():
                                            (1.5, "Fair"), (1.51, "Poor")])
 def test_bank_instability_bhr_proxy(bhr, expected):
     ctx = _ctx()
-    ctx.extras["reach_geomorph"] = {"bank_height_ratio": bhr}
+    ctx.extras["reach_geomorph"] = _sound({"bank_height_ratio": bhr})
     result = geomorphology.bank_erosion(ctx)
     assert result.rating == expected
     assert result.scoring["evidenceFamily"] == "incision_geometry"
@@ -197,9 +197,24 @@ def test_hyporheic_rates_slope_alone_as_partial():
 
 
 # --- high flow dynamics: floodplain engagement from BHR directly ----------- #
+def _sound(geom):
+    """A bare-ratio geometry as EASI v2 rates it: its K2b quality record (owner decision D15)
+    withholds a geometry rating unless three sections carry the ratio, and these tests are
+    about the bands and the wording, so the geometry gains three sections in the stored
+    evidence form (``candidate_scalars``) with the reach values and no reach statistics, so
+    the legacy wording stays legacy. A geometry with sections or reach statistics, or with
+    no ratio, is left alone; the withholding itself has its own tests."""
+    if not isinstance(geom, dict) or geom.get("candidate_scalars") or geom.get("reach"):
+        return geom
+    keys = [k for k in ("bank_height_ratio", "entrenchment_ratio") if geom.get(k) is not None]
+    if not keys:
+        return geom
+    return {**geom, "candidate_scalars": [{k: geom[k] for k in keys} for _ in range(3)]}
+
+
 def _geom_ctx(geom, slope=0.004):
     c = AnalysisContext(lat=40.0, lon=-83.0, comid=1, slope=slope)
-    c.extras["reach_geomorph"] = geom
+    c.extras["reach_geomorph"] = _sound(geom)
     return c
 
 
@@ -628,9 +643,9 @@ def test_best_available_dem_resolution(monkeypatch, avail, finite, raises, expec
 
 def test_channel_evolution_uses_bhr_and_er_proxy():
     ctx = _ctx(fcode=46006)
-    ctx.extras["reach_geomorph"] = {
+    ctx.extras["reach_geomorph"] = _sound({
         "bank_height_ratio": 1.2, "entrenchment_ratio": 2.3,
-        "dem_resolution_m": 1}
+        "dem_resolution_m": 1})
     result = geomorphology.channel_evolution(ctx)
     assert result.rating == "Good"
     assert result.scoring["evidenceFamily"] == "incision_geometry"

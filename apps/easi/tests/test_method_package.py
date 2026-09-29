@@ -80,7 +80,12 @@ def test_builtin_package_reproduces_the_release_identity():
     ident = pkg.envelope["identity"]
     assert ident["methodVersion"] == RELEASE_METHOD
     assert ident["evaluatorDigest"] == mp.evaluator_digest()
-    assert ident["scoringIdentity"]["alternative_id"] == "alternative-2"
+    # the adopted alternative the library's default version records (v2: alternative-2-e5b)
+    entry = ma.library_entry()
+    if entry is not None:
+        recorded = json.loads((entry / f"v{ma.default_version(entry)}" / "method"
+                               / "scoring-identity.json").read_text(encoding="utf-8"))
+        assert ident["scoringIdentity"]["alternative_id"] == recorded["alternative_id"]
     blob = mp.to_zip(pkg)
     assert mp.to_zip(_builtin_pkg()) == blob  # deterministic
     back = mp.read_package(blob)
@@ -293,7 +298,9 @@ def test_operator_and_stratifier_lists_match_the_evaluator():
     from easi import geo
     keys = set(geo.strata_for("50", slope=0.01)) | {"nars9", "national"}
     assert set(mp.STRATIFIERS) <= keys
-    assert req["behaviors"] == list(mp.BEHAVIORS)
+    # every base behavior, plus the optional ones the method uses (v2: applicability-rules)
+    assert req["behaviors"][:len(mp.BEHAVIORS)] == list(mp.BEHAVIORS)
+    assert set(req["behaviors"][len(mp.BEHAVIORS):]) <= set(mp.OPTIONAL_BEHAVIORS)
 
 
 def test_a_package_needing_capabilities_this_evaluator_lacks_is_refused():
