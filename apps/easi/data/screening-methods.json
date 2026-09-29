@@ -643,6 +643,14 @@
       "usedFallback": false
     },
     {
+      "applicability": {
+        "evidence": "crossSectionQuality",
+        "statement": "3DEP cross-section geometry withheld ({value}); the ratio is not rated from unreliable DEM sections (candidate E5b).",
+        "withhold_when": [
+          "low_quality",
+          "out_of_range"
+        ]
+      },
       "bands": [
         {
           "label": "\u22641.3",
@@ -702,7 +710,8 @@
       ],
       "limitations": [
         "A BHR below 1.0 remains Good but requires geometry verification.",
-        "The DEM-derived cross section is a screening estimate and may require surveyed geometry."
+        "The DEM-derived cross section is a screening estimate and may require surveyed geometry.",
+        "Candidate E5b (Addendum 2, 2026-09-28, owner decision D15): the rating is withheld where the 3DEP cross-section record is unreliable on its own terms (fewer than three sections carry the ratio, bankfull is extrapolated outside the Bieger fit range, every section found its bank by the crest scan, or the reach median bank-height ratio sits at the cap only with sections the DEM cannot resolve: bankfull depth at or below 0.15 m on a 10 m or 3 m model, 0.05 m on lidar) or the ratio is physically impossible (a bank-height ratio at or below 0, an entrenchment ratio below 1). A bank-height ratio at the floodprone cap on resolved sections reads at least 2, severe incision, and is rated. Geometry is otherwise a documented gap."
       ],
       "methodKey": "bank-height-ratio",
       "metricId": "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
@@ -722,6 +731,14 @@
       "usedFallback": false
     },
     {
+      "applicability": {
+        "evidence": "crossSectionQuality",
+        "statement": "3DEP cross-section geometry withheld ({value}); the ratio is not rated from unreliable DEM sections (candidate E5b).",
+        "withhold_when": [
+          "low_quality",
+          "out_of_range"
+        ]
+      },
       "basisClass": "provisional STAF screening judgment",
       "breakpoints": [
         {
@@ -762,7 +779,8 @@
       "limitations": [
         "National reference curves group channel slopes below 0.5 percent, from 0.5 to below 2 percent, and at least 2 percent.",
         "An unsplit national reference curve is used when slope is unknown. Naturally confined valleys still require field interpretation.",
-        "Entrenchment ratio measures floodplain access; it does not establish channel stability or flood frequency."
+        "Entrenchment ratio measures floodplain access; it does not establish channel stability or flood frequency.",
+        "Candidate E5b (Addendum 2, 2026-09-28, owner decision D15): the rating is withheld where the 3DEP cross-section record is unreliable on its own terms (fewer than three sections carry the ratio, bankfull is extrapolated outside the Bieger fit range, every section found its bank by the crest scan, or the reach median bank-height ratio sits at the cap only with sections the DEM cannot resolve: bankfull depth at or below 0.15 m on a 10 m or 3 m model, 0.05 m on lidar) or the ratio is physically impossible (a bank-height ratio at or below 0, an entrenchment ratio below 1). A bank-height ratio at the floodprone cap on resolved sections reads at least 2, severe incision, and is rated. Geometry is otherwise a documented gap."
       ],
       "methodKey": "entrenchment-ratio",
       "metricId": "floodplain-connectivity-floodplain-access-entrenchment",
@@ -920,6 +938,14 @@
       "title": "Hyporheic-exchange potential (channel gradient or sinuosity)"
     },
     {
+      "applicability": {
+        "evidence": "crossSectionQuality",
+        "statement": "3DEP cross-section geometry withheld ({value}); the ratio is not rated from unreliable DEM sections (candidate E5b).",
+        "withhold_when": [
+          "low_quality",
+          "out_of_range"
+        ]
+      },
       "basisClass": "provisional STAF screening judgment",
       "breakpoints": [
         {
@@ -1040,7 +1066,8 @@
       "limitations": [
         "This is a susceptibility proxy, not a formal channel-evolution stage assessment. Both BHR and ER are required.",
         "BHR retains its 1.3/1.5 bands; ER uses national reference curves by slope class, with an unsplit national fallback when slope is unknown.",
-        "Canal/ditch classification and documented field-stage overrides remain decisive. Naturally confined valleys require field interpretation."
+        "Canal/ditch classification and documented field-stage overrides remain decisive. Naturally confined valleys require field interpretation.",
+        "Candidate E5b (Addendum 2, 2026-09-28, owner decision D15): the rating is withheld where the 3DEP cross-section record is unreliable on its own terms (fewer than three sections carry the ratio, bankfull is extrapolated outside the Bieger fit range, every section found its bank by the crest scan, or the reach median bank-height ratio sits at the cap only with sections the DEM cannot resolve: bankfull depth at or below 0.15 m on a 10 m or 3 m model, 0.05 m on lidar) or the ratio is physically impossible (a bank-height ratio at or below 0, an entrenchment ratio below 1). A bank-height ratio at the floodprone cap on resolved sections reads at least 2, severe incision, and is rated. Geometry is otherwise a documented gap."
       ],
       "methodKey": "channel-adjustment-susceptibility",
       "metricId": "channel-evolution-channel-evolution-stage-and-trends",
@@ -1184,6 +1211,14 @@
       ]
     },
     {
+      "applicability": {
+        "evidence": "crossSectionQuality",
+        "statement": "3DEP cross-section geometry withheld ({value}); the ratio is not rated from unreliable DEM sections (candidate E5b).",
+        "withhold_when": [
+          "low_quality",
+          "out_of_range"
+        ]
+      },
       "bands": [
         {
           "label": "\u22641.3",
@@ -1257,7 +1292,8 @@
       "limitations": [
         "BHR does not detect existing armoring and does not directly measure erosion rate or eroding-bank extent.",
         "The DEM-derived cross section is a susceptibility screen and may require surveyed geometry.",
-        "BHR is reused by floodplain engagement and channel adjustment and is therefore correlated evidence."
+        "BHR is reused by floodplain engagement and channel adjustment and is therefore correlated evidence.",
+        "Candidate E5b (Addendum 2, 2026-09-28, owner decision D15): the rating is withheld where the 3DEP cross-section record is unreliable on its own terms (fewer than three sections carry the ratio, bankfull is extrapolated outside the Bieger fit range, every section found its bank by the crest scan, or the reach median bank-height ratio sits at the cap only with sections the DEM cannot resolve: bankfull depth at or below 0.15 m on a 10 m or 3 m model, 0.05 m on lidar) or the ratio is physically impossible (a bank-height ratio at or below 0, an entrenchment ratio below 1). A bank-height ratio at the floodprone cap on resolved sections reads at least 2, severe incision, and is rated. Geometry is otherwise a documented gap."
       ],
       "methodKey": "bhr-bank-instability-susceptibility",
       "metricId": "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition",
