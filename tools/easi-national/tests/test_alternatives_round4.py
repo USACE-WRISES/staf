@@ -28,17 +28,24 @@ from builder.analysis.alternatives.io import info, read_json, sha, write_json, w
 
 ADOPTED = "alternative-2-b2e3033116e3"
 DATA = REPO_ROOT / "apps/easi/data"
+#: Alternative 2 as published (easi-screening v1), the base these Round 4 studies ran on; the
+#: live data has been EASI v2 (E5b) since 2026-09-29, so a snapshot takes the base's method files
+A2_METHOD = REPO_ROOT / "apps/library/assessments/easi-screening/v1/method"
 LIBRARY_V1 = REPO_ROOT / "apps/library/assessments/easi-screening/v1"
 LOW = "low_flow_baseflow_dynamics"
 
 
-def _study_paths(tmp_path, name="2026-09-27-low-flow-intermittence-alternatives"):
+def _study_paths(tmp_path, name="2026-09-27-low-flow-intermittence-alternatives", base_files=None):
     root = tmp_path / "root"
     study_dir = root / "review/alternative-studies" / name
     (study_dir / "snapshot/app-data").mkdir(parents=True)
     for path in DATA.iterdir():
         if path.is_file():
             shutil.copyfile(path, study_dir / "snapshot/app-data" / path.name)
+    if base_files is not None:      # a study on a base that is not the live data
+        from easi import method_package as mp
+        for name in mp.METHOD_FILES:
+            shutil.copyfile(Path(base_files) / name, study_dir / "snapshot/app-data" / name)
     return root, study_dir
 
 
@@ -265,7 +272,7 @@ def test_the_candidates_block_refuses_the_wrong_base_evaluator_and_family(tmp_pa
 def test_the_candidates_step_assembles_app_data_and_writes_the_base_zip(tmp_path):
     from easi import method_package as mp
     base = bases.base(ADOPTED)
-    root, study_dir = _study_paths(tmp_path)
+    root, study_dir = _study_paths(tmp_path, base_files=A2_METHOD)
     folder = _candidate_folder(tmp_path, "E1")
     e8 = _candidate_folder(tmp_path, "E8")
     block = study.candidate_block(base, {"E1": str(folder), "E8": str(e8)}, mp.evaluator_digest())
@@ -283,7 +290,7 @@ def test_the_candidates_step_assembles_app_data_and_writes_the_base_zip(tmp_path
     assert pkg.digest == base.package_digest == written["candidates"][0]["package_digest"]
     assert written["candidates"][0]["published_zip_sha256"].startswith("3ae27405")
     for name in mp.METHOD_FILES:
-        assert (study_dir / "candidates/alternative-1/app-data" / name).read_bytes() == (DATA / name).read_bytes()
+        assert (study_dir / "candidates/alternative-1/app-data" / name).read_bytes() == (A2_METHOD / name).read_bytes()
     # a candidate: the eight method files are the package's, every other file the snapshot's
     e1 = mp.read_package(folder / "E1.easi-method.zip")
     for name in mp.METHOD_FILES:

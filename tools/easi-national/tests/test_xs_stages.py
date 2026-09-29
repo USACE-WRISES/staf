@@ -144,7 +144,7 @@ def test_derivation_matches_the_app_on_the_same_elevation(tmp_path, monkeypatch)
     assert xs_derive.xs_method_version() == xs_derive.xs_method_version()
 
 
-def test_published_dict_draws_one_section_and_scores_the_four_metrics(tmp_path, monkeypatch):
+def test_published_dict_draws_one_section_and_the_four_metrics_follow_its_quality(tmp_path, monkeypatch):
     from easi import assessment
     from easi.national import client, records
     root, chunk = _root(tmp_path)
@@ -166,12 +166,17 @@ def test_published_dict_draws_one_section_and_scores_the_four_metrics(tmp_path, 
               "nas_taxa": None, "nas_scope": None, "geomorph": published, "schema_version": 1}
     report = client.score_record(record, cross_section=True)
     rated = {r["metricId"]: r for r in report["metricRows"]}
+    # EASI v2 (K2b, owner decision D15): every bank of this synthetic sample is found by the
+    # crest scan, so the four geometry ratings are withheld and say why
+    from easi import geomorph
+    assert geomorph.cross_section_quality(published)["matched"] == {"low_quality": ["crest_scan"]}
     for metric in ("floodplain-connectivity-floodplain-access-entrenchment",
                    "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
                    "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition",
                    "channel-evolution-channel-evolution-stage-and-trends"):
-        assert rated[metric]["rating"] in ("Good", "Fair", "Poor"), metric
-        assert "median of 9" in (rated[metric].get("source") or "")
+        scoring = rated[metric].get("scoring") or {}
+        assert rated[metric]["rating"] is None and scoring.get("completeness") == "withheld", metric
+        assert "crest scan" in str(scoring.get("statement")), metric
     assert report.get("crossSection") and len(report["crossSection"]["candidates"]) == 1
 
 

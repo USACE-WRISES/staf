@@ -10,6 +10,8 @@ from builder.analysis.alternatives import bases, study
 from builder.analysis.alternatives.io import read_json, sha, write_json
 
 ADOPTED = "alternative-2-b2e3033116e3"
+#: the base the checkout ships since EASI v2 (E5b) was adopted and activated on 2026-09-29
+SHIPPED = "alternative-2-e5b-e91118cc821c"
 
 
 def test_the_legacy_constants_are_the_default_base():
@@ -38,9 +40,19 @@ def test_the_adopted_method_is_a_base_with_verified_values():
         bases.base("2026-09-16")
 
 
+def test_the_v2_base_is_alternative_2_with_the_cross_section_rule():
+    v2, a2 = bases.base(SHIPPED), bases.base(ADOPTED)
+    assert v2.method_version == "e91118cc821c" and len(v2.commit) == 40
+    assert v2.reference_sha256 == a2.reference_sha256 and v2.curve_count == a2.curve_count == 34
+    assert v2.catalog_sha256 != a2.catalog_sha256
+    assert v2.alternative_id == "alternative-2-e5b" and v2.library_version == "easi-screening v2"
+    assert v2.package_digest.startswith("sha256:7e44b19d") and v2.adopted == "2026-09-29"
+    assert all(isinstance(note, str) and note for note in v2.verified)
+
+
 def test_the_adopted_base_is_the_method_this_checkout_ships():
     data = REPO_ROOT / "apps/easi/data"
-    adopted = bases.base(ADOPTED)
+    adopted = bases.base(SHIPPED)
     assert sha(data / "reference-curves.json") == adopted.reference_sha256
     assert sha(data / "screening-methods.json") == adopted.catalog_sha256
     identity = read_json(data / "scoring-identity.json")

@@ -144,6 +144,31 @@ BASES: dict[str, Base] = {
             "to 'NARS-9', apps/easi/data/source/alternative-2-promotion.json)",
         ),
     ),
+    "alternative-2-e5b-e91118cc821c": Base(
+        id="alternative-2-e5b-e91118cc821c",
+        label="Alternative 2 with corrected cross-section quality checks (E5b), the operational "
+              "method since 2026-09-29 (assessment library easi-screening v2)",
+        method_version="e91118cc821c",
+        commit="b4fe763ef083d1002b2713dc38658057308f759d",
+        reference_sha256="a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887",
+        catalog_sha256="e754bf570291e0231d11e127e594a7fa375b3f227ee2f0d6591c45f9faa4ac49",
+        alternative_id="alternative-2-e5b",
+        curve_count=34,
+        package_digest="sha256:7e44b19d4ad8415da0e0216f19c9d03a9e5bd021136439f8c43931e0fc44933d",
+        library_version="easi-screening v2",
+        adopted="2026-09-29",
+        verified=(
+            "method_version, package_digest: the library version's method.json "
+            "(apps/library/assessments/easi-screening/v2) and data/source/adopted-method.json, "
+            "the pin EASI loads by (owner decisions D15 and D20)",
+            "commit: git log b4fe763 (2026-09-29, 'easi: activate easi-screening v2, pinned')",
+            "reference_sha256: sha256 of apps/easi/data/reference-curves.json, unchanged from "
+            "alternative-2-b2e3033116e3 (v2 keeps all 34 curves)",
+            "catalog_sha256: sha256 of apps/easi/data/screening-methods.json: Alternative 2's "
+            "catalog with the K2b applicability rule and its limitation on the four DEM geometry "
+            "methods (study 2026-09-28-dem-geometry-quality-alternatives)",
+        ),
+    ),
 }
 
 
