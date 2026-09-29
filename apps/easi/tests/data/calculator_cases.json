@@ -1,6 +1,6 @@
 {
- "method_version": "b2e3033116e3",
- "workbook": "EASI_Calculator_1.0.xlsx",
+ "method_version": "e91118cc821c",
+ "workbook": "EASI_Calculator_1.1.xlsx",
  "cases": [
   {
    "id": "base",
@@ -73463,7 +73463,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.807757,
+    "in_er": "",
     "in_slope": 0.01,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -73537,10 +73537,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -73551,12 +73551,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -73641,18 +73641,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -73682,7 +73682,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.807957,
+    "in_er": "",
     "in_slope": 0.01,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -73756,10 +73756,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Fair",
-      "score": 8,
-      "index": 0.545,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -73770,12 +73770,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Fair",
-      "score": 8,
-      "index": 0.545,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -73860,18 +73860,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.7333333333333336,
-     "chemical": 0.774074074074074,
-     "biological": 0.8309523809523811
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7794532627865962,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.73,
-     "chemical": 0.77,
-     "biological": 0.83
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.78,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -74339,7 +74339,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.0,
+    "in_er": "",
     "in_slope": 0.01,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -74413,10 +74413,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -74427,12 +74427,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -74517,18 +74517,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -74777,7 +74777,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.621429,
+    "in_er": "",
     "in_slope": 0.01,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -74851,10 +74851,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -74865,12 +74865,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -74955,18 +74955,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -75653,7 +75653,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.310715,
+    "in_er": "",
     "in_slope": 0.01,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -75727,10 +75727,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -75741,12 +75741,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -75831,18 +75831,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -76529,7 +76529,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.8189,
+    "in_er": "",
     "in_slope": 0.05,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -76603,10 +76603,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -76617,12 +76617,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -76707,18 +76707,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -76748,7 +76748,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.8191,
+    "in_er": "",
     "in_slope": 0.05,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -76822,10 +76822,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Fair",
-      "score": 8,
-      "index": 0.545,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -76836,12 +76836,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Fair",
-      "score": 8,
-      "index": 0.545,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -76926,18 +76926,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.7333333333333336,
-     "chemical": 0.774074074074074,
-     "biological": 0.8309523809523811
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7794532627865962,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.73,
-     "chemical": 0.77,
-     "biological": 0.83
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.78,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -77405,7 +77405,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.0,
+    "in_er": "",
     "in_slope": 0.05,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -77479,10 +77479,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -77493,12 +77493,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -77583,18 +77583,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -77843,7 +77843,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.63,
+    "in_er": "",
     "in_slope": 0.05,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -77917,10 +77917,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -77931,12 +77931,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -78021,18 +78021,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -78719,7 +78719,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.315,
+    "in_er": "",
     "in_slope": 0.05,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -78793,10 +78793,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -78807,12 +78807,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -78897,18 +78897,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -79595,7 +79595,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.646186,
+    "in_er": "",
     "in_slope": 0.001,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -79669,10 +79669,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -79683,12 +79683,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -79773,18 +79773,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -79814,7 +79814,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.646386,
+    "in_er": "",
     "in_slope": 0.001,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -79888,10 +79888,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Fair",
-      "score": 8,
-      "index": 0.545,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -79902,12 +79902,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Fair",
-      "score": 8,
-      "index": 0.545,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -79992,18 +79992,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.7333333333333336,
-     "chemical": 0.774074074074074,
-     "biological": 0.8309523809523811
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7794532627865962,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.73,
-     "chemical": 0.77,
-     "biological": 0.83
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.78,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -80471,7 +80471,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.0,
+    "in_er": "",
     "in_slope": 0.001,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -80545,10 +80545,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -80559,12 +80559,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -80649,18 +80649,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -80909,7 +80909,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.497143,
+    "in_er": "",
     "in_slope": 0.001,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -80983,10 +80983,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -80997,12 +80997,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -81087,18 +81087,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -81785,7 +81785,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.248572,
+    "in_er": "",
     "in_slope": 0.001,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -81859,10 +81859,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -81873,12 +81873,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -81963,18 +81963,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -82004,7 +82004,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.828572,
+    "in_er": "",
     "in_slope": 0.001,
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -82078,10 +82078,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Fair",
-      "score": 8,
-      "index": 0.545,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -82092,12 +82092,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Fair",
-      "score": 8,
-      "index": 0.545,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -82182,18 +82182,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.7333333333333336,
-     "chemical": 0.774074074074074,
-     "biological": 0.8309523809523811
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7794532627865962,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.73,
-     "chemical": 0.77,
-     "biological": 0.83
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.78,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -82661,7 +82661,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.796614,
+    "in_er": "",
     "in_slope": "",
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -82735,10 +82735,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -82749,12 +82749,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -82839,18 +82839,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -82880,7 +82880,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.796814,
+    "in_er": "",
     "in_slope": "",
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -82954,10 +82954,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Fair",
-      "score": 8,
-      "index": 0.545,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -82968,12 +82968,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Fair",
-      "score": 8,
-      "index": 0.545,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -83058,18 +83058,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.7333333333333336,
-     "chemical": 0.774074074074074,
-     "biological": 0.8309523809523811
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7794532627865962,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.73,
-     "chemical": 0.77,
-     "biological": 0.83
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.78,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -83537,7 +83537,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.0,
+    "in_er": "",
     "in_slope": "",
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -83611,10 +83611,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -83625,12 +83625,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -83715,18 +83715,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -83975,7 +83975,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.612857,
+    "in_er": "",
     "in_slope": "",
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -84049,10 +84049,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -84063,12 +84063,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -84153,18 +84153,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -84851,7 +84851,7 @@
     "in_grassland": 15.0,
     "in_wetland": 5.0,
     "in_bhr": 1.1,
-    "in_er": 0.306428,
+    "in_er": "",
     "in_slope": "",
     "in_sinuosity": 1.2,
     "in_tn": "",
@@ -84925,10 +84925,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -84939,12 +84939,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Good",
@@ -85029,18 +85029,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.6799999999999999,
-     "chemical": 0.7617283950617283,
-     "biological": 0.8190476190476191
+     "physical": 0.7714285714285714,
+     "chemical": 0.7833333333333332,
+     "biological": 0.8419753086419753
     },
-    "eciRaw": 0.7535920047031158,
+    "eciRaw": 0.79891240446796,
     "subIndices": {
-     "physical": 0.68,
-     "chemical": 0.76,
-     "biological": 0.82
+     "physical": 0.77,
+     "chemical": 0.78,
+     "biological": 0.84
     },
-    "eci": 0.75,
-    "rated": 20,
+    "eci": 0.8,
+    "rated": 18,
     "provisional": false
    }
   },
@@ -161812,7 +161812,7 @@
     "in_grassland": 0.0,
     "in_wetland": 0.0,
     "in_bhr": 2.0,
-    "in_er": 0.5,
+    "in_er": "",
     "in_slope": 0.0001,
     "in_sinuosity": 1.0,
     "in_tn": 9.0,
@@ -161886,10 +161886,10 @@
       "methodKey": "bank-height-ratio"
      },
      "m07": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "entrenchment-ratio"
      },
      "m08": {
@@ -161900,12 +161900,12 @@
       "methodKey": "hyporheic-exchange-potential"
      },
      "m09": {
-      "rating": "Poor",
-      "score": 3,
-      "index": 0.195,
-      "completeness": "complete",
+      "rating": null,
+      "score": null,
+      "index": null,
+      "completeness": "withheld",
       "methodKey": "channel-adjustment-susceptibility",
-      "route": "automatic proxy"
+      "route": "not rated"
      },
      "m10": {
       "rating": "Poor",
@@ -161990,18 +161990,18 @@
      }
     },
     "subIndicesRaw": {
-     "physical": 0.19999999999999993,
-     "chemical": 0.19999999999999998,
-     "biological": 0.19999999999999996
+     "physical": 0.2,
+     "chemical": 0.2,
+     "biological": 0.19999999999999998
     },
-    "eciRaw": 0.19999999999999996,
+    "eciRaw": 0.19999999999999998,
     "subIndices": {
      "physical": 0.2,
      "chemical": 0.2,
      "biological": 0.2
     },
     "eci": 0.2,
-    "rated": 20,
+    "rated": 18,
     "provisional": false
    }
   },

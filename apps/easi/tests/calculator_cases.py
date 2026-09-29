@@ -136,6 +136,10 @@ def entries_from(report: dict, case: dict) -> dict:
     record = make_record(case.get("record") or {})
     traced: dict[str, object] = {}
     for row in report["metricRows"]:
+        # a rating an applicability rule withheld was never made with these values, and the
+        # application enters none of them (calculator.entries_from_result)
+        if ((row.get("scoring") or {}).get("applicability") or {}).get("withheld"):
+            continue
         for inp in (row.get("scoring") or {}).get("inputs") or []:
             key = bc.ALIASES.get(inp.get("key"), inp.get("key"))
             value = inp.get("value")
