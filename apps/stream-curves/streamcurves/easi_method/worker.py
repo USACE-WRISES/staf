@@ -17,18 +17,33 @@ def _flatten(report: dict) -> dict:
     metrics = {}
     for row in report.get("metricRows") or []:
         sc = row.get("scoring") or {}
-        metrics[row["metricId"]] = {
+        item = {
             "rating": row.get("rating"), "index": row.get("index"),
             "functionScore": row.get("functionScore"), "status": row.get("status"),
             "methodKey": sc.get("methodKey"), "completeness": sc.get("completeness"),
         }
+        if sc.get("completeness") == "withheld":
+            # a documented gap (candidate families E1, E3, E5, E6): the statement, the rule
+            # that matched and what it matched (the K1 input value, or the K2 quality flags
+            # with the record they came from), so P3 can account for it per metric
+            applicability = sc.get("applicability") or {}
+            item["gap"] = {"statement": sc.get("statement"),
+                           "rule": applicability.get("rule"),
+                           "matched": applicability.get("matched")}
+        metrics[row["metricId"]] = item
     cov = report.get("coverage") or {}
-    return {"metrics": metrics, "functionScores": report.get("functionScores"),
-            "subIndicesRaw": report.get("subIndicesRaw"),
-            "eciRaw": report.get("ecosystemConditionIndexRaw"),
-            "eci": report.get("ecosystemConditionIndex"),
-            "rated": (cov.get("overall") or {}).get("rated"),
-            "provisional": bool(cov.get("provisional"))}
+    out = {"metrics": metrics, "functionScores": report.get("functionScores"),
+           "subIndicesRaw": report.get("subIndicesRaw"),
+           "eciRaw": report.get("ecosystemConditionIndexRaw"),
+           "eci": report.get("ecosystemConditionIndex"),
+           "rated": (cov.get("overall") or {}).get("rated"),
+           "provisional": bool(cov.get("provisional"))}
+    # the rollup's completeness fields, only when the method asked for them (candidate E8):
+    # a result scored without them is byte for byte what it was
+    for key in ("functionsRated", "ecosystemConditionIndexInterval"):
+        if key in report:
+            out[key] = report[key]
+    return out
 
 
 def main(argv: list[str]) -> int:

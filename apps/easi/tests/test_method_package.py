@@ -1,9 +1,12 @@
 """EASI method packages: the built-in method round-trips byte for byte, damaged or
 foreign packages are refused whole, and activation never mixes two methods.
 
-The release method is ``b2e3033116e3`` (README release record). A package of the
-built-in files must reproduce it, score the calculator cases exactly like the
-built-in method, and regenerate the committed calculator workbook byte for byte.
+The release method is the one the assessment library records for this evaluator
+(``method_authority.recorded_method_version``: the ``validatedUnder`` row of the library's
+EASI version for the running evaluator digest, ``b2e3033116e3`` under the evaluator it was
+published with). A package of the built-in files must reproduce it, score the calculator
+cases exactly like the built-in method, and regenerate the committed calculator workbook
+byte for byte.
 """
 from __future__ import annotations
 
@@ -18,11 +21,14 @@ from pathlib import Path
 
 import pytest
 
-from easi import config, method_package as mp
+from easi import config, method_authority as ma, method_package as mp
 from easi.national import method_version
 
 ROOT = Path(__file__).resolve().parents[1]
-RELEASE_METHOD = "b2e3033116e3"
+#: the method version the library records for the running evaluator (never a literal); a
+#: copy without the library beside it has nothing recorded and compares with itself
+RELEASE_METHOD = (ma.recorded_method_version() if ma.library_entry() is not None
+                  else method_version())
 PY = sys.executable
 
 

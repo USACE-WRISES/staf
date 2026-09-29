@@ -1,18 +1,31 @@
 """Fetch and simplify EPA's official nine-region NARS polygon layer.
 
 Run from anywhere:
-    python apps/easi/scripts/fetch_nars_ecoregions.py
+    python apps/easi/scripts/fetch_nars_ecoregions.py [--allow-direct-write]
+
+While the library's EASI version is the authority for the method files
+(``easi.method_authority``: the library entry sits beside this EASI and its default version
+equals ``data/``), this script refuses to write ``data/nars-ecoregions-9.geojson.gz`` (a method
+file: the NARS-9 geography is inside the method version): a refreshed layer enters an authored
+StreamCurves version and reaches EASI through
+``apps/stream-curves/scripts/export_easi_method.py --write-easi-data``.
+``--allow-direct-write`` is the transition escape, removed at adoption.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import gzip
+import sys
 from pathlib import Path
 
 import requests
 from shapely.geometry import mapping, shape
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from easi import method_authority  # noqa: E402
+
 OUT = ROOT / "data" / "nars-ecoregions-9.geojson.gz"
 URL = (
     "https://geopub.epa.gov/ArcGIS/rest/services/OWOWM/NARS/MapServer/5/query"
@@ -26,7 +39,15 @@ PARAMS = {
 }
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--allow-direct-write", action="store_true",
+                    help="write data/nars-ecoregions-9.geojson.gz although the library's EASI "
+                         "version is the authority for it (transition only; the exporter is "
+                         "the writer)")
+    args = ap.parse_args(argv)
+    if not args.allow_direct_write and method_authority.authority_active():
+        method_authority.refuse_direct_write("fetch_nars_ecoregions.py")
     response = requests.get(URL, params=PARAMS, timeout=120)
     response.raise_for_status()
     source = response.json()

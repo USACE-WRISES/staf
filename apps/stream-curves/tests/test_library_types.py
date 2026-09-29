@@ -18,12 +18,15 @@ import pytest
 
 from streamcurves import carry_forward as cf
 from streamcurves import gallery, library as lib, project_file as pf
+from streamcurves._vendor.easi import method_authority as ma
 from streamcurves.easi_method import edit, io as eio, register as reg
 
 APP = Path(__file__).resolve().parents[1]
 VENDORED_DATA = APP / "streamcurves" / "_vendor" / "easi" / "data"
 REAL_LIBRARY = APP.parent / "library"
-RELEASE_METHOD = "b2e3033116e3"
+#: the method version the real library records for the vendored evaluator (never a literal):
+#: what a fresh publish of the unchanged method by this copy records
+RELEASE_METHOD = ma.recorded_method_version(REAL_LIBRARY / "assessments" / "easi-screening")
 
 
 def _load(name: str, path: Path):

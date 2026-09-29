@@ -34,15 +34,25 @@ def runtime_classes(points, values):
     return result
 
 
-def _rounded_fit(values):
+def _rounded_fit(values, quantity="woody_wsrp100"):
+    """One fit of ``quantity`` (the woody family by default; a refitted candidate family's
+    quantity for ``set_stability``) under the builder's default tail endpoints, rounded to the
+    shipped six-place precision."""
     from ..artifact import _rounded
     from ..curves import QUANTITIES, fit_curve
-    return _rounded(fit_curve(values, QUANTITIES["woody_wsrp100"], "targeted-woody-stability"))
+    label = "targeted-woody-stability" if quantity == "woody_wsrp100" else f"targeted-stability-{quantity}"
+    return _rounded(fit_curve(values, QUANTITIES[quantity], label))
 
 
-def fit_linkage(values, frozen):
+def _fit(values, quantity):
+    """``_rounded_fit`` called as the woody study always called it (one argument, which its
+    tests patch) for the woody quantity, with the quantity otherwise."""
+    return _rounded_fit(values) if quantity == "woody_wsrp100" else _rounded_fit(values, quantity)
+
+
+def fit_linkage(values, frozen, quantity="woody_wsrp100"):
     """Prove the supplied original observations reproduce the shipped fit."""
-    fit = _rounded_fit(values)
+    fit = _fit(values, quantity)
     fields = ("n", "q25", "q50", "q75", "x39", "x69", "points", "status")
     mismatches = {key: {"frozen": frozen.get(key), "refit": fit.get(key)}
                   for key in fields if frozen.get(key) != fit.get(key)}
@@ -50,8 +60,11 @@ def fit_linkage(values, frozen):
             "precision": "six_decimal_export", "compared_fields": list(fields), "mismatches": mismatches}
 
 
-def bootstrap(values, clusters, population, frozen, *, n_boot=200, seed=SEED):
-    """Reference uncertainty; both calls receive the identical 8.2 population."""
+def bootstrap(values, clusters, population, frozen, *, n_boot=200, seed=SEED, quantity="woody_wsrp100"):
+    """Reference uncertainty of one curve: the reference panel resampled by cluster (HUC12),
+    the curve refitted per draw and the population re-rated against the frozen classes. The
+    woody study calls it twice on the identical 8.2 population; ``set_stability`` calls it per
+    curve of a set with the set's quantity."""
     from ..curves import crossings
     from ..stability import verdict
     if not isinstance(n_boot, int) or isinstance(n_boot, bool) or n_boot < 1:
@@ -63,7 +76,7 @@ def bootstrap(values, clusters, population, frozen, *, n_boot=200, seed=SEED):
     baseline = runtime_classes(frozen["points"], population)
     rated = baseline >= 0
     if not rated.any():
-        raise ValueError("The 8.2 population has no finite rateable woody values")
+        raise ValueError(f"The population has no finite rateable {quantity} values")
     labels, inverse = np.unique(clusters, return_inverse=True)
     groups = [np.flatnonzero(inverse == i) for i in range(len(labels))]
     rng = np.random.default_rng(seed)
@@ -75,7 +88,7 @@ def bootstrap(values, clusters, population, frozen, *, n_boot=200, seed=SEED):
         if len(sample) < 5:
             invalid["fewer_than_five_finite_values"] += 1
             continue
-        fit = _rounded_fit(sample)
+        fit = _fit(sample, quantity)
         if fit.get("status") != "complete":
             invalid[str(fit.get("status"))] += 1
             continue

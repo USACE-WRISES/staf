@@ -3,6 +3,13 @@
 Run with the workspace interpreter and --study pointing at the completed study.
 Only the live curve, catalog, identity and build-time receipt are written. Source
 study files and the historical Alternative 1 snapshot are verified, never edited.
+
+While the library's EASI version is the authority for the method files
+(``easi.method_authority``: the library entry sits beside this EASI and its default version
+equals ``data/``), this script refuses to promote, whatever the destination: an alternative
+is adopted in a StreamCurves draft revision (Final selection), published, and reaches EASI
+through ``apps/stream-curves/scripts/export_easi_method.py --write-easi-data``.
+``--allow-direct-write`` is the transition escape, removed at adoption.
 """
 from __future__ import annotations
 
@@ -10,9 +17,13 @@ import argparse
 import hashlib
 import json
 import os
+import sys
 from pathlib import Path
 
 APP = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(APP))
+from easi import method_authority  # noqa: E402
+
 STUDY_ID = "2026-09-15-controlled-alternatives"
 CURVES_SHA = "a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887"
 CATALOG_SHA = "64c0a49da530879ed7c0bb329ace1f12c4b386fa1f02378865c0e882c5331d6e"
@@ -139,11 +150,29 @@ def promote(study: Path, destination: Path) -> dict:
     return receipt
 
 
-def main() -> int:
+def _under(path: Path, root: Path) -> bool:
+    """True when ``path`` is ``root`` or inside it (resolved, so a relative spelling of the
+    app's data folder still counts)."""
+    try:
+        path.resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return True
+
+
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--study", type=Path, required=True)
     parser.add_argument("--destination", type=Path, default=APP / "data")
-    args = parser.parse_args()
+    parser.add_argument("--allow-direct-write", action="store_true",
+                        help="promote although the library's EASI version is the authority for "
+                             "the method files (transition only; the exporter is the writer)")
+    args = parser.parse_args(argv)
+    # the library's EASI version is the authority for the method files under apps/easi/data;
+    # a promotion into any other folder (a rehearsal, a comparison) is never refused
+    into_app_data = _under(Path(args.destination), APP / "data")
+    if into_app_data and not args.allow_direct_write and method_authority.authority_active():
+        method_authority.refuse_direct_write("promote_alternative_2.py")
     print(json.dumps(promote(args.study, args.destination), indent=2, sort_keys=True))
     return 0
 

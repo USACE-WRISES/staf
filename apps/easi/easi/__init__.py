@@ -11,7 +11,11 @@ package's files; unset, the built-in method in ``data/`` is used.
 
 __version__ = "0.0.1"
 
+from .adopted_method import apply_to_env as _apply_adopted_method
 from .method_package import materialize_from_env as _materialize_from_env
 
+# the explicitly adopted library version (owner decision D20): a verified package from
+# the library release, or the bundled copy when it is that same version
+_apply_adopted_method()
 _materialize_from_env()
-del _materialize_from_env
+del _apply_adopted_method, _materialize_from_env

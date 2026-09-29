@@ -865,7 +865,7 @@ def _finalize(rows: list[dict], total_count: int, overrides_applied) -> dict:
              "Partial screening coverage")),
         "correlationNotes": correlation_notes,
     })
-    return {
+    out = {
         "metricRows": rows,
         "functionScores": roll.function_scores,
         "subIndices": {k: scoring.round2(v) for k, v in roll.sub_indices.items()},
@@ -889,6 +889,12 @@ def _finalize(rows: list[dict], total_count: int, overrides_applied) -> dict:
         "provisionalCoverage": bool(limited),
         "overridesApplied": sorted(overrides_applied),
     }
+    # The completeness fields (functions rated of twenty, the ECI interval with unrated
+    # functions taken as Poor and as Good) only when the package or the process asks:
+    # the legacy report shape is otherwise byte for byte what it was.
+    if scoring.rollup_reporting_enabled():
+        out.update(scoring.reporting_fields(roll))
+    return out
 
 
 def _serialize_variant(mid: str, meta: dict, v) -> dict:

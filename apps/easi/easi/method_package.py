@@ -92,7 +92,12 @@ WORKER_ENV = "STREAMCURVES_EASI_WORKER"
 #: method.json) and is refused when this evaluator lacks any of it.
 #: ``tests/test_method_package.py`` keeps OPERATORS equal to ``screening_methods``'s.
 OPERATORS = ("threshold", "ratio", "minimum", "minimum_of_products", "worst_index", "best_index",
-             "weighted_capped_sum", "sum_capped", "categorical_lookup", "unscored")
+             "weighted_capped_sum", "sum_capped", "categorical_lookup", "unscored", "mean_index")
+#: Behaviors a package names only when its files use them, because an evaluator without
+#: them would read past the file and score as if they were absent: an applicability rule
+#: on a method (a rating withheld as a documented gap) and the rollup reporting flag
+#: (``rollupReporting`` in the catalog: functions rated and the ECI interval).
+OPTIONAL_BEHAVIORS = ("applicability-rules", "rollup-completeness-interval")
 #: The curve-set stratifiers the evaluator resolves: a key of the reach's strata
 #: (``geo.strata_for`` / ``strata_at``), or ``national`` (a set holding only the national
 #: curve). Level II sets were Alternative 1's; national-only sets were Alternative 3's.
@@ -261,7 +266,7 @@ def requirements(files: dict[str, bytes]) -> dict:
     """What a method file set requires of its evaluator: the operators and stratifiers
     its catalog uses, and the evaluator behaviors every EASI method relies on."""
     cat = _json(files, "screening-methods.json")
-    ops, strat = set(), set()
+    ops, strat, extras = set(), set(), []
 
     def visit(rule):
         if not isinstance(rule, dict):
@@ -271,6 +276,8 @@ def requirements(files: dict[str, bytes]) -> dict:
         c = rule.get("curve")
         if isinstance(c, dict) and c.get("stratifier"):
             strat.add(c["stratifier"])
+        if isinstance(rule.get("applicability"), dict) and "applicability-rules" not in extras:
+            extras.append("applicability-rules")
         for i in rule.get("inputs") or []:
             visit(i)
         for v in rule.get("variants") or []:
@@ -278,7 +285,10 @@ def requirements(files: dict[str, bytes]) -> dict:
 
     for m in cat.get("methods") or []:
         visit(m)
-    return {"operators": sorted(ops), "stratifiers": sorted(strat), "behaviors": list(BEHAVIORS)}
+    if cat.get("rollupReporting"):
+        extras.append("rollup-completeness-interval")
+    return {"operators": sorted(ops), "stratifiers": sorted(strat),
+            "behaviors": list(BEHAVIORS) + extras}
 
 
 def validate_files(files: dict[str, bytes]) -> list[str]:
@@ -393,7 +403,7 @@ def check_requirements(env: dict) -> None:
     req = (env.get("evaluator") or {}).get("requires") or {}
     missing_ops = sorted(set(req.get("operators") or []) - set(OPERATORS))
     missing_strat = sorted(set(req.get("stratifiers") or []) - set(STRATIFIERS))
-    missing_beh = sorted(set(req.get("behaviors") or []) - set(BEHAVIORS))
+    missing_beh = sorted(set(req.get("behaviors") or []) - set(BEHAVIORS) - set(OPTIONAL_BEHAVIORS))
     if missing_ops or missing_strat or missing_beh:
         raise MethodPackageError(
             "this method package needs evaluator capabilities this EASI does not provide: "

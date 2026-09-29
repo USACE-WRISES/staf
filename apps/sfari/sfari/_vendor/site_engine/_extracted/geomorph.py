@@ -632,6 +632,215 @@ def median_edge_limited(cands: list[dict]) -> bool:
     return any(bool(c.get("edge_limited")) for c in mid)
 
 
+#: The physical range of the two ratios (K2b, 2026-09-28, owner decision D15): a bank-height
+#: ratio at or below zero (the low bank at or below the thalweg) and a flood-prone width
+#: narrower than the bankfull width are broken sections. A bank-height ratio at the floodprone
+#: cap is not: the default low bank held at twice the bankfull depth reads "at least 2.00",
+#: severe incision, a valid rating input (Poor), unless the section is unreliable on its own
+#: terms (below).
+ER_MIN = 1.0
+#: Fewer sections than this carrying a ratio make the reach median a weak basis.
+MIN_QUALITY_SECTIONS = 3
+#: The ``low_quality`` tokens the quality record lists under ``matched`` (what the flag
+#: matched, beside the reasons in words): too few sections carry the ratio; bankfull is
+#: extrapolated outside the Bieger fit range; every section found its bank by the crest scan;
+#: the median sits at the cap only with sections whose cap is the bank detector's floor.
+LOW_QUALITY_FEW_SECTIONS = "few_sections"
+LOW_QUALITY_EXTRAPOLATED = "bankfull_extrapolated"
+LOW_QUALITY_CREST_SCAN = "crest_scan"
+LOW_QUALITY_CAP_UNREACHABLE = "cap_unreachable"
+QUALITY_RULES = "K2b"
+
+
+def cap_unreachable_depth(dem_res_m: Optional[float]) -> float:
+    """The bankfull depth at or below which the default low bank cannot sit below the
+    floodprone cap on a DEM of this resolution.
+
+    :func:`bank_break_elev` considers a bank only once the profile has climbed
+    ``max(bank_rise_floor(dem_res_m), BANK_ARM_RISE_FRAC * d_bf)`` above the thalweg (the
+    DEM's vertical noise floor: 0.3 m on 10 m models, 0.1 m on lidar), and
+    :func:`summarize_profile` caps the default low bank at the floodprone stage, twice the
+    bankfull depth. When ``BHR_CAP * d_bf <= floor`` the climb floor sits at or above the
+    floodprone stage, so every slope break the detector can find is at or above the cap and
+    the section reads exactly 2.00 by construction (the 2026-09-07 note on the lidar floor:
+    the 0.3 m floor hid every bank on channels under 0.15 m deep and pinned their ratio at
+    the cap). Such a cap is the detector's floor, not the channel's incision: 0.15 m on a
+    10 m (or 3 m) model, 0.05 m on lidar."""
+    return bank_rise_floor(dem_res_m) / BHR_CAP
+
+
+def _section_depth(section: dict) -> Optional[float]:
+    value = section.get("bankfull_depth_m")
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _sections(geom: Optional[dict]) -> list[dict]:
+    """The per-section records of a geometry: the builder's slim ``candidate_scalars``
+    (stored evidence) or the live ``candidates``."""
+    if not isinstance(geom, dict):
+        return []
+    for key in ("candidate_scalars", "candidates"):
+        found = geom.get(key)
+        if isinstance(found, list) and found:
+            return [c for c in found if isinstance(c, dict)]
+    return []
+
+
+def bankfull_width_cv(geom: Optional[dict]) -> Optional[float]:
+    """Bankfull width variability across the sampled sections, as the national builder's
+    ``bankfull_width_cv``: the population standard deviation of the sections' bankfull
+    widths over their mean. None under two sections with a width, for a non-finite width
+    or a non-positive mean (the builder's ``_cv``)."""
+    widths = []
+    for section in _sections(geom):
+        value = section.get("bankfull_width_m")
+        if value is None or isinstance(value, bool):
+            continue
+        try:
+            widths.append(float(value))
+        except (TypeError, ValueError):
+            return None
+    if len(widths) < 2:
+        return None
+    import numpy as np
+    arr = np.asarray(widths, dtype=float)
+    if not np.isfinite(arr).all() or arr.mean() <= 0:
+        return None
+    return float(arr.std(ddof=0) / arr.mean())
+
+
+def cross_section_quality(geom: Optional[dict]) -> Optional[dict]:
+    """The quality record of a reach's 3DEP cross-section evidence, from what the provider
+    records: the sections sampled and how many carry each ratio (``reach``), the bank
+    detection method where the sections record it (``bank_detection``: the slope break or
+    the crest-scan fallback; stored records built before it was recorded read unknown),
+    the sections whose default low bank hit the floodprone cap and those whose cap is the
+    bank detector's floor (:func:`cap_unreachable_depth`), the edge limitation, the Bieger
+    fit range and the DEM resolution, and whether each reach ratio is inside its physical
+    range (BHR above 0, ER at least 1).
+
+    The rules are K2b (``QUALITY_RULES``, 2026-09-28, owner decision D15). ``flags`` are
+    the tokens an applicability rule may withhold on: ``out_of_range_bhr`` (a bank-height
+    ratio at or below zero) and ``out_of_range_er`` (an entrenchment ratio below 1, the
+    flood-prone width narrower than the bankfull width) name physically impossible
+    sections; ``low_quality`` names a reach whose median is a weak basis: fewer than three
+    sections carry a ratio the reach reports (``few_sections``), bankfull is extrapolated
+    outside the Bieger fit range (``bankfull_extrapolated``), every section found its bank
+    by the crest scan (``crest_scan``), or the median bank-height ratio sits at the cap
+    only with sections whose bankfull depth is at or below the depth at which the DEM's
+    bank detector cannot place a bank below the cap (``cap_unreachable``). A median at the
+    cap carried by sections deeper than that is not a flag: it reads "at least 2.00",
+    severe incision, a valid rating input (``bhrAtCap``). ``matched`` lists the tokens each
+    flag matched and ``reasons`` says each flag in words. None for an empty geometry.
+    """
+    if not isinstance(geom, dict) or not geom:
+        return None
+    reach = geom.get("reach") if isinstance(geom.get("reach"), dict) else {}
+    sections = _sections(geom)
+    bhr = geom.get("bank_height_ratio")
+    er = geom.get("entrenchment_ratio")
+    try:
+        bhr = None if bhr is None or isinstance(bhr, bool) else float(bhr)
+        er = None if er is None or isinstance(er, bool) else float(er)
+    except (TypeError, ValueError):
+        bhr, er = None, None
+    if bhr is None and er is None and not sections and not reach:
+        return None
+    n_sections = int(reach.get("n") or geom.get("n_transects") or len(sections)
+                     or (1 if bhr is not None or er is not None else 0))
+
+    def ratio_n(key: str, value) -> int:
+        stats = reach.get(key) if isinstance(reach.get(key), dict) else None
+        if stats is not None:
+            return int(stats.get("n") or 0)
+        if sections:
+            return sum(1 for s in sections if s.get(key) is not None)
+        return 1 if value is not None else 0
+
+    bhr_n, er_n = ratio_n("bank_height_ratio", bhr), ratio_n("entrenchment_ratio", er)
+    bhr_stats = reach.get("bank_height_ratio") if isinstance(reach.get("bank_height_ratio"), dict) else {}
+    capped = int(bhr_stats.get("capped") or sum(1 for s in sections if s.get("low_bank_capped")))
+    median_capped = bool(bhr_stats.get("median_capped")
+                         or (capped and bhr is not None and bhr >= BHR_CAP - 1e-9))
+    dem_res = geom.get("dem_resolution_m")
+    floor_depth = cap_unreachable_depth(dem_res)
+    # the capped sections whose bankfull depth is at or below the detector's floor: their
+    # 2.00 is the floor, not the channel (a section without a depth is never counted)
+    unreachable = sum(1 for s in sections
+                      if s.get("low_bank_capped") and s.get("bank_height_ratio") is not None
+                      and _section_depth(s) is not None and _section_depth(s) <= floor_depth + 1e-9)
+    # the capped sections it takes to put the reach median at the cap (the middle value,
+    # or both middle values on an even count): the cap is the channel's when the genuine
+    # capped sections alone reach that count
+    needed = bhr_n // 2 + 1 if bhr_n else 0
+    cap_is_floor = bool(median_capped and sections and bhr_n and (capped - unreachable) < needed)
+    found = {str(s.get("bank_detection")) for s in sections if s.get("bank_detection")}
+    if not found and geom.get("bank_detection"):
+        found = {str(geom["bank_detection"])}
+    detection = ("unknown" if not found else next(iter(found)) if len(found) == 1 else "mixed")
+    profile = geom.get("profile") if isinstance(geom.get("profile"), dict) else None
+    points = len(profile.get("stations") or []) if profile else None
+    flags: list[str] = []
+    reasons: dict[str, str] = {}
+    matched: dict[str, list[str]] = {}
+    weak: list[str] = []
+    weak_tokens: list[str] = []
+    if bhr is not None and not bhr > 0.0:
+        flags.append("out_of_range_bhr")
+        matched["out_of_range_bhr"] = ["bhr_at_or_below_0"]
+        reasons["out_of_range_bhr"] = (f"bank-height ratio {bhr:.2f} is at or below zero "
+                                       "(the low bank at or below the thalweg)")
+    if er is not None and er < ER_MIN:
+        flags.append("out_of_range_er")
+        matched["out_of_range_er"] = ["er_below_1"]
+        reasons["out_of_range_er"] = (f"entrenchment ratio {er:.2f} is below {ER_MIN:g} "
+                                      "(flood-prone width narrower than bankfull width)")
+    for key, token, count in (("bank-height ratio", "bhr", bhr_n if bhr is not None else None),
+                              ("entrenchment ratio", "er", er_n if er is not None else None)):
+        if count is not None and count < MIN_QUALITY_SECTIONS:
+            weak.append(f"only {count} of {n_sections} section(s) carry a {key}")
+            weak_tokens.append(f"{LOW_QUALITY_FEW_SECTIONS}:{token}")
+    if geom.get("bankfull_extrapolated"):
+        weak.append("bankfull geometry is extrapolated outside the Bieger fit range")
+        weak_tokens.append(LOW_QUALITY_EXTRAPOLATED)
+    if detection == "crest_scan":
+        weak.append("every section found its low bank by the crest scan, not a slope break")
+        weak_tokens.append(LOW_QUALITY_CREST_SCAN)
+    if cap_is_floor:
+        res_words = f"{dem_res:g} m" if isinstance(dem_res, (int, float)) and not isinstance(dem_res, bool) else "this"
+        weak.append(f"the reach median bank-height ratio sits at the {BHR_CAP:g} cap only with "
+                    f"sections whose bankfull depth is at or below {floor_depth:.2f} m, where the "
+                    f"{res_words} DEM's bank detector cannot place a bank below the cap "
+                    f"({unreachable} of {capped} capped sections)")
+        weak_tokens.append(LOW_QUALITY_CAP_UNREACHABLE)
+    if weak:
+        flags.append("low_quality")
+        matched["low_quality"] = weak_tokens
+        reasons["low_quality"] = "; ".join(weak)
+    return {
+        "quality": QUALITY_RULES,
+        "sections": n_sections, "bhrSections": bhr_n, "erSections": er_n,
+        "cappedSections": capped, "medianCapped": median_capped,
+        "capUnreachableSections": unreachable, "capUnreachableDepthM": round(floor_depth, 3),
+        # a median at the cap is "at least 2.00", a valid rating input, unless the cap is
+        # the detector's floor (then low_quality names it)
+        "bhrAtCap": median_capped, "capIsFloor": cap_is_floor,
+        "detection": detection, "profilePoints": points,
+        "edgeLimited": bool(geom.get("edge_limited")),
+        "bankfullExtrapolated": bool(geom.get("bankfull_extrapolated")),
+        "demResolutionM": dem_res,
+        "bhr": bhr, "er": er,
+        "bhrInRange": None if bhr is None else bool(bhr > 0.0),
+        "erInRange": None if er is None else bool(er >= ER_MIN),
+        "flags": flags, "matched": matched, "reasons": reasons,
+    }
+
+
 def describe_reach(stats: Optional[dict], key: str) -> str:
     """``reach median of 9 sections (1.26 to 2.24)`` for the metric texts, or
     ``""`` when the geometry carries no reach statistics for ``key`` or only
@@ -788,6 +997,9 @@ def summarize_profile(stations: list[float], elevs: list[float], da_sqkm: float,
                  "thalweg": thalweg, "fp_stage_m": thalweg + 2.0 * d_bf,
                  "bankfull_stage_m": bankfull_stage,
                  "low_bank_stage_m": low_bank_stage,
+                 # how the default low bank was found: the slope break onto a flat, or
+                 # the crest scan when no side broke (the quality record reads it)
+                 "bank_detection": "slope_break" if brk is not None else "crest_scan",
                  # the default low bank hit the floodprone cap: the first bank sat
                  # above twice the bankfull depth, or no side broke onto a flat
                  "low_bank_capped": bool(low_bank_stage >= thalweg + BHR_CAP * d_bf - 1e-9),

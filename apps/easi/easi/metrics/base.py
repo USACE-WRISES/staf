@@ -79,6 +79,37 @@ def xs_source(geom: Optional[dict]) -> str:
             else XS_SOURCE_LEGACY)
 
 
+def xs_evidence(geom: Optional[dict]) -> Optional[dict]:
+    """The named evidence records of a cross-section geometry for the evaluator: its
+    quality record (``crossSectionQuality``, see ``geomorph.cross_section_quality``), which
+    an applicability rule may withhold a rating on. None for an empty geometry."""
+    from .. import geomorph
+    quality = geomorph.cross_section_quality(geom)
+    return {"crossSectionQuality": quality} if quality else None
+
+
+def rated_keys(trace: Optional[dict]) -> list[str]:
+    """The keys of the inputs a method rates (its non-context inputs), from its trace: how
+    an adapter tells which quantity the active method read when a candidate package
+    substitutes one (the flow ratio for the flow CV, width variability for woody cover)."""
+    return [x["key"] for x in (trace or {}).get("inputs") or [] if not x.get("contextOnly")]
+
+
+def mean_composite(trace: Optional[dict]) -> bool:
+    """True when the method that produced ``trace`` is a mean-of-indices composite (no
+    single input governs)."""
+    return (trace or {}).get("methodKind") == "mean_index"
+
+
+def mean_text(trace: dict) -> str:
+    """``mean rating index 0.523 (impervious Good, agriculture Poor)`` for a mean composite."""
+    rated = [x for x in trace.get("inputs") or [] if x.get("rating")]
+    parts = ", ".join(f"{x['key']} {x['rating']}" for x in rated)
+    combined = trace.get("combinedValue")
+    value = f"{float(combined):.3f}" if combined is not None else "n/a"
+    return f"mean rating index {value} ({parts})"
+
+
 def _integrity_value(value: Any) -> Optional[float]:
     """A StreamCat integrity component, valid only on its documented 0-1 scale."""
     try:
@@ -219,8 +250,15 @@ def unavailable(metric_id: str, note: str = "", confidence: str = "L",
     """Graceful degradation when a source fails or a required input is absent.
 
     Pass ``scoring`` to keep the evaluation trace (which inputs were missing, and why the
-    metric could not be rated) even though no rating was produced.
+    metric could not be rated) even though no rating was produced. A trace whose rating
+    was withheld as a documented gap (an applicability rule or an unscored method with a
+    statement) carries that statement as the note: the evidence was there, the method
+    chose not to rate it.
     """
+    trace = scoring or {}
+    if trace.get("completeness") == "withheld" and trace.get("statement"):
+        note = str(trace["statement"])
+        value_text = "not rated (documented gap)"
     return MetricResult(metric_id=metric_id, rating=None, status="unavailable",
                         confidence=confidence, note=note, value_text=value_text,
                         scoring=scoring)

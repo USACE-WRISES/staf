@@ -1,0 +1,247 @@
+# evaluation_protocol_v1_easi_addendum.yaml
+# The EASI addendum to Pre-registration V (evaluation_protocol_v1.yaml): the frozen protocol of
+# the STAF national assessment campaign's Round 4 step 5, EASI's revision rounds. Machine
+# readable; the prose is EVALUATION_PROTOCOL_V1_EASI_ADDENDUM.md. Both are committed under
+# apps/stream-curves/config/methodology/ on the candidate branch, and every EASI study or
+# campaign manifest of Round 4 records this file's sha256 beside the study runner's protocol.
+# Frozen before any candidate result is read; a margin here never moves afterwards. One
+# re-specification per family is allowed only before that family's results are read, as a
+# dated addendum in the .md. Written under the owner's standing instruction of 2026-09-25 (the
+# families and margins are the campaign's, listed for the owner; nothing here changes scoring).
+schema: evaluation-protocol-addendum/1
+addendum_version: "1.0"
+extends:
+  file: evaluation_protocol_v1.yaml
+  protocol_version: "1.0"
+  sha256: 84a5cabca0b08d403c44164b130500173451aa0d14ae11704abeeece014a1cfd
+campaign: national-campaign-2026-09
+round: 4
+frozen_on: "2026-09-26"
+authority: >-
+  Owner decision D1 (EASI's own revision rounds after the DEEP methodology is frozen for national
+  generation; one heavy campaign at a time) and the review prompt 02_EASI.md sections 2 to 5.
+  This effort owns EASI screening methods, proxy evaluation and candidate app behavior; DEEP
+  coordinates shared engine changes through numbered handoffs (HANDOFF_DEEP-EASI_001 is the
+  baseline).
+
+baseline:
+  easi_method_version: b2e3033116e3            # Alternative 2, adopted 2026-09-16 (commit 02f39a8)
+  package_digest: sha256:5b733a6b7690f7893c6c15357178128a04646595e5d2cff7f8bb69fdbf40246d
+  evaluator_digest: sha256:594bd096fd36bc4060d1023f99379446beeb522364c3ac18a143d55786345845
+  method_zip_sha256: 3ae274055cd7d6ec6bebd98ae7284ec6081abf9e7c68a5e2c0545528180a9619
+  library_version: easi-screening v1
+  curves:
+    count: 34
+    sets:
+      corridor-woody: {quantity: woody_wsrp100, stratifier: nars9, fallback: national}
+      corridor-natural: {quantity: natural_wsrp100, stratifier: nars9, fallback: national}
+      flow-variability: {quantity: q_cv_monthly, stratifier: nars9, fallback: national}
+      entrenchment: {quantity: er_median, stratifier: slope_class, fallback: national}
+  fixed_bands_unchanged: [catchment-land-cover-pressure, road-density-inflow-pressure, watershed-wetland-extent, degree-of-regulation, bank-height-ratio, watershed-agriculture-share, streamcat-prg-bmmi, nas-established-taxa-count, nearby-dam-proximity]
+  rating_index: {Poor: 0.195, Fair: 0.545, Good: 0.85}
+  rollup: mean of the available discipline sub-indices; unrated functions are omitted (easi/scoring.py)
+  candidate_workspace:
+    branch: easi-candidate
+    commit: 8b673d0932ca5037c6e9cc96f1a934168a51b13d
+    data_root: D:/Data/staf-campaign-2026-09/easi/
+    writer_rule: apps/easi/data is written only by export_easi_method.py --write-easi-data; an arm scores an isolated package through EASI_METHOD_PACKAGE
+  deep_baseline:
+    handoff: HANDOFF_DEEP-EASI_001
+    commit: "616c04ddd02d3387079c5500560a5dcb2ee7b1c1"
+    methodology_version: "0.15-provisional"
+    station_screen_sha256_prefix: d9954342
+    shared_files_changed: none
+  study_runner:
+    version: "1.1.0"
+    base_id: alternative-2-b2e3033116e3
+    study_id_pattern: "<ISO date>-<family>-alternatives"
+    reference_alternative: the base method scored through the same runner (never a historical AUC)
+
+cohorts:
+  stored_sample: {n: 100000, seed: 17, strata: [state, l2], weights: N_h over n_h, describes: the stored footprint, not CONUS}
+  nrsa_stations: every NRSA station COMID with sufficient stored identity and evidence; identical targets collapse; conflicts and missing identities counted and excluded
+  visit_rule: latest eligible visit 1 per station and target; development cohort 2013-19; retrospective cohort 2023-24
+  independence_unit: station and connected watershed (HUC8), never observations repeated across functions
+
+partitions:
+  spatial_folds: 5
+  fold_assignment: "SHA256('easi-field-fold-v1:' + smallest connected HUC8), first eight bytes as a big-endian integer modulo five"
+  held_out_refits: every fitted reference family (the four sets and any family a candidate adds) refitted per fold on the original strict panels excluding the fold's watersheds, under the same fit and usability rules; an unavailable fold makes that fold unavailable and no frozen curve fills it
+  frozen_fits: the all-data fits (the shipped package and each candidate package) are used for the stored-footprint effects and are distinct from the fold fits
+  paired_bootstrap: {draws: 1000, cluster: huc8, deterministic: true}
+  reference_bootstrap: {draws: 200, cluster: huc12, seed: 7}
+  temporal_evaluation: retrospective 2023-24 (2023-24 informed the 0.14 corrections and the 2026-09-15 study)
+  development_only: reference selection, transforms, donor choices and thresholds are fitted on development data only
+
+targets:
+  T1: {name: reference_vs_impaired, measure: AUC of the ECI against the 2013-14 EPA reference and impaired designations, cohort: field, unweighted}
+  T2: {name: benthic_mmi, measure: AUC of the ECI against the NRSA benthic MMI Good and Poor classes}
+  T3: {name: fish_mmi_and_oe, measure: AUC against the NRSA fish MMI Good and Poor classes and O/E where the station carries them (the campaign's O3 targets)}
+  field:
+    low_flow: same-visit XWIDTH over XBKF_W with a positive denominator (percent reach dry separate)
+    habitat: same-visit NRSA XFC_NAT and PCT_FAST
+    geometry: same-visit NRSA XBKF_H and BFWD_RAT at matched stations
+    note: field observations are targets, never DEEP outputs; an observation flagged as a scoring input of a function is excluded from that function's comparison
+
+independence:
+  - T2 never decides for population-support (prg_bmmi0809 was trained on NRSA benthic MMI); it is reported for that function as exploratory
+  - no DEEP output is a target; no EASI-derived screen or criterion validates DEEP (the shared evidence contract)
+  - agreement with previous EASI scores, with DEEP, or with the fixed criteria supports nothing
+  - unknown biological-model training membership prevents an independence claim for the model route
+
+candidates:
+  # one change each against the base; every mechanism is parity preserving when absent
+  E1:
+    family: low_flow_intermittence
+    function: low-flow-baseflow-dynamics
+    change: "the low-flow rating is withheld as a documented gap on reaches whose NHDPlus FCODE is intermittent (46003) or ephemeral (46007); perennial reaches keep the flow-variability rating"
+    mechanism: an applicability rule on the context input fcodeContext of erom-flow-variability (engine knob K1)
+    hypothesis: "H-E1 naturally intermittent reaches are rated Poor by monthly flow variability without impairment"
+    primary_outcome: P1
+    decision: simplification
+    coverage_effect: low-flow unrated on intermittent and ephemeral reaches (reported under P3)
+    supporting: field low-flow ratio agreement on perennial reaches; the withheld reaches' distribution of the ratio (exploratory)
+  E2:
+    family: low_flow_proxy
+    function: low-flow-baseflow-dynamics
+    change: "the minimum-month over annual-mean EROM ratio (q_min_ratio, higher is better) with NARS-9 reference curves refitted on the strict panels replaces monthly flow variability"
+    mechanism: quantity q_min_ratio of the builder's curve registry fitted through refit_campaign into a flow-min-ratio set; a method variant reading flowMinRatio (engine knob K3)
+    hypothesis: "H-E2 the low-flow ratio tracks low-flow condition with less climate confounding than variability"
+    primary_outcome: P1
+    decision: accuracy_change
+    coverage_effect: none intended (the same reaches carry both quantities)
+    supporting: field low-flow ratio agreement (Spearman, paired delta) and the gage diagnostics
+  E3:
+    family: biological_fallback
+    function: population-support
+    change: "the ICI and IWI landscape fallback of streamcat-prg-bmmi is withheld (unscored) where the model has no value; the model route is unchanged"
+    mechanism: the fallback entry of the method's sourceHierarchy set to unscored with a documented-gap statement (existing operator)
+    hypothesis: "H-E3 the fallback reuses landscape evidence rated by other functions and adds no independent association"
+    primary_outcome: P1 on T1 (T2 is exploratory for this function)
+    decision: simplification
+    coverage_effect: population support unrated on about 59 percent of reaches (reported under P3)
+  E4:
+    family: habitat_channel_form
+    function: habitat-provision
+    change: "habitat-support-potential reads bankfull width variability from the 3DEP cross sections (bankfull_width_cv, higher is better) with NARS-9 reference curves refitted on the strict panels instead of corridor woody cover"
+    mechanism: quantity bankfull_width_cv of the builder's curve registry fitted through refit_campaign; a method variant reading widthCv (engine knob K3)
+    hypothesis: "H-E4 in-stream habitat complexity is a channel-form construct; the corridor proxy is a shade and carbon quantity rated three times"
+    primary_outcome: P1
+    decision: accuracy_change
+    coverage_effect: reaches without a cross section lose the rating (reported under P3)
+    supporting: field agreement with XFC_NAT and PCT_FAST
+  E5:
+    family: dem_geometry_uncertainty
+    function: [high-flow-dynamics, floodplain-connectivity, channel-evolution, channel-floodplain-dynamics]
+    change: "BHR and ER ratings are withheld where the 3DEP cross-section record is flagged low quality (detection method, valid stations) or the ratio is outside the physical range (0 < BHR <= 2, ER >= 1)"
+    mechanism: an applicability rule on the cross-section evidence's quality record (engine knob K1 with the provider's flags exposed, K2)
+    hypothesis: "H-E5 uncertain DEM geometry rates channels at random"
+    primary_outcome: P1
+    decision: simplification
+    coverage_effect: geometry functions unrated where withheld (reported under P3)
+    supporting: field agreement with XBKF_H and BFWD_RAT on matched stations, before and after the gate
+  E6:
+    family: shared_agriculture
+    function: [sediment-continuity, bed-composition-bedform-dynamics]
+    change: "agricultural cover enters the assessment once: sediment-supply-potential rates K factor and road density only, and watershed-agriculture-share is withheld (unscored), so Bed composition is a documented gap; catchment-land-cover-pressure is unchanged"
+    mechanism: method file edits with existing operators (worst_index over two inputs; unscored)
+    hypothesis: "H-E6 the repeated input inflates cross-function agreement without adding association"
+    primary_outcome: P1
+    decision: simplification
+    coverage_effect: Bed composition unrated everywhere (reported under P3)
+    supporting: the shared-agriculture paired agreement diagnostic of the 2026-09-15 study, rerun
+  E7:
+    family: composites
+    function: [catchment-hydrology, sediment-continuity, light-thermal-regime, channel-evolution, hyporheic-connectivity]
+    change: "a composite method's index is the mean of its inputs' indices instead of the worst (or best) of them"
+    mechanism: a mean_index operator beside worst_index and best_index (engine knob K4); existing packages keep their operators
+    hypothesis: "H-E7 the extreme-of composite makes one input decisive and discontinuous; the mean keeps information"
+    primary_outcome: P1
+    decision: accuracy_change
+    coverage_effect: none
+    supporting: P4 stability
+  E8:
+    family: completeness
+    function: all
+    change: "the ECI is reported with its completeness (functions rated of 20) and as an interval beside the point value (unrated functions taken as Poor for the lower bound and Good for the upper); comparisons between reaches are paired on identical rated sets; the point ECI is unchanged"
+    mechanism: rollup reporting fields (engine knob K5); no scoring change
+    hypothesis: "H-E8 reaches with few rated functions read more favorably than complete reaches"
+    primary_outcome: P5
+    decision: presentation
+    coverage_effect: none
+
+outcomes:
+  P1:
+    name: independent_association
+    measure: paired AUC delta (candidate minus base) on T1 and T2, frozen and held-out designs, identical finite observations, 95 percent HUC8-bootstrap intervals from 1,000 draws; T3 reported
+    adopt_accuracy_change: "on the family's primary target the interval excludes 0 and the median delta is >= 0.01, and the other target's lower bound is >= -0.01, in both designs"
+    adopt_simplification: "both targets' lower 95 percent bounds are >= -0.01 in both designs, and rating availability is unchanged or its change is documented gaps only"
+    basis: the 2026-09-15 alternatives study rule (0.01) and the campaign's O3 block, shared so both tiers use one margin; 0.01 as an accuracy margin is an uncalibrated operating choice
+  P2:
+    name: function_and_regional_review
+    measure: per-function and per-NARS-9 paired AUC, signed Spearman and weighted-kappa deltas with 95 percent intervals; supported when the sample floor holds and at least 800 of 1,000 draws are valid
+    block: "a supported AUC delta interval wholly below -0.01, or a supported Spearman or weighted-kappa delta interval wholly below zero, retains the base for that family"
+    basis: the 2026-09-15 study's review rule; no equivalence margin is assumed for correlation or kappa
+  P3:
+    name: coverage_and_footprint
+    measure: rating availability per function, changed share of rated reaches, paired mean ECI delta on the stored sample (weights N_h over n_h)
+    rule: reported; never traded against P1 or P2; a withheld rating is a documented gap, never a favorable rating
+  P4:
+    name: stability
+    measure: class-flip share of a refitted family's ratings over 200 HUC12 reference-panel resamples on the stored sample, and the threshold sensitivity of fixed bands (a sub-precision shift at the band edge)
+    limit: "the flip share may not rise by more than 0.02 against the base's family"
+    basis: operating choice (the campaign's O5 analog)
+  P5:
+    name: completeness_optimism
+    measure: the mean ECI of reaches with fewer than 15 rated functions minus the mean ECI of complete reaches within the same Level II stratum, weighted, on the stored sample
+    adopt_presentation: "E8 is adopted when the difference exceeds 0.02"
+    basis: operating choice (the ACC-06 net-optimism scale)
+  P6:
+    name: usability
+    measure: inputs per function, distinct sources, runtime, failures, unavailable services
+    rule: reported
+
+multiplicity:
+  families: 8
+  primary_comparisons_per_family: 1
+  supporting: Benjamini-Hochberg q <= 0.10 across the eight primaries, reported
+  subgroups: function and NARS-9 group, uncorrected, exploratory (P2 is the block)
+
+stopping:
+  - stop after the declared families
+  - a family without a passing member is rejected and the base kept
+  - one re-specification per family, only before its results are read, as a dated addendum in the .md
+  - the finalist composition is checked once on the development cohort, then scored once on the retrospective 2023-24 cohort
+
+sequence:
+  round_ea:
+    - EA1 replay of the base through evaluation_campaign on the case set (the stored sample and the NRSA stations); digests equal the D4c parity (792 cases, 540 reaches)
+    - EA2 baseline P1 to P6 for the base, frozen and held-out designs
+  round_eb: [E1, E2, E3, E4]
+  round_ec: [E5, E6, E7, E8]
+  finalist:
+    - compose the accepted changes into one method package through the exporter (the sole writer), never into apps/easi/data
+    - check the composition once on the development cohort for interaction
+    - score the retrospective 2023-24 cohort once
+    - final all-data fits distinct from the fold fits
+    - the adoption candidate is a library version and a HANDOFF_EASI-DEEP reply; activation, redeploy, canonical EASI v2 and national rescoring stay owner actions (Round 5)
+  comparison_rule: paired on identical eligible observations; coverage change reported separately
+  rejection_rule: no candidate meets its margin, or meets it only by coverage accounting or by lowering reference quality
+
+claims:
+  software_verification: parity cases, digests, serial and parallel equivalence
+  proxy_meaning: [P1, P2, field agreement]
+  association_not_validation: [P1]
+  supports_nothing: agreement with previous EASI scores, with DEEP outputs, or with the fixed criteria
+
+engine_knobs:
+  # each exists before its arm runs, parity preserving when absent (the base package scores identically)
+  K1: an applicability rule on a method's context input or evidence quality record that withholds the rating with a documented-gap statement (E1, E5)
+  K2: the 3DEP cross-section provider exposes its quality flags in the evidence record (E5)
+  K3: refit_campaign fits a new quantity of the builder's registry (q_min_ratio, bankfull_width_cv) into a curve set, and a method variant reads it (E2, E4)
+  K4: a mean_index operator (E7)
+  K5: rollup reporting fields for completeness and the ECI interval (E8)
+
+owner_reserved:
+  - the families, hypotheses, margins and the fold and cohort rules above are taken under the standing instruction of 2026-09-25 and listed for the owner; a change before any result is read is a dated re-specification, never a silent edit
+  - adoption of a finalist into the operational EASI (activation, redeploy, canonical v2, national rescoring) is the owner's (D4c, Round 5)
