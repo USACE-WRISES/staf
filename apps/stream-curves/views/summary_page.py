@@ -172,7 +172,6 @@ def summary_page_server(input, output, session, state: AppState):
     bulk_recompute_phase = reactive.value("idle")
     pending_bulk_recompute = reactive.value(None)
     pending_row_recompute = reactive.value(None)
-    pending_review = reactive.value(None)  # {"metric", "decision"} awaiting a rationale
     review_queue_collapsed = reactive.value(False)  # session-scoped; default expanded
 
     @reactive.calc
@@ -866,12 +865,7 @@ def summary_page_server(input, output, session, state: AppState):
     def _open_export():
         st.launch_workspace_modal(state, "summary_export")
 
-    # ── flagged-curve review queue (inline; was a stage-banner modal) ────────
-    def _metric_label(metric: str) -> str:
-        with reactive.isolate():
-            mc = state.metric_config() or {}
-        return (mc.get(metric) or {}).get("display_name") or metric
-
+    # ── flagged-curve review queue (inline, read-only; decided in Select final curves)
     def _review_action(metric: str, action: str) -> str:
         payload = json.dumps({"metric": metric, "action": action})
         return (
@@ -931,6 +925,9 @@ def summary_page_server(input, output, session, state: AppState):
                 # the full reason rides in the tooltip since the line clips.
                 ui.div(linkify_rule_ids(reason), class_="review-queue-reason",
                        title=str(reason)),
+                # Read-only list: the answer (accept or remove, with a rationale)
+                # is given in Select final curves, the one decision authority.
+                # Adjusting the curve is workspace work, not a decision.
                 ui.div(
                     ui.tags.button(
                         "Adjust",
@@ -939,16 +936,11 @@ def summary_page_server(input, output, session, state: AppState):
                         title="Open the analysis workspace and rerun this metric",
                     ),
                     ui.tags.button(
-                        "Accept",
-                        class_="btn btn-sm btn-outline-success",
-                        onclick=_review_action(metric, "accept"),
-                        title="Accept the proposed curve (rationale required)",
-                    ),
-                    ui.tags.button(
-                        "Remove",
-                        class_="btn btn-sm btn-outline-danger",
-                        onclick=_review_action(metric, "remove"),
-                        title="Remove from the published scope (rationale required)",
+                        "Decide in Select final curves",
+                        class_="btn btn-sm btn-outline-secondary",
+                        onclick=_review_action(metric, "decide"),
+                        title="Accept or remove this curve, with a rationale, in "
+                              "Select final curves",
                     ),
                     class_="review-queue-actions",
                 ),
@@ -975,53 +967,9 @@ def summary_page_server(input, output, session, state: AppState):
             request_id = st.next_workspace_modal_request_id(state)
             st.launch_workspace_modal(state, "analysis", metric, request_id=request_id)
             return
-        if action not in ("accept", "remove"):
-            return
-        decision = rs.DECISION_FINALIZED if action == "accept" else rs.DECISION_REMOVED
-        pending_review.set({"metric": metric, "decision": decision})
-        accepting = action == "accept"
-        verb = "Accept" if accepting else "Remove"
-        ui.modal_show(ui.modal(
-            ui.tags.p(
-                f"{verb} {_metric_label(metric)}"
-                + ("." if accepting else " from the published scope."),
-            ),
-            ui.input_text_area(
-                ns("review_note"), "Rationale (required)",
-                width="100%", height="70px",
-            ),
-            title=f"{verb} curve",
-            easy_close=True,
-            footer=ui.TagList(
-                ui.modal_button("Cancel"),
-                ui.input_action_button(
-                    ns("review_confirm"), verb,
-                    class_="btn btn-success" if accepting else "btn btn-danger",
-                ),
-            ),
-        ))
-
-    @reactive.effect
-    @reactive.event(input.review_confirm, ignore_init=True)
-    @guard("record the review decision")
-    def _review_confirm():
-        pending = pending_review()
-        req(pending and pending.get("metric"))
-        note = (input.review_note() or "").strip()
-        if not note:
-            ui.notification_show(
-                "Add a rationale before continuing.", type="warning", duration=5
-            )
-            return
-        metric = pending["metric"]
-        decision = pending["decision"]
-        pending_review.set(None)
-        ca.set_review_decision(state, metric, decision, note=note, actor="reviewer")
-        done = "Accepted" if decision == rs.DECISION_FINALIZED else "Removed"
-        ui.notification_show(
-            f"{done} {_metric_label(metric)}.", type="message", duration=4
-        )
-        ui.modal_remove()
+        if action == "decide":
+            # the section switch; the register's function rows carry the buttons
+            ui.update_navset("curves_section", selected=fs.SECTION, session=session)
 
     @render.ui
     def bulk_refresh_status():
@@ -1046,7 +994,8 @@ def summary_page_server(input, output, session, state: AppState):
         return cg.reference_tiles_for(build, mapping, built=built, decisions=decisions)
 
     def _waiting_for_build():
-        """The refused sources the owner accepted that no build has computed yet."""
+        """The refused sources the owner accepted that no build has computed yet,
+        read-only: a decision is undone from Select final curves."""
         from streamcurves import metric_names as _mn
         from streamcurves import owner_curves as _oc
         waiting = _oc.pending(state.owner_curve_decisions() or [])
@@ -1055,19 +1004,20 @@ def summary_page_server(input, output, session, state: AppState):
         return ui.div(
             ui.tags.strong("Waiting for a build: "),
             *[ui.tags.span(f"{_mn.display_name_for(mk, None) or mk}: "
-                           f"{(d.get('source') or {}).get('title')} ",
-                           ui.tags.button(fa("rotate-left"), " Undo", type="button",
-                                          class_="btn btn-link btn-sm p-0",
-                                          onclick=sp.undo_onclick(d.get("id"))),
+                           f"{(d.get('source') or {}).get('title')}",
                            class_="me-3")
               for mk, d in sorted(waiting.items())],
             ui.div("The next build of this region computes each one and records every check "
-                   "it fails. Build the region again in the Region builder.",
+                   "it fails. Build the region again from its Build step; undo a choice "
+                   "from Select final curves.",
                    class_="text-muted"),
             class_="alert alert-secondary py-2 small mb-0 mt-2")
 
     @render.ui
     def reference_table():
+        # Read-only since the one decision authority (2026-09-25): a row opens
+        # where its curve comes from; removing it, taking it out of a function,
+        # undoing, or choosing a source happens in Select final curves.
         tiles = _reference_tiles()
         if not tiles:
             return None
@@ -1079,22 +1029,6 @@ def summary_page_server(input, output, session, state: AppState):
             n_ref = t.get("reference_n")
             lo, hi = t.get("reference_range") or (None, None)
             fns = [t.get("function_name")] + list(t.get("also_functions") or [])
-            if t.get("removed_decision"):
-                action = ui.tags.button(
-                    fa("rotate-left"), " Undo", type="button", class_="btn btn-link btn-sm p-0",
-                    onclick=sp.undo_onclick(t["removed_decision"]),
-                    title="Undo the removal")
-            elif t.get("owner_decision"):
-                action = ui.tags.button(
-                    fa("rotate-left"), " Undo", type="button", class_="btn btn-link btn-sm p-0",
-                    onclick=sp.undo_onclick(t["owner_decision"]),
-                    title="Undo this choice: the metric scores as the build left it")
-            else:
-                action = ui.tags.button(
-                    fa("trash-can"), " Remove", type="button",
-                    class_="btn btn-link btn-sm p-0 text-danger",
-                    onclick=sp.act_onclick(metric, "remove"),
-                    title="Remove this curve from the assessment")
             status = (t.get("status_text") if t.get("status_text") != t.get("badge") else None)
             body.append(ui.tags.tr(
                 ui.tags.td(ui.HTML(cs.tile_svg(t, w=150, h=90))),
@@ -1109,7 +1043,6 @@ def summary_page_server(input, output, session, state: AppState):
                 ui.tags.td("" if lo is None or hi is None
                            else f"{cs.fmt_num(lo)} to {cs.fmt_num(hi)}"),
                 ui.tags.td(str(t.get("confidence_label") or "")),
-                ui.tags.td(action),
                 class_="summary-reference-row"
                 + (" is-owner-removed" if t.get("removed_decision") else ""),
                 role="button", tabindex="0",
@@ -1117,26 +1050,22 @@ def summary_page_server(input, output, session, state: AppState):
                 onclick=sp.open_onclick(metric), onkeydown=sp.open_onkeydown(),
             ))
         n = len(tiles)
-        from views import source_dialog as sd
         return ui.card(
             ui.card_header(
                 ui.div(
                     ui.tags.strong("Curves from other sources"),
-                    ui.tags.button(fa("circle-plus"), " Add a source", type="button",
-                                   class_="btn btn-sm btn-outline-primary ms-auto",
-                                   onclick=sd.open_onclick(stop=False),
-                                   title="Choose a source for a function's metric"),
                     class_="d-flex align-items-center gap-2"),
                 ui.tags.div(
                     f"{n} curve{'' if n == 1 else 's'} this version scores that this build "
                     "did not fit. Click a row to see where it comes from and why it was "
-                    "chosen. A removal or a new source applies at once and to every later "
-                    "build of this region.",
+                    "chosen. A removal, a new source or an undo is decided in Select "
+                    "final curves and applies at once and to every later build of this "
+                    "region.",
                     class_="text-muted small")),
             ui.card_body(ui.tags.table(
                 ui.tags.thead(ui.tags.tr(*[ui.tags.th(h) for h in (
                     "Curve", "Metric", "Functions", "Source", "n reference",
-                    "Reference range", "Confidence", "")])),
+                    "Reference range", "Confidence")])),
                 ui.tags.tbody(*body),
                 class_="table table-sm align-middle summary-reference-table"),
                 _waiting_for_build()),

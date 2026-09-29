@@ -866,13 +866,54 @@ def units_of(metric: dict) -> str:
 def support_text(metric: dict) -> str:
     """One line on what the metric is scored against, for the Reference sheet. A
     source the build refused and the owner accepted (REF-15) adds the checks it
-    failed, which the bundle states as its limit."""
+    failed, which the bundle states as its limit. A flagged transfer (REF-16,
+    methodology 0.16) adds the limitation DEEP prints beside the metric: the
+    recovery test did not confirm the source, and the confidence is capped."""
     text = _support_text(metric)
     exception = metric.get("ownerException")
     limit = str(metric.get("basisLimit") or "").strip()
     if isinstance(exception, dict) and limit:
         text = (text.rstrip(". ") + ". " + limit) if text else limit
+    flag = flagged_note(metric)
+    if flag:
+        text = (text.rstrip(". ") + ". " + flag) if text else flag
     return text
+
+
+#: a flagged transfer's transfer risk (reference_pool.RISK_UNVALIDATED). Spelled here
+#: because DEEP's bake loads this module by file path, outside the package, so it
+#: imports nothing from streamcurves.
+UNVALIDATED_RISK = "unvalidated"
+
+
+def flagged_note(metric: dict) -> str:
+    """The per-metric note of a flagged transfer (REF-16): the same words
+    ``acceptance.transfer_limitation`` writes into the bundle and DEEP prints
+    (``reference_support.flag_line``); empty for a curve that is not flagged."""
+    sup = metric.get("referenceSupport") if isinstance(metric.get("referenceSupport"), dict) else {}
+    risk = str(metric.get("transferRisk") or sup.get("transferRisk") or "")
+    if risk != UNVALIDATED_RISK:
+        return ""
+    validation = metric.get("transferValidation")
+    if not isinstance(validation, dict):
+        validation = sup.get("transferValidation") or {}
+    cap = metric.get("confidenceCap", sup.get("confidenceCap"))
+    v = validation or {}
+    a1, n, net = v.get("a1_share"), v.get("n_cells"), v.get("net_opt")
+    min_cells = int(v.get("min_cells") or 4)
+    max_net = float(v.get("max_net_optimism") or 0.05)
+    if a1 is None or a1 != a1:
+        found = ("no recovery evidence for this source and metric; class agreement in two "
+                 "thirds of evaluation regions required")
+    else:
+        found = f"class agreement {float(a1):.2f} of evaluation regions; two thirds required"
+        if n is not None and int(n) < min_cells:
+            found += f", over {int(n)} evaluation regions where {min_cells} are required"
+        if net is not None and net == net and float(net) > max_net:
+            found += f"; net optimism {float(net):+.2f}, at most {max_net:.2f} allowed"
+    tail = f"; confidence capped at {int(cap)}" if cap is not None else "; confidence capped"
+    return ("Scored on a reference pool whose transfer to this ecoregion was not confirmed by "
+            f"the recovery test ({found}){tail}.")
 
 
 def _support_text(metric: dict) -> str:
@@ -918,8 +959,11 @@ def _support_text(metric: dict) -> str:
         where = (f"NARS-9 region {sup.get('regionCode')}" if sup.get("level") == "nars9" else
                  f"{sup.get('levelLabel') or sup.get('level')} ecoregion {sup.get('regionCode')}"
                  + (f" ({sup.get('regionName')})" if sup.get("regionName") else ""))
+        risk = str(sup.get("transferRisk") or "")
+        words = {"unvalidated": "unvalidated (transfer not confirmed by the recovery test)",
+                 "unassessed": "not yet assessed"}.get(risk, risk)
         return (f"{sup.get('nUsable')} least-disturbed stations borrowed from {where}{screen}"
-                f", transfer risk {sup.get('transferRisk')}{tail}")
+                f", transfer risk {words}{tail}")
     n = metric.get("referenceN")
     return f"{int(n)} reference sites" if isinstance(n, (int, float)) else ""
 

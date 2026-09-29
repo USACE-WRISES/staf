@@ -198,3 +198,87 @@ def test_bake_empty_library_is_empty_registry(tmp_path, libroot):
     doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
     assert doc["assessments"] == []
     assert doc["schemaVersion"] == 2
+
+
+# --------------------------------------------------------------------------- #
+# --default-only: each assessment's defaultVersion alone (a smaller deploy)
+# --------------------------------------------------------------------------- #
+def _refs(out: Path) -> list[str]:
+    doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
+    return [r["assessmentRef"] for r in doc["assessments"]]
+
+
+def test_default_only_bakes_each_assessments_default_version(tmp_path, libroot):
+    out = tmp_path / "data"
+    # two eligible (preliminary) versions of one assessment; the catalog points at v2
+    _write_library(libroot, "ecbp", "ECBP", [1, 2])
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=2, default=2, prelim=2)])
+    bake = _load_bake_module()
+    result = bake.bake(out=out, default_only=True)
+
+    assert result["records"] == 1 and result["libraryCount"] == 2
+    assert result["defaultOnly"] is True and result["assessments"] == ["ecbp"]
+    assert _refs(out) == ["ecbp@v2"]
+    doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
+    assert doc["libraryCatalog"]["ecbp"] == {"defaultVersion": 2, "latestCertified": 0,
+                                             "latestPreliminary": 2}, "every pointer stays"
+    assert (out / "bundles" / "ecbp@v2.deep.json").is_file()
+    assert json.loads((out / "bundles" / "ecbp.deep.json").read_text("utf-8"))["version"] == 2
+    assert not (out / "bundles" / "ecbp@v1.deep.json").exists()
+
+    # without the flag nothing changes: every eligible version bakes, stale files go
+    full = bake.bake(out=out)
+    assert full["records"] == 2 and full["defaultOnly"] is False
+    assert _refs(out) == ["ecbp@v1", "ecbp@v2"]
+    assert (out / "bundles" / "ecbp@v1.deep.json").is_file()
+
+
+def test_default_only_follows_the_catalog_pointer_not_the_newest_version(tmp_path, libroot):
+    out = tmp_path / "data"
+    # v1 certified is the default although v2 preliminary is newer
+    _write_library(libroot, "ecbp", "ECBP", [1, 2], statuses={1: "certified", 2: "preliminary"})
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=2, default=1,
+                                            cert=1, prelim=2)])
+    _load_bake_module().bake(out=out, default_only=True)
+    assert _refs(out) == ["ecbp@v1"]
+    assert json.loads((out / "bundles" / "ecbp.deep.json").read_text("utf-8"))["version"] == 1
+    assert not (out / "bundles" / "ecbp@v2.deep.json").exists()
+
+
+def test_default_only_never_bakes_a_draft_default(tmp_path, libroot):
+    """An assessment whose only versions are drafts points its default at a draft (the
+    StreamCurves picker needs an openable default); DEEP still bakes nothing of it."""
+    out = tmp_path / "data"
+    _write_library(libroot, "ecbp", "ECBP", [1, 2], statuses={1: "draft", 2: "draft"})
+    _write_library(libroot, "other", "Other", [1])
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=2, default=2),
+                             _catalog_entry("other", "Other", latest=1, default=1, prelim=1)])
+    result = _load_bake_module().bake(out=out, default_only=True)
+    assert result["records"] == 1 and _refs(out) == ["other@v1"]
+    assert not (out / "bundles" / "ecbp.deep.json").exists()
+
+
+def test_default_only_copies_the_default_calculator_only(tmp_path, libroot):
+    from test_bake_calculators import _add_calculator
+    out = tmp_path / "data"
+    _write_library(libroot, "ecbp", "ECBP", [1, 2])
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=2, default=2, prelim=2)])
+    _add_calculator(libroot, 1, b"PK-one")
+    _add_calculator(libroot, 2, b"PK-two")
+    result = _load_bake_module().bake(out=out, default_only=True)
+    assert result["calculators"] == {"copied": ["ecbp@v2"], "missing": []}
+    www = tmp_path / "www" / "calculators"
+    assert sorted(p.name for p in www.glob("*.xlsx")) == ["ecbp.xlsx", "ecbp@v2.xlsx"]
+
+
+def test_the_default_only_flag_on_the_command_line(tmp_path, libroot, capsys):
+    out = tmp_path / "data"
+    _write_library(libroot, "ecbp", "ECBP", [1, 2])
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=2, default=2, prelim=2)])
+    bake = _load_bake_module()
+    assert bake.main(["--out", str(out), "--default-only"]) == 0
+    assert _refs(out) == ["ecbp@v2"]
+    assert "default versions only" in capsys.readouterr().out
+    assert bake.main(["--out", str(out)]) == 0
+    assert _refs(out) == ["ecbp@v1", "ecbp@v2"]
+    assert "default versions only" not in capsys.readouterr().out

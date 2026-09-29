@@ -445,6 +445,25 @@ MISSING_POOL = {"metricId": "spring-chem-chla", "metricName": "Chlorophyll a",
                 "statement": "Insufficient reference support. Too few stations."}
 
 
+#: StreamCurves methodology 0.15: two rules withhold a metric whose pool exists,
+#: at the build, and each reads under its own label
+HIGH_MISSING = {"metricId": "spring-phab-lwdeqvolm100", "metricName": "Large wood volume",
+                "reason": "high-missingness", "rule": "DATA-03",
+                "functions": [{"functionId": "habitat-provision", "functionName": "Habitat provision"}],
+                "statement": ("High missingness. 55% of the 40 comparable reference stations of "
+                              "this ecoregion's own reference pool have no value for this metric "
+                              "(18 carry one), above the 40% limit of rule DATA-03, so the metric "
+                              "is withheld at the build. No curve was built and the metric is "
+                              "not scored.")}
+NARROW_CORE = {"metricId": "spring-chem-ph", "metricName": "pH",
+               "reason": "measurement-precision-floor", "rule": "CURVE-09",
+               "functions": [{"functionId": "water-soil-quality", "functionName": "Water and soil quality"}],
+               "statement": ("Measurement-precision floor. The Functioning core of this two-sided "
+                             "curve spans 0.153 su, narrower than 0.4 su, so the metric is "
+                             "withheld at the build under rule CURVE-09. No curve was built and "
+                             "the metric is not scored.")}
+
+
 def test_a_held_curve_is_titled_as_held_not_as_a_missing_pool():
     assert rs.is_held(HELD) and not rs.is_held(MISSING_POOL)
     assert rs.withheld_title(HELD) == "Held for review, not scored"
@@ -454,6 +473,24 @@ def test_a_held_curve_is_titled_as_held_not_as_a_missing_pool():
     assert rs.withheld_reason(HELD) == "Held for review"
 
 
+def test_a_metric_withheld_by_a_rule_reads_under_that_rule():
+    """Methodology 0.15: DATA-03 and CURVE-09 withhold at the build; the label
+    names the rule. Any other reason keeps the insufficient-support wording."""
+    assert not rs.is_held(HIGH_MISSING) and not rs.is_held(NARROW_CORE)
+    assert rs.withheld_reason(HIGH_MISSING) == "withheld: high missingness (DATA-03)"
+    assert rs.withheld_title(HIGH_MISSING) == "Withheld: high missingness (DATA-03), not scored"
+    assert rs.withheld_reason(NARROW_CORE) == "withheld: measurement-precision floor (CURVE-09)"
+    assert rs.withheld_title(NARROW_CORE) == \
+        "Withheld: measurement-precision floor (CURVE-09), not scored"
+    other = {**MISSING_POOL, "reason": "discrimination-gate"}
+    assert rs.withheld_reason(other) == "Insufficient reference support"
+    assert rs.withheld_title(other) == rs.INSUFFICIENT_TITLE
+    note = rs.withheld_note([HIGH_MISSING, NARROW_CORE])
+    assert "rule DATA-03" in note and "rule CURVE-09" in note
+    assert "national donor" not in note and "held for review" not in note
+    assert chr(0x2014) not in note
+
+
 def test_the_note_explains_only_the_reasons_present():
     held_only = rs.withheld_note([HELD])
     assert "held for review" in held_only and "national donor" not in held_only
@@ -461,6 +498,7 @@ def test_the_note_explains_only_the_reasons_present():
     assert "no national donor pool" in pool_only and "held for review" not in pool_only
     both = rs.withheld_note([HELD, MISSING_POOL])
     assert "held for review" in both and "no modeled expectation" in both
+    assert "rule DATA-03" not in both and "rule CURVE-09" not in both
     for text in (held_only, pool_only, both):
         assert "modelled" not in text and chr(0x2014) not in text
 
@@ -583,6 +621,68 @@ def test_a_curve_from_another_assessment_never_claims_this_ecoregions_stations()
 def test_a_ladder_curve_with_no_sentence_still_names_its_basis():
     bare = {"basis": "modeled-reference", "referenceSupport": {"status": "modeled", "nUsable": 9}}
     assert rs.support_line(bare) == "Modeled reference."
+
+
+# --------------------------------------------------------------------------- #
+# the practitioner's two lines: uncertainty and limitations (campaign Round 1)
+# --------------------------------------------------------------------------- #
+def test_the_uncertainty_line_reads_the_sample_and_the_reviewer_priority():
+    m = _reference(nUsable=24)
+    m.update(referenceN=24, sampleDisposition="adequate", confidenceLabel="Moderate")
+    assert rs.uncertainty_line(m) == "Reference sample: 24 stations, adequate; reviewer priority: moderate"
+    # the builder's label is a review-priority heuristic: Low confidence is a high priority
+    low = dict(m, confidenceLabel="Low", referenceN=9, sampleDisposition="insufficient")
+    assert rs.uncertainty_line(low) == ("Reference sample: 9 stations, insufficient; reviewer priority: high "
+                                        "(builder confidence low)")
+    assert rs.reviewer_priority("High") == "low" and rs.reviewer_priority("Fixed criteria") == ""
+    # what the bundle does not say is not invented
+    assert rs.uncertainty_line(dict(m, confidenceLabel=None)) == "Reference sample: 24 stations, adequate"
+    assert rs.uncertainty_line({"metricId": "m", "referenceN": 94}) == "Reference sample: 94 stations"
+    assert rs.uncertainty_line({"metricId": "m", "sampleDisposition": "exploratory"}) == "Reference sample: exploratory"
+    assert rs.uncertainty_line({"metricId": "m"}) == "" and rs.uncertainty_line(None) == ""
+    # fixed criteria rest on no sample
+    assert rs.uncertainty_line(dict(_fixed(), referenceN=30)) == ""
+    # the modeled and published rungs keep their line (their label still reads as a priority)
+    assert rs.uncertainty_line(dict(MODELED_AS_SHIPPED, confidenceLabel="Low")).endswith("(builder confidence low)")
+
+
+def test_the_limitations_line_joins_the_caveats_and_the_basis_limit_once():
+    m = _reference()
+    assert rs.limitations_line(m) == ""
+    m["curveCaveats"] = ["Built from 66 reference sites.", "Read the condition band, not the point value."]
+    assert rs.limitations_line(m) == "Built from 66 reference sites. Read the condition band, not the point value."
+    limit = "A published criterion is not an estimate of this ecoregion's reference condition."
+    bench = dict(BENCHMARK_AS_SHIPPED, curveCaveats=[limit, "EASI lists the criteria as provisional."],
+                 basisLimit=limit)
+    line = rs.limitations_line(bench)
+    assert line.count(limit) == 1 and line.endswith("EASI lists the criteria as provisional.")
+    # the first 0.13 bundles put basisLimit inside referenceSupport
+    inside = {"metricId": "m", "referenceSupport": {"status": "modeled", "basisLimit": "An extrapolation."}}
+    assert rs.limitations_line(inside) == "An extrapolation."
+    assert rs.limitations_line({"metricId": "m", "curveCaveats": ["", None, "  "]}) == ""
+
+
+def test_the_practitioner_lines_keep_their_order_and_the_old_three_lines():
+    m = _reference("borrowed_l1", level="l1", regionCode="8", regionName="Eastern Temperate Forests",
+                   nUsable=26, nLocal=3, transferRisk="moderate")
+    m.update(referenceN=26, sampleDisposition="adequate", confidenceLabel="Low",
+             curveCaveats=["Borrowed stations."], carriedForward={"fromVersion": 5},
+             ownerDecision={"recordedBy": "GM", "rationale": "Closest match."})
+    lines = rs.practitioner_lines(m)
+    assert lines[0] == rs.support_line(m) and lines[1] == rs.carried_line(m) and lines[2] == rs.owner_line(m)
+    assert lines[3].startswith("Reference sample: 26 stations, adequate; reviewer priority: high")
+    assert lines[4] == "Borrowed stations."
+    assert rs.practitioner_lines({"metricId": "m"}) == [] and rs.practitioner_lines(None) == []
+    for line in lines:
+        assert chr(0x2014) not in line
+    # the hover card and the metric card read the same helpers (source pins)
+    import io as _io, pathlib as _pl
+    src = _io.open(_pl.Path(__file__).resolve().parents[1] / "app.py", encoding="utf-8").read()
+    tip = src[src.index("def _metric_tip_html("):src.index("_BASIS_TAG = {")]
+    assert "reference_support.limitations_line(m)" in tip and "Read with care" in tip
+    card = src[src.index("def fn_panel():"):]
+    assert "reference_support.uncertainty_line(m)" in card and "reference_support.limitations_line(m)" in card
+    assert '"Uncertainty"' in card and "deep-uncertainty-row" in card and "deep-limits-row" in card
 
 
 def test_the_published_ladder_curves_read_as_their_basis():

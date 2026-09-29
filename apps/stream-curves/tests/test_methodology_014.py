@@ -113,11 +113,17 @@ def test_the_committed_calibration_matches_pre_registration_iv():
 
 
 def test_every_family_searches_nars9_as_a_separate_grouping():
+    """Methodology 0.15 (campaign Round 2, candidate B3 adopted): one search
+    order for every family, the Omernik nesting first and NARS-9, a separate
+    grouping, last; no family carries an order of its own any more."""
     cfg = rp.load_transfer_config()
+    assert cfg["search_order"] == ["l3", "l2", "l1", "nars9"]
     for fam, prof in (cfg.get("families") or {}).items():
-        order = rp.search_order(prof)
-        assert order[0] == "l3" and sorted(order) == ["l1", "l2", "l3", "nars9"], fam
-    assert rp.search_order(rp.family_profile("chem_PTL"))[1] == "nars9"
+        assert "search_order" not in prof, fam
+        order = rp.search_order(rp.family_profile(next(
+            mk for mk, f in cfg["metric_family"].items() if f == fam)))
+        assert order == ["l3", "l2", "l1", "nars9"], fam
+    assert rp.search_order(rp.family_profile("chem_PTL"))[-1] == "nars9"
 
 
 def test_the_envelope_widens_by_a_share_of_the_national_span():
@@ -239,12 +245,23 @@ def test_a_candidate_specification_is_never_run():
 # REF-14: the verified catalog
 # --------------------------------------------------------------------------- #
 def test_catalog_thresholds_match_the_vendored_criteria_they_are_copied_from():
+    """The pin applies to the EASI-sourced entries only: an entry that holds its
+    thresholds itself (methodology 0.16, the NRSA indices and salinity) names the
+    EPA document, table and page they were copied from and is verified against
+    EPA's own class calls instead (test_published_benchmark)."""
+    checked = 0
     for entry in pb.load_catalog()["entries"]:
+        source = str((entry.get("thresholds_source") or {}).get("catalog") or pb.EASI_SOURCE)
+        if source != pb.EASI_SOURCE:
+            assert pb._input_of(entry["metric"]) is None, entry["id"]
+            continue
         inp = pb._input_of(entry["metric"])
         assert inp is not None, entry["id"]
         vendored = inp.get("regionalBands") or {}
         assert {k: [float(x) for x in v] for k, v in entry["thresholds"].items()} == \
             {k: [float(x) for x in v] for k, v in vendored.items()}, entry["id"]
+        checked += 1
+    assert checked == 2, "the two nutrient entries read their bands from the EASI catalog"
 
 
 def test_catalog_precedence_prefers_the_most_specific_then_the_newest(monkeypatch):

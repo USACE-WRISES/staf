@@ -1,12 +1,14 @@
 """The one read-only join the Rules page renders: catalog + policy + live values.
 
 Three files govern a build and none of them knows the others' display concerns:
-``rule_catalog.json`` (the 42 rules with their dual status tags),
-``standing_decisions.yaml`` (the 9 owner class decisions, 5 standing and 4
-per-run opt-ins), and ``methodology_config.yaml`` (the numeric thresholds the
-rules cite). ``rule_entries`` joins them through the same accessors the
-pipeline itself uses (``methodology.threshold``, ``decisions.load_policy``), so
-what the page shows is by construction what a run applies.
+``rule_catalog.json`` (the rules with their dual status tags, 74 under
+methodology 0.15), ``standing_decisions.yaml`` (the owner's class decisions:
+under policy 1.4, 13 applied on every build and 4 legacy per-run opt-ins;
+``policy_counts`` reads the live numbers), and ``methodology_config.yaml`` (the
+numeric thresholds the rules cite). ``rule_entries`` joins them through the same
+accessors the pipeline itself uses (``methodology.threshold``,
+``decisions.load_policy``), so what the page shows is by construction what a
+run applies.
 
 Pure module: no Shiny. The page (views/rules.py) renders these structures; the
 chips (views/uihelpers.rule_chip / linkify_rule_ids) use the id vocabulary.
@@ -35,6 +37,7 @@ FAMILY_LABELS = {
     "SELECT": "Metric selection",
     "ACC": "Source acceptance",
     "COV": "Function coverage",
+    "EVAL": "Evaluation",
 }
 
 #: Rule id -> the dotted config paths its numeric thresholds live at. Resolved
@@ -82,7 +85,7 @@ RULE_THRESHOLD_PATHS: dict[str, list[str]] = {
     "REF-03": ["reference_tiers.floor_tier"],
     # methodology 0.12: the pressure-screen reference method
     "REF-04": ["reference_screen.strict", "reference_screen.frame"],
-    "REF-05": ["reference_pool.levels", "reference_pool.envelope_quantiles",
+    "REF-05": ["reference_pool.envelope_quantiles",
                "reference_pool.min_self_coverage",
                "confidence_rules.caps.borrowed_reference_low_risk",
                "confidence_rules.caps.borrowed_reference_moderate_risk",
@@ -92,7 +95,7 @@ RULE_THRESHOLD_PATHS: dict[str, list[str]] = {
     "REF-07": ["reference_screen.relaxed"],
     "CURVE-11": ["curve_rules.deep_index_bands"],
     # methodology 0.13: the basis ladder above the ecoregion hierarchy
-    "REF-08": ["reference_pool.levels", "data_rules.exploratory_n_unstratified",
+    "REF-08": ["data_rules.exploratory_n_unstratified",
                "confidence_rules.caps.national_reference"],
     "REF-09": ["confidence_rules.caps.modeled_reference"],
     "REF-10": ["confidence_rules.caps.published_benchmark"],
@@ -121,12 +124,26 @@ RULE_THRESHOLD_PATHS: dict[str, list[str]] = {
 
 #: Matches every catalog id, including CURVE-07a and STRAT-00, and nothing that
 #: only looks like one (no trailing word characters).
-RULE_ID_RE = re.compile(r"\b(?:DATA|RED|STRAT|CURVE|REF|CONF|SELECT|ACC|COV)-\d{2}[a-z]?\b")
+RULE_ID_RE = re.compile(r"\b(?:DATA|RED|STRAT|CURVE|REF|CONF|SELECT|ACC|COV|EVAL)-\d{2}[a-z]?\b")
 
-#: The page baseline: 36 of 42 rules carry exactly this pair, so a row shows a
+#: The page baseline: most rules carry exactly this pair, so a row shows a
 #: status mark only when a rule DEPARTS from it (status_exceptions).
 BASELINE_THRESHOLD_STATUS = "provisional"
 BASELINE_IMPLEMENTATION_STATUS = "implemented"
+
+
+def policy_counts(policy: Optional[dict] = None) -> dict:
+    """``{"total", "default", "optional", "version"}`` of the standing-decision
+    policy, read from the file so the page never restates a count."""
+    policy = policy or dec.load_policy()
+    entries = [e for e in policy.get("entries") or [] if e.get("id")]
+    # policy 1.5: an entry retired in a later policy replays the earlier versions
+    # and never applies to a new build, so it is counted apart from the defaults
+    retired = sum(1 for e in entries if e.get("enabled", False) and e.get("retired_in_policy"))
+    default = sum(1 for e in entries if e.get("enabled", False)) - retired
+    return {"total": len(entries), "default": default, "retired": retired,
+            "optional": len(entries) - default - retired,
+            "version": dec.policy_version(policy)}
 
 _MATCH_OPS = {"eq": "is", "ne": "is not", "lt": "below", "lte": "at most",
               "gt": "above", "gte": "at least", "in": "one of"}

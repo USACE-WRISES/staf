@@ -1,8 +1,26 @@
 {
  "meta": {
-  "methodology_version": "0.14-provisional",
-  "date": "2026-09-21",
-  "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses were untouched. v0.5 (2026-08-21) promotes REF-02's threshold status to calibrated on the Eastern Corn Belt Plains pilot evidence (owner decision), values unchanged. v0.6 (2026-08-21) is the adversarial-review release: REF-02 and the DATA sample floors (DATA-04 to DATA-08) return to provisional because the pilots mechanism-verified the implementation without calibrating the values (calibrated is reserved for external evidence); REF-02's automatic trigger fires only below the DATA-05 exploratory floor; CURVE-02 is renamed Leave-one-site-out stability and the confidence vocabulary drops out-of-sample (the component is resampling_stability, the cap no_stability_evidence); CONF-02 gains a mandatory_review_open cap of 79 and a deferred_gradient deduction of 10; the seed clamps to declared physical domains, signed scales are declared, and a two-sided curve may declare a flat low tail. No numeric threshold value moved. v0.7 (2026-08-22) adds standing decisions: the owner's class decisions from the two pilots (standing_decisions.yaml) may be applied per item by a batch run to a staged version, with the owner's end review before any canonical publish; SELECT-01 records count the bundle's metric blocks as well as the compact portfolio. No threshold value or status changed. v0.8 (2026-08-23) adds a second NRSA data source. Runs may now draw candidates from a multi-cycle archive pooling the 2013-14, 2018-19 and 2023-24 surveys instead of the bundled 2018-19 snapshot, under a most-recent-visit policy: each distinct station contributes one row, taken from the newest cycle that carries the metrics the run needs, with every excluded station recorded in a ledger. The default is unchanged, so a run that does not ask for the archive reproduces its inputs digest exactly. The digest itself now carries the dataset id, its cycles and the policy, because two runs over one ecoregion on different data must not share a digest. No threshold value or status changed. 2026-08-27: the unused standing_policy value is removed from override_permission_values (no rule ever used it; the standing-decision linkage is the standing_decision_ids cross-links instead). No rule, threshold value or status changed. v0.9 (2026-08-27) is the governance-capture release, driven by a reproducibility audit of the published versions: config keys that read as governance but were never loaded now either govern (metric_portfolio.default_maximum_metrics_per_function, stratifier_rules.min_group_size_current, the reference_tiers ladder, and stratifier_rules.screening_significance_alpha, renamed from group_difference_fdr_q which mislabeled the acting raw-p cut as a BH q) or are marked declarative in the config comments; the curve engine's hard floor, its single family name, and the screening alpha join the mirror check; golden-master tests pin the curve seed geometry, the confidence assembly formulas, and the screening cuts, recorded as CURVE-10; CURVE-09 implements the measurement-precision floor proposed at v0.6, advisory only, with per-metric floors in config (pH 0.2 su provisional); the redundancy view now honors the low-n and binary-coarseness guards on the RED-01 flag everywhere it is consumed; a partially failed StreamCat fetch reports status partial (refused by batch, gated interactively) instead of ok, and is never cached; the screening cache is keyed to its candidate panel and refetches when stale; the bootstrap depth joins the inputs digest under absence semantics (the canonical 1000 adds no key, so published digests reproduce) and both entry points default to 1000; the mandatory-review rule list and the uncovered-hard-stop trigger list are single-sourced. No published threshold value moved. v0.10 (2026-09-07) is the reference-frame and screening-provenance release. Three changes, all owner decisions. (1) The reference panel is framed on stream order (reference_panel.max_stream_order, new rule DATA-10): wadeable means NHDPlus V2 Strahler order 1 to 5, read from the order cached for every station COMID, with the NRSA sampling protocol deciding only where an order cannot be resolved. Framing on the protocol instead was measured and rejected: it drops 57 of 301 in-frame stations across the three pilots, because a stream of order 1 to 5 is often sampled under the boatable protocol. The frame joins the inputs digest under absence semantics, so every version published before it reproduces. (2) The EASI reference screen keys on each NRSA site's own archive COMID, the reach the crew sampled, instead of re-snapping the coordinate; a candidate without one still routes under the streamcat-legacy pin. The pin and the COMID mode now join the digest under absence semantics, because neither reproduces anything published (surrogate routing reached the vendored engine after every published version was screened) and both decide pool membership. The screening cache is keyed on the screening method version, the pin and the COMID mode, and screening_method_version moves to easi-batch-2. (3) Surface water storage is scored on one combined wetland metric (pctwet2019 = woody + herbaceous, both classes required), the sum EASI has always scored, closing review item ECO-15; the two class metrics stay pickable and keep their DEEP adapters. No threshold value moved and no rule's threshold_status changed. v0.11 (2026-09-08) changes one publish rule, on the owner's decision. A function counts as covered when its metric carries a curve DEEP can interpolate, not when the curve's status word reads complete. The two agree for every curve fitted from a real quartile spread and differ only for the IQR seed's three-point fallback (curve_status degenerate_q25), which has points, scores, and passes its own geometric validation, yet was dropped from the bundle and left its function reported as an uncovered gap. A curve with no points (degenerate_curve) is still dropped and still covers nothing. The flag survives: the curve stays open in StreamCurves' review until a reviewer finalizes it by name, the bundle stamps curveStatus on the metric entry, and the reason travels to the scorer as a caveat. New rule SELECT-03. Occasioned by Interior Plateau, whose wadeable reference pool carries almost no mapped wetland (11 of 38 retained sites exactly zero, median 0.05 percent of watershed area), so Surface water storage can only be a fallback curve there. No threshold value moved and no rule's threshold_status changed. v0.12 (2026-09-19) is the reference-definition release, five owner decisions taken from what the EASI rework of September 2026 showed. A reference station is one whose watershed passes EASI's fixed desktop pressure screen inside the wadeable non-canal frame (REF-04), read from a committed station table, so the EASI condition index no longer gates reference membership and a build needs no live service. Where a Level III ecoregion holds too few reference stations for a metric, the pool widens to the Level II and then the Level I parent, holding the screen fixed and admitting only stations comparable in natural setting, metric by metric (REF-05); where no level supports a metric there is no curve and nothing is scored (REF-06); the region's own best-available stations appear only as a labeled comparison (REF-07). REF-01, REF-02 and REF-03 now describe the legacy easi-eci method only and are kept so published provenance still replays. Landscape pressure metrics are scored on EASI's fixed criteria, identical in every region (CURVE-11). Scale and class splits are decided once, nationally, in a registry every build reads (STRAT-10). Each curve is checked for whether its index separates reference from pressured stations (CURVE-12, advisory). A station sampled in several survey cycles contributes its most recent non-null value per metric (DATA-11). STRAT-09's test text now says what the code does (the raw Kruskal-Wallis p). The curve engine and every numeric floor are unchanged. v0.14 (2026-09-21) makes one automated workflow of the reference sources: published curves are carried forward, and a missing curve takes the first source of one hierarchy (local, regional pools under a documented regional screen, comparable national, modeled from an approved registry, published from a verified catalog) that passes six acceptance criteria (REF-11 to REF-14, ACC-01 to ACC-06). SELECT-04 fills each function to two metrics and COV-01 records a function no source supports as a documented gap. REF-08 to REF-10 are superseded and kept so 0.13 records resolve. 2026-09-22 (owner decision): REF-15 records the owner's decisions on the curves a build did not fit (remove, take out of a function, put back a curve SELECT-04 left out), as standing decisions of the region that the workspace and every later build apply the same way. No threshold value moved and no rule's threshold_status changed.",
+  "methodology_version": "0.16-provisional",
+  "date": "2026-09-28",
+  "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses were untouched. v0.5 (2026-08-21) promotes REF-02's threshold status to calibrated on the Eastern Corn Belt Plains pilot evidence (owner decision), values unchanged. v0.6 (2026-08-21) is the adversarial-review release: REF-02 and the DATA sample floors (DATA-04 to DATA-08) return to provisional because the pilots mechanism-verified the implementation without calibrating the values (calibrated is reserved for external evidence); REF-02's automatic trigger fires only below the DATA-05 exploratory floor; CURVE-02 is renamed Leave-one-site-out stability and the confidence vocabulary drops out-of-sample (the component is resampling_stability, the cap no_stability_evidence); CONF-02 gains a mandatory_review_open cap of 79 and a deferred_gradient deduction of 10; the seed clamps to declared physical domains, signed scales are declared, and a two-sided curve may declare a flat low tail. No numeric threshold value moved. v0.7 (2026-08-22) adds standing decisions: the owner's class decisions from the two pilots (standing_decisions.yaml) may be applied per item by a batch run to a staged version, with the owner's end review before any canonical publish; SELECT-01 records count the bundle's metric blocks as well as the compact portfolio. No threshold value or status changed. v0.8 (2026-08-23) adds a second NRSA data source. Runs may now draw candidates from a multi-cycle archive pooling the 2013-14, 2018-19 and 2023-24 surveys instead of the bundled 2018-19 snapshot, under a most-recent-visit policy: each distinct station contributes one row, taken from the newest cycle that carries the metrics the run needs, with every excluded station recorded in a ledger. The default is unchanged, so a run that does not ask for the archive reproduces its inputs digest exactly. The digest itself now carries the dataset id, its cycles and the policy, because two runs over one ecoregion on different data must not share a digest. No threshold value or status changed. 2026-08-27: the unused standing_policy value is removed from override_permission_values (no rule ever used it; the standing-decision linkage is the standing_decision_ids cross-links instead). No rule, threshold value or status changed. v0.9 (2026-08-27) is the governance-capture release, driven by a reproducibility audit of the published versions: config keys that read as governance but were never loaded now either govern (metric_portfolio.default_maximum_metrics_per_function, stratifier_rules.min_group_size_current, the reference_tiers ladder, and stratifier_rules.screening_significance_alpha, renamed from group_difference_fdr_q which mislabeled the acting raw-p cut as a BH q) or are marked declarative in the config comments; the curve engine's hard floor, its single family name, and the screening alpha join the mirror check; golden-master tests pin the curve seed geometry, the confidence assembly formulas, and the screening cuts, recorded as CURVE-10; CURVE-09 implements the measurement-precision floor proposed at v0.6, advisory only, with per-metric floors in config (pH 0.2 su provisional); the redundancy view now honors the low-n and binary-coarseness guards on the RED-01 flag everywhere it is consumed; a partially failed StreamCat fetch reports status partial (refused by batch, gated interactively) instead of ok, and is never cached; the screening cache is keyed to its candidate panel and refetches when stale; the bootstrap depth joins the inputs digest under absence semantics (the canonical 1000 adds no key, so published digests reproduce) and both entry points default to 1000; the mandatory-review rule list and the uncovered-hard-stop trigger list are single-sourced. No published threshold value moved. v0.10 (2026-09-07) is the reference-frame and screening-provenance release. Three changes, all owner decisions. (1) The reference panel is framed on stream order (reference_panel.max_stream_order, new rule DATA-10): wadeable means NHDPlus V2 Strahler order 1 to 5, read from the order cached for every station COMID, with the NRSA sampling protocol deciding only where an order cannot be resolved. Framing on the protocol instead was measured and rejected: it drops 57 of 301 in-frame stations across the three pilots, because a stream of order 1 to 5 is often sampled under the boatable protocol. The frame joins the inputs digest under absence semantics, so every version published before it reproduces. (2) The EASI reference screen keys on each NRSA site's own archive COMID, the reach the crew sampled, instead of re-snapping the coordinate; a candidate without one still routes under the streamcat-legacy pin. The pin and the COMID mode now join the digest under absence semantics, because neither reproduces anything published (surrogate routing reached the vendored engine after every published version was screened) and both decide pool membership. The screening cache is keyed on the screening method version, the pin and the COMID mode, and screening_method_version moves to easi-batch-2. (3) Surface water storage is scored on one combined wetland metric (pctwet2019 = woody + herbaceous, both classes required), the sum EASI has always scored, closing review item ECO-15; the two class metrics stay pickable and keep their DEEP adapters. No threshold value moved and no rule's threshold_status changed. v0.11 (2026-09-08) changes one publish rule, on the owner's decision. A function counts as covered when its metric carries a curve DEEP can interpolate, not when the curve's status word reads complete. The two agree for every curve fitted from a real quartile spread and differ only for the IQR seed's three-point fallback (curve_status degenerate_q25), which has points, scores, and passes its own geometric validation, yet was dropped from the bundle and left its function reported as an uncovered gap. A curve with no points (degenerate_curve) is still dropped and still covers nothing. The flag survives: the curve stays open in StreamCurves' review until a reviewer finalizes it by name, the bundle stamps curveStatus on the metric entry, and the reason travels to the scorer as a caveat. New rule SELECT-03. Occasioned by Interior Plateau, whose wadeable reference pool carries almost no mapped wetland (11 of 38 retained sites exactly zero, median 0.05 percent of watershed area), so Surface water storage can only be a fallback curve there. No threshold value moved and no rule's threshold_status changed. v0.12 (2026-09-19) is the reference-definition release, five owner decisions taken from what the EASI rework of September 2026 showed. A reference station is one whose watershed passes EASI's fixed desktop pressure screen inside the wadeable non-canal frame (REF-04), read from a committed station table, so the EASI condition index no longer gates reference membership and a build needs no live service. Where a Level III ecoregion holds too few reference stations for a metric, the pool widens to the Level II and then the Level I parent, holding the screen fixed and admitting only stations comparable in natural setting, metric by metric (REF-05); where no level supports a metric there is no curve and nothing is scored (REF-06); the region's own best-available stations appear only as a labeled comparison (REF-07). REF-01, REF-02 and REF-03 now describe the legacy easi-eci method only and are kept so published provenance still replays. Landscape pressure metrics are scored on EASI's fixed criteria, identical in every region (CURVE-11). Scale and class splits are decided once, nationally, in a registry every build reads (STRAT-10). Each curve is checked for whether its index separates reference from pressured stations (CURVE-12, advisory). A station sampled in several survey cycles contributes its most recent non-null value per metric (DATA-11). STRAT-09's test text now says what the code does (the raw Kruskal-Wallis p). The curve engine and every numeric floor are unchanged. v0.14 (2026-09-21) makes one automated workflow of the reference sources: published curves are carried forward, and a missing curve takes the first source of one hierarchy (local, regional pools under a documented regional screen, comparable national, modeled from an approved registry, published from a verified catalog) that passes six acceptance criteria (REF-11 to REF-14, ACC-01 to ACC-06). SELECT-04 fills each function to two metrics and COV-01 records a function no source supports as a documented gap. REF-08 to REF-10 are superseded and kept so 0.13 records resolve. 2026-09-22 (owner decision): REF-15 records the owner's decisions on the curves a build did not fit (remove, take out of a function, put back a curve SELECT-04 left out), as standing decisions of the region that the workspace and every later build apply the same way. No threshold value moved and no rule's threshold_status changed. v0.15 (2026-09-26) closes campaign Round 2 under evaluation protocol V1 (sha256 84a5cabc, the campaign block below): B3 (one search order for every metric family) and C3b (the monotone ladders' tail endpoints 0.5, 1.5 and 2.5 IQR; curve method iqr-seed-3; new golden masters) are adopted; B1, B2, B4, C1, C2, C3a and C4 are rejected on their declared margins; C5 and C6 are reference-only. New rules: CURVE-13 (residual structure, not applicable to the IQR family), DATA-12 (the rebuild ledger) and EVAL-01 (the evaluation protocol). DATA-03 and CURVE-09 now withhold a metric at the build with its statement, the same in every region, instead of holding a built curve for a reviewer. No threshold value moved and no threshold_status moved to calibrated. v0.16 (2026-09-28, campaign Round 6, owner decisions D11, D13 and D14 of 2026-09-28): REF-16, the flagged-transfer rung. When every validated source refuses a metric, a second pass over the regional options in the family's search order and then over the national options takes the narrowest comparable pool with at least the adequate floor of usable stations, else at least the exploratory floor, that passes ACC-01, ACC-04 and the comparability envelope; ACC-05 and ACC-06 do not gate the pass and their verdict is recorded on the decision (transfer_validation) and stated as a limitation. The curve carries transfer risk unvalidated, a confidence cap and a note; its function is rated and enters the ecosystem condition index. A validated source of any kind wins over a flagged one and a flagged pool over a documented gap. D13: a pool option whose curve would be the engine's degenerate fallback, or would read as inverted against its own pressured stations, fails acceptance with the reason stated and the ladder moves on; no fallback ramp is written into a bundle, the stage refuses one, and policy 1.5 retires curve07-fallback-accepted (kept for the replay of the 1.3 and 1.4 era versions) and adds curve07-degenerate-refused. D14: promotion policy 1.2 records the owner's acceptance of the noLocal and frameUnder10 support classes as Preliminary-eligible and adds the flagged-transfer-disclosed gate. No threshold value moved and no threshold_status moved to calibrated.",
+  "campaign": {
+   "id": "national-campaign-2026-09",
+   "round": 2,
+   "protocol": {
+    "path": "config/methodology/evaluation_protocol_v1.yaml",
+    "version": "1.0",
+    "sha256": "84a5cabca0b08d403c44164b130500173451aa0d14ae11704abeeece014a1cfd"
+   },
+   "verdicts": "B3 (one search order) and C3b (tail endpoints 0.5, 1.5 and 2.5 IQR) adopted; B1 (narrowest adequate pool), B2 (regional screen relaxation off), B4 (floors 15/25 and 8/20), C1 (fill to one), C2 (CURVE-12 gate), C3a (zero-inflated two-part curves) and C4 (evidence-table assignments) rejected on their declared margins; C5 (REF-15 extension) and C6 (carry-forward off) reference-only.",
+   "threshold_status_review": "Every rule's threshold_status was re-stated at 0.15 and none moved to calibrated by this round: calibrated needs external evidence (independent field data or the blind benchmark) that does not exist; a candidate meeting its margin on the development regions changes a default, not a status. 62 rules provisional, 12 approved, 0 calibrated at 0.15; 0.16 adds REF-16 as provisional: 63 rules provisional, 12 approved, 0 calibrated; REF-17 (the last resort, owner decision D19) joins as provisional: 64 rules provisional, 12 approved, 0 calibrated.",
+   "round6": {
+    "opened": "2026-09-28",
+    "owner_decisions": ["D11", "D13", "D14", "D18", "D19"],
+    "rules": ["REF-16", "REF-17"],
+    "policies": {"standing_decisions": "1.5", "promotion_policy": "1.2"},
+    "note": "Round 6 changes the methodology on the owner's decisions of 2026-09-28, not on a protocol verdict: the frozen 0.15 pass scored 20 functions in 9 of 84 regions, and the owner decided that publishing a region with fewer than 20 scored functions is not acceptable. The evaluation protocol V1 and its margins stand for any later candidate."
+   }
+  },
   "status_legend": {
    "threshold_status": {
     "provisional": "Operating default, not yet calibrated. Never describe as validated.",
@@ -13,7 +31,8 @@
     "implemented": "A real StreamCurves function performs this today (see maps_to).",
     "partial": "Related machinery exists but diverges from the rule as written (see note).",
     "not_yet_implemented": "Specified here; no code performs it yet. Route affected decisions to human review.",
-    "superseded": "Replaced by a later rule and no longer applied by the pipeline; kept so the records of versions published under it still resolve (see superseded_by)."
+    "superseded": "Replaced by a later rule and no longer applied by the pipeline; kept so the records of versions published under it still resolve (see superseded_by).",
+    "not_applicable": "The rule describes a diagnostic the approved curve family does not need; no code performs it, nothing is routed to review for it, and every run record lists it as not evaluated with that reason (see note)."
    }
   },
   "override_permission_values": [
@@ -74,20 +93,20 @@
    "id": "DATA-03",
    "family": "DATA",
    "name": "High missingness",
-   "purpose": "Prevent auto-recommendation on sparse coverage.",
-   "test": "missing_fraction > 0.40",
+   "purpose": "Keep a metric whose reference pool is mostly unmeasured out of scoring.",
+   "test": "missing_fraction > 0.40 over the metric's own pool (the comparable reference stations at the level used); a pressure-screen build withholds the metric at the build with its statement, the same in every region",
    "threshold": "> 0.40",
    "threshold_status": "provisional",
    "implementation_status": "implemented",
-   "maps_to": "regional_agent.review_curves (data_review status); run_state.CURVE_STATUS_DATA_REVIEW",
+   "maps_to": "pressure_evidence.run_evidence with missingness_withheld and missingness_statement (no curve; a withheld entry with the statement and rule DATA-03; reference_support status withheld with the pool's own status beside it; ledger disposition unsupported; no review item); the legacy easi-eci path and the interactive classification still route a built curve to review: regional_agent.review_curves and curve_automation (data_review, run_state.CURVE_STATUS_DATA_REVIEW)",
    "outcomes": {
     "pass": "n/a",
-    "review": "human review or exclusion",
-    "fail": "do not auto-recommend"
+    "review": "legacy and interactive paths only: the built curve is held (data_review)",
+    "fail": "withheld at the build with the statement (0.15): no curve in the bundle, the metric listed as withheld, its function scored by its other metrics or reported as a documented gap. v0.16 (owner decision D18): where the withhold would leave a function with no other metric holding a curve, the candidate with the smallest missing fraction keeps its validated pool instead, the missingness stated on the curve as a limitation (pressure_evidence.missingness_kept_for_coverage, missingness_kept_caveat), as REF-16 states a recovery verdict"
    },
-   "confidence_effect": "hard-stop from automation",
+   "confidence_effect": "n/a (no curve is built)",
    "override_permission": "human_review",
-   "note": "Wired v0.4: above 0.40 the curve is routed to review, never auto-recommended.",
+   "note": "Wired v0.4: above 0.40 the curve was routed to review, never auto-recommended. v0.15 (2026-09-26, the campaign plan's policy line): the pressure-screen build withholds such a metric under REF-06's record shape before any curve is fitted, so the same missingness gives the same outcome in every region and no reviewer decides it per region (the fast pass of 2026-09-26 raised the item in 5 of 85 regions, four habitat metrics measured only on wadeable-protocol reaches). The nine recorded decisions that finalized such curves in the published versions replay under the legacy entry data03-thin-metric-finalized, which no new build raises. The 0.40 value did not move and stays provisional. The owner may still give the metric a curve from a source they choose (REF-15).",
    "standing_decision_ids_optional": [
     "data03-thin-metric-finalized"
    ]
@@ -256,6 +275,25 @@
    "override_permission": "none"
   },
   {
+   "id": "DATA-12",
+   "family": "DATA",
+   "name": "Rebuild ledger",
+   "purpose": "Say, for every metric and function of a build, what the build did with it and why, so a rebuilt claim rests on engine evidence and never on equal points.",
+   "test": "every metric of a build carries exactly one disposition of refitted, carried, fixed, owner_sourced, owner_held, removed, unsupported, held_for_review or not_evaluated, with its rule and reason; a refitted row carries engine evidence from this build (the curve method version, the metric's seed, the pool's station ids and cycles from the pool ledger)",
+   "threshold": "one disposition per metric and function; engine evidence on every refitted row",
+   "threshold_status": "approved",
+   "implementation_status": "implemented",
+   "maps_to": "provenance.build_ledger (schema rebuild-ledger/1, LEDGER_DISPOSITIONS), written to the run folder (rebuild_ledger.json), the version's provenance (metricLedger) and the session (reference_build.ledger); provenance.build_ledger_from_version for a published version; candidates.register_for_result supplies the rows; provenance.build_records writes one DATA-12 record per build",
+   "note": "Implemented in campaign Round 1 (2026-09-25, notes context/07_rebuild_ledger_schema.md); catalogued at v0.15 so the record of a build cites it. The ledger's selected set, the candidate register's selected pairs and the bundle's metricsByFunction agree by construction (provenance.ledger_rows_for_bundle). A version published before the pool ledger entered provenance says its station ids were not recorded rather than inventing them. A metric withheld at the build (REF-06, DATA-03, CURVE-09, or a Round 2 rule when on) reads unsupported under the withholding rule.",
+   "outcomes": {
+    "pass": "one row per metric and function, the selected set equal to the bundle's",
+    "review": "n/a",
+    "fail": "a build that cannot state a disposition does not publish"
+   },
+   "confidence_effect": "none (a record)",
+   "override_permission": "maintainer"
+  },
+  {
    "id": "RED-01",
    "family": "RED",
    "name": "Strong pairwise association",
@@ -265,14 +303,17 @@
    "threshold_status": "provisional",
    "implementation_status": "implemented",
    "maps_to": "streamcurves/overlap.py (Spearman-primary flag, config threshold); agent and interactive view share it",
-   "note": "Resolved v0.4: the divergence is closed, Pearson rides along as supporting output. v0.9: the redundancy view consumes the computed flag, so the low-n and binary-coarseness guards apply everywhere the flag is read. The regional keeper choice for a flagged same-function pair is a recorded owner decision (class red01-keep-both-distinct-axes, e.g. NEH conductivity/pH); the standing policy deliberately never makes it.",
+   "note": "Resolved v0.4: the divergence is closed, Pearson rides along as supporting output. v0.9: the redundancy view consumes the computed flag, so the low-n and binary-coarseness guards apply everywhere the flag is read. Policy 1.3 (v0.15, 2026-09-26): a flagged pair whose two metrics serve different functions is kept, both, under standing decision red01-keep-both-distinct-axes (the recorded class, e.g. NEH conductivity/pH), pending the owner's confirmation at the first promotion batch; the keeper choice for a same-function pair stays the owner's (SELECT-01 and SELECT-04 govern the portfolio, SELECT-02 ranks).",
    "outcomes": {
     "pass": "not strongly redundant",
     "review": "n/a",
     "fail": "strong redundancy flag -> evaluate function overlap (RED matrix)"
    },
    "confidence_effect": "informs redundancy decision confidence",
-   "override_permission": "human_review"
+   "override_permission": "human_review",
+   "standing_decision_ids": [
+    "red01-keep-both-distinct-axes"
+   ]
   },
   {
    "id": "RED-02",
@@ -568,8 +609,10 @@
    },
    "confidence_effect": "supporting only",
    "override_permission": "none",
+   "note": "Policy 1.3 (v0.15, 2026-09-26): a Broad-Use Candidate whose smallest level is at or above the stratum floor is recorded and not applied under strat09-advisory-not-applied (stratified reference curves, STRAT-07, are not part of this methodology version), the complement of strat09-defer-floors, which records a candidate a stratum floor keeps unapplied; both pending the owner's confirmation at the first promotion batch.",
    "standing_decision_ids": [
-    "strat09-defer-floors"
+    "strat09-defer-floors",
+    "strat09-advisory-not-applied"
    ]
   },
   {
@@ -706,26 +749,34 @@
    },
    "confidence_effect": "resampling_stability",
    "override_permission": "human_review",
-   "note": "v0.6: every interval carries n_matched (the structure-reproducing resamples it summarizes) and the structure_stability rate is reported beside it, because the percentiles condition on matched resamples (review STAT-4). The point intervals ride in the CURVE-06 provenance record (S-02). v0.9: accepting a fallback/degenerate curve without an interval is a recorded owner decision under class curve06-no-interval-fallback-curve (ECBP v3 precedent); the class is documented here so replay recognizes it, and it stays owner-only."
+   "note": "v0.6: every interval carries n_matched (the structure-reproducing resamples it summarizes) and the structure_stability rate is reported beside it, because the percentiles condition on matched resamples (review STAT-4). The point intervals ride in the CURVE-06 provenance record (S-02). v0.9: accepting a fallback/degenerate curve without an interval was a recorded owner decision under class curve06-no-interval-fallback-curve (ECBP v3 precedent). Policy 1.3 (v0.15, 2026-09-26): a curve whose interval is not estimable is accepted with the interval reported as such, under curve06-no-interval-fallback-curve (the pilots' class, no CURVE-12 record) or curve06-no-interval-flagged (a CURVE-12 record exists and is not inverted), both pending the owner's confirmation at the first promotion batch; the curve passed reference support and geometry, and the missing interval is reported, never hidden.",
+   "standing_decision_ids": [
+    "curve06-no-interval-fallback-curve",
+    "curve06-no-interval-flagged"
+   ]
   },
   {
    "id": "CURVE-07",
    "family": "CURVE",
-   "name": "Residual structure",
-   "purpose": "No meaningful systematic residual pattern remains.",
-   "test": "residual diagnostics acceptable",
-   "threshold": "no systematic pattern",
+   "name": "Curve held for review",
+   "purpose": "A curve the build fitted but could not approve on its own is held, unpublished and unscored, until a person decides.",
+   "test": "the proposal's classification is in run_state.CURVE_REVIEW_REQUIRED, every status but auto_ok: insufficient_data, degenerate_curve, unmapped, shape_conflict (CURVE-05), data_review (DATA-03), strat_review (DATA-07, DATA-08), multi_crossing (CURVE-07a) or error",
+   "threshold": "any classification but auto_ok",
    "threshold_status": "provisional",
-   "implementation_status": "partial",
-   "maps_to": "streamcurves/diagnostics.py (Shapiro / Breusch-Pagan on regression, not on the IQR curve)",
+   "implementation_status": "implemented",
+   "maps_to": "streamcurves/run_state.py::classify_curve_proposal and CURVE_REVIEW_REQUIRED; regional_agent.review_curves (headless) and curve_automation.reconcile_review_map (in the app); pressure_evidence.held_for_review writes the bundle's held-for-review record",
    "outcomes": {
-    "pass": "ok",
-    "review": "pattern -> revise/stratify/transform",
-    "fail": "reject"
+    "pass": "auto_ok: published without a decision",
+    "review": "held: accept (finalize), adjust, or drop the metric; its function is scored by its other metrics meanwhile",
+    "fail": "removed from scope by the reviewer"
    },
-   "confidence_effect": "statistical_strength",
+   "confidence_effect": "mandatory_review_open cap while held",
    "override_permission": "human_review",
-   "note": "Owner decision S-01 (2026-08-21): scoped to the regression-candidate track where residual diagnostics exist; not applicable by family for IQR-seed curves. v0.9: accepting a fallback (degenerate) curve as preliminary is a recorded owner decision under class curve07-fallback-curve-preliminary (ECBP v3 precedent); documented here so replay recognizes it, and it stays owner-only.",
+   "note": "Renamed 2026-09-25 (campaign Round 1) from Residual structure: the catalog described a residual-diagnostics test the pipeline does not apply to IQR-seed curves, while the code and the review flow hold any non-auto_ok proposal for a reviewer, which is the rule every published version ran under. Residual structure is split out as CURVE-13 at v0.15 (not applicable to the IQR family; owner decision S-01 of 2026-08-21: residual diagnostics are scoped to the regression-candidate track where they exist, Shapiro / Breusch-Pagan in streamcurves/diagnostics.py). v0.9: accepting a fallback (degenerate) curve as preliminary was a recorded owner decision under class curve07-fallback-curve-preliminary (ECBP v3 precedent). Policy 1.3 (v0.15, 2026-09-26): a fallback curve with no anchor outside its declared domain and a CURVE-12 verdict that is not inverted is accepted as preliminary with its flag under curve07-fallback-accepted (aliases the two recorded classes), pending the owner's confirmation at the first promotion batch; an inverted fallback curve, a shape conflict, a multiple crossing, an insufficient stratum and a build error stay the owner's. Under 0.15 a DATA-03 metric is withheld before classification on the pressure-screen build, so data_review arises only on the legacy and interactive paths, and the legacy entry curve07-thin-metric-finalized replays the published versions only. v0.16 (2026-09-28, owner decision D13): a fallback curve is a refusal, never an acceptance. A pool option whose curve would be the degenerate fallback (curve status degenerate_q25 or degenerate_curve), or would read as inverted against its own in-frame pressured stations, fails acceptance before it is built (acceptance.curve_checks, run in reference_pool.choose_pool and basis_ladder.try_national) and the ladder moves to the next option, so a headless build never raises this item for a fallback curve; a metric every option refuses is withheld with the reasons recorded. No fallback ramp is written into a bundle: regional_agent.publish refuses a bundle carrying one (deep_export.fallback_entries) and carry_forward.prepare rebuilds a published fallback curve instead of carrying it. The interactive workspace keeps the engine's labelled fallback. Policy 1.5 retires curve07-fallback-accepted (it replays the versions decided under 1.3 and 1.4 and the pilots' recorded classes, and never applies to a 1.5 build) and adds curve07-degenerate-refused, which rejects a fallback curve that reaches the review by another path and takes the metric out of scoring.",
+   "standing_decision_ids": [
+    "curve07-fallback-accepted",
+    "curve07-degenerate-refused"
+   ],
    "standing_decision_ids_optional": [
     "curve07-thin-metric-finalized"
    ]
@@ -771,20 +822,20 @@
    "id": "CURVE-09",
    "family": "CURVE",
    "name": "Measurement-precision floor (two-sided cores)",
-   "purpose": "A two-sided Functioning core narrower than the metric's documented measurement precision allows presents measurement noise as condition classes; such a curve is flagged for review.",
-   "test": "functioning_core_width < measurement_precision_core_multiple * precision_sd (metrics with a declared floor only)",
-   "threshold": "core < 2 x precision SD",
+   "purpose": "A two-sided Functioning core narrower than the metric's documented measurement precision allows presents measurement noise as condition classes; such a curve is withheld at the build.",
+   "test": "functioning_core_width < measurement_precision_core_multiple * precision_sd (metrics with a declared floor only); a pressure-screen build withholds the metric at the build with its statement, the same in every region",
+   "threshold": "core < 2 x precision SD (chem_PH 0.2 su, provisional)",
    "threshold_status": "provisional",
    "implementation_status": "implemented",
-   "maps_to": "streamcurves/provenance.py build_records (CURVE-09 records + measurement_precision_floor queue items); floors in methodology_config.yaml curve_rules.measurement_precision_floors",
+   "maps_to": "pressure_evidence.run_evidence with precision_floor_records and precision_floor_statement (no curve; a withheld entry with the statement and rule CURVE-09; reference_support status withheld with the pool's own status beside it; ledger disposition unsupported; no review item); provenance.build_records writes the CURVE-09 record from the withheld entry, and the advisory record with its measurement_precision_floor item on a legacy or interactive build; floors in methodology_config.yaml curve_rules.measurement_precision_floors",
    "outcomes": {
     "pass": "core resolvable at instrument precision",
-    "review": "narrow core -> measurement_precision_floor review item",
-    "fail": "n/a (advisory; exclusion stays a recorded human decision)"
+    "review": "legacy and interactive builds only: measurement_precision_floor review item",
+    "fail": "withheld at the build with the statement (0.15): no curve in the bundle, the metric listed as withheld"
    },
-   "confidence_effect": "none directly (advisory queue item; no automatic cap)",
+   "confidence_effect": "n/a (no curve is built)",
    "override_permission": "human_review",
-   "note": "v0.9 (2026-08-27): implements the future rule proposed at v0.6 (adversarial review ECO-2/STAT-13). Origin: the ECBP pH curve (core 0.196 su at n = 16) was removed from scoring by recorded owner decision under class measurement-precision-floor, whose rationale called itself 'the proposed rule'. Advisory only: nothing is auto-removed. The pH 0.2 su floor is provisional; floors for further analytes are added to the config as they are documented."
+   "note": "v0.9 (2026-08-27): implements the future rule proposed at v0.6 (adversarial review ECO-2/STAT-13). Origin: the ECBP pH curve (core 0.196 su at n = 16) was removed from scoring by recorded owner decision under class measurement-precision-floor, whose rationale called itself 'the proposed rule'. v0.15 (2026-09-26, the campaign plan's policy line): no longer advisory on the pressure-screen build. A two-sided curve whose fitted Functioning core is narrower than the floor is withheld under REF-06's record shape, with the core width and the floor in its statement, so the same core gives the same outcome in every region (the fast pass of 2026-09-26 raised the item in 11 of 85 regions, every one pH); the recorded owner rejection of the ECBP pH curve replays as before. The pH 0.2 su floor is provisional; floors for further analytes are added to the config as they are documented. The owner may still give the metric a curve from a source they choose (REF-15)."
   },
   {
    "id": "CURVE-10",
@@ -795,7 +846,7 @@
    "threshold": "structural (no tunable value)",
    "threshold_status": "approved",
    "implementation_status": "implemented",
-   "maps_to": "streamcurves/curves.py (seed geometry, CURVE_ENGINE_HARD_FLOOR_N, CURVE_FAMILY); tests/test_golden_masters.py; run_state.CURVE_METHOD_VERSION",
+   "maps_to": "streamcurves/curves.py (seed geometry, MONOTONE_TAIL_OFFSETS_IQR, CURVE_ENGINE_HARD_FLOOR_N, CURVE_FAMILY); tests/test_golden_masters.py; run_state.CURVE_METHOD_VERSION (iqr-seed-3); methodology_config curve10",
    "outcomes": {
     "pass": "the engine matches the pinned geometry",
     "review": "n/a",
@@ -803,7 +854,7 @@
    },
    "confidence_effect": "none (definitional)",
    "override_permission": "maintainer",
-   "note": "v0.9 (2026-08-27), owner capture decision: the geometry stays code rather than config, because thirty seed coordinates in YAML would invite unreviewed tuning; the golden masters make any change loud, and the methodology version (embedded in the run seed) pins which geometry produced a run."
+   "note": "v0.9 (2026-08-27), owner capture decision: the geometry stays code rather than config, because thirty seed coordinates in YAML would invite unreviewed tuning; the golden masters make any change loud, and the methodology version (embedded in the run seed) pins which geometry produced a run. Campaign Round 2 (2026-09-25, candidates C3a and C3b): two governed knobs in methodology_config curve10. zero_inflated_share with zero_inflated_handling (default off: the degenerate_q25 fallback) gives a zero-inflated pool of a higher-is-better metric on a non-negative scale a two-part seed (the positive values' scale-free ladder with a point at zero scoring 0, the zero share as a caveat) or withholds the metric ('zero-inflated reference pool'); tail_offsets_iqr sets the monotone ladders' tail endpoints in IQR units. A non-default knob joins the inputs digest. v0.15 (2026-09-26) records the verdicts. C3a rejected on the frozen primary (O5 flip rate 0.0714 in both arms, delta 0.0000 against a 0.05 margin; the coverage gain of 12 fewer withheld metrics is recorded for the owner as a protocol V2 hypothesis and not traded), so the zero-inflation rule stays off. C3b adopted (O1 delta 0.0000 over 1,157 cells, O2 0.0000 against 0.0065, O3 AUC 0.8067 against 0.8075 with lower bound -0.0017, coverage and stability identical), so the endpoints 0.5, 1.5 and 2.5 IQR are the engine's own default (curves.MONOTONE_TAIL_OFFSETS_IQR), CURVE_METHOD_VERSION moved from iqr-seed-2 to iqr-seed-3, and the golden masters of tests/test_golden_masters.py were regenerated from the engine: on the 1 to 20 fixture the rising plateau ends at 20.0 instead of 18.1 and the falling tail sits at 29.5 and 39.0 instead of 27.9167 and 37.4167; the signed-scale fixture's tail reads -16.625, -11.375 and 4.375 instead of -15.75, -10.5 and 3.325; the two-sided optimum seed and the degenerate fallback are unchanged. The iqr-seed-2 endpoints stay reachable as the non-default knob value [0.3, '4/3', '7/3'], which joins the inputs digest and reproduces the iqr-seed-2 golden seeds (a test pins it). Published curves keep their points (carried forward) and their recorded method version."
   },
   {
    "id": "CURVE-11",
@@ -834,14 +885,36 @@
    "threshold_status": "provisional",
    "implementation_status": "implemented",
    "maps_to": "streamcurves/discrimination.py",
-   "note": "v0.12 (2026-09-19). Advisory: a weak or absent separation informs the portfolio choice and the report, an inverted one goes to review. Stations that are not reference check a curve here and never fit one.",
+   "note": "v0.12 (2026-09-19). Advisory: a weak or absent separation informs the portfolio choice and the report, an inverted one goes to review. Stations that are not reference check a curve here and never fit one. Campaign Round 2 (2026-09-25, candidate C2): curve12.gate (default false, advisory as above) withholds a NEW curve, never a carried one, whose verdict is inverted or whose AUC is below curve12.min_auc (0.55) with the statement 'discrimination gate' (no curve, nothing scored, the reason on the metric); its CURVE-12 record stays for information. The verdict cuts are mirrored in curve12.verdict_cuts. A non-default knob joins the inputs digest. v0.15 (2026-09-26): candidate C2 rejected on its declared margin: with the gate on, ECI vs benthic MMI AUC fell from 0.8075 to 0.7606 (paired delta -0.0469, interval [-0.0655, -0.0273]), 190 function blocks were supported against 233 and 253 metrics were withheld against 117, so the gated curves carry association and the check stays advisory with curve12.gate false. Policy 1.3: an inverted verdict with a reference or pressured group under the DATA-04 floor of 20 is accepted with its flag under curve12-inverted-thin (the direction is not resolvable at that sample), pending the owner's confirmation at the first promotion batch; a well-supported inversion stays the owner's. v0.16 (2026-09-28, owner decision D13: no inverted curve is retained): the check runs on every pool option before the option is accepted (acceptance.curve_checks, in reference_pool.choose_pool, for a regional option's own in-frame pressured stations where five or more carry the metric), and an inverted verdict (AUC below 0.45) refuses the option with the reason, so the ladder moves on and no inverted curve is built from a station pool; a national option is checked the same way against the national frame's pressured stations (basis_ladder.try_national). The advisory record on the built curve stays as it was, and curve12.gate keeps its 0.15 verdict (off).",
    "outcomes": {
     "pass": "discriminates",
-    "review": "inverted",
+    "review": "inverted (a built curve, advisory); under 0.16 an inverted pool option is refused at acceptance and never built",
     "fail": "recorded as weak or none (advisory)"
    },
    "confidence_effect": "none (advisory)",
-   "override_permission": "human_review"
+   "override_permission": "human_review",
+   "standing_decision_ids": [
+    "curve12-inverted-thin"
+   ]
+  },
+  {
+   "id": "CURVE-13",
+   "family": "CURVE",
+   "name": "Residual structure",
+   "purpose": "Residual normality and constant variance of a fitted regression curve; the diagnostic the catalog described under CURVE-07 until campaign Round 1.",
+   "test": "Shapiro-Wilk on the residuals and Breusch-Pagan against the fitted values of a regression-candidate curve; not defined for the approved IQR-seed family, which fits no residuals",
+   "threshold": "none acts",
+   "threshold_status": "provisional",
+   "implementation_status": "not_applicable",
+   "maps_to": "none in the pipeline; streamcurves/diagnostics.py holds the Shapiro-Wilk and Breusch-Pagan checks of the regression-candidate track, which no published curve uses",
+   "note": "Split out of CURVE-07 at v0.15 (2026-09-26) so the catalog never claims a diagnostic the pipeline does not run: the IQR-seed curve is a quantile ladder, fits no residuals, and is validated geometrically (CURVE-07a) and by resampling (CURVE-02, CURVE-04, CURVE-06). Owner decision S-01 (2026-08-21): residual diagnostics are scoped to the regression-candidate track where they exist and are not applicable by family for IQR-seed curves. Every run record lists this rule as not evaluated with that reason. It becomes applicable only if a regression family joins curve_rules.approved_families (CURVE-01).",
+   "outcomes": {
+    "pass": "n/a",
+    "review": "n/a",
+    "fail": "n/a"
+   },
+   "confidence_effect": "none",
+   "override_permission": "none"
   },
   {
    "id": "REF-01",
@@ -958,7 +1031,7 @@
    "threshold_status": "approved",
    "implementation_status": "implemented",
    "maps_to": "reference_pool.choose_pool (status insufficient); deep_export insufficientReferenceSupport; coverage exception reason insufficient-reference-support",
-   "note": "v0.12 (2026-09-19, owner decision). No curve is built, the metric is listed in the bundle as withheld with its support record, DEEP shows it as not scored, and a function left without a metric needs a documented coverage exception. Reference quality is never relaxed to reach a sample size. The owner may still give the metric a curve from a source they choose (REF-15), recorded as their decision; the build itself never does.",
+   "note": "v0.12 (2026-09-19, owner decision). No curve is built, the metric is listed in the bundle as withheld with its support record, DEEP shows it as not scored, and a function left without a metric needs a documented coverage exception. Reference quality is never relaxed to reach a sample size. The owner may still give the metric a curve from a source they choose (REF-15), recorded as their decision; the build itself never does. The bundle's nWithheld is set from the final withheld list it exports and nHeldForReview beside it (campaign Round 1, deep_export.build_deep_assessment_bundle), never from the evidence-time count. Campaign Round 2 (2026-09-25): the discrimination gate (CURVE-12, curve12.gate) and the zero-inflation rule (CURVE-10, curve10.zero_inflated_handling withhold), both off by default, withhold a metric whose pool exists with the same record shape and their own reason words (discrimination-gate, zero-inflated-reference-pool). v0.15 (2026-09-26): DATA-03 (missing-data fraction above 0.40 over the pool) and CURVE-09 (a two-sided core narrower than its measurement-precision floor) withhold a metric at the build the same way, with the reason words high-missingness and measurement-precision-floor: the support record carries status withheld with the pool's own status beside it (pool_status) and the rule; the withheld entry carries the rule and a statement naming the numbers; the ledger row reads unsupported under that rule; no review item is raised; and a function left empty by such a withhold is a documented gap exactly as under this rule (COV-01, provenance.coverage_gaps counts every withheld candidate with a statement as a documented blocker). v0.16 (2026-09-28): a metric reaches this rule only after the flagged-transfer rung too has found no comparable pool of min_usable stations that passes the sample, stability, comparability and curve checks (REF-16), and a pool option refused because its curve would be a fallback or inverted (D13) is recorded in options_tried with that reason (refused_by curve).",
    "outcomes": {
     "pass": "n/a",
     "review": "n/a",
@@ -1054,14 +1127,14 @@
    "family": "REF",
    "name": "Regional least-disturbed reference pools",
    "purpose": "Where the local reference is too thin or unstable, draw least-disturbed stations from the target's own ecoregion and wider regions under one documented regional screen, in a fixed order per metric family.",
-   "test": "pool options Level III, Level II, NARS-9 and Level I in the family's search_order, each under least-disturbed-regional-v1 (the relaxed tier with agriculture at the 90th percentile of EPA reference sites in the target's NARS-9 region, never below 25 percent); stations inside the widened comparability envelope and, for an assemblage, the target's fauna groups; the first option passing ACC-01 to ACC-06 is used",
-   "threshold": "agriculture p90 of rt_nrsa R sites, floor 25, at least 5 EPA sites; envelope widened by 5 percent of the national span; fauna share 0.10",
-   "maps_to": "reference_pool.choose_pool, regional_screen_mask, epa_agriculture_limit, widen_envelope, fauna_mask; config/reference_transfer.yaml search_order and fauna_groups; methodology_config reference_hierarchy",
-   "note": "v0.14 (2026-09-21, owner decisions). NARS-9 is EPA's grouping of Level III regions, a separate grouping and not a nested level. The screen is never loosened further for any region or metric.",
+   "test": "pool options Level III, Level II, Level I and NARS-9 in the one search order of config/reference_transfer.yaml (search_order: l3, l2, l1, nars9, read for every metric family), each under least-disturbed-regional-v1 (the relaxed tier with agriculture at the 90th percentile of EPA reference sites in the target's NARS-9 region, never below 25 percent); stations inside the widened comparability envelope and, for an assemblage, the target's fauna groups; the first option passing ACC-01 to ACC-06 is used (reference_pool.ladder_rule: first_pass)",
+   "threshold": "agriculture p90 of rt_nrsa R sites, floor 25, at least 5 EPA sites; envelope widened by 5 percent of the national span; fauna share 0.10; search order l3, l2, l1, nars9; ladder rule first_pass",
+   "maps_to": "reference_pool.choose_pool, family_profile (search_order_source global), regional_screen_mask, epa_agriculture_limit, widen_envelope, fauna_mask; config/reference_transfer.yaml search_order and fauna_groups; methodology_config reference_hierarchy and reference_pool.ladder_rule",
+   "note": "v0.14 (2026-09-21, owner decisions). NARS-9 is EPA's grouping of Level III regions, a separate grouping and not a nested level. The screen is never loosened further for any region or metric. Campaign Round 2 (2026-09-25 and 26, candidates B1 to B3): reference_pool.ladder_rule (first_pass, the acting rule; narrowest_adequate takes the narrowest option passing acceptance with usable n at the adequate floor, else the narrowest exploratory one) and reference_hierarchy.regional_screen.enabled (true; false keeps every wider pool to the strict screen, with no relaxed tier and no EPA agriculture limit, the ledger saying which screen admitted each station) are governed knobs that join the inputs digest when non-default, and both keep their defaults at v0.15. B1 rejected: narrowest_adequate chose the same pool as first_pass in every cell but one (O1 delta 0.0000 over 1,157 cells; 376 curves against 377). B2 rejected: with the relaxed tier off, ECI vs benthic MMI AUC fell from 0.8139 to 0.8043 (lower bound -0.0230), 340 curves were built against 377 and one region could not be built, for a 0.0065 gain in net optimism; the regional relaxed tier stays as governed. B3 adopted: one search order (l3, l2, l1, nars9) for every family chose the same pool in every cell (O1 delta 0.0000 with lower bound 0.0000; coverage, association and stability identical; runtime 14,053 s against 18,167 s), so the per-family orders left reference_transfer.yaml and its top-level search_order is read for every family (that file's hash is in the digest, so a new build's digest moved and every published one replays). The recovery test withholds a region from the agriculture calibration too (epa_agriculture_limit withhold_l3). v0.16 (2026-09-28): every option faces the curve checks of D13 before it is accepted (acceptance.curve_checks), and every option's checks are recorded in options_tried (checks); an option refused by the recovery evidence alone is a candidate for the flagged-transfer rung (REF-16), taken only after the national, modeled and published sources have refused the metric too.",
    "outcomes": {
     "pass": "curve built on the pool, its screen and every option tried recorded",
     "review": "n/a: a pool that passes acceptance is the rule's decision",
-    "fail": "next option, then REF-12"
+    "fail": "next option, then REF-12; a pool refused by the recovery evidence alone may return under REF-16"
    },
    "confidence_effect": "caps by transfer risk (REF-05 caps) and regional_relaxed_screen"
   },
@@ -1076,11 +1149,11 @@
    "test": "the national strict pool less the target, kept to the target's fauna groups for an assemblage; first the three nearest donors per target stream (3c_matched), then the donors inside the widened envelope (3a_envelope); ACC-01 to ACC-06, and the target inside the range of the option's domain measure its passing evaluation regions spanned",
    "threshold": "at least 10 distinct donors; the transport bound of the evidence record",
    "maps_to": "basis_ladder.try_national; basis_transfer.national_donors_for, gower_matches, envelope_donors; acceptance.transport_ok",
-   "note": "v0.14 (2026-09-21). Supersedes REF-08.",
+   "note": "v0.14 (2026-09-21). Supersedes REF-08. v0.16 (2026-09-28): an option whose curve would be the degenerate fallback, or would read as inverted against the national frame's in-frame pressured stations (every station failing the relaxed screen, the pool's own geography as CURVE-12 defines it), is refused (D13, acceptance.curve_checks); an option that passes the sample, stability, curve and transport checks and fails the recovery evidence alone is the rung's flagged candidate, returned to the walk and taken under REF-16 only after the modeled and published sources have refused the metric and no flagged station pool exists.",
    "outcomes": {
     "pass": "curve built, labelled National reference",
     "review": "n/a",
-    "fail": "REF-13"
+    "fail": "REF-13; an option refused by the recovery evidence alone may return under REF-16"
    },
    "confidence_effect": "capped by CONF-03 at national_reference"
   },
@@ -1132,7 +1205,7 @@
    "threshold_status": "approved",
    "implementation_status": "implemented",
    "maps_to": "streamcurves/owner_curves.py (apply_to_inputs, effective_build); streamcurves/owner_sources.py (the sources and their curves); basis_ladder.force_source and acceptance.all_checks (a refused source, computed at the build); regional_agent.assemble curve_decisions; run_region_batch.py stage --curve-decisions; views/source_panel.py; views/source_dialog.py",
-   "note": "2026-09-22, owner decision. A decision is a standing decision of its region: it applies at once in the workspace, rides in the session, and every later build applies it the same way, after SELECT-04, with nothing refilled automatically. remove and unmap name a carried curve, a curve from REF-12 to REF-14, or a fixed criterion (a portfolio choice: CURVE-11 still decides how a fixed criterion scores); include puts back a fitted curve SELECT-04 left out; source puts a curve the owner chose in place of the build's, or in a function that had none: a criterion of the verified catalog that passes REF-14's fitness conditions here, a curve of an earlier version of this assessment, another assessment's curve for the same metric (taken without a comparability check), a curve the owner enters by two thresholds or point by point, or a source the build refused (a station pool, a national option, a modeled specification, a catalog criterion), which the next build computes on its own stations or donors, never through the pooled frame, with every acceptance check run and each failure recorded; a source with fewer than five stations, or nothing to compute from, fails at the build and applies nothing. A supplied curve may rest on a citation or on professional judgment. A fixed criterion can be removed or unmapped but never given another source, and a curve built here cannot take one. A chosen curve states what it rests on (the owner-entered basis, or the source's own for a borrowed curve) and no reference support it does not have. A build never carries a chosen curve forward; the decision puts it back. The bundle records the decisions (ownerCurveDecisions, and ownerDecision on a chosen curve) and the provenance carries one REF-15 record per decision, naming the rule it overrides; the refused sources the owner accepted join the inputs digest. Extension of 2026-09-23 (authoring foundation), applied only while owner_decisions.alternatives_over_fitted is true, false in the canonical configuration until the owner adopts it: a source may also be a published state SQT curve (sqt), frozen from the SQT registry with its verification status, applicability checks and the DEEP banding stated; and a source decision may name curves this build fitted that it replaces in the functions it names (replaces), each of which stays built and is recorded as supported, not selected, under the decision. SELECT-04 and the reference-source hierarchy keep their order, and a decision that needs the extension applies nothing while it is off.",
+   "note": "2026-09-22, owner decision. A decision is a standing decision of its region: it applies at once in the workspace, rides in the session, and every later build applies it the same way, after SELECT-04, with nothing refilled automatically. remove and unmap name a carried curve, a curve from REF-12 to REF-14, or a fixed criterion (a portfolio choice: CURVE-11 still decides how a fixed criterion scores); include puts back a fitted curve SELECT-04 left out; source puts a curve the owner chose in place of the build's, or in a function that had none: a criterion of the verified catalog that passes REF-14's fitness conditions here, a curve of an earlier version of this assessment, another assessment's curve for the same metric (taken without a comparability check), a curve the owner enters by two thresholds or point by point, or a source the build refused (a station pool, a national option, a modeled specification, a catalog criterion), which the next build computes on its own stations or donors, never through the pooled frame, with every acceptance check run and each failure recorded; a source with fewer than five stations, or nothing to compute from, fails at the build and applies nothing. A supplied curve may rest on a citation or on professional judgment. A fixed criterion can be removed or unmapped but never given another source, and a curve built here cannot take one. A chosen curve states what it rests on (the owner-entered basis, or the source's own for a borrowed curve) and no reference support it does not have. A build never carries a chosen curve forward; the decision puts it back. The bundle records the decisions (ownerCurveDecisions, and ownerDecision on a chosen curve) and the provenance carries one REF-15 record per decision, naming the rule it overrides; the refused sources the owner accepted join the inputs digest. Extension of 2026-09-23 (authoring foundation), applied only while owner_decisions.alternatives_over_fitted is true, false in the canonical configuration until the owner adopts it: a source may also be a published state SQT curve (sqt), frozen from the SQT registry with its verification status, applicability checks and the DEEP banding stated; and a source decision may name curves this build fitted that it replaces in the functions it names (replaces), each of which stays built and is recorded as supported, not selected, under the decision. SELECT-04 and the reference-source hierarchy keep their order, and a decision that needs the extension applies nothing while it is off. v0.15 (2026-09-26): owner_decisions.alternatives_over_fitted is false in the canonical configuration and true only in an experimental configuration root (owner decision D4a); the canonical library refuses a manifest built under an experimental root. Campaign Round 2 candidate C5 (the extension on, experimental root only) changed no outcome against the baseline (377 curves, 233 function blocks, AUC 0.8075, flip rate 0.0714), because no state SQT curve competes without an owner source decision; the extension stays off, reference-only, with D4a unresolved.",
    "outcomes": {
     "pass": "the decision applies; its record's outcome is remove, unmap, include, catalog, earlier_version, borrowed, entered_cited, entered_judgment, refused_accepted or sqt",
     "review": "n/a",
@@ -1140,6 +1213,44 @@
    },
    "confidence_effect": "none",
    "override_permission": "none"
+  },
+  {
+   "id": "REF-16",
+   "family": "REF",
+   "name": "Flagged transfer",
+   "purpose": "Score a function on the best comparable least-disturbed pool when every validated source refuses its metric, with the recovery verdict stated as a limitation instead of leaving the function a documented gap.",
+   "test": "tried only after the local reference, the regional pools, comparable national reference, the approved models and the verified catalog have each refused the metric under ACC-01 to ACC-06 (or their own rules): a second pass over the regional options in the family's search order (l3, l2, l1, nars9), then over the national options (3c_matched, 3a_envelope), takes the narrowest option holding at least the adequate floor of usable comparable stations, else the narrowest holding at least min_usable, that passes ACC-01, ACC-04, the comparability envelope and faunal rule, the curve checks of D13 and, for a national option, the transport condition (ACC-03); ACC-05 and ACC-06 are recorded on the decision (transfer_validation: the evidence key, the verdict, a1_share, net_opt, n_cells and the words the first pass refused with) and never gate this pass",
+   "threshold": "reference_hierarchy.flagged_transfer: enabled true, min_usable 10, prefer_adequate true, confidence_cap 39 (the ceiling of high transfer risk, one step below the exploratory cap of 59)",
+   "threshold_status": "provisional",
+   "implementation_status": "implemented",
+   "maps_to": "reference_pool.choose_pool (the second pass, PoolDecision.transfer_validation, confidence_cap, RISK_UNVALIDATED, _flagged_note, flagged_limitation, reference_support_record); basis_ladder.try_national and resolve (the national second pass, flagged_national); pressure_evidence.run_evidence (a validated source of any kind wins over a flagged pool, a flagged pool over a flagged national pool, both over a documented gap; flagged_metrics); acceptance.pool_acceptor, validation_record, evidence_only_refusal, transfer_limitation, flagged_settings; confidence.curve_confidence (cap flagged_transfer_unvalidated); provenance._pressure_records (the REF-16 record) and build_ledger (rule REF-16); deep_export (transferRisk, transferValidation, transferNote, confidenceCap at the metric entry); apps/deep/deep/reference_support.py (the limitation line, the function line, the report count); deep_calculator.support_text; campaign.gate_flagged_transfer_disclosed (promotion policy 1.2)",
+   "note": "v0.16 (2026-09-28, owner decision D11 of 2026-09-28: publishing a region with fewer than 20 scored functions is not acceptable; after the validated sources fail, the best comparable pool of 10 or more least-disturbed stations at the nearest level is used with a stated transfer-risk flag and a confidence cap, the recovery verdict recorded as a limitation, not a gate; a flagged curve's function is rated, flagged in the report and the metric row, and included in the ECI). The frozen 0.15 pass scored 20 functions in 9 of 84 regions; the coordinator's counterfactual over the same pools found that a rung taking any comparable pool of ten or more stations reaches about 78 of 84. The words on every flagged curve say that the recovery test did not confirm the source, with the numbers and what the test requires, where the stations come from, and that the confidence is capped; the cap is 39 because a validated borrowed pool at moderate transfer risk reads at most 59 and a pool the test refused must not read as high as one it confirmed. A flagged transfer raises no review item (the methodology's decision), and promotion policy 1.2's flagged-transfer-disclosed gate refuses a staged bundle whose flagged curve lacks any of the four fields or the limitation text. The rung keeps the D13 curve checks: a flagged pool whose curve would be a fallback or inverted is refused too, and a metric every option refuses stays withheld with the reasons. In a function's portfolio (SELECT-04) a flagged curve ranks last (metric_portfolio.source_rank flagged 5, pressure_evidence.source_of), so a validated curve of any source wins the place over it, a validated reserve candidate wins the place over a flagged regular one, and a flagged curve joins only a function that would otherwise hold fewer than two scored metrics.",
+   "outcomes": {
+    "pass": "curve built on the flagged pool, transfer risk unvalidated, the recovery verdict and the cap on the decision, the metric and the bundle",
+    "review": "n/a: the flag is a stated limitation, and the promotion gate checks its disclosure",
+    "fail": "no comparable pool of min_usable stations passes the sample, stability, comparability and curve checks: the metric is withheld (REF-06) and its function is a documented gap (COV-01) or takes the benchmark rung"
+   },
+   "confidence_effect": "cap 39 (flagged_transfer_unvalidated), on top of the caps by basis and by regional screen",
+   "override_permission": "human_review"
+  },
+  {
+   "id": "REF-17",
+   "family": "REF",
+   "name": "Last resort: adopted EASI screening method",
+   "purpose": "Complete a function that no source supports in the ecoregion with EASI's published national screening method for the same quantity, disclosed as provisional, instead of leaving the function unassessed (owner decisions D18 and D19).",
+   "test": "run at the end of the build, after the station pools, comparable national reference, the approved models, the verified catalog, the flagged transfers, the owner's accepted sources, carried curves and the fixed criteria: a canonical function none of whose metrics holds a curve or a standing owner decision, and for which config/fixed_criteria.yaml names a last_resort entry, takes that entry's metric scored on the EASI method's bands through the CURVE-11 construction (the curve passes through index 0.69 and 0.39 at EASI's boundaries, a boundary value landing in EASI's own class); every candidate metric the function had is named in the record with the reason it was refused or withheld",
+   "threshold": "reference_hierarchy.last_resort: enabled true; config/fixed_criteria.yaml last_resort: pctwet2019ws on watershed-wetland-extent (Poor below 1 percent, Fair 1 to 5, Good above 5) for surface water storage, bank_height_ratio on bhr-bank-instability-susceptibility (Good at or below 1.3, Fair to 1.5, Poor above) for channel and floodplain dynamics, natural_riparian_cover (forest, shrub, grassland and wetland of the 100 m corridor) on organic-matter-supply-potential, EASI's corridor-natural reference curve of the region's NARS-9 class (national fallback), for carbon processing",
+   "threshold_status": "provisional",
+   "implementation_status": "implemented",
+   "maps_to": "fixed_criteria.LAST_RESORT_SPEC, generate (the last_resort block), last_resort_keys, last_resort_entry, last_resort_config, last_resort_curve_row, last_resort_mapping_rows, last_resort_provenance; pressure_evidence.last_resort_fills and run_evidence (the step, last_resort_metrics), bundle_inputs (criteriaBasis fixed, criteriaSource, sourceCitation, adoptedMethod, methodContext, the caveats), ladder_confidence, source_of (pathway, ranked last by SELECT-04); curve_basis.EASI_SCREENING (label, statement, limit, cap 39); provenance._pressure_records (the REF-17 record) and build_ledger (rule REF-17); deep_export (adoptedMethod); apps/deep/deep/reference_support.py (the label); apps/deep/deep/metrics/computed.py (the bank height ratio prefill under spring-bank-height-ratio)",
+   "note": "v0.16 (2026-09-28, owner decision D19 of 2026-09-28: \"use EASI thresholds with a label in stream-curves that it is adopted from national criteria\"; the label reads \"Adopted from EASI's national screening method (provisional)\" after the accuracy review the owner accepted, since EASI lists the wetland bands as a provisional screening judgment and the bank height ratio bands as a provisional directional relationship). The wetland bands rate a watershed with no mapped wetland Poor, so where least-disturbed watersheds carry none the rating cannot tell natural absence from loss; the caveat says so and a regional method is a StreamCurves follow-up. The two-part zero-inflated seed (Round 2 candidate C3a) is not used: it also scores zero wetland as 0, and its study found no accuracy gain.",
+   "outcomes": {
+    "pass": "the function is scored on the adopted EASI method, labelled, cited and capped; the candidates refused ride in the record",
+    "review": "n/a: a rule decision with its disclosure; the follow-up is non-blocking",
+    "fail": "no last_resort entry names the function: it stays unassessed and the promotion policy's all-functions-scored gate refuses the region"
+   },
+   "confidence_effect": "a label and no number (EASI screening method, provisional); basis cap 39",
+   "override_permission": "human_review"
   },
   {
    "id": "CONF-01",
@@ -1229,14 +1340,15 @@
    "threshold": "0-100",
    "threshold_status": "provisional",
    "implementation_status": "implemented",
-   "maps_to": "confidence.metric_score (100-point config-weighted ranking, advisory only)",
+   "maps_to": "confidence.metric_score (100-point config-weighted ranking, advisory only); pressure_evidence.select_portfolio reads it as SELECT-04's tie-break",
    "outcomes": {
     "pass": "ranked",
     "review": "tradeoffs visible for review",
     "fail": "n/a"
    },
    "confidence_effect": "informs portfolio confidence",
-   "override_permission": "human_review"
+   "override_permission": "human_review",
+   "note": "v0.15 (2026-09-26, discrepancy 6 of the campaign log): the score is an advisory rank inside a function and decides nothing on its own; SELECT-04 reads it as the tie-break after the source rank (the higher score joins first, then the metric key), and the keeper choice for a same-function redundant pair (RED-01) stays the owner's."
   },
   {
    "id": "SELECT-03",
@@ -1266,9 +1378,9 @@
    "name": "Fill each function to two",
    "purpose": "Assess every function with up to two metrics automatically, and no more without a person.",
    "test": "carried-forward, rebuilt and fixed metrics keep their places; a new curve joins a function only while it holds fewer than two scored metrics, by source rank then SELECT-02 score; a reserve candidate only where the function would otherwise be unassessed",
-   "threshold": "fill_to 2",
+   "threshold": "fill_to 2; second_metric_rule rank (independent_and_discriminating: absolute Spearman below 0.65 and CURVE-12 AUC at least 0.55, both provisional)",
    "maps_to": "pressure_evidence.select_portfolio; methodology_config metric_portfolio",
-   "note": "v0.14 (2026-09-21, owner decision). The curves not selected are recorded as supported, not selected.",
+   "note": "v0.14 (2026-09-21, owner decision). The curves not selected are recorded as supported, not selected. Campaign Round 2 (2026-09-25, candidate C1): metric_portfolio.second_metric_rule with second_metric_max_abs_spearman and second_metric_min_auc are governed knobs, default rank (the rule above); under independent_and_discriminating the first new metric joins by rank and one further place goes to the highest-ranked candidate independent of every scored metric and discriminating. select_portfolio records the rule and each candidate's numbers per function; a non-default knob joins the inputs digest. v0.15 (2026-09-26): candidate C1 rejected on its declared margin: filling to one, with a second metric only when independent and discriminating, cut ECI vs benthic MMI AUC from 0.8075 to 0.7870 (paired delta -0.0205, interval [-0.0324, -0.0059]), 290 curves against 377 and 12.0 against 16.5 field metrics per assessment, so the second metric of a function carries association rather than redundancy; fill_to stays 2 with second_metric_rule rank.",
    "outcomes": {
     "pass": "portfolio recorded per function",
     "review": "n/a",
@@ -1360,14 +1472,14 @@
    "family": "ACC",
    "name": "Classification error",
    "purpose": "A source must place sites in the same condition class as reference does.",
-   "test": "in the recovery test, class agreement with reference (exceedance at least 0.10) in at least two thirds of at least 4 evaluation regions; the metric family's pooled evidence where the metric has fewer regions",
+   "test": "in the recovery test, class agreement with reference (exceedance at least 0.10) in at least two thirds of at least 4 evaluation regions; the metric family's pooled evidence where the metric has fewer regions. Under 0.16 the criterion gates the validated rungs (REF-04, REF-11, REF-12) and is recorded, never gating, on the flagged rung (REF-16)",
    "threshold": "a1_share >= 2/3 over >= 4 cells",
-   "maps_to": "acceptance.evidence; config/basis_validation.yaml; scripts/build_basis_validation.py",
-   "note": "v0.14 (2026-09-21). Pre-registration II's accuracy criterion, fixed in Pre-registration IV. The local reference needs no recovery evidence.",
+   "maps_to": "acceptance.evidence, validation_record; config/basis_validation.yaml; scripts/build_basis_validation.py",
+   "note": "v0.14 (2026-09-21). Pre-registration II's accuracy criterion, fixed in Pre-registration IV. The local reference needs no recovery evidence. v0.16 (2026-09-28, owner decision D11): the criterion still decides whether a source is validated; a source it refuses may be taken by the flagged-transfer rung (REF-16) when nothing validated supports the metric, and then the verdict (the evidence key, a1_share, n_cells and the refusal words) is recorded on the decision as transfer_validation and stated as the curve's limitation, with transfer risk unvalidated and the confidence capped.",
    "outcomes": {
     "pass": "source accepted on this criterion",
     "review": "n/a",
-    "fail": "the next source of the hierarchy is tried"
+    "fail": "the next source of the hierarchy is tried; if none is validated, the flagged rung may take the source with this verdict recorded (REF-16)"
    },
    "confidence_effect": "none"
   },
@@ -1379,14 +1491,14 @@
    "family": "ACC",
    "name": "Directional bias",
    "purpose": "A source must not systematically promote sites.",
-   "test": "median net optimism across evaluation regions at most 0.05",
+   "test": "median net optimism across evaluation regions at most 0.05. Under 0.16 the criterion gates the validated rungs (REF-04, REF-11, REF-12) and is recorded, never gating, on the flagged rung (REF-16)",
    "threshold": "net_opt <= 0.05",
-   "maps_to": "acceptance.evidence; config/basis_validation.yaml",
-   "note": "v0.14 (2026-09-21). Exact anchor recovery (containment, C1) is reported beside it as a diagnostic and never gates.",
+   "maps_to": "acceptance.evidence, validation_record; config/basis_validation.yaml",
+   "note": "v0.14 (2026-09-21). Exact anchor recovery (containment, C1) is reported beside it as a diagnostic and never gates. v0.16 (2026-09-28, owner decision D11): as ACC-05, the verdict of a source the flagged-transfer rung takes is recorded on the decision (net_opt beside a1_share in transfer_validation) and stated as the curve's limitation, never as a gate on that rung.",
    "outcomes": {
     "pass": "source accepted on this criterion",
     "review": "n/a",
-    "fail": "the next source of the hierarchy is tried"
+    "fail": "the next source of the hierarchy is tried; if none is validated, the flagged rung may take the source with this verdict recorded (REF-16)"
    },
    "confidence_effect": "none"
   },
@@ -1411,6 +1523,25 @@
    "standing_decision_ids": [
     "cov01-documented-gap"
    ]
+  },
+  {
+   "id": "EVAL-01",
+   "family": "EVAL",
+   "name": "Evaluation protocol",
+   "purpose": "Change the methodology only against a protocol written before any result is read, so a candidate rule is judged on declared outcomes and margins and never on what it produced.",
+   "test": "a build under a campaign records the protocol's path, version and sha256 in its manifest (the protocol block) and its rebuild ledger (protocolSha256); an arm recorded under another protocol is refused; an acceptance threshold, margin or decision type changes only with a new protocol version, never inside a round",
+   "threshold": "protocol V1 (config/methodology/evaluation_protocol_v1.yaml, sha256 84a5cabca0b08d403c44164b130500173451aa0d14ae11704abeeece014a1cfd): margins frozen 2026-09-25",
+   "threshold_status": "approved",
+   "implementation_status": "implemented",
+   "maps_to": "streamcurves/round2.py (stamp, check_protocol, arm_record, load_protocol); provenance.build_records (one EVAL-01 record when the manifest carries a protocol) and provenance.build_ledger (protocolSha256); config/methodology/evaluation_protocol_v1.yaml and EVALUATION_PROTOCOL_V1.md",
+   "note": "v0.15 (2026-09-26). Round 2 ran ten candidates under protocol V1 on 14 development regions with the reserved finalist cells untouched; every verdict in this catalog's campaign block cites the protocol sha. A build outside a campaign records no protocol and lists this rule as not evaluated with that reason. The rule governs how the method is changed, not a threshold of the method, which is why it stands in its own family.",
+   "outcomes": {
+    "pass": "the protocol is recorded and matches the round's",
+    "review": "n/a",
+    "fail": "an arm under another protocol is refused (round2.check_protocol)"
+   },
+   "confidence_effect": "none",
+   "override_permission": "maintainer"
   }
  ]
 }

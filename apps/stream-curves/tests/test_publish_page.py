@@ -10,10 +10,12 @@ import views.publish as pub
 
 SRC = Path(pub.__file__).read_text(encoding="utf-8")
 
-#: Every id _publish reads (plus the buttons/downloads the page must emit).
+#: Every id _publish reads (plus the buttons/downloads the page must emit). The SELECT-01
+#: checkbox (pub_select01) is gone: approvals are given in Select final curves and read
+#: from the session's portfolio_approvals (one decision authority, 2026-09-25).
 HANDLER_IDS = (
     "pub_status", "pub_assessment", "pub_new_id", "pub_name",
-    "pub_citation", "pub_author", "pub_notes", "pub_select01",
+    "pub_citation", "pub_author", "pub_notes",
     "publish_btn", "download_workbook", "download_calculator",
     "download_deep_bundle", "download_project_copy",
 )
@@ -22,15 +24,38 @@ HANDLER_IDS = (
 def test_every_handler_id_is_still_emitted():
     for input_id in HANDLER_IDS:
         assert f'"{input_id}"' in SRC, f"publish.py no longer emits {input_id!r}"
+    assert '"pub_select01"' not in SRC and "input.pub_select01()" not in SRC
 
 
-def test_a_version_publishes_as_a_draft_unless_the_maintainer_says_preliminary():
+def test_the_status_default_follows_what_is_left_to_decide():
+    """library.py's rule: an interactive publish is the human review, so a version with
+    nothing left to decide is Preliminary; anything left makes it a Draft, the radio
+    locked and the reason shown."""
     choices = pub._status_choices()
     assert set(choices) == set(pub.lib.PUBLISH_STATUSES) == {"draft", "preliminary"}
-    assert 'selected="draft"' in SRC
-    assert "status=status)" in SRC, "the chosen status reaches publish_version"
+    assert pub.publish_default_status(True, 0, 0, 0) == ("preliminary", None)
+    assert pub.publish_default_status(True, None, 0) == ("preliminary", None)
+    status, why = pub.publish_default_status(False, 0, 0)
+    assert status == "draft" and "checklist" in why
+    status, why = pub.publish_default_status(True, 3, 0)
+    assert status == "draft" and why == "3 items to resolve in Select final curves"
+    status, why = pub.publish_default_status(True, 0, 1)
+    assert status == "draft" and "SELECT-01" in why and why.startswith("1 function ")
+    status, why = pub.publish_default_status(True, 0, 0, 2)
+    assert status == "draft" and "2 standing decisions to confirm" in why
+    # the form: its own output, opened on the default, locked with the reason on a Draft
+    control = SRC[SRC.index("def status_control():"):SRC.index("def new_id_field():")]
+    assert "selected=status" in control and 'ui.tags.fieldset(radio, disabled="disabled")' in control
+    assert "Published as a Draft: {reason}" in control
+    assert 'selected="draft"' not in SRC
+    # the handler enforces it too, and the chosen status reaches publish_version
+    handler = SRC[SRC.index("def _publish():"):]
+    assert 'if default_status == "draft":\n            status = "draft"' in handler
+    assert "status=status)" in SRC
     assert pub.lib.DEFAULT_STATUS == "preliminary", \
-        "the library default stays preliminary (DEEP mirrors it); the page passes draft"
+        "the library default stays preliminary (DEEP mirrors it)"
+    for text in (pub.publish_default_status(True, 2, 0)[1], pub.publish_default_status(False, 0, 0)[1]):
+        assert chr(8212) not in text
 
 
 def test_only_the_maintainer_publishes_and_everyone_else_saves_a_copy():

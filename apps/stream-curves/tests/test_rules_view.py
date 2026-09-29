@@ -162,7 +162,25 @@ def test_status_exceptions_flags_only_departures_from_the_baseline():
     assert rv.status_exceptions(entries["DATA-01"]) == []
     assert rv.status_exceptions(entries["STRAT-07"]) == [
         ("implementation", "not_yet_implemented")]
-    assert rv.status_exceptions(entries["CURVE-07"]) == [("implementation", "partial")]
+    # CURVE-07 joined the baseline on 2026-09-25: the rule the code applies (a
+    # curve held for review) is implemented; the residual diagnostics it used
+    # to describe were never applied to IQR-seed curves
+    assert rv.status_exceptions(entries["CURVE-07"]) == []
     assert rv.status_exceptions(entries["CURVE-07a"]) == [("threshold", "approved")]
     baseline = [e for e in entries.values() if not rv.status_exceptions(e)]
     assert len(baseline) >= 30, "the baseline is the overwhelming majority"
+
+
+def test_curve_07_is_the_held_for_review_rule_the_code_applies():
+    """Item 3 of the campaign's discrepancy log: the catalog said residual
+    structure while the code and the review flow hold any non-auto_ok proposal."""
+    rule = methodology.rule("CURVE-07")
+    assert rule["name"] == "Curve held for review"
+    assert "run_state.CURVE_REVIEW_REQUIRED" in rule["test"]
+    for status in sorted(rs.CURVE_REVIEW_REQUIRED):
+        assert status in rule["test"], status
+    assert f"every status but {rs.CURVE_STATUS_AUTO_OK}" in rule["test"]
+    assert rule["implementation_status"] == "implemented"
+    assert "Residual structure" in rule["note"] and "S-01" in rule["note"]
+    assert "CURVE-13" in rule["note"]
+    assert rule["standing_decision_ids_optional"] == ["curve07-thin-metric-finalized"]

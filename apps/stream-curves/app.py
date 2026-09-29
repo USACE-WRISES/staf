@@ -54,7 +54,6 @@ from views import summary_state as sst
 from views.analysis_workspace import analysis_workspace_server, analysis_workspace_ui
 from views.cross_section import cross_section_server, cross_section_ui
 from views.nrsa_explorer import nrsa_explorer_server, nrsa_explorer_ui
-from views.region_builder import region_builder_server, region_builder_ui
 from views.source_panel import PANEL_ID as SOURCE_PANEL_ID, source_panel_server
 from views.source_dialog import DIALOG_ID as SOURCE_DIALOG_ID, source_dialog_server
 from views.rules import rules_server, rules_ui
@@ -107,8 +106,8 @@ _PANELS = [
                  value="xsec"),
     ui.nav_panel("NRSA Explorer", ui.div(nrsa_explorer_ui("nrsa"), class_="mt-3"),
                  value="nrsa"),
-    ui.nav_panel("Region Builder", ui.div(region_builder_ui("build"), class_="mt-3"),
-                 value="build"),
+    # The Region builder is no page of its own: an ecoregion project's stage 3 is a single
+    # Build step whose body is the builder (views/import_map.py mounts it as "region_builder").
     ui.nav_panel("Rules", ui.div(rules_ui("rules"), class_="mt-3"), value="rules"),
 ]
 
@@ -163,10 +162,6 @@ def server(input, output, session):
     # shows rather than at session init, where it races the leaflet bundle
     nrsa_explorer_server("nrsa", state,
                          active=lambda: state.current_tab() == "nrsa")
-    # Same gate: the page reads the site table and a run folder off disk, so it
-    # should do that when it shows rather than at session init.
-    region_builder_server("build", state,
-                          active=lambda: state.current_tab() == "build")
     # Same gate: the page reads the three methodology files.
     rules_server("rules", state,
                  active=lambda: state.current_tab() == "rules")

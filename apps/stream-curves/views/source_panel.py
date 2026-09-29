@@ -12,7 +12,7 @@ import json
 import re
 from typing import Mapping, Optional
 
-from shiny import module, reactive, ui
+from shiny import module, reactive, render, ui
 
 from streamcurves import curve_sources as src
 from streamcurves import curve_svg as cs
@@ -193,8 +193,11 @@ def _functions_block(metric: str, entry: Mapping, decisions) -> list:
 
 
 def panel_body(metric: str, entry: Mapping, *, provenance: Optional[Mapping] = None,
-               build: Optional[Mapping] = None, decisions=()):
-    """Everything the panel shows about one curve, and the owner's decisions on it."""
+               build: Optional[Mapping] = None, decisions=(), evidence=None):
+    """Everything the panel shows about one curve, and the owner's decisions on it.
+    ``evidence``: the Evidence section's body (the package behind the build, its status,
+    Download or View, the stations behind this metric), rendered by the server so it
+    repaints after a download; None leaves the section out."""
     kind = entry.get("kind")
     units = src.units_of(entry)
     tile = cs.reference_tile(metric, entry)
@@ -227,6 +230,8 @@ def panel_body(metric: str, entry: Mapping, *, provenance: Optional[Mapping] = N
         parts.append(_section("Breakpoints", _breakpoint_table(points, units)))
     parts.append(_section("Functions", ui.div(*_functions_block(metric, entry, decisions),
                                               class_="source-panel-functions")))
+    if evidence is not None:
+        parts.append(_section("Evidence", evidence))
     return ui.div(*[p for p in parts if p is not None], class_="source-panel")
 
 
@@ -239,7 +244,7 @@ def build_has_curve(metric: str, build: Optional[Mapping]) -> bool:
 
 
 def panel_modal(metric: str, entry: Mapping, *, provenance: Optional[Mapping] = None,
-                build: Optional[Mapping] = None, decisions=()):
+                build: Optional[Mapping] = None, decisions=(), evidence=None):
     from views import source_dialog as sd
     removed = oc.removed(decisions).get(str(metric))
     owner = entry.get("owner")
@@ -263,7 +268,8 @@ def panel_modal(metric: str, entry: Mapping, *, provenance: Optional[Mapping] = 
     elif owner:
         footer[0].attrs["class"] = footer[0].attrs["class"] + " me-auto"
     return ui.modal(
-        panel_body(metric, entry, provenance=provenance, build=build, decisions=decisions),
+        panel_body(metric, entry, provenance=provenance, build=build, decisions=decisions,
+                   evidence=evidence),
         title=panel_title(metric, entry),
         footer=ui.TagList(*footer),
         size="l", easy_close=True)
@@ -348,6 +354,14 @@ def decision_form(metric: str, name: str, action: str, functions: list, emptied:
 
 @module.server
 def source_panel_server(input, output, session, state: AppState):
+    from views import evidence_panel as evp
+    ns = session.ns
+    # the Evidence section: the metric the panel shows and the package the build recorded
+    showing = reactive.value(None)
+    packages = evp.evidence_panel_server(
+        input, output, session, state, prefix="ev", kind="deep",
+        refs=lambda: [showing()["ref"]] if (showing() or {}).get("ref") else [])
+
     @reactive.effect
     @reactive.event(input.open)
     @guard("open the curve source")
@@ -364,8 +378,25 @@ def source_panel_server(input, output, session, state: AppState):
             provenance = state.source_provenance()
             build = state.reference_build()
             decisions = state.owner_curve_decisions() or []
+            origin = state.assessment_source() or {}
+        ref = evp.evidence_reference_for(build, provenance, origin)
+        showing.set({"metric": metric, "ref": ref})
         ui.modal_show(panel_modal(metric, entry, provenance=provenance, build=build,
-                                  decisions=decisions))
+                                  decisions=decisions, evidence=ui.output_ui(ns("ev_section"))))
+
+    # suspend_when_hidden=False: dialog outputs bind while the modal is still hidden
+    # (Bootstrap fade) and a suspended output never resumes (DEEP documents the same trap)
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def ev_section():
+        """The package behind this curve's build, its status on this computer, Download or
+        View, and, once it is here, the stations behind this metric from its pool ledger."""
+        packages.tick()
+        cur = showing() or {}
+        ref = cur.get("ref")
+        return evp.evidence_section(ref, packages.installed(), prefix="ev", ns=ns,
+                                    metric=cur.get("metric"), folder=packages.ready_folder(ref),
+                                    busy=packages.busy())
 
     pending = reactive.value(None)
 

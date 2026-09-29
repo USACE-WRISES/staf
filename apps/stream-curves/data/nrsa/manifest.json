@@ -22,8 +22,8 @@
       "sha256": "sha256:d9e2fde1f0e3b676677cb338270e9c8c02b7eea10b2c23de4bb44cab74ca5b0f"
     },
     "cycle_compatibility.csv": {
-      "bytes": 9038,
-      "sha256": "sha256:0952342bec8abf6bd62b5d493829220855c52ec2fcea0e2545ff67e032690c77"
+      "bytes": 10956,
+      "sha256": "sha256:efe39873556ee094d38da435bb0ec85b964ce3ffa8784df6d5f406b6c481239f"
     },
     "fish_counts.parquet": {
       "bytes": 622430,
@@ -34,12 +34,12 @@
       "sha256": "sha256:d32b0590eb9548b33e2faee90e36250f9e3d4a2cc3f9c72544ef6fa2b637df5d"
     },
     "metric_crosswalk.csv": {
-      "bytes": 80584,
-      "sha256": "sha256:86c7b644ba3599ec109659fc2cc2fa2dfb19987414b4d26cf74356a5369eae7c"
+      "bytes": 80978,
+      "sha256": "sha256:73727cbd7ab51d1dd16bf722fdbd534ffa232393bb69831bd672aacd21020a8a"
     },
     "metric_dictionary.csv": {
-      "bytes": 191412,
-      "sha256": "sha256:422926fc366538ac608793e178556e53105c64c0ec2ed5414d681c4f0e9df8bd"
+      "bytes": 192387,
+      "sha256": "sha256:ddaff6f3702ffef628c08a2e4bb7cdecacaaaaea2ad02edb608b6c83983fc81a"
     },
     "reference/cycle_comparison.csv": {
       "bytes": 698972,
@@ -110,17 +110,17 @@
       "sha256": "sha256:7816cc7b41837484ceea268e4f0daa109a37a62b7e46b615fdf247da7d85492b"
     },
     "value_origins.csv": {
-      "bytes": 68136,
-      "sha256": "sha256:eeabf40ce92e4802f79b5a1f0d78a193b282dc11153b85b9d364210e0b44a09c"
+      "bytes": 68402,
+      "sha256": "sha256:f14bf5bb39f783ed6dc75a181b9f398b104e814b16c6e885b197fa30aa247d48"
     },
     "values.parquet": {
-      "bytes": 7599712,
-      "sha256": "sha256:ee7ac06598848451f3104b7b1f5e39765c7c2d719eb6a54ec4928408e881ac60"
+      "bytes": 7652207,
+      "sha256": "sha256:266adaac93476ee772f797af89820ee4a4e30141e5737da5ffac86a1b67c95fe"
     },
     "verification_report.md": {
-      "bytes": 4373,
-      "sha256": "sha256:50234c36cf824fc57d3c20032553efc5867378424d4063bffc1ff45f8649dd38"
+      "bytes": 5036,
+      "sha256": "sha256:3902a5719cd708e08202a88d539a143bdd0d6d44e99044ee4895a9db24c32fd2"
     }
   },
-  "totalBytes": 15451058
+  "totalBytes": 15507769
 }

@@ -48,16 +48,21 @@ def test_unknown_rules_and_thresholds_raise():
 def test_the_catalog_covers_every_rule_family():
     families = {rule_id.split("-")[0] for rule_id in methodology.rule_ids()}
     assert families == {"DATA", "RED", "STRAT", "CURVE", "REF", "CONF", "SELECT",
-                        "ACC", "COV"}
+                        "ACC", "COV", "EVAL"}
 
 
 def test_every_rule_declares_both_statuses():
+    legend = methodology.load_rule_catalog()["meta"]["status_legend"]
     for rule_id in methodology.rule_ids():
         rule = methodology.rule(rule_id)
         assert rule.get("threshold_status") in (
             "provisional", "calibrated", "approved"), rule_id
+        # not_applicable (v0.15): a diagnostic the approved curve family does not
+        # need; the legend states it beside the other four
         assert rule.get("implementation_status") in (
-            "implemented", "partial", "not_yet_implemented", "superseded"), rule_id
+            "implemented", "partial", "not_yet_implemented", "superseded",
+            "not_applicable"), rule_id
+        assert rule.get("implementation_status") in legend["implementation_status"], rule_id
         if rule.get("implementation_status") == "superseded":
             assert rule.get("superseded_by") in methodology.rule_ids(), rule_id
 
@@ -114,6 +119,92 @@ def test_an_edited_curve_band_mirror_is_reported(monkeypatch):
     tweaked = {**clean, "curve_rules": {**clean["curve_rules"], "index_low_band": 0.25}}
     monkeypatch.setattr(methodology, "load_config", lambda: tweaked)
     assert any("curve engine" in d for d in methodology.mirror_drift())
+
+
+# --------------------------------------------------------------------------- #
+# Config hygiene (campaign Round 1, 2026-09-25): the keys no code read are gone,
+# carry_forward is read, and the two describing blocks are mirror-checked.
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("path", [
+    "reference_pool.levels", "reference_pool.review_risks",
+    "reference_hierarchy.sources", "reference_hierarchy.option_rank",
+])
+def test_the_keys_no_code_read_stay_deleted(path):
+    assert methodology.threshold(path, "__missing__") == "__missing__", path
+
+
+def test_the_keys_the_code_reads_are_still_there():
+    assert methodology.threshold("reference_pool.envelope_quantiles") == [0.025, 0.975]
+    assert methodology.threshold("reference_pool.min_self_coverage") == 0.80
+    assert methodology.threshold("reference_hierarchy.national_options")
+    assert methodology.threshold("reference_hierarchy.regional_screen")["id"]
+    # campaign Round 2 (candidate B1): ladder_rule came back as a key the code
+    # reads (reference_pool.choose_pool), default first_pass, today's behavior
+    assert methodology.threshold("reference_pool.ladder_rule") == "first_pass"
+    assert methodology.ladder_rule() == methodology.LADDER_RULE_FIRST_PASS
+
+
+def test_the_curve12_verdict_cuts_are_mirror_checked(monkeypatch):
+    from streamcurves import discrimination as dz
+    cuts = methodology.load_config()["curve12"]["verdict_cuts"]
+    assert (cuts["discriminates"], cuts["weak"], cuts["inverted"]) == (
+        dz.AUC_DISCRIMINATES, dz.AUC_WEAK, dz.AUC_INVERTED)
+    clean = methodology.load_config()
+    tweaked = {**clean, "curve12": {**clean["curve12"],
+                                    "verdict_cuts": {**cuts, "weak": 0.5}}}
+    monkeypatch.setattr(methodology, "load_config", lambda: tweaked)
+    assert any(d.startswith("curve12.verdict_cuts.weak") for d in methodology.mirror_drift())
+
+
+def test_carry_forward_default_is_read_from_the_config(monkeypatch):
+    assert methodology.carry_forward_default() == "published_curves"
+    assert methodology.carry_forward_default() == methodology.threshold(
+        "reference_hierarchy.carry_forward")
+    clean = methodology.load_config()
+    tweaked = {**clean, "reference_hierarchy": {**clean["reference_hierarchy"],
+                                                "carry_forward": "sometimes"}}
+    monkeypatch.setattr(methodology, "load_config", lambda: tweaked)
+    with pytest.raises(ValueError, match="carry_forward"):
+        methodology.carry_forward_default()
+
+
+def test_the_standing_decisions_index_is_mirror_checked(monkeypatch):
+    from streamcurves import decisions as dec
+    from streamcurves import rules_view as rv
+    policy = dec.load_policy()
+    index = methodology.load_config()["standing_decisions"]
+    assert sorted(index["default_enabled"]) == sorted(rv.default_policy_ids(policy))
+    assert sorted(index["enable_per_run_only"]) == sorted(rv.optional_policy_ids(policy))
+    clean = methodology.load_config()
+    tweaked = {**clean, "standing_decisions": {
+        **clean["standing_decisions"],
+        "default_enabled": list(clean["standing_decisions"]["default_enabled"]) + ["no-such"]}}
+    monkeypatch.setattr(methodology, "load_config", lambda: tweaked)
+    assert any(d.startswith("standing_decisions.default_enabled")
+               for d in methodology.mirror_drift())
+
+
+def test_the_lifecycle_block_mirrors_the_library(monkeypatch):
+    from streamcurves import library as lib
+    life = methodology.load_config()["lifecycle"]
+    assert life["version_statuses"] == list(lib.VERSION_STATUSES)
+    assert "draft" in life["version_statuses"]
+    assert life["default_status"] == lib.DEFAULT_STATUS
+    assert life["validation_states"] == list(lib.VALIDATION_STATES)
+    clean = methodology.load_config()
+    tweaked = {**clean, "lifecycle": {**clean["lifecycle"], "version_statuses": [
+        s for s in clean["lifecycle"]["version_statuses"] if s != "draft"]}}
+    monkeypatch.setattr(methodology, "load_config", lambda: tweaked)
+    assert any(d.startswith("lifecycle.version_statuses") for d in methodology.mirror_drift())
+
+
+def test_the_calibration_note_records_the_hygiene_pass_and_the_round_2_close():
+    note = methodology.load_config()["meta"]["calibration_note"]
+    assert "2026-09-25 hygiene" in note
+    assert "v0.15 (2026-09-26" in note and "B3" in note and "C3b" in note
+    # v0.16 (campaign Round 6, owner decisions D11, D13 and D14 of 2026-09-28)
+    assert "v0.16 (2026-09-28" in note and "REF-16" in note and "D13" in note
+    assert methodology.methodology_version() == "0.16-provisional"
 
 
 # --------------------------------------------------------------------------- #

@@ -16,9 +16,18 @@
 # fraction, then the most specific geography (Level III before NARS-9 before
 # national), then the newest edition.
 #
-# The thresholds are copied from the vendored EASI catalog they are read from
-# (thresholds_source) so the record is complete on its own; a test fails if the
-# two ever disagree.
+# Two kinds of entry hold their thresholds differently. The nutrient entries copy
+# theirs from the vendored EASI catalog they are read from (thresholds_source
+# catalog: easi) so the record is complete on its own; a test fails if the two
+# ever disagree. The entries added under methodology 0.16 (owner decision D12,
+# 2026-09-28; the review record notes/2026-09-25_National_Campaign/reports/
+# R6_benchmark_review.md) hold their thresholds here, copied from the EPA
+# document their thresholds_source names (table and page), with `direction`,
+# `class_rule` (which class owns a boundary value), `domain` and a
+# `verification` block: the thresholds applied to EPA's own station values must
+# reproduce EPA's published condition class for every classified visit
+# (scripts/nrsa/verify_benchmark_classes.py), or the benchmark is not adopted as
+# EPA's. Thresholds are the two breakpoints in ascending order of the metric.
 
 version: 1
 precedence: [exact_metric_and_fraction, most_specific_geography, newest_edition]
@@ -89,6 +98,329 @@ entries:
       STAF curve through the same construction as the fixed criteria (CURVE-11):
       Good scores above 0.69, Fair between 0.39 and 0.69, Poor below 0.39.
 
+  # ------------------------------------------------------------------------- #
+  # Methodology 0.16 (owner decision D12, 2026-09-28): EPA NRSA condition
+  # benchmarks for the two NRSA biological indices and for salinity, adopted
+  # after the published-benchmark review and verified against EPA's own class
+  # calls (review record: notes/2026-09-25_National_Campaign/reports/
+  # R6_benchmark_review.md; handoff report agent_reports/WP-R6b.md).
+  # ------------------------------------------------------------------------- #
+  - id: nrsa-2018-19-benthic-mmi
+    metric: bent_MMI_BENT
+    title: NRSA benthic macroinvertebrate MMI condition benchmarks
+    analyte: benthic macroinvertebrate multimetric index
+    fraction: index
+    definition: >-
+      the NRSA benthic macroinvertebrate multimetric index (MMI_BENT), EPA's
+      Wadeable Streams Assessment MMI of six metrics scored per NARS-9 region and
+      rescaled to 0 to 100 (Stoddard et al. 2008), the same index and scoring in
+      the 2008-09, 2013-14, 2018-19 and 2023-24 surveys
+    purpose: condition-assessment
+    direction: higher_is_better
+    units: {benchmark: MMI points, metric: MMI points, factor: 1.0}
+    resolution: 0.01
+    domain: [0, 100]
+    sampling: >-
+      A reachwide composite of eleven transect kick samples taken with a D-frame net
+      of 500 micrometre mesh, a fixed count of 500 organisms identified to EPA's
+      standard taxonomic level, and the six regional metrics scored against EPA's
+      published floor and ceiling values, the NRSA benthic protocol the index is
+      defined by.
+    stream_types: >-
+      Perennial streams and rivers in the NRSA sample frame, wadeable and boatable,
+      one set of benchmarks per NARS-9 region.
+    geography: {kind: nars9}
+    edition: "2018-19"
+    thresholds:       # [Poor below, Good at or above] in MMI points, per NARS-9 region
+      CPL: [40.7, 54.9]
+      NAP: [40.9, 55.0]
+      NPL: [42.6, 56.8]
+      SAP: [30.8, 45.0]
+      SPL: [21.3, 35.5]
+      TPL: [26.2, 40.3]
+      UMW: [22.7, 36.9]
+      WMT: [35.9, 50.1]
+      XER: [42.8, 57.0]
+    class_rule: {good: at_or_above, poor: below}
+    thresholds_source:
+      catalog: nrsa-tsd-2018-19
+      document: "National Rivers and Streams Assessment 2018-2019 Technical Support Document, Version 1.1, EPA 841-R-22-005 (November 2023, updated September 2024)"
+      table: "Table 5-3. Benchmark Values for the Nine Regional Benthic MMIs"
+      page: 41
+      url: "https://www.epa.gov/system/files/documents/2024-12/nrsa-2018-19-tsd-final-11252024.pdf"
+      derivation: >-
+        Section 5.3.2 (page 40): the 25th and 5th percentiles of the least-disturbed
+        reference distribution per NARS-9 region, hindcast to the 25th percentile of
+        the reference sites' disturbance score (Herlihy et al. 2008), Good-Fair =
+        MMIpred - 0.675 RMSE, Fair-Poor = MMIpred - 1.650 RMSE; the same benchmarks
+        in NRSA 2008-09, 2013-14 and 2018-19 (page 36).
+      corroboration:
+        - "NRSA 2008-2009 Technical Report, EPA/841/R-16/008, Table 9.3 (page 52): identical values"
+        - "NRSA 2013-14 Technical Support Document, Appendix B, Ecoregion-Specific Benchmarks Used in NRSA 2013-14 (page 1): identical values; https://www.epa.gov/system/files/documents/2021-10/nrsa_2013-14_appendix_b_c_accessible_ci.pdf"
+    verification:
+      epa_class_column: BENT_MMI_COND
+      checked_on: "2026-09-28"
+      script: scripts/nrsa/verify_benchmark_classes.py
+      sources:
+        - {cycle: "1314", file: nrsa1314_allcond_05312019_0.csv, value_column: MMI_BENT, class_column: BENT_MMI_COND}
+        - {cycle: "1819", file: nrsa-1819-benthic-macroinvertebrate-mmi-data.csv, value_column: MMI_BENT, class_column: BENT_MMI_COND}
+        - {cycle: "2324", file: nrsa2324_benthicmmi.csv, value_column: MMI_BENT, class_column: BENT_MMI_COND, region_from: nrsa2324_siteinfo.csv}
+      result:
+        n: 6083
+        agree: 6083
+        share: 1.0
+        per_cycle: {"1314": {n: 1848, agree: 1848}, "1819": {n: 2106, agree: 2106}, "2324": {n: 2129, agree: 2129}}
+        per_region:
+          CPL: {n: 791, agree: 791}
+          NAP: {n: 796, agree: 796}
+          NPL: {n: 439, agree: 439}
+          SAP: {n: 866, agree: 866}
+          SPL: {n: 472, agree: 472}
+          TPL: {n: 742, agree: 742}
+          UMW: {n: 584, agree: 584}
+          WMT: {n: 810, agree: 810}
+          XER: {n: 583, agree: 583}
+    citation:
+      key: nrsa-2018-19
+      title: "National Rivers and Streams Assessment 2018-19 Technical Support Document"
+      edition: "Version 1.1, EPA 841-R-22-005, November 2023, updated September 2024"
+      url: "https://www.epa.gov/system/files/documents/2024-12/nrsa-2018-19-tsd-final-11252024.pdf"
+    region_citation:
+      key: nars-regions
+      title: "Ecoregions Used in the National Aquatic Resource Surveys"
+      url: "https://www.epa.gov/national-aquatic-resource-surveys/ecoregions-used-national-aquatic-resource-surveys"
+    source_tier: epa-national-survey-benchmark
+    confidence: M
+    provisional: false
+    limitations:
+      - >-
+        The benchmarks rest on EPA's least-disturbed reference sites and their
+        disturbance-adjusted 5th and 25th percentiles, a definition of reference
+        that need not match this assessment's landscape-pressure screen.
+      - >-
+        The index is defined by the NRSA benthic protocol and EPA's regional metric
+        scoring; a value from another sampling method, count size, taxonomic
+        resolution or scoring is not comparable with these benchmarks.
+      - >-
+        One set of benchmarks serves each NARS-9 region, wadeable and boatable
+        sites alike; the benchmarks were set in 2008-09 and have not been revised.
+    scoring: >-
+      The two breakpoints become the Fair to Poor and Good to Fair boundaries of a
+      STAF curve through the same construction as the fixed criteria (CURVE-11):
+      Good scores above 0.69, Fair between 0.39 and 0.69, Poor below 0.39, and a
+      higher index scores higher.
+
+  - id: nrsa-2018-19-fish-mmi
+    metric: fish_MMI_FISH
+    title: NRSA fish MMI condition benchmarks
+    analyte: fish assemblage multimetric index
+    fraction: index
+    definition: >-
+      the NRSA fish multimetric index (MMI_FISH), EPA's index of eight metrics per
+      NARS-9 region, several adjusted for watershed area, scored and rescaled to 0
+      to 100, the index and benchmarks of the 2013-14 survey applied unchanged in
+      2018-19 and 2023-24
+    purpose: condition-assessment
+    direction: higher_is_better
+    units: {benchmark: MMI points, metric: MMI points, factor: 1.0}
+    resolution: 0.01
+    domain: [0, 100]
+    sampling: >-
+      A single-pass electrofishing sample of the NRSA reach under the NRSA fish
+      protocol (reach length and effort by stream size), all fish identified to
+      species, and EPA's eight regional metrics scored, several after adjustment for
+      watershed area; sites sampled by seining carry no index, and a site under two
+      square kilometres where no fish were caught is not scored.
+    stream_types: >-
+      Perennial streams and rivers in the NRSA sample frame, wadeable and boatable,
+      one set of benchmarks per NARS-9 region.
+    geography: {kind: nars9}
+    edition: "2018-19"
+    thresholds:       # [Poor below, Good at or above] in MMI points, per NARS-9 region
+      CPL: [46.8, 57.3]
+      NAP: [47.1, 57.6]
+      NPL: [35.8, 46.3]
+      SAP: [49.8, 60.3]
+      SPL: [39.7, 50.2]
+      TPL: [47.5, 58.0]
+      UMW: [29.3, 39.8]
+      WMT: [65.4, 75.9]
+      XER: [66.3, 76.8]
+    class_rule: {good: at_or_above, poor: below}
+    thresholds_source:
+      catalog: nrsa-tsd-2018-19
+      document: "National Rivers and Streams Assessment 2018-2019 Technical Support Document, Version 1.1, EPA 841-R-22-005 (November 2023, updated September 2024)"
+      table: "Table 6-15. Benchmarks for assigning ecological condition based on the distribution of regional fish MMI scores in least-disturbed sites sampled in NRSA 2008-09 or NRSA 2013-14, adjusted using the hindcasting approach of Herlihy et al. (2008)"
+      page: 73
+      url: "https://www.epa.gov/system/files/documents/2024-12/nrsa-2018-19-tsd-final-11252024.pdf"
+      derivation: >-
+        Section 6.6 (pages 71 to 73): the same hindcast 25th and 5th percentile
+        process as the benthic MMI, on the least-disturbed sites of 2008-09 and
+        2013-14 combined; the benchmarks of every region differ by 10.5 points
+        (page 73) and were not updated for 2018-19 (page 28).
+      note: >-
+        The Xeric West fair-to-poor bound is entered as 66.3, not the 63.7 the
+        printed tables show (Table 6-15, page 74, and the 2013-14 Appendix B). The
+        printed value does not reproduce EPA's own classes: in every cycle EPA
+        classed Xeric West sites with scores up to 66.09 as Poor and from 66.31 as
+        Fair, and the document states that the two benchmarks of every region
+        differ by 10.5 points (76.8 - 10.5 = 66.3). The value EPA applied is
+        adopted; the printed figure is treated as a typographical error.
+      corroboration:
+        - "NRSA 2013-14 Technical Support Document, Appendix B, Ecoregion-Specific Benchmarks Used in NRSA 2013-14 (page 1): the same values, Xeric West poor bound printed 63.7; https://www.epa.gov/system/files/documents/2021-10/nrsa_2013-14_appendix_b_c_accessible_ci.pdf"
+    verification:
+      epa_class_column: FISH_MMI_COND
+      checked_on: "2026-09-28"
+      script: scripts/nrsa/verify_benchmark_classes.py
+      sources:
+        - {cycle: "1314", file: nrsa1314_allcond_05312019_0.csv, value_column: MMI_FISH, class_column: FISH_MMI_COND}
+        - {cycle: "1819", file: nrsa-1819-fish-mmi-data.csv, value_column: MMI_FISH, class_column: FISH_MMI_COND}
+        - {cycle: "2324", file: nrsa2324_fishmmi.csv, value_column: MMI_FISH, class_column: FISH_MMI_COND, region_from: nrsa2324_siteinfo.csv}
+      result:
+        n: 4892
+        agree: 4892
+        share: 1.0
+        per_cycle: {"1314": {n: 1546, agree: 1546}, "1819": {n: 1665, agree: 1665}, "2324": {n: 1681, agree: 1681}}
+        per_region:
+          CPL: {n: 670, agree: 670}
+          NAP: {n: 724, agree: 724}
+          NPL: {n: 338, agree: 338}
+          SAP: {n: 732, agree: 732}
+          SPL: {n: 396, agree: 396}
+          TPL: {n: 657, agree: 657}
+          UMW: {n: 489, agree: 489}
+          WMT: {n: 546, agree: 546}
+          XER: {n: 340, agree: 340}
+    citation:
+      key: nrsa-2018-19
+      title: "National Rivers and Streams Assessment 2018-19 Technical Support Document"
+      edition: "Version 1.1, EPA 841-R-22-005, November 2023, updated September 2024"
+      url: "https://www.epa.gov/system/files/documents/2024-12/nrsa-2018-19-tsd-final-11252024.pdf"
+    region_citation:
+      key: nars-regions
+      title: "Ecoregions Used in the National Aquatic Resource Surveys"
+      url: "https://www.epa.gov/national-aquatic-resource-surveys/ecoregions-used-national-aquatic-resource-surveys"
+    source_tier: epa-national-survey-benchmark
+    confidence: M
+    provisional: false
+    limitations:
+      - >-
+        The benchmarks rest on EPA's least-disturbed reference sites of 2008-09 and
+        2013-14 and their disturbance-adjusted 5th and 25th percentiles, a
+        definition of reference that need not match this assessment's
+        landscape-pressure screen; three regions had fewer than 30 such sites.
+      - >-
+        The index is defined by the NRSA fish protocol and EPA's regional metric
+        scoring with watershed-area adjustments; a value from another sampling
+        method or scoring is not comparable, and EPA computes no index for sites
+        sampled by seining.
+      - >-
+        The Xeric West fair-to-poor bound is EPA's applied value of 66.3, where the
+        printed tables show 63.7.
+    scoring: >-
+      The two breakpoints become the Fair to Poor and Good to Fair boundaries of a
+      STAF curve through the same construction as the fixed criteria (CURVE-11):
+      Good scores above 0.69, Fair between 0.39 and 0.69, Poor below 0.39, and a
+      higher index scores higher.
+
+  - id: nrsa-2018-19-salinity-conductivity
+    metric: chem_COND
+    title: NRSA salinity condition benchmarks, specific conductance
+    analyte: specific conductance
+    fraction: total
+    definition: >-
+      specific conductance of the stream water at 25 degrees Celsius in
+      microsiemens per centimetre, the measure NRSA reports salinity condition on
+    purpose: condition-assessment
+    direction: lower_is_better
+    units: {benchmark: uS/cm, metric: uS/cm, factor: 1.0}
+    resolution: 0.1
+    domain: [0, null]
+    sampling: >-
+      A mid-channel grab sample at the X-site (the upper end of the reach in
+      boatable rivers) analyzed for specific conductance in the NRSA laboratory,
+      reported at 25 degrees Celsius, the NRSA field and laboratory protocol the
+      metric is measured by.
+    stream_types: >-
+      Perennial streams and rivers in the NRSA sample frame, wadeable and boatable,
+      one pair of benchmarks per NARS-9 region.
+    geography: {kind: nars9}
+    edition: "2018-19"
+    thresholds:       # [Good at or below, Poor above] in uS/cm, per NARS-9 region
+      CPL: [500, 1000]
+      NAP: [500, 1000]
+      NPL: [1000, 2000]
+      SAP: [500, 1000]
+      SPL: [1000, 2000]
+      TPL: [1000, 2000]
+      UMW: [500, 1000]
+      WMT: [500, 1000]
+      XER: [500, 1000]
+    class_rule: {good: at_or_below, poor: above}
+    thresholds_source:
+      catalog: nrsa-tsd-2018-19
+      document: "National Rivers and Streams Assessment 2018-2019 Technical Support Document, Version 1.1, EPA 841-R-22-005 (November 2023, updated September 2024)"
+      table: "Table 7-1. Nutrient and Salinity Category Benchmarks for NRSA Assessment (Salinity as Conductivity, Good-Fair and Fair-Poor)"
+      page: 93
+      url: "https://www.epa.gov/system/files/documents/2024-12/nrsa-2018-19-tsd-final-11252024.pdf"
+      derivation: >-
+        Section 7.1 (page 91): salinity classes are defined by specific conductance
+        using ecoregion-specific values, identical to those of the 2008-09 survey;
+        the values are fixed category boundaries, not reference percentiles. Good
+        owns the lower boundary and Fair the upper one, as EPA's class calls show
+        (a site at exactly 500 or 1000 is Good, one at exactly 2000 is Fair).
+      corroboration:
+        - "NRSA 2008-2009 Technical Report, EPA/841/R-16/008, Table 6.1 Nutrient and Salinity Category Criteria for NRSA Assessment (page 42): identical values"
+        - "NRSA 2013-14 Technical Support Document, Appendix B (page 1), Salinity as Conductivity: identical values"
+    verification:
+      epa_class_column: SAL_COND
+      checked_on: "2026-09-28"
+      script: scripts/nrsa/verify_benchmark_classes.py
+      sources:
+        - {cycle: "1314", file: nrsa1314_allcond_05312019_0.csv, value_column: COND, class_column: SAL_COND}
+        - {cycle: "1819", file: nrsa1819_data_for_populationestimates.csv, value_file: "nrsa_1819_water_chemistry_chla_-_data.csv", value_column: COND_RESULT, class_column: SAL_COND}
+      result:
+        n: 3702
+        agree: 3702
+        share: 1.0
+        per_cycle: {"1314": {n: 1852, agree: 1852}, "1819": {n: 1850, agree: 1850}}
+        per_region:
+          CPL: {n: 438, agree: 438}
+          NAP: {n: 478, agree: 478}
+          NPL: {n: 324, agree: 324}
+          SAP: {n: 494, agree: 494}
+          SPL: {n: 309, agree: 309}
+          TPL: {n: 441, agree: 441}
+          UMW: {n: 357, agree: 357}
+          WMT: {n: 479, agree: 479}
+          XER: {n: 382, agree: 382}
+    citation:
+      key: nrsa-2018-19
+      title: "National Rivers and Streams Assessment 2018-19 Technical Support Document"
+      edition: "Version 1.1, EPA 841-R-22-005, November 2023, updated September 2024"
+      url: "https://www.epa.gov/system/files/documents/2024-12/nrsa-2018-19-tsd-final-11252024.pdf"
+    region_citation:
+      key: nars-regions
+      title: "Ecoregions Used in the National Aquatic Resource Surveys"
+      url: "https://www.epa.gov/national-aquatic-resource-surveys/ecoregions-used-national-aquatic-resource-surveys"
+    source_tier: epa-national-survey-benchmark
+    confidence: M
+    provisional: false
+    limitations:
+      - >-
+        The benchmarks are fixed category boundaries chosen by EPA, 500 and 1000
+        microsiemens per centimetre in six regions and 1000 and 2000 in the
+        Northern, Southern and Temperate Plains, not percentiles of a reference
+        distribution, and they have not changed since the 2008-09 survey.
+      - >-
+        Specific conductance carries natural geology and climate as well as
+        disturbance, so a naturally saline or calcareous stream reads Fair or Poor
+        against these benchmarks without being degraded.
+    scoring: >-
+      The two breakpoints become the Good to Fair and Fair to Poor boundaries of a
+      STAF curve through the same construction as the fixed criteria (CURVE-11):
+      Good scores above 0.69, Fair between 0.39 and 0.69, Poor below 0.39.
+
 # Criteria checked and found unsuitable. Each `why` is read on a DEEP card, so it
 # names no code, file or constant. `applies_where` limits a sentence to the
 # targets it is true for.
@@ -99,12 +431,12 @@ refusals:
       NRSA Table 7-1 is written for total nitrogen. Dissolved nitrogen is a
       different fraction, so the criterion does not measure it and no conversion
       would be defensible.
-  - id: no-conductivity-criterion
-    metrics: [chem_COND]
-    why: The published criteria STAF draws on include no regional criterion for conductivity.
   - id: no-ph-criterion
     metrics: [chem_PH]
-    why: The published criteria STAF draws on include no regional criterion for pH.
+    why: >-
+      The published criteria STAF draws on include no regional criterion for pH.
+      NRSA rates acidity on acid neutralizing capacity together with dissolved
+      organic carbon and sulfate, a different measurement from pH.
   - id: no-turbidity-criterion
     metrics: [chem_TURB]
     why: The published criteria STAF draws on include no regional criterion for turbidity.
@@ -115,7 +447,47 @@ refusals:
       Every published biological criterion in the STAF assessment library is
       scored on a state-specific field index (Michigan Procedure 51, the Carolina
       IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed
-      from NRSA data, so none measures the same quantity as this metric.
+      from NRSA data, so none measures the same quantity as this metric. EPA's own
+      NRSA benchmarks are set on its multimetric indices, which this assessment
+      carries as metrics of their own; an index benchmark is never applied to one
+      of the metrics the index is built from.
+  - id: benthic-oe-taxa-loss-categories
+    metrics: [bent_OE_SCORE]
+    checked_on: "2026-09-28"
+    why: >-
+      EPA publishes the benthic observed-to-expected taxa ratio in four taxa-loss
+      categories (less than 10, 10 to 20, 20 to 50 and more than 50 percent of the
+      expected taxa missing) and never as good, fair or poor condition, and it
+      states that a ratio is read against the spread of ratios among reference
+      sites rather than as a loss on its own; a quarter of EPA's own reference
+      sites fall below 0.8. Choosing two of the four boundaries as condition
+      classes would be this assessment's construction, not EPA's, so no benchmark
+      is adopted for the ratio.
+  - id: nrsa-habitat-modeled-expectations
+    metrics: [phab_XCMGW, phab_XFC_NAT, phab_LRBS_use]
+    checked_on: "2026-09-28"
+    why: >-
+      NRSA rates riparian vegetation cover, instream fish cover and bed stability
+      against an expected value modeled for each site from its natural setting,
+      and publishes the resulting class but not the expected values or a
+      threshold on the measured metric. The same measured value is Good at one
+      site and Poor at another, so there is no published threshold on this metric
+      to adopt.
+  - id: channel-form-no-published-benchmark
+    metrics: [phab_XBKA, phab_SINU, phab_XBKF_H, phab_BFWD_RAT]
+    checked_on: "2026-09-28"
+    why: >-
+      No national or regional assessment publishes a condition benchmark for bank
+      angle, sinuosity, bankfull height or the bankfull width to depth ratio as
+      NRSA measures them. The state stream quantification tools rate channel and
+      floodplain dynamics on the bank height ratio and on the share of eroding or
+      armored bank, field measurements this archive does not carry. Where no
+      station pool supports this metric the function is completed by measuring
+      the bank height ratio at the assessment reach and scoring it on the
+      published curve for the state (the Minnesota and Wisconsin tools, verified
+      against their originals) or on the national Stream Functions Pyramid
+      standard (1.0 to 1.2 functioning, above 1.5 not functioning), entered as a
+      provisional source with its citation.
   - id: ohio-epa-biocriteria
     metrics: [fish_NAT_TOTLNTAX, fish_NAT_NTOLNTAX, fish_NAT_NTOLPTAX, fish_NAT_TOLRPIND,
               fish_NAT_LITHPIND, bent_TOTLNTAX]
@@ -128,6 +500,104 @@ refusals:
       such as this one, those indices are computed under Ohio's own field
       protocol and are not carried by the NRSA archive, and they are Ohio water
       quality standards while half this ecoregion's stations lie in Indiana.
+
+# Methodology 0.16, owner decisions D18 and D19 (2026-09-28): a documented gap does
+# not complete a function. Where no station pool, national donor, approved model,
+# published benchmark or flagged transfer serves a function, the last-resort rung
+# (REF-17) scores it on EASI's national screening method for the same quantity, the
+# curves generated from the vendored EASI catalog into config/fixed_criteria.yaml
+# (block last_resort) by scripts/build_fixed_criteria.py. The entries below state the
+# measurement and its protocol, how the value enters DEEP, the scoring source and the
+# disclosure, for a reader and for a DEEP card (published_benchmark.pathway_for and
+# pathway_sentence). Nothing here is fetched or fitted at build time.
+input_pathways:
+  - id: channel-floodplain-dynamics-bank-height-ratio
+    function: channel-floodplain-dynamics
+    implemented_by: config/fixed_criteria.yaml last_resort bank_height_ratio (REF-17)
+    applies_when: >-
+      No pool of ten comparable least-disturbed stations at any level carries bank
+      angle or sinuosity, the national donors fail the comparability or stability
+      checks, no published benchmark exists for the NRSA channel-form metrics and no
+      flagged transfer passes (the Nebraska Sand Hills, 44, in the 0.15 pass and the
+      census; the Northern Minnesota Wetlands, 49, where the missingness rule withheld
+      the Level II pools).
+    measurements:
+      - key: bank_height_ratio
+        name: Bank height ratio
+        units: ratio
+        direction: lower_is_better
+        domain: [1.0, null]
+        protocol: >-
+          The height of the lower top of bank above the thalweg divided by the maximum
+          bankfull depth, both at a representative riffle cross section of the assessment
+          reach, the field procedure of the stream quantification tools and of Rosgen
+          (2006); a ratio of 1.0 means flows above bankfull spread onto the floodplain.
+    scoring:
+      - states: any
+        measurement: bank_height_ratio
+        source: >-
+          EASI's bank-instability screening method, Good at or below 1.3, Fair above 1.3
+          to 1.5, Poor above 1.5, the bands EASI takes from the Minnesota Stream
+          Quantification Tool and the function-based framework of Harman and others
+          (2012), adopted as the last resort for this function.
+        classes: "Good at or below 1.3, Fair above 1.3 to 1.5, Poor above 1.5"
+    follow_up: >-
+      The state tools' own curves (Minnesota SQT v2.0 and Wisconsin SQT 2022 for the
+      bank height ratio, percent streambank erosion and percent armoring; registry keys
+      sqt:mn:bank-height-ratio-bhr:default, sqt:mn:percent-streambank-erosion:default,
+      sqt:mn:percent-armoring:default, sqt:wi:bank-height-ratio-bhr:default,
+      sqt:wi:percent-streambank-erosion:default, sqt:wi:percent-streambank-armoring:default)
+      can replace the national bands where the target lies in that state, once D4a's
+      verification and adoption conditions are met.
+    deep_entry: >-
+      The measurement is the function's input in DEEP: the value measured at the reach is
+      scored on the curve like any other metric, DEEP offers a DEM-derived value only
+      where the cross sections pass the quality checks and otherwise leaves the function
+      unassessed until a value is entered, the calculator computes the index from the same
+      value, and the report and the metric row carry the label, the citation and the
+      provisional flag.
+    disclosure: >-
+      Provisional. Adopted from EASI's national screening method, a published directional
+      relationship EASI applies in every region; it is not an estimate of this ecoregion's
+      reference condition, and the bank height ratio does not measure erosion rate or
+      armoring directly.
+  - id: surface-water-storage-easi-wetland-extent
+    function: surface-water-storage
+    implemented_by: config/fixed_criteria.yaml last_resort pctwet2019ws (REF-17)
+    applies_when: >-
+      Least-disturbed watersheds of the ecoregion carry little or no wetland, so every
+      reference pool's curve is a fallback or reads as inverted and no other source
+      serves the function (the Northern Rockies, 15: 31 percent of the region's in-frame
+      watersheds hold no wetland; the Interior Plateau, 71).
+    measurements:
+      - key: pctwet2019ws
+        name: Wetland cover of the watershed
+        units: "%"
+        direction: higher_is_better
+        domain: [0, 100]
+        protocol: >-
+          The same desktop input, NLCD 2019 woody plus herbaceous wetland over the
+          watershed, from the StreamCat lookup engine or the STAF site engine.
+    scoring:
+      - states: any
+        measurement: pctwet2019ws
+        source: >-
+          EASI's wetland-extent screening method, national transitions at 1 and 5 percent
+          taken from the reviewed wetland-benefit range (Mitsch and Gosselink, as reviewed
+          by the Chesapeake Bay Program 2016), adopted as the last resort for this function.
+        classes: "Poor below 1 percent, Fair 1 to 5 percent, Good above 5 percent"
+    follow_up: >-
+      A regional storage indicator for wetland-poor ecoregions. The two-part
+      zero-inflated seed (Round 2 candidate C3a) was examined and not adopted: it also
+      scores zero wetland as 0, and its study found no accuracy gain.
+    deep_entry: >-
+      No new input: DEEP reads the watershed wetland share it already computes, and the
+      curve's label says which method scores it.
+    disclosure: >-
+      Provisional. Adopted from EASI's national screening method, a provisional screening
+      judgment that rates the quantity the same way in every region: a watershed with no
+      mapped wetland rates Poor, so where least-disturbed watersheds carry none the rating
+      cannot tell natural absence from loss.
 
 # What a refusal says for a metric the catalog holds nothing on at all.
 no_entry: The published criteria STAF draws on include none for this metric.

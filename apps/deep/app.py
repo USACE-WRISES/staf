@@ -567,10 +567,12 @@ def _metric_tip_html(m) -> str:
         parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Curve basis</span>'
                      + "; ".join(html.escape(b) if not b.startswith("Builder confidence") else b
                                  for b in basis) + "</div>")
-    caveats = [str(c) for c in (m.get("curveCaveats") or []) if str(c).strip()]
-    if caveats:
+    # The limitations line: the curve's caveats and the limit its basis carries
+    # (reference_support.limitations_line, the same words the metric card shows).
+    limits = reference_support.limitations_line(m)
+    if limits:
         parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Read with care</span>'
-                     + " ".join(html.escape(c) for c in caveats) + "</div>")
+                     + html.escape(limits) + "</div>")
     return "".join(parts)
 
 
@@ -784,12 +786,27 @@ def _unassessed_panel(fn, la):
     name = fn.get("functionName") or fn.get("functionId")
     detail = (fn.get("unassessed") or {}).get("metrics") or []
     cards = [_withheld_card(w) for w in detail]
+    # a documented gap (functionCoverage.exclusions, StreamCurves COV-01): the card says
+    # why the assessment leaves the function unassessed, and never a score
+    gap = assessments.documented_gap(la, fn.get("functionId")) if la is not None else None
+    if gap:
+        lead = assessments.gap_line(gap) + "."
+        who = str(gap.get("recordedBy") or "").strip()
+        when = str(gap.get("recordedAt") or "")[:10]
+        cards.insert(0, ui.div(
+            ui.div(assessments.gap_line(gap), class_="deep-withheld-title"),
+            ui.div(str(gap.get("justification") or ""), class_="deep-withheld-text"),
+            (ui.div("Recorded by " + who + (f" on {when}" if when else "") + ".",
+                    class_="deep-withheld-text") if who else None),
+            {"data-function-gap": str(gap.get("reason") or "")},
+            class_="sfari-metric deep-metric-withheld deep-metric-gap"))
     # a function whose only candidates are curves awaiting a reviewer has a basis,
     # it is just not cleared yet, so it is not told it has none
-    lead = ("Its candidate curves are held for review, so this function carries no score."
-            if detail and all(reference_support.is_held(w) for w in detail) else
-            "This assessment has no defensible basis for scoring this function, so it "
-            "carries no score.")
+    elif detail and all(reference_support.is_held(w) for w in detail):
+        lead = "Its candidate curves are held for review, so this function carries no score."
+    else:
+        lead = ("This assessment has no defensible basis for scoring this function, so it "
+                "carries no score.")
     if not cards:
         cards = [ui.div(ui.div("No metric is assigned to this function in this assessment.",
                                class_="deep-withheld-text"),
@@ -2656,6 +2673,10 @@ def server(input, output, session_):  # noqa: C901
             cur_stratum = rc.get("stratum") or m.get("activeStratum") or (strata[0] if strata else None)
             points = curves.active_points(m, cur_stratum)
             support_line = reference_support.support_line(m)
+            # the practitioner's two lines beside the basis: how far to trust the
+            # curve, and what to read with care (campaign Round 1)
+            uncertainty_line = reference_support.uncertainty_line(m)
+            limitations_line = reference_support.limitations_line(m)
             stratum_auto = bool(rc.get("stratumAuto"))
             stratum_note = (reference_support.stratifier_note(m, delineation_now)
                             if stratum_auto else "")
@@ -2686,6 +2707,14 @@ def server(input, output, session_):  # noqa: C901
                         class_="deep-source-row deep-support-row"
                                + (" borrowed" if reference_support.is_borrowed(m) else ""))
                  if support_line else None),
+                (ui.div(ui.span("Uncertainty", class_="deep-source-key"),
+                        ui.span(uncertainty_line, class_="deep-source-val"),
+                        class_="deep-source-row deep-uncertainty-row")
+                 if uncertainty_line else None),
+                (ui.div(ui.span("Read with care", class_="deep-source-key"),
+                        ui.span(limitations_line, class_="deep-source-val"),
+                        class_="deep-source-row deep-limits-row")
+                 if limitations_line else None),
                 (ui.div(
                     ui.span("Curve set", class_="deep-stratum-label"),
                     ui.tags.select(
@@ -2744,6 +2773,14 @@ def server(input, output, session_):  # noqa: C901
         # reference pool exists, so there is no curve and nothing to enter.
         for w in reference_support.withheld_for_function(la_now, fid):
             metric_blocks.append(_withheld_card(w))
+        # StreamCurves methodology 0.16 (REF-16): a function rated on a flagged
+        # transfer says so once more at the function, under its metrics
+        function_flag = reference_support.function_flag_line(la_now, fid)
+        if function_flag:
+            metric_blocks.append(
+                ui.div(ui.span("Read with care", class_="deep-source-key"),
+                       ui.span(function_flag, class_="deep-source-val"),
+                       class_="deep-source-row deep-limits-row deep-function-flag"))
 
         score = fr.score if fr else None
         if score is not None:

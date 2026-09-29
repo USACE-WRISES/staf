@@ -787,3 +787,6 @@
 "land_WTDEPWS","WTDEPWS","Landscape","WTDEPWS","",FALSE
 "land_CATAREASQKM","CATAREASQKM","Landscape","CATAREASQKM","",TRUE
 "land_WSAREASQKM","WSAREASQKM","Landscape","WSAREASQKM","",FALSE
+"bent_MMI_BENT","MMI_BENT","Benthic macroinvertebrates","MMI_BENT","MMI points",FALSE
+"bent_OE_SCORE","OE_SCORE","Benthic macroinvertebrates","OE_SCORE","ratio",FALSE
+"fish_MMI_FISH","MMI_FISH","Fish","MMI_FISH","MMI points",FALSE

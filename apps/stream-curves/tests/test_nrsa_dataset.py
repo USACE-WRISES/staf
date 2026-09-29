@@ -1,4 +1,4 @@
-"""Dataset selection and the pooled-panel policy.
+"""Dataset selection, the pooled-panel policy and the value policies.
 
 The legacy dataset is the default and must keep behaving exactly as it did,
 because three published assessments fingerprint its two files. The multi-cycle
@@ -6,6 +6,9 @@ tests skip when the archive has not been built.
 """
 from __future__ import annotations
 
+import hashlib
+
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -341,3 +344,163 @@ def test_the_packet_shows_the_frame_its_exclusions_and_any_override():
     # an unframed run says so instead of printing an empty table
     every = "\n".join(rp._reference_frame_lines({"max_stream_order": None}))
     assert "every stream" in every
+
+
+# --------------------------------------------------------------------------- #
+# Value policies (rule DATA-11; campaign Round 1, 2026-09-25)
+#
+# v1 is the literal every published version records and must never move; v2 is
+# v1 plus three read-time corrections, counted here against the archive.
+# --------------------------------------------------------------------------- #
+#: sha256 of latest_values over every archive station and metric under v1,
+#: rendered with to_csv(index=False, float_format="%.6g"), measured on
+#: 2026-09-25 with the code as it stood before the value policies existed.
+V1_SELECTION_SHA256 = "428b5e21edf92143b2889ab78d264a6c3b9164e3df771f18ea5079c451b57011"
+CORRECTED = ["phab_BFWD_RAT", "phab_XWD_RAT", "phab_SINU", "chem_PTL", "phab_XCDENMID",
+             "phab_RP100_cm"]
+
+
+def _selection_sha256(values: pd.DataFrame) -> str:
+    text = values.to_csv(index=False, float_format="%.6g", lineterminator="\n")
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def test_the_policy_ids_and_how_they_resolve():
+    assert nd.VALUE_POLICY_V1 == nd.POLICY_LATEST_NON_NULL == "latest_non_null_index_visit", \
+        "the recorded literal of every published manifest, inside the inputs digest"
+    assert nd.VALUE_POLICY_V2 == "newest-nonnull-v2"
+    assert nd.DEFAULT_VALUE_POLICY == nd.VALUE_POLICY_V2
+    assert nd.resolve_value_policy(None) == nd.VALUE_POLICY_V2
+    assert nd.resolve_value_policy("newest-nonnull-v1") == nd.VALUE_POLICY_V1
+    assert nd.resolve_value_policy(nd.VALUE_POLICY_V1) == nd.VALUE_POLICY_V1
+    with pytest.raises(ValueError, match="unknown value policy"):
+        nd.resolve_value_policy("newest-nonnull-v9")
+    assert nd.value_derivations(nd.VALUE_POLICY_V1) == []
+    assert [r["target"] for r in nd.value_derivations()] == ["phab_RP100_cm"]
+    assert set(nd.VALUE_POLICY_IDS) <= set(nd.VALUE_POLICIES)
+
+
+def test_the_declared_domains_come_from_the_direction_registry():
+    domains = nd.declared_domains()
+    assert domains["phab_SINU"] == (1.0, None)
+    assert domains["phab_XCDENMID"] == (0.0, 100.0)
+    assert domains["chem_PTL"] == (0.0, None)
+    assert domains["chem_PH"] == (0.0, 14.0)
+    assert "phab_LSUB_DMM" not in domains, "a signed scale declares no domain"
+
+
+@MULTI
+def test_v1_reproduces_todays_selection_on_the_whole_archive():
+    """The selection every published version was built from, byte for byte."""
+    ds = nd.load_dataset(nd.MULTI_CYCLE_DATASET_ID)
+    keys = sorted(ds.stations["station_key"].astype(str))
+    values, ledger = nd.latest_values(keys, dataset=ds, policy=nd.VALUE_POLICY_V1)
+    assert _selection_sha256(values) == V1_SELECTION_SHA256
+    assert list(ledger.columns) == nd.LATEST_LEDGER_COLUMNS
+    assert (ledger["derived_from"] == "").all(), "v1 derives nothing"
+    # the alias reads the same
+    alias, _ = nd.latest_values(keys[:40], dataset=ds, metrics=CORRECTED,
+                                policy="newest-nonnull-v1")
+    plain, _ = nd.latest_values(keys[:40], dataset=ds, metrics=CORRECTED,
+                                policy=nd.VALUE_POLICY_V1)
+    assert alias.equals(plain)
+
+
+@MULTI
+def test_v2_counts_each_correction_against_the_archive():
+    """The harmonization audit's numbers (2026-09-25): three infinite
+    width-to-depth ratios, the out-of-domain values, and the 2013-14 residual
+    pool depths RP100 recovers, which equal RP100_cm wherever both exist."""
+    report = nd.value_policy_report(nd.VALUE_POLICY_V2)
+    assert report["policy"] == nd.VALUE_POLICY_V2
+    assert report["nonFinite"] == {"phab_BFWD_RAT": 3, "phab_XWD_RAT": 26}
+    assert report["outOfDomain"] == {"chem_PTL": 1, "phab_XCDENMID": 1, "phab_SINU": 7}
+    (rp100,) = report["derived"]
+    assert rp100["status"] == "applied" and rp100["source"] == "phab_RP100"
+    assert rp100["agreement"] == 1.0 and rp100["n_compared"] == 4128
+    assert rp100["n_filled"] == 2215 and rp100["by_cycle"] == {"1314": 2215}
+    empty = nd.value_policy_report(nd.VALUE_POLICY_V1)
+    assert empty["nonFinite"] == {} and empty["outOfDomain"] == {} and empty["derived"] == []
+
+
+@MULTI
+def test_v2_reads_the_corrections_into_the_selection():
+    ds = nd.load_dataset(nd.MULTI_CYCLE_DATASET_ID)
+    keys = sorted(ds.stations["station_key"].astype(str))
+    v1, _ = nd.latest_values(keys, dataset=ds, metrics=CORRECTED, policy=nd.VALUE_POLICY_V1)
+    v2, ledger = nd.latest_values(keys, dataset=ds, metrics=CORRECTED)
+    assert list(v2["site_id"]) == list(v1["site_id"])
+    for mk in CORRECTED:
+        assert not np.isinf(pd.to_numeric(v2[mk])).any(), mk
+    assert np.isinf(pd.to_numeric(v1["phab_BFWD_RAT"])).sum() == 1, "v1 selected an inf"
+    assert pd.to_numeric(v2["chem_PTL"]).min() >= 0 > pd.to_numeric(v1["chem_PTL"]).min()
+    assert pd.to_numeric(v2["phab_XCDENMID"]).max() <= 100 < pd.to_numeric(v1["phab_XCDENMID"]).max()
+    assert pd.to_numeric(v2["phab_SINU"]).min() >= 1.0 > pd.to_numeric(v1["phab_SINU"]).min()
+    # 2013-14 residual pool depth: 2,215 archive rows recovered, 1,130 of them selected
+    assert int(v1["phab_RP100_cm"].notna().sum()) == 3194
+    assert int(v2["phab_RP100_cm"].notna().sum()) == 4324
+    derived = ledger[ledger["derived_from"] != ""]
+    assert set(derived["metric"]) == {"phab_RP100_cm"} and len(derived) == 1130
+    assert set(derived["derived_from"]) == {"phab_RP100"} and set(derived["source_cycle"]) == {"1314"}
+    # a value a correction removed falls back to the station's next compatible
+    # survey, so a station may keep a value under v2 that v1 read from a worse one
+    for mk in ("phab_SINU", "phab_XCDENMID"):
+        assert int(v2[mk].notna().sum()) == int(v1[mk].notna().sum()), mk
+
+
+def test_a_derivation_that_disagrees_is_refused(monkeypatch):
+    """The fill is evidence: a stand-in that differs from its target where both
+    exist is refused, and the target stays missing."""
+    visits = pd.DataFrame([
+        {"station_key": "A", "cycle": "1314", "visit_no": "1", "site_id": "a13"},
+        {"station_key": "B", "cycle": "1819", "visit_no": "1", "site_id": "b18"},
+    ])
+    values = pd.DataFrame([
+        {"station_key": "A", "cycle": "1314", "visit_no": "1", "site_id": "a13",
+         "phab_RP100_cm": np.nan, "phab_RP100": 12.0},
+        {"station_key": "B", "cycle": "1819", "visit_no": "1", "site_id": "b18",
+         "phab_RP100_cm": 20.0, "phab_RP100": 99.0},
+    ])
+    stations = pd.DataFrame({"station_key": ["A", "B"]})
+    ds = nd.NrsaDataset(dataset_id=nd.MULTI_CYCLE_DATASET_ID, sites=stations, values=values,
+                        stations=stations, visits=visits)
+    monkeypatch.setattr(nd, "fish_protocol_failures", lambda: frozenset())
+    refused = nd.value_policy_report(nd.VALUE_POLICY_V2, dataset=ds)["derived"][0]
+    assert refused["status"] == "refused" and refused["n_compared"] == 1
+    got, ledger = nd.latest_values(["A", "B"], dataset=ds, metrics=["phab_RP100_cm"])
+    assert pd.isna(got.set_index("site_id").loc["A", "phab_RP100_cm"])
+    assert (ledger["derived_from"] == "").all()
+    # and where they agree, A reads its 2013-14 value from the stand-in
+    values.loc[1, "phab_RP100"] = 20.0
+    got, ledger = nd.latest_values(["A", "B"], dataset=ds, metrics=["phab_RP100_cm"])
+    assert got.set_index("site_id").loc["A", "phab_RP100_cm"] == 12.0
+    assert ledger.set_index("station_key").loc["A", "derived_from"] == "phab_RP100"
+    assert ledger.set_index("station_key").loc["B", "derived_from"] == ""
+    v1, _ = nd.latest_values(["A", "B"], dataset=ds, metrics=["phab_RP100_cm"],
+                             policy=nd.VALUE_POLICY_V1)
+    assert pd.isna(v1.set_index("site_id").loc["A", "phab_RP100_cm"])
+
+
+@MULTI
+def test_the_carry_forward_check_keeps_v1_unless_told():
+    """valid_cycle_values is what a published pool is checked against, so it
+    reads under v1 by default and under a build's policy when asked."""
+    default = nd.valid_cycle_values(["TXRF-0009"], "phab_BFWD_RAT")
+    assert np.isinf(default["value"]).sum() == 1
+    v2 = nd.valid_cycle_values(["TXRF-0009"], "phab_BFWD_RAT", policy=nd.VALUE_POLICY_V2)
+    assert not np.isinf(v2["value"]).any() and len(v2) == len(default) - 1
+
+
+def test_a_manifest_records_the_policy_and_the_digest_moves_with_it():
+    """A v2 build digests differently from a v1 build of the same request, and a
+    replay that records v1 keeps the digest every published version carries."""
+    from streamcurves import provenance as pv
+    base = {"region": {"code": "58"}, "screening_method": "direct_engine",
+            "nrsa_dataset": nd.MULTI_CYCLE_DATASET_ID}
+    v1 = pv.build_run_manifest({**base, "nrsa_policy": nd.VALUE_POLICY_V1}, argv=[])
+    v2 = pv.build_run_manifest({**base, "nrsa_policy": nd.VALUE_POLICY_V2}, argv=[])
+    assert v1["inputs"]["nrsa_dataset"]["policy"] == "latest_non_null_index_visit"
+    assert v2["inputs"]["nrsa_dataset"]["policy"] == "newest-nonnull-v2"
+    assert pv.digest_payload_from_manifest(v1)["nrsa_dataset"]["policy"] == nd.VALUE_POLICY_V1
+    assert pv.digest_payload_from_manifest(v2)["nrsa_dataset"]["policy"] == nd.VALUE_POLICY_V2
+    assert v1["inputsDigest"] != v2["inputsDigest"]

@@ -14,6 +14,26 @@ import pytest
 
 import golden_io
 from streamcurves import curves as rc
+from streamcurves import methodology
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _iqr_seed_2_geometry():
+    """This module is the R port's parity suite. The R engine seeded the monotone
+    tails at 0.3, 4/3 and 7/3 IQR (iqr-seed-2), and its exported point sets under
+    tests/golden/ carry that geometry. Methodology 0.15 (campaign Round 2,
+    candidate C3b) moved the engine's default to 0.5, 1.5 and 2.5 (iqr-seed-3,
+    pinned by tests/test_golden_masters.py), so every check here runs under the
+    iqr-seed-2 endpoints through the curve10.tail_offsets_iqr knob, which is also
+    the proof that the knob reproduces the earlier seeds."""
+    import copy
+    mp = pytest.MonkeyPatch()
+    cfg = copy.deepcopy(methodology.load_config())
+    cfg["curve10"]["tail_offsets_iqr"] = list(rc.LEGACY_TAIL_OFFSETS_IQR_SEED_2)
+    mp.setattr(methodology, "load_config", lambda: cfg)
+    yield
+    mp.undo()
+
 
 MC = {
     "epi": {

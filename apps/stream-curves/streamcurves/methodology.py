@@ -82,6 +82,215 @@ def threshold(path: str, default: Any = None) -> Any:
     return node
 
 
+CARRY_FORWARD_CHOICES = ("published_curves", "none")
+
+
+def carry_forward_default() -> str:
+    """``reference_hierarchy.carry_forward``: what a build does with the curves
+    its ecoregion's latest published version scores when the caller does not
+    say. ``published_curves`` carries them forward unchanged unless their data
+    were found defective (methodology 0.14, ``carry_forward.prepare``); ``none``
+    rebuilds every curve. The batch runner's ``--refit`` default reads this."""
+    value = str(threshold("reference_hierarchy.carry_forward")).strip()
+    if value not in CARRY_FORWARD_CHOICES:
+        raise ValueError(
+            f"reference_hierarchy.carry_forward is {value!r}; expected one of "
+            f"{', '.join(CARRY_FORWARD_CHOICES)}.")
+    return value
+
+
+# --------------------------------------------------------------------------- #
+# Campaign Round 2 knobs (2026-09-25). Every default is today's behavior. A
+# knob joins a run's inputs digest only when it differs from its default
+# (provenance.build_run_manifest, ``reference.knobs``, absence semantics), so
+# every published version still replays. The knobs GOVERN and are not mirror
+# checked: a campaign config root (STREAMCURVES_CONFIG_ROOT) moves them.
+# --------------------------------------------------------------------------- #
+LADDER_RULE_FIRST_PASS = "first_pass"
+LADDER_RULE_NARROWEST_ADEQUATE = "narrowest_adequate"
+LADDER_RULES = (LADDER_RULE_FIRST_PASS, LADDER_RULE_NARROWEST_ADEQUATE)
+SECOND_METRIC_RANK = "rank"
+SECOND_METRIC_INDEPENDENT = "independent_and_discriminating"
+SECOND_METRIC_RULES = (SECOND_METRIC_RANK, SECOND_METRIC_INDEPENDENT)
+ZERO_INFLATED_TWO_PART = "two_part"
+ZERO_INFLATED_WITHHOLD = "withhold"
+ZERO_INFLATED_HANDLINGS = (ZERO_INFLATED_TWO_PART, ZERO_INFLATED_WITHHOLD)
+#: the monotone IQR ladders' tail endpoints in IQR units, the engine's own
+#: (curves.MONOTONE_TAIL_OFFSETS_IQR restates them; a test pins the two equal).
+#: iqr-seed-3 (methodology 0.15, candidate C3b adopted): 0.5, 1.5 and 2.5; the
+#: iqr-seed-2 values 0.3, 4/3 and 7/3 are a non-default setting from here on
+MONOTONE_TAIL_OFFSETS_IQR = (0.5, 1.5, 2.5)
+
+#: config path -> the default, which is today's behavior
+KNOB_DEFAULTS: dict[str, Any] = {
+    "reference_pool.ladder_rule": LADDER_RULE_FIRST_PASS,
+    "reference_hierarchy.regional_screen.enabled": True,
+    "metric_portfolio.fill_to": 2,
+    "metric_portfolio.second_metric_rule": SECOND_METRIC_RANK,
+    "metric_portfolio.second_metric_max_abs_spearman": 0.65,
+    "metric_portfolio.second_metric_min_auc": 0.55,
+    "curve12.gate": False,
+    "curve12.min_auc": 0.55,
+    "curve10.tail_offsets_iqr": list(MONOTONE_TAIL_OFFSETS_IQR),
+    "curve10.zero_inflated_share": None,
+    "curve10.zero_inflated_handling": None,
+}
+_MISSING = object()
+
+
+def knob(path: str) -> Any:
+    """A Round 2 knob's raw config value, or its default when the key is absent
+    (a config root copied from an older config still runs as today)."""
+    if path not in KNOB_DEFAULTS:
+        raise KeyError(f"Unknown Round 2 knob '{path}'.")
+    value = threshold(path, _MISSING)
+    return KNOB_DEFAULTS[path] if value is _MISSING else value
+
+
+def ladder_rule() -> str:
+    """``reference_pool.ladder_rule`` (candidate B1): which passing pool option
+    ``reference_pool.choose_pool`` uses."""
+    value = str(knob("reference_pool.ladder_rule") or "").strip()
+    if value not in LADDER_RULES:
+        raise ValueError(f"reference_pool.ladder_rule is {value!r}; expected one of "
+                         f"{', '.join(LADDER_RULES)}.")
+    return value
+
+
+def regional_screen_enabled() -> bool:
+    """``reference_hierarchy.regional_screen.enabled`` (candidate B2)."""
+    return bool(knob("reference_hierarchy.regional_screen.enabled"))
+
+
+def portfolio_settings() -> dict:
+    """SELECT-04's knobs (candidate C1): ``fill_to``, ``second_metric_rule`` and
+    the two limits of the independent-and-discriminating rule."""
+    rule = str(knob("metric_portfolio.second_metric_rule") or "").strip()
+    if rule not in SECOND_METRIC_RULES:
+        raise ValueError(f"metric_portfolio.second_metric_rule is {rule!r}; expected one of "
+                         f"{', '.join(SECOND_METRIC_RULES)}.")
+    return {"fill_to": int(knob("metric_portfolio.fill_to") or 2),
+            "second_metric_rule": rule,
+            "max_abs_spearman": float(knob("metric_portfolio.second_metric_max_abs_spearman")),
+            "min_auc": float(knob("metric_portfolio.second_metric_min_auc"))}
+
+
+def curve12_gate() -> dict:
+    """The CURVE-12 gate (candidate C2): ``{"gate": bool, "min_auc": float}``."""
+    return {"gate": bool(knob("curve12.gate")), "min_auc": float(knob("curve12.min_auc"))}
+
+
+#: the cap a flagged transfer takes when the config block names none: the
+#: ceiling of high transfer risk (confidence_rules.caps.borrowed_reference_high_risk)
+FLAGGED_TRANSFER_DEFAULT_CAP = 39
+
+
+def flagged_transfer() -> dict:
+    """REF-16 (methodology 0.16): ``reference_hierarchy.flagged_transfer`` as the
+    ladder reads it: ``enabled``, ``min_usable``, ``prefer_adequate`` and
+    ``confidence_cap``. An absent block reads as disabled, so a config root copied
+    from an older methodology reproduces the validated-only ladder of 0.15."""
+    block = threshold("reference_hierarchy.flagged_transfer", _MISSING)
+    block = {} if block is _MISSING or not isinstance(block, dict) else block
+    cap = block.get("confidence_cap", FLAGGED_TRANSFER_DEFAULT_CAP)
+    out = {"enabled": bool(block.get("enabled", False)),
+           "min_usable": int(block.get("min_usable", 10)),
+           "prefer_adequate": bool(block.get("prefer_adequate", True)),
+           "confidence_cap": None if cap is None else int(cap)}
+    if out["min_usable"] < 1:
+        raise ValueError("reference_hierarchy.flagged_transfer.min_usable must be at least 1.")
+    if out["confidence_cap"] is not None and not (0 <= out["confidence_cap"] <= 100):
+        raise ValueError("reference_hierarchy.flagged_transfer.confidence_cap must lie in 0 to 100.")
+    return out
+
+
+def last_resort() -> dict:
+    """REF-17 (methodology 0.16, owner decision D19): ``reference_hierarchy.last_resort``
+    as the build reads it, ``enabled``. An absent block reads as disabled, so a
+    config root copied from an older methodology never adds a last-resort curve."""
+    block = threshold("reference_hierarchy.last_resort", _MISSING)
+    block = {} if block is _MISSING or not isinstance(block, dict) else block
+    return {"enabled": bool(block.get("enabled", False))}
+
+
+def parse_offset(value: Any) -> float:
+    """An IQR offset from the config: a number, or a fraction written as a
+    string such as ``"4/3"`` (YAML reads an unquoted 4/3 as a string too). An
+    integer fraction keeps its numerator and denominator (``curves.IqrOffset``, a
+    float) so the seed multiplies then divides, as the iqr-seed-2 literals did."""
+    if isinstance(value, str) and "/" in value:
+        num, den = (part.strip() for part in value.split("/", 1))
+        if num.lstrip("-").isdigit() and den.isdigit():
+            from .curves import IqrOffset
+            return IqrOffset(int(num), int(den))
+        return float(num) / float(den)
+    return float(value)
+
+
+def seed_geometry() -> dict:
+    """The CURVE-10 knobs (candidates C3a and C3b) as the curve engine reads them.
+
+    ``tail_offsets_iqr`` is the ``(near, mid, far)`` tuple, ``custom_tail_offsets``
+    says whether it differs from the engine's own (iqr-seed-3: 0.5, 1.5, 2.5;
+    a different triple joins the inputs digest through :func:`round2_knobs`),
+    ``zero_inflated_share`` is the threshold or None (off) and
+    ``zero_inflated_handling`` is ``two_part``, ``withhold`` or None.
+    """
+    raw = knob("curve10.tail_offsets_iqr")
+    raw = MONOTONE_TAIL_OFFSETS_IQR if raw is None else raw
+    try:
+        offsets = tuple(parse_offset(v) for v in raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"curve10.tail_offsets_iqr must be three IQR offsets, got {raw!r}") from exc
+    if len(offsets) != 3 or not (0.0 < offsets[0] <= offsets[1] <= offsets[2]):
+        raise ValueError("curve10.tail_offsets_iqr must be three positive, non-decreasing "
+                         f"IQR offsets [near, mid, far]; got {list(offsets)!r}.")
+    share = knob("curve10.zero_inflated_share")
+    share = None if share is None else float(share)
+    if share is not None and not (0.0 <= share < 1.0):
+        raise ValueError(f"curve10.zero_inflated_share must lie in [0, 1); got {share!r}.")
+    handling = knob("curve10.zero_inflated_handling")
+    handling = None if handling in (None, "") else str(handling).strip()
+    if handling is not None and handling not in ZERO_INFLATED_HANDLINGS:
+        raise ValueError(f"curve10.zero_inflated_handling is {handling!r}; expected one of "
+                         f"{', '.join(ZERO_INFLATED_HANDLINGS)} or null.")
+    if share is not None and handling is None:
+        raise ValueError("curve10.zero_inflated_share is set but curve10.zero_inflated_handling "
+                         "is null; say two_part or withhold.")
+    return {"tail_offsets_iqr": offsets,
+            "custom_tail_offsets": offsets != tuple(MONOTONE_TAIL_OFFSETS_IQR),
+            "zero_inflated_share": share,
+            "zero_inflated_handling": handling if share is not None else None}
+
+
+def round2_knobs() -> dict:
+    """``{config path: value}`` for every Round 2 knob set away from its default,
+    the block a run's manifest records under ``inputs.reference.knobs`` and the
+    inputs digest carries. Empty on the shipped config, so no published digest
+    gains a key. Values are normalized (an offset list to floats), so a fraction
+    written differently is not a different setting."""
+    current: dict[str, Any] = {
+        "reference_pool.ladder_rule": ladder_rule(),
+        "reference_hierarchy.regional_screen.enabled": regional_screen_enabled(),
+    }
+    ps = portfolio_settings()
+    current.update({
+        "metric_portfolio.fill_to": ps["fill_to"],
+        "metric_portfolio.second_metric_rule": ps["second_metric_rule"],
+        "metric_portfolio.second_metric_max_abs_spearman": ps["max_abs_spearman"],
+        "metric_portfolio.second_metric_min_auc": ps["min_auc"],
+    })
+    gate = curve12_gate()
+    current.update({"curve12.gate": gate["gate"], "curve12.min_auc": gate["min_auc"]})
+    geo = seed_geometry()
+    current.update({
+        "curve10.tail_offsets_iqr": list(geo["tail_offsets_iqr"]),
+        "curve10.zero_inflated_share": geo["zero_inflated_share"],
+        "curve10.zero_inflated_handling": geo["zero_inflated_handling"],
+    })
+    return {k: v for k, v in sorted(current.items()) if v != KNOB_DEFAULTS[k]}
+
+
 def missingness_disposition(missing_fraction: Any) -> str:
     """DATA-01/02/03 band for a variable's missing-data fraction.
 
@@ -250,6 +459,74 @@ def mirror_drift() -> list[str]:
     except Exception as exc:  # noqa: BLE001
         problems.append(f"could not compare the fixed criteria: {exc}")
 
+    # 8. The standing-decisions index mirrors the policy file's enabled flags
+    #    (config/methodology/standing_decisions.yaml governs; the index is what
+    #    the Rules page and the prose cite).
+    try:
+        from . import decisions as _dec
+        policy = _dec.load_policy()
+        entries = [e for e in policy.get("entries") or [] if e.get("id")]
+        on = sorted(str(e["id"]) for e in entries if e.get("enabled", False))
+        off = sorted(str(e["id"]) for e in entries if not e.get("enabled", False))
+        index = cfg.get("standing_decisions") or {}
+        declared_on = sorted(str(i) for i in index.get("default_enabled") or [])
+        declared_off = sorted(str(i) for i in index.get("enable_per_run_only") or [])
+        if declared_on != on:
+            problems.append(
+                f"standing_decisions.default_enabled {declared_on} differs from the "
+                f"policy file's enabled entries {on}.")
+        if declared_off != off:
+            problems.append(
+                f"standing_decisions.enable_per_run_only {declared_off} differs from "
+                f"the policy file's opt-in entries {off}.")
+        # policy 1.5 (v0.16): the entries a policy version retired, which apply
+        # only to the replay of versions recorded under an earlier policy
+        retired = sorted(str(e["id"]) for e in entries if e.get("retired_in_policy"))
+        declared_retired = sorted(str(i) for i in index.get("retired") or [])
+        if declared_retired != retired:
+            problems.append(
+                f"standing_decisions.retired {declared_retired} differs from the policy "
+                f"file's retired entries {retired}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the standing-decisions index: {exc}")
+
+    # 9. The lifecycle block mirrors the library's vocabulary (library.py is
+    #    the writer; the config describes it to a reader).
+    try:
+        from . import library as _lib
+        life = cfg.get("lifecycle") or {}
+        pairs = [
+            ("lifecycle.version_statuses", list(life.get("version_statuses") or []),
+             list(_lib.VERSION_STATUSES)),
+            ("lifecycle.default_status", life.get("default_status"), _lib.DEFAULT_STATUS),
+            ("lifecycle.validation_states", list(life.get("validation_states") or []),
+             list(_lib.VALIDATION_STATES)),
+        ]
+        for path, declared, actual in pairs:
+            if declared != actual:
+                problems.append(
+                    f"{path} ({declared!r}) differs from the library's {actual!r}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the lifecycle vocabulary: {exc}")
+
+    # 10. The CURVE-12 verdict cuts mirror discrimination.py (campaign Round 2:
+    #     the gate's min_auc is a knob and is not checked here; the cuts the
+    #     verdict words rest on are the engine's).
+    try:
+        from . import discrimination as _dz
+        cuts = (cfg.get("curve12") or {}).get("verdict_cuts") or {}
+        pairs = [("discriminates", _dz.AUC_DISCRIMINATES), ("weak", _dz.AUC_WEAK),
+                 ("inverted", _dz.AUC_INVERTED)]
+        for name, engine_value in pairs:
+            if name not in cuts:
+                problems.append(f"curve12.verdict_cuts is missing '{name}'.")
+            elif float(cuts[name]) != float(engine_value):
+                problems.append(
+                    f"curve12.verdict_cuts.{name} ({cuts[name]!r}) differs from the "
+                    f"discrimination engine's {engine_value!r}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the CURVE-12 verdict cuts: {exc}")
+
     return problems
 
 
@@ -277,16 +554,34 @@ def _sha256(path: Path) -> str | None:
         return None
 
 
+def _relative_config_path(path: Path) -> str:
+    """The config file's path relative to the app root, or the absolute path when the
+    config root was pointed elsewhere (``STREAMCURVES_CONFIG_ROOT``)."""
+    try:
+        return str(path.relative_to(CONFIG_DIR.parent)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
+
 def config_fingerprints() -> dict:
-    """What a run record cites so another run can be compared against it."""
-    return {
+    """What a run record cites so another run can be compared against it.
+
+    ``config_root`` appears only when the process runs under another config root
+    (absence semantics: every record written under the app's own root keeps its keys)."""
+    out = {
         "methodology_version": methodology_version(),
-        "config_path": str(CONFIG_PATH.relative_to(CONFIG_DIR.parent)).replace("\\", "/"),
+        "config_path": _relative_config_path(CONFIG_PATH),
         "config_sha256": _sha256(CONFIG_PATH),
-        "rule_catalog_path": str(
-            RULE_CATALOG_PATH.relative_to(CONFIG_DIR.parent)).replace("\\", "/"),
+        "rule_catalog_path": _relative_config_path(RULE_CATALOG_PATH),
         "rule_catalog_sha256": _sha256(RULE_CATALOG_PATH),
     }
+    try:
+        from . import paths as _paths
+        if getattr(_paths, "CONFIG_ROOT_OVERRIDDEN", False):
+            out["config_root"] = str(_paths.CONFIG_DIR).replace("\\", "/")
+    except Exception:  # pragma: no cover - paths always imports
+        pass
+    return out
 
 
 def file_fingerprints(paths) -> list[dict]:

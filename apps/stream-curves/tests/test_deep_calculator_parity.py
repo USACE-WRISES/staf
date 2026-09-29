@@ -91,12 +91,50 @@ def _synthetic() -> dict:
                  "discipline": "Biology", "metrics": [stepped]}]}
 
 
+def _synthetic_016() -> dict:
+    """The methodology 0.16 shapes: a flagged transfer (REF-16), an EPA benchmark
+    (REF-14) and the two last-resort curves (REF-17) exactly as the build writes
+    them, the adopted EASI methods' points read from config/fixed_criteria.yaml."""
+    from streamcurves import fixed_criteria as fc
+    from streamcurves import published_benchmark as pb
+
+    def pts(key):
+        return [{"x": float(x), "y": float(y)} for x, y in fc.last_resort_entry(key)["points"]]
+    wet = {"metricId": "spring-pctwet2019ws", "metricName": "Wetland cover of the watershed",
+           "xLabel": "Wetland cover of the watershed (%)", "criteriaBasis": "fixed",
+           "basis": "easi-screening-method", "curve": {"points": pts("pctwet2019ws")}}
+    bhr = {"metricId": "spring-bank-height-ratio", "metricName": "Bank height ratio",
+           "xLabel": "Bank height ratio (ratio)", "criteriaBasis": "fixed",
+           "basis": "easi-screening-method", "curve": {"points": pts("bank_height_ratio")}}
+    flagged = {"metricId": "spring-phab-xfc-nat", "metricName": "Instream fish cover",
+               "transferRisk": "unvalidated", "confidenceCap": 39,
+               "curve": {"points": [{"x": 0, "y": 0}, {"x": 20, "y": 0.39},
+                                    {"x": 45, "y": 0.69}, {"x": 80, "y": 1}]}}
+    mmi = {"metricId": "spring-bent-mmi-bent", "metricName": "Benthic MMI",
+           "criteriaBasis": "fixed", "basis": "published-benchmark",
+           "curve": {"points": pb.curve_points("bent_MMI_BENT", "CPL")}}
+    return {"assessmentId": "parity-synthetic-016", "assessmentName": "Parity synthetic 0.16",
+            "library": {"version": 1, "updatedAt": "2026-09-28T00:00:00Z"},
+            "scoringContract": {"indirectWeight": 0.10, "functionScoreMax": 15},
+            "metricsByFunction": [
+                {"functionId": "surface-water-storage", "functionName": "Surface water storage",
+                 "discipline": "Hydrology", "metrics": [wet]},
+                {"functionId": "channel-floodplain-dynamics",
+                 "functionName": "Channel and floodplain dynamics",
+                 "discipline": "Geomorphology", "metrics": [bhr]},
+                {"functionId": "habitat-provision", "functionName": "Habitat provision",
+                 "discipline": "Biology", "metrics": [flagged]},
+                {"functionId": "community-dynamics", "functionName": "Community dynamics",
+                 "discipline": "Biology", "metrics": [mmi]}]}
+
+
 BUNDLES = {
     "northeastern-highlands": lambda: _latest("northeastern-highlands"),
     "eastern-corn-belt-plains": lambda: _latest("eastern-corn-belt-plains"),
     "interior-plateau": lambda: _latest("interior-plateau"),
     "nc-sqt-adapted": lambda: _latest("nc-sqt-adapted"),
     "synthetic-0.12": _synthetic,
+    "synthetic-0.16": _synthetic_016,
 }
 
 
@@ -251,6 +289,34 @@ def test_not_applicable_is_a_blank(book):
         xs = sorted(float(p["x"]) for p in curves.active_points(m))
         state[mid] = {"value": xs[len(xs) // 2], "na": i % 2 == 0}
     _compare(book, state)
+
+
+def test_the_last_resort_boundaries_and_a_missing_measurement(tmp_path):
+    """REF-17 (owner decision D19): at EASI's own boundaries (wetland 1 and 5
+    percent, bank height ratio 1.3 and 1.5) DEEP and the workbook agree and DEEP
+    reads EASI's class; a site with no bank height ratio leaves channel and
+    floodplain dynamics unassessed in both, while the other functions score."""
+    from streamcurves import fixed_criteria as fc
+    curves, measure, LoadedAssessment = _deep()
+    b = Book(_synthetic_016(), tmp_path)
+    classes = {"Good": "Functioning", "Fair": "Functioning-at-Risk", "Poor": "Non-Functioning"}
+    for wet, bhr in ((0.99, 1.3), (1.0, 1.31), (5.0, 1.5), (5.01, 1.51), (0.0, 1.0)):
+        state = {"spring-pctwet2019ws": {"value": wet}, "spring-bank-height-ratio": {"value": bhr},
+                 "spring-phab-xfc-nat": {"value": 30.0}, "spring-bent-mmi-bent": {"value": 50.0}}
+        _compare(b, state)
+        la = LoadedAssessment.from_dict(b.bundle)
+        _sc, fres = curves.score_site(la, measure.measured_from_state(state))
+        for key, mid, x in (("pctwet2019ws", "spring-pctwet2019ws", wet),
+                            ("bank_height_ratio", "spring-bank-height-ratio", bhr)):
+            idx = [fr.metric_indices[mid] for fr in fres.values() if mid in fr.metric_indices][0]
+            assert fc.deep_class(idx) == classes[fc.class_of(fc.last_resort_entry(key), x)], (key, x)
+    state = {"spring-pctwet2019ws": {"value": 3.0}, "spring-phab-xfc-nat": {"value": 30.0},
+             "spring-bent-mmi-bent": {"value": 50.0}}
+    _compare(b, state)
+    la = LoadedAssessment.from_dict(b.bundle)
+    _sc, fres = curves.score_site(la, measure.measured_from_state(state))
+    assert fres["channel-floodplain-dynamics"].score is None
+    assert fres["surface-water-storage"].score is not None
 
 
 # --------------------------------------------------------------------------- #

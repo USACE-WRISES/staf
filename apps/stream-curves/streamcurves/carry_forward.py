@@ -50,7 +50,7 @@ import pandas as pd
 
 from . import curve_basis
 from . import nrsa_dataset as nd
-from .deep_export import deep_slug
+from .deep_export import FALLBACK_CURVE_STATUSES as FALLBACK_STATUSES, deep_slug
 
 #: the bundle entry fields a carried curve keeps, which are exactly the fields
 #: the exporter reads from a metric's annotations
@@ -241,6 +241,16 @@ def prepare(l3_code: str, *, root: Optional[Path] = None) -> dict:
     for mk, block in sorted(blocks.items()):
         basis = curve_basis.resolve(block.get("basis"), criteria_basis=block.get("criteriaBasis"))
         why = None
+        status = str(block.get("curveStatus") or "complete")
+        if status in FALLBACK_STATUSES:
+            # methodology 0.16 (owner decision D13): a published fallback ramp is
+            # not carried; the metric walks the hierarchy again, where a pool whose
+            # curve would be one is refused and the ladder moves on
+            out["rebuilt"][mk] = {"why": (f"The published curve is the engine's fallback "
+                                          f"(curve status {status}), which methodology 0.16 "
+                                          "never carries or publishes (owner decision D13): the "
+                                          "metric walks the reference-source hierarchy again.")}
+            continue
         if mk in ladder:
             if basis != curve_basis.PUBLISHED:
                 reason = nd.is_corrected(mk, corrected)

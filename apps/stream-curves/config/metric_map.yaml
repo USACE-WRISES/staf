@@ -199,6 +199,22 @@ functions:
       - {code: fish_NAT_NTOLPTAX, source: nrsa,         label: "Native non-tolerant fish taxa (%)", default_selected: false, reserve: true, role: metric}
       - {code: fish_NAT_TOLRPIND, source: nrsa,         label: "Tolerant native fish individuals (%)", default_selected: false, reserve: true, role: metric}
       - {code: fish_NAT_LITHPIND, source: nrsa,         label: "Simple lithophil fish individuals (%)", default_selected: false, reserve: true, role: metric}
+      # Methodology 0.16 (owner decision D12, 2026-09-28): EPA's NRSA fish MMI, a
+      # reserve candidate. Its construct is the integrity of the native fish
+      # assemblage (native richness, tolerance, reproductive guild, migration,
+      # habitat and trophic guilds, alien taxa), the persistence and reproduction
+      # of target taxa this function is about, and the eight state SQTs place their
+      # fish indices under this function. It enters a portfolio only where the
+      # function would otherwise be unassessed; the component metrics above keep
+      # their places, and the index's benchmarks are never applied to them.
+      - {code: fish_MMI_FISH,     source: nrsa,         label: "Fish MMI",                     default_selected: false, reserve: true, role: metric}
+      # EPA's benthic observed-to-expected taxa ratio (the share of the expected
+      # native taxa still present) serves the same construct, but EPA publishes it
+      # in taxa-loss categories rather than condition classes, the archive holds
+      # scores for 2013-14 only, and the expectation needs EPA's predictive model,
+      # which a new site cannot run. Mapped and labelled so an assessment that has
+      # an O/E score can pick it; never selected by default and not a reserve.
+      - {code: bent_OE_SCORE,     source: nrsa,         label: "Benthic O/E taxa loss ratio",  default_selected: false, role: metric}
 
   - discipline: Biology
     function: Community dynamics
@@ -206,6 +222,14 @@ functions:
       - {code: bent_EPT_NTAX,     source: nrsa,         label: "EPT taxa richness",            default_selected: true,  role: metric}
       - {code: bent_HPRIME,       source: nrsa,         label: "Shannon diversity (H')",       default_selected: true,  role: metric}
       - {code: bent_TOLRPIND,     source: nrsa,         label: "Tolerant individuals (%) ~ HBI", default_selected: true, role: metric}
+      # Methodology 0.16 (owner decision D12, 2026-09-28): EPA's NRSA benthic MMI,
+      # a reserve candidate. Its six metric classes (composition, diversity,
+      # feeding, habit, richness, tolerance) are the community structure this
+      # function is about and the same classes the three metrics above measure one
+      # at a time. It enters a portfolio only where the function would otherwise be
+      # unassessed; the component metrics keep their places, and the index's
+      # benchmarks are never applied to them.
+      - {code: bent_MMI_BENT,     source: nrsa,         label: "Benthic macroinvertebrate MMI", default_selected: false, reserve: true, role: metric}
 
   - discipline: Biology
     function: Watershed connectivity

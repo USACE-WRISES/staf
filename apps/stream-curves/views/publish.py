@@ -38,9 +38,10 @@ from streamcurves.workbook import write_input_workbook
 from views import assessment_publish as ap
 from views import final_selection as fs
 from views.data_overview import _default_session_name, _sanitize_file_stem
+from views import state as _st
 from views.state import AppState
 from views.theme import bi, fa
-from views.uihelpers import _goto_onclick, guard, not_ready_panel, rule_chip
+from views.uihelpers import _goto_onclick, count_text, guard, not_ready_panel, rule_chip
 
 logger = logging.getLogger("streamcurves")
 
@@ -48,8 +49,9 @@ _NEW = "__new__"
 
 
 def _status_choices() -> dict:
-    """The status a new version is published with. Draft is the default: a maintainer
-    publishing a reviewer's revision reviews it before DEEP runs it."""
+    """The status a new version is published with. Which one the form opens on is
+    :func:`publish_default_status`'s: Preliminary when nothing is left to decide,
+    else Draft with the radio disabled and the reason shown."""
     return {
         "draft": ui.TagList(
             ui.tags.span("Draft", class_="pub-seg-title"),
@@ -66,7 +68,6 @@ def _maintainer_name(state=None) -> str:
     """Who to record as the publisher, derived rather than asked for: the initials every
     StreamCurves page records (``views.state.recorded_by``: STAF_LIBRARY_MAINTAINER, else the
     open project's Prepared by, else ``n/a``; never the login)."""
-    from views import state as _st
     return _st.recorded_by(state)
 
 
@@ -83,12 +84,35 @@ def _publish_block_reason() -> str | None:
 
 
 def _portfolio_approval_text(pending: list[dict]) -> str:
-    """The sentence over the SELECT-01 checkbox, naming the functions and their counts."""
+    """The checklist sentence for SELECT-01, naming the functions and their counts."""
     named = ", ".join(f"{p['functionName']} ({p['nMetrics']} metrics)" for p in pending)
     verb = "carries" if len(pending) == 1 else "carry"
     return (f"{named} {verb} more than the default maximum of two metrics. Rule SELECT-01 "
-            "publishes such a function only with a recorded human approval, and this "
-            "publish writes yours into the version's metadata.")
+            "publishes such a function only with a recorded human approval: approve the set "
+            "as complementary in Select final curves, and the publish writes it into the "
+            "version's metadata.")
+
+
+def publish_default_status(checklist_ok: bool, unresolved: Optional[int], unapproved: int,
+                           pending_standing: int = 0) -> tuple[str, Optional[str]]:
+    """``(status, reason)`` the publish form opens on (library.py: an interactive publish
+    is the human review, so a version with nothing left to decide is Preliminary).
+
+    Preliminary when the seven-item checklist passes, the register leaves no item to
+    resolve, every function over the portfolio maximum is approved and no standing
+    decision waits for confirmation; else Draft, with the first reason.
+    """
+    if not checklist_ok:
+        return "draft", "the publish checklist has items left"
+    if unresolved:
+        return "draft", (f"{count_text(int(unresolved), 'item')} to resolve in Select final "
+                         "curves")
+    if unapproved:
+        return "draft", (f"{count_text(int(unapproved), 'function')} with more than two "
+                         "metrics without an approval (SELECT-01)")
+    if pending_standing:
+        return "draft", (f"{count_text(int(pending_standing), 'standing decision')} to confirm")
+    return "preliminary", None
 
 
 def _waiting_note(state: AppState):
@@ -124,10 +148,10 @@ def _origin_steer(state: AppState, origin: dict | None, has_doc: bool, built_by)
         if unchanged:
             return ui.div(
                 "Content unchanged from the staged build. Publish it from the "
-                "Region builder to confirm and publish with the build's own record.",
-                ui.tags.button("Open Region builder",
+                "Build step to confirm and publish with the build's own record.",
+                ui.tags.button("Open the Build step",
                                class_="btn btn-outline-primary btn-sm ms-2",
-                               onclick=_goto_onclick("build", None), type="button"),
+                               onclick=_goto_onclick("data", 4), type="button"),
                 class_="alert alert-info py-2 small")
     if has_doc:
         return ui.div(
@@ -161,6 +185,34 @@ def publish_server(input, output, session, state: AppState):
             return []
 
     # ── readiness checklist (shown for staged guided runs only) ───────────────
+    def _snapshot() -> dict:
+        """run_snapshot() plus the reference method the checklist names (REF-04 for
+        a pressure-screen session, REF-01 for a legacy one). Reads reactively."""
+        snap = ap.run_snapshot(state)
+        snap["reference_method"] = rs.reference_method_of(state.reference_build(),
+                                                          state.screening_run())
+        return snap
+
+    @reactive.calc
+    def _decisions_left() -> dict:
+        """What Select final curves still has to decide: the register's unresolved
+        items and the functions over the portfolio maximum with no approval
+        (SELECT-01). Read from the same register the section shows; the decisions
+        are taken there, this page only reads them."""
+        state.reference_build()
+        state.owner_curve_decisions()
+        state.candidate_register()
+        state.function_coverage_exceptions()
+        state.portfolio_approvals()
+        state.assessment_source()
+        state.curve_review()
+        state.completed_metrics()
+        state.discipline_function_mapping()
+        state.metric_config()
+        reg = fs.session_register(state)
+        return {"unresolved": fs.unresolved_count(state, reg),
+                "unapproved": fs.unapproved_functions(state, reg)}
+
     @render.ui
     def publish_checklist():
         # Readiness list for the gate enforced in _publish; shown for guided
@@ -186,13 +238,23 @@ def publish_server(input, output, session, state: AppState):
         # The Validate stage's status inputs (run_snapshot isolates its reads).
         state.validation_records()
         state.assessment_source()
-        snap = ap.run_snapshot(state)
+        snap = _snapshot()
         if not snap.get("curve_review"):
             return None
         items = rs.readiness_checklist(snap)
         # Only the failing items say anything. Printing all seven meant six green
         # ticks of noise above the form on every render.
         outstanding = [i for i in items if not i["ok"]]
+        # The decisions Select final curves is the home of, read from its register:
+        # the seven-item checklist stays as it is, these lines sit under it.
+        left = _decisions_left()
+        if left["unresolved"]:
+            outstanding.append({
+                "label": (f"{count_text(int(left['unresolved']), 'item')} to resolve in "
+                          "Select final curves"), "rule": "CURVE-07"})
+        if left["unapproved"]:
+            outstanding.append({"label": _portfolio_approval_text(left["unapproved"]),
+                                "rule": "SELECT-01"})
         if not outstanding:
             return ui.div(
                 ui.tags.span("✓ ", class_="fw-bold"),
@@ -214,6 +276,18 @@ def publish_server(input, output, session, state: AppState):
             ),
             class_="publish-checklist border rounded p-2 mb-3",
         )
+
+    def _default_status() -> tuple[str, str | None]:
+        """The status the form opens on and why (``publish_default_status``)."""
+        with reactive.isolate():
+            snap = _snapshot()
+            left = _decisions_left()
+            standing = ap.pending_standing_decisions(state)
+        guided = bool(snap.get("curve_review"))
+        return publish_default_status(
+            checklist_ok=(rs.is_ready_to_publish(snap) if guided else True),
+            unresolved=left["unresolved"], unapproved=len(left["unapproved"]),
+            pending_standing=len(standing["approvals"]) + len(standing["exceptions"]))
 
     def _exports_card():
         """What anyone can take away: the workbook, the calculator preview and the DEEP
@@ -308,11 +382,7 @@ def publish_server(input, output, session, state: AppState):
             # when updating one, and its old label carried that as a parenthetical.
             ui.output_ui("new_id_field"),
             ui.output_ui("origin_note"),
-            ui.div(
-                ui.input_radio_buttons("pub_status", "Publish as",
-                                       choices=_status_choices(), selected="draft",
-                                       inline=True),
-                class_="pub-seg"),
+            ui.output_ui("status_control"),
             ui.div(
                 ui.tags.label("Region of applicability", class_="form-label mb-0"),
                 ui.div(ap.region_label(region), class_="text-muted small"),
@@ -372,22 +442,8 @@ def publish_server(input, output, session, state: AppState):
             # own output, so a decision taken elsewhere updates it without
             # re-rendering the form)
             body.append(ui.output_ui("publish_waiting"))
-            pending = ap.portfolio_approval_needed(state)
-            if pending:
-                body.append(ui.div(
-                    ui.tags.label("Portfolio approval", class_="form-label mb-0"),
-                    ui.div(
-                        _portfolio_approval_text(pending),
-                        class_="text-muted small mb-1",
-                    ),
-                    ui.input_checkbox(
-                        "pub_select01",
-                        f"I approve {'this set' if len(pending) == 1 else 'these sets'} "
-                        "as complementary, recorded under my name",
-                        value=False,
-                    ),
-                    class_="pub-select01 mb-2",
-                ))
+            # SELECT-01 approvals are given in Select final curves (the session's
+            # portfolio_approvals); the checklist above says which are still missing.
         body.append(
             ui.input_action_button(
                 "publish_btn",
@@ -406,6 +462,31 @@ def publish_server(input, output, session, state: AppState):
             return (input.pub_new_id() or "").strip()
         except Exception:  # noqa: BLE001 — input absent unless the target is new
             return ""
+
+    @render.ui
+    def status_control():
+        """The status radio, opened on what the decisions allow (library.py's rule):
+        Preliminary when nothing is left to decide, else Draft, locked, with the
+        reason. Its own output, so a decision taken in Select final curves moves
+        it without re-rendering the form."""
+        _decisions_left()
+        state.curve_review()
+        state.run_stage_status()
+        state.function_coverage_exceptions()
+        state.assessment_source()
+        status, reason = _default_status()
+        radio = ui.input_radio_buttons("pub_status", "Publish as",
+                                       choices=_status_choices(), selected=status,
+                                       inline=True)
+        if status == "draft":
+            return ui.div(
+                ui.tags.fieldset(radio, disabled="disabled"),
+                ui.div(f"Published as a Draft: {reason}. Resolve it to publish as "
+                       "Preliminary, or approve the Draft as Preliminary on the "
+                       "Validate stage later.",
+                       class_="text-muted small pub-status-reason"),
+                class_="pub-seg")
+        return ui.div(radio, class_="pub-seg")
 
     @render.ui
     def new_id_field():
@@ -614,6 +695,11 @@ def publish_server(input, output, session, state: AppState):
         status = input.pub_status() or "draft"
         if status not in lib.PUBLISH_STATUSES:
             status = "draft"
+        # library.py's rule, enforced here as well as on the form: a version with
+        # anything left to decide is a Draft, whatever a DOM edit sent
+        default_status, _why = _default_status()
+        if default_status == "draft":
+            status = "draft"
         status_word = lib.status_label(status)
         target = input.pub_assessment()
         if target == _NEW:
@@ -672,7 +758,8 @@ def publish_server(input, output, session, state: AppState):
         # Staged-run readiness gate: only enforced once a staged run exists (a
         # populated curve_review). The Advanced path (confirmed mapping + finalized
         # curves, no staged run) publishes on the mapping/curve checks made above.
-        snap = ap.run_snapshot(state)
+        with reactive.isolate():
+            snap = _snapshot()
         if snap.get("curve_review") and not rs.is_ready_to_publish(snap):
             unresolved = rs.flagged_metrics(snap.get("curve_review") or {})
             # Naming the outstanding items beats the old fixed list of four: the
@@ -760,34 +847,31 @@ def publish_server(input, output, session, state: AppState):
                 meta["portfolioApprovals"] = copy.deepcopy(origin["portfolio_approvals"])
                 dec.confirm_approvals(meta["portfolioApprovals"], maintainer=maintainer,
                                       date=now_iso)
-            # The rest are this publisher's to give: the checkbox on the form is the
-            # recorded human approval SELECT-01 asks for, and the real bundle (not the
-            # page's quick count) names the functions it covers.
+            # The rest are the approvals given in Select final curves (the session's
+            # portfolio_approvals, each under the initials that gave it), written into
+            # the meta as approvedBy; the real bundle (not the page's quick count)
+            # names the functions the gate will judge.
             approved = {str(a.get("functionId"))
                         for a in (meta.get("portfolioApprovals") or [])
                         if a.get("functionId") and a.get("approvedBy")}
+            given = _st.approvals_for_meta(_st.portfolio_approvals(state))
+            if given:
+                meta["portfolioApprovals"] = (meta.get("portfolioApprovals") or []) + [
+                    a for a in given if a["functionId"] not in approved]
+                approved |= {a["functionId"] for a in given}
             unapproved = [(fid, n) for fid, n in lib.functions_over_metric_limit(bundle)
                           if fid not in approved]
             if unapproved:
-                try:
-                    ticked = bool(input.pub_select01())
-                except Exception:  # noqa: BLE001 — the box is absent when nothing needs one
-                    ticked = False
-                if not ticked:
-                    state.run_stage_status.set(prev_stage_status)
-                    state.run_meta.set(prev_meta)
-                    ui.notification_show(
-                        "Approve the portfolio first: "
-                        + ", ".join(f"{fid} ({n} metrics)" for fid, n in unapproved)
-                        + " carry more than two metrics, so SELECT-01 needs the approval "
-                        "checkbox on this form ticked before publishing.",
-                        type="warning", duration=12)
-                    return
-                meta["portfolioApprovals"] = (meta.get("portfolioApprovals") or []) + [
-                    {"functionId": fid, "approvedBy": maintainer,
-                     "note": (f"Approved at interactive publish: {n} metrics kept as a "
-                              "complementary set after review in StreamCurves.")}
-                    for fid, n in unapproved]
+                state.run_stage_status.set(prev_stage_status)
+                state.run_meta.set(prev_meta)
+                ui.notification_show(
+                    "Approve the portfolio first: "
+                    + ", ".join(f"{fid} ({n} metrics)" for fid, n in unapproved)
+                    + " carry more than two metrics, so SELECT-01 needs each set approved "
+                    "as complementary in Reference curves, Select final curves, before "
+                    "publishing.",
+                    type="warning", duration=12)
+                return
             if source_doc:
                 changes = ap.origin_changes(
                     state, origin, content_digest=lib.content_digest(bundle))

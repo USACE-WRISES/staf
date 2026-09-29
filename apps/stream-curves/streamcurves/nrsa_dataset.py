@@ -23,6 +23,12 @@ three, and the station pool goes from 1,919 to 4,378.
 row, taken from the most recent cycle that actually has the metrics a run needs.
 "Complete" is judged against the run's own metric set rather than baked in, and
 every station that is excluded is recorded with the reason.
+
+``latest_values`` reads the archive under a VALUE POLICY (rule DATA-11), named by
+an id every run manifest records and the inputs digest carries. The id a
+published version records keeps its exact behavior for as long as the version
+exists; anything that changes what a build reads from the archive is a new id
+(``VALUE_POLICY_V2`` and its successors), never a change to an existing one.
 """
 
 from __future__ import annotations
@@ -35,7 +41,8 @@ from typing import Iterable, Optional, Sequence
 import numpy as np
 import pandas as pd
 
-from .paths import DATA_DIR
+from .config import read_yaml
+from .paths import CONFIG_DIR, DATA_DIR
 
 LEGACY_DATASET_ID = "legacy-1819"
 MULTI_CYCLE_DATASET_ID = "multi-cycle-v1"
@@ -56,7 +63,206 @@ POLICY_LATEST_NON_NULL = "latest_non_null_index_visit"
 # ``POLICIES`` are the PANEL policies ``resolve_site_panel`` accepts. The value
 # policy is a separate choice, recorded beside it in the run manifest.
 POLICIES = (POLICY_MOST_RECENT,)
-VALUE_POLICIES = (POLICY_MOST_RECENT, POLICY_LATEST_NON_NULL)
+
+# --------------------------------------------------------------------------- #
+# Value policies (rule DATA-11): what a build reads from the pooled archive.
+#
+# Every published pressure-screen version records ``latest_non_null_index_visit``
+# in its manifest (``inputs.nrsa_dataset.policy``, ``value_selection.policy``) and
+# the inputs digest carries that literal, so it is the id of policy v1 and never
+# moves. v2 (campaign Round 1, 2026-09-25) is v1 plus three read-time corrections
+# the NRSA harmonization audit found the raw selection needs; a build records the
+# id it read under, so a v2 build digests differently from a v1 build and a replay
+# that passes a published version's recorded id reads exactly what it read.
+# --------------------------------------------------------------------------- #
+#: v1: per metric, the newest compatible cycle's index visit that carries a value,
+#: read as the archive publishes it (``numpy`` keeps ``inf`` as a value).
+VALUE_POLICY_V1 = POLICY_LATEST_NON_NULL
+#: v2: v1, and (a) a non-finite cell (inf, -inf) is missing, (b) a value outside
+#: the metric's declared physical domain (``config/nrsa_response_directions.yaml``
+#: ``domain_min`` / ``domain_max``) is missing, (c) ``VALUE_DERIVATIONS``: a column
+#: a cycle does not publish is read from the column that stands in for it exactly,
+#: measured first, as the archive builder does for ``phab_XSLOPE_use``.
+VALUE_POLICY_V2 = "newest-nonnull-v2"
+#: The campaign plan's name for v1; accepted and resolved to the recorded literal.
+VALUE_POLICY_V1_ALIAS = "newest-nonnull-v1"
+VALUE_POLICY_ALIASES = {VALUE_POLICY_V1_ALIAS: VALUE_POLICY_V1}
+VALUE_POLICY_IDS = (VALUE_POLICY_V1, VALUE_POLICY_V2)
+#: What a NEW build reads under when the caller names no policy. A replay names
+#: the policy its published version recorded instead.
+DEFAULT_VALUE_POLICY = VALUE_POLICY_V2
+VALUE_POLICIES = (POLICY_MOST_RECENT, POLICY_LATEST_NON_NULL, VALUE_POLICY_V2)
+
+#: Per policy, the columns read from a stand-in where a cycle does not publish
+#: them. Each rule is applied only after its source is measured against its
+#: target on the rows of the archive that carry both (``derivation_check``), and
+#: refused when they disagree, so the fill is evidence rather than assumption.
+VALUE_DERIVATIONS: dict[str, list[dict]] = {
+    VALUE_POLICY_V1: [],
+    VALUE_POLICY_V2: [
+        {
+            "target": "phab_RP100_cm",
+            "source": "phab_RP100",
+            "cycles": ("1314",),
+            "min_agreement": 0.99,
+            "note": ("2013-14 publishes RP100 and no RP100_cm; the two are equal on every "
+                     "row of 2018-19 and 2023-24 that carries both, so the 2013-14 residual "
+                     "pool depth is read from RP100 (harmonization audit, 2026-09-25)."),
+        },
+    ],
+}
+
+RESPONSE_DIRECTIONS_PATH = CONFIG_DIR / "nrsa_response_directions.yaml"
+_DERIVED_PREFIX = "_derived__"
+
+
+def resolve_value_policy(policy: Optional[str]) -> str:
+    """The value policy id a caller meant: ``None`` is the default for a new
+    build, the plan's alias resolves to the recorded literal, and anything
+    else must be a known id, so a typo can never read the archive silently
+    under some other rule."""
+    if policy is None:
+        return DEFAULT_VALUE_POLICY
+    p = VALUE_POLICY_ALIASES.get(str(policy), str(policy))
+    if p not in VALUE_POLICY_IDS:
+        raise ValueError(
+            f"unknown value policy {policy!r}; known: {', '.join(VALUE_POLICY_IDS)}")
+    return p
+
+
+def value_derivations(policy: Optional[str] = None) -> list[dict]:
+    """The derivation rules ``policy`` applies (none under v1)."""
+    return [dict(r) for r in VALUE_DERIVATIONS.get(resolve_value_policy(policy), [])]
+
+
+@lru_cache(maxsize=1)
+def declared_domains() -> dict[str, tuple[Optional[float], Optional[float]]]:
+    """``{metric: (domain_min, domain_max)}`` for every NRSA response metric that
+    declares a physical domain in ``config/nrsa_response_directions.yaml``
+    (a percent cannot exceed 100, sinuosity cannot be below 1). Empty when the
+    file is absent."""
+    if not RESPONSE_DIRECTIONS_PATH.exists():
+        return {}
+    doc = read_yaml(RESPONSE_DIRECTIONS_PATH) or {}
+    out: dict[str, tuple[Optional[float], Optional[float]]] = {}
+    for mk, entry in (doc.get("metrics") or {}).items():
+        if not isinstance(entry, dict):
+            continue
+        lo, hi = entry.get("domain_min"), entry.get("domain_max")
+        if lo is None and hi is None:
+            continue
+        out[str(mk)] = (None if lo is None else float(lo), None if hi is None else float(hi))
+    return out
+
+
+def _as_float(series: pd.Series) -> np.ndarray:
+    return pd.to_numeric(series, errors="coerce").to_numpy(dtype="float64", na_value=np.nan)
+
+
+def _out_of_domain(arr: np.ndarray, lo: Optional[float], hi: Optional[float]) -> np.ndarray:
+    """True where a finite value lies outside ``[lo, hi]``."""
+    finite = np.isfinite(arr)
+    bad = np.zeros(arr.shape, dtype=bool)
+    if lo is not None:
+        bad |= finite & (arr < lo)
+    if hi is not None:
+        bad |= finite & (arr > hi)
+    return bad
+
+
+def derivation_check(rule: dict, values: pd.DataFrame) -> dict:
+    """Measure one derivation rule on the archive's values table: the agreement
+    of source and target where both exist, and what the rule would fill (a blank
+    target in one of its cycles whose source has a value). ``status`` is
+    ``applied`` when the agreement reaches the rule's floor, ``refused`` when it
+    does not, ``skipped`` when a column is absent. Never mutates ``values``."""
+    target, source = str(rule["target"]), str(rule["source"])
+    out = {"target": target, "source": source, "cycles": [str(c) for c in rule["cycles"]],
+           "min_agreement": float(rule["min_agreement"]), "note": rule.get("note") or ""}
+    if target not in values.columns or source not in values.columns:
+        return {**out, "status": "skipped", "reason": "column absent", "agreement": None,
+                "n_compared": 0, "n_filled": 0, "by_cycle": {}}
+    t, s = _as_float(values[target]), _as_float(values[source])
+    both = np.isfinite(t) & np.isfinite(s)
+    n_compared = int(both.sum())
+    agreement = (float(np.isclose(t[both], s[both], rtol=1e-4, atol=1e-6).mean())
+                 if n_compared else 0.0)
+    in_cycles = values["cycle"].astype(str).isin(out["cycles"]).to_numpy()
+    fillable = in_cycles & np.isnan(t) & np.isfinite(s)
+    by_cycle = {str(k): int(v) for k, v in
+                values.loc[fillable, "cycle"].astype(str).value_counts().items()}
+    if agreement < out["min_agreement"]:
+        return {**out, "status": "refused", "agreement": agreement, "n_compared": n_compared,
+                "n_filled": 0, "by_cycle": {},
+                "reason": f"agreement {agreement:.3f} below {out['min_agreement']}"}
+    return {**out, "status": "applied", "agreement": agreement, "n_compared": n_compared,
+            "n_filled": int(fillable.sum()), "by_cycle": by_cycle}
+
+
+def _apply_value_policy(joined: pd.DataFrame, wanted: list[str], policy: str,
+                        ds: "NrsaDataset") -> tuple[pd.DataFrame, dict[str, str]]:
+    """The read-time corrections ``policy`` makes to an index-visit frame, in
+    place. Returns the frame and ``{metric: source}`` for every derivation that
+    was applied (a ``_derived__<metric>`` column then marks the rows filled).
+    v1 makes no correction, so every published selection reads as it did."""
+    if policy == VALUE_POLICY_V1:
+        return joined, {}
+    derived: dict[str, str] = {}
+    compatibility = cycle_compatibility()
+    # (c) first, so a derived value faces the same checks as a published one
+    for rule in value_derivations(policy):
+        target, source = rule["target"], rule["source"]
+        if target not in wanted or source not in joined.columns:
+            continue
+        if derivation_check(rule, ds.values)["status"] != "applied":
+            continue
+        cycles = {str(c) for c in rule["cycles"]}
+        allowed = compatibility.get(target)
+        if allowed:
+            cycles &= set(allowed)      # ACC-02: never fill from an incompatible cycle
+        fill = (joined["cycle"].astype(str).isin(cycles) & joined[target].isna()
+                & joined[source].notna())
+        joined.loc[fill, target] = joined.loc[fill, source]
+        joined[_DERIVED_PREFIX + target] = fill.to_numpy()
+        derived[target] = source
+    # (a) and (b)
+    domains = declared_domains()
+    for mk in wanted:
+        arr = _as_float(joined[mk])
+        bad = np.isinf(arr)
+        lo, hi = domains.get(mk, (None, None))
+        if lo is not None or hi is not None:
+            bad |= _out_of_domain(arr, lo, hi)
+        if bad.any():
+            joined.loc[bad, mk] = np.nan
+    return joined, derived
+
+
+def value_policy_report(policy: Optional[str] = None, *,
+                        dataset: str | NrsaDataset = MULTI_CYCLE_DATASET_ID) -> dict:
+    """What each correction of ``policy`` changes, counted over every row of the
+    archive's values table (all cycles and visits), for the audit: ``nonFinite``
+    and ``outOfDomain`` map a metric to the number of cells read as missing, and
+    ``derived`` carries one :func:`derivation_check` per rule. All empty under v1."""
+    policy = resolve_value_policy(policy)
+    ds = dataset if isinstance(dataset, NrsaDataset) else load_dataset(dataset)
+    report: dict = {"policy": policy, "nonFinite": {}, "outOfDomain": {}, "derived": []}
+    if policy == VALUE_POLICY_V1 or not ds.is_multi_cycle:
+        return report
+    values = ds.values
+    for mk in ds.metric_columns():
+        n = int(np.isinf(_as_float(values[mk])).sum())
+        if n:
+            report["nonFinite"][mk] = n
+    for mk, (lo, hi) in declared_domains().items():
+        if mk not in values.columns:
+            continue
+        n = int(_out_of_domain(_as_float(values[mk]), lo, hi).sum())
+        if n:
+            report["outOfDomain"][mk] = n
+    for rule in value_derivations(policy):
+        report["derived"].append(derivation_check(rule, values))
+    return report
 
 # Which visit of a station's cycle a curve reads: the lowest visit number, and
 # where two EPA sites of ONE cycle resolve to the same station (a probability
@@ -576,7 +782,10 @@ def panel_values(
 # --------------------------------------------------------------------------- #
 # rule DATA-11: the most recent non-null value per metric
 # --------------------------------------------------------------------------- #
-LATEST_LEDGER_COLUMNS = ["station_key", "metric", "source_cycle", "visit_no", "site_name"]
+#: ``derived_from`` names the stand-in column a value was read from under a
+#: derivation rule of the value policy, and is empty for a value read as published.
+LATEST_LEDGER_COLUMNS = ["station_key", "metric", "source_cycle", "visit_no", "site_name",
+                         "derived_from"]
 
 
 def cycle_compatibility(path=None) -> dict:
@@ -636,9 +845,12 @@ def fish_protocol_failures() -> frozenset:
 
 
 def _index_visit_values(ds: "NrsaDataset", keys: list[str], wanted: list[str],
-                        cycles: Sequence[str]) -> pd.DataFrame:
+                        cycles: Sequence[str],
+                        policy: str = VALUE_POLICY_V1) -> tuple[pd.DataFrame, dict[str, str]]:
     """One row per station per cycle (its index visit), newest cycle first, with
-    every value an incompatible cycle or a failed fish sample supplies removed."""
+    every value an incompatible cycle or a failed fish sample supplies removed,
+    then read under ``policy`` (:func:`_apply_value_policy`). Returns the frame
+    and the derivations applied (``{metric: source}``)."""
     rank = {c: i for i, c in enumerate(c for c in CYCLES_NEWEST_FIRST if c in set(cycles))}
     visits = ds.visits[ds.visits["station_key"].astype(str).isin(set(keys))
                        & ds.visits["cycle"].isin(rank)]
@@ -647,7 +859,12 @@ def _index_visit_values(ds: "NrsaDataset", keys: list[str], wanted: list[str],
     visits = (visits.sort_values(INDEX_VISIT_ORDER)
               .drop_duplicates(["station_key", "cycle"]))
     index_rows = visits[["station_key", "cycle", "visit_no", "site_id"]]
-    joined = index_rows.merge(ds.values[["station_key", "cycle", "visit_no", "site_id"] + wanted],
+    # a derivation's stand-in column rides along when its target is wanted
+    extra = [r["source"] for r in value_derivations(policy)
+             if r["target"] in wanted and r["source"] in ds.values.columns
+             and r["source"] not in wanted]
+    read = list(dict.fromkeys(wanted + extra))
+    joined = index_rows.merge(ds.values[["station_key", "cycle", "visit_no", "site_id"] + read],
                               on=["station_key", "cycle", "visit_no", "site_id"], how="left")
     joined["_rank"] = joined["cycle"].map(rank)
     joined = joined.sort_values(["station_key", "_rank"], kind="stable")
@@ -661,22 +878,28 @@ def _index_visit_values(ds: "NrsaDataset", keys: list[str], wanted: list[str],
     if failed and fish_cols:
         pair = list(zip(joined["station_key"].astype(str), joined["cycle"].astype(str)))
         joined.loc[[x in failed for x in pair], fish_cols] = np.nan
-    return joined
+    return _apply_value_policy(joined, wanted, policy, ds)
 
 
 def valid_cycle_values(station_keys: Iterable[str], metric: str, *,
                        dataset: "str | NrsaDataset" = MULTI_CYCLE_DATASET_ID,
-                       cycles: Sequence[str] = CYCLES_NEWEST_FIRST) -> pd.DataFrame:
+                       cycles: Sequence[str] = CYCLES_NEWEST_FIRST,
+                       policy: str = VALUE_POLICY_V1) -> pd.DataFrame:
     """Every value the verified archive holds for ``metric`` at each station's
     index visit of each compatible cycle: ``station_key``, ``cycle``, ``value``.
     What a published pool value is checked against when a curve is carried
     forward: a value no compatible, protocol-valid survey holds is one the
-    verification corrected or removed."""
+    verification corrected or removed.
+
+    ``policy`` defaults to v1 on purpose: every published pool was read under
+    it, and the check must keep finding the values those pools rest on. A
+    build that wants the check made under its own policy passes it."""
     ds = dataset if isinstance(dataset, NrsaDataset) else load_dataset(dataset)
     keys = [str(k) for k in station_keys]
     if metric not in ds.values.columns or not ds.is_multi_cycle or not keys:
         return pd.DataFrame(columns=["station_key", "cycle", "value"])
-    joined = _index_visit_values(ds, keys, [metric], cycles)
+    joined, _derived = _index_visit_values(ds, keys, [metric], cycles,
+                                           resolve_value_policy(policy))
     out = joined[["station_key", "cycle", metric]].rename(columns={metric: "value"})
     out["value"] = pd.to_numeric(out["value"], errors="coerce")
     return out.dropna(subset=["value"]).reset_index(drop=True)
@@ -688,6 +911,7 @@ def latest_values(
     dataset: str | NrsaDataset = MULTI_CYCLE_DATASET_ID,
     metrics: Optional[Sequence[str]] = None,
     cycles: Sequence[str] = CYCLES_NEWEST_FIRST,
+    policy: Optional[str] = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """One value per station per metric: the newest cycle that measured it.
 
@@ -698,14 +922,23 @@ def latest_values(
     taken whole) reports as missing. EASI's national analysis reads the archive
     the same way.
 
+    ``policy`` is the value policy id (``VALUE_POLICY_V1``, ``VALUE_POLICY_V2``
+    or the plan's alias); ``None`` is ``DEFAULT_VALUE_POLICY``, what a new build
+    reads under. A replay passes the id its published version recorded. The
+    corrections a policy makes apply to the pooled archive; the legacy snapshot
+    is read as published under either id, because its manifests predate the
+    policy and pin the files' bytes.
+
     Returns ``(values, ledger)``. ``values`` is keyed by ``site_id`` (the
     station key), shaped like :func:`panel_values`. ``ledger`` has one row per
     station and metric that received a value, naming the cycle, the visit and
-    the EPA site it came from, so a pooled curve can always say which survey
-    each of its values is from.
+    the EPA site it came from, and the stand-in column when a derivation
+    supplied it, so a pooled curve can always say which survey each of its
+    values is from.
 
     A legacy dataset has one cycle, so this is :func:`panel_values` for it.
     """
+    policy = resolve_value_policy(policy)
     ds = dataset if isinstance(dataset, NrsaDataset) else load_dataset(dataset)
     keys = [str(k) for k in station_keys]
     wanted = [m for m in (list(metrics) if metrics else ds.metric_columns())
@@ -720,7 +953,7 @@ def latest_values(
         out = values[["site_id"] + wanted].reset_index(drop=True)
         return out, empty_ledger
 
-    joined = _index_visit_values(ds, keys, wanted, cycles)
+    joined, derived = _index_visit_values(ds, keys, wanted, cycles, policy)
 
     # GroupBy.first() takes the first NON-NULL value per column, which is the rule
     wide = joined.groupby("station_key", sort=True)[wanted].first()
@@ -732,10 +965,14 @@ def latest_values(
         have = joined[joined[metric].notna()].drop_duplicates("station_key")
         if not len(have):
             continue
+        flag = _DERIVED_PREFIX + metric
+        from_stand_in = (have[flag].to_numpy(dtype=bool) if flag in have.columns
+                         else np.zeros(len(have), dtype=bool))
         parts.append(pd.DataFrame({
             "station_key": have["station_key"].to_numpy(), "metric": metric,
             "source_cycle": have["cycle"].to_numpy(), "visit_no": have["visit_no"].to_numpy(),
-            "site_name": have["site_id"].to_numpy()}))
+            "site_name": have["site_id"].to_numpy(),
+            "derived_from": np.where(from_stand_in, derived.get(metric, ""), "")}))
     ledger = (pd.concat(parts, ignore_index=True) if parts else empty_ledger)
     return out, ledger
 
