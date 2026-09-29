@@ -1,0 +1,95 @@
+{
+ "calculator": {
+  "bytes": 59077,
+  "name": "EASI_Calculator_1.1.xlsx",
+  "sha256": "8da078bfb37d819b2e4db8a85e1ae34b116e14d121f6a802cc544800da66e125"
+ },
+ "criteriaSet": "regional",
+ "evaluator": {
+  "app": "easi",
+  "engineApi": 1,
+  "requires": {
+   "behaviors": [
+    "curve-index-bands-0.39-0.69",
+    "anchors-from-metric-midpoints",
+    "function-score-round-x15",
+    "cwa-weights-D1-i0.1",
+    "eci-mean-of-available-subindices",
+    "coverage-provisional-below-0.70",
+    "composites-on-anchor-indices",
+    "curve-fallback-by-list",
+    "twenty-methods",
+    "applicability-rules"
+   ],
+   "operators": [
+    "best_index",
+    "categorical_lookup",
+    "minimum",
+    "minimum_of_products",
+    "ratio",
+    "sum_capped",
+    "threshold",
+    "worst_index"
+   ],
+   "stratifiers": [
+    "nars9",
+    "slope_class"
+   ]
+  }
+ },
+ "files": {
+  "cwa-mapping.json": {
+   "bytes": 1742,
+   "sha256": "df1e49bc00d57473025d4915bc07fe36e9dc5071e429dde3ce497323546461aa"
+  },
+  "easi-metrics.json": {
+   "bytes": 43071,
+   "sha256": "7d37cd8ed7bb6694d79bfe1206d1d1578f679b7a1955af863432b07f01d2b57e"
+  },
+  "ecoregion-crosswalk.json": {
+   "bytes": 9270,
+   "sha256": "831732aa126bafea596874e584553effadff641b69b04e6c3e29e69e89157eef"
+  },
+  "functions.json": {
+   "bytes": 21372,
+   "sha256": "b1695628cd00ede8e4f5f3c4c1dc0f40c0d36dc13e5a4a65bb4f6b5e29f6310c"
+  },
+  "nars-ecoregions-9.geojson.gz": {
+   "bytes": 2899918,
+   "sha256": "f08b5be1ec4149da224f7fc5185c755f0d612d9115c53a172081c67009ab0300"
+  },
+  "reference-curves.json": {
+   "bytes": 27235,
+   "sha256": "a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887"
+  },
+  "scoring-identity.json": {
+   "bytes": 1672,
+   "sha256": "af33a61a5cb2a0a27c23adc1c76f96db5c61053cf9d40f2e8f2be109cd10a851"
+  },
+  "screening-methods.json": {
+   "bytes": 104926,
+   "sha256": "e754bf570291e0231d11e127e594a7fa375b3f227ee2f0d6591c45f9faa4ac49"
+  }
+ },
+ "identity": {
+  "evaluatorDigest": "sha256:08f960b5b0d71fab84f8b865f134633c14cd8a357e489563f5ae4caf4e5e4a8a",
+  "methodVersion": "e91118cc821c",
+  "packageDigest": "sha256:7e44b19d4ad8415da0e0216f19c9d03a9e5bd021136439f8c43931e0fc44933d",
+  "scoringIdentity": {
+   "alternative_id": "alternative-2-e5b",
+   "alternative_name": "Alternative 2 with corrected cross-section quality checks (E5b)",
+   "curve_count": 34
+  },
+  "validatedUnder": [
+   {
+    "evaluatorDigest": "sha256:08f960b5b0d71fab84f8b865f134633c14cd8a357e489563f5ae4caf4e5e4a8a",
+    "methodVersion": "e91118cc821c"
+   }
+  ]
+ },
+ "label": "Alternative 2 with corrected cross-section quality checks (E5b)",
+ "methodId": "easi-screening",
+ "schema": "staf-easi-method",
+ "schemaVersion": 1,
+ "version": 2
+}

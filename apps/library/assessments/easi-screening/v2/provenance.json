@@ -1,0 +1,67 @@
+{
+  "kind": "easi-method",
+  "methodId": "easi-screening",
+  "identity": {
+    "methodVersion": "e91118cc821c",
+    "packageDigest": "sha256:7e44b19d4ad8415da0e0216f19c9d03a9e5bd021136439f8c43931e0fc44933d",
+    "evaluatorDigest": "sha256:08f960b5b0d71fab84f8b865f134633c14cd8a357e489563f5ae4caf4e5e4a8a"
+  },
+  "lineage": {
+    "origin": {
+      "kind": "revision",
+      "methodId": "easi-screening",
+      "version": 1,
+      "label": "Alternative 2: NARS-9 references",
+      "methodVersion": "b2e3033116e3",
+      "packageDigest": "sha256:5b733a6b7690f7893c6c15357178128a04646595e5d2cff7f8bb69fdbf40246d",
+      "evaluatorDigest": "sha256:594bd096fd36bc4060d1023f99379446beeb522364c3ac18a143d55786345845",
+      "scoringIdentity": {
+        "alternative_id": "alternative-2",
+        "catalog_sha256": "78c1e2921198905ee6e53f18147e2aa33f9a6ffd87ff3e7a23844238b3fb73f3",
+        "curves_sha256": "a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887"
+      }
+    },
+    "candidate": {
+      "family": "E5b",
+      "familyName": "dem_geometry_reliable_sections",
+      "composition": null,
+      "label": "rehearsal",
+      "builder": "apps/stream-curves/scripts/build_easi_candidate_package.py",
+      "builtAt": "2026-09-28T10:04:42Z",
+      "addendum": {
+        "file": "apps/stream-curves/config/methodology/evaluation_protocol_v1_easi_addendum.yaml",
+        "sha256": "8a48de98a4205c5eab1e423e69fdce2f238a76df8cbafca860bb032696625e6a"
+      },
+      "respecified": null,
+      "refinement": {
+        "addendum": 2,
+        "afterResults": true,
+        "curveSet": "entrenchment",
+        "curves": "curves: the shipped sets; the reliable-member refit evaluated and not adopted, see WP-R6c",
+        "date": "2026-09-28",
+        "decisionRecord": "D15",
+        "parent": "E5",
+        "summary": "E5b is E5 with the quality checks corrected so a model cap never excludes genuine severe incision (owner decision D15): the K2b flags, with the entrenchment curves evaluated on the reliable reference members (the refit was studied as 2026-09-28-dem-geometry-refit-alternatives and not adopted: P2 retained the base on channel evolution in WMT against relative bed stability, a finding the refit curves caused, so the shipped sets stand). It was specified on 2026-09-28, after the Round 4 families' results were read, as the owner's adoption refinement of the accepted E5; the protocol's outcomes P1 to P6 and E5's simplification rule are computed for it, and no margin moves."
+      },
+      "source": "D:\\Data\\staf-campaign-2026-09\\easi\\candidates\\E5b-k2b"
+    }
+  },
+  "history": [
+    {
+      "action": "candidate",
+      "at": "2026-09-29T17:28:26Z",
+      "kind": "round4",
+      "detail": "Round 4 candidate E5b (dem_geometry_reliable_sections) built by apps/stream-curves/scripts/build_easi_candidate_package.py from base method b2e3033116e3; the label is the rehearsal label, no approval is recorded"
+    }
+  ],
+  "publishedBy": "GM",
+  "consequences": null,
+  "candidateRegister": {
+    "schema": 1,
+    "rows": [],
+    "studies": []
+  },
+  "version": 2,
+  "updatedAt": "2026-09-29T17:28:28Z",
+  "contentDigest": "sha256:7e44b19d4ad8415da0e0216f19c9d03a9e5bd021136439f8c43931e0fc44933d"
+}
