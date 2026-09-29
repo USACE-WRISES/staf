@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-24T15:33:36Z",
+  "generatedAt": "2026-09-29T17:28:28Z",
   "assessments": [
     {
       "assessmentId": "ak-sqt-adapted",
@@ -96,7 +96,7 @@
     },
     {
       "assessmentType": "easi",
-      "methodVersion": "b2e3033116e3",
+      "methodVersion": "e91118cc821c",
       "assessmentId": "easi-screening",
       "assessmentName": "EASI screening method",
       "region": {
@@ -106,14 +106,14 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 1,
-      "latestUpdatedAt": "2026-09-24T13:41:12Z",
-      "latestPreliminary": 1,
+      "latestVersion": 2,
+      "latestUpdatedAt": "2026-09-29T17:28:28Z",
+      "latestPreliminary": 2,
       "latestCertified": 0,
       "latestDraft": 0,
-      "defaultVersion": 1,
+      "defaultVersion": 2,
       "defaultStatus": "preliminary",
-      "contentDigest": "sha256:5b733a6b7690f7893c6c15357178128a04646595e5d2cff7f8bb69fdbf40246d",
+      "contentDigest": "sha256:7e44b19d4ad8415da0e0216f19c9d03a9e5bd021136439f8c43931e0fc44933d",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",

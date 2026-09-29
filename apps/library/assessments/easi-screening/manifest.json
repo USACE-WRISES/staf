@@ -11,7 +11,7 @@
   "stateCode": "",
   "stateName": "",
   "sourceCitation": "",
-  "latestVersion": 1,
+  "latestVersion": 2,
   "versions": [
     {
       "version": 1,
@@ -21,6 +21,15 @@
       "contentDigest": "sha256:5b733a6b7690f7893c6c15357178128a04646595e5d2cff7f8bb69fdbf40246d",
       "methodVersion": "b2e3033116e3",
       "supersedesVersion": null
+    },
+    {
+      "version": 2,
+      "updatedAt": "2026-09-29T17:28:28Z",
+      "author": "GM",
+      "revisionNotes": "EASI v2: Alternative 2 (the same 34 curves, bands, weights and evidence) with the corrected cross-section quality checks (K2b): the four DEM cross-section ratings (bank height ratio, entrenchment ratio, bank-instability susceptibility, channel adjustment) are withheld where the sections are unreliable, and a bank height ratio at the cap on resolved sections rates as severe incision. Every rating kept is the v1 rating. Adopted by the study 2026-09-28-dem-geometry-quality-alternatives (owner decisions D15 and D20, 2026-09-28).",
+      "contentDigest": "sha256:7e44b19d4ad8415da0e0216f19c9d03a9e5bd021136439f8c43931e0fc44933d",
+      "methodVersion": "e91118cc821c",
+      "supersedesVersion": 1
     }
   ]
 }

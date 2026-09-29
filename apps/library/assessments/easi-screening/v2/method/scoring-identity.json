@@ -1,0 +1,34 @@
+{
+  "adopted_from": {
+    "decided": "2026-09-28",
+    "owner_decisions": [
+      "D15",
+      "D20"
+    ],
+    "studied_method_version": "c567058e9eac",
+    "studied_package_digest": "sha256:28b267f4f04654275c9dccad14b7e78fbc6565db9c9f53b6a48ed0a6ae7c5eb7",
+    "study_completion_sha256": "900f0f21329071f7b945c6c3fccdcdd8e3bd11a8530d40b89f9f92ebf91029ff",
+    "study_id": "2026-09-28-dem-geometry-quality-alternatives"
+  },
+  "alternative_id": "alternative-2-e5b",
+  "alternative_name": "Alternative 2 with corrected cross-section quality checks (E5b)",
+  "catalog_sha256": "e754bf570291e0231d11e127e594a7fa375b3f227ee2f0d6591c45f9faa4ac49",
+  "criteria_family": "regional",
+  "curve_count": 34,
+  "curves_sha256": "a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887",
+  "derived_from": {
+    "alternative_id": "alternative-2",
+    "catalog_sha256": "78c1e2921198905ee6e53f18147e2aa33f9a6ffd87ff3e7a23844238b3fb73f3",
+    "curves_sha256": "a824e2c254dea1c22af62d2a6f5fd3d0862ff0574190111655aa5b34dbce4887"
+  },
+  "nars_geography_sha256": "f08b5be1ec4149da224f7fc5185c755f0d612d9115c53a172081c67009ab0300",
+  "schema_version": 1,
+  "source": {
+    "alternative_1_curves_sha256": "ad100b39313af9259bd0628728d50ab87513e2c07955bf24d78e9d107863abdd",
+    "alternative_1_method_version": "e9f472b31fe5",
+    "candidate_catalog_sha256": "64c0a49da530879ed7c0bb329ace1f12c4b386fa1f02378865c0e882c5331d6e",
+    "original_registry_sha256": "99539cbcc4a2a25a62fd25c6638c2f725751293252a0329f31d66db229977410",
+    "study_completion_sha256": "97a24b44e2314cbe5c001d99bb67ce71343ac99d432f27bec54948342b0fa7dd",
+    "study_id": "2026-09-15-controlled-alternatives"
+  }
+}
