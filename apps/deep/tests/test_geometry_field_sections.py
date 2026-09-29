@@ -3,10 +3,11 @@
 DEEP rates the bank-height and entrenchment ratios of a site by the assessment's own metric
 curves (``deep.curves``), whatever produced the value: a field entry (origin ``field``) or the
 desktop prefill the vendored site engine's EASI extract computes from the 3DEP sections
-(``metrics.computed._reach_geom``, origin ``desktop``). No K2 or K2b quality flag exists in
-DEEP: the extract carries EASI's ``cross_section_quality`` (it is EASI's ``geomorph.py`` byte
-for byte, synced by ``libs/site_engine/scripts/sync_engine_extracts.py``) and nothing in the
-``deep`` package calls it, so a hand-entered section is never withheld. DEEP reads no EASI
+(``metrics.computed._reach_geom``, origin ``desktop``). A hand-entered section is never
+withheld. The desktop prefill alone reads the extract's ``cross_section_quality`` (EASI's
+``geomorph.py`` byte for byte, synced by ``libs/site_engine/scripts/sync_engine_extracts.py``):
+where EASI v2 withholds a geometry rating on the K2b record (a weak reach median, or a ratio
+outside its physical range), DEEP offers no 3DEP value and asks for a measured one. DEEP reads no EASI
 method file: EASI's ``entrenchment`` curve set and bank-height bands never reach a DEEP
 rating, and a refit of them changes nothing here; what reaches DEEP through re-vendoring is
 the geometry arithmetic of the extract, which these tests hold equal to EASI's source when
@@ -59,18 +60,18 @@ def test_a_field_entered_ratio_is_rated_by_the_assessments_curve_never_withheld(
     assert edited.engine is False and curves.engine_pairing_advisory(edited, bhr_spec) is None
 
 
-def test_no_deep_module_reads_a_cross_section_quality_flag():
-    """The K2b record lives in the extract (EASI's geomorph) and nothing in DEEP calls it; the
-    only readers of the extract are the desktop prefill (``_reach_geom``) and the site engine's
-    cross-section metrics, which compute ratios and never a quality gate."""
+def test_only_the_desktop_prefill_reads_the_cross_section_quality_record():
+    """The K2b record lives in the extract (EASI's geomorph); in DEEP only the 3DEP prefill of
+    the two ratios reads it (``metrics/computed.py``), so the scoring layer never withholds a
+    value that was entered, and the site engine's cross-section metrics never gate on it."""
     callers = []
     for path in sorted(_DEEP_PKG.rglob("*.py")):
         if "_vendor" in path.parts:
             continue
         text = path.read_text(encoding="utf-8")
         if "cross_section_quality" in text or "crossSectionQuality" in text or "low_quality" in text:
-            callers.append(str(path.relative_to(_DEEP_PKG)))
-    assert callers == []
+            callers.append(path.relative_to(_DEEP_PKG).as_posix())
+    assert callers == ["metrics/computed.py"]
     extract = _EXTRACT.read_text(encoding="utf-8")
     assert "def cross_section_quality" in extract and "QUALITY_RULES = \"K2b\"" in extract
     engine_xsection = _DEEP_PKG / "_vendor" / "site_engine" / "metrics" / "xsection.py"
@@ -103,3 +104,31 @@ def test_deep_reads_no_easi_method_file():
         if "screening-methods.json" in text or "reference-curves.json" in text:
             readers.append(str(path.relative_to(_DEEP_PKG)))
     assert readers == []
+
+
+def test_the_prefill_steps_aside_where_easi_v2_withholds_the_rating():
+    """A weak reach median (here bankfull extrapolated outside the Bieger fit) withholds both
+    ratios, as EASI v2 does; a ratio outside its physical range withholds that ratio only; a
+    sound reach prefills both. The reasons ride on the context."""
+    from deep.metrics import computed as c
+
+    class Ctx:
+        def __init__(self, geom):
+            self.extras = {"reach_geomorph": geom}
+
+    reach = {"n": 9, "bank_height_ratio": {"n": 9}, "entrenchment_ratio": {"n": 9}}
+    sound = {"bank_height_ratio": 1.2, "entrenchment_ratio": 2.5, "reach": reach}
+    ctx = Ctx(sound)
+    assert c._ADAPTERS[BHR](ctx).value == 1.2 and c._ADAPTERS[ER](ctx).value == 2.5
+    assert c._ADAPTERS["spring-bank-height-ratio"](ctx).value == 1.2
+    assert "xs_prefill_withheld" not in ctx.extras
+
+    weak = Ctx({**sound, "bankfull_extrapolated": True})
+    assert c._ADAPTERS[BHR](weak) is None and c._ADAPTERS[ER](weak) is None
+    assert "extrapolated" in weak.extras["xs_prefill_withheld"]["bhr"]
+    assert "extrapolated" in weak.extras["xs_prefill_withheld"]["er"]
+
+    impossible = Ctx({**sound, "bank_height_ratio": 0.0})
+    assert c._ADAPTERS[BHR](impossible) is None
+    assert c._ADAPTERS[ER](impossible).value == 2.5
+    assert "at or below zero" in impossible.extras["xs_prefill_withheld"]["bhr"]
