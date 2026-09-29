@@ -417,7 +417,7 @@ def test_the_panel_renders_for_a_real_station():
     ds = nd.load_dataset(nd.MULTI_CYCLE_DATASET_ID)
     groups = ex.station_metric_groups("GARO-1032", values=ds.values)
     html = str(vx.metric_groups_ui(groups, ["1314", "1819"]))
-    assert "760 metrics with a value for this station." in html
+    assert "763 metrics with a value for this station." in html
     assert html.count("accordion-button collapsed") == len(groups) == 5
     assert "<th>Value</th>" in html            # Landscape
     assert "<th>NRSA 2013-14</th>" in html     # the measured categories
@@ -428,8 +428,9 @@ def test_a_real_station_groups_every_metric_it_has():
     ds = nd.load_dataset(nd.MULTI_CYCLE_DATASET_ID)
     groups = ex.station_metric_groups("GARO-1032", values=ds.values)
     counts = {g["category"]: g["n"] for g in groups}
-    # 760 of the 788 metric columns carry a value for this station
-    assert sum(counts.values()) == 760
+    # 763 of the 791 metric columns carry a value for this station (760 before R6b added the
+    # benthic and fish MMIs and the benthic O/E, 2026-09-28)
+    assert sum(counts.values()) == 763
     assert counts["Landscape"] == 303
     assert _by_category(groups)["Landscape"]["varies_by_cycle"] is False
     # a name is never the bare code, and never the truncated tile-header form
