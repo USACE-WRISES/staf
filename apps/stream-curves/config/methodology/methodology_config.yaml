@@ -613,7 +613,9 @@ reference_hierarchy:
   # config/fixed_criteria.yaml names one under last_resort (generated from the
   # vendored EASI catalog by scripts/build_fixed_criteria.py): surface water
   # storage on watershed wetland cover, channel and floodplain dynamics on the
-  # bank height ratio. The curve carries the basis easi-screening-method, labelled
+  # bank height ratio, carbon processing on the natural cover of the riparian
+  # corridor against EASI's reference curve of the region's NARS-9 class. The
+  # curve carries the basis easi-screening-method, labelled
   # "Adopted from EASI's national screening method (provisional)", the method's
   # own citations and limitations, the input it needs and the confidence cap of
   # curve_basis (39). It never replaces a curve and never enters a function that

@@ -1209,7 +1209,9 @@ def review_curves(curve_rows_by_metric: dict, column_functions: dict,
     for mk, row in curve_rows_by_metric.items():
         mapping = column_functions.get(mk) or ""
         miss = missingness.get(mk) or {}
-        data_ok = miss.get("disposition") != "review"
+        # methodology 0.16 (D18): a pool DATA-03 kept as its function's last candidate
+        # carries its missingness as a stated limitation, never as a review hold
+        data_ok = miss.get("disposition") != "review" or bool(miss.get("keptForCoverage"))
         data_reason = None
         if not data_ok:
             frac = miss.get("missing_fraction")

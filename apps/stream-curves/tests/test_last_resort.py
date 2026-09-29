@@ -29,7 +29,7 @@ DEEP_CLASS = {"Good": "Functioning", "Fair": "Functioning-at-Risk", "Poor": "Non
 # --------------------------------------------------------------------------- #
 def test_the_last_resort_block_is_generated_from_the_vendored_catalog():
     assert fc.criteria_drift() == []
-    assert fc.last_resort_keys() == ["pctwet2019ws", "bank_height_ratio"]
+    assert fc.last_resort_keys() == ["pctwet2019ws", "bank_height_ratio", "natural_riparian_cover"]
     # the fixed criteria never include a last-resort metric, so no bundle gains one
     assert not set(fc.metric_keys()) & set(fc.last_resort_keys())
     wet = fc.last_resort_entry("pctwet2019ws")
@@ -38,7 +38,8 @@ def test_the_last_resort_block_is_generated_from_the_vendored_catalog():
     bhr = fc.last_resort_entry("bank_height_ratio")
     assert bhr["easi_method"] == "bhr-bank-instability-susceptibility"
     assert bhr["direction"] == "lower_better" and bhr["domain"][0] == 1.0
-    for e in (wet, bhr):
+    carbon = fc.last_resort_entry("natural_riparian_cover")
+    for e in (wet, bhr, carbon):
         assert e["rule"] == fc.LAST_RESORT_RULE and e["required_input"] and e["limitation"]
         assert e["citations"] and all(c["text"] for c in e["citations"])
         assert "—" not in json.dumps(e)
@@ -115,7 +116,7 @@ def test_the_replaced_metrics_own_refusals_stay_on_its_record():
 def test_the_rung_completes_only_a_function_nothing_else_covers():
     got = pe.last_resort_fills(
         "71", "Interior Plateau",
-        covered_metrics=["phab_XBKA", "phab_SINU", "bfi"],
+        covered_metrics=["phab_XBKA", "phab_SINU", "bfi", "phab_XCMGW"],
         candidate_metrics={"pctwet2019": _insufficient("pctwet2019")},
         configs={}, withheld_statements={"pctwet2019": "every pool is a fallback ramp."})
     assert list(got) == ["pctwet2019ws"]
@@ -134,7 +135,7 @@ def test_the_rung_completes_only_a_function_nothing_else_covers():
 def test_the_channel_function_takes_the_bank_height_ratio_when_both_its_metrics_fail():
     got = pe.last_resort_fills(
         "44", "Nebraska Sand Hills",
-        covered_metrics=["pctwet2019"],
+        covered_metrics=["pctwet2019", "phab_XCMGW"],
         candidate_metrics={"phab_XBKA": _insufficient("phab_XBKA"),
                            "phab_SINU": _insufficient("phab_SINU")},
         configs={})
@@ -146,7 +147,8 @@ def test_the_channel_function_takes_the_bank_height_ratio_when_both_its_metrics_
 
 def test_a_carried_curve_or_a_disabled_rung_adds_nothing(monkeypatch):
     carried = {"pctwet2019ws": {"functions": ["surface-water-storage"]},
-               "phab_XBKA": {"functions": ["channel-floodplain-dynamics"]}}
+               "phab_XBKA": {"functions": ["channel-floodplain-dynamics"]},
+               "phab_XCMGW": {"functions": ["carbon-processing"]}}
     got = pe.last_resort_fills("71", "Interior Plateau", covered_metrics=[],
                                candidate_metrics={}, configs={}, carried=carried)
     assert got == {}
@@ -237,3 +239,32 @@ def test_the_last_candidate_of_a_function_keeps_its_pool_with_its_missingness_st
          "phab_SINU": {"missing_fraction": 0.42, "n_with_value": 24}},
         covered_metrics=[], configs={})
     assert kept == {"phab_SINU": ["channel-floodplain-dynamics"]}
+
+
+# --------------------------------------------------------------------------- #
+# carbon processing: EASI's organic-matter supply curve of the region's NARS-9 class
+# --------------------------------------------------------------------------- #
+def test_the_carbon_last_resort_is_easis_reference_curve_of_the_regions_class():
+    """High Plains (25) and Southwestern Tablelands (26) in the production pass: woody
+    riparian cover refused at every level (a grassland region), so carbon processing had
+    no metric. EASI scores the function on the corridor's natural cover against its
+    NARS-9 reference curve; the last resort takes that curve for the region's class."""
+    import json as _json
+    e = fc.last_resort_entry("natural_riparian_cover")
+    assert e["easi_method"] == "organic-matter-supply-potential" and e["curve_set"] == "corridor-natural"
+    easi = _json.loads(fc.REFERENCE_CURVES_PATH.read_text(encoding="utf-8"))["sets"]["corridor-natural"]["curves"]
+    for k, v in easi.items():
+        assert e["curve_layers"][k] == [[round(float(x), 6), round(float(y), 6)] for x, y in v["points"]], k
+    assert e["fallback_stratum"] == "national"
+    row = fc.last_resort_curve_row("natural_riparian_cover", "SPL")
+    assert row["stratum"] == "NARS-9 SPL"
+    assert row["curve_points"]["metric_value"].tolist() == [p[0] for p in easi["SPL"]["points"]]
+    assert fc.last_resort_curve_row("natural_riparian_cover", "nowhere")["stratum"] == "NARS-9 national"
+    got = pe.last_resort_fills("25", "High Plains", covered_metrics=[],
+                               candidate_metrics={"phab_XCMGW": _insufficient("phab_XCMGW")},
+                               configs={}, nars9="SPL")
+    fill = got["natural_riparian_cover"]
+    assert fill["function_id"] == "carbon-processing" and fill["candidates"] == ["phab_XCMGW"]
+    assert fill["decision"].screen_detail["stratum"] == "SPL"
+    assert "reference curve for NARS-9 region SPL" in fill["attempt"]["why"]
+    assert fill["config"]["higher_is_better"] is True
