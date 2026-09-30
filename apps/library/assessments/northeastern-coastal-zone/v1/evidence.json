@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 755747,
+  "name": "deep-dev-l3-59-5f6f7ca00d4d-6aa3d686.evidence.zip",
+  "sha256": "42b5f15586d048151e8377afb4e3dc10b7a9e9982e5a0d5f864fc1f9721ed096"
+ },
+ "bytes": 7525385,
+ "coverage": {
+  "assessmentId": "northeastern-coastal-zone",
+  "curves": 24,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 62574,
+  "region": {
+   "code": "59",
+   "kind": "ecoregion",
+   "name": "Northeastern Coastal Zone"
+  },
+  "stations": 106,
+  "stationsOutOfFrame": 37,
+  "values": 3279
+ },
+ "dataDigest": "sha256:93b9483fdb3e2a75019966480da9a73e20bf6c5af931f86b3f26a31938910da6",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:6aa3d6864a9d899e59691b211d8c11c51be9fe3c1cc7c6cb782297659d04a224",
+ "packageId": "deep-dev-l3-59",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 59 (Northeastern Coastal Zone)",
+ "version": "5f6f7ca00d4d"
+}

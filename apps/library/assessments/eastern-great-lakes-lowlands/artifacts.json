@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "eastern-great-lakes-lowlands",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:ed6b3a9f2f18d970eec7ef139912eb84465b06e3e018d590560bbffcbf2d261b",
+      "bytes": 43750,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:12db39cbdd89986caa0fd435228a56c068a50ea0cab2a4df3881bb3db1d608ae",
+      "builtAt": "2026-09-30T07:04:32Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "assessmentId": "north-central-appalachians",
+  "assessmentName": "North Central Appalachians reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:04:37Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 13 of 31 stations of this ecoregion pass. 13 reference curves use local stations, 6 borrow from a wider region, 5 metrics use fixed criteria, and 3 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "62",
+    "name": "North Central Appalachians"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 62), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:4b78e8a7e1dd9ab8d95886e4543651a204b2641b3dbf7905b314b0638b63fae3",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "northeastern-coastal-zone",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:572e0cb35aa458d29a2524b734ef790f0e750c5fa12fecbf76b4a95d150369a4",
+      "bytes": 43365,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:c896d50a5c3e71f8877c9d0c06a7b77032900ce3d20235f2793d58ac8eef3c7f",
+      "builtAt": "2026-09-30T07:04:30Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

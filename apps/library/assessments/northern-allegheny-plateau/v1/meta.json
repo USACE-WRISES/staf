@@ -1,0 +1,19 @@
+{
+  "assessmentId": "northern-allegheny-plateau",
+  "assessmentName": "Northern Allegheny Plateau reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:04:34Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 4 of 47 stations of this ecoregion pass. 0 reference curves use local stations, 16 borrow from a wider region, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "60",
+    "name": "Northern Allegheny Plateau"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 60), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:5df6c9488a79114c6215e178da1af460c45eba625faa2e7d1c747147d9752e59",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

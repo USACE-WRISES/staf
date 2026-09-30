@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "eastern-great-lakes-lowlands",
+  "assessmentName": "Eastern Great Lakes Lowlands reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "83",
+    "name": "Eastern Great Lakes Lowlands"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 83), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:04:32Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 6 of 43 stations of this ecoregion pass. 0 reference curves use local stations, 20 borrow from a wider region, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:12db39cbdd89986caa0fd435228a56c068a50ea0cab2a4df3881bb3db1d608ae",
+      "supersedesVersion": null
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 606509,
+  "name": "deep-dev-l3-82-f978c32a8b4e-53f6537c.evidence.zip",
+  "sha256": "100a53bdd86c73e4625952ac7971125fe6dc7f49b8fd5cdd3c494923a2e21c62"
+ },
+ "bytes": 5999615,
+ "coverage": {
+  "assessmentId": "acadian-plains-and-hills",
+  "curves": 22,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 50431,
+  "region": {
+   "code": "82",
+   "kind": "ecoregion",
+   "name": "Acadian Plains and Hills"
+  },
+  "stations": 37,
+  "stationsOutOfFrame": 11,
+  "values": 1066
+ },
+ "dataDigest": "sha256:1af589b41887a06661f413019bcadf4937c7f4d798a460f43dd60b08d427572f",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:53f6537c25af6ad2bbab7ac5ff0de095fdb3fe8a02c1a7795b1a57c1ad0cfeed",
+ "packageId": "deep-dev-l3-82",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 82 (Acadian Plains and Hills)",
+ "version": "f978c32a8b4e"
+}
