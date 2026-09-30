@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 183533,
+  "name": "deep-dev-l3-15-39de271097a4-0ff54e4b.evidence.zip",
+  "sha256": "11ab348ed463a4aa0535cef318dae149af13fbd09d9b1da2779f230e8ce910d1"
+ },
+ "bytes": 1710433,
+ "coverage": {
+  "assessmentId": "northern-rockies",
+  "curves": 29,
+  "functionsScored": 20,
+  "ledgerRows": 43,
+  "metrics": 33,
+  "poolLedgerRows": 12581,
+  "region": {
+   "code": "15",
+   "kind": "ecoregion",
+   "name": "Northern Rockies"
+  },
+  "stations": 45,
+  "stationsOutOfFrame": 13,
+  "values": 1310
+ },
+ "dataDigest": "sha256:cbf96434d04ed08bcd1e69dd71406193d0e401992baf3486bf27380703240219",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:0ff54e4b715590d796343c0ea36961c05dd80e61d71f4eff4a73494c912879a6",
+ "packageId": "deep-dev-l3-15",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 15 (Northern Rockies)",
+ "version": "39de271097a4"
+}

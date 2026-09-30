@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 319053,
+  "name": "deep-dev-l3-11-b86058e634ca-7457447f.evidence.zip",
+  "sha256": "b16169ae787d87aa48b7c2b4250b9836ce0c41518a39cafd93303137994e3f63"
+ },
+ "bytes": 3126264,
+ "coverage": {
+  "assessmentId": "blue-mountains",
+  "curves": 25,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 24770,
+  "region": {
+   "code": "11",
+   "kind": "ecoregion",
+   "name": "Blue Mountains"
+  },
+  "stations": 21,
+  "stationsOutOfFrame": 14,
+  "values": 629
+ },
+ "dataDigest": "sha256:22cb5ff4ed12fadece39715ed86422efdd3c292007fce95f82ee530c0d6c9fb5",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:7457447f8fa86e5bfc76a5931cd7d3e8e4c37a967ff3f64b30ba3428527b77df",
+ "packageId": "deep-dev-l3-11",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 11 (Blue Mountains)",
+ "version": "b86058e634ca"
+}

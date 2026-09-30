@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "blue-mountains",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:a0b26608170c1ad5cefa6115931c749d9870110baea84a92ab7e8a7d5aad2ca7",
+      "bytes": 43521,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:2ec853341a60f85ec296bc5d8a0f0dfd60f3d65c86ee2811f59a3f5f70dc13b0",
+      "builtAt": "2026-09-30T07:06:35Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

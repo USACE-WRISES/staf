@@ -1,0 +1,19 @@
+{
+  "assessmentId": "southern-rockies",
+  "assessmentName": "Southern Rockies reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:06:19Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 53 of 83 stations of this ecoregion pass. 20 reference curves use local stations, 4 borrow from a wider region, 5 metrics use fixed criteria, and 6 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "21",
+    "name": "Southern Rockies"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 21), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:cbd87ee5b27929c7eb7568292ae4ed1c4d62e06eec8db8f124eeb308fb5b0066",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

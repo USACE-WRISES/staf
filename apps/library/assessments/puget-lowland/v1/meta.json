@@ -1,0 +1,19 @@
+{
+  "assessmentId": "puget-lowland",
+  "assessmentName": "Puget Lowland reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:06:47Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 3 of 10 stations of this ecoregion pass. 0 reference curves use local stations, 23 borrow from a wider region, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "2",
+    "name": "Puget Lowland"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 2), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:2cd02b48a19d50288dc835356ab09fd696bd1497e8ea93643aa11cb0a0d25ed2",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

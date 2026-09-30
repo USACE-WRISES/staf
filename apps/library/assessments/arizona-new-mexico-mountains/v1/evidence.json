@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 152823,
+  "name": "deep-dev-l3-23-e6b75bb2a819-e9edf4f5.evidence.zip",
+  "sha256": "9fddc544c82133fc58b6b733e2ece3deb11ef3145f087633cbf7ef647f74683e"
+ },
+ "bytes": 1602233,
+ "coverage": {
+  "assessmentId": "arizona-new-mexico-mountains",
+  "curves": 22,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 10399,
+  "region": {
+   "code": "23",
+   "kind": "ecoregion",
+   "name": "Arizona/New Mexico Mountains"
+  },
+  "stations": 19,
+  "stationsOutOfFrame": 6,
+  "values": 595
+ },
+ "dataDigest": "sha256:aba695cd6e05cc4d023cce24f8cd51592fb08df3992c8935de75063b2f46bf3a",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:e9edf4f510d9150662c4ab590f2e6e35da43be686e731e21d20fad9417274ae1",
+ "packageId": "deep-dev-l3-23",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 23 (Arizona/New Mexico Mountains)",
+ "version": "e6b75bb2a819"
+}

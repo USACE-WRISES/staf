@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 279861,
+  "name": "deep-dev-l3-8-1397ffa956c2-ee9f70c6.evidence.zip",
+  "sha256": "890d92d7faa9e7d722857f5cf675731904215f79d78a8869afd21e7ef15b9473"
+ },
+ "bytes": 2735458,
+ "coverage": {
+  "assessmentId": "southern-california-mountains",
+  "curves": 20,
+  "functionsScored": 20,
+  "ledgerRows": 42,
+  "metrics": 33,
+  "poolLedgerRows": 19074,
+  "region": {
+   "code": "8",
+   "kind": "ecoregion",
+   "name": "Southern California Mountains"
+  },
+  "stations": 2,
+  "stationsOutOfFrame": 0,
+  "values": 60
+ },
+ "dataDigest": "sha256:e1bb461a84200adaaf6df760a5ecf565ef62dd0bd13e1d4020282b451af60890",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:ee9f70c63e8fb480b879dc557e9a276ac18da4a3c55a9190dda6cca6cd8f2d00",
+ "packageId": "deep-dev-l3-8",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 8 (Southern California Mountains)",
+ "version": "1397ffa956c2"
+}

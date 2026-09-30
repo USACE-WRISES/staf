@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "klamath-mountains-california-high-north-coast-range",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:dcf6a85c7e645cafaf9d07897d007489e1f50ef6f6c3c3299461366d1c25ce85",
+      "bytes": 43164,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:0956ade172c734babc0e8b6dacdbb5b3b9d978c386e1a59034237ca5b30ebc49",
+      "builtAt": "2026-09-30T07:06:37Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 273167,
+  "name": "deep-dev-l3-17-7e4c6980149d-531d3b92.evidence.zip",
+  "sha256": "cbb135ca3080666ed69af044a4a7e74f99828717a61d6cc1132bdbc0ee0c8772"
+ },
+ "bytes": 2672841,
+ "coverage": {
+  "assessmentId": "middle-rockies",
+  "curves": 25,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 20476,
+  "region": {
+   "code": "17",
+   "kind": "ecoregion",
+   "name": "Middle Rockies"
+  },
+  "stations": 86,
+  "stationsOutOfFrame": 22,
+  "values": 2625
+ },
+ "dataDigest": "sha256:56a0eb43c4d3db5938c38630ec02bd32dd4aa5343583cd3b6286d7246a33be5f",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:531d3b92da2ecaee97487961da8f30b11d33c2d0f3d307fd99eb5d19f009ef70",
+ "packageId": "deep-dev-l3-17",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 17 (Middle Rockies)",
+ "version": "7e4c6980149d"
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 380782,
+  "name": "deep-dev-l3-41-561c046bb593-b607333e.evidence.zip",
+  "sha256": "d86481e4d31f6b47c71b5d8f68b75a3c23fe025ddd29c118d7ce430fa12c0105"
+ },
+ "bytes": 3741324,
+ "coverage": {
+  "assessmentId": "canadian-rockies",
+  "curves": 22,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 29732,
+  "region": {
+   "code": "41",
+   "kind": "ecoregion",
+   "name": "Canadian Rockies"
+  },
+  "stations": 14,
+  "stationsOutOfFrame": 0,
+  "values": 388
+ },
+ "dataDigest": "sha256:d0b317907f6171dc6ebaca715916fb675e01877dd3e02415b20d22a5a354c9ff",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:b607333e0850ffe357676477c39356b3caa5761dabfd861798aaf2d051c915f1",
+ "packageId": "deep-dev-l3-41",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 41 (Canadian Rockies)",
+ "version": "561c046bb593"
+}

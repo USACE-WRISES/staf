@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 233449,
+  "name": "deep-dev-l3-3-de18e65bc6db-012e302b.evidence.zip",
+  "sha256": "fa37de0f829bc7959a0ccb58333e102c06eb712bf8cce7343f26cb6a92b946b4"
+ },
+ "bytes": 2344134,
+ "coverage": {
+  "assessmentId": "willamette-valley",
+  "curves": 21,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 16419,
+  "region": {
+   "code": "3",
+   "kind": "ecoregion",
+   "name": "Willamette Valley"
+  },
+  "stations": 8,
+  "stationsOutOfFrame": 4,
+  "values": 227
+ },
+ "dataDigest": "sha256:02652be61759dc9bfdf9c5c7abe40c5c957c5e9609d1ad8fdb83d617397bd3a0",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:012e302bbcb1b2d33c3b5254a2fea267af1055e8da8919ae0f05a8983bc99d21",
+ "packageId": "deep-dev-l3-3",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 3 (Willamette Valley)",
+ "version": "de18e65bc6db"
+}

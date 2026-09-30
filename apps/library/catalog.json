@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-30T07:06:09Z",
+  "generatedAt": "2026-09-30T07:06:53Z",
   "assessments": [
     {
       "assessmentId": "acadian-plains-and-hills",
@@ -43,6 +43,29 @@
       "defaultVersion": 2,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "arizona-new-mexico-mountains",
+      "assessmentName": "Arizona/New Mexico Mountains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "23",
+        "name": "Arizona/New Mexico Mountains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:52Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:82ef65e38b0ce93611e0ff9901eaa8d06d8b7add52eaf9665a6a9118a095e03c",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -95,6 +118,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "blue-mountains",
+      "assessmentName": "Blue Mountains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "11",
+        "name": "Blue Mountains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:34Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:2ec853341a60f85ec296bc5d8a0f0dfd60f3d65c86ee2811f59a3f5f70dc13b0",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "blue-ridge",
       "assessmentName": "Blue Ridge reference assessment",
       "region": {
@@ -135,6 +181,52 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:397e2ca5c762906ce6fe27fa3bde50aafd2dfa89e66f34d2a907838257d34f1a",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "canadian-rockies",
+      "assessmentName": "Canadian Rockies reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "41",
+        "name": "Canadian Rockies"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:42Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:7719ed984f8ef2ad6f2371d2c04ed9b694f1442a63356dedef8539f6260b1d33",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "cascades",
+      "assessmentName": "Cascades reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "4",
+        "name": "Cascades"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:29Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:5a4d596751a1e3d7f5d849168a8a2c624ea83c462045cf8a285a437ced67d27a",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -279,6 +371,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "coast-range",
+      "assessmentName": "Coast Range reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "1",
+        "name": "Coast Range"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:32Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:93b11715e3d1b0f98e4e067f7b8bf80cd247c890d90747216de80ba30ef9f7ee",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "cross-timbers",
       "assessmentName": "Cross Timbers reference assessment",
       "region": {
@@ -367,6 +482,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:90bba9709b8a833d0c95e21d59a0b40797f2e736d2f049f535f8148a4350034c",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "eastern-cascades-slopes-and-foothills",
+      "assessmentName": "Eastern Cascades Slopes and Foothills reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "9",
+        "name": "Eastern Cascades Slopes and Foothills"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:27Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:c9589a714fa80105b206cc42102f14cb3b9d278d5c093b89a858261bb6b6a6ea",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -534,6 +672,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "idaho-batholith",
+      "assessmentName": "Idaho Batholith reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "16",
+        "name": "Idaho Batholith"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:45Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:a8de2e1de74d0a7299718a14798911df70102cdd3e381f79a384d96ec068894f",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "interior-plateau",
       "assessmentName": "Interior Plateau reference assessment",
       "region": {
@@ -574,6 +735,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:3ed23f4a8c1793a122a750cf8cb113a90f16ca70f47b09b96cb6984cd1aa6e56",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "klamath-mountains-california-high-north-coast-range",
+      "assessmentName": "Klamath Mountains/California High North Coast Range reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "78",
+        "name": "Klamath Mountains/California High North Coast Range"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:37Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:0956ade172c734babc0e8b6dacdbb5b3b9d978c386e1a59034237ca5b30ebc49",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -643,6 +827,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:479d76c5e211ba08519ef4a041f5b64afc72a7fd16eb1410bfe8b6051ee0e73f",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "middle-rockies",
+      "assessmentName": "Middle Rockies reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "17",
+        "name": "Middle Rockies"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:14Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:339fff1f7ffbb4a19aa8b413de8622374061211fd9b377a482b8137e717f0040",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -758,6 +965,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:42e3b24ac13c2e8355bcc07b3527d336957a041a5b611a31dd7d74b565528b21",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "north-cascades",
+      "assessmentName": "North Cascades reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "77",
+        "name": "North Cascades"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:11Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:1d757ddc17ed4dfc1b32ada21fec34f70173b24616c01d9bc494fd8e9908b9a3",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -971,6 +1201,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "northern-rockies",
+      "assessmentName": "Northern Rockies reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "15",
+        "name": "Northern Rockies"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:16Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:fecfe0278f4c869c64c06f10c3399754bc83c9b40b1774b2db2254d0686711d7",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "northwestern-glaciated-plains",
       "assessmentName": "Northwestern Glaciated Plains reference assessment",
       "region": {
@@ -1086,6 +1339,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "puget-lowland",
+      "assessmentName": "Puget Lowland reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "2",
+        "name": "Puget Lowland"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:47Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:2cd02b48a19d50288dc835356ab09fd696bd1497e8ea93643aa11cb0a0d25ed2",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "ridge-and-valley",
       "assessmentName": "Ridge and Valley reference assessment",
       "region": {
@@ -1126,6 +1402,29 @@
       "defaultVersion": 2,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:91a19a28ca5e6bbbe1f35eefb5a06284a65b006ccddca6f905fe28e79a893f23",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "sierra-nevada",
+      "assessmentName": "Sierra Nevada reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "5",
+        "name": "Sierra Nevada"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:24Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:5213157ece683a99b559d6118a2e8f9a8464d6bda539e56288457793753c5949",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -1201,6 +1500,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "southern-california-mountains",
+      "assessmentName": "Southern California Mountains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "8",
+        "name": "Southern California Mountains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:21Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:7835f7893b911d983d2458bd0793454e4de7070e951803c1b3b7bc1ffa18ec89",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "southern-coastal-plain",
       "assessmentName": "Southern Coastal Plain reference assessment",
       "region": {
@@ -1264,6 +1586,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:ce867283331e82b389853145b2b381e0a6d12e26c4507893a2b10a028235bf43",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "southern-rockies",
+      "assessmentName": "Southern Rockies reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "21",
+        "name": "Southern Rockies"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:19Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:cbd87ee5b27929c7eb7568292ae4ed1c4d62e06eec8db8f124eeb308fb5b0066",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -1362,6 +1707,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "wasatch-and-uinta-mountains",
+      "assessmentName": "Wasatch and Uinta Mountains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "19",
+        "name": "Wasatch and Uinta Mountains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:39Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:cff8e647901ecbc9f56eb0f867bc7037e1e09f79bbf95e894d2f55dbdc28cafb",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "western-allegheny-plateau",
       "assessmentName": "Western Allegheny Plateau reference assessment",
       "region": {
@@ -1448,6 +1816,29 @@
       "defaultVersion": 2,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "willamette-valley",
+      "assessmentName": "Willamette Valley reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "3",
+        "name": "Willamette Valley"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:50Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:240ddb45e155df064882b97c9de783d1375d92d9c2e3780e20f78634617f920c",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 353074,
+  "name": "deep-dev-l3-19-c11c5e20e236-e6dcffa5.evidence.zip",
+  "sha256": "d1e96508c7dcda2e14334305a879ced55cc70f6a2afa4091451af756d0938d60"
+ },
+ "bytes": 3430038,
+ "coverage": {
+  "assessmentId": "wasatch-and-uinta-mountains",
+  "curves": 22,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 27052,
+  "region": {
+   "code": "19",
+   "kind": "ecoregion",
+   "name": "Wasatch and Uinta Mountains"
+  },
+  "stations": 22,
+  "stationsOutOfFrame": 0,
+  "values": 724
+ },
+ "dataDigest": "sha256:a6a24b0ec687c9128aca1743cc6440f74e545c7af665e536689f97e4c8158166",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:e6dcffa5f5eb6b10699e65c8799ac3eb85962bb883d9927140745b9beb509ea0",
+ "packageId": "deep-dev-l3-19",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 19 (Wasatch and Uinta Mountains)",
+ "version": "c11c5e20e236"
+}

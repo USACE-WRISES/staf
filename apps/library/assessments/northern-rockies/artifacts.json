@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "northern-rockies",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:5575e37b2bc71dc0118a8d099bc6b573292f0f43a3c0e054c6cbb04bf9317eec",
+      "bytes": 40234,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:fecfe0278f4c869c64c06f10c3399754bc83c9b40b1774b2db2254d0686711d7",
+      "builtAt": "2026-09-30T07:06:17Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

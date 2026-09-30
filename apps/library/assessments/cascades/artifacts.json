@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "cascades",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:a62de14686d660ce268381d20bbb8b7e087e33930d93286c1311d717e06739b8",
+      "bytes": 39436,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:5a4d596751a1e3d7f5d849168a8a2c624ea83c462045cf8a285a437ced67d27a",
+      "builtAt": "2026-09-30T07:06:30Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

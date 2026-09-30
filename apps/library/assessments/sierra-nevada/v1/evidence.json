@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 511977,
+  "name": "deep-dev-l3-5-7e4ddcdccb20-3ebf11a8.evidence.zip",
+  "sha256": "8885e82cd173f26aea49b304724398137c6bf7445af728e9cd02345731365038"
+ },
+ "bytes": 4926076,
+ "coverage": {
+  "assessmentId": "sierra-nevada",
+  "curves": 17,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 40106,
+  "region": {
+   "code": "5",
+   "kind": "ecoregion",
+   "name": "Sierra Nevada"
+  },
+  "stations": 28,
+  "stationsOutOfFrame": 1,
+  "values": 873
+ },
+ "dataDigest": "sha256:52dbc8821722e4e002fe73e37728fd4dc9dc8fc4b412b995cb59823971745b1d",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:3ebf11a8752d2bfde1823c82fca51bfca718ed7e548cfaa70ebcc5e15c0d58f0",
+ "packageId": "deep-dev-l3-5",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 5 (Sierra Nevada)",
+ "version": "7e4ddcdccb20"
+}

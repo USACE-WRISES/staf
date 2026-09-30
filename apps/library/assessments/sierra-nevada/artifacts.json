@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "sierra-nevada",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:5fe0e2e499e69f09f33fa980bb5f4289cb1e5e5915a6918e8fff384ec68bc71c",
+      "bytes": 43651,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:5213157ece683a99b559d6118a2e8f9a8464d6bda539e56288457793753c5949",
+      "builtAt": "2026-09-30T07:06:25Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "southern-california-mountains",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:42c6637d39a86d9d48945f8fc12df77dadd03f4ba042403b999b0f1d4a54b49e",
+      "bytes": 44954,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:7835f7893b911d983d2458bd0793454e4de7070e951803c1b3b7bc1ffa18ec89",
+      "builtAt": "2026-09-30T07:06:22Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

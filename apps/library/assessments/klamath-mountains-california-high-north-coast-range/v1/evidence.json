@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 257574,
+  "name": "deep-dev-l3-78-53d94c34c12b-3284335e.evidence.zip",
+  "sha256": "ae9e404f24b554fc65515f9458eb80e3c31f3e59a3e5ead9be31adbff8c186af"
+ },
+ "bytes": 2708776,
+ "coverage": {
+  "assessmentId": "klamath-mountains-california-high-north-coast-range",
+  "curves": 27,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 20410,
+  "region": {
+   "code": "78",
+   "kind": "ecoregion",
+   "name": "Klamath Mountains/California High North Coast Range"
+  },
+  "stations": 26,
+  "stationsOutOfFrame": 10,
+  "values": 776
+ },
+ "dataDigest": "sha256:d3db8316d195e96e605a4840dec90895d0095d006222319b86dfd987b2fdf87e",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:3284335e97d2b798fd9fa1416eb95f1fcdd25a24fe36cce488b19fe5c5a033fa",
+ "packageId": "deep-dev-l3-78",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 78 (Klamath Mountains/California High North Coast Range)",
+ "version": "53d94c34c12b"
+}
