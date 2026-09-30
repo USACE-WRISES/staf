@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 724802,
+  "name": "deep-dev-l3-60-10f733c00d11-a87b97ea.evidence.zip",
+  "sha256": "5638923e2de101df172e9be51f0f8e1022564ada00bf4a79076a3fe9811b708f"
+ },
+ "bytes": 7093650,
+ "coverage": {
+  "assessmentId": "northern-allegheny-plateau",
+  "curves": 21,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 60140,
+  "region": {
+   "code": "60",
+   "kind": "ecoregion",
+   "name": "Northern Allegheny Plateau"
+  },
+  "stations": 47,
+  "stationsOutOfFrame": 9,
+  "values": 1450
+ },
+ "dataDigest": "sha256:b0b63403db25f3bdc690798fd1055e6c8cf4083d81da281fa7457b26da907b0b",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:a87b97eaac69186fd43340f88d67deac1604ff9e8ce795fe27196ca236da50fd",
+ "packageId": "deep-dev-l3-60",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 60 (Northern Allegheny Plateau)",
+ "version": "10f733c00d11"
+}

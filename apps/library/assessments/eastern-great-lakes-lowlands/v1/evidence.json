@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 802574,
+  "name": "deep-dev-l3-83-576528c921df-e602605a.evidence.zip",
+  "sha256": "e677ca3608ccbcbdb2067a8e096b54593742593c929d1e94c1bb5fec0277ca9b"
+ },
+ "bytes": 7906994,
+ "coverage": {
+  "assessmentId": "eastern-great-lakes-lowlands",
+  "curves": 20,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 67712,
+  "region": {
+   "code": "83",
+   "kind": "ecoregion",
+   "name": "Eastern Great Lakes Lowlands"
+  },
+  "stations": 44,
+  "stationsOutOfFrame": 14,
+  "values": 1324
+ },
+ "dataDigest": "sha256:18b8c5597a05f69440e97ccb6d9c096c20f8aab596e6cfab61583e91d722c82e",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:e602605ae3a7e3e34b8816bfe076612172d4aa5237c18512624a58b8199b5054",
+ "packageId": "deep-dev-l3-83",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 83 (Eastern Great Lakes Lowlands)",
+ "version": "576528c921df"
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 798887,
+  "name": "deep-dev-l3-61-055fd5d01976-0f9b852b.evidence.zip",
+  "sha256": "d31c67f20cffec383b5c5545e28634b9064f5ef1c62d86245b18f3dd28383a9a"
+ },
+ "bytes": 8133596,
+ "coverage": {
+  "assessmentId": "erie-drift-plain",
+  "curves": 22,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 69508,
+  "region": {
+   "code": "61",
+   "kind": "ecoregion",
+   "name": "Erie Drift Plain"
+  },
+  "stations": 27,
+  "stationsOutOfFrame": 2,
+  "values": 839
+ },
+ "dataDigest": "sha256:887b8f6e52802181944601dc0df9087fa89c1a6bb408f92e7dcefd0cf021f607",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:0f9b852b8dc7da01ef8e3a7d64348b163d330ba2a788db1fb6a591f549c43f39",
+ "packageId": "deep-dev-l3-61",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 61 (Erie Drift Plain)",
+ "version": "055fd5d01976"
+}

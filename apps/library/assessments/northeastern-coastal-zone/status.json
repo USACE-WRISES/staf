@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "northeastern-coastal-zone",
+  "history": [
+    {
+      "version": 1,
+      "status": "preliminary",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "timestamp": "2026-09-30T07:04:29Z",
+      "note": "Published new version."
+    }
+  ]
+}

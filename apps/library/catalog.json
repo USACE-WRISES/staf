@@ -1,7 +1,30 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-30T07:04:26Z",
+  "generatedAt": "2026-09-30T07:04:42Z",
   "assessments": [
+    {
+      "assessmentId": "acadian-plains-and-hills",
+      "assessmentName": "Acadian Plains and Hills reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "82",
+        "name": "Acadian Plains and Hills"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:39Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:c3e8edf06ed458480ab2ea0387e6a2e90ccceee15e8809591dbf7d1fe58f75ae",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
     {
       "assessmentId": "ak-sqt-adapted",
       "assessmentName": "AK SQT Adapted",
@@ -189,6 +212,52 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "eastern-great-lakes-lowlands",
+      "assessmentName": "Eastern Great Lakes Lowlands reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "83",
+        "name": "Eastern Great Lakes Lowlands"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:32Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:12db39cbdd89986caa0fd435228a56c068a50ea0cab2a4df3881bb3db1d608ae",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "erie-drift-plain",
+      "assessmentName": "Erie Drift Plain reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "61",
+        "name": "Erie Drift Plain"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:42Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:657f4325208401fe972d8ff9a33445e34184e9c63b485e421563b0385b0f5546",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "interior-plateau",
       "assessmentName": "Interior Plateau reference assessment",
       "region": {
@@ -350,6 +419,52 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "north-central-appalachians",
+      "assessmentName": "North Central Appalachians reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "62",
+        "name": "North Central Appalachians"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:37Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:4b78e8a7e1dd9ab8d95886e4543651a204b2641b3dbf7905b314b0638b63fae3",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "northeastern-coastal-zone",
+      "assessmentName": "Northeastern Coastal Zone reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "59",
+        "name": "Northeastern Coastal Zone"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:29Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:c896d50a5c3e71f8877c9d0c06a7b77032900ce3d20235f2793d58ac8eef3c7f",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "northeastern-highlands",
       "assessmentName": "Northeastern Highlands reference assessment",
       "region": {
@@ -367,6 +482,29 @@
       "defaultVersion": 9,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:4902d33d13042a2aff1c22bf8ac22e615dcb53ce02507641cf290e61d23ce593",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "northern-allegheny-plateau",
+      "assessmentName": "Northern Allegheny Plateau reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "60",
+        "name": "Northern Allegheny Plateau"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:34Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:5df6c9488a79114c6215e178da1af460c45eba625faa2e7d1c747147d9752e59",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",

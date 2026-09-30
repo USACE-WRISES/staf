@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 272812,
+  "name": "deep-dev-l3-62-1ca07179a300-ffb3cc9f.evidence.zip",
+  "sha256": "afa0dabbf6a86c8e742fbba0952305ccf70a6c59368517abeec6cc33c3abfbe3"
+ },
+ "bytes": 2642003,
+ "coverage": {
+  "assessmentId": "north-central-appalachians",
+  "curves": 23,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 19563,
+  "region": {
+   "code": "62",
+   "kind": "ecoregion",
+   "name": "North Central Appalachians"
+  },
+  "stations": 31,
+  "stationsOutOfFrame": 9,
+  "values": 1006
+ },
+ "dataDigest": "sha256:90f4622c53bf055aa416e0dd5caf75df6ff38ee5b01b6c462dfa77004231243f",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:ffb3cc9f88b141ee0b95fa8582b47fda48e062303248f2cf33be2dc6a2ef9676",
+ "packageId": "deep-dev-l3-62",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 62 (North Central Appalachians)",
+ "version": "1ca07179a300"
+}

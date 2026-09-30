@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "northeastern-coastal-zone",
+  "assessmentName": "Northeastern Coastal Zone reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "59",
+    "name": "Northeastern Coastal Zone"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 59), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:04:29Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 5 of 106 stations of this ecoregion pass. 0 reference curves use local stations, 19 borrow from a wider region, 5 metrics use fixed criteria, and 1 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:c896d50a5c3e71f8877c9d0c06a7b77032900ce3d20235f2793d58ac8eef3c7f",
+      "supersedesVersion": null
+    }
+  ]
+}
