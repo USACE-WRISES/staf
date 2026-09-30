@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 198444,
+  "name": "deep-dev-l3-81-147f9cceb48d-5e1031d9.evidence.zip",
+  "sha256": "ff5f52e9e88459f2d7f42e2037a1f91f8aa879624007240e8beb0931f2650163"
+ },
+ "bytes": 2099960,
+ "coverage": {
+  "assessmentId": "sonoran-basin-and-range",
+  "curves": 20,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 14517,
+  "region": {
+   "code": "81",
+   "kind": "ecoregion",
+   "name": "Sonoran Basin and Range"
+  },
+  "stations": 5,
+  "stationsOutOfFrame": 15,
+  "values": 160
+ },
+ "dataDigest": "sha256:f29907935ec025c46ed34ca27f8e24fb05c6a9b423cc0340cc0ceb881aedba3b",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:5e1031d99b1e0edfa4b270a6b5a9bb976908067a561ff081be3a4adab240084f",
+ "packageId": "deep-dev-l3-81",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 81 (Sonoran Basin and Range)",
+ "version": "147f9cceb48d"
+}

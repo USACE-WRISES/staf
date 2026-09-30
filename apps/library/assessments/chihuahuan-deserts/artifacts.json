@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "chihuahuan-deserts",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:be553fba2189f4989b841d5d5860ba4694d164e5c7765ccd29208aa5a8b5a731",
+      "bytes": 42574,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:9e917fb454ed3df7f93e83eb09b4518bd7342bf61a2fdca64676e86e63da426b",
+      "builtAt": "2026-09-30T07:07:19Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

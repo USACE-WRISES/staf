@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "arizona-new-mexico-plateau",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:55ac7020ba047f3ce8a47c2483809f6e7b4d9f349a7313f91bde86345c46a43f",
+      "bytes": 42603,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:00079a58968ceaa2562f116890f1d0fa22eb94616ce75aaa52ca59a127a4cd88",
+      "builtAt": "2026-09-30T07:07:17Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

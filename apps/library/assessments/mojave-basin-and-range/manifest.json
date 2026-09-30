@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "mojave-basin-and-range",
+  "assessmentName": "Mojave Basin and Range reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "14",
+    "name": "Mojave Basin and Range"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 14), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:07:01Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 0 of 3 stations of this ecoregion pass. 0 reference curves use local stations, 20 borrow from a wider region, 5 metrics use fixed criteria, and 7 metrics are withheld for insufficient reference support.  No station of this ecoregion passes the reference screen, so every reference curve here borrows its reference stations from a parent ecoregion.",
+      "contentDigest": "sha256:a2f609ab57cacc1f979cf660bf059a767f48deeb868039177847e2e98c537d55",
+      "supersedesVersion": null
+    }
+  ]
+}

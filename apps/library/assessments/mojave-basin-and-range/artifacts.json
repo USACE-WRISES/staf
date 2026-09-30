@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "mojave-basin-and-range",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:f3effbac7ff6e7da49b3626e6035a2630315cc4bb64bc9fb7ca7ec7123927a2c",
+      "bytes": 43176,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:a2f609ab57cacc1f979cf660bf059a767f48deeb868039177847e2e98c537d55",
+      "builtAt": "2026-09-30T07:07:02Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

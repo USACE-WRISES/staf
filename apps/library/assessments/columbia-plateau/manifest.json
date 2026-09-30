@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "columbia-plateau",
+  "assessmentName": "Columbia Plateau reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "10",
+    "name": "Columbia Plateau"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 10), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:07:14Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 10 of 21 stations of this ecoregion pass. 7 reference curves use local stations, 13 borrow from a wider region, 5 metrics use fixed criteria, and 4 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:de9c4339da83ede757cc7c4e1d0fcb290220c703402a5b49d55652ed21413b42",
+      "supersedesVersion": null
+    }
+  ]
+}

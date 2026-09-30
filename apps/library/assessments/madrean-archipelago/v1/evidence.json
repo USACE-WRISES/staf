@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 145357,
+  "name": "deep-dev-l3-79-c10d8347ec16-d711ef13.evidence.zip",
+  "sha256": "d6120a670806b8a5b5d1bc3e87f489f7f600151b570e975b160de705b40e2b7c"
+ },
+ "bytes": 1484652,
+ "coverage": {
+  "assessmentId": "madrean-archipelago",
+  "curves": 19,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 8448,
+  "region": {
+   "code": "79",
+   "kind": "ecoregion",
+   "name": "Madrean Archipelago"
+  },
+  "stations": 4,
+  "stationsOutOfFrame": 0,
+  "values": 124
+ },
+ "dataDigest": "sha256:9f752462ac2e7e4158e2b41e5ffcd641aeee994a43922bc3549f540d4060ad62",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:d711ef1351f4b2756805db7fdf05d8e673c3c483d631bd9658f6154f42822688",
+ "packageId": "deep-dev-l3-79",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 79 (Madrean Archipelago)",
+ "version": "c10d8347ec16"
+}

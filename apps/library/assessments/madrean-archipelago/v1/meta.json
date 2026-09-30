@@ -1,0 +1,19 @@
+{
+  "assessmentId": "madrean-archipelago",
+  "assessmentName": "Madrean Archipelago reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:07:06Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 2 of 4 stations of this ecoregion pass. 0 reference curves use local stations, 19 borrow from a wider region, 5 metrics use fixed criteria, and 7 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "79",
+    "name": "Madrean Archipelago"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 79), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:f738d6007f5794d91d26bf56f86265a511249180aa054ff9fa2b411c2735f0f7",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

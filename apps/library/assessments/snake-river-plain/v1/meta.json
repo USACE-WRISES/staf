@@ -1,0 +1,19 @@
+{
+  "assessmentId": "snake-river-plain",
+  "assessmentName": "Snake River Plain reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:07:11Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 2 of 10 stations of this ecoregion pass. 0 reference curves use local stations, 22 borrow from a wider region, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "12",
+    "name": "Snake River Plain"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 12), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:507919d17c919c6c2c5e298aed3e207a0e5105d4e38654b055fd606ac8a86ad5",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

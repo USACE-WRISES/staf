@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "arizona-new-mexico-plateau",
+  "assessmentName": "Arizona/New Mexico Plateau reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "22",
+    "name": "Arizona/New Mexico Plateau"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 22), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:07:16Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 4 of 12 stations of this ecoregion pass. 0 reference curves use local stations, 19 borrow from a wider region, 5 metrics use fixed criteria, and 5 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:00079a58968ceaa2562f116890f1d0fa22eb94616ce75aaa52ca59a127a4cd88",
+      "supersedesVersion": null
+    }
+  ]
+}

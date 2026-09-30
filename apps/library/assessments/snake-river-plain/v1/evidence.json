@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 224922,
+  "name": "deep-dev-l3-12-6266966bb708-f7ee4b22.evidence.zip",
+  "sha256": "0f982fda5b6e831fa5de2714de67b1d832fcedc4916a52b9f768ef1a8ad424f7"
+ },
+ "bytes": 2443329,
+ "coverage": {
+  "assessmentId": "snake-river-plain",
+  "curves": 22,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 17493,
+  "region": {
+   "code": "12",
+   "kind": "ecoregion",
+   "name": "Snake River Plain"
+  },
+  "stations": 10,
+  "stationsOutOfFrame": 11,
+  "values": 295
+ },
+ "dataDigest": "sha256:8fcb3085b90bc3bfd8fe25b2627b163e119e7b43fb11f242be048c15c769904a",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:f7ee4b22df442c8018b7aed10dd84824cb0ec9a66739e1ed6f2c92e080da54e6",
+ "packageId": "deep-dev-l3-12",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 12 (Snake River Plain)",
+ "version": "6266966bb708"
+}

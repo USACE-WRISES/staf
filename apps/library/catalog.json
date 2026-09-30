@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-30T07:06:53Z",
+  "generatedAt": "2026-09-30T07:07:27Z",
   "assessments": [
     {
       "assessmentId": "acadian-plains-and-hills",
@@ -66,6 +66,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:82ef65e38b0ce93611e0ff9901eaa8d06d8b7add52eaf9665a6a9118a095e03c",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "arizona-new-mexico-plateau",
+      "assessmentName": "Arizona/New Mexico Plateau reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "22",
+        "name": "Arizona/New Mexico Plateau"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:07:16Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:00079a58968ceaa2562f116890f1d0fa22eb94616ce75aaa52ca59a127a4cd88",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -279,6 +302,52 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "central-california-foothills-and-coastal-mountains",
+      "assessmentName": "Central California Foothills and Coastal Mountains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "6",
+        "name": "Central California Foothills and Coastal Mountains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:07:24Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:2ec24dcbc9840b9ecdc5528d501d1e0c431e76a4e1900c6f02110240e2f18f11",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "central-california-valley",
+      "assessmentName": "Central California Valley reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "7",
+        "name": "Central California Valley"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:07:26Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:95741053578fdd4bd4b7444ada7d74ccfd82fc54fe6d9c04f4bd7cfefb926aa5",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "central-corn-belt-plains",
       "assessmentName": "Central Corn Belt Plains reference assessment",
       "region": {
@@ -348,6 +417,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "chihuahuan-deserts",
+      "assessmentName": "Chihuahuan Deserts reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "24",
+        "name": "Chihuahuan Deserts"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:07:19Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:9e917fb454ed3df7f93e83eb09b4518bd7342bf61a2fdca64676e86e63da426b",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "co-sqt-adapted",
       "assessmentName": "CO SQT Adapted",
       "region": {
@@ -388,6 +480,52 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:93b11715e3d1b0f98e4e067f7b8bf80cd247c890d90747216de80ba30ef9f7ee",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "colorado-plateaus",
+      "assessmentName": "Colorado Plateaus reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "20",
+        "name": "Colorado Plateaus"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:07:21Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:07eb4455d1599dccc180a7c20fb08aa3b4a5cd03a65c24883eeb71ce3134aef1",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "columbia-plateau",
+      "assessmentName": "Columbia Plateau reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "10",
+        "name": "Columbia Plateau"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:07:14Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:de9c4339da83ede757cc7c4e1d0fcb290220c703402a5b49d55652ed21413b42",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -787,6 +925,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "madrean-archipelago",
+      "assessmentName": "Madrean Archipelago reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "79",
+        "name": "Madrean Archipelago"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:07:06Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:f738d6007f5794d91d26bf56f86265a511249180aa054ff9fa2b411c2735f0f7",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "mi-sqt-adapted",
       "assessmentName": "MI SQT Adapted",
       "region": {
@@ -919,6 +1080,29 @@
       "defaultVersion": 2,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "mojave-basin-and-range",
+      "assessmentName": "Mojave Basin and Range reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "14",
+        "name": "Mojave Basin and Range"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:07:01Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:a2f609ab57cacc1f979cf660bf059a767f48deeb868039177847e2e98c537d55",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -1103,6 +1287,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:5df6c9488a79114c6215e178da1af460c45eba625faa2e7d1c747147d9752e59",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "northern-basin-and-range",
+      "assessmentName": "Northern Basin and Range reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "80",
+        "name": "Northern Basin and Range"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:56Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:5387b5f5ed77e5fe3ef14c2de352f0f32c6a1b0f7d9d26c4939687a59529d4fd",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -1431,6 +1638,52 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "snake-river-plain",
+      "assessmentName": "Snake River Plain reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "12",
+        "name": "Snake River Plain"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:07:11Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:507919d17c919c6c2c5e298aed3e207a0e5105d4e38654b055fd606ac8a86ad5",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "sonoran-basin-and-range",
+      "assessmentName": "Sonoran Basin and Range reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "81",
+        "name": "Sonoran Basin and Range"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:59Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:1cb320e5cd5a1be90a9432c7aa302dd5b7b88ebf1c106885c9fa8848ffb6015b",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "south-central-plains",
       "assessmentName": "South Central Plains reference assessment",
       "region": {
@@ -1517,6 +1770,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:7835f7893b911d983d2458bd0793454e4de7070e951803c1b3b7bc1ffa18ec89",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "southern-california-northern-baja-coast",
+      "assessmentName": "Southern California/Northern Baja Coast reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "85",
+        "name": "Southern California/Northern Baja Coast"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:07:04Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:9495d1086469a49d1ba727bb0e48248603b22cad0da72033e7ddebf1cbeee925",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -1862,6 +2138,29 @@
       "defaultVersion": 2,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "wyoming-basin",
+      "assessmentName": "Wyoming Basin reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "18",
+        "name": "Wyoming Basin"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:07:09Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:0273b0d6091ed8fa689f0ed1646df9de86d7e8be8ffbde8cbaa91de12393d280",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",

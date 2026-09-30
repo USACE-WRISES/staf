@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "colorado-plateaus",
+  "assessmentName": "Colorado Plateaus reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "20",
+    "name": "Colorado Plateaus"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 20), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:07:21Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 6 of 28 stations of this ecoregion pass. 0 reference curves use local stations, 13 borrow from a wider region, 5 metrics use fixed criteria, and 7 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:07eb4455d1599dccc180a7c20fb08aa3b4a5cd03a65c24883eeb71ce3134aef1",
+      "supersedesVersion": null
+    }
+  ]
+}

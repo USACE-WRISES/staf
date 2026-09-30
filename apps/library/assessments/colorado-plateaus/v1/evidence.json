@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 269608,
+  "name": "deep-dev-l3-20-ec3a722a8dcc-366c8fbb.evidence.zip",
+  "sha256": "021185334951cd7cb2049a2d8718c9fee6ca7ef3ba1d4491ec3460f1a313ad7b"
+ },
+ "bytes": 2837404,
+ "coverage": {
+  "assessmentId": "colorado-plateaus",
+  "curves": 13,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 21357,
+  "region": {
+   "code": "20",
+   "kind": "ecoregion",
+   "name": "Colorado Plateaus"
+  },
+  "stations": 28,
+  "stationsOutOfFrame": 27,
+  "values": 861
+ },
+ "dataDigest": "sha256:29cc3bf6c77c3e5b06a2fc3ded1a60a2f42500a3310120f6c1100cd5ca5e3126",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:366c8fbbe00a1f19f7aecceb83ed6a97b10cd589dfb85a6e9c0de8d479902909",
+ "packageId": "deep-dev-l3-20",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 20 (Colorado Plateaus)",
+ "version": "ec3a722a8dcc"
+}
