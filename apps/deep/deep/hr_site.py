@@ -17,7 +17,11 @@ from typing import Optional
 
 from . import engine_prefill
 
-HR_PROBE_HALF_DEG = 0.012
+# The pick reads the map tiles under a box this wide around the click. A snap
+# counts only within 150 ft, and 0.002 degrees is at least 146 m (480 ft) in
+# CONUS, so the box holds every line that can snap while usually touching one
+# tile (2026-09-30: with the service slow, a pick waited on up to four).
+HR_PROBE_HALF_DEG = 0.002
 
 
 def _engine():

@@ -79,9 +79,11 @@ def test_the_process_default_is_patient_and_unknown_policies_refuse():
 
 
 def test_display_policy_one_attempt_after_a_timeout(monkeypatch):
+    # A tile may take a minute in the background (the view waits 30 s): the
+    # recovering service answered in 40 to 100 s on 2026-09-30.
     calls = _script_get(monkeypatch, lambda p, t: requests.exceptions.ReadTimeout("slow"))
     assert hr._query("u", {"where": "1=1"}, timeout=99.0, policy="display") is None
-    assert [c[1] for c in calls] == [hr._DISPLAY_TIMEOUT_S]
+    assert [c[1] for c in calls] == [hr._TILE_TIMEOUT_S] == [60.0]
 
 
 def test_display_policy_retries_a_quick_failure_once(monkeypatch):
@@ -91,10 +93,14 @@ def test_display_policy_retries_a_quick_failure_once(monkeypatch):
     assert len(calls) == 2
 
 
-def test_pick_policy_two_attempts_of_fifteen_seconds(monkeypatch):
+def test_pick_policy_one_long_attempt_and_a_quick_failure_retried(monkeypatch):
     calls = _script_get(monkeypatch, lambda p, t: requests.exceptions.ReadTimeout("slow"))
     assert hr._query("u", {"where": "1=1"}, timeout=99.0, policy="pick") is None
-    assert [c[1] for c in calls] == [15.0, 15.0]
+    assert [c[1] for c in calls] == [hr._PICK_TIMEOUT_S] == [45.0]
+    answers = [_Resp(502), _Resp(200, _fc())]
+    calls = _script_get(monkeypatch, lambda p, t: answers.pop(0))
+    assert hr._query("u", {"where": "1=1"}, timeout=99.0, policy="pick") == _fc()
+    assert len(calls) == 2
 
 
 def test_interactive_caps_the_timeout_and_pauses_between_attempts(monkeypatch):
@@ -345,7 +351,7 @@ def test_snap_records_are_the_lines_in_the_probe_box(monkeypatch):
 def test_snap_records_fail_when_a_tile_does_not_answer(monkeypatch):
     calls = _script_get(monkeypatch, lambda p, t: requests.exceptions.ReadTimeout("slow"))
     assert hr.snap_records(40.025, -83.025) == ("failed", [])
-    assert {c[1] for c in calls} == {15.0}          # the pick policy
+    assert [c[1] for c in calls] == [hr._PICK_TIMEOUT_S]   # the pick policy, one attempt
 
 
 def test_a_pick_on_drawn_tiles_sends_nothing(monkeypatch):
@@ -426,3 +432,37 @@ def test_the_catchment_stage_reports_its_batches(monkeypatch):
     out = delineate.delineate_watershed(anchor, progress=events.append)
     assert out["status"] == "ok"
     assert [(e.get("batch"), e.get("batches")) for e in events if e.get("batch")] == [(1, 2), (2, 2)]
+
+
+def test_a_pick_joins_the_tile_the_map_is_fetching(monkeypatch):
+    gate = threading.Event()
+
+    def answer(p, t):
+        gate.wait(5)
+        return _Resp(200, _fc(_line(1, -83.026, 40.02, -83.024, 40.03)))
+    calls = _script_get(monkeypatch, answer)
+    assert hr.flowlines_in_tiles(-83.04, 40.01, -83.01, 40.04, wait_s=0.05)[0] == "failed"
+    # the map's fetch of the tile is still running: the pick waits on it, never a second request
+    assert hr.snap_records(40.025, -83.025, wait_s=0.05) == ("failed", [])
+    assert len(calls) == 1
+    gate.set()
+    job = next(iter(hr._tile_jobs.values()), None)
+    if job is not None:
+        job.result(timeout=5)
+    status, recs = hr.snap_records(40.025, -83.025)
+    assert status == "ok" and [r["nhdplusid"] for r in recs] == [1] and len(calls) == 1
+
+
+def test_a_tile_asks_spatially_and_keeps_network_lines_only(monkeypatch):
+    seen = []
+
+    def answer(p, t):
+        seen.append(p.get("where"))
+        return _Resp(200, _fc(_line(1, -83.065, 40.015, -83.064, 40.016),
+                              _line(2, -83.066, 40.015, -83.065, 40.016, innetwork=0)))
+    _script_get(monkeypatch, answer)
+    status, recs, _missing = hr.flowlines_in_tiles(-83.07, 40.01, -83.06, 40.02)
+    assert status == "ok" and [r["nhdplusid"] for r in recs] == [1]
+    assert seen == ["1=1"]
+    # the engine's own anchoring keeps its exact query and filter
+    assert hr._bbox_params(0, 0, 1, 1)["where"] == "innetwork=1"

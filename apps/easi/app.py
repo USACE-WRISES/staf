@@ -286,6 +286,10 @@ USGS_HYDRO_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSHydro
 USGS_ATTR = "USGS The National Map"
 FLOW_ZOOM = 14          # NHD vectors appear at/above this zoom
 SNAP_TOL_FT = 150.0     # click must land within this distance of a flowline
+# The HR lines for a pick come from the map tiles under a box this wide around
+# the click: at least 146 m (480 ft) in CONUS, so every line that can snap is in
+# it, and it usually touches one tile (the V2 probe stays 0.012 degrees).
+HR_PICK_HALF_DEG = 0.002
 _MISS_TEXT = (f"No stream line within {int(SNAP_TOL_FT)} ft of the click. "
               "Zoom in and click a line.")
 _STREAMS_DOWN_TEXT = ("The USGS stream service did not answer. "
@@ -2158,7 +2162,7 @@ def server(input, output, session):
             # The HR lines under the click come from the map's tiles (kept on
             # disk), else those tiles are asked for under the engine's pick
             # policy (about 30 s).
-            hr_status, hr_fc = nhd_hr.hr_snap_status(lat, lon, d)
+            hr_status, hr_fc = nhd_hr.hr_snap_status(lat, lon, HR_PICK_HALF_DEG)
             hr_hit = nhd_hr.nearest_point_on_hr_lines(hr_fc, lat, lon)
             return {"hit": hit, "hrHit": hr_hit, "lat": lat, "lon": lon,
                     "hrAvailable": hr_status != "failed", "hrStatus": hr_status,

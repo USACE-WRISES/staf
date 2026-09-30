@@ -88,7 +88,7 @@ def _scope(*, v2_fc=V2_FC, hr_fc=HR_FC, v2_hit=V2, hr_hit=HR, pending=None):
 
     namespace = {
         "math": math, "isfinite": math.isfinite, "routing": routing,
-        "SNAP_TOL_FT": 150.0, "_map_pick": {"generation": 5},
+        "SNAP_TOL_FT": 150.0, "HR_PICK_HALF_DEG": 0.002, "_map_pick": {"generation": 5},
         "snapped_point": state.point, "pending_anchor": state.pending,
         "scored_reach": state.scored, "source_lookup": state.lookup, "stage": state.stage,
         "_layers": state.layers, "_MAP": state.map, "_add_layer": add_layer,
@@ -209,7 +209,7 @@ def test_worker_fetches_both_networks_even_when_v2_hit_succeeds():
     state, scope = _scope()
     result = _function("easi", "_snap_both", scope)(*CLICK)
     assert {item[0] for item in state.fetches} == {"v2", "hr"}
-    assert state.hr_kwargs == [{"probe": 0.012}]         # the tiles under the probe box
+    assert state.hr_kwargs == [{"probe": 0.002}]         # the tiles under the pick box
     assert {key: result[key] for key in ("hit", "hitFeature", "hrHit", "lat", "lon")} == {
         "hit": V2, "hitFeature": FEATURE, "hrHit": HR, "lat": CLICK[0], "lon": CLICK[1]}
 

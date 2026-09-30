@@ -89,10 +89,17 @@ _FAST_FAIL_S = 5.0
 _MAX_IN_FLIGHT = 6
 # The map's tiles: a global grid of TILE_DEG squares; a tile over the record
 # cap is answered by its quarters, down to _TILE_MIN_DEG. A view waits at most
-# _TILE_WAIT_S for its tiles (the rest finish into the cache).
+# _TILE_WAIT_S for its tiles, but a tile's request may take _TILE_TIMEOUT_S:
+# a slow answer finishes in the background into the cache, and the app's next
+# retry finds it (2026-09-30: the recovering service answered in 40 to 100 s,
+# so a 20 s tile never arrived). A pick waits at most _PICK_WAIT_S for the
+# tiles under it, joining a tile the map is already fetching.
 TILE_DEG = 0.05
 _TILE_MIN_DEG = 0.0125
 _TILE_WAIT_S = 30.0
+_TILE_TIMEOUT_S = 60.0
+_PICK_TIMEOUT_S = 45.0
+_PICK_WAIT_S = 50.0
 _TILE_WORKERS = 4
 _TILE_MEMO_MAX = 512
 
@@ -126,12 +133,15 @@ POLICIES = {
     # The app's own work: engine delineations, routing, reach derivation.
     "interactive": Policy("interactive", attempts=2, cap_s=60.0, backoff_s=(2.0, 5.0),
                           split=True, deadline_s=480.0),
-    # One map tile: one 20 s attempt, a quick failure retried once. The
-    # app's own capped retries ask for missing tiles again later.
-    "display": Policy("display", attempts=2, timeout_s=_DISPLAY_TIMEOUT_S,
+    # One map tile: one attempt of up to a minute in the background (the view
+    # waits 30 s), a quick failure retried once. The app's own capped retries
+    # ask for missing tiles again later.
+    "display": Policy("display", attempts=2, timeout_s=_TILE_TIMEOUT_S,
                       backoff_s=(0.5,), retry_slow=False),
-    # A pick's probe tiles: about a 30 s budget.
-    "pick": Policy("pick", attempts=2, timeout_s=15.0, backoff_s=(2.0,)),
+    # A pick's probe tile when the map is not already fetching it: one
+    # attempt of up to 45 s, a quick failure retried once.
+    "pick": Policy("pick", attempts=2, timeout_s=_PICK_TIMEOUT_S, backoff_s=(2.0,),
+                   retry_slow=False),
 }
 _active = {"name": "patient"}
 _local = threading.local()
@@ -395,18 +405,31 @@ def _round_bbox(west, south, east, north, ndigits=3):
             round(east, ndigits), round(north, ndigits))
 
 
-def _bbox_params(west: float, south: float, east: float, north: float) -> dict:
+def _bbox_params(west: float, south: float, east: float, north: float,
+                 where: str = "innetwork=1") -> dict:
     """The network flowlines in an envelope, every attribute, full geometry."""
     return {"geometry": f"{west},{south},{east},{north}",
             "geometryType": "esriGeometryEnvelope", "inSR": "4326",
-            "spatialRel": "esriSpatialRelIntersects", "where": "innetwork=1",
+            "spatialRel": "esriSpatialRelIntersects", "where": where,
             "outFields": ",".join(_ATTR_FIELDS), "returnGeometry": "true",
             "outSR": "4326", "f": "geojson"}
 
 
-def _parse_records(data: dict) -> tuple:
-    recs = [parse_feature(f) for f in data.get("features") or []]
+def _parse_records(data: dict, *, network_only: bool = False) -> tuple:
+    """Parsed records with geometry; ``network_only`` keeps ``innetwork == 1``
+    (the tiles apply the filter here instead of in the query)."""
+    feats = data.get("features") or []
+    if network_only:
+        feats = [f for f in feats if _innetwork(f)]
+    recs = [parse_feature(f) for f in feats]
     return tuple(r for r in recs if r and r.get("geometry"))
+
+
+def _innetwork(feature: dict) -> bool:
+    try:
+        return int(float((feature.get("properties") or {}).get("innetwork"))) == 1
+    except (TypeError, ValueError):
+        return False
 
 
 @functools.lru_cache(maxsize=32)
@@ -521,12 +544,15 @@ def _tile_answer(tile: tuple, policy="display", offline: bool = False) -> tuple[
     hit = _remembered(tile)
     if hit is not None:
         return hit
-    data = _query(FLOWLINE_QUERY_URL, _bbox_params(*tile_bbox(tile)),
-                  timeout=_DISPLAY_TIMEOUT_S, policy=policy, offline=offline)
+    # A spatial-only query (as PyNHD asks), with innetwork applied to the answer:
+    # the layer holds network lines only, and on 2026-09-30 the same tile with the
+    # attribute filter drew 504s the spatial query did not.
+    data = _query(FLOWLINE_QUERY_URL, _bbox_params(*tile_bbox(tile), where="1=1"),
+                  timeout=_TILE_TIMEOUT_S, policy=policy, offline=offline)
     if data is None:
         raise _Unanswered
     if not _exceeded(data):
-        recs = _parse_records(data)
+        recs = _parse_records(data, network_only=True)
         answer = ("ok", recs) if recs else ("empty", ())
     elif _tile_size(tile[0] + 1) < _TILE_MIN_DEG - 1e-12:
         answer = ("truncated", ())
@@ -636,13 +662,17 @@ def records_in_box(records: Iterable[dict], west: float, south: float, east: flo
 
 
 def snap_records(lat: float, lon: float, half_deg: float = 0.012, *, policy="pick",
-                 offline: bool = False) -> tuple[str, list[dict]]:
+                 offline: bool = False, wait_s: float = _PICK_WAIT_S
+                 ) -> tuple[str, list[dict]]:
     """``(status, records)`` for a pick: the flowlines intersecting the probe
-    box around the point, read from the map's tiles under it (remembered,
-    stored, else fetched under ``policy``). The same lines the probe box's
-    own query returns. Status: ``ok``, ``empty``, ``truncated`` or ``failed``
-    (a tile did not answer). The engine's own anchoring keeps its exact
-    envelope query (``flowlines_in_bbox``)."""
+    box around the point, read from the map's tiles under it: remembered,
+    stored, joined when the map is already fetching the tile, else fetched
+    under ``policy``. The same lines the probe box's own query returns.
+    Waits at most ``wait_s``; a tile still running then counts as unanswered
+    and finishes into the cache, so the next pick there is immediate. Status:
+    ``ok``, ``empty``, ``truncated`` or ``failed`` (a tile did not answer).
+    The engine's own anchoring keeps its exact envelope query
+    (``flowlines_in_bbox``)."""
     west, south, east, north = lon - half_deg, lat - half_deg, lon + half_deg, lat + half_deg
     tiles = tiles_over(west, south, east, north)
     answers: dict = {}
@@ -653,13 +683,20 @@ def snap_records(lat: float, lon: float, half_deg: float = 0.012, *, policy="pic
             answers[tile] = hit
         else:
             todo.append(tile)
-    if todo:
-        with futures.ThreadPoolExecutor(max_workers=min(4, len(todo))) as pool:
-            jobs = {t: pool.submit(_tile_answer, t, policy, offline) for t in todo}
-            for tile, job in jobs.items():
+    if todo and offline:
+        for tile in todo:
+            try:
+                answers[tile] = _tile_answer(tile, policy, offline=True)
+            except _Unanswered:
+                pass
+    elif todo:
+        jobs = {t: _tile_job(t, policy) for t in todo}
+        done, _running = futures.wait(list(jobs.values()), timeout=wait_s)
+        for tile, job in jobs.items():
+            if job in done:
                 try:
                     answers[tile] = job.result()
-                except Exception:  # noqa: BLE001
+                except Exception:  # noqa: BLE001 - _Unanswered or worse: no answer
                     pass
     if len(answers) < len(tiles):
         return "failed", []
