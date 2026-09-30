@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 288655,
+  "name": "deep-dev-l3-43-051df192dd9d-078fa3d3.evidence.zip",
+  "sha256": "2a7caa33ca20979759220d201480e3f2d02b591c7645a54597a48e6bf015125d"
+ },
+ "bytes": 2674130,
+ "coverage": {
+  "assessmentId": "northwestern-great-plains",
+  "curves": 29,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 18618,
+  "region": {
+   "code": "43",
+   "kind": "ecoregion",
+   "name": "Northwestern Great Plains"
+  },
+  "stations": 159,
+  "stationsOutOfFrame": 94,
+  "values": 5037
+ },
+ "dataDigest": "sha256:2ab16f11f5ca943a9b75c29c97c917bd01908de0fa4c50dea90246c7d2417c3f",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:078fa3d3790ad7305b8b2c0eefc57bb948940c64c488ad45eea8c5eb802ff388",
+ "packageId": "deep-dev-l3-43",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 43 (Northwestern Great Plains)",
+ "version": "051df192dd9d"
+}

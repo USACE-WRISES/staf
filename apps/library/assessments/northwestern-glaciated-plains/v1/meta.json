@@ -1,0 +1,19 @@
+{
+  "assessmentId": "northwestern-glaciated-plains",
+  "assessmentName": "Northwestern Glaciated Plains reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:04:47Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 5 of 51 stations of this ecoregion pass. 0 reference curves use local stations, 17 borrow from a wider region, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "42",
+    "name": "Northwestern Glaciated Plains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 42), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:e8b385250dbbd57d44d3747e0997c5e5e927792fb203cd67bb912ae2c0fbb387",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

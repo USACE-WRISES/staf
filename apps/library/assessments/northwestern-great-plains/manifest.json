@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "northwestern-great-plains",
+  "assessmentName": "Northwestern Great Plains reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "43",
+    "name": "Northwestern Great Plains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 43), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:04:45Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 25 of 159 stations of this ecoregion pass. 17 reference curves use local stations, 5 borrow from a wider region, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:2ee7911c0fe28c2bbedb454948482840707ed71438e2a395efd4bd899b6f1d2d",
+      "supersedesVersion": null
+    }
+  ]
+}
