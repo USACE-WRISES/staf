@@ -315,6 +315,11 @@ def _score_in_easi(easi_app: pathlib.Path, env_extra: dict) -> dict:
               "print(json.dumps(out, sort_keys=True, default=str))")
     env = {k: v for k, v in os.environ.items()
            if k not in ("EASI_DATA_DIR", "EASI_METHOD_PACKAGE", "EASI_CRITERIA_SET")}
+    # The adopted library version (D20) stays out of the way: each run scores with exactly
+    # the method named here (EASI's own suite sets the same switch). Once EASI loads v2
+    # from the library release it sets EASI_METHOD_PACKAGE, which EASI refuses beside
+    # EASI_DATA_DIR.
+    env["EASI_ADOPTED_METHOD"] = "0"
     env.update(env_extra)
     proc = subprocess.run([sys.executable, "-B", "-c", script], cwd=easi_app, env=env,
                           capture_output=True, text=True, timeout=1800)
