@@ -66,11 +66,19 @@ class _Group:
 
 
 def _column(table, name, default):
-    """A numpy view of ``name`` with nulls filled, or ``None`` when absent."""
+    """A numpy view of ``name`` with nulls filled, or ``None`` when absent. A column with no
+    value at all reads as ``default`` throughout: Arrow types it null (EASI v2 withholds a
+    geometry rating on every reach of some HUC8s), and fill_null cannot fill a null type."""
+    import numpy as np
+    import pyarrow as pa
     import pyarrow.compute as pc
     if name not in table.column_names:
         return None
-    return pc.fill_null(table.column(name), default).to_numpy(zero_copy_only=False)
+    column = table.column(name)
+    if pa.types.is_null(column.type):
+        kind = np.bool_ if isinstance(default, bool) else np.int64 if isinstance(default, int) else object
+        return np.full(len(column), default, dtype=kind)
+    return pc.fill_null(column, default).to_numpy(zero_copy_only=False)
 
 
 def _float_column(table, name):

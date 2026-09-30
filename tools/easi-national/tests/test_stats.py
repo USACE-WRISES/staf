@@ -110,3 +110,19 @@ def test_staging_writes_the_asset_and_skips_it_without_the_state_table(tmp_path)
     assert "stats.json" not in manifest["assets"] and not (root.staging / "stats.json").exists()
     with pytest.raises(stats.NoStateTable):
         stats.build_stats(root, [HUC8_A])
+
+
+def test_a_column_with_no_value_reads_as_its_default():
+    """EASI v2 withholds a geometry rating on every reach of some HUC8s; that HUC8's score file
+    then holds an all-null (null-typed) function column, which reads as unrated, not an error."""
+    import numpy as np
+    import pyarrow as pa
+    from builder.stages import stats
+    table = pa.table({"fs_x": pa.array([None, None], type=pa.null()),
+                      "tier_x": pa.array([None, None], type=pa.null()),
+                      "fs_y": pa.array([3, None], type=pa.int8())})
+    assert stats._column(table, "fs_x", -1).tolist() == [-1, -1]
+    assert stats._column(table, "fs_x", -1).dtype == np.int64
+    assert stats._column(table, "tier_x", "unavailable").tolist() == ["unavailable", "unavailable"]
+    assert stats._column(table, "fs_y", -1).tolist() == [3, -1]
+    assert stats._column(table, "absent", -1) is None
