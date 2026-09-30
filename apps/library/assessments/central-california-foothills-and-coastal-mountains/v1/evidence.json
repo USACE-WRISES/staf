@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 174649,
+  "name": "deep-dev-l3-6-ec674740f07a-5928b7e7.evidence.zip",
+  "sha256": "8b0f2be195cae8344b4c5fa53891172154f1369ce6e9443e625823809b902599"
+ },
+ "bytes": 1732612,
+ "coverage": {
+  "assessmentId": "central-california-foothills-and-coastal-mountains",
+  "curves": 13,
+  "functionsScored": 20,
+  "ledgerRows": 42,
+  "metrics": 33,
+  "poolLedgerRows": 10684,
+  "region": {
+   "code": "6",
+   "kind": "ecoregion",
+   "name": "Central California Foothills and Coastal Mountains"
+  },
+  "stations": 14,
+  "stationsOutOfFrame": 4,
+  "values": 407
+ },
+ "dataDigest": "sha256:1467c9cf07cb06c52cc940974ec7fdcc4bd7dafbaeb40de231321b7f7fbf3a45",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:5928b7e79837cf49b173154782ed8d5a5c9014fb44ee8b145f6af070a3bfad9d",
+ "packageId": "deep-dev-l3-6",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 6 (Central California Foothills and Coastal Mountains)",
+ "version": "ec674740f07a"
+}

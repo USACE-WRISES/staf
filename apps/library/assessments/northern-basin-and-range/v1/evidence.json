@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 98616,
+  "name": "deep-dev-l3-80-6baac4501df4-feb849b7.evidence.zip",
+  "sha256": "55279019e058f0841f79428b4bfb1e0eed15070cd837b78a0b9830faf48e2511"
+ },
+ "bytes": 1011388,
+ "coverage": {
+  "assessmentId": "northern-basin-and-range",
+  "curves": 28,
+  "functionsScored": 20,
+  "ledgerRows": 43,
+  "metrics": 33,
+  "poolLedgerRows": 6154,
+  "region": {
+   "code": "80",
+   "kind": "ecoregion",
+   "name": "Northern Basin and Range"
+  },
+  "stations": 41,
+  "stationsOutOfFrame": 5,
+  "values": 1271
+ },
+ "dataDigest": "sha256:78b27c7284f3c48d0420848fc0ee1351e65c6bf19ab09fc22d73833bfc4ad89d",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:feb849b7a211b8365f1dab8bdf1a5d58768b86732bcfaa5bcd9d7699a1a26d81",
+ "packageId": "deep-dev-l3-80",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 80 (Northern Basin and Range)",
+ "version": "6baac4501df4"
+}

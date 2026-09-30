@@ -1,0 +1,19 @@
+{
+  "assessmentId": "southern-california-northern-baja-coast",
+  "assessmentName": "Southern California/Northern Baja Coast reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:07:04Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 1 of 3 stations of this ecoregion pass. 0 reference curves use local stations, 18 borrow from a wider region, 5 metrics use fixed criteria, and 6 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "85",
+    "name": "Southern California/Northern Baja Coast"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 85), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:9495d1086469a49d1ba727bb0e48248603b22cad0da72033e7ddebf1cbeee925",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

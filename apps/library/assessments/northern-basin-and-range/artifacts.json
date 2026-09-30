@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "northern-basin-and-range",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:d562ae27df17b0f54de98f9b0bcd255b1579d82eb25e397b75de2e000d0dac87",
+      "bytes": 40438,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:5387b5f5ed77e5fe3ef14c2de352f0f32c6a1b0f7d9d26c4939687a59529d4fd",
+      "builtAt": "2026-09-30T07:06:56Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 176178,
+  "name": "deep-dev-l3-7-0ce8d7bdb913-ed3ef1eb.evidence.zip",
+  "sha256": "3c447cf178b1563bd0c34f9c422e83b44a73fa9c530ddaa5a7b75a42bb730564"
+ },
+ "bytes": 1725369,
+ "coverage": {
+  "assessmentId": "central-california-valley",
+  "curves": 13,
+  "functionsScored": 20,
+  "ledgerRows": 42,
+  "metrics": 33,
+  "poolLedgerRows": 10890,
+  "region": {
+   "code": "7",
+   "kind": "ecoregion",
+   "name": "Central California Valley"
+  },
+  "stations": 13,
+  "stationsOutOfFrame": 20,
+  "values": 325
+ },
+ "dataDigest": "sha256:56865ee0b02853b33b05cba3605714cbced08063545a572b84c258ffb60664ed",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:ed3ef1eb0ce7971b70dbaa344fdda570c45b315c2d5ee614e8dfbdf015bc9666",
+ "packageId": "deep-dev-l3-7",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 7 (Central California Valley)",
+ "version": "0ce8d7bdb913"
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 241706,
+  "name": "deep-dev-l3-22-23067f4c943e-ac739670.evidence.zip",
+  "sha256": "9e81bde0d344a1a01490e2480cf4246a4f5a4dd3b4501615252ce3146b9720f8"
+ },
+ "bytes": 2619189,
+ "coverage": {
+  "assessmentId": "arizona-new-mexico-plateau",
+  "curves": 19,
+  "functionsScored": 20,
+  "ledgerRows": 42,
+  "metrics": 33,
+  "poolLedgerRows": 18963,
+  "region": {
+   "code": "22",
+   "kind": "ecoregion",
+   "name": "Arizona/New Mexico Plateau"
+  },
+  "stations": 12,
+  "stationsOutOfFrame": 12,
+  "values": 336
+ },
+ "dataDigest": "sha256:80822284b8386b13a453ba2b85bfd58ca284db9c6954f212562817420c767315",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:ac739670f3e99fd500e4558aaa87920245d300dfba2dcddd1d68ac6e4080aedc",
+ "packageId": "deep-dev-l3-22",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 22 (Arizona/New Mexico Plateau)",
+ "version": "23067f4c943e"
+}

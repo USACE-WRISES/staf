@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 202899,
+  "name": "deep-dev-l3-18-336b9b0b3c90-d9dad920.evidence.zip",
+  "sha256": "967148c2cad3f533363cb8e80b4b5fb38601eb6b3936a298bef337b920b9efd1"
+ },
+ "bytes": 2095932,
+ "coverage": {
+  "assessmentId": "wyoming-basin",
+  "curves": 21,
+  "functionsScored": 20,
+  "ledgerRows": 42,
+  "metrics": 33,
+  "poolLedgerRows": 14924,
+  "region": {
+   "code": "18",
+   "kind": "ecoregion",
+   "name": "Wyoming Basin"
+  },
+  "stations": 38,
+  "stationsOutOfFrame": 17,
+  "values": 1193
+ },
+ "dataDigest": "sha256:e201a6da78bc8a1acbbb471073b72c6c6c9bd2107be28a8fa66ca247ed50a62c",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:d9dad9205f9523bed41dcadce02eab8c95fcd3cefc0e2d56874ebcec3567a4d0",
+ "packageId": "deep-dev-l3-18",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 18 (Wyoming Basin)",
+ "version": "336b9b0b3c90"
+}

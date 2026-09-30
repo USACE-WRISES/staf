@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "central-california-valley",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:6acfa8df340f06986286487835403ec99810770744b8515c0ed483bc5bce19d9",
+      "bytes": 42092,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:95741053578fdd4bd4b7444ada7d74ccfd82fc54fe6d9c04f4bd7cfefb926aa5",
+      "builtAt": "2026-09-30T07:07:27Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 194911,
+  "name": "deep-dev-l3-14-1157a373b8db-e973e239.evidence.zip",
+  "sha256": "51e2953d00a39380abd93e205507d7b587107154985c80b13e3f3f2979d778d6"
+ },
+ "bytes": 2075432,
+ "coverage": {
+  "assessmentId": "mojave-basin-and-range",
+  "curves": 20,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 14385,
+  "region": {
+   "code": "14",
+   "kind": "ecoregion",
+   "name": "Mojave Basin and Range"
+  },
+  "stations": 4,
+  "stationsOutOfFrame": 6,
+  "values": 87
+ },
+ "dataDigest": "sha256:532e14b4c78a6f2d73c1aa1357f1b310a6f243940a575f148c3cc8124daccea4",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:e973e239d43b2fd9778c7e726040afe4a43aec829a00a0e038d16c354fbca950",
+ "packageId": "deep-dev-l3-14",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 14 (Mojave Basin and Range)",
+ "version": "1157a373b8db"
+}

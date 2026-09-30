@@ -1,0 +1,19 @@
+{
+  "assessmentId": "wyoming-basin",
+  "assessmentName": "Wyoming Basin reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:07:09Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 13 of 38 stations of this ecoregion pass. 8 reference curves use local stations, 7 borrow from a wider region, 5 metrics use fixed criteria, and 4 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "18",
+    "name": "Wyoming Basin"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 18), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:0273b0d6091ed8fa689f0ed1646df9de86d7e8be8ffbde8cbaa91de12393d280",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

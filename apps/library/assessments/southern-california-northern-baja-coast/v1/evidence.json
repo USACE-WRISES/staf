@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 167057,
+  "name": "deep-dev-l3-85-67ad09bdd743-c1322811.evidence.zip",
+  "sha256": "dd4c643898c424a1525f3d8bc65a57e03253a989fd34dc227f490e06404cec92"
+ },
+ "bytes": 1672979,
+ "coverage": {
+  "assessmentId": "southern-california-northern-baja-coast",
+  "curves": 18,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 9958,
+  "region": {
+   "code": "85",
+   "kind": "ecoregion",
+   "name": "Southern California/Northern Baja Coast"
+  },
+  "stations": 3,
+  "stationsOutOfFrame": 1,
+  "values": 81
+ },
+ "dataDigest": "sha256:8b443b5301da7afa6fda07de26131b0bea93b5aadb4c21f8b8fe2a14a553ff34",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:c13228118d2cb72414c0ec876ff60dc96633a651891fddfe3262978d53f6eb37",
+ "packageId": "deep-dev-l3-85",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 85 (Southern California/Northern Baja Coast)",
+ "version": "67ad09bdd743"
+}

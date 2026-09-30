@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 202090,
+  "name": "deep-dev-l3-10-1566dccc9cdb-bb3fccea.evidence.zip",
+  "sha256": "d8305193cba2bf623d16de9ff521b15afb5d7a82d7a479ea9ac64df3342e51bc"
+ },
+ "bytes": 2124727,
+ "coverage": {
+  "assessmentId": "columbia-plateau",
+  "curves": 22,
+  "functionsScored": 20,
+  "ledgerRows": 43,
+  "metrics": 33,
+  "poolLedgerRows": 14984,
+  "region": {
+   "code": "10",
+   "kind": "ecoregion",
+   "name": "Columbia Plateau"
+  },
+  "stations": 21,
+  "stationsOutOfFrame": 23,
+  "values": 631
+ },
+ "dataDigest": "sha256:844ca26b6533b1acd8dfeaa1ad0c124b793605dd9ebfac7e262bc1a5d0202e87",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:bb3fcceaf0a2d9ac3ef1d403c6aab020a03ddbfe2ed78dea56f53398c2ad9bb1",
+ "packageId": "deep-dev-l3-10",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 10 (Columbia Plateau)",
+ "version": "1566dccc9cdb"
+}

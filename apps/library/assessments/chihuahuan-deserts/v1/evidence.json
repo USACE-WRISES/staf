@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 212419,
+  "name": "deep-dev-l3-24-5d03ace60a4b-4e6ba591.evidence.zip",
+  "sha256": "0ea2c28365bbb7419ecdaf854f05d3c6231f7aee6cea94e453571b05fcae2ac2"
+ },
+ "bytes": 2102847,
+ "coverage": {
+  "assessmentId": "chihuahuan-deserts",
+  "curves": 13,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 14757,
+  "region": {
+   "code": "24",
+   "kind": "ecoregion",
+   "name": "Chihuahuan Deserts"
+  },
+  "stations": 8,
+  "stationsOutOfFrame": 10,
+  "values": 161
+ },
+ "dataDigest": "sha256:ef6e1c5f9beb0883776c43e797156a3c0596aca2d61a0ed2a8da6afc1aa93cbd",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:4e6ba59140d798c9eb97b2a69833f022175e33ab110ea8aa492a56ce48073847",
+ "packageId": "deep-dev-l3-24",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 24 (Chihuahuan Deserts)",
+ "version": "5d03ace60a4b"
+}

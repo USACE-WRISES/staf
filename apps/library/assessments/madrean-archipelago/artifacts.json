@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "madrean-archipelago",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:b960ad5eca1b9ec553ac518439947ce8bd461af6cf129b1db1acfd23ed3f9b11",
+      "bytes": 43123,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:f738d6007f5794d91d26bf56f86265a511249180aa054ff9fa2b411c2735f0f7",
+      "builtAt": "2026-09-30T07:07:07Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}
