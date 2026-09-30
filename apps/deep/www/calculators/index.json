@@ -1,11 +1,88 @@
 {
   "schemaVersion": 1,
   "calculators": {
+    "acadian-plains-and-hills@v1": {
+      "file": "acadian-plains-and-hills@v1.xlsx",
+      "sha256": "sha256:97995e479742434deef2a3cba4dae9a54ea6fac5d036711a82151d2cea91f162",
+      "bytes": 41790,
+      "contentDigest": "sha256:c3e8edf06ed458480ab2ea0387e6a2e90ccceee15e8809591dbf7d1fe58f75ae",
+      "generatorVersion": "1.0"
+    },
     "ak-sqt-adapted@v2": {
       "file": "ak-sqt-adapted@v2.xlsx",
       "sha256": "sha256:c58bc6657e7387879307cba860a7d11c39e1398a867672e68a7bf32bad316e0b",
       "bytes": 37136,
       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
+      "generatorVersion": "1.0"
+    },
+    "arizona-new-mexico-mountains@v1": {
+      "file": "arizona-new-mexico-mountains@v1.xlsx",
+      "sha256": "sha256:2363f69db9c9deac70c56bfeb32739e2b32b27f31ecd5821ad6180d36188175f",
+      "bytes": 41694,
+      "contentDigest": "sha256:82ef65e38b0ce93611e0ff9901eaa8d06d8b7add52eaf9665a6a9118a095e03c",
+      "generatorVersion": "1.0"
+    },
+    "arizona-new-mexico-plateau@v1": {
+      "file": "arizona-new-mexico-plateau@v1.xlsx",
+      "sha256": "sha256:55ac7020ba047f3ce8a47c2483809f6e7b4d9f349a7313f91bde86345c46a43f",
+      "bytes": 42603,
+      "contentDigest": "sha256:00079a58968ceaa2562f116890f1d0fa22eb94616ce75aaa52ca59a127a4cd88",
+      "generatorVersion": "1.0"
+    },
+    "arkansas-valley@v1": {
+      "file": "arkansas-valley@v1.xlsx",
+      "sha256": "sha256:a85dde87c872b8b66a5d9a3e9c46a3cdc214af26086f7ec63213915fb15596c8",
+      "bytes": 43697,
+      "contentDigest": "sha256:ba846cc11891c8219c558ce0b9687ecc17465d0a82f92530a7a72859a998ae0e",
+      "generatorVersion": "1.0"
+    },
+    "atlantic-coastal-pine-barrens@v1": {
+      "file": "atlantic-coastal-pine-barrens@v1.xlsx",
+      "sha256": "sha256:32f684199a399b6b6befb601e3da579deceffee8b20d2563f0504733db7e016e",
+      "bytes": 44117,
+      "contentDigest": "sha256:aa270bf0739bcae77f15ac1c9d309300368e1cfb280a0bdcd9a22c1ad259252b",
+      "generatorVersion": "1.0"
+    },
+    "blue-mountains@v1": {
+      "file": "blue-mountains@v1.xlsx",
+      "sha256": "sha256:a0b26608170c1ad5cefa6115931c749d9870110baea84a92ab7e8a7d5aad2ca7",
+      "bytes": 43521,
+      "contentDigest": "sha256:2ec853341a60f85ec296bc5d8a0f0dfd60f3d65c86ee2811f59a3f5f70dc13b0",
+      "generatorVersion": "1.0"
+    },
+    "blue-ridge@v1": {
+      "file": "blue-ridge@v1.xlsx",
+      "sha256": "sha256:08b1e742ba81ac9b46aa18725db371b71f8948fabfad2c44ce1c57c26db6b17f",
+      "bytes": 41718,
+      "contentDigest": "sha256:b53b6ffc1cfad0c64bbbc490d51e26ab1be617a91919a9d1c75a6560520e9616",
+      "generatorVersion": "1.0"
+    },
+    "boston-mountains@v1": {
+      "file": "boston-mountains@v1.xlsx",
+      "sha256": "sha256:daab60d1015041061db133951d59f92df8c3c42c29d6c7937d0febb58600a9d0",
+      "bytes": 40665,
+      "contentDigest": "sha256:397e2ca5c762906ce6fe27fa3bde50aafd2dfa89e66f34d2a907838257d34f1a",
+      "generatorVersion": "1.0"
+    },
+    "canadian-rockies@v1": {
+      "file": "canadian-rockies@v1.xlsx",
+      "sha256": "sha256:6f0805abfcecc68b08f8fbda8399a7c638add8178a95cfd85509a2b45cfbcb86",
+      "bytes": 42241,
+      "contentDigest": "sha256:7719ed984f8ef2ad6f2371d2c04ed9b694f1442a63356dedef8539f6260b1d33",
+      "generatorVersion": "1.0"
+    },
+    "cascades@v1": {
+      "file": "cascades@v1.xlsx",
+      "sha256": "sha256:a62de14686d660ce268381d20bbb8b7e087e33930d93286c1311d717e06739b8",
+      "bytes": 39436,
+      "contentDigest": "sha256:5a4d596751a1e3d7f5d849168a8a2c624ea83c462045cf8a285a437ced67d27a",
+      "generatorVersion": "1.0"
+    },
+    "central-appalachians@v1": {
+      "file": "central-appalachians@v1.xlsx",
+      "sha256": "sha256:db60e2951146c693caa61a0b77d935156c320daaaedd2cd0e9dd158b04a0ba09",
+      "bytes": 43382,
+      "contentDigest": "sha256:bde3f4beb2e0c2b766df7c9d09afb029919152992a2d7fca92d93a64a629593b",
       "generatorVersion": "1.0"
     },
     "central-basin-and-range@v1": {
@@ -15,6 +92,34 @@
       "contentDigest": "sha256:632f70661f0e013ef7afb9e58bb9c7520c0b52b7bcf443ef434748b0d2fd5770",
       "generatorVersion": "1.0"
     },
+    "central-basin-and-range@v2": {
+      "file": "central-basin-and-range@v2.xlsx",
+      "sha256": "sha256:d57717d573ab8ba909833763e51080082d38f424b3336879e3506af6adb430a2",
+      "bytes": 39779,
+      "contentDigest": "sha256:9d3ed96f17757f4623dcc4a5b9b3a280f7e19c6c4a1004370469cb3841b2fe01",
+      "generatorVersion": "1.0"
+    },
+    "central-california-foothills-and-coastal-mountains@v1": {
+      "file": "central-california-foothills-and-coastal-mountains@v1.xlsx",
+      "sha256": "sha256:b1e82ede295a82fec475c3cd19eac0ba0fd46710d1dcd14e22e8e465ebced958",
+      "bytes": 42637,
+      "contentDigest": "sha256:2ec24dcbc9840b9ecdc5528d501d1e0c431e76a4e1900c6f02110240e2f18f11",
+      "generatorVersion": "1.0"
+    },
+    "central-california-valley@v1": {
+      "file": "central-california-valley@v1.xlsx",
+      "sha256": "sha256:6acfa8df340f06986286487835403ec99810770744b8515c0ed483bc5bce19d9",
+      "bytes": 42092,
+      "contentDigest": "sha256:95741053578fdd4bd4b7444ada7d74ccfd82fc54fe6d9c04f4bd7cfefb926aa5",
+      "generatorVersion": "1.0"
+    },
+    "central-corn-belt-plains@v1": {
+      "file": "central-corn-belt-plains@v1.xlsx",
+      "sha256": "sha256:9d0dee0811eda2aebf25deb68c908b3df88ff936159d1d9ccbe71ced2f001392",
+      "bytes": 43506,
+      "contentDigest": "sha256:debdf0750b17be3fdd4a04382e529b54ccea278078d0a6198790a494289e8aef",
+      "generatorVersion": "1.0"
+    },
     "central-great-plains@v1": {
       "file": "central-great-plains@v1.xlsx",
       "sha256": "sha256:2336e0eefc2df67057d9ea1877c15429ac0765be5f8d7d90093bb2e6773991b9",
@@ -22,11 +127,81 @@
       "contentDigest": "sha256:a8d63f254bc0d56a5c1bee680104279a79f13f69b3a4d7c73c28e64948597a6f",
       "generatorVersion": "1.0"
     },
+    "central-great-plains@v2": {
+      "file": "central-great-plains@v2.xlsx",
+      "sha256": "sha256:ea59d6fa16eec3cfe56d69139ed3346aa38de2360f6f35dfc1ea3d9e8ac09c80",
+      "bytes": 43011,
+      "contentDigest": "sha256:1512c029854b1ceeb5dfee29a960e4877dff0c0c3bbd7bf92341194b91c16419",
+      "generatorVersion": "1.0"
+    },
+    "central-irregular-plains@v1": {
+      "file": "central-irregular-plains@v1.xlsx",
+      "sha256": "sha256:188674983db2f0fb64ca41ada91e1afec2b19ca7ba18d9150015bfe122f1b3d8",
+      "bytes": 41414,
+      "contentDigest": "sha256:634a596acf7bebaaae71c4a97de625faf04627947d01e5419d5d9ce33a9998e6",
+      "generatorVersion": "1.0"
+    },
+    "chihuahuan-deserts@v1": {
+      "file": "chihuahuan-deserts@v1.xlsx",
+      "sha256": "sha256:be553fba2189f4989b841d5d5860ba4694d164e5c7765ccd29208aa5a8b5a731",
+      "bytes": 42574,
+      "contentDigest": "sha256:9e917fb454ed3df7f93e83eb09b4518bd7342bf61a2fdca64676e86e63da426b",
+      "generatorVersion": "1.0"
+    },
     "co-sqt-adapted@v2": {
       "file": "co-sqt-adapted@v2.xlsx",
       "sha256": "sha256:765b1560e6226c331550de4f9e159cd266e9109dfdbb28f6b02305124325cbf1",
       "bytes": 39551,
       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
+      "generatorVersion": "1.0"
+    },
+    "coast-range@v1": {
+      "file": "coast-range@v1.xlsx",
+      "sha256": "sha256:bae8983ce9321fdef3a6ea802ef9a3946c91939dadc2c562bf78ae4eb65d6ac9",
+      "bytes": 42955,
+      "contentDigest": "sha256:93b11715e3d1b0f98e4e067f7b8bf80cd247c890d90747216de80ba30ef9f7ee",
+      "generatorVersion": "1.0"
+    },
+    "colorado-plateaus@v1": {
+      "file": "colorado-plateaus@v1.xlsx",
+      "sha256": "sha256:f67202d77864b751d7075a65103bc480c9f8a99b36d50ce9bb177290a9440570",
+      "bytes": 42973,
+      "contentDigest": "sha256:07eb4455d1599dccc180a7c20fb08aa3b4a5cd03a65c24883eeb71ce3134aef1",
+      "generatorVersion": "1.0"
+    },
+    "columbia-plateau@v1": {
+      "file": "columbia-plateau@v1.xlsx",
+      "sha256": "sha256:933a8b6209665ca06519471e4b1e7327056e6974a1c1af3632bc1f86e473530f",
+      "bytes": 42693,
+      "contentDigest": "sha256:de9c4339da83ede757cc7c4e1d0fcb290220c703402a5b49d55652ed21413b42",
+      "generatorVersion": "1.0"
+    },
+    "cross-timbers@v1": {
+      "file": "cross-timbers@v1.xlsx",
+      "sha256": "sha256:c4b1ab83ad56009acf2928d87a0a2aab701aa5a958e6893bddfc4ecfb7c5c02e",
+      "bytes": 42003,
+      "contentDigest": "sha256:4ac69278cd70b3a5a34488fd6431a81a3a5b57ff80780ee04df7fa62d3360b6e",
+      "generatorVersion": "1.0"
+    },
+    "driftless-area@v1": {
+      "file": "driftless-area@v1.xlsx",
+      "sha256": "sha256:545407a2d4774f3598eb090c7d450d2af1f34c5a9611bebced630f56cb854e55",
+      "bytes": 44764,
+      "contentDigest": "sha256:413ad5065a70fe7abf205d81bf6fe5d0da9d4e74a301ea882a1dc26ec4811a26",
+      "generatorVersion": "1.0"
+    },
+    "east-central-texas-plains@v1": {
+      "file": "east-central-texas-plains@v1.xlsx",
+      "sha256": "sha256:8935995d241c7a6a3b64e9148e3980a94e7562a44bf3cb0725e41d10abe52a4c",
+      "bytes": 42444,
+      "contentDigest": "sha256:90bba9709b8a833d0c95e21d59a0b40797f2e736d2f049f535f8148a4350034c",
+      "generatorVersion": "1.0"
+    },
+    "eastern-cascades-slopes-and-foothills@v1": {
+      "file": "eastern-cascades-slopes-and-foothills@v1.xlsx",
+      "sha256": "sha256:81bf0bd886068ef701ac8a89611a89112ffb6aad29167a054ba78967a1d1b066",
+      "bytes": 44202,
+      "contentDigest": "sha256:c9589a714fa80105b206cc42102f14cb3b9d278d5c093b89a858261bb6b6a6ea",
       "generatorVersion": "1.0"
     },
     "eastern-corn-belt-plains@v6": {
@@ -50,6 +225,62 @@
       "contentDigest": "sha256:2b9698cd3554ba99507d73f0a0e17f82561acdbc0d6fe5b31983ae6926e23f7f",
       "generatorVersion": "1.0"
     },
+    "eastern-corn-belt-plains@v9": {
+      "file": "eastern-corn-belt-plains@v9.xlsx",
+      "sha256": "sha256:d2455376bc968df90c8350358221db534e16cdd96aaf8bf22f1da028a992f1c9",
+      "bytes": 44353,
+      "contentDigest": "sha256:02e720a6278c02080a796cab5402bed6b80080f418b44e76edf3c661ddc38a29",
+      "generatorVersion": "1.0"
+    },
+    "eastern-great-lakes-lowlands@v1": {
+      "file": "eastern-great-lakes-lowlands@v1.xlsx",
+      "sha256": "sha256:ed6b3a9f2f18d970eec7ef139912eb84465b06e3e018d590560bbffcbf2d261b",
+      "bytes": 43750,
+      "contentDigest": "sha256:12db39cbdd89986caa0fd435228a56c068a50ea0cab2a4df3881bb3db1d608ae",
+      "generatorVersion": "1.0"
+    },
+    "edwards-plateau@v1": {
+      "file": "edwards-plateau@v1.xlsx",
+      "sha256": "sha256:64942da95daa7f6f1635d17ecf9847486aa59fa5dee204272d3c5682ba3ece6b",
+      "bytes": 41969,
+      "contentDigest": "sha256:e40f0aed31715b50e1964dde3752a12a020048bccb50698d7bfa7022eb9a0c00",
+      "generatorVersion": "1.0"
+    },
+    "erie-drift-plain@v1": {
+      "file": "erie-drift-plain@v1.xlsx",
+      "sha256": "sha256:25a3a41d5f79a9de8d3f06a811f7208167c4ef1ed340bd07c12b6f0caf40051f",
+      "bytes": 43383,
+      "contentDigest": "sha256:657f4325208401fe972d8ff9a33445e34184e9c63b485e421563b0385b0f5546",
+      "generatorVersion": "1.0"
+    },
+    "flint-hills@v1": {
+      "file": "flint-hills@v1.xlsx",
+      "sha256": "sha256:aff7a01d761938b5e8bc9f7df553b0ccddd6e6ac89b9d23badac60f379497107",
+      "bytes": 43280,
+      "contentDigest": "sha256:ccfa82b988c0f4175c6c6a9671be4532ca6dbac35154676375017e7ad4327d5d",
+      "generatorVersion": "1.0"
+    },
+    "high-plains@v1": {
+      "file": "high-plains@v1.xlsx",
+      "sha256": "sha256:b70ef403ea11024cf12d7290a9ca9d666a4119d805af0aebf8f83598ec843b05",
+      "bytes": 41807,
+      "contentDigest": "sha256:67c58200e3e02d38d26e241a33792fe24ddf61c7332dddfa6b5d94be135c8c92",
+      "generatorVersion": "1.0"
+    },
+    "huron-erie-lake-plains@v1": {
+      "file": "huron-erie-lake-plains@v1.xlsx",
+      "sha256": "sha256:deea39d7526d93c5603b13afaaffe6fd608a7ac40dd6315ddbbd51f00d117117",
+      "bytes": 42904,
+      "contentDigest": "sha256:530f47d876ae5d98534a6d2e289afacf27db21c654a2b72cafd25eadcd439b25",
+      "generatorVersion": "1.0"
+    },
+    "idaho-batholith@v1": {
+      "file": "idaho-batholith@v1.xlsx",
+      "sha256": "sha256:e7201a420461e741250df29dfb87035e3e5a56bbd484c1ba9c864dc6d74947cd",
+      "bytes": 41339,
+      "contentDigest": "sha256:a8de2e1de74d0a7299718a14798911df70102cdd3e381f79a384d96ec068894f",
+      "generatorVersion": "1.0"
+    },
     "interior-plateau@v4": {
       "file": "interior-plateau@v4.xlsx",
       "sha256": "sha256:ff9f700b1fa1d69a9e680242c61a68180df52e61ea2c7440f75ed71adb43cccb",
@@ -71,11 +302,74 @@
       "contentDigest": "sha256:c7f3ba4aab6330c47fa23613a0ca1969469bd4b99a8f5b268498601311da0f73",
       "generatorVersion": "1.0"
     },
+    "interior-plateau@v7": {
+      "file": "interior-plateau@v7.xlsx",
+      "sha256": "sha256:c58a5e91443775bee152df4daff197c29aa8aea67ae02b321d3316ff4049e992",
+      "bytes": 43985,
+      "contentDigest": "sha256:3dfc705427d34238acf676460286484e2d45c1661e24944b32fa3eec61e60b9e",
+      "generatorVersion": "1.0"
+    },
+    "interior-river-valleys-and-hills@v1": {
+      "file": "interior-river-valleys-and-hills@v1.xlsx",
+      "sha256": "sha256:28fdfde23c9d3a6ff607bcc2335ae536aa12a0dfddb9b3548dee41b67e3ade05",
+      "bytes": 42084,
+      "contentDigest": "sha256:3ed23f4a8c1793a122a750cf8cb113a90f16ca70f47b09b96cb6984cd1aa6e56",
+      "generatorVersion": "1.0"
+    },
+    "klamath-mountains-california-high-north-coast-range@v1": {
+      "file": "klamath-mountains-california-high-north-coast-range@v1.xlsx",
+      "sha256": "sha256:dcf6a85c7e645cafaf9d07897d007489e1f50ef6f6c3c3299461366d1c25ce85",
+      "bytes": 43164,
+      "contentDigest": "sha256:0956ade172c734babc0e8b6dacdbb5b3b9d978c386e1a59034237ca5b30ebc49",
+      "generatorVersion": "1.0"
+    },
+    "lake-agassiz-plain@v1": {
+      "file": "lake-agassiz-plain@v1.xlsx",
+      "sha256": "sha256:8239881b843749920d86e2acc094bc36d5df3e2e999e18f20ef342c8ac23d612",
+      "bytes": 39797,
+      "contentDigest": "sha256:0dc290898d5c02b8b449b8d4a910b8192353f89f3aa6854d3fd7770a0d92b910",
+      "generatorVersion": "1.0"
+    },
+    "madrean-archipelago@v1": {
+      "file": "madrean-archipelago@v1.xlsx",
+      "sha256": "sha256:b960ad5eca1b9ec553ac518439947ce8bd461af6cf129b1db1acfd23ed3f9b11",
+      "bytes": 43123,
+      "contentDigest": "sha256:f738d6007f5794d91d26bf56f86265a511249180aa054ff9fa2b411c2735f0f7",
+      "generatorVersion": "1.0"
+    },
     "mi-sqt-adapted@v2": {
       "file": "mi-sqt-adapted@v2.xlsx",
       "sha256": "sha256:d5853ba6699aa4bccbff75cd8dd00bbd70ec4ddd853443f168d5f9d5583095ac",
       "bytes": 35927,
       "contentDigest": "sha256:5d8e95677f0cf2bf4b18d1f089024b4fda8aefb21767fb89e2742ad819998e02",
+      "generatorVersion": "1.0"
+    },
+    "middle-atlantic-coastal-plain@v1": {
+      "file": "middle-atlantic-coastal-plain@v1.xlsx",
+      "sha256": "sha256:6059ba874fe69d7172bccf1a701041ed240d0bc5a7a61390b5280fe7e9536f20",
+      "bytes": 41671,
+      "contentDigest": "sha256:479d76c5e211ba08519ef4a041f5b64afc72a7fd16eb1410bfe8b6051ee0e73f",
+      "generatorVersion": "1.0"
+    },
+    "middle-rockies@v1": {
+      "file": "middle-rockies@v1.xlsx",
+      "sha256": "sha256:a593686d8b5042cf25ce8691e06086869fdc3d0531f914864633f76efa9c7f6c",
+      "bytes": 43445,
+      "contentDigest": "sha256:339fff1f7ffbb4a19aa8b413de8622374061211fd9b377a482b8137e717f0040",
+      "generatorVersion": "1.0"
+    },
+    "mississippi-alluvial-plain@v1": {
+      "file": "mississippi-alluvial-plain@v1.xlsx",
+      "sha256": "sha256:f96e2fa80e02a5502d16ea1cdd0fd30be1d2e28160e4702b64a1b6fdc25ef886",
+      "bytes": 40004,
+      "contentDigest": "sha256:9336561580d8e41687d31817b1579fb511ab74d35a4d22f42f39f881f566ea83",
+      "generatorVersion": "1.0"
+    },
+    "mississippi-valley-loess-plains@v1": {
+      "file": "mississippi-valley-loess-plains@v1.xlsx",
+      "sha256": "sha256:76d6e8668f187de06f5ce0a6ade4fef299d728f779980cff1f16c7ea18188620",
+      "bytes": 45107,
+      "contentDigest": "sha256:2e1f1494c6fc759e91d21e33e8620a4b2248511d593a5413e9aa153d526b18d7",
       "generatorVersion": "1.0"
     },
     "mn-sqt-adapted@v2": {
@@ -85,11 +379,60 @@
       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c",
       "generatorVersion": "1.0"
     },
+    "mojave-basin-and-range@v1": {
+      "file": "mojave-basin-and-range@v1.xlsx",
+      "sha256": "sha256:f3effbac7ff6e7da49b3626e6035a2630315cc4bb64bc9fb7ca7ec7123927a2c",
+      "bytes": 43176,
+      "contentDigest": "sha256:a2f609ab57cacc1f979cf660bf059a767f48deeb868039177847e2e98c537d55",
+      "generatorVersion": "1.0"
+    },
     "nc-sqt-adapted@v2": {
       "file": "nc-sqt-adapted@v2.xlsx",
       "sha256": "sha256:8d60a421163dc5aae6bb49329614d8df4ab10a59867b635fd99a09b348731ff4",
       "bytes": 43861,
       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
+      "generatorVersion": "1.0"
+    },
+    "nebraska-sand-hills@v1": {
+      "file": "nebraska-sand-hills@v1.xlsx",
+      "sha256": "sha256:384efd7ce0ca9999e4d482693d8308ab5b70ad0d58551e0d7d0ced4d8056e056",
+      "bytes": 38552,
+      "contentDigest": "sha256:42e3b24ac13c2e8355bcc07b3527d336957a041a5b611a31dd7d74b565528b21",
+      "generatorVersion": "1.0"
+    },
+    "north-cascades@v1": {
+      "file": "north-cascades@v1.xlsx",
+      "sha256": "sha256:bfbd3db7f997bbc375761dbc9f4853a1f9ab680b7c461807b1293a08f4275014",
+      "bytes": 42967,
+      "contentDigest": "sha256:1d757ddc17ed4dfc1b32ada21fec34f70173b24616c01d9bc494fd8e9908b9a3",
+      "generatorVersion": "1.0"
+    },
+    "north-central-appalachians@v1": {
+      "file": "north-central-appalachians@v1.xlsx",
+      "sha256": "sha256:c716419e09302bbf1bfa0a1ae1f8261b15708b8bf9614d5f47e65dfb4abd6bdf",
+      "bytes": 41284,
+      "contentDigest": "sha256:4b78e8a7e1dd9ab8d95886e4543651a204b2641b3dbf7905b314b0638b63fae3",
+      "generatorVersion": "1.0"
+    },
+    "north-central-hardwood-forests@v1": {
+      "file": "north-central-hardwood-forests@v1.xlsx",
+      "sha256": "sha256:3ba351a4899ea254e230f46e79f04f4e964c30153a537c2bf0d16755400613e9",
+      "bytes": 43780,
+      "contentDigest": "sha256:b38d91140db054378edba33178d80b027f785c0512477a6a3e9223df25834371",
+      "generatorVersion": "1.0"
+    },
+    "northeastern-coastal-zone@v1": {
+      "file": "northeastern-coastal-zone@v1.xlsx",
+      "sha256": "sha256:572e0cb35aa458d29a2524b734ef790f0e750c5fa12fecbf76b4a95d150369a4",
+      "bytes": 43365,
+      "contentDigest": "sha256:c896d50a5c3e71f8877c9d0c06a7b77032900ce3d20235f2793d58ac8eef3c7f",
+      "generatorVersion": "1.0"
+    },
+    "northeastern-highlands@v10": {
+      "file": "northeastern-highlands@v10.xlsx",
+      "sha256": "sha256:679a6ffabd7febf01b23a1baf273c37d3faa7bf298e15b85147b69ce0e09e160",
+      "bytes": 42719,
+      "contentDigest": "sha256:3803702732ec6e7191238f165ffae1d5e6588465a682a891fbf58f3d1e2256ca",
       "generatorVersion": "1.0"
     },
     "northeastern-highlands@v7": {
@@ -113,6 +456,27 @@
       "contentDigest": "sha256:4902d33d13042a2aff1c22bf8ac22e615dcb53ce02507641cf290e61d23ce593",
       "generatorVersion": "1.0"
     },
+    "northern-allegheny-plateau@v1": {
+      "file": "northern-allegheny-plateau@v1.xlsx",
+      "sha256": "sha256:1d5c843836ca4bb0bf0fdf3f3b627672c6877c9146ece5ec8fd7657bee4090e4",
+      "bytes": 42890,
+      "contentDigest": "sha256:5df6c9488a79114c6215e178da1af460c45eba625faa2e7d1c747147d9752e59",
+      "generatorVersion": "1.0"
+    },
+    "northern-basin-and-range@v1": {
+      "file": "northern-basin-and-range@v1.xlsx",
+      "sha256": "sha256:d562ae27df17b0f54de98f9b0bcd255b1579d82eb25e397b75de2e000d0dac87",
+      "bytes": 40438,
+      "contentDigest": "sha256:5387b5f5ed77e5fe3ef14c2de352f0f32c6a1b0f7d9d26c4939687a59529d4fd",
+      "generatorVersion": "1.0"
+    },
+    "northern-glaciated-plains@v1": {
+      "file": "northern-glaciated-plains@v1.xlsx",
+      "sha256": "sha256:5d47bfe7446f7915d4a81af2a3216a115b3977cf73333eac0c45086c47f9a94d",
+      "bytes": 41909,
+      "contentDigest": "sha256:701cf91abc42d9051c404b1101f22595620e96dd750b70df5529043d65a7d151",
+      "generatorVersion": "1.0"
+    },
     "northern-lakes-and-forests@v1": {
       "file": "northern-lakes-and-forests@v1.xlsx",
       "sha256": "sha256:49db634f06c1a80945ed9833518da3c25b128c5070ffcf2dc299e39d8d364a8e",
@@ -120,11 +484,116 @@
       "contentDigest": "sha256:7d8d5bed086c24c7ac118c4008ca58ae2190f42e4209dca35415d0fa8e24277a",
       "generatorVersion": "1.0"
     },
+    "northern-lakes-and-forests@v2": {
+      "file": "northern-lakes-and-forests@v2.xlsx",
+      "sha256": "sha256:174ae37a2c5efcb54299fa6cc9787421e85d7393b4c9697a110f3b9c51e6e254",
+      "bytes": 43263,
+      "contentDigest": "sha256:7ead5bd14988d461b5b3687d466eec875a8eeecd805375e02438fa07b97c866d",
+      "generatorVersion": "1.0"
+    },
+    "northern-minnesota-wetlands@v1": {
+      "file": "northern-minnesota-wetlands@v1.xlsx",
+      "sha256": "sha256:e10b4b20551d0e01341f88c0c1256eb7fde60ef6aaa987273ee8ba1e3b512819",
+      "bytes": 40145,
+      "contentDigest": "sha256:bffd5e693018df99058152b461a81651ccc3cad7ed90b46339045a82b3946abc",
+      "generatorVersion": "1.0"
+    },
+    "northern-piedmont@v1": {
+      "file": "northern-piedmont@v1.xlsx",
+      "sha256": "sha256:f7e006987c8506c3495c65a1e900d0581bd28798fe78762f3bec6cb553eef1e3",
+      "bytes": 43633,
+      "contentDigest": "sha256:09ae1a8c033c66db35838eed39ca7248e6522810e202cdb9ac70d6b1192b8913",
+      "generatorVersion": "1.0"
+    },
+    "northern-rockies@v1": {
+      "file": "northern-rockies@v1.xlsx",
+      "sha256": "sha256:5575e37b2bc71dc0118a8d099bc6b573292f0f43a3c0e054c6cbb04bf9317eec",
+      "bytes": 40234,
+      "contentDigest": "sha256:fecfe0278f4c869c64c06f10c3399754bc83c9b40b1774b2db2254d0686711d7",
+      "generatorVersion": "1.0"
+    },
+    "northwestern-glaciated-plains@v1": {
+      "file": "northwestern-glaciated-plains@v1.xlsx",
+      "sha256": "sha256:2854af5a696a991bf2503c62aad46249b51277f23e18f0032e193f7c94491ee7",
+      "bytes": 43724,
+      "contentDigest": "sha256:e8b385250dbbd57d44d3747e0997c5e5e927792fb203cd67bb912ae2c0fbb387",
+      "generatorVersion": "1.0"
+    },
+    "northwestern-great-plains@v1": {
+      "file": "northwestern-great-plains@v1.xlsx",
+      "sha256": "sha256:8a4a82b52428953885d7df1937d63e8d00bf4171b956e6d287bff7895ec28f95",
+      "bytes": 42577,
+      "contentDigest": "sha256:2ee7911c0fe28c2bbedb454948482840707ed71438e2a395efd4bd899b6f1d2d",
+      "generatorVersion": "1.0"
+    },
+    "ouachita-mountains@v1": {
+      "file": "ouachita-mountains@v1.xlsx",
+      "sha256": "sha256:0380655dfb664d997171f88ab6a4d44834239e52c3ee0959460815b5338d8fc8",
+      "bytes": 43185,
+      "contentDigest": "sha256:ccaedde6c64137dd680e54a83fd08f8972dd6e695bd7996f28b6a1b62212f650",
+      "generatorVersion": "1.0"
+    },
+    "ozark-highlands@v1": {
+      "file": "ozark-highlands@v1.xlsx",
+      "sha256": "sha256:d0cb4d376ea2886ec095bd947bfd16788063d93a52d2b9ba2d564faf1c1b20d1",
+      "bytes": 43337,
+      "contentDigest": "sha256:f2e324139fc4a85fd4b125de9ffac8c865fd3ce27c36de7999c7ff541a7e314c",
+      "generatorVersion": "1.0"
+    },
+    "piedmont@v1": {
+      "file": "piedmont@v1.xlsx",
+      "sha256": "sha256:901930956a6a060f77fd9f8512197e2e652356e67d4c0d6d8db4d4450b4ab493",
+      "bytes": 42870,
+      "contentDigest": "sha256:ef86450941a9a31167adbb7221d44e97362454c65b225649d3a68715d361feea",
+      "generatorVersion": "1.0"
+    },
+    "puget-lowland@v1": {
+      "file": "puget-lowland@v1.xlsx",
+      "sha256": "sha256:5b3b61a341a480951bd177af90e3db31f0f4bd6b9abf8731839a4781a0967025",
+      "bytes": 42604,
+      "contentDigest": "sha256:2cd02b48a19d50288dc835356ab09fd696bd1497e8ea93643aa11cb0a0d25ed2",
+      "generatorVersion": "1.0"
+    },
+    "ridge-and-valley@v1": {
+      "file": "ridge-and-valley@v1.xlsx",
+      "sha256": "sha256:fc4e265781388a8436c7154762e747f06791d65367d0fd77750fd09ffe7d535d",
+      "bytes": 41848,
+      "contentDigest": "sha256:91a68c2969f895e3f2d8fca8f6d2d55f49f7d805da284cc0fca54025a48390a6",
+      "generatorVersion": "1.0"
+    },
     "sc-sqt-adapted@v2": {
       "file": "sc-sqt-adapted@v2.xlsx",
       "sha256": "sha256:05960db85e274c3337f5a3008232851fdaa37cd782c0b895fbb6a61880b50c60",
       "bytes": 39153,
       "contentDigest": "sha256:91a19a28ca5e6bbbe1f35eefb5a06284a65b006ccddca6f905fe28e79a893f23",
+      "generatorVersion": "1.0"
+    },
+    "sierra-nevada@v1": {
+      "file": "sierra-nevada@v1.xlsx",
+      "sha256": "sha256:5fe0e2e499e69f09f33fa980bb5f4289cb1e5e5915a6918e8fff384ec68bc71c",
+      "bytes": 43651,
+      "contentDigest": "sha256:5213157ece683a99b559d6118a2e8f9a8464d6bda539e56288457793753c5949",
+      "generatorVersion": "1.0"
+    },
+    "snake-river-plain@v1": {
+      "file": "snake-river-plain@v1.xlsx",
+      "sha256": "sha256:9769a4279cf2fc2b7272298513edf03ed77b5a895ebf6e35c2117edd4ecb28b9",
+      "bytes": 41739,
+      "contentDigest": "sha256:507919d17c919c6c2c5e298aed3e207a0e5105d4e38654b055fd606ac8a86ad5",
+      "generatorVersion": "1.0"
+    },
+    "sonoran-basin-and-range@v1": {
+      "file": "sonoran-basin-and-range@v1.xlsx",
+      "sha256": "sha256:7dc15b0a8e8a10d7349092fafa10ee19012b09544cede7a7d4c859f432731391",
+      "bytes": 43177,
+      "contentDigest": "sha256:1cb320e5cd5a1be90a9432c7aa302dd5b7b88ebf1c106885c9fa8848ffb6015b",
+      "generatorVersion": "1.0"
+    },
+    "south-central-plains@v1": {
+      "file": "south-central-plains@v1.xlsx",
+      "sha256": "sha256:e85e0d22c7cd526cc858b971d8eb5786bd8b860f0d8dd1867c0aa429e4a895da",
+      "bytes": 41764,
+      "contentDigest": "sha256:1ea97f3cd875254bf1ee6f9126c68a5dae471dfd87505be612cbcc78abdcdd94",
       "generatorVersion": "1.0"
     },
     "southeastern-plains@v1": {
@@ -141,11 +610,130 @@
       "contentDigest": "sha256:fe2aca83722659416d0eccddf8e01ac668272363e995ca238259f7edf1971856",
       "generatorVersion": "1.0"
     },
+    "southeastern-plains@v3": {
+      "file": "southeastern-plains@v3.xlsx",
+      "sha256": "sha256:e6cc186c587f821b74537413222eaff63f8054569db3f8a9ed83348f39b94855",
+      "bytes": 41886,
+      "contentDigest": "sha256:f8065d8b324379ff10ce6632fb9e38d3d01b51b0fca26383b3949649e9b4a039",
+      "generatorVersion": "1.0"
+    },
+    "southeastern-wisconsin-till-plains@v1": {
+      "file": "southeastern-wisconsin-till-plains@v1.xlsx",
+      "sha256": "sha256:c04387a047fccbe659188f3ad752a331a4fcd39d0450cbb5653179d0602c32bf",
+      "bytes": 43782,
+      "contentDigest": "sha256:2848e7844509a72cc7b8e5b4dc2fbdb04e5620e28e72e2ccf298cff1054877f4",
+      "generatorVersion": "1.0"
+    },
+    "southern-california-mountains@v1": {
+      "file": "southern-california-mountains@v1.xlsx",
+      "sha256": "sha256:42c6637d39a86d9d48945f8fc12df77dadd03f4ba042403b999b0f1d4a54b49e",
+      "bytes": 44954,
+      "contentDigest": "sha256:7835f7893b911d983d2458bd0793454e4de7070e951803c1b3b7bc1ffa18ec89",
+      "generatorVersion": "1.0"
+    },
+    "southern-california-northern-baja-coast@v1": {
+      "file": "southern-california-northern-baja-coast@v1.xlsx",
+      "sha256": "sha256:a5193249c4af3e6ebc9b03324f6f1c978062087d3e759b28442d77907169fc1d",
+      "bytes": 42607,
+      "contentDigest": "sha256:9495d1086469a49d1ba727bb0e48248603b22cad0da72033e7ddebf1cbeee925",
+      "generatorVersion": "1.0"
+    },
+    "southern-coastal-plain@v1": {
+      "file": "southern-coastal-plain@v1.xlsx",
+      "sha256": "sha256:b56169b25a412ff8d97dcf18a1248fe1570b541d58225137819a63c4796b547b",
+      "bytes": 41006,
+      "contentDigest": "sha256:82ddc4b7db486f58ea8a429fbe185553877029b158b451b34bb45dd1827aa0dd",
+      "generatorVersion": "1.0"
+    },
+    "southern-florida-coastal-plain@v1": {
+      "file": "southern-florida-coastal-plain@v1.xlsx",
+      "sha256": "sha256:8181e9970c8bddefb95a55f0d327594a16ac9f6bef1db24c9488474b95e1dcc0",
+      "bytes": 44796,
+      "contentDigest": "sha256:61561a49a080e992ce47797a3b72993a0ac0134243f7db799b012c295f7c0c39",
+      "generatorVersion": "1.0"
+    },
+    "southern-michigan-northern-indiana-drift-plains@v1": {
+      "file": "southern-michigan-northern-indiana-drift-plains@v1.xlsx",
+      "sha256": "sha256:f0a7a248905b448f5de89938b9a162f2869d2328a37463e8485d93ead7d9166b",
+      "bytes": 41966,
+      "contentDigest": "sha256:ce867283331e82b389853145b2b381e0a6d12e26c4507893a2b10a028235bf43",
+      "generatorVersion": "1.0"
+    },
+    "southern-rockies@v1": {
+      "file": "southern-rockies@v1.xlsx",
+      "sha256": "sha256:00c6e55df5f00b7ccdd998f18d725901ae61f916246507e82c2d87ba81b088b3",
+      "bytes": 39693,
+      "contentDigest": "sha256:cbd87ee5b27929c7eb7568292ae4ed1c4d62e06eec8db8f124eeb308fb5b0066",
+      "generatorVersion": "1.0"
+    },
+    "southern-texas-plains@v1": {
+      "file": "southern-texas-plains@v1.xlsx",
+      "sha256": "sha256:a628a7ac69c702e32edef178128f0d075256f4c8154e59b9bc765006963acd95",
+      "bytes": 41003,
+      "contentDigest": "sha256:02f7c5121deb91a8f91feb1585915e517f99487fcc250e88c36dea740d9e242c",
+      "generatorVersion": "1.0"
+    },
+    "southwestern-appalachians@v1": {
+      "file": "southwestern-appalachians@v1.xlsx",
+      "sha256": "sha256:682369eee0e2b822ac4dffa07262370918162ece6711690b4300651547bd5cfb",
+      "bytes": 43972,
+      "contentDigest": "sha256:48a56ca74a25bfd4daffb1237b01e70292c5cc499804def3577ed2af0fb45fa0",
+      "generatorVersion": "1.0"
+    },
+    "southwestern-tablelands@v1": {
+      "file": "southwestern-tablelands@v1.xlsx",
+      "sha256": "sha256:baa632e9b47d6ae952bc007e593740b276c18b5125960a587fab40a5db68d9cc",
+      "bytes": 39961,
+      "contentDigest": "sha256:5526f67dbe8297beb4ad280cfc84a34a4342457bbbcca8438fbb882e5a960c34",
+      "generatorVersion": "1.0"
+    },
+    "texas-blackland-prairies@v1": {
+      "file": "texas-blackland-prairies@v1.xlsx",
+      "sha256": "sha256:b6bd5dedf5eaa7764d025335e5958ed10c4e05a9ef69d54eda7eb5d34f4d7c4b",
+      "bytes": 41852,
+      "contentDigest": "sha256:f4f3b6b4fb55cb03e2fcea4ccf0eade80f5994eca514149efbffe0dd082adea4",
+      "generatorVersion": "1.0"
+    },
+    "wasatch-and-uinta-mountains@v1": {
+      "file": "wasatch-and-uinta-mountains@v1.xlsx",
+      "sha256": "sha256:9a29056069b3bd90540faf5e12aa6c67168420c303d2d4f98b39e6ecc1c22201",
+      "bytes": 43276,
+      "contentDigest": "sha256:cff8e647901ecbc9f56eb0f867bc7037e1e09f79bbf95e894d2f55dbdc28cafb",
+      "generatorVersion": "1.0"
+    },
+    "western-allegheny-plateau@v1": {
+      "file": "western-allegheny-plateau@v1.xlsx",
+      "sha256": "sha256:c7eb59463ae9e12032ebc7436eb24af6a76453dd7c8f1486f4a82933dc47801a",
+      "bytes": 43997,
+      "contentDigest": "sha256:2bcc053d3d14cdb214b4cbdf43c9e8482685813f27af6528a45e79e000f13e3e",
+      "generatorVersion": "1.0"
+    },
+    "western-corn-belt-plains@v1": {
+      "file": "western-corn-belt-plains@v1.xlsx",
+      "sha256": "sha256:eaff9aa790cbd0030c0bdb14ad87980395f5f9fec23f3845630116b2be5d9b97",
+      "bytes": 40837,
+      "contentDigest": "sha256:092d2889575f3acb05db781b0b33f88e0b11642276ae64635ee7c62ad87aaa1a",
+      "generatorVersion": "1.0"
+    },
+    "western-gulf-coastal-plain@v1": {
+      "file": "western-gulf-coastal-plain@v1.xlsx",
+      "sha256": "sha256:f0b4a067c5ded310ded9dcca617196bc896ca75e8a28dec2bc5a0b3b93d84fed",
+      "bytes": 38356,
+      "contentDigest": "sha256:5e5fa2b7d4658d1a0a9fec1ea953ce9f61c3610fc882279f3a9d2c5354499b79",
+      "generatorVersion": "1.0"
+    },
     "wi-sqt-adapted@v2": {
       "file": "wi-sqt-adapted@v2.xlsx",
       "sha256": "sha256:9914cf889f9ee2041ca2513c3a8d57cec11ccffa9b796bbee8c8dd1e560827a7",
       "bytes": 38035,
       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b",
+      "generatorVersion": "1.0"
+    },
+    "willamette-valley@v1": {
+      "file": "willamette-valley@v1.xlsx",
+      "sha256": "sha256:000dfcaa99cc809125a7940f17d17f375022bfdd2b7e5cf8080d7abd3ede6e28",
+      "bytes": 41470,
+      "contentDigest": "sha256:240ddb45e155df064882b97c9de783d1375d92d9c2e3780e20f78634617f920c",
       "generatorVersion": "1.0"
     },
     "wy-sqt-adapted@v2": {
@@ -154,23 +742,108 @@
       "bytes": 38750,
       "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
       "generatorVersion": "1.0"
+    },
+    "wyoming-basin@v1": {
+      "file": "wyoming-basin@v1.xlsx",
+      "sha256": "sha256:d95530ad2b71ac9f272ffa5d08f6b89a2b98a318fe48b742b97fcb9fba1dc45a",
+      "bytes": 40485,
+      "contentDigest": "sha256:0273b0d6091ed8fa689f0ed1646df9de86d7e8be8ffbde8cbaa91de12393d280",
+      "generatorVersion": "1.0"
     }
   },
   "default": {
+    "acadian-plains-and-hills": "acadian-plains-and-hills.xlsx",
     "ak-sqt-adapted": "ak-sqt-adapted.xlsx",
+    "arizona-new-mexico-mountains": "arizona-new-mexico-mountains.xlsx",
+    "arizona-new-mexico-plateau": "arizona-new-mexico-plateau.xlsx",
+    "arkansas-valley": "arkansas-valley.xlsx",
+    "atlantic-coastal-pine-barrens": "atlantic-coastal-pine-barrens.xlsx",
+    "blue-mountains": "blue-mountains.xlsx",
+    "blue-ridge": "blue-ridge.xlsx",
+    "boston-mountains": "boston-mountains.xlsx",
+    "canadian-rockies": "canadian-rockies.xlsx",
+    "cascades": "cascades.xlsx",
+    "central-appalachians": "central-appalachians.xlsx",
     "central-basin-and-range": "central-basin-and-range.xlsx",
+    "central-california-foothills-and-coastal-mountains": "central-california-foothills-and-coastal-mountains.xlsx",
+    "central-california-valley": "central-california-valley.xlsx",
+    "central-corn-belt-plains": "central-corn-belt-plains.xlsx",
     "central-great-plains": "central-great-plains.xlsx",
+    "central-irregular-plains": "central-irregular-plains.xlsx",
+    "chihuahuan-deserts": "chihuahuan-deserts.xlsx",
     "co-sqt-adapted": "co-sqt-adapted.xlsx",
+    "coast-range": "coast-range.xlsx",
+    "colorado-plateaus": "colorado-plateaus.xlsx",
+    "columbia-plateau": "columbia-plateau.xlsx",
+    "cross-timbers": "cross-timbers.xlsx",
+    "driftless-area": "driftless-area.xlsx",
+    "east-central-texas-plains": "east-central-texas-plains.xlsx",
+    "eastern-cascades-slopes-and-foothills": "eastern-cascades-slopes-and-foothills.xlsx",
     "eastern-corn-belt-plains": "eastern-corn-belt-plains.xlsx",
+    "eastern-great-lakes-lowlands": "eastern-great-lakes-lowlands.xlsx",
+    "edwards-plateau": "edwards-plateau.xlsx",
+    "erie-drift-plain": "erie-drift-plain.xlsx",
+    "flint-hills": "flint-hills.xlsx",
+    "high-plains": "high-plains.xlsx",
+    "huron-erie-lake-plains": "huron-erie-lake-plains.xlsx",
+    "idaho-batholith": "idaho-batholith.xlsx",
     "interior-plateau": "interior-plateau.xlsx",
+    "interior-river-valleys-and-hills": "interior-river-valleys-and-hills.xlsx",
+    "klamath-mountains-california-high-north-coast-range": "klamath-mountains-california-high-north-coast-range.xlsx",
+    "lake-agassiz-plain": "lake-agassiz-plain.xlsx",
+    "madrean-archipelago": "madrean-archipelago.xlsx",
     "mi-sqt-adapted": "mi-sqt-adapted.xlsx",
+    "middle-atlantic-coastal-plain": "middle-atlantic-coastal-plain.xlsx",
+    "middle-rockies": "middle-rockies.xlsx",
+    "mississippi-alluvial-plain": "mississippi-alluvial-plain.xlsx",
+    "mississippi-valley-loess-plains": "mississippi-valley-loess-plains.xlsx",
     "mn-sqt-adapted": "mn-sqt-adapted.xlsx",
+    "mojave-basin-and-range": "mojave-basin-and-range.xlsx",
     "nc-sqt-adapted": "nc-sqt-adapted.xlsx",
+    "nebraska-sand-hills": "nebraska-sand-hills.xlsx",
+    "north-cascades": "north-cascades.xlsx",
+    "north-central-appalachians": "north-central-appalachians.xlsx",
+    "north-central-hardwood-forests": "north-central-hardwood-forests.xlsx",
+    "northeastern-coastal-zone": "northeastern-coastal-zone.xlsx",
     "northeastern-highlands": "northeastern-highlands.xlsx",
+    "northern-allegheny-plateau": "northern-allegheny-plateau.xlsx",
+    "northern-basin-and-range": "northern-basin-and-range.xlsx",
+    "northern-glaciated-plains": "northern-glaciated-plains.xlsx",
     "northern-lakes-and-forests": "northern-lakes-and-forests.xlsx",
+    "northern-minnesota-wetlands": "northern-minnesota-wetlands.xlsx",
+    "northern-piedmont": "northern-piedmont.xlsx",
+    "northern-rockies": "northern-rockies.xlsx",
+    "northwestern-glaciated-plains": "northwestern-glaciated-plains.xlsx",
+    "northwestern-great-plains": "northwestern-great-plains.xlsx",
+    "ouachita-mountains": "ouachita-mountains.xlsx",
+    "ozark-highlands": "ozark-highlands.xlsx",
+    "piedmont": "piedmont.xlsx",
+    "puget-lowland": "puget-lowland.xlsx",
+    "ridge-and-valley": "ridge-and-valley.xlsx",
     "sc-sqt-adapted": "sc-sqt-adapted.xlsx",
+    "sierra-nevada": "sierra-nevada.xlsx",
+    "snake-river-plain": "snake-river-plain.xlsx",
+    "sonoran-basin-and-range": "sonoran-basin-and-range.xlsx",
+    "south-central-plains": "south-central-plains.xlsx",
     "southeastern-plains": "southeastern-plains.xlsx",
+    "southeastern-wisconsin-till-plains": "southeastern-wisconsin-till-plains.xlsx",
+    "southern-california-mountains": "southern-california-mountains.xlsx",
+    "southern-california-northern-baja-coast": "southern-california-northern-baja-coast.xlsx",
+    "southern-coastal-plain": "southern-coastal-plain.xlsx",
+    "southern-florida-coastal-plain": "southern-florida-coastal-plain.xlsx",
+    "southern-michigan-northern-indiana-drift-plains": "southern-michigan-northern-indiana-drift-plains.xlsx",
+    "southern-rockies": "southern-rockies.xlsx",
+    "southern-texas-plains": "southern-texas-plains.xlsx",
+    "southwestern-appalachians": "southwestern-appalachians.xlsx",
+    "southwestern-tablelands": "southwestern-tablelands.xlsx",
+    "texas-blackland-prairies": "texas-blackland-prairies.xlsx",
+    "wasatch-and-uinta-mountains": "wasatch-and-uinta-mountains.xlsx",
+    "western-allegheny-plateau": "western-allegheny-plateau.xlsx",
+    "western-corn-belt-plains": "western-corn-belt-plains.xlsx",
+    "western-gulf-coastal-plain": "western-gulf-coastal-plain.xlsx",
     "wi-sqt-adapted": "wi-sqt-adapted.xlsx",
-    "wy-sqt-adapted": "wy-sqt-adapted.xlsx"
+    "willamette-valley": "willamette-valley.xlsx",
+    "wy-sqt-adapted": "wy-sqt-adapted.xlsx",
+    "wyoming-basin": "wyoming-basin.xlsx"
   }
 }

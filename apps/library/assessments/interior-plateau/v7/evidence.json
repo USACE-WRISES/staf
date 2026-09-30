@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 794682,
+  "name": "deep-dev-l3-71-9437cbd85758-b0991555.evidence.zip",
+  "sha256": "98d748d077b5f4f60de5de77bb736bf22fe28a8e2f310fe1d927e738108cac1c"
+ },
+ "bytes": 7455427,
+ "coverage": {
+  "assessmentId": "interior-plateau",
+  "curves": 22,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 63842,
+  "region": {
+   "code": "71",
+   "kind": "ecoregion",
+   "name": "Interior Plateau"
+  },
+  "stations": 41,
+  "stationsOutOfFrame": 23,
+  "values": 1277
+ },
+ "dataDigest": "sha256:2e383285f802ef49cff2b904136b0c3feb19d5a118b730c735295ff7e9899126",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:b0991555f8baae273579f199cbf5638ce27da24d67dafa7643a7553b0c142151",
+ "packageId": "deep-dev-l3-71",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 71 (Interior Plateau)",
+ "version": "9437cbd85758"
+}

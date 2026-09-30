@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 168152,
+  "name": "deep-dev-l3-13-718bc7993243-c290ed69.evidence.zip",
+  "sha256": "9ade2bacc5f30c80770b3c5cde6f05d2025b0ea67c842fdd7cd023e0adaed098"
+ },
+ "bytes": 1730312,
+ "coverage": {
+  "assessmentId": "central-basin-and-range",
+  "curves": 21,
+  "functionsScored": 20,
+  "ledgerRows": 43,
+  "metrics": 33,
+  "poolLedgerRows": 11675,
+  "region": {
+   "code": "13",
+   "kind": "ecoregion",
+   "name": "Central Basin and Range"
+  },
+  "stations": 43,
+  "stationsOutOfFrame": 8,
+  "values": 1292
+ },
+ "dataDigest": "sha256:63e533bfb93222b577c412a4115f67c5f638faafa3bcd3f185724d66fa61dc6d",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:c290ed690d9ab3a8190bdf7250e4d2ba18a8ecfd85242618de097cb8be95a565",
+ "packageId": "deep-dev-l3-13",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 13 (Central Basin and Range)",
+ "version": "718bc7993243"
+}

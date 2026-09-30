@@ -9,8 +9,8 @@
   },
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 13), StreamCurves regional analysis, methodology 0.14-provisional",
-  "latestVersion": 1,
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 13), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 2,
   "versions": [
     {
       "version": 1,
@@ -19,6 +19,14 @@
       "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 19 of 43 stations of this ecoregion pass. 24 reference curves use local stations, 2 borrow from a wider region, 5 metrics use fixed criteria, and 3 metrics are withheld for insufficient reference support.",
       "contentDigest": "sha256:632f70661f0e013ef7afb9e58bb9c7520c0b52b7bcf443ef434748b0d2fd5770",
       "supersedesVersion": null
+    },
+    {
+      "version": 2,
+      "updatedAt": "2026-09-30T07:07:38Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 19 of 43 stations of this ecoregion pass. 16 reference curves use local stations, 4 borrow from a wider region, 5 metrics use fixed criteria, and 5 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:9d3ed96f17757f4623dcc4a5b9b3a280f7e19c6c4a1004370469cb3841b2fe01",
+      "supersedesVersion": 1
     }
   ]
 }

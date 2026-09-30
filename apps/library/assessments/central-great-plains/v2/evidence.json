@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 479505,
+  "name": "deep-dev-l3-27-b436e021a338-728318b4.evidence.zip",
+  "sha256": "99ce101f3295829340729c595c0b2a44a0a5b5f93b8bcc9587ecf692ef99b1c7"
+ },
+ "bytes": 4748686,
+ "coverage": {
+  "assessmentId": "central-great-plains",
+  "curves": 16,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 30,
+  "poolLedgerRows": 38090,
+  "region": {
+   "code": "27",
+   "kind": "ecoregion",
+   "name": "Central Great Plains"
+  },
+  "stations": 93,
+  "stationsOutOfFrame": 34,
+  "values": 2654
+ },
+ "dataDigest": "sha256:b09485806238032d403ed02ad0d75ff4f0883262e871e6cd13643f768e64eca5",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:728318b4a89dca5646cde576e45da2f98a9aad0d0f06271e50a14e1af119bf5a",
+ "packageId": "deep-dev-l3-27",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 27 (Central Great Plains)",
+ "version": "b436e021a338"
+}

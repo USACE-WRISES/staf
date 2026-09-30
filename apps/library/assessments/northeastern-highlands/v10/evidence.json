@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 201794,
+  "name": "deep-dev-l3-58-cb461bf9983c-485391ef.evidence.zip",
+  "sha256": "409fe263d0957c8c20798fb991051f8aff84bba8b25466cbeef8c7bb20189fb5"
+ },
+ "bytes": 1828076,
+ "coverage": {
+  "assessmentId": "northeastern-highlands",
+  "curves": 29,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 11024,
+  "region": {
+   "code": "58",
+   "kind": "ecoregion",
+   "name": "Northeastern Highlands"
+  },
+  "stations": 175,
+  "stationsOutOfFrame": 11,
+  "values": 5425
+ },
+ "dataDigest": "sha256:98b19547e0be70665de1f5022eae000b9ee4f24789d7a0d3d95ea6144e297860",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:485391ef76c6c2d2f6b8953d12cbcdf820684115fbdfad7673cd4f16446879c9",
+ "packageId": "deep-dev-l3-58",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 58 (Northeastern Highlands)",
+ "version": "cb461bf9983c"
+}

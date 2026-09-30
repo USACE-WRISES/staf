@@ -1,0 +1,5343 @@
+{
+  "schemaVersion": 1,
+  "tier": "detailed",
+  "assessmentId": "idaho-batholith",
+  "assessmentName": "Idaho Batholith reference assessment",
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+  "applicability": "Idaho Batholith",
+  "metricsByFunction": [
+    {
+      "functionId": "catchment-hydrology",
+      "functionName": "Catchment hydrology",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-pctimp2019ws",
+          "metricName": "Impervious surface",
+          "inputType": "proportion",
+          "sourceCitation": "EASI fixed criteria, Catchment hydrology (land-cover pressure)",
+          "xLabel": "Impervious surface (%)",
+          "howToMeasure": "Impervious surface (%) is scored on the same fixed criteria EASI uses in every region. Good <10%, Fair 10-25%, Poor >25%.",
+          "methodContext": "Percent of the watershed in impervious surface. DEEP computes it for the delineated watershed. Nothing is measured in the field.",
+          "curve": {
+            "layerName": "EASI fixed criteria, Catchment hydrology (land-cover pressure)",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.69
+              },
+              {
+                "x": 25.005,
+                "y": 0.39
+              },
+              {
+                "x": 44.5115,
+                "y": 0.0
+              }
+            ]
+          },
+          "metricRole": "pressure_fixed",
+          "curveCaveats": [
+            "EASI lists the criteria for this metric as provisional, so the breakpoints may be revised."
+          ],
+          "confidenceLabel": "Fixed criteria",
+          "criteriaBasis": "fixed",
+          "criteriaSource": {
+            "title": "Catchment hydrology (land-cover pressure)",
+            "easiMethod": "catchment-land-cover-pressure",
+            "provisional": true,
+            "bands": [
+              {
+                "rating": "Good",
+                "label": "<10%"
+              },
+              {
+                "rating": "Fair",
+                "label": "10-25%"
+              },
+              {
+                "rating": "Poor",
+                "label": ">25%"
+              }
+            ],
+            "citations": [
+              {
+                "key": "nrsa-2018-19",
+                "text": "National Rivers and Streams Assessment 2018-19 Technical Support Document"
+              },
+              {
+                "key": "schueler-1994",
+                "text": "Schueler 1994, The importance of imperviousness"
+              },
+              {
+                "key": "allan-2004",
+                "text": "Allan 2004, Landscapes and riverscapes: the influence of land use on stream ecosystems"
+              },
+              {
+                "key": "wang-1997",
+                "text": "Wang et al. 1997, Influences of watershed land use on habitat quality and biotic integrity in Wisconsin streams"
+              },
+              {
+                "key": "king-2011",
+                "text": "King et al. 2011, Stream community thresholds at exceptionally low levels of catchment urbanization"
+              }
+            ],
+            "limitations": [
+              "The worse input governs because hydrologic alteration through one pathway is not offset by low pressure in the other.",
+              "Agricultural bands are national screening tiers, not ecological criteria.",
+              "A result computed from one input is labeled partial.",
+              "Sensitive macroinvertebrate taxa decline well below the 10 percent impervious Good boundary (community thresholds near 0.5 to 2 percent), so a Good rating is not a no-effect finding (King et al. 2011)."
+            ]
+          },
+          "basis": "published-benchmark",
+          "basisLabel": "Published benchmark",
+          "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+          "basisLimit": "A published criterion is not an estimate of this ecoregion's reference condition and may disagree with a reference curve where one exists.",
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-pctag2019ws",
+          "metricName": "Agriculture, crop and hay",
+          "inputType": "proportion",
+          "sourceCitation": "EASI fixed criteria, Catchment hydrology (land-cover pressure)",
+          "xLabel": "Agriculture, crop and hay (%)",
+          "howToMeasure": "Agriculture, crop and hay (%) is scored on the same fixed criteria EASI uses in every region. Good <30%, Fair 30-50%, Poor >50%.",
+          "methodContext": "Percent of the watershed in cultivated crops plus hay and pasture. DEEP computes it for the delineated watershed. Nothing is measured in the field.",
+          "curve": {
+            "layerName": "EASI fixed criteria, Catchment hydrology (land-cover pressure)",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 30.0,
+                "y": 0.69
+              },
+              {
+                "x": 50.005,
+                "y": 0.39
+              },
+              {
+                "x": 76.0115,
+                "y": 0.0
+              }
+            ]
+          },
+          "metricRole": "pressure_fixed",
+          "curveCaveats": [
+            "EASI lists the criteria for this metric as provisional, so the breakpoints may be revised."
+          ],
+          "confidenceLabel": "Fixed criteria",
+          "criteriaBasis": "fixed",
+          "criteriaSource": {
+            "title": "Catchment hydrology (land-cover pressure)",
+            "easiMethod": "catchment-land-cover-pressure",
+            "provisional": true,
+            "bands": [
+              {
+                "rating": "Good",
+                "label": "<30%"
+              },
+              {
+                "rating": "Fair",
+                "label": "30-50%"
+              },
+              {
+                "rating": "Poor",
+                "label": ">50%"
+              }
+            ],
+            "citations": [
+              {
+                "key": "nrsa-2018-19",
+                "text": "National Rivers and Streams Assessment 2018-19 Technical Support Document"
+              },
+              {
+                "key": "schueler-1994",
+                "text": "Schueler 1994, The importance of imperviousness"
+              },
+              {
+                "key": "allan-2004",
+                "text": "Allan 2004, Landscapes and riverscapes: the influence of land use on stream ecosystems"
+              },
+              {
+                "key": "wang-1997",
+                "text": "Wang et al. 1997, Influences of watershed land use on habitat quality and biotic integrity in Wisconsin streams"
+              },
+              {
+                "key": "king-2011",
+                "text": "King et al. 2011, Stream community thresholds at exceptionally low levels of catchment urbanization"
+              }
+            ],
+            "limitations": [
+              "The worse input governs because hydrologic alteration through one pathway is not offset by low pressure in the other.",
+              "Agricultural bands are national screening tiers, not ecological criteria.",
+              "A result computed from one input is labeled partial.",
+              "Sensitive macroinvertebrate taxa decline well below the 10 percent impervious Good boundary (community thresholds near 0.5 to 2 percent), so a Good rating is not a no-effect finding (King et al. 2011)."
+            ]
+          },
+          "basis": "published-benchmark",
+          "basisLabel": "Published benchmark",
+          "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+          "basisLimit": "A published criterion is not an estimate of this ecoregion's reference condition and may disagree with a reference curve where one exists.",
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    },
+    {
+      "functionId": "surface-water-storage",
+      "functionName": "Surface water storage",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-pctwet2019ws",
+          "metricName": "Wetland",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Wetland (%)",
+          "howToMeasure": "Watershed wetland (%), woody plus herbaceous, both classes required; wetlands store surface water and attenuate flow peaks. EASI scores Surface water storage on the same sum (method watershed-wetland-extent).",
+          "methodContext": "Percent of the watershed in woody plus herbaceous wetland (NLCD 2019). DEEP reads it from EPA StreamCat for the reach. Nothing is measured in the field.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.025714285714285714,
+                "y": 0.3
+              },
+              {
+                "x": 0.06,
+                "y": 0.7
+              },
+              {
+                "x": 2.25,
+                "y": 1.0
+              },
+              {
+                "x": 3.3449999999999998,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 121,
+          "sampleDisposition": "adequate",
+          "metricRole": "landscape_expectation",
+          "curveCaveats": [
+            "Wetland cover follows terrain: a steep watershed that never held wetland reads low on this curve without being degraded.",
+            "The reference stations for this curve were borrowed from Level II ecoregion 6.2 (Western Cordillera) because this ecoregion has too few least-disturbed stations of its own. 121 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 6.2 (Western Cordillera), 26 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on hydraulic conductivity, precipitation, surficial lithology. Flagged transfer: the recovery test did not confirm this source for this ecoregion. In the recovery test the source's class calls did not agree with reference often enough. The test found class agreement 0.56 of 18 evaluation regions, where two thirds over at least 4 regions is required; net optimism +0.00, where at most 0.05 is allowed. No source passed the validated acceptance criteria for this metric here, so the pool is used under the flagged-transfer rung as the narrowest comparable pool with at least the adequate floor of usable comparable stations that passes the sample, stability and comparability checks. The curve carries transfer risk unvalidated and its confidence is capped at 39; read the condition band with that limitation in mind.",
+            "Scored on a reference pool whose transfer to this ecoregion was not confirmed by the recovery test (class agreement 0.56 of evaluation regions; two thirds required); confidence capped at 39."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 39.0,
+          "referenceRange": [
+            0.0,
+            8.31
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "borrowed_l2",
+            "level": "l2",
+            "levelLabel": "Level II",
+            "regionCode": "6.2",
+            "regionName": "Western Cordillera",
+            "screen": "least-disturbed-regional-v1 (relaxed tier, watershed agriculture at most 25 percent, the 25 percent floor)",
+            "screenId": "least-disturbed-regional-v1",
+            "agricultureLimit": 25.0,
+            "agricultureRule": "floor",
+            "nPool": 317,
+            "nComparable": 121,
+            "nUsable": 121,
+            "nLocal": 26,
+            "nHuc12": 115,
+            "disposition": "adequate",
+            "family": "hydrology",
+            "covariates": [
+              "hydrlcondws",
+              "precip8110ws",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l3",
+            "transferRisk": "unvalidated",
+            "transferNote": "121 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 6.2 (Western Cordillera), 26 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on hydraulic conductivity, precipitation, surficial lithology. Flagged transfer: the recovery test did not confirm this source for this ecoregion. In the recovery test the source's class calls did not agree with reference often enough. The test found class agreement 0.56 of 18 evaluation regions, where two thirds over at least 4 regions is required; net optimism +0.00, where at most 0.05 is allowed. No source passed the validated acceptance criteria for this metric here, so the pool is used under the flagged-transfer rung as the narrowest comparable pool with at least the adequate floor of usable comparable stations that passes the sample, stability and comparability checks. The curve carries transfer risk unvalidated and its confidence is capped at 39; read the condition band with that limitation in mind.",
+            "transferValidation": {
+              "basis": "2r_l2",
+              "evidence": "metric",
+              "accepted": false,
+              "why": "In the recovery test the source's class calls did not agree with reference often enough.",
+              "min_cells": 4,
+              "min_share": 0.6667,
+              "max_net_optimism": 0.05,
+              "verdict": "unsupported",
+              "a1_share": 0.5556,
+              "net_opt": 0.0,
+              "n_cells": 18,
+              "c1_share": 0.1667
+            },
+            "confidenceCap": 39,
+            "rule": "REF-16",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 0.08249999999999999,
+            "q50": 0.325,
+            "q75": 0.9325
+          },
+          "stratifier": {
+            "key": "NhdSlopeClass",
+            "variable": "nhd_slope",
+            "units": "m/m",
+            "source": "NHDPlus V2 flowline slope",
+            "breaks": [
+              0.005,
+              0.02
+            ],
+            "right": false,
+            "classes": [
+              {
+                "key": "lt_0.5",
+                "label": "Low gradient (under 0.5 percent)",
+                "hasCurve": false,
+                "n": 12
+              },
+              {
+                "key": "0.5_to_2",
+                "label": "Moderate gradient (0.5 to 2 percent)",
+                "hasCurve": true,
+                "n": 32
+              },
+              {
+                "key": "ge_2",
+                "label": "Steep (2 percent and above)",
+                "hasCurve": true,
+                "n": 77
+              }
+            ],
+            "registryVersion": 1,
+            "status": "accept"
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.478,
+            "nRef": 121,
+            "nPressure": 95,
+            "medianRefIndex": 0.775,
+            "medianPressureIndex": 0.815,
+            "aucRvsIm": 0.396,
+            "nR": 35,
+            "nIm": 41,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "transferRisk": "unvalidated",
+          "transferValidation": {
+            "basis": "2r_l2",
+            "evidence": "metric",
+            "accepted": false,
+            "why": "In the recovery test the source's class calls did not agree with reference often enough.",
+            "min_cells": 4,
+            "min_share": 0.6667,
+            "max_net_optimism": 0.05,
+            "verdict": "unsupported",
+            "a1_share": 0.5556,
+            "net_opt": 0.0,
+            "n_cells": 18,
+            "c1_share": 0.1667
+          },
+          "transferNote": "121 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 6.2 (Western Cordillera), 26 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on hydraulic conductivity, precipitation, surficial lithology. Flagged transfer: the recovery test did not confirm this source for this ecoregion. In the recovery test the source's class calls did not agree with reference often enough. The test found class agreement 0.56 of 18 evaluation regions, where two thirds over at least 4 regions is required; net optimism +0.00, where at most 0.05 is allowed. No source passed the validated acceptance criteria for this metric here, so the pool is used under the flagged-transfer rung as the narrowest comparable pool with at least the adequate floor of usable comparable stations that passes the sample, stability and comparability checks. The curve carries transfer risk unvalidated and its confidence is capped at 39; read the condition band with that limitation in mind.",
+          "confidenceCap": 39,
+          "curveLayers": [
+            {
+              "stratum": "",
+              "points": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 0.025714285714285714,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.06,
+                  "y": 0.7
+                },
+                {
+                  "x": 2.25,
+                  "y": 1.0
+                },
+                {
+                  "x": 3.3449999999999998,
+                  "y": 1.0
+                }
+              ]
+            },
+            {
+              "stratum": "0.5_to_2",
+              "points": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 0.11142857142857143,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.26,
+                  "y": 0.7
+                },
+                {
+                  "x": 2.2199999999999998,
+                  "y": 1.0
+                },
+                {
+                  "x": 3.1999999999999997,
+                  "y": 1.0
+                }
+              ]
+            }
+          ],
+          "activeStratum": "",
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "reach-inflow",
+      "functionName": "Reach inflow",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-rddensws",
+          "metricName": "Road density",
+          "inputType": "continuous",
+          "sourceCitation": "EASI fixed criteria, Road-density proxy for concentrated inflow pressure",
+          "xLabel": "Road density (km/sq km)",
+          "howToMeasure": "Road density (km/sq km) is scored on the same fixed criteria EASI uses in every region. Good <1 km/km², Fair 1-<3 km/km², Poor ≥3 km/km².",
+          "methodContext": "Road length per square kilometer of watershed. DEEP computes it for the delineated watershed. Nothing is measured in the field.",
+          "curve": {
+            "layerName": "EASI fixed criteria, Road-density proxy for concentrated inflow pressure",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 1.0,
+                "y": 0.69
+              },
+              {
+                "x": 3.0,
+                "y": 0.39
+              },
+              {
+                "x": 5.6,
+                "y": 0.0
+              }
+            ]
+          },
+          "metricRole": "pressure_fixed",
+          "curveCaveats": [
+            "EASI lists the criteria for this metric as provisional, so the breakpoints may be revised."
+          ],
+          "confidenceLabel": "Fixed criteria",
+          "criteriaBasis": "fixed",
+          "criteriaSource": {
+            "title": "Road-density proxy for concentrated inflow pressure",
+            "easiMethod": "road-density-inflow-pressure",
+            "provisional": true,
+            "bands": [
+              {
+                "rating": "Good",
+                "label": "<1 km/km²"
+              },
+              {
+                "rating": "Fair",
+                "label": "1-<3 km/km²"
+              },
+              {
+                "rating": "Poor",
+                "label": "≥3 km/km²"
+              }
+            ],
+            "citations": [
+              {
+                "key": "nrsa-2018-19",
+                "text": "National Rivers and Streams Assessment 2018-19 Technical Support Document"
+              },
+              {
+                "key": "usfs-wcf",
+                "text": "USDA Forest Service 2011, Watershed Condition Classification Technical Guide (FS-978)"
+              }
+            ],
+            "limitations": [
+              "Road density does not count actual outfalls or establish whether runoff is treated.",
+              "The 1 km/km² breakpoint is a screening judgment.",
+              "USFS watershed-condition guidance classes road density more strictly (good under 1, impaired over 2.4 miles per square mile, about 0.62 and 1.49 km/km²), derived from salmonid watersheds. EASI keeps the NRSA-anchored national screen and discloses the stricter alternative."
+            ]
+          },
+          "basis": "published-benchmark",
+          "basisLabel": "Published benchmark",
+          "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+          "basisLimit": "A published criterion is not an estimate of this ecoregion's reference condition and may disagree with a reference curve where one exists.",
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    },
+    {
+      "functionId": "streamflow-regime",
+      "functionName": "Streamflow regime",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-bfiws",
+          "metricName": "Base flow index",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Base flow index (%)",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
+          "methodContext": "Base flow index of the watershed, the percent of streamflow that comes from base flow (USGS base flow index grid). DEEP reads it from EPA StreamCat for the reach. Nothing is measured in the field.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 29.232707142857148,
+                "y": 0.3
+              },
+              {
+                "x": 68.20965000000001,
+                "y": 0.7
+              },
+              {
+                "x": 74.0,
+                "y": 1.0
+              },
+              {
+                "x": 76.895175,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "landscape_expectation",
+          "curveCaveats": [
+            "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 94.0,
+          "referenceRange": [
+            63.3895,
+            75.5224
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "hydrology",
+            "covariates": [
+              "hydrlcondws",
+              "precip8110ws",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 68.20965000000001,
+            "q50": 71.725,
+            "q75": 74.0
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.738,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.883,
+            "medianPressureIndex": 0.759,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "discriminates"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-dorws",
+          "metricName": "Degree of regulation",
+          "inputType": "continuous",
+          "sourceCitation": "EASI fixed criteria, Flow alteration (degree of regulation)",
+          "xLabel": "Degree of regulation (%)",
+          "howToMeasure": "Degree of regulation (%) is scored on the same fixed criteria EASI uses in every region. Good <2%, Fair 2-15%, Poor >15%.",
+          "methodContext": "Degree of regulation, the normal storage of upstream dams as a percent of mean annual runoff. DEEP reads both from EPA StreamCat for the reach. Nothing is measured in the field.",
+          "curve": {
+            "layerName": "EASI fixed criteria, Flow alteration (degree of regulation)",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 2.0,
+                "y": 0.69
+              },
+              {
+                "x": 15.005,
+                "y": 0.39
+              },
+              {
+                "x": 31.9115,
+                "y": 0.0
+              }
+            ]
+          },
+          "metricRole": "pressure_fixed",
+          "curveCaveats": [],
+          "confidenceLabel": "Fixed criteria",
+          "criteriaBasis": "fixed",
+          "criteriaSource": {
+            "title": "Flow alteration (degree of regulation)",
+            "easiMethod": "degree-of-regulation",
+            "provisional": false,
+            "bands": [
+              {
+                "rating": "Good",
+                "label": "<2%"
+              },
+              {
+                "rating": "Fair",
+                "label": "2-15%"
+              },
+              {
+                "rating": "Poor",
+                "label": ">15%"
+              }
+            ],
+            "citations": [
+              {
+                "key": "streamcat",
+                "text": "EPA StreamCat Metrics and Definitions"
+              },
+              {
+                "key": "lehner-2011",
+                "text": "Lehner et al. 2011, High-resolution mapping of the world's reservoirs and dams"
+              },
+              {
+                "key": "grill-2019",
+                "text": "Grill et al. 2019, Mapping the world's free-flowing rivers"
+              }
+            ],
+            "limitations": [
+              "Degree of regulation does not describe operating rules, diversions, seasonality, or dam location on the network.",
+              "Missing or non-positive runoff is not converted to zero and leaves the metric unscored."
+            ]
+          },
+          "basis": "published-benchmark",
+          "basisLabel": "Published benchmark",
+          "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+          "basisLimit": "A published criterion is not an estimate of this ecoregion's reference condition and may disagree with a reference curve where one exists.",
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    },
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "functionName": "Low flow and baseflow dynamics",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-bfiws",
+          "metricName": "Base flow index",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Base flow index (%)",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
+          "methodContext": "Base flow index of the watershed, the percent of streamflow that comes from base flow (USGS base flow index grid). DEEP reads it from EPA StreamCat for the reach. Nothing is measured in the field.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 29.232707142857148,
+                "y": 0.3
+              },
+              {
+                "x": 68.20965000000001,
+                "y": 0.7
+              },
+              {
+                "x": 74.0,
+                "y": 1.0
+              },
+              {
+                "x": 76.895175,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "landscape_expectation",
+          "curveCaveats": [
+            "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 94.0,
+          "referenceRange": [
+            63.3895,
+            75.5224
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "hydrology",
+            "covariates": [
+              "hydrlcondws",
+              "precip8110ws",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 68.20965000000001,
+            "q50": 71.725,
+            "q75": 74.0
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.738,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.883,
+            "medianPressureIndex": 0.759,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "discriminates"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-phab-rp100-cm",
+          "metricName": "Residual pool depth",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Residual pool depth (cm)",
+          "howToMeasure": "Residual pool depth per 100 m; deeper residual pools generally better habitat.",
+          "methodContext": "Measure the thalweg depth at 10 or 15 evenly spaced stations between each pair of transects (100 or 150 along the reach). The value is the mean residual pool depth in centimeters, computed from that depth profile and the reach slope with the NRSA physical habitat calculations.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 2.63643673488072,
+                "y": 0.3
+              },
+              {
+                "x": 6.15168571472168,
+                "y": 0.7
+              },
+              {
+                "x": 23.616482734680176,
+                "y": 1.0
+              },
+              {
+                "x": 32.348881244659424,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with ChannelSlopeClass (cross-validated improvement 16%, resample recurrence 80%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "Moderate",
+          "confidenceTotal": 70.2,
+          "referenceRange": [
+            1.968775987625122,
+            61.02259063720703
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "channel_form",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 6.15168571472168,
+            "q50": 8.65691614151001,
+            "q75": 23.616482734680176
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.585,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.747,
+            "medianPressureIndex": 0.741,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "weak"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "high-flow-dynamics",
+      "functionName": "High flow dynamics",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-pctimp2019ws",
+          "metricName": "Impervious surface",
+          "inputType": "proportion",
+          "sourceCitation": "EASI fixed criteria, Catchment hydrology (land-cover pressure)",
+          "xLabel": "Impervious surface (%)",
+          "howToMeasure": "Impervious surface (%) is scored on the same fixed criteria EASI uses in every region. Good <10%, Fair 10-25%, Poor >25%.",
+          "methodContext": "Percent of the watershed in impervious surface. DEEP computes it for the delineated watershed. Nothing is measured in the field.",
+          "curve": {
+            "layerName": "EASI fixed criteria, Catchment hydrology (land-cover pressure)",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.69
+              },
+              {
+                "x": 25.005,
+                "y": 0.39
+              },
+              {
+                "x": 44.5115,
+                "y": 0.0
+              }
+            ]
+          },
+          "metricRole": "pressure_fixed",
+          "curveCaveats": [
+            "EASI lists the criteria for this metric as provisional, so the breakpoints may be revised."
+          ],
+          "confidenceLabel": "Fixed criteria",
+          "criteriaBasis": "fixed",
+          "criteriaSource": {
+            "title": "Catchment hydrology (land-cover pressure)",
+            "easiMethod": "catchment-land-cover-pressure",
+            "provisional": true,
+            "bands": [
+              {
+                "rating": "Good",
+                "label": "<10%"
+              },
+              {
+                "rating": "Fair",
+                "label": "10-25%"
+              },
+              {
+                "rating": "Poor",
+                "label": ">25%"
+              }
+            ],
+            "citations": [
+              {
+                "key": "nrsa-2018-19",
+                "text": "National Rivers and Streams Assessment 2018-19 Technical Support Document"
+              },
+              {
+                "key": "schueler-1994",
+                "text": "Schueler 1994, The importance of imperviousness"
+              },
+              {
+                "key": "allan-2004",
+                "text": "Allan 2004, Landscapes and riverscapes: the influence of land use on stream ecosystems"
+              },
+              {
+                "key": "wang-1997",
+                "text": "Wang et al. 1997, Influences of watershed land use on habitat quality and biotic integrity in Wisconsin streams"
+              },
+              {
+                "key": "king-2011",
+                "text": "King et al. 2011, Stream community thresholds at exceptionally low levels of catchment urbanization"
+              }
+            ],
+            "limitations": [
+              "The worse input governs because hydrologic alteration through one pathway is not offset by low pressure in the other.",
+              "Agricultural bands are national screening tiers, not ecological criteria.",
+              "A result computed from one input is labeled partial.",
+              "Sensitive macroinvertebrate taxa decline well below the 10 percent impervious Good boundary (community thresholds near 0.5 to 2 percent), so a Good rating is not a no-effect finding (King et al. 2011)."
+            ]
+          },
+          "basis": "published-benchmark",
+          "basisLabel": "Published benchmark",
+          "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+          "basisLimit": "A published criterion is not an estimate of this ecoregion's reference condition and may disagree with a reference curve where one exists.",
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "additional-function"
+        }
+      ]
+    },
+    {
+      "functionId": "floodplain-connectivity",
+      "functionName": "Floodplain connectivity",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-phab-bfwd-rat",
+          "metricName": "Bankfull width:depth ratio",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Bankfull width:depth ratio",
+          "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
+          "methodContext": "At each transect, measure the bankfull width and the bankfull height above the water surface, and the thalweg depth. The value is the mean bankfull width divided by the mean bankfull depth (bankfull height plus thalweg depth).",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 4.2731640338897705,
+                "y": 0.3
+              },
+              {
+                "x": 8.136164915561675,
+                "y": 0.7
+              },
+              {
+                "x": 10.21624231338501,
+                "y": 1.0
+              },
+              {
+                "x": 16.15932059288025,
+                "y": 1.0
+              },
+              {
+                "x": 18.239397990703583,
+                "y": 0.7
+              },
+              {
+                "x": 22.10239887237549,
+                "y": 0.3
+              },
+              {
+                "x": 28.045477151870728,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 86.2,
+          "referenceRange": [
+            5.353730201721191,
+            53.86482238769531
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "channel_form",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 10.21624231338501,
+            "q50": 13.69361162185669,
+            "q75": 16.15932059288025
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.7,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.87,
+            "medianPressureIndex": 0.329,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "discriminates"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-phab-xbkf-h",
+          "metricName": "Bankfull height above channel",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Bankfull height above channel (m)",
+          "howToMeasure": "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core.",
+          "methodContext": "At each transect, measure the height of the bankfull elevation above the present water surface in meters, with a rod at the water's edge and a clinometer held level at bankfull. The value is the mean of the 11 heights.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.00022724270820617676,
+                "y": 0.3
+              },
+              {
+                "x": 0.19360225684940816,
+                "y": 0.7
+              },
+              {
+                "x": 0.2977272644639015,
+                "y": 1.0
+              },
+              {
+                "x": 0.5952272862195969,
+                "y": 1.0
+              },
+              {
+                "x": 0.6993522938340903,
+                "y": 0.7
+              },
+              {
+                "x": 0.8927273079752922,
+                "y": 0.3
+              },
+              {
+                "x": 1.1902273297309875,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 80.7,
+          "referenceRange": [
+            0.15545454621315002,
+            1.239090919494629
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "channel_form",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 0.2977272644639015,
+            "q50": 0.3877272754907608,
+            "q75": 0.5952272862195969
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.523,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.946,
+            "medianPressureIndex": 0.996,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "hyporheic-connectivity",
+      "functionName": "Hyporheic connectivity",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-phab-pct-safn",
+          "metricName": "Sand + fines",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Sand + fines (%)",
+          "howToMeasure": "Percent sand and fines; higher indicates fine-sediment loading (worse).",
+          "methodContext": "Record the size class of the particle at five evenly spaced points across each of the 11 transects and the 10 cross-sections midway between them (105 particles). The value is the percent of particles that are sand or finer.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 2.452380955219269,
+                "y": 1.0
+              },
+              {
+                "x": 30.0,
+                "y": 0.7
+              },
+              {
+                "x": 71.3214285671711,
+                "y": 0.3
+              },
+              {
+                "x": 98.86904761195183,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 85.1,
+          "referenceRange": [
+            0.0,
+            95.23809814453125
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "substrate",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l2",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 2.452380955219269,
+            "q50": 12.023809909820557,
+            "q75": 30.0
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.454,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.898,
+            "medianPressureIndex": 0.902,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-phab-xembed",
+          "metricName": "Embeddedness",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Embeddedness (%)",
+          "howToMeasure": "Percent embeddedness; higher means interstitial spaces filled with fines (worse).",
+          "methodContext": "At five evenly spaced points across each of the 11 transects, estimate how much of the particle under the point is buried in sand and finer sediment, in percent. Record the 55 estimates. The value is their mean.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 41.55555534362793,
+                "y": 1.0
+              },
+              {
+                "x": 48.718854904174805,
+                "y": 1.0
+              },
+              {
+                "x": 63.045454025268555,
+                "y": 0.7
+              },
+              {
+                "x": 84.53535270690918,
+                "y": 0.3
+              },
+              {
+                "x": 98.86195182800293,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 19,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 19 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            19.545454025268555,
+            96.54545593261719
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 19,
+            "nLocal": 19,
+            "nHuc12": 18,
+            "disposition": "exploratory",
+            "family": "substrate",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l2",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 19,
+            "q25": 48.718854904174805,
+            "q50": 52.54545593261719,
+            "q75": 63.045454025268555
+          },
+          "discrimination": {
+            "aucRefVsPressure": null,
+            "nRef": 19,
+            "nPressure": 3,
+            "medianRefIndex": null,
+            "medianPressureIndex": null,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "not_evaluable"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "channel-evolution",
+      "functionName": "Channel evolution",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-bfwd-rat",
+          "metricName": "Bankfull width:depth ratio",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Bankfull width:depth ratio",
+          "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
+          "methodContext": "At each transect, measure the bankfull width and the bankfull height above the water surface, and the thalweg depth. The value is the mean bankfull width divided by the mean bankfull depth (bankfull height plus thalweg depth).",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 4.2731640338897705,
+                "y": 0.3
+              },
+              {
+                "x": 8.136164915561675,
+                "y": 0.7
+              },
+              {
+                "x": 10.21624231338501,
+                "y": 1.0
+              },
+              {
+                "x": 16.15932059288025,
+                "y": 1.0
+              },
+              {
+                "x": 18.239397990703583,
+                "y": 0.7
+              },
+              {
+                "x": 22.10239887237549,
+                "y": 0.3
+              },
+              {
+                "x": 28.045477151870728,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 86.2,
+          "referenceRange": [
+            5.353730201721191,
+            53.86482238769531
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "channel_form",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 10.21624231338501,
+            "q50": 13.69361162185669,
+            "q75": 16.15932059288025
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.7,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.87,
+            "medianPressureIndex": 0.329,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "discriminates"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-phab-xbkf-h",
+          "metricName": "Bankfull height above channel",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Bankfull height above channel (m)",
+          "howToMeasure": "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core.",
+          "methodContext": "At each transect, measure the height of the bankfull elevation above the present water surface in meters, with a rod at the water's edge and a clinometer held level at bankfull. The value is the mean of the 11 heights.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.00022724270820617676,
+                "y": 0.3
+              },
+              {
+                "x": 0.19360225684940816,
+                "y": 0.7
+              },
+              {
+                "x": 0.2977272644639015,
+                "y": 1.0
+              },
+              {
+                "x": 0.5952272862195969,
+                "y": 1.0
+              },
+              {
+                "x": 0.6993522938340903,
+                "y": 0.7
+              },
+              {
+                "x": 0.8927273079752922,
+                "y": 0.3
+              },
+              {
+                "x": 1.1902273297309875,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 80.7,
+          "referenceRange": [
+            0.15545454621315002,
+            1.239090919494629
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "channel_form",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 0.2977272644639015,
+            "q50": 0.3877272754907608,
+            "q75": 0.5952272862195969
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.523,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.946,
+            "medianPressureIndex": 0.996,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "functionName": "Channel and floodplain dynamics",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-sinu",
+          "metricName": "Sinuosity",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Sinuosity",
+          "howToMeasure": "Channel sinuosity; higher generally indicates a more natural planform.",
+          "methodContext": "Take a compass bearing (backsight) and the distance between each pair of neighboring transects. The value is the channel length along those segments divided by the straight line distance between the ends of the reach.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 1.0,
+                "y": 0.0
+              },
+              {
+                "x": 1.0503123998641968,
+                "y": 0.7
+              },
+              {
+                "x": 1.2742894291877747,
+                "y": 1.0
+              },
+              {
+                "x": 1.3862779438495636,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 19,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 19 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            1.0068236589431763,
+            1.7988117933273315
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 19,
+            "nLocal": 19,
+            "nHuc12": 18,
+            "disposition": "exploratory",
+            "family": "channel_form",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 19,
+            "q25": 1.0503123998641968,
+            "q50": 1.1264082193374634,
+            "q75": 1.2742894291877747
+          },
+          "discrimination": {
+            "aucRefVsPressure": null,
+            "nRef": 19,
+            "nPressure": 3,
+            "medianRefIndex": null,
+            "medianPressureIndex": null,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "not_evaluable"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-phab-xbka",
+          "metricName": "Bank angle",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Bank angle (degrees)",
+          "howToMeasure": "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment. low_tail flat added at the adversarial review gate (owner decision, 2026-08-21): a regraded or naturally gentle bank holds at the Functioning edge instead of being penalized, because the flat tail is not symmetric evidence of degradation and the framework's stated use is restoration evaluation.",
+          "methodContext": "At the left and the right bank of each transect, lay a pole about one meter long against the bank and read its angle from horizontal with a clinometer, in degrees. The value is the mean of the 22 readings.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.7
+              },
+              {
+                "x": 14.132142305374146,
+                "y": 0.7
+              },
+              {
+                "x": 21.357142448425293,
+                "y": 1.0
+              },
+              {
+                "x": 42.0,
+                "y": 1.0
+              },
+              {
+                "x": 49.22500014305115,
+                "y": 0.7
+              },
+              {
+                "x": 62.64285755157471,
+                "y": 0.3
+              },
+              {
+                "x": 83.28571510314941,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 19,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 19 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            10.681818008422852,
+            67.36363983154297
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 19,
+            "nLocal": 19,
+            "nHuc12": 18,
+            "disposition": "exploratory",
+            "family": "channel_form",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l2",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 19,
+            "q25": 21.357142448425293,
+            "q50": 35.59090805053711,
+            "q75": 42.0
+          },
+          "discrimination": {
+            "aucRefVsPressure": null,
+            "nRef": 19,
+            "nPressure": 3,
+            "medianRefIndex": null,
+            "medianPressureIndex": null,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "not_evaluable"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "sediment-continuity",
+      "functionName": "Sediment continuity",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-lrbs-use",
+          "metricName": "Relative bed stability",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Relative bed stability (log)",
+          "howToMeasure": "Log relative bed stability; departure from the reference core in EITHER direction departs from reference (negative excess fines, positive an armored, sediment-starved bed, the classic below-impoundment failure). The pilot's rising direction scored armored beds 1.0 and left Sediment continuity blind to its textbook failure mode. Two-sided form is an owner decision at the adversarial review gate, 2026-08-21.",
+          "methodContext": "Computed, not read in the field. It is the base 10 logarithm of the ratio of the geometric mean particle diameter to the largest diameter the bankfull flow can move, from the particle count, reach slope, bankfull depth, wood tally and residual pools, with the NRSA physical habitat calculations.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": -2.7778757188934833,
+                "y": 0.0
+              },
+              {
+                "x": -1.853631234378554,
+                "y": 0.3
+              },
+              {
+                "x": -1.2528723194438498,
+                "y": 0.7
+              },
+              {
+                "x": -0.9293867498636246,
+                "y": 1.0
+              },
+              {
+                "x": -0.0051422653486952186,
+                "y": 1.0
+              },
+              {
+                "x": 0.31834330423153,
+                "y": 0.7
+              },
+              {
+                "x": 0.9191022191662341,
+                "y": 0.3
+              },
+              {
+                "x": 1.8433467036811635,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 84.0,
+          "referenceRange": [
+            -2.4239790439605713,
+            1.0848180055618286
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "substrate",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": -0.9293867498636246,
+            "q50": -0.3785204291343689,
+            "q75": -0.00514226546511054
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.685,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.963,
+            "medianPressureIndex": 0.701,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "discriminates"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-phab-pct-safn",
+          "metricName": "Sand + fines",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Sand + fines (%)",
+          "howToMeasure": "Percent sand and fines; higher indicates fine-sediment loading (worse).",
+          "methodContext": "Record the size class of the particle at five evenly spaced points across each of the 11 transects and the 10 cross-sections midway between them (105 particles). The value is the percent of particles that are sand or finer.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 2.452380955219269,
+                "y": 1.0
+              },
+              {
+                "x": 30.0,
+                "y": 0.7
+              },
+              {
+                "x": 71.3214285671711,
+                "y": 0.3
+              },
+              {
+                "x": 98.86904761195183,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 85.1,
+          "referenceRange": [
+            0.0,
+            95.23809814453125
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "substrate",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l2",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 2.452380955219269,
+            "q50": 12.023809909820557,
+            "q75": 30.0
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.454,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.898,
+            "medianPressureIndex": 0.902,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "functionName": "Bed composition and bedform dynamics",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-lsub-dmm",
+          "metricName": "Substrate size",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Substrate size (log mm)",
+          "howToMeasure": "Log mean substrate diameter; coarser substrate generally better, but valley-type dependent.",
+          "methodContext": "From the same 105-particle size class count as sand and fines. The value is the base 10 logarithm of the geometric mean particle diameter in millimeters, computed from the size classes with the NRSA physical habitat calculations.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": -1.7944860011339188,
+                "y": 0.0
+              },
+              {
+                "x": -0.6543828099966049,
+                "y": 0.3
+              },
+              {
+                "x": 1.0557719767093658,
+                "y": 0.7
+              },
+              {
+                "x": 2.1958751678466797,
+                "y": 1.0
+              },
+              {
+                "x": 2.7659267634153366,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 94.0,
+          "referenceRange": [
+            -1.2043269872665405,
+            2.6421375274658203
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "substrate",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l2",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 1.0557719767093658,
+            "q50": 1.866190791130066,
+            "q75": 2.1958751678466797
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.523,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.913,
+            "medianPressureIndex": 0.795,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-phab-xembed",
+          "metricName": "Embeddedness",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Embeddedness (%)",
+          "howToMeasure": "Percent embeddedness; higher means interstitial spaces filled with fines (worse).",
+          "methodContext": "At five evenly spaced points across each of the 11 transects, estimate how much of the particle under the point is buried in sand and finer sediment, in percent. Record the 55 estimates. The value is their mean.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 41.55555534362793,
+                "y": 1.0
+              },
+              {
+                "x": 48.718854904174805,
+                "y": 1.0
+              },
+              {
+                "x": 63.045454025268555,
+                "y": 0.7
+              },
+              {
+                "x": 84.53535270690918,
+                "y": 0.3
+              },
+              {
+                "x": 98.86195182800293,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 19,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 19 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            19.545454025268555,
+            96.54545593261719
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 19,
+            "nLocal": 19,
+            "nHuc12": 18,
+            "disposition": "exploratory",
+            "family": "substrate",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l2",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 19,
+            "q25": 48.718854904174805,
+            "q50": 52.54545593261719,
+            "q75": 63.045454025268555
+          },
+          "discrimination": {
+            "aucRefVsPressure": null,
+            "nRef": 19,
+            "nPressure": 3,
+            "medianRefIndex": null,
+            "medianPressureIndex": null,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "not_evaluable"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "light-thermal-regime",
+      "functionName": "Light & thermal regime",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "spring-chem-chla",
+          "metricName": "Chlorophyll a",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Chlorophyll a (ug/L)",
+          "howToMeasure": "Chlorophyll a; higher indicates algal enrichment/eutrophication (worse).",
+          "methodContext": "Chlorophyll a of the water column in micrograms per liter, from a 2 L grab sample taken at mid-channel at the X-site in an amber bottle, filtered and analyzed in a laboratory.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.2602500170469284,
+                "y": 1.0
+              },
+              {
+                "x": 0.4685000032186508,
+                "y": 1.0
+              },
+              {
+                "x": 0.8849999755620956,
+                "y": 0.7
+              },
+              {
+                "x": 1.5097499340772629,
+                "y": 0.3
+              },
+              {
+                "x": 1.9262499064207077,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            0.17000000178813934,
+            1.909999966621399
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "water_chemistry",
+            "covariates": [
+              "bfiws",
+              "runoffws",
+              "lith_group"
+            ],
+            "selfCoverage": 0.839,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 0.4685000032186508,
+            "q50": 0.6800000071525574,
+            "q75": 0.8849999755620956
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.681,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.846,
+            "medianPressureIndex": 0.17,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "discriminates"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-phab-xcdenmid",
+          "metricName": "Canopy density, mid-channel",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Canopy density, mid-channel (%)",
+          "howToMeasure": "Mid-channel canopy density; higher shading generally better for thermal/light regime.",
+          "methodContext": "At mid-channel on each transect, read a convex spherical densiometer facing upstream, downstream, left and right, counting the covered points of 17. The value is the mean of the 44 readings as a percent.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 7.39113848549979,
+                "y": 0.3
+              },
+              {
+                "x": 17.24598979949951,
+                "y": 0.7
+              },
+              {
+                "x": 60.56149673461914,
+                "y": 1.0
+              },
+              {
+                "x": 82.21925020217896,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 19,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 19 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.5347593426704407,
+            87.70053100585938
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 19,
+            "nLocal": 19,
+            "nHuc12": 18,
+            "disposition": "exploratory",
+            "family": "riparian",
+            "covariates": [
+              "drainage_area_sqkm",
+              "precip8110ws"
+            ],
+            "selfCoverage": 1.0,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 19,
+            "q25": 17.24598979949951,
+            "q50": 30.0,
+            "q75": 60.56149673461914
+          },
+          "discrimination": {
+            "aucRefVsPressure": null,
+            "nRef": 19,
+            "nPressure": 3,
+            "medianRefIndex": null,
+            "medianPressureIndex": null,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "not_evaluable"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "carbon-processing",
+      "functionName": "Carbon processing",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "spring-phab-xcmgw",
+          "metricName": "Riparian veg cover, woody",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Riparian veg cover, woody (frac)",
+          "howToMeasure": "Riparian canopy plus mid-layer plus ground cover; higher is better.",
+          "methodContext": "In a 10 m by 10 m plot on each bank at each transect, estimate the areal cover class of woody vegetation in the canopy, the understory and the ground layer. The value is the summed woody cover of the three layers, averaged over the 22 plots, as a fraction.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.2522727165903364,
+                "y": 0.3
+              },
+              {
+                "x": 0.5886363387107849,
+                "y": 0.7
+              },
+              {
+                "x": 1.0917613804340363,
+                "y": 1.0
+              },
+              {
+                "x": 1.343323901295662,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 196,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference stations for this curve were borrowed from Level II ecoregion 6.2 (Western Cordillera) because this ecoregion has too few least-disturbed stations of its own. 196 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 6.2 (Western Cordillera), 26 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, precipitation. Flagged transfer: the recovery test did not confirm this source for this ecoregion. In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. The test found class agreement 0.50 of 18 evaluation regions, where two thirds over at least 4 regions is required; net optimism +0.10, where at most 0.05 is allowed. No source passed the validated acceptance criteria for this metric here, so the pool is used under the flagged-transfer rung as the narrowest comparable pool with at least the adequate floor of usable comparable stations that passes the sample, stability and comparability checks. The curve carries transfer risk unvalidated and its confidence is capped at 39; read the condition band with that limitation in mind.",
+            "Scored on a reference pool whose transfer to this ecoregion was not confirmed by the recovery test (class agreement 0.50 of evaluation regions; two thirds required; net optimism +0.10, at most 0.05 allowed); confidence capped at 39."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 39.0,
+          "referenceRange": [
+            0.020454544574022293,
+            1.982954502105713
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "borrowed_l2",
+            "level": "l2",
+            "levelLabel": "Level II",
+            "regionCode": "6.2",
+            "regionName": "Western Cordillera",
+            "screen": "least-disturbed-regional-v1 (relaxed tier, watershed agriculture at most 25 percent, the 25 percent floor)",
+            "screenId": "least-disturbed-regional-v1",
+            "agricultureLimit": 25.0,
+            "agricultureRule": "floor",
+            "nPool": 317,
+            "nComparable": 197,
+            "nUsable": 196,
+            "nLocal": 26,
+            "nHuc12": 188,
+            "disposition": "adequate",
+            "family": "riparian",
+            "covariates": [
+              "drainage_area_sqkm",
+              "precip8110ws"
+            ],
+            "selfCoverage": 1.0,
+            "supportedLevel": "l3",
+            "transferRisk": "unvalidated",
+            "transferNote": "196 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 6.2 (Western Cordillera), 26 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, precipitation. Flagged transfer: the recovery test did not confirm this source for this ecoregion. In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. The test found class agreement 0.50 of 18 evaluation regions, where two thirds over at least 4 regions is required; net optimism +0.10, where at most 0.05 is allowed. No source passed the validated acceptance criteria for this metric here, so the pool is used under the flagged-transfer rung as the narrowest comparable pool with at least the adequate floor of usable comparable stations that passes the sample, stability and comparability checks. The curve carries transfer risk unvalidated and its confidence is capped at 39; read the condition band with that limitation in mind.",
+            "transferValidation": {
+              "basis": "2r_l2",
+              "evidence": "metric",
+              "accepted": false,
+              "why": "In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically.",
+              "min_cells": 4,
+              "min_share": 0.6667,
+              "max_net_optimism": 0.05,
+              "verdict": "unsupported",
+              "a1_share": 0.5,
+              "net_opt": 0.0977,
+              "n_cells": 18,
+              "c1_share": 0.5
+            },
+            "confidenceCap": 39,
+            "rule": "REF-16",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 0.5900568217039108,
+            "q50": 0.8238636553287506,
+            "q75": 1.1366477012634277
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.524,
+            "nRef": 196,
+            "nPressure": 94,
+            "medianRefIndex": 0.852,
+            "medianPressureIndex": 0.835,
+            "aucRvsIm": 0.693,
+            "nR": 35,
+            "nIm": 43,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "transferRisk": "unvalidated",
+          "transferValidation": {
+            "basis": "2r_l2",
+            "evidence": "metric",
+            "accepted": false,
+            "why": "In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically.",
+            "min_cells": 4,
+            "min_share": 0.6667,
+            "max_net_optimism": 0.05,
+            "verdict": "unsupported",
+            "a1_share": 0.5,
+            "net_opt": 0.0977,
+            "n_cells": 18,
+            "c1_share": 0.5
+          },
+          "transferNote": "196 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 6.2 (Western Cordillera), 26 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, precipitation. Flagged transfer: the recovery test did not confirm this source for this ecoregion. In the recovery test the source's class calls did not agree with reference often enough and the source promoted sites systematically. The test found class agreement 0.50 of 18 evaluation regions, where two thirds over at least 4 regions is required; net optimism +0.10, where at most 0.05 is allowed. No source passed the validated acceptance criteria for this metric here, so the pool is used under the flagged-transfer rung as the narrowest comparable pool with at least the adequate floor of usable comparable stations that passes the sample, stability and comparability checks. The curve carries transfer risk unvalidated and its confidence is capped at 39; read the condition band with that limitation in mind.",
+          "confidenceCap": 39,
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "nutrient-cycling",
+      "functionName": "Nutrient cycling",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "spring-chem-ntl",
+          "metricName": "Total nitrogen",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Total nitrogen (mg N/L)",
+          "howToMeasure": "Total nitrogen; higher indicates nutrient enrichment (worse). The total fraction, reported in every NRSA cycle, and the fraction published nitrogen criteria are written against.",
+          "methodContext": "Total nitrogen in milligrams of nitrogen per liter, laboratory analysis of the unfiltered mid-channel grab sample from the X-site, kept on ice.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.012625000439584255,
+                "y": 1.0
+              },
+              {
+                "x": 0.051749998703598976,
+                "y": 1.0
+              },
+              {
+                "x": 0.12999999523162842,
+                "y": 0.7
+              },
+              {
+                "x": 0.24737499002367258,
+                "y": 0.3
+              },
+              {
+                "x": 0.325624986551702,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            0.02500000037252903,
+            0.2199999988079071
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "water_chemistry",
+            "covariates": [
+              "bfiws",
+              "runoffws",
+              "lith_group"
+            ],
+            "selfCoverage": 0.839,
+            "supportedLevel": "l2",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 0.051749998703598976,
+            "q50": 0.07050000131130219,
+            "q75": 0.12999999523162842
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.554,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.92,
+            "medianPressureIndex": 0.861,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "weak"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-chem-ptl",
+          "metricName": "Total phosphorus",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Total phosphorus (ug/L)",
+          "howToMeasure": "Total phosphorus; higher indicates nutrient enrichment (worse).",
+          "methodContext": "Total phosphorus in micrograms per liter, laboratory analysis of the mid-channel grab sample from the X-site, kept on ice.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 3.6762499809265137,
+                "y": 1.0
+              },
+              {
+                "x": 10.267499923706055,
+                "y": 1.0
+              },
+              {
+                "x": 23.449999809265137,
+                "y": 0.7
+              },
+              {
+                "x": 43.22374963760376,
+                "y": 0.3
+              },
+              {
+                "x": 56.40624952316284,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            2.0,
+            77.0
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "water_chemistry",
+            "covariates": [
+              "bfiws",
+              "runoffws",
+              "lith_group"
+            ],
+            "selfCoverage": 0.839,
+            "supportedLevel": "l2",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 10.267499923706055,
+            "q50": 15.449999809265137,
+            "q75": 23.449999809265137
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.715,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.882,
+            "medianPressureIndex": 0.418,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "discriminates"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "water-soil-quality",
+      "functionName": "Water & soil quality",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "spring-chem-cond",
+          "metricName": "Specific conductivity",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Specific conductivity (uS/cm)",
+          "howToMeasure": "Specific conductance; higher indicates ionic disturbance (worse).",
+          "methodContext": "Specific conductance in microsiemens per centimeter. NRSA reports the laboratory value of a grab sample taken at mid-channel at the X-site (the center of the reach). A calibrated multi-parameter meter reads the same quantity in the stream at that point.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 16.800003051757812,
+                "y": 1.0
+              },
+              {
+                "x": 40.400001525878906,
+                "y": 1.0
+              },
+              {
+                "x": 87.5999984741211,
+                "y": 0.7
+              },
+              {
+                "x": 158.39999389648438,
+                "y": 0.3
+              },
+              {
+                "x": 205.59999084472656,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Specific conductance carries natural carbonate geology as well as disturbance: a pristine stream in a calcareous valley can score low on this curve."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            15.100000381469727,
+            245.0
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "water_chemistry",
+            "covariates": [
+              "bfiws",
+              "runoffws",
+              "lith_group"
+            ],
+            "selfCoverage": 0.839,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 40.400001525878906,
+            "q50": 60.64999961853027,
+            "q75": 87.5999984741211
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.562,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.866,
+            "medianPressureIndex": 0.834,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "weak"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-chem-turb",
+          "metricName": "Turbidity",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Turbidity (NTU)",
+          "howToMeasure": "Turbidity; higher indicates more suspended sediment (worse).",
+          "methodContext": "Turbidity in nephelometric turbidity units, laboratory analysis of the mid-channel grab sample from the X-site. Sample before anyone walks the channel upstream.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 0.14000000059604645,
+                "y": 1.0
+              },
+              {
+                "x": 0.8299999833106995,
+                "y": 0.7
+              },
+              {
+                "x": 1.864999957382679,
+                "y": 0.3
+              },
+              {
+                "x": 2.554999940097332,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 25,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            0.009999999776482582,
+            16.719999313354492
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 25,
+            "nLocal": 25,
+            "nHuc12": 24,
+            "disposition": "adequate",
+            "family": "water_chemistry",
+            "covariates": [
+              "bfiws",
+              "runoffws",
+              "lith_group"
+            ],
+            "selfCoverage": 0.839,
+            "supportedLevel": "l2",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 25,
+            "q25": 0.14000000059604645,
+            "q50": 0.5400000214576721,
+            "q75": 0.8299999833106995
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.748,
+            "nRef": 25,
+            "nPressure": 5,
+            "medianRefIndex": 0.831,
+            "medianPressureIndex": 0.654,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "discriminates"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "habitat-provision",
+      "functionName": "Habitat provision",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-pct-fast",
+          "metricName": "Fast-water / riffle habitat",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Fast-water / riffle habitat (%)",
+          "howToMeasure": "Percent fast-water (riffle/run) habitat; more generally better for many biota. Ecoregion-dependent.",
+          "methodContext": "At each thalweg station record the channel unit (falls, cascade, rapid, riffle, glide, pool, dry). The value is the percent of stations in fast water (falls, cascade, rapid or riffle).",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 18.428571428571427,
+                "y": 0.3
+              },
+              {
+                "x": 43.0,
+                "y": 0.7
+              },
+              {
+                "x": 91.34615325927734,
+                "y": 1.0
+              },
+              {
+                "x": 100.0,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 193,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference stations for this curve were borrowed from Level II ecoregion 6.2 (Western Cordillera) because this ecoregion has too few least-disturbed stations of its own. 193 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 6.2 (Western Cordillera), 26 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, channel slope, surficial lithology. The national scale analysis found this metric varies no more between Level III ecoregions than at the level borrowed from, so the transfer risk is low."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            100.0
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "borrowed_l2",
+            "level": "l2",
+            "levelLabel": "Level II",
+            "regionCode": "6.2",
+            "regionName": "Western Cordillera",
+            "screen": "least-disturbed-regional-v1 (relaxed tier, watershed agriculture at most 25 percent, the 25 percent floor)",
+            "screenId": "least-disturbed-regional-v1",
+            "agricultureLimit": 25.0,
+            "agricultureRule": "floor",
+            "nPool": 317,
+            "nComparable": 194,
+            "nUsable": 193,
+            "nLocal": 26,
+            "nHuc12": 184,
+            "disposition": "adequate",
+            "family": "channel_form",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.871,
+            "supportedLevel": "l2",
+            "transferRisk": "low",
+            "transferNote": "193 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 6.2 (Western Cordillera), 26 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, channel slope, surficial lithology. The national scale analysis found this metric varies no more between Level III ecoregions than at the level borrowed from, so the transfer risk is low.",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 44.19127655029297,
+            "q50": 85.82692337036133,
+            "q75": 94.75000190734863
+          },
+          "stratifier": {
+            "key": "NhdSlopeClass",
+            "variable": "nhd_slope",
+            "units": "m/m",
+            "source": "NHDPlus V2 flowline slope",
+            "breaks": [
+              0.005,
+              0.02
+            ],
+            "right": false,
+            "classes": [
+              {
+                "key": "lt_0.5",
+                "label": "Low gradient (under 0.5 percent)",
+                "hasCurve": true,
+                "n": 22
+              },
+              {
+                "key": "0.5_to_2",
+                "label": "Moderate gradient (0.5 to 2 percent)",
+                "hasCurve": true,
+                "n": 47
+              },
+              {
+                "key": "ge_2",
+                "label": "Steep (2 percent and above)",
+                "hasCurve": true,
+                "n": 124
+              }
+            ],
+            "registryVersion": 1,
+            "status": "accept"
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.652,
+            "nRef": 193,
+            "nPressure": 94,
+            "medianRefIndex": 0.876,
+            "medianPressureIndex": 0.763,
+            "aucRvsIm": 0.667,
+            "nR": 35,
+            "nIm": 43,
+            "verdict": "discriminates"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "curveLayers": [
+            {
+              "stratum": "",
+              "points": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 18.428571428571427,
+                  "y": 0.3
+                },
+                {
+                  "x": 43.0,
+                  "y": 0.7
+                },
+                {
+                  "x": 91.34615325927734,
+                  "y": 1.0
+                },
+                {
+                  "x": 100.0,
+                  "y": 1.0
+                }
+              ]
+            },
+            {
+              "stratum": "lt_0.5",
+              "points": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 2.6428571258272444,
+                  "y": 0.3
+                },
+                {
+                  "x": 6.166666626930237,
+                  "y": 0.7
+                },
+                {
+                  "x": 89.25,
+                  "y": 1.0
+                },
+                {
+                  "x": 100.0,
+                  "y": 1.0
+                }
+              ]
+            },
+            {
+              "stratum": "0.5_to_2",
+              "points": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 20.785714285714285,
+                  "y": 0.3
+                },
+                {
+                  "x": 48.5,
+                  "y": 0.7
+                },
+                {
+                  "x": 91.17307662963867,
+                  "y": 1.0
+                },
+                {
+                  "x": 100.0,
+                  "y": 1.0
+                }
+              ]
+            },
+            {
+              "stratum": "ge_2",
+              "points": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 20.53403663635254,
+                  "y": 0.3
+                },
+                {
+                  "x": 47.91275215148926,
+                  "y": 0.7
+                },
+                {
+                  "x": 91.74999809265137,
+                  "y": 1.0
+                },
+                {
+                  "x": 100.0,
+                  "y": 1.0
+                }
+              ]
+            }
+          ],
+          "activeStratum": "",
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-phab-xfc-nat",
+          "metricName": "Natural fish cover",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Natural fish cover (frac)",
+          "howToMeasure": "Natural fish cover; higher is better.",
+          "methodContext": "In the 10 m of channel centered on each transect, estimate the areal cover class of each fish cover type on the form (wood, brush, overhanging vegetation, undercut banks, boulders and the rest). The value is the summed areal cover of the types that are not man-made, averaged over the transects.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.07987012873802866,
+                "y": 0.3
+              },
+              {
+                "x": 0.18636363372206688,
+                "y": 0.7
+              },
+              {
+                "x": 0.5880681574344635,
+                "y": 1.0
+              },
+              {
+                "x": 0.7889204192906618,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            0.036363635212183,
+            2.0840909481048584
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "riparian",
+            "covariates": [
+              "drainage_area_sqkm",
+              "precip8110ws"
+            ],
+            "selfCoverage": 1.0,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 0.18636363372206688,
+            "q50": 0.2909090965986252,
+            "q75": 0.5880681574344635
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.535,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.782,
+            "medianPressureIndex": 0.78,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "none"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "population-support",
+      "functionName": "Population support",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "spring-bent-totlntax",
+          "metricName": "Benthic total taxa richness",
+          "inputType": "count",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Benthic total taxa richness",
+          "howToMeasure": "Total benthic taxa richness; higher is better.",
+          "methodContext": "From the same 11-transect composite D-frame net sample (500 micrometer mesh) and laboratory subsample. The value is the total number of taxa.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 14.678571428571429,
+                "y": 0.3
+              },
+              {
+                "x": 34.25,
+                "y": 0.7
+              },
+              {
+                "x": 42.0,
+                "y": 1.0
+              },
+              {
+                "x": 45.875,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 96.7,
+          "referenceRange": [
+            28.0,
+            47.0
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "biology",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "tmean8110ws"
+            ],
+            "selfCoverage": 0.935,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 34.25,
+            "q50": 41.0,
+            "q75": 42.0
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.592,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.963,
+            "medianPressureIndex": 0.845,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "weak"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-fish-nat-totlntax",
+          "metricName": "Native fish taxa richness",
+          "inputType": "count",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Native fish taxa richness",
+          "howToMeasure": "Native fish taxa richness; higher is better.",
+          "methodContext": "Electrofish the sampling reach in an upstream direction, working every habitat between the transects, and identify and count every fish. The value is the number of native taxa.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.42857142857142855,
+                "y": 0.3
+              },
+              {
+                "x": 1.0,
+                "y": 0.7
+              },
+              {
+                "x": 2.25,
+                "y": 1.0
+              },
+              {
+                "x": 2.875,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 29%, resample recurrence 84%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            5.0
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 16,
+            "nLocal": 16,
+            "nHuc12": 15,
+            "disposition": "exploratory",
+            "family": "biology",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "tmean8110ws"
+            ],
+            "selfCoverage": 0.935,
+            "supportedLevel": "l2",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 16,
+            "q25": 1.0,
+            "q50": 1.0,
+            "q75": 2.25
+          },
+          "discrimination": {
+            "aucRefVsPressure": null,
+            "nRef": 16,
+            "nPressure": 2,
+            "medianRefIndex": null,
+            "medianPressureIndex": null,
+            "aucRvsIm": null,
+            "nR": 2,
+            "nIm": 1,
+            "verdict": "not_evaluable"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "community-dynamics",
+      "functionName": "Community dynamics",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "spring-bent-ept-ntax",
+          "metricName": "EPT taxa richness",
+          "inputType": "count",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "EPT taxa richness",
+          "howToMeasure": "EPT (mayfly/stonefly/caddisfly) taxa richness; more sensitive taxa indicate better condition.",
+          "methodContext": "Collect one D-frame net sample (500 micrometer mesh) one meter downstream of each of the 11 transects at the assigned left, center or right station, and composite them. A laboratory identifies a fixed count subsample. The value is the number of mayfly, stonefly and caddisfly taxa.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 5.142857142857143,
+                "y": 0.3
+              },
+              {
+                "x": 12.0,
+                "y": 0.7
+              },
+              {
+                "x": 19.0,
+                "y": 1.0
+              },
+              {
+                "x": 22.5,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 144,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference stations for this curve were borrowed from Level II ecoregion 6.2 (Western Cordillera) because this ecoregion has too few least-disturbed stations of its own. 144 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 6.2 (Western Cordillera), 26 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, channel slope, air temperature. Every station drains to this ecoregion's faunal province. Flagged transfer: the recovery test did not confirm this source for this ecoregion. In the recovery test the source's class calls did not agree with reference often enough. The test found class agreement 0.50 of 18 evaluation regions, where two thirds over at least 4 regions is required; net optimism +0.01, where at most 0.05 is allowed. No source passed the validated acceptance criteria for this metric here, so the pool is used under the flagged-transfer rung as the narrowest comparable pool with at least the adequate floor of usable comparable stations that passes the sample, stability and comparability checks. The curve carries transfer risk unvalidated and its confidence is capped at 39; read the condition band with that limitation in mind.",
+            "Scored on a reference pool whose transfer to this ecoregion was not confirmed by the recovery test (class agreement 0.50 of evaluation regions; two thirds required); confidence capped at 39."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 39.0,
+          "referenceRange": [
+            1.0,
+            27.0
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "borrowed_l2",
+            "level": "l2",
+            "levelLabel": "Level II",
+            "regionCode": "6.2",
+            "regionName": "Western Cordillera",
+            "screen": "least-disturbed-regional-v1 (relaxed tier, watershed agriculture at most 25 percent, the 25 percent floor)",
+            "screenId": "least-disturbed-regional-v1",
+            "agricultureLimit": 25.0,
+            "agricultureRule": "floor",
+            "nPool": 317,
+            "nComparable": 144,
+            "nUsable": 144,
+            "nLocal": 26,
+            "nHuc12": 138,
+            "disposition": "adequate",
+            "family": "biology",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "tmean8110ws"
+            ],
+            "selfCoverage": 0.935,
+            "supportedLevel": "l3",
+            "transferRisk": "unvalidated",
+            "transferNote": "144 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 6.2 (Western Cordillera), 26 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, channel slope, air temperature. Every station drains to this ecoregion's faunal province. Flagged transfer: the recovery test did not confirm this source for this ecoregion. In the recovery test the source's class calls did not agree with reference often enough. The test found class agreement 0.50 of 18 evaluation regions, where two thirds over at least 4 regions is required; net optimism +0.01, where at most 0.05 is allowed. No source passed the validated acceptance criteria for this metric here, so the pool is used under the flagged-transfer rung as the narrowest comparable pool with at least the adequate floor of usable comparable stations that passes the sample, stability and comparability checks. The curve carries transfer risk unvalidated and its confidence is capped at 39; read the condition band with that limitation in mind.",
+            "transferValidation": {
+              "basis": "2r_l2",
+              "evidence": "metric",
+              "accepted": false,
+              "why": "In the recovery test the source's class calls did not agree with reference often enough.",
+              "min_cells": 4,
+              "min_share": 0.6667,
+              "max_net_optimism": 0.05,
+              "verdict": "unsupported",
+              "a1_share": 0.5,
+              "net_opt": 0.0143,
+              "n_cells": 18,
+              "c1_share": 0.2222
+            },
+            "confidenceCap": 39,
+            "rule": "REF-16",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 15.25,
+            "q50": 16.0,
+            "q75": 18.0
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.611,
+            "nRef": 144,
+            "nPressure": 95,
+            "medianRefIndex": 0.871,
+            "medianPressureIndex": 0.743,
+            "aucRvsIm": 0.809,
+            "nR": 35,
+            "nIm": 43,
+            "verdict": "weak"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "transferRisk": "unvalidated",
+          "transferValidation": {
+            "basis": "2r_l2",
+            "evidence": "metric",
+            "accepted": false,
+            "why": "In the recovery test the source's class calls did not agree with reference often enough.",
+            "min_cells": 4,
+            "min_share": 0.6667,
+            "max_net_optimism": 0.05,
+            "verdict": "unsupported",
+            "a1_share": 0.5,
+            "net_opt": 0.0143,
+            "n_cells": 18,
+            "c1_share": 0.2222
+          },
+          "transferNote": "144 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 6.2 (Western Cordillera), 26 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, channel slope, air temperature. Every station drains to this ecoregion's faunal province. Flagged transfer: the recovery test did not confirm this source for this ecoregion. In the recovery test the source's class calls did not agree with reference often enough. The test found class agreement 0.50 of 18 evaluation regions, where two thirds over at least 4 regions is required; net optimism +0.01, where at most 0.05 is allowed. No source passed the validated acceptance criteria for this metric here, so the pool is used under the flagged-transfer rung as the narrowest comparable pool with at least the adequate floor of usable comparable stations that passes the sample, stability and comparability checks. The curve carries transfer risk unvalidated and its confidence is capped at 39; read the condition band with that limitation in mind.",
+          "confidenceCap": 39,
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-bent-hprime",
+          "metricName": "Shannon diversity (H')",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Shannon diversity (H')",
+          "howToMeasure": "Benthic Shannon diversity; higher diversity indicates better condition.",
+          "methodContext": "From the same 11-transect composite D-frame net sample (500 micrometer mesh) and laboratory subsample. The value is the Shannon diversity of the taxa counted.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 16), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 1.1796428561210632,
+                "y": 0.3
+              },
+              {
+                "x": 2.752499997615814,
+                "y": 0.7
+              },
+              {
+                "x": 3.1475000977516174,
+                "y": 1.0
+              },
+              {
+                "x": 3.345000147819519,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 26,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 96.7,
+          "referenceRange": [
+            2.359999895095825,
+            3.299999952316284
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "16",
+            "regionName": "Idaho Batholith",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 26,
+            "nComparable": 26,
+            "nUsable": 26,
+            "nLocal": 26,
+            "nHuc12": 25,
+            "disposition": "adequate",
+            "family": "biology",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "tmean8110ws"
+            ],
+            "selfCoverage": 0.935,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 26,
+            "q25": 2.752499997615814,
+            "q50": 2.940000057220459,
+            "q75": 3.1475000977516174
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.677,
+            "nRef": 26,
+            "nPressure": 5,
+            "medianRefIndex": 0.843,
+            "medianPressureIndex": 0.692,
+            "aucRvsIm": null,
+            "nR": 3,
+            "nIm": 3,
+            "verdict": "discriminates"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        }
+      ]
+    },
+    {
+      "functionId": "watershed-connectivity",
+      "functionName": "Watershed connectivity",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "spring-nid-dams-1mi",
+          "metricName": "Mapped dams within one mile",
+          "inputType": "count",
+          "sourceCitation": "EASI fixed criteria, Nearby dam-proximity proxy",
+          "xLabel": "Mapped dams within one mile (dams)",
+          "howToMeasure": "Mapped dams within one mile is scored on the same fixed criteria EASI uses in every region. Good 0 mapped dams, Fair 1 mapped dam, Poor ≥2 mapped dams.",
+          "methodContext": "Number of dams in the USACE National Inventory of Dams within one mile of the site. DEEP counts them. Note in the field any barrier the inventory does not show.",
+          "curve": {
+            "layerName": "EASI fixed criteria, Nearby dam-proximity proxy",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 1.0,
+                "y": 0.545
+              },
+              {
+                "x": 2.0,
+                "y": 0.195
+              },
+              {
+                "x": 3.0,
+                "y": 0.0
+              }
+            ]
+          },
+          "metricRole": "pressure_fixed",
+          "curveCaveats": [
+            "EASI lists the criteria for this metric as provisional, so the breakpoints may be revised."
+          ],
+          "confidenceLabel": "Fixed criteria",
+          "criteriaBasis": "fixed",
+          "criteriaSource": {
+            "title": "Nearby dam-proximity proxy",
+            "easiMethod": "nearby-dam-proximity",
+            "provisional": true,
+            "bands": [
+              {
+                "rating": "Good",
+                "label": "0 mapped dams"
+              },
+              {
+                "rating": "Fair",
+                "label": "1 mapped dam"
+              },
+              {
+                "rating": "Poor",
+                "label": "≥2 mapped dams"
+              }
+            ],
+            "citations": [
+              {
+                "key": "nid",
+                "text": "USACE National Inventory of Dams"
+              }
+            ],
+            "limitations": [
+              "A mapped dam count is a proximity screen and cannot confirm passability or the severity of a barrier.",
+              "NID carries about 91,000 regulated dams while the National Aquatic Barrier Inventory maps over 500,000 barriers of all sizes, so zero mapped dams is frequently a false negative for passage.",
+              "Query failure is unscored, not Good."
+            ]
+          },
+          "basis": "published-benchmark",
+          "basisLabel": "Published benchmark",
+          "basisStatement": "Scored against a published criterion rather than against stations from this ecoregion. The criterion carries its own definition of reference, which need not match this assessment's.",
+          "basisLimit": "A published criterion is not an estimate of this ecoregion's reference condition and may disagree with a reference curve where one exists.",
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    }
+  ],
+  "functionCoverage": {
+    "framework": "staf-20",
+    "total": 20,
+    "covered": 20,
+    "excluded": 0,
+    "missing": 0,
+    "coveredFunctionIds": [
+      "catchment-hydrology",
+      "surface-water-storage",
+      "reach-inflow",
+      "streamflow-regime",
+      "low-flow-baseflow-dynamics",
+      "high-flow-dynamics",
+      "floodplain-connectivity",
+      "hyporheic-connectivity",
+      "channel-evolution",
+      "channel-floodplain-dynamics",
+      "sediment-continuity",
+      "bed-composition-bedform-dynamics",
+      "light-thermal-regime",
+      "carbon-processing",
+      "nutrient-cycling",
+      "water-soil-quality",
+      "habitat-provision",
+      "population-support",
+      "community-dynamics",
+      "watershed-connectivity"
+    ],
+    "missingFunctionIds": [],
+    "exclusions": []
+  },
+  "scoringContract": {
+    "method": "STAF detailed reference-curve scoring",
+    "methodVersion": "iqr-seed-v2",
+    "indexBands": [
+      0.39,
+      0.69
+    ],
+    "functionScoreBands": [
+      5,
+      10
+    ],
+    "functionScoreMax": 15,
+    "indirectWeight": 0.1,
+    "rounding": {
+      "index": 2,
+      "functionScore": 0
+    },
+    "settings": {}
+  },
+  "region": {
+    "kind": "ecoregion",
+    "code": "16",
+    "name": "Idaho Batholith",
+    "polygon": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -114.6308,
+            46.7458
+          ],
+          [
+            -114.6887,
+            46.7419
+          ],
+          [
+            -114.7146,
+            46.6874
+          ],
+          [
+            -114.7583,
+            46.6811
+          ],
+          [
+            -114.7535,
+            46.6551
+          ],
+          [
+            -114.7776,
+            46.661
+          ],
+          [
+            -114.7695,
+            46.6227
+          ],
+          [
+            -114.7828,
+            46.5725
+          ],
+          [
+            -114.8123,
+            46.5795
+          ],
+          [
+            -114.816,
+            46.5589
+          ],
+          [
+            -114.8487,
+            46.5711
+          ],
+          [
+            -114.8444,
+            46.603
+          ],
+          [
+            -114.8648,
+            46.5975
+          ],
+          [
+            -114.8665,
+            46.5552
+          ],
+          [
+            -114.9072,
+            46.5174
+          ],
+          [
+            -114.9056,
+            46.49
+          ],
+          [
+            -114.9362,
+            46.4894
+          ],
+          [
+            -114.9224,
+            46.5114
+          ],
+          [
+            -114.9352,
+            46.5271
+          ],
+          [
+            -115.0104,
+            46.5174
+          ],
+          [
+            -115.0001,
+            46.5054
+          ],
+          [
+            -115.0115,
+            46.4987
+          ],
+          [
+            -115.0278,
+            46.5228
+          ],
+          [
+            -115.0619,
+            46.4717
+          ],
+          [
+            -115.1041,
+            46.4762
+          ],
+          [
+            -115.0989,
+            46.4585
+          ],
+          [
+            -115.1417,
+            46.4627
+          ],
+          [
+            -115.2314,
+            46.4147
+          ],
+          [
+            -115.2546,
+            46.4139
+          ],
+          [
+            -115.2535,
+            46.4317
+          ],
+          [
+            -115.277,
+            46.3964
+          ],
+          [
+            -115.3695,
+            46.3603
+          ],
+          [
+            -115.4333,
+            46.2588
+          ],
+          [
+            -115.4668,
+            46.2554
+          ],
+          [
+            -115.5085,
+            46.2839
+          ],
+          [
+            -115.584,
+            46.2342
+          ],
+          [
+            -115.6008,
+            46.2028
+          ],
+          [
+            -115.6722,
+            46.2039
+          ],
+          [
+            -115.6558,
+            46.1623
+          ],
+          [
+            -115.6837,
+            46.1544
+          ],
+          [
+            -115.7186,
+            46.1752
+          ],
+          [
+            -115.7781,
+            46.1481
+          ],
+          [
+            -115.798,
+            46.1604
+          ],
+          [
+            -115.8657,
+            46.1499
+          ],
+          [
+            -115.8681,
+            46.1206
+          ],
+          [
+            -115.8416,
+            46.0632
+          ],
+          [
+            -115.8698,
+            46.0039
+          ],
+          [
+            -115.9165,
+            45.965
+          ],
+          [
+            -116.0168,
+            45.9623
+          ],
+          [
+            -116.0775,
+            45.9159
+          ],
+          [
+            -116.2229,
+            45.8779
+          ],
+          [
+            -116.2379,
+            45.8599
+          ],
+          [
+            -116.2365,
+            45.8403
+          ],
+          [
+            -116.2078,
+            45.8444
+          ],
+          [
+            -116.218,
+            45.817
+          ],
+          [
+            -116.15,
+            45.8052
+          ],
+          [
+            -116.1915,
+            45.7869
+          ],
+          [
+            -116.1402,
+            45.7674
+          ],
+          [
+            -116.203,
+            45.7526
+          ],
+          [
+            -116.2082,
+            45.7322
+          ],
+          [
+            -116.182,
+            45.7365
+          ],
+          [
+            -116.1769,
+            45.711
+          ],
+          [
+            -116.2106,
+            45.6954
+          ],
+          [
+            -116.2288,
+            45.653
+          ],
+          [
+            -116.1438,
+            45.652
+          ],
+          [
+            -116.118,
+            45.6359
+          ],
+          [
+            -116.1646,
+            45.6221
+          ],
+          [
+            -116.1637,
+            45.6063
+          ],
+          [
+            -116.2279,
+            45.6062
+          ],
+          [
+            -116.1966,
+            45.5706
+          ],
+          [
+            -116.2565,
+            45.5662
+          ],
+          [
+            -116.2709,
+            45.5432
+          ],
+          [
+            -116.2731,
+            45.458
+          ],
+          [
+            -116.2868,
+            45.4407
+          ],
+          [
+            -116.2571,
+            45.4434
+          ],
+          [
+            -116.2161,
+            45.4004
+          ],
+          [
+            -116.2971,
+            45.4013
+          ],
+          [
+            -116.3368,
+            45.3671
+          ],
+          [
+            -116.3133,
+            45.3099
+          ],
+          [
+            -116.3319,
+            45.2893
+          ],
+          [
+            -116.3157,
+            45.2746
+          ],
+          [
+            -116.3339,
+            45.2551
+          ],
+          [
+            -116.2855,
+            45.1331
+          ],
+          [
+            -116.3002,
+            45.1216
+          ],
+          [
+            -116.3378,
+            45.1318
+          ],
+          [
+            -116.3473,
+            45.1102
+          ],
+          [
+            -116.3185,
+            45.1012
+          ],
+          [
+            -116.2941,
+            45.0529
+          ],
+          [
+            -116.2988,
+            44.9793
+          ],
+          [
+            -116.3223,
+            44.9641
+          ],
+          [
+            -116.2475,
+            44.9169
+          ],
+          [
+            -116.2862,
+            44.8979
+          ],
+          [
+            -116.3474,
+            44.8992
+          ],
+          [
+            -116.4002,
+            44.8201
+          ],
+          [
+            -116.3796,
+            44.779
+          ],
+          [
+            -116.4012,
+            44.7332
+          ],
+          [
+            -116.3598,
+            44.7185
+          ],
+          [
+            -116.3565,
+            44.6845
+          ],
+          [
+            -116.3177,
+            44.6808
+          ],
+          [
+            -116.344,
+            44.6146
+          ],
+          [
+            -116.2976,
+            44.5252
+          ],
+          [
+            -116.3194,
+            44.3822
+          ],
+          [
+            -116.2817,
+            44.3853
+          ],
+          [
+            -116.2833,
+            44.3559
+          ],
+          [
+            -116.2327,
+            44.3692
+          ],
+          [
+            -116.2029,
+            44.3368
+          ],
+          [
+            -116.2582,
+            44.2108
+          ],
+          [
+            -116.236,
+            44.0719
+          ],
+          [
+            -116.2719,
+            44.0755
+          ],
+          [
+            -116.2647,
+            44.0472
+          ],
+          [
+            -116.2975,
+            43.9872
+          ],
+          [
+            -116.2732,
+            43.9176
+          ],
+          [
+            -116.4145,
+            43.9048
+          ],
+          [
+            -116.3665,
+            43.8684
+          ],
+          [
+            -116.3802,
+            43.8211
+          ],
+          [
+            -116.2804,
+            43.7863
+          ],
+          [
+            -116.2085,
+            43.7027
+          ],
+          [
+            -116.15,
+            43.6686
+          ],
+          [
+            -116.1022,
+            43.6148
+          ],
+          [
+            -116.1022,
+            43.5705
+          ],
+          [
+            -116.061,
+            43.5121
+          ],
+          [
+            -116.0,
+            43.5094
+          ],
+          [
+            -115.7395,
+            43.3097
+          ],
+          [
+            -115.6498,
+            43.2613
+          ],
+          [
+            -115.4483,
+            43.3286
+          ],
+          [
+            -115.3825,
+            43.3277
+          ],
+          [
+            -115.3145,
+            43.2972
+          ],
+          [
+            -115.2423,
+            43.3474
+          ],
+          [
+            -115.052,
+            43.3378
+          ],
+          [
+            -115.0424,
+            43.3525
+          ],
+          [
+            -114.9912,
+            43.36
+          ],
+          [
+            -115.0083,
+            43.3852
+          ],
+          [
+            -114.919,
+            43.3925
+          ],
+          [
+            -114.9018,
+            43.4171
+          ],
+          [
+            -114.8633,
+            43.388
+          ],
+          [
+            -114.7928,
+            43.4216
+          ],
+          [
+            -114.7093,
+            43.3973
+          ],
+          [
+            -114.65,
+            43.3994
+          ],
+          [
+            -114.4676,
+            43.347
+          ],
+          [
+            -114.432,
+            43.3613
+          ],
+          [
+            -114.4776,
+            43.3923
+          ],
+          [
+            -114.4348,
+            43.4008
+          ],
+          [
+            -114.3818,
+            43.3471
+          ],
+          [
+            -114.3229,
+            43.3258
+          ],
+          [
+            -114.2907,
+            43.3803
+          ],
+          [
+            -114.3073,
+            43.4074
+          ],
+          [
+            -114.2728,
+            43.4455
+          ],
+          [
+            -114.3482,
+            43.5586
+          ],
+          [
+            -114.3717,
+            43.562
+          ],
+          [
+            -114.352,
+            43.5779
+          ],
+          [
+            -114.3554,
+            43.6143
+          ],
+          [
+            -114.3214,
+            43.5785
+          ],
+          [
+            -114.2863,
+            43.4984
+          ],
+          [
+            -114.1774,
+            43.3706
+          ],
+          [
+            -114.0708,
+            43.3359
+          ],
+          [
+            -114.015,
+            43.2954
+          ],
+          [
+            -113.9937,
+            43.2978
+          ],
+          [
+            -113.972,
+            43.2717
+          ],
+          [
+            -113.9536,
+            43.2887
+          ],
+          [
+            -113.9679,
+            43.3132
+          ],
+          [
+            -113.9963,
+            43.3193
+          ],
+          [
+            -113.9856,
+            43.3688
+          ],
+          [
+            -113.9506,
+            43.3387
+          ],
+          [
+            -113.8519,
+            43.3779
+          ],
+          [
+            -113.8217,
+            43.4206
+          ],
+          [
+            -113.7852,
+            43.3667
+          ],
+          [
+            -113.7251,
+            43.3804
+          ],
+          [
+            -113.7088,
+            43.4069
+          ],
+          [
+            -113.6526,
+            43.3926
+          ],
+          [
+            -113.6189,
+            43.4362
+          ],
+          [
+            -113.6307,
+            43.4589
+          ],
+          [
+            -113.5819,
+            43.4669
+          ],
+          [
+            -113.5494,
+            43.4927
+          ],
+          [
+            -113.5579,
+            43.5148
+          ],
+          [
+            -113.6067,
+            43.5194
+          ],
+          [
+            -113.7073,
+            43.5862
+          ],
+          [
+            -113.7861,
+            43.569
+          ],
+          [
+            -113.8061,
+            43.5774
+          ],
+          [
+            -113.7369,
+            43.6302
+          ],
+          [
+            -113.7807,
+            43.6803
+          ],
+          [
+            -113.7522,
+            43.7381
+          ],
+          [
+            -113.7674,
+            43.7678
+          ],
+          [
+            -113.829,
+            43.7827
+          ],
+          [
+            -113.9081,
+            43.7615
+          ],
+          [
+            -113.8738,
+            43.696
+          ],
+          [
+            -113.9189,
+            43.742
+          ],
+          [
+            -113.9462,
+            43.723
+          ],
+          [
+            -113.9594,
+            43.7398
+          ],
+          [
+            -113.9368,
+            43.7682
+          ],
+          [
+            -113.9255,
+            43.8756
+          ],
+          [
+            -114.0274,
+            43.9029
+          ],
+          [
+            -114.0202,
+            43.9455
+          ],
+          [
+            -114.0573,
+            43.9671
+          ],
+          [
+            -114.122,
+            43.9256
+          ],
+          [
+            -114.2118,
+            43.9443
+          ],
+          [
+            -114.2261,
+            43.9914
+          ],
+          [
+            -114.1922,
+            43.9909
+          ],
+          [
+            -114.1661,
+            44.0191
+          ],
+          [
+            -114.1827,
+            44.0154
+          ],
+          [
+            -114.193,
+            44.0564
+          ],
+          [
+            -114.2311,
+            44.0718
+          ],
+          [
+            -114.2453,
+            44.095
+          ],
+          [
+            -114.2775,
+            44.0607
+          ],
+          [
+            -114.3115,
+            44.0604
+          ],
+          [
+            -114.3535,
+            44.1288
+          ],
+          [
+            -114.4312,
+            44.1738
+          ],
+          [
+            -114.3053,
+            44.1712
+          ],
+          [
+            -114.3078,
+            44.212
+          ],
+          [
+            -114.3455,
+            44.2228
+          ],
+          [
+            -114.3923,
+            44.2682
+          ],
+          [
+            -114.3387,
+            44.282
+          ],
+          [
+            -114.3548,
+            44.3005
+          ],
+          [
+            -114.3237,
+            44.3136
+          ],
+          [
+            -114.2945,
+            44.3797
+          ],
+          [
+            -114.2997,
+            44.4028
+          ],
+          [
+            -114.2686,
+            44.4282
+          ],
+          [
+            -114.3291,
+            44.4956
+          ],
+          [
+            -114.3432,
+            44.5476
+          ],
+          [
+            -114.3182,
+            44.5992
+          ],
+          [
+            -114.2605,
+            44.6524
+          ],
+          [
+            -114.2756,
+            44.758
+          ],
+          [
+            -114.2445,
+            44.7757
+          ],
+          [
+            -114.1944,
+            44.7491
+          ],
+          [
+            -114.1372,
+            44.7573
+          ],
+          [
+            -114.0891,
+            44.8053
+          ],
+          [
+            -114.0912,
+            44.8373
+          ],
+          [
+            -114.0384,
+            44.8435
+          ],
+          [
+            -114.0424,
+            44.8685
+          ],
+          [
+            -114.0224,
+            44.893
+          ],
+          [
+            -114.0631,
+            44.907
+          ],
+          [
+            -114.0677,
+            44.9282
+          ],
+          [
+            -113.9945,
+            44.9501
+          ],
+          [
+            -114.0057,
+            44.9806
+          ],
+          [
+            -113.9546,
+            44.9795
+          ],
+          [
+            -113.9647,
+            44.9969
+          ],
+          [
+            -114.0019,
+            45.0024
+          ],
+          [
+            -113.938,
+            45.0081
+          ],
+          [
+            -113.9697,
+            45.0324
+          ],
+          [
+            -113.9593,
+            45.0783
+          ],
+          [
+            -113.9733,
+            45.1082
+          ],
+          [
+            -113.9519,
+            45.1339
+          ],
+          [
+            -113.9241,
+            45.2987
+          ],
+          [
+            -113.9383,
+            45.3482
+          ],
+          [
+            -113.9714,
+            45.3678
+          ],
+          [
+            -113.9884,
+            45.4007
+          ],
+          [
+            -113.9995,
+            45.472
+          ],
+          [
+            -113.944,
+            45.5013
+          ],
+          [
+            -113.8441,
+            45.4819
+          ],
+          [
+            -113.7986,
+            45.5177
+          ],
+          [
+            -113.8347,
+            45.5207
+          ],
+          [
+            -113.8145,
+            45.5615
+          ],
+          [
+            -113.7596,
+            45.5625
+          ],
+          [
+            -113.7493,
+            45.5436
+          ],
+          [
+            -113.6992,
+            45.5711
+          ],
+          [
+            -113.6179,
+            45.7071
+          ],
+          [
+            -113.6394,
+            45.745
+          ],
+          [
+            -113.4791,
+            45.8114
+          ],
+          [
+            -113.4248,
+            45.8181
+          ],
+          [
+            -113.3791,
+            45.9029
+          ],
+          [
+            -113.378,
+            45.9391
+          ],
+          [
+            -113.3998,
+            45.9492
+          ],
+          [
+            -113.4114,
+            45.939
+          ],
+          [
+            -113.4099,
+            45.9699
+          ],
+          [
+            -113.4226,
+            45.9586
+          ],
+          [
+            -113.4529,
+            45.9771
+          ],
+          [
+            -113.4327,
+            45.9338
+          ],
+          [
+            -113.4559,
+            45.9496
+          ],
+          [
+            -113.4607,
+            45.9313
+          ],
+          [
+            -113.4923,
+            45.9396
+          ],
+          [
+            -113.5363,
+            45.9111
+          ],
+          [
+            -113.5281,
+            45.9358
+          ],
+          [
+            -113.6522,
+            45.9723
+          ],
+          [
+            -113.6351,
+            46.019
+          ],
+          [
+            -113.6874,
+            46.0649
+          ],
+          [
+            -113.6946,
+            46.1101
+          ],
+          [
+            -113.6831,
+            46.1333
+          ],
+          [
+            -113.6265,
+            46.1585
+          ],
+          [
+            -113.6921,
+            46.237
+          ],
+          [
+            -113.8132,
+            46.2125
+          ],
+          [
+            -113.7893,
+            46.1498
+          ],
+          [
+            -113.7584,
+            46.1194
+          ],
+          [
+            -113.8115,
+            46.0613
+          ],
+          [
+            -113.8301,
+            46.094
+          ],
+          [
+            -113.9068,
+            46.1029
+          ],
+          [
+            -114.0054,
+            46.0649
+          ],
+          [
+            -114.1122,
+            46.0713
+          ],
+          [
+            -114.1187,
+            46.0461
+          ],
+          [
+            -114.1476,
+            46.0314
+          ],
+          [
+            -114.1267,
+            45.9725
+          ],
+          [
+            -114.0939,
+            45.9675
+          ],
+          [
+            -114.1056,
+            45.9235
+          ],
+          [
+            -114.0762,
+            45.904
+          ],
+          [
+            -114.1355,
+            45.9143
+          ],
+          [
+            -114.1884,
+            45.96
+          ],
+          [
+            -114.168,
+            45.9715
+          ],
+          [
+            -114.2099,
+            45.9941
+          ],
+          [
+            -114.2249,
+            46.0467
+          ],
+          [
+            -114.2143,
+            46.0908
+          ],
+          [
+            -114.2364,
+            46.1053
+          ],
+          [
+            -114.2135,
+            46.1881
+          ],
+          [
+            -114.2412,
+            46.365
+          ],
+          [
+            -114.2281,
+            46.4076
+          ],
+          [
+            -114.1583,
+            46.5043
+          ],
+          [
+            -114.1461,
+            46.571
+          ],
+          [
+            -114.1001,
+            46.6697
+          ],
+          [
+            -114.107,
+            46.6877
+          ],
+          [
+            -114.2676,
+            46.6913
+          ],
+          [
+            -114.3065,
+            46.7093
+          ],
+          [
+            -114.3215,
+            46.6768
+          ],
+          [
+            -114.3613,
+            46.6905
+          ],
+          [
+            -114.3611,
+            46.706
+          ],
+          [
+            -114.4068,
+            46.7106
+          ],
+          [
+            -114.4118,
+            46.7336
+          ],
+          [
+            -114.4662,
+            46.704
+          ],
+          [
+            -114.4787,
+            46.6674
+          ],
+          [
+            -114.5179,
+            46.6864
+          ],
+          [
+            -114.5852,
+            46.653
+          ],
+          [
+            -114.5878,
+            46.7003
+          ],
+          [
+            -114.6247,
+            46.6791
+          ],
+          [
+            -114.6026,
+            46.7314
+          ],
+          [
+            -114.6308,
+            46.7458
+          ]
+        ]
+      ]
+    }
+  },
+  "referenceTier": "least_disturbed",
+  "referenceMethod": {
+    "method": "pressure-screen",
+    "methodVersion": "pressure-screen-1",
+    "screenId": "least-disturbed-v1",
+    "screenTier": "strict",
+    "screenLabel": "least-disturbed-v1 (strict), wadeable non-canal frame",
+    "valuePolicy": "newest-nonnull-v2",
+    "nLocalReference": 26,
+    "nCandidates": 31,
+    "nInFrame": 31,
+    "nCurvesLocal": 22,
+    "nCurvesBorrowed": 6,
+    "nCurvesRegionalScreen": 0,
+    "nCurvesCarried": 0,
+    "nCurvesFlagged": 4,
+    "nCurvesEasiScreening": 0,
+    "nWithheld": 0,
+    "curvesByBasis": {
+      "regional-reference": 28,
+      "national-reference": 1
+    },
+    "statement": "Reference condition is set by a fixed landscape-pressure screen, never by a score. 22 curves are fitted to least-disturbed stations of this ecoregion. 6 borrow comparable least-disturbed stations from a wider region, stating the region and the transfer risk. 1 carries the national reference label: reference curve fitted to comparable least-disturbed stations drawn from the national pool, because this ecoregion and its parents hold too few of their own. 4 rest on a flagged transfer: a comparable least-disturbed pool the recovery test did not confirm for this ecoregion, used because no validated source supports the metric here, with transfer risk unvalidated and confidence capped. A metric that no basis supports is not scored, and the function it would have scored is reported as unassessed.",
+    "nHeldForReview": 0
+  },
+  "contentDigest": "sha256:a8de2e1de74d0a7299718a14798911df70102cdd3e381f79a384d96ec068894f",
+  "library": {
+    "libraryId": "idaho-batholith",
+    "version": 1,
+    "updatedAt": "2026-09-30T07:06:45Z",
+    "author": "StreamCurves regional analysis (STAF)",
+    "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 26 of 31 stations of this ecoregion pass. 22 reference curves use local stations, 6 borrow from a wider region, 5 metrics use fixed criteria, and 4 metrics are withheld for insufficient reference support.",
+    "region": {
+      "kind": "ecoregion",
+      "code": "16",
+      "name": "Idaho Batholith"
+    },
+    "contentDigest": "sha256:a8de2e1de74d0a7299718a14798911df70102cdd3e381f79a384d96ec068894f",
+    "supersedesVersion": null
+  },
+  "version": 1,
+  "lifecycle": "preliminary",
+  "assessmentRef": "idaho-batholith@v1"
+}
