@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "piedmont",
+  "assessmentName": "Piedmont reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "45",
+    "name": "Piedmont"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 45), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:04:55Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 8 of 88 stations of this ecoregion pass. 0 reference curves use local stations, 11 borrow from a wider region, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:ef86450941a9a31167adbb7221d44e97362454c65b225649d3a68715d361feea",
+      "supersedesVersion": null
+    }
+  ]
+}

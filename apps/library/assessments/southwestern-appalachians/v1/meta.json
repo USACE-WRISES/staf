@@ -1,0 +1,19 @@
+{
+  "assessmentId": "southwestern-appalachians",
+  "assessmentName": "Southwestern Appalachians reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:05:01Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 2 of 20 stations of this ecoregion pass. 0 reference curves use local stations, 21 borrow from a wider region, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "68",
+    "name": "Southwestern Appalachians"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 68), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:48a56ca74a25bfd4daffb1237b01e70292c5cc499804def3577ed2af0fb45fa0",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

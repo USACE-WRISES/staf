@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 753423,
+  "name": "deep-dev-l3-45-1658066bc3ca-07e68505.evidence.zip",
+  "sha256": "0febfd4666860f9fe5d65e36c63f7a300f615c2be871d7c14116b1719c91bd32"
+ },
+ "bytes": 7236917,
+ "coverage": {
+  "assessmentId": "piedmont",
+  "curves": 26,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 60874,
+  "region": {
+   "code": "45",
+   "kind": "ecoregion",
+   "name": "Piedmont"
+  },
+  "stations": 88,
+  "stationsOutOfFrame": 15,
+  "values": 2747
+ },
+ "dataDigest": "sha256:b33e93766236f699f208d381d7bffa4dcb07d072298d7673d3b9c6dab102d589",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:07e6850525afef57bc5393f83d573bec5fa9d1db0e28252a39de8aa82e3f2844",
+ "packageId": "deep-dev-l3-45",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 45 (Piedmont)",
+ "version": "1658066bc3ca"
+}

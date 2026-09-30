@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "ridge-and-valley",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:fc4e265781388a8436c7154762e747f06791d65367d0fd77750fd09ffe7d535d",
+      "bytes": 41848,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:91a68c2969f895e3f2d8fca8f6d2d55f49f7d805da284cc0fca54025a48390a6",
+      "builtAt": "2026-09-30T07:04:51Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "ouachita-mountains",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:0380655dfb664d997171f88ab6a4d44834239e52c3ee0959460815b5338d8fc8",
+      "bytes": 43185,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:ccaedde6c64137dd680e54a83fd08f8972dd6e695bd7996f28b6a1b62212f650",
+      "builtAt": "2026-09-30T07:05:14Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

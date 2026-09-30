@@ -1,0 +1,19 @@
+{
+  "assessmentId": "ouachita-mountains",
+  "assessmentName": "Ouachita Mountains reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:05:13Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 8 of 21 stations of this ecoregion pass. 0 reference curves use local stations, 21 borrow from a wider region, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "36",
+    "name": "Ouachita Mountains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 36), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:ccaedde6c64137dd680e54a83fd08f8972dd6e695bd7996f28b6a1b62212f650",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

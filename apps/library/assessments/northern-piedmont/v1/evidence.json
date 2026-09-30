@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 870251,
+  "name": "deep-dev-l3-64-e0161b18bb8d-762adfd0.evidence.zip",
+  "sha256": "eb8d3ff94819dc54fd2b30ae638b4d91ca5625adba729debe32a198ba40fbca6"
+ },
+ "bytes": 8542710,
+ "coverage": {
+  "assessmentId": "northern-piedmont",
+  "curves": 23,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 72506,
+  "region": {
+   "code": "64",
+   "kind": "ecoregion",
+   "name": "Northern Piedmont"
+  },
+  "stations": 38,
+  "stationsOutOfFrame": 13,
+  "values": 1200
+ },
+ "dataDigest": "sha256:4d99e06fe7fdaa073b8cb0b65383f2bf79ea4cde4bec53d5af01b76f7594f914",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:762adfd0f041fe48ab85c537e038ca0baab47d4479257e6d5f6614a218f73167",
+ "packageId": "deep-dev-l3-64",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 64 (Northern Piedmont)",
+ "version": "e0161b18bb8d"
+}

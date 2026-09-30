@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "southwestern-appalachians",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:682369eee0e2b822ac4dffa07262370918162ece6711690b4300651547bd5cfb",
+      "bytes": 43972,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:48a56ca74a25bfd4daffb1237b01e70292c5cc499804def3577ed2af0fb45fa0",
+      "builtAt": "2026-09-30T07:05:01Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

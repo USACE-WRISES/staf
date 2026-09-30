@@ -1,0 +1,19 @@
+{
+  "assessmentId": "ozark-highlands",
+  "assessmentName": "Ozark Highlands reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:05:08Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 4 of 49 stations of this ecoregion pass. 0 reference curves use local stations, 20 borrow from a wider region, 5 metrics use fixed criteria, and 1 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "39",
+    "name": "Ozark Highlands"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 39), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:f2e324139fc4a85fd4b125de9ffac8c865fd3ce27c36de7999c7ff541a7e314c",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

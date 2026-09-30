@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 757793,
+  "name": "deep-dev-l3-68-7064084137ab-d5b46b53.evidence.zip",
+  "sha256": "295139cff2112ca05438abaa5d5a9111a02a39145bd1ed0a7a09f1d59c263c25"
+ },
+ "bytes": 7274550,
+ "coverage": {
+  "assessmentId": "southwestern-appalachians",
+  "curves": 21,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 62057,
+  "region": {
+   "code": "68",
+   "kind": "ecoregion",
+   "name": "Southwestern Appalachians"
+  },
+  "stations": 20,
+  "stationsOutOfFrame": 2,
+  "values": 618
+ },
+ "dataDigest": "sha256:e93259c487a45ef6dcbedd16572f57e1e6b5343aa338a64073ba3de3ca43b4cf",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:d5b46b535db9db8ff3945e8233e4d37a20d2b2c28907bab84424794b020b6d3d",
+ "packageId": "deep-dev-l3-68",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 68 (Southwestern Appalachians)",
+ "version": "7064084137ab"
+}

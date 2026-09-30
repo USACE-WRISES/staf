@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "arkansas-valley",
+  "assessmentName": "Arkansas Valley reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "37",
+    "name": "Arkansas Valley"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 37), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:05:11Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 2 of 12 stations of this ecoregion pass. 0 reference curves use local stations, 19 borrow from a wider region, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:ba846cc11891c8219c558ce0b9687ecc17465d0a82f92530a7a72859a998ae0e",
+      "supersedesVersion": null
+    }
+  ]
+}
