@@ -140,9 +140,11 @@ def test_new_selection_and_clear_invalidate_before_state_changes(app_name, event
 
 @pytest.mark.parametrize("app_name", ["easi", "sfari", "deep"])
 @pytest.mark.parametrize("event", ["click", "coordinates"])
-def test_streams_down_refuses_a_pick_without_touching_state(app_name, event):
-    # The HR service did not answer: a pick shows one notice (one id, so repeated
-    # clicks never stack) and changes nothing.
+def test_a_pick_proceeds_while_the_map_is_unavailable(app_name, event):
+    # Since 2026-09-30 the map never blocks a pick: with the map's retries run
+    # out, a click or typed point still starts a pick (it reads the tiles under
+    # it, or asks for them under the engine's pick policy). The handler reaches
+    # its first state change, as it does with the map up.
     state = {"generation": 7}
     notices = []
 
@@ -158,9 +160,9 @@ def test_streams_down_refuses_a_pick_without_touching_state(app_name, event):
         "_MAP": Map(), "input": SimpleNamespace(coords_entered=lambda: {"lat": 40, "lon": -83}),
         "ui": SimpleNamespace(notification_show=lambda *a, **k: notices.append((a, k))),
     })
-    handler()
-    assert state["generation"] == 7
-    assert notices == [(("down",), {"type": "warning", "duration": 5, "id": "streams_down"})]
+    with pytest.raises(StateMutation):
+        handler()
+    assert state["generation"] == 8 and notices == []
 
 
 @pytest.mark.parametrize("app_name", ["sfari", "deep"])

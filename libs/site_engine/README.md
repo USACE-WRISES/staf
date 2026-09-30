@@ -11,7 +11,7 @@ reach, checked against its published drainage area; the reach, not the point,
 is the outlet) and computes watershed and reach-scale GIS metrics from source
 data, with per-metric provenance and pinned data vintages.
 
-- **Identity**: `ENGINE_ID = "site-engine"`, `ENGINE_VERSION` (0.4.0). Display
+- **Identity**: `ENGINE_ID = "site-engine"`, `ENGINE_VERSION` (0.4.1). Display
   names and label helpers live in `site_engine/naming.py`; every consuming app
   imports them from its vendored copy so the four apps share one vocabulary.
 - **Entry point**: `compute_site(lat, lon, config=None, *, progress=None)`.
@@ -67,6 +67,24 @@ data, with per-metric provenance and pinned data vintages.
   `tests/test_extracts_sync.py` gate fails on drift.
 - **Determinism**: same inputs + same engine version = same record. The record
   body carries no timestamps; stamp them outside if needed.
+- **HR client** (`site_engine/hr.py`, 2026-09-30): the USGS NHDPlus HR
+  MapServer answers the same query in 1.5 to 75 seconds, so the client keeps
+  every answer on disk (`site_engine/httpcache.py`: stdlib sqlite, 90 days,
+  about 500 MB, `STAF_HR_CACHE_DIR`, off under pytest unless a folder is
+  named) and bounds each request by a policy. `patient` (the default: batch
+  runs and scripts) keeps the rules the client always had; the apps select
+  `interactive` at startup (`hr.set_policy`): two attempts capped at 60 s, a
+  failing batch asked again in halves (100, 50, 25 ids), and an eight-minute
+  deadline on a delineation's walk and catchments. The map reads the network
+  in 0.05 degree tiles of a global grid (`flowlines_in_tiles`, `display`
+  policy, a tile over the 2,000-record cap answered by its quarters) and a
+  pick reads the tiles under its probe box (`snap_records`, `pick` policy).
+  The engine's own anchoring keeps its exact envelope query. At most six
+  requests run at once per process.
+
+  Same queries, same answers: a record that completes is byte-identical, so
+  the version stays 0.4.1. StreamCurves' site-engine caches are keyed on it
+  and stay valid; the vendored copies' `VENDOR_INFO.json` records the change.
 
 ## Versioning
 

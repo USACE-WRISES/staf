@@ -122,3 +122,23 @@ def test_field_forms_outputs_stay_alive_while_the_modal_is_hidden():
     for name in ("ff_site", "ff_status", "ff_table", "ff_preview"):
         assert f"@output(suspend_when_hidden=False)\n    @render.ui\n    def {name}(" in src, name
     assert "field_forms_body" not in src
+
+
+def test_catchment_batches_and_the_plain_hr_failure_text():
+    # 2026-09-30: the catchment step names its batch, and an unanswered USGS
+    # HR service reads in plain words (the engine's record keeps its reason).
+    lead = "Delineating watershed · step 3 of 5 · joining catchments"
+    assert app._engine_progress_text(
+        {"stage": "catchments", "reaches": 1180, "batch": 3, "batches": 12}) \
+        == lead + ", 1,180 reaches, batch 3 of 12"
+    assert app._engine_progress_text(
+        {"stage": "catchments", "reaches": 40, "batch": 1, "batches": 1}) == lead + ", 40 reaches"
+    assert app._engine_progress_text(
+        {"stage": "union", "reaches": 40, "batch": 2, "batches": 2}) == lead + ", 40 reaches"
+    for reason in ("catchment query failed", "upstream tree query failed",
+                   "anchor reach geometry unavailable", "no HR flowline near the point"):
+        assert app._engine_reason_text(reason) == app._HR_FAILURE_TEXT
+    budget = "watershed exceeds the engine budget (3001 reaches, 12 hops)"
+    assert app._engine_reason_text(budget) == budget
+    assert "\u2014" not in app._HR_FAILURE_TEXT and "\u2014" not in app._STREAMS_DOWN_TEXT
+    assert app.STREAM_RETRY_DELAYS_S == (15.0, 30.0, 60.0)

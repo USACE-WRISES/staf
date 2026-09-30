@@ -40,6 +40,12 @@ from deep.datasources.geocode import geocode_address  # noqa: E402
 from deep.metrics import computed as _computed  # noqa: E402
 from deep.pipeline import DEFAULT_REACH_FT  # noqa: E402
 
+# The USGS NHDPlus HR service is slow at times: this app's requests to it
+# follow the site engine's interactive policy (bounded attempts, a failing
+# batch split in halves, an eight-minute deadline on a delineation's walk and
+# catchments). Batch runs elsewhere keep the engine's patient default.
+hr_site.use_interactive_policy()
+
 try:
     from ipyleaflet import (CircleMarker, GeoJSON, LayerGroup, LayersControl, Map, Marker,  # noqa: F401
                         ScaleControl, TileLayer)
@@ -124,8 +130,17 @@ FLOW_ZOOM = 14
 SNAP_TOL_FT = 150.0
 _MISS_TEXT = (f"No stream line within {int(SNAP_TOL_FT)} ft of the click. "
               "Zoom in and click a line.")
-_STREAMS_DOWN_TEXT = ("The USGS stream service is not responding. "
-                      "Use the refresh button in the map legend.")
+_STREAMS_DOWN_TEXT = ("The USGS stream service did not answer. "
+                      "Click the stream again in a moment.")
+# A view whose stream tiles did not all answer asks for the missing ones again
+# after these pauses; after the last, nothing more is asked until the legend's
+# Try again or an answer from the service (2026-09-30: retry, but never hammer).
+STREAM_RETRY_DELAYS_S = (15.0, 30.0, 60.0)
+# Engine failures that mean the USGS HR service did not answer (the engine's own
+# reasons, unchanged in its record) and the plain words the assessor reads.
+_HR_FAILURE_REASONS = ("upstream tree query failed", "catchment query failed",
+                       "anchor reach geometry unavailable", "no HR flowline near the point")
+_HR_FAILURE_TEXT = "the USGS stream service did not answer in time"
 # The legend's Try again button: a clockwise arrow drawn here (the app ships
 # no icon font), colored by the button's text color.
 _RETRY_ICON = ui.HTML(
@@ -643,12 +658,23 @@ def _engine_progress_text(prog: dict, families=None) -> str:
     if n in (2, 3) and prog.get("reaches"):
         count = int(prog["reaches"])
         what += f", {count:,} reach" + ("" if count == 1 else "es")
+    if st == "catchments" and prog.get("batch") and (prog.get("batches") or 0) > 1:
+        what += f", batch {int(prog['batch'])} of {int(prog['batches'])}"
     if st == "metrics" and prog.get("family"):
         fam = str(prog["family"])
         fams = sorted(families if families is not None else engine_prefill.DEEP_FAMILIES)
         pos = f" ({fams.index(fam) + 1} of {len(fams)})" if fam in fams else ""
         what += f", {_ENGINE_FAMILY_TEXT.get(fam, fam)}{pos}"
     return f"{lead} · step {n} of {_ENGINE_STEP_COUNT} · {what}"
+
+
+def _engine_reason_text(reason) -> str:
+    """The engine's failure reason as the assessor reads it: an unanswered USGS
+    HR service in plain words, anything else as the engine said it."""
+    text = str(reason or "").strip()
+    if text.startswith(_HR_FAILURE_REASONS):
+        return _HR_FAILURE_TEXT
+    return text or "no detail"
 
 
 def _engine_line_ui(es: dict, running: bool, prog: dict):
@@ -659,7 +685,7 @@ def _engine_line_ui(es: dict, running: bool, prog: dict):
     if st == "ok":
         return None      # routine success needs no status message
     if st in ("failed", "refused", "unavailable"):
-        return ui.div(f"STAF site engine {st}: {es.get('reason') or 'no detail'}. StreamCat "
+        return ui.div(f"STAF site engine {st}: {_engine_reason_text(es.get('reason'))}. StreamCat "
                       "values stand in where the reach has them, labeled. Delineate again "
                       "to retry.", class_="deep-engine-line warn")
     return None
@@ -714,6 +740,10 @@ def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
         note = "Zoom in to see streams"
     elif mode == "hr-truncated":
         note = "Too many streams to show here. Zoom in."
+    elif mode == "hr-partial":
+        note = "Some stream lines did not load. Retrying."
+    elif mode == "hr-unavailable":
+        note = "Stream lines did not load. Retrying."
     elif mode == "hr-only" and coverage:
         note = "StreamCat coverage unavailable here."
     elif mode == "empty":
@@ -1048,13 +1078,17 @@ def server(input, output, session_):  # noqa: C901
     computed_for = reactive.value(None)        # (assessmentId, version, site) already desktop-computed
     hr_geojson = reactive.value(None)          # NHDPlus HR flowlines in the viewport | None
     streams_mode = reactive.value(None)        # network_display mode of the drawn layers | None
-    streams_down = reactive.value(False)       # the HR service did not answer: no stream fetch
-    #                                            until the legend's Try again
+    streams_down = reactive.value(False)       # the automatic stream retries ran out: no
+    #                                            stream request until Try again or an answer
+    streams_retry_due = reactive.value(None)   # time.monotonic() of the next automatic retry | None
+    streams_kick = reactive.value(0)           # bumped to ask again for the box in view
+    _streams_retries = {"count": 0, "down_at": None}
     zoomed_in = reactive.value(False)          # zoom >= FLOW_ZOOM (the legend reads this, not the view)
     site_anchor = reactive.value(None)         # the StreamCat reach classification of the point | None
     evidence_reach = reactive.value(None)      # {"comid", "name"} of the glowing V2 reach | None
     engine_state = reactive.value({"status": "idle"})   # the STAF site engine on this site
-    _engine_prog = {"stage": None, "reaches": None, "hops": None, "family": None}
+    _engine_prog = {"stage": None, "reaches": None, "hops": None, "family": None,
+                    "batch": None, "batches": None}
     _no_watershed: dict = {}                   # the pending continuation after an engine failure
 
     # One-shot deep-link ingest from the URL query string:
@@ -1269,14 +1303,13 @@ def server(input, output, session_):  # noqa: C901
             bbox = view_bbox()
             changed = last_view_change()
             down = streams_down()
+            streams_kick()                          # an automatic retry asks again
             if bbox is None:
                 with reactive.isolate():
                     fetched_bbox.set(None)
                     _stream_layers.clear_streams()
                     flow_geojson.set(None); hr_geojson.set(None)
                     streams_mode.set(None)
-                return
-            if down:                                # the service is down: ask only on Try again
                 return
             elapsed = time.monotonic() - changed
             if elapsed < 0.5:
@@ -1293,28 +1326,57 @@ def server(input, output, session_):  # noqa: C901
                 if not (viewport.needs_fetch(view_bounds(), fetched) or refine):
                     return
                 fetched_bbox.set(bbox)
-            streams_task(bbox)
+            streams_task.cancel()                   # a newer box replaces a slower one; its
+            #                                         tiles still finish into the cache
+            streams_task(bbox, down)                # retries ran out: stored tiles only
 
         @reactive.extended_task
-        async def streams_task(bbox: tuple) -> dict:
+        async def streams_task(bbox: tuple, offline: bool = False) -> dict:
             # Both networks fetched side by side, then split by the click rule
-            # (deep.network_display), all on the worker thread.
-            return await anyio.to_thread.run_sync(
-                lambda: network_display.fetch_streams(bbox, tol_ft=SNAP_TOL_FT))
+            # (deep.network_display), all on the worker thread. ``offline``: the
+            # automatic retries ran out, so only stored HR tiles are drawn.
+            res = await anyio.to_thread.run_sync(
+                lambda: network_display.fetch_streams(bbox, tol_ft=SNAP_TOL_FT, offline=offline))
+            return {**res, "offline": offline}
 
-        def _streams_outage():
-            """The HR service did not answer (a map fetch or a pick): draw nothing,
-            drop any queued box, and ask again only on the legend's Try again."""
-            streams_task.cancel()
-            _stream_layers.clear_streams()
-            flow_geojson.set(None); hr_geojson.set(None)
-            streams_mode.set("hr-unavailable")
-            streams_down.set(True)
+        def _streams_gap(offline: bool):
+            """Some or all of the view's HR tiles did not answer: what arrived is
+            drawn, and the rest is asked again after 15, 30 and 60 seconds. After
+            the last retry (the cap) nothing more is asked until Try again or an
+            answer from the service; pans draw stored tiles only."""
+            import time
+            with reactive.isolate():
+                if offline or streams_down():
+                    return
+                n = _streams_retries["count"]
+                if n >= len(STREAM_RETRY_DELAYS_S):
+                    streams_retry_due.set(None)
+                    _streams_retries["down_at"] = time.monotonic()
+                    streams_down.set(True)
+                    return
+                _streams_retries["count"] = n + 1
+                streams_retry_due.set(time.monotonic() + STREAM_RETRY_DELAYS_S[n])
+
+        def _streams_reset():
+            """The retry count starts over (an answered view, or Try again)."""
+            _streams_retries["count"] = 0
+            _streams_retries["down_at"] = None
+            with reactive.isolate():
+                streams_retry_due.set(None)
+                if streams_down():
+                    streams_down.set(False)
+
+        def _resume_if_answered():
+            """After the retries ran out, an answer from the service (a pick, a
+            delineation) brings the map back: ask again for the box in view."""
+            with reactive.isolate():
+                if streams_down() and hr_site.answered_since(_streams_retries["down_at"]):
+                    fetched_bbox.set(None)
+                    _streams_reset()
 
         def _pick_outage():
-            """A pick's HR request went unanswered: the state of a failed map fetch,
-            and a notice that points at Try again, never the miss text."""
-            _streams_outage()
+            """A pick's HR request went unanswered: say so, never the miss text.
+            The map keeps what it drew and its own retries."""
             ui.notification_show(_STREAMS_DOWN_TEXT, type="warning", duration=5,
                                  id="streams_down")
 
@@ -1325,37 +1387,52 @@ def server(input, output, session_):  # noqa: C901
             except Exception:
                 return
             with reactive.isolate():
-                if res.get("mode") == "hr-unavailable":
-                    _streams_outage()               # whatever box asked
-                    return
                 fetched = fetched_bbox()
                 if fetched is None or tuple(res.get("bbox") or ()) != tuple(fetched):
                     return                          # torn down or a stale box
+                mode = res.get("mode")
                 flow_geojson.set(res.get("v2"))     # raw networks: the click rule's input
                 hr_geojson.set(res.get("hr"))
                 _stream_layers.set_data(res["covered"], res["uncovered"])
-                if streams_mode() != res.get("mode"):
-                    streams_mode.set(res.get("mode"))
+                if streams_mode() != mode:
+                    streams_mode.set(mode)
+                if mode in ("hr-unavailable", "hr-partial"):
+                    _streams_gap(bool(res.get("offline")))
+                elif not res.get("offline"):
+                    _streams_reset()                # the service answered the whole view
+
+        @reactive.effect
+        def _streams_retry_timer():
+            import time
+            due = streams_retry_due()
+            if due is None:
+                return
+            wait = due - time.monotonic()
+            if wait > 0:
+                reactive.invalidate_later(wait + 0.05)
+                return
+            with reactive.isolate():
+                streams_retry_due.set(None)
+                fetched_bbox.set(None)              # ask again for the box in view
+                streams_kick.set(streams_kick() + 1)
 
         @reactive.effect
         @reactive.event(input.retry_streams)
         def _retry_streams():
-            # The legend's Try again: ask once more, for the box in view.
+            # The legend's Try again: the automatic retries start over, for the
+            # box in view.
             if not streams_down():
                 return      # a second press while the retry runs changes nothing
             fetched_bbox.set(None)
-            streams_down.set(False)
+            _streams_reset()
 
         @reactive.effect
         @reactive.event(clicked)
         def _handle_click():
             if current_step() != STEP_IDENTIFY:
                 return
-            if streams_down():
-                # No stream lines to pick from, and no snap that could finish.
-                ui.notification_show(_STREAMS_DOWN_TEXT, type="warning", duration=5,
-                                     id="streams_down")
-                return
+            # A pick never waits on the map: drawn lines settle it, else the
+            # tiles under the click are asked for (the engine's pick policy).
             _map_pick["generation"] += 1
             lat, lon = clicked()
             _begin_pick()
@@ -1427,6 +1504,8 @@ def server(input, output, session_):  # noqa: C901
             _start_lookup(lat, lon, hit)
 
         def _apply_snap_result(res, *, from_coords=False):
+            if res.get("hrStatus") not in (None, "failed"):
+                _resume_if_answered()
             hit = res.get("hit")
             if hit and hit[2] <= SNAP_TOL_FT:
                 _apply_snap(hit, click=(res.get("lat"), res.get("lon")))
@@ -1622,10 +1701,6 @@ def server(input, output, session_):  # noqa: C901
                 ui.notification_show("Coordinates must be within the continental United States.",
                                      type="warning", duration=5)
                 return
-            if streams_down():
-                ui.notification_show(_STREAMS_DOWN_TEXT, type="warning", duration=5,
-                                     id="streams_down")
-                return
             _map_pick["generation"] += 1
             _begin_pick()
             _MAP.center = (lat, lon); _MAP.zoom = 15
@@ -1667,7 +1742,7 @@ def server(input, output, session_):  # noqa: C901
         def _cb(event):
             if generation != _map_pick["generation"]:
                 return
-            for k in ("stage", "reaches", "hops", "family"):
+            for k in ("stage", "reaches", "hops", "family", "batch", "batches"):
                 if k in event:
                     _engine_prog[k] = event[k]
         try:
@@ -1799,7 +1874,7 @@ def server(input, output, session_):  # noqa: C901
         Without one the site stays on Identify so Delineate can retry."""
         if res.get("generation") != _map_pick["generation"] or not _source_ready():
             return
-        reason = state.get("reason") or state.get("status") or "no detail"
+        reason = _engine_reason_text(state.get("reason") or state.get("status"))
         with reactive.isolate():
             anchor = site_anchor()
             pt = snapped_point()
@@ -2191,8 +2266,7 @@ def server(input, output, session_):  # noqa: C901
     @render.ui
     def cursor_style():
         z, _c = _view()
-        picking = (current_step() == STEP_IDENTIFY and z is not None and z >= FLOW_ZOOM
-                   and not streams_down())     # no crosshair while nothing can be picked
+        picking = current_step() == STEP_IDENTIFY and z is not None and z >= FLOW_ZOOM
         if not picking:
             return None
         return ui.tags.style(
@@ -2210,7 +2284,9 @@ def server(input, output, session_):  # noqa: C901
         return _legend_ui(current_step(), zoomed_in(), streams_mode(), evidence_reach(),
                           comid_anchor.is_routed(site_anchor()), coverage=coverage_enabled(),
                           streams_visible=streams_visible(), source_visible=glow,
-                          route_visible=route, unavailable=streams_down())
+                          route_visible=route,
+                          unavailable=(streams_down()
+                                       and streams_mode() in ("hr-unavailable", "hr-partial")))
 
     # ======================================================================= #
     # Assessment resolution (Basin step)

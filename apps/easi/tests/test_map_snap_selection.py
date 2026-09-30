@@ -55,7 +55,7 @@ def _scope(*, v2_fc=V2_FC, hr_fc=HR_FC, v2_hit=V2, hr_hit=HR, pending=None):
         point=Value(), pending=Value(copy.deepcopy(pending)), scored=Value(),
         lookup=Value({"status": "idle"}), stage=Value(""), numeric={}, buttons=[],
         notifications=[], routes=[], fetches=[], layers={"marker": None, "scored": None},
-        outages=[], hr_kwargs=[],
+        outages=[], hr_kwargs=[], resumed=[],
         map=SimpleNamespace(layers=[], center=CLICK, zoom=15))
 
     def add_layer(key, layer):
@@ -79,6 +79,11 @@ def _scope(*, v2_fc=V2_FC, hr_fc=HR_FC, v2_hit=V2, hr_hit=HR, pending=None):
     def fetch_hr_status(*args, **kwargs):
         state.fetches.append(("hr", args))
         state.hr_kwargs.append(kwargs)
+        return "ok", HR_FC
+
+    def snap_status(lat, lon, half_deg):
+        state.fetches.append(("hr", (lat, lon)))
+        state.hr_kwargs.append({"probe": half_deg})
         return "ok", HR_FC
 
     namespace = {
@@ -107,7 +112,9 @@ def _scope(*, v2_fc=V2_FC, hr_fc=HR_FC, v2_hit=V2, hr_hit=HR, pending=None):
                                      nearest_point_on_lines=lambda *args: v2_hit),
         "nhd_hr": SimpleNamespace(hr_flowlines_in_bbox=fetch_hr,
                                   hr_flowlines_in_bbox_status=fetch_hr_status,
+                                  hr_snap_status=snap_status,
                                   nearest_point_on_hr_lines=lambda *args: hr_hit),
+        "_resume_if_answered": lambda: state.resumed.append(True),
         "network_display": SimpleNamespace(feature_by_id=lambda *args: FEATURE),
         "ui": SimpleNamespace(
             update_numeric=lambda name, **kwargs: state.numeric.update({name: kwargs["value"]}),
@@ -202,7 +209,7 @@ def test_worker_fetches_both_networks_even_when_v2_hit_succeeds():
     state, scope = _scope()
     result = _function("easi", "_snap_both", scope)(*CLICK)
     assert {item[0] for item in state.fetches} == {"v2", "hr"}
-    assert state.hr_kwargs == [{"fast_fail": True}]      # the map's one-attempt policy
+    assert state.hr_kwargs == [{"probe": 0.012}]         # the tiles under the probe box
     assert {key: result[key] for key in ("hit", "hitFeature", "hrHit", "lat", "lon")} == {
         "hit": V2, "hitFeature": FEATURE, "hrHit": HR, "lat": CLICK[0], "lon": CLICK[1]}
 
@@ -366,7 +373,8 @@ def _geometric_scope(*, hr_y=0, v2_y=20, click_y=50, hr_status=None):
                                   flowlines_in_bbox=lambda *args: v2),
         nhd_hr=SimpleNamespace(nearest_point_on_hr_lines=nhd_hr.nearest_point_on_hr_lines,
                                hr_flowlines_in_bbox=lambda *args: hr,
-                               hr_flowlines_in_bbox_status=lambda *args, **k: (hr_status, hr)),
+                               hr_flowlines_in_bbox_status=lambda *args, **k: (hr_status, hr),
+                               hr_snap_status=lambda *args, **k: (hr_status, hr)),
         _stream_layers=SimpleNamespace(flow=SimpleNamespace(data=display["covered"])),
         streams_mode=Value(display["mode"]))
     scope["clicked"].set((lat, lon))
