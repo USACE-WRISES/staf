@@ -146,13 +146,13 @@ CYCLES = ("1314", "1819", "2324")
 #: Pinned on purpose: a new version changes the table only when this list is updated,
 #: and the test checks the pins against each assessment's manifest.
 LIBRARY_BUNDLES = (
-    ("central-basin-and-range", 1),
-    ("central-great-plains", 1),
-    ("northern-lakes-and-forests", 1),
-    ("eastern-corn-belt-plains", 8),
-    ("northeastern-highlands", 9),
-    ("southeastern-plains", 2),
-    ("interior-plateau", 6),
+    ("central-basin-and-range", 2),
+    ("central-great-plains", 2),
+    ("northern-lakes-and-forests", 2),
+    ("eastern-corn-belt-plains", 9),
+    ("northeastern-highlands", 10),
+    ("southeastern-plains", 3),
+    ("interior-plateau", 7),
 )
 
 CONSTRUCT_CLASSES = ("direct_function_measure", "ecological_response", "pressure_proxy",

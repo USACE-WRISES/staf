@@ -60,7 +60,9 @@ def _opened(version: str, monkeypatch):
 
 
 def test_the_library_holds_the_regional_versions_this_checks():
-    assert {"northern-lakes-and-forests/v1", "central-basin-and-range/v1"} <= set(REGIONAL)
+    # the national campaign's versions (2026-09-29) are the latest of every regional assessment
+    assert {"northern-lakes-and-forests/v2", "central-basin-and-range/v2", "high-plains/v1"} <= set(REGIONAL)
+    assert len(REGIONAL) >= 85
 
 
 @pytest.mark.parametrize("version", REGIONAL)

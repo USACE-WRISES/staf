@@ -48,15 +48,18 @@ def test_the_published_regions_announce_what_they_score():
     of 2026-09-22 published the Eastern Corn Belt Plains v8 (28, large wood back under D9
     and Population support closed), the Southeastern Plains v2 (26, its own wetland pool
     accepted), and the first versions of the Central Great Plains (23), the Northern
-    Lakes and Forests (28) and the Central Basin and Range (28). Every one covers all
-    twenty functions."""
-    for aid, expected in (("northeastern-highlands", "31 metrics"),
+    Lakes and Forests (28) and the Central Basin and Range (28). The national campaign
+    (methodology 0.16, 2026-09-29) published the next version of each: Northeastern
+    Highlands v10 (28), Interior Plateau v7 (29), Eastern Corn Belt Plains v9 (28),
+    Southeastern Plains v3 (28), Central Great Plains v2 (29), Northern Lakes and Forests v2
+    (27) and Central Basin and Range v2 (27). Every one covers all twenty functions."""
+    for aid, expected in (("northeastern-highlands", "28 metrics"),
                           ("interior-plateau", "29 metrics"),
                           ("eastern-corn-belt-plains", "28 metrics"),
-                          ("southeastern-plains", "26 metrics"),
-                          ("central-great-plains", "23 metrics"),
-                          ("northern-lakes-and-forests", "28 metrics"),
-                          ("central-basin-and-range", "28 metrics")):
+                          ("southeastern-plains", "28 metrics"),
+                          ("central-great-plains", "29 metrics"),
+                          ("northern-lakes-and-forests", "27 metrics"),
+                          ("central-basin-and-range", "27 metrics")):
         counts = _facts(assessments.load_predefined(aid).raw)["counts"]
         assert counts.startswith(expected), (aid, counts)
         assert "20 of 20 functions" in counts and "documented" not in counts, (aid, counts)
