@@ -1,0 +1,19 @@
+{
+  "assessmentId": "driftless-area",
+  "assessmentName": "Driftless Area reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:06:03Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 1 of 68 stations of this ecoregion pass. 0 reference curves use local stations, 21 borrow from a wider region, 5 metrics use fixed criteria, and 1 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "52",
+    "name": "Driftless Area"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 52), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:413ad5065a70fe7abf205d81bf6fe5d0da9d4e74a301ea882a1dc26ec4811a26",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

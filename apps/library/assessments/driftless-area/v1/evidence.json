@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 777409,
+  "name": "deep-dev-l3-52-21245778d136-0e143b09.evidence.zip",
+  "sha256": "050bbadb1035363524a1936c562205f690d84bcbaa4250e0434f21088b12a943"
+ },
+ "bytes": 7817029,
+ "coverage": {
+  "assessmentId": "driftless-area",
+  "curves": 21,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 65982,
+  "region": {
+   "code": "52",
+   "kind": "ecoregion",
+   "name": "Driftless Area"
+  },
+  "stations": 68,
+  "stationsOutOfFrame": 28,
+  "values": 2113
+ },
+ "dataDigest": "sha256:e0a993c403c6a1c0ae4e6f8538915c06e92ec9111d0bbb5b7ab07acaa736565d",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:0e143b09fbc0fba720691f1a6a320373de43c381f6040a5a8f87b18cb1fa3dc7",
+ "packageId": "deep-dev-l3-52",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 52 (Driftless Area)",
+ "version": "21245778d136"
+}
