@@ -24,6 +24,12 @@ walk for ``scripts/walk_equivalence.py``.
 Budgets keep big basins from walking forever: past ``max_hops`` or
 ``max_reaches`` the delineation REFUSES with a reason rather than returning a
 truncated watershed as if it were complete. Never raises.
+
+Under a request policy with a deadline (the apps' ``interactive``, see
+``hr.POLICIES``) the walk and the catchments share it: past it the next query
+is not sent and the delineation fails with its usual reason. The riparian
+geometry fetch that follows a complete union is outside the deadline, so a
+watershed that completes carries the same record either way.
 """
 from __future__ import annotations
 
@@ -64,54 +70,12 @@ def delineate_watershed(anchor: dict, *, max_hops: int = 200,
         out["reason"] = "anchor reach has no id or hydroseq"
         return out
 
-    tree_ids = {int(nid)}
-    # The node walk needs the frontier's geometry; an anchor without one is
-    # fetched once (a parsed record from flowlines_in_bbox always carries it).
-    if not anchor.get("geometry"):
-        fetched = hr.flowline_by_id(int(nid))
-        if not fetched or not fetched.get("geometry"):
-            out["reason"] = "anchor reach geometry unavailable"
-            return out
-        anchor = {**anchor, "geometry": fetched["geometry"]}
-    geoms_by_id: dict[int, dict] = {int(nid): anchor["geometry"]}
-    frontier = [anchor]
-    hops = 0
-    while frontier:
-        if hops >= max_hops or len(tree_ids) >= max_reaches:
-            out["status"] = "refused"
-            out["reason"] = (f"watershed exceeds the engine budget "
-                             f"({len(tree_ids)} reaches, {hops} hops; the "
-                             f"budget is {max_reaches} reaches and "
-                             f"{max_hops} hops)")
-            out["nReaches"], out["nHops"] = len(tree_ids), hops
-            return out
-        parents = hr.parents_by_node(frontier)
-        if parents is None:
-            out["reason"] = "upstream tree query failed"
-            out["nReaches"], out["nHops"] = len(tree_ids), hops
-            return out
-        frontier = []
-        for rec in parents:
-            rid = rec.get("nhdplusid")
-            if rid is None or rid in tree_ids:
-                continue
-            tree_ids.add(int(rid))
-            if rec.get("geometry"):
-                geoms_by_id[int(rid)] = rec["geometry"]
-            if rec.get("hydroseq") and rec.get("geometry"):
-                frontier.append(rec)
-        hops += 1
-        notify(progress, stage="walk", hops=hops, reaches=len(tree_ids))
-    out["nReaches"], out["nHops"] = len(tree_ids), hops
-
-    notify(progress, stage="catchments", hops=hops, reaches=len(tree_ids))
-    cats = hr.catchments_by_ids(sorted(tree_ids))
-    if cats is None:
-        out["reason"] = "catchment query failed"
+    with hr.deadline(hr.active_policy().deadline_s):
+        found = _tree_and_catchments(anchor, int(nid), out, max_hops=max_hops,
+                                     max_reaches=max_reaches, progress=progress)
+    if found is None:
         return out
-    if not cats:
-        out["reason"] = "no catchments returned for the upstream tree"
-        return out
+    anchor, tree_ids, geoms_by_id, cats, hops = found
 
     notify(progress, stage="union", hops=hops, reaches=len(tree_ids))
     try:
@@ -160,3 +124,62 @@ def delineate_watershed(anchor: dict, *, max_hops: int = 200,
     out["treeFlowlines"] = [geoms_by_id[i] for i in sorted(geoms_by_id)]
     out["status"] = "ok"
     return out
+
+
+def _tree_and_catchments(anchor: dict, nid: int, out: dict, *, max_hops: int,
+                         max_reaches: int, progress):
+    """The walk and the catchment fetch: ``(anchor, tree_ids, geoms_by_id,
+    catchments, hops)``, or None with ``out``'s status and reason set."""
+    tree_ids = {int(nid)}
+    # The node walk needs the frontier's geometry; an anchor without one is
+    # fetched once (a parsed record from flowlines_in_bbox always carries it).
+    if not anchor.get("geometry"):
+        fetched = hr.flowline_by_id(int(nid))
+        if not fetched or not fetched.get("geometry"):
+            out["reason"] = "anchor reach geometry unavailable"
+            return None
+        anchor = {**anchor, "geometry": fetched["geometry"]}
+    geoms_by_id: dict[int, dict] = {int(nid): anchor["geometry"]}
+    frontier = [anchor]
+    hops = 0
+    while frontier:
+        if hops >= max_hops or len(tree_ids) >= max_reaches:
+            out["status"] = "refused"
+            out["reason"] = (f"watershed exceeds the engine budget "
+                             f"({len(tree_ids)} reaches, {hops} hops; the "
+                             f"budget is {max_reaches} reaches and "
+                             f"{max_hops} hops)")
+            out["nReaches"], out["nHops"] = len(tree_ids), hops
+            return None
+        parents = hr.parents_by_node(frontier)
+        if parents is None:
+            out["reason"] = "upstream tree query failed"
+            out["nReaches"], out["nHops"] = len(tree_ids), hops
+            return None
+        frontier = []
+        for rec in parents:
+            rid = rec.get("nhdplusid")
+            if rid is None or rid in tree_ids:
+                continue
+            tree_ids.add(int(rid))
+            if rec.get("geometry"):
+                geoms_by_id[int(rid)] = rec["geometry"]
+            if rec.get("hydroseq") and rec.get("geometry"):
+                frontier.append(rec)
+        hops += 1
+        notify(progress, stage="walk", hops=hops, reaches=len(tree_ids))
+    out["nReaches"], out["nHops"] = len(tree_ids), hops
+
+    notify(progress, stage="catchments", hops=hops, reaches=len(tree_ids))
+
+    def batches(done, total):
+        notify(progress, stage="catchments", hops=hops, reaches=len(tree_ids),
+               batch=done, batches=total)
+    cats = hr.catchments_by_ids(sorted(tree_ids), progress=batches)
+    if cats is None:
+        out["reason"] = "catchment query failed"
+        return None
+    if not cats:
+        out["reason"] = "no catchments returned for the upstream tree"
+        return None
+    return anchor, tree_ids, geoms_by_id, cats, hops

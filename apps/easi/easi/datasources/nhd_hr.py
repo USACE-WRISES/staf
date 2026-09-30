@@ -22,6 +22,13 @@ Like the other datasources: never raises — every helper returns ``None`` (or a
 dict with an error note) on failure, and results are cached in-process. A
 request the service never answered is not a result: it is asked again next
 time, so an outage does not outlive itself in the cache.
+
+Transport (2026-09-30): every request goes through the vendored STAF site
+engine's HR client (``_vendor/site_engine/hr.py``), so EASI shares its disk
+cache of answers, its request policies and its limit on requests in flight.
+The map reads the engine's tiles (``hr_flowlines_display``) and a pick the
+tiles under its probe box (``hr_snap_status``); the batch path keeps the exact
+probe query (``hr_flowlines_in_bbox``), so its snaps are unchanged.
 """
 from __future__ import annotations
 
@@ -54,35 +61,32 @@ class _Unanswered(Exception):
     """The service did not answer: never a cached result."""
 
 
+def _engine_hr():
+    """The vendored site engine's HR client (one transport for every HR request)."""
+    from .._vendor.site_engine import hr
+    return hr
+
+
+def _record(outcome) -> None:
+    """A failed attempt, for the batch retry side channel (a no-op outside a
+    batch run): the status code (500 for an error payload) or the exception."""
+    if isinstance(outcome, BaseException):
+        diagnostics.record_exception("NHDPlus HR", outcome)
+    else:
+        diagnostics.record_response("NHDPlus HR", int(outcome))
+
+
 def _request(params: dict, timeout: float, retries: int = 1, *,
              fast_fail: bool = False) -> Optional[dict]:
-    """GET against the HR query endpoint with light retry. Never raises.
+    """GET against the HR query endpoint through the vendored engine's client
+    (a stored answer first; the engine's active request policy, whose default
+    keeps this client's old rules). Never raises.
 
     Failures are reported to the batch retry side channel (a no-op outside a
     batch run) so the scheduler can classify a partial result as transient.
     """
-    for attempt in range(retries + 1):
-        started = time.monotonic()
-        try:
-            r = requests.get(HR_QUERY_URL, params=params, timeout=timeout)
-            if r.status_code == 200:
-                data = r.json()
-                # ArcGIS reports errors inside a 200 payload.
-                if isinstance(data, dict) and "error" not in data:
-                    return data
-                diagnostics.record_response("NHDPlus HR", 500)
-            else:
-                diagnostics.record_response("NHDPlus HR", r.status_code)
-        except requests.exceptions.Timeout as exc:
-            diagnostics.record_exception("NHDPlus HR", exc)
-            if fast_fail:
-                return None
-        except Exception as exc:  # noqa: BLE001 - resilience by design
-            diagnostics.record_exception("NHDPlus HR", exc)
-        if fast_fail and time.monotonic() - started > _FAST_FAIL_S:
-            return None
-        time.sleep(0.5 * (attempt + 1))
-    return None
+    return _engine_hr()._request(HR_QUERY_URL, params, timeout, retries,
+                                 fast_fail=fast_fail, on_attempt=_record)
 
 
 def _exceeded(payload: Optional[dict]) -> bool:
@@ -173,6 +177,73 @@ def hr_flowlines_in_bbox(west: float, south: float, east: float, north: float,
     """
     return hr_flowlines_in_bbox_status(west, south, east, north,
                                        max_area_deg2=max_area_deg2)[1]
+
+
+def _id_only(records) -> list[dict]:
+    """Display features (geometry plus ``nhdplusid``) from parsed engine records."""
+    return [{"type": "Feature", "properties": {"nhdplusid": r["nhdplusid"]},
+             "geometry": r["geometry"]} for r in records or [] if r.get("geometry")]
+
+
+def hr_flowlines_display(west: float, south: float, east: float, north: float, *,
+                         offline: bool = False) -> tuple[str, Optional[dict]]:
+    """``(status, FeatureCollection | None)`` for the map's view, from the
+    vendored engine's tiles (``hr.flowlines_in_tiles``): ``ok``, ``empty``,
+    ``partial`` (the lines of the tiles that answered, with a ``missing`` list
+    of [w, s, e, n] tile boxes on the collection), ``failed``, ``truncated`` or
+    ``too-large``. Id-only features, like ``hr_flowlines_in_bbox``. ``offline``
+    reads stored tiles only and asks nothing."""
+    try:
+        status, records, missing = _engine_hr().flowlines_in_tiles(
+            west, south, east, north, offline=offline)
+    except Exception:  # noqa: BLE001 - resilience by design
+        return "failed", None
+    feats = _id_only(records)
+    if status == "partial":
+        return "partial", {"type": "FeatureCollection", "features": feats,
+                           "missing": [list(b) for b in missing]}
+    if status == "ok":
+        return ("ok", {"type": "FeatureCollection", "features": feats}) if feats else ("empty", None)
+    return status, None
+
+
+def hr_snap_status(lat: float, lon: float, half_deg: float = 0.012
+                   ) -> tuple[str, Optional[dict]]:
+    """``(status, FeatureCollection | None)``: the HR lines in a pick's probe
+    box, read from the map's tiles under it (fetched under the engine's pick
+    policy, about 30 s, when not already kept). The same lines the probe
+    box's own query returns. Status ``ok``, ``empty``, ``truncated`` or
+    ``failed`` (no answer: never the same fact as "no stream nearby")."""
+    try:
+        status, records = _engine_hr().snap_records(lat, lon, half_deg)
+    except Exception:  # noqa: BLE001 - resilience by design
+        return "failed", None
+    if status != "ok":
+        return status, None
+    feats = _id_only(records)
+    return ("ok", {"type": "FeatureCollection", "features": feats}) if feats else ("empty", None)
+
+
+def answered_since(moment: Optional[float]) -> bool:
+    """True when the HR service itself answered this process after ``moment``
+    (``time.monotonic()``; a stored answer does not count)."""
+    if moment is None:
+        return False
+    try:
+        last = _engine_hr().last_answer_at()
+    except Exception:  # noqa: BLE001
+        return False
+    return last is not None and last > moment
+
+
+def use_interactive_policy() -> None:
+    """The app's HR requests follow the engine's interactive policy (bounded
+    attempts, a failing batch split in halves, an eight-minute deadline on a
+    delineation's walk and catchments)."""
+    try:
+        _engine_hr().set_policy("interactive")
+    except Exception:  # noqa: BLE001 - no engine here: nothing to set
+        pass
 
 
 def parse_feature(feature: Optional[dict]) -> Optional[dict]:

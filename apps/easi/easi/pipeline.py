@@ -38,6 +38,8 @@ def _engine_progress(progress: Optional[dict]):
         progress["reaches"] = event.get("reaches")
         progress["hops"] = event.get("hops")
         progress["family"] = event.get("family")
+        progress["batch"] = event.get("batch")          # catchment batch n of m
+        progress["batches"] = event.get("batches")
     return _cb
 
 

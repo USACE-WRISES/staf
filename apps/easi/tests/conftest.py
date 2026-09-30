@@ -54,3 +54,16 @@ def _no_basemap_fetch(monkeypatch):
         raise AssertionError("a test tried to fetch the USGS basemap")
 
     monkeypatch.setattr(reportmap.requests, "get", _refuse)
+
+
+@pytest.fixture(autouse=True)
+def _hr_client_defaults():
+    """The app selects the site engine's interactive HR policy when imported;
+    every test starts from the engine's default (patient) with no remembered
+    tiles, so no result depends on test order (2026-09-30)."""
+    from easi._vendor.site_engine import hr
+    hr.set_policy("patient")
+    hr.clear_caches()
+    yield
+    hr.set_policy("patient")
+    hr.clear_caches()

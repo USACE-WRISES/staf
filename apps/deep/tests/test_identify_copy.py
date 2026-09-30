@@ -36,7 +36,7 @@ def test_every_click_snaps_to_the_nhd_and_pins_at_once():
     assert 'nearest_point_on_lines(fc, lat, lon, id_prop="nhdplusid")' in SRC
     assert "hr_site.snap_point(lat, lon)" in SRC
     assert "async def anchor_task(" in SRC and "comid_anchor.resolve(" in SRC
-    assert "network_display.fetch_streams(bbox, tol_ft=SNAP_TOL_FT)" in SRC
+    assert "network_display.fetch_streams(bbox, tol_ft=SNAP_TOL_FT, offline=offline)" in SRC
     for gone in ("snap_both", "route_from_hr", "pending_anchor", "_surrogate_offer",
                  "delineate_task", "hr_flow_task", "async def flow_task(", "_LOCATING_TEXT",
                  "engine_site", "_maybe_launch_engine", "_engine_wanted_for",

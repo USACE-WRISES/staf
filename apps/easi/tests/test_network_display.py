@@ -212,3 +212,48 @@ def test_transition_error_is_bounded_by_half_the_spacing(spacing):
     covered, _uncovered = nd.split_by_coverage(trib, V2, TOL, spacing_ft=spacing)
     cov = [f for f in covered["features"] if f["properties"]["cover"] == "v2"]
     assert abs(_len_ft(cov[0]) - TOL) <= spacing / 2 + 1.0
+
+
+# --- the engine's tiles (2026-09-30): partial views and stored-tile views ------
+MISSING_EAST = [-83.045, 40.29, -83.03, 40.31]          # the east half of the view
+
+
+def _orphans(disp):
+    return [f for f in disp["covered"]["features"] if f["properties"]["cover"] == "v2-orphan"]
+
+
+def test_a_partial_view_draws_what_arrived_and_never_v2_where_hr_is_missing():
+    west_hr = _fc(_line([[-83.05, 40.30 + LAT_60FT], [-83.045, 40.30 + LAT_60FT]], nhdplusid=11))
+    west_hr["missing"] = [MISSING_EAST]
+    disp = nd.build_display(V2, west_hr, TOL, hr_status="partial")
+    assert disp["mode"] == "hr-partial"
+    covers = {f["properties"]["cover"] for f in disp["covered"]["features"]}
+    assert "v2" in covers                               # the HR line that arrived, split
+    # V2's east half has no HR neighbor only because its tile did not answer
+    assert all(shape(f["geometry"]).bounds[2] <= MISSING_EAST[0] + 1e-9 for f in _orphans(disp))
+
+
+def test_a_partial_view_with_no_hr_line_keeps_the_answered_orphans_only():
+    nothing = {"type": "FeatureCollection", "features": [], "missing": [MISSING_EAST]}
+    disp = nd.build_display(V2, nothing, TOL, hr_status="partial")
+    assert disp["mode"] == "hr-partial" and disp["uncovered"]["features"] == []
+    orphans = _orphans(disp)
+    assert orphans and all(shape(f["geometry"]).bounds[2] <= MISSING_EAST[0] + 1e-9
+                           for f in orphans)
+    # the click rule's input is the partial network
+    assert nd._assemble(BOX, V2, "partial", nothing, TOL)["hr"] is None
+    some = {**HR_NEAR, "missing": [MISSING_EAST]}
+    assert nd._assemble(BOX, V2, "partial", some, TOL)["hr"] is some
+
+
+def test_fetch_streams_offline_reads_stored_tiles_only(monkeypatch):
+    seen = []
+
+    def hr_fetch(*box, offline=False):
+        seen.append(offline)
+        return "ok", HR_NEAR
+    monkeypatch.setattr(nd, "_hr_for_display", hr_fetch)
+    res = nd.fetch_streams(BOX, tol_ft=TOL, fetch_v2=lambda *a: V2, offline=True)
+    assert seen == [True] and res["mode"] == "segmented"
+    nd.fetch_streams(BOX, tol_ft=TOL, fetch_v2=lambda *a: V2)
+    assert seen == [True, False]

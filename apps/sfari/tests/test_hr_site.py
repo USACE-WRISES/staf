@@ -27,9 +27,14 @@ class _Anchor:
 
 class _HR:
     @staticmethod
-    def flowlines_in_bbox_status(w, s, e, n, *, fast_fail=False):
+    def snap_records(lat, lon, half_deg):
         return "ok", [{"nhdplusid": 1, "geometry": {"type": "LineString",
-                                                    "coordinates": [[w, s], [e, n]]}}]
+                                                    "coordinates": [[lon, lat], [lon + 0.001, lat]]}}]
+
+    @staticmethod
+    def flowlines_in_tiles(w, s, e, n, *, offline=False):
+        return "ok", [{"nhdplusid": 1, "geometry": {"type": "LineString",
+                                                    "coordinates": [[w, s], [e, n]]}}], []
 
 
 def test_hr_records_to_geojson_keeps_only_geometries():
@@ -74,17 +79,21 @@ def test_snap_never_raises(monkeypatch):
 
 
 class _StatusHR:
-    """The engine client's status channel, recording the policy it was asked with."""
+    """The engine client's tile and probe channels, recording how they were asked."""
 
-    def __init__(self, status, records):
-        self.status, self.records, self.asked = status, records, []
+    def __init__(self, status, records, missing=()):
+        self.status, self.records, self.missing, self.asked = status, records, list(missing), []
 
-    def flowlines_in_bbox_status(self, w, s, e, n, *, fast_fail=False):
-        self.asked.append(fast_fail)
+    def flowlines_in_tiles(self, w, s, e, n, *, offline=False):
+        self.asked.append("offline" if offline else "tiles")
+        return self.status, self.records, self.missing
+
+    def snap_records(self, lat, lon, half_deg):
+        self.asked.append(("pick", half_deg))
         return self.status, self.records
 
 
-def test_the_map_fetch_uses_the_fast_fail_policy_and_passes_statuses_through(monkeypatch):
+def test_the_map_fetch_reads_the_engine_tiles_and_passes_statuses_through(monkeypatch):
     line = {"nhdplusid": 1, "geometry": {"type": "LineString", "coordinates": [[0, 0], [1, 1]]}}
     monkeypatch.setattr(hr_site, "hr_available", lambda: True)
     for status, records, expected in (
@@ -94,9 +103,23 @@ def test_the_map_fetch_uses_the_fast_fail_policy_and_passes_statuses_through(mon
         engine = _StatusHR(status, records)
         monkeypatch.setattr(hr_site, "_engine", lambda engine=engine: (None, engine))
         got, fc = hr_site.hr_flowlines_status(-83.1, 40.3, -83.0, 40.4)
-        assert got == expected and engine.asked == [True]
+        assert got == expected and engine.asked == ["tiles"]
         assert (fc is not None) == (expected == "ok")
     assert not hasattr(hr_site, "hr_flowlines_fc")
+
+
+def test_a_partial_view_carries_what_arrived_and_the_missing_tiles(monkeypatch):
+    line = {"nhdplusid": 1, "geometry": {"type": "LineString", "coordinates": [[0, 0], [1, 1]]}}
+    monkeypatch.setattr(hr_site, "hr_available", lambda: True)
+    box = (-83.1, 40.3, -83.05, 40.35)
+    for records, n in (([line], 1), ([], 0)):
+        engine = _StatusHR("partial", records, [box])
+        monkeypatch.setattr(hr_site, "_engine", lambda engine=engine: (None, engine))
+        got, fc = hr_site.hr_flowlines_status(-83.1, 40.3, -83.0, 40.4)
+        assert got == "partial" and len(fc["features"]) == n and fc["missing"] == [list(box)]
+    # offline (after the app's retries ran out) reads stored tiles only
+    hr_site.hr_flowlines_status(-83.1, 40.3, -83.0, 40.4, offline=True)
+    assert engine.asked == ["tiles", "offline"]
 
 
 class _NearestAnchor:
@@ -121,7 +144,7 @@ def test_a_pick_reports_whether_the_hr_service_answered(monkeypatch):
         res = hr_site.snap_point(40.31, -83.05)
         assert res["hrStatus"] == expected[0] and res["hit"] == expected[1]
         assert hr_site.snap_hr(40.31, -83.05) == expected[1]
-        assert engine.asked == [True, True, True]     # one attempt each, like the map
+        assert engine.asked == [("pick", hr_site.HR_PROBE_HALF_DEG)] * 3   # the tiles under the probe
 
 
 def test_delineate_from_engine_shape():

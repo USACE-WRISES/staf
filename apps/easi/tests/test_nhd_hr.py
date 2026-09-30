@@ -290,3 +290,90 @@ def test_nearest_point_on_hr_lines_returns_nhdplusid():
     assert hit is not None
     assert hit[3] == 222
     assert hit[2] < 100.0          # a few dozen feet, not miles
+
+
+# --- the vendored engine's transport and tiles (2026-09-30) --------------------
+_LINE = {"nhdplusid": 7, "gnis_name": "Rush Run",
+         "geometry": {"type": "LineString", "coordinates": [[-83.02, 40.09], [-83.01, 40.10]]}}
+
+
+class _TilesHR:
+    """The vendored engine's tile and probe channels, recording how they were asked."""
+
+    def __init__(self, status, records, missing=()):
+        self.status, self.records, self.missing, self.asked = status, records, list(missing), []
+
+    def flowlines_in_tiles(self, w, s, e, n, *, offline=False):
+        self.asked.append("offline" if offline else "tiles")
+        return self.status, self.records, self.missing
+
+    def snap_records(self, lat, lon, half_deg):
+        self.asked.append(("pick", half_deg))
+        return self.status, self.records
+
+
+def test_the_map_reads_the_engine_tiles_as_id_only_features(monkeypatch):
+    for status, records, expected in (("ok", [_LINE], "ok"), ("ok", [], "empty"),
+                                      ("empty", [], "empty"), ("failed", [], "failed"),
+                                      ("truncated", [], "truncated"),
+                                      ("too-large", [], "too-large")):
+        engine = _TilesHR(status, records)
+        monkeypatch.setattr(nhd_hr, "_engine_hr", lambda engine=engine: engine)
+        got, fc = nhd_hr.hr_flowlines_display(-83.03, 40.08, -83.00, 40.11)
+        assert got == expected and engine.asked == ["tiles"]
+        assert (fc is not None) == (expected == "ok")
+        if fc:
+            assert fc["features"][0]["properties"] == {"nhdplusid": 7}
+    box = (-83.05, 40.05, -83.0, 40.1)
+    engine = _TilesHR("partial", [_LINE], [box])
+    monkeypatch.setattr(nhd_hr, "_engine_hr", lambda: engine)
+    got, fc = nhd_hr.hr_flowlines_display(-83.03, 40.08, -83.00, 40.11, offline=True)
+    assert got == "partial" and fc["missing"] == [list(box)] and len(fc["features"]) == 1
+    assert engine.asked == ["offline"]
+
+
+def test_a_pick_reads_the_tiles_under_its_probe_box(monkeypatch):
+    for status, records, expected in (("ok", [_LINE], "ok"), ("empty", [], "empty"),
+                                      ("failed", [], "failed"), ("truncated", [], "truncated")):
+        engine = _TilesHR(status, records)
+        monkeypatch.setattr(nhd_hr, "_engine_hr", lambda engine=engine: engine)
+        got, fc = nhd_hr.hr_snap_status(40.1, -83.0, 0.012)
+        assert got == expected and engine.asked == [("pick", 0.012)]
+        assert (fc is not None) == (expected == "ok")
+
+    def boom():
+        raise RuntimeError("no engine")
+    monkeypatch.setattr(nhd_hr, "_engine_hr", boom)
+    assert nhd_hr.hr_snap_status(40.1, -83.0) == ("failed", None)
+    assert nhd_hr.hr_flowlines_display(-83.03, 40.08, -83.00, 40.11) == ("failed", None)
+
+
+def test_every_request_goes_through_the_engine_transport(monkeypatch):
+    seen, recorded = [], []
+
+    class Engine:
+        @staticmethod
+        def _request(url, params, timeout, retries, *, fast_fail=False, on_attempt=None):
+            seen.append((url, timeout, retries, fast_fail))
+            on_attempt(503)
+            on_attempt(nhd_hr.requests.exceptions.ReadTimeout("slow"))
+            return {"features": [_feat()]}
+    monkeypatch.setattr(nhd_hr, "_engine_hr", lambda: Engine)
+    monkeypatch.setattr(nhd_hr.diagnostics, "record_response",
+                        lambda source, code: recorded.append((source, code)))
+    monkeypatch.setattr(nhd_hr.diagnostics, "record_exception",
+                        lambda source, exc: recorded.append((source, type(exc).__name__)))
+    rec = nhd_hr.hr_flowline_by_id(24000800021917)
+    assert rec["gnis_name"] == "Rush Run" and "qama" not in rec        # EASI's own parser
+    assert seen == [(nhd_hr.HR_QUERY_URL, 25.0, 2, False)]
+    assert recorded == [("NHDPlus HR", 503), ("NHDPlus HR", "ReadTimeout")]
+
+
+def test_the_app_policy_switch_reaches_the_vendored_engine():
+    from easi._vendor.site_engine import hr
+    try:
+        nhd_hr.use_interactive_policy()
+        assert hr.active_policy().name == "interactive"
+    finally:
+        hr.set_policy("patient")
+    assert nhd_hr.answered_since(None) is False

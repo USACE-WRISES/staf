@@ -58,7 +58,10 @@ def test_native_streams_visibility_hides_all_stream_and_source_legend_rows():
 def test_notes_follow_zoom_and_fetch_state():
     assert "Zoom in to see streams" in _html(zoomed=False, mode=None)
     assert "Too many streams to show here. Zoom in." in _html(mode="hr-truncated")
-    assert "easi-legend-note" not in _html(mode="hr-unavailable")   # a retry in flight
+    # Tiles that did not answer are asked again (15, 30, 60 s), and the legend says so.
+    assert "Stream lines did not load. Retrying." in _html(mode="hr-unavailable")
+    assert "Some stream lines did not load. Retrying." in _html(mode="hr-partial")
+    assert "Retrying" not in _html(mode="hr-partial", unavailable=True)   # the cap: Try again
     assert "easi-legend-note" not in _html(mode="hr-only")
     assert "StreamCat coverage unavailable here." in _html(mode="hr-only", coverage=True)
     assert "No streams in view." in _html(mode="empty")

@@ -8,9 +8,11 @@ engine and draws cyan (its COMID-keyed values come from the nearest covered
 reach downstream, labeled). V2 geometry farther than the tolerance from any
 HR line still draws dark blue, so nothing the lookup engine covers disappears.
 The distance is the click rule's own (planar EPSG:5070 in feet, see
-``flowlines.nearest_point_on_lines``). When the HR service does not answer,
-or truncates the box, nothing is drawn: the coarse V2 lines are never a
-stand-in for the HR network, and the app's legend says why. Pure functions,
+``flowlines.nearest_point_on_lines``). The HR lines come from the vendored
+site engine's map tiles (2026-09-30): a view draws the tiles that answered
+(``hr-partial``, the app asks for the rest again), and where no HR tile
+answered nothing is drawn: the coarse V2 lines are never a stand-in for
+the HR network, and the app's legend says why. Pure functions,
 no Shiny; ``fetch_streams`` takes injectable fetchers so the split is tested
 offline.
 """
@@ -45,7 +47,9 @@ _TO_ALBERS = Transformer.from_crs(CRS_WGS84, CRS_ALBERS, always_xy=True)
 _TO_WGS84 = Transformer.from_crs(CRS_ALBERS, CRS_WGS84, always_xy=True)
 
 Fetcher = Callable[[float, float, float, float], Optional[dict]]
-#: The HR fetch answers ``(status, fc)``: ok, empty, truncated, too-large or failed.
+#: The HR fetch answers ``(status, fc)``: ok, empty, partial (``fc`` carries the
+#: lines that arrived and a ``missing`` list of [w, s, e, n] tile boxes),
+#: truncated, too-large or failed.
 HrFetcher = Callable[[float, float, float, float], tuple[str, Optional[dict]]]
 
 
@@ -240,6 +244,34 @@ def _tagged(fc: dict, cover: str) -> dict:
     return {"type": "FeatureCollection", "features": feats}
 
 
+def _clip_out(fc: dict, boxes: list, cover: str) -> dict:
+    """``fc`` with its ``cover`` features clipped out of ``boxes`` (HR tiles
+    that did not answer: a V2 line there only lacks its HR neighbor, so it is
+    not an orphan to draw)."""
+    if not boxes:
+        return fc
+    from shapely.geometry import box, mapping, shape
+    from shapely.ops import unary_union
+    holes = unary_union([box(*b) for b in boxes])
+    feats = []
+    for feat in fc.get("features") or []:
+        if (feat.get("properties") or {}).get(COVER_PROP) != cover:
+            feats.append(feat)
+            continue
+        try:
+            geom = shape(feat["geometry"])
+            if not geom.intersects(holes):
+                feats.append(feat)
+                continue
+            rest = geom.difference(holes)
+        except Exception:  # noqa: BLE001 - an unreadable piece is not drawn
+            continue
+        if rest.is_empty or rest.geom_type not in ("LineString", "MultiLineString"):
+            continue
+        feats.append({**feat, "geometry": mapping(rest)})
+    return {"type": "FeatureCollection", "features": feats}
+
+
 def build_display(v2_fc: Optional[dict], hr_fc: Optional[dict], tol_ft: float = 150.0,
                   *, hr_status: Optional[str] = None) -> dict:
     """``{"mode", "covered", "uncovered"}`` for the two map layers.
@@ -247,13 +279,21 @@ def build_display(v2_fc: Optional[dict], hr_fc: Optional[dict], tol_ft: float = 
     ``hr_status`` is the HR fetch's status (None: ``hr_fc`` is an answer).
     ``mode`` is ``hr-unavailable`` (the HR service did not answer) or
     ``hr-truncated`` (too many HR lines for the box, or a box over the size
-    cap), both drawing nothing; otherwise ``segmented`` (the split; V2 lines
+    cap), both drawing nothing; ``hr-partial`` (some of the view's HR tiles did
+    not answer: the lines that arrived, split, with the V2 lines inside the
+    missing tiles clipped away); otherwise ``segmented`` (the split; V2 lines
     in a box with no HR line draw as ``v2-orphan``, as the split tags them),
     ``hr-only`` (no V2 lines, everything draws cyan) or ``empty``."""
     if hr_status == "failed":
         return {"mode": "hr-unavailable", "covered": _empty(), "uncovered": _empty()}
     if hr_status in ("truncated", "too-large"):
         return {"mode": "hr-truncated", "covered": _empty(), "uncovered": _empty()}
+    if hr_status == "partial":
+        missing = (hr_fc or {}).get("missing") or []
+        part = build_display(v2_fc, hr_fc if (hr_fc or {}).get("features") else None, tol_ft)
+        return {"mode": "hr-partial",
+                "covered": _clip_out(part["covered"], missing, "v2-orphan"),
+                "uncovered": part["uncovered"]}
     has_v2 = bool(v2_fc and v2_fc.get("features"))
     has_hr = bool(hr_fc and hr_fc.get("features"))
     if has_v2 and has_hr:
@@ -267,12 +307,12 @@ def build_display(v2_fc: Optional[dict], hr_fc: Optional[dict], tol_ft: float = 
     return {"mode": "empty", "covered": _empty(), "uncovered": _empty()}
 
 
-def _hr_for_display(west: float, south: float, east: float, north: float
-                    ) -> tuple[str, Optional[dict]]:
-    """The map's HR fetch: ``(status, fc)`` from the vendored engine's client
-    under the fast-fail policy (``hr_site.hr_flowlines_status``)."""
+def _hr_for_display(west: float, south: float, east: float, north: float, *,
+                    offline: bool = False) -> tuple[str, Optional[dict]]:
+    """The map's HR fetch: ``(status, fc)`` from the vendored engine's tiles
+    (``hr_site.hr_flowlines_status``); ``offline`` reads stored tiles only."""
     from . import hr_site
-    return hr_site.hr_flowlines_status(west, south, east, north)
+    return hr_site.hr_flowlines_status(west, south, east, north, offline=offline)
 
 
 def _fetch_pair(bbox: tuple, fetch_v2: Fetcher, fetch_hr: HrFetcher):
@@ -289,7 +329,8 @@ def _assemble(bbox: tuple, v2_fc: Optional[dict], hr_status: str, hr_fc: Optiona
     disp = build_display(v2_fc, hr_fc, tol_ft, hr_status=hr_status)
     return {"bbox": tuple(bbox),
             "v2": v2_fc if v2_fc and v2_fc.get("features") else None,
-            "hr": hr_fc if hr_status == "ok" and hr_fc and hr_fc.get("features") else None,
+            "hr": (hr_fc if hr_status in ("ok", "partial") and hr_fc and hr_fc.get("features")
+                   else None),
             "hrStatus": hr_status, **disp}
 
 
@@ -311,7 +352,7 @@ def _default_display(west: float, south: float, east: float, north: float,
 
 
 def fetch_streams(bbox: tuple, *, tol_ft: float = 150.0, fetch_v2: Optional[Fetcher] = None,
-                  fetch_hr: Optional[HrFetcher] = None) -> dict:
+                  fetch_hr: Optional[HrFetcher] = None, offline: bool = False) -> dict:
     """The map's stream layers for ``bbox`` (west, south, east, north).
 
     Returns ``{"bbox", "v2", "hr", "hrStatus", "mode", "covered", "uncovered"}``
@@ -319,16 +360,20 @@ def fetch_streams(bbox: tuple, *, tol_ft: float = 150.0, fetch_v2: Optional[Fetc
     rule keeps using and ``hrStatus`` is the HR fetch's status. ``fetch_hr``
     answers ``(status, fc)``. With the default fetchers a split result is
     cached on the bbox, so a pan back into a fetched box never re-splits;
-    injected fetchers (tests) bypass the cache."""
+    injected fetchers (tests) bypass the cache. ``offline`` (the app after its
+    automatic retries ran out) draws the stored HR tiles only and asks the HR
+    service nothing."""
     bbox = tuple(float(b) for b in bbox)
-    if fetch_v2 is None and fetch_hr is None:
+    if fetch_v2 is None and fetch_hr is None and not offline:
         try:
             return _default_display(*bbox, float(tol_ft))
         except _NotKept as not_kept:
             return not_kept.display
     from .datasources import flowlines
+    if fetch_hr is None:
+        fetch_hr = functools.partial(_hr_for_display, offline=offline)
     v2_fc, (hr_status, hr_fc) = _fetch_pair(bbox, fetch_v2 or flowlines.flowlines_in_bbox,
-                                            fetch_hr or _hr_for_display)
+                                            fetch_hr)
     return _assemble(bbox, v2_fc, hr_status, hr_fc, tol_ft)
 
 
