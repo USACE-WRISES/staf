@@ -5,7 +5,7 @@
   "assessmentName": "Northeastern Highlands reference assessment",
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
   "applicability": "Northeastern Highlands",
   "metricsByFunction": [
     {
@@ -206,12 +206,12 @@
           "metricId": "spring-pctwet2019ws",
           "metricName": "Wetland",
           "inputType": "proportion",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Wetland (%)",
           "howToMeasure": "Watershed wetland (%), woody plus herbaceous, both classes required; wetlands store surface water and attenuate flow peaks. EASI scores Surface water storage on the same sum (method watershed-wetland-extent).",
           "methodContext": "Percent of the watershed in woody plus herbaceous wetland (NLCD 2019). DEEP reads it from EPA StreamCat for the reach. Nothing is measured in the field.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -220,64 +220,70 @@
                 "y": 0.0
               },
               {
-                "x": 0.36642857142857144,
+                "x": 1.4614285714285715,
                 "y": 0.3
               },
               {
-                "x": 0.855,
+                "x": 3.41,
                 "y": 0.7
               },
               {
-                "x": 8.935,
+                "x": 10.86,
                 "y": 1.0
               },
               {
-                "x": 11.359,
+                "x": 14.584999999999999,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 66,
-          "sampleDisposition": "adequate",
-          "metricRole": "landscape_expectation",
+          "referenceN": 49,
           "curveCaveats": [
-            "Wetland cover follows terrain: a steep watershed that never held wetland reads low on this curve without being degraded.",
-            "In the discrimination check this curve scored pressured stations above reference stations (area under the curve 0.36), so the score may not track condition here. Read it with the other metrics of the function."
+            "Scored on a reference pool whose transfer to this ecoregion was not confirmed by the recovery test (class agreement 0.47 of evaluation regions; two thirds required); confidence capped at 39.",
+            "The donor stations lie outside this ecoregion and its parents, matched on natural setting rather than drawn from it."
           ],
-          "confidenceLabel": "Moderate",
-          "confidenceTotal": 79.0,
-          "referenceRange": [
-            0.0,
-            35.87
-          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 39.0,
           "criteriaBasis": "reference",
           "referenceSupport": {
-            "status": "local",
-            "level": "l3",
-            "levelLabel": "Level III",
-            "regionCode": "58",
-            "regionName": "Northeastern Highlands",
+            "status": "national",
+            "level": null,
+            "levelLabel": "",
+            "regionCode": "national",
+            "regionName": "National least-disturbed pool",
             "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
-            "nPool": 66,
-            "nComparable": 66,
-            "nUsable": 66,
-            "nLocal": 66,
-            "nHuc12": 62,
+            "nPool": 704,
+            "nComparable": 49,
+            "nUsable": 49,
+            "nLocal": 0,
+            "nHuc12": 47,
             "disposition": "adequate",
             "family": "hydrology",
-            "covariates": [
-              "hydrlcondws",
-              "precip8110ws",
-              "lith_group"
-            ],
-            "selfCoverage": 0.806,
-            "supportedLevel": "l3",
-            "transferRisk": "none",
-            "transferNote": "",
-            "basis": "regional-reference",
-            "basisLabel": "Regional reference",
-            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
-            "basisLimit": ""
+            "covariates": [],
+            "selfCoverage": null,
+            "supportedLevel": null,
+            "transferRisk": "unvalidated",
+            "transferNote": "49 least-disturbed stations from the national pool, the three nearest to each of this ecoregion's streams on the natural setting that governs this metric family, none inside this ecoregion. Flagged transfer: the recovery test did not confirm this source for this ecoregion. In the recovery test the source's class calls did not agree with reference often enough. The test found class agreement 0.47 of 19 evaluation regions, where two thirds over at least 4 regions is required; net optimism -0.03, where at most 0.05 is allowed. No source passed the validated acceptance criteria for this metric here, so the pool is used under the flagged-transfer rung as the narrowest comparable pool with at least the adequate floor of usable comparable stations that passes the sample, stability and comparability checks. The curve carries transfer risk unvalidated and its confidence is capped at 39; read the condition band with that limitation in mind.",
+            "transferValidation": {
+              "basis": "3c_matched",
+              "evidence": "metric",
+              "accepted": false,
+              "why": "In the recovery test the source's class calls did not agree with reference often enough.",
+              "min_cells": 4,
+              "min_share": 0.6667,
+              "max_net_optimism": 0.05,
+              "verdict": "unsupported",
+              "a1_share": 0.4737,
+              "net_opt": -0.0286,
+              "n_cells": 19,
+              "c1_share": 0.0526
+            },
+            "confidenceCap": 39,
+            "rule": "REF-16",
+            "basis": "national-reference",
+            "basisLabel": "National reference",
+            "basisStatement": "Reference curve fitted to comparable least-disturbed stations drawn from the national pool, because this ecoregion and its parents hold too few of their own.",
+            "basisLimit": "The donor stations lie outside this ecoregion and its parents, matched on natural setting rather than drawn from it."
           },
           "localComparison": {
             "label": "Local best-available comparison (not reference)",
@@ -287,135 +293,27 @@
             "q50": 5.175,
             "q75": 8.855
           },
-          "stratifier": {
-            "key": "NhdSlopeClass",
-            "variable": "nhd_slope",
-            "units": "m/m",
-            "source": "NHDPlus V2 flowline slope",
-            "breaks": [
-              0.005,
-              0.02
-            ],
-            "right": false,
-            "classes": [
-              {
-                "key": "lt_0.5",
-                "label": "Low gradient (under 0.5 percent)",
-                "hasCurve": false,
-                "n": 12
-              },
-              {
-                "key": "0.5_to_2",
-                "label": "Moderate gradient (0.5 to 2 percent)",
-                "hasCurve": true,
-                "n": 20
-              },
-              {
-                "key": "ge_2",
-                "label": "Steep (2 percent and above)",
-                "hasCurve": true,
-                "n": 34
-              }
-            ],
-            "registryVersion": 1,
-            "status": "accept"
+          "basis": "national-reference",
+          "basisLabel": "National reference",
+          "basisStatement": "Reference curve fitted to comparable least-disturbed stations drawn from the national pool, because this ecoregion and its parents hold too few of their own.",
+          "basisLimit": "The donor stations lie outside this ecoregion and its parents, matched on natural setting rather than drawn from it.",
+          "transferRisk": "unvalidated",
+          "transferValidation": {
+            "basis": "3c_matched",
+            "evidence": "metric",
+            "accepted": false,
+            "why": "In the recovery test the source's class calls did not agree with reference often enough.",
+            "min_cells": 4,
+            "min_share": 0.6667,
+            "max_net_optimism": 0.05,
+            "verdict": "unsupported",
+            "a1_share": 0.4737,
+            "net_opt": -0.0286,
+            "n_cells": 19,
+            "c1_share": 0.0526
           },
-          "discrimination": {
-            "aucRefVsPressure": 0.361,
-            "nRef": 66,
-            "nPressure": 70,
-            "medianRefIndex": 0.837,
-            "medianPressureIndex": 0.913,
-            "aucRvsIm": null,
-            "nR": 7,
-            "nIm": 2,
-            "verdict": "inverted"
-          },
-          "basis": "regional-reference",
-          "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
-          "curveLayers": [
-            {
-              "stratum": "",
-              "points": [
-                {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "x": 0.36642857142857144,
-                  "y": 0.3
-                },
-                {
-                  "x": 0.855,
-                  "y": 0.7
-                },
-                {
-                  "x": 8.935,
-                  "y": 1.0
-                },
-                {
-                  "x": 11.359,
-                  "y": 1.0
-                }
-              ]
-            },
-            {
-              "stratum": "0.5_to_2",
-              "points": [
-                {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "x": 2.807142857142857,
-                  "y": 0.3
-                },
-                {
-                  "x": 6.55,
-                  "y": 0.7
-                },
-                {
-                  "x": 13.7425,
-                  "y": 1.0
-                },
-                {
-                  "x": 15.90025,
-                  "y": 1.0
-                }
-              ]
-            },
-            {
-              "stratum": "ge_2",
-              "points": [
-                {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "x": 0.07071428571428572,
-                  "y": 0.3
-                },
-                {
-                  "x": 0.165,
-                  "y": 0.7
-                },
-                {
-                  "x": 3.2225,
-                  "y": 1.0
-                },
-                {
-                  "x": 4.13975,
-                  "y": 1.0
-                }
-              ]
-            }
-          ],
-          "activeStratum": "",
+          "transferNote": "49 least-disturbed stations from the national pool, the three nearest to each of this ecoregion's streams on the natural setting that governs this metric family, none inside this ecoregion. Flagged transfer: the recovery test did not confirm this source for this ecoregion. In the recovery test the source's class calls did not agree with reference often enough. The test found class agreement 0.47 of 19 evaluation regions, where two thirds over at least 4 regions is required; net optimism -0.03, where at most 0.05 is allowed. No source passed the validated acceptance criteria for this metric here, so the pool is used under the flagged-transfer rung as the narrowest comparable pool with at least the adequate floor of usable comparable stations that passes the sample, stability and comparability checks. The curve carries transfer risk unvalidated and its confidence is capped at 39; read the condition band with that limitation in mind.",
+          "confidenceCap": 39,
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -516,12 +414,12 @@
           "metricId": "spring-bfiws",
           "metricName": "Base flow index",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Base flow index (%)",
           "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
           "methodContext": "Base flow index of the watershed, the percent of streamflow that comes from base flow (USGS base flow index grid). DEEP reads it from EPA StreamCat for the reach. Nothing is measured in the field.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -542,7 +440,7 @@
                 "y": 1.0
               },
               {
-                "x": 54.626125,
+                "x": 55.799375,
                 "y": 1.0
               }
             ]
@@ -579,7 +477,7 @@
               "precip8110ws",
               "lith_group"
             ],
-            "selfCoverage": 0.806,
+            "selfCoverage": 0.891,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -609,11 +507,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -708,12 +601,12 @@
           "metricId": "spring-bfiws",
           "metricName": "Base flow index",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Base flow index (%)",
           "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
           "methodContext": "Base flow index of the watershed, the percent of streamflow that comes from base flow (USGS base flow index grid). DEEP reads it from EPA StreamCat for the reach. Nothing is measured in the field.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -734,7 +627,7 @@
                 "y": 1.0
               },
               {
-                "x": 54.626125,
+                "x": 55.799375,
                 "y": 1.0
               }
             ]
@@ -771,7 +664,7 @@
               "precip8110ws",
               "lith_group"
             ],
-            "selfCoverage": 0.806,
+            "selfCoverage": 0.891,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -801,11 +694,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -814,12 +702,12 @@
           "metricId": "spring-phab-bfwd-rat",
           "metricName": "Bankfull width:depth ratio",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Bankfull width:depth ratio",
           "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
           "methodContext": "At each transect, measure the bankfull width and the bankfull height above the water surface, and the thalweg depth. The value is the mean bankfull width divided by the mean bankfull depth (bankfull height plus thalweg depth).",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "optimum",
             "points": [
@@ -858,7 +746,7 @@
           "metricRole": "response",
           "curveCaveats": [],
           "confidenceLabel": "High",
-          "confidenceTotal": 85.9,
+          "confidenceTotal": 86.4,
           "referenceRange": [
             3.7505359649658203,
             42.61398696899414
@@ -883,7 +771,7 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -946,11 +834,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "curveLayers": [
             {
               "stratum": "",
@@ -1064,223 +947,6 @@
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
-        },
-        {
-          "metricId": "spring-phab-rp100-cm",
-          "metricName": "Residual pool depth",
-          "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-          "xLabel": "Residual pool depth (cm)",
-          "howToMeasure": "Residual pool depth per 100 m; deeper residual pools generally better habitat.",
-          "methodContext": "Measure the thalweg depth at 10 or 15 evenly spaced stations between each pair of transects (100 or 150 along the reach). The value is the mean residual pool depth in centimeters, computed from that depth profile and the reach slope with the NRSA physical habitat calculations.",
-          "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-            "stratification": "",
-            "form": "monotone",
-            "points": [
-              {
-                "x": 0.0,
-                "y": 0.0
-              },
-              {
-                "x": 2.415524789265224,
-                "y": 0.3
-              },
-              {
-                "x": 5.6362245082855225,
-                "y": 0.7
-              },
-              {
-                "x": 13.329579830169678,
-                "y": 1.0
-              },
-              {
-                "x": 15.637586426734924,
-                "y": 1.0
-              }
-            ]
-          },
-          "referenceN": 50,
-          "sampleDisposition": "adequate",
-          "metricRole": "response",
-          "curveCaveats": [
-            "In the discrimination check this curve scored pressured stations above reference stations (area under the curve 0.25), so the score may not track condition here. Read it with the other metrics of the function."
-          ],
-          "confidenceLabel": "Moderate",
-          "confidenceTotal": 79.0,
-          "referenceRange": [
-            1.1960088014602661,
-            66.97931671142578
-          ],
-          "criteriaBasis": "reference",
-          "referenceSupport": {
-            "status": "local",
-            "level": "l3",
-            "levelLabel": "Level III",
-            "regionCode": "58",
-            "regionName": "Northeastern Highlands",
-            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
-            "nPool": 66,
-            "nComparable": 66,
-            "nUsable": 50,
-            "nLocal": 50,
-            "nHuc12": 49,
-            "disposition": "adequate",
-            "family": "channel_form",
-            "covariates": [
-              "drainage_area_sqkm",
-              "nhd_slope",
-              "lith_group"
-            ],
-            "selfCoverage": 0.834,
-            "supportedLevel": "l3",
-            "transferRisk": "none",
-            "transferNote": "",
-            "basis": "regional-reference",
-            "basisLabel": "Regional reference",
-            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
-            "basisLimit": ""
-          },
-          "localComparison": {
-            "label": "Local best-available comparison (not reference)",
-            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
-            "n": 72,
-            "q25": 6.1313323974609375,
-            "q50": 8.768091201782227,
-            "q75": 14.30416202545166
-          },
-          "stratifier": {
-            "key": "NhdSlopeClass",
-            "variable": "nhd_slope",
-            "units": "m/m",
-            "source": "NHDPlus V2 flowline slope",
-            "breaks": [
-              0.005,
-              0.02
-            ],
-            "right": false,
-            "classes": [
-              {
-                "key": "lt_0.5",
-                "label": "Low gradient (under 0.5 percent)",
-                "hasCurve": false,
-                "n": 10
-              },
-              {
-                "key": "0.5_to_2",
-                "label": "Moderate gradient (0.5 to 2 percent)",
-                "hasCurve": true,
-                "n": 16
-              },
-              {
-                "key": "ge_2",
-                "label": "Steep (2 percent and above)",
-                "hasCurve": true,
-                "n": 24
-              }
-            ],
-            "registryVersion": 1,
-            "status": "accept"
-          },
-          "discrimination": {
-            "aucRefVsPressure": 0.25,
-            "nRef": 50,
-            "nPressure": 47,
-            "medianRefIndex": 0.793,
-            "medianPressureIndex": 1.0,
-            "aucRvsIm": null,
-            "nR": 3,
-            "nIm": 0,
-            "verdict": "inverted"
-          },
-          "basis": "regional-reference",
-          "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
-          "curveLayers": [
-            {
-              "stratum": "",
-              "points": [
-                {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "x": 2.415524789265224,
-                  "y": 0.3
-                },
-                {
-                  "x": 5.6362245082855225,
-                  "y": 0.7
-                },
-                {
-                  "x": 13.329579830169678,
-                  "y": 1.0
-                },
-                {
-                  "x": 15.637586426734924,
-                  "y": 1.0
-                }
-              ]
-            },
-            {
-              "stratum": "0.5_to_2",
-              "points": [
-                {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "x": 2.627713884626116,
-                  "y": 0.3
-                },
-                {
-                  "x": 6.1313323974609375,
-                  "y": 0.7
-                },
-                {
-                  "x": 10.84903073310852,
-                  "y": 1.0
-                },
-                {
-                  "x": 12.264340233802795,
-                  "y": 1.0
-                }
-              ]
-            },
-            {
-              "stratum": "ge_2",
-              "points": [
-                {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "x": 2.048769082341875,
-                  "y": 0.3
-                },
-                {
-                  "x": 4.7804611921310425,
-                  "y": 0.7
-                },
-                {
-                  "x": 10.759310007095337,
-                  "y": 1.0
-                },
-                {
-                  "x": 12.552964651584626,
-                  "y": 1.0
-                }
-              ]
-            }
-          ],
-          "activeStratum": "",
-          "discipline": "Hydraulics",
-          "assignmentOrigin": "canonical",
-          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -1391,12 +1057,12 @@
           "metricId": "spring-phab-bfwd-rat",
           "metricName": "Bankfull width:depth ratio",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Bankfull width:depth ratio",
           "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
           "methodContext": "At each transect, measure the bankfull width and the bankfull height above the water surface, and the thalweg depth. The value is the mean bankfull width divided by the mean bankfull depth (bankfull height plus thalweg depth).",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "optimum",
             "points": [
@@ -1435,7 +1101,7 @@
           "metricRole": "response",
           "curveCaveats": [],
           "confidenceLabel": "High",
-          "confidenceTotal": 85.9,
+          "confidenceTotal": 86.4,
           "referenceRange": [
             3.7505359649658203,
             42.61398696899414
@@ -1460,7 +1126,7 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -1523,11 +1189,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "curveLayers": [
             {
               "stratum": "",
@@ -1646,12 +1307,12 @@
           "metricId": "spring-phab-xbkf-h",
           "metricName": "Bankfull height above channel",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Bankfull height above channel (m)",
           "howToMeasure": "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core.",
           "methodContext": "At each transect, measure the height of the bankfull elevation above the present water surface in meters, with a rod at the water's edge and a clinometer held level at bankfull. The value is the mean of the 11 heights.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "optimum",
             "points": [
@@ -1715,7 +1376,7 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -1778,11 +1439,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "curveLayers": [
             {
               "stratum": "",
@@ -1900,12 +1556,12 @@
           "metricId": "spring-phab-pct-safn",
           "metricName": "Sand + fines",
           "inputType": "proportion",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Sand + fines (%)",
           "howToMeasure": "Percent sand and fines; higher indicates fine-sediment loading (worse).",
           "methodContext": "Record the size class of the particle at five evenly spaced points across each of the 11 transects and the 10 cross-sections midway between them (105 particles). The value is the percent of particles that are sand or finer.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -1922,7 +1578,7 @@
                 "y": 0.7
               },
               {
-                "x": 77.838165918986,
+                "x": 82.99948418140411,
                 "y": 0.3
               },
               {
@@ -1936,7 +1592,7 @@
           "metricRole": "response",
           "curveCaveats": [],
           "confidenceLabel": "High",
-          "confidenceTotal": 98.2,
+          "confidenceTotal": 97.4,
           "referenceRange": [
             0.0,
             100.0
@@ -1961,7 +1617,7 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l2",
             "transferRisk": "none",
             "transferNote": "",
@@ -1983,7 +1639,7 @@
             "nRef": 66,
             "nPressure": 70,
             "medianRefIndex": 0.9,
-            "medianPressureIndex": 0.629,
+            "medianPressureIndex": 0.637,
             "aucRvsIm": null,
             "nR": 7,
             "nIm": 2,
@@ -1991,11 +1647,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2004,17 +1655,17 @@
           "metricId": "spring-phab-xembed",
           "metricName": "Embeddedness",
           "inputType": "proportion",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Embeddedness (%)",
           "howToMeasure": "Percent embeddedness; higher means interstitial spaces filled with fines (worse).",
           "methodContext": "At five evenly spaced points across each of the 11 transects, estimate how much of the particle under the point is buried in sand and finer sediment, in percent. Record the 55 estimates. The value is their mean.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
               {
-                "x": 11.345453929901124,
+                "x": 4.153845310211182,
                 "y": 1.0
               },
               {
@@ -2036,7 +1687,7 @@
           "metricRole": "response",
           "curveCaveats": [],
           "confidenceLabel": "High",
-          "confidenceTotal": 93.2,
+          "confidenceTotal": 95.3,
           "referenceRange": [
             0.0,
             100.0
@@ -2061,7 +1712,7 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l2",
             "transferRisk": "none",
             "transferNote": "",
@@ -2091,11 +1742,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2111,12 +1757,12 @@
           "metricId": "spring-phab-bfwd-rat",
           "metricName": "Bankfull width:depth ratio",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Bankfull width:depth ratio",
           "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
           "methodContext": "At each transect, measure the bankfull width and the bankfull height above the water surface, and the thalweg depth. The value is the mean bankfull width divided by the mean bankfull depth (bankfull height plus thalweg depth).",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "optimum",
             "points": [
@@ -2155,7 +1801,7 @@
           "metricRole": "response",
           "curveCaveats": [],
           "confidenceLabel": "High",
-          "confidenceTotal": 85.9,
+          "confidenceTotal": 86.4,
           "referenceRange": [
             3.7505359649658203,
             42.61398696899414
@@ -2180,7 +1826,7 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -2243,11 +1889,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "curveLayers": [
             {
               "stratum": "",
@@ -2366,12 +2007,12 @@
           "metricId": "spring-phab-xbkf-h",
           "metricName": "Bankfull height above channel",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Bankfull height above channel (m)",
           "howToMeasure": "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core.",
           "methodContext": "At each transect, measure the height of the bankfull elevation above the present water surface in meters, with a rod at the water's edge and a clinometer held level at bankfull. The value is the mean of the 11 heights.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "optimum",
             "points": [
@@ -2435,7 +2076,7 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -2498,11 +2139,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "curveLayers": [
             {
               "stratum": "",
@@ -2620,12 +2256,12 @@
           "metricId": "spring-phab-sinu",
           "metricName": "Sinuosity",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Sinuosity",
           "howToMeasure": "Channel sinuosity; higher generally indicates a more natural planform.",
           "methodContext": "Take a compass bearing (backsight) and the distance between each pair of neighboring transects. The value is the channel length along those segments divided by the straight line distance between the ends of the reach.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -2642,7 +2278,7 @@
                 "y": 1.0
               },
               {
-                "x": 1.3435235679149629,
+                "x": 1.3823560774326324,
                 "y": 1.0
               }
             ]
@@ -2677,7 +2313,7 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -2707,11 +2343,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2720,12 +2351,12 @@
           "metricId": "spring-phab-xbka",
           "metricName": "Bank angle",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Bank angle (degrees)",
           "howToMeasure": "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment. low_tail flat added at the adversarial review gate (owner decision, 2026-08-21): a regraded or naturally gentle bank holds at the Functioning edge instead of being penalized, because the flat tail is not symmetric evidence of degradation and the framework's stated use is restoration evaluation.",
           "methodContext": "At the left and the right bank of each transect, lay a pole about one meter long against the bank and read its angle from horizontal with a clinometer, in degrees. The value is the mean of the 22 readings.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "optimum",
             "points": [
@@ -2734,56 +2365,59 @@
                 "y": 0.7
               },
               {
-                "x": 12.16338405609131,
+                "x": 14.35454590320587,
                 "y": 0.7
               },
               {
-                "x": 20.68181800842285,
+                "x": 21.86363649368286,
                 "y": 1.0
               },
               {
-                "x": 45.02020072937012,
+                "x": 43.31818103790283,
                 "y": 1.0
               },
               {
-                "x": 53.53863468170166,
+                "x": 50.82727162837982,
                 "y": 0.7
               },
               {
-                "x": 69.35858345031738,
+                "x": 64.7727255821228,
                 "y": 0.3
               },
               {
-                "x": 93.69696617126465,
+                "x": 86.22727012634277,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 63,
+          "referenceN": 98,
           "sampleDisposition": "adequate",
           "metricRole": "response",
           "curveCaveats": [
-            "In the discrimination check this curve scored pressured stations above reference stations (area under the curve 0.43), so the score may not track condition here. Read it with the other metrics of the function."
+            "The reference stations for this curve were borrowed from Level II ecoregion 5.3 (Atlantic Highlands) because this ecoregion has too few least-disturbed stations of its own. 98 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 5.3 (Atlantic Highlands), 90 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, channel slope, surficial lithology. The national scale analysis found this metric varies no more between Level III ecoregions than at the level borrowed from, so the transfer risk is low."
           ],
-          "confidenceLabel": "Moderate",
-          "confidenceTotal": 79.0,
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
           "referenceRange": [
             0.0,
             84.0
           ],
           "criteriaBasis": "reference",
           "referenceSupport": {
-            "status": "local",
-            "level": "l3",
-            "levelLabel": "Level III",
-            "regionCode": "58",
-            "regionName": "Northeastern Highlands",
-            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
-            "nPool": 66,
-            "nComparable": 66,
-            "nUsable": 63,
-            "nLocal": 63,
-            "nHuc12": 59,
+            "status": "borrowed_l2",
+            "level": "l2",
+            "levelLabel": "Level II",
+            "regionCode": "5.3",
+            "regionName": "Atlantic Highlands",
+            "screen": "least-disturbed-regional-v1 (relaxed tier, watershed agriculture at most 25 percent, the 25 percent floor)",
+            "screenId": "least-disturbed-regional-v1",
+            "agricultureLimit": 25.0,
+            "agricultureRule": "floor",
+            "nPool": 119,
+            "nComparable": 106,
+            "nUsable": 98,
+            "nLocal": 90,
+            "nHuc12": 91,
             "disposition": "adequate",
             "family": "channel_form",
             "covariates": [
@@ -2791,10 +2425,10 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l2",
-            "transferRisk": "none",
-            "transferNote": "",
+            "transferRisk": "low",
+            "transferNote": "98 stations passing the regional least-disturbed screen (watershed agriculture up to 25 percent, the screen's floor, with the relaxed tier's other limits) from Level II 5.3 (Atlantic Highlands), 90 of them inside this ecoregion. Borrowed stations were matched to this ecoregion's streams on drainage area, channel slope, surficial lithology. The national scale analysis found this metric varies no more between Level III ecoregions than at the level borrowed from, so the transfer risk is low.",
             "basis": "regional-reference",
             "basisLabel": "Regional reference",
             "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
@@ -2809,23 +2443,18 @@
             "q75": 44.374999046325684
           },
           "discrimination": {
-            "aucRefVsPressure": 0.426,
-            "nRef": 63,
-            "nPressure": 41,
-            "medianRefIndex": 0.982,
+            "aucRefVsPressure": 0.456,
+            "nRef": 98,
+            "nPressure": 49,
+            "medianRefIndex": 0.995,
             "medianPressureIndex": 1.0,
             "aucRvsIm": null,
-            "nR": 6,
-            "nIm": 1,
-            "verdict": "inverted"
+            "nR": 10,
+            "nIm": 3,
+            "verdict": "none"
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -2841,12 +2470,12 @@
           "metricId": "spring-phab-lrbs-use",
           "metricName": "Relative bed stability",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Relative bed stability (log)",
           "howToMeasure": "Log relative bed stability; departure from the reference core in EITHER direction departs from reference (negative excess fines, positive an armored, sediment-starved bed, the classic below-impoundment failure). The pilot's rising direction scored armored beds 1.0 and left Sediment continuity blind to its textbook failure mode. Two-sided form is an owner decision at the adversarial review gate, 2026-08-21.",
           "methodContext": "Computed, not read in the field. It is the base 10 logarithm of the ratio of the geometric mean particle diameter to the largest diameter the bankfull flow can move, from the particle count, reach slope, bankfull depth, wood tally and residual pools, with the NRSA physical habitat calculations.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "optimum",
             "points": [
@@ -2914,7 +2543,7 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -2977,11 +2606,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "curveLayers": [
             {
               "stratum": "",
@@ -3104,12 +2728,12 @@
           "metricId": "spring-phab-pct-safn",
           "metricName": "Sand + fines",
           "inputType": "proportion",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Sand + fines (%)",
           "howToMeasure": "Percent sand and fines; higher indicates fine-sediment loading (worse).",
           "methodContext": "Record the size class of the particle at five evenly spaced points across each of the 11 transects and the 10 cross-sections midway between them (105 particles). The value is the percent of particles that are sand or finer.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -3126,7 +2750,7 @@
                 "y": 0.7
               },
               {
-                "x": 77.838165918986,
+                "x": 82.99948418140411,
                 "y": 0.3
               },
               {
@@ -3140,7 +2764,7 @@
           "metricRole": "response",
           "curveCaveats": [],
           "confidenceLabel": "High",
-          "confidenceTotal": 98.2,
+          "confidenceTotal": 97.4,
           "referenceRange": [
             0.0,
             100.0
@@ -3165,7 +2789,7 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l2",
             "transferRisk": "none",
             "transferNote": "",
@@ -3187,7 +2811,7 @@
             "nRef": 66,
             "nPressure": 70,
             "medianRefIndex": 0.9,
-            "medianPressureIndex": 0.629,
+            "medianPressureIndex": 0.637,
             "aucRvsIm": null,
             "nR": 7,
             "nIm": 2,
@@ -3195,11 +2819,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -3212,15 +2831,114 @@
       "discipline": "Geomorphology",
       "metrics": [
         {
+          "metricId": "spring-phab-lsub-dmm",
+          "metricName": "Substrate size",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Substrate size (log mm)",
+          "howToMeasure": "Log mean substrate diameter; coarser substrate generally better, but valley-type dependent.",
+          "methodContext": "From the same 105-particle size class count as sand and fines. The value is the base 10 logarithm of the geometric mean particle diameter in millimeters, computed from the size classes with the NRSA physical habitat calculations.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": -2.226022332906723,
+                "y": 0.0
+              },
+              {
+                "x": -1.045407384634018,
+                "y": 0.3
+              },
+              {
+                "x": 0.7255150377750397,
+                "y": 0.7
+              },
+              {
+                "x": 1.9061299860477448,
+                "y": 1.0
+              },
+              {
+                "x": 2.4964374601840973,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 66,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 94.0,
+          "referenceRange": [
+            -1.9472957849502563,
+            2.7054555416107178
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "58",
+            "regionName": "Northeastern Highlands",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 66,
+            "nComparable": 66,
+            "nUsable": 66,
+            "nLocal": 66,
+            "nHuc12": 62,
+            "disposition": "adequate",
+            "family": "substrate",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "lith_group"
+            ],
+            "selfCoverage": 0.891,
+            "supportedLevel": "l2",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 98,
+            "q25": 0.7536189407110214,
+            "q50": 1.4677417278289795,
+            "q75": 1.9627543091773987
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.633,
+            "nRef": 66,
+            "nPressure": 70,
+            "medianRefIndex": 0.888,
+            "medianPressureIndex": 0.683,
+            "aucRvsIm": null,
+            "nR": 7,
+            "nIm": 2,
+            "verdict": "weak"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
           "metricId": "spring-phab-lwdeqvolm100",
           "metricName": "Large wood volume",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Large wood volume (m3/100m)",
           "howToMeasure": "Large woody debris volume per 100 m; higher is better.",
           "methodContext": "Between each pair of transects, tally every piece of wood at least 10 cm in diameter and 1.5 m long in or above the bankfull channel, by length and diameter class. The value is the wood volume per 100 m of channel, computed from the tally classes.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -3241,7 +2959,7 @@
                 "y": 1.0
               },
               {
-                "x": 4.902601650170982,
+                "x": 5.638512258417904,
                 "y": 1.0
               }
             ]
@@ -3251,7 +2969,7 @@
           "metricRole": "response",
           "curveCaveats": [],
           "confidenceLabel": "High",
-          "confidenceTotal": 83.3,
+          "confidenceTotal": 83.1,
           "referenceRange": [
             0.0,
             70.28636169433594
@@ -3308,210 +3026,6 @@
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
-        },
-        {
-          "metricId": "spring-phab-lsub-dmm",
-          "metricName": "Substrate size",
-          "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-          "xLabel": "Substrate size (log mm)",
-          "howToMeasure": "Log mean substrate diameter; coarser substrate generally better, but valley-type dependent.",
-          "methodContext": "From the same 105-particle size class count as sand and fines. The value is the base 10 logarithm of the geometric mean particle diameter in millimeters, computed from the size classes with the NRSA physical habitat calculations.",
-          "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-            "stratification": "",
-            "form": "monotone",
-            "points": [
-              {
-                "x": -2.0292531748612723,
-                "y": 0.0
-              },
-              {
-                "x": -0.848638226588567,
-                "y": 0.3
-              },
-              {
-                "x": 0.7255150377750397,
-                "y": 0.7
-              },
-              {
-                "x": 1.9061299860477448,
-                "y": 1.0
-              },
-              {
-                "x": 2.2603144705295564,
-                "y": 1.0
-              }
-            ]
-          },
-          "referenceN": 66,
-          "sampleDisposition": "adequate",
-          "metricRole": "response",
-          "curveCaveats": [],
-          "confidenceLabel": "High",
-          "confidenceTotal": 94.0,
-          "referenceRange": [
-            -1.9472957849502563,
-            2.7054555416107178
-          ],
-          "criteriaBasis": "reference",
-          "referenceSupport": {
-            "status": "local",
-            "level": "l3",
-            "levelLabel": "Level III",
-            "regionCode": "58",
-            "regionName": "Northeastern Highlands",
-            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
-            "nPool": 66,
-            "nComparable": 66,
-            "nUsable": 66,
-            "nLocal": 66,
-            "nHuc12": 62,
-            "disposition": "adequate",
-            "family": "substrate",
-            "covariates": [
-              "drainage_area_sqkm",
-              "nhd_slope",
-              "lith_group"
-            ],
-            "selfCoverage": 0.834,
-            "supportedLevel": "l2",
-            "transferRisk": "none",
-            "transferNote": "",
-            "basis": "regional-reference",
-            "basisLabel": "Regional reference",
-            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
-            "basisLimit": ""
-          },
-          "localComparison": {
-            "label": "Local best-available comparison (not reference)",
-            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
-            "n": 98,
-            "q25": 0.7536189407110214,
-            "q50": 1.4677417278289795,
-            "q75": 1.9627543091773987
-          },
-          "discrimination": {
-            "aucRefVsPressure": 0.633,
-            "nRef": 66,
-            "nPressure": 70,
-            "medianRefIndex": 0.888,
-            "medianPressureIndex": 0.681,
-            "aucRvsIm": null,
-            "nR": 7,
-            "nIm": 2,
-            "verdict": "weak"
-          },
-          "basis": "regional-reference",
-          "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
-          "discipline": "Geomorphology",
-          "assignmentOrigin": "canonical",
-          "referenceTier": "least_disturbed"
-        },
-        {
-          "metricId": "spring-phab-xembed",
-          "metricName": "Embeddedness",
-          "inputType": "proportion",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-          "xLabel": "Embeddedness (%)",
-          "howToMeasure": "Percent embeddedness; higher means interstitial spaces filled with fines (worse).",
-          "methodContext": "At five evenly spaced points across each of the 11 transects, estimate how much of the particle under the point is buried in sand and finer sediment, in percent. Record the 55 estimates. The value is their mean.",
-          "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-            "stratification": "",
-            "form": "monotone",
-            "points": [
-              {
-                "x": 11.345453929901124,
-                "y": 1.0
-              },
-              {
-                "x": 22.132866859436035,
-                "y": 1.0
-              },
-              {
-                "x": 58.09090995788574,
-                "y": 0.7
-              },
-              {
-                "x": 100.0,
-                "y": 0.0
-              }
-            ]
-          },
-          "referenceN": 63,
-          "sampleDisposition": "adequate",
-          "metricRole": "response",
-          "curveCaveats": [],
-          "confidenceLabel": "High",
-          "confidenceTotal": 93.2,
-          "referenceRange": [
-            0.0,
-            100.0
-          ],
-          "criteriaBasis": "reference",
-          "referenceSupport": {
-            "status": "local",
-            "level": "l3",
-            "levelLabel": "Level III",
-            "regionCode": "58",
-            "regionName": "Northeastern Highlands",
-            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
-            "nPool": 66,
-            "nComparable": 66,
-            "nUsable": 63,
-            "nLocal": 63,
-            "nHuc12": 59,
-            "disposition": "adequate",
-            "family": "substrate",
-            "covariates": [
-              "drainage_area_sqkm",
-              "nhd_slope",
-              "lith_group"
-            ],
-            "selfCoverage": 0.834,
-            "supportedLevel": "l2",
-            "transferRisk": "none",
-            "transferNote": "",
-            "basis": "regional-reference",
-            "basisLabel": "Regional reference",
-            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
-            "basisLimit": ""
-          },
-          "localComparison": {
-            "label": "Local best-available comparison (not reference)",
-            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
-            "n": 90,
-            "q25": 23.744755268096924,
-            "q50": 39.55454635620117,
-            "q75": 58.800700187683105
-          },
-          "discrimination": {
-            "aucRefVsPressure": 0.714,
-            "nRef": 63,
-            "nPressure": 41,
-            "medianRefIndex": 0.852,
-            "medianPressureIndex": 0.598,
-            "aucRvsIm": null,
-            "nR": 6,
-            "nIm": 1,
-            "verdict": "discriminates"
-          },
-          "basis": "regional-reference",
-          "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
-          "discipline": "Geomorphology",
-          "assignmentOrigin": "additional-function",
-          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -3524,17 +3038,17 @@
           "metricId": "spring-chem-chla",
           "metricName": "Chlorophyll a",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Chlorophyll a (ug/L)",
           "howToMeasure": "Chlorophyll a; higher indicates algal enrichment/eutrophication (worse).",
           "methodContext": "Chlorophyll a of the water column in micrograms per liter, from a 2 L grab sample taken at mid-channel at the X-site in an amber bottle, filtered and analyzed in a laboratory.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
               {
-                "x": 0.04717499278485776,
+                "x": 0.0,
                 "y": 1.0
               },
               {
@@ -3546,11 +3060,11 @@
                 "y": 0.7
               },
               {
-                "x": 1.7463333557049432,
+                "x": 1.8538750242441893,
                 "y": 0.3
               },
               {
-                "x": 2.391583366940419,
+                "x": 2.499125035479665,
                 "y": 0.0
               }
             ]
@@ -3603,11 +3117,11 @@
             "q75": 1.1900000274181366
           },
           "discrimination": {
-            "aucRefVsPressure": 0.739,
+            "aucRefVsPressure": 0.737,
             "nRef": 66,
             "nPressure": 70,
             "medianRefIndex": 0.911,
-            "medianPressureIndex": 0.591,
+            "medianPressureIndex": 0.603,
             "aucRvsIm": null,
             "nR": 7,
             "nIm": 2,
@@ -3623,12 +3137,12 @@
           "metricId": "spring-phab-xcdenmid",
           "metricName": "Canopy density, mid-channel",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Canopy density, mid-channel (%)",
           "howToMeasure": "Mid-channel canopy density; higher shading generally better for thermal/light regime.",
           "methodContext": "At mid-channel on each transect, read a convex spherical densiometer facing upstream, downstream, left and right, counting the covered points of 17. The value is the mean of the 44 readings as a percent.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -3683,7 +3197,7 @@
               "drainage_area_sqkm",
               "precip8110ws"
             ],
-            "selfCoverage": 0.846,
+            "selfCoverage": 0.926,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -3746,11 +3260,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "curveLayers": [
             {
               "stratum": "",
@@ -3844,12 +3353,12 @@
           "metricId": "spring-phab-xcmgw",
           "metricName": "Riparian veg cover, woody",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Riparian veg cover, woody (frac)",
           "howToMeasure": "Riparian canopy plus mid-layer plus ground cover; higher is better.",
           "methodContext": "In a 10 m by 10 m plot on each bank at each transect, estimate the areal cover class of woody vegetation in the canopy, the understory and the ground layer. The value is the summed woody cover of the three layers, averaged over the 22 plots, as a fraction.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -3870,7 +3379,7 @@
                 "y": 1.0
               },
               {
-                "x": 1.734677404165268,
+                "x": 1.886515885591507,
                 "y": 1.0
               }
             ]
@@ -3904,7 +3413,7 @@
               "drainage_area_sqkm",
               "precip8110ws"
             ],
-            "selfCoverage": 0.846,
+            "selfCoverage": 0.926,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -3934,11 +3443,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -3954,17 +3458,17 @@
           "metricId": "spring-chem-ntl",
           "metricName": "Total nitrogen",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Total nitrogen (mg N/L)",
           "howToMeasure": "Total nitrogen; higher indicates nutrient enrichment (worse). The total fraction, reported in every NRSA cycle, and the fraction published nitrogen criteria are written against.",
-          "methodContext": "",
+          "methodContext": "Total nitrogen in milligrams of nitrogen per liter, laboratory analysis of the unfiltered mid-channel grab sample from the X-site, kept on ice.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
               {
-                "x": 0.0818750061094761,
+                "x": 0.03912500664591789,
                 "y": 1.0
               },
               {
@@ -3976,11 +3480,11 @@
                 "y": 0.7
               },
               {
-                "x": 0.6447499990463257,
+                "x": 0.6803749985992908,
                 "y": 0.3
               },
               {
-                "x": 0.8584999963641167,
+                "x": 0.8941249959170818,
                 "y": 0.0
               }
             ]
@@ -4015,7 +3519,7 @@
               "runoffws",
               "lith_group"
             ],
-            "selfCoverage": 0.823,
+            "selfCoverage": 0.903,
             "supportedLevel": "l2",
             "transferRisk": "none",
             "transferNote": "",
@@ -4045,11 +3549,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -4058,17 +3557,17 @@
           "metricId": "spring-chem-ptl",
           "metricName": "Total phosphorus",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Total phosphorus (ug/L)",
           "howToMeasure": "Total phosphorus; higher indicates nutrient enrichment (worse).",
           "methodContext": "Total phosphorus in micrograms per liter, laboratory analysis of the mid-channel grab sample from the X-site, kept on ice.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
               {
-                "x": 4.130000114440918,
+                "x": 1.5500001907348633,
                 "y": 1.0
               },
               {
@@ -4080,11 +3579,11 @@
                 "y": 0.7
               },
               {
-                "x": 38.099999109903976,
+                "x": 40.249999046325684,
                 "y": 0.3
               },
               {
-                "x": 50.99999872843425,
+                "x": 53.14999866485596,
                 "y": 0.0
               }
             ]
@@ -4119,7 +3618,7 @@
               "runoffws",
               "lith_group"
             ],
-            "selfCoverage": 0.823,
+            "selfCoverage": 0.903,
             "supportedLevel": "l2",
             "transferRisk": "none",
             "transferNote": "",
@@ -4149,11 +3648,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -4169,17 +3663,17 @@
           "metricId": "spring-chem-cond",
           "metricName": "Specific conductivity",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Specific conductivity (uS/cm)",
           "howToMeasure": "Specific conductance; higher indicates ionic disturbance (worse).",
           "methodContext": "Specific conductance in microsiemens per centimeter. NRSA reports the laboratory value of a grab sample taken at mid-channel at the X-site (the center of the reach). A calibrated multi-parameter meter reads the same quantity in the stream at that point.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
               {
-                "x": 6.940000391006469,
+                "x": 0.0,
                 "y": 1.0
               },
               {
@@ -4191,11 +3685,11 @@
                 "y": 0.7
               },
               {
-                "x": 122.67500114440918,
+                "x": 130.0000011920929,
                 "y": 0.3
               },
               {
-                "x": 166.62500143051147,
+                "x": 173.9500014781952,
                 "y": 0.0
               }
             ]
@@ -4232,7 +3726,7 @@
               "runoffws",
               "lith_group"
             ],
-            "selfCoverage": 0.823,
+            "selfCoverage": 0.903,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -4254,7 +3748,7 @@
             "nRef": 66,
             "nPressure": 70,
             "medianRefIndex": 0.901,
-            "medianPressureIndex": 0.369,
+            "medianPressureIndex": 0.406,
             "aucRvsIm": null,
             "nR": 7,
             "nIm": 2,
@@ -4262,129 +3756,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
-          "discipline": "Physicochemistry",
-          "assignmentOrigin": "canonical",
-          "referenceTier": "least_disturbed"
-        },
-        {
-          "metricId": "spring-chem-ph",
-          "metricName": "pH",
-          "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-          "xLabel": "pH (Std. Units)",
-          "howToMeasure": "pH degrades condition at BOTH extremes. Two-sided (optimum) curve: scored 1.0 across the reference interquartile core, falling in both tails.",
-          "methodContext": "pH of the mid-channel grab sample from the X-site, as NRSA reports it. A calibrated multi-parameter meter reads pH in the stream at the same point, at 0.5 m depth or mid-depth in shallow water.",
-          "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-            "stratification": "",
-            "form": "optimum",
-            "points": [
-              {
-                "x": 5.53249990940094,
-                "y": 0.0
-              },
-              {
-                "x": 6.1549999713897705,
-                "y": 0.3
-              },
-              {
-                "x": 6.5596250116825106,
-                "y": 0.7
-              },
-              {
-                "x": 6.777500033378601,
-                "y": 1.0
-              },
-              {
-                "x": 7.400000095367432,
-                "y": 1.0
-              },
-              {
-                "x": 7.617875117063522,
-                "y": 0.7
-              },
-              {
-                "x": 8.022500157356262,
-                "y": 0.3
-              },
-              {
-                "x": 8.645000219345093,
-                "y": 0.0
-              }
-            ]
-          },
-          "referenceN": 66,
-          "sampleDisposition": "adequate",
-          "metricRole": "response",
-          "curveCaveats": [
-            "pH carries natural geology (calcareous or naturally acidic waters) as well as disturbance, and a two-sided core narrower than measurement precision is noise rather than condition."
-          ],
-          "confidenceLabel": "High",
-          "confidenceTotal": 100.0,
-          "referenceRange": [
-            5.570000171661377,
-            8.3100004196167
-          ],
-          "criteriaBasis": "reference",
-          "referenceSupport": {
-            "status": "local",
-            "level": "l3",
-            "levelLabel": "Level III",
-            "regionCode": "58",
-            "regionName": "Northeastern Highlands",
-            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
-            "nPool": 66,
-            "nComparable": 66,
-            "nUsable": 66,
-            "nLocal": 66,
-            "nHuc12": 62,
-            "disposition": "adequate",
-            "family": "water_chemistry",
-            "covariates": [
-              "bfiws",
-              "runoffws",
-              "lith_group"
-            ],
-            "selfCoverage": 0.823,
-            "supportedLevel": "l2",
-            "transferRisk": "none",
-            "transferNote": "",
-            "basis": "regional-reference",
-            "basisLabel": "Regional reference",
-            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
-            "basisLimit": ""
-          },
-          "localComparison": {
-            "label": "Local best-available comparison (not reference)",
-            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
-            "n": 98,
-            "q25": 6.917499899864197,
-            "q50": 7.199999809265137,
-            "q75": 7.5650001764297485
-          },
-          "discrimination": {
-            "aucRefVsPressure": 0.631,
-            "nRef": 66,
-            "nPressure": 70,
-            "medianRefIndex": 0.986,
-            "medianPressureIndex": 0.738,
-            "aucRvsIm": null,
-            "nR": 7,
-            "nIm": 2,
-            "verdict": "weak"
-          },
-          "basis": "regional-reference",
-          "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -4393,17 +3764,17 @@
           "metricId": "spring-chem-turb",
           "metricName": "Turbidity",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Turbidity (NTU)",
           "howToMeasure": "Turbidity; higher indicates more suspended sediment (worse).",
           "methodContext": "Turbidity in nephelometric turbidity units, laboratory analysis of the mid-channel grab sample from the X-site. Sample before anyone walks the channel upstream.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
               {
-                "x": 0.061000023037195206,
+                "x": 0.0,
                 "y": 1.0
               },
               {
@@ -4415,11 +3786,11 @@
                 "y": 0.7
               },
               {
-                "x": 2.7733332614103956,
+                "x": 2.944999922066927,
                 "y": 0.3
               },
               {
-                "x": 3.803333225349585,
+                "x": 3.974999886006117,
                 "y": 0.0
               }
             ]
@@ -4454,7 +3825,7 @@
               "runoffws",
               "lith_group"
             ],
-            "selfCoverage": 0.823,
+            "selfCoverage": 0.903,
             "supportedLevel": "l2",
             "transferRisk": "none",
             "transferNote": "",
@@ -4472,7 +3843,7 @@
             "q75": 1.399999976158142
           },
           "discrimination": {
-            "aucRefVsPressure": 0.651,
+            "aucRefVsPressure": 0.652,
             "nRef": 62,
             "nPressure": 70,
             "medianRefIndex": 0.844,
@@ -4484,11 +3855,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -4504,12 +3870,12 @@
           "metricId": "spring-phab-pct-fast",
           "metricName": "Fast-water / riffle habitat",
           "inputType": "proportion",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Fast-water / riffle habitat (%)",
           "howToMeasure": "Percent fast-water (riffle/run) habitat; more generally better for many biota. Ecoregion-dependent.",
           "methodContext": "At each thalweg station record the channel unit (falls, cascade, rapid, riffle, glide, pool, dry). The value is the percent of stations in fast water (falls, cascade, rapid or riffle).",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -4530,7 +3896,7 @@
                 "y": 1.0
               },
               {
-                "x": 73.06363534927368,
+                "x": 82.22727155685425,
                 "y": 1.0
               }
             ]
@@ -4565,7 +3931,7 @@
               "nhd_slope",
               "lith_group"
             ],
-            "selfCoverage": 0.834,
+            "selfCoverage": 0.891,
             "supportedLevel": "l2",
             "transferRisk": "none",
             "transferNote": "",
@@ -4628,11 +3994,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "curveLayers": [
             {
               "stratum": "",
@@ -4654,7 +4015,7 @@
                   "y": 1.0
                 },
                 {
-                  "x": 73.06363534927368,
+                  "x": 82.22727155685425,
                   "y": 1.0
                 }
               ]
@@ -4679,7 +4040,7 @@
                   "y": 1.0
                 },
                 {
-                  "x": 76.24772682189942,
+                  "x": 86.17045402526855,
                   "y": 1.0
                 }
               ]
@@ -4704,7 +4065,7 @@
                   "y": 1.0
                 },
                 {
-                  "x": 82.10000014305115,
+                  "x": 90.50000023841858,
                   "y": 1.0
                 }
               ]
@@ -4719,12 +4080,12 @@
           "metricId": "spring-phab-xfc-nat",
           "metricName": "Natural fish cover",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Natural fish cover (frac)",
           "howToMeasure": "Natural fish cover; higher is better.",
           "methodContext": "In the 10 m of channel centered on each transect, estimate the areal cover class of each fish cover type on the form (wood, brush, overhanging vegetation, undercut banks, boulders and the rest). The value is the summed areal cover of the types that are not man-made, averaged over the transects.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -4745,7 +4106,7 @@
                 "y": 1.0
               },
               {
-                "x": 0.7244318217039108,
+                "x": 0.7937500029802322,
                 "y": 1.0
               }
             ]
@@ -4779,7 +4140,7 @@
               "drainage_area_sqkm",
               "precip8110ws"
             ],
-            "selfCoverage": 0.846,
+            "selfCoverage": 0.926,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -4842,11 +4203,6 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
           "curveLayers": [
             {
               "stratum": "",
@@ -4868,7 +4224,7 @@
                   "y": 1.0
                 },
                 {
-                  "x": 0.7244318217039108,
+                  "x": 0.7937500029802322,
                   "y": 1.0
                 }
               ]
@@ -4893,7 +4249,7 @@
                   "y": 1.0
                 },
                 {
-                  "x": 0.7007386602461338,
+                  "x": 0.7633523009717464,
                   "y": 1.0
                 }
               ]
@@ -4918,7 +4274,7 @@
                   "y": 1.0
                 },
                 {
-                  "x": 0.7658863589167595,
+                  "x": 0.8276136294007301,
                   "y": 1.0
                 }
               ]
@@ -4940,12 +4296,12 @@
           "metricId": "spring-bent-totlntax",
           "metricName": "Benthic total taxa richness",
           "inputType": "count",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Benthic total taxa richness",
           "howToMeasure": "Total benthic taxa richness; higher is better.",
           "methodContext": "From the same 11-transect composite D-frame net sample (500 micrometer mesh) and laboratory subsample. The value is the total number of taxa.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.14-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -4966,7 +4322,7 @@
                 "y": 1.0
               },
               {
-                "x": 51.2,
+                "x": 54.0,
                 "y": 1.0
               }
             ]
@@ -5034,223 +4390,6 @@
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
-        },
-        {
-          "metricId": "spring-fish-nat-totlntax",
-          "metricName": "Native fish taxa richness",
-          "inputType": "count",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-          "xLabel": "Native fish taxa richness",
-          "howToMeasure": "Native fish taxa richness; higher is better.",
-          "methodContext": "Electrofish the sampling reach in an upstream direction, working every habitat between the transects, and identify and count every fish. The value is the number of native taxa.",
-          "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-            "stratification": "",
-            "form": "monotone",
-            "points": [
-              {
-                "x": 0.0,
-                "y": 0.0
-              },
-              {
-                "x": 0.42857142857142855,
-                "y": 0.3
-              },
-              {
-                "x": 1.0,
-                "y": 0.7
-              },
-              {
-                "x": 5.25,
-                "y": 1.0
-              },
-              {
-                "x": 6.525,
-                "y": 1.0
-              }
-            ]
-          },
-          "referenceN": 64,
-          "sampleDisposition": "adequate",
-          "metricRole": "response",
-          "curveCaveats": [
-            "In the discrimination check this curve scored pressured stations above reference stations (area under the curve 0.26), so the score may not track condition here. Read it with the other metrics of the function."
-          ],
-          "confidenceLabel": "Moderate",
-          "confidenceTotal": 79.0,
-          "referenceRange": [
-            0.0,
-            13.0
-          ],
-          "criteriaBasis": "reference",
-          "referenceSupport": {
-            "status": "local",
-            "level": "l3",
-            "levelLabel": "Level III",
-            "regionCode": "58",
-            "regionName": "Northeastern Highlands",
-            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
-            "nPool": 66,
-            "nComparable": 66,
-            "nUsable": 64,
-            "nLocal": 64,
-            "nHuc12": 60,
-            "disposition": "adequate",
-            "family": "biology",
-            "covariates": [
-              "drainage_area_sqkm",
-              "nhd_slope",
-              "tmean8110ws"
-            ],
-            "selfCoverage": 0.829,
-            "supportedLevel": "l2",
-            "transferRisk": "none",
-            "transferNote": "",
-            "basis": "regional-reference",
-            "basisLabel": "Regional reference",
-            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
-            "basisLimit": ""
-          },
-          "localComparison": {
-            "label": "Local best-available comparison (not reference)",
-            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
-            "n": 92,
-            "q25": 2.0,
-            "q50": 4.0,
-            "q75": 6.0
-          },
-          "stratifier": {
-            "key": "NhdSlopeClass",
-            "variable": "nhd_slope",
-            "units": "m/m",
-            "source": "NHDPlus V2 flowline slope",
-            "breaks": [
-              0.005,
-              0.02
-            ],
-            "right": false,
-            "classes": [
-              {
-                "key": "lt_0.5",
-                "label": "Low gradient (under 0.5 percent)",
-                "hasCurve": false,
-                "n": 11
-              },
-              {
-                "key": "0.5_to_2",
-                "label": "Moderate gradient (0.5 to 2 percent)",
-                "hasCurve": true,
-                "n": 19
-              },
-              {
-                "key": "ge_2",
-                "label": "Steep (2 percent and above)",
-                "hasCurve": true,
-                "n": 34
-              }
-            ],
-            "registryVersion": 1,
-            "status": "accept"
-          },
-          "discrimination": {
-            "aucRefVsPressure": 0.258,
-            "nRef": 64,
-            "nPressure": 57,
-            "medianRefIndex": 0.833,
-            "medianPressureIndex": 1.0,
-            "aucRvsIm": null,
-            "nR": 7,
-            "nIm": 0,
-            "verdict": "inverted"
-          },
-          "basis": "regional-reference",
-          "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
-          "curveLayers": [
-            {
-              "stratum": "",
-              "points": [
-                {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "x": 0.42857142857142855,
-                  "y": 0.3
-                },
-                {
-                  "x": 1.0,
-                  "y": 0.7
-                },
-                {
-                  "x": 5.25,
-                  "y": 1.0
-                },
-                {
-                  "x": 6.525,
-                  "y": 1.0
-                }
-              ]
-            },
-            {
-              "stratum": "0.5_to_2",
-              "points": [
-                {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "x": 1.2857142857142858,
-                  "y": 0.3
-                },
-                {
-                  "x": 3.0,
-                  "y": 0.7
-                },
-                {
-                  "x": 6.5,
-                  "y": 1.0
-                },
-                {
-                  "x": 7.55,
-                  "y": 1.0
-                }
-              ]
-            },
-            {
-              "stratum": "ge_2",
-              "points": [
-                {
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "x": 0.42857142857142855,
-                  "y": 0.3
-                },
-                {
-                  "x": 1.0,
-                  "y": 0.7
-                },
-                {
-                  "x": 3.0,
-                  "y": 1.0
-                },
-                {
-                  "x": 3.6,
-                  "y": 1.0
-                }
-              ]
-            }
-          ],
-          "activeStratum": "",
-          "discipline": "Biology",
-          "assignmentOrigin": "canonical",
-          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -5260,119 +4399,15 @@
       "discipline": "Biology",
       "metrics": [
         {
-          "metricId": "spring-bent-ept-ntax",
-          "metricName": "EPT taxa richness",
-          "inputType": "count",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-          "xLabel": "EPT taxa richness",
-          "howToMeasure": "EPT (mayfly/stonefly/caddisfly) taxa richness; more sensitive taxa indicate better condition.",
-          "methodContext": "Collect one D-frame net sample (500 micrometer mesh) one meter downstream of each of the 11 transects at the assigned left, center or right station, and composite them. A laboratory identifies a fixed count subsample. The value is the number of mayfly, stonefly and caddisfly taxa.",
-          "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
-            "stratification": "",
-            "form": "monotone",
-            "points": [
-              {
-                "x": 0.0,
-                "y": 0.0
-              },
-              {
-                "x": 4.714285714285714,
-                "y": 0.3
-              },
-              {
-                "x": 11.0,
-                "y": 0.7
-              },
-              {
-                "x": 21.0,
-                "y": 1.0
-              },
-              {
-                "x": 24.0,
-                "y": 1.0
-              }
-            ]
-          },
-          "referenceN": 65,
-          "sampleDisposition": "adequate",
-          "metricRole": "response",
-          "curveCaveats": [],
-          "confidenceLabel": "High",
-          "confidenceTotal": 96.7,
-          "referenceRange": [
-            2.0,
-            31.0
-          ],
-          "criteriaBasis": "reference",
-          "referenceSupport": {
-            "status": "local",
-            "level": "l3",
-            "levelLabel": "Level III",
-            "regionCode": "58",
-            "regionName": "Northeastern Highlands",
-            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
-            "nPool": 66,
-            "nComparable": 66,
-            "nUsable": 65,
-            "nLocal": 65,
-            "nHuc12": 61,
-            "disposition": "adequate",
-            "family": "biology",
-            "covariates": [
-              "drainage_area_sqkm",
-              "nhd_slope",
-              "tmean8110ws"
-            ],
-            "selfCoverage": 0.829,
-            "supportedLevel": "l3",
-            "transferRisk": "none",
-            "transferNote": "",
-            "basis": "regional-reference",
-            "basisLabel": "Regional reference",
-            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
-            "basisLimit": ""
-          },
-          "localComparison": {
-            "label": "Local best-available comparison (not reference)",
-            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
-            "n": 97,
-            "q25": 12.0,
-            "q50": 17.0,
-            "q75": 22.0
-          },
-          "discrimination": {
-            "aucRefVsPressure": 0.606,
-            "nRef": 65,
-            "nPressure": 69,
-            "medianRefIndex": 0.85,
-            "medianPressureIndex": 0.76,
-            "aucRvsIm": null,
-            "nR": 7,
-            "nIm": 2,
-            "verdict": "weak"
-          },
-          "basis": "regional-reference",
-          "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
-          },
-          "discipline": "Biology",
-          "assignmentOrigin": "canonical",
-          "referenceTier": "least_disturbed"
-        },
-        {
           "metricId": "spring-bent-hprime",
           "metricName": "Shannon diversity (H')",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
           "xLabel": "Shannon diversity (H')",
           "howToMeasure": "Benthic Shannon diversity; higher diversity indicates better condition.",
           "methodContext": "From the same 11-transect composite D-frame net sample (500 micrometer mesh) and laboratory subsample. The value is the Shannon diversity of the taxa counted.",
           "curve": {
-            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.13-provisional",
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
             "stratification": "",
             "form": "monotone",
             "points": [
@@ -5393,7 +4428,7 @@
                 "y": 1.0
               },
               {
-                "x": 3.2620001316070555,
+                "x": 3.3500001430511475,
                 "y": 1.0
               }
             ]
@@ -5428,7 +4463,7 @@
               "nhd_slope",
               "tmean8110ws"
             ],
-            "selfCoverage": 0.829,
+            "selfCoverage": 0.937,
             "supportedLevel": "l3",
             "transferRisk": "none",
             "transferNote": "",
@@ -5458,11 +4493,105 @@
           },
           "basis": "regional-reference",
           "basisLabel": "Regional reference",
-          "carriedForward": {
-            "assessmentId": "northeastern-highlands",
-            "fromVersion": 8,
-            "contentDigest": "sha256:8b00cfe9b148157bdf3491a42e11723d98422db39c5d71a647b68eda88ece4a6"
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-bent-tolrpind",
+          "metricName": "Tolerant individuals (%) ~ HBI",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
+          "xLabel": "Tolerant individuals (%) ~ HBI",
+          "howToMeasure": "Percent tolerant individuals; a higher share of pollution-tolerant taxa indicates worse condition.",
+          "methodContext": "From the same 11-transect composite D-frame net sample (500 micrometer mesh) and laboratory subsample. The value is the percent of individuals that belong to pollution tolerant taxa.",
+          "curve": {
+            "layerName": "USEPA NRSA 2013-24 (L3 ecoregion 58), StreamCurves regional analysis, methodology 0.16-provisional",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 3.0,
+                "y": 1.0
+              },
+              {
+                "x": 9.09000015258789,
+                "y": 0.7
+              },
+              {
+                "x": 18.225000381469727,
+                "y": 0.3
+              },
+              {
+                "x": 24.315000534057617,
+                "y": 0.0
+              }
+            ]
           },
+          "referenceN": 65,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 96.7,
+          "referenceRange": [
+            0.33000001311302185,
+            50.66999816894531
+          ],
+          "criteriaBasis": "reference",
+          "referenceSupport": {
+            "status": "local",
+            "level": "l3",
+            "levelLabel": "Level III",
+            "regionCode": "58",
+            "regionName": "Northeastern Highlands",
+            "screen": "least-disturbed-v1 (strict), wadeable non-canal frame",
+            "nPool": 66,
+            "nComparable": 66,
+            "nUsable": 65,
+            "nLocal": 65,
+            "nHuc12": 61,
+            "disposition": "adequate",
+            "family": "biology",
+            "covariates": [
+              "drainage_area_sqkm",
+              "nhd_slope",
+              "tmean8110ws"
+            ],
+            "selfCoverage": 0.937,
+            "supportedLevel": "l3",
+            "transferRisk": "none",
+            "transferNote": "",
+            "basis": "regional-reference",
+            "basisLabel": "Regional reference",
+            "basisStatement": "Reference curve fitted to least-disturbed stations selected by a fixed landscape-pressure screen.",
+            "basisLimit": ""
+          },
+          "localComparison": {
+            "label": "Local best-available comparison (not reference)",
+            "definition": "stations of this ecoregion that pass the relaxed pressure screen",
+            "n": 97,
+            "q25": 3.6700000762939453,
+            "q50": 6.480000019073486,
+            "q75": 12.329999923706055
+          },
+          "discrimination": {
+            "aucRefVsPressure": 0.699,
+            "nRef": 65,
+            "nPressure": 69,
+            "medianRefIndex": 0.872,
+            "medianPressureIndex": 0.471,
+            "aucRvsIm": null,
+            "nR": 7,
+            "nIm": 2,
+            "verdict": "discriminates"
+          },
+          "basis": "regional-reference",
+          "basisLabel": "Regional reference",
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -8246,36 +7375,192 @@
     "screenId": "least-disturbed-v1",
     "screenTier": "strict",
     "screenLabel": "least-disturbed-v1 (strict), wadeable non-canal frame",
-    "valuePolicy": "latest_non_null_index_visit",
+    "valuePolicy": "newest-nonnull-v2",
     "nLocalReference": 66,
     "nCandidates": 175,
     "nInFrame": 175,
-    "nCurvesLocal": 31,
-    "nCurvesBorrowed": 0,
+    "nCurvesLocal": 28,
+    "nCurvesBorrowed": 1,
     "nCurvesRegionalScreen": 0,
-    "nCurvesCarried": 23,
-    "nWithheld": 0,
+    "nCurvesCarried": 0,
+    "nCurvesFlagged": 2,
+    "nCurvesEasiScreening": 0,
+    "nWithheld": 2,
     "curvesByBasis": {
-      "regional-reference": 31
+      "regional-reference": 29,
+      "national-reference": 2
     },
-    "statement": "Reference condition is set by a fixed landscape-pressure screen, never by a score. 31 curves are fitted to least-disturbed stations of this ecoregion. 23 of these curves carried forward unchanged from version 8. A metric that no basis supports is not scored, and the function it would have scored is reported as unassessed."
+    "statement": "Reference condition is set by a fixed landscape-pressure screen, never by a score. 28 curves are fitted to least-disturbed stations of this ecoregion. 1 borrows comparable least-disturbed stations from a wider region, stating the region and the transfer risk. 2 carry the national reference label: reference curve fitted to comparable least-disturbed stations drawn from the national pool, because this ecoregion and its parents hold too few of their own. 2 rest on a flagged transfer: a comparable least-disturbed pool the recovery test did not confirm for this ecoregion, used because no validated source supports the metric here, with transfer risk unvalidated and confidence capped. A metric that no basis supports is not scored, and the function it would have scored is reported as unassessed.",
+    "nHeldForReview": 0
   },
-  "contentDigest": "sha256:4902d33d13042a2aff1c22bf8ac22e615dcb53ce02507641cf290e61d23ce593",
+  "insufficientReferenceSupport": [
+    {
+      "metricId": "spring-fish-nat-totlntax",
+      "metricKey": "fish_NAT_TOTLNTAX",
+      "metricName": "Native fish taxa richness",
+      "units": "",
+      "functions": [
+        {
+          "functionId": "population-support",
+          "functionName": "Population support"
+        }
+      ],
+      "functionId": "population-support",
+      "reason": "insufficient-reference-support",
+      "statement": "Insufficient reference support. No station pool, from this ecoregion's own least-disturbed streams or from a wider region under the regional screen, holds enough comparable stations with a value for this metric and passes acceptance. The local reference: The curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.26 over 64 reference and 57 pressured stations), so it is refused under methodology 0.16 (owner decision D13). This ecoregion under the regional screen: The curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.32 over 92 reference and 57 pressured stations), so it is refused under methodology 0.16 (owner decision D13). The Level II pool (5.3): The curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.29 over 113 reference and 67 pressured stations), so it is refused under methodology 0.16 (owner decision D13). The Level I pool (5): The curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.32 over 184 reference and 112 pressured stations), so it is refused under methodology 0.16 (owner decision D13). The NARS-9 pool (NAP): The curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.35 over 162 reference and 253 pressured stations), so it is refused under methodology 0.16 (owner decision D13). No other basis supports it either. National reference: 91 matched national donors, but the curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.41 over 504 reference and 1786 pressured stations), so it is refused under methodology 0.16 (owner decision D13). 93 national donors inside the comparability envelope, but the curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.33 over 93 reference and 1786 pressured stations), so it is refused under methodology 0.16 (owner decision D13). Modeled reference: The model registry holds no approved specification for this metric. Published benchmark: Every published biological criterion in the STAF assessment library is scored on a state-specific field index (Michigan Procedure 51, the Carolina IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed from NRSA data, so none measures the same quantity as this metric. EPA's own NRSA benchmarks are set on its multimetric indices, which this assessment carries as metrics of their own; an index benchmark is never applied to one of the metrics the index is built from. No curve was built and the metric is not scored.",
+      "levelsTried": [
+        {
+          "level": "l3",
+          "region_code": "58",
+          "n_pool": 66,
+          "n_comparable": 66,
+          "n_usable": 64,
+          "n_local": 64
+        },
+        {
+          "level": "l3",
+          "region_code": "58",
+          "n_pool": 98,
+          "n_comparable": 98,
+          "n_usable": 92,
+          "n_local": 92
+        },
+        {
+          "level": "l2",
+          "region_code": "5.3",
+          "n_pool": 119,
+          "n_comparable": 119,
+          "n_usable": 113,
+          "n_local": 92
+        },
+        {
+          "level": "l1",
+          "region_code": "5",
+          "n_pool": 225,
+          "n_comparable": 201,
+          "n_usable": 184,
+          "n_local": 92
+        },
+        {
+          "level": "nars9",
+          "region_code": "NAP",
+          "n_pool": 177,
+          "n_comparable": 176,
+          "n_usable": 162,
+          "n_local": 92
+        }
+      ],
+      "rungsTried": [
+        {
+          "rung": "REF-12",
+          "why": "91 matched national donors, but the curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.41 over 504 reference and 1786 pressured stations), so it is refused under methodology 0.16 (owner decision D13). 93 national donors inside the comparability envelope, but the curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.33 over 93 reference and 1786 pressured stations), so it is refused under methodology 0.16 (owner decision D13)."
+        },
+        {
+          "rung": "REF-13",
+          "why": "The model registry holds no approved specification for this metric."
+        },
+        {
+          "rung": "REF-14",
+          "why": "Every published biological criterion in the STAF assessment library is scored on a state-specific field index (Michigan Procedure 51, the Carolina IBI scores, the Wisconsin and Minnesota IBIs), none of which can be computed from NRSA data, so none measures the same quantity as this metric. EPA's own NRSA benchmarks are set on its multimetric indices, which this assessment carries as metrics of their own; an index benchmark is never applied to one of the metrics the index is built from.",
+          "condition": [
+            "catalog",
+            "no entry"
+          ]
+        }
+      ]
+    },
+    {
+      "metricId": "spring-phab-rp100-cm",
+      "metricKey": "phab_RP100_cm",
+      "metricName": "Residual pool depth",
+      "units": "cm",
+      "functions": [
+        {
+          "functionId": "low-flow-baseflow-dynamics",
+          "functionName": "Low flow and baseflow dynamics"
+        }
+      ],
+      "functionId": "low-flow-baseflow-dynamics",
+      "reason": "insufficient-reference-support",
+      "statement": "Insufficient reference support. No station pool, from this ecoregion's own least-disturbed streams or from a wider region under the regional screen, holds enough comparable stations with a value for this metric and passes acceptance. The local reference: The curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.23 over 66 reference and 65 pressured stations), so it is refused under methodology 0.16 (owner decision D13). This ecoregion under the regional screen: The curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.26 over 96 reference and 65 pressured stations), so it is refused under methodology 0.16 (owner decision D13). The Level II pool (5.3): The curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.28 over 104 reference and 75 pressured stations), so it is refused under methodology 0.16 (owner decision D13). The Level I pool (5): The curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.30 over 170 reference and 130 pressured stations), so it is refused under methodology 0.16 (owner decision D13). The NARS-9 pool (NAP): The curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.33 over 155 reference and 274 pressured stations), so it is refused under methodology 0.16 (owner decision D13). No other basis supports it either. National reference: 87 matched national donors, but the curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.38 over 504 reference and 2013 pressured stations), so it is refused under methodology 0.16 (owner decision D13). 94 national donors inside the comparability envelope, but the curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.38 over 94 reference and 2013 pressured stations), so it is refused under methodology 0.16 (owner decision D13). Modeled reference: The model registry holds no approved specification for this metric. Published benchmark: The published criteria STAF draws on include none for this metric. No curve was built and the metric is not scored.",
+      "levelsTried": [
+        {
+          "level": "l3",
+          "region_code": "58",
+          "n_pool": 66,
+          "n_comparable": 66,
+          "n_usable": 66,
+          "n_local": 66
+        },
+        {
+          "level": "l3",
+          "region_code": "58",
+          "n_pool": 98,
+          "n_comparable": 98,
+          "n_usable": 96,
+          "n_local": 96
+        },
+        {
+          "level": "l2",
+          "region_code": "5.3",
+          "n_pool": 119,
+          "n_comparable": 106,
+          "n_usable": 104,
+          "n_local": 96
+        },
+        {
+          "level": "l1",
+          "region_code": "5",
+          "n_pool": 225,
+          "n_comparable": 173,
+          "n_usable": 170,
+          "n_local": 96
+        },
+        {
+          "level": "nars9",
+          "region_code": "NAP",
+          "n_pool": 177,
+          "n_comparable": 158,
+          "n_usable": 155,
+          "n_local": 96
+        }
+      ],
+      "rungsTried": [
+        {
+          "rung": "REF-12",
+          "why": "87 matched national donors, but the curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.38 over 504 reference and 2013 pressured stations), so it is refused under methodology 0.16 (owner decision D13). 94 national donors inside the comparability envelope, but the curve on this pool would rank pressured stations above reference stations (discrimination check inverted, area under the curve 0.38 over 94 reference and 2013 pressured stations), so it is refused under methodology 0.16 (owner decision D13)."
+        },
+        {
+          "rung": "REF-13",
+          "why": "The model registry holds no approved specification for this metric."
+        },
+        {
+          "rung": "REF-14",
+          "why": "The published criteria STAF draws on include none for this metric.",
+          "condition": [
+            "catalog",
+            "no entry"
+          ]
+        }
+      ]
+    }
+  ],
+  "contentDigest": "sha256:3803702732ec6e7191238f165ffae1d5e6588465a682a891fbf58f3d1e2256ca",
   "library": {
     "libraryId": "northeastern-highlands",
-    "version": 9,
-    "updatedAt": "2026-09-21T16:26:47Z",
+    "version": 10,
+    "updatedAt": "2026-09-30T07:07:33Z",
     "author": "StreamCurves regional analysis (STAF)",
-    "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 66 of 175 stations of this ecoregion pass. 31 reference curves use local stations, 0 borrow from a wider region, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support. 23 published curves are carried forward unchanged from version 8, and 2 were rebuilt because the data verification corrected values they rested on.",
+    "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 66 of 175 stations of this ecoregion pass. 28 reference curves use local stations, 1 borrow from a wider region, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
     "region": {
       "kind": "ecoregion",
       "code": "58",
       "name": "Northeastern Highlands"
     },
-    "contentDigest": "sha256:4902d33d13042a2aff1c22bf8ac22e615dcb53ce02507641cf290e61d23ce593",
-    "supersedesVersion": 8
+    "contentDigest": "sha256:3803702732ec6e7191238f165ffae1d5e6588465a682a891fbf58f3d1e2256ca",
+    "supersedesVersion": 9
   },
-  "version": 9,
+  "version": 10,
   "lifecycle": "preliminary",
-  "assessmentRef": "northeastern-highlands@v9"
+  "assessmentRef": "northeastern-highlands@v10"
 }

@@ -1,0 +1,19 @@
+{
+  "assessmentId": "southeastern-plains",
+  "assessmentName": "Southeastern Plains reference assessment",
+  "version": 3,
+  "updatedAt": "2026-09-30T07:07:35Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 18 of 119 stations of this ecoregion pass. 14 reference curves use local stations, 7 borrow from a wider region, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "65",
+    "name": "Southeastern Plains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 65), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:f8065d8b324379ff10ce6632fb9e38d3d01b51b0fca26383b3949649e9b4a039",
+  "supersedesVersion": 2,
+  "provenance": "present"
+}

@@ -1,0 +1,19 @@
+{
+  "assessmentId": "interior-plateau",
+  "assessmentName": "Interior Plateau reference assessment",
+  "version": 7,
+  "updatedAt": "2026-09-30T07:07:43Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 3 of 41 stations of this ecoregion pass. 0 reference curves use local stations, 19 borrow from a wider region, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "71",
+    "name": "Interior Plateau"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 71), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:3dfc705427d34238acf676460286484e2d45c1661e24944b32fa3eec61e60b9e",
+  "supersedesVersion": 6,
+  "provenance": "present"
+}

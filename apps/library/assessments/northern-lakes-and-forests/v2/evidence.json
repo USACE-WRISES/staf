@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 265855,
+  "name": "deep-dev-l3-50-f568e9f0a76c-d1a6572a.evidence.zip",
+  "sha256": "e178f077dd60ba7f1d7ff1fb5ac586c1575b5ee40f83f0b205626d04b1cb3666"
+ },
+ "bytes": 2506981,
+ "coverage": {
+  "assessmentId": "northern-lakes-and-forests",
+  "curves": 27,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 17690,
+  "region": {
+   "code": "50",
+   "kind": "ecoregion",
+   "name": "Northern Lakes and Forests"
+  },
+  "stations": 146,
+  "stationsOutOfFrame": 13,
+  "values": 4443
+ },
+ "dataDigest": "sha256:464e9cb79df46ca248c067e5d2cf8c73c100fd7436b3a016987137a17013e67a",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:d1a6572a57e5438486189ce75acf3ee0315341b8aaaa4a0c48930021b469b325",
+ "packageId": "deep-dev-l3-50",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 50 (Northern Lakes and Forests)",
+ "version": "f568e9f0a76c"
+}

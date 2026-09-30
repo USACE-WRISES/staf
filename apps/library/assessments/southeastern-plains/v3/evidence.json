@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 469273,
+  "name": "deep-dev-l3-65-ed473ded390d-55d51064.evidence.zip",
+  "sha256": "2810ae3617fd4c92a855fcfbcfefcdc4b0575f18702c2cad01ac34097e447f2d"
+ },
+ "bytes": 4432364,
+ "coverage": {
+  "assessmentId": "southeastern-plains",
+  "curves": 28,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 32,
+  "poolLedgerRows": 35970,
+  "region": {
+   "code": "65",
+   "kind": "ecoregion",
+   "name": "Southeastern Plains"
+  },
+  "stations": 122,
+  "stationsOutOfFrame": 53,
+  "values": 3545
+ },
+ "dataDigest": "sha256:e6a4047bf83fc134f6e329ab65e47494ecb37b502948b16443520ae90d9a5232",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:55d510645fa709617918183936972a63ec43f4d51b059fe42fe1ac3c8e2cdb64",
+ "packageId": "deep-dev-l3-65",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 65 (Southeastern Plains)",
+ "version": "ed473ded390d"
+}
