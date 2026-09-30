@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 427198,
+  "name": "deep-dev-l3-29-7b89791e5a70-51b3d6aa.evidence.zip",
+  "sha256": "146dc86881a0fe02c6bb0b7f2d50a7033a046e99385e31bf15de05277331162d"
+ },
+ "bytes": 4249609,
+ "coverage": {
+  "assessmentId": "cross-timbers",
+  "curves": 21,
+  "functionsScored": 20,
+  "ledgerRows": 43,
+  "metrics": 33,
+  "poolLedgerRows": 34196,
+  "region": {
+   "code": "29",
+   "kind": "ecoregion",
+   "name": "Cross Timbers"
+  },
+  "stations": 34,
+  "stationsOutOfFrame": 14,
+  "values": 1064
+ },
+ "dataDigest": "sha256:d9b03977a2b12f12897e59e9dfebabcf577ca74d393e292ac8348b1936c437e7",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:51b3d6aae91390e206ee7f9609a8c6fbf62980c2bb832437328cd39fe29f4ff1",
+ "packageId": "deep-dev-l3-29",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 29 (Cross Timbers)",
+ "version": "7b89791e5a70"
+}

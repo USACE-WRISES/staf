@@ -1,0 +1,19 @@
+{
+  "assessmentId": "southwestern-tablelands",
+  "assessmentName": "Southwestern Tablelands reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:05:27Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 3 of 45 stations of this ecoregion pass. 0 reference curves use local stations, 17 borrow from a wider region, 5 metrics use fixed criteria, and 5 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "26",
+    "name": "Southwestern Tablelands"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 26), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:5526f67dbe8297beb4ad280cfc84a34a4342457bbbcca8438fbb882e5a960c34",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 477902,
+  "name": "deep-dev-l3-44-8b21f28f9316-6969e695.evidence.zip",
+  "sha256": "c0bc7b01ec34040ba959128d7576397ae4279e7605dabf59d8a665b01dfcc679"
+ },
+ "bytes": 4832441,
+ "coverage": {
+  "assessmentId": "nebraska-sand-hills",
+  "curves": 10,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 34,
+  "poolLedgerRows": 39866,
+  "region": {
+   "code": "44",
+   "kind": "ecoregion",
+   "name": "Nebraska Sand Hills"
+  },
+  "stations": 8,
+  "stationsOutOfFrame": 3,
+  "values": 256
+ },
+ "dataDigest": "sha256:edad3674a659b70b943d1f752e0059119030cd3950fa2eb4d4d2bab78ace7459",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:6969e6957434347d288c3666067e3831e7e03280d72a02a949352d5dd46cfbe1",
+ "packageId": "deep-dev-l3-44",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 44 (Nebraska Sand Hills)",
+ "version": "8b21f28f9316"
+}

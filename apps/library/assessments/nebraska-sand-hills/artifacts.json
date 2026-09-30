@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "nebraska-sand-hills",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:384efd7ce0ca9999e4d482693d8308ab5b70ad0d58551e0d7d0ced4d8056e056",
+      "bytes": 38552,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:42e3b24ac13c2e8355bcc07b3527d336957a041a5b611a31dd7d74b565528b21",
+      "builtAt": "2026-09-30T07:05:34Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

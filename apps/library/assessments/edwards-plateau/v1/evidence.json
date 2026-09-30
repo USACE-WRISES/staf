@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 414346,
+  "name": "deep-dev-l3-30-302d6cd46419-1b0e0857.evidence.zip",
+  "sha256": "de2f5549b28040f791bee8d47cac4e17b661dacedd4d9492124d355c03be8cb6"
+ },
+ "bytes": 4206370,
+ "coverage": {
+  "assessmentId": "edwards-plateau",
+  "curves": 24,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 33990,
+  "region": {
+   "code": "30",
+   "kind": "ecoregion",
+   "name": "Edwards Plateau"
+  },
+  "stations": 16,
+  "stationsOutOfFrame": 0,
+  "values": 504
+ },
+ "dataDigest": "sha256:63ec2fc3b89aba0e4b70d82ff50d9b2dd36a4270f5f36f70fd2215fe97181e9f",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:1b0e085736054574182c00866787c60fe6d99d2f50726bc262d0a80699dcab82",
+ "packageId": "deep-dev-l3-30",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 30 (Edwards Plateau)",
+ "version": "302d6cd46419"
+}

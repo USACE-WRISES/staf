@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 424132,
+  "name": "deep-dev-l3-32-f30790423306-41797b3d.evidence.zip",
+  "sha256": "f47a74f383125e3282e07939fc8053e40b32d77f78473f8b6f2efb4783177fe1"
+ },
+ "bytes": 4226208,
+ "coverage": {
+  "assessmentId": "texas-blackland-prairies",
+  "curves": 23,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 34120,
+  "region": {
+   "code": "32",
+   "kind": "ecoregion",
+   "name": "Texas Blackland Prairies"
+  },
+  "stations": 14,
+  "stationsOutOfFrame": 3,
+  "values": 434
+ },
+ "dataDigest": "sha256:581c45f9999e27e424ab71b277919831c01eeac471b1211316026a6fbf55e763",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:41797b3de0ff7abee16d4960b44373c2c8d1c3696b2abb0812e15da6beb11127",
+ "packageId": "deep-dev-l3-32",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 32 (Texas Blackland Prairies)",
+ "version": "f30790423306"
+}

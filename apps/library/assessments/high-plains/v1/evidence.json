@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 432958,
+  "name": "deep-dev-l3-25-38ca048b7e91-5a6b91fa.evidence.zip",
+  "sha256": "da0e0b0ac3131cc588b2809c31386c83dc538f1d60394da6e4700a5bf6f8bb11"
+ },
+ "bytes": 4301797,
+ "coverage": {
+  "assessmentId": "high-plains",
+  "curves": 19,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 34,
+  "poolLedgerRows": 34460,
+  "region": {
+   "code": "25",
+   "kind": "ecoregion",
+   "name": "High Plains"
+  },
+  "stations": 39,
+  "stationsOutOfFrame": 14,
+  "values": 1266
+ },
+ "dataDigest": "sha256:c7f47fa11b0f410c95fde69b6e5f3ef0e9b07e430d14b7d35f9ca243a3bf1606",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:5a6b91fa497ad9222ab8697aaa062078df543ea4d14442f1947dd8735b10991e",
+ "packageId": "deep-dev-l3-25",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 25 (High Plains)",
+ "version": "38ca048b7e91"
+}
