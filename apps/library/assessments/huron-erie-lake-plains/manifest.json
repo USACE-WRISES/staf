@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "huron-erie-lake-plains",
+  "assessmentName": "Huron/Erie Lake Plains reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "57",
+    "name": "Huron/Erie Lake Plains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 57), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:05:45Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 0 of 21 stations of this ecoregion pass. 0 reference curves use local stations, 25 borrow from a wider region, 5 metrics use fixed criteria, and 1 metrics are withheld for insufficient reference support.  No station of this ecoregion passes the reference screen, so every reference curve here borrows its reference stations from a parent ecoregion.",
+      "contentDigest": "sha256:530f47d876ae5d98534a6d2e289afacf27db21c654a2b72cafd25eadcd439b25",
+      "supersedesVersion": null
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "lake-agassiz-plain",
+  "assessmentName": "Lake Agassiz Plain reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "48",
+    "name": "Lake Agassiz Plain"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 48), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:05:57Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 0 of 15 stations of this ecoregion pass. 0 reference curves use local stations, 11 borrow from a wider region, 5 metrics use fixed criteria, and 10 metrics are withheld for insufficient reference support.  No station of this ecoregion passes the reference screen, so every reference curve here borrows its reference stations from a parent ecoregion.",
+      "contentDigest": "sha256:0dc290898d5c02b8b449b8d4a910b8192353f89f3aa6854d3fd7770a0d92b910",
+      "supersedesVersion": null
+    }
+  ]
+}

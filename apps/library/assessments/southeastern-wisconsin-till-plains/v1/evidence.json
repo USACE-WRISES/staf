@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 643858,
+  "name": "deep-dev-l3-53-2686f69958c9-a504fcb9.evidence.zip",
+  "sha256": "a56a4f7b52cef1efcec1bf40c032d44b94973900603fae89cfa8ebaed0177c1b"
+ },
+ "bytes": 6359228,
+ "coverage": {
+  "assessmentId": "southeastern-wisconsin-till-plains",
+  "curves": 25,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 52079,
+  "region": {
+   "code": "53",
+   "kind": "ecoregion",
+   "name": "Southeastern Wisconsin Till Plains"
+  },
+  "stations": 33,
+  "stationsOutOfFrame": 11,
+  "values": 1039
+ },
+ "dataDigest": "sha256:91da74815f623b870cd41ac884b5d79bb89c3f8ba43cfd4325d4fa351ede071f",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:a504fcb9d30b77f790add15b2e7805b078b9d70bb14775f5ec0e1f225c2e8aa4",
+ "packageId": "deep-dev-l3-53",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 53 (Southeastern Wisconsin Till Plains)",
+ "version": "2686f69958c9"
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "southeastern-wisconsin-till-plains",
+  "assessmentName": "Southeastern Wisconsin Till Plains reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "53",
+    "name": "Southeastern Wisconsin Till Plains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 53), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:05:42Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 0 of 33 stations of this ecoregion pass. 0 reference curves use local stations, 22 borrow from a wider region, 5 metrics use fixed criteria, and 1 metrics are withheld for insufficient reference support.  No station of this ecoregion passes the reference screen, so every reference curve here borrows its reference stations from a parent ecoregion.",
+      "contentDigest": "sha256:2848e7844509a72cc7b8e5b4dc2fbdb04e5620e28e72e2ccf298cff1054877f4",
+      "supersedesVersion": null
+    }
+  ]
+}

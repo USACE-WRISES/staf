@@ -1,0 +1,19 @@
+{
+  "assessmentId": "interior-river-valleys-and-hills",
+  "assessmentName": "Interior River Valleys and Hills reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:05:40Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 0 of 43 stations of this ecoregion pass. 0 reference curves use local stations, 20 borrow from a wider region, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support.  No station of this ecoregion passes the reference screen, so every reference curve here borrows its reference stations from a parent ecoregion.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "72",
+    "name": "Interior River Valleys and Hills"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 72), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:3ed23f4a8c1793a122a750cf8cb113a90f16ca70f47b09b96cb6984cd1aa6e56",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

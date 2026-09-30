@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "huron-erie-lake-plains",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:deea39d7526d93c5603b13afaaffe6fd608a7ac40dd6315ddbbd51f00d117117",
+      "bytes": 42904,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:530f47d876ae5d98534a6d2e289afacf27db21c654a2b72cafd25eadcd439b25",
+      "builtAt": "2026-09-30T07:05:45Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}
