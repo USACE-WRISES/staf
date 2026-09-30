@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-30T07:05:58Z",
+  "generatedAt": "2026-09-30T07:06:09Z",
   "assessments": [
     {
       "assessmentId": "acadian-plains-and-hills",
@@ -296,6 +296,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:4ac69278cd70b3a5a34488fd6431a81a3a5b57ff80780ee04df7fa62d3360b6e",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "driftless-area",
+      "assessmentName": "Driftless Area reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "52",
+        "name": "Driftless Area"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:03Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:413ad5065a70fe7abf205d81bf6fe5d0da9d4e74a301ea882a1dc26ec4811a26",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -764,6 +787,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "north-central-hardwood-forests",
+      "assessmentName": "North Central Hardwood Forests reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "51",
+        "name": "North Central Hardwood Forests"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:01Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:b38d91140db054378edba33178d80b027f785c0512477a6a3e9223df25834371",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "northeastern-coastal-zone",
       "assessmentName": "Northeastern Coastal Zone reference assessment",
       "region": {
@@ -873,6 +919,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:7d8d5bed086c24c7ac118c4008ca58ae2190f42e4209dca35415d0fa8e24277a",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "northern-minnesota-wetlands",
+      "assessmentName": "Northern Minnesota Wetlands reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "49",
+        "name": "Northern Minnesota Wetlands"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:08Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:bffd5e693018df99058152b461a81651ccc3cad7ed90b46339045a82b3946abc",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -1172,6 +1241,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:61561a49a080e992ce47797a3b72993a0ac0134243f7db799b012c295f7c0c39",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "southern-michigan-northern-indiana-drift-plains",
+      "assessmentName": "Southern Michigan/Northern Indiana Drift Plains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "56",
+        "name": "Southern Michigan/Northern Indiana Drift Plains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:06:06Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:ce867283331e82b389853145b2b381e0a6d12e26c4507893a2b10a028235bf43",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",

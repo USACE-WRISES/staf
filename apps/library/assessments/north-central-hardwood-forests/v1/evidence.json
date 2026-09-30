@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 782060,
+  "name": "deep-dev-l3-51-9b749eda6f10-94286f17.evidence.zip",
+  "sha256": "5d327e10f90d5bd6c669d7fabe4affbf515e0ffccb53a1d74ef7a768e4f20651"
+ },
+ "bytes": 7874819,
+ "coverage": {
+  "assessmentId": "north-central-hardwood-forests",
+  "curves": 21,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 66742,
+  "region": {
+   "code": "51",
+   "kind": "ecoregion",
+   "name": "North Central Hardwood Forests"
+  },
+  "stations": 66,
+  "stationsOutOfFrame": 19,
+  "values": 1917
+ },
+ "dataDigest": "sha256:56c58bd0e42f18819f2facdad618fdb3e7c5a768a2f86058c785deb25d4e9556",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:94286f1773df83e2104f5bce77aee1f2f4f23ced53fed3d8347c7fc13305d808",
+ "packageId": "deep-dev-l3-51",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 51 (North Central Hardwood Forests)",
+ "version": "9b749eda6f10"
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 307941,
+  "name": "deep-dev-l3-49-9f0e491f1518-8a56efed.evidence.zip",
+  "sha256": "b7786bc09ef75f6d491ee909a277bf76bcc8600ec9f8cb3c6e793320dbed3baf"
+ },
+ "bytes": 3244364,
+ "coverage": {
+  "assessmentId": "northern-minnesota-wetlands",
+  "curves": 17,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 24292,
+  "region": {
+   "code": "49",
+   "kind": "ecoregion",
+   "name": "Northern Minnesota Wetlands"
+  },
+  "stations": 18,
+  "stationsOutOfFrame": 1,
+  "values": 516
+ },
+ "dataDigest": "sha256:78c49e7f59b26a69c9716fc8ef23a37860a41923d27f0db2ede4066e53bd2abb",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:8a56efedae6d921d93a097754ba76140d8244d18fb8cdfc19b0e07c4789bf638",
+ "packageId": "deep-dev-l3-49",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 49 (Northern Minnesota Wetlands)",
+ "version": "9f0e491f1518"
+}

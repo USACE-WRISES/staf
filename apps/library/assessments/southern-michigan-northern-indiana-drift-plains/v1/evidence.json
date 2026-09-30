@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 778417,
+  "name": "deep-dev-l3-56-a7bc4a0f127c-6fa8f614.evidence.zip",
+  "sha256": "3a17c1575c228a75ce642f268dd33cf7c1034f5a6c3a5df81490b281a6c72c57"
+ },
+ "bytes": 7975718,
+ "coverage": {
+  "assessmentId": "southern-michigan-northern-indiana-drift-plains",
+  "curves": 17,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 67724,
+  "region": {
+   "code": "56",
+   "kind": "ecoregion",
+   "name": "Southern Michigan/Northern Indiana Drift Plains"
+  },
+  "stations": 44,
+  "stationsOutOfFrame": 12,
+  "values": 1290
+ },
+ "dataDigest": "sha256:20eebc552540b1d6a5516b6b7c583b460ea75b4c810778d609e9682a9c4416f8",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:6fa8f6140899b6c28624c7c1801fdc9faefa4be4085c3927f65546cbdee48c0b",
+ "packageId": "deep-dev-l3-56",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 56 (Southern Michigan/Northern Indiana Drift Plains)",
+ "version": "a7bc4a0f127c"
+}

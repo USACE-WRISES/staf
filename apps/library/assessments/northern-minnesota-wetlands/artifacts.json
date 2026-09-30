@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "northern-minnesota-wetlands",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:e10b4b20551d0e01341f88c0c1256eb7fde60ef6aaa987273ee8ba1e3b512819",
+      "bytes": 40145,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:bffd5e693018df99058152b461a81651ccc3cad7ed90b46339045a82b3946abc",
+      "builtAt": "2026-09-30T07:06:08Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}
