@@ -28,7 +28,7 @@
   "_vendor/site_engine/delineate.py": "d0630f62dbbb3a14896b568208d65754bda09b75b879358f6dab763b2d9cc60c",
   "_vendor/site_engine/engine.py": "c59d34dd10ba338a94e0cb5bafe251c14e08b1c1907462127c7ba7a474d65ede",
   "_vendor/site_engine/geometry.py": "e08eada5a5f43b881b5693bab94033c7b878e670d3eaedc05ebf1710b5833458",
-  "_vendor/site_engine/hr.py": "a3ee98d1ed0d2bce3974aa408acbafd8ef411b8c450a82d5ac4262750c55b16b",
+  "_vendor/site_engine/hr.py": "58b3f97301256caca432f3b8f78272211d369fda3fb74e24245e7eda57ded19d",
   "_vendor/site_engine/httpcache.py": "e80525658cdd6f0366c3aa91e3b502c6186ca2ab15aca927e221bdf780137684",
   "_vendor/site_engine/metrics/__init__.py": "2750ed259f74292cf900b94b69c72e94db3390bde8e497c7ca2f15791291b9e8",
   "_vendor/site_engine/metrics/baseflow.py": "34f5136d4a1b93825f97fdbd63138d949787ef8f643ef6a43aa1e24e3a20a612",
@@ -112,7 +112,7 @@
   "xsplotly.py": "6f1922940b3c9df2b94943421ebf64c5fb1e4a12edb80ac81ea0f262f97269fd"
  },
  "package_data_manifest": {
-  "_vendor/site_engine/VENDOR_INFO.json": "5a39f85b2803c3871c24ab7410a9577f32f2743caf8bcac2f8f1887da5dc561d",
+  "_vendor/site_engine/VENDOR_INFO.json": "9780aa252a5ddf2427272f86359f38ce9ef9fac5fec00cbb39ec2738f40de5e1",
   "_vendor/site_engine/_extracted/EXTRACTS_INFO.json": "59134d5b23ba75f9179544bb82b7be3cf97e7811a8e2fbe9b63f8cf354f489e3",
   "_vendor/site_engine/_extracted/data/ecoregions_l3.geojson": "e91f411d4976ef44b4247e3668b09269bd0dbf8e56c5402318b91518d04e865e",
   "_vendor/site_engine/_extracted/data/physio_divisions.geojson": "41f147243333c1b37f448ea4cbade3c7411424794899bdaafc1017a4804b1ff7",
