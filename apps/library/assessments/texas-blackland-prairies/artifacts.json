@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "texas-blackland-prairies",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:b6bd5dedf5eaa7764d025335e5958ed10c4e05a9ef69d54eda7eb5d34f4d7c4b",
+      "bytes": 41852,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:f4f3b6b4fb55cb03e2fcea4ccf0eade80f5994eca514149efbffe0dd082adea4",
+      "builtAt": "2026-09-30T07:05:29Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

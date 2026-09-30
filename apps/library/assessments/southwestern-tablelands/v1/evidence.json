@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 449351,
+  "name": "deep-dev-l3-26-6813239dc63c-7dc33fe5.evidence.zip",
+  "sha256": "103cbf2966631b4b9a3347003056e4a37f5b7ebbeb40af9eaf5c7ddcc8ee2f38"
+ },
+ "bytes": 4351764,
+ "coverage": {
+  "assessmentId": "southwestern-tablelands",
+  "curves": 17,
+  "functionsScored": 20,
+  "ledgerRows": 46,
+  "metrics": 34,
+  "poolLedgerRows": 34922,
+  "region": {
+   "code": "26",
+   "kind": "ecoregion",
+   "name": "Southwestern Tablelands"
+  },
+  "stations": 45,
+  "stationsOutOfFrame": 12,
+  "values": 1426
+ },
+ "dataDigest": "sha256:7f77926c766b7d548bab83bfe4097c3dfc89603ca3cc5f6cd0e9abbfa02300b8",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:7dc33fe5270f3da6c86a7bd48d12fbfa5f3c925c46b61628ff98128b70269af0",
+ "packageId": "deep-dev-l3-26",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 26 (Southwestern Tablelands)",
+ "version": "6813239dc63c"
+}

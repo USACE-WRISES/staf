@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "edwards-plateau",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:64942da95daa7f6f1635d17ecf9847486aa59fa5dee204272d3c5682ba3ece6b",
+      "bytes": 41969,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:e40f0aed31715b50e1964dde3752a12a020048bccb50698d7bfa7022eb9a0c00",
+      "builtAt": "2026-09-30T07:05:25Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

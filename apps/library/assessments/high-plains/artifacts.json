@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "high-plains",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:b70ef403ea11024cf12d7290a9ca9d666a4119d805af0aebf8f83598ec843b05",
+      "bytes": 41807,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:67c58200e3e02d38d26e241a33792fe24ddf61c7332dddfa6b5d94be135c8c92",
+      "builtAt": "2026-09-30T07:05:20Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

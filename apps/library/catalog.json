@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-30T07:05:16Z",
+  "generatedAt": "2026-09-30T07:05:34Z",
   "assessments": [
     {
       "assessmentId": "acadian-plains-and-hills",
@@ -233,6 +233,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "cross-timbers",
+      "assessmentName": "Cross Timbers reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "29",
+        "name": "Cross Timbers"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:22Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:4ac69278cd70b3a5a34488fd6431a81a3a5b57ff80780ee04df7fa62d3360b6e",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentType": "easi",
       "methodVersion": "e91118cc821c",
       "assessmentId": "easi-screening",
@@ -327,6 +350,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "edwards-plateau",
+      "assessmentName": "Edwards Plateau reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "30",
+        "name": "Edwards Plateau"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:24Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:e40f0aed31715b50e1964dde3752a12a020048bccb50698d7bfa7022eb9a0c00",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "erie-drift-plain",
       "assessmentName": "Erie Drift Plain reference assessment",
       "region": {
@@ -344,6 +390,29 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:657f4325208401fe972d8ff9a33445e34184e9c63b485e421563b0385b0f5546",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "high-plains",
+      "assessmentName": "High Plains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "25",
+        "name": "High Plains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:19Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:67c58200e3e02d38d26e241a33792fe24ddf61c7332dddfa6b5d94be135c8c92",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -505,6 +574,29 @@
       "defaultVersion": 2,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "nebraska-sand-hills",
+      "assessmentName": "Nebraska Sand Hills reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "44",
+        "name": "Nebraska Sand Hills"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:34Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:42e3b24ac13c2e8355bcc07b3527d336957a041a5b611a31dd7d74b565528b21",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -902,6 +994,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "southern-texas-plains",
+      "assessmentName": "Southern Texas Plains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "31",
+        "name": "Southern Texas Plains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:32Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:02f7c5121deb91a8f91feb1585915e517f99487fcc250e88c36dea740d9e242c",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "southwestern-appalachians",
       "assessmentName": "Southwestern Appalachians reference assessment",
       "region": {
@@ -919,6 +1034,52 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:48a56ca74a25bfd4daffb1237b01e70292c5cc499804def3577ed2af0fb45fa0",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "southwestern-tablelands",
+      "assessmentName": "Southwestern Tablelands reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "26",
+        "name": "Southwestern Tablelands"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:27Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:5526f67dbe8297beb4ad280cfc84a34a4342457bbbcca8438fbb882e5a960c34",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "texas-blackland-prairies",
+      "assessmentName": "Texas Blackland Prairies reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "32",
+        "name": "Texas Blackland Prairies"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:29Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:f4f3b6b4fb55cb03e2fcea4ccf0eade80f5994eca514149efbffe0dd082adea4",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",

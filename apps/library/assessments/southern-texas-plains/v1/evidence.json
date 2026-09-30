@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 410247,
+  "name": "deep-dev-l3-31-52fe3c49cb33-9040b720.evidence.zip",
+  "sha256": "bd0e264d5101eb7b5424d5648807e0fdb4d27f4191f34316d63a2c39e7aab9cc"
+ },
+ "bytes": 4160919,
+ "coverage": {
+  "assessmentId": "southern-texas-plains",
+  "curves": 19,
+  "functionsScored": 20,
+  "ledgerRows": 43,
+  "metrics": 33,
+  "poolLedgerRows": 33169,
+  "region": {
+   "code": "31",
+   "kind": "ecoregion",
+   "name": "Southern Texas Plains"
+  },
+  "stations": 13,
+  "stationsOutOfFrame": 5,
+  "values": 397
+ },
+ "dataDigest": "sha256:bdcf360aa86d810bbe19885457a012f765f536f5a92a691fdab98c70a261077f",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:9040b72032cec35e943a97e0d29c8f9e07aa65b4550ecb050d0d69e699687d60",
+ "packageId": "deep-dev-l3-31",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 31 (Southern Texas Plains)",
+ "version": "52fe3c49cb33"
+}
