@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "mississippi-alluvial-plain",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:f96e2fa80e02a5502d16ea1cdd0fd30be1d2e28160e4702b64a1b6fdc25ef886",
+      "bytes": 40004,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:9336561580d8e41687d31817b1579fb511ab74d35a4d22f42f39f881f566ea83",
+      "builtAt": "2026-09-30T07:04:19Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

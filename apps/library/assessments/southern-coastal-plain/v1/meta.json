@@ -1,0 +1,19 @@
+{
+  "assessmentId": "southern-coastal-plain",
+  "assessmentName": "Southern Coastal Plain reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:04:16Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 11 of 38 stations of this ecoregion pass. 7 reference curves use local stations, 19 borrow from a wider region, 5 metrics use fixed criteria, and 1 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "75",
+    "name": "Southern Coastal Plain"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 75), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:82ddc4b7db486f58ea8a429fbe185553877029b158b451b34bb45dd1827aa0dd",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "south-central-plains",
+  "assessmentName": "South Central Plains reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "35",
+    "name": "South Central Plains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 35), StreamCurves regional analysis, methodology 0.16-provisional",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-09-30T07:04:11Z",
+      "author": "StreamCurves regional analysis (STAF)",
+      "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 12 of 58 stations of this ecoregion pass. 5 reference curves use local stations, 10 borrow from a wider region, 5 metrics use fixed criteria, and 0 metrics are withheld for insufficient reference support.",
+      "contentDigest": "sha256:1ea97f3cd875254bf1ee6f9126c68a5dae471dfd87505be612cbcc78abdcdd94",
+      "supersedesVersion": null
+    }
+  ]
+}

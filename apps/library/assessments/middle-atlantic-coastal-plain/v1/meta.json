@@ -1,0 +1,19 @@
+{
+  "assessmentId": "middle-atlantic-coastal-plain",
+  "assessmentName": "Middle Atlantic Coastal Plain reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:04:08Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 3 of 60 stations of this ecoregion pass. 0 reference curves use local stations, 23 borrow from a wider region, 5 metrics use fixed criteria, and 1 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "63",
+    "name": "Middle Atlantic Coastal Plain"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 63), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:479d76c5e211ba08519ef4a041f5b64afc72a7fd16eb1410bfe8b6051ee0e73f",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

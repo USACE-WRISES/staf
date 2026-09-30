@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 210462,
+  "name": "deep-dev-l3-76-7be273702123-40d7717c.evidence.zip",
+  "sha256": "df834d23953c6fa60bd2753cb4776643462dea21ce6f74cf5a0ea06c56381b00"
+ },
+ "bytes": 2050972,
+ "coverage": {
+  "assessmentId": "southern-florida-coastal-plain",
+  "curves": 24,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 12309,
+  "region": {
+   "code": "76",
+   "kind": "ecoregion",
+   "name": "Southern Florida Coastal Plain"
+  },
+  "stations": 1,
+  "stationsOutOfFrame": 2,
+  "values": 30
+ },
+ "dataDigest": "sha256:596db85b8077baed035e89bfd0ffec1d021d41698b435a33c5ec6177147d59ea",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:40d7717c6a3488dc54fe0f3e32ffa9d13d93907bbb7257ad2466c5345ebdbd43",
+ "packageId": "deep-dev-l3-76",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 76 (Southern Florida Coastal Plain)",
+ "version": "7be273702123"
+}

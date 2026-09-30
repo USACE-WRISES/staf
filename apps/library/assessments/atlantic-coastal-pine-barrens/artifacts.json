@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "atlantic-coastal-pine-barrens",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:32f684199a399b6b6befb601e3da579deceffee8b20d2563f0504733db7e016e",
+      "bytes": 44117,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:aa270bf0739bcae77f15ac1c9d309300368e1cfb280a0bdcd9a22c1ad259252b",
+      "builtAt": "2026-09-30T07:04:24Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 791226,
+  "name": "deep-dev-l3-33-5199ba285369-7d782ecc.evidence.zip",
+  "sha256": "c71a270437324a1c996d8e89f5c0d9dcee8775704e0ebff6cac65ae541d9bb6b"
+ },
+ "bytes": 7923842,
+ "coverage": {
+  "assessmentId": "east-central-texas-plains",
+  "curves": 22,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 67356,
+  "region": {
+   "code": "33",
+   "kind": "ecoregion",
+   "name": "East Central Texas Plains"
+  },
+  "stations": 14,
+  "stationsOutOfFrame": 3,
+  "values": 441
+ },
+ "dataDigest": "sha256:e33f13e3f9cf51e420bea12927fefa1e4091338a40bef18981d60f8e9487958f",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:7d782ecc133e74169976376c6d0d020e7ebbe73ec5c8bf4432bacc219aecef6c",
+ "packageId": "deep-dev-l3-33",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 33 (East Central Texas Plains)",
+ "version": "5199ba285369"
+}

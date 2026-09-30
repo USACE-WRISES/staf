@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "middle-atlantic-coastal-plain",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:6059ba874fe69d7172bccf1a701041ed240d0bc5a7a61390b5280fe7e9536f20",
+      "bytes": 41671,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:479d76c5e211ba08519ef4a041f5b64afc72a7fd16eb1410bfe8b6051ee0e73f",
+      "builtAt": "2026-09-30T07:04:09Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 739377,
+  "name": "deep-dev-l3-84-3cd8e3155728-80976eb4.evidence.zip",
+  "sha256": "6bda901837e236aaf4219eaa415d9735d365f551abb4db2b700fdd4da0f2b0e3"
+ },
+ "bytes": 7420420,
+ "coverage": {
+  "assessmentId": "atlantic-coastal-pine-barrens",
+  "curves": 19,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 63039,
+  "region": {
+   "code": "84",
+   "kind": "ecoregion",
+   "name": "Atlantic Coastal Pine Barrens"
+  },
+  "stations": 11,
+  "stationsOutOfFrame": 0,
+  "values": 354
+ },
+ "dataDigest": "sha256:29746ffaf0f21aadb7cd27344ddb4f464220233d03af05fb843320f336c4c91e",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:80976eb42f8f82c5042e4d1b3ba279d5c0b607d5d1c8259b29cd0c2de9fb5f84",
+ "packageId": "deep-dev-l3-84",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 84 (Atlantic Coastal Pine Barrens)",
+ "version": "3cd8e3155728"
+}

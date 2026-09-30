@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "western-gulf-coastal-plain",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:f0b4a067c5ded310ded9dcca617196bc896ca75e8a28dec2bc5a0b3b93d84fed",
+      "bytes": 38356,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:5e5fa2b7d4658d1a0a9fec1ea953ce9f61c3610fc882279f3a9d2c5354499b79",
+      "builtAt": "2026-09-30T07:04:26Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

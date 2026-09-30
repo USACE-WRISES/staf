@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "southern-florida-coastal-plain",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:8181e9970c8bddefb95a55f0d327594a16ac9f6bef1db24c9488474b95e1dcc0",
+      "bytes": 44796,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:61561a49a080e992ce47797a3b72993a0ac0134243f7db799b012c295f7c0c39",
+      "builtAt": "2026-09-30T07:04:06Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

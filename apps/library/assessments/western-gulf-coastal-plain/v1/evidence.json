@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 456006,
+  "name": "deep-dev-l3-34-4e91e080ece4-86f6583f.evidence.zip",
+  "sha256": "3c3f0add8d90250f65c2ca58cf0c0f9d6033a17e863fe2b56ba12675b772b2e3"
+ },
+ "bytes": 4591677,
+ "coverage": {
+  "assessmentId": "western-gulf-coastal-plain",
+  "curves": 11,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 37323,
+  "region": {
+   "code": "34",
+   "kind": "ecoregion",
+   "name": "Western Gulf Coastal Plain"
+  },
+  "stations": 16,
+  "stationsOutOfFrame": 6,
+  "values": 438
+ },
+ "dataDigest": "sha256:809c0006442db02b39046552c9ef5f6382a067ec159fb4388d1268b249e26e4d",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:86f6583f643623ab534725670869aded69dc3ccb097d91ec9b51080b1de790dc",
+ "packageId": "deep-dev-l3-34",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 34 (Western Gulf Coastal Plain)",
+ "version": "4e91e080ece4"
+}
