@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "central-corn-belt-plains",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:9d0dee0811eda2aebf25deb68c908b3df88ff936159d1d9ccbe71ced2f001392",
+      "bytes": 43506,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:debdf0750b17be3fdd4a04382e529b54ccea278078d0a6198790a494289e8aef",
+      "builtAt": "2026-09-30T07:05:50Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

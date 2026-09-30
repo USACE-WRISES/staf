@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 698782,
+  "name": "deep-dev-l3-57-c459767344a3-20d7f9dd.evidence.zip",
+  "sha256": "bfb7c51d4e0f06e6e0c23155a7d6b193125aa8d4173348e16e135a92f2317c7d"
+ },
+ "bytes": 6973364,
+ "coverage": {
+  "assessmentId": "huron-erie-lake-plains",
+  "curves": 25,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 58053,
+  "region": {
+   "code": "57",
+   "kind": "ecoregion",
+   "name": "Huron/Erie Lake Plains"
+  },
+  "stations": 22,
+  "stationsOutOfFrame": 9,
+  "values": 653
+ },
+ "dataDigest": "sha256:0c9df2a87270fb7f8719b9889aa14fc8ae44fa4983f3483f0c44b8d26d06a167",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:20d7f9dd7e0a70a3d18f8f84dd032b3d94be9303e44b77a97210f1333f150237",
+ "packageId": "deep-dev-l3-57",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 57 (Huron/Erie Lake Plains)",
+ "version": "c459767344a3"
+}

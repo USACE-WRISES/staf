@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 480379,
+  "name": "deep-dev-l3-47-45b7d99925ef-0843933e.evidence.zip",
+  "sha256": "b4914ef64dc66442a192cd27d65ddfe7802ef5622ebc7e6a117770283e48b0d3"
+ },
+ "bytes": 4844131,
+ "coverage": {
+  "assessmentId": "western-corn-belt-plains",
+  "curves": 21,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 38628,
+  "region": {
+   "code": "47",
+   "kind": "ecoregion",
+   "name": "Western Corn Belt Plains"
+  },
+  "stations": 113,
+  "stationsOutOfFrame": 33,
+  "values": 3449
+ },
+ "dataDigest": "sha256:0ba54a99650aaeaa22bc94eb2b8b8c090e1896240340991f1f300ca4bac2d20c",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:0843933e03440dc5ad5f1afd196c3b334c88b1d7229bba91e308cf19fbbe32e8",
+ "packageId": "deep-dev-l3-47",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 47 (Western Corn Belt Plains)",
+ "version": "45b7d99925ef"
+}

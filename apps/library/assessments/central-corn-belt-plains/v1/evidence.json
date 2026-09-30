@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 701254,
+  "name": "deep-dev-l3-54-5472cdd18135-875ce045.evidence.zip",
+  "sha256": "d0d53dfbafc12e4c49189b9db3d28b48361e5678f80c72899cee5dde9306457e"
+ },
+ "bytes": 6934717,
+ "coverage": {
+  "assessmentId": "central-corn-belt-plains",
+  "curves": 23,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 57559,
+  "region": {
+   "code": "54",
+   "kind": "ecoregion",
+   "name": "Central Corn Belt Plains"
+  },
+  "stations": 30,
+  "stationsOutOfFrame": 7,
+  "values": 910
+ },
+ "dataDigest": "sha256:f0a3abed0164a9add6424e780d0da6132b2a1e8fb1a7081107f82d7017d47747",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:875ce04553365605dbd54b0f770d6600acd5615f06a1127b2cd6f58ca5e866e6",
+ "packageId": "deep-dev-l3-54",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 54 (Central Corn Belt Plains)",
+ "version": "5472cdd18135"
+}

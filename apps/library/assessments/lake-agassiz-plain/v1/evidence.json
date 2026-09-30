@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 534044,
+  "name": "deep-dev-l3-48-2864e965bc3e-27e7b0de.evidence.zip",
+  "sha256": "66c54bd333c4d92d1c12185c177905a452883bc11a0dd39c833eb03b56a65ffe"
+ },
+ "bytes": 5486386,
+ "coverage": {
+  "assessmentId": "lake-agassiz-plain",
+  "curves": 11,
+  "functionsScored": 20,
+  "ledgerRows": 42,
+  "metrics": 34,
+  "poolLedgerRows": 44707,
+  "region": {
+   "code": "48",
+   "kind": "ecoregion",
+   "name": "Lake Agassiz Plain"
+  },
+  "stations": 15,
+  "stationsOutOfFrame": 9,
+  "values": 420
+ },
+ "dataDigest": "sha256:4eed154ca166cef0a9a1825bb68ddc207aba5a6408a4df963b16c1ed0167559b",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:27e7b0de192c910b7d13810bc64a31efa5345c884a8337234c30db0e590b6a4a",
+ "packageId": "deep-dev-l3-48",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 48 (Lake Agassiz Plain)",
+ "version": "2864e965bc3e"
+}

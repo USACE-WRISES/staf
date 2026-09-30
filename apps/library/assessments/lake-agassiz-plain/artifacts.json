@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "lake-agassiz-plain",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:8239881b843749920d86e2acc094bc36d5df3e2e999e18f20ef342c8ac23d612",
+      "bytes": 39797,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:0dc290898d5c02b8b449b8d4a910b8192353f89f3aa6854d3fd7770a0d92b910",
+      "builtAt": "2026-09-30T07:05:58Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

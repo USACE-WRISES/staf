@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 479167,
+  "name": "deep-dev-l3-46-1a72d48c20c3-b2576d69.evidence.zip",
+  "sha256": "5790e101dd2b983d4d79b1863d6c0332d2cb163b58b1f77ba26cbd6150c905d0"
+ },
+ "bytes": 4865671,
+ "coverage": {
+  "assessmentId": "northern-glaciated-plains",
+  "curves": 18,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 39591,
+  "region": {
+   "code": "46",
+   "kind": "ecoregion",
+   "name": "Northern Glaciated Plains"
+  },
+  "stations": 41,
+  "stationsOutOfFrame": 14,
+  "values": 1288
+ },
+ "dataDigest": "sha256:1b3e20245adfb3eb2c681cd756fd59a296fd3caa4b0acb92261315bf9b7068c3",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:b2576d69e7ae4fa1c744db6dd8d1aacf55282bf9108c12a2e485bc40dcb676a8",
+ "packageId": "deep-dev-l3-46",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 46 (Northern Glaciated Plains)",
+ "version": "1a72d48c20c3"
+}

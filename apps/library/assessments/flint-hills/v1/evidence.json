@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 391372,
+  "name": "deep-dev-l3-28-931aa323d0b3-9dd35db2.evidence.zip",
+  "sha256": "4dafbc01246de77a74f662352d2f6f58edcce6ddf1cf59b8df0dcc2a642499aa"
+ },
+ "bytes": 3913352,
+ "coverage": {
+  "assessmentId": "flint-hills",
+  "curves": 24,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 31322,
+  "region": {
+   "code": "28",
+   "kind": "ecoregion",
+   "name": "Flint Hills"
+  },
+  "stations": 21,
+  "stationsOutOfFrame": 4,
+  "values": 662
+ },
+ "dataDigest": "sha256:9bf80c343f775a1faf0e827144749371114d8e182f259b83cea8a67d74ba59c3",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:9dd35db247d140651228858fc8b197a5bdb59136dfd118bc5f7f574d55044257",
+ "packageId": "deep-dev-l3-28",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 28 (Flint Hills)",
+ "version": "931aa323d0b3"
+}

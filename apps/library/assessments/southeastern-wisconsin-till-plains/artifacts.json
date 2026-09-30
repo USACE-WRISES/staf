@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "southeastern-wisconsin-till-plains",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:c04387a047fccbe659188f3ad752a331a4fcd39d0450cbb5653179d0602c32bf",
+      "bytes": 43782,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:2848e7844509a72cc7b8e5b4dc2fbdb04e5620e28e72e2ccf298cff1054877f4",
+      "builtAt": "2026-09-30T07:05:43Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

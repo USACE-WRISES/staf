@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 461670,
+  "name": "deep-dev-l3-40-ad81f721c5ab-594ea0ab.evidence.zip",
+  "sha256": "65156eb9e76c0f64cd13e7acfe84bcc2168f955df0851c5b09725e54df8b9cc8"
+ },
+ "bytes": 4591199,
+ "coverage": {
+  "assessmentId": "central-irregular-plains",
+  "curves": 21,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 37063,
+  "region": {
+   "code": "40",
+   "kind": "ecoregion",
+   "name": "Central Irregular Plains"
+  },
+  "stations": 48,
+  "stationsOutOfFrame": 11,
+  "values": 1505
+ },
+ "dataDigest": "sha256:b80f9869e3e9454c4ac5a3fed8321db82c8cb9e10e2e1d421ff7941e6ca0b2d1",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:594ea0ab1422cf9b9b8a6ae3c3a8ea4c5b81a0cfd91a8e849a5c2d7bc96a0a96",
+ "packageId": "deep-dev-l3-40",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 40 (Central Irregular Plains)",
+ "version": "ad81f721c5ab"
+}

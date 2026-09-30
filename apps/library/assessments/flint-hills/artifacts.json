@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "flint-hills",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:aff7a01d761938b5e8bc9f7df553b0ccddd6e6ac89b9d23badac60f379497107",
+      "bytes": 43280,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:ccfa82b988c0f4175c6c6a9671be4532ca6dbac35154676375017e7ad4327d5d",
+      "builtAt": "2026-09-30T07:05:53Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}
