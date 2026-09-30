@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 774051,
+  "name": "deep-dev-l3-37-6ed072ad595f-0511a5bf.evidence.zip",
+  "sha256": "ddb05ca4bd63319ef3396ea2d65a93e3259b6b448971861228bbc1908d5fa1c5"
+ },
+ "bytes": 7515066,
+ "coverage": {
+  "assessmentId": "arkansas-valley",
+  "curves": 19,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 63895,
+  "region": {
+   "code": "37",
+   "kind": "ecoregion",
+   "name": "Arkansas Valley"
+  },
+  "stations": 12,
+  "stationsOutOfFrame": 7,
+  "values": 373
+ },
+ "dataDigest": "sha256:94842ce7eff39932bb10ae03643a789eb23b6f4a7cedec9f77bfaeb96303612a",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:0511a5bf8f4f27778f00abd569d93c7df95fe2c272ea8dd7e59ecbc18b8a6cf8",
+ "packageId": "deep-dev-l3-37",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 37 (Arkansas Valley)",
+ "version": "6ed072ad595f"
+}

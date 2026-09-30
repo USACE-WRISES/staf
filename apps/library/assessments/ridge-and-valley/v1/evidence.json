@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 513075,
+  "name": "deep-dev-l3-67-81e26a456903-c6b71024.evidence.zip",
+  "sha256": "999767c3c6a08c9e02aa1dd4dc59824884123505745ea09d7c17778c716f4996"
+ },
+ "bytes": 4756858,
+ "coverage": {
+  "assessmentId": "ridge-and-valley",
+  "curves": 24,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 38690,
+  "region": {
+   "code": "67",
+   "kind": "ecoregion",
+   "name": "Ridge and Valley"
+  },
+  "stations": 90,
+  "stationsOutOfFrame": 27,
+  "values": 2767
+ },
+ "dataDigest": "sha256:404a072aab5b27d02a1e1380c1adabac568f74119fd6f8a1044be66306a1ba7c",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:c6b7102479a5e0721fe8d1e2edcafc913ac8a385dfd4d9aef63d38c9ae80d20c",
+ "packageId": "deep-dev-l3-67",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 67 (Ridge and Valley)",
+ "version": "81e26a456903"
+}

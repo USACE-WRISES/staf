@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 300348,
+  "name": "deep-dev-l3-66-423f43676edf-8f31c828.evidence.zip",
+  "sha256": "3ad9d4b5c17bcd32ef62f21b00e13d660bb03ad4df4e563f95670d79ecf39a12"
+ },
+ "bytes": 2738522,
+ "coverage": {
+  "assessmentId": "blue-ridge",
+  "curves": 27,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 21427,
+  "region": {
+   "code": "66",
+   "kind": "ecoregion",
+   "name": "Blue Ridge"
+  },
+  "stations": 31,
+  "stationsOutOfFrame": 3,
+  "values": 1005
+ },
+ "dataDigest": "sha256:e1418c8e8f282d4c614ab54c684e7c9d141b9fee8ce4bccc2b8359c6eacd3fc5",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:8f31c8284309031f6d8750f9cf433e6009c1557f0d242a3e9fa4ca7db0da95f7",
+ "packageId": "deep-dev-l3-66",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 66 (Blue Ridge)",
+ "version": "423f43676edf"
+}

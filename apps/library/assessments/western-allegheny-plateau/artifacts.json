@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "western-allegheny-plateau",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:c7eb59463ae9e12032ebc7436eb24af6a76453dd7c8f1486f4a82933dc47801a",
+      "bytes": 43997,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:2bcc053d3d14cdb214b4cbdf43c9e8482685813f27af6528a45e79e000f13e3e",
+      "builtAt": "2026-09-30T07:05:06Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

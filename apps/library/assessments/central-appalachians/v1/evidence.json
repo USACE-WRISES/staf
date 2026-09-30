@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 769257,
+  "name": "deep-dev-l3-69-eacc368cb0b4-0a58813b.evidence.zip",
+  "sha256": "3e3e53857e4304f3c572dde66ca6ad9b0790f805a0c102b45f4f126b3b0b0a13"
+ },
+ "bytes": 7372471,
+ "coverage": {
+  "assessmentId": "central-appalachians",
+  "curves": 18,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 62825,
+  "region": {
+   "code": "69",
+   "kind": "ecoregion",
+   "name": "Central Appalachians"
+  },
+  "stations": 39,
+  "stationsOutOfFrame": 7,
+  "values": 1223
+ },
+ "dataDigest": "sha256:83da413ab6b83027113d990f3501c1ded4e408097049a220727aad59a8b390a3",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:0a58813b2dc8acf2c6b4259ede972512043fa7bc084ddd9dde08ff4bb7669a8c",
+ "packageId": "deep-dev-l3-69",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 69 (Central Appalachians)",
+ "version": "eacc368cb0b4"
+}

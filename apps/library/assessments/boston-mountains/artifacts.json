@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "boston-mountains",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:daab60d1015041061db133951d59f92df8c3c42c29d6c7937d0febb58600a9d0",
+      "bytes": 40665,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:397e2ca5c762906ce6fe27fa3bde50aafd2dfa89e66f34d2a907838257d34f1a",
+      "builtAt": "2026-09-30T07:05:16Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

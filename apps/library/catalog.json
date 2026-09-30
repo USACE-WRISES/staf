@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-30T07:04:48Z",
+  "generatedAt": "2026-09-30T07:05:16Z",
   "assessments": [
     {
       "assessmentId": "acadian-plains-and-hills",
@@ -49,6 +49,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "arkansas-valley",
+      "assessmentName": "Arkansas Valley reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "37",
+        "name": "Arkansas Valley"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:11Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:ba846cc11891c8219c558ce0b9687ecc17465d0a82f92530a7a72859a998ae0e",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "atlantic-coastal-pine-barrens",
       "assessmentName": "Atlantic Coastal Pine Barrens reference assessment",
       "region": {
@@ -66,6 +89,75 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:aa270bf0739bcae77f15ac1c9d309300368e1cfb280a0bdcd9a22c1ad259252b",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "blue-ridge",
+      "assessmentName": "Blue Ridge reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "66",
+        "name": "Blue Ridge"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:53Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:b53b6ffc1cfad0c64bbbc490d51e26ab1be617a91919a9d1c75a6560520e9616",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "boston-mountains",
+      "assessmentName": "Boston Mountains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "38",
+        "name": "Boston Mountains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:16Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:397e2ca5c762906ce6fe27fa3bde50aafd2dfa89e66f34d2a907838257d34f1a",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "central-appalachians",
+      "assessmentName": "Central Appalachians reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "69",
+        "name": "Central Appalachians"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:03Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:bde3f4beb2e0c2b766df7c9d09afb029919152992a2d7fca92d93a64a629593b",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -534,6 +626,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "northern-piedmont",
+      "assessmentName": "Northern Piedmont reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "64",
+        "name": "Northern Piedmont"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:58Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:09ae1a8c033c66db35838eed39ca7248e6522810e202cdb9ac70d6b1192b8913",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "northwestern-glaciated-plains",
       "assessmentName": "Northwestern Glaciated Plains reference assessment",
       "region": {
@@ -574,6 +689,98 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:2ee7911c0fe28c2bbedb454948482840707ed71438e2a395efd4bd899b6f1d2d",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "ouachita-mountains",
+      "assessmentName": "Ouachita Mountains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "36",
+        "name": "Ouachita Mountains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:13Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:ccaedde6c64137dd680e54a83fd08f8972dd6e695bd7996f28b6a1b62212f650",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "ozark-highlands",
+      "assessmentName": "Ozark Highlands reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "39",
+        "name": "Ozark Highlands"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:08Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:f2e324139fc4a85fd4b125de9ffac8c865fd3ce27c36de7999c7ff541a7e314c",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "piedmont",
+      "assessmentName": "Piedmont reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "45",
+        "name": "Piedmont"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:55Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:ef86450941a9a31167adbb7221d44e97362454c65b225649d3a68715d361feea",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "ridge-and-valley",
+      "assessmentName": "Ridge and Valley reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "67",
+        "name": "Ridge and Valley"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:50Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:91a68c2969f895e3f2d8fca8f6d2d55f49f7d805da284cc0fca54025a48390a6",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -689,6 +896,52 @@
       "defaultVersion": 1,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:61561a49a080e992ce47797a3b72993a0ac0134243f7db799b012c295f7c0c39",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "southwestern-appalachians",
+      "assessmentName": "Southwestern Appalachians reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "68",
+        "name": "Southwestern Appalachians"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:01Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:48a56ca74a25bfd4daffb1237b01e70292c5cc499804def3577ed2af0fb45fa0",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "western-allegheny-plateau",
+      "assessmentName": "Western Allegheny Plateau reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "70",
+        "name": "Western Allegheny Plateau"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:05:06Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:2bcc053d3d14cdb214b4cbdf43c9e8482685813f27af6528a45e79e000f13e3e",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",

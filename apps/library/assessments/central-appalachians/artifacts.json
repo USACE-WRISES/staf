@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "central-appalachians",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:db60e2951146c693caa61a0b77d935156c320daaaedd2cd0e9dd158b04a0ba09",
+      "bytes": 43382,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:bde3f4beb2e0c2b766df7c9d09afb029919152992a2d7fca92d93a64a629593b",
+      "builtAt": "2026-09-30T07:05:03Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

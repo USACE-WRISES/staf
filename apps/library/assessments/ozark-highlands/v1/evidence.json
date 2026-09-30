@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 679608,
+  "name": "deep-dev-l3-39-b86e5ec32767-4c7be01c.evidence.zip",
+  "sha256": "9f1d36bb8ccf4957b8988b6acd621f08887fce450176672b44465968dcde3375"
+ },
+ "bytes": 6680805,
+ "coverage": {
+  "assessmentId": "ozark-highlands",
+  "curves": 24,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 55645,
+  "region": {
+   "code": "39",
+   "kind": "ecoregion",
+   "name": "Ozark Highlands"
+  },
+  "stations": 49,
+  "stationsOutOfFrame": 13,
+  "values": 1486
+ },
+ "dataDigest": "sha256:3170d46caf2e049e5c96bfa387070253d961bbcd267c644cebd115efb8473467",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:4c7be01c571ba709c915539654e10316939a30d49a73cfce4968a8340894ad4c",
+ "packageId": "deep-dev-l3-39",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 39 (Ozark Highlands)",
+ "version": "b86e5ec32767"
+}

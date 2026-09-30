@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "arkansas-valley",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:a85dde87c872b8b66a5d9a3e9c46a3cdc214af26086f7ec63213915fb15596c8",
+      "bytes": 43697,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:ba846cc11891c8219c558ce0b9687ecc17465d0a82f92530a7a72859a998ae0e",
+      "builtAt": "2026-09-30T07:05:11Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

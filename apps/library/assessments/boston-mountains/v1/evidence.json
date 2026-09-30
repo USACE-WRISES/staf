@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 758433,
+  "name": "deep-dev-l3-38-b825391e4bac-3ae3567d.evidence.zip",
+  "sha256": "d6bc22a42f985d359c1b02978bd58942d2bff3f6b3693eb57b8e8d4c66eab213"
+ },
+ "bytes": 7565260,
+ "coverage": {
+  "assessmentId": "boston-mountains",
+  "curves": 16,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 63903,
+  "region": {
+   "code": "38",
+   "kind": "ecoregion",
+   "name": "Boston Mountains"
+  },
+  "stations": 5,
+  "stationsOutOfFrame": 1,
+  "values": 149
+ },
+ "dataDigest": "sha256:073b6b74a49c5b165f5d18f3365a720c79cea1d576a42a7cd90728817e0a3ec1",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:3ae3567df6abba9e484775049e61a455151c116a9482c58b30760aea65722a47",
+ "packageId": "deep-dev-l3-38",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 38 (Boston Mountains)",
+ "version": "b825391e4bac"
+}

@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "piedmont",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:901930956a6a060f77fd9f8512197e2e652356e67d4c0d6d8db4d4450b4ab493",
+      "bytes": 42870,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:ef86450941a9a31167adbb7221d44e97362454c65b225649d3a68715d361feea",
+      "builtAt": "2026-09-30T07:04:56Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

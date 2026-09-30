@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 666465,
+  "name": "deep-dev-l3-36-0827168656bc-e5e36df3.evidence.zip",
+  "sha256": "62c327bfc68ec58f2a728eebda54380cd8b82e37536ed225a807721b63f654fe"
+ },
+ "bytes": 6677015,
+ "coverage": {
+  "assessmentId": "ouachita-mountains",
+  "curves": 23,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 56299,
+  "region": {
+   "code": "36",
+   "kind": "ecoregion",
+   "name": "Ouachita Mountains"
+  },
+  "stations": 21,
+  "stationsOutOfFrame": 3,
+  "values": 634
+ },
+ "dataDigest": "sha256:6ff53db94fe7c8435b4f30b7567771bcbd75ffde28f8ac9bda6669e36a42c7e5",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:e5e36df35865172c0afede0ece311a0795a2572df9ba9efaec2b4a7fe8871c1b",
+ "packageId": "deep-dev-l3-36",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 36 (Ouachita Mountains)",
+ "version": "0827168656bc"
+}
