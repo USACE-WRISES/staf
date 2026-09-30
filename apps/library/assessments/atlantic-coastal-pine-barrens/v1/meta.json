@@ -1,0 +1,19 @@
+{
+  "assessmentId": "atlantic-coastal-pine-barrens",
+  "assessmentName": "Atlantic Coastal Pine Barrens reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:04:23Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 0 of 11 stations of this ecoregion pass. 0 reference curves use local stations, 19 borrow from a wider region, 5 metrics use fixed criteria, and 5 metrics are withheld for insufficient reference support.  No station of this ecoregion passes the reference screen, so every reference curve here borrows its reference stations from a parent ecoregion.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "84",
+    "name": "Atlantic Coastal Pine Barrens"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 84), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:aa270bf0739bcae77f15ac1c9d309300368e1cfb280a0bdcd9a22c1ad259252b",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

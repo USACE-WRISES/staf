@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 693059,
+  "name": "deep-dev-l3-74-bffc55d4f48f-de8dcf04.evidence.zip",
+  "sha256": "82f1942bdfca6f270ee374bdfa864ec7aa00c46f0238ae6403f05b943ccaba12"
+ },
+ "bytes": 6731967,
+ "coverage": {
+  "assessmentId": "mississippi-valley-loess-plains",
+  "curves": 23,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 57567,
+  "region": {
+   "code": "74",
+   "kind": "ecoregion",
+   "name": "Mississippi Valley Loess Plains"
+  },
+  "stations": 25,
+  "stationsOutOfFrame": 6,
+  "values": 802
+ },
+ "dataDigest": "sha256:e72fb611f9ad1bcb33c84b0aa13e80921340bf4e1998933df6a0d9217eeb19a9",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:de8dcf0424b47d1d3a0299341fe4bb40ddc798f0ede0179934396568a6ebeac8",
+ "packageId": "deep-dev-l3-74",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 74 (Mississippi Valley Loess Plains)",
+ "version": "bffc55d4f48f"
+}

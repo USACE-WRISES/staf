@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 761670,
+  "name": "deep-dev-l3-63-ed110b12f22c-8744add5.evidence.zip",
+  "sha256": "599161a5dc2d7792ea32c56cc63ace8069b657b3bd2e94531bd34d62b446f82c"
+ },
+ "bytes": 7542632,
+ "coverage": {
+  "assessmentId": "middle-atlantic-coastal-plain",
+  "curves": 23,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 63740,
+  "region": {
+   "code": "63",
+   "kind": "ecoregion",
+   "name": "Middle Atlantic Coastal Plain"
+  },
+  "stations": 61,
+  "stationsOutOfFrame": 12,
+  "values": 1750
+ },
+ "dataDigest": "sha256:eb5cb5044ba0cda43a0ce08b3817e7bda3405039c2e7a77d1a283096f6447700",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:8744add587841bc9b20872a46fa2f9b9f2d4c712e7bbd004aea0458b02f922b2",
+ "packageId": "deep-dev-l3-63",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 63 (Middle Atlantic Coastal Plain)",
+ "version": "ed110b12f22c"
+}

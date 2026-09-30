@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-29T17:28:28Z",
+  "generatedAt": "2026-09-30T07:04:26Z",
   "assessments": [
     {
       "assessmentId": "ak-sqt-adapted",
@@ -20,6 +20,29 @@
       "defaultVersion": 2,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "atlantic-coastal-pine-barrens",
+      "assessmentName": "Atlantic Coastal Pine Barrens reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "84",
+        "name": "Atlantic Coastal Pine Barrens"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:23Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:aa270bf0739bcae77f15ac1c9d309300368e1cfb280a0bdcd9a22c1ad259252b",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -120,6 +143,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "east-central-texas-plains",
+      "assessmentName": "East Central Texas Plains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "33",
+        "name": "East Central Texas Plains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:21Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:90bba9709b8a833d0c95e21d59a0b40797f2e736d2f049f535f8148a4350034c",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "eastern-corn-belt-plains",
       "assessmentName": "Eastern Corn Belt Plains reference assessment",
       "region": {
@@ -183,6 +229,75 @@
       "defaultVersion": 2,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:5d8e95677f0cf2bf4b18d1f089024b4fda8aefb21767fb89e2742ad819998e02",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "middle-atlantic-coastal-plain",
+      "assessmentName": "Middle Atlantic Coastal Plain reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "63",
+        "name": "Middle Atlantic Coastal Plain"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:08Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:479d76c5e211ba08519ef4a041f5b64afc72a7fd16eb1410bfe8b6051ee0e73f",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "mississippi-alluvial-plain",
+      "assessmentName": "Mississippi Alluvial Plain reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "73",
+        "name": "Mississippi Alluvial Plain"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:18Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:9336561580d8e41687d31817b1579fb511ab74d35a4d22f42f39f881f566ea83",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "mississippi-valley-loess-plains",
+      "assessmentName": "Mississippi Valley Loess Plains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "74",
+        "name": "Mississippi Valley Loess Plains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:13Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:2e1f1494c6fc759e91d21e33e8620a4b2248511d593a5413e9aa153d526b18d7",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",
@@ -304,6 +419,29 @@
       "calculatorState": "present"
     },
     {
+      "assessmentId": "south-central-plains",
+      "assessmentName": "South Central Plains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "35",
+        "name": "South Central Plains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:11Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:1ea97f3cd875254bf1ee6f9126c68a5dae471dfd87505be612cbcc78abdcdd94",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
       "assessmentId": "southeastern-plains",
       "assessmentName": "Southeastern Plains reference assessment",
       "region": {
@@ -321,6 +459,75 @@
       "defaultVersion": 2,
       "defaultStatus": "preliminary",
       "contentDigest": "sha256:fe2aca83722659416d0eccddf8e01ac668272363e995ca238259f7edf1971856",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "southern-coastal-plain",
+      "assessmentName": "Southern Coastal Plain reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "75",
+        "name": "Southern Coastal Plain"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:16Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:82ddc4b7db486f58ea8a429fbe185553877029b158b451b34bb45dd1827aa0dd",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "southern-florida-coastal-plain",
+      "assessmentName": "Southern Florida Coastal Plain reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "76",
+        "name": "Southern Florida Coastal Plain"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:06Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:61561a49a080e992ce47797a3b72993a0ac0134243f7db799b012c295f7c0c39",
+      "validationState": "unvalidated",
+      "validationSummary": null,
+      "provenanceState": "present",
+      "calculatorState": "present"
+    },
+    {
+      "assessmentId": "western-gulf-coastal-plain",
+      "assessmentName": "Western Gulf Coastal Plain reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "34",
+        "name": "Western Gulf Coastal Plain"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-09-30T07:04:26Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "latestDraft": 0,
+      "defaultVersion": 1,
+      "defaultStatus": "preliminary",
+      "contentDigest": "sha256:5e5fa2b7d4658d1a0a9fec1ea953ce9f61c3610fc882279f3a9d2c5354499b79",
       "validationState": "unvalidated",
       "validationSummary": null,
       "provenanceState": "present",

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 532170,
+  "name": "deep-dev-l3-75-186a93967f3c-f9a1ba80.evidence.zip",
+  "sha256": "d402765e754c60fbfaeda79981e078c5f73a96ea1ace0a73a76038320f764d63"
+ },
+ "bytes": 5194729,
+ "coverage": {
+  "assessmentId": "southern-coastal-plain",
+  "curves": 26,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 42787,
+  "region": {
+   "code": "75",
+   "kind": "ecoregion",
+   "name": "Southern Coastal Plain"
+  },
+  "stations": 39,
+  "stationsOutOfFrame": 11,
+  "values": 1131
+ },
+ "dataDigest": "sha256:eeab27b8322ea898ee03fe2921af880c5704d5d5d831fe84d62862affd299a75",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:f9a1ba8098ab96552535ae5b34b60b06dc2fbd693d7b342fea04f5ab8230cd7f",
+ "packageId": "deep-dev-l3-75",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 75 (Southern Coastal Plain)",
+ "version": "186a93967f3c"
+}

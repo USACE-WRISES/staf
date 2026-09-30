@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "southern-coastal-plain",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:b56169b25a412ff8d97dcf18a1248fe1570b541d58225137819a63c4796b547b",
+      "bytes": 41006,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:82ddc4b7db486f58ea8a429fbe185553877029b158b451b34bb45dd1827aa0dd",
+      "builtAt": "2026-09-30T07:04:16Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

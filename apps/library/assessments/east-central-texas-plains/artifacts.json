@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "east-central-texas-plains",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:8935995d241c7a6a3b64e9148e3980a94e7562a44bf3cb0725e41d10abe52a4c",
+      "bytes": 42444,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:90bba9709b8a833d0c95e21d59a0b40797f2e736d2f049f535f8148a4350034c",
+      "builtAt": "2026-09-30T07:04:21Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

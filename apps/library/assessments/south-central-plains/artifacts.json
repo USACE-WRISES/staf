@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "south-central-plains",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:e85e0d22c7cd526cc858b971d8eb5786bd8b860f0d8dd1867c0aa429e4a895da",
+      "bytes": 41764,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:1ea97f3cd875254bf1ee6f9126c68a5dae471dfd87505be612cbcc78abdcdd94",
+      "builtAt": "2026-09-30T07:04:11Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

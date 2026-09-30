@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 743829,
+  "name": "deep-dev-l3-73-950175ff3f23-fd81563a.evidence.zip",
+  "sha256": "0f92c9fd0631cd2d3279df67413377a546128ee382fbf977dc42a8cec6923d8b"
+ },
+ "bytes": 7376467,
+ "coverage": {
+  "assessmentId": "mississippi-alluvial-plain",
+  "curves": 23,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 62432,
+  "region": {
+   "code": "73",
+   "kind": "ecoregion",
+   "name": "Mississippi Alluvial Plain"
+  },
+  "stations": 35,
+  "stationsOutOfFrame": 45,
+  "values": 826
+ },
+ "dataDigest": "sha256:9755abfb2d6040a1d35e208d9764a1438f96f3ade874c340631a0db4d0e782bb",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:fd81563a86c71ef463de7505b5e207967310afcede362d68f7bd88899c0ff3cd",
+ "packageId": "deep-dev-l3-73",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 73 (Mississippi Alluvial Plain)",
+ "version": "950175ff3f23"
+}

@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 516288,
+  "name": "deep-dev-l3-35-4633008fdf3c-d4d50865.evidence.zip",
+  "sha256": "c755bbb5f96ec736dc097be7e2674ea2acb83dab76f65374a6421d31c85136f9"
+ },
+ "bytes": 4966120,
+ "coverage": {
+  "assessmentId": "south-central-plains",
+  "curves": 25,
+  "functionsScored": 20,
+  "ledgerRows": 45,
+  "metrics": 33,
+  "poolLedgerRows": 41261,
+  "region": {
+   "code": "35",
+   "kind": "ecoregion",
+   "name": "South Central Plains"
+  },
+  "stations": 58,
+  "stationsOutOfFrame": 25,
+  "values": 1816
+ },
+ "dataDigest": "sha256:bb93610c5ee827432f3c1e73a7a1c7679c14f69ef7709a608fb7f810bc75d819",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:d4d5086525746874c2d26d274533fcbd7b1b21686087c4db97ac630921602e34",
+ "packageId": "deep-dev-l3-35",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 35 (South Central Plains)",
+ "version": "4633008fdf3c"
+}
