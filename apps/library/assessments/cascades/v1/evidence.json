@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 172581,
+  "name": "deep-dev-l3-4-22b1d86f568d-bfe515a2.evidence.zip",
+  "sha256": "a49c52af77407282bdf6ca91efc90e50896c4cf155ea7438b82f05804a0f1d98"
+ },
+ "bytes": 1835672,
+ "coverage": {
+  "assessmentId": "cascades",
+  "curves": 27,
+  "functionsScored": 20,
+  "ledgerRows": 43,
+  "metrics": 33,
+  "poolLedgerRows": 13999,
+  "region": {
+   "code": "4",
+   "kind": "ecoregion",
+   "name": "Cascades"
+  },
+  "stations": 35,
+  "stationsOutOfFrame": 0,
+  "values": 1038
+ },
+ "dataDigest": "sha256:51d92c66ed5c5f2a94a17b33b4b15d106c3ee6be32468c69313029de978976ec",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:bfe515a2a3af4b541e7a8900a52bc7eefd7f9bacdc38c1b8598894bdee97d2a6",
+ "packageId": "deep-dev-l3-4",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 4 (Cascades)",
+ "version": "22b1d86f568d"
+}

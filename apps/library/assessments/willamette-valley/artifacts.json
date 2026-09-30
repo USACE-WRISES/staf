@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "willamette-valley",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:000dfcaa99cc809125a7940f17d17f375022bfdd2b7e5cf8080d7abd3ede6e28",
+      "bytes": 41470,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:240ddb45e155df064882b97c9de783d1375d92d9c2e3780e20f78634617f920c",
+      "builtAt": "2026-09-30T07:06:50Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

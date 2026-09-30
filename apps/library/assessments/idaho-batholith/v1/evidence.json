@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 182340,
+  "name": "deep-dev-l3-16-1ceae02ca193-865099c8.evidence.zip",
+  "sha256": "3ef12c4777a30917f94d1fcdfe631421e491438f42248be1a16a038ac730973f"
+ },
+ "bytes": 1900227,
+ "coverage": {
+  "assessmentId": "idaho-batholith",
+  "curves": 28,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 14274,
+  "region": {
+   "code": "16",
+   "kind": "ecoregion",
+   "name": "Idaho Batholith"
+  },
+  "stations": 31,
+  "stationsOutOfFrame": 11,
+  "values": 900
+ },
+ "dataDigest": "sha256:cc9799fc69de4a9de3cf8fb340b9ba00789162406ff8921f0739da4d0ebaa87d",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:865099c860c601e39abdcac912dd0fe15c551356fff0e8d4543b4b14620ebbcc",
+ "packageId": "deep-dev-l3-16",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 16 (Idaho Batholith)",
+ "version": "1ceae02ca193"
+}

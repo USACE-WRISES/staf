@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "puget-lowland",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:5b3b61a341a480951bd177af90e3db31f0f4bd6b9abf8731839a4781a0967025",
+      "bytes": 42604,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:2cd02b48a19d50288dc835356ab09fd696bd1497e8ea93643aa11cb0a0d25ed2",
+      "builtAt": "2026-09-30T07:06:48Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

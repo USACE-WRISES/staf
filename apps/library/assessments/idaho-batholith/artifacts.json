@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "idaho-batholith",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:e7201a420461e741250df29dfb87035e3e5a56bbd484c1ba9c864dc6d74947cd",
+      "bytes": 41339,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:a8de2e1de74d0a7299718a14798911df70102cdd3e381f79a384d96ec068894f",
+      "builtAt": "2026-09-30T07:06:45Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

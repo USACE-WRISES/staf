@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 252992,
+  "name": "deep-dev-l3-21-a4f1ecc3b463-16297bfe.evidence.zip",
+  "sha256": "b06d49c466cca6508ea019c111fdf907d450684a2967ae6683f8047b1e946eec"
+ },
+ "bytes": 2428848,
+ "coverage": {
+  "assessmentId": "southern-rockies",
+  "curves": 25,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 18070,
+  "region": {
+   "code": "21",
+   "kind": "ecoregion",
+   "name": "Southern Rockies"
+  },
+  "stations": 83,
+  "stationsOutOfFrame": 4,
+  "values": 2576
+ },
+ "dataDigest": "sha256:e2976af6f2086b5f8a03d968e95e22d3853be4b9e89005e558457cef7df0d17a",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:16297bfefc75121cd8a1122dc63dc71935e7cf61b2ba5838e67a6416ecab407f",
+ "packageId": "deep-dev-l3-21",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 21 (Southern Rockies)",
+ "version": "a4f1ecc3b463"
+}

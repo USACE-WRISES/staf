@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 448466,
+  "name": "deep-dev-l3-77-53bd9351c236-eb2b315c.evidence.zip",
+  "sha256": "937900a07ee3971cde64e68b0bd092b0bd60dcf5a0808a8db453d695635a8bf2"
+ },
+ "bytes": 4403903,
+ "coverage": {
+  "assessmentId": "north-cascades",
+  "curves": 20,
+  "functionsScored": 20,
+  "ledgerRows": 41,
+  "metrics": 33,
+  "poolLedgerRows": 35094,
+  "region": {
+   "code": "77",
+   "kind": "ecoregion",
+   "name": "North Cascades"
+  },
+  "stations": 13,
+  "stationsOutOfFrame": 2,
+  "values": 381
+ },
+ "dataDigest": "sha256:061be6b08ca65bb29ceff990eea9253ce9d1dbaf3b22103c356b82545155068c",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:eb2b315c6d17b552116750a5585376c9a0a365f425f84e5b346179839dff1a84",
+ "packageId": "deep-dev-l3-77",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 77 (North Cascades)",
+ "version": "53bd9351c236"
+}

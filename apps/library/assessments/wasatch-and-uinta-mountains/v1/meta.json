@@ -1,0 +1,19 @@
+{
+  "assessmentId": "wasatch-and-uinta-mountains",
+  "assessmentName": "Wasatch and Uinta Mountains reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:06:39Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 11 of 22 stations of this ecoregion pass. 10 reference curves use local stations, 10 borrow from a wider region, 5 metrics use fixed criteria, and 6 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "19",
+    "name": "Wasatch and Uinta Mountains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 19), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:cff8e647901ecbc9f56eb0f867bc7037e1e09f79bbf95e894d2f55dbdc28cafb",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

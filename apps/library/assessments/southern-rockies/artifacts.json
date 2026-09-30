@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "southern-rockies",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:00c6e55df5f00b7ccdd998f18d725901ae61f916246507e82c2d87ba81b088b3",
+      "bytes": 39693,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:cbd87ee5b27929c7eb7568292ae4ed1c4d62e06eec8db8f124eeb308fb5b0066",
+      "builtAt": "2026-09-30T07:06:19Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "assessmentId": "willamette-valley",
+  "assessmentName": "Willamette Valley reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:06:50Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 1 of 8 stations of this ecoregion pass. 0 reference curves use local stations, 21 borrow from a wider region, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "3",
+    "name": "Willamette Valley"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 3), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:240ddb45e155df064882b97c9de783d1375d92d9c2e3780e20f78634617f920c",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

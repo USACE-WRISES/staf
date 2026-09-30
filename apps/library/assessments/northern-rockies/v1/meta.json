@@ -1,0 +1,19 @@
+{
+  "assessmentId": "northern-rockies",
+  "assessmentName": "Northern Rockies reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:06:16Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 30 of 45 stations of this ecoregion pass. 25 reference curves use local stations, 3 borrow from a wider region, 5 metrics use fixed criteria, and 3 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "15",
+    "name": "Northern Rockies"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 15), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:fecfe0278f4c869c64c06f10c3399754bc83c9b40b1774b2db2254d0686711d7",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

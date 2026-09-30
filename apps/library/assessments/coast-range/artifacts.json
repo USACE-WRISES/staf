@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "coast-range",
+  "history": [
+    {
+      "version": 1,
+      "kind": "excel-calculator",
+      "file": "calculator.xlsx",
+      "sha256": "sha256:bae8983ce9321fdef3a6ea802ef9a3946c91939dadc2c562bf78ae4eb65d6ac9",
+      "bytes": 42955,
+      "generator": "streamcurves.deep_calculator",
+      "generatorVersion": "1.0",
+      "contentDigest": "sha256:93b11715e3d1b0f98e4e067f7b8bf80cd247c890d90747216de80ba30ef9f7ee",
+      "builtAt": "2026-09-30T07:06:32Z",
+      "actor": "StreamCurves regional analysis (STAF)",
+      "note": "Built at publish."
+    }
+  ]
+}

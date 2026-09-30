@@ -1,0 +1,19 @@
+{
+  "assessmentId": "coast-range",
+  "assessmentName": "Coast Range reference assessment",
+  "version": 1,
+  "updatedAt": "2026-09-30T07:06:32Z",
+  "author": "StreamCurves regional analysis (STAF)",
+  "revisionNotes": "Reference condition is the fixed landscape-pressure screen least-disturbed-v1 (strict), wadeable non-canal frame. 34 of 55 stations of this ecoregion pass. 25 reference curves use local stations, 4 borrow from a wider region, 5 metrics use fixed criteria, and 2 metrics are withheld for insufficient reference support.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "1",
+    "name": "Coast Range"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA 2013-24 (L3 ecoregion 1), StreamCurves regional analysis, methodology 0.16-provisional",
+  "contentDigest": "sha256:93b11715e3d1b0f98e4e067f7b8bf80cd247c890d90747216de80ba30ef9f7ee",
+  "supersedesVersion": null,
+  "provenance": "present"
+}

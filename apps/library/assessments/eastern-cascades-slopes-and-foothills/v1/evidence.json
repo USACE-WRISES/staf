@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 505004,
+  "name": "deep-dev-l3-9-f5271d8a4694-8023da44.evidence.zip",
+  "sha256": "e8f2d45abbed74574adeb2aef3b6a6b9ccebd2690323bfa38605ff3c9c6bd94a"
+ },
+ "bytes": 4868013,
+ "coverage": {
+  "assessmentId": "eastern-cascades-slopes-and-foothills",
+  "curves": 19,
+  "functionsScored": 20,
+  "ledgerRows": 43,
+  "metrics": 33,
+  "poolLedgerRows": 39938,
+  "region": {
+   "code": "9",
+   "kind": "ecoregion",
+   "name": "Eastern Cascades Slopes and Foothills"
+  },
+  "stations": 12,
+  "stationsOutOfFrame": 2,
+  "values": 341
+ },
+ "dataDigest": "sha256:63737d0169c9eb0d2f63235b79438e877d4e6f56f99c8a504e561a33970c0154",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:8023da44c2e434820b0eb06e02868a610f2ad0c4744a718507ae0e27a815e338",
+ "packageId": "deep-dev-l3-9",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 9 (Eastern Cascades Slopes and Foothills)",
+ "version": "f5271d8a4694"
+}

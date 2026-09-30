@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 254033,
+  "name": "deep-dev-l3-2-55798f1f9e73-0c55c824.evidence.zip",
+  "sha256": "a852fad9d095edc76a5fb38e799383bc4f2053f4b47f0e8ed9fef1c93221e4cb"
+ },
+ "bytes": 2498014,
+ "coverage": {
+  "assessmentId": "puget-lowland",
+  "curves": 23,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 17717,
+  "region": {
+   "code": "2",
+   "kind": "ecoregion",
+   "name": "Puget Lowland"
+  },
+  "stations": 10,
+  "stationsOutOfFrame": 3,
+  "values": 289
+ },
+ "dataDigest": "sha256:33cee999f955f69c6c919739fe62d5a144a0a33b8261161370d7f2da3a2d47c7",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:0c55c8241dc0d0b79bf18de419877161a6cd0bef11a96e9441d4cf39b2ed5ded",
+ "packageId": "deep-dev-l3-2",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 2 (Puget Lowland)",
+ "version": "55798f1f9e73"
+}

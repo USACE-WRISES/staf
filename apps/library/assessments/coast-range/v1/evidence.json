@@ -1,0 +1,40 @@
+{
+ "archive": {
+  "bytes": 133176,
+  "name": "deep-dev-l3-1-049e09fb19c7-ca2b71b6.evidence.zip",
+  "sha256": "f2f68f081b66a69e08056da7ac2444db0d8daafdded48ee18634a099fca3d970"
+ },
+ "bytes": 1157084,
+ "coverage": {
+  "assessmentId": "coast-range",
+  "curves": 30,
+  "functionsScored": 20,
+  "ledgerRows": 44,
+  "metrics": 33,
+  "poolLedgerRows": 6792,
+  "region": {
+   "code": "1",
+   "kind": "ecoregion",
+   "name": "Coast Range"
+  },
+  "stations": 55,
+  "stationsOutOfFrame": 10,
+  "values": 1629
+ },
+ "dataDigest": "sha256:2c2fb12c4f581749fa4f773201ba347393c31b8421e0c76216c77d99e87916a6",
+ "dependsOn": [
+  {
+   "dataDigest": "sha256:904a131298a349b1e7316cc04e6c7c63b6acc40e3ad87d4ade674c1e71ecd773",
+   "packageId": "nrsa-archive",
+   "version": "multi-cycle-v1"
+  }
+ ],
+ "packageDigest": "sha256:ca2b71b6d73fc2545125da2e9e0b9af209ad62989be68878b82f32e219c85e27",
+ "packageId": "deep-dev-l3-1",
+ "reproducibility": "refittable",
+ "roles": [
+  "development"
+ ],
+ "title": "DEEP development evidence, Level III ecoregion 1 (Coast Range)",
+ "version": "049e09fb19c7"
+}
