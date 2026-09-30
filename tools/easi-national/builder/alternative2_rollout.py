@@ -42,6 +42,18 @@ class RolloutError(RuntimeError):
     pass
 
 
+def _alternative(build) -> str:
+    """The alternative a build scores under: the scoring identity it captured, else the active
+    one (Alternative 2, or its adopted revision alternative-2-e5b since EASI v2). Every score
+    row, the validation and the published manifest name it, so the national map's identity
+    check (easi.national.bundle.identity_error) matches the method that scored."""
+    captured = (build.get("scoring_identity") or {}).get("alternative_id")
+    if captured:
+        return str(captured)
+    from easi import config
+    return str(config.scoring_identity().get("alternative_id") or ALTERNATIVE)
+
+
 def read_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
@@ -245,7 +257,7 @@ def score_huc8(folder, source, huc8, build):
     import pyarrow.parquet as pq
     from easi.national import client, records
     root = RolloutRoot(Path(folder), Path(source))
-    current_identity(build["method_version"])
+    alternative = current_identity(build["method_version"])["alternative_id"]
     destination = root.huc8_file(huc8, "scores")
     marker = destination.with_suffix(".json")
     if marker.exists() and destination.exists():
@@ -262,7 +274,7 @@ def score_huc8(folder, source, huc8, build):
             report = client.score_record(records.from_row(raw), cross_section=False)
             rows.append({**meta[comid], **score.flatten_report(report, {}),
                          "method_version": build["method_version"], "computed_at": now_iso(),
-                         "alternative_id": ALTERNATIVE, "build_id": build["build_id"],
+                         "alternative_id": alternative, "build_id": build["build_id"],
                          "source_manifest_sha256": build["source_manifest_sha256"]})
     common.write_parquet(pa.Table.from_pylist(rows), destination)
     write_json(marker, {"build_id": build["build_id"], "rows": len(rows), "sha256": coverage.sha256_of(destination)})
@@ -274,7 +286,7 @@ def validate_scores(root, huc8s, build):
     from easi import config
     seen, count = set(), 0
     fids = [f["id"].replace("-", "_") for f in config.functions()]
-    expected = {"method_version": build["method_version"], "alternative_id": ALTERNATIVE,
+    expected = {"method_version": build["method_version"], "alternative_id": _alternative(build),
                 "build_id": build["build_id"], "source_manifest_sha256": build["source_manifest_sha256"]}
     for huc8 in huc8s:
         evidence_ids = pq.read_table(root.huc8_file(huc8, "evidence"), columns=["comid"])["comid"].to_pylist()
@@ -312,7 +324,7 @@ def finish_staging(root, build, huc8s, progress):
     if manifest["method_version"] != build["method_version"] or method_version() != build["method_version"]:
         raise RolloutError("Scoring method changed before staging")
     source = read_json(root.source / "staging/manifest.json")
-    binding = {"alternative_id": ALTERNATIVE, "method_version": build["method_version"],
+    binding = {"alternative_id": _alternative(build), "method_version": build["method_version"],
                "build_id": build["build_id"], "source_manifest_sha256": build["source_manifest_sha256"]}
     # Preserve original evidence bytes, including row order and source metadata.
     for huc4, unit in manifest["units"].items():

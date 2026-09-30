@@ -228,3 +228,18 @@ def test_partial_completion_resumes_until_final_manifest(tmp_path,monkeypatch):
     monkeypatch.setattr(rollout.tiles,'docker_ready',lambda:(False,'stop at resumed preparation'))
     with pytest.raises(rollout.RolloutError,match='stop at resumed preparation'):
         rollout.run(source,destination,'method')
+
+
+def test_rows_and_validation_name_the_active_scoring_identity(tmp_path):
+    """EASI v2 scores as alternative-2-e5b: the rows, the validation and the manifest binding name
+    that identity, which the national map compares with the running method (a build that said
+    alternative-2 would read as outdated there)."""
+    from easi import config
+    root, huc8, build = prepared(tmp_path)
+    rollout.score_huc8(str(root.root), str(root.source), huc8, build)
+    active = config.scoring_identity()["alternative_id"]
+    table = pq.read_table(root.huc8_file(huc8, 'scores'))
+    assert set(table['alternative_id'].to_pylist()) == {active}
+    assert rollout._alternative(build) == active
+    assert rollout._alternative({**build, "scoring_identity": {"alternative_id": "alternative-2"}}) == "alternative-2"
+    assert rollout.validate_scores(root, [huc8], build)['passed']
