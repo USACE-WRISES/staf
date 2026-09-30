@@ -467,3 +467,17 @@ def test_rolling_back_a_process_that_never_switched_keeps_its_own_settings(cache
             os.environ.pop("EASI_CRITERIA_SET", None)
         else:
             os.environ["EASI_CRITERIA_SET"] = old
+
+
+def test_a_package_zips_to_the_same_bytes_on_every_platform(monkeypatch):
+    """The release builder runs on Linux and a maintainer on Windows: the adopted-method pin
+    (D20) holds a Windows build's sha256, so the zip may not depend on the platform."""
+    import sys as _sys
+    pkg = _builtin_pkg()
+    monkeypatch.setattr(_sys, "platform", "win32")
+    windows = mp.to_zip(pkg)
+    monkeypatch.setattr(_sys, "platform", "linux")
+    linux = mp.to_zip(pkg)
+    assert windows == linux
+    with zipfile.ZipFile(io.BytesIO(linux)) as zf:
+        assert {i.create_system for i in zf.infolist()} == {0}

@@ -501,6 +501,11 @@ def to_zip(pkg: MethodPackage) -> bytes:
             info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
             info.external_attr = 0o644 << 16
+            # zipfile stamps the creating system from sys.platform (0 on Windows, 3 elsewhere),
+            # so the same package zipped by the release builder (Linux) and by a maintainer
+            # (Windows) differed in bytes and in sha256; every recorded package sha
+            # (the adopted-method pin, the study records) is a Windows build, so fix it at 0
+            info.create_system = 0
             zf.writestr(info, data)
     return buf.getvalue()
 
