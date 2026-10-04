@@ -17,7 +17,7 @@ from __future__ import annotations
 import requests
 
 from ..provenance import metric_entry
-from . import register
+from . import precomputed, register
 from .common import watershed_geom
 
 SDA_URL = "https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest"
@@ -161,11 +161,29 @@ def _fallback(wkt: str, reason: str) -> dict:
                   [_LIMITATION, f"area weighting unavailable: {reason}"])
 
 
+def _from_values(pre: dict) -> dict:
+    """The entry from the bundle's K cells per catchment (0.5.0): cell-weighted
+    over the watershed, the same construction the area-weighted query makes."""
+    value, share = pre.get("soilKFactor"), pre.get("soilKCoverage")
+    warns: list[str] = []
+    if value is None:
+        warns.append("no surface-horizon kwfact in the AOI")
+    elif share is not None and share < _COVERAGE_WARN:
+        warns.append(f"{(1 - share):.0%} of the watershed area has no "
+                     "surface-horizon K and is excluded from the mean")
+    return {"soilKFactor": metric_entry(value, "dimensionless", precomputed.SRC_SOILS,
+                                        precomputed.vintages()["soils"], "pointWatershed",
+                                        warns)}
+
+
 @register("soils")
 def compute(record: dict, tree_geoms: list) -> dict:
     ws = watershed_geom((record.get("watershed") or {}).get("polygon"))
     if ws is None:
         return _entry(None, _SRC_FALLBACK, ["watershed polygon unavailable"])
+    pre = precomputed.values_for(record)
+    if pre is not None:
+        return _from_values(pre)
     wkt = _wkt(ws)
     if wkt is None:
         return _entry(None, _SRC_FALLBACK,

@@ -1,0 +1,12 @@
+# NHDPlus HR data app: runtime dependencies, pinned for reproducible deploys.
+#
+# Posit Connect Cloud installs from this file. The app serves the slim NHDPlus HR
+# files in data/ (built by tools/hr-slim) through a Leaflet viewer and a REST API,
+# and compares them with the USGS packages read directly (pyogrio bundles GDAL).
+dash==4.4.1
+pyarrow==24.0.0
+numpy==2.4.6
+shapely==2.1.2
+pyproj==3.7.2
+pyogrio==0.12.1
+requests==2.34.2

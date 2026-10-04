@@ -1,0 +1,24 @@
+# Posit Publisher configuration: deploy the NHDPlus HR data app to Posit Connect Cloud.
+#
+# In VS Code: open apps/hr-data as its own window, open the Posit Publisher panel,
+# pick the "hr-data" configuration, select your Connect Cloud credential, and click
+# Deploy. Run `python tools/hr-slim/run.py pack` first so data/ holds the files.
+# data/ is gitignored but listed here, so Publisher uploads it with the app.
+"$schema" = "https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json"
+type = "python-dash"
+entrypoint = "app.py"
+title = "hr-data"
+files = [
+    "/app.py",
+    "/requirements.txt",
+    "/.python-version",
+    "/hrslim/",
+    "/assets/",
+    "/data/",
+    "/.posit/publish/hr-data.toml",
+]
+validate = true
+product_type = "connect_cloud"
+
+[python]
+version = "3.12"
