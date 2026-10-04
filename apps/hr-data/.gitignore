@@ -1,0 +1,12 @@
+# The slim data files are built by tools/hr-slim (pack) and uploaded with the
+# deploy; they never go into git.
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Posit Publisher: keep the deploy CONFIG (.posit/publish/*.toml) in git, but ignore
+# the account-specific deployment RECORDS (content GUIDs / URLs, written on first deploy).
+.posit/publish/deployments/

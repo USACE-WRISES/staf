@@ -28,6 +28,7 @@ DEST = ENGINE_ROOT / "site_engine" / "_extracted"
 
 MODULES = {
     "threedep.py": EASI / "easi" / "datasources" / "threedep.py",
+    "dem_tiles.py": EASI / "easi" / "datasources" / "dem_tiles.py",
     "geomorph.py": EASI / "easi" / "geomorph.py",
     "bieger.py": EASI / "easi" / "bieger.py",
 }

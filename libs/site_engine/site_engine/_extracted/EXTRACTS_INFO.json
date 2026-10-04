@@ -15,15 +15,20 @@
    "source": "apps/easi/easi/bieger.py",
    "source_sha": "4421ab46f7706312802ab52beaba7ad258eb1675f7d3354abfa178a49efa9fdd"
   },
+  "dem_tiles.py": {
+   "extracted_sha": "602675d9e532f38a96c9a6222722186cc12f6550e5a37b551c87272fac240c04",
+   "source": "apps/easi/easi/datasources/dem_tiles.py",
+   "source_sha": "602675d9e532f38a96c9a6222722186cc12f6550e5a37b551c87272fac240c04"
+  },
   "geomorph.py": {
    "extracted_sha": "ef61a98a5e132530722317aebcd91a8331bb9307e6f5e63e20069739ac7d0c94",
    "source": "apps/easi/easi/geomorph.py",
    "source_sha": "ef61a98a5e132530722317aebcd91a8331bb9307e6f5e63e20069739ac7d0c94"
   },
   "threedep.py": {
-   "extracted_sha": "143281de0ab99f5f27fc8cd6aeda5d36065eb01a9d36395f277f72262d0db895",
+   "extracted_sha": "203b151e0a60c6738bf0aad8f8d7ae49717d4b0c956cca8d87ba5a446458a0c6",
    "source": "apps/easi/easi/datasources/threedep.py",
-   "source_sha": "ebab6f305efcf45787a5b08336c514ebc75606967d5fed4a2f3bfce535df06b7"
+   "source_sha": "b6fd9452a50d95314e49513a696e682cae0ba833b282f1f6a21330873c969433"
   }
  }
 }
