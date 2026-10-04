@@ -7,6 +7,8 @@ self-contained, and a per-app drift gate fails when a vendored copy diverges
 from its source. There is no shared runtime package.
 
 - `libs/site_engine/`: the STAF site engine (see below and its own README).
+- `libs/staf_workbook/`: the workbook and scenario toolkit of EASI, SFARI and DEEP
+  (see "The workbook and scenario toolkit" below).
 
 ## The two watershed engines
 
@@ -78,16 +80,45 @@ score_equivalence_study_2026-09.md`.
   `unavailable`, or empty for reach and point evidence no watershed engine
   touches.
 
+## The workbook and scenario toolkit
+
+`libs/staf_workbook` (standard library only, so it adds no runtime pins) gives the three
+assessment apps one behavior and one look (owner, 2026-10-03):
+
+- **Download-only workbooks and the leave-page guard** (`web.py`, `assets/unsaved-guard.js`):
+  every download is a plain attachment link without `target`, served as
+  `application/octet-stream`, so nothing opens a new page or previews a workbook; the page
+  warns before it is closed or reloaded with unsaved work.
+- **Scenarios** (`model/scenarios.py`, `web.scenario_bar`, `assets/scenarios.js`):
+  "Existing Conditions" (fixed name) plus up to nine alternatives, each a copy of the app's
+  own state; session files keep Existing Conditions at the top level and add the
+  alternatives under an additive `scenarios` key.
+- **Comparison and summary** (`model/compare.py`, `model/summary.py`, `web.comparison_table`,
+  `web.summary_block`): ECI, sub-indices and every function with the change from Existing
+  Conditions (DEEP's intervals compare as intervals); reach, tier, length, drainage area,
+  stream order, NARS-9 and EPA Level I to III, named from `data/ecoregions.json`
+  (`scripts/build_ecoregion_table.py`).
+- **One workbook per assessment** (`assemble.py`, `xlsx/`, `sheets.py`): Summary, Existing
+  Conditions, one live calculator per alternative, ReferenceCurves, then the template's other
+  sheets. The app's calculator template is never changed; the toolkit edits the zip parts
+  directly (never openpyxl load and save, which drops charts).
+
+Each app keeps its own glue in `<pkg>/workbook.py` (and EASI's `easi/scenario_state.py`).
+EASI lists both, and `_vendor/staf_workbook/`, as presentation code outside its method and
+acquisition digests.
+
 ## Vendoring
 
 After any change under `libs/site_engine/site_engine/`, re-run every
 consumer's `scripts/vendor_site_engine.py` (easi, sfari, deep, stream-curves)
 and commit the copies; after any change under `apps/easi/easi` or
 `apps/easi/data`, re-run `apps/stream-curves/scripts/vendor_easi_engine.py`
-(the vendored EASI carries its own nested engine copy). Drift gates:
-`tests/test_site_engine_vendor.py` in each app and
-`apps/stream-curves/tests/test_easi_screening.py`. Never hand-edit a
-`_vendor/` tree.
+(the vendored EASI carries its own nested engine copy). After any change under
+`libs/staf_workbook/`, run `libs/staf_workbook/scripts/vendor_staf_workbook.py` (the package
+into `<pkg>/_vendor/staf_workbook/` and the assets into `www/staf/` of easi, sfari and deep),
+then `vendor_easi_engine.py`, whose EASI copy carries it. Drift gates:
+`tests/test_site_engine_vendor.py` and `tests/test_staf_workbook_vendor.py` in each app and
+`apps/stream-curves/tests/test_easi_screening.py`. Never hand-edit a `_vendor/` tree.
 
 Keep this file and `docs/computation-engines.md` in step: both change in the
 same commit.
