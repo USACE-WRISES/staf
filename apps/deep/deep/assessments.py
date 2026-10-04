@@ -318,7 +318,11 @@ def covering_refs(lat: float, lon: float, *, require_polygon: bool = True) -> li
     then preliminary-desc with the default ref first. Ids with a certified default sort
     ahead. ``require_polygon`` mirrors :func:`covering_assessments`.
     """
+    # One registry read serves every id: a default and a load per id re-read the registry
+    # twice per assessment (171 reads, 72 s with the live library beside DEEP, 2026-10-03).
     records = config._registry_records()
+    by_ref = {r["assessmentRef"]: r for r in records}
+    catalog = config._catalog_of(records)
     by_id: dict[str, list[dict]] = {}
     for r in records:
         aid = r.get("assessmentId")
@@ -327,8 +331,11 @@ def covering_refs(lat: float, lon: float, *, require_polygon: bool = True) -> li
 
     out: list[dict] = []
     for aid, recs in by_id.items():
-        default_ref = config.default_ref_for(aid)
-        default_rec = config.load_ref(default_ref) if default_ref else None
+        cat = catalog.get(aid)
+        default_ref = f"{aid}@v{cat['defaultVersion']}" if cat else config.default_ref_for(aid)
+        default_rec = by_ref.get(default_ref) if default_ref else None
+        if default_rec is None and default_ref:
+            default_rec = config.load_ref(default_ref)
         default_rec = default_rec or recs[0]
         region = default_rec.get("region") or (default_rec.get("library") or {}).get("region") or {}
         geom = _region_geometry(region)

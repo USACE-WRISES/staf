@@ -20,12 +20,22 @@ from __future__ import annotations
 import json
 import logging
 import os
+import threading
 from pathlib import Path
 
 logger = logging.getLogger("deep")
 
 _ENV_ROOT = "STAF_LIBRARY_ROOT"
 DEEP_ROOT = Path(__file__).resolve().parents[1]  # apps/deep
+
+#: The last :func:`all_eligible_bundles` read. DEEP looks the library up many times per page
+#: action and a full read parses every eligible bundle (0.35 s for the 126 of 2026-10, so a
+#: Basin step that looked it up 171 times took 72 s). The read is kept with the size and
+#: modification time of every file it looked at (catalog, manifests, status files, bundles)
+#: and reused while none of them changed: a publish or a status change rewrites the
+#: manifest, the status file and the catalog, so the next lookup reads again.
+_last: dict = {"root": None, "stamps": None, "bundles": None}
+_last_lock = threading.Lock()
 
 
 def library_root() -> Path:
@@ -123,16 +133,55 @@ def all_eligible_bundles() -> list[dict]:
     This is the authoritative bake source: DEEP offers a version chooser per assessment,
     so every eligible version is baked (not just the latest). Empty when the library
     folder is absent (cloud) or on read error.
+
+    Read once and reused while every file the read looked at is unchanged (``_last``).
+    Each call gets its own list and its own top-level dicts; the nested content is shared
+    between calls, as the baked registry's always is, so nothing may edit it in place.
     """
     root = library_root()
+    with _last_lock:
+        if _last["root"] != str(root) or not _unchanged(_last["stamps"]):
+            bundles, stamps = _read_eligible(root)
+            _last.update(root=str(root), stamps=stamps, bundles=bundles)
+        return [dict(b) for b in _last["bundles"]]
+
+
+def clear_cache() -> None:
+    """Forget the last library read, so the next lookup reads every file again."""
+    with _last_lock:
+        _last.update(root=None, stamps=None, bundles=None)
+
+
+def _stamp(path: Path):
+    """``(mtime_ns, size)`` of a file, or None when it is absent."""
+    try:
+        st = os.stat(path)
+    except OSError:
+        return None
+    return (st.st_mtime_ns, st.st_size)
+
+
+def _unchanged(stamps) -> bool:
+    return stamps is not None and all(_stamp(path) == stamp for path, stamp in stamps.items())
+
+
+def _read_eligible(root: Path) -> tuple[list[dict], dict]:
+    """The eligible bundles under ``root``, and the stamp of every file looked at (an
+    absent one too, so its arrival is seen)."""
+    stamps: dict = {}
+
+    def present(path: Path) -> bool:
+        stamps[str(path)] = _stamp(path)
+        return stamps[str(path)] is not None
+
     catalog_path = root / "catalog.json"
-    if not catalog_path.is_file():
-        return []
+    if not present(catalog_path):
+        return [], stamps
     try:
         catalog = _read_json(catalog_path)
     except Exception:  # noqa: BLE001
         logger.exception("library: could not read catalog at %s", catalog_path)
-        return []
+        return [], stamps
 
     out: list[dict] = []
     for entry in catalog.get("assessments") or []:
@@ -140,7 +189,7 @@ def all_eligible_bundles() -> list[dict]:
         if not aid or not is_deep(entry):
             continue
         manifest_path = root / "assessments" / aid / "manifest.json"
-        if not manifest_path.is_file():
+        if not present(manifest_path):
             continue
         try:
             manifest = _read_json(manifest_path)
@@ -148,6 +197,7 @@ def all_eligible_bundles() -> list[dict]:
             continue
         if not is_deep(manifest):
             continue
+        present(root / "assessments" / aid / "status.json")
         smap = _status_map(root, aid)
         for v in manifest.get("versions") or []:
             try:
@@ -158,7 +208,7 @@ def all_eligible_bundles() -> list[dict]:
             if status not in _ELIGIBLE:
                 continue
             bundle_path = root / "assessments" / aid / f"v{ver}" / "assessment.deep.json"
-            if not bundle_path.is_file():
+            if not present(bundle_path):
                 logger.warning("library: %s v%d bundle missing", aid, ver)
                 continue
             try:
@@ -170,7 +220,7 @@ def all_eligible_bundles() -> list[dict]:
             bundle["lifecycle"] = status
             bundle["assessmentRef"] = f"{aid}@v{ver}"
             out.append(bundle)
-    return out
+    return out, stamps
 
 
 def catalog_pointers() -> dict[str, dict]:
