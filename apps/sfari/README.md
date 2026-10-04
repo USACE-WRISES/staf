@@ -65,6 +65,16 @@ of 0.5 read as Functioning whenever Physicochemistry reached 0.7. Its second
 `AVERAGE` now reads `H72:H87` like the other four. The master copy still carries the
 bug, so the same fix has to reach whoever re-issues the draft.
 
+**Scenarios and the one-workbook download** (owner, 2026-10-03): the chip at the top of the
+score rail keeps "Existing Conditions" and up to nine alternatives (their Likert ratings and
+function scores; evidence and the cross-section are shared). Save writes Existing Conditions at
+the top level and the alternatives under an additive `scenarios` key (schema 1 unchanged). The
+completed workbook holds Summary, Existing Conditions, one copy of the calculator per
+alternative (the template's formulas unchanged, only sheet names differ: tell Eco-PCX), then
+ReferenceCurves (the Likert criteria and suggestion breakpoints) (`sfari/workbook.py`,
+`libs/staf_workbook`). Downloads never open a page, and the page warns before unsaved work is
+lost.
+
 ## Desktop evidence sources
 
 Evidence is pulled per metric from national services and shown with a source

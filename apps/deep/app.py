@@ -25,6 +25,10 @@ from pathlib import Path
 os.environ.setdefault("HYRIVER_CACHE_NAME",
                       os.path.join(tempfile.gettempdir(), "deep_hyriver.sqlite"))
 os.environ.setdefault("HYRIVER_CACHE_EXPIRE", str(7 * 24 * 3600))
+# The STAF data bundle, fetched on demand from its staf-data-current release, answers where it
+# covers and the USGS services elsewhere (the engine's own default stays "service" for StreamCurves
+# and the national builder); STAF_DATA_SOURCE=service asks the services only.
+os.environ.setdefault("STAF_DATA_SOURCE", "auto")
 
 import anyio  # noqa: E402
 from shiny import App, reactive, render, ui  # noqa: E402
@@ -35,6 +39,9 @@ from deep import viewport  # noqa: E402
 from deep import comid_anchor, engine_prefill, hr_site, network_display  # noqa: E402
 from deep import reportmap  # noqa: E402
 from deep import calculator, field_form, reference_support  # noqa: E402
+from deep._vendor.staf_workbook import web as staf_web  # noqa: E402  (download-only controls)
+from deep._vendor.staf_workbook.model.scenarios import BASELINE_ID, ScenarioSet  # noqa: E402
+from deep import workbook as deep_book  # noqa: E402  (scenarios, summary, the scenario workbook)
 from deep.datasources import flowlines  # noqa: E402
 from deep.datasources.geocode import geocode_address  # noqa: E402
 from deep.metrics import computed as _computed  # noqa: E402
@@ -240,6 +247,22 @@ def _outcome_bar(label, value, *, indent=False):
     if value is None:
         return _bar(f"{label} (not assessed)", None, "#eef1f6", indent=indent)
     return _bar(label, value, scoring.index_band_color(value), indent=indent)
+
+
+def _without_photos(measured):
+    """A scenario's measured values without photos: an alternative is a plan, not a site visit."""
+    out = copy.deepcopy(measured or {})
+    for rec in out.values():
+        if isinstance(rec, dict):
+            rec.pop("photos", None)
+    return out
+
+
+def _own_entries(measured):
+    """The assessor's own entries (desktop values the app fills in by itself do not count)."""
+    return dict((mid, v) for mid, v in (measured or {}).items()
+                if isinstance(v, dict) and (v.get("origin") == "field" or v.get("na") or v.get("note")
+                                            or v.get("photos") or v.get("stratumAuto") is False))
 
 
 def _index_claim_block(sc):
@@ -917,11 +940,14 @@ def staf_topnav():
 app_ui = ui.page_fillable(
     ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=21"),
                     ui.tags.link(rel="stylesheet", href="deep.css?v=11"),
+                    ui.tags.link(rel="stylesheet", href="staf/staf.css?v=4"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
                     ui.tags.script(src="report-ready.js?v=2", defer=""),
+                    ui.tags.script(src="staf/unsaved-guard.js?v=1", defer=""),
+                    ui.tags.script(src="staf/scenarios.js?v=1", defer=""),
                     ui.tags.script(src="measure.js?v=5", defer=""),
                     ui.tags.script(src="coverage.js?v=3", defer="")),
     ui.busy_indicators.use(pulse=False),
@@ -934,7 +960,7 @@ app_ui = ui.page_fillable(
                 ui.input_action_link("nav_new", "New"),
                 ui.input_file("load_session", None, accept=[".json"], multiple=False,
                               button_label="Open"),
-                ui.download_button("save_session", "Save", class_="easi-nav-btn"),
+                staf_web.download_button("save_session", "Save", class_="easi-nav-btn"),
                 ui.input_action_link("nav_about", "About"),
                 ui.input_action_link("nav_help", "Help"),
                 class_="easi-nav",
@@ -1073,6 +1099,110 @@ def server(input, output, session_):  # noqa: C901
     selected_ref = reactive.value(None)               # "id@vN" resolved on Basin
     covering_cache = reactive.value([])               # the list the open picker rendered
     measured_values = reactive.value({})              # {metricId: {value, na, note, origin, source}}
+
+    # ---- scenarios (2026-10-03): Existing Conditions plus optional alternatives. The active
+    # scenario's values live in measured_values; the others wait in _sc. Desktop values the app
+    # computes for the site go into every scenario. ----
+    _sc = {"set": ScenarioSet(), "dialog": None}
+    scenario_rev = reactive.value(0)      # any scenario change: the chip, compare and report re-read
+    scenario_nonce = reactive.value(0)    # a switch: the metric panel re-reads its values
+
+    def _bump_scenarios(switched=False):
+        with reactive.isolate():
+            scenario_rev.set(scenario_rev() + 1)
+            if switched:
+                scenario_nonce.set(scenario_nonce() + 1)
+
+    def _values_now():
+        with reactive.isolate():
+            return copy.deepcopy(measured_values())
+
+    def _show_values(state):
+        measured_values.set(copy.deepcopy((state or {}).get("measured_values") or {}))
+
+    def _reset_scenarios():
+        _sc["set"] = ScenarioSet()
+        _bump_scenarios(switched=True)
+
+    def _scenario_values():
+        """[(scenario, measured values)] in order, the active scenario's read live."""
+        sset = _sc["set"]
+        live = measured_values()
+        return [(sc_, live if sc_.id == sset.active else ((sc_.state or {}).get("measured_values") or {}))
+                for sc_ in sset.items]
+
+    def _stored_scenarios():
+        """The scenarios not on screen, whose values wait in _sc."""
+        sset = _sc["set"]
+        return [sc_ for sc_ in sset.items if sc_.id != sset.active]
+
+    def _switch_scenario(sid):
+        sset = _sc["set"]
+        if sid == sset.active:
+            return
+        sset.set_state(sset.active, {"measured_values": _values_now()})
+        sset.select(sid)
+        _show_values(sset.current.state)
+        _bump_scenarios(switched=True)
+
+    def _session_scenarios():
+        """(Existing Conditions' measured values, the session file's scenarios key)."""
+        sset = _sc["set"]
+        live = _values_now()
+        ec = live if sset.active == BASELINE_ID else ((sset.baseline.state or {}).get("measured_values") or {})
+        data = sset.to_json()
+        for item in data["items"]:
+            if item["id"] == sset.active and item["id"] != BASELINE_ID:
+                item["state"] = {"measured_values": live}
+        return ec, data
+
+    def _restore_scenarios(raw):
+        sset = ScenarioSet.from_json(raw, baseline_state={"measured_values": _values_now()})
+        _sc["set"] = sset
+        if sset.active != BASELINE_ID:
+            _show_values(sset.current.state)
+        _bump_scenarios(switched=True)
+
+    def _merge_into_stored(updates):
+        """Fill each stored scenario by the rule the screen uses: ``updates(values)`` changes a
+        copy of its values in place and says whether anything changed."""
+        changed = False
+        for sc_ in _stored_scenarios():
+            mv = copy.deepcopy((sc_.state or {}).get("measured_values") or {})
+            if updates(mv):
+                sc_.state = {"measured_values": mv}
+                changed = True
+        if changed:
+            _bump_scenarios()
+
+    def _comparison(rows=None):
+        rows = rows if rows is not None else _scenario_values()
+        la = loaded_assessment()
+        return deep_book.comparison(la, [sc_.name for sc_, _mv in rows],
+                                    [deep_book.score(la, mv) for _sc_, mv in rows])
+
+    # Leave-page guard: warn while the site and the assessor's entries differ from the last Save
+    # or Open (desktop values the app fills in by itself do not count).
+    _saved_fp = reactive.value(None)
+    _unsaved_sent = {"dirty": None}
+
+    def _work_fp():
+        dd = (delin() or {}).get("delineation") or {}
+        scenario_rev()
+        rows = [(sc_.id, sc_.name, sc_.description, _own_entries(mv)) for sc_, mv in _scenario_values()]
+        if not dd and not any(r[3] for r in rows) and len(rows) == 1 and not rows[0][2]:
+            return None
+        site = [dd.get(k) for k in ("nhdplusid", "comid", "snapped_lat", "snapped_lon")]
+        la = loaded_assessment()
+        return staf_web.state_fingerprint(site, getattr(la, "assessment_id", None) if la else None, rows)
+
+    @reactive.effect
+    async def _publish_unsaved():
+        fp = _work_fp()
+        dirty = fp is not None and fp != _saved_fp()
+        if dirty != _unsaved_sent["dirty"]:
+            _unsaved_sent["dirty"] = dirty
+            await session_.send_custom_message(staf_web.UNSAVED_MESSAGE, {"dirty": dirty})
     current_fn = reactive.value(0)
     compute_nonce = reactive.value(0)          # bumped when desktop-compute merges values
     computed_for = reactive.value(None)        # (assessmentId, version, site) already desktop-computed
@@ -1133,6 +1263,7 @@ def server(input, output, session_):  # noqa: C901
             return
         loaded_assessment.set(la); selected_ref.set(resolved_ref)
         measured_values.set({}); current_fn.set(0)
+        _reset_scenarios()
         current_step.set(STEP_IDENTIFY)
         if requested_ref and resolved_ref != requested_ref:
             ui.notification_show(
@@ -1471,6 +1602,7 @@ def server(input, output, session_):  # noqa: C901
             delin.set(None)
             _delin_generation.set(None)
             measured_values.set({})
+            _reset_scenarios()
             computed_for.set(None)
             current_fn.set(0)
             for key in ("marker", "ws", "reach"):
@@ -1993,6 +2125,7 @@ def server(input, output, session_):  # noqa: C901
         _set_lookup("idle")
         engine_state.set({"status": "idle"})
         loaded_assessment.set(None); measured_values.set({}); current_fn.set(0)
+        _reset_scenarios()
         # Basin adopts only when nothing is chosen, so a stale ref here would stop the
         # next delineation from ever resolving one.
         selected_ref.set(None); covering_cache.set([])
@@ -2402,6 +2535,7 @@ def server(input, output, session_):  # noqa: C901
         loaded_assessment.set(la)
         selected_ref.set(ref)
         measured_values.set({})
+        _reset_scenarios()
         current_fn.set(0)
         if not quiet:
             ui.notification_show(f"Selected {la.assessment_name}.", type="message", duration=3)
@@ -2546,6 +2680,20 @@ def server(input, output, session_):  # noqa: C901
             with reactive.isolate():
                 compute_nonce.set(compute_nonce() + 1)
 
+        def _seed(mv):
+            seeded = False
+            for mid, label in auto.items():
+                cur = dict(mv.get(mid) or {})
+                if cur.get("stratumAuto") is False:
+                    continue
+                if cur.get("stratum") != label or cur.get("stratumAuto") is not True:
+                    cur["stratum"], cur["stratumAuto"] = label, True
+                    mv[mid] = cur
+                    seeded = True
+            return seeded
+        with reactive.isolate():
+            _merge_into_stored(_seed)
+
     @reactive.effect
     @reactive.event(input.metric_photo_add)
     def _on_photo_add():
@@ -2667,6 +2815,17 @@ def server(input, output, session_):  # noqa: C901
             cur = mvs.get(mid) or {}
             if cur.get("value") in (None, "") and not cur.get("na"):
                 mvs[mid] = {**cur, **entry}; n += 1   # merge so a prior note/photo survives prefill
+
+        def _prefill(mv):
+            filled = False
+            for mid, entry in res.items():
+                cur = mv.get(mid) or {}
+                if cur.get("value") in (None, "") and not cur.get("na"):
+                    mv[mid] = {**cur, **copy.deepcopy(entry)}
+                    filled = True
+            return filled
+        with reactive.isolate():
+            _merge_into_stored(_prefill)
         if n:
             measured_values.set(mvs)
             compute_nonce.set(compute_nonce() + 1)
@@ -2695,7 +2854,7 @@ def server(input, output, session_):  # noqa: C901
                 ui.output_ui("fn_nav"),
                 class_="sfari-nav"),
             ui.div(ui.output_ui("fn_panel"), class_="sfari-fnpanel"),
-            ui.div(ui.output_ui("rollup_rail"), class_="sfari-rollup"),
+            ui.div(ui.output_ui("scenario_bar"), ui.output_ui("rollup_rail"), class_="sfari-rollup"),
             class_="sfari-worksheet")
 
     @render.ui
@@ -2726,6 +2885,7 @@ def server(input, output, session_):  # noqa: C901
             return None
         fns = _walk_fns()
         compute_nonce()  # re-render when desktop auto-compute fills values
+        scenario_nonce()  # and when another scenario is shown
         if not fns:
             return ui.div("No assessment loaded.", class_="sfari-nav-empty")
         idx = max(0, min(len(fns) - 1, current_fn()))
@@ -2943,6 +3103,7 @@ def server(input, output, session_):  # noqa: C901
         cov = assessments.coverage_of(loaded_assessment())
         cov_caption = assessments.coverage_caption(cov)
         return ui.TagList(
+            _rail_delta(),
             ui.h4("Live rollup"),
             # During entry the headline is a running total, not a claim, and it says
             # so. It becomes a claim only once every outcome is measured.
@@ -2965,6 +3126,113 @@ def server(input, output, session_):  # noqa: C901
             ui.tags.button("Open report", {"data-report": "1", "type": "button"},
                            class_="sfari-btn sfari-rollup-report" + (" primary" if report_primary else "")),
         )
+
+    # ---- the scenario chip, its dialogs, and the compare view ----
+    @render.ui
+    def scenario_bar():
+        if current_step() not in (STEP_MEASURE, STEP_REPORT) or loaded_assessment() is None:
+            return None
+        scenario_rev()
+        return staf_web.scenario_bar(_sc["set"])
+
+    def _rail_delta():
+        scenario_rev()
+        sset = _sc["set"]
+        if sset.active == BASELINE_ID:
+            return None
+        rows = _scenario_values()
+        active = next(i for i, (sc_, _mv) in enumerate(rows) if sc_.id == sset.active)
+        return staf_web.rail_delta(_comparison([rows[0], rows[active]]), 1)
+
+    def _scenario_dialog(mode, *, name, description, error=None):
+        cur = _sc["set"].current
+        title = ("New scenario" if mode == "new" else
+                 "Describe Existing Conditions" if cur.is_baseline else "Rename or describe")
+        ui.modal_show(staf_web.scenario_dialog(title=title, name=name, description=description,
+                                               name_locked=mode != "new" and cur.is_baseline, error=error,
+                                               can_delete=mode == "edit" and not cur.is_baseline))
+
+    @reactive.effect
+    @reactive.event(input.staf_scenario_evt)
+    def _scenario_event():
+        ev = input.staf_scenario_evt() or {}
+        action, sid = ev.get("action"), ev.get("id") or ""
+        sset = _sc["set"]
+        if action == "select" and sid:
+            _switch_scenario(sid)
+        elif action == "new":
+            if not sset.can_add():
+                ui.notification_show("Up to 10 scenarios.", type="warning", duration=4)
+                return
+            _sc["dialog"] = "new"
+            _scenario_dialog("new", name=sset.default_name(), description="")
+        elif action == "edit":
+            _sc["dialog"] = "edit"
+            _scenario_dialog("edit", name=sset.current.name, description=sset.current.description)
+        elif action == "delete" and not sset.current.is_baseline:
+            ui.modal_show(staf_web.delete_dialog(sset.current.name))
+        elif action == "compare" and sset.has_alternatives():
+            ui.modal_show(staf_web.compare_dialog(_comparison()))
+
+    @reactive.effect
+    @reactive.event(input.staf_sc_save)
+    def _scenario_save():
+        sset = _sc["set"]
+        mode = _sc["dialog"]
+        desc = (input.staf_sc_desc() or "").strip()
+        name = sset.current.name
+        if mode == "new" or not sset.current.is_baseline:
+            name = (input.staf_sc_name() or "").strip()
+        try:
+            if mode == "new":
+                sset.set_state(sset.active, {"measured_values": _values_now()})
+                new = sset.add(name, desc, copy_from=sset.active)
+                new.state = {"measured_values": _without_photos((new.state or {}).get("measured_values"))}
+                _show_values(new.state)
+                _bump_scenarios(switched=True)
+            else:
+                cur = sset.current
+                if not cur.is_baseline and name != cur.name:
+                    sset.rename(cur.id, name)
+                sset.describe(cur.id, desc)
+                _bump_scenarios()
+        except ValueError as exc:
+            _scenario_dialog(mode, name=name, description=desc, error=str(exc))
+            return
+        ui.modal_remove()
+
+    @reactive.effect
+    @reactive.event(input.staf_sc_delete)
+    def _scenario_delete():
+        sset = _sc["set"]
+        if not sset.current.is_baseline:
+            sset.delete(sset.active)
+            _show_values(sset.current.state)
+            _bump_scenarios(switched=True)
+        ui.modal_remove()
+
+    def _summary_section():
+        # the report is the shown scenario's alone: it names that scenario, and comparing stays in
+        # Compare and the workbook's Summary tab (owner, 2026-10-03)
+        scenario_rev()
+        return ui.div(ui.h4("Assessment summary", style="margin-top:4px;"),
+                      staf_web.summary_block(deep_book.summary_info(delin() or {}),
+                                             scenario=staf_web.report_scenario(_sc["set"])),
+                      class_="staf-report-summary")
+
+    def _report_title():
+        sset = _sc["set"]
+        base = "DEEP Detailed Assessment Report"
+        return base if not sset.has_alternatives() else f"{base} · {sset.current.name}"
+
+    def _workbook_bytes(template):
+        la, d = loaded_assessment(), delin() or {}
+        try:
+            return deep_book.build(template, la, d, _scenario_values())
+        except Exception as exc:  # noqa: BLE001 - never a failed download: the single calculator instead
+            print(f"DEEP: the scenario workbook failed ({exc!r}); serving the single calculator", flush=True)
+            ec, _data = _session_scenarios()
+            return calculator.build_filled(template, la, ec, d)
 
     # ---- report modal ----
     @reactive.effect
@@ -3175,7 +3443,8 @@ def server(input, output, session_):  # noqa: C901
 
         body = ui.div(
             header,
-            ui.h4("Outcome sub-indices & Ecosystem Condition Index", style="margin-top:4px;"),
+            _summary_section(),
+            ui.h4("Outcome sub-indices & Ecosystem Condition Index", style="margin-top:14px;"),
             summary,
             ui.h4("Function scores (0–15)", style="margin-top:14px;"),
             ui.div(*fbars),
@@ -3189,10 +3458,10 @@ def server(input, output, session_):  # noqa: C901
                    style="font-size:11px;color:#8a93a3;margin-top:10px;"),
             id="deep-report")
         return ui.modal(
-            body, title="DEEP Detailed Assessment Report", easy_close=True, size="xl",
-            footer=ui.div(ui.download_button("dl_pdf", "PDF", class_="btn-sm"),
-                          ui.download_button("dl_csv", "CSV", class_="btn-sm"),
-                          ui.download_button("dl_geojson", "GeoJSON", class_="btn-sm"),
+            body, title=_report_title(), easy_close=True, size="xl",
+            footer=ui.div(staf_web.download_button("dl_pdf", "PDF", class_="btn-sm"),
+                          staf_web.download_button("dl_csv", "CSV", class_="btn-sm"),
+                          staf_web.download_button("dl_geojson", "GeoJSON", class_="btn-sm"),
                           ui.modal_button("Close"),
                           style="display:flex;gap:8px;align-items:center;"))
 
@@ -3225,19 +3494,19 @@ def server(input, output, session_):  # noqa: C901
         # ``.nav-pills > li > a`` as a nav link, and the wrapper keeps the anchors
         # real buttons. The four buttons are equals.
         downloads = [
-            ui.nav_control(ui.div(ui.download_button("dl_field_forms", "Field forms PDF",
+            ui.nav_control(ui.div(staf_web.download_button("dl_field_forms", "Field forms PDF",
                                                      class_="btn-sm btn-primary"),
                                   class_="ff-dl")),
-            ui.nav_control(ui.div(ui.download_button("dl_metrics_pdf", "Metrics PDF",
+            ui.nav_control(ui.div(staf_web.download_button("dl_metrics_pdf", "Metrics PDF",
                                                      class_="btn-sm btn-primary"),
                                   class_="ff-dl")),
         ]
         if has_calc:
             downloads += [
-                ui.nav_control(ui.div(ui.download_button("dl_calc_filled", "Completed workbook",
+                ui.nav_control(ui.div(staf_web.download_button("dl_calc_filled", "Completed workbook",
                                                          class_="btn-sm btn-primary"),
                                       class_="ff-dl")),
-                ui.nav_control(ui.div(ui.download_button("dl_calc_blank", "Blank workbook",
+                ui.nav_control(ui.div(staf_web.download_button("dl_calc_blank", "Blank workbook",
                                                          class_="btn-sm btn-primary"),
                                       class_="ff-dl")),
             ]
@@ -3410,26 +3679,28 @@ def server(input, output, session_):  # noqa: C901
 
     @render.download(filename="deep-assessment.json")
     def save_session():
-        yield session.dump(delin() or {}, _assessment_raw(), measured_values(),
-                           region=_site_region())
+        _saved_fp.set(_work_fp())
+        ec, scen = _session_scenarios()
+        yield session.dump(delin() or {}, _assessment_raw(), ec,
+                           region=_site_region(), scenarios=scen)
 
-    @render.download(filename="deep-report.csv")
+    @render.download(filename=lambda: f"deep-report{staf_web.scenario_suffix(_sc['set'])}.csv")
     def dl_csv():
         sc, _fr = scored()
         yield report.build_csv(delin() or {}, loaded_assessment(), measured_values(), sc,
                                region=_site_region())
 
-    @render.download(filename="deep-report.geojson")
+    @render.download(filename=lambda: f"deep-report{staf_web.scenario_suffix(_sc['set'])}.geojson")
     def dl_geojson():
         sc, _fr = scored()
         yield report.build_geojson(delin() or {}, loaded_assessment(), sc, region=_site_region(),
                                    measured=measured_values())
 
-    @render.download(filename="deep-report.pdf")
+    @render.download(filename=lambda: f"deep-report{staf_web.scenario_suffix(_sc['set'])}.pdf")
     def dl_pdf():
         sc, _fr = scored()
         yield report.build_pdf(delin() or {}, loaded_assessment(), measured_values(), sc,
-                               region=_site_region())
+                               region=_site_region(), scenario=staf_web.report_scenario(_sc["set"]))
 
     @render.download(filename=lambda: report.field_forms_filename(loaded_assessment()))
     def dl_field_forms():
@@ -3443,20 +3714,19 @@ def server(input, output, session_):  # noqa: C901
 
     # The Excel calculator of the loaded version: the blank byte for byte, and a
     # copy with the worksheet's values typed in (it recalculates when Excel opens it).
-    @render.download(filename=lambda: calculator.blank_filename(loaded_assessment()))
+    @render.download(filename=lambda: calculator.blank_filename(loaded_assessment()), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_calc_blank():
         template = _calculator_template()
         if template is None:
             return
         yield template
 
-    @render.download(filename=lambda: calculator.filled_filename(loaded_assessment(), delin()))
+    @render.download(filename=lambda: calculator.filled_filename(loaded_assessment(), delin()), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_calc_filled():
         template = _calculator_template()
         if template is None:
             return
-        yield calculator.build_filled(template, loaded_assessment(), measured_values(),
-                                      delin() or {})
+        yield _workbook_bytes(template)
 
     @reactive.effect
     @reactive.event(input.load_session)
@@ -3482,6 +3752,7 @@ def server(input, output, session_):  # noqa: C901
         _lookup_request.clear(); _lookup_progress.clear(); _no_watershed.clear()
         stage.set("")
         measured_values.set(st.get("measured_values") or {})
+        _restore_scenarios(st.get("scenarios"))
         computed_for.set(None)  # restored site/version must recompute desktop metrics
         se = d.get("siteEngine") if isinstance(d, dict) else None
         engine_state.set({"status": "ok", "record": se, "reason": None}
@@ -3556,6 +3827,7 @@ def server(input, output, session_):  # noqa: C901
             _set_lookup("failed", detail="The stream map is unavailable in this deployment.")
         current_fn.set(0)
         current_step.set(STEP_MEASURE if loaded_assessment() is not None else STEP_BASIN)
+        _saved_fp.set(_work_fp())                      # just opened: nothing unsaved yet
         ui.notification_show("Assessment loaded. Resuming.", type="message", duration=4)
 
 

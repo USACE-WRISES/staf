@@ -22,6 +22,15 @@ def barriers_near(lat: float, lon: float, miles: float = 1.0,
     Short fail-fast ``timeout`` (interactive screening flow): a slow NID FeatureServer
     should mark the metric unavailable quickly rather than stall the report.
     """
+    from .._vendor.site_engine import bundle
+    found = bundle.lookups()
+    if found is not None:
+        # the STAF data bundle's NID snapshot (the same FeatureServer's dams), same box
+        points, tables = found
+        try:
+            return points.nid_box(tables, lat, lon, miles)
+        except Exception:  # noqa: BLE001 - the service answers instead
+            pass
     dx = MILE_DEG * miles
     params = {
         "geometry": f"{lon-dx},{lat-dx},{lon+dx},{lat+dx}",

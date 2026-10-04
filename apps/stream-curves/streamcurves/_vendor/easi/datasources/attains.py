@@ -1,7 +1,14 @@
-"""EPA ATTAINS assessed-water lookup with deterministic nearest-unit selection."""
+"""EPA ATTAINS assessed-water lookup with deterministic nearest-unit selection.
+
+The STAF data bundle answers first where it covers the point: the unit at the HR
+flowline there and the nearest within 2 km, precomputed from EPA's national ATTAINS
+layers at three points along every flowline (the one nearest the point answers).
+"""
 from __future__ import annotations
 
 import math
+from typing import Optional
+
 import requests
 
 _BASE = "https://gispub.epa.gov/arcgis/rest/services/OW/ATTAINS_Assessment/MapServer"
@@ -77,6 +84,16 @@ def _request(layer: int, lat: float, lon: float, buffer_m: float,
         return None
 
 
+def _bundle_extras(lat: float, lon: float) -> Optional[dict]:
+    """The STAF data bundle's precomputed lookups for the HR flowline at the point (the vendored
+    site engine's ``bundle.point_extras``), or None where the bundle cannot answer."""
+    try:
+        from .._vendor.site_engine import bundle
+        return bundle.point_extras(lat, lon)
+    except Exception:  # noqa: BLE001 - the service answers instead
+        return None
+
+
 def _record(feature: dict, *, distance_m: float, match_type: str,
             source_layer: int | None = None) -> dict:
     attrs = feature.get("attributes") or {}
@@ -94,6 +111,9 @@ def _record(feature: dict, *, distance_m: float, match_type: str,
 
 def impairment_at_point(lat: float, lon: float, timeout: float = 8.0) -> dict:
     """Actual assessed point, line, or area intersecting the selected point."""
+    local = _bundle_extras(lat, lon)
+    if local is not None:
+        return dict(local.get("attains_exact") or {})
     candidates = []
     for layer in _ASSESSED_LAYERS:
         for feature in _request(layer, lat, lon, 0.0, timeout) or []:
@@ -116,6 +136,9 @@ def impairment_near_point(lat: float, lon: float, buffer_m: float = 2000.0,
 
     Candidate order and impairment status never influence selection.
     """
+    local = _bundle_extras(lat, lon) if float(buffer_m) == 2000.0 else None
+    if local is not None:
+        return dict(local.get("attains_nearby") or {})
     candidates = []
     for layer in _ASSESSED_LAYERS:
         for feature in _request(layer, lat, lon, buffer_m, timeout) or []:

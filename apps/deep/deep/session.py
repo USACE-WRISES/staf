@@ -116,7 +116,8 @@ def _provenance(bundle: dict, region, completeness, result_state) -> dict:
 # Serialize / deserialize
 # --------------------------------------------------------------------------- #
 def dump(delineation: dict, assessment: dict, measured_values: dict, *,
-         region: dict | None = None, completeness=None, result_state=None) -> str:
+         region: dict | None = None, completeness=None, result_state=None,
+         scenarios: dict | None = None) -> str:
     """Serialize the run state to a JSON string (schema v2).
 
     ``assessment`` is the loaded assessment dict (metricsByFunction with inlined
@@ -127,16 +128,24 @@ def dump(delineation: dict, assessment: dict, measured_values: dict, *,
     resolved ``region`` (level3 + state) and ``completeness`` / ``resultState`` the caller
     supplies. All provenance is derived or optional, so a caller passing only the three
     positional arguments still produces a valid v2 session.
+
+    ``measured_values`` is always Existing Conditions. ``scenarios`` (written only when the
+    user added an alternative or described Existing Conditions) carries the alternatives in
+    an additive key, so an older DEEP still opens Existing Conditions and the schema stays 2.
     """
     bundle = assessment or {}
-    return json.dumps({
+    out = {
         "schemaVersion": SCHEMA_VERSION,
         "method": "DEEP",
         "delineation": delineation or {},
         "assessment": bundle,
         "measured_values": measured_values or {},
         "provenance": _provenance(bundle, region, completeness, result_state),
-    }, indent=2, ensure_ascii=False)
+    }
+    items = (scenarios or {}).get("items") or []
+    if len(items) > 1 or any(i.get("description") for i in items):
+        out["scenarios"] = scenarios
+    return json.dumps(out, indent=2, ensure_ascii=False)
 
 
 def _migrate(d: dict, from_version: int) -> dict:
@@ -174,4 +183,5 @@ def load(text: str) -> dict:
         "assessment": d.get("assessment", {}),
         "measured_values": d.get("measured_values", {}),
         "provenance": d.get("provenance", {}),
+        "scenarios": d.get("scenarios"),
     }

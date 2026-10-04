@@ -461,13 +461,10 @@ def _repack(source: bytes, replacements: dict) -> bytes:
 
 
 # --- The completed workbook -------------------------------------------------------
-def build_filled(result: dict, *, today: _dt.date | None = None) -> bytes:
-    """The calculator with this screening typed into its entry cells.
-
-    The workbook already recalculates on open (``fullCalcOnLoad``) and carries no
-    cached results, so only the EASI Score part changes; every other part is
-    copied byte for byte.
-    """
+def filled_values(result: dict, *, today: _dt.date | None = None) -> tuple[dict, str]:
+    """``({cell: value}, notes cell)`` for the EASI Score sheet: what :func:`build_filled`
+    types in. A scenario's copy of the sheet has the same cells, so the shared workbook
+    fills every scenario with this."""
     today = today or _dt.date.today()
     cells = entry_cells()
     entries, disclosures = entries_from_result(result)
@@ -487,12 +484,27 @@ def build_filled(result: dict, *, today: _dt.date | None = None) -> bytes:
             if not value:
                 continue
         values[cells[name]] = value
+    return values, cells[NOTES_NAME]
 
+
+def fill_sheet(sheet_xml: str, values: dict, notes_ref: str | None = None) -> str:
+    """The EASI Score sheet XML with ``values`` (from :func:`filled_values`) typed in."""
+    return _fill_cells(sheet_xml, values, notes_ref=notes_ref)
+
+
+def build_filled(result: dict, *, today: _dt.date | None = None) -> bytes:
+    """The calculator with this screening typed into its entry cells.
+
+    The workbook already recalculates on open (``fullCalcOnLoad``) and carries no
+    cached results, so only the EASI Score part changes; every other part is
+    copied byte for byte.
+    """
+    values, notes_ref = filled_values(result, today=today)
     source = blank_bytes()
     with zipfile.ZipFile(io.BytesIO(source)) as zin:
         sheet_part = _sheet_part(zin, SHEET_NAME)
         sheet_xml = zin.read(sheet_part).decode("utf-8")
-    filled = _fill_cells(sheet_xml, values, notes_ref=cells[NOTES_NAME])
+    filled = _fill_cells(sheet_xml, values, notes_ref=notes_ref)
     return _repack(source, {sheet_part: filled.encode("utf-8")})
 
 

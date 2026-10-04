@@ -67,6 +67,25 @@ def _engine_hr():
     return hr
 
 
+def _bundle():
+    """The vendored site engine's STAF data bundle module, or None. Its answers are None
+    wherever the bundle is off or does not hold the request, and the service answers then."""
+    try:
+        from .._vendor.site_engine import bundle
+        return bundle
+    except Exception:  # noqa: BLE001 - no engine here: the service answers
+        return None
+
+
+# the keys of this module's ``parse_feature`` (the engine's records carry a few more)
+_RECORD_KEYS = ("nhdplusid", "gnis_name", "reachcode", "lengthkm", "totdasqkm", "slope", "fcode",
+                "ftype", "stream_order", "hydroseq", "uphydroseq", "dnhydroseq", "vpuid", "geometry")
+
+
+def _local_record(rec: Optional[dict]) -> Optional[dict]:
+    return None if rec is None else dict((k, rec.get(k)) for k in _RECORD_KEYS)
+
+
 def _record(outcome) -> None:
     """A failed attempt, for the batch retry side channel (a no-op outside a
     batch run): the status code (500 for an error payload) or the exception."""
@@ -119,6 +138,11 @@ def _fetch_bbox(west: float, south: float, east: float, north: float,
     """Cached HR flowline pull for a (rounded) bbox -> ``(status, id-only
     GeoJSON)``. Always called positionally (the cache key). An unanswered
     request raises ``_Unanswered``, which the cache never stores."""
+    b = _bundle()
+    local = b.lines_in_box(west, south, east, north) if b is not None else None
+    if local is not None:
+        feats = _id_only(local)
+        return ("ok", {"type": "FeatureCollection", "features": feats}) if feats else ("empty", None)
     # Preserve stream bends and coordinate precision for display and snapping,
     # matching the shared HR client used by SFARI and DEEP.
     data = _request({
@@ -295,10 +319,15 @@ def parse_feature(feature: Optional[dict]) -> Optional[dict]:
 
 
 def hr_flowline_by_id(nhdplusid: int, timeout: float = 25.0) -> Optional[dict]:
-    """One HR reach's attributes + geometry by nhdplusid, or None."""
+    """One HR reach's attributes + geometry by nhdplusid, or None (the STAF data
+    bundle first where it holds the reach)."""
     nid = _int_id(nhdplusid)
     if nid is None:
         return None
+    b = _bundle()
+    local = _local_record(b.flowline(nhdplusid=nid)) if b is not None else None
+    if local is not None:
+        return local
     data = _request({
         "where": f"nhdplusid = {nid}",
         "outFields": ",".join(_ATTR_FIELDS), "returnGeometry": "true",
@@ -312,6 +341,10 @@ def _feature_by_hydroseq(hydroseq: int, timeout: float = 25.0) -> Optional[dict]
     hs = _int_id(hydroseq)
     if hs is None:
         return None
+    b = _bundle()
+    local = _local_record(b.flowline(hydroseq=hs)) if b is not None else None
+    if local is not None:
+        return local
     data = _request({
         "where": f"hydroseq = {hs}",
         "outFields": ",".join(_ATTR_FIELDS), "returnGeometry": "true",
@@ -347,7 +380,12 @@ def hr_attrs(nhdplusid: int) -> dict:
         from shapely.geometry import shape
 
         from .. import delineation
-        if rec.get("geometry"):
+        b = _bundle()
+        # the bundle's lines are simplified; its sinuosity comes from the original line
+        local = b.sinuosity(int(nhdplusid)) if b is not None else None
+        if local is not None:
+            out["sinuosity"] = local
+        elif rec.get("geometry"):
             out["sinuosity"] = delineation.line_sinuosity(shape(rec["geometry"]))
     except Exception:  # noqa: BLE001 - context is best-effort
         pass

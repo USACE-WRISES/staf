@@ -296,3 +296,17 @@ def test_an_engine_dam_density_without_a_count_stays_an_engine_entry():
     assert r.origin == "engine" and r.value == 0.081 and r.suggested_likert is None
     assert r.value_text.endswith("(HR reach watershed)") and "m3/km2" not in r.value_text
     assert "StreamCat" not in r.source
+
+
+def test_lateral_inundation_from_nwi_strips_along_the_reach():
+    # the STAF data bundle's NWI strips (owner decision D3): wetland area within 150 m of the reach
+    strips = {"acres": 3.7, "stripAcres": 7.4, "pctOfStrip": 50.0, "halfWidthM": 150.0, "flowlines": 1,
+              "bySystem": {"riverine": 0.4, "palustrine": 3.3, "lacustrine": 0.0, "estuarine": 0.0,
+                           "marine": 0.0}}
+    r = evidence.ev_lateral_inundation(_ctx(engine=OK, nwi=strips))
+    assert r.origin == "pull" and r.value == 3.7
+    assert r.value_text.startswith("3.7 ac of NWI wetland within 150 m of the reach (50.0% of the strip)")
+    assert "0.4 ac of it riverine" in r.value_text and "entrenchment ratio 2.40" in r.value_text
+    assert r.source.startswith("USFWS National Wetlands Inventory (STAF data bundle)")
+    none = evidence.ev_lateral_inundation(_ctx(engine=OK, nwi=dict(strips, acres=0.0, pctOfStrip=0.0)))
+    assert none.origin == "engine" and "no NWI wetland within 150 m of the reach" in none.value_text

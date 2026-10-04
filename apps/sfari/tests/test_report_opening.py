@@ -250,5 +250,7 @@ def test_modal_builder_requires_prepared_map_and_never_calls_map_service():
         ns["function_scores"] = Value({})
         ns["evidence"] = Value({})
         ns["scored"] = lambda: app.scoring.score_assessment({})
+    ns["_summary_section"] = lambda: None          # the summary block has its own tests
+    ns["_report_title"] = lambda: "Report"
     markup = str(function("_report_modal", ns)(minimap_html="<svg>prepared-marker</svg>"))
     assert "prepared-marker" in markup

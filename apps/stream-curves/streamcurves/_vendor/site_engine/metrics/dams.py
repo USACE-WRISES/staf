@@ -10,7 +10,7 @@ query uses, switched to polygon membership. Never raises.
 from __future__ import annotations
 
 from ..provenance import VINTAGES, metric_entry
-from . import register
+from . import precomputed, register
 from .common import esri_polygon, post_query_features, watershed_geom
 
 NID_URL = ("https://geospatial.sec.usace.army.mil/dls/rest/services/NID/"
@@ -31,12 +31,38 @@ def _unavailable(reason: str) -> dict:
                                      "pointWatershed", [reason])}
 
 
+def _from_values(pre: dict) -> dict:
+    """The entries from the bundle's dams located per catchment (0.5.0)."""
+    nid = precomputed.vintages()["nid"]
+    src = precomputed.SRC_DAMS
+    missing = int(pre.get("damsWithoutNormalStorage") or 0)
+    warns = ([f"{missing} dam(s) without normal storage counted as zero"]
+             if missing else [])
+    return {
+        "damCount": metric_entry(int(pre["damCount"]), "count", src, nid, "pointWatershed"),
+        "damDensityPerSqkm": metric_entry(pre["damDensityPerSqkm"], "count/km2", src, nid,
+                                          "pointWatershed"),
+        "damStorageAcreFt": metric_entry(pre["damStorageAcreFt"], "acre-ft",
+                                         f"{src}, normal storage", nid, "pointWatershed", warns),
+        "damStoragePerSqkm": metric_entry(pre["damStoragePerSqkm"], "acre-ft/km2",
+                                          f"{src}, normal storage", nid, "pointWatershed",
+                                          warns),
+        "damNidStorageAcreFt": metric_entry(pre["damNidStorageAcreFt"], "acre-ft",
+                                            f"{src}, NID storage", nid, "pointWatershed"),
+        "damNidStoragePerSqkm": metric_entry(pre["damNidStoragePerSqkm"], "acre-ft/km2",
+                                             f"{src}, NID storage", nid, "pointWatershed"),
+    }
+
+
 @register("dams")
 def compute(record: dict, tree_geoms: list) -> dict:
     ws = watershed_geom((record.get("watershed") or {}).get("polygon"))
     area_sqkm = (record.get("watershed") or {}).get("areaSqkm")
     if ws is None or not area_sqkm:
         return _unavailable("watershed polygon or area unavailable")
+    pre = precomputed.values_for(record)
+    if pre is not None:
+        return _from_values(pre)
     poly = esri_polygon(ws)
     if poly is None:
         return _unavailable("polygon could not be encoded for the query")

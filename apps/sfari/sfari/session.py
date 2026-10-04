@@ -19,9 +19,11 @@ SCHEMA_VERSION = 1
 
 
 def dump(delineation: dict, metric_scores: dict, function_scores: dict,
-         evidence: dict, cross_section=None) -> str:
-    """Serialize the assessment reactive state to a JSON string."""
-    return json.dumps({
+         evidence: dict, cross_section=None, scenarios=None) -> str:
+    """Serialize the assessment reactive state to a JSON string. The top-level scores are
+    always Existing Conditions; ``scenarios`` (when the user added any, or described the
+    baseline) carries the alternatives, so older readers still open Existing Conditions."""
+    out = {
         "schemaVersion": SCHEMA_VERSION,
         "method": "SFARI",
         "delineation": delineation or {},
@@ -29,7 +31,11 @@ def dump(delineation: dict, metric_scores: dict, function_scores: dict,
         "function_scores": function_scores or {},
         "evidence": evidence or {},
         "cross_section": cross_section,
-    }, indent=2, ensure_ascii=False)
+    }
+    items = (scenarios or {}).get("items") or []
+    if len(items) > 1 or any(i.get("description") for i in items):
+        out["scenarios"] = scenarios
+    return json.dumps(out, indent=2, ensure_ascii=False)
 
 
 def load(text: str) -> dict:
@@ -45,4 +51,5 @@ def load(text: str) -> dict:
         "function_scores": function_scores,
         "evidence": d.get("evidence", {}),
         "cross_section": d.get("cross_section"),
+        "scenarios": d.get("scenarios"),
     }

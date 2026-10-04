@@ -97,9 +97,9 @@ def test_the_three_downloads_build_the_three_files():
     assert re.search(r"@render\.download\(filename=lambda: report\.desktop_metrics_filename\(export_result\(\)\)\)\s+"
                      r"def dl_forms_pdf\(\):\s+res = export_result\(\)\s+if res:\s+"
                      r"yield report\.build_desktop_metrics_pdf\(res\)", SRC)
-    assert re.search(r"@render\.download\(filename=lambda: calculator\.filled_filename\(export_result\(\)\)\)\s+"
+    assert re.search(r"@render\.download\(filename=lambda: calculator\.filled_filename\(export_result\(\)\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+"
                      r"def dl_forms_filled\(\):", SRC)
-    assert re.search(r"@render\.download\(filename=calculator\.blank_filename\(\)\)\s+def dl_forms_blank\(\):", SRC)
+    assert re.search(r"@render\.download\(filename=calculator\.blank_filename\(\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+def dl_forms_blank\(\):", SRC)
 
 
 def test_the_stylesheet_pins_the_header_and_the_layout():

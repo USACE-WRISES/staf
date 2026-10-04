@@ -1,0 +1,14 @@
+{
+ "synced_from": "apps/hr-data/hrslim",
+ "modules": {
+  "grid.py": "75de627dacbe809dcf6cadd5c0e876d87a6742089998b0a39766aebfaac3afac",
+  "arcs.py": "3a6c7851bbc890e2a4bcbf58cd23b6f61e36e8f89969166832d9a15b770bf979",
+  "fmt.py": "3ef02e9f6863473845d8fcfa9c789fefee2aaab490d99fcf88b424f2d9175edf",
+  "fmt2.py": "bdceb9b61520e605221a7e0c0fa859a1fc541f782513027294465b336a18dc8d",
+  "reader.py": "9b9a797446e58d9b1dfaafe5282817c1348878fb22a18a2b0d7c0f94fdb8c6ff",
+  "reader2.py": "d32322fd2a4639b408a4404fa93690f5e1a0e1f94bc822164ab6700e0b3dcfe5",
+  "lean.py": "3d2a0a2a399ff77e1eaa317584c4a9cf9783e9409b8521c7cab3b4cbdb7c8001",
+  "values.py": "7b823244f2de0c835677b4c3e1fa8a30bb954a5b049342b35af7afaca9e74890",
+  "points.py": "9697ed7b952d647f66e003a73a900cad408211fe2f04a0b10f043647dd071dfc"
+ }
+}

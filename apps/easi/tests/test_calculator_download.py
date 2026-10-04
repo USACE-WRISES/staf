@@ -28,22 +28,25 @@ def test_the_blank_is_the_committed_workbook():
 def test_the_app_serves_the_calculator_from_get_forms_and_the_report_and_not_the_header():
     # 2026-09-18: the blank workbook lives only in the Get Forms dialog of the Assessment page;
     # the completed one is there and, after GeoJSON, in the report footer (the owner's call)
-    assert re.search(r"@render\.download\(filename=calculator\.blank_filename\(\)\)\s+def dl_forms_blank\(\):", SRC)
+    assert re.search(r"@render\.download\(filename=calculator\.blank_filename\(\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+def dl_forms_blank\(\):", SRC)
     assert SRC.count("yield calculator.blank_bytes()") == 1
-    assert re.search(r"def dl_forms_filled\(\):\s+res = export_result\(\)\s+if res:\s+"
-                     r"yield calculator\.build_filled\(res\)", SRC)
+    assert re.search(r"def dl_forms_filled\(\):\s+data = _workbook_bytes\(\)\s+if data:\s+yield data", SRC)
+    # one workbook for every scenario (easi/workbook.py); the single calculator if that fails
+    helper = SRC.split("def _workbook_bytes():", 1)[1].split("@render", 1)[0]
+    assert "res = export_result()" in helper and "easi_book.build(" in helper
+    assert "return calculator.build_filled(res)" in helper
     assert "dl_calc" not in SRC.replace("dl_site_calc", "")
     footer = str(app._dl_buttons())
     assert re.findall(r'id="([^"]+)"', footer) == ["dl_pdf", "dl_csv", "dl_geojson", "dl_workbook", "close_modal"]
     labels = [text.strip() for text in re.sub(r"<[^>]+>", "\n", footer).split("\n") if text.strip()]
     assert labels == ["PDF", "CSV", "GeoJSON", "Completed workbook", "Close"]
-    # the visible labels, not the markup (every download link carries target="_blank")
+    # the visible labels, not the markup (download links carry no target: they never open a page)
     assert not any("calculator" in label.lower() or "blank" in label.lower() for label in labels)
     # the same file as Get Forms offers, named by the site
-    assert re.search(r"@render\.download\(filename=lambda: calculator\.filled_filename\(export_result\(\)\)\)\s+"
+    assert re.search(r"@render\.download\(filename=lambda: calculator\.filled_filename\(export_result\(\)\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+"
                      r"def dl_workbook\(\):", SRC)
     body = SRC.split("def dl_workbook():", 1)[1].split("@render", 1)[0]
-    assert "res = export_result()" in body and "yield calculator.build_filled(res)" in body
+    assert "data = _workbook_bytes()" in body and "yield data" in body
     # the owner removed the header link on 2026-09-16; the file itself stays reachable under www/
     html = str(app.app_ui)
     assert f'href="calculator/{calculator.blank_filename()}"' not in html
@@ -53,9 +56,9 @@ def test_the_app_serves_the_calculator_from_get_forms_and_the_report_and_not_the
 def test_the_batch_popup_serves_the_site_completed_workbook():
     # batch has no Assessment page, so its per-site report offers that site's completed
     # calculator, behind the same stale-bundle guard as the other per-site exports
-    assert 'ui.download_button("dl_site_calc", "Completed workbook"' in SRC
+    assert 'staf_web.download_button("dl_site_calc", "Completed workbook"' in SRC
     assert "Excel calculator\"" not in SRC
-    assert re.search(r'@render\.download\(filename=lambda: _modal_site_file\("xlsx", "calculator"\)\)\s+'
+    assert re.search(r'@render\.download\(filename=lambda: _modal_site_file\("xlsx", "calculator"\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+'
                      r"def dl_site_calc\(\):", SRC)
     body = SRC.split("def dl_site_calc():", 1)[1].split("@render", 1)[0]
     assert "base = _modal_download_base()" in body and "yield calculator.build_filled(base)" in body

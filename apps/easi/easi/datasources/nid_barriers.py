@@ -22,7 +22,17 @@ def _distance_m(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 def barriers_near(lat: float, lon: float, miles: float = 1.0,
                   timeout: float = 10.0) -> Optional[list[dict]]:
-    """Mapped NID dams within the requested geodesic radius, or ``None`` on failure."""
+    """Mapped NID dams within the requested geodesic radius, or ``None`` on failure.
+    From the STAF data bundle's NID snapshot (the same FeatureServer's dams) when
+    the bundle is on."""
+    from .._vendor.site_engine import bundle
+    found = bundle.lookups()
+    if found is not None:
+        points, tables = found
+        try:
+            return points.nid_radius(tables, lat, lon, miles)
+        except Exception:  # noqa: BLE001 - the service answers instead
+            pass
     radius_m = float(miles) * 1609.344
     params = {
         "geometry": f"{lon},{lat}",

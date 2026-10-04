@@ -107,6 +107,24 @@ def _fetch_csv(characteristics: list[str], lat: float, lon: float, within_mi: fl
         return None
 
 
+def _from_bundle(param: str, lat: float, lon: float, within_mi: float,
+                 start: str | None) -> Optional[dict]:
+    """The same summary from the STAF data bundle's WQP tables (every result
+    since 2015, normalized by this module's rules), or None without the bundle.
+    Temperature follows the STAF rule there: results reported in Fahrenheit
+    count, converted, at stations with no Celsius result, and Celsius results
+    that are not realistic stream temperatures are left out."""
+    from .._vendor.site_engine import bundle
+    found = bundle.lookups()
+    if found is None or param not in ("tn", "tp", "temp"):
+        return None
+    points, tables = found
+    try:
+        return points.wqp_easi(tables, param, lat, lon, within_mi, start=bundle.wqp_start(start))
+    except Exception:  # noqa: BLE001 - the portal answers instead
+        return None
+
+
 def sample_summary(param: str, lat: float, lon: float, within_mi: float = 5.0,
                    start: str | None = None, timeout: float = 10.0) -> Optional[dict]:
     """Normalized station-balanced WQP summary for TN, TP, or temperature.
@@ -118,6 +136,9 @@ def sample_summary(param: str, lat: float, lon: float, within_mi: float = 5.0,
     characteristics = SYNONYMS.get(param)
     if not characteristics:
         return None
+    local = _from_bundle(param, lat, lon, within_mi, start)
+    if local is not None:
+        return local
     text = _fetch_csv(characteristics, lat, lon, within_mi, start or _start_10_years(),
                       timeout)
     if text is None:

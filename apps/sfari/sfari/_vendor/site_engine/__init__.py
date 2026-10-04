@@ -21,7 +21,20 @@ ENGINE_ID = "site-engine"
 # reported zero percent of every class. The covered path is unchanged; a
 # second pass scores the covered cells alone and reports the fraction, and
 # a polygon with no covered cell yields no value rather than a zero.
-ENGINE_VERSION = "0.4.1"
+# 0.5.0 (2026-10-02): the STAF data bundle as a source (``bundle.py``,
+# reader synced into ``_hrslim``). With ``STAF_DATA_SOURCE`` set to ``bundle``
+# or ``auto``, the HR calls are answered from the bundle wherever it covers
+# them (same records; exact catchments, so the same watershed and area; the
+# bundle's 2 m flowlines; sinuosity from the original lines) and from the
+# service elsewhere; the record's ``hrSource`` says which answered. The
+# precomputed families (land cover, roads, dams, soils) read the bundle's
+# per-catchment tables; the anchor's raindrop is the V2 catchment holding the
+# point and its V2 attributes the bundle's (``routing.method`` names it). The
+# bundle comes from a folder (``STAF_DATA_BUNDLE``) or from its rolling
+# release (``delivery.py``: the core first, a region or a table on first
+# read). The default source is still the service, so records are unchanged
+# until a deployment selects the bundle. Tokens unchanged.
+ENGINE_VERSION = "0.5.0"
 
 from . import naming  # noqa: E402,F401  (pure vocabulary module, cheap import)
 

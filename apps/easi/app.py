@@ -23,6 +23,10 @@ from pathlib import Path
 os.environ.setdefault("HYRIVER_CACHE_NAME",
                       os.path.join(tempfile.gettempdir(), "easi_hyriver.sqlite"))
 os.environ.setdefault("HYRIVER_CACHE_EXPIRE", str(7 * 24 * 3600))
+# The STAF data bundle, fetched on demand from its staf-data-current release, answers where it
+# covers and the USGS services elsewhere (the engine's own default stays "service" for StreamCurves
+# and the national builder); STAF_DATA_SOURCE=service asks the services only.
+os.environ.setdefault("STAF_DATA_SOURCE", "auto")
 
 import anyio  # noqa: E402
 import local_review  # noqa: E402
@@ -45,6 +49,10 @@ from easi.datasources.geocode import geocode_address  # noqa: E402
 from easi.pipeline import DEFAULT_REACH_FT  # noqa: E402
 from easi.snapcard import hr_snap_card  # noqa: E402
 from easi import calculator  # noqa: E402  (the Excel calculator, blank and completed)
+from easi._vendor.staf_workbook import web as staf_web  # noqa: E402  (download-only controls)
+from easi._vendor.staf_workbook.model.scenarios import BASELINE_ID, ScenarioSet  # noqa: E402
+from easi import scenario_state  # noqa: E402  (what one scenario holds, and its scores)
+from easi import workbook as easi_book  # noqa: E402  (summary, comparison, the scenario workbook)
 from easi import method_package  # noqa: E402  (EASI_METHOD_PACKAGE: the scoring method)
 
 # A method package named by EASI_METHOD_PACKAGE was verified when easi was imported; the
@@ -652,6 +660,7 @@ def staf_topnav():
 
 app_ui = ui.page_fillable(
     ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=62"),
+                    ui.tags.link(rel="stylesheet", href="staf/staf.css?v=4"),
                     *_viewer_head_tags(NATIONAL_VIEWER),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
@@ -659,6 +668,8 @@ app_ui = ui.page_fillable(
                     ui.tags.script(src="report-controls.js", defer=""),
                     ui.tags.script(src="report-edit.js", defer=""),
                     ui.tags.script(src="report-ready.js?v=2", defer=""),
+                    ui.tags.script(src="staf/unsaved-guard.js?v=1", defer=""),
+                    ui.tags.script(src="staf/scenarios.js?v=1", defer=""),
                     ui.tags.script(src="worksheet.js?v=10", defer=""),
                     ui.tags.script(src="coord-entry.js", defer="")),
     # Disable Shiny/bslib's page-level "pulse" loading bar at the top of the screen —
@@ -1347,10 +1358,10 @@ def _dl_buttons():
     # the report's exports, then the Excel calculator completed from this screening (the same
     # file as Get Forms offers; the blank workbook and the metrics list are only there)
     return ui.div(
-        ui.download_button("dl_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
-        ui.download_button("dl_csv", "CSV", class_="btn-sm btn-outline-secondary"),
-        ui.download_button("dl_geojson", "GeoJSON", class_="btn-sm btn-outline-secondary"),
-        (ui.download_button("dl_workbook", "Completed workbook", class_="btn-sm btn-outline-secondary")
+        staf_web.download_button("dl_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
+        staf_web.download_button("dl_csv", "CSV", class_="btn-sm btn-outline-secondary"),
+        staf_web.download_button("dl_geojson", "GeoJSON", class_="btn-sm btn-outline-secondary"),
+        (staf_web.download_button("dl_workbook", "Completed workbook", class_="btn-sm btn-outline-secondary")
          if calculator.available() else None),
         ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
         class_="easi-modal-footer",
@@ -1484,7 +1495,7 @@ def _header_with_map(d, rep, geo, minimap_html=None):
         style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;")
 
 
-def _report_body(d, rep, notes, downloads, anchor=None, geo=None, minimap_html=None):
+def _report_body(d, rep, notes, downloads, anchor=None, geo=None, minimap_html=None, summary=None):
     """Read-only report body shared by the single-site and batch modals (STAF layout).
     Ratings and notes are edited only in the Assessment worksheet, so this view never posts
     anything: the dense metric table (display toggles reveal detail client-side), the static
@@ -1493,6 +1504,7 @@ def _report_body(d, rep, notes, downloads, anchor=None, geo=None, minimap_html=N
     return ui.div(
         _anchor_banner(anchor, d),
         _header_with_map(d, rep, geo, minimap_html),
+        summary,
         _xs_readonly_block(rep),
         ui.div("Metrics", class_="easi-section-title"),
         _metric_toolbar(),
@@ -1507,17 +1519,19 @@ def _report_body(d, rep, notes, downloads, anchor=None, geo=None, minimap_html=N
     )                                             # reconciles with any saved preference)
 
 
-def _report_modal(res, notes, minimap_html=None):
+def _report_modal(res, notes, minimap_html=None, *, summary=None, title="EASI Report"):
     """Single-site report popup, built from an ``export_result()`` snapshot (current overrides,
-    swapped sources, and edited cross-section already folded in), so it is fully static."""
+    swapped sources, and edited cross-section already folded in), so it is fully static.
+    ``summary``: the summary block (and the scenario comparison) the report opens with."""
     d, rep = res["delineation"], res.get("report") or {}
     return ui.modal(
         _report_body(d, rep, notes, _dl_buttons(), anchor=res.get("siteAnchor"),
                      geo={"watershed": res.get("watershed_geojson"),
-                          "reach": res.get("reach_geojson")}, minimap_html=minimap_html),
+                          "reach": res.get("reach_geojson")}, minimap_html=minimap_html,
+                     summary=summary),
         # ✕ lives in the modal header so it stays put when the body scrolls; the muted
         # hint beside it cues that closing returns to the editable Assessment worksheet.
-        title=ui.TagList("EASI Report",
+        title=ui.TagList(title,
                          ui.span("Close to review the Assessment", class_="easi-modal-hint"),
                          ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
         size="xl", easy_close=True, footer=None,
@@ -1529,17 +1543,20 @@ def _batch_report_modal(site_id, base, minimap_html=None):
     report. ``base`` is the site's ``metadata["_artifacts"]`` ``{"delineation","report"}`` dict."""
     d, rep = base.get("delineation") or {}, base.get("report") or {}
     downloads = ui.div(
-        ui.download_button("dl_site_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
-        ui.download_button("dl_site_csv", "CSV", class_="btn-sm btn-outline-secondary"),
-        ui.download_button("dl_site_geojson", "GeoJSON", class_="btn-sm btn-outline-secondary"),
+        staf_web.download_button("dl_site_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
+        staf_web.download_button("dl_site_csv", "CSV", class_="btn-sm btn-outline-secondary"),
+        staf_web.download_button("dl_site_geojson", "GeoJSON", class_="btn-sm btn-outline-secondary"),
         # batch has no Assessment page, so the site's completed calculator is offered here
-        ui.download_button("dl_site_calc", "Completed workbook", class_="btn-sm btn-outline-secondary"),
+        staf_web.download_button("dl_site_calc", "Completed workbook", class_="btn-sm btn-outline-secondary"),
         ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
         class_="easi-modal-footer")
+    summary = ui.div(ui.div("Assessment summary", class_="easi-section-title"),
+                     staf_web.summary_block(easi_book.summary_info(base)), class_="staf-report-summary")
     return ui.modal(
         _report_body(d, rep, {}, downloads, anchor=base.get("siteAnchor"),
                      geo={"watershed": base.get("watershed_geojson"),
-                          "reach": base.get("reach_geojson")}, minimap_html=minimap_html),
+                          "reach": base.get("reach_geojson")}, minimap_html=minimap_html,
+                     summary=summary),
         title=ui.TagList(f"EASI Report: {site_id}",
                          ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
         size="xl", easy_close=True, footer=None,
@@ -1618,15 +1635,15 @@ def _forms_modal(res):
             # Each download sits in its own div: Shiny's Bootstrap styles a bare
             # ``.nav-pills > li > a`` as a nav link (link-blue text, no button
             # chrome), and the wrapper keeps the anchors real buttons.
-            ui.nav_control(ui.div(ui.download_button(
+            ui.nav_control(ui.div(staf_web.download_button(
                 "dl_forms_pdf", "Desktop metrics PDF", class_="btn-sm btn-primary",
                 title="The 20 desktop metrics with this site's values, ratings and sources"),
                 class_="ff-dl")),
-            *((ui.nav_control(ui.div(ui.download_button(
+            *((ui.nav_control(ui.div(staf_web.download_button(
                 "dl_forms_filled", "Completed workbook", class_="btn-sm btn-primary",
                 title="The EASI calculator with this site's values, your ratings and your notes entered"),
                 class_="ff-dl")),
-               ui.nav_control(ui.div(ui.download_button(
+               ui.nav_control(ui.div(staf_web.download_button(
                    "dl_forms_blank", "Blank workbook", class_="btn-sm btn-primary",
                    title="The EASI calculator with empty entry cells"),
                    class_="ff-dl")))
@@ -1678,6 +1695,14 @@ def server(input, output, session):
     _geom_scoring = reactive.value({})      # {metricId: scoring trace} recomputed from the
     #                                        edited stages, so the Scoring method panel shows
     #                                        the geometry that actually produced the rating
+    # ---- scenarios (2026-10-03): Existing Conditions plus optional alternatives. A scenario
+    # changes ratings only (easi/scenario_state.py); the active one lives in the rating state
+    # above, the others wait in _sc. Notes are shared. ----
+    _sc = {"set": ScenarioSet(), "dialog": None}
+    scenario_rev = reactive.value(0)       # any scenario change: the chip, compare and report re-read
+    scenario_nonce = reactive.value(0)     # a switch: the function panel re-reads its entries
+    _xs_heights = reactive.value(None)     # (bankfull, low bank) the height boxes show, display unit
+    _xs_echo = {"want": None, "was": None}  # heights a switch moved the boxes to: not an edit
     current_fn = reactive.value(0)         # index into _FUNCTIONS shown in the worksheet
     view_bbox = reactive.value(None)       # rounded bbox at zoom >= FLOW_ZOOM | None
     last_view_change = reactive.value(0.0)
@@ -2753,6 +2778,7 @@ def server(input, output, session):
         _overrides.set({}); _notes.set({}); _observed.set({})
         _geom_owned.set(set()); _geom_text.set({}); _geom_scoring.set({}); _xs_sel.set(None)
         _xs_unit_prev.set("ft"); current_fn.set(0)
+        _xs_heights.set(None); _reset_scenarios()
         # Fresh run complete: auto-open the screening report (same path as "Open report",
         # so closing it lands on the Assessment worksheet either way). MUST stay isolated:
         # _show_report_modal reads export_result() (base_result/scored/notes calcs), and
@@ -2803,6 +2829,7 @@ def server(input, output, session):
         snapped_point.set(None); delin.set(None); base_result.set(None)
         _overrides.set({}); _notes.set({}); _observed.set({})
         _geom_owned.set(set()); _geom_text.set({}); _geom_scoring.set({}); current_fn.set(0)
+        _xs_heights.set(None); _reset_scenarios()
         stage.set("")
         current_step.set(STEP_IDENTIFY)
         try:
@@ -3032,7 +3059,8 @@ def server(input, output, session):
                     res = export_result()  # include edits made while the map was loading
                     if not res:
                         return
-                    modal = _report_modal(res, dict(_notes()), minimap_html=minimap)
+                    modal = _report_modal(res, dict(_notes()), minimap_html=minimap,
+                                          summary=_summary_section(), title=_report_title())
                 ui.modal_show(modal)
                 opened = True
             except Exception:
@@ -3253,6 +3281,14 @@ def server(input, output, session):
         a manual dropdown pick wins until the next geometry change (last-action-wins)."""
         if not _xs_block():
             return
+        try:
+            bf_now, lb_now = input.xs_bankfull(), input.xs_lowbank()
+        except Exception:  # noqa: BLE001
+            bf_now = lb_now = None
+        if _xs_is_echo(bf_now, lb_now):
+            return              # a scenario switch moved the boxes: its ratings already stand
+        if bf_now is not None and lb_now is not None:
+            _xs_heights.set((float(bf_now), float(lb_now)))
         g = current_geometry()
         edited = bool(g and _geom_edited())
         own = bool(g and (edited or _xs_sel_idx() != _xs_default_sel()))
@@ -3274,6 +3310,8 @@ def server(input, output, session):
         thal = block["thalweg"]
         ui.update_numeric("xs_bankfull", value=round((block["bankfull_stage"] - thal) * per_m, 2))
         ui.update_numeric("xs_lowbank", value=round((block["floodplain_stage"] - thal) * per_m, 2))
+        _xs_heights.set((round((block["bankfull_stage"] - thal) * per_m, 2),
+                         round((block["floodplain_stage"] - thal) * per_m, 2)))
         _set_geom_metrics(block, block["bankfull_stage"], block["floodplain_stage"],
                           new != _xs_default_sel(), reason="scrolled")
 
@@ -3287,42 +3325,126 @@ def server(input, output, session):
     def _xs_go_next():
         _select(+1)
 
+    def _score_state():
+        """The active scenario's rating state, read reactively (the heights are not read: the
+        cross-section ratings they produce are already in the state)."""
+        return {"overrides": current_overrides(), "observed": _observed(), "geomOwned": sorted(_geom_owned()),
+                "geomText": _geom_text(), "geomScoring": _geom_scoring(), "geomReason": _geom_reason(),
+                "xsSel": _xs_sel()}
+
     @reactive.calc
     def scored():
         base = base_result()
         if not base:
             return None
-        sc = assessment.rescore(base["report"], dict(current_overrides()))
-        owned = _geom_owned()
-        if owned:  # relabel so an edited or scrolled section doesn't read as a manual override
-            texts = _geom_text()
-            traces = _geom_scoring()
-            scrolled = _geom_reason() == "scrolled"
-            station = (_xs_block() or {}).get("label") or "the shown station"
-            where = f"cross-section at {station}" if scrolled else "edited cross-section"
-            note = (f"scored from the section at {station}, not the reach median" if scrolled
-                    else "recomputed from your bankfull/floodplain heights")
-            for row in sc["metricRows"]:
-                mid = row["metricId"]
-                if mid in owned:
-                    row["status"] = "xs-derived"
-                    row["source"] = where
-                    row["valueText"] = texts.get(mid) or f"from {where}: {row['rating']}"
-                    row["note"] = note
-                    # carry the recomputed trace so the Scoring method panel shows the
-                    # edited geometry, not the geometry the run started from
-                    trace = traces.get(mid)
-                    if trace:
-                        row["scoring"] = trace
-                        row["generatedRating"] = trace.get("generatedRating")
-                        row["completeness"] = trace.get("completeness", row.get("completeness"))
-        # observed channel class and bank condition sit above everything else, in the
-        # engine's own order: rescore first, then the observations (a rescore run second
-        # would rebuild an observed row from its generated rating and undo it)
-        observed = _observed()
-        if observed:
-            sc = assessment.apply_observed_evidence(sc, observed)
-        return sc
+        # the override rescore, the cross-section relabel, then the observations: the steps
+        # this calc always took, in easi/scenario_state.py so every scenario scores alike
+        return scenario_state.scored_for(base["report"], _score_state())
+
+    # ---- scenarios: switching swaps the rating state; the others score from their copy ----
+    def _bump_scenarios(switched=False):
+        with reactive.isolate():
+            scenario_rev.set(scenario_rev() + 1)
+            if switched:
+                scenario_nonce.set(scenario_nonce() + 1)
+
+    def _reset_scenarios():
+        _sc["set"] = ScenarioSet()
+        _xs_echo["want"] = _xs_echo["was"] = None
+        _bump_scenarios(switched=True)
+
+    def _xs_per_m():
+        with reactive.isolate():
+            return FT_PER_M if _xs_unit_prev() == "ft" else 1.0
+
+    def _capture_state():
+        """The active scenario's state, to keep while another one is shown."""
+        with reactive.isolate():
+            st = scenario_state.normalized(_score_state())
+            block, h = _xs_block(), _xs_heights()
+            if block and h is not None:
+                per_m, thal = _xs_per_m(), block["thalweg"]
+                defaults = (round((block["bankfull_stage"] - thal) * per_m, 2),
+                            round((block["floodplain_stage"] - thal) * per_m, 2))
+                if abs(h[0] - defaults[0]) > 0.005 or abs(h[1] - defaults[1]) > 0.005:
+                    st["xsHeights"] = {"bankfull_m": h[0] / per_m, "lowbank_m": h[1] / per_m}
+        return st
+
+    def _xs_is_echo(bf, lb):
+        """Whether the height boxes only report what a switch set them to (both boxes, or one
+        of the two while the other still shows its previous value)."""
+        want, was = _xs_echo["want"], _xs_echo["was"]
+        if want is None:
+            return False
+
+        def near(a, b):
+            return a is not None and b is not None and abs(float(a) - float(b)) <= 0.005
+        if near(bf, want[0]) and near(lb, want[1]):
+            _xs_echo["want"] = _xs_echo["was"] = None
+            return True
+        if was and (near(bf, want[0]) or near(bf, was[0])) and (near(lb, want[1]) or near(lb, was[1])):
+            return True
+        _xs_echo["want"] = _xs_echo["was"] = None
+        return False
+
+    def _show_heights(st):
+        """Point the height boxes at a scenario's cross-section (its edited heights, else the
+        shown section's own) without re-rating: its ratings come with it."""
+        with reactive.isolate():
+            block = scenario_state.xs_block(((base_result() or {}).get("report")) or {}, st["xsSel"])
+            if block is None:
+                _xs_heights.set(None)
+                return
+            per_m, thal, h = _xs_per_m(), block["thalweg"], st.get("xsHeights")
+            if h:
+                target = (round(h["bankfull_m"] * per_m, 2), round(h["lowbank_m"] * per_m, 2))
+            else:
+                target = (round((block["bankfull_stage"] - thal) * per_m, 2),
+                          round((block["floodplain_stage"] - thal) * per_m, 2))
+            try:
+                was = (input.xs_bankfull(), input.xs_lowbank())
+            except Exception:  # noqa: BLE001 - the boxes were never shown
+                was = None
+            _xs_heights.set(target)
+            if was is None or None in was or abs(float(was[0]) - target[0]) > 0.005 \
+                    or abs(float(was[1]) - target[1]) > 0.005:
+                _xs_echo["want"], _xs_echo["was"] = target, (None if was is None or None in was else was)
+                ui.update_numeric("xs_bankfull", value=target[0])
+                ui.update_numeric("xs_lowbank", value=target[1])
+
+    def _apply_state(state):
+        st = scenario_state.normalized(state)
+        _overrides.set(dict(st["overrides"]))
+        _observed.set(st["observed"])
+        _geom_owned.set(set(st["geomOwned"]))
+        _geom_text.set(dict(st["geomText"]))
+        _geom_scoring.set(st["geomScoring"])
+        _geom_reason.set(st["geomReason"])
+        _xs_sel.set(st["xsSel"])
+        _show_heights(st)
+
+    def _switch_scenario(sid):
+        sset = _sc["set"]
+        if sid == sset.active:
+            return
+        sset.set_state(sset.active, _capture_state())
+        sset.select(sid)
+        _apply_state(sset.current.state)
+        _bump_scenarios(switched=True)
+
+    def _scenario_reports():
+        """[(scenario, scored report)] in order, the active scenario's read live."""
+        sset = _sc["set"]
+        base = base_result()
+        if not base:
+            return []
+        live = scored()
+        return [(sc_, live if sc_.id == sset.active else scenario_state.scored_for(base["report"], sc_.state))
+                for sc_ in sset.items]
+
+    def _comparison(rows=None):
+        rows = rows if rows is not None else _scenario_reports()
+        return easi_book.comparison([sc_.name for sc_, _r in rows], [r for _sc_, r in rows])
 
     @reactive.calc
     def xs_render():
@@ -3603,6 +3725,10 @@ def server(input, output, session):
         unit0 = unit_cur or "ft"
         per_m = FT_PER_M if unit0 == "ft" else 1.0
         thal = block["thalweg"]
+        with reactive.isolate():
+            shown = _xs_heights()     # the server's heights win: a switch may not have reached the boxes
+        if shown is not None:
+            bf_cur, lb_cur = shown
         bf0 = bf_cur if bf_cur is not None else round((block["bankfull_stage"] - thal) * per_m, 2)
         lb0 = lb_cur if lb_cur is not None else round((block["floodplain_stage"] - thal) * per_m, 2)
         bk_area = block.get("bankfull_area_m2")
@@ -3668,7 +3794,7 @@ def server(input, output, session):
                 ui.output_ui("fn_nav"),
                 class_="sfari-nav"),
             ui.div(ui.output_ui("fn_panel"), class_="sfari-fnpanel"),
-            ui.div(ui.output_ui("rollup_rail"), class_="sfari-rollup"),
+            ui.div(ui.output_ui("scenario_bar"), ui.output_ui("rollup_rail"), class_="sfari-rollup"),
             class_="sfari-worksheet")
 
     @render.ui
@@ -3719,6 +3845,7 @@ def server(input, output, session):
                     class_="easi-fn-compute")
             return ui.div("Run a screening from the Basin step.", class_="easi-instr")
         idx = max(0, min(len(_FUNCTIONS) - 1, current_fn()))
+        scenario_nonce()        # another scenario shown: re-seed its observations and heights
         fn = _FUNCTIONS[idx]
         fid = fn["id"]
         meta = _METRIC_BY_FID.get(fid) or {}
@@ -3906,6 +4033,7 @@ def server(input, output, session):
         report_primary = bool(n_total) and n_scored == n_total
         pct = (n_scored / n_total * 100) if n_total else 0
         return ui.TagList(
+            _rail_delta(),
             ui.div(ui.div("–" if eci is None else f"{eci:.2f}", class_="sfari-eci"),
                    ui.div("Ecosystem Condition Index", class_="sfari-eci-lbl"),
                    ui.div(ui.div(class_="sfari-eci-knob", style=f"left:{knob:.1f}%;"),
@@ -3920,6 +4048,114 @@ def server(input, output, session):
                            class_="sfari-btn sfari-rollup-report"
                            + (" primary" if report_primary else "")),
         )
+
+    # ---- the scenario chip, its dialogs, and the compare view ----
+    @render.ui
+    def scenario_bar():
+        if app_mode() != "single" or current_step() not in (STEP_ASSESS, STEP_REPORT) or base_result() is None:
+            return None
+        scenario_rev()
+        return staf_web.scenario_bar(_sc["set"])
+
+    def _rail_delta():
+        scenario_rev()
+        sset = _sc["set"]
+        if sset.active == BASELINE_ID:
+            return None
+        rows = _scenario_reports()
+        active = next((i for i, (sc_, _r) in enumerate(rows) if sc_.id == sset.active), None)
+        if active is None:
+            return None
+        return staf_web.rail_delta(_comparison([rows[0], rows[active]]), 1)
+
+    def _scenario_dialog(mode, *, name, description, error=None):
+        cur = _sc["set"].current
+        title = ("New scenario" if mode == "new" else
+                 "Describe Existing Conditions" if cur.is_baseline else "Rename or describe")
+        ui.modal_show(staf_web.scenario_dialog(title=title, name=name, description=description,
+                                               name_locked=mode != "new" and cur.is_baseline, error=error,
+                                               can_delete=mode == "edit" and not cur.is_baseline))
+
+    @reactive.effect
+    @reactive.event(input.staf_scenario_evt)
+    def _scenario_event():
+        ev = input.staf_scenario_evt() or {}
+        action, sid = ev.get("action"), ev.get("id") or ""
+        sset = _sc["set"]
+        if action == "select" and sid:
+            _switch_scenario(sid)
+        elif action == "new":
+            if not sset.can_add():
+                ui.notification_show("Up to 10 scenarios.", type="warning", duration=4)
+                return
+            _sc["dialog"] = "new"
+            _scenario_dialog("new", name=sset.default_name(), description="")
+        elif action == "edit":
+            _sc["dialog"] = "edit"
+            _scenario_dialog("edit", name=sset.current.name, description=sset.current.description)
+        elif action == "delete" and not sset.current.is_baseline:
+            ui.modal_show(staf_web.delete_dialog(sset.current.name))
+        elif action == "compare" and sset.has_alternatives():
+            ui.modal_show(staf_web.compare_dialog(_comparison()))
+
+    @reactive.effect
+    @reactive.event(input.staf_sc_save)
+    def _scenario_save():
+        sset = _sc["set"]
+        mode = _sc["dialog"]
+        desc = (input.staf_sc_desc() or "").strip()
+        name = sset.current.name
+        if mode == "new" or not sset.current.is_baseline:
+            name = (input.staf_sc_name() or "").strip()
+        try:
+            if mode == "new":
+                sset.set_state(sset.active, _capture_state())
+                sset.add(name, desc, copy_from=sset.active)      # a copy: it shows as it was
+                _bump_scenarios(switched=True)
+            else:
+                cur = sset.current
+                if not cur.is_baseline and name != cur.name:
+                    sset.rename(cur.id, name)
+                sset.describe(cur.id, desc)
+                _bump_scenarios()
+        except ValueError as exc:
+            _scenario_dialog(mode, name=name, description=desc, error=str(exc))
+            return
+        ui.modal_remove()
+
+    @reactive.effect
+    @reactive.event(input.staf_sc_delete)
+    def _scenario_delete():
+        sset = _sc["set"]
+        if not sset.current.is_baseline:
+            sset.delete(sset.active)
+            _apply_state(sset.current.state)
+            _bump_scenarios(switched=True)
+        ui.modal_remove()
+
+    def _summary_section():
+        # the report is the shown scenario's alone: it names that scenario, and comparing stays in
+        # Compare and the workbook's Summary tab (owner, 2026-10-03)
+        scenario_rev()
+        return ui.div(ui.div("Assessment summary", class_="easi-section-title"),
+                      staf_web.summary_block(easi_book.summary_info(export_result() or {}),
+                                             scenario=staf_web.report_scenario(_sc["set"])),
+                      class_="staf-report-summary")
+
+    def _report_title():
+        sset = _sc["set"]
+        return "EASI Report" if not sset.has_alternatives() else f"EASI Report · {sset.current.name}"
+
+    def _workbook_bytes():
+        res = export_result()
+        if not res:
+            return None
+        try:
+            base = base_result()
+            return easi_book.build(base, _scenario_reports(), dict(_notes()))
+        except Exception as exc:  # noqa: BLE001 - never a failed download: the single calculator instead
+            print(f"EASI: the scenario workbook failed ({exc!r}); serving the single calculator", flush=True)
+            return calculator.build_filled(res)
 
     @render.ui
     def xsection():
@@ -4108,33 +4344,36 @@ def server(input, output, session):
                 v = None
             if v is not None:
                 ui.update_numeric(fid, value=round(float(v) * factor, 2))
+        h = _xs_heights()
+        if h is not None:
+            _xs_heights.set((round(h[0] * factor, 2), round(h[1] * factor, 2)))
         _xs_unit_prev.set(new)
 
     # ---- downloads (reflect current overrides) ----
-    @render.download(filename="easi_report.pdf")
+    @render.download(filename=lambda: f"easi_report{staf_web.scenario_suffix(_sc['set'])}.pdf")
     def dl_pdf():
         res = export_result()
         if res:
-            yield report.build_pdf(res)
+            yield report.build_pdf(res, scenario=staf_web.report_scenario(_sc["set"]))
 
-    @render.download(filename="easi_report.csv")
+    @render.download(filename=lambda: f"easi_report{staf_web.scenario_suffix(_sc['set'])}.csv")
     def dl_csv():
         res = export_result()
         if res:
             yield report.build_csv(res)
 
-    @render.download(filename="easi_report.geojson")
+    @render.download(filename=lambda: f"easi_report{staf_web.scenario_suffix(_sc['set'])}.geojson")
     def dl_geojson():
         res = export_result()
         if res:
             yield report.build_geojson(res).encode("utf-8")
 
-    @render.download(filename=lambda: calculator.filled_filename(export_result()))
+    @render.download(filename=lambda: calculator.filled_filename(export_result()), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_workbook():
         # the report footer's copy of Get Forms' completed workbook
-        res = export_result()
-        if res:
-            yield calculator.build_filled(res)
+        data = _workbook_bytes()
+        if data:
+            yield data
 
     # ---- Get Forms downloads: the list as a PDF, and the Excel calculator completed
     #      from this screening (values, the override scores and the notes) or blank ----
@@ -4144,13 +4383,13 @@ def server(input, output, session):
         if res:
             yield report.build_desktop_metrics_pdf(res)
 
-    @render.download(filename=lambda: calculator.filled_filename(export_result()))
+    @render.download(filename=lambda: calculator.filled_filename(export_result()), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_forms_filled():
-        res = export_result()
-        if res:
-            yield calculator.build_filled(res)
+        data = _workbook_bytes()
+        if data:
+            yield data
 
-    @render.download(filename=calculator.blank_filename())
+    @render.download(filename=calculator.blank_filename(), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_forms_blank():
         # the committed workbook, generated by scripts/build_calculator.py from the
         # same catalog and curves this app scores with (see tests/test_calculator_parity.py)
@@ -4171,6 +4410,16 @@ def server(input, output, session):
                                               # rebind is a NoResend no-op, not a wipe
     batch_msg = reactive.value("")
     batch_result = reactive.value(None)       # BatchResult object (with artifacts)
+
+    # Leave-page guard: EASI has no Save, so any screening result is work a reload would lose.
+    _unsaved_sent = {"dirty": None}
+
+    @reactive.effect
+    async def _publish_unsaved():
+        dirty = base_result() is not None or batch_result() is not None
+        if dirty != _unsaved_sent["dirty"]:
+            _unsaved_sent["dirty"] = dirty
+            await session.send_custom_message(staf_web.UNSAVED_MESSAGE, {"dirty": dirty})
     batch_modal_site = reactive.value(None)   # {"site_id", "base"} for the open popup
     _batch_prog = {"done": 0, "total": 0, "stage": "", "site": ""}
     batch_tick = reactive.value(0)
@@ -4368,7 +4617,7 @@ def server(input, output, session):
                 class_="easi-batch-actions")
         if batch_result() is not None:
             return ui.div(
-                ui.download_button("dl_batch_zip", "Download batch ZIP",
+                staf_web.download_button("dl_batch_zip", "Download batch ZIP",
                                    class_="btn btn-primary"),
                 ui.input_action_button("batch_run", "Run again",
                                        class_="btn btn-sm btn-secondary"),
@@ -4454,7 +4703,7 @@ def server(input, output, session):
         if base:
             yield report.build_geojson(base).encode("utf-8")
 
-    @render.download(filename=lambda: _modal_site_file("xlsx", "calculator"))
+    @render.download(filename=lambda: _modal_site_file("xlsx", "calculator"), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_site_calc():
         # the calculator completed from this batch site's result (batch has no Assessment
         # page, so Get Forms is not reachable from here)
@@ -4984,7 +5233,7 @@ def server(input, output, session):
                                 selected=measure0, width="330px"),
                 class_="easi-dash-toolbar-group"),
             ui.div(class_="easi-dash-spacer"),
-            ui.download_button("dash_export", "Download CSV", class_="btn-outline-secondary btn-sm"),
+            staf_web.download_button("dash_export", "Download CSV", class_="btn-outline-secondary btn-sm"),
             class_="easi-dash-toolbar")
         return ui.div(
             ui.div(ui.div("Condition dashboard", class_="easi-dash-title"),

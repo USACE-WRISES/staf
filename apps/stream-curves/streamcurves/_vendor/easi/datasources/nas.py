@@ -23,6 +23,15 @@ def established_taxa(huc12: str | None = None, huc8: str | None = None,
     Short fail-fast ``timeout`` (interactive screening flow): a slow NAS API should
     mark the metric unavailable quickly rather than stall the report.
     """
+    from .._vendor.site_engine import bundle
+    found = bundle.lookups()
+    if found is not None and (huc12 or huc8):
+        # the STAF data bundle's complete NAS table (the API stops at 500 records)
+        points, tables = found
+        try:
+            return points.nas_established(tables, huc12=huc12, huc8=huc8)
+        except Exception:  # noqa: BLE001 - the API answers instead
+            pass
     params = {"status": "established", "limit": "500"}
     if huc12:
         params["huc12"] = huc12

@@ -167,6 +167,7 @@ def test_import_replaces_old_point_and_source_before_any_new_work(tmp_path, save
                delineation=SimpleNamespace(geojson_bounds=lambda *a: None),
                scored_task=lambda *a: None, coord_snap_task=lambda *a: lookups.append(a),
                ui=SimpleNamespace(notification_show=lambda *a, **k: None), STEP_REVIEW="review",
+               _restore_scenarios=lambda raw: None, _saved_fp=Value(None), _work_fp=lambda: None,
                **{name: Value(None) for name in ("delin", "metric_scores", "function_scores", "evidence",
                    "xs_geom", "engine_state", "evidence_reach", "current_fn", "current_step", "stage")})
     ns["_load_session"]()

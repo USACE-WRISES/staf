@@ -29,8 +29,19 @@ def compute_site(lat: float, lon: float, config: Optional[dict] = None, *,
     for the record shape. ``progress`` receives dict events
     (``{"stage", "hops", "reaches", "family"}``); see ``progress.py``.
     """
+    from . import bundle, hr
     cfg = provenance.resolve_config(config)
     record = provenance.base_record(lat, lon, cfg)
+    with hr.sources_used() as used:
+        try:
+            return _compute(lat, lon, cfg, record, progress)
+        finally:
+            # Which HR source answered (0.5.0): the bundle's identity, and
+            # ``answeredBy`` the sources this computation used.
+            record["hrSource"] = {**bundle.describe(), "answeredBy": sorted(used)}
+
+
+def _compute(lat: float, lon: float, cfg: dict, record: dict, progress) -> dict:
     try:
         notify(progress, stage="site")
         ctx = _context.site_context(lat, lon, snap_tol_ft=cfg["snapTolFt"])

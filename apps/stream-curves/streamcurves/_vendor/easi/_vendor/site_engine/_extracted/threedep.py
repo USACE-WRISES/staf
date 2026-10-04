@@ -10,7 +10,13 @@ captured. Never raises — returns {} on failure.
 
 Bankfull is curve-estimated, so the result is an approximate screening value
 (M/L confidence, overrideable). The resolution actually used is returned as
-``dem_resolution_m`` (1 or 10) and surfaced in the report.
+``dem_resolution_m`` (1, 3 or 10) and surfaced in the report.
+
+From USGS's own tile files (2026-10, ``dem_tiles``): where the tile catalogs are
+configured (the STAF data bundle ships them), the DEM is read straight from the
+3DEP 1 m project tiles, else the 1/9 arc-second (3 m) quads, that USGS publishes
+on Amazon S3, by range requests, so the 1 m answer no longer times out to 10 m
+on a slow dynamic service. Without the catalogs nothing changes.
 """
 from __future__ import annotations
 
@@ -20,16 +26,23 @@ from . import geomorph
 def _best_available_dem(buf4326):
     """Best-available 3DEP DEM over ``buf4326`` (a shapely polygon in EPSG:4326).
 
-    Returns ``(dem_5070, resolution_m)`` — 1 m where 3DEP 1 m coverage exists (the
-    seamless mosaic serves real 1 m there), otherwise the 10 m seamless DEM. The 1 m
-    attempt is gated by the 3DEP tile index (so we never download an upsampled 1 m
-    raster where only 10 m exists) and bounded by a timeout so a slow fetch can't hang
-    the assessment; any failure falls back to 10 m.
+    Returns ``(dem_5070, resolution_m)``. With the tile catalogs: 1 m from the
+    newest lidar project covering the buffer, else the 3 m quads (``dem_tiles``).
+    Otherwise, or when the tiles do not answer: 1 m where 3DEP 1 m coverage exists
+    (the seamless mosaic serves real 1 m there), else the 10 m seamless DEM. The
+    service's 1 m attempt is gated by the 3DEP tile index (so we never download an
+    upsampled 1 m raster where only 10 m exists) and bounded by a timeout so a slow
+    fetch can't hang the assessment; any failure falls back to 10 m.
     """
     import concurrent.futures as cf
 
     import numpy as np
     import py3dep
+
+    from . import dem_tiles
+    tiles = dem_tiles.best_tile_dem(buf4326)
+    if tiles is not None:
+        return tiles[0], tiles[1]
 
     def _one_metre():
         avail = py3dep.check_3dep_availability(tuple(buf4326.bounds))

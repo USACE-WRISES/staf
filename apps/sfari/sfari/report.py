@@ -148,7 +148,8 @@ def build_geojson(delin, function_scores, sc) -> str:
     return json.dumps({"type": "FeatureCollection", "features": feats}, indent=2)
 
 
-def build_pdf(delin, metric_scores, function_scores, evidence, sc) -> bytes:
+def build_pdf(delin, metric_scores, function_scores, evidence, sc, *, scenario=None) -> bytes:
+    """The report PDF; ``scenario`` (``(name, description)``) names the scenario it is for."""
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import letter
     import base64
@@ -183,6 +184,12 @@ def build_pdf(delin, metric_scores, function_scores, evidence, sc) -> bytes:
 
     story.append(Paragraph("SFARI Screening Report", styles["Title"]))
     story.append(Paragraph(dl.get("gnis_name") or "(unnamed reach)", styles["Heading2"]))
+    if scenario:            # the scenario this report is for, while there are alternatives
+        from xml.sax.saxutils import escape
+        name, description = scenario
+        story.append(Paragraph(f"<b>Scenario:</b> {escape(name)}", styles["Normal"]))
+        if description:
+            story.append(Paragraph(escape(description), styles["Italic"]))
     hdr = [["Coordinates", f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}"],
            ["COMID / HUC8", f"{dl.get('comid')} / {dl.get('huc8')}"],
            ["Drainage area", f"{dl.get('drainage_area_sqkm')} km2"],

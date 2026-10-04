@@ -122,7 +122,10 @@ BEHAVIORS = (
 #: or its evidence), left out of the acquisition digest.
 _PRESENTATION = ("__init__.py", "method_package.py", "methods.py", "method_plot.py", "report.py",
                  "reportmap.py", "snapcard.py", "viewport.py", "network_display.py", "notices.py",
-                 "xsplot.py", "xsplotly.py", "batch_ui.py", "calculator.py")
+                 "xsplot.py", "xsplotly.py", "batch_ui.py", "calculator.py", "workbook.py",
+                 "scenario_state.py")
+#: vendored presentation code (the shared workbook and scenario toolkit): never evidence
+_PRESENTATION_TREES = ("_vendor/staf_workbook/",)
 
 
 class MethodPackageError(ValueError):
@@ -216,13 +219,14 @@ def acquisition_sources() -> list[Path]:
             continue
         if "/" not in rel and rel in _PRESENTATION:
             continue
-        if rel.startswith(("batch/", "national/dashboard", "national/tiles")):
+        if rel.startswith(("batch/", "national/dashboard", "national/tiles") + _PRESENTATION_TREES):
             continue
         out.append(p)
     vend = root / "_vendor"
     if vend.is_dir():
         out += sorted(p for p in vend.rglob("*") if p.is_file() and p.suffix != ".pyc"
-                      and "__pycache__" not in p.parts and p.suffix != ".py")
+                      and "__pycache__" not in p.parts and p.suffix != ".py"
+                      and not p.relative_to(root).as_posix().startswith(_PRESENTATION_TREES))
     data = builtin_data_dir()
     out += [data / n for n in EVALUATOR_ASSETS if (data / n).is_file()]
     return out

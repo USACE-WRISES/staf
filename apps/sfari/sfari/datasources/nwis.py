@@ -114,7 +114,17 @@ def flow_stats(lat: float, lon: float, da_sqkm: Optional[float] = None) -> Optio
 
     Returns ``{site, name, da_sqmi, n_days, zero_frac, q10, q50, q90, baseflow_ratio}``.
     Qp = discharge (cfs) exceeded p% of the time (so Q90 is a low-flow index).
+    From the STAF data bundle's gage table (the same statistics, computed from the
+    daily values when the bundle was built; ``as_of`` says when) when it is on.
     """
+    from .._vendor.site_engine import bundle
+    found = bundle.lookups()
+    if found is not None:
+        points, tables = found
+        try:
+            return points.nwis_flow_stats(tables, lat, lon, da_sqkm)
+        except Exception:  # noqa: BLE001 - the service answers instead
+            pass
     ranked = _rank_gages(_nearby_gages(lat, lon), lat, lon, da_sqkm)
     for g in ranked[:5]:                                  # first ranked gage with a usable record
         vals = _daily_flow(g["site"])
