@@ -115,13 +115,50 @@ def _round10(x: float) -> float:
     return round(float(x), 10)
 
 
+def tile_elevations(pts_lonlat, pad_deg: float = 0.0003):
+    """Elevations (metres) at lon/lat points from USGS's own 3DEP tile files (1 m, else 3 m; the
+    vendored site engine's tile reader, read the way EASI's cross-sections read them), as
+    ``(elevs, resolution_m)``, or None: the tile reader is off (no catalogs: the STAF data bundle
+    is not the source), no tile covers the points, or a read failed. The services answer then."""
+    try:
+        import xarray as xr
+        from pyproj import Transformer
+        from shapely.geometry import LineString, Point
+
+        from ._vendor.site_engine._extracted import dem_tiles
+        pts = np.asarray(pts_lonlat, dtype=float)[:, :2]
+        shape = Point(pts[0]) if len(pts) == 1 else LineString(pts)
+        hit = dem_tiles.best_tile_dem(shape.buffer(pad_deg))
+        if hit is None:
+            return None
+        da, res, _ = hit
+        x, y = Transformer.from_crs(4326, 5070, always_xy=True).transform(pts[:, 0], pts[:, 1])
+        grid = da.squeeze(drop=True)
+        vals = grid.interp(x=xr.DataArray(np.asarray(x), dims="p"), y=xr.DataArray(np.asarray(y), dims="p"),
+                           method="linear").values.astype(float)
+        if not np.isfinite(vals).all():
+            return None
+        return vals, float(res)
+    except Exception:  # noqa: BLE001 - the services answer instead
+        return None
+
+
 def sample_transect_3dep(pts_lonlat, stations_m=None) -> dict | None:
     """Sample elevations along a transect (n x 2 lon/lat array) from 3DEP
     getSamples. POST (handles long geometries). Returns
-    ``{"stations", "elevs", "resolution_m"}`` or None."""
+    ``{"stations", "elevs", "resolution_m"}`` or None. USGS's own tile files
+    answer first where the tile reader is on (``tile_elevations``)."""
     pts = np.asarray(pts_lonlat, dtype=float)
     if pts.ndim != 2 or pts.shape[0] < 2:
         return None
+    tiles = tile_elevations(pts)
+    if tiles is not None and pts.shape[0] >= 5:
+        st = None if stations_m is None else np.asarray(stations_m, dtype=float)
+        if st is None or st.size != pts.shape[0]:
+            # ground distance along the transect, as parse_3dep_samples measures sample locations
+            steps = [haversine_m(pts[i, 0], pts[i, 1], pts[i + 1, 0], pts[i + 1, 1]) for i in range(len(pts) - 1)]
+            st = np.concatenate([[0.0], np.cumsum(steps)])
+        return {"stations": st, "elevs": tiles[0], "resolution_m": tiles[1]}
     geom = {
         "paths": [[[_round10(x), _round10(y)] for x, y in pts[:, :2]]],
         "spatialReference": {"wkid": 4326},

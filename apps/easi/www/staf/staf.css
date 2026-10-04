@@ -1,0 +1,113 @@
+/* STAF shared styles: the scenario chip, the compare table and the summary block. Colours follow
+   each app's own tokens (--easi-accent, --card-border, --rule, --surface-soft) with fallbacks. */
+
+.staf-scen { margin: 0 0 12px; position: relative; }
+.staf-scen-chip { position: relative; }
+.staf-scen-sum {
+  list-style: none; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
+  padding: 6px 10px; border: 1px solid var(--card-border, #d5deea); border-radius: 8px;
+  background: var(--surface-soft, #f6f8fb); font-size: 12.5px; line-height: 1.3;
+}
+.staf-scen-sum::-webkit-details-marker { display: none; }
+.staf-scen-sum::after { content: ""; margin-left: auto; border: 4px solid transparent;
+  border-top-color: #7a8699; transform: translateY(2px); }
+.staf-scen-chip[open] .staf-scen-sum::after { transform: translateY(-2px) rotate(180deg); }
+.staf-scen-lab { color: #7a8699; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+.staf-scen-name { font-weight: 600; color: #2b3445; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.staf-scen.solo .staf-scen-name { font-weight: 500; color: #4a5568; }
+.staf-scen-chip.alt .staf-scen-sum { border-color: var(--easi-accent, #2f4b7c); background: #eef3fb; }
+.staf-scen-chip.alt .staf-scen-name { color: var(--easi-accent, #2f4b7c); }
+.staf-scen-sum:focus-visible { outline: 2px solid var(--easi-accent, #2f4b7c); outline-offset: 2px; }
+.staf-scen-menu {
+  position: absolute; z-index: 1050; left: 0; right: 0; top: calc(100% + 4px); padding: 6px;
+  background: #fff; border: 1px solid var(--card-border, #d5deea); border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(28, 43, 68, 0.14); max-height: 360px; overflow-y: auto;
+}
+.staf-scen-item {
+  display: block; width: 100%; text-align: left; border: 0; background: none; padding: 6px 8px;
+  border-radius: 6px; font-size: 12.5px; color: #2b3445; cursor: pointer;
+}
+.staf-scen-item:hover { background: var(--surface-soft, #f6f8fb); }
+.staf-scen-item-name, .staf-scen-item-desc { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.staf-scen-item-desc { margin-top: 1px; padding-left: 13px; font-size: 11.5px; color: #7a8699; }
+.staf-scen-item-name { padding-left: 13px; }
+.staf-scen-item.active .staf-scen-item-name { font-weight: 600; color: var(--easi-accent, #2f4b7c); padding-left: 0; }
+.staf-scen-item.active .staf-scen-item-name::before { content: ""; display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--easi-accent, #2f4b7c); margin-right: 7px; transform: translateY(-1px); }
+.staf-scen-actions { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; padding-left: 2px; }
+.staf-scen-link {
+  display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; padding: 2px 0;
+  font-size: 12px; line-height: 1.3; color: #5a6578; cursor: pointer;
+}
+.staf-scen-link svg { flex: none; }
+.staf-scen-link:hover:not([disabled]) { color: var(--easi-accent, #2f4b7c); }
+.staf-scen-link:hover:not([disabled]) span { text-decoration: underline; }
+.staf-scen-link[disabled] { color: #a7b0bd; cursor: default; }
+.staf-scen-link:focus-visible { outline: 2px solid var(--easi-accent, #2f4b7c); outline-offset: 2px; border-radius: 3px; }
+.staf-scen-delta { margin-top: 6px; font-size: 12px; color: #5a6578; }
+.staf-scen-delta .up { color: #2f7a4b; font-weight: 600; }
+.staf-scen-delta .down { color: #a33a3a; font-weight: 600; }
+
+/* scenario dialogs (New, Edit, Delete, Compare): compact, with the apps' own buttons. Scoped
+   with :has(), as the apps' Field Forms dialog is, so no other dialog changes. */
+.modal:has(.staf-dialog) {
+  --bs-modal-width: 460px; --bs-modal-padding: 18px 22px; --bs-modal-header-padding: 15px 22px;
+  --bs-modal-border-radius: 10px; --bs-modal-inner-border-radius: 9px;
+  --bs-modal-border-color: var(--card-border, #d5deea); --bs-modal-header-border-color: var(--rule, #e5e8ee);
+  --bs-modal-footer-border-width: 0;
+}
+.modal:has(.staf-dialog) .modal-title { font-size: 17px; font-weight: 600; line-height: 1.3; color: #2b3445; }
+.modal:has(.staf-dialog) .modal-footer { gap: 8px; padding: 2px 22px 18px; }
+.modal:has(.staf-dialog) .modal-footer > * { margin: 0; }
+.staf-dialog .form-group { margin-bottom: 14px; }
+.staf-dialog .control-label { font-size: 12.5px; font-weight: 600; color: #4a5568; margin-bottom: 5px; }
+.staf-dialog .form-control { font-size: 13.5px; line-height: 1.45; padding: 7px 10px; border-radius: 7px;
+  border-color: var(--card-border, #d5deea); color: #2b3445; }
+.staf-dialog .form-control:focus { border-color: var(--easi-accent, #2f4b7c); box-shadow: 0 0 0 3px rgba(47, 75, 124, 0.14); }
+.staf-dialog textarea.form-control { resize: vertical; min-height: 76px; }
+.staf-dialog .form-control::placeholder { color: #a0a9b6; }
+.staf-dialog > p { font-size: 13.5px; line-height: 1.5; color: #2b3445; margin: 0; }
+.staf-scen-fixed { padding: 7px 10px; font-size: 13.5px; line-height: 1.45; color: #4a5568;
+  background: var(--surface-soft, #f6f8fb); border: 1px solid var(--rule, #e5e8ee); border-radius: 7px; }
+.staf-scen-err { color: #a33a3a; font-size: 12.5px; margin-top: -6px; }
+
+/* the dialog buttons carry each app's own .sfari-btn (its Open report button), so they match the
+   page in every app; these rules add Bootstrap's state colours and the two red variants */
+.btn.staf-btn {
+  --bs-btn-line-height: 1.5; --bs-btn-box-shadow: none; --bs-btn-hover-color: var(--easi-accent, #2f4b7c);
+  --bs-btn-hover-bg: #fff; --bs-btn-hover-border-color: var(--easi-accent, #2f4b7c);
+  --bs-btn-active-color: var(--easi-accent, #2f4b7c); --bs-btn-active-bg: var(--surface-soft, #f6f8fb);
+  --bs-btn-active-border-color: var(--easi-accent, #2f4b7c); --bs-btn-focus-shadow-rgb: 47, 75, 124;
+  min-width: 76px;
+}
+.btn.staf-btn.primary { --bs-btn-hover-color: #fff; --bs-btn-hover-bg: var(--easi-accent-dark, #243a61);
+  --bs-btn-hover-border-color: var(--easi-accent-dark, #243a61); --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--easi-accent-dark, #243a61); --bs-btn-active-border-color: var(--easi-accent-dark, #243a61); }
+.btn.staf-btn.danger { color: #a33a3a; border-color: #e3b9b9; background: #fff; --bs-btn-focus-shadow-rgb: 163, 58, 58; }
+.btn.staf-btn.danger:hover, .btn.staf-btn.danger:active { color: #fff; background: #a33a3a; border-color: #a33a3a; }
+.btn.staf-btn.danger-solid { color: #fff; background: #a33a3a; border-color: #a33a3a; --bs-btn-focus-shadow-rgb: 163, 58, 58; }
+.btn.staf-btn.danger-solid:hover, .btn.staf-btn.danger-solid:active { color: #fff; background: #8d3131; border-color: #8d3131; }
+
+/* compare table */
+.staf-cmp-wrap { overflow-x: auto; }
+.staf-cmp { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.staf-cmp th { position: sticky; top: 0; background: #fff; font-weight: 600; color: #2b3445; padding: 6px 10px;
+  border-bottom: 2px solid var(--card-border, #d5deea); text-align: center; white-space: nowrap; }
+.staf-cmp th.staf-cmp-label { text-align: left; }
+.staf-cmp th.delta { color: #7a8699; font-weight: 500; }
+.staf-cmp td { padding: 5px 10px; border-bottom: 1px solid var(--rule, #e5e8ee); }
+.staf-cmp-label { text-align: left; color: #2b3445; }
+.staf-cmp-num { text-align: center; color: #2b3445; }
+.staf-cmp-num.base { background: var(--surface-soft, #f6f8fb); }
+.staf-cmp-num.delta { color: #7a8699; }
+.staf-cmp-num.delta.up { color: #2f7a4b; font-weight: 600; }
+.staf-cmp-num.delta.down { color: #a33a3a; font-weight: 600; }
+.staf-cmp-row.headline td { font-weight: 600; }
+.staf-cmp-group td { padding-top: 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: #7a8699; border-bottom: 1px solid var(--card-border, #d5deea); }
+
+/* summary block */
+.staf-sum { border-collapse: collapse; font-size: 12.5px; margin: 0 0 14px; }
+.staf-sum th { text-align: left; font-weight: 600; color: #5a6578; padding: 3px 18px 3px 0; white-space: nowrap;
+  vertical-align: top; }
+.staf-sum td { color: #2b3445; padding: 3px 0; }

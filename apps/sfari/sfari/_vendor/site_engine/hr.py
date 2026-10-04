@@ -41,6 +41,11 @@ records do not change:
   cap, tiles are reused across views and sessions, and a view draws the tiles
   that answered. A pick reads the tiles under its probe box (``snap_records``).
 - At most ``_MAX_IN_FLIGHT`` requests to the service run at once per process.
+
+The STAF data bundle (0.5.0, ``bundle.py``): with ``STAF_DATA_SOURCE`` set to ``bundle`` or ``auto`` and
+a bundle folder present, every public call below is answered from the bundle wherever it covers
+the request (the same ``parse_feature`` records, built from the same fields), and from the
+service elsewhere. ``sources_used`` tells a caller which answered.
 """
 from __future__ import annotations
 
@@ -57,6 +62,7 @@ from typing import Any, Callable, Iterable, Optional
 
 import requests
 
+from . import bundle as _bundle
 from . import httpcache
 
 _BASE = "https://hydro.nationalmap.gov/arcgis/rest/services/NHDPlus_HR/MapServer"
@@ -202,6 +208,32 @@ def last_answer_at() -> Optional[float]:
     return _answered["at"]
 
 
+def _mark(source: str) -> None:
+    used = getattr(_local, "hr_sources", None)
+    if used is not None:
+        used.add(source)
+
+
+@contextlib.contextmanager
+def sources_used():
+    """The HR sources (``bundle``, ``service``) that answered this thread's
+    calls inside the block, as a set filled while it runs."""
+    before = getattr(_local, "hr_sources", None)
+    _local.hr_sources = set()
+    try:
+        yield _local.hr_sources
+    finally:
+        _local.hr_sources = before
+
+
+def _from_bundle(answer):
+    """``answer`` (a bundle result, None where the bundle does not cover the
+    call), noting the source when there is one."""
+    if answer is not None:
+        _mark("bundle")
+    return answer
+
+
 class _Unanswered(Exception):
     """The service did not answer: never a cached result."""
 
@@ -299,6 +331,7 @@ def _query(url: str, params: dict, *, timeout: float, retries: int = 1,
     """The answer to one request, or None. A stored answer is used first
     (``httpcache``); ``offline`` asks nothing when there is none. Only
     answers are stored."""
+    _mark("service")
     key = None
     if cache:
         key = httpcache.key_for(url, params, "POST" if post else "GET")
@@ -461,6 +494,9 @@ def flowlines_in_bbox_status(west: float, south: float, east: float, north: floa
         return "empty", []
     if (east - west) * (north - south) > max_area_deg2:
         return "too-large", []
+    local = _from_bundle(_bundle.lines_in_box(west, south, east, north))
+    if local is not None:
+        return ("ok", local) if local else ("empty", [])
     try:
         status, recs = _fetch_bbox(*_round_bbox(west, south, east, north), fast_fail)
     except _Unanswered:
@@ -611,6 +647,9 @@ def flowlines_in_tiles(west: float, south: float, east: float, north: float, *,
         return "empty", [], []
     if (east - west) * (north - south) > max_area_deg2:
         return "too-large", [], []
+    local = _from_bundle(_bundle.lines_in_box(west, south, east, north))
+    if local is not None:
+        return ("ok", local, []) if local else ("empty", [], [])
     tiles = tiles_over(west, south, east, north)
     answers: dict = {}
     jobs: dict = {}
@@ -674,6 +713,9 @@ def snap_records(lat: float, lon: float, half_deg: float = 0.012, *, policy="pic
     The engine's own anchoring keeps its exact envelope query
     (``flowlines_in_bbox``)."""
     west, south, east, north = lon - half_deg, lat - half_deg, lon + half_deg, lat + half_deg
+    local = _from_bundle(_bundle.lines_in_box(west, south, east, north))
+    if local is not None:
+        return ("ok", local) if local else ("empty", [])
     tiles = tiles_over(west, south, east, north)
     answers: dict = {}
     todo = []
@@ -722,6 +764,9 @@ def flowline_by_id(nhdplusid: int, timeout: float = 30.0) -> Optional[dict]:
     nid = _int_id(nhdplusid)
     if nid is None:
         return None
+    local = _from_bundle(_bundle.flowline(nhdplusid=nid))
+    if local is not None:
+        return local
     data = _request(FLOWLINE_QUERY_URL, {
         "where": f"nhdplusid = {nid}", "outFields": ",".join(_ATTR_FIELDS),
         "returnGeometry": "true", "outSR": "4326", "f": "geojson"},
@@ -734,6 +779,9 @@ def feature_by_hydroseq(hydroseq: int, timeout: float = 30.0) -> Optional[dict]:
     hs = _int_id(hydroseq)
     if hs is None:
         return None
+    local = _from_bundle(_bundle.flowline(hydroseq=hs))
+    if local is not None:
+        return local
     data = _request(FLOWLINE_QUERY_URL, {
         "where": f"hydroseq = {hs}", "outFields": ",".join(_ATTR_FIELDS),
         "returnGeometry": "true", "outSR": "4326", "f": "geojson"},
@@ -836,6 +884,11 @@ def parents_by_dnhydroseq(hydroseqs: list[int], *, with_geometry: bool = False,
     any chunk failure (the caller must treat the tree as incomplete, never
     silently partial).
     """
+    children = [_bundle.flowline(hydroseq=h) for h in hydroseqs] if _bundle.enabled() else []
+    if children and all(children):
+        local = _from_bundle(_bundle.parents(children))
+        if local is not None:
+            return local
     size = _GEOM_CHUNK if with_geometry else _WALK_CHUNK
 
     def ask(chunk):
@@ -891,6 +944,9 @@ def parents_by_node(frontier: list[dict], *, timeout: float = 60.0,
     wanted = {int(r["hydroseq"]) for r in frontier if r.get("hydroseq")}
     if not wanted:
         return []
+    local = _from_bundle(_bundle.parents(frontier))
+    if local is not None:
+        return local
     points: list[list[float]] = []
     for rec in frontier:
         pts = _endpoints(rec.get("geometry"))
@@ -932,6 +988,10 @@ def flowlines_by_ids(nhdplusids: list[int], timeout: float = 60.0,
     """Flowline geometries for the given reach ids (one fetch for a whole
     tree). Returns ``[{"nhdplusid", "geometry"}]`` for the features that
     carry geometry, or None on any chunk failure."""
+    local = _from_bundle(_bundle.flowline_geometries(nhdplusids))
+    if local is not None:
+        return local
+
     def ask(chunk):
         where = "nhdplusid IN (" + ",".join(str(x) for x in chunk) + ")"
         return _chunk_query(FLOWLINE_QUERY_URL, {
@@ -963,6 +1023,15 @@ def catchments_by_ids(nhdplusids: list[int], timeout: float = 90.0,
     reaches exist in the HR fabric). ``progress(done, total)`` follows the
     batches.
     """
+    local = _from_bundle(_bundle.catchments(nhdplusids))
+    if local is not None:
+        if progress is not None:
+            try:
+                progress(1, 1)
+            except Exception:  # noqa: BLE001 - the UI never breaks a query
+                pass
+        return local
+
     def ask(chunk):
         where = "nhdplusid IN (" + ",".join(str(x) for x in chunk) + ")"
         return _chunk_query(CATCHMENT_QUERY_URL, {

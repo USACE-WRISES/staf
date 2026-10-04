@@ -102,8 +102,11 @@ def site_context(lat: float, lon: float, *, snap_tol_ft: float = SNAP_TOL_FT
     if anchor is None:
         return {"status": "failed", "reason": "anchored reach not resolvable",
                 "anchor": None, "site": None}
-    sinuosity = None
-    if anchor.get("geometry"):
+    # From the bundle, the sinuosity of the original line (precomputed: the
+    # bundle's 2 m line would read a shade straighter); else from the geometry.
+    from . import bundle
+    sinuosity = bundle.sinuosity(int(nid)) if bundle.enabled() else None
+    if sinuosity is None and anchor.get("geometry"):
         try:
             from shapely.geometry import shape
             sinuosity = line_sinuosity(shape(anchor["geometry"]))

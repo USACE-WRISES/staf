@@ -381,14 +381,12 @@ def _repack(source: bytes, replacements: dict) -> bytes:
     return buf.getvalue()
 
 
-def build_filled(template: bytes, assessment, measured: Optional[dict], delineation=None, *,
-                 today: Optional[_dt.date] = None) -> bytes:
-    """The calculator with the worksheet's values typed into its entry cells.
-
-    The workbook recalculates on open (``fullCalcOnLoad``) and carries no cached
-    results, so only the DEEP Score part changes and every other part is copied
-    byte for byte.
-    """
+def filled_values(template: bytes, assessment, measured: Optional[dict], delineation=None, *,
+                  today: Optional[_dt.date] = None) -> tuple[dict, frozenset]:
+    """``({cell: value}, curve-set cells)`` for the DEEP Score sheet: what
+    :func:`build_filled` types in, and the entry cells whose default a value may
+    replace. A scenario's copy of the sheet has the same cells, so the shared
+    workbook fills every scenario with this."""
     today = today or _dt.date.today()
     cells = entry_cells(template)
     entries, disclosures = entries_from_state(assessment, measured, delineation)
@@ -407,6 +405,23 @@ def build_filled(template: bytes, assessment, measured: Optional[dict], delineat
                 continue
         values[cells[name]] = value
     replaceable = frozenset(addr for name, addr in cells.items() if name.startswith("st_"))
+    return values, replaceable
+
+
+def fill_sheet(sheet_xml: str, values: dict, replaceable: frozenset = frozenset()) -> str:
+    """The DEEP Score sheet XML with ``values`` (from :func:`filled_values`) typed in."""
+    return _fill_cells(sheet_xml, values, replaceable=replaceable)
+
+
+def build_filled(template: bytes, assessment, measured: Optional[dict], delineation=None, *,
+                 today: Optional[_dt.date] = None) -> bytes:
+    """The calculator with the worksheet's values typed into its entry cells.
+
+    The workbook recalculates on open (``fullCalcOnLoad``) and carries no cached
+    results, so only the DEEP Score part changes and every other part is copied
+    byte for byte.
+    """
+    values, replaceable = filled_values(template, assessment, measured, delineation, today=today)
     with zipfile.ZipFile(io.BytesIO(template)) as zin:
         part = _sheet_part(zin, SHEET_NAME)
         sheet_xml = zin.read(part).decode("utf-8")

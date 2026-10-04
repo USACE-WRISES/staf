@@ -303,6 +303,12 @@ def _repack(source: bytes, replacements: dict) -> bytes:
 
 
 # --- The public builders ------------------------------------------------------
+def fill_sheet(sheet_xml: str, values: dict) -> str:
+    """The score sheet's XML with ``values`` (cell -> value) written into its empty input cells
+    (the multi-scenario workbook fills each scenario's copy with this)."""
+    return _fill_cells(sheet_xml, values)
+
+
 def build_calculator(delin, metric_scores, function_scores, *, today=None) -> bytes:
     """The calculator with this assessment written into its input cells.
 
@@ -310,6 +316,21 @@ def build_calculator(delin, metric_scores, function_scores, *, today=None) -> by
     are left blank, exactly as they would be if the assessor had not filled them
     in yet.
     """
+    values = input_values(delin, metric_scores, function_scores, today=today)
+    source = blank_bytes()
+    with zipfile.ZipFile(io.BytesIO(source)) as zin:
+        sheet_part = _sheet_part(zin, SHEET_NAME)
+        sheet_xml = zin.read(sheet_part).decode("utf-8")
+        book_xml = zin.read("xl/workbook.xml").decode("utf-8")
+
+    return _repack(source, {
+        sheet_part: _fill_cells(sheet_xml, values).encode("utf-8"),
+        "xl/workbook.xml": _force_recalc(book_xml).encode("utf-8"),
+    })
+
+
+def input_values(delin, metric_scores, function_scores, *, today=None) -> dict:
+    """The input cells of the score sheet for one assessment: ``{cell: value}``."""
     from . import report                      # local: avoids a cycle at import time
 
     dl = (delin or {}).get("delineation") or {}
@@ -337,17 +358,7 @@ def build_calculator(delin, metric_scores, function_scores, *, today=None) -> by
             continue
         values[f"J{row}"] = (NOT_APPLICABLE_LABEL if likert == config.LIKERT_NA
                              else str(likert))
-
-    source = blank_bytes()
-    with zipfile.ZipFile(io.BytesIO(source)) as zin:
-        sheet_part = _sheet_part(zin, SHEET_NAME)
-        sheet_xml = zin.read(sheet_part).decode("utf-8")
-        book_xml = zin.read("xl/workbook.xml").decode("utf-8")
-
-    return _repack(source, {
-        sheet_part: _fill_cells(sheet_xml, values).encode("utf-8"),
-        "xl/workbook.xml": _force_recalc(book_xml).encode("utf-8"),
-    })
+    return values
 
 
 def blank_filename() -> str:

@@ -1,4 +1,10 @@
-import pytest
+import os
+
+# app.py defaults the STAF data source to "auto" (its release, fetched on demand): the suite asks the
+# services, which the tests stub, unless a test chooses the bundle itself
+os.environ.setdefault("STAF_DATA_SOURCE", "service")
+
+import pytest  # noqa: E402
 
 
 @pytest.fixture(autouse=True)

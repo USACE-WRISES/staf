@@ -45,11 +45,13 @@ Run:  .venv/Scripts/python.exe scripts/build_calculator.py [--out PATH] [--check
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as _dt
 import hashlib
 import io
 import json
 import os
+import re
 import sys
 import zipfile
 from pathlib import Path
@@ -82,6 +84,55 @@ OUT_NAME = f"EASI_Calculator_{TEMPLATE_VERSION}.xlsx"
 PASSWORD = "easi"      # a guard rail against accidental edits, not a secret
 FIXED_STAMP = _dt.datetime(2026, 9, 18, 0, 0, 0)
 SCORE = "EASI Score"   # the worksheet the user fills
+
+#: The namespace prefixes openpyxl registers when it is imported (``openpyxl/xml/functions.py``).
+#: lxml and ElementTree keep one prefix registry per process, and a library imported later may
+#: register another prefix for the same namespace: owslib, which pynhd imports, registers ``dct``
+#: for Dublin Core terms, and ``docProps/core.xml`` would then say ``dct:created`` for
+#: ``dcterms:created`` (the same XML, other bytes). ``Builder.build`` puts these back for the save.
+OPENPYXL_NAMESPACES = {
+    "dcterms": "http://purl.org/dc/terms/",
+    "dcmitype": "http://purl.org/dc/dcmitype/",
+    "cp": "http://schemas.openxmlformats.org/package/2006/metadata/core-properties",
+    "c": "http://schemas.openxmlformats.org/drawingml/2006/chart",
+    "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
+    "s": "http://schemas.openxmlformats.org/spreadsheetml/2006/main",
+    "r": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+    "vt": "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes",
+    "xdr": "http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing",
+    "cdr": "http://schemas.openxmlformats.org/drawingml/2006/chartDrawing",
+    "xml": "http://www.w3.org/XML/1998/namespace",
+    "cust": "http://schemas.openxmlformats.org/officeDocument/2006/custom-properties",
+}
+
+
+def registered_prefix(uri: str) -> str | None:
+    """The prefix the XML library openpyxl writes with gives a new element in ``uri`` now
+    (None when no prefix is registered for it)."""
+    from openpyxl import LXML
+    if LXML:
+        from lxml import etree
+        prefix = etree.Element("{%s}probe" % uri).prefix
+        return None if prefix is None or re.fullmatch(r"ns\d+", prefix) else prefix
+    import xml.etree.ElementTree as ElementTree
+    return ElementTree._namespace_map.get(uri)
+
+
+@contextlib.contextmanager
+def openpyxl_namespaces():
+    """openpyxl's own prefixes (``OPENPYXL_NAMESPACES``) while the workbook is written, and the
+    registry as it was afterwards, so building leaves no trace on the process either."""
+    from openpyxl.xml.functions import register_namespace
+    before = dict((uri, registered_prefix(uri)) for uri in OPENPYXL_NAMESPACES.values())
+    for prefix, uri in OPENPYXL_NAMESPACES.items():
+        register_namespace(prefix, uri)
+    try:
+        yield
+    finally:
+        for prefix, uri in OPENPYXL_NAMESPACES.items():
+            if before[uri] is not None and before[uri] != prefix:
+                register_namespace(before[uri], uri)
+
 
 RATINGS = ("Good", "Fair", "Poor")
 INDEX_EDGES = (0.39, 0.69)
@@ -1971,7 +2022,8 @@ class Builder:
         self.wb.properties.modified = FIXED_STAMP
         self.wb.calculation.fullCalcOnLoad = True
         buf = io.BytesIO()
-        self.wb.save(buf)
+        with openpyxl_namespaces():
+            self.wb.save(buf)
         return repack(buf.getvalue())
 
 
@@ -1988,10 +2040,10 @@ def repack(source: bytes) -> bytes:
     """Rewrite the package with fixed entry timestamps so the bytes are reproducible.
 
     openpyxl stamps ``dcterms:modified`` with the save time regardless of the
-    workbook properties, so that element is pinned here too. The chart parts
-    gain the "#N/A as blank" option on the way through.
+    workbook properties, so that element is pinned here too (and the build stops
+    if either stamp is not where it is pinned: the bytes would carry the clock).
+    The chart parts gain the "#N/A as blank" option on the way through.
     """
-    import re
     stamp = FIXED_STAMP.strftime("%Y-%m-%dT%H:%M:%SZ")
     out = io.BytesIO()
     with zipfile.ZipFile(io.BytesIO(source)) as zin, zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zout:
@@ -1999,8 +2051,10 @@ def repack(source: bytes) -> bytes:
             data = zin.read(info.filename)
             if info.filename == "docProps/core.xml":
                 text = data.decode("utf-8")
-                text = re.sub(r"(<dcterms:modified[^>]*>)[^<]*(</dcterms:modified>)", rf"\g<1>{stamp}\g<2>", text)
-                text = re.sub(r"(<dcterms:created[^>]*>)[^<]*(</dcterms:created>)", rf"\g<1>{stamp}\g<2>", text)
+                for name in ("modified", "created"):
+                    text, n = re.subn(rf"(<dcterms:{name}[^>]*>)[^<]*(</dcterms:{name}>)", rf"\g<1>{stamp}\g<2>", text)
+                    if n != 1:
+                        raise ValueError(f"docProps/core.xml has {n} dcterms:{name} elements, not one")
                 data = text.encode("utf-8")
             elif info.filename.startswith("xl/charts/chart") and info.filename.endswith(".xml"):
                 text = data.decode("utf-8")

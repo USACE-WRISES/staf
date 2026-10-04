@@ -16,7 +16,7 @@ zero almost everywhere rural. Never raises.
 from __future__ import annotations
 
 from ..provenance import VINTAGES, metric_entry
-from . import register
+from . import precomputed, register
 from .common import albers, esri_polygon, post_query_features, watershed_geom
 
 _TIGER_BASE = ("https://tigerweb.geo.census.gov/arcgis/rest/services/"
@@ -71,6 +71,20 @@ def compute(record: dict, tree_geoms: list) -> dict:
     area_sqkm = (record.get("watershed") or {}).get("areaSqkm")
     if ws is None or not area_sqkm:
         return _unavailable("watershed polygon or area unavailable")
+    pre = precomputed.values_for(record)
+    if pre is not None:
+        # 0.5.0: road length and crossings counted per catchment in the bundle
+        tiger = precomputed.vintages()["tiger"]
+        return {
+            "roadLengthKm": metric_entry(pre["roadLengthKm"], "km", precomputed.SRC_ROADS,
+                                         tiger, "pointWatershed"),
+            "roadDensity": metric_entry(pre["roadDensity"], "km/km2", precomputed.SRC_ROADS,
+                                        tiger, "pointWatershed"),
+            "roadCrossings": metric_entry(int(pre["roadCrossings"]), "count",
+                                          precomputed.SRC_CROSS, tiger, "pointWatershed"),
+            "roadCrossingDensity": metric_entry(pre["roadCrossingDensity"], "crossings/km2",
+                                                precomputed.SRC_CROSS, tiger, "pointWatershed"),
+        }
     poly = esri_polygon(ws)
     if poly is None:
         return _unavailable("polygon could not be encoded for the query")

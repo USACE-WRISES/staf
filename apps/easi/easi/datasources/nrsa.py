@@ -89,8 +89,28 @@ def _within_age(record: dict, as_of: date, max_age_years: int) -> bool:
     return sampled >= cutoff
 
 
+def _bundle_connected(comid: int, distance_km: float) -> set[int] | None:
+    """The same mainstem COMIDs from the STAF data bundle's V2 network, or None where it
+    cannot answer for both directions."""
+    try:
+        from .._vendor.site_engine import bundle
+        connected = {int(comid)}
+        for upstream in (True, False):
+            recs = bundle.v2_mainstem(int(comid), max(1.0, float(distance_km)), upstream=upstream)
+            if recs is None:
+                return None
+            connected.update(int(r["nhdplusid"]) for r in recs)
+        return connected
+    except Exception:  # noqa: BLE001 - NLDI answers instead
+        return None
+
+
 def _connected_comids(comid: int, distance_km: float) -> set[int] | None:
-    """Return verified upstream/downstream-main COMIDs; ``None`` means NLDI failed."""
+    """Return verified upstream/downstream-main COMIDs; ``None`` means NLDI failed
+    (the STAF data bundle answers first where it holds the network)."""
+    local = _bundle_connected(comid, distance_km)
+    if local is not None:
+        return local
     try:
         from pynhd import NLDI
         connected = {int(comid)}

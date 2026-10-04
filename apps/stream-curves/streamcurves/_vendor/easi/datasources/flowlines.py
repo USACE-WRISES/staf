@@ -36,8 +36,8 @@ def _fetch(west: float, south: float, east: float, north: float) -> Optional[dic
     ``comid`` per feature (the USGS fabric API; see ``fabric.py``). An
     unanswered request raises ``_Unanswered``, which the cache never stores."""
     try:
-        from . import fabric
-        found = fabric.features_in_bbox(west, south, east, north)
+        from . import v2
+        found = v2.features_in_bbox(west, south, east, north)
     except Exception as exc:  # noqa: BLE001 - network / version guard
         raise _Unanswered from exc
     if found is None:

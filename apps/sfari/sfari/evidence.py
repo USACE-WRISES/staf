@@ -762,14 +762,40 @@ def ev_barriers(ctx):
                           suggested_likert=sug)
 
 
+def _lateral_from_strips(ctx, mid, w, er):
+    """The evidence from NWI wetland area within 150 m of the reach (the STAF data bundle)."""
+    half = int(w.get("halfWidthM") or 150)
+    txt = (f"{w['acres']} ac of NWI wetland within {half} m of the reach "
+           f"({w['pctOfStrip']}% of the strip)")
+    riverine = (w.get("bySystem") or {}).get("riverine")
+    if riverine:
+        txt += f", {riverine} ac of it riverine"
+    if er is not None:
+        txt += f" · entrenchment ratio {float(er):.2f} (reach median, 3DEP sections)"
+    return EvidenceResult(mid, value=w["acres"], value_text=txt,
+                          field_value_text=f"Floodplain {w['acres']} ac NWI within {half} m",
+                          confidence="L",
+                          source="USFWS National Wetlands Inventory (STAF data bundle)"
+                                 + (" + STAF site engine reach cross-sections" if er is not None else ""),
+                          source_url="https://www.fws.gov/program/national-wetlands-inventory/wetlands-mapper",
+                          note=(f"NWI wetland area within {half} m of the reach centerline, summed "
+                                "over the HR flowlines the reach runs along (each for the share of "
+                                "it the reach covers). Screening; confirm inundation with 3DEP."))
+
+
 def ev_lateral_inundation(ctx):
     mid = "floodplain-connectivity-lateral-floodplain-inundation"
     w = ctx.extras.get("nwi")
     er = _eng(ctx, "entrenchmentRatio")
+    strips = bool(w) and w.get("stripAcres") is not None
+    if strips and w.get("acres"):
+        return _lateral_from_strips(ctx, mid, w, er)
     if not w or not w.get("count"):
-        # None: the NWI service did not answer; a zero count: no wetland nearby.
+        # None: the NWI service did not answer; a zero count (or no wetland area within the
+        # strip along the reach): no wetland nearby.
         nwi_text = ("NWI did not answer" if w is None
-                    else "no NWI wetland feature near the reach")
+                    else f"no NWI wetland within {int(w.get('halfWidthM') or 150)} m of the reach"
+                    if strips else "no NWI wetland feature near the reach")
         if er is not None:
             e = _engine_entry(ctx, mid, round(float(er), 2),
                               f"entrenchment ratio {float(er):.2f} (reach median, 3DEP "
@@ -904,7 +930,7 @@ async def pull(ctx_inputs: dict, *, progress: Optional[dict] = None,
         _thread(wqp.median_value, "tn", ctx.lat, ctx.lon),
         _thread(wqp.median_value, "tp", ctx.lat, ctx.lon),
         _thread(nwis.flow_stats, ctx.lat, ctx.lon, ctx.drainage_area_sqkm),
-        _thread(nwi.wetlands_near, ctx.lat, ctx.lon),
+        _thread(nwi.wetlands_for_reach, ctx.lat, ctx.lon, state.get("record")),
         (_thread(streamcat.metrics_by_comid, comid, STREAMCAT_NAMES)
          if comid is not None else _none()),
     )

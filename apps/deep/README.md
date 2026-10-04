@@ -251,6 +251,16 @@ downloads (field forms PDF, metrics PDF, completed workbook, blank workbook).
   on every card, selects the curve set from the delineated slope or drainage area (marked
   auto, user can override), and shows withheld metrics as disabled cards.
 
+**Scenarios** (owner, 2026-10-03): the chip at the top of the score rail keeps "Existing
+Conditions" and up to nine alternatives, each with its own measured values; desktop values the
+app computes go into every scenario without replacing an entry. Save writes Existing Conditions
+at the top level and the alternatives under an additive `scenarios` key (schema 2 unchanged).
+Compare and the report compare condition claims, so an unassessed function shows as an
+interval. The completed workbook holds Summary (the calculator's own numbers with the
+application's condition claim beside them), Existing Conditions, one calculator per
+alternative, then ReferenceCurves (every metric's curve layers, with the curve set each
+scenario used) (`deep/workbook.py`, `libs/staf_workbook`).
+
 ## Report preparation
 
 Report popups keep the current workspace visible while the mini map is prepared

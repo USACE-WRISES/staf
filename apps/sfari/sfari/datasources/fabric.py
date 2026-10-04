@@ -43,10 +43,27 @@ def _get(params: dict, *, timeout: float, retries: int = 2) -> Optional[dict]:
     return None
 
 
+def _bundle():
+    """The vendored site engine's STAF data bundle module (its answers are None wherever the
+    bundle is off or does not hold the request), or None."""
+    try:
+        from .._vendor.site_engine import bundle
+        return bundle
+    except Exception:  # noqa: BLE001 - no engine here: the service answers
+        return None
+
+
 def features_in_bbox(west: float, south: float, east: float, north: float, *,
                      limit: int = BBOX_LIMIT, timeout: float = 60.0
                      ) -> Optional[list[dict]]:
-    """GeoJSON features (comid, gnis_name, geometry) in the bbox, or None on failure."""
+    """GeoJSON features (comid, gnis_name, geometry) in the bbox, or None on failure.
+    The STAF data bundle answers first where it covers the box (every line in it; the
+    service stops at ``limit``)."""
+    b = _bundle()
+    recs = b.v2_lines_in_box(west, south, east, north) if b is not None else None
+    if recs is not None:
+        return [{"type": "Feature", "properties": {"comid": r["nhdplusid"], "gnis_name": r.get("gnis_name")},
+                 "geometry": r["geometry"]} for r in recs]
     data = _get({"bbox": f"{west},{south},{east},{north}", "limit": int(limit),
                  "properties": BBOX_PROPERTIES}, timeout=timeout)
     if data is None:
@@ -69,11 +86,20 @@ def clear_feature_memo() -> None:
 
 def feature_by_comid(comid: int, *, timeout: float = 60.0) -> Optional[dict]:
     """The COMID's feature (attributes + geometry), ``{}`` when the COMID is
-    unknown, or None when the service did not answer."""
+    unknown, or None when the service did not answer. The STAF data bundle answers
+    first where it holds the COMID."""
     key = int(comid)
     hit = _feature_memo.get(key)
     if hit is not None:
         return hit
+    b = _bundle()
+    local = b.v2_feature(key) if b is not None else None
+    if local is not None:
+        # the STAF data bundle's copy of the same flowline (attributes, EROM flows, exact line)
+        if len(_feature_memo) >= _MEMO_MAX:
+            _feature_memo.pop(next(iter(_feature_memo)))
+        _feature_memo[key] = local
+        return local
     data = _get({"comid": key, "limit": 1, "properties": ATTR_PROPERTIES},
                 timeout=timeout)
     if data is None:

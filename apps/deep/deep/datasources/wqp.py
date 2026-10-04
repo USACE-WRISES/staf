@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import csv
 import io
+from datetime import date
 from statistics import median
 from typing import Optional
 
@@ -80,6 +81,17 @@ def median_value(param: str, lat: float, lon: float, within_mi: float = 5.0,
     chars = SYNONYMS.get(param)
     if not chars:
         return None
+    if param in ("tn", "tp"):
+        # the STAF data bundle's WQP results when it is on (every numeric result, as here)
+        from .._vendor.site_engine import bundle
+        found = bundle.lookups()
+        if found is not None:
+            points, tables = found
+            try:
+                return points.wqp_sfari(tables, param, lat, lon, within_mi,
+                                        start=bundle.wqp_start(start) or date(2015, 1, 1))
+            except Exception:  # noqa: BLE001 - the portal answers instead
+                pass
     vals = _fetch(chars, lat, lon, within_mi, start, timeout)
     if not vals:
         return None

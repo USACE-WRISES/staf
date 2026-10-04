@@ -400,10 +400,10 @@ def v2_reach_feature(comid: int) -> Optional[dict]:
     fabric API, for the scored-reach highlight when the reach lies outside the
     viewport's V2 fetch (a routed click). None when unknown or unanswered.
     ``fabric.feature_by_comid`` memoizes answered features; an unanswered
-    request is asked again."""
+    request is asked again. The STAF data bundle answers first (``v2``)."""
     try:
-        from .datasources import fabric
-        feat = fabric.feature_by_comid(int(comid))
+        from .datasources import v2
+        feat = v2.feature_by_comid(int(comid))
     except Exception:  # noqa: BLE001 - resilience by design
         return None
     return feat if feat and feat.get("geometry") else None

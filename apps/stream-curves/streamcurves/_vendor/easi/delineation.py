@@ -149,13 +149,13 @@ def line_sinuosity(geom) -> Optional[float]:
 def flowline_attrs(comid: int) -> dict:
     """NHDPlus attributes for a COMID (gnis_name, drainage area, huc8, slope,
     fcode, stream order, sinuosity). Best-effort; never raises."""
-    from .datasources import fabric
+    from .datasources import fabric, v2
 
     out: dict[str, Any] = {"gnis_name": None, "drainage_area_sqkm": None, "huc8": None,
                            "slope": None, "fcode": None, "stream_order": None,
                            "sinuosity": None, "erom": None}
     try:
-        feat = fabric.feature_by_comid(comid)
+        feat = v2.feature_by_comid(comid)
         if feat is None:
             out["_flowline_error"] = "fabric: the NHDPlus V2 flowline service did not answer"
             return out
@@ -170,6 +170,16 @@ def flowline_attrs(comid: int) -> dict:
     except Exception as exc:  # pragma: no cover - network/version guard
         out["_flowline_error"] = str(exc)
     return out
+
+
+def _bundle_call(name: str, *args):
+    """``bundle.<name>(*args)`` from the vendored site engine's STAF data bundle: None
+    wherever the bundle is off or cannot answer (the services answer then). Never raises."""
+    try:
+        from ._vendor.site_engine import bundle
+        return getattr(bundle, name)(*args)
+    except Exception:  # noqa: BLE001 - the services answer instead
+        return None
 
 
 def _comid_from_frame(frame) -> Optional[int]:
@@ -212,6 +222,14 @@ def snap_point(lat: float, lon: float) -> dict:
                            "slope": None, "fcode": None, "stream_order": None,
                            "sinuosity": None, "erom": None,
                            "snapped_lat": None, "snapped_lon": None}
+
+    local = _bundle_call("raindrop", lat, lon)
+    if local is not None and local.get("comid") is not None:
+        # the STAF data bundle's raindrop (the V2 catchment that holds the point); NLDI otherwise
+        out["comid"] = int(local["comid"])
+        out["snapped_lat"], out["snapped_lon"] = local.get("snap_lat"), local.get("snap_lon")
+        out.update(flowline_attrs(out["comid"]))
+        return out
 
     comid: Optional[int] = None
     snapped_point: Optional[tuple[float, float]] = None
@@ -262,6 +280,15 @@ def delineate_watershed(comid: int, simplified: bool = False) -> tuple[Optional[
     from pynhd import NLDI
 
     warnings: list[str] = []
+    local = None if simplified else _bundle_call("v2_watershed", int(comid))
+    if local is not None:
+        # the STAF data bundle's basin: the same exact V2 catchments, walked as NLDI walks them
+        import geopandas as gpd
+        from shapely.geometry import shape
+        frame = gpd.GeoDataFrame(geometry=[shape(local["geometry"])], crs=CRS_WGS84)
+        geom, area_sqkm = _largest_polygon(frame)
+        if geom is not None:
+            return gpd.GeoSeries([geom], crs=CRS_WGS84).__geo_interface__, area_sqkm, warnings
     try:
         basins = NLDI().get_basins([str(comid)], fsource="comid", simplified=simplified)
     except Exception as exc:  # pragma: no cover - network guard
@@ -350,7 +377,7 @@ def derive_reach(comid: int, lat: float, lon: float,
     from shapely.ops import linemerge
     from pynhd import NLDI
 
-    from .datasources import fabric
+    from .datasources import v2
 
     warnings: list[str] = []
     length_m = length_ft / FT_PER_M
@@ -362,7 +389,7 @@ def derive_reach(comid: int, lat: float, lon: float,
     own_len_km = 0.0
     try:
         from shapely.geometry import shape
-        feat = fabric.feature_by_comid(comid)
+        feat = v2.feature_by_comid(comid)
         own_geoms = [shape(feat["geometry"])] if feat and feat.get("geometry") else []
         own_geoms = [g for g in own_geoms if g is not None and not g.is_empty]
         if own_geoms:
@@ -376,15 +403,21 @@ def derive_reach(comid: int, lat: float, lon: float,
     # upstream segments — and thus the COMID's *internal* upstream node — are returned
     # even for long reaches; that lets the trim be oriented deterministically.
     nav_km = round(max(length_km * 4, own_len_km + length_km) + 0.3, 1)
-    try:
-        up = NLDI().navigate_byid(
-            fsource="comid", fid=str(comid), navigation="upstreamMain",
-            source="flowlines", distance=max(1.0, nav_km),
-        )
-        geoms = [g for g in up.geometry if g is not None and not g.is_empty]
-    except Exception as exc:
-        warnings.append(f"upstream navigation failed: {exc}")
-        geoms = []
+    local = _bundle_call("v2_upstream_main", int(comid), max(1.0, nav_km))
+    if local is not None:
+        # the STAF data bundle's upstream mainstem (uphydroseq, as NLDI navigates it)
+        from shapely.geometry import shape
+        geoms = [g for g in (shape(x) for x in local) if g is not None and not g.is_empty]
+    else:
+        try:
+            up = NLDI().navigate_byid(
+                fsource="comid", fid=str(comid), navigation="upstreamMain",
+                source="flowlines", distance=max(1.0, nav_km),
+            )
+            geoms = [g for g in up.geometry if g is not None and not g.is_empty]
+        except Exception as exc:
+            warnings.append(f"upstream navigation failed: {exc}")
+            geoms = []
     if not geoms:                       # fall back to the COMID's own flowline
         geoms = own_geoms
     if not geoms:

@@ -359,6 +359,22 @@ complete availability, not 20 independent field observations.
   rescore, so it outranks a rating set by hand and locks the rating select until it
   is cleared. It reaches the exports and the completed workbook's observed cells.
 
+## Scenarios, summary and the workbook
+
+- **Scenarios** (owner, 2026-10-03): the chip at the top of the score rail keeps
+  "Existing Conditions" and up to nine alternatives. A scenario changes ratings only: the
+  overrides, the cross-section (shown section and edited heights) and the observations
+  (`easi/scenario_state.py`, whose `scored_for` is the page's scoring for any scenario).
+  Notes are shared. EASI has no Save/Open, so scenarios live in the session and the page
+  warns before it is closed.
+- **Compare** shows the ECI, the three sub-indices and every function with the change from
+  Existing Conditions; the report opens with the summary block (`easi/workbook.py`).
+- **The completed workbook** (Get Forms and the report) is one file: Summary, Existing
+  Conditions, a live calculator per alternative, ReferenceCurves (the six curves this site
+  was scored against and the rating bands), then the calculator's own sheets
+  (`libs/staf_workbook`). Downloads never open a page. `workbook.py`, `scenario_state.py`
+  and `_vendor/staf_workbook/` are presentation code outside the method digests.
+
 ## Data sources (all public, no API keys)
 
 | Source | Used for |

@@ -1,6 +1,8 @@
 """Port of app/helpers/data_sources.R — NLDI section (lat/lon -> NHDPlus COMID).
 
 Endpoint (keyless): https://api.water.usgs.gov/nldi/linked-data/comid/position
+Where the STAF data bundle holds the point, the vendored site engine answers first with the same
+fact, the V2 catchment that contains the point (``bundle.v2_catchment_at``).
 """
 
 from __future__ import annotations
@@ -25,6 +27,16 @@ def parse_nldi_comid(j: Any) -> int | None:
     return _as_int(cid)
 
 
+def _bundle_comid(lat: float, lon: float) -> int | None:
+    """The COMID of the V2 catchment holding the point, from the STAF data bundle, or None
+    where the bundle is off or holds no catchment there."""
+    try:
+        from .._vendor.site_engine import bundle
+        return bundle.v2_catchment_at(lat, lon)
+    except Exception:  # noqa: BLE001 - NLDI answers instead
+        return None
+
+
 def nldi_comid(lon: Any, lat: Any) -> int | None:
     """COMID at a point; None on any failure. Cached per point (a cached miss is
     reused, not refetched — R stores NA_integer_ in .ds_cache)."""
@@ -36,6 +48,10 @@ def nldi_comid(lon: Any, lat: Any) -> int | None:
     hit = _cache_get(key)
     if hit is not _MISS:
         return hit
+    local = _bundle_comid(lat, lon)
+    if local is not None:
+        _cache_set(key, local)
+        return local
     try:
         j = _get_json(
             NLDI_POSITION_URL,

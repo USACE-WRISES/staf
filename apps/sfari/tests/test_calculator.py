@@ -339,9 +339,9 @@ def test_the_report_modal_offers_both_downloads():
     from pathlib import Path
 
     src = Path(app.__file__).read_text(encoding="utf-8")
-    footer = src.split('title="SFARI Report"', 1)[1].split("))", 1)[0]
-    assert 'ui.download_button("dl_calc_filled"' in footer
-    assert 'ui.download_button("dl_calc_blank"' in footer
+    footer = src.split("title=_report_title()", 1)[1].split("))", 1)[0]
+    assert 'staf_web.download_button("dl_calc_filled"' in footer
+    assert 'staf_web.download_button("dl_calc_blank"' in footer
     assert "def dl_calc_filled():" in src and "def dl_calc_blank():" in src
     assert "calculator.build_calculator(" in src and "calculator.blank_bytes()" in src
 

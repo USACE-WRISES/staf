@@ -23,12 +23,19 @@ from urllib.parse import urlparse
 os.environ.setdefault("HYRIVER_CACHE_NAME",
                       os.path.join(tempfile.gettempdir(), "sfari_hyriver.sqlite"))
 os.environ.setdefault("HYRIVER_CACHE_EXPIRE", str(7 * 24 * 3600))
+# The STAF data bundle, fetched on demand from its staf-data-current release, answers where it
+# covers and the USGS services elsewhere (the engine's own default stays "service" for StreamCurves
+# and the national builder); STAF_DATA_SOURCE=service asks the services only.
+os.environ.setdefault("STAF_DATA_SOURCE", "auto")
 
 import anyio  # noqa: E402
 from shiny import App, reactive, render, ui  # noqa: E402
 
 from sfari import bieger, config, delineation, pipeline, report, scoring, session as session_io, xscalc  # noqa: E402
 from sfari import viewport  # noqa: E402
+from sfari._vendor.staf_workbook import web as staf_web  # noqa: E402  (download-only controls)
+from sfari._vendor.staf_workbook.model.scenarios import BASELINE_ID, ScenarioSet  # noqa: E402
+from sfari import workbook as staf_book  # noqa: E402  (the scenario workbook and the summary block)
 from sfari import calculator, comid_anchor, engine_prefill, hr_site, network_display  # noqa: E402
 from sfari import reportmap  # noqa: E402
 from sfari.datasources import flowlines  # noqa: E402
@@ -209,6 +216,15 @@ METRICS_BY_ID = config.metrics_by_id()
 CATEGORY_ORDER = list(config.CATEGORY_ORDER)
 FNS_BY_CAT = config.functions_by_category()
 _FNF_SHORT = {"Functioning": "F", "Functioning-at-Risk": "AR", "Non-Functioning": "NF"}
+
+
+def _without_photos(state):
+    """A scenario's entries without photos: an alternative is a plan, not a site visit."""
+    out = copy.deepcopy(state or {})
+    for rec in (out.get("metric_scores") or {}).values():
+        if isinstance(rec, dict):
+            rec.pop("photos", None)
+    return out
 
 
 def _bar(label, value, color, *, vmax=1.0, fmt="{:.2f}", indent=False):
@@ -575,6 +591,9 @@ app_ui = ui.page_fillable(
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
                     ui.tags.script(src="report-ready.js?v=2", defer=""),
+                    ui.tags.script(src="staf/unsaved-guard.js?v=1", defer=""),
+                    ui.tags.link(rel="stylesheet", href="staf/staf.css?v=4"),
+                    ui.tags.script(src="staf/scenarios.js?v=1", defer=""),
                     ui.tags.script(src="field-review.js?v=6", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
@@ -586,7 +605,7 @@ app_ui = ui.page_fillable(
                 ui.input_action_link("nav_new", "New"),
                 ui.input_file("load_session", None, accept=[".json"], multiple=False,
                               button_label="Open"),
-                ui.download_button("save_session", "Save", class_="easi-nav-btn"),
+                staf_web.download_button("save_session", "Save", class_="easi-nav-btn"),
                 ui.input_action_link("nav_about", "About"),
                 ui.input_action_link("nav_help", "Help"),
                 class_="easi-nav",
@@ -651,6 +670,92 @@ def server(input, output, session):
     evidence = reactive.value({})          # {metricId: EvidenceResult dict} (desktop pull)
     _pull_prog = {"done": 0, "total": 0}
     xs_geom = reactive.value(None)         # cross-section geometry for the hydraulics popup
+
+    # ---- scenarios (2026-10-03): Existing Conditions plus optional alternatives. The active
+    # scenario's entries live in metric_scores / function_scores; the others wait in _sc. ----
+    _sc = {"set": ScenarioSet(), "dialog": None}
+    scenario_rev = reactive.value(0)      # any scenario change: the chip, compare and report re-read
+    scenario_nonce = reactive.value(0)    # a switch: the function panel re-reads its entries
+
+    def _bump_scenarios(switched=False):
+        with reactive.isolate():
+            scenario_rev.set(scenario_rev() + 1)
+            if switched:
+                scenario_nonce.set(scenario_nonce() + 1)
+
+    def _entries_now():
+        with reactive.isolate():
+            return {"metric_scores": copy.deepcopy(metric_scores()),
+                    "function_scores": copy.deepcopy(function_scores())}
+
+    def _show_entries(state):
+        metric_scores.set(copy.deepcopy((state or {}).get("metric_scores") or {}))
+        function_scores.set(copy.deepcopy((state or {}).get("function_scores") or {}))
+
+    def _reset_scenarios():
+        _sc["set"] = ScenarioSet()
+        _bump_scenarios(switched=True)
+
+    def _scenario_entries():
+        """[(scenario, entries)] in order, the active scenario's read live."""
+        sset = _sc["set"]
+        live = {"metric_scores": metric_scores(), "function_scores": function_scores()}
+        return [(s, live if s.id == sset.active else (s.state or {})) for s in sset.items]
+
+    def _switch_scenario(sid):
+        sset = _sc["set"]
+        if sid == sset.active:
+            return
+        sset.set_state(sset.active, _entries_now())
+        sset.select(sid)
+        _show_entries(sset.current.state)
+        _bump_scenarios(switched=True)
+
+    def _session_scenarios():
+        """(Existing Conditions' entries, the session file's scenarios key)."""
+        sset = _sc["set"]
+        live = _entries_now()
+        ec = live if sset.active == BASELINE_ID else (sset.baseline.state or {})
+        data = sset.to_json()
+        for item in data["items"]:
+            if item["id"] == sset.active and item["id"] != BASELINE_ID:
+                item["state"] = live
+        return ec, data
+
+    def _restore_scenarios(raw):
+        sset = ScenarioSet.from_json(raw, baseline_state=_entries_now())
+        _sc["set"] = sset
+        if sset.active != BASELINE_ID:
+            _show_entries(sset.current.state)
+        _bump_scenarios(switched=True)
+
+    def _comparison(rows=None):
+        rows = rows if rows is not None else _scenario_entries()
+        return staf_book.comparison([s.name for s, _e in rows], [e.get("function_scores") or {} for _s, e in rows])
+
+    # Leave-page guard: warn while the site and its scores differ from the last Save or Open.
+    _saved_fp = reactive.value(None)
+    _unsaved_sent = {"dirty": None}
+
+    def _work_fp():
+        dd = (delin() or {}).get("delineation") or {}
+        ms, fs = metric_scores(), function_scores()
+        scenario_rev()
+        sset = _sc["set"]
+        if not dd and not ms and not fs and not sset.has_alternatives() and not sset.baseline.description:
+            return None
+        site = [dd.get(k) for k in ("nhdplusid", "comid", "snapped_lat", "snapped_lon")]
+        # every scenario's entries, whichever one is on screen: switching is not a change
+        rows = [(s.id, s.name, s.description, e) for s, e in _scenario_entries()]
+        return staf_web.state_fingerprint(site, rows)
+
+    @reactive.effect
+    async def _publish_unsaved():
+        fp = _work_fp()
+        dirty = fp is not None and fp != _saved_fp()
+        if dirty != _unsaved_sent["dirty"]:
+            _unsaved_sent["dirty"] = dirty
+            await session.send_custom_message(staf_web.UNSAVED_MESSAGE, {"dirty": dirty})
     hr_geojson = reactive.value(None)      # NHDPlus HR flowlines in the viewport | None
     flow_geojson = reactive.value(None)    # NHDPlus V2 flowlines in the viewport | None
     streams_mode = reactive.value(None)    # network_display mode of the drawn layers | None
@@ -707,6 +812,7 @@ def server(input, output, session):
         delin.set(None); _delin_generation["generation"] = None
         engine_state.set({"status": "idle"}); stage.set("")
         evidence.set({}); metric_scores.set({}); function_scores.set({}); xs_geom.set(None)
+        _reset_scenarios()
         _lookup_state("snapping")
 
     def _remove_layer(key):
@@ -1481,6 +1587,7 @@ def server(input, output, session):
         engine_state.set({"status": "idle"})
         metric_scores.set({}); function_scores.set({}); current_fn.set(0)
         evidence.set({}); xs_geom.set(None)
+        _reset_scenarios()
         current_step.set(STEP_IDENTIFY)
         try:
             ui.modal_remove()
@@ -1992,7 +2099,7 @@ def server(input, output, session):
                 ui.output_ui("fn_nav"),
                 class_="sfari-nav"),
             ui.div(ui.output_ui("fn_panel"), class_="sfari-fnpanel"),
-            ui.div(ui.output_ui("rollup_rail"), class_="sfari-rollup"),
+            ui.div(ui.output_ui("scenario_bar"), ui.output_ui("rollup_rail"), class_="sfari-rollup"),
             class_="sfari-worksheet")
 
     @render.ui
@@ -2022,6 +2129,7 @@ def server(input, output, session):
         if current_step() not in (STEP_REVIEW, STEP_REPORT):
             return None
         idx = current_fn()
+        scenario_nonce()                     # a scenario switch re-reads the entries
         ev_map = evidence()
         pulling = ((pull_task.status() == "running"
                     and _pull_prog.get("generation") == _map_pick["generation"])
@@ -2262,6 +2370,7 @@ def server(input, output, session):
             return _bar(label, subs[key], scoring.index_band_color(subs[key]))
 
         return ui.TagList(
+            _rail_delta(),
             ui.div(ui.div("–" if n_scored == 0 else f"{eci:.2f}",
                           class_="sfari-eci" + (" empty" if n_scored == 0 else "")),
                    ui.div("Ecosystem Condition Index", class_="sfari-eci-lbl"),
@@ -2525,6 +2634,7 @@ def server(input, output, session):
 
         body = ui.div(
             header,
+            _summary_section(),
             ui.div("Metric evidence & Likert scores", class_="easi-section-title"),
             evidence_tools,
             *disc_blocks,
@@ -2532,13 +2642,13 @@ def server(input, output, session):
             ui.div(left, right, class_="easi-summary-plots"),
             id="sfari-report")
         return ui.modal(
-            body, title="SFARI Report", easy_close=True, size="xl",
-            footer=ui.div(ui.download_button("dl_pdf", "PDF", class_="btn-sm"),
-                          ui.download_button("dl_csv", "CSV", class_="btn-sm"),
-                          ui.download_button("dl_geojson", "GeoJSON", class_="btn-sm"),
-                          ui.download_button("dl_calc_filled", "Excel Workbook",
+            body, title=_report_title(), easy_close=True, size="xl",
+            footer=ui.div(staf_web.download_button("dl_pdf", "PDF", class_="btn-sm"),
+                          staf_web.download_button("dl_csv", "CSV", class_="btn-sm"),
+                          staf_web.download_button("dl_geojson", "GeoJSON", class_="btn-sm"),
+                          staf_web.download_button("dl_calc_filled", "Excel Workbook",
                                              class_="btn-sm"),
-                          ui.download_button("dl_calc_blank", "Excel Workbook (blank)",
+                          staf_web.download_button("dl_calc_blank", "Excel Workbook (blank)",
                                              class_="btn-sm"),
                           ui.modal_button("Close"),
                           style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"))
@@ -2571,10 +2681,10 @@ def server(input, output, session):
                 # Each download sits in its own div: Shiny's Bootstrap styles a bare
                 # ``.nav-pills > li > a`` as a nav link (link-blue text, no button
                 # chrome), and the wrapper keeps the anchors real buttons.
-                ui.nav_control(ui.div(ui.download_button("dl_field_forms", "Field forms PDF",
+                ui.nav_control(ui.div(staf_web.download_button("dl_field_forms", "Field forms PDF",
                                                          class_="btn-sm btn-primary"),
                                       class_="ff-dl")),
-                ui.nav_control(ui.div(ui.download_button("dl_desktop_metrics",
+                ui.nav_control(ui.div(staf_web.download_button("dl_desktop_metrics",
                                                          "Desktop metrics PDF",
                                                          class_="btn-sm btn-primary"),
                                       class_="ff-dl")),
@@ -2908,28 +3018,138 @@ def server(input, output, session):
                              type="message", duration=4)
         ui.modal_remove()
 
+    # ---- the scenario chip, its dialogs, and the compare view ----
+    @render.ui
+    def scenario_bar():
+        if current_step() not in (STEP_REVIEW, STEP_REPORT):
+            return None
+        scenario_rev()
+        return staf_web.scenario_bar(_sc["set"])
+
+    def _rail_delta():
+        scenario_rev()
+        sset = _sc["set"]
+        if sset.active == BASELINE_ID:
+            return None
+        rows = _scenario_entries()
+        active = next(i for i, (s, _e) in enumerate(rows) if s.id == sset.active)
+        return staf_web.rail_delta(_comparison([rows[0], rows[active]]), 1)
+
+    def _scenario_dialog(mode, *, name, description, error=None):
+        cur = _sc["set"].current
+        title = ("New scenario" if mode == "new" else
+                 "Describe Existing Conditions" if cur.is_baseline else "Rename or describe")
+        ui.modal_show(staf_web.scenario_dialog(title=title, name=name, description=description,
+                                               name_locked=mode != "new" and cur.is_baseline, error=error,
+                                               can_delete=mode == "edit" and not cur.is_baseline))
+
+    @reactive.effect
+    @reactive.event(input.staf_scenario_evt)
+    def _scenario_event():
+        ev = input.staf_scenario_evt() or {}
+        action, sid = ev.get("action"), ev.get("id") or ""
+        sset = _sc["set"]
+        if action == "select" and sid:
+            _switch_scenario(sid)
+        elif action == "new":
+            if not sset.can_add():
+                ui.notification_show("Up to 10 scenarios.", type="warning", duration=4)
+                return
+            _sc["dialog"] = "new"
+            _scenario_dialog("new", name=sset.default_name(), description="")
+        elif action == "edit":
+            _sc["dialog"] = "edit"
+            _scenario_dialog("edit", name=sset.current.name, description=sset.current.description)
+        elif action == "delete" and not sset.current.is_baseline:
+            ui.modal_show(staf_web.delete_dialog(sset.current.name))
+        elif action == "compare" and sset.has_alternatives():
+            ui.modal_show(staf_web.compare_dialog(_comparison()))
+
+    @reactive.effect
+    @reactive.event(input.staf_sc_save)
+    def _scenario_save():
+        sset = _sc["set"]
+        mode = _sc["dialog"]
+        desc = (input.staf_sc_desc() or "").strip()
+        name = sset.current.name
+        if mode == "new" or not sset.current.is_baseline:
+            name = (input.staf_sc_name() or "").strip()
+        try:
+            if mode == "new":
+                sset.set_state(sset.active, _entries_now())
+                new = sset.add(name, desc, copy_from=sset.active)
+                new.state = _without_photos(new.state)
+                _show_entries(new.state)
+                _bump_scenarios(switched=True)
+            else:
+                cur = sset.current
+                if not cur.is_baseline and name != cur.name:
+                    sset.rename(cur.id, name)
+                sset.describe(cur.id, desc)
+                _bump_scenarios()
+        except ValueError as exc:
+            _scenario_dialog(mode, name=name, description=desc, error=str(exc))
+            return
+        ui.modal_remove()
+
+    @reactive.effect
+    @reactive.event(input.staf_sc_delete)
+    def _scenario_delete():
+        sset = _sc["set"]
+        if not sset.current.is_baseline:
+            sset.delete(sset.active)
+            _show_entries(sset.current.state)
+            _bump_scenarios(switched=True)
+        ui.modal_remove()
+
+    def _summary_section():
+        # the report is the shown scenario's alone: it names that scenario, and comparing stays in
+        # Compare and the workbook's Summary tab (owner, 2026-10-03)
+        scenario_rev()
+        return ui.div(ui.div("Assessment summary", class_="easi-section-title"),
+                      staf_web.summary_block(staf_book.summary_info(delin() or {}),
+                                             scenario=staf_web.report_scenario(_sc["set"])),
+                      class_="staf-report-summary")
+
+    def _report_title():
+        sset = _sc["set"]
+        return "SFARI Report" if not sset.has_alternatives() else f"SFARI Report · {sset.current.name}"
+
+    def _workbook_bytes():
+        d = delin() or {}
+        try:
+            return staf_book.build(d, _scenario_entries())
+        except Exception as exc:  # noqa: BLE001 - never a failed download: the single calculator instead
+            print(f"SFARI: the scenario workbook failed ({exc!r}); serving the single calculator", flush=True)
+            ec, _data = _session_scenarios()
+            return calculator.build_calculator(d, ec.get("metric_scores") or {}, ec.get("function_scores") or {})
+
     # ---- exports + resumable session ----
     @render.download(filename="sfari-assessment.json")
     def save_session():
-        yield session_io.dump(delin() or {}, metric_scores(), function_scores(), evidence(), xs_geom())
+        _saved_fp.set(_work_fp())
+        ec, scen = _session_scenarios()
+        yield session_io.dump(delin() or {}, ec.get("metric_scores") or {}, ec.get("function_scores") or {},
+                              evidence(), xs_geom(), scenarios=scen)
 
-    @render.download(filename="sfari-report.csv")
+    @render.download(filename=lambda: f"sfari-report{staf_web.scenario_suffix(_sc['set'])}.csv")
     def dl_csv():
         yield report.build_csv(delin() or {}, metric_scores(), function_scores(), evidence(), scored())
 
-    @render.download(filename="sfari-report.geojson")
+    @render.download(filename=lambda: f"sfari-report{staf_web.scenario_suffix(_sc['set'])}.geojson")
     def dl_geojson():
         yield report.build_geojson(delin() or {}, function_scores(), scored())
 
-    @render.download(filename="sfari-report.pdf")
+    @render.download(filename=lambda: f"sfari-report{staf_web.scenario_suffix(_sc['set'])}.pdf")
     def dl_pdf():
-        yield report.build_pdf(delin() or {}, metric_scores(), function_scores(), evidence(), scored())
+        yield report.build_pdf(delin() or {}, metric_scores(), function_scores(), evidence(), scored(),
+                               scenario=staf_web.report_scenario(_sc["set"]))
 
-    @render.download(filename=lambda: calculator.calculator_filename(delin() or {}))
+    @render.download(filename=lambda: calculator.calculator_filename(delin() or {}), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_calc_filled():
-        yield calculator.build_calculator(delin() or {}, metric_scores(), function_scores())
+        yield _workbook_bytes()
 
-    @render.download(filename=calculator.blank_filename())
+    @render.download(filename=calculator.blank_filename(), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_calc_blank():
         yield calculator.blank_bytes()
 
@@ -2974,6 +3194,8 @@ def server(input, output, session):
         function_scores.set(st.get("function_scores") or {})
         evidence.set(st.get("evidence") or {})
         xs_geom.set(st.get("cross_section"))
+        _restore_scenarios(st.get("scenarios"))
+        _saved_fp.set(_work_fp())                      # just opened: nothing unsaved yet
         se = d.get("siteEngine") if isinstance(d, dict) else None
         engine_state.set({"status": "ok", "record": se, "reason": None}
                          if se and se.get("status", "ok") == "ok"

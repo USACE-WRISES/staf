@@ -387,7 +387,8 @@ def _source_cell_text(meta: dict) -> str:
     return txt
 
 
-def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
+def build_pdf(delin, assessment, measured, sc, region=None, *, scenario=None) -> bytes:
+    """The report PDF; ``scenario`` (``(name, description)``) names the scenario it is for."""
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -421,6 +422,12 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
              Paragraph(_attr(assessment, "assessment_name", "assessmentName") or "Detailed assessment",
                        styles["Heading2"]),
              Paragraph(dl.get("gnis_name") or "(unnamed reach)", styles["Heading3"])]
+    if scenario:            # the scenario this report is for, while there are alternatives
+        from xml.sax.saxutils import escape
+        name, description = scenario
+        story.append(Paragraph(f"<b>Scenario:</b> {escape(name)}", styles["Normal"]))
+        if description:
+            story.append(Paragraph(escape(description), styles["Italic"]))
 
     version, status, digest, l3, st = _provenance(assessment, region)
     ver_txt = "unversioned" if version is None else f"v{version}"

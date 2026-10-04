@@ -124,7 +124,7 @@ def test_the_dashboard_is_an_overlay_the_map_never_re_renders_for():
     dash = SRC[SRC.index("def viewer_dashboard():"):SRC.index("def viewer_dashboard_body():")]
     assert 'input.viewer_view() != "dashboard"' in dash and "national_dashboard.scope_choices(stats)" in dash
     assert "input.dash_panel == 'scope'" in dash and "input.dash_panel == 'compare'" in dash
-    assert 'ui.download_button("dash_export"' in dash and "_dash_current(" in dash
+    assert 'staf_web.download_button("dash_export"' in dash and "_dash_current(" in dash
     assert "viewer_stats.set(stats)" in SRC and "viewer_stats.set(None)" in SRC
     config_task = SRC[SRC.index("async def viewer_config_task"):SRC.index("def _viewer_config_request")]
     assert 'ds.current_stats(summary.get("dataset_key"))' in config_task

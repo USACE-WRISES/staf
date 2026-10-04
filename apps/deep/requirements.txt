@@ -31,6 +31,7 @@ rioxarray==0.22.0
 xarray==2026.4.0
 numpy==2.4.6
 pandas==3.0.3
+pyarrow==24.0.0            # the STAF data bundle (the vendored site engine reads its parquet files)
 
 # --- PDF export ---
 reportlab==4.5.1

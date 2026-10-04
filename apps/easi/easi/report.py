@@ -437,7 +437,8 @@ def _xs_reach_sentence(xs: Optional[dict]) -> str:
     return text
 
 
-def build_pdf(result: dict) -> bytes:
+def build_pdf(result: dict, *, scenario=None) -> bytes:
+    """The report PDF; ``scenario`` (``(name, description)``) names the scenario it is for."""
     from reportlab.lib import colors as rc
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -450,6 +451,11 @@ def build_pdf(result: dict) -> bytes:
     story = []
     story.append(Paragraph(f"EASI Report: {d.get('gnis_name','')}",
                            styles["Title"]))
+    if scenario:            # the scenario this report is for, while there are alternatives
+        name, description = scenario
+        story.append(Paragraph(f"<b>Scenario:</b> {_esc(name)}", styles["Normal"]))
+        if description:
+            story.append(Paragraph(_esc(description), styles["Italic"]))
     lat, lon = d.get("snapped_lat"), d.get("snapped_lon")
     pt = f"{lat:.4f}, {lon:.4f}" if lat is not None and lon is not None else "—"
     meta = f"Analysis point {pt} · Reach {d.get('reach_length_ft')} ft upstream"

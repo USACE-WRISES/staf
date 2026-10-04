@@ -9,7 +9,9 @@ scored:
     snap tolerance. Everything behaves exactly as it always has.
   * ``hrSurrogate`` — the click sits on an HR-only stream. The point is routed
     to the nearest covered downstream V2 reach with an NLDI hydrolocation
-    raindrop trace, and the substitution is labeled (surrogate reach, routed
+    raindrop trace (where the STAF data bundle holds the point, the V2 catchment
+    that contains it, which names the reach the trace reaches; ``routing.method``
+    names which answered), and the substitution is labeled (surrogate reach, routed
     distance, drainage-area ratio) in the UI, the report, and every export.
   * refusal — only under the ``streamcat-legacy`` policy: when the surrogate
     drains more than ``DA_RATIO_MAX`` times the clicked stream's area, that
@@ -239,7 +241,8 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
     if clicked_da and surrogate_da:
         da_ratio = round(surrogate_da / clicked_da, 2)
 
-    routing = {"method": ROUTING_METHOD, "routedDistanceFt": routed_ft,
+    # the STAF data bundle names its own method where it answered the raindrop
+    routing = {"method": snap.get("method") or ROUTING_METHOD, "routedDistanceFt": routed_ft,
                "daRatio": da_ratio, "daRatioLimit": DA_RATIO_MAX,
                "declined": False}
     if attrs_error:

@@ -61,6 +61,27 @@ def _fetch(comid: int, names: tuple[str, ...], aoi: str, timeout: float) -> tupl
     return tuple((k.lower(), v) for k, v in row.items())
 
 
+def _from_bundle(comid: int, base_names: list[str]) -> dict | None:
+    """The values from the STAF data bundle's StreamCat slices (the API's own values, kept as
+    float64): every bundled column a requested base name begins, as the API's shared answer
+    carries them. None without the bundle, or when it lacks the COMID or a requested metric
+    (the API then answers the whole request)."""
+    from .._vendor.site_engine import bundle
+    try:
+        got = bundle.streamcat(int(comid), base_names)
+    except Exception:  # noqa: BLE001 - the API answers instead
+        return None
+    if got is None:
+        return None
+    out: dict = {}
+    for k, v in got.items():
+        try:
+            out[k] = float(v)
+        except (TypeError, ValueError):
+            out[k] = v
+    return out
+
+
 def metrics_by_comid(comid: int, base_names: list[str], aoi: str = "watershed",
                      timeout: float = 25.0) -> dict[str, float]:
     """Return {column_name: value} for the requested StreamCat metrics.
@@ -70,6 +91,9 @@ def metrics_by_comid(comid: int, base_names: list[str], aoi: str = "watershed",
     """
     if comid is None or not base_names:
         return {}
+    local = _from_bundle(int(comid), base_names)
+    if local is not None:
+        return local
     try:
         pairs = _fetch(int(comid), tuple(sorted(base_names)), aoi, timeout)
     except _Unanswered:

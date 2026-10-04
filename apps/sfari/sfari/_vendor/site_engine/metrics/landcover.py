@@ -26,7 +26,7 @@ that fraction. Nothing covered means no value and a reason, never a zero.
 from __future__ import annotations
 
 from ..provenance import VINTAGES, metric_entry
-from . import register
+from . import precomputed, register
 from .common import watershed_geom
 
 NLCD_YEAR = 2021
@@ -202,8 +202,42 @@ def _baseline_wanted(record: dict) -> bool:
     return bool(cfg.get("landcoverBaseline"))
 
 
+_NO_COVER = ("NLCD reports no land cover for this polygon (outside the "
+             "product's footprint, or the service failed)")
+
+
+def _from_values(record: dict, pre: dict) -> dict:
+    """The entries from the bundle's per-catchment counts (0.5.0): the same
+    names, units, rounding and warnings as the live path."""
+    out: dict = {}
+    baseline = _baseline_wanted(record)
+    for label, support in (("Watershed", "pointWatershed"), ("Riparian", "riparianBuffer")):
+        if pre.get(f"landcover{label}Unavailable"):
+            out[f"landcover{label}Unavailable"] = metric_entry(
+                None, "", "NLCD", VINTAGES["nlcd"], support, [_NO_COVER])
+            continue
+        covered = pre.get(f"coveredFraction{label}")
+        warnings = ([] if covered is None else
+                    [f"NLCD covers {covered * 100:.0f} percent of this "
+                     "polygon; the percentages describe the covered part"])
+        for key in ("imperviousPct",) + tuple(f"{stem}Pct" for stem in _CLASS_KEYWORDS):
+            out[f"{key}{label}"] = metric_entry(
+                pre.get(f"{key}{label}"), "percent", precomputed.SRC_NLCD,
+                VINTAGES["nlcd"], support, list(warnings))
+        if baseline:
+            base = pre.get(f"imperviousPct{BASELINE_YEAR}{label}")
+            out[f"imperviousPct{BASELINE_YEAR}{label}"] = metric_entry(
+                base, "percent", precomputed.SRC_NLCD, VINTAGES["nlcdBaseline"], support,
+                [] if base is not None else
+                [f"NLCD {BASELINE_YEAR} impervious unavailable"])
+    return out
+
+
 @register("landcover")
 def compute(record: dict, tree_geoms: list) -> dict:
+    pre = precomputed.values_for(record)
+    if pre is not None:
+        return _from_values(record, pre)
     out: dict = {}
     ws_fc = (record.get("watershed") or {}).get("polygon")
     ws = watershed_geom(ws_fc)
@@ -228,9 +262,7 @@ def compute(record: dict, tree_geoms: list) -> dict:
         stats = _stats_for(geom)
         if stats is None:
             out[f"landcover{label}Unavailable"] = metric_entry(
-                None, "", "NLCD", VINTAGES["nlcd"], support,
-                ["NLCD reports no land cover for this polygon (outside the "
-                 "product's footprint, or the service failed)"])
+                None, "", "NLCD", VINTAGES["nlcd"], support, [_NO_COVER])
             continue
         stats = dict(stats)
         covered = stats.pop("_coveredFraction", None)

@@ -3,6 +3,9 @@ import os
 # owner decision D20: the suite scores with the bundled method and never reaches the
 # library release at import (tests/test_adopted_method.py drives the loader itself)
 os.environ.setdefault("EASI_ADOPTED_METHOD", "0")
+# app.py defaults the STAF data source to "auto" (its release, fetched on demand): the suite asks the
+# services, which the tests stub, unless a test chooses the bundle itself
+os.environ.setdefault("STAF_DATA_SOURCE", "service")
 
 import pytest
 

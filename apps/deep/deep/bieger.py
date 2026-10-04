@@ -7,8 +7,9 @@ Table 3):
 
     y = a * DA^b        DA in km^2;  width & depth in m, area in m^2.
 
-The division is looked up from the analysis point against bundled USGS
-physiographic-division polygons (Fenneman, via ``data/physio_divisions.geojson``).
+The division is looked up from the analysis point against USGS
+physiographic-division polygons (Fenneman, the ``physio_divisions.geojson`` the
+vendored site engine's extracts carry).
 Outside CONUS, or for a division with no usable model, the national ("USA") curve
 is used. Division-level curves are what the USGS applied per NHDPlus v2.1 flowline
 in its bankfull-geometry release (doi:10.5066/F7765D7V) and are more reliable than
@@ -19,11 +20,13 @@ No exception escapes ``bankfull_geometry`` — it always returns a usable estima
 from __future__ import annotations
 
 import functools
-from pathlib import Path
 from typing import Optional
 
-# DEEP's bundled data dir (holds physio_divisions.geojson alongside the assessment data).
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+# The division polygons ship with the vendored site engine's extracts, beside the
+# transect machinery DEEP already runs from there; DEEP keeps no copy of its own.
+# (apps/deep/data never held the file, so every lookup used to fall back to the
+# national curve without a word.)
+from ._vendor.site_engine._extracted.config import DATA_DIR
 
 # Division abbr -> (a, b) for bankfull width [m], mean depth [m], area [m^2];
 # DA in km^2.  Bieger et al. 2015, Table 3.  LUP and IHI are tentative (n < 10).

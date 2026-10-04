@@ -9,7 +9,9 @@ source tree is present):
   * ``v2Direct``: the point resolved to a V2 flowline within the published
     snap tolerance. COMID-keyed evidence describes the clicked stream.
   * ``hrSurrogate``: the point sits on an HR-only stream. The nearest covered
-    downstream V2 reach is found with an NLDI hydrolocation raindrop trace and
+    downstream V2 reach is found with an NLDI hydrolocation raindrop trace (or,
+    where the STAF data bundle holds the point, the V2 catchment that contains it:
+    the reach the trace reaches; ``routing.method`` names which answered) and
     recorded with the routed distance and the drainage-area ratio. The HR reach
     watershed still comes from the engine; only COMID-keyed evidence rides
     the covered reach, labeled (``naming.anchor_label``).
@@ -35,7 +37,7 @@ from typing import Any, Callable, Optional
 
 import requests
 
-from . import hr
+from . import bundle, hr
 from .geometry import CRS_ALBERS, CRS_WGS84, FT_PER_M, nearest_point_on_records
 
 ANCHOR_SCHEMA_VERSION = 1
@@ -281,7 +283,14 @@ def hydrolocation_snap(lat: float, lon: float, *,
     ``progress`` receives a plain dict before each attempt: finding/1, then
     retrying/2, retrying/3, and retrying/4. Retry progress is emitted before
     its pause so the caller can show that the lookup is still running.
+
+    Where the STAF data bundle holds the point it answers first, with no request
+    (``bundle.raindrop``: the V2 reach whose catchment contains the point, the reach
+    the trace reaches; ``method`` names it); NLDI answers wherever the bundle cannot.
     """
+    local = bundle.raindrop(lat, lon)
+    if local is not None and local.get("comid") is not None:
+        return local
     params = {"coords": f"POINT({lon:.6f} {lat:.6f})"}
     errors: list[str] = []
     for attempt in range(1, len(_ROUTING_RETRY_PAUSES_S) + 2):
@@ -313,7 +322,14 @@ def v2_flowline_attrs(comid: int) -> dict:
     EASI's delineation reads (``nhdflowline_network``). Returns the
     ``delineation.flowline_attrs`` keys, or ``{"error": ...}`` when the
     service failed (no alternate source: the ratio must come from the same
-    numbers EASI uses). Never raises."""
+    numbers EASI uses; the STAF data bundle carries those numbers and answers
+    first where it holds the COMID). Never raises."""
+    rec = bundle.v2_flowline(comid)
+    if rec is not None:
+        return {"gnis_name": rec.get("gnis_name"), "drainage_area_sqkm": rec.get("totdasqkm"),
+                "huc8": str(rec["reachcode"])[:8] if rec.get("reachcode") else None,
+                "slope": rec.get("slope"), "fcode": rec.get("fcode"),
+                "stream_order": rec.get("stream_order")}
     params = {"comid": int(comid), "limit": 1, "properties": _V2_FIELDS, "f": "json"}
     data, err = _get_json(V2_ITEMS_URL, params, timeout=60.0, retries=2)
     if err:
@@ -465,7 +481,7 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
         da_ratio = round(surrogate_da / clicked_da, 2)
 
     routing: dict[str, Any] = {
-        "method": ROUTING_METHOD, "routedDistanceFt": routed_ft,
+        "method": snap.get("method") or ROUTING_METHOD, "routedDistanceFt": routed_ft,
         "daRatio": da_ratio, "daRatioLimit": da_ratio_max, "declined": False}
     if attrs_error:
         routing["attrsError"] = attrs_error

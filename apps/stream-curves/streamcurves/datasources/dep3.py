@@ -31,6 +31,12 @@ def epqs_elev(lon: Any, lat: Any) -> float:
     hit = _cache_get(key)
     if hit is not _MISS:
         return hit
+    from ..terrain import tile_elevations
+    tiles = tile_elevations([[lon, lat]], pad_deg=0.0001)       # USGS's own tile files first
+    if tiles is not None:
+        val = float(tiles[0][0])
+        _cache_set(key, val)
+        return val
     try:
         j = _get_json(EPQS_URL, params={"x": lon, "y": lat, "units": "Meters", "wkid": 4326})
         val = parse_epqs(j)

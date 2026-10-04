@@ -70,6 +70,11 @@ def delineate_watershed(anchor: dict, *, max_hops: int = 200,
         out["reason"] = "anchor reach has no id or hydroseq"
         return out
 
+    local = _from_bundle(anchor, int(nid), out, max_hops=max_hops,
+                         max_reaches=max_reaches, progress=progress)
+    if local is not None:
+        return local
+
     with hr.deadline(hr.active_policy().deadline_s):
         found = _tree_and_catchments(anchor, int(nid), out, max_hops=max_hops,
                                      max_reaches=max_reaches, progress=progress)
@@ -92,7 +97,13 @@ def delineate_watershed(anchor: dict, *, max_hops: int = 200,
     except Exception as exc:  # noqa: BLE001 - resilience by design
         out["reason"] = f"catchment union failed: {exc}"
         return out
+    return _finish(anchor, out, tree_ids, geoms_by_id, hops, progress)
 
+
+def _finish(anchor: dict, out: dict, tree_ids: set, geoms_by_id: dict, hops: int,
+            progress) -> dict:
+    """The area check against the published drainage area and the tree
+    flowline geometries, shared by the service and bundle paths."""
     vaa = anchor.get("totdasqkm")
     if vaa:
         agreement = out["areaSqkm"] / float(vaa)
@@ -124,6 +135,42 @@ def delineate_watershed(anchor: dict, *, max_hops: int = 200,
     out["treeFlowlines"] = [geoms_by_id[i] for i in sorted(geoms_by_id)]
     out["status"] = "ok"
     return out
+
+
+def _from_bundle(anchor: dict, nid: int, out: dict, *, max_hops: int,
+                 max_reaches: int, progress) -> Optional[dict]:
+    """The bundle's delineation (0.5.0): the same walk on the bundle's
+    network, the outline assembled from the exact catchments' shared borders
+    and the area from their grid cells, which equals the service union's.
+    None where the bundle cannot answer for the whole tree; the service path
+    then runs as before."""
+    from . import bundle
+    if not bundle.enabled():
+        return None
+    ws = bundle.watershed(nid, max_hops=max_hops, max_reaches=max_reaches)
+    if ws is None:
+        return None
+    hr._mark("bundle")
+    out["nReaches"], out["nHops"] = int(ws.get("nReaches") or 0), int(ws.get("nHops") or 0)
+    notify(progress, stage="walk", hops=out["nHops"], reaches=out["nReaches"])
+    if ws["status"] == "refused":
+        out["status"] = "refused"
+        out["reason"] = ws.get("reason")
+        return out
+    notify(progress, stage="union", hops=out["nHops"], reaches=out["nReaches"])
+    try:
+        import geopandas as gpd
+        from shapely.geometry import shape
+
+        basin = gpd.GeoSeries([shape(ws["geometry"])], crs=CRS_WGS84)
+        out["polygon"] = basin.__geo_interface__
+        out["areaSqkm"] = round(float(ws["areaSqkm"]), 4)
+    except Exception as exc:  # noqa: BLE001 - resilience by design
+        out["reason"] = f"catchment union failed: {exc}"
+        return out
+    tree_ids = {int(i) for i in ws.get("ids") or []}
+    geoms_by_id = {int(nid): anchor["geometry"]} if anchor.get("geometry") else {}
+    return _finish(anchor, out, tree_ids, geoms_by_id, out["nHops"], progress)
 
 
 def _tree_and_catchments(anchor: dict, nid: int, out: dict, *, max_hops: int,

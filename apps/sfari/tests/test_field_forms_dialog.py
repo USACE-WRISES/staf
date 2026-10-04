@@ -22,8 +22,8 @@ def test_the_shell_is_static_with_both_downloads_in_the_tab_strip():
     assert "ui.navset_pill(" in SHELL and "ui.nav_spacer()" in SHELL
     assert 'ui.nav_panel("Desktop metrics"' in SHELL
     assert 'ui.nav_panel("Field forms preview"' in SHELL
-    assert 'ui.download_button("dl_field_forms", "Field forms PDF"' in SHELL
-    assert 'ui.download_button("dl_desktop_metrics"' in SHELL
+    assert 'staf_web.download_button("dl_field_forms", "Field forms PDF"' in SHELL
+    assert 'staf_web.download_button("dl_desktop_metrics"' in SHELL
     # wrapped, so Bootstrap's ``.nav-pills > li > a`` nav-link rule cannot strip
     # the button chrome (it did: link-blue text, dark hover behind it)
     assert SHELL.count('class_="ff-dl")') == 2

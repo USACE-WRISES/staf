@@ -243,7 +243,8 @@ def import_scope(tmp_path, d):
     scope.update(input=SimpleNamespace(load_session=lambda: [{"datapath": str(saved)}]),
                  session=SimpleNamespace(load=json.loads), measured_values=Value({"old": {"value": 9}}),
                  computed_for=Value("old"), loaded_assessment=Value(object()), selected_ref=Value("old"),
-                 current_fn=Value(1), current_step=Value("identify"), _HAS_MAP=False)
+                 current_fn=Value(1), current_step=Value("identify"), _HAS_MAP=False,
+                 _restore_scenarios=lambda raw: None, _saved_fp=Value(None), _work_fp=lambda: None)
     scope["_no_watershed"].update(generation=7, anchor=ANCHOR)
     return scope
 
@@ -389,9 +390,12 @@ def test_explicit_replacement_pick_clears_previous_sites_values_and_geometry():
     scope.update(delin=Value({"siteAnchor": ANCHOR}),
                  measured_values=Value({"desktop": {"value": 12}, "field": {"value": 8}}),
                  computed_for=Value("old-site"), current_fn=Value(2))
+    resets = []
+    scope["_reset_scenarios"] = lambda: resets.append(1)
     function("_begin_pick", scope)()
     assert scope["delin"]() is None and scope["_delin_generation"]() is None
     assert scope["measured_values"]() == {} and scope["computed_for"]() is None
+    assert resets == [1]                                # a new site starts with Existing Conditions alone
     assert {"marker", "ws", "reach", "scored", "route"}.issubset(scope["removed"])
 
 

@@ -145,8 +145,12 @@ def test_the_hint_names_what_is_missing():
 
 def test_the_server_applies_the_observations_after_the_rescore():
     scored = SRC.split("def scored():", 1)[1].split("@reactive.calc", 1)[0]
-    assert scored.index("assessment.rescore(") < scored.index("assessment.apply_observed_evidence(sc, observed)")
-    assert scored.index('row["status"] = "xs-derived"') < scored.index("apply_observed_evidence")
+    assert 'scenario_state.scored_for(base["report"], _score_state())' in scored
+    # the steps live in easi/scenario_state.py, so every scenario scores in the engine's order
+    steps = (Path(app.__file__).parent / "easi" / "scenario_state.py").read_text(encoding="utf-8")
+    steps = steps.split("def scored_for(", 1)[1]
+    assert steps.index("assessment.rescore(") < steps.index("assessment.apply_observed_evidence(sc, observed)")
+    assert steps.index('row["status"] = "xs-derived"') < steps.index("apply_observed_evidence")
     handler = SRC.split("def _apply_observed():", 1)[1].split("@reactive", 1)[0]
     assert "@reactive.event(input.observed_set)\n    def _apply_observed():" in SRC
     assert "if key not in OBSERVED_INPUTS.get(mid, ()):" in handler and "_observed_value(mid, key" in handler

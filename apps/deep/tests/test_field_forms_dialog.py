@@ -47,7 +47,7 @@ def test_the_modal_is_sfaris_shell():
 
 def test_the_four_downloads_are_equal_primary_buttons():
     modal = SRC[SRC.index("def _field_forms_modal():"):SRC.index("_FF_BADGE = {")]
-    labels = re.findall(r'ui\.download_button\("(dl_[a-z_]+)", "([^"]+)"', modal)
+    labels = re.findall(r'staf_web\.download_button\("(dl_[a-z_]+)", "([^"]+)"', modal)
     assert labels == [("dl_field_forms", "Field forms PDF"), ("dl_metrics_pdf", "Metrics PDF"),
                       ("dl_calc_filled", "Completed workbook"),
                       ("dl_calc_blank", "Blank workbook")]
