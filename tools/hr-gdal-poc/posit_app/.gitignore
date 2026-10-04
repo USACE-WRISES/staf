@@ -1,0 +1,3 @@
+__pycache__/
+# Posit Publisher deployment records (account-specific)
+.posit/publish/deployments/
