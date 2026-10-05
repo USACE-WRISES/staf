@@ -33,6 +33,8 @@
   description: Runs detailed, curve-based site assessments. Comes with a limited number of predefined assessments out of the box.
   url: https://gtmenichino-deep.share.connect.posit.cloud/
   status: live
+  walkthrough: /walkthroughs/deep/
+  walkthrough_label: Read the guide
 - id: curves
   name: stream-curves
   full_name: Reference and Regional Curve Builder

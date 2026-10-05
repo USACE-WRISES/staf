@@ -1,0 +1,109 @@
+/* STAF metric rows: the one layout EASI, SFARI and DEEP give a function page's metrics (owner,
+   2026-10-04). Top to bottom: the name with its (i), a description, the evidence line, an optional
+   notice, and a row of labeled buttons; the rating or value sits in a fixed column on the right;
+   the panels the buttons open (Scoring, Note, Photos) span the row underneath. This file is the
+   only definition of these classes: edit it here and re-vendor (vendor_staf_workbook.py).
+   Colours follow each app's own tokens (--easi-accent, --card-border, --rule, --surface-soft). */
+
+.staf-metric { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 4px 22px;
+  align-items: start; padding: 14px 16px 13px; border-top: 1px solid var(--rule, #e5e8ee); }
+.staf-metric-main { min-width: 0; }
+.staf-metric-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.staf-metric-name { font-size: 15px; font-weight: 600; line-height: 1.35; color: #2a3344; }
+/* SFARI's watershed or reach scale letter */
+.staf-metric-scale { flex: none; font-size: 10px; font-weight: 700; color: #98a1b1; cursor: help;
+  border: 1px solid #dfe4ec; border-radius: 4px; padding: 0 4px; }
+.staf-metric-desc { font-size: 14px; line-height: 1.5; color: #4d5870; margin-top: 3px; }
+
+/* the evidence: a small tag, then the value the app pulled, then its suggestion */
+.staf-metric-ev { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin-top: 7px;
+  font-size: 13px; color: #45506a; }
+.staf-ev-tag { flex: none; font-size: 9.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: #4a6a99; background: #eaf1fb; border: 1px solid #d3e0f2; border-radius: 4px; padding: 1px 6px;
+  cursor: default; }
+.staf-ev-tag.field { color: #7a869a; background: #f0f2f6; border-color: #e2e6ee; }
+.staf-ev-tag.pending { color: #7a5b12; background: #fdf0d6; border-color: #f1dca6; }
+.staf-ev-tag.observed { color: #1f6b4a; background: #e3f3ec; border-color: #bfe0d0; }
+.staf-ev-val { font-weight: 700; color: #2f3a52; }
+.staf-ev-val.muted { font-weight: 500; color: #8a93a3; font-style: italic; }
+.staf-suggest { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: #5a6578; }
+.staf-suggest b { font-weight: 600; color: #33415c; }
+.staf-suggest-use { border: 1px solid #cdd8ec; background: #eef2f8; color: var(--easi-accent, #2f4b7c);
+  border-radius: 6px; padding: 1px 9px; font-size: 12px; font-weight: 600; line-height: 1.5; cursor: pointer; }
+.staf-suggest-use:hover { background: #e2eaf6; border-color: #b9c8e0; }
+.staf-suggest-use:focus-visible { outline: 2px solid var(--easi-accent, #2f4b7c); outline-offset: 1px; }
+
+/* a notice the assessor should act on: a value from another reach, out of range, not scored */
+.staf-metric-warn { display: block; width: fit-content; max-width: 100%; box-sizing: border-box; margin-top: 8px;
+  font-size: 12.5px; line-height: 1.4; color: #8a5a00; background: #fdf6e3; border: 1px solid #f0dfae;
+  border-radius: 6px; padding: 4px 9px; }
+.staf-metric-warn[hidden] { display: none; }
+.staf-metric-warn .easi-info { margin-left: 4px; }
+
+/* the right column: the rating select, or a value box (DEEP stacks its index pill under it) */
+.staf-metric-input { display: flex; flex-direction: column; align-items: stretch; gap: 7px; min-width: 0; }
+.staf-rate { width: 100%; box-sizing: border-box; border: 1px solid var(--card-border, #d5deea);
+  border-radius: 7px; background: #fff; color: #7c869c; font-size: 14px; font-weight: 600;
+  padding: 8px 10px; cursor: pointer; }
+.staf-rate:hover { border-color: var(--easi-accent, #2f4b7c); }
+.staf-rate:focus { outline: none; border-color: var(--easi-accent, #2f4b7c);
+  box-shadow: 0 0 0 2px rgba(47, 75, 124, .12); }
+/* answered: darker text on a calm border, never a rating colour */
+.staf-rate.set { color: #2a3344; border-color: #c3cfe2; background: #fbfcfe; }
+.staf-rate option { background: #fff; color: #33415c; }
+.staf-rate[disabled] { cursor: default; color: #8a93a3; background: #f4f6fa; }
+
+/* the row's buttons: always visible, outlined, an icon and a label. Blue while their panel is
+   open; a dot (a note) or a count (photos) while they hold something. */
+.staf-metric-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.staf-act { position: relative; display: inline-flex; align-items: center; gap: 5px; height: 28px;
+  box-sizing: border-box; margin: 0; padding: 0 10px; font-family: inherit; font-size: 12.5px;
+  font-weight: 600; line-height: 1; color: #4d5870; background: #fff;
+  border: 1px solid var(--card-border, #d5deea); border-radius: 7px; cursor: pointer; user-select: none;
+  white-space: nowrap; transition: background-color .12s, border-color .12s, color .12s; }
+.staf-act svg { flex: none; display: block; }
+.staf-act:hover { color: var(--easi-accent, #2f4b7c); border-color: #9fb1cc; background: #f6f8fb; }
+.staf-act.on { color: var(--easi-accent, #2f4b7c); background: #eaf0f9; border-color: #b9c8e0; }
+.staf-act:focus-visible, .staf-act:has(input:focus-visible) { outline: 2px solid var(--easi-accent, #2f4b7c);
+  outline-offset: 1px; }
+.staf-act-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--easi-accent, #2f4b7c);
+  display: none; }
+.staf-act.has .staf-act-dot { display: inline-block; }
+.staf-act-count { min-width: 17px; height: 17px; box-sizing: border-box; padding: 0 5px; border-radius: 9px;
+  font-size: 11px; line-height: 17px; text-align: center; color: #fff; background: var(--easi-accent, #2f4b7c); }
+.staf-act-count:empty { display: none; }
+/* a checkbox button (DEEP's N/A): the box stays in the form, out of sight */
+.staf-act input[type="checkbox"] { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0;
+  pointer-events: none; }
+
+/* what the buttons open: closed until asked for (the server opens a note or photos that exist) */
+.staf-metric-panel { display: none; grid-column: 1 / -1; min-width: 0; margin-top: 10px; }
+.staf-metric.show-scoring .staf-metric-panel[data-panel="scoring"],
+.staf-metric.show-note .staf-metric-panel[data-panel="note"],
+.staf-metric.show-photo .staf-metric-panel[data-panel="photo"] { display: block; }
+.staf-metric-panel[data-panel="scoring"] { box-sizing: border-box; padding: 11px 13px; font-size: 13px;
+  color: #45506a; background: var(--surface-soft, #f6f8fb); border: 1px solid var(--rule, #e5e8ee);
+  border-radius: 8px; }
+.staf-panel-title { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: #7a8699; margin: 0 0 6px; }
+.staf-panel-title:not(:first-child) { margin-top: 12px; }
+.staf-panel-sub { font-size: 12px; color: #7a8699; margin: -2px 0 6px; }
+.staf-crit { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: baseline;
+  font-size: 13px; line-height: 1.45; }
+.staf-crit-lbl { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: #33415c;
+  white-space: nowrap; }
+.staf-crit-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--band-fair, #f5e7a6);
+  border: 1px solid rgba(0, 0, 0, .12); }
+.staf-crit-dot.good { background: var(--band-good, #c8d9f2); }
+.staf-crit-dot.poor { background: var(--band-poor, #f5b5b5); }
+.staf-metric-note { display: block; width: 100%; box-sizing: border-box; resize: vertical; min-height: 34px;
+  height: 34px; margin: 0; padding: 6px 9px; font-family: inherit; font-size: 13px; color: #2a3344;
+  background: #fff; border: 1px solid var(--card-border, #d5deea); border-radius: 6px; }
+.staf-metric-note:focus { outline: none; border-color: var(--easi-accent, #2f4b7c);
+  box-shadow: 0 0 0 2px rgba(47, 75, 124, .12); }
+.staf-metric-note::placeholder { color: #a0a9b6; }
+
+@media (max-width: 820px) {
+  .staf-metric { grid-template-columns: minmax(0, 1fr); }
+  .staf-metric-input { max-width: 320px; margin-top: 8px; }
+}

@@ -98,6 +98,15 @@ assessment apps one behavior and one look (owner, 2026-10-03):
   Conditions (DEEP's intervals compare as intervals); reach, tier, length, drainage area,
   stream order, NARS-9 and EPA Level I to III, named from `data/ecoregions.json`
   (`scripts/build_ecoregion_table.py`).
+- **One metric row** (`web.metric_action`, `web.metric_actions`, `web.metric_check`,
+  `web.scoring_criteria`, `assets/metric-rows.css`, `assets/metric-rows.js`; owner, 2026-10-04):
+  the layout every function page gives its metrics. The name and its (i), a description, the
+  evidence, then labeled buttons that are always shown (Scoring, Note, Photo, and DEEP's N/A);
+  the rating or value in a 220px right column; the panels the buttons open span the row. The
+  script opens and closes panels in the browser alone and keeps the note dot and the photo
+  count current (`window.STAFMetricRows.sync(row)` after an app adds or removes a photo). The
+  apps keep only their own parts (DEEP's value box and curve, SFARI's photo strip, EASI's
+  method tables).
 - **One workbook per assessment** (`assemble.py`, `xlsx/`, `sheets.py`): Summary, Existing
   Conditions, one live calculator per alternative, ReferenceCurves, then the template's other
   sheets. The app's calculator template is never changed; the toolkit edits the zip parts

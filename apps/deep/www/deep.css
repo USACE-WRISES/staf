@@ -1,72 +1,63 @@
-/* DEEP-specific styles — layered on top of the shared SFARI/EASI styles.css.
+/* DEEP-specific styles, layered on top of the shared SFARI/EASI styles.css.
    Reuses the same design tokens (--easi-accent, --band-*, --font-head). */
 
-.deep-method {
-  font-size: 11px;
-  color: #8a93a3;
-  margin: 1px 0 6px;
-}
-
-.deep-measure-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 2px 0 6px;
-}
-.deep-metric-input {
-  width: 130px;
-  padding: 5px 8px;
-  border: 1px solid #cdd5e0;
-  border-radius: 6px;
-  font-size: 13px;
-}
-.deep-metric-input:focus {
-  outline: none;
-  border-color: var(--easi-accent, #2f4b7c);
-  box-shadow: 0 0 0 2px rgba(47, 75, 124, 0.15);
-}
-.deep-metric-input:disabled { background: #f1f3f7; color: #aab; }
-
-.deep-xlabel { font-size: 11px; color: #667; flex: 1; }
-
-.deep-metric-index {
-  min-width: 40px;
-  text-align: center;
-  white-space: nowrap;
-  font-weight: 700;
-  font-size: 12px;
-  color: #33415c;
-  padding: 3px 8px;
-  border-radius: 10px;
-}
-
-.deep-domain-warn {
-  margin: 3px 0 0;
-  font-size: 11.5px;
-  line-height: 1.35;
-  color: #8a5a00;
-  background: #fdf3d8;
-  border: 1px solid #ecd9a0;
-  border-radius: 6px;
-  padding: 3px 8px;
-}
-.deep-domain-warn[hidden] { display: none; }
-
+/* ---- a metric row of the function page (app._metric_row) -----------------------
+   The row is the shared staf/metric-rows.css (the same in EASI, SFARI and DEEP, 2026-10-04);
+   these are DEEP's own parts: the value box with its unit, the index under it, the curve set
+   and the reference curve in the Scoring panel. */
+.deep-value-box { display: flex; align-items: center; width: 100%; box-sizing: border-box;
+  border: 1px solid var(--card-border); border-radius: 7px; background: #fff; overflow: hidden; }
+.deep-value-box:hover { border-color: #b9c6da; }
+.deep-value-box:focus-within { border-color: var(--easi-accent);
+  box-shadow: 0 0 0 2px rgba(47, 75, 124, .12); }
+.deep-value-box:has(.deep-metric-input:disabled) { background: #f4f6fa; }
+.deep-metric-input { flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  padding: 8px 10px; font-size: 14px; font-weight: 600; color: #2a3344;
+  font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+.deep-metric-input::-webkit-outer-spin-button,
+.deep-metric-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.deep-metric-input::placeholder { color: #b6becb; font-weight: 500; }
+.deep-metric-input:disabled { color: #aab3c2; }
+.deep-unit { flex: none; padding: 0 10px 0 2px; font-size: 12.5px; color: #8a93a3; white-space: nowrap; }
+/* the index under the value box, as wide as the column so it never shifts */
+.deep-metric-index { display: block; box-sizing: border-box; text-align: center; white-space: nowrap;
+  font-size: 12px; font-weight: 700; color: #33415c; padding: 4px 10px; border-radius: 11px;
+  font-variant-numeric: tabular-nums; }
+/* the curve set of a stratified metric; why it was chosen is the select's tooltip */
+.deep-stratum { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.deep-stratum-label { font-size: 11.5px; font-weight: 600; color: #8a93a3; }
+.deep-stratum-select { font-size: 12.5px; padding: 3px 6px; border: 1px solid var(--card-border);
+  border-radius: 6px; background: #fff; color: #33415c; max-width: 300px; }
+.deep-stratum-select:focus { outline: none; border-color: var(--easi-accent); }
+/* the reference curve, in the row's Scoring panel */
 .deep-curve { display: block; max-width: 100%; height: auto; }
+.deep-curve-tick { font-size: 9px; fill: #6b7689; }
+.deep-curve-axis { font-size: 10px; font-weight: 600; fill: #55607a; }
 
-.deep-na-row { margin: 2px 0; font-size: 12px; color: #55607a; }
-.deep-na-row label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+/* a metric the assessment withholds: named, marked Not scored, the reason on its (i) */
+.deep-metric-withheld .staf-metric-name { color: #8a93a3; font-weight: 500; }
+.deep-metric-withheld .staf-metric-input { align-items: flex-start; }
+.deep-notscored-tag { font-size: 11.5px; font-weight: 600; color: #8a93a3; background: #f0f2f6;
+  border: 1px solid #e2e6ee; border-radius: 11px; padding: 3px 10px; white-space: nowrap; }
 
-.deep-scorecard {
-  margin-top: 14px;
-  padding: 12px 14px;
-  border: 1px solid #dfe4ec;
-  border-radius: 10px;
-  background: #f8fafc;
-}
-.deep-fscore-head { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
-.deep-fscore-lbl { font-family: var(--font-head, inherit); font-size: 13px; font-weight: 700;
-  color: var(--easi-accent, #2f4b7c); }
+/* a function the assessment does not score: one sentence, then what was considered */
+.deep-fn-pill { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: #6b7280;
+  background: #eef1f6; border-radius: 11px; padding: 3px 10px; }
+.deep-fn-lead { font-size: 14px; color: #4d5870; line-height: 1.5; margin: 0 0 12px; }
+.deep-unassessed-card > :first-child { border-top: none; }
+.deep-gap { padding: 13px 16px; border-top: 1px solid var(--rule); }
+.deep-gap-text { font-size: 13.5px; color: #45506a; line-height: 1.5; }
+.deep-gap-who { font-size: 12px; color: #8a93a3; margin-top: 4px; }
+
+/* ---- the function's score, after its metrics (SFARI's scorecard) ---------------- */
+.deep-scorecard { background: #fff; border: 1px solid var(--card-border);
+  border-left: 3px solid var(--easi-accent); border-radius: 10px; padding: 14px 16px;
+  margin: 0 0 12px; }
+/* header row with a full-width divider (the negative margins reach the card edges) */
+.deep-fscore-head { display: flex; align-items: center; gap: 9px; margin: -14px -16px 12px;
+  padding: 12px 16px 11px; border-bottom: 1px solid var(--rule); }
+.deep-fscore-lbl { font-family: var(--font-head); font-size: 14.5px; font-weight: 700;
+  color: var(--eci-title); }
 .deep-fscore-row { display: flex; align-items: center; gap: 12px; }
 /* read-only banded score gauge (DEEP's score is automatic): 0-5 NF | 6-10 AR | 11-15 F, with
    band stops at the score-band thresholds (5/15, 10/15); the knob is positioned by measure.js */
@@ -79,132 +70,12 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
 .deep-scorecard.unset .deep-fscore-knob { display: none; }
 .deep-scorecard.unset .deep-fscore-num { color: #b6becb; }
-.deep-fscore-num { font-size: 28px; font-weight: 800; color: #33415c; min-width: 46px; }
-.deep-fscore-band {
-  font-size: 12px;
-  font-weight: 700;
-  color: #33415c;
-  padding: 4px 12px;
-  border-radius: 12px;
-}
-
-.deep-source-badge {
-  font-size: 10.5px;
-  color: #3a8a5c;
-  margin: -2px 0 5px;
-  font-weight: 600;
-}
-
-.deep-stratum-row { display: flex; align-items: center; gap: 6px; margin: 2px 0 6px; }
-.deep-stratum-label { font-size: 11px; color: #667; font-weight: 600; }
-.deep-stratum-select {
-  font-size: 12px;
-  padding: 3px 6px;
-  border: 1px solid #cdd5e0;
-  border-radius: 6px;
-  background: #fff;
-  color: #33415c;
-  max-width: 280px;
-}
-
-/* Metric statement — the "what / why" prose under the metric name. */
-.deep-metric-statement {
-  font-size: 12px;
-  color: #55607a;
-  line-height: 1.45;
-  margin: 2px 0 6px;
-}
-
-/* Data-source attribution row (input type · source citation · curve layer). */
-.deep-source-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  margin: 1px 0 6px;
-}
-.deep-source-key {
-  flex: none;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: #8a93a3;
-}
-.deep-source-val { font-size: 11px; color: #5a6577; }
-
-/* How-to-measure guidance. */
-.deep-howto {
-  font-size: 11px;
-  color: #74809a;
-  line-height: 1.4;
-  margin: 2px 0 6px;
-}
-.deep-howto-key {
-  font-weight: 700;
-  color: #667;
-  margin-right: 5px;
-}
-
-/* Plot + scoring-criteria table, side by side (wraps to stacked when narrow). */
-.deep-plot-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 14px;
-  margin: 6px 0;
-}
-.deep-plot-wrap > .deep-curve {
-  flex: 1 1 300px;
-  min-width: 240px;
-  max-width: 340px;
-}
-.deep-plot-wrap > .deep-criteria-table {
-  flex: 1 1 210px;
-  min-width: 190px;
-}
-.deep-curve-tick { font-size: 9px; fill: #6b7689; }
-.deep-curve-axis { font-size: 10px; font-weight: 600; fill: #55607a; }
-
-/* Scoring-criteria table: reference-curve breakpoints + your-location row. */
-.deep-criteria-table {
-  border-collapse: collapse;
-  font-size: 11.5px;
-  color: #45506a;
-}
-.deep-criteria-table th,
-.deep-criteria-table td {
-  text-align: left;
-  padding: 3px 8px;
-  border-bottom: 1px solid #eef1f6;
-  white-space: nowrap;
-}
-.deep-criteria-table thead th {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  color: #8a93a3;
-  border-bottom: 1px solid #dfe4ec;
-}
-.deep-criteria-table caption {
-  caption-side: top;
-  text-align: left;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: .05em;
-  text-transform: uppercase;
-  color: #8a93a3;
-  padding: 0 0 3px;
-}
-.deep-band-dot {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  margin-right: 5px;
-  vertical-align: middle;
-  border: 1px solid rgba(0, 0, 0, .14);
-}
+.deep-fscore-num { font-family: var(--font-head); font-size: 1.4rem; font-weight: 700;
+  color: var(--eci-title); min-width: 46px; text-align: center; font-variant-numeric: tabular-nums; }
+/* fixed width sized to the longest label (Functioning-at-Risk) so the gauge never jumps */
+.deep-fscore-band { flex: none; box-sizing: border-box; min-width: 140px; text-align: center;
+  white-space: nowrap; font-size: 12px; font-weight: 600; color: #33415c; padding: 3px 8px;
+  border-radius: 11px; }
 
 /* File-input progress bar ("Uploading..." / "Upload complete") in the narrow (352px)
    left pane: Bootstrap's default .progress height (1rem) clips the label there. Shiny
@@ -283,42 +154,14 @@
   border-radius: 5px; color: var(--easi-accent); cursor: pointer; }
 .deep-cov-zoom:hover { background: var(--surface-soft); border-color: var(--easi-accent); }
 
-.deep-region-context { font-size: 12.5px; color: #3a4a63; background: #eef3fb;
-  border: 1px solid #d5e0f0; border-radius: 6px; padding: 6px 10px; margin: 6px 0; }
-
-/* desktop value provenance: which engine or layer produced it */
-.deep-basis-tag { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .02em;
-  padding: 1px 6px; border-radius: 9px; border: 1px solid #d5deea; background: #eef1f6;
-  color: #45506a; margin-right: 6px; vertical-align: middle; }
-.deep-basis-tag.engine { color: #1f6b32; background: #e3f3e6; border-color: #bfe0c6; }
-.deep-basis-tag.streamcat { color: #5b3f8a; background: #efe8f7; border-color: #d9cbea; }
-.deep-basis-tag.nlcd { color: #2c4f7a; background: #dce8f5; border-color: #bcd0e8; }
-.deep-basis-tag.threedep { color: #7a5b12; background: #fdf0d6; border-color: #f1dca6; }
-.deep-basis-tag.nid { color: #6a3f1d; background: #f6e9de; border-color: #e6cfba; }
-/* which basis a reference curve rests on (StreamCurves REF-08/09/10) */
-.deep-basis-tag.national { color: #1f4e8c; background: #e2ecf8; border-color: #c2d6ec; }
-.deep-basis-tag.modeled { color: #7a4a12; background: #fbeeda; border-color: #eed7ae; }
-.deep-basis-tag.published { color: #5b3f8a; background: #efe8f7; border-color: #d9cbea; }
-/* a curve the assessment's owner chose (StreamCurves REF-15) */
-.deep-basis-tag.owner { color: #7a4d0b; background: #fdf3e1; border-color: #f0d9a8; }
-.deep-basis-tag.borrowed { color: #5c4f23; background: #f3f0e3; border-color: #ded6b6; }
-
-/* What a metric is scored against: fixed criteria, or a reference curve with the
-   geography its stations came from. A borrowed pool reads in the caution tone. */
-.deep-support-row .deep-source-val { color: #33415c; }
-.deep-support-row.borrowed .deep-source-val { color: #8a5a00; }
-.deep-stratum-row { flex-wrap: wrap; }
-.deep-stratum-note { flex: 1 1 100%; font-size: 11px; color: #74809a; line-height: 1.4; }
+/* the report popup's per-metric support and advisory lines */
 .deep-report-support { font-size: 11px; color: #45506a; margin-top: 2px; }
-
-/* A metric the assessment withholds: named, explained, no input and no index. */
-.deep-metric-withheld { background: #f7f8fb; border-style: dashed; }
-.deep-metric-withheld .sfari-metric-name { color: #74809a; }
-.deep-withheld-title { font-size: 12px; font-weight: 700; color: #8a5a00; margin: 2px 0 3px; }
-.deep-withheld-text { font-size: 12px; color: #5a6577; line-height: 1.45; }
+.deep-report-advisory { font-size: 11px; color: #8a5a00; margin-top: 2px; }
+/* the rail note naming functions whose every metric is withheld */
 .deep-withheld-note { color: #8a5a00; }
 .deep-engine-line { font-size: 12px; color: #45506a; background: #f4f6fa; border: 1px solid #e2e6ee;
   border-radius: 6px; padding: 4px 8px; margin: 4px 0 6px; }
 .deep-engine-line.warn { background: #fff7e0; border-color: #e6c96b; color: #8a5a00; }
-.deep-report-advisory { font-size: 11px; color: #8a5a00; margin-top: 2px; }
 .easi-snap-note.warn { color: #8a5a00; }
+
+/* narrow windows: the shared metric-rows.css stacks the row (the value box under the name) */

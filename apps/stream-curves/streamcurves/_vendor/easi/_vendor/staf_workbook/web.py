@@ -100,6 +100,75 @@ def scenario_bar(scenarios):
                     class_="staf-scen" + (" solo" if not scenarios.has_alternatives() else ""))
 
 
+# --------------------------------------------------------------------------- metric rows
+#: the buttons under every metric of a function page (assets/metric-rows.css and .js; owner,
+#: 2026-10-04): one line icon each, drawn in the text color, so EASI, SFARI and DEEP show the
+#: same buttons
+_ROW_SVG = ('<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false" fill="none" '
+            'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">{}</svg>')
+ROW_ICONS = {
+    "scoring": _ROW_SVG.format('<path d="M2.5 2v11.5H14"/><path d="M4.5 4.5c2.5 0 3 4.5 5 6.2 1 .8 2.2 1 3.5 1"/>'),
+    "note": _ROW_SVG.format('<path d="M11.2 2.6l2.2 2.2-7.7 7.7-2.9.7.7-2.9z"/><path d="M9.6 4.2l2.2 2.2"/>'),
+    "photo": _ROW_SVG.format('<path d="M2 5.5h2.6l1.2-1.8h4.4l1.2 1.8H14v7.5H2z"/><circle cx="8" cy="9.1" r="2.3"/>'),
+    "na": _ROW_SVG.format('<circle cx="8" cy="8" r="5.6"/><path d="M4.1 11.9l7.8-7.8"/>'),
+}
+
+
+def metric_icon(kind: str):
+    from htmltools import HTML
+    return HTML(ROW_ICONS[kind])
+
+
+def metric_action(kind: str, label: str, *, on: bool = False, has: bool = False, count: int | None = None,
+                  title: str | None = None, icon: str | None = None):
+    """One button of a metric row: outlined, a line icon and a label, always visible. It opens and
+    closes the row's ``kind`` panel in the browser (``assets/metric-rows.js``).
+
+    ``on``: the panel starts open. ``has``: it holds something, which a note button shows as a dot.
+    ``count``: the photos attached, shown as a number (and the label reads "Photos" past one)."""
+    from htmltools import HTML, tags
+    icon = icon or ("note" if kind == "fnnote" else kind)
+    if count is not None and count > 1 and label == "Photo":
+        label = "Photos"
+    parts = [HTML(ROW_ICONS[icon]), tags.span(label, class_="staf-act-label")]
+    if kind in ("note", "fnnote"):
+        parts.append(tags.span(class_="staf-act-dot"))
+    if count is not None:
+        parts.append(tags.span(str(count) if count else "", class_="staf-act-count"))
+    cls = "staf-act" + (" on" if on else "") + (" has" if has or (count or 0) > 0 else "")
+    return tags.button(*parts, {"type": "button", "data-staf-panel": kind, "aria-expanded": "true" if on else "false",
+                                "title": title or label}, class_=cls)
+
+
+def metric_check(label: str, box, *, on: bool = False, title: str | None = None, icon: str = "na",
+                 extra_class: str = ""):
+    """A checkbox shaped like a row button (DEEP's N/A): ``box`` is the app's own
+    ``<input type="checkbox">``, kept in the label so the app's change handler still reads it."""
+    from htmltools import HTML, tags
+    return tags.label(HTML(ROW_ICONS[icon]), tags.span(label, class_="staf-act-label"), box,
+                      {"title": title or label},
+                      class_="staf-act" + (" on" if on else "") + (f" {extra_class}" if extra_class else ""))
+
+
+def metric_actions(*buttons):
+    """The row of buttons under a metric's text (``None`` entries are skipped)."""
+    from htmltools import tags
+    return tags.div(*[b for b in buttons if b is not None], class_="staf-metric-acts")
+
+
+def scoring_criteria(rows, *, title: str | None = None, sub: str | None = None):
+    """Rating rungs for a Scoring panel: ``rows`` of ``(label, band, text)`` with ``band`` one of
+    good, fair or poor (the dot's color)."""
+    from htmltools import tags
+    cells = []
+    for label, band, text in rows:
+        cells.append(tags.span(tags.span(class_=f"staf-crit-dot {band}"), label, class_="staf-crit-lbl"))
+        cells.append(tags.span(text))
+    return tags.div(tags.div(title, class_="staf-panel-title") if title else None,
+                    tags.div(sub, class_="staf-panel-sub") if sub else None,
+                    tags.div(*cells, class_="staf-crit"))
+
+
 def report_scenario(scenarios):
     """``(name, description)`` of the scenario shown, for its report to name, or None while the
     assessment has only Existing Conditions without a description (its report reads as before)."""

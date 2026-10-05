@@ -469,7 +469,7 @@ def _info(text: str = None, *, html_tip: str = None):
     HTML card (``data-tip-html``). The onclick guard lets the icon sit inside a
     checkbox ``<label>`` without a click on it toggling the checkbox.
     """
-    attrs = {"onclick": "event.preventDefault();event.stopPropagation();"}
+    attrs = {"onclick": "event.preventDefault();event.stopPropagation();", "tabindex": "0"}
     if html_tip:
         attrs["data-tip-html"] = html_tip
     elif text and text.strip():
@@ -659,8 +659,9 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=62"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=64"),
                     ui.tags.link(rel="stylesheet", href="staf/staf.css?v=4"),
+                    ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
                     *_viewer_head_tags(NATIONAL_VIEWER),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
@@ -670,6 +671,7 @@ app_ui = ui.page_fillable(
                     ui.tags.script(src="report-ready.js?v=2", defer=""),
                     ui.tags.script(src="staf/unsaved-guard.js?v=1", defer=""),
                     ui.tags.script(src="staf/scenarios.js?v=1", defer=""),
+                    ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
                     ui.tags.script(src="worksheet.js?v=10", defer=""),
                     ui.tags.script(src="coord-entry.js", defer="")),
     # Disable Shiny/bslib's page-level "pulse" loading bar at the top of the screen —
@@ -815,8 +817,8 @@ def _rate_select(mid, r):
     for rt in ("Good", "Fair", "Poor"):
         opts.append(ui.tags.option(rt, value=rt, selected="selected") if rt == eff
                     else ui.tags.option(rt, value=rt))
-    # the criteria + computed value live in the metric-name ⓘ, so the control stays narrow.
-    attrs = {"class": "easi-rate-sel" + (" set" if eff else ""), "data-mid": mid,
+    # the criteria and the computation are the card's Scoring panel; the shared .staf-rate look
+    attrs = {"class": "staf-rate easi-rate-sel" + (" set" if eff else ""), "data-mid": mid,
              "title": "Click to override rating"}
     if r.get("status") == "observed":      # the observation governs until its entries are cleared
         attrs.update({"disabled": "disabled",
@@ -887,7 +889,7 @@ def _metric_card_tip(row):
     # described as a dataset value used directly.
     calc = ((row.get("scoring") or {}).get("equation")
             or config.metric_calculation(mid)
-            or "See the Scoring method panel for the equation and breakpoints.")
+            or "See the metric's Scoring panel for the equation and breakpoints.")
     # A routed site's COMID-keyed rows carry ``anchorNote`` (which covered reach
     # scored them, how far downstream, the drainage-area ratio) ahead of the
     # adapter's own note.
@@ -1023,26 +1025,34 @@ def _method_body_ui(method, row, site_inputs):
     return ui.TagList(*parts)
 
 
-def _method_expander(mid, scoring_trace):
-    """The two stacked method sections on a metric card (skeleton part). Body and criteria are
-    nested output slots so a data-source swap re-renders in place without remounting the card or
-    the cross-section widget. Definition, rationale and limitations now live on the docs site's
-    Screening Metric Reference, and the reference-curve plot and what-if sliders were removed."""
+def _scoring_panel(mid, scoring_trace):
+    """The metric row's Scoring panel (skeleton part), opened by its Scoring button as in SFARI and
+    DEEP (owner, 2026-10-04): the rating criteria, then how the value is computed (the inputs and
+    the equation, or the categorical decision table). Both are nested output slots, so a rating
+    change re-renders them in place without remounting the card or the cross-section widget.
+    None when the metric has no method to show. Definition, rationale and limitations live on the
+    docs site's Screening Metric Reference."""
     method = easi_methods.resolve(mid, (scoring_trace or {}).get("methodKey"),
                                   (scoring_trace or {}).get("context"))
     if method is None:
         return None
-    # Two stacked sections, both collapsed by default so the card opens compact: how the number is
-    # computed (inputs + equation, or the categorical decision table), then the scoring criteria.
-    return ui.TagList(
-        ui.tags.details(
-            ui.tags.summary("Scoring method", class_="easi-rollup-sum"),
-            ui.output_ui("method_body"),
-            class_="easi-method", **{"data-mid": mid}),
-        ui.tags.details(
-            ui.tags.summary("Scoring criteria", class_="easi-rollup-sum"),
-            ui.output_ui("method_criteria"),
-            class_="easi-method easi-method-critsec", **{"data-mid": mid}))
+    return ui.div(
+        ui.div("Criteria", class_="staf-panel-title"),
+        ui.output_ui("method_criteria"),
+        ui.div("How it's computed", class_="staf-panel-title"),
+        ui.output_ui("method_body"),
+        {"data-panel": "scoring", "data-mid": mid}, class_="staf-metric-panel")
+
+
+def _metric_about_tip(meta) -> str:
+    """The (i) beside the metric's name: how the metric is measured (the catalog's howToMeasure),
+    as DEEP's (i) says how to measure and SFARI's defines its metric. '' when there is none."""
+    how = " ".join(str((meta or {}).get("howToMeasure") or "").split())
+    if not how:
+        return ""
+    return (f'<div class="easi-tip-title">{html.escape(str(meta.get("name") or ""))}</div>'
+            '<div class="easi-tip-sec"><span class="easi-tip-lbl">How to measure</span>'
+            f'{html.escape(how)}</div>')
 
 
 def _fmt2(x):
@@ -1454,8 +1464,7 @@ def _borrowed_metric_note(row):
     if not _is_borrowed(row):
         return None
     return ui.div("Desktop evidence comes from the nearest StreamCat reach downstream.",
-                  _info(row["anchorNote"]), class_="easi-disclaimer",
-                  style="margin-top:.25rem;")
+                  _info(row["anchorNote"]), class_="staf-metric-warn")
 
 
 #: what the nationwide screening is, and is not, said once under its header
@@ -3857,20 +3866,42 @@ def server(input, output, session):
             observed0 = (_observed() or {}).get(mid)
             brow = next((r for r in ((base_result() or {}).get("report") or {}).get("metricRows", [])
                          if r["metricId"] == mid), None) or {}
+        # the row EASI, SFARI and DEEP share (owner, 2026-10-04; staf/metric-rows.css): the name
+        # and its (i), the description, the evidence, then the Scoring and Note buttons; the
+        # rating in the right column; the panels, the observed entries and the cross-section
+        # editor under the row
+        scoring_panel = _scoring_panel(mid, _active_scoring(brow, None))
+        has_note = bool((note0 or "").strip())
+        extras = [x for x in (_observed_editor(mid, observed0), _xs_editor() if is_xs else None)
+                  if x is not None]
         card = ui.div(
             ui.div(ui.span("1", class_="sfari-step-num"),
-                   ui.span("Score this metric", class_="sfari-sec-title"),
+                   ui.span("Metric", class_="sfari-sec-title"),
                    class_="sfari-sec-lbl"),
-            ui.div(ui.span(meta.get("name", ""), class_="easi-metric-title"),
-                   class_="sfari-metric-name"),
-            (ui.div(statement, class_="sfari-metric-statement") if statement else None),
-            ui.output_ui("fn_metric_live"),
-            _method_expander(mid, _active_scoring(brow, None)),
-            ui.tags.textarea(note0, {"class": "easi-note-ta", "data-mid": mid, "rows": "2",
-                                     "placeholder": "Add a note for this metric…"}),
-            _observed_editor(mid, observed0),
-            _xs_editor() if is_xs else None,
-            class_="sfari-metric easi-metric-card")
+            ui.div(
+                ui.div(
+                    ui.div(ui.span(meta.get("name", ""), class_="staf-metric-name"),
+                           _info(html_tip=_metric_about_tip(meta)),
+                           class_="staf-metric-head"),
+                    (ui.div(statement, class_="staf-metric-desc") if statement else None),
+                    ui.output_ui("fn_metric_live"),
+                    staf_web.metric_actions(
+                        (staf_web.metric_action("scoring", "Scoring",
+                                                title="How this metric is scored")
+                         if scoring_panel is not None else None),
+                        staf_web.metric_action("note", "Note", on=has_note, has=has_note,
+                                               title="Add a note")),
+                    class_="staf-metric-main"),
+                ui.output_ui("fn_metric_rate", class_="staf-metric-input"),
+                scoring_panel,
+                ui.div(ui.tags.textarea(note0, {"class": "staf-metric-note easi-note-ta",
+                                                "data-mid": mid, "rows": "2",
+                                                "placeholder": "Note (optional)",
+                                                "aria-label": f"Note: {meta.get('name', '')}"}),
+                       {"data-panel": "note"}, class_="staf-metric-panel"),
+                *[ui.div(x, class_="easi-card-wide") for x in extras],
+                class_="staf-metric" + (" show-note" if has_note else "")),
+            class_="sfari-ev-card easi-metric-card")
         prev_attrs = {"data-nav": "-1", "type": "button"}
         if idx == 0:
             prev_attrs["disabled"] = "disabled"
@@ -3901,7 +3932,8 @@ def server(input, output, session):
 
     @render.ui
     def fn_metric_live():
-        # Desktop evidence + override select — re-renders on scored() (override / source swap / XS edit).
+        # Desktop evidence, the restore suggestion and the observed hint; re-renders on scored()
+        # (an override or a cross-section edit). The select is fn_metric_rate, the right column.
         if current_step() not in (STEP_ASSESS, STEP_REPORT):
             return None
         sc = scored()
@@ -3913,19 +3945,33 @@ def server(input, output, session):
         # an observation outranks the rating select, so while one is in effect the evidence
         # reads "observed", the restore chip is hidden and the select is locked
         is_observed = row.get("status") == "observed"
-        chip = (ui.tags.button(f"use {gen}", {"data-suggest": mid, "type": "button",
-                                              "title": f"Restore the desktop rating ({gen})"},
-                               class_="sfari-suggest-chip")
+        chip = (ui.span("Desktop rating: ", ui.tags.b(gen),
+                        ui.tags.button("Use", {"data-suggest": mid, "type": "button",
+                                               "title": f"Restore the desktop rating ({gen})"},
+                                       class_="staf-suggest-use"),
+                        class_="staf-suggest")
                 if gen and row.get("rating") != gen and not is_observed else None)
         hint = _observed_hint(mid, (_observed() or {}).get(mid) or {}, row)
         return ui.div(
-            ui.div(ui.span("observed" if is_observed else "desktop", class_="sfari-ev-tag"),
-                   ui.tags.b(row.get("valueText") or "—", class_="sfari-ev-val"),
-                   chip, class_="sfari-evidence"),
+            ui.div(ui.span("observed" if is_observed else "desktop",
+                           class_="staf-ev-tag" + (" observed" if is_observed else "")),
+                   ui.tags.b(row.get("valueText") or "—", class_="staf-ev-val"),
+                   chip, class_="staf-metric-ev"),
             _borrowed_metric_note(row),
-            ui.div(_rate_select(mid, row), class_="easi-rate-cell"),
             (ui.div(hint, class_="easi-obs-hint" + (" applied" if is_observed else "")) if hint else None),
             class_="easi-metric-live")
+
+    @render.ui
+    def fn_metric_rate():
+        # The rating select, the right column of the metric row; re-renders on scored().
+        if current_step() not in (STEP_ASSESS, STEP_REPORT):
+            return None
+        sc = scored()
+        if not sc:
+            return None
+        current_fn()
+        mid, row = _cur_row(sc)
+        return _rate_select(mid, row)
 
     def _cur_method():
         """(mid, row, method, site_inputs) for the active function's Scoring-method panel."""
@@ -3940,8 +3986,8 @@ def server(input, output, session):
             return None
         return mid, row, trace, method, _trace_values(trace)
 
-    # suspend_when_hidden=False: these two slots live inside a collapsed <details> (display:none),
-    # which Shiny would otherwise suspend (never compute) until first opened — so the body and
+    # suspend_when_hidden=False: these two slots live in the closed Scoring panel (display:none),
+    # which Shiny would otherwise suspend (never compute) until first opened, so the body and
     # criteria would be blank on open. They read scored() and re-render in place on a source swap
     # or override, keeping the fn_panel skeleton (and the mounted cross-section widget) untouched.
     @output(suspend_when_hidden=False)

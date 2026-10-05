@@ -24,15 +24,9 @@
     // Step navigator (data-step) — one event, so the two steppers never collide on ids.
     var step = e.target.closest("[data-step]");
     if (step) { send("step_nav", { key: step.dataset.step }); return; }
-    // Reveal/hide an optional field (note / photo strip / function justification) — client-only.
-    var tog = e.target.closest(".sfari-metric-toggle");
-    if (tog) {
-      var host = tog.closest(".sfari-metric, .sfari-scorecard");
-      var kind = tog.dataset.toggle;
-      if (host && kind) { host.classList.toggle("show-" + kind); tog.classList.toggle("on"); }
-      return;
-    }
-    // "use this" suggested Likert chip -> set that rating in the metric's dropdown.
+    // A row's Scoring, Note and Photo buttons (and the score card's Note) belong to the shared
+    // staf/metric-rows.js, the same in EASI, SFARI and DEEP.
+    // The suggested rating's Use button -> set that rating in the metric's dropdown.
     var chip = e.target.closest(".sfari-suggest-chip");
     if (chip) {
       var lksel = document.querySelector('.sfari-likert-select[data-mid="' + cssEsc(chip.dataset.mid) + '"]');
@@ -90,7 +84,9 @@
     // Remove a metric photo.
     var prm = e.target.closest(".sfari-photo-rm");
     if (prm) {
+      var prow = prm.closest(".staf-metric");
       var pw = prm.closest(".sfari-thumb-wrap"); if (pw) pw.remove();
+      syncRow(prow);
       send("metric_photo_remove", { mid: prm.dataset.mid, id: prm.dataset.id });
       return;
     }
@@ -133,7 +129,7 @@
     var photo = e.target.closest(".sfari-photo");
     if (photo) {
       var pmid = photo.dataset.mid;
-      var metricEl = photo.closest(".sfari-metric");
+      var metricEl = photo.closest(".staf-metric");
       var strip = metricEl ? metricEl.querySelector(".sfari-photos") : null;
       var files = Array.prototype.slice.call(photo.files || []);
       var used = strip ? strip.querySelectorAll(".sfari-thumb-wrap").length : 0;
@@ -143,6 +139,7 @@
           if (!uri) return;
           var id = "p" + Date.now() + "-" + Math.round(Math.random() * 1e6);
           if (strip) strip.insertBefore(thumbEl(pmid, id, uri), strip.querySelector(".sfari-photo-btn"));
+          syncRow(metricEl);
           send("metric_photo_add", { mid: pmid, id: id, uri: uri });
         });
       });
@@ -162,6 +159,9 @@
     var foot = document.querySelector(".sfari-foot-rated");
     if (foot) foot.textContent = rated + "/" + groups.length + " rated";
   }
+
+  // The photo button's count follows the strip (staf/metric-rows.js owns the button).
+  function syncRow(row) { if (row && window.STAFMetricRows) window.STAFMetricRows.sync(row); }
 
   function scrollPanelTop() {
     var p = document.querySelector(".sfari-fnpanel");

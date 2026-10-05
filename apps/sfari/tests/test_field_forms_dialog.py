@@ -72,11 +72,11 @@ def test_the_stylesheet_pins_the_header_and_the_layout():
     for state in (".ff-dl .btn-primary {", ".ff-dl .btn-primary:hover,"):
         assert state in CSS, state
     assert "ff-dl-secondary" not in CSS and "ff-dl-secondary" not in SRC
-    assert 'href="styles.css?v=26"' in SRC
+    assert 'href="styles.css?v=28"' in SRC
 
 
 def test_the_worksheet_button_names_the_dialog():
-    assert 'ui.tags.button("Field Forms",' in SRC and "Get Field Forms" not in SRC
+    assert 'ui.tags.button("Get Forms",' in SRC and "Get Field Forms" not in SRC
     assert "Print-ready field packet" not in SRC
 
 

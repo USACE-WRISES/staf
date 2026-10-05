@@ -105,7 +105,7 @@ def test_field_forms_print_desktop_values_and_the_site():
     text = " ".join(text.split())
     assert "NHDPlusID 750012345" in text and "Sugar Run" in text
     assert "HR reach watershed (STAF site engine v0.2.0)" in text
-    assert "DESKTOP: STAF site engine v0.2.0 impervious" in text
+    assert "DESKTOP: NLCD 2021" in text
     assert "0.4" in text
     # the legacy call shape still builds
     assert report.build_field_forms_pdf(BUNDLE)[:4] == b"%PDF"

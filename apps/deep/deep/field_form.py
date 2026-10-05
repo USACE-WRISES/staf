@@ -121,12 +121,14 @@ def _desktop_ids() -> set:
 
 def method_text(metric: dict) -> str:
     """How to measure the metric: the assessment's protocol text when it has
-    one, else its measurement note, else nothing."""
+    one, else its measurement note, else nothing; in the concise wording of
+    :mod:`deep.method_text` where one is recorded."""
+    from . import method_text as _concise
     name = str(metric.get("metricName") or "")
     for key in ("methodContext", "howToMeasure", "metricStatement"):
         txt = " ".join(str(metric.get(key) or "").split())
         if txt and txt != name:
-            return _first_sentences(txt)
+            return _first_sentences(_concise.concise(txt))
     return ""
 
 

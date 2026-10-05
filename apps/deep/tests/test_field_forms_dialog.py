@@ -20,7 +20,7 @@ SFARI_CSS = (ROOT.parent / "sfari" / "www" / "styles.css")
 
 def test_the_rail_button_is_a_delegated_plain_button():
     assert '"data-field-forms": "1"' in SRC
-    assert 'ui.tags.button("Get Field Forms"' in SRC
+    assert 'ui.tags.button("Get Forms"' in SRC
     # no Shiny download sits in the rail any more: the dialog owns the downloads
     rail = SRC[SRC.index("def worksheet():"):SRC.index("def fn_nav():")]
     assert "download_button" not in rail
@@ -98,4 +98,4 @@ def test_the_dialog_styles_are_sfaris():
 
 
 def test_the_cache_bust_versions_moved_with_the_assets():
-    assert 'href="styles.css?v=21"' in SRC and 'src="measure.js?v=5"' in SRC
+    assert 'href="styles.css?v=23"' in SRC and 'src="measure.js?v=7"' in SRC

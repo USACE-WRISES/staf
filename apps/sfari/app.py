@@ -14,6 +14,7 @@ from __future__ import annotations
 import copy
 import json
 import os
+import re
 import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
@@ -327,7 +328,7 @@ def _interp_series(xs, zs, x):
 
 def _info(text: str = None, *, html_tip: str = None):
     """A small circled-'i'; the custom tooltip (www/tooltip.js) shows the tip."""
-    attrs = {"onclick": "event.preventDefault();event.stopPropagation();"}
+    attrs = {"onclick": "event.preventDefault();event.stopPropagation();", "tabindex": "0"}
     if html_tip:
         attrs["data-tip-html"] = html_tip
     elif text and text.strip():
@@ -341,32 +342,40 @@ _LIKERT_DOT = {"Strongly Agree": "good", "Agree": "good", "Neutral": "fair",
                "Disagree": "poor", "Strongly Disagree": "poor"}
 
 
-def _criteria_tip_html(m) -> str:
-    """Rich hover card for a metric: its statement + an example Likert scoring ladder
-    (illustrative anchors, not exact thresholds — the user judges fit for their stream).
-    Criteria are raw text (may contain '<', '>', '&'), so escape them for the HTML tip."""
+def _about_tip_html(m) -> str:
+    """The (i) beside a metric's name: its definition, nothing else. How the evidence maps to a
+    rating is the row's Scoring panel (owner, 2026-10-04: one row design in EASI, SFARI and DEEP).
+    The definition is raw text (it may hold '<', '>', '&'), so escape it for the HTML tip."""
     import html as _h
     name = m.get("name", "")
     parts = [f'<div class="easi-tip-title">{_h.escape(name)}</div>']
     stmt = (m.get("metricStatement") or "").strip()
     if stmt and stmt != name:
         parts.append(f'<div class="easi-tip-sec">{_h.escape(stmt)}</div>')
+    return "".join(parts)
+
+
+def _scoring_rungs(m) -> list:
+    """``(label, band, criteria)`` for each Likert level the metric's example ladder fills."""
     rungs = []
     for c in m.get("likertCriteria", []):
         crit = (c.get("criteria") or "").strip()
-        if not crit:
-            continue
-        lk = c.get("likert", "")
-        short = config.LIKERT_SHORT.get(lk, lk)
-        rungs.append(
-            f'<div class="easi-tip-crit"><span class="easi-tip-dot {_LIKERT_DOT.get(lk, "fair")}"></span>'
-            f'<span><b>{_h.escape(short)}:</b> {_h.escape(crit)}</span></div>')
-    if rungs:
-        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Example scoring</span>'
-                     '<div class="easi-tip-sub">Illustrative only. Judge what\'s appropriate '
-                     'for your stream type and region.</div>'
-                     + "".join(rungs) + "</div>")
-    return "".join(parts)
+        if crit:
+            lk = c.get("likert", "")
+            rungs.append((lk, _LIKERT_DOT.get(lk, "fair"), crit))
+    return rungs
+
+
+def _scoring_panel(m):
+    """The row's Scoring panel: the example Likert ladder (illustrative anchors, not exact
+    thresholds; the assessor judges fit for the stream), or None when the metric has none."""
+    rungs = _scoring_rungs(m)
+    if not rungs:
+        return None
+    return staf_web.scoring_criteria(
+        rungs, title="Example scoring",
+        sub="Illustrative only. Judge what's appropriate for your stream type and region.")
+
 
 
 # --------------------------------------------------------------------------- #
@@ -385,21 +394,169 @@ STAF_LINKS = {
 
 
 # --------------------------------------------------------------------------- #
-# Evidence provenance: which engine or service produced a value
+# Evidence on the worksheet. The report keeps every provenance detail (_ev_tip, the source
+# columns); the worksheet shows the value and why it suggests a rating, never the engine, its
+# version or the watershed basis (owner, 2026-10-04).
 # --------------------------------------------------------------------------- #
-_EV_BADGE = {"engine": ("Desktop", "sfari-ev-tag engine"),
-             "streamcat": ("StreamCat", "sfari-ev-tag streamcat"),
-             "pull": ("Desktop", "sfari-ev-tag")}
-_PENDING_BADGE = ("Desktop pending", "sfari-ev-tag pending")
+_EV_BADGE = ("Desktop", "staf-ev-tag")
+_PENDING_BADGE = ("Desktop pending", "staf-ev-tag pending")
+_BASIS_SUFFIX = re.compile(r"\s*\((?:HR reach watershed|NHDPlus V2 basin(?:, COMID \d+)?)\)")
+_ENGINE_NOTE = re.compile(r"Watershed of the clicked NHD reach, HR catchments aggregated"
+                          r"(?:, [\d.]+ km2)?(?:, area agreement [\d.]+)?\.\s*")
+_ENGINE_WORDS = ("STAF site engine", "StreamCat lookup engine", "site engine")
+_BORROWED_NOTICE = "Desktop evidence comes from the nearest StreamCat reach downstream."
 
 
 def _ev_badge(edata):
-    """``(label, css class)`` of the provenance badge for one evidence entry."""
+    """``(label, css class)`` of the evidence tag: one Desktop tag for every desktop source
+    (engine, StreamCat or a direct service), Desktop pending, or Field."""
     if not edata:
-        return "field", "sfari-ev-tag field"
+        return "Field", "staf-ev-tag field"
     if edata.get("status") == "pending":
         return _PENDING_BADGE
-    return _EV_BADGE.get(edata.get("origin") or "pull", _EV_BADGE["pull"])
+    return _EV_BADGE
+
+
+def _ev_value_ws(text) -> str:
+    """A value as the worksheet shows it: without its watershed-basis suffix, wherever it sits
+    (a value built from several keys can carry it twice)."""
+    out = _BASIS_SUFFIX.sub("", str(text or ""))
+    return " ".join(out.replace("HR reach watershed", "watershed").split())
+
+
+def _ev_tip_ws(edata) -> str:
+    """The worksheet's (i) on a desktop value: why it suggests its rating and the data behind it.
+    Sentences that name an engine and the engine's watershed note are left to the report."""
+    note = _ENGINE_NOTE.sub("", str((edata or {}).get("note") or ""))
+    note = _BASIS_SUFFIX.sub("", note).replace("HR reach watershed", "watershed")
+    kept = [s for s in re.split(r"(?<=\.)\s+", " ".join(note.split()))
+            if s and not any(w in s for w in _ENGINE_WORDS)]
+    if (edata or {}).get("origin") == "streamcat" or (edata or {}).get("fallback_reason"):
+        kept.insert(0, "Read from EPA StreamCat.")
+    return " ".join(kept).strip()
+
+
+def _ev_notice(edata):
+    """The notice under a value that describes another reach (a stream outside NHDPlus V2): one
+    sentence, EASI's wording, with the reach, its distance and its size on hover."""
+    label = (edata or {}).get("anchor_label")
+    if not label:
+        return None
+    return ui.div(_BORROWED_NOTICE, {"title": "Describes the " + label + "."}, class_="staf-metric-warn")
+
+
+def _evidence_line(m, edata, pulling: bool):
+    """The evidence line of a metric row: the tag, the value, its (i) and the suggested rating."""
+    mid = m["metricId"]
+    ds = m.get("desktopSource")
+    if edata and edata.get("status") == "ok":
+        sug = edata.get("suggested_likert")
+        suggest = (ui.span("Suggested: ", ui.tags.b(sug),
+                           ui.tags.button("Use", {"data-mid": mid, "data-val": sug, "type": "button",
+                                                  "title": f"Use the suggested rating ({sug})"},
+                                          class_="staf-suggest-use sfari-suggest-chip"),
+                           class_="staf-suggest") if sug else None)
+        label, cls = _ev_badge(edata)
+        return ui.div(ui.span(label, class_=cls),
+                      ui.tags.b(_ev_value_ws(edata.get("value_text", "")), class_="staf-ev-val"),
+                      _info(_ev_tip_ws(edata)), suggest, class_="staf-metric-ev")
+    if edata and edata.get("status") == "pending":
+        return ui.div(ui.span(_PENDING_BADGE[0], class_=_PENDING_BADGE[1]),
+                      ui.span("Computing the watershed…", class_="staf-ev-val muted"),
+                      class_="staf-metric-ev")
+    if edata and edata.get("status") == "unavailable":
+        url = (ds or {}).get("url")
+        link = (ui.tags.a("look it up ↗", {"href": url, "target": "_blank", "rel": "noopener"})
+                if url else None)
+        label, cls = _ev_badge(edata)
+        return ui.div(ui.span(label, class_=cls),
+                      ui.span("Not available. Review in the field.", class_="staf-ev-val muted"),
+                      link, _info(_ev_tip_ws(edata)), class_="staf-metric-ev")
+    if ds and pulling:
+        return ui.div(ui.span(_PENDING_BADGE[0], class_=_PENDING_BADGE[1]),
+                      ui.span("Pulling desktop evidence…", class_="staf-ev-val muted"),
+                      class_="staf-metric-ev")
+    if ds:
+        url = ds.get("url")
+        link = (ui.tags.a("↗", {"href": url, "target": "_blank", "rel": "noopener",
+                                     "title": "Open resource"}) if url else None)
+        return ui.div(ui.span("Desktop", class_="staf-ev-tag"),
+                      ui.span(ds.get("label", ""), class_="staf-ev-val muted"), link,
+                      class_="staf-metric-ev")
+    return ui.div(ui.span("Field", class_="staf-ev-tag field"),
+                  ui.span("Field observation only.", class_="staf-ev-val muted"),
+                  class_="staf-metric-ev")
+
+
+def _metric_row(m, rc, edata, pulling: bool):
+    """One metric of a function page, in the row EASI, SFARI and DEEP share (owner, 2026-10-04;
+    ``staf/metric-rows.css``): the name with its scale letter and its (i) (the definition), the
+    statement the assessor rates, the evidence with its suggested rating, then the row's buttons
+    (Scoring, Note, Photo), always visible. The Likert select sits in the right column; the
+    Scoring ladder, the note and the photos open under the row."""
+    mid = m["metricId"]
+    rc = rc or {}
+    sel = rc.get("likert")
+    note = rc.get("note", "") or ""
+    has_note = bool(note.strip())
+    photos = rc.get("photos", []) or []
+    opts = [ui.tags.option("Rate…", {"value": ""})]
+    for lv in list(config.LIKERT_ORDER) + [config.LIKERT_NA]:
+        oattrs = {"value": lv}
+        if sel == lv:
+            oattrs["selected"] = "selected"
+        opts.append(ui.tags.option(lv, oattrs))
+    rate = ui.tags.select(*opts, {"data-mid": mid, "aria-label": f"Rate: {m['name']}"},
+                          class_="staf-rate sfari-likert-select" + (" set" if sel else ""))
+    thumbs = [
+        ui.span(
+            ui.tags.img({"src": p.get("uri", "")}, class_="sfari-thumb"),
+            ui.tags.button("×", {"data-mid": mid, "data-id": p.get("id"), "type": "button"},
+                           class_="sfari-photo-rm"),
+            {"data-mid": mid, "data-id": p.get("id")}, class_="sfari-thumb-wrap")
+        for p in photos
+    ]
+    photos_row = ui.div(
+        *thumbs,
+        ui.tags.label(staf_web.metric_icon("photo"), "Add photo",
+                      ui.tags.input({"type": "file", "accept": "image/*",
+                                     "capture": "environment", "data-mid": mid},
+                                    class_="sfari-photo"),
+                      class_="sfari-photo-btn"),
+        {"data-mid": mid}, class_="sfari-photos")
+    scoring_panel = _scoring_panel(m)
+    # the short field-form agreement statement is what the assessor rates; the longer library
+    # metricStatement is the (i)
+    stmt = (m.get("fieldStatement") or m.get("metricStatement") or "").strip()
+    actions = staf_web.metric_actions(
+        (staf_web.metric_action("scoring", "Scoring", title="Example scoring")
+         if scoring_panel is not None else None),
+        staf_web.metric_action("note", "Note", on=has_note, has=has_note, title="Add a note"),
+        staf_web.metric_action("photo", "Photo", on=bool(photos), count=len(photos),
+                               title="Add a photo"))
+    cls = ("staf-metric" + (" show-note" if has_note else "") + (" show-photo" if photos else ""))
+    return ui.div(
+        ui.div(
+            ui.div(ui.span(m["name"], class_="staf-metric-name"),
+                   ui.span(m.get("scale", "R"),
+                           {"title": "Watershed-scale metric" if m.get("scale") == "W"
+                            else "Reach-scale metric"}, class_="staf-metric-scale"),
+                   _info(html_tip=_about_tip_html(m)),
+                   class_="staf-metric-head"),
+            (ui.div(stmt, class_="staf-metric-desc") if stmt and stmt != m["name"] else None),
+            _evidence_line(m, edata, pulling),
+            _ev_notice(edata) if edata and edata.get("status") == "ok" else None,
+            actions,
+            class_="staf-metric-main"),
+        ui.div(rate, class_="staf-metric-input"),
+        (ui.div(scoring_panel, {"data-panel": "scoring"}, class_="staf-metric-panel")
+         if scoring_panel is not None else None),
+        ui.div(ui.tags.textarea(note, {"data-mid": mid, "placeholder": "Note (optional)",
+                                       "aria-label": f"Note: {m['name']}"},
+                                class_="staf-metric-note sfari-metric-note"),
+               {"data-panel": "note"}, class_="staf-metric-panel"),
+        ui.div(photos_row, {"data-panel": "photo"}, class_="staf-metric-panel"),
+        {"data-metric": mid}, class_=cls)
 
 
 def _ev_tip(edata):
@@ -417,12 +574,56 @@ def _ev_tip(edata):
     return tip
 
 
-def _ev_describes(edata):
-    """A small line under a StreamCat value on a stream outside NHDPlus V2."""
-    label = (edata or {}).get("anchor_label")
-    if not label:
-        return None
-    return ui.span("describes the " + label, class_="sfari-ev-describes")
+_FSCORE_TIP = ('<div class="easi-tip-sec">Your professional-judgment 0-15 score, '
+               'using the evidence above.</div>'
+               '<div class="easi-tip-sec">'
+               '<div class="easi-tip-crit"><span class="easi-tip-dot poor"></span>'
+               '<span><b>0-5:</b> Non-Functioning</span></div>'
+               '<div class="easi-tip-crit"><span class="easi-tip-dot fair"></span>'
+               '<span><b>6-10:</b> Functioning-at-Risk</span></div>'
+               '<div class="easi-tip-crit"><span class="easi-tip-dot good"></span>'
+               '<span><b>11-15:</b> Functioning</span></div>'
+               '</div>')
+
+
+def _score_card(f, fid, rec):
+    """The function's score after its metrics: the assessor's 0-15 judgment on a banded slider,
+    the suggested value and a justification note. Named "Function score" as in EASI and DEEP; its
+    Note button is the rows' button, hosted by the card (staf/metric-rows.js)."""
+    score = rec.get("score")
+    sval = score if score is not None else 8
+    if score is not None:
+        band_lbl = scoring.index_band_label(sval / 15.0)
+        band_col = scoring.function_score_band_color(sval)
+    else:
+        band_lbl = "Not scored yet"; band_col = "#e7ebf1"
+    fnote = rec.get("note", "") or ""
+    has_fnnote = bool(fnote.strip())
+    card_cls = ("sfari-scorecard" + ("" if score is not None else " unset")
+                + (" show-fnnote" if has_fnnote else ""))
+    return ui.div(
+        ui.div(
+            ui.span("2", class_="sfari-step-num"),
+            ui.span("Function score", class_="sfari-fscore-lbl"),
+            _info(html_tip=_FSCORE_TIP),
+            class_="sfari-fscore-head"),
+        ui.p(f.get("functionStatement", ""), class_="sfari-fn-statement"),
+        ui.div(
+            ui.tags.input({"type": "range", "min": "0", "max": "15", "step": "1",
+                           "value": str(sval), "data-fid": fid}, class_="sfari-fscore"),
+            ui.span(str(score) if score is not None else "–", class_="sfari-fscore-num"),
+            ui.span(band_lbl, class_="sfari-fscore-band", style=f"background:{band_col};"),
+            class_="sfari-fscore-row"),
+        ui.output_ui("fn_suggest"),
+        staf_web.metric_actions(staf_web.metric_action(
+            "fnnote", "Note", on=has_fnnote, has=has_fnnote,
+            title="Justification or notes, especially if the score differs from the suggestion")),
+        ui.tags.textarea(fnote,
+                         {"data-fid": fid,
+                          "placeholder": "Justification / notes (especially if the score differs "
+                                         "from the suggestion)…"},
+                         class_="sfari-fn-note staf-metric-note"),
+        {"data-staf-host": ""}, class_=card_cls)
 
 
 def _report_evidence_value(edata, fallback="—"):
@@ -585,7 +786,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=26"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=28"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -593,8 +794,10 @@ app_ui = ui.page_fillable(
                     ui.tags.script(src="report-ready.js?v=2", defer=""),
                     ui.tags.script(src="staf/unsaved-guard.js?v=1", defer=""),
                     ui.tags.link(rel="stylesheet", href="staf/staf.css?v=4"),
+                    ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
                     ui.tags.script(src="staf/scenarios.js?v=1", defer=""),
-                    ui.tags.script(src="field-review.js?v=6", defer="")),
+                    ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
+                    ui.tags.script(src="field-review.js?v=7", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
         ui.div(
@@ -1665,11 +1868,11 @@ def server(input, output, session):
                 "2. **Basin**: review the watershed and reach.\n"
                 "3. **Assessment**: for each function, review the pulled evidence, "
                 "Likert-score each metric, and assign the 0–15 function score. "
-                "Each value carries a Desktop or StreamCat badge; its information tooltip "
-                "names the source, including the STAF site engine and HR reach watershed. "
-                "StreamCat evidence also names the reach it describes. "
-                "Some values carry a suggested rating. Every "
-                "score stays yours to set.\n"
+                "Values pulled from desktop data are marked **Desktop**; a suggested rating "
+                "has a **Use** button, and every score stays yours to set. The buttons under "
+                "each metric open its **Scoring** examples, a **Note** and **Photos**. A value "
+                "that describes the nearest StreamCat reach downstream says so under it, and "
+                "the report names every source.\n"
                 "4. **Report**: the assessment stays visible while the report map is prepared. "
                 "The completed report opens in a popup; closing it returns to the same screen. "
                 "Review the screening report and export. A dagger marks "
@@ -2089,7 +2292,7 @@ def server(input, output, session):
             ui.div(
                 ui.div("SFARI · Assessment", class_="easi-pane-head"),
                 ui.div(_stepper(current_step()), class_="sfari-nav-steps"),
-                ui.tags.button("Field Forms",
+                ui.tags.button("Get Forms",
                                {"data-desktop-metrics": "1", "type": "button",
                                 "title": "The blank field-form pages, and the desktop metrics "
                                          "PDF with your pulled values"},
@@ -2138,154 +2341,10 @@ def server(input, output, session):
         with reactive.isolate():
             ms = metric_scores(); fs = function_scores()
         rec = fs.get(fid, {})
-        metric_blocks = []
-        for m in METRICS_BY_FN.get(fid, []):
-            mid = m["metricId"]
-            rc = ms.get(mid) or {}
-            sel = rc.get("likert"); note = rc.get("note", "")
-            ds = m.get("desktopSource")
-            edata = ev_map.get(mid)
-            if edata and edata.get("status") == "ok":
-                sug = edata.get("suggested_likert")
-                chip = (ui.tags.button(f"use {config.LIKERT_SHORT.get(sug, sug)}",
-                                       {"data-mid": mid, "data-val": sug, "type": "button",
-                                        "title": f"Use the suggested rating ({sug})"},
-                                       class_="sfari-suggest-chip") if sug else None)
-                blabel, bcls = _ev_badge(edata)
-                ev = ui.div(ui.span(blabel, class_=bcls),
-                            ui.tags.b(edata.get("value_text", ""), class_="sfari-ev-val"),
-                            _info(_ev_tip(edata)), chip, _ev_describes(edata),
-                            class_="sfari-evidence")
-            elif edata and edata.get("status") == "pending":
-                ev = ui.div(ui.span(_PENDING_BADGE[0], class_=_PENDING_BADGE[1]),
-                            ui.span("The STAF site engine is computing the HR reach watershed…",
-                                    class_="sfari-ev-val muted"),
-                            (_info(edata.get("note", "")) if edata.get("note") else None),
-                            class_="sfari-evidence pending")
-            elif edata and edata.get("status") == "unavailable":
-                url = (ds or {}).get("url")
-                link = (ui.tags.a("look it up ↗", {"href": url, "target": "_blank",
-                                                   "rel": "noopener"}) if url else None)
-                blabel, bcls = _ev_badge(edata)
-                has_tip = bool(edata.get("note") or edata.get("fallback_reason"))
-                ev = ui.div(ui.span(blabel, class_=bcls),
-                            ui.span("Not available. Review in the field.", class_="sfari-ev-val muted"),
-                            link, (_info(_ev_tip(edata)) if has_tip else None),
-                            class_="sfari-evidence")
-            elif ds and pulling:
-                ev = ui.div(ui.span("Desktop pending", class_="sfari-ev-tag pending"),
-                            ui.span("Pulling desktop evidence…", class_="sfari-ev-val muted"),
-                            class_="sfari-evidence pending")
-            elif ds:
-                url = ds.get("url")
-                link = (ui.tags.a("↗", {"href": url, "target": "_blank", "rel": "noopener",
-                                        "title": "Open resource"}) if url else None)
-                ev = ui.div(ui.span("Desktop", class_="sfari-ev-tag"),
-                            ui.span(ds.get("label", ""), class_="sfari-ev-val muted"), link,
-                            class_="sfari-evidence")
-            else:
-                ev = ui.div(ui.span("field", class_="sfari-ev-tag field"),
-                            ui.span("Field observation only.", class_="sfari-ev-val muted"),
-                            class_="sfari-evidence")
-            opts = [ui.tags.option("Rate…", {"value": ""})]
-            for lv in list(config.LIKERT_ORDER) + [config.LIKERT_NA]:
-                oattrs = {"value": lv}
-                if sel == lv:
-                    oattrs["selected"] = "selected"
-                opts.append(ui.tags.option(lv, oattrs))
-            rate = ui.tags.select(*opts, {"data-mid": mid, "aria-label": f"Rate: {m['name']}"},
-                                  class_="sfari-likert-select" + (" set" if sel else ""))
-            photos = rc.get("photos", []) or []
-            thumbs = [
-                ui.span(
-                    ui.tags.img({"src": p.get("uri", "")}, class_="sfari-thumb"),
-                    ui.tags.button("×", {"data-mid": mid, "data-id": p.get("id"), "type": "button"},
-                                   class_="sfari-photo-rm"),
-                    {"data-mid": mid, "data-id": p.get("id")}, class_="sfari-thumb-wrap")
-                for p in photos
-            ]
-            photos_row = ui.div(
-                *thumbs,
-                ui.tags.label("📷 Photo",
-                              ui.tags.input({"type": "file", "accept": "image/*",
-                                             "capture": "environment", "data-mid": mid},
-                                            class_="sfari-photo"),
-                              class_="sfari-photo-btn"),
-                {"data-mid": mid}, class_="sfari-photos")
-            has_note = bool((note or "").strip())
-            # Show the short field-form agreement statement; the longer library
-            # metricStatement stays in the "how to score" tooltip (_criteria_tip_html).
-            stmt = (m.get("fieldStatement") or m.get("metricStatement") or "").strip()
-            name_row = ui.div(
-                ui.span(m["name"], class_="sfari-metric-title"),
-                ui.span(m.get("scale", "R"),
-                        {"title": "Watershed-scale metric" if m.get("scale") == "W"
-                         else "Reach-scale metric"}, class_="sfari-metric-scale"),
-                _info(html_tip=_criteria_tip_html(m)),
-                ui.div(
-                    ui.tags.button("✎", {"data-toggle": "note", "type": "button", "title": "Add a note"},
-                                   class_="sfari-metric-toggle" + (" on" if has_note else "")),
-                    ui.tags.button("📷", {"data-toggle": "photo", "type": "button", "title": "Add a photo"},
-                                   class_="sfari-metric-toggle" + (" on" if photos else "")),
-                    class_="sfari-metric-actions"),
-                class_="sfari-metric-name")
-            mcls = ("sfari-metric" + (" show-note" if has_note else "")
-                    + (" show-photo" if photos else ""))
-            metric_blocks.append(ui.div(
-                ui.div(
-                    name_row,
-                    (ui.div(stmt, class_="sfari-metric-statement")
-                     if stmt and stmt != m["name"] else None),
-                    ev,
-                    class_="sfari-metric-main"),
-                ui.div(rate, class_="sfari-metric-rate"),
-                ui.tags.textarea(note, {"data-mid": mid, "placeholder": "Note (optional)…"},
-                                 class_="sfari-metric-note"),
-                photos_row,
-                class_=mcls))
-        score = rec.get("score")
-        sval = score if score is not None else 8
-        if score is not None:
-            band_lbl = scoring.index_band_label(sval / 15.0)
-            band_col = scoring.function_score_band_color(sval)
-        else:
-            band_lbl = "Not scored yet"; band_col = "#e7ebf1"
-        has_fnnote = bool((rec.get("note") or "").strip())
-        card_cls = ("sfari-scorecard" + ("" if score is not None else " unset")
-                    + (" show-fnnote" if has_fnnote else ""))
-        scorecard = ui.div(
-            ui.div(
-                ui.span("2", class_="sfari-step-num"),
-                ui.span("Score this function", class_="sfari-fscore-lbl"),
-                _info(html_tip=(
-                    '<div class="easi-tip-sec">Your professional-judgment 0-15 score, '
-                    'using the evidence above.</div>'
-                    '<div class="easi-tip-sec">'
-                    '<div class="easi-tip-crit"><span class="easi-tip-dot poor"></span>'
-                    '<span><b>0-5:</b> Non-Functioning</span></div>'
-                    '<div class="easi-tip-crit"><span class="easi-tip-dot fair"></span>'
-                    '<span><b>6-10:</b> Functioning-at-Risk</span></div>'
-                    '<div class="easi-tip-crit"><span class="easi-tip-dot good"></span>'
-                    '<span><b>11-15:</b> Functioning</span></div>'
-                    '</div>')),
-                ui.tags.button("✎", {"data-toggle": "fnnote", "type": "button",
-                                     "title": "Add justification / notes"},
-                               class_="sfari-metric-toggle" + (" on" if has_fnnote else "")),
-                class_="sfari-fscore-head"),
-            ui.p(f.get("functionStatement", ""), class_="sfari-fn-statement"),
-            ui.div(
-                ui.tags.input({"type": "range", "min": "0", "max": "15", "step": "1",
-                               "value": str(sval), "data-fid": fid}, class_="sfari-fscore"),
-                ui.span(str(score) if score is not None else "–", class_="sfari-fscore-num"),
-                ui.span(band_lbl, class_="sfari-fscore-band", style=f"background:{band_col};"),
-                class_="sfari-fscore-row"),
-            ui.output_ui("fn_suggest"),
-            ui.tags.textarea(rec.get("note", ""),
-                             {"data-fid": fid,
-                              "placeholder": "Justification / notes (especially if the score differs "
-                                             "from the suggestion)…"},
-                             class_="sfari-fn-note"),
-            class_=card_cls)
+        # the row design EASI, SFARI and DEEP share (owner, 2026-10-04): _metric_row, _score_card
+        metric_blocks = [_metric_row(m, ms.get(m["metricId"]), ev_map.get(m["metricId"]), pulling)
+                         for m in METRICS_BY_FN.get(fid, [])]
+        scorecard = _score_card(f, fid, rec)
         fn_head = ui.div(
             ui.div(f"Function {idx + 1} of {len(FN_IDS)} · {f['category']}",
                    class_="sfari-fn-eyebrow"),
@@ -2316,7 +2375,7 @@ def server(input, output, session):
             fn_head,
             ui.div(
                 ui.div(ui.span("1", class_="sfari-step-num"),
-                       ui.span("Evidence", class_="sfari-sec-title"),
+                       ui.span("Metrics", class_="sfari-sec-title"),
                        ui.span(f"{rated} of {total} rated", class_="sfari-sec-count"),
                        class_="sfari-sec-lbl"),
                 *metric_blocks,

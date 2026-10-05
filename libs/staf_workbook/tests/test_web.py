@@ -107,3 +107,70 @@ def test_the_summary_block_names_the_scenario_first():
     labels = re.findall(r"<th>([^<]+)</th>", named)
     assert labels[:3] == ["Scenario", "Description", "Reach name"]
     assert "Description" not in str(web.summary_block(info, scenario=("Restore riparian", "")))
+
+
+# --------------------------------------------------------------------------- metric rows
+def test_a_row_button_is_outlined_with_an_icon_and_a_label():
+    """Owner, 2026-10-04: the buttons under every metric are always visible, outlined, an icon and a
+    label, in EASI, SFARI and DEEP alike."""
+    html = str(web.metric_action("scoring", "Scoring", title="How this metric is scored"))
+    assert html.startswith('<button type="button" data-staf-panel="scoring" aria-expanded="false"')
+    assert 'class="staf-act"' in html and html.count("<svg") == 1
+    assert '<span class="staf-act-label">Scoring</span>' in html
+    assert 'title="How this metric is scored"' in html
+    assert "staf-act-dot" not in html and "staf-act-count" not in html
+
+
+def test_a_note_button_shows_a_dot_and_photos_a_count():
+    note = str(web.metric_action("note", "Note", on=True, has=True))
+    assert 'class="staf-act on has"' in note and 'aria-expanded="true"' in note
+    assert '<span class="staf-act-dot"></span>' in note
+    none = str(web.metric_action("photo", "Photo", count=0))
+    assert 'class="staf-act"' in none and '<span class="staf-act-count"></span>' in none
+    two = str(web.metric_action("photo", "Photo", on=True, count=2))
+    assert 'class="staf-act on has"' in two and ">Photos</span>" in two
+    assert '<span class="staf-act-count">2</span>' in two
+    fn = str(web.metric_action("fnnote", "Note"))
+    assert 'data-staf-panel="fnnote"' in fn and fn.count("<svg") == 1 and "staf-act-dot" in fn
+
+
+def test_a_checkbox_button_keeps_the_apps_own_box():
+    from htmltools import tags
+    box = tags.input({"type": "checkbox", "data-mid-na": "m1", "checked": "checked"}, class_="deep-na")
+    html = str(web.metric_check("N/A", box, on=True, title="Not applicable at this site",
+                                extra_class="deep-na-toggle"))
+    assert html.startswith("<label") and 'class="staf-act on deep-na-toggle"' in html
+    assert 'data-mid-na="m1"' in html and html.count("<svg") == 1
+    assert "data-staf-panel" not in html            # a checkbox, not a panel button
+
+
+def test_the_actions_skip_missing_buttons_and_every_icon_is_a_line_icon():
+    html = str(web.metric_actions(web.metric_action("note", "Note"), None))
+    assert html.startswith('<div class="staf-metric-acts">') and html.count("<button") == 1
+    for kind, svg in web.ROW_ICONS.items():
+        assert 'stroke="currentColor"' in svg and 'fill="none"' in svg and 'aria-hidden="true"' in svg, kind
+    assert set(web.ROW_ICONS) == {"scoring", "note", "photo", "na"}
+
+
+def test_scoring_criteria_rows_carry_a_band_dot():
+    html = str(web.scoring_criteria([("Strongly Agree", "good", "< 5% impervious"),
+                                     ("Disagree", "poor", "10 to 20%")],
+                                    title="Example scoring", sub="Illustrative only."))
+    assert '<div class="staf-panel-title">Example scoring</div>' in html
+    assert '<div class="staf-panel-sub">Illustrative only.</div>' in html
+    assert html.count("staf-crit-dot good") == 1 and html.count("staf-crit-dot poor") == 1
+    assert "&lt; 5% impervious" in html
+
+
+def test_the_shared_row_stylesheet_and_script_ship_with_the_library():
+    from pathlib import Path
+    assets = Path(__file__).resolve().parents[1] / "assets"
+    css = (assets / "metric-rows.css").read_text(encoding="utf-8")
+    js = (assets / "metric-rows.js").read_text(encoding="utf-8")
+    for rule in (".staf-metric {", ".staf-act {", ".staf-act.on {", ".staf-act.has .staf-act-dot",
+                 '.staf-metric.show-scoring .staf-metric-panel[data-panel="scoring"]', ".staf-rate {",
+                 ".staf-ev-tag {", ".staf-metric-warn {", "@media (max-width: 820px)"):
+        assert rule in css, rule
+    assert "(hover: hover)" not in css and ":hover .staf-act" not in css   # nothing waits for a hover
+    assert "window.STAFMetricRows" in js and "button.staf-act[data-staf-panel]" in js
+    assert "—" not in css + js

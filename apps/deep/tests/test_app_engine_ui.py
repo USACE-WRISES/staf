@@ -1,4 +1,4 @@
-"""The app's basis badge, engine line, engine scheduling rule, and copy.
+"""The app's engine line, engine scheduling rule, and copy.
 Imports the Shiny module without running a server."""
 from __future__ import annotations
 
@@ -9,19 +9,6 @@ import pytest
 
 pytest.importorskip("shiny")
 app = importlib.import_module("app")
-
-
-def test_basis_tag_follows_the_basis():
-    assert app._basis_tag({"origin": "desktop", "basis": "site-engine"}) == (
-        "HR reach watershed", "deep-basis-tag engine")
-    assert app._basis_tag({"origin": "desktop", "basis": "streamcat"})[0] == "StreamCat"
-    assert app._basis_tag({"origin": "desktop", "basis": "nlcd"})[0] == "NLCD"
-    assert app._basis_tag({"origin": "desktop", "basis": "3dep"})[0] == "3DEP"
-    # a legacy engine entry without a basis still reads as the engine
-    assert app._basis_tag({"origin": "desktop", "engine": True})[0] == "HR reach watershed"
-    assert app._basis_tag({"origin": "field", "basis": "streamcat"}) is None
-    assert app._basis_tag({"origin": "desktop"}) is None
-    assert app._basis_tag(None) is None
 
 
 def test_engine_line_states():
@@ -65,17 +52,18 @@ def test_copy_and_cache_bust():
     assert app._MISS_TEXT == ("No stream line within 150 ft of the click. "
                               "Zoom in and click a line.")
     src = Path(app.__file__).read_text(encoding="utf-8")
-    # v10: the curve-basis chip on the Scored against row (StreamCurves 0.13)
-    # v11: the owner-entered and borrowed chips (StreamCurves REF-15)
-    assert "deep.css?v=11" in src and "styles.css?v=21" in src
+    # v13 / v23 (2026-10-04): the metric rows EASI, SFARI and DEEP share (staf/metric-rows.css)
+    assert "deep.css?v=13" in src and "styles.css?v=23" in src
+    assert 'href="staf/metric-rows.css?v=1"' in src and 'src="staf/metric-rows.js?v=1"' in src
+    # the shared script loads before measure.js, which calls it after a photo changes
+    assert src.index("staf/metric-rows.js") < src.index("measure.js?v=")
     # Source readiness has its own persistent row instead of sharing engine progress.
     assert '"Finding the nearest StreamCat reach…"' in src
     assert 'ui.output_ui("streamcat_lookup_status")' in src
     css = (Path(app.__file__).parent / "www" / "deep.css").read_text(encoding="utf-8")
-    assert ".deep-basis-tag.engine" in css and ".deep-engine-line" in css
-    # a curve that does not rest on this ecoregion's own stations says so
-    for basis in ("national", "modeled", "published"):
-        assert f".deep-basis-tag.{basis}" in css, basis
+    assert ".deep-engine-line" in css
+    # where a value or a curve comes from is in the report, not on the worksheet
+    assert ".deep-basis-tag" not in css and ".deep-source-row" not in css
 
 
 def test_catchment_batches_and_the_plain_hr_failure_text():
