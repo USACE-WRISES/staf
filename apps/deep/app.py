@@ -38,7 +38,7 @@ from deep import (assessments, config, curves, delineation, measure,  # noqa: E4
 from deep import viewport  # noqa: E402
 from deep import comid_anchor, engine_prefill, hr_site, network_display  # noqa: E402
 from deep import reportmap  # noqa: E402
-from deep import calculator, field_form, reference_support  # noqa: E402
+from deep import calculator, describe, field_form, reference_support  # noqa: E402
 from deep._vendor.staf_workbook import web as staf_web  # noqa: E402  (download-only controls)
 from deep._vendor.staf_workbook.model.scenarios import BASELINE_ID, ScenarioSet  # noqa: E402
 from deep import workbook as deep_book  # noqa: E402  (scenarios, summary, the scenario workbook)
@@ -297,9 +297,10 @@ def _chip(text, color):
 
 
 def _info(text: str = None, *, html_tip: str = None):
-    """A small circled-'i'; the custom tooltip (www/tooltip.js) shows the tip. Pass
-    ``html_tip`` for a rich card (data-tip-html) or ``text`` for a plain tooltip."""
-    attrs = {"onclick": "event.preventDefault();event.stopPropagation();"}
+    """A small circled-'i'; the custom tooltip (www/tooltip.js) shows the tip on hover
+    or keyboard focus. Pass ``html_tip`` for a rich card (data-tip-html) or ``text``
+    for a plain tooltip."""
+    attrs = {"onclick": "event.preventDefault();event.stopPropagation();", "tabindex": "0"}
     if html_tip:
         attrs["data-tip-html"] = html_tip
     elif text and text.strip():
@@ -409,24 +410,243 @@ def _curve_svg(points, value=None, xlabel="", w=320, h=200):
     return "".join(P)
 
 
-def _criteria_table(points):
-    """Static reference-curve breakpoint legend beside the plot (value -> index ->
-    condition band). The measured value's index + condition is shown on the chip next
-    to the input instead, so this stays a read-only reference (it is NOT the site's row)."""
-    pts = sorted(({"x": float(p["x"]), "y": float(p["y"])} for p in points
-                  if p.get("x") is not None and p.get("y") is not None), key=lambda p: p["x"])
-    if not pts:
-        return ""
-    rows = ['<table class="deep-criteria-table">'
-            '<caption>Reference curve breakpoints</caption><thead><tr>'
-            '<th>Value</th><th>Index</th><th>Condition</th></tr></thead><tbody>']
-    for p in pts:
-        col = scoring.index_band_color(p["y"])
-        lbl = html.escape(scoring.index_band_label(p["y"]))
-        rows.append(f'<tr><td>{_fmt_num(p["x"])}</td><td>{p["y"]:.2f}</td>'
-                    f'<td><span class="deep-band-dot" style="background:{col};"></span>{lbl}</td></tr>')
-    rows.append("</tbody></table>")
-    return "".join(rows)
+def _fmt_bound(v) -> str:
+    """A curve bound for the warning line: four decimals at most, trailing zeros
+    dropped, so the server's text matches the one www/measure.js writes live."""
+    s = f"{round(float(v), 4):.4f}".rstrip("0").rstrip(".")
+    return "0" if s in ("", "-0") else s
+
+
+def _card_warning(m, rc) -> tuple[str, str, bool]:
+    """The one warning a metric row can show, as ``(short, full, reference_only)``.
+
+    Only the two that change what the assessor does reach the page: a desktop value
+    the pairing rule keeps out of the score, and a value outside the curve's range.
+    The full advisory rides along as the line's tooltip. The thin-sample and
+    outside-the-reference-pool advisories stay in the report's Scoring advisory
+    column (2026-10-04)."""
+    rc = rc or {}
+    mid = m.get("metricId")
+    if rc.get("na") or rc.get("value") in (None, ""):
+        return "", "", False
+    try:
+        x = float(rc["value"])
+    except (TypeError, ValueError):
+        return "", "", False
+    mv = measure.measured_from_state({mid: rc}).get(mid)
+    pairing = curves.engine_pairing_advisory(mv, m)
+    if pairing:
+        return "Not scored: shown for reference only.", pairing, True
+    if reference_support.is_fixed(m):
+        return "", "", False        # fixed criteria end where the index reaches zero
+    pts = curves.active_points(m, rc.get("stratum"))
+    full = curves.domain_warning(pts, x)
+    if not full:
+        return "", "", False
+    xs = sorted(float(p["x"]) for p in pts if p.get("x") is not None and p.get("y") is not None)
+    return (f"Outside the curve's range ({_fmt_bound(xs[0])} to {_fmt_bound(xs[-1])}); "
+            "scored at the nearest end.", full, False)
+
+
+def _metric_row(m, rc, *, midx=None, stratum_note: str = ""):
+    """One metric of a function page, in the row EASI, SFARI and DEEP share (owner, 2026-10-04;
+    ``staf/metric-rows.css``): the name with its (i) on how to measure it, a line saying what the
+    value is and which way is better, the Desktop tag and the curve set, then the row's buttons
+    (Scoring, Note, Photo, N/A), always visible. The value box and the index sit in the right
+    column; the warning shows under the evidence when there is one; the curve, the note and the
+    photos open under the row. Where a curve comes from is in the report and the DEEP guide."""
+    mid = m["metricId"]
+    rc = rc or {}
+    name = m.get("metricName", mid)
+    val = rc.get("value")
+    na = bool(rc.get("na", False))
+    note = rc.get("note", "") or ""
+    has_note = bool(note.strip())
+    photos = rc.get("photos") or []
+    has_val = not na and val not in (None, "")
+    strata = curves.curve_strata(m)
+    cur_stratum = rc.get("stratum") or m.get("activeStratum") or (strata[0] if strata else None)
+    points = curves.active_points(m, cur_stratum)
+    units = field_form.units_of(m)
+    desc = describe.describe(m, cur_stratum)
+    short, full, ref_only = _card_warning(m, rc)
+    if na:
+        idx_txt, idx_col = "N/A", "#eef1f6"
+    elif midx is None:
+        idx_txt, idx_col = "—", "#eef1f6"
+    else:
+        idx_txt = f"{midx:.2f} · {scoring.index_band_label(midx)}"
+        idx_col = scoring.index_band_color(midx)
+
+    ev = []
+    if has_val and rc.get("origin") == "desktop":
+        ev.append(ui.span("Desktop", {"title": "Filled in from desktop data. Type a value "
+                                                "to replace it."},
+                          class_="staf-ev-tag deep-desktop-tag"))
+    if len(strata) > 1:
+        auto = bool(rc.get("stratumAuto"))
+        ev.append(ui.tags.label(
+            ui.span("Curve set", class_="deep-stratum-label"),
+            ui.tags.select(
+                {"data-mid-stratum": mid, "aria-label": f"Curve set: {name}",
+                 **({"title": stratum_note} if stratum_note else {})},
+                *[ui.tags.option(
+                    reference_support.stratum_label(s, m)
+                    + (" (auto)" if auto and s == cur_stratum else ""),
+                    {"value": s, **({"selected": "selected"} if s == cur_stratum else {})})
+                  for s in strata],
+                class_="deep-stratum-select"),
+            class_="deep-stratum"))
+
+    na_box = ui.tags.input({"type": "checkbox", "data-mid-na": mid,
+                            **({"checked": "checked"} if na else {})}, class_="deep-na")
+    actions = staf_web.metric_actions(
+        (staf_web.metric_action("scoring", "Scoring", title="Show the reference curve")
+         if points else None),
+        staf_web.metric_action("note", "Note", on=has_note, has=has_note, title="Add a note"),
+        staf_web.metric_action("photo", "Photo", on=bool(photos), count=len(photos),
+                               title="Add a photo"),
+        staf_web.metric_check("N/A", na_box, on=na, title="Not applicable at this site",
+                              extra_class="deep-na-toggle"))
+    value_box = ui.div(
+        ui.tags.input({"type": "number", "step": "any", "inputmode": "decimal",
+                       "value": "" if val in (None, "") else str(val),
+                       "data-mid": mid, "placeholder": "Value",
+                       "aria-label": name + (f" ({units})" if units else ""),
+                       **({"disabled": "disabled"} if na else {})},
+                      class_="deep-metric-input"),
+        (ui.span(units, class_="deep-unit") if units else None),
+        class_="deep-value-box")
+    photos_row = ui.div(
+        *[ui.span(
+            ui.tags.img({"src": p.get("uri", "")}, class_="sfari-thumb"),
+            ui.tags.button("×", {"data-mid": mid, "data-id": p.get("id"), "type": "button"},
+                           class_="sfari-photo-rm"),
+            {"data-mid": mid, "data-id": p.get("id")}, class_="sfari-thumb-wrap")
+          for p in photos],
+        ui.tags.label(staf_web.metric_icon("photo"), "Add photo",
+                      ui.tags.input({"type": "file", "accept": "image/*",
+                                     "capture": "environment", "data-mid": mid},
+                                    class_="sfari-photo"),
+                      class_="sfari-photo-btn"),
+        {"data-mid": mid}, class_="sfari-photos")
+    attrs = {"data-metric": mid, "data-points": json.dumps(points)}
+    if reference_support.is_fixed(m):
+        attrs["data-fixed"] = "1"
+    if ref_only:
+        attrs["data-ref-only"] = "1"
+    row_cls = ("staf-metric deep-metric" + (" show-note" if has_note else "")
+               + (" show-photo" if photos else ""))
+    return ui.div(
+        ui.div(
+            ui.div(ui.span(name, class_="staf-metric-name"), _info(html_tip=_metric_tip_html(m)),
+                   class_="staf-metric-head"),
+            (ui.div(desc, class_="staf-metric-desc") if desc else None),
+            (ui.div(*ev, class_="staf-metric-ev deep-metric-sub") if ev else None),
+            ui.div(short, {"data-mid-warn": mid, "role": "status",
+                           **({"title": full} if full else {}),
+                           **({} if short else {"hidden": "hidden"})},
+                   class_="staf-metric-warn deep-domain-warn"),
+            actions,
+            class_="staf-metric-main"),
+        ui.div(value_box,
+               ui.span(idx_txt, {"data-mid-idx": mid}, class_="deep-metric-index",
+                       style=f"background:{idx_col};"),
+               class_="staf-metric-input"),
+        (ui.div(ui.div(ui.HTML(_curve_svg(points, float(val) if has_val else None,
+                                          m.get("xLabel", ""))), class_="deep-plot-wrap"),
+                {"data-panel": "scoring"}, class_="staf-metric-panel")
+         if points else None),
+        ui.div(ui.tags.textarea(note, {"data-mid-note": mid, "placeholder": "Note (optional)",
+                                       "aria-label": f"Note: {name}"},
+                                class_="staf-metric-note"),
+               {"data-panel": "note"}, class_="staf-metric-panel"),
+        ui.div(photos_row, {"data-panel": "photo"}, class_="staf-metric-panel"),
+        attrs, class_=row_cls)
+
+
+def _is_entered(rc) -> bool:
+    """A metric counts as entered once it holds a value or is marked N/A."""
+    rc = rc or {}
+    return bool(rc.get("na")) or rc.get("value") not in (None, "")
+
+
+def _function_band_label(score: float) -> str:
+    """The written-out band of a 0-15 function score (the short F/AR/F stays in the
+    report), on the score's own breaks, so it matches what www/measure.js writes."""
+    for (threshold, _col), label in zip(config.FUNCTION_SCORE_BANDS, config.INDEX_BAND_LABELS):
+        if score <= threshold:
+            return label
+    return config.INDEX_BAND_LABELS[-1]
+
+
+def _fn_head(eyebrow: str, name: str, pill=None):
+    """A function page's heading, SFARI's: the position and discipline over the name."""
+    return ui.div(
+        (ui.div(eyebrow, class_="sfari-fn-eyebrow") if eyebrow else None),
+        ui.div(ui.span(name), pill, class_="sfari-fn-name"),
+        class_="sfari-fn-head")
+
+
+def _sec_lbl(entered: int, total: int):
+    return ui.div(ui.span("1", class_="sfari-step-num"),
+                  ui.span("Metrics", class_="sfari-sec-title"),
+                  ui.span(f"{entered} of {total} entered", class_="sfari-sec-count"),
+                  class_="sfari-sec-lbl")
+
+
+_FSCORE_TIP = (
+    '<div class="easi-tip-sec">Computed automatically: the mean of the metric indices '
+    'above times 15.</div>'
+    '<div class="easi-tip-sec"><span class="easi-tip-lbl">Condition bands</span>'
+    '<div class="easi-tip-crit"><span class="easi-tip-dot poor"></span>'
+    '<span><b>0 to 5:</b> Non-Functioning</span></div>'
+    '<div class="easi-tip-crit"><span class="easi-tip-dot fair"></span>'
+    '<span><b>6 to 10:</b> Functioning-at-Risk</span></div>'
+    '<div class="easi-tip-crit"><span class="easi-tip-dot good"></span>'
+    '<span><b>11 to 15:</b> Functioning</span></div></div>')
+
+
+def _scorecard(fid: str, score):
+    """The function's conclusion, after its metrics: the function statement (as on EASI's and
+    SFARI's score card), a read-only banded gauge (DEEP computes the score), the number and the
+    written-out band."""
+    if score is not None:
+        band_lbl = _function_band_label(score)
+        band_col = scoring.function_score_band_color(score)
+    else:
+        band_lbl, band_col = "Not scored yet", "#e7ebf1"
+    knob_style = "" if score is None else f"left:{score / 15 * 100:.1f}%;"
+    statement = (config.functions_by_id().get(fid) or {}).get("function_statement", "")
+    return ui.div(
+        ui.div(ui.span("2", class_="sfari-step-num"),
+               ui.span("Function score", class_="deep-fscore-lbl"),
+               _info(html_tip=_FSCORE_TIP), class_="deep-fscore-head"),
+        (ui.p(statement, class_="sfari-fn-statement") if statement else None),
+        ui.div(
+            ui.div(ui.div({"style": knob_style}, class_="deep-fscore-knob"),
+                   class_="deep-fscore-track"),
+            ui.span("–" if score is None else f"{score:.1f}", class_="deep-fscore-num"),
+            ui.span(band_lbl, class_="deep-fscore-band", style=f"background:{band_col};"),
+            class_="deep-fscore-row"),
+        {"data-fn": fid}, class_="deep-scorecard" + ("" if score is not None else " unset"))
+
+
+def _fn_footer(idx: int, n: int, counts=None):
+    """The sticky Previous / status / Next bar. ``counts`` is ``(entered, total)``;
+    a page with nothing to enter (an unassessed function) shows no count."""
+    prev_attrs = {"data-nav": "-1", "type": "button"}
+    if idx == 0:
+        prev_attrs["disabled"] = "disabled"
+    status = (ui.span(f"{counts[0]}/{counts[1]} entered", class_="sfari-foot-rated")
+              if counts else None)
+    return ui.div(ui.div(
+        ui.div(ui.tags.button("‹ Previous", prev_attrs, class_="sfari-btn"),
+               class_="sfari-foot-left"),
+        ui.div(status, class_="sfari-foot-status"),
+        ui.tags.button("Next function ›" if idx < n - 1 else "Done",
+                       {"data-nav": "1", "type": "button"}, class_="sfari-btn primary"),
+        class_="sfari-nav-actions"), class_="sfari-fn-footer")
 
 
 _TIER_LABELS = {
@@ -554,99 +774,22 @@ def _no_assessment_block(*, has_candidates: bool = False):
 
 
 def _metric_tip_html(m) -> str:
-    """Rich hover card for a metric: how to collect it, plus what stands behind
-    its curve. Pulls the assessment's ``metricStatement`` / ``howToMeasure`` /
-    ``methodContext`` prose (all optional) and the builder's annotations
-    (``metricRole``, ``referenceN``, ``sampleDisposition``, ``curveCaveats``,
-    ``confidenceLabel``, ``referenceTier``), all optional. Falls back to a muted
-    note when the assessment carries none yet (raw text may hold '<', '>', '&',
-    so escape it)."""
+    """The metric's hover card: its name and how to measure it, nothing else.
+
+    What a curve rests on (its basis, reference sample and caveats) is in the
+    report and the DEEP guide, not on the worksheet (2026-10-04). The text comes
+    from :func:`field_form.method_text`, the same concise wording the Get Forms
+    dialog and the printed forms use. Raw text may hold '<', '>', '&', so escape it."""
     name = m.get("metricName", m.get("metricId", ""))
     parts = [f'<div class="easi-tip-title">{html.escape(name)}</div>']
-    any_sec = False
-    for lbl, key in (("", "metricStatement"), ("How to measure", "howToMeasure"),
-                     ("Method", "methodContext")):
-        txt = (m.get(key) or "").strip()
-        if not txt or txt == name:
-            continue
-        any_sec = True
-        head = f'<span class="easi-tip-lbl">{html.escape(lbl)}</span>' if lbl else ""
-        parts.append(f'<div class="easi-tip-sec">{head}{html.escape(txt)}</div>')
-    if not any_sec:
+    how = field_form.method_text(m)
+    if how:
+        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">How to measure</span>'
+                     f'{html.escape(how)}</div>')
+    else:
         parts.append('<div class="easi-tip-sub">Field collection guidance has not been '
                      'provided for this assessment yet.</div>')
-    # Fixed criteria or a reference curve, and where the reference stations came
-    # from (bundles built under StreamCurves methodology 0.12; silent otherwise).
-    support = reference_support.tip_lines(m)
-    if support:
-        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Scored against</span>'
-                     + "<br>".join(html.escape(s) for s in support) + "</div>")
-    # What stands behind the curve (stamped by StreamCurves at publish).
-    basis = []
-    fixed = reference_support.is_fixed(m)
-    tier = _tier_label(m.get("referenceTier"))
-    if tier:
-        basis.append(f"Reference tier: {tier}")
-    role = str(m.get("metricRole") or "").strip()
-    if role == "stressor_surrogate":
-        basis.append("Landscape stressor surrogate (footprint comparison, not measured function)")
-    elif role == "response":
-        basis.append("Site-scale response measurement")
-    elif role == "landscape_expectation":
-        basis.append("Landscape setting the watershed is expected to have (reference curve)")
-    n = m.get("referenceN")
-    disp = str(m.get("sampleDisposition") or "").strip()
-    if isinstance(n, (int, float)):
-        basis.append(f"Reference sites: {int(n)}" + (f" ({disp})" if disp else ""))
-    conf = m.get("confidenceLabel")
-    if conf and not fixed:      # fixed criteria carry no sample-based confidence
-        basis.append(f"Builder confidence: {html.escape(str(conf))} (a review-priority heuristic, not a probability)")
-    if basis:
-        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Curve basis</span>'
-                     + "; ".join(html.escape(b) if not b.startswith("Builder confidence") else b
-                                 for b in basis) + "</div>")
-    # The limitations line: the curve's caveats and the limit its basis carries
-    # (reference_support.limitations_line, the same words the metric card shows).
-    limits = reference_support.limitations_line(m)
-    if limits:
-        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Read with care</span>'
-                     + html.escape(limits) + "</div>")
     return "".join(parts)
-
-
-_BASIS_TAG = {"site-engine": ("HR reach watershed", "deep-basis-tag engine"),
-              "streamcat": ("StreamCat", "deep-basis-tag streamcat"),
-              "nlcd": ("NLCD", "deep-basis-tag nlcd"),
-              "3dep": ("3DEP", "deep-basis-tag threedep"),
-              "nid": ("NID", "deep-basis-tag nid")}
-
-#: The curve's basis (StreamCurves REF-08/09/10), shown beside what the metric
-#: is scored against. A curve fitted to this ecoregion's own least-disturbed
-#: stations gets no chip: it is the ordinary case and the sentence already says
-#: so. The other three are the ones a reader has to know about.
-_CURVE_BASIS_TAG = {
-    reference_support.BASIS_NATIONAL: ("National reference", "deep-basis-tag national"),
-    reference_support.BASIS_MODELED: ("Modeled reference", "deep-basis-tag modeled"),
-    reference_support.BASIS_PUBLISHED: ("Published benchmark", "deep-basis-tag published"),
-    reference_support.BASIS_OWNER: ("Owner-entered", "deep-basis-tag owner"),
-}
-
-
-def _curve_basis_tag(m):
-    """``(label, css class)`` for a curve that does not rest on this
-    ecoregion's own stations, or None. A curve taken from another assessment
-    (StreamCurves REF-15) says so, whatever its basis there."""
-    if reference_support.borrowed_from(m):
-        return ("From another assessment", "deep-basis-tag borrowed")
-    return _CURVE_BASIS_TAG.get(reference_support.basis_of(m))
-
-
-def _basis_tag(rc):
-    """``(label, css class)`` of the basis badge for a desktop value, or None."""
-    if not rc or rc.get("origin") != "desktop":
-        return None
-    basis = rc.get("basis") or ("site-engine" if rc.get("engine") else "")
-    return _BASIS_TAG.get(basis)
 
 
 # The engine's progress stages as the assessor sees them: five steps, the
@@ -785,74 +928,49 @@ def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
     return ui.div(*rows, class_="easi-legend")
 
 
-def _source_line(m, rc):
-    """One-line data-source attribution from the metric's library fields + runtime
-    provenance: humanized inputType, sourceCitation, curve layer, and (for a
-    desktop-computed value) the pulled source. Deduped; '' when nothing to show."""
-    it = (m.get("inputType") or "").strip()
-    it_lbl = {"field": "Field measurement", "desktop (gis)": "Desktop (GIS)",
-              "continuous": "Measured value"}.get(it.lower(), it)
-    layer = ((m.get("curve") or {}).get("layerName") or "").strip()
-    parts = []
-    if it_lbl:
-        parts.append(it_lbl)
-    for s in ((m.get("sourceCitation") or "").strip(), layer):
-        if s and s not in parts:
-            parts.append(s)
-    rsrc = (rc.get("source") or "").strip()
-    if rc.get("origin") == "desktop" and rsrc and rsrc not in parts:
-        parts.append(rsrc)
-    return " · ".join(parts)
-
-
-WITHHELD_TITLE = reference_support.INSUFFICIENT_TITLE
-
-
 def _withheld_card(w):
-    """A metric the assessment withholds (StreamCurves rule REF-06): named, with
-    the reason, no input and no index. It never enters a function score."""
+    """A metric the assessment withholds (StreamCurves rule REF-06): one quiet row in
+    the metrics card, named and marked Not scored, with the reason on its (i). No
+    input and no index; it never enters a function score. The full statement is in
+    the report."""
     statement = str(w.get("statement") or
                     "No basis supports this metric in this ecoregion, so no curve was built "
                     "and the metric is not scored.")
-    # the card's own title already says it
+    # the tooltip's title already says it
     for prefix in ("Insufficient reference support.", "Held for review."):
         statement = statement.removeprefix(prefix).strip()
-    units = str(w.get("units") or "").strip()
+    tip = (f'<div class="easi-tip-title">{html.escape(reference_support.withheld_title(w))}</div>'
+           f'<div class="easi-tip-sec">{html.escape(statement)}</div>')
     return ui.div(
-        ui.div(w.get("metricName") or w.get("metricId") or "",
-               (ui.span(units, class_="sfari-metric-scale") if units else None),
-               class_="sfari-metric-name"),
-        ui.div(reference_support.withheld_title(w), class_="deep-withheld-title"),
-        ui.div(statement, class_="deep-withheld-text"),
+        ui.div(ui.div(ui.span(w.get("metricName") or w.get("metricId") or "",
+                              class_="staf-metric-name"),
+                      _info(html_tip=tip), class_="staf-metric-head"),
+               class_="staf-metric-main"),
+        ui.div(ui.span("Not scored", class_="deep-notscored-tag"), class_="staf-metric-input"),
         {"data-metric-withheld": str(w.get("metricId") or "")},
-        class_="sfari-metric deep-metric-withheld")
+        class_="staf-metric deep-metric-withheld")
 
 
-def _unassessed_panel(fn, la):
-    """The step for a function the assessment cannot score.
-
-    It used to be no step at all: the function was absent from the walk, and the
-    only trace was one line in the rail. A reader met nineteen or sixteen steps and
-    had to work out which were missing. Now the gap is where it belongs, says what
-    was considered and why it was withheld, and states what it costs the index.
-    """
+def _unassessed_panel(fn, la, *, eyebrow: str = ""):
+    """The page for a function the assessment cannot score: the reason in one
+    sentence, then the metrics it considered. Never a score; the ECI's interval
+    accounts for it (the DEEP guide explains how)."""
     name = fn.get("functionName") or fn.get("functionId")
     detail = (fn.get("unassessed") or {}).get("metrics") or []
-    cards = [_withheld_card(w) for w in detail]
-    # a documented gap (functionCoverage.exclusions, StreamCurves COV-01): the card says
-    # why the assessment leaves the function unassessed, and never a score
+    rows = [_withheld_card(w) for w in detail]
+    # a documented gap (functionCoverage.exclusions, StreamCurves COV-01) says why the
+    # assessment leaves the function unassessed
     gap = assessments.documented_gap(la, fn.get("functionId")) if la is not None else None
     if gap:
         lead = assessments.gap_line(gap) + "."
         who = str(gap.get("recordedBy") or "").strip()
         when = str(gap.get("recordedAt") or "")[:10]
-        cards.insert(0, ui.div(
-            ui.div(assessments.gap_line(gap), class_="deep-withheld-title"),
-            ui.div(str(gap.get("justification") or ""), class_="deep-withheld-text"),
+        rows.insert(0, ui.div(
+            ui.div(str(gap.get("justification") or ""), class_="deep-gap-text"),
             (ui.div("Recorded by " + who + (f" on {when}" if when else "") + ".",
-                    class_="deep-withheld-text") if who else None),
+                    class_="deep-gap-who") if who else None),
             {"data-function-gap": str(gap.get("reason") or "")},
-            class_="sfari-metric deep-metric-withheld deep-metric-gap"))
+            class_="deep-gap"))
     # a function whose only candidates are curves awaiting a reviewer has a basis,
     # it is just not cleared yet, so it is not told it has none
     elif detail and all(reference_support.is_held(w) for w in detail):
@@ -860,22 +978,15 @@ def _unassessed_panel(fn, la):
     else:
         lead = ("This assessment has no defensible basis for scoring this function, so it "
                 "carries no score.")
-    if not cards:
-        cards = [ui.div(ui.div("No metric is assigned to this function in this assessment.",
-                               class_="deep-withheld-text"),
-                        class_="sfari-metric deep-metric-withheld")]
+    if not rows:
+        rows = [ui.div("No metric is assigned to this function in this assessment.",
+                       class_="deep-gap deep-gap-text")]
     return ui.div(
-        ui.div(ui.h3(name, class_="deep-fn-title"),
-               ui.span("Not assessed", class_="deep-fscore-band",
-                       style="background:#eef1f6;color:#6b7280;"),
-               class_="deep-fn-head"),
-        ui.div(lead + " It is not a low score. The Ecosystem Condition Index is "
-               "reported as an interval that allows for whatever this function would have "
-               "scored, and names a condition band only when that interval stays inside one.",
-               class_="sfari-coverage-note"),
-        *cards,
+        _fn_head(eyebrow, name, ui.span("Not assessed", class_="deep-fn-pill")),
+        ui.p(lead + " It does not count as a low score.", class_="deep-fn-lead"),
+        ui.div(*rows, class_="sfari-ev-card deep-unassessed-card"),
         {"data-fn": fn.get("functionId"), "data-unassessed": "1"},
-        class_="deep-fn-panel deep-fn-unassessed")
+        class_="deep-fn-unassessed")
 
 
 def _withheld_note(la):
@@ -926,7 +1037,13 @@ STAF_LINKS = {
     "sfari":  "https://gtmenichino-sfari.share.connect.posit.cloud/",
     "curves": "https://github.com/USACE-WRISES/staf/releases/latest",
     "deep":   "https://gtmenichino-deep.share.connect.posit.cloud/",
+    # the DEEP guide on the STAF site: how scoring works and the metric reference
+    "guide":  "https://usace-wrises.github.io/staf/walkthroughs/deep/",
 }
+
+#: One line for About and Help. A new tab, so the open assessment is never left.
+_GUIDE_LINE = (f'The <a href="{STAF_LINKS["guide"]}" target="_blank" rel="noopener">DEEP '
+               'guide</a> explains how DEEP scores and how each metric is measured.')
 
 
 def staf_topnav():
@@ -938,9 +1055,10 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=21"),
-                    ui.tags.link(rel="stylesheet", href="deep.css?v=11"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=23"),
+                    ui.tags.link(rel="stylesheet", href="deep.css?v=13"),
                     ui.tags.link(rel="stylesheet", href="staf/staf.css?v=4"),
+                    ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=3", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -948,7 +1066,8 @@ app_ui = ui.page_fillable(
                     ui.tags.script(src="report-ready.js?v=2", defer=""),
                     ui.tags.script(src="staf/unsaved-guard.js?v=1", defer=""),
                     ui.tags.script(src="staf/scenarios.js?v=1", defer=""),
-                    ui.tags.script(src="measure.js?v=5", defer=""),
+                    ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
+                    ui.tags.script(src="measure.js?v=7", defer=""),
                     ui.tags.script(src="coverage.js?v=3", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
@@ -2184,11 +2303,11 @@ def server(input, output, session_):  # noqa: C901
                 "NHD reach the point snaps to, built from NHDPlus HR catchments and checked "
                 "against the reach's published drainage area. The reach, not the point, is "
                 "the outlet. The StreamCat lookup engine answers by NHDPlus V2 COMID for the "
-                "curves fitted on its predictors. Every value names its engine, and an engine "
-                "value never scores against a StreamCat-fitted curve while the pairing mode "
-                "refuses it. On a stream outside V2 that COMID is the nearest StreamCat reach "
-                "downstream, named with the routed distance and the drainage-area ratio on "
-                "every such value."),
+                "curves fitted on its predictors. The report records which engine produced each "
+                "value, and an engine value never scores against a StreamCat-fitted curve while "
+                "the pairing mode refuses it. On a stream outside V2 that COMID is the nearest "
+                "StreamCat reach downstream, named with the routed distance and the "
+                "drainage-area ratio in the report.\n\n" + _GUIDE_LINE),
             title="About DEEP", easy_close=True, footer=ui.modal_button("Close")))
 
     @reactive.effect
@@ -2214,18 +2333,16 @@ def server(input, output, session_):  # noqa: C901
                 "whose area of applicability covers your site is resolved here (certified "
                 "before preliminary); use **Change** when more than one applies.\n"
                 "3. **Assessment**: enter each metric's measured value; the reference curve converts "
-                "it to an index and the function/outcome scores update live. Desktop-derivable "
-                "metrics prefill with a badge naming the engine or layer that produced them "
-                "(HR reach watershed, StreamCat, NLCD, 3DEP) and stay editable. On a regional "
-                "assessment the landscape metrics (impervious, crops, wetlands, road and dam "
-                "density, base flow index, road-stream crossings) prefill the same way, from "
-                "the STAF site engine when the curves were fitted on it and from the StreamCat "
-                "lookup engine otherwise. A value computed "
-                "from a different predictor source than the one the curves were fitted on is "
-                "shown as reference evidence and is not scored.\n"
+                "it to an index and the function and outcome scores update live. Metrics DEEP can "
+                "answer from desktop data fill in on their own, marked **Desktop**, and stay "
+                "editable. Hover a metric's **i** for how to measure it. The buttons under each "
+                "metric open its **Scoring** curve, a **Note** and **Photos**; **N/A** marks it not "
+                "applicable at the site. **Get Forms** lists "
+                "every metric with its method and the data behind each desktop value.\n"
                 "4. **Report**: the assessment stays visible while the report map is prepared. "
                 "The completed report opens in a popup; closing it returns to the same screen. "
                 "Review and export the detailed assessment.\n\n"
+                + _GUIDE_LINE + "\n\n"
                 "Address search uses OpenStreetMap data (Photon and Nominatim)."),
             title="How to use DEEP", easy_close=True, footer=ui.modal_button("Close")))
 
@@ -2844,7 +2961,7 @@ def server(input, output, session_):  # noqa: C901
                 # A plain button, not a Shiny input: www/measure.js delegates the click
                 # to one field_forms_evt event (SFARI's pattern), so the dialog opens
                 # from wherever the rail is rendered.
-                ui.tags.button("Get Field Forms",
+                ui.tags.button("Get Forms",
                                {"data-field-forms": "1", "type": "button",
                                 "title": "The metrics of this assessment, the field worksheet "
                                          "to print, and the Excel calculator"},
@@ -2891,185 +3008,37 @@ def server(input, output, session_):  # noqa: C901
         idx = max(0, min(len(fns) - 1, current_fn()))
         fn = fns[idx]
         fid = fn["functionId"]
+        eyebrow = f"Function {idx + 1} of {len(fns)} · {fn.get('discipline', '')}"
         if fn.get("unassessed"):
             with reactive.isolate():
-                return _unassessed_panel(fn, loaded_assessment())
+                panel = _unassessed_panel(fn, loaded_assessment(), eyebrow=eyebrow)
+            return ui.div(panel, _fn_footer(idx, len(fns)), class_="sfari-fnpanel-inner")
         with reactive.isolate():
             mvs = measured_values()
             _sc, fresults = scored()
             delineation_now = delin()
             la_now = loaded_assessment()
         fr = fresults.get(fid)
-        metric_blocks = []
+        rows = []
         for m in fn.get("metrics", []):
             mid = m["metricId"]
             rc = mvs.get(mid) or {}
-            val = rc.get("value"); na = bool(rc.get("na", False)); note = rc.get("note", "")
-            strata = curves.curve_strata(m)
-            cur_stratum = rc.get("stratum") or m.get("activeStratum") or (strata[0] if strata else None)
-            points = curves.active_points(m, cur_stratum)
-            support_line = reference_support.support_line(m)
-            # the practitioner's two lines beside the basis: how far to trust the
-            # curve, and what to read with care (campaign Round 1)
-            uncertainty_line = reference_support.uncertainty_line(m)
-            limitations_line = reference_support.limitations_line(m)
-            stratum_auto = bool(rc.get("stratumAuto"))
+            # why the reach got its curve set, on the selector's hover
             stratum_note = (reference_support.stratifier_note(m, delineation_now)
-                            if stratum_auto else "")
-            midx = fr.metric_indices.get(mid) if fr else None
-            mwarn = fr.metric_warnings.get(mid) if fr else None
-            idx_txt = "—" if midx is None else f"{midx:.2f} · {scoring.index_band_label(midx)}"
-            idx_col = scoring.index_band_color(midx) if midx is not None else "#eef1f6"
-            plot_val = None if (na or val in (None, "")) else float(val)
-            src_line = _source_line(m, rc)
-            basis_tag = _basis_tag(rc)
-            curve_basis_tag = _curve_basis_tag(m)
-            metric_blocks.append(ui.div(
-                ui.div(m.get("metricName", mid),
-                       ui.span(m.get("discipline", ""), class_="sfari-metric-scale"),
-                       _info(html_tip=_metric_tip_html(m)),
-                       class_="sfari-metric-name"),
-                (ui.div(ui.span("Source", class_="deep-source-key"),
-                        (ui.span(basis_tag[0], class_=basis_tag[1]) if basis_tag else None),
-                        ui.span(src_line, class_="deep-source-val"),
-                        class_="deep-source-row")
-                 if src_line else None),
-                # What the value is scored against: fixed criteria, or a reference
-                # curve with the geography its stations came from.
-                (ui.div(ui.span("Scored against", class_="deep-source-key"),
-                        (ui.span(curve_basis_tag[0], class_=curve_basis_tag[1])
-                         if curve_basis_tag else None),
-                        ui.span(support_line, class_="deep-source-val"),
-                        class_="deep-source-row deep-support-row"
-                               + (" borrowed" if reference_support.is_borrowed(m) else ""))
-                 if support_line else None),
-                (ui.div(ui.span("Uncertainty", class_="deep-source-key"),
-                        ui.span(uncertainty_line, class_="deep-source-val"),
-                        class_="deep-source-row deep-uncertainty-row")
-                 if uncertainty_line else None),
-                (ui.div(ui.span("Read with care", class_="deep-source-key"),
-                        ui.span(limitations_line, class_="deep-source-val"),
-                        class_="deep-source-row deep-limits-row")
-                 if limitations_line else None),
-                (ui.div(
-                    ui.span("Curve set", class_="deep-stratum-label"),
-                    ui.tags.select(
-                        {"data-mid-stratum": mid}, class_="deep-stratum-select",
-                        *[ui.tags.option(
-                            reference_support.stratum_label(s, m)
-                            + (" (auto)" if stratum_auto and s == cur_stratum else ""),
-                            {"value": s,
-                             **({"selected": "selected"} if s == cur_stratum else {})})
-                          for s in strata]),
-                    (ui.span(stratum_note, class_="deep-stratum-note") if stratum_note else None),
-                    class_="deep-stratum-row")
-                 if len(strata) > 1 else None),
-                ui.div(
-                    ui.tags.input({"type": "number", "step": "any", "inputmode": "decimal",
-                                   "value": ("" if val in (None, "") else str(val)),
-                                   "data-mid": mid, "placeholder": m.get("xLabel", "value"),
-                                   **({"disabled": "disabled"} if na else {})},
-                                  class_="deep-metric-input"),
-                    ui.span(m.get("xLabel", ""), class_="deep-xlabel"),
-                    ui.span(idx_txt, {"data-mid-idx": mid}, class_="deep-metric-index",
-                            style=f"background:{idx_col};"),
-                    class_="deep-measure-row"),
-                ui.div(mwarn or "",
-                       {"data-mid-warn": mid, "role": "status",
-                        **({} if mwarn else {"hidden": "hidden"})},
-                       class_="deep-domain-warn"),
-                ui.div(
-                    ui.HTML(_curve_svg(points, plot_val, m.get("xLabel", ""))),
-                    ui.HTML(_criteria_table(points)),
-                    class_="deep-plot-wrap"),
-                ui.div(ui.tags.label(
-                    ui.tags.input({"type": "checkbox", "data-mid-na": mid,
-                                   **({"checked": "checked"} if na else {})}, class_="deep-na"),
-                    ui.span(" Not applicable")), class_="deep-na-row"),
-                ui.tags.textarea(note, {"data-mid-note": mid, "placeholder": "Note (optional)…"},
-                                 class_="sfari-metric-note"),
-                ui.div(
-                    *[ui.span(
-                        ui.tags.img({"src": p.get("uri", "")}, class_="sfari-thumb"),
-                        ui.tags.button("×", {"data-mid": mid, "data-id": p.get("id"),
-                                             "type": "button"}, class_="sfari-photo-rm"),
-                        {"data-mid": mid, "data-id": p.get("id")}, class_="sfari-thumb-wrap")
-                      for p in (rc.get("photos") or [])],
-                    ui.tags.label("📷 Photo",
-                                  ui.tags.input({"type": "file", "accept": "image/*",
-                                                 "capture": "environment", "data-mid": mid},
-                                                class_="sfari-photo"),
-                                  class_="sfari-photo-btn"),
-                    {"data-mid": mid}, class_="sfari-photos"),
-                {"data-metric": mid, "data-points": json.dumps(points),
-                 **({"data-fixed": "1"} if reference_support.is_fixed(m) else {})},
-                class_="sfari-metric deep-metric"))
-
+                            if rc.get("stratumAuto") else "")
+            rows.append(_metric_row(m, rc, midx=fr.metric_indices.get(mid) if fr else None,
+                                    stratum_note=stratum_note))
         # Metrics of this function the assessment withholds: no defensible
         # reference pool exists, so there is no curve and nothing to enter.
-        for w in reference_support.withheld_for_function(la_now, fid):
-            metric_blocks.append(_withheld_card(w))
-        # StreamCurves methodology 0.16 (REF-16): a function rated on a flagged
-        # transfer says so once more at the function, under its metrics
-        function_flag = reference_support.function_flag_line(la_now, fid)
-        if function_flag:
-            metric_blocks.append(
-                ui.div(ui.span("Read with care", class_="deep-source-key"),
-                       ui.span(function_flag, class_="deep-source-val"),
-                       class_="deep-source-row deep-limits-row deep-function-flag"))
-
-        score = fr.score if fr else None
-        if score is not None:
-            band_lbl = scoring.function_score_band_label(score)
-            band_col = scoring.function_score_band_color(score)
-        else:
-            band_lbl = "Not scored yet"; band_col = "#e7ebf1"
-        fscore_tip = (
-            '<div class="easi-tip-sec">Computed automatically: the mean of the metric indices '
-            'above times 15.</div>'
-            '<div class="easi-tip-sec"><span class="easi-tip-lbl">Condition bands</span>'
-            '<div class="easi-tip-crit"><span class="easi-tip-dot poor"></span>'
-            '<span><b>0 to 5:</b> Non-Functioning</span></div>'
-            '<div class="easi-tip-crit"><span class="easi-tip-dot fair"></span>'
-            '<span><b>6 to 10:</b> Functioning-at-Risk</span></div>'
-            '<div class="easi-tip-crit"><span class="easi-tip-dot good"></span>'
-            '<span><b>11 to 15:</b> Functioning</span></div></div>')
-        knob_style = "" if score is None else f"left:{score / 15 * 100:.1f}%;"
-        scorecard = ui.div(
-            ui.div(ui.span("Function score", class_="deep-fscore-lbl"),
-                   _info(html_tip=fscore_tip), class_="deep-fscore-head"),
-            ui.div(
-                ui.div(ui.div({"style": knob_style}, class_="deep-fscore-knob"),
-                       class_="deep-fscore-track"),
-                ui.span("–" if score is None else f"{score:.1f}", class_="deep-fscore-num"),
-                ui.span(band_lbl, class_="deep-fscore-band", style=f"background:{band_col};"),
-                class_="deep-fscore-row"),
-            {"data-fn": fid}, class_="deep-scorecard" + ("" if score is not None else " unset"))
-
-        prev_attrs = {"data-nav": "-1", "type": "button"}
-        if idx == 0:
-            prev_attrs["disabled"] = "disabled"
+        rows.extend(_withheld_card(w)
+                    for w in reference_support.withheld_for_function(la_now, fid))
         total = len(fn.get("metrics", []))
-        entered = sum(1 for mm in fn.get("metrics", [])
-                      if (mvs.get(mm["metricId"]) or {}).get("na")
-                      or (mvs.get(mm["metricId"]) or {}).get("value") not in (None, ""))
-        actions = ui.div(
-            ui.div(ui.tags.button("‹ Previous", prev_attrs, class_="sfari-btn"),
-                   class_="sfari-foot-left"),
-            ui.div(ui.span(f"{entered}/{total} entered", class_="sfari-foot-rated"),
-                   class_="sfari-foot-status"),
-            ui.tags.button("Next function ›" if idx < len(fns) - 1 else "Done",
-                           {"data-nav": "1", "type": "button"}, class_="sfari-btn primary"),
-            class_="sfari-nav-actions")
+        entered = sum(1 for mm in fn.get("metrics", []) if _is_entered(mvs.get(mm["metricId"])))
         return ui.div(
-            ui.div(ui.span(fn.get("functionName", "")),
-                   ui.span(f"Function {idx + 1} / {len(fns)} · {fn.get('discipline', '')}",
-                           class_="sfari-fn-counter"), class_="sfari-fn-title"),
-            ui.div("Enter each metric's measured value. The reference curve converts it to a 0 to 1 index.",
-                   class_="sfari-sec-lbl"),
-            *metric_blocks,
-            scorecard,
-            ui.div(actions, class_="sfari-fn-footer"),
+            _fn_head(eyebrow, fn.get("functionName", "")),
+            ui.div(_sec_lbl(entered, total), *rows, class_="sfari-ev-card"),
+            _scorecard(fid, fr.score if fr else None),
+            _fn_footer(idx, len(fns), (entered, total)),
             class_="sfari-fnpanel-inner")
 
     @render.ui
@@ -3622,9 +3591,7 @@ def server(input, output, session_):  # noqa: C901
             trs.append(ui.tags.tr(
                 ui.tags.td(r["discipline"], style=dim),
                 ui.tags.td(r["function"], style=dim),
-                ui.tags.td(metric,
-                           (ui.span(r["scored_against"], class_="ff-src-sub")
-                            if r["scored_against"] else None)),
+                ui.tags.td(metric),
                 ui.tags.td(r["code"], style="font-size:11px;text-align:center;"),
                 ui.tags.td(r["method"], style="font-size:11px;color:#45506a;"),
                 ui.tags.td(badge, style="font-size:11px;"),
@@ -3632,7 +3599,11 @@ def server(input, output, session_):  # noqa: C901
                 ui.tags.td(r["source"], style="font-size:11px;")))
         return ui.tags.table(
             ui.tags.thead(ui.tags.tr(ui.tags.th("Discipline"), ui.tags.th("Function"),
-                                     ui.tags.th("Metric"), ui.tags.th("F / D"),
+                                     ui.tags.th("Metric"),
+                                     # inline: the dialog's stylesheet block is SFARI's, byte for byte
+                                     ui.tags.th("F/D", {"title": "F: measured in the field. "
+                                                                 "D: answered from the desk."},
+                                                style="white-space:nowrap;text-align:center;"),
                                      ui.tags.th("How it is measured"), ui.tags.th("Status"),
                                      ui.tags.th("Value"), ui.tags.th("Source"))),
             ui.tags.tbody(*trs), class_="easi-tbl ff-table", id="deep-field-form-metrics")

@@ -45,7 +45,7 @@ produces carries its source, vintage and the engine version.
 ## Which app uses which
 
 No app asks the user to pick a method. Each applies one fixed policy, and
-every value says which engine produced it.
+each report says which engine produced every value.
 
 EASI, SFARI, and DEEP display one solid blue stream network by default. In the
 Layers menu, **StreamCat coverage** is initially off. Enabling it distinguishes
@@ -79,13 +79,15 @@ is resolved. Coverage toggles do not trigger lookup or affect readiness.
   information retains the source reach, distance, and drainage-area ratio;
   routine provenance does not add a report-top banner. CSV and GeoJSON exports
   retain engine and reach provenance.
-- SFARI evidence rows carry a badge: HR reach watershed (site engine),
-  StreamCat (by COMID, naming the reach it describes) or desktop (other
-  services). The main report and assessment PDF mark affected desktop evidence
-  with a dagger and a short explanation below the metrics table. The desktop
-  metrics PDF and report CSV retain their detailed source descriptions.
-- DEEP shows the source and basis of each auto-pulled value beside its input,
-  and an advisory when a value is shown as reference only.
+- SFARI marks every pulled value Desktop on the Assessment page and names its
+  data in the value's (i); a value from the nearest StreamCat reach downstream
+  says so under it. The main report and assessment PDF mark affected desktop
+  evidence with a dagger and a short explanation below the metrics table. The
+  report tooltips, the desktop metrics PDF and the report CSV retain the
+  detailed source descriptions, engine included.
+- DEEP marks an auto-pulled value Desktop beside its input, and shows an
+  advisory when a value is shown as reference only. Get Forms names the data
+  behind each value, and the report CSV keeps the engine and basis.
 - StreamCurves records the predictor source in the run manifest, the published
   bundle and the science support report.
 

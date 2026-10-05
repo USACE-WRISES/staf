@@ -64,9 +64,12 @@ stepper: **Identify → Basin → Assessment → Report**.
    drainage area and reach length, and identifies the StreamCat reach supplying
    evidence. Routine engine names and versions stay out of the Basin card.
 3. **Assessment** — All 20 metrics compute automatically, then a worksheet walks
-   the functions by discipline. Each card shows the metric, its scoring method
-   (inputs, breakpoints, and the resulting rating), and the evidence source, with
-   inline overrides, notes, and the editable cross-section.
+   the functions by discipline. Each card is the metric row EASI, SFARI and DEEP share
+   (`libs/staf_workbook`, `assets/metric-rows.*`): the metric with an (i) on how to
+   measure it, its description and desktop evidence, the rating select with inline
+   overrides, and two buttons that are always shown, **Scoring** (the criteria, then the
+   inputs and equation) and **Note**. The observed entries and the editable
+   cross-section sit under the row.
 4. **Report** — A popup with the **outcome rollup** (ECI + sub-indices + cards),
    a **basin-characteristics** section, an **editable cross-section**, and the
    **metric table** with inline overrides and per-metric notes. A dagger marks
@@ -397,7 +400,7 @@ complete availability, not 20 independent field observations.
 | **Bieger et al. (2015)** curves + **Fenneman** physiographic divisions (bundled) | Location-aware bankfull geometry |
 
 Source selection is automatic and fixed per metric (see **Evidence hierarchy** above);
-a fallback is recorded in the trace and shown in the Scoring method panel, so it is
+a fallback is recorded in the trace and shown in the metric's Scoring panel, so it is
 always visible which tier produced a rating.
 
 **Two watershed engines, one fixed policy.** The watershed metrics read
@@ -483,7 +486,7 @@ This repo is ready to deploy from GitHub — no build step or manifest required.
 app.py                     Shiny (Core) UI + server: map, workflow stepper, report modal, exports
 easi/
   screening_methods.py     canonical evaluator: typed operators only, no arbitrary expressions
-  methods.py               display projection of the catalog for the "Scoring method" panel
+  methods.py               display projection of the catalog for the metric's Scoring panel
   scoring.py               rating → index → function score → CWA rollup → sub-indices → ECI (STAF math)
   config.py                constants, CWA mapping, data loaders, per-metric registry + definitions
   assessment.py            assemble report; rescore overrides; coverage; cross-section recompute

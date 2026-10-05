@@ -1,7 +1,8 @@
-"""The worksheet method-panel markup.
+"""The worksheet's Scoring panel markup.
 
-Two stacked ``<details>`` on each metric card, both collapsed by default: how the number is
-computed (inputs + equation, or the categorical decision table), then the scoring criteria. Every
+One panel under the metric row, opened by the row's Scoring button as in SFARI and DEEP (owner,
+2026-10-04): the scoring criteria, then how the number is computed (inputs + equation, or the
+categorical decision table). Every
 criteria row carries the exact automated breakpoint generated from the catalog bands that produced
 the rating, so the panel cannot describe a different quantity than the one that was scored. The
 definition, rationale and limitations moved to the docs site's Screening Metric Reference.
@@ -30,21 +31,21 @@ def _row(mid, values, rating, **extra):
     return row, trace
 
 
-def test_expander_is_two_details_all_collapsed():
+def test_the_scoring_panel_holds_the_criteria_then_the_method():
     _, trace = _row(SEDIMENT_ID,
                     {"agriculture": 20.0, "kFactor": 0.3, "roadDensity": 1.5}, "Fair")
-    m = str(app._method_expander(SEDIMENT_ID, trace))
-    assert m.count("<details") == 2
-    assert "Scoring method" in m and "Scoring criteria" in m
-    # definition/rationale/limitations moved to the docs site — no third section
-    assert "Definition, rationale, and limitations" not in m
-    # the card opens compact: no section carries `open`
-    assert "open=" not in m
-    assert '<details class="easi-method" data-mid=' in m
-    assert '<details class="easi-method easi-method-critsec" data-mid=' in m
-    assert "easi-method-docsec" not in m
+    m = str(app._scoring_panel(SEDIMENT_ID, trace))
+    assert m.startswith('<div data-panel="scoring" data-mid=') and 'class="staf-metric-panel"' in m
+    assert "<details" not in m and "Scoring method" not in m and "Scoring criteria" not in m
+    # the criteria first, then how the value is computed, each a nested output slot
+    assert m.index(">Criteria</div>") < m.index('id="method_criteria"') \
+        < m.index(">How it's computed</div>") < m.index('id="method_body"')
+    # definition/rationale/limitations moved to the docs site; no third section
+    assert "Definition, rationale, and limitations" not in m and "easi-method-docsec" not in m
     # the what-if sliders + reset are gone
     assert "easi-method-reset" not in m and "js-range-slider" not in m
+    # a metric with no method has no panel (and so no Scoring button)
+    assert app._scoring_panel("no-such-metric", {}) is None
 
 
 def test_criteria_rows_carry_the_catalog_breakpoint_and_colour_swatch():

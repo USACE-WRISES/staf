@@ -89,6 +89,34 @@ _BASIS_WORDS = (("site-engine", "STAF site engine (HR reach watershed)"),
                 ("nlcd", "NLCD (HR reach watershed polygon)"), ("3dep", "3DEP"),
                 ("nid", "USACE National Inventory of Dams"))
 
+#: The data behind a desktop value, as the Get Forms table and the printed forms
+#: name it (2026-10-04): the dataset, never the engine, its version or a StreamCat
+#: column name. The CSV keeps the full ``source`` string for the record.
+_SOURCE_DATA = {"streamcat": "EPA StreamCat", "nlcd": "NLCD 2021",
+                "3dep": "3DEP elevation (modeled)", "nid": "National Inventory of Dams"}
+
+
+def source_label(meta) -> str:
+    """The short Source of a desktop value: ``NLCD 2021``, ``TIGERweb roads``,
+    ``EPA StreamCat`` (``EPA StreamCat, nearest reach`` when the value describes the
+    nearest StreamCat reach downstream), ``3DEP elevation (modeled)`` or ``National
+    Inventory of Dams``. ``""`` for a value the assessor entered."""
+    meta = meta or {}
+    if meta.get("origin") != "desktop":
+        return ""
+    src = str(meta.get("source") or "")
+    basis = str(meta.get("basis") or ("site-engine" if meta.get("engine") else ""))
+    if basis == "site-engine":
+        # "STAF site engine v0.5.0 impervious (HR reach watershed, NLCD 2021)"
+        _head, sep, tail = src.rpartition("(HR reach watershed, ")
+        return tail.rstrip(")").strip() if sep else "Computed by DEEP"
+    label = _SOURCE_DATA.get(basis)
+    if label is None:
+        return src
+    if basis == "streamcat" and "nearest StreamCat reach" in src:
+        label += ", nearest reach"
+    return label
+
 
 def desktop_basis_label(measured) -> str:
     """One short line on what the desktop values describe, counted by basis:
@@ -297,12 +325,13 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
     for k, v in _header_pairs(delin, assessment, sc, region, measured):
         w.writerow([k, v])
     w.writerow([])
-    # The last two columns were added for StreamCurves methodology 0.12 and sit
-    # at the end so every earlier column keeps its position.
+    # New columns go at the end so every earlier column keeps its position: the
+    # methodology 0.12 pair, then (2026-10-04) the curve's reference sample and the
+    # caveats the worksheet no longer prints.
     w.writerow(["Function", "Discipline", "Metric", "Measured value", "Curve (source)",
                 "Metric index (0-1)", "Note", "Origin", "Basis", "Source", "Engine value",
                 "Predictor source", "Scoring advisory", "Curve basis", "Scored against",
-                "Curve set"])
+                "Curve set", "Uncertainty", "Read with care"])
     for fn, m, val, idx, meta in _rows(assessment, measured):
         note = (measured.get(m["metricId"]) or {}).get("note", "")
         w.writerow([fn.get("functionName", ""), fn.get("discipline", ""),
@@ -312,7 +341,9 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
                     meta["origin"], meta["basis"], meta["source"],
                     "yes" if meta["engine"] else "", meta["predictor_source"],
                     meta["advisory"] or "", meta["curve_basis"],
-                    meta["scored_against"], meta["curve_set"]])
+                    meta["scored_against"], meta["curve_set"],
+                    reference_support.uncertainty_line(m),
+                    reference_support.limitations_line(m)])
     withheld = withheld_rows(assessment)
     if withheld:
         w.writerow([])
@@ -595,7 +626,7 @@ def _desktop_entries(assessment, measured) -> dict:
     for _fn, m, val, _idx, meta in _rows(assessment, measured):
         if meta.get("origin") != "desktop" or val in (None, ""):
             continue
-        note = f"DESKTOP: {meta.get('source') or meta.get('basis') or 'desktop'}"
+        note = f"DESKTOP: {source_label(meta) or 'desktop'}"
         if meta.get("reference_only"):
             note += " (reference only)"
         out[m["metricId"]] = (str(val), note)
@@ -674,7 +705,7 @@ def metric_rows(assessment, measured, *, computing: bool = False,
             "units": field_form.units_of(m), "code": code,
             "method": field_form.method_text(m), "status": status,
             "value": "" if val in (None, "") else str(val),
-            "source": meta.get("source") or "",
+            "source": source_label(meta),
             "scored_against": meta.get("scored_against") or "",
             "repeat": mid in seen})
         seen.add(mid)
@@ -749,7 +780,7 @@ def build_metrics_pdf(assessment, ref: str = "", *, measured=None, delineation=N
                                ("BACKGROUND", (0, 0), (0, -1), head_bg)]))
         story += [t, Spacer(1, 10)]
 
-    data = [["Function", "Metric", "F / D", "How it is measured", "Status", "Value", "Source"]]
+    data = [["Function", "Metric", "F/D", "How it is measured", "Status", "Value", "Source"]]
     for r in metric_rows(assessment, measured):
         metric = escape(safe(r["metric"])) + (f" ({escape(safe(r['units']))})" if r["units"] else "")
         is_value = r["status"] in (STATUS_AVAILABLE, STATUS_REFERENCE_ONLY, STATUS_ENTERED)

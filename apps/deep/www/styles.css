@@ -544,6 +544,11 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
    full-report flash. Neutralize it so the numbers just update in place. */
 .modal-body .recalculating { min-height: 0 !important; opacity: 1 !important; }
 .modal-body .recalculating::after { display: none !important; }
+/* Same overlay, same fix, for the worksheet outputs (the rails re-render on every
+   keystroke): their recomputes are instant local swaps; Shiny's overlay would flash
+   the columns and shift the layout on every edit. */
+.sfari-worksheet .recalculating { min-height: 0 !important; opacity: 1 !important; }
+.sfari-worksheet .recalculating::after { display: none !important; }
 .easi-spinner {
   width: 15px; height: 15px; border: 2px solid #cdd8ec; border-top-color: var(--easi-accent);
   border-radius: 50%; animation: easi-spin .8s linear infinite; flex: none;
@@ -630,94 +635,71 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .deep-pane-caution { font-size: 11.5px; color: #a3521f; margin-top: 4px; }
 .deep-pane-change { text-align: right; margin-top: 5px; }
 .deep-pane-change a { font-size: 11.5px; color: var(--easi-accent); }
-.sfari-nav { width: 240px; flex: none; background: #fff; border-right: 1px solid var(--card-border);
+/* The worksheet rail, SFARI's (2026-10-04): the same width, scrollbar and type in EASI,
+   SFARI and DEEP. The width is the narrowest that keeps the bold "Low flow and baseflow
+   dynamics" on one line with the scrollbar showing. */
+.sfari-nav { width: 276px; flex: none; background: #fff; border-right: 1px solid var(--card-border);
   overflow: hidden auto; padding: 0 0 14px; }
-.sfari-nav-cat { font-family: var(--font-head); font-size: 10.5px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .04em; color: #8a93a3; padding: 10px 14px 3px; }
-.sfari-nav-fn { display: flex; align-items: center; gap: 7px; padding: 5px 14px; font-size: 12.5px;
-  color: #33415c; cursor: pointer; border-left: 3px solid transparent; }
+/* slim, quiet scrollbars for the worksheet columns and modals: the default chunky
+   Windows bar reads as clutter; the thumb stays faint until the column is hovered */
+.sfari-nav, .sfari-fnpanel, .sfari-rollup, .modal-body {
+  scrollbar-width: thin; scrollbar-color: #e4e9f1 transparent; }
+.sfari-nav:hover, .sfari-fnpanel:hover, .sfari-rollup:hover, .modal-body:hover {
+  scrollbar-color: #c3cbda transparent; }
+.sfari-nav-cat { font-family: var(--font-head); font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: #98a1b1; padding: 11px 14px 2px; }
+.sfari-nav-fn { display: flex; align-items: flex-start; gap: 7px; padding: 5px 14px;
+  font-size: 14px; line-height: 1.3; color: #33415c; cursor: pointer;
+  border-left: 3px solid transparent; }
 .sfari-nav-fn:hover { background: #eef2f8; }
 .sfari-nav-fn.active { background: #eaf0f9; border-left-color: var(--easi-accent);
   font-weight: 600; color: var(--easi-accent); }
-.sfari-nav-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: #dfe4ec;
-  border: 1px solid rgba(0,0,0,.12); }
-.sfari-fnpanel { flex: 1; overflow-y: auto; padding: 16px 22px 6px; }
-.sfari-fnpanel-inner { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100%; }
-.sfari-fn-title { font-family: var(--font-head); color: var(--eci-title); font-size: 1.18rem;
-  font-weight: 700; margin: 0 0 3px; display: flex; align-items: center; gap: 8px; }
-.sfari-fn-counter { font-size: 12px; color: #8a93a3; font-weight: 500; margin-left: auto; }
-.sfari-fn-statement { font-size: 12.5px; color: #55607a; margin: 0 0 16px; line-height: 1.45; }
-.sfari-sec-lbl { font-family: var(--font-head); font-size: 11px; font-weight: 700; color: #8a93a3;
-  text-transform: uppercase; letter-spacing: .04em; margin: 6px 0 6px; }
-.sfari-metric { background: #fff; border: 1px solid var(--card-border); border-radius: 8px;
-  padding: 10px 12px; margin-bottom: 10px; }
-.sfari-metric-name { font-size: 13px; font-weight: 600; color: #2a3344; margin-bottom: 5px; }
-.sfari-metric-scale { font-size: 10px; font-weight: 700; color: #98a1b1; margin-left: 6px;
-  border: 1px solid #dfe4ec; border-radius: 4px; padding: 0 4px; }
-.sfari-evidence { font-size: 11.5px; color: #45506a; background: var(--surface-soft);
-  border: 1px solid #eaeef4; border-radius: 5px; padding: 5px 8px; margin-bottom: 7px; }
-.sfari-evidence .src { color: #8a93a3; }
-.sfari-suggest-chip { display: inline-block; background: #eef2f8; color: #3b6d9c;
-  border: 1px solid #cdd8ec; border-radius: 9px; padding: 1px 8px; font-size: 11px;
-  font-weight: 600; cursor: pointer; margin-left: 6px; }
-.sfari-suggest-chip:hover { background: #e2eaf6; }
-.sfari-likert { display: flex; gap: 4px; flex-wrap: wrap; margin: 2px 0 0; }
-.sfari-likert-btn { border: 1px solid var(--card-border); background: #fff; border-radius: 6px;
-  padding: 3px 9px; font-size: 11.5px; font-weight: 600; color: #55607a; cursor: pointer;
-  transition: border-color .12s, background .12s; }
-.sfari-likert-btn:hover { border-color: var(--easi-accent); }
-.sfari-likert-btn.sel[data-val="Strongly Agree"], .sfari-likert-btn.sel[data-val="Agree"] {
-  background: var(--band-good); color: #1f3f6e; border-color: #9fbce0; }
-.sfari-likert-btn.sel[data-val="Neutral"] { background: #e7ebf1; color: #40495a; border-color: #c7cede; }
-.sfari-likert-btn.sel[data-val="Disagree"], .sfari-likert-btn.sel[data-val="Strongly Disagree"] {
-  background: var(--band-poor); color: #7a2e2e; border-color: #e0a3a3; }
-.sfari-likert-btn.sel[data-val="Not Applicable"] { background: #33415c; color: #fff; border-color: #33415c; }
-.sfari-metric-note { width: 100%; box-sizing: border-box; resize: vertical; height: 30px;
-  border: 1px solid var(--card-border); border-radius: 6px; padding: 4px 8px; font-size: 12px;
-  color: #2a3344; margin-top: 6px; }
-.sfari-metric-note:focus, .sfari-fn-note:focus { outline: none; border-color: var(--easi-accent);
-  box-shadow: 0 0 0 2px rgba(47, 75, 124, .12); }
-/* score card */
-.sfari-scorecard { background: #fff; border: 1px solid var(--easi-accent); border-radius: 8px;
-  padding: 13px 15px; margin-top: 18px; }
-.sfari-scorecard h4 { font-family: var(--font-head); font-size: 13px; color: var(--eci-title); margin: 0 0 4px; }
-.sfari-scorecard .hint { font-size: 11.5px; color: #8a93a3; margin: 0 0 10px; }
-.sfari-scorecard.unset .sfari-fscore-num { color: #b6becb; }
-.sfari-scorecard.na { opacity: .55; }
-.sfari-fscore-row { display: flex; align-items: center; gap: 14px; }
-.sfari-fscore { flex: 1; accent-color: var(--easi-accent); height: 6px; }
-.sfari-fscore-num { font-family: var(--font-head); font-weight: 700; font-size: 1.5rem;
-  color: var(--eci-title); width: 36px; text-align: center; font-variant-numeric: tabular-nums; }
-.sfari-fscore-band { padding: 3px 11px; border-radius: 11px; font-size: 11.5px; font-weight: 600; color: #33415c; }
-.sfari-suggest-line { font-size: 12px; color: #55607a; margin: 10px 0 0; }
-.sfari-accept { background: #eef2f8; color: var(--easi-accent); border: 1px solid #cdd8ec;
-  border-radius: 6px; padding: 2px 10px; font-size: 11.5px; font-weight: 600; cursor: pointer; margin-left: 8px; }
-.sfari-accept:hover { background: #e2eaf6; }
-.sfari-na-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #55607a; margin-top: 10px; }
-.sfari-fn-note { width: 100%; box-sizing: border-box; resize: vertical; height: 34px;
-  border: 1px solid var(--card-border); border-radius: 6px; padding: 5px 8px; font-size: 12px;
-  color: #2a3344; margin-top: 10px; }
-.sfari-nav-actions { display: flex; gap: 8px; margin-top: 16px; }
+.sfari-nav-fn.unassessed:not(.active) { color: #8a93a3; }
+/* small borderless dot, top-aligned to the first line of wrapped names; scored band
+   colors (inline style) become the only color accents in the list */
+.sfari-nav-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; margin-top: 5.5px;
+  background: #e3e8f0; }
+.sfari-fnpanel { flex: 1; overflow-y: auto; padding: 16px 26px 6px; }
+.sfari-fnpanel-inner { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100%; }
+/* function heading: the position and discipline over the name (SFARI's) */
+.sfari-fn-head { margin: 2px 0 12px; }
+.sfari-fn-eyebrow { font-family: var(--font-head); font-size: 12.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: #8a93a3; margin-bottom: 3px; }
+.sfari-fn-name { font-family: var(--font-head); color: var(--eci-title); font-size: 1.5rem;
+  font-weight: 700; line-height: 1.25; margin: 0; display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; }
+/* numbered section headers: 1 Metrics / 2 Function score */
+.sfari-step-num { flex: none; width: 21px; height: 21px; border-radius: 50%; background: #33415c;
+  color: #fff; font-family: var(--font-head); font-size: 11.5px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; }
+/* one card holds the section header and every metric row (divider lines between rows) */
+.sfari-ev-card { background: #fff; border: 1px solid var(--card-border); border-radius: 10px;
+  margin-bottom: 14px; overflow: hidden; }
+.sfari-sec-lbl { font-family: var(--font-head); font-size: 14.5px; font-weight: 700;
+  color: var(--eci-title); margin: 0; padding: 12px 16px 11px;
+  display: flex; align-items: center; gap: 9px; }
+.sfari-sec-count { font-size: 12.5px; font-weight: 600; color: #98a1b1; margin-left: auto; }
+/* the metric rows themselves are the shared staf/metric-rows.css (EASI, SFARI and DEEP) */
+/* the function statement on the score card, as EASI and SFARI show it */
+.sfari-fn-statement { font-size: 15.5px; color: #3d4a63; margin: 0 0 10px; line-height: 1.55; }
+.sfari-nav-actions { display: flex; gap: 8px; margin-top: 9px; flex-wrap: wrap; }
 .sfari-btn { border: 1px solid var(--card-border); background: #fff; border-radius: 7px;
-  padding: 6px 14px; font-size: 12.5px; font-weight: 600; color: #33415c; cursor: pointer; }
+  padding: 6px 14px; font-size: 13px; font-weight: 600; color: #33415c; cursor: pointer; }
 .sfari-btn:hover { border-color: var(--easi-accent); color: var(--easi-accent); }
 .sfari-btn.primary { background: var(--easi-accent); color: #fff; border-color: var(--easi-accent); }
 .sfari-btn.primary:hover { background: var(--easi-accent-dark); color: #fff; }
 .sfari-btn[disabled] { opacity: .5; cursor: default; }
-/* left-rail stepper (ported from SFARI): fit each step to its label in the 240px rail.
-   DEEP has FIVE steps (SFARI has four), so the row is compacted (2px side padding + 2px gaps)
-   to hold all five on ONE line at 240px; flex-wrap stays only as an emergency fallback, since
-   the rail hides x-overflow and unusual font metrics would otherwise clip "Report" invisibly */
+/* left-rail stepper (SFARI's): each step sized to its label */
 .sfari-nav .easi-pane-head { border-radius: 0; }
-.sfari-nav-steps { padding: 8px 10px 0; }
-.sfari-nav-steps .easi-steps { margin-bottom: 4px; gap: 2px; flex-wrap: wrap; row-gap: 4px; }
-.sfari-nav-steps .easi-step { flex: 1 1 auto; white-space: nowrap; padding: 5px 2px 6px; }
-/* Get Field Forms — a Shiny download button renders <a class="btn btn-default ...>; the .btn
-   override reaches past Bootstrap the same way the header Save link does */
-.sfari-nav .sfari-nav-desktop.btn { display: block; width: calc(100% - 28px); margin: 8px 14px 6px;
-  padding: 8px 10px; font-size: 13.5px; font-weight: 600; text-align: center; text-decoration: none;
-  color: var(--easi-accent); background: #fff; border: 1px solid #b9c8e0; border-radius: 7px; box-shadow: none; }
-.sfari-nav .sfari-nav-desktop.btn:hover { border-color: var(--easi-accent); background: #eef2f8; }
+.sfari-nav-steps { padding: 10px 14px 0; }
+.sfari-nav-steps .easi-steps { margin-bottom: 4px; }
+.sfari-nav-steps .easi-step { flex: 1 1 auto; white-space: nowrap; padding: 5px 4px 6px; }
+/* Get Forms: the one assessment-wide action, labeled, under the stepper. Two classes:
+   .sfari-btn above would otherwise win on color and border. */
+.sfari-btn.sfari-nav-desktop { display: block; width: calc(100% - 28px); margin: 8px 14px 6px;
+  padding: 8px 10px; font-size: 13.5px; font-weight: 600; text-align: center;
+  color: var(--easi-accent); border-color: #b9c8e0; }
+.sfari-btn.sfari-nav-desktop:hover { border-color: var(--easi-accent); background: #eef2f8; }
 /* sticky navigation footer — always reachable without scrolling the metrics */
 .sfari-fn-footer { position: sticky; bottom: 0; z-index: 5; margin-top: auto;
   background: var(--surface-soft); padding: 9px 0 10px;
@@ -773,7 +755,7 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .easi-nav #nav_about { border-left: 1px solid rgba(255, 255, 255, .22); padding-left: 18px; }
 
 /* per-metric site photos */
-.sfari-photos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 7px; }
+.sfari-photos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .sfari-thumb-wrap { position: relative; width: 54px; height: 54px; border-radius: 5px;
   overflow: hidden; border: 1px solid var(--card-border); background: #f2f4f8; }
 .sfari-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -791,10 +773,6 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .sfari-progress-bar { height: 6px; background: #edeef2; border-radius: 3px; overflow: hidden; margin: 10px 0 3px; }
 .sfari-progress-bar > span { display: block; height: 100%; background: var(--easi-accent); border-radius: 3px; transition: width .25s; }
 .sfari-nav-empty { font-size: 11px; color: #8a93a3; padding: 9px 14px; font-style: italic; line-height: 1.4; }
-.sfari-evidence.pending { color: #8a93a3; font-style: italic; }
-
-/* N/A control sits beside the score, subtle box */
-.sfari-na-row { justify-content: flex-end; }
 
 /* report modal: sticky header while scrolling the metric table; per-metric photo thumbs */
 #deep-report .easi-tbl thead th { position: sticky; top: 0; z-index: 3; }
@@ -805,7 +783,7 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 
 /* --- Responsive: tablet / narrow windows --- */
 @media (max-width: 1024px) {
-  /* keep the rail at 240px (SFARI drops to 200) — DEEP's five-step stepper needs the width */
+  /* the same narrower rail in EASI, SFARI and DEEP */
   .sfari-nav { width: 240px; }
   .sfari-rollup { width: 264px; padding: 13px 14px; }
   .sfari-fnpanel { padding: 14px 16px 26px; }
@@ -824,7 +802,7 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   .sfari-fnpanel-inner { max-width: 100%; }
   .sfari-rollup { width: 100%; order: 3; max-height: 230px; border-left: none;
     border-top: 1px solid var(--card-border); }
-  .sfari-nav .sfari-nav-desktop.btn { flex: 1 1 100%; width: auto; margin: 4px 3px 2px; }
+  .sfari-btn.sfari-nav-desktop { flex: 1 1 100%; width: auto; margin: 4px 3px 2px; }
   .sfari-nav .easi-pane-head, .sfari-nav-steps,
   .sfari-nav > .shiny-html-output { flex: 1 1 100%; }         /* header + stepper span the strip */
   /* Keep the map controls exposed above the scrollable Identify/Basin pane. */

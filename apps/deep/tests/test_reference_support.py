@@ -675,14 +675,24 @@ def test_the_practitioner_lines_keep_their_order_and_the_old_three_lines():
     assert rs.practitioner_lines({"metricId": "m"}) == [] and rs.practitioner_lines(None) == []
     for line in lines:
         assert chr(0x2014) not in line
-    # the hover card and the metric card read the same helpers (source pins)
+    # 2026-10-04: the worksheet shows only what finishing the assessment needs; the
+    # report CSV carries the reference sample and the caveats for every metric
     import io as _io, pathlib as _pl
     src = _io.open(_pl.Path(__file__).resolve().parents[1] / "app.py", encoding="utf-8").read()
-    tip = src[src.index("def _metric_tip_html("):src.index("_BASIS_TAG = {")]
-    assert "reference_support.limitations_line(m)" in tip and "Read with care" in tip
-    card = src[src.index("def fn_panel():"):]
-    assert "reference_support.uncertainty_line(m)" in card and "reference_support.limitations_line(m)" in card
-    assert '"Uncertainty"' in card and "deep-uncertainty-row" in card and "deep-limits-row" in card
+    for name in ("def _metric_tip_html(", "def _metric_row("):
+        body = src[src.index(name):]
+        body = body[:body.index("\ndef ", 1)]
+        assert "uncertainty_line" not in body and "limitations_line" not in body, name
+        assert "Read with care" not in body and "Scored against" not in body, name
+    from deep import curves, measure, report
+    la = assessments.LoadedAssessment.from_dict(
+        {"assessmentId": "t", "metricsByFunction": [
+            {"functionId": "f", "functionName": "F", "metrics": [m]}]})
+    state = {m["metricId"]: {"value": 5.0, "na": False, "note": ""}}
+    sc, _ = curves.score_site(la, measure.measured_from_state(state))
+    csv_txt = report.build_csv({}, la, state, sc)
+    assert "Scored against,Curve set,Uncertainty,Read with care" in csv_txt
+    assert rs.uncertainty_line(m) in csv_txt and "Borrowed stations." in csv_txt
 
 
 def test_the_published_ladder_curves_read_as_their_basis():

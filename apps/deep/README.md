@@ -52,8 +52,8 @@ assessment bundles.
   the reach, reach-median ER and BHR, Bieger bankfull; the transect code comes
   from the vendored site engine's EASI extracts, only `deep/bieger.py` is DEEP's).
 - `deep/measure.py` + `deep/pipeline.py` gain a `compute_metrics_only` stage;
-  the app runs it on entering **Assessment** and prefills the computable metrics
-  with a source badge (values stay editable — editing flips origin to field).
+  the app runs it on entering **Assessment** and prefills the computable metrics,
+  marked Desktop (values stay editable; editing flips origin to field).
   Auto-modeled geomorphic ratios are labelled "modeled" (confirm/override).
 
 **Phase 4 — stratified curves + deploy (done):**
@@ -82,8 +82,10 @@ adversarial review):**
 - The assessment card and detail pane show the **reference tier** the curves were
   drawn at (least disturbed or best available); a best-available bar is never
   mistaken for reference condition.
-- The metric information card lists the curve basis (tier, role, reference
+- The metric information card listed the curve basis (tier, role, reference
   sites, builder confidence band) and the builder's caveats ("Read with care").
+  Since 2026-10-04 the worksheet shows only how to measure a metric; the basis
+  and caveats are in the report CSV (Uncertainty, Read with care) and the DEEP guide.
 - Four scoring advisories compose beside a score (`deep/curves.py:metric_warning`):
   the endpoint clamp, a value outside the reference pool's observed range, a
   thin-sample curve (`sampleDisposition` insufficient) that should be read as a
@@ -151,10 +153,12 @@ adversarial review):**
   watershed polygon answers a land-cover id only when neither engine has a
   value for it.
 - Every desktop value carries a `basis` (`site-engine` | `streamcat` | `nlcd` |
-  `3dep`), shown as a badge beside the Source row, printed in the CSV, the
+  `3dep`), printed in the CSV, the
   PDF, the GeoJSON (`predictor_source`, `watershed_basis`,
   `engine_values_withheld`), and the field-form packet (desktop values in the
-  Value cell, `DESKTOP: <source>` in Notes, `reference only` when withheld).
+  Value cell, `DESKTOP: <data>` in Notes, `reference only` when withheld). Get Forms
+  and the printed forms name the data (`report.source_label`: NLCD 2021, EPA
+  StreamCat, 3DEP elevation, ...), never the engine; the CSV keeps the full source.
 - **Any NHD stream:** the map draws the high-resolution NHD once in one solid
   blue style. The Layers menu has **Streams** and an optional **StreamCat
   coverage** checkbox, initially off. Enabling it distinguishes **StreamCat
@@ -163,7 +167,7 @@ adversarial review):**
   highlight and downstream connector. The choice lasts for the current page
   session and only changes the display. The assessment point, reach, and
   watershed remain distinct. Engine names and downstream-source details stay
-  on the source row, basis badge, and exports. The separate **Available
+  in the exports. The separate **Available
   assessments** panel continues to show assessment applicability.
   Every click, and every typed point, snaps to the HR line
   (`deep/hr_site.py`), the point lands at once, the StreamCat reach resolves
@@ -234,9 +238,11 @@ for the same content comes first.
 
 ## Field forms, metric list and Excel calculator
 
-**Get Field Forms** on the worksheet opens a dialog copied from SFARI: a **Metrics** tab (every
+**Get Forms** on the worksheet opens a dialog copied from SFARI: a **Metrics** tab (every
 metric of the chosen assessment with its status), a **Field forms preview** tab, and four
-downloads (field forms PDF, metrics PDF, completed workbook, blank workbook).
+downloads (field forms PDF, metrics PDF, completed workbook, blank workbook). Its method
+text is the concise wording of `deep/method_text.py` (keyed by the published text, so no
+bundle changes), and its Source column names the data behind each desktop value.
 
 - `deep/field_form.py` builds the field worksheet with reportlab from whatever bundle is loaded,
   so it always matches the assessment and version in use. Protocol lines come from the bundle's
@@ -247,9 +253,24 @@ downloads (field forms PDF, metrics PDF, completed workbook, blank workbook).
   and the completed workbook is filled at zip level, so DEEP needs no spreadsheet library.
   `DEEP_CALCULATOR_DIR` points a local DEEP at another folder.
 - `deep/reference_support.py` reads the bundle's `referenceSupport`, `criteriaBasis`,
-  `stratifier` and `insufficientReferenceSupport`. The worksheet shows a "Scored against" line
-  on every card, selects the curve set from the delineated slope or drainage area (marked
-  auto, user can override), and shows withheld metrics as disabled cards.
+  `stratifier` and `insufficientReferenceSupport`. The report carries the "Scored against"
+  line for every metric; the worksheet selects the curve set from the delineated slope or
+  drainage area (marked auto, user can override) and lists withheld metrics as Not scored rows.
+
+**The Assessment page** (owner, 2026-10-04) uses the metric row EASI, SFARI and DEEP share: one
+card per function with a row per metric (`app._metric_row`). A row shows the name, its (i) with
+how to measure it, a description line (`deep/describe.py`: what the value is, and which way is
+better, read from the scoring curve), a Desktop tag on an auto-filled value, and four labeled
+buttons that are always shown: Scoring (the reference curve), Note, Photo and N/A. The value box
+with its unit and the index under it sit in the right column. The row's layout, buttons and
+panels come from `libs/staf_workbook` (`web.metric_action`, `assets/metric-rows.css` and
+`metric-rows.js`, vendored to `www/staf/`), the one definition the three apps share; edit them
+there and re-vendor, never in an app. Where a curve comes from (the
+Source, Scored against, Uncertainty and Read with care rows, the breakpoint table) is not on the
+page: the report carries it per metric, and the DEEP guide on the docs site
+(`docs/walkthroughs/deep/index.md`) explains it. The guide's metric reference is generated by
+`scripts/build_guide_reference.py`; `tests/test_guide_reference.py` fails when a library change
+leaves it stale, so re-run the script after a publish adds or renames a metric.
 
 **Scenarios** (owner, 2026-10-03): the chip at the top of the score rail keeps "Existing
 Conditions" and up to nine alternatives, each with its own measured values; desktop values the

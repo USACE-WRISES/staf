@@ -110,7 +110,8 @@ def test_desktop_values_are_printed_with_their_source():
         "source": "STAF site engine v0.4.1 impervious (HR reach watershed, NLCD 2021)"}}
     text = _text(report.build_field_forms_pdf(la, measured=measured, delineation=DELIN))
     assert "1.3" in text
-    assert "DESKTOP: STAF site engine v0.4.1 impervious" in text
+    # the data behind the value, never the engine (2026-10-04)
+    assert "DESKTOP: NLCD 2021" in text and "DESKTOP: STAF" not in text
 
 
 def test_the_bytes_are_reproducible_and_carry_no_em_dash():

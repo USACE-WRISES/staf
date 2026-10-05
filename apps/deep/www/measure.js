@@ -31,7 +31,8 @@
     }
     return clamp01(p[p.length - 1].y);
   }
-  // Endpoint-clamp advisory — mirror of deep/curves.domain_warning.
+  // Endpoint-clamp advisory: the row's short line (app._card_warning) and, as its
+  // tooltip, the full text of deep/curves.domain_warning.
   function domainWarning(points, x) {
     if (!points || !points.length) return null;
     var xs = points
@@ -42,10 +43,14 @@
     var lo = xs[0], hi = xs[xs.length - 1];
     // Four decimals at most, so a seed edge such as 2.086666666666667 reads 2.0867 (mirrors deep/curves.py).
     var fmtB = function (v) { return String(Math.round(v * 1e4) / 1e4); };
-    if (x < lo) return "value " + fmtB(x) + " is below the curve domain [" + fmtB(lo) + ", " + fmtB(hi) + "]; score clamped to the endpoint";
-    if (x > hi) return "value " + fmtB(x) + " is above the curve domain [" + fmtB(lo) + ", " + fmtB(hi) + "]; score clamped to the endpoint";
-    return null;
+    var dir = x < lo ? "below" : (x > hi ? "above" : null);
+    if (!dir) return null;
+    return {
+      short: "Outside the curve's range (" + fmtB(lo) + " to " + fmtB(hi) + "); scored at the nearest end.",
+      full: "value " + fmtB(x) + " is " + dir + " the curve domain [" + fmtB(lo) + ", " + fmtB(hi) + "]; score clamped to the endpoint"
+    };
   }
+  var REF_ONLY_TEXT = "Not scored: shown for reference only.";
   function idxColor(v) {
     if (v == null) return "#eef1f6";
     if (v <= 0.39) return "#f5b5b5";
@@ -65,6 +70,8 @@
     var input = metricEl.querySelector(".deep-metric-input");
     var na = metricEl.querySelector(".deep-na");
     if (na && na.checked) return null;
+    // a desktop value the pairing rule keeps out of the score, until it is edited
+    if (metricEl.dataset.refOnly === "1") return null;
     if (!input || input.value === "" || input.value == null) return null;
     var v = parseFloat(input.value);
     if (isNaN(v)) return null;
@@ -106,24 +113,44 @@
               hh.setAttribute("y1", py.toFixed(1)); hh.setAttribute("y2", py.toFixed(1)); hh.removeAttribute("visibility"); }
     if (dot) { dot.setAttribute("cx", px.toFixed(1)); dot.setAttribute("cy", py.toFixed(1)); dot.removeAttribute("visibility"); }
   }
-  // Toggle the metric's endpoint-clamp advisory (hidden when in-domain / unset).
+  // The row's warning line (hidden when there is nothing to say): the pairing note
+  // while an unedited desktop value is kept out of the score, else the clamp note.
   function updateWarn(metricEl, val) {
     var el = metricEl.querySelector(".deep-domain-warn");
     if (!el) return;
+    if (val != null && metricEl.dataset.refOnly === "1") {
+      el.textContent = REF_ONLY_TEXT; el.hidden = false;      // the server's title stays
+      return;
+    }
     // A fixed-criteria curve ends where the index reaches zero, so a value past its
     // last point is scored as intended (mirrors deep/curves.metric_warning).
     var fixed = metricEl.dataset.fixed === "1";
     var msg = (val == null || fixed) ? null : domainWarning(pointsOf(metricEl), val);
-    if (msg) { el.textContent = msg; el.hidden = false; }
-    else { el.textContent = ""; el.hidden = true; }
+    if (msg) { el.textContent = msg.short; el.title = msg.full; el.hidden = false; }
+    else { el.textContent = ""; el.removeAttribute("title"); el.hidden = true; }
   }
   function updateMetric(metricEl) {
     var val = rawValue(metricEl);
-    var idx = (val == null) ? null : interp(pointsOf(metricEl), val);
+    var na = metricEl.querySelector(".deep-na");
+    var idx = (val == null || metricEl.dataset.refOnly === "1") ? null : interp(pointsOf(metricEl), val);
     var chip = metricEl.querySelector(".deep-metric-index");
-    if (chip) { chip.textContent = (idx == null ? "—" : idx.toFixed(2) + " · " + idxLabel(idx)); chip.style.background = idxColor(idx); }
-    updateMarker(metricEl, val, idx);
+    if (chip) {
+      chip.textContent = (na && na.checked) ? "N/A" : (idx == null ? "—" : idx.toFixed(2) + " · " + idxLabel(idx));
+      chip.style.background = idxColor(idx);
+    }
+    updateMarker(metricEl, val, idx == null ? null : idx);
     updateWarn(metricEl, val);
+  }
+  // A typed value is the assessor's: it is no longer a desktop value, so the Desktop
+  // tag and the pairing note go (the server records origin "field" for it).
+  function markEdited(metricEl) {
+    delete metricEl.dataset.refOnly;
+    var tag = metricEl.querySelector(".deep-desktop-tag");
+    if (tag) {
+      var sub = tag.parentNode;
+      tag.remove();
+      if (sub && sub.classList.contains("deep-metric-sub") && !sub.children.length) sub.remove();
+    }
   }
   function updateFunction() {
     var card = document.querySelector(".deep-scorecard");
@@ -151,9 +178,10 @@
     if (knob) knob.style.left = (score / 15 * 100).toFixed(1) + "%";
     updateEnteredCount();
   }
-  // Live "N/M entered" footer counter (the panel is isolated server-side, so it does not
-  // re-render on each keystroke — update it client-side instead). A metric is entered when
-  // it is marked N/A or holds a parseable value.
+  // Live "N of M entered" counts in the section header and the footer (the panel is
+  // isolated server-side, so it does not re-render on each keystroke; update them
+  // client-side instead). A metric is entered when it is marked N/A or holds a
+  // parseable value.
   function updateEnteredCount() {
     var panel = document.querySelector(".sfari-fnpanel-inner");
     if (!panel) return;
@@ -163,6 +191,8 @@
       var input = mEl.querySelector(".deep-metric-input");
       if ((na && na.checked) || (input && input.value !== "" && !isNaN(parseFloat(input.value)))) entered++;
     });
+    var head = panel.querySelector(".sfari-sec-count");
+    if (head) head.textContent = entered + " of " + metrics.length + " entered";
     var foot = document.querySelector(".sfari-foot-rated");
     if (foot) foot.textContent = entered + "/" + metrics.length + " entered";
   }
@@ -202,10 +232,10 @@
     var mi = e.target.closest(".deep-metric-input");
     if (mi) {
       var mEl = mi.closest(".deep-metric");
-      if (mEl) { updateMetric(mEl); updateFunction(); send("measure_set", { mid: mEl.getAttribute("data-metric"), value: mi.value }); }
+      if (mEl) { markEdited(mEl); updateMetric(mEl); updateFunction(); send("measure_set", { mid: mEl.getAttribute("data-metric"), value: mi.value }); }
       return;
     }
-    var note = e.target.closest(".sfari-metric-note");
+    var note = e.target.closest("textarea[data-mid-note]");
     if (note) { debounce(note, function () { send("measure_note", { mid: note.dataset.midNote, note: note.value }); }); return; }
   });
 
@@ -217,6 +247,8 @@
       var mEl = na.closest(".deep-metric");
       var input = mEl ? mEl.querySelector(".deep-metric-input") : null;
       if (input) input.disabled = na.checked;
+      var naTog = na.closest(".deep-na-toggle");
+      if (naTog) naTog.classList.toggle("on", na.checked);
       if (mEl) { updateMetric(mEl); updateFunction(); }
       send("measure_na", { mid: na.dataset.midNa, na: na.checked });
       return;
@@ -235,6 +267,7 @@
           if (!uri) return;
           var id = "p" + Date.now() + "-" + Math.round(Math.random() * 1e6);
           if (strip) strip.insertBefore(thumbEl(pmid, id, uri), strip.querySelector(".sfari-photo-btn"));
+          syncRow(metricEl);
           send("metric_photo_add", { mid: pmid, id: id, uri: uri });
         });
       });
@@ -258,6 +291,8 @@
     // neither can register a Shiny input the other already owns.
     var step = e.target.closest("[data-step]");
     if (step) { send("step_nav", { key: step.dataset.step }); return; }
+    // A row's Scoring, Note and Photo buttons belong to the shared staf/metric-rows.js; the
+    // N/A button is a label, handled by its checkbox above.
 
     var rep = e.target.closest("[data-report]");
     if (rep) { send("open_report_evt", {}); return; }
@@ -288,11 +323,15 @@
     // Remove a metric photo.
     var prm = e.target.closest(".sfari-photo-rm");
     if (prm) {
+      var prow = prm.closest(".staf-metric");
       var pw = prm.closest(".sfari-thumb-wrap"); if (pw) pw.remove();
+      syncRow(prow);
       send("metric_photo_remove", { mid: prm.dataset.mid, id: prm.dataset.id });
       return;
     }
   });
 
   function debounce(el, fn) { clearTimeout(el._deb); el._deb = setTimeout(fn, 350); }
+  // The photo button's count follows the strip (staf/metric-rows.js owns the button).
+  function syncRow(row) { if (row && window.STAFMetricRows) window.STAFMetricRows.sync(row); }
 })();

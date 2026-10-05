@@ -77,10 +77,15 @@ lost.
 
 ## Desktop evidence sources
 
-Evidence is pulled per metric from national services and shown with a source
-label, a provenance badge, and a suggested Likert; the assessor always scores.
-Site-engine values use the plain **Desktop** badge (**Desktop pending** while
-calculating); tooltips retain the engine name, version, and watershed details.
+Evidence is pulled per metric from national services and shown with one
+**Desktop** tag (**Desktop pending** while calculating) and, where a rule exists, a
+suggested Likert with a **Use** button; the assessor always scores. On the Assessment
+page the value drops its watershed-basis suffix and its (i) names the data, never the
+engine (`app._ev_value_ws`, `app._ev_tip_ws`; owner, 2026-10-04); the report, the PDFs
+and the CSV keep the engine name, version and watershed details (`app._ev_tip`).
+Each metric is the row EASI, SFARI and DEEP share (`libs/staf_workbook`,
+`assets/metric-rows.*`): the statement to rate, the evidence, then **Scoring** (the
+example Likert ladder), **Note** and **Photo** buttons that are always shown.
 One watershed engine answers the watershed metrics (the definitions live in
 `libs/README.md` and on the STAF site's Computation Engines page):
 
@@ -130,7 +135,7 @@ streams** in cyan (`sfari/network_display.py`, EASI's split within 150 ft of
 an NHDPlus V2 reach). It also reveals the source-reach highlight and downstream
 connector. The choice lasts for the current page session and only changes the
 display. The assessment point, reach, and watershed remain distinct. Engine
-names stay on the evidence badges, basin card, and exports. Downstream desktop
+names stay on the basin card and in the exports. Downstream desktop
 evidence carries a dagger in the main report and assessment PDF, explained
 beneath the relevant metrics table; assessor-assigned scores are not marked.
 Every click, and every typed point, snaps to the HR

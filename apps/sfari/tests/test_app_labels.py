@@ -12,13 +12,13 @@ app = importlib.import_module("app")
 
 
 def test_badges_follow_the_origin():
-    assert app._ev_badge({"origin": "engine", "status": "ok"}) == ("Desktop", "sfari-ev-tag engine")
-    assert app._ev_badge({"origin": "streamcat", "status": "ok"}) == ("StreamCat", "sfari-ev-tag streamcat")
-    assert app._ev_badge({"origin": "pull", "status": "ok"}) == ("Desktop", "sfari-ev-tag")
-    assert app._ev_badge({"status": "ok"}) == ("Desktop", "sfari-ev-tag")     # legacy entry
+    # one Desktop tag for every desktop source on the worksheet (owner, 2026-10-04); the report
+    # keeps the source (its tooltip, _ev_tip, still names the engine)
+    for origin in ("engine", "streamcat", "pull", None):
+        assert app._ev_badge({"origin": origin, "status": "ok"}) == ("Desktop", "staf-ev-tag")
     assert app._ev_badge({"origin": "engine", "status": "pending"}) == app._PENDING_BADGE
-    assert app._ev_badge(None) == ("field", "sfari-ev-tag field")
-    assert app._PENDING_BADGE == ("Desktop pending", "sfari-ev-tag pending")
+    assert app._ev_badge(None) == ("Field", "staf-ev-tag field")
+    assert app._PENDING_BADGE == ("Desktop pending", "staf-ev-tag pending")
     assert "STAF site engine" in app._ev_tip({"source": "STAF site engine (HR reach watershed)"})
 
 
@@ -33,9 +33,12 @@ def test_tooltip_names_the_reach_and_the_fallback():
     assert tip.endswith("national default")
     # upgrade_pending is a legacy field nothing sets any more (2026-09-07)
     assert "still running" not in app._ev_tip({"source": "x", "upgrade_pending": True})
-    assert app._ev_describes({"anchor_label": ""}) is None
-    assert "describes the nearest StreamCat reach" in str(app._ev_describes(
-        {"anchor_label": "nearest StreamCat reach, COMID 1"}))
+    # on the worksheet a value from another reach says so in EASI's words, the reach on hover
+    assert app._ev_notice({"anchor_label": ""}) is None
+    notice = str(app._ev_notice({"anchor_label": "nearest StreamCat reach, COMID 1"}))
+    assert ">Desktop evidence comes from the nearest StreamCat reach downstream.</div>" in notice
+    assert 'title="Describes the nearest StreamCat reach, COMID 1."' in notice
+    assert 'class="staf-metric-warn"' in notice
 
 
 def test_report_marks_desktop_evidence_with_a_short_local_footnote():
@@ -101,7 +104,7 @@ def test_copy_has_no_em_dash_and_names_both_engines():
     # head content renders as a dependency, not in str(app_ui): read the source
     from pathlib import Path
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert 'styles.css?v=26' in src and 'styles.css?v=25' not in src
+    assert 'styles.css?v=28' in src and 'styles.css?v=27' not in src
 
 
 def test_map_styles_exist():
