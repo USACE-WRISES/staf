@@ -5,12 +5,20 @@
  * the reference-curve points embedded on the metric block, and notifies the
  * server via Shiny.setInputValue so the live rollup + report recompute
  * authoritatively. Mirrors the non-binding shadow-copy pattern EASI/SFARI use.
+ *
+ * In the STAF app DEEP shares the page with EASI and SFARI: this script acts only
+ * on events inside DEEP's body (or outside every body, its dialogs, while DEEP is
+ * shown) and posts to DEEP's own inputs (staf/staf-ns.js).
  */
 (function () {
+  var TOOL = "deep", NS = window.STAFNs;
+
+  function body() { return NS.scope(NS.tool(TOOL)); }
+
   function send(id, payload) {
     if (window.Shiny && Shiny.setInputValue) {
       payload._t = Date.now();
-      Shiny.setInputValue(id, payload, { priority: "event" });
+      Shiny.setInputValue(NS.id(NS.tool(TOOL), id), payload, { priority: "event" });
     }
   }
   function clamp01(y) { return y < 0 ? 0 : (y > 1 ? 1 : y); }
@@ -153,8 +161,8 @@
     }
   }
   function updateFunction() {
-    var card = document.querySelector(".deep-scorecard");
-    var panel = document.querySelector(".sfari-fnpanel-inner");
+    var card = body().querySelector(".deep-scorecard");
+    var panel = body().querySelector(".sfari-fnpanel-inner");
     if (!card || !panel) return;
     var vals = [];
     panel.querySelectorAll(".deep-metric").forEach(function (mEl) {
@@ -183,7 +191,7 @@
   // client-side instead). A metric is entered when it is marked N/A or holds a
   // parseable value.
   function updateEnteredCount() {
-    var panel = document.querySelector(".sfari-fnpanel-inner");
+    var panel = body().querySelector(".sfari-fnpanel-inner");
     if (!panel) return;
     var metrics = panel.querySelectorAll(".deep-metric"), entered = 0;
     metrics.forEach(function (mEl) {
@@ -193,11 +201,11 @@
     });
     var head = panel.querySelector(".sfari-sec-count");
     if (head) head.textContent = entered + " of " + metrics.length + " entered";
-    var foot = document.querySelector(".sfari-foot-rated");
+    var foot = body().querySelector(".sfari-foot-rated");
     if (foot) foot.textContent = entered + "/" + metrics.length + " entered";
   }
   function scrollPanelTop() {
-    var p = document.querySelector(".sfari-fnpanel");
+    var p = body().querySelector(".sfari-fnpanel");
     if (p) p.scrollTop = 0;
   }
   // Downscale an image file to <= maxDim on its longest side, JPEG data-URI.
@@ -229,6 +237,7 @@
   }
 
   document.addEventListener("input", function (e) {
+    if (!NS.mine(e.target, TOOL)) return;
     var mi = e.target.closest(".deep-metric-input");
     if (mi) {
       var mEl = mi.closest(".deep-metric");
@@ -240,6 +249,7 @@
   });
 
   document.addEventListener("change", function (e) {
+    if (!NS.mine(e.target, TOOL)) return;
     var strat = e.target.closest(".deep-stratum-select");
     if (strat) { send("measure_stratum", { mid: strat.dataset.midStratum, stratum: strat.value }); return; }
     var na = e.target.closest(".deep-na");
@@ -280,6 +290,7 @@
   // its own; they carry tabindex instead and this supplies Enter and Space.
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+    if (!NS.mine(e.target, TOOL)) return;
     var step = e.target.closest && e.target.closest("[data-step]");
     if (!step) return;
     e.preventDefault();                     // Space would scroll the page otherwise
@@ -287,6 +298,7 @@
   });
 
   document.addEventListener("click", function (e) {
+    if (!NS.mine(e.target, TOOL)) return;
     // Step navigator. One event id for both steppers (left pane + worksheet rail), so
     // neither can register a Shiny input the other already owns.
     var step = e.target.closest("[data-step]");
@@ -304,8 +316,8 @@
     var nav = e.target.closest("[data-nav]");
     if (nav) {
       var d = parseInt(nav.dataset.nav, 10);
-      var active = document.querySelector(".sfari-nav-fn.active");
-      var lastIdx = document.querySelectorAll(".sfari-nav-fn").length - 1;
+      var active = body().querySelector(".sfari-nav-fn.active");
+      var lastIdx = body().querySelectorAll(".sfari-nav-fn").length - 1;
       if (d === 1 && active && parseInt(active.dataset.idx, 10) === lastIdx) {
         send("open_report_evt", {});
       } else {

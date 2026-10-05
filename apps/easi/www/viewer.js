@@ -91,7 +91,8 @@
     if (!props || !props.comid || !window.Shiny) return;
     if (!props.band || props.band === "pending") { showStatus("This reach has no precomputed assessment yet.", 2500); return; }
     var config = state.config || {};
-    window.Shiny.setInputValue("viewer_pick", { comid: Number(props.comid), huc4: props.huc4 || null,
+    // the server names the input (EASI's prefix in the STAF app); older configs did not
+    window.Shiny.setInputValue(config.pickInput || "viewer_pick", { comid: Number(props.comid), huc4: props.huc4 || null,
       name: props.name || null, datasetKey: config.datasetKey, generation: config.generation, nonce: Date.now() }, { priority: "event" });
     showStatus("Preparing report…", 0);
   }

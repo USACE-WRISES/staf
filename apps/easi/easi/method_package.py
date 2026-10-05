@@ -123,7 +123,7 @@ BEHAVIORS = (
 _PRESENTATION = ("__init__.py", "method_package.py", "methods.py", "method_plot.py", "report.py",
                  "reportmap.py", "snapcard.py", "viewport.py", "network_display.py", "notices.py",
                  "xsplot.py", "xsplotly.py", "batch_ui.py", "calculator.py", "workbook.py",
-                 "scenario_state.py")
+                 "scenario_state.py", "session.py")
 #: vendored presentation code (the shared workbook and scenario toolkit): never evidence
 _PRESENTATION_TREES = ("_vendor/staf_workbook/",)
 

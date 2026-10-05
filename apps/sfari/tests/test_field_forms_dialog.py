@@ -44,7 +44,7 @@ def test_the_two_downloads_build_the_two_pdfs():
 
 
 def test_the_preview_is_served_inline_by_a_session_route():
-    assert 'session.dynamic_route("field-forms-preview", _ff_preview_route)' in SRC
+    assert 'session.dynamic_route("field_forms_preview", _ff_preview_route)' in SRC
     assert 'media_type="application/pdf"' in SRC and '"Content-Disposition": "inline' in SRC
     body = SRC.split("def ff_preview():", 1)[1].split("@reactive.effect", 1)[0]
     assert "ui.tags.iframe(" in body and "Open in a new tab" not in SRC
@@ -72,7 +72,7 @@ def test_the_stylesheet_pins_the_header_and_the_layout():
     for state in (".ff-dl .btn-primary {", ".ff-dl .btn-primary:hover,"):
         assert state in CSS, state
     assert "ff-dl-secondary" not in CSS and "ff-dl-secondary" not in SRC
-    assert 'href="styles.css?v=28"' in SRC
+    assert 'href="styles.css?v=31"' in SRC
 
 
 def test_the_worksheet_button_names_the_dialog():

@@ -151,11 +151,14 @@ def test_session_round_trip():
                              "snapped_lat": 44.0, "snapped_lon": -123.0}}
     mv = {"spring-catchment-hydrology-percent-impervious-cover":
           {"value": 12.0, "na": False, "note": "n"}}
-    text = session.dump(delin, la.raw, mv)
+    from deep._vendor.staf_workbook import assessment_file
+    from deep._vendor.staf_workbook.model.scenarios import ScenarioSet
+    text = session.dump(delin, la.raw, assessment_file.scenarios_block(ScenarioSet(), {"measured_values": mv}))
     st = session.load(text)
     # session stores the full delineation result, which nests a "delineation" sub-dict
     assert st["delineation"]["delineation"]["comid"] == 123
-    assert st["measured_values"]["spring-catchment-hydrology-percent-impervious-cover"]["value"] == 12.0
+    saved = assessment_file.scenario_set(st["scenarios"]).baseline.state["measured_values"]
+    assert saved["spring-catchment-hydrology-percent-impervious-cover"]["value"] == 12.0
     la2 = assessments.LoadedAssessment.from_dict(st["assessment"])
     assert la2.assessment_id == la.assessment_id
     # resumed assessment scores identically

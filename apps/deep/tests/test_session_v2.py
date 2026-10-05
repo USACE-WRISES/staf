@@ -1,10 +1,15 @@
-"""Session schema v2: round-trip of the new provenance fields, v1 migration, and a
-stable content digest (Part D1/D2)."""
+"""The DEEP assessment file: the STAF assessment file EASI and SFARI write too (owner, 2026-10-05),
+with the provenance fields round-tripping beside the assessment, DEEP's own v2 and v1 files still
+opening, and a stable content digest (Part D1/D2)."""
 from __future__ import annotations
 
 import json
 
+import pytest
+
 from deep import session
+from deep._vendor.staf_workbook import assessment_file
+from deep._vendor.staf_workbook.model.scenarios import ScenarioSet
 
 
 def _bundle(version=2, status=None):
@@ -23,20 +28,28 @@ def _bundle(version=2, status=None):
     return b
 
 
-def test_v2_round_trips_new_fields():
+def _values(mv):
+    return assessment_file.scenarios_block(ScenarioSet(), {"measured_values": mv})
+
+
+def _existing(st):
+    return assessment_file.scenario_set(st["scenarios"]).baseline.state["measured_values"]
+
+
+def test_the_file_round_trips_its_provenance():
     bundle = _bundle(version=3, status="certified")
     region = {"level3": {"code": "55", "name": "Eastern Corn Belt Plains"},
               "state": {"code": "OH", "abbr": "OH", "name": "Ohio"}}
     delin = {"delineation": {"comid": 42, "snapped_lat": 40.0, "snapped_lon": -83.5}}
     mv = {"m1": {"value": 5.0, "na": False, "note": ""}}
 
-    text = session.dump(delin, bundle, mv, region=region, completeness="complete",
+    text = session.dump(delin, bundle, _values(mv), region=region, completeness="complete",
                         result_state="final")
     raw = json.loads(text)
-    assert raw["schemaVersion"] == 2
+    assert raw["format"] == "staf-assessment" and raw["tool"] == "DEEP"
+    assert list(raw["toolData"]) == ["assessment", "provenance"] and "measured_values" not in raw
 
     st = session.load(text)
-    assert st["schemaVersion"] == 2
     prov = st["provenance"]
     assert prov["assessmentId"] == "demo-assess"
     assert prov["version"] == 3
@@ -48,16 +61,32 @@ def test_v2_round_trips_new_fields():
     assert prov["contentDigest"].startswith("sha256:")
     # The embedded bundle + measured values still resume standalone.
     assert st["assessment"]["assessmentId"] == "demo-assess"
-    assert st["measured_values"]["m1"]["value"] == 5.0
+    assert _existing(st)["m1"]["value"] == 5.0
+    assert st["delineation"] == delin
 
 
-def test_dump_positional_only_still_valid_v2():
-    # A caller passing only the three positional args produces a valid v2 session; provenance
-    # simply reflects the bundle and an unresolved region.
-    st = session.load(session.dump({}, _bundle(version=1), {}))
-    assert st["schemaVersion"] == 2
+def test_dump_positional_only_still_valid():
+    # A caller passing only the positional args writes a valid file; provenance simply reflects
+    # the bundle and an unresolved region.
+    st = session.load(session.dump({}, _bundle(version=1), _values({})))
     assert st["provenance"]["version"] == 1
     assert st["provenance"]["region"] == {"level3": None, "state": None}
+
+
+def test_a_v2_file_from_before_the_shared_format_still_opens():
+    region = {"level3": {"code": "55", "name": "Eastern Corn Belt Plains"}, "state": None}
+    sset = ScenarioSet()
+    sset.add("Restore riparian", "")
+    sset.current.state = {"measured_values": {"m1": {"value": 9.0}}}
+    v2 = json.dumps({"schemaVersion": 2, "method": "DEEP", "delineation": {"delineation": {"comid": 7}},
+                     "assessment": _bundle(version=2), "measured_values": {"m1": {"value": 2.0}},
+                     "provenance": {"assessmentId": "demo-assess", "version": 2, "region": region},
+                     "scenarios": sset.to_json()})
+    st = session.load(v2)
+    assert st["provenance"]["region"] == region and st["assessment"]["assessmentId"] == "demo-assess"
+    back = assessment_file.scenario_set(st["scenarios"])
+    assert back.baseline.state == {"measured_values": {"m1": {"value": 2.0}}}
+    assert back.items[1].state == {"measured_values": {"m1": {"value": 9.0}}} and back.active == back.items[1].id
 
 
 def test_v1_session_loads_via_migration():
@@ -70,7 +99,6 @@ def test_v1_session_loads_via_migration():
         "measured_values": {"m1": {"value": 2.0}},
     })
     st = session.load(v1)
-    assert st["schemaVersion"] == 2
     prov = st["provenance"]
     assert prov["migratedFrom"] == 1
     assert prov["assessmentId"] == "demo-assess"
@@ -79,14 +107,25 @@ def test_v1_session_loads_via_migration():
     assert prov["region"] == {"level3": None, "state": None}  # v1 never resolved a region
     # Embedded bundle + values preserved so the current rules reconstruct scores.
     assert st["assessment"]["assessmentId"] == "demo-assess"
-    assert st["measured_values"]["m1"]["value"] == 2.0
+    assert _existing(st)["m1"]["value"] == 2.0
 
 
 def test_versionless_session_migrates_as_v1():
     v0 = json.dumps({"assessment": _bundle(version=1), "measured_values": {}, "delineation": {}})
     st = session.load(v0)
-    assert st["schemaVersion"] == 2
     assert st["provenance"]["migratedFrom"] == 1
+
+
+def test_an_unreadable_schema_version_is_refused():
+    with pytest.raises(assessment_file.AssessmentFileError, match="schema version"):
+        session.load(json.dumps({"schemaVersion": "two", "method": "DEEP"}))
+
+
+def test_a_sfari_or_easi_file_is_refused_with_the_tool_to_open_it_in():
+    with pytest.raises(assessment_file.AssessmentFileError, match="Open it in SFARI"):
+        session.load(json.dumps({"schemaVersion": 1, "method": "SFARI", "metric_scores": {}}))
+    with pytest.raises(assessment_file.AssessmentFileError, match="Open it in EASI"):
+        session.load(assessment_file.dump("EASI", {}, {}, None))
 
 
 def test_content_digest_is_stable_and_bundle_sensitive():

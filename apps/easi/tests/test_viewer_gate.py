@@ -61,16 +61,16 @@ def test_public_page_carries_no_viewer_markup_unless_the_flag_is_set():
     else:
         assert not any(marker in html for marker in VIEWER_MARKERS)
         # the single-site page is otherwise intact
-        assert 'id="nav_batch"' in html and 'id="nav_help"' in html
+        assert 'id="load_session"' in html and 'id="nav_help"' in html and "nav_batch" not in html
         assert 'class="easi-mode-toggle"' in html
 
 
 def test_every_mount_point_reads_the_flag():
     assert "*_viewer_head_tags(NATIONAL_VIEWER)" in SRC
-    assert "_viewer_switch(NATIONAL_VIEWER)," in SRC
+    assert "return _viewer_switch(NATIONAL_VIEWER)" in SRC
     assert "_viewer_workspace_slot(NATIONAL_VIEWER)," in SRC
     assert "+ _viewer_help(NATIONAL_VIEWER) +" in SRC
-    route = ('tiles_route = (session.dynamic_route("national-tiles", _national_tiles_handler)\n'
+    route = ('tiles_route = (session.dynamic_route("national_tiles", _national_tiles_handler)\n'
              '                   if NATIONAL_VIEWER else None)')
     assert route in SRC
     assert 'NATIONAL_VIEWER = _env_flag("EASI_NATIONAL_VIEWER")' in SRC

@@ -56,8 +56,7 @@ function harness(app, jquery = true) {
   const wrap = { querySelector() { return corner; } };
   const document = {
     readyState: "complete",
-    querySelector() { return wrap; },
-    getElementById() { return null; },
+    querySelector(selector) { return selector === ".easi-map-wrap" ? wrap : null; },
     createElement: element,
     addEventListener: bind,
   };
@@ -72,8 +71,8 @@ function harness(app, jquery = true) {
   };
   if (jquery) window.jQuery = () => ({ on: bind });
 
-  const filename = path.resolve(__dirname, "..", "..", app, "www", "legend-dock.js");
-  vm.runInNewContext(fs.readFileSync(filename, "utf8"), {
+  // A page without tool bodies: the shared scripts (www/staf/, staf-ns.js first) post plain names.
+  const context = {
     window, document,
     MutationObserver: function (callback) {
       observer = callback;
@@ -81,7 +80,11 @@ function harness(app, jquery = true) {
     },
     setInterval() { throw new Error("the fixture control should already be mounted"); },
     clearInterval() {},
-  }, { filename });
+  };
+  for (const name of ["staf-ns.js", "legend-dock.js"]) {
+    const filename = path.resolve(__dirname, "..", "..", app, "www", "staf", name);
+    vm.runInNewContext(fs.readFileSync(filename, "utf8"), context, { filename });
+  }
 
   return {
     updates,

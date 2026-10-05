@@ -1,282 +1,617 @@
-/* DEEP available-assessment coverage: a floating collapsible panel of per-assessment
- * visibility toggles + client-side, non-interactive outline layers.
+/* DEEP's assessment regions (owner, 2026-10-05): a right sidebar that lists the available
+ * assessments by their region, with a search, and the regions themselves on DEEP's map.
  *
- * Modeled on hype-app (www/map_bounds.js map capture + www/tree.js panel chrome). The
- * coverage outlines are drawn as RAW Leaflet layers on the captured map (window.__deepMap),
- * NOT ipyleaflet layers — so they stay out of the LayersControl (the basemaps button) and are
- * interactive:false: they never intercept the click used to place a survey point.
+ * The map. One polygon per region, drawn with the Leaflet copy that made DEEP's map, in a pane
+ * under the streams (deep-regions, z 380). Zoomed out on the Identify step the regions are ACTIVE:
+ * hovering anywhere inside one highlights it and names it (one shared tooltip; a per-path
+ * bindTooltip makes every path focusable, and the browser drew a focus box around a clicked one),
+ * and a click selects it and zooms in: to the whole region when it is bigger than the view, else
+ * two levels at the click, up to where streams show. A click on a region never reaches the map,
+ * so it never starts a stream pick. From the stream zoom (the panel's data-flow-zoom) on, or on
+ * any other step, they are PASSIVE: a faint dashed outline that takes no pointer events (the
+ * pane's is-passive class), so every click goes to the streams. The Layers menu gets an
+ * "Assessment regions" checkbox (app-owned, like legend-dock.js's StreamCat coverage).
  *
- * Server contract: on shiny:connected we post `coverage_ready`; the server replies with a
- * `deep_coverage` custom message {features:[{assessmentId, name, region, version, geometry}]}.
- * We render one checkbox row per feature into #deep-cov-body and add its outline layer; a
- * checkbox toggles that layer's visibility. No features -> the panel stays hidden.
+ * The sidebar (markup in app.py _tool_body, layout in deep.css): a search over the region names
+ * (an all-digit query matches the Level III code exactly), then one row per region: its name, its
+ * version, "In use" for the assessment the site uses and "Final" when certified. Hovering a row
+ * highlights its region; clicking it selects the region and fits the map to it. The search
+ * filters the map too. Open or closed is the deep-cov-open class on DEEP's body (.easi-shell),
+ * remembered per browser; the map's right-hand controls make room (deep.css). Closed, the
+ * sidebar is a button in the map's top-right controls, under Layers, with the region count: it is
+ * docked into Leaflet's corner (as legend-dock.js docks the legend), because the map is its own
+ * stacking context and anything floated over it would cover the Layers menu.
+ *
+ * Server contract: the page posts `coverage_ready` (DEEP's own input) until the server answers.
+ * `deep_coverage` brings {features:[{assessmentId, name, code, version, status, certified,
+ * geometry}]} once; `deep_coverage_current` brings {assessmentId, identify, focus} whenever the
+ * assessment in use or the step changes (focus: show that region once, for a link).
+ *
+ * In the STAF app DEEP shares the page with EASI and SFARI, whose maps may come first: DEEP's map
+ * is the Leaflet map whose container sits in DEEP's body (staf/staf-ns.js), and the capture and the
+ * handshake start again each time DEEP is shown (the shell's staf:tool-shown event).
  */
 (function () {
   "use strict";
 
-  // Two layers per region. FILL carries the tint and a dark casing and is
-  // interactive:false -> pointer-events:none, so a click inside a region still
-  // reaches the map handler that places a survey point. That is load-bearing,
-  // not cosmetic: a filled path left interactive swallows the click and breaks
-  // the app's main interaction.
-  //
-  // The tint is a warm grey, and both halves of that are measured rather than
-  // taste. All three tile layers sit on the map at once and USGS Topo is the
-  // opaque one on top, so the visible background is LIGHT (mean luminance 220 of
-  // 255) — the tint has to be darker than the basemap to shade it. A near-white
-  // was tried first and moved luminance by 2, which is below the ~4 threshold
-  // where anything is perceptible at all: it drew nothing. 0.12 of this grey
-  // moves it 14, which reads as light shading and stays far below the delineated
-  // watershed's 0.40 yellow so the two never look alike.
-  //
-  // Warm, because the topo tiles average RGB 209,223,223 and the hydrography
-  // overlay washes more blue on top. A cool grey would blend into exactly the
-  // cast the regions need to stand out from. Switching to the imagery basemap
-  // drops this to a delta of about 6, and the dark casing carries the boundary.
-  var FILL = { color: "#0b2a3d", weight: 4, opacity: 0.30,
-               fill: true, fillColor: "#6b6459", fillOpacity: 0.12,
-               interactive: false };
-  var OUTLINE = { color: "#1f9dff", weight: 2, opacity: 1, fill: false };
-  var HOVER_FILL_OPACITY = 0.20;
-  var ZOOM_SVG = "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' " +
-    "stroke='currentColor' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'>" +
-    "<path d='M6 2H2v4M10 2h4v4M10 14h4v-4M6 14H2v-4'/></svg>";
-  var layers = {};      // assessmentId -> L.GeoJSON (client layer)
-  var pending = null;   // features awaiting the map handle
-  var gotCoverage = false;   // set once the server answers the ready handshake
+  var TOOL = "deep", NS = window.STAFNs;
+  var PANE = "deep-regions", STORE = "staf.deep.regionsOpen", PHONE = 820;
+  function root() { return NS.tool(TOOL); }
+  function body() { return NS.scope(root()); }
+  function shell() { return root() || document.querySelector(".easi-shell"); }
 
-  // ---- capture the Leaflet map (jupyter-leaflet bundle, no global registry) ----
-  function attach(map) {
-    if (window.__deepMap === map) return;
-    window.__deepMap = map;
-    if (pending) { var f = pending; pending = null; drawAll(f); }
-  }
-  function lateCapture() {
-    if (window.__deepMap || !window.L || !window.L.Evented) return;
-    var orig = window.L.Evented.prototype.fire;
-    window.L.Evented.prototype.fire = function () {
-      if (this instanceof window.L.Map) attach(this);
-      return orig.apply(this, arguments);
-    };
-    var cont = document.querySelector(".leaflet-container");
-    if (cont) cont.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: 5, clientY: 5 }));
-    window.L.Evented.prototype.fire = orig;
-  }
-  var hooked = false, tries = 0;
-  var capT = setInterval(function () {
-    tries += 1;
-    if (!hooked && window.L && window.L.Map && window.L.Map.addInitHook) {
-      hooked = true;
-      window.L.Map.addInitHook(function () { attach(this); });
-      lateCapture();
-    }
-    if (hooked && !window.__deepMap) lateCapture();
-    if (window.__deepMap || tries > 150) clearInterval(capT);   // give up after ~30s
-  }, 200);
+  // Styles, by state. The fill is the warm grey measured for the topo basemap (0.12 moves its
+  // luminance by ~14, a light shading far below the delineated watershed's 0.40 yellow); the
+  // outline is slate, never the streams' blue.
+  var STYLE = {
+    active: { color: "#475569", weight: 1, opacity: 0.8, fillColor: "#6b6459", fillOpacity: 0.12, dashArray: null },
+    hover: { color: "#2f4b7c", weight: 2.25, opacity: 1, fillColor: "#6b6459", fillOpacity: 0.22, dashArray: null },
+    selected: { color: "#2f4b7c", weight: 2.5, opacity: 1, fillColor: "#2f4b7c", fillOpacity: 0.14, dashArray: null },
+    selectedHover: { color: "#2f4b7c", weight: 2.5, opacity: 1, fillColor: "#2f4b7c", fillOpacity: 0.22, dashArray: null },
+    passive: { color: "#475569", weight: 1.25, opacity: 0.55, fillOpacity: 0, dashArray: "6 5" },
+    passiveSelected: { color: "#2f4b7c", weight: 2, opacity: 0.9, fillOpacity: 0, dashArray: null },
+  };
 
-  // ---- draw / toggle client layers ----
-  function drawAll(features) {
-    var map = window.__deepMap;
-    if (!map) { pending = features; return; }   // draw once the map arrives
-    features.forEach(function (f) {
-      var aid = f.assessmentId;
-      if (!aid || layers[aid] || !f.geometry) return;
-      try {
-        var geom = { type: "Feature", geometry: f.geometry };
-        // fill first so it renders beneath the outline (children draw in add order)
-        var fill = window.L.geoJSON(geom, { style: function () { return FILL; } });
-        // the outline stays interactive: it carries the tooltip and the hover
-        var outline = window.L.geoJSON(geom, { style: function () { return OUTLINE; } });
-        outline.bindTooltip(String(f.name || f.region || aid),
-          { sticky: true, direction: "top", opacity: 0.95 });
-        // Hover fires on the boundary, not anywhere inside: hover-anywhere would
-        // need an interactive fill, which is exactly what blocks point placement.
-        // The tooltip already behaved this way, so this is not a regression.
-        outline.on("mouseover", function () {
-          fill.setStyle({ fillOpacity: HOVER_FILL_OPACITY });
-        });
-        outline.on("mouseout", function () {
-          fill.setStyle({ fillOpacity: FILL.fillOpacity });
-        });
-        // featureGroup keeps getBounds(), so the toggle and zoom-to-extent code
-        // below goes on treating layers[aid] as one layer
-        layers[aid] = window.L.featureGroup([fill, outline]);
-      } catch (e) { /* bad geometry — skip */ }
-    });
-    syncFromChecks();
-  }
-  function syncFromChecks() {
-    var map = window.__deepMap;
-    if (!map) return;
-    document.querySelectorAll("#deep-cov-body [data-aid]").forEach(function (cb) {
-      var lyr = layers[cb.getAttribute("data-aid")];
-      if (!lyr) return;
-      if (cb.checked) { if (!map.hasLayer(lyr)) map.addLayer(lyr); }
-      else if (map.hasLayer(lyr)) { map.removeLayer(lyr); }
-    });
-  }
+  var features = [], byId = {}, layers = {}, rows = {};
+  var map = null, Lm = null, pane = null, tip = null, setupDone = false;
+  var selected = null, inUse = null, hovered = null;
+  var query = "", visible = true, identify = true, passive = null, focusWanted = false;
+  var gotCoverage = false, queryTimer = null;
 
-  // ---- dock the panel into the leaflet top-right control stack ----
-  // Appended AFTER the LayersControl so it stacks BELOW the basemaps button; leaflet's control
-  // flow auto-spaces them (the panel flows down when the layers list expands) — no overlap.
-  var docked = false;
-  function dockPanel() {
-    if (docked) return true;
+  function flowZoom() {
     var panel = document.getElementById("deep-cov-panel");
-    var corner = document.querySelector(".leaflet-control-container .leaflet-top.leaflet-right")
-              || document.querySelector(".leaflet-top.leaflet-right");
-    if (!panel || !corner) return false;
-    // Wait for the LayersControl so appendChild lands the panel AFTER it (below the button);
-    // ipyleaflet adds that control asynchronously, so we may be called before it exists.
-    if (!corner.querySelector(".leaflet-control-layers")) return false;
-    panel.classList.add("leaflet-control");
-    corner.appendChild(panel);
-    if (window.L && window.L.DomEvent) {
-      window.L.DomEvent.disableClickPropagation(panel);
-      window.L.DomEvent.disableScrollPropagation(panel);
-    }
-    panel.classList.add("is-ready");   // reveal the collapsed chip as soon as we dock
-    docked = true;
-    return true;
+    var z = panel && parseInt(panel.getAttribute("data-flow-zoom"), 10);
+    return z > 0 ? z : 14;
   }
-
-  // ---- render the panel body (client-owned DOM) ----
+  function phone() { return (window.innerWidth || 0) <= PHONE; }
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
     });
   }
-  function renderPanel(features) {
-    var panel = document.getElementById("deep-cov-panel");
-    var body = document.getElementById("deep-cov-body");
-    if (!panel || !body) return;
-    dockPanel();   // relocate under the top-right layers button (falls back to CSS absolute)
-    panel.classList.add("is-ready");   // always visible; an empty library shows an empty state
-    body.textContent = "";
-    if (!features || !features.length) {
-      var empty = document.createElement("div");
-      empty.className = "deep-cov-empty";
-      empty.textContent = "No published assessments yet";
-      body.appendChild(empty);
-      return;
-    }
-
-    // master "toggle all on/off" row
-    var master = document.createElement("label");
-    master.className = "deep-cov-lbl deep-cov-all";
-    var mcb = document.createElement("input");
-    mcb.type = "checkbox"; mcb.checked = true; mcb.id = "deep-cov-all";
-    mcb.addEventListener("change", function () {
-      document.querySelectorAll("#deep-cov-body input[data-aid]").forEach(function (cb) {
-        cb.checked = mcb.checked;
-      });
-      mcb.indeterminate = false;
-      syncFromChecks();
-    });
-    var mtxt = document.createElement("span");
-    mtxt.className = "deep-cov-text";
-    mtxt.innerHTML = "<span class='deep-cov-name'>All assessments</span>";
-    master.appendChild(mcb); master.appendChild(mtxt);
-    body.appendChild(master);
-
-    features.forEach(function (f) {
-      var row = document.createElement("div");
-      row.className = "deep-cov-row";
-      var lbl = document.createElement("label");
-      lbl.className = "deep-cov-lbl";
-      var cb = document.createElement("input");
-      cb.type = "checkbox"; cb.checked = true;
-      cb.setAttribute("data-aid", f.assessmentId || "");
-      cb.addEventListener("change", function () { syncFromChecks(); syncMaster(); });
-      var sub = [];
-      if (f.region) sub.push(f.region);
-      if (f.version) sub.push("v" + f.version);
-      var txt = document.createElement("span");
-      txt.className = "deep-cov-text";
-      txt.innerHTML = "<span class='deep-cov-name'>" + esc(f.name || f.assessmentId || "assessment") +
-        "</span>" + (sub.length ? "<span class='deep-cov-sub'>" + esc(sub.join(" · ")) + "</span>" : "");
-      lbl.appendChild(cb); lbl.appendChild(txt);
-      var zoom = document.createElement("button");
-      zoom.type = "button"; zoom.className = "deep-cov-zoom"; zoom.title = "Zoom to extent";
-      zoom.innerHTML = ZOOM_SVG;
-      (function (aid) {
-        zoom.addEventListener("click", function (e) { e.preventDefault(); zoomTo(aid); });
-      })(f.assessmentId);
-      row.appendChild(lbl); row.appendChild(zoom);
-      body.appendChild(row);
-    });
-    syncMaster();
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
   }
 
-  function zoomTo(aid) {
-    var map = window.__deepMap, lyr = layers[aid];
+  // ---- capture DEEP's Leaflet map (jupyter-leaflet keeps no registry of maps) ----
+  // Every map made on the page is seen with the Leaflet copy that made it; DEEP's is the one whose
+  // container sits in DEEP's body (on a page without tool bodies, the first one on the page).
+  var seen = [];
+  function inDeep(m) {
+    try {
+      var r = root(), c = m.getContainer();
+      return r ? r.contains(c) : !!(c && c.isConnected);
+    } catch (e) { return false; }
+  }
+  function resolveMap() {
+    if (!map) {
+      for (var i = 0; i < seen.length; i++) {
+        if (inDeep(seen[i].map)) { map = seen[i].map; Lm = seen[i].L; window.__deepMap = map; break; }
+      }
+    }
+    if (map) setup();
+    return !!map;
+  }
+  function attach(m, L) {
+    for (var i = 0; i < seen.length; i++) if (seen[i].map === m) { resolveMap(); return; }
+    seen.push({ map: m, L: L });
+    resolveMap();
+  }
+  function lateCapture() {
+    var L = window.L;
+    if (map || !L || !L.Evented) return;
+    var cont = body().querySelector(".leaflet-container");
+    if (!cont) return;
+    var orig = L.Evented.prototype.fire;
+    L.Evented.prototype.fire = function () {
+      if (this instanceof L.Map) attach(this, L);
+      return orig.apply(this, arguments);
+    };
+    cont.dispatchEvent(new MouseEvent("mousemove", { bubbles: true, clientX: 5, clientY: 5 }));
+    L.Evented.prototype.fire = orig;
+  }
+  // EASI's Nationwide viewer brings its own Leaflet: hook every window.L that turns up.
+  var hooked = [], captureTimer = null;
+  function capture() {
+    if (captureTimer || map) return;
+    var tries = 0;
+    captureTimer = setInterval(function () {
+      tries += 1;
+      var L = window.L;
+      if (L && L.Map && L.Map.addInitHook && hooked.indexOf(L) < 0) {
+        hooked.push(L);
+        L.Map.addInitHook(function () { attach(this, L); });
+      }
+      if (hooked.length && !resolveMap()) lateCapture();
+      if (map || tries > 150) { clearInterval(captureTimer); captureTimer = null; }   // ~30 s
+    }, 200);
+  }
+
+  // ---- the regions on the map ----
+  function setup() {
+    if (setupDone || !map || !Lm) return;
+    setupDone = true;
+    pane = map.getPane(PANE) || map.createPane(PANE);
+    pane.style.zIndex = 380;            // above the tiles, under the streams (385-395) and overlays (400)
+    tip = Lm.tooltip({ direction: "top", offset: [0, -12], opacity: 1, className: "deep-reg-tip" });
+    map.on("zoomend", applyMode);
+    map.on("zoomstart movestart", leave);
+    draw();
+    applyMode();
+    applyCurrent();
+  }
+
+  function styleFor(aid) {
+    var on = aid === selected;
+    // passive, only a row of the list can hover a region: it shows the way a selected one does
+    if (passive) return on || aid === hovered ? STYLE.passiveSelected : STYLE.passive;
+    if (aid === hovered) return on ? STYLE.selectedHover : STYLE.hover;
+    return on ? STYLE.selected : STYLE.active;
+  }
+  function restyle(aid) {
+    var lyr = layers[aid];
+    if (lyr) lyr.setStyle(styleFor(aid));
+  }
+  function restyleAll() { Object.keys(layers).forEach(restyle); }
+
+  function draw() {
+    if (!map || !Lm) return;
+    features.forEach(function (f) {
+      var aid = f.assessmentId;
+      if (layers[aid] || !f.geometry) return;
+      try {
+        var lyr = Lm.geoJSON({ type: "Feature", geometry: f.geometry }, {
+          pane: PANE, interactive: true, bubblingMouseEvents: false,
+          style: function () { return styleFor(aid); },
+        });
+        lyr.on("mouseover", function (e) { hover(aid, e && e.latlng); });
+        lyr.on("mousemove", function (e) { if (hovered === aid && tip && e && e.latlng) tip.setLatLng(e.latlng); });
+        lyr.on("mouseout", function () { unhover(aid); });
+        lyr.on("click", function (e) {
+          if (Lm.DomEvent && e) Lm.DomEvent.stopPropagation(e);
+          clickRegion(aid, e && e.latlng);
+        });
+        layers[aid] = lyr;
+      } catch (err) { /* a malformed outline is skipped */ }
+    });
+    applyFilter();
+    if (selected && layers[selected] && layers[selected].bringToFront) layers[selected].bringToFront();
+  }
+
+  function applyMode() {
+    var z = map && map.getZoom ? map.getZoom() : null;
+    var next = !identify || (typeof z === "number" && z >= flowZoom());
+    if (next === passive) return;
+    passive = next;
+    if (pane) pane.classList.toggle("is-passive", passive);
+    leave();
+    restyleAll();
+  }
+
+  // ``latlng``: the pointer over the map (opens the region's name there); a row hovers without one
+  function hover(aid, latlng) {
+    if (!aid || (passive && latlng)) return;
+    if (hovered && hovered !== aid) unhover(hovered);
+    hovered = aid;
+    restyle(aid);
+    markRow(aid, "is-hover", true);
+    var f = byId[aid];
+    if (latlng && tip && map && f) {
+      tip.setContent("<b>" + esc(f.name) + "</b><span>" + esc(meta(f)) + "</span>");
+      tip.setLatLng(latlng);
+      map.openTooltip(tip);
+    }
+  }
+  function unhover(aid) {
+    if (hovered !== aid) return;
+    hovered = null;
+    restyle(aid);
+    markRow(aid, "is-hover", false);
+    if (tip && map) map.closeTooltip(tip);
+  }
+  function leave() {
+    if (hovered) unhover(hovered);
+    else if (tip && map) map.closeTooltip(tip);
+  }
+
+  // where a fitted region can sit: clear of the left pane, the open sidebar and the zoom cue
+  function padding() {
+    var tl = [24, 56], br = [24, 24];
+    if (!map || phone()) return { tl: tl, br: br };
+    var box = map.getContainer().getBoundingClientRect();
+    var left = body().querySelector(".easi-leftpane");
+    var lr = left && left.getBoundingClientRect();
+    if (lr && lr.width) tl[0] = Math.max(tl[0], lr.right - box.left + 16);
+    var panel = document.getElementById("deep-cov-panel");
+    var pr = isOpen() && panel && panel.getBoundingClientRect();
+    if (pr && pr.width) br[0] = Math.max(br[0], box.right - pr.left + 16);
+    return { tl: tl, br: br };
+  }
+  function fitTo(aid) {
+    var lyr = layers[aid];
     if (!map || !lyr || !lyr.getBounds) return;
     try {
-      var b = lyr.getBounds();
-      if (b && b.isValid()) map.fitBounds(b, { padding: [26, 26] });
+      var b = lyr.getBounds(), pad = padding();
+      if (b && b.isValid()) {
+        map.fitBounds(b, { paddingTopLeft: pad.tl, paddingBottomRight: pad.br, maxZoom: flowZoom() - 1 });
+      }
     } catch (e) { /* not ready */ }
   }
-
-  function syncMaster() {
-    var mcb = document.getElementById("deep-cov-all");
-    if (!mcb) return;
-    var boxes = [].slice.call(document.querySelectorAll("#deep-cov-body input[data-aid]"));
-    var on = boxes.filter(function (b) { return b.checked; }).length;
-    mcb.checked = boxes.length > 0 && on === boxes.length;
-    mcb.indeterminate = on > 0 && on < boxes.length;
+  // a click on an active region: fit a region bigger than the view, else zoom in at the click
+  function clickRegion(aid, latlng) {
+    if (passive || !map) return;
+    select(aid, { reveal: true });
+    var lyr = layers[aid], z = map.getZoom(), flow = flowZoom();
+    try {
+      var b = lyr.getBounds(), pad = padding();
+      var fit = map.getBoundsZoom(b, false, Lm.point(pad.tl[0] + pad.br[0], pad.tl[1] + pad.br[1]));
+      if (Math.min(fit, flow - 1) > z + 0.25) {
+        map.fitBounds(b, { paddingTopLeft: pad.tl, paddingBottomRight: pad.br, maxZoom: flow - 1 });
+        return;
+      }
+    } catch (e) { /* zoom in at the click instead */ }
+    if (latlng) map.setView(latlng, Math.min(z + 2, flow));
   }
 
+  function select(aid, opts) {
+    var prev = selected;
+    selected = aid || null;
+    if (prev && prev !== selected) restyle(prev);
+    if (selected) {
+      restyle(selected);
+      if (layers[selected] && layers[selected].bringToFront) layers[selected].bringToFront();
+      if (!visible) setVisible(true);       // a chosen region always shows
+    }
+    Object.keys(rows).forEach(function (id) {
+      var on = id === selected;
+      rows[id].classList.toggle("is-selected", on);
+      if (on) rows[id].setAttribute("aria-current", "true"); else rows[id].removeAttribute("aria-current");
+    });
+    applyFilter();
+    if (opts && opts.reveal && selected && rows[selected] && isOpen() && rows[selected].scrollIntoView) {
+      rows[selected].scrollIntoView({ block: "nearest" });
+    }
+  }
+
+  // ---- the filter: the search narrows the list and the map alike ----
+  function matches(f) {
+    if (!query) return true;
+    if (/^\d+$/.test(query)) return String(f.code) === query;
+    return f.name.toLowerCase().indexOf(query) >= 0;
+  }
+  function applyFilter() {
+    var shown = 0;
+    features.forEach(function (f) {
+      var aid = f.assessmentId, on = matches(f);
+      if (on) shown += 1;
+      if (rows[aid]) rows[aid].hidden = !on;
+      var lyr = layers[aid];
+      if (!lyr || !map) return;
+      var want = visible && (on || aid === selected || aid === inUse);
+      if (want && !map.hasLayer(lyr)) map.addLayer(lyr);
+      else if (!want && map.hasLayer(lyr)) { if (hovered === aid) unhover(aid); map.removeLayer(lyr); }
+    });
+    var label = query ? shown + " of " + features.length : String(features.length);
+    var count = document.querySelector("#deep-cov-panel .deep-cov-count");
+    if (count) count.textContent = label;
+    var tabCount = tab() && tab().querySelector(".deep-cov-tab-count");   // closed, it says a filter is on
+    if (tabCount) tabCount.textContent = label;
+    var empty = document.querySelector("#deep-cov-body .deep-cov-empty");
+    if (empty) {
+      empty.hidden = !(features.length && shown === 0);
+      if (!empty.hidden) empty.textContent = "No ecoregion matches “" + query + "”";
+    }
+    return shown;
+  }
+  function setQuery(text) {
+    query = String(text || "").trim().toLowerCase();
+    var box = document.querySelector("#deep-cov-body .deep-cov-search");
+    if (box) box.classList.toggle("has-query", !!query);
+    applyFilter();
+  }
+  function setVisible(on) {
+    visible = !!on;
+    if (!visible) leave();
+    document.querySelectorAll(".deep-regions-toggle").forEach(function (box) { box.checked = visible; });
+    applyFilter();
+  }
+
+  // ---- the sidebar ----
+  function meta(f) {
+    var parts = [];
+    if (f.version != null && f.version !== "") parts.push("v" + f.version);
+    if (f.status) parts.push(f.status);
+    return parts.join(" · ");
+  }
+  function markRow(aid, cls, on) { if (rows[aid]) rows[aid].classList.toggle(cls, on); }
+  function markInUse() {
+    Object.keys(rows).forEach(function (id) { rows[id].classList.toggle("is-in-use", id === inUse); });
+  }
+  function firstShown() {
+    for (var i = 0; i < features.length; i++) if (matches(features[i])) return features[i].assessmentId;
+    return null;
+  }
+  function choose(aid) {
+    select(aid);
+    fitTo(aid);
+    if (phone()) setOpen(false);          // on a phone the list covers the map: hand it back
+  }
+
+  function renderPanel() {
+    var panelBody = document.getElementById("deep-cov-body");
+    if (!panelBody) return;
+    panelBody.innerHTML = "";
+    rows = {};
+    if (!features.length) {
+      panelBody.appendChild(el("div", "deep-cov-empty", "No published assessments yet"));
+      applyFilter();
+      return;
+    }
+    var search = el("div", "deep-cov-search");
+    var icon = el("span", "deep-cov-search-icon");
+    icon.innerHTML = "<svg viewBox='0 0 16 16' width='14' height='14' aria-hidden='true' fill='none' " +
+      "stroke='currentColor' stroke-width='1.6' stroke-linecap='round'><circle cx='7' cy='7' r='4.6'/>" +
+      "<path d='M10.4 10.4L14 14'/></svg>";
+    var input = el("input", "deep-cov-q");
+    input.setAttribute("type", "search");
+    input.setAttribute("placeholder", "Search ecoregions");
+    input.setAttribute("aria-label", "Search ecoregions");
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("spellcheck", "false");
+    input.setAttribute("data-shiny-no-bind-input", "");   // the page's own control, never a Shiny input
+    input.addEventListener("input", function () {
+      if (queryTimer) clearTimeout(queryTimer);
+      queryTimer = setTimeout(function () { queryTimer = null; setQuery(input.value); }, 90);
+    });
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        if (queryTimer) { clearTimeout(queryTimer); queryTimer = null; }
+        setQuery(input.value);
+        var aid = firstShown();
+        if (aid) choose(aid);
+        if (e.preventDefault) e.preventDefault();
+      } else if (e.key === "Escape") {
+        if (input.value) { input.value = ""; setQuery(""); }
+        else { setOpen(false, { remember: true, returnFocus: true }); }
+        if (e.preventDefault) e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+      }
+    });
+    var clear = el("button", "deep-cov-clear");
+    clear.setAttribute("type", "button");
+    clear.setAttribute("aria-label", "Clear the search");
+    clear.innerHTML = "<svg viewBox='0 0 16 16' width='12' height='12' aria-hidden='true' fill='none' " +
+      "stroke='currentColor' stroke-width='1.8' stroke-linecap='round'><path d='M4 4l8 8M12 4l-8 8'/></svg>";
+    clear.addEventListener("click", function () {
+      input.value = ""; setQuery("");
+      if (input.focus) input.focus();
+    });
+    search.appendChild(icon); search.appendChild(input); search.appendChild(clear);
+    panelBody.appendChild(search);
+
+    var list = el("div", "deep-cov-list");
+    features.forEach(function (f) {
+      var aid = f.assessmentId;
+      var row = el("button", "deep-cov-row");
+      row.setAttribute("type", "button");
+      row.setAttribute("data-aid", aid);
+      row.setAttribute("title", f.name + (meta(f) ? " (" + meta(f) + ")" : ""));
+      row.appendChild(el("span", "deep-cov-name", f.name));
+      row.appendChild(el("span", "deep-cov-chip deep-cov-use", "In use"));
+      if (f.certified) row.appendChild(el("span", "deep-cov-chip deep-cov-final", "Final"));
+      if (f.version != null && f.version !== "") row.appendChild(el("span", "deep-cov-chip deep-cov-ver", "v" + f.version));
+      row.addEventListener("mouseenter", function () { hover(aid); });
+      row.addEventListener("mouseleave", function () { unhover(aid); });
+      row.addEventListener("focus", function () { hover(aid); });
+      row.addEventListener("blur", function () { unhover(aid); });
+      row.addEventListener("click", function () { choose(aid); });
+      rows[aid] = row;
+      list.appendChild(row);
+    });
+    panelBody.appendChild(list);
+    var empty = el("div", "deep-cov-empty");
+    empty.hidden = true;
+    panelBody.appendChild(empty);
+    markInUse();
+    select(selected);
+  }
+
+  // the closed sidebar's button, wherever it is: the server's markup, then the map's controls
+  var tabEl = null;
+  function tab() {
+    if (!tabEl) { var s = shell(); tabEl = (s && s.querySelector(".deep-cov-tab")) || null; }
+    return tabEl;
+  }
+  function isOpen() { var s = shell(); return !!(s && s.classList.contains("deep-cov-open")); }
+  function setOpen(open, opts) {
+    var s = shell();
+    if (!s) return;
+    s.classList.toggle("deep-cov-open", !!open);
+    var t = tab();
+    if (t) t.setAttribute("aria-expanded", open ? "true" : "false");
+    if (opts && opts.remember) {
+      try { window.localStorage.setItem(STORE, open ? "1" : "0"); } catch (e) { /* storage blocked */ }
+    }
+    if (open && opts && opts.focus) {
+      var q = s.querySelector(".deep-cov-q");
+      if (q && q.focus) q.focus();
+    }
+    if (!open && opts && opts.returnFocus && t && t.focus) t.focus();
+  }
+  function initiallyOpen() {
+    if (phone()) return false;            // on a phone the list covers the map: never at first
+    try {
+      var v = window.localStorage.getItem(STORE);
+      if (v === "1" || v === "0") return v === "1";
+    } catch (e) { /* storage blocked: the default */ }
+    return (window.innerWidth || 0) >= 1280;
+  }
+
+  // ---- the map's top-right controls: the closed sidebar's button and a Layers checkbox ----
+  // The button joins the controls between Layers and the legend (deep.css orders the corner's
+  // column), so an opened Layers menu pushes it down instead of opening under it; a rebuilt map
+  // gets it back. Leaflet then ignores clicks on it: it opens the sidebar, never picks a stream.
+  var tabGuarded = false;
+  function dockTab() {
+    var t = tab(), wrap = body().querySelector(".easi-map-wrap");
+    var corner = wrap && wrap.querySelector(".leaflet-top.leaflet-right");
+    if (!t || !corner) return false;
+    if (t.parentNode !== corner) {
+      t.classList.add("leaflet-control");
+      corner.appendChild(t);
+    }
+    var L = Lm || window.L;
+    if (!tabGuarded && L && L.DomEvent) {
+      tabGuarded = true;
+      L.DomEvent.disableClickPropagation(t);
+      L.DomEvent.disableScrollPropagation(t);
+    }
+    return true;
+  }
+
+  // The Layers menu gets an app-owned "Assessment regions" checkbox. ipyleaflet rebuilds the
+  // control's list on a layer change, so a watcher puts the row back.
+  function layersRow() {
+    var wrap = body().querySelector(".easi-map-wrap");
+    var list = wrap && wrap.querySelector(".leaflet-control-layers-overlays");
+    if (!list) return false;
+    if (list.querySelector(".deep-regions-control")) return true;
+    var row = el("div", "deep-regions-control");
+    var label = el("label");
+    var box = el("input", "deep-regions-toggle");
+    box.setAttribute("type", "checkbox");
+    box.type = "checkbox";
+    box.checked = visible;
+    box.setAttribute("data-shiny-no-bind-input", "");   // not a native layer, not a Shiny input
+    box.addEventListener("change", function () { setVisible(box.checked); });
+    label.appendChild(box);
+    label.appendChild(el("span", null, " Assessment regions"));
+    row.appendChild(label);
+    list.appendChild(row);
+    return true;
+  }
+  var layersTimer = null, layersObserver = null;
+  function controls() {
+    var row = layersRow(), docked = dockTab();      // both, every time
+    return row && docked;
+  }
+  function watchControls() {
+    var wrap = body().querySelector(".easi-map-wrap");
+    if (wrap && !layersObserver && window.MutationObserver) {
+      layersObserver = new MutationObserver(function () { controls(); });
+      layersObserver.observe(wrap, { childList: true, subtree: true });
+    }
+    if (controls() || layersTimer) return;
+    var tries = 0;
+    layersTimer = setInterval(function () {
+      tries += 1;
+      if (controls() || tries > 75) { clearInterval(layersTimer); layersTimer = null; }
+    }, 200);
+  }
+
+  // ---- the server's messages ----
   function onCoverage(msg) {
     gotCoverage = true;
-    var features = (msg && msg.features) || [];
-    renderPanel(features);
-    drawAll(features);
+    features = ((msg && msg.features) || []).filter(function (f) { return f && f.assessmentId; })
+      .map(function (f) {
+        return { assessmentId: f.assessmentId, name: String(f.name || f.assessmentId),
+                 code: f.code == null ? "" : String(f.code), version: f.version, status: f.status || "",
+                 certified: !!f.certified, geometry: f.geometry };
+      })
+      .sort(function (a, b) { return a.name.localeCompare(b.name); });
+    byId = {};
+    features.forEach(function (f) { byId[f.assessmentId] = f; });
+    var wrap = body().querySelector(".deep-cov");
+    if (wrap && !wrap.classList.contains("is-ready")) {
+      wrap.classList.add("is-ready");
+      if (shell()) shell().classList.add("deep-cov-ready");   // the docked button shows from now
+      setOpen(initiallyOpen());
+    }
+    dockTab();
+    renderPanel();
+    draw();
+    applyCurrent();
+  }
+  var current = { aid: null, identify: true };
+  function onCurrent(msg) {
+    msg = msg || {};
+    current = { aid: msg.assessmentId || null, identify: msg.identify !== false };
+    if (msg.focus) focusWanted = true;
+    applyCurrent();
+  }
+  function applyCurrent() {
+    identify = current.identify;
+    if (inUse !== current.aid) {
+      var was = inUse;
+      inUse = current.aid;
+      markInUse();
+      if (inUse) select(inUse);
+      else if (selected === was) select(null);
+      else applyFilter();
+    }
+    if (map) applyMode();
+    if (focusWanted && inUse && map && layers[inUse]) { focusWanted = false; fitTo(inUse); }
   }
 
-  // ---- collapse chrome (delegated; mirrors hype-app tree.js initChrome) ----
+  // ---- open, close, keyboard (delegated: the markup is the server's) ----
   function initChrome() {
     document.addEventListener("click", function (e) {
-      var head = e.target.closest && e.target.closest(".deep-cov-head");
-      if (!head) return;
-      var panel = head.closest(".deep-cov-panel");
-      if (panel) panel.classList.toggle("collapsed");
+      var t = e.target && e.target.closest ? e.target : null;
+      if (!t) return;
+      if (t.closest(".deep-cov-tab")) setOpen(true, { remember: true, focus: true });
+      else if (t.closest(".deep-cov-close")) setOpen(false, { remember: true, returnFocus: true });
+    });
+    document.addEventListener("keydown", function (e) {
+      var t = e.target && e.target.closest ? e.target : null;
+      if (e.key === "Escape" && t && t.closest("#deep-cov-panel") && !t.closest(".deep-cov-q")) {
+        setOpen(false, { remember: true, returnFocus: true });
+      }
     });
   }
 
   function register() {
     if (window.Shiny && Shiny.addCustomMessageHandler) {
       Shiny.addCustomMessageHandler("deep_coverage", onCoverage);
+      Shiny.addCustomMessageHandler("deep_coverage_current", onCurrent);
       return true;
     }
     return false;
   }
   function ready() {
     if (window.Shiny && Shiny.setInputValue) {
-      Shiny.setInputValue("coverage_ready", Date.now(), { priority: "event" });
+      Shiny.setInputValue(NS.id(NS.tool(TOOL), "coverage_ready"), Date.now(), { priority: "event" });
     }
   }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initChrome);
-  } else {
-    initChrome();
+  // This deferred script can attach its shiny:connected listener AFTER the event already fired
+  // (so `ready` never runs). Ask again until the server answers (it answers once per session)
+  // or we give up (~6 s). In the STAF app only while DEEP is shown: its server starts then.
+  var readyTimer = null;
+  function askForCoverage() {
+    var shown = NS.active();
+    if (readyTimer || gotCoverage || (shown && shown !== TOOL)) return;
+    var readyTries = 0;
+    readyTimer = setInterval(function () {
+      if (gotCoverage || readyTries > 20) { clearInterval(readyTimer); readyTimer = null; return; }
+      readyTries += 1;
+      ready();
+    }, 300);
   }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initChrome);
+  else initChrome();
   if (!register()) document.addEventListener("shiny:connected", register);
   document.addEventListener("shiny:connected", ready);
-  // Fallback: this deferred script can attach its shiny:connected listener AFTER the event
-  // already fired (so `ready` never runs). Poll ready() until the server answers (onCoverage
-  // is idempotent) or we give up (~6s).
-  var readyTries = 0;
-  var readyTimer = setInterval(function () {
-    if (gotCoverage || readyTries > 20) { clearInterval(readyTimer); return; }
-    readyTries += 1;
-    ready();
-  }, 300);
-  // Dock the panel under the layers button once the LayersControl exists (added async after
-  // the map mounts). Retry until docked or we give up (~8s).
-  var dockTries = 0;
-  var dockTimer = setInterval(function () {
-    if (dockPanel() || dockTries > 40) { clearInterval(dockTimer); return; }
-    dockTries += 1;
-  }, 200);
+  // DEEP shown again in the STAF app: its map may only exist now
+  document.addEventListener("staf:tool-shown", function (e) {
+    if (!e.detail || e.detail.tool !== TOOL) return;
+    capture();
+    askForCoverage();
+    watchControls();
+  });
+  capture();
+  askForCoverage();
+  watchControls();
 })();

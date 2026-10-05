@@ -237,14 +237,18 @@ def test_import_restores_current_point_and_source_atomically(tmp_path, legacy):
 
 
 def import_scope(tmp_path, d):
+    # a file DEEP wrote before the shared format: it still opens through the real reader
     saved = tmp_path / "assessment.json"
     saved.write_text(json.dumps({"delineation": d, "measured_values": {"saved": {"value": 4}}}))
     scope = state_scope()
+
+    def restore(block):
+        scope["measured_values"].set(app.assessment_file.scenario_set(block).current.state["measured_values"])
     scope.update(input=SimpleNamespace(load_session=lambda: [{"datapath": str(saved)}]),
-                 session=SimpleNamespace(load=json.loads), measured_values=Value({"old": {"value": 9}}),
+                 session=app.session, measured_values=Value({"old": {"value": 9}}),
                  computed_for=Value("old"), loaded_assessment=Value(object()), selected_ref=Value("old"),
                  current_fn=Value(1), current_step=Value("identify"), _HAS_MAP=False,
-                 _restore_scenarios=lambda raw: None, _saved_fp=Value(None), _work_fp=lambda: None)
+                 _restore_scenarios=restore, _saved_fp=Value(None), _work_fp=lambda: None)
     scope["_no_watershed"].update(generation=7, anchor=ANCHOR)
     return scope
 

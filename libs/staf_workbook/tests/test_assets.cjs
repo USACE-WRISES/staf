@@ -8,21 +8,22 @@ const vm = require("node:vm");
 
 const GUARD = fs.readFileSync(path.join(__dirname, "..", "assets", "unsaved-guard.js"), "utf8");
 
-function load({ shiny = true, jquery = true } = {}) {
+function load({ shiny = true, jquery = true, elements = {} } = {}) {
   const handlers = new Map(), jq = new Map(), win = new Map();
   const clock = { t: 1000000 };
-  const timers = [];
+  const timers = [], timeouts = [];
   const window = {};
   window.addEventListener = (name, fn) => win.set(name, fn);
   if (jquery) window.jQuery = () => ({ on: (name, fn) => jq.set(name, fn) });
   const shinyObj = { addCustomMessageHandler: (name, fn) => handlers.set(name, fn) };
   if (shiny) window.Shiny = shinyObj;
   const context = {
-    window, document: {}, Date: { now: () => clock.t },
+    window, document: { getElementById: (id) => elements[id] || null }, Date: { now: () => clock.t },
     setInterval: (fn) => { timers.push(fn); return timers.length; }, clearInterval: () => {},
+    setTimeout: (fn, ms) => { timeouts.push([fn, ms]); return timeouts.length; },
   };
   vm.runInNewContext(GUARD, context);
-  return { handlers, jq, win, clock, timers, window, shinyObj };
+  return { handlers, jq, win, clock, timers, timeouts, window, shinyObj };
 }
 
 function leave(h) {
@@ -55,6 +56,23 @@ test("a file download never triggers the warning", () => {
   assert.equal(leave(h).prevented, false);          // within the quiet window
   h.clock.t += 2500;
   assert.equal(leave(h).prevented, true);           // a real navigation later still warns
+});
+
+test("Save asks the server for the saved state at once; another download does not", () => {
+  // the server marks the work saved while it writes the file, and says so on its next message
+  const h = load({ elements: { "easi-save_session": { id: "easi-save_session" }, "easi-dl_pdf": { id: "easi-dl_pdf" } } });
+  const pings = [];
+  h.window.STAFNs = { owner: () => ({ ns: "easi" }), id: (root, name) => root.ns + "-" + name };
+  h.shinyObj.setInputValue = (id, value, opts) => pings.push([id, opts && opts.priority]);
+  h.jq.get("shiny:filedownload")({ name: "easi-dl_pdf" });
+  assert.equal(h.timeouts.length, 0);
+  h.jq.get("shiny:filedownload")({ name: "easi-save_session" });
+  assert.deepEqual(h.timeouts.map((t) => t[1]), [1000, 4000]);    // a second, should the file be slow
+  h.timeouts.forEach((t) => t[0]());
+  assert.deepEqual(pings, [["easi-staf_saved", "event"], ["easi-staf_saved", "event"]]);
+  h.handlers.get("staf-unsaved")({ dirty: true, ns: "easi" });
+  h.clock.t += 2500;
+  assert.equal(leave(h).prevented, true);              // still dirty until the server says otherwise
 });
 
 test("a closed session has nothing left to lose", () => {

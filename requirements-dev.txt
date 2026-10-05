@@ -10,4 +10,5 @@
 -r apps/sfari/requirements.txt
 -r apps/deep/requirements.txt
 -r apps/stream-curves/requirements.txt
+-r apps/staf/requirements.txt
 pytest

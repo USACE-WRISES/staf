@@ -95,64 +95,127 @@
   padding: 0 6px;
 }
 
-/* ---- floating assessment-coverage panel (www/coverage.js) ---- */
-/* A collapsible card over the map, docked below the top-right basemaps (LayersControl) button.
-   Hidden until coverage.js adds .is-ready (once docked / once the deep_coverage handshake
-   resolves); it then stays visible even with an empty library, showing a "No published
-   assessments yet" empty state. */
+/* ---- assessment regions: the right sidebar, its button and the map layer (www/coverage.js) ----
+   Owner, 2026-10-05. The card mirrors the left pane (.easi-leftpane in styles.css: same edge,
+   border, radius, shadow and .easi-pane-head title bar). Hidden until the regions arrive
+   (.deep-cov.is-ready); closed, it is a button in the map's top-right controls. While it is open
+   the map's right-hand controls move left of it, and the zoom cue keeps clear of it
+   (--staf-map-inset-right). */
+.deep-cov { display: none; }
+.deep-cov.is-ready { display: block; }
 .deep-cov-panel {
-  position: absolute; top: 62px; right: 12px; z-index: 1100;
-  display: none; flex-direction: column; width: 240px; max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 86px); background: #fff; border: 1px solid var(--card-border);
-  border-radius: 8px; overflow: hidden; box-shadow: 0 8px 26px rgba(15, 23, 42, .16);
+  position: absolute; top: 62px; right: 12px; width: 320px; max-height: calc(100vh - 86px);
+  z-index: 1100; display: none; flex-direction: column; overflow: hidden; background: #fff;
+  border: 1px solid var(--card-border); border-radius: 8px; box-shadow: 0 2px 12px rgba(0, 0, 0, .18);
 }
-.deep-cov-panel.is-ready { display: flex; }
-/* Docked into the leaflet top-right control stack (coverage.js). The position:absolute above
-   is only a fallback if docking fails; once docked, leaflet floats it right and clears both,
-   so it stacks BELOW the layers button and flows down when that list expands (no overlap). */
-.deep-cov-panel.leaflet-control {
-  position: relative; top: auto; right: auto; z-index: auto; margin: 12px 10px 0 0;
+.easi-shell.deep-cov-open .deep-cov-panel { display: flex; }
+.deep-cov-head { flex: none; display: flex; align-items: center; gap: 8px; padding: 7px 8px 7px 14px; }
+.deep-cov-title { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deep-cov-count {
+  flex: none; padding: 3px 8px; border-radius: 10px; background: rgba(255, 255, 255, .16);
+  color: #e8eef8; font-family: var(--font-body); font-size: 11px; font-weight: 600; line-height: 1.2;
 }
-.deep-cov-panel.collapsed { width: auto; min-width: 0; }
-.deep-cov-panel.collapsed .deep-cov-body { display: none; }
+.deep-cov-close {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+  padding: 0; border: 0; border-radius: 6px; background: transparent; color: #dbe4f3; cursor: pointer;
+}
+.deep-cov-close:hover, .deep-cov-close:focus-visible { background: rgba(255, 255, 255, .16); color: #fff; outline: none; }
 
-.deep-cov-head {
-  display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 11px; flex: none;
-  cursor: pointer; user-select: none; border-bottom: 1px solid var(--rule);
+.deep-cov-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.deep-cov-search { position: relative; flex: none; padding: 10px 12px 9px; border-bottom: 1px solid var(--rule); }
+.deep-cov-search-icon {
+  position: absolute; left: 22px; top: 19px; display: inline-flex; color: #8a94a6; pointer-events: none;
 }
-.deep-cov-head:hover { background: var(--surface-soft); }
-.deep-cov-panel.collapsed .deep-cov-head { border-bottom: none; }
-.deep-cov-title { font-weight: 600; font-size: 12.5px; color: var(--easi-accent); white-space: nowrap; }
+.deep-cov-q {
+  width: 100%; height: 32px; padding: 5px 30px 5px 31px; border: 1px solid var(--card-border); border-radius: 7px;
+  background: var(--surface-soft); color: #2b3445; font: inherit; font-size: 13px; line-height: 1.4;
+}
+.deep-cov-q::placeholder { color: #8a94a6; }
+.deep-cov-q::-webkit-search-cancel-button { display: none; }
+.deep-cov-q:focus { outline: none; background: #fff; border-color: var(--easi-accent);
+  box-shadow: 0 0 0 3px rgba(47, 75, 124, .14); }
+.deep-cov-clear {
+  position: absolute; right: 18px; top: 15px; display: none; align-items: center; justify-content: center;
+  width: 22px; height: 22px; padding: 0; border: 0; border-radius: 5px; background: transparent;
+  color: #7a8699; cursor: pointer;
+}
+.deep-cov-search.has-query .deep-cov-clear { display: inline-flex; }
+.deep-cov-clear:hover, .deep-cov-clear:focus-visible { background: #e9eef6; color: #2b3445; outline: none; }
 
-/* drawn chevron (rotated border-L), not a font glyph — reads clearly at any size */
-.deep-cov-caret {
-  width: 16px; height: 16px; flex: none; display: inline-flex;
-  align-items: center; justify-content: center; color: var(--easi-accent);
+.deep-cov-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 0 8px; }
+.deep-cov-row {
+  display: flex; align-items: center; gap: 6px; width: 100%; padding: 6px 12px 6px 11px; margin: 0;
+  border: 0; border-left: 3px solid transparent; background: none; color: #2b3445; font: inherit;
+  text-align: left; cursor: pointer;
 }
-.deep-cov-caret::before {
-  content: ""; width: 8px; height: 8px;
-  border-right: 2.4px solid currentColor; border-bottom: 2.4px solid currentColor;
-  transform: rotate(45deg) translate(-1.5px, -1.5px); transition: transform .15s ease;
+.deep-cov-row[hidden] { display: none; }
+.deep-cov-row:hover, .deep-cov-row.is-hover, .deep-cov-row:focus-visible { background: var(--surface-soft); outline: none; }
+.deep-cov-row.is-selected { border-left-color: var(--easi-accent); background: #eef2f8; }
+.deep-cov-name {
+  flex: 1 1 auto; min-width: 0; font-size: 12.5px; line-height: 1.35;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.deep-cov-panel.collapsed .deep-cov-caret::before {
-  transform: rotate(-45deg) translate(-1.5px, -1.5px);
+.deep-cov-row.is-selected .deep-cov-name { font-weight: 600; color: var(--easi-accent-dark); }
+.deep-cov-chip { flex: none; padding: 2px 7px; border-radius: 9px; font-size: 10.5px; line-height: 1.4; }
+.deep-cov-ver { color: #5b6b85; background: #eef1f6; }
+.deep-cov-final { color: #2f6b45; background: #e5f2ea; }
+.deep-cov-use { display: none; color: #fff; background: var(--easi-accent); }
+.deep-cov-row.is-in-use .deep-cov-use { display: inline-block; }
+.deep-cov-empty { padding: 14px; font-size: 12.5px; line-height: 1.45; color: #7a8699; }
+
+/* closed: a button in the map's top-right controls, between Layers and the legend, looking like
+   the legend card. coverage.js docks it into Leaflet's corner (the map is its own stacking
+   context, so a button floated over it would cover the Layers menu); it shows once docked and
+   the regions are in, and hides while the sidebar is open. */
+.deep-cov-tab { display: none; }
+.easi-shell.deep-cov-ready .deep-cov-tab.leaflet-control { display: inline-flex; }
+.easi-shell.deep-cov-open .deep-cov-tab.leaflet-control { display: none; }
+.easi-map-wrap .leaflet-top.leaflet-right .deep-cov-tab { order: 2; }
+.easi-map-wrap .leaflet-top.leaflet-right .easi-legend-panel { order: 3; }
+.deep-cov-tab.leaflet-control {
+  align-items: center; gap: 7px; height: 32px; padding: 0 8px 0 9px;
+  border: 1px solid var(--card-border); border-radius: 6px; background: rgba(255, 255, 255, .96);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .15); color: #2b3445; cursor: pointer;
+  font-family: var(--font-body); font-size: 12.5px; font-weight: 600; line-height: 1; white-space: nowrap;
+}
+.deep-cov-tab svg { flex: none; color: var(--easi-accent); }
+.deep-cov-tab-count {
+  padding: 2px 7px; border-radius: 9px; background: #eef1f6; color: #5b6b85;
+  font-size: 10.5px; font-weight: 600; line-height: 1.4;
+}
+.deep-cov-tab-count:empty { display: none; }
+.deep-cov-tab.leaflet-control:hover, .deep-cov-tab.leaflet-control:focus-visible {
+  border-color: var(--easi-accent); color: var(--easi-accent-dark); outline: none;
+}
+.deep-cov-tab.leaflet-control:focus-visible { box-shadow: 0 0 0 3px rgba(47, 75, 124, .2); }
+
+/* open: the map's right-hand controls (Layers, legend, scale) and the zoom cue make room */
+.easi-shell .easi-map-wrap .leaflet-right { transition: right .2s ease; }
+.easi-shell.deep-cov-open { --staf-map-inset-right: 344px; }
+.easi-shell.deep-cov-open .easi-map-wrap .leaflet-right { right: 332px; }
+@media (max-width: 1180px) {
+  .deep-cov-panel { width: 288px; }
+  .easi-shell.deep-cov-open { --staf-map-inset-right: 312px; }
+  .easi-shell.deep-cov-open .easi-map-wrap .leaflet-right { right: 300px; }
+}
+/* phones: the sidebar opens over the map, above the bottom sheet, and the controls stay put */
+@media (max-width: 820px) {
+  .deep-cov-panel { top: 58px; left: 8px; right: 8px; width: auto; max-height: none;
+    bottom: calc(var(--map-pane-height) + 16px); }
+  .easi-shell.deep-cov-open { --staf-map-inset-right: 60px; }
+  .easi-shell.deep-cov-open .easi-map-wrap .leaflet-right { right: 0; }
 }
 
-.deep-cov-body { padding: 6px 10px 9px; overflow-y: auto; }
-.deep-cov-row { display: flex; align-items: center; gap: 6px; margin: 5px 0; }
-.deep-cov-lbl { display: flex; align-items: flex-start; gap: 7px; flex: 1 1 auto;
-  min-width: 0; cursor: pointer; margin: 0; }
-.deep-cov-lbl input { margin-top: 2px; flex: none; }
-.deep-cov-all { padding-bottom: 6px; margin-bottom: 5px; border-bottom: 1px solid var(--rule);
-  font-weight: 600; }
-.deep-cov-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
-.deep-cov-name { font-size: 12px; color: #33415c; }
-.deep-cov-sub { font-size: 10.5px; color: #8a93a3; }
-.deep-cov-empty { font-size: 12px; color: #8a93a3; padding: 4px 2px 2px; }
-.deep-cov-zoom { flex: none; display: inline-flex; align-items: center; justify-content: center;
-  width: 22px; height: 22px; padding: 0; border: 1px solid var(--card-border); background: #fff;
-  border-radius: 5px; color: var(--easi-accent); cursor: pointer; }
-.deep-cov-zoom:hover { background: var(--surface-soft); border-color: var(--easi-accent); }
+/* the regions on the map. Passive (zoomed in to the streams, or past Identify) they take no
+   pointer events; this outranks Leaflet's .leaflet-pane > svg path.leaflet-interactive rule. */
+.leaflet-pane.leaflet-deep-regions-pane.is-passive > svg path { pointer-events: none; }
+.leaflet-deep-regions-pane path:focus { outline: none; }
+.leaflet-tooltip.deep-reg-tip {
+  padding: 5px 9px; border: 1px solid var(--card-border); border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .16); font-family: var(--font-body); color: #2b3445;
+}
+.deep-reg-tip b { display: block; font-size: 12.5px; font-weight: 600; }
+.deep-reg-tip span { display: block; margin-top: 1px; font-size: 11px; color: #6a7486; }
 
 /* the report popup's per-metric support and advisory lines */
 .deep-report-support { font-size: 11px; color: #45506a; margin-top: 2px; }

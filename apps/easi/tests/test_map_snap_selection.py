@@ -103,7 +103,7 @@ def _scope(*, v2_fc=V2_FC, hr_fc=HR_FC, v2_hit=V2, hr_hit=HR, pending=None):
         "_STREAMS_DOWN_TEXT": "The stream service is down",
         "_pick_outage": lambda: state.outages.append(True),
         "_stream_layers": SimpleNamespace(flow=SimpleNamespace(data=V2_FC)),
-        "current_step": lambda: "identify", "STEP_IDENTIFY": "identify",
+        "current_step": lambda: "identify", "STEP_IDENTIFY": "identify", "zoomed_in": lambda: True,
         "_clear_route_state": lambda: None, "_invalidate_analysis": lambda: None,
         "_start_route": lambda *args: state.routes.append(args),
         "_FINDING_TEXT": "Finding stream", "_MISS_TEXT": "No nearby stream",

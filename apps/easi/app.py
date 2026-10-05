@@ -30,7 +30,7 @@ os.environ.setdefault("STAF_DATA_SOURCE", "auto")
 
 import anyio  # noqa: E402
 import local_review  # noqa: E402
-from shiny import App, reactive, render, ui  # noqa: E402
+from shiny import App, module, reactive, render, ui  # noqa: E402
 
 from easi import (assessment, basin, batch_ui, notices, xsplotly, bieger, config, delineation,  # noqa: E402
                   geomorph, method_plot, methods as easi_methods, pipeline, report,
@@ -50,7 +50,9 @@ from easi.pipeline import DEFAULT_REACH_FT  # noqa: E402
 from easi.snapcard import hr_snap_card  # noqa: E402
 from easi import calculator  # noqa: E402  (the Excel calculator, blank and completed)
 from easi._vendor.staf_workbook import web as staf_web  # noqa: E402  (download-only controls)
+from easi._vendor.staf_workbook import assessment_file  # noqa: E402  (Save and Open: one file in every tool)
 from easi._vendor.staf_workbook.model.scenarios import BASELINE_ID, ScenarioSet  # noqa: E402
+from easi import session as session_io  # noqa: E402  (EASI's part of the assessment file)
 from easi import scenario_state  # noqa: E402  (what one scenario holds, and its scores)
 from easi import workbook as easi_book  # noqa: E402  (summary, comparison, the scenario workbook)
 from easi import method_package  # noqa: E402  (EASI_METHOD_PACKAGE: the scoring method)
@@ -107,7 +109,7 @@ def _viewer_head_tags(viewer: bool) -> list:
             ui.tags.script(src="vendor/easi-vector-tile.js", defer=""),
             ui.tags.script(src="viewer-standard.js?v=3", defer=""),
             ui.tags.script(src="viewer-compatibility.js?v=5", defer=""),
-            ui.tags.script(src="viewer.js?v=9", defer="")]
+            ui.tags.script(src="viewer.js?v=10", defer="")]
 
 
 def _viewer_switch(viewer: bool):
@@ -576,7 +578,13 @@ STAF_LINKS = {
     "sfari":  "https://gtmenichino-sfari.share.connect.posit.cloud/",
     "curves": "https://github.com/USACE-WRISES/staf/releases/latest",
     "deep":   "https://gtmenichino-deep.share.connect.posit.cloud/",
+    # the EASI guide on the STAF site: how EASI screens and the metric reference
+    "guide":  "https://usace-wrises.github.io/staf/walkthroughs/easi/",
 }
+
+#: One line for About and Help. A new tab, so the open assessment is never left.
+_GUIDE_LINE = (f'The <a href="{STAF_LINKS["guide"]}" target="_blank" rel="noopener">EASI '
+               'guide</a> explains how EASI screens and how each metric is computed.')
 
 
 def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
@@ -625,7 +633,8 @@ def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
     elif not streams_visible:
         note = "Streams are hidden"
     elif not zoomed:
-        note = "Zoom in to see streams"
+        # on Identify the zoom cue over the map says it (staf_web.zoom_cue)
+        note = None if step == STEP_IDENTIFY else "Zoom in to see streams"
     elif mode == "hr-truncated":
         note = "Too many streams to show here. Zoom in."
     elif mode == "hr-partial":
@@ -658,47 +667,70 @@ def staf_topnav():
     )
 
 
-app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=64"),
-                    ui.tags.link(rel="stylesheet", href="staf/staf.css?v=4"),
-                    ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
-                    *_viewer_head_tags(NATIONAL_VIEWER),
-                    ui.tags.script(src="geocode-autocomplete.js", defer=""),
-                    ui.tags.script(src="legend-dock.js?v=3", defer=""),
-                    ui.tags.script(src="tooltip.js", defer=""),
-                    ui.tags.script(src="report-controls.js", defer=""),
-                    ui.tags.script(src="report-edit.js", defer=""),
-                    ui.tags.script(src="report-ready.js?v=2", defer=""),
-                    ui.tags.script(src="staf/unsaved-guard.js?v=1", defer=""),
-                    ui.tags.script(src="staf/scenarios.js?v=1", defer=""),
-                    ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
-                    ui.tags.script(src="worksheet.js?v=10", defer=""),
-                    ui.tags.script(src="coord-entry.js", defer="")),
-    # Disable Shiny/bslib's page-level "pulse" loading bar at the top of the screen —
-    # the bottom-right toast is the app's loading indicator (output spinners unaffected).
-    ui.busy_indicators.use(pulse=False),
-    ui.div(
-        ui.div(
-            ui.div(ui.span("EASI", ui.tags.small("Ecosystem Assessment Screening Index"),
-                           class_="easi-brand"),
-                   staf_topnav(),
-                   class_="easi-header-left"),
-            _viewer_switch(NATIONAL_VIEWER),
-            ui.div(
-                ui.input_action_link("nav_new", "New analysis"),
-                ui.input_action_link("nav_batch", "Batch"),
-                ui.input_action_link("nav_help", "Help"),
-                # Extended documentation (verification & validation) — a static,
-                # self-contained Quarto page served from www/. Opens in a new tab
-                # so the analysis session is preserved.
-                ui.tags.a("Documentation", href="documentation.html",
-                          target="_blank", rel="noopener", class_="easi-doclink"),
-                (ui.tags.a("Local review", href="local-review/", target="_blank",
-                           rel="noopener", class_="easi-doclink") if LOCAL_REVIEW_ROOT else None),
-                class_="easi-nav",
-            ),
-            class_="easi-header",
-        ),
+# --------------------------------------------------------------------------- #
+# Page: EASI on its own, or as one tool of the STAF app (apps/staf)
+# --------------------------------------------------------------------------- #
+# The STAF app hosts EASI as a Shiny module beside SFARI and DEEP: it draws its
+# own header (with EASI's Nationwide screening switch beside its tool switch),
+# loads HEAD once per tool and uses the module pieces at the end of this block,
+# which give every id the tool's prefix. The body's data-staf-ns attribute tells
+# the shared scripts (www/staf/staf-ns.js) which prefix to post to.
+TOOL_KEY = "easi"
+TOOL_NAME = "EASI"
+TOOL_FULL_NAME = "Ecosystem Assessment Screening Index"
+
+# head assets in load order; staf/ holds the scripts and styles every STAF tool shares
+HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=66"),
+        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=9"),
+        ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
+        *_viewer_head_tags(NATIONAL_VIEWER),
+        ui.tags.script(src="staf/staf-ns.js?v=1", defer=""),
+        ui.tags.script(src="staf/geocode-autocomplete.js", defer=""),
+        ui.tags.script(src="staf/legend-dock.js?v=4", defer=""),
+        ui.tags.script(src="staf/tooltip.js", defer=""),
+        ui.tags.script(src="report-controls.js", defer=""),
+        ui.tags.script(src="report-edit.js?v=2", defer=""),
+        ui.tags.script(src="staf/report-ready.js?v=2", defer=""),
+        ui.tags.script(src="staf/unsaved-guard.js?v=3", defer=""),
+        ui.tags.script(src="staf/scenarios.js?v=2", defer=""),
+        ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
+        ui.tags.script(src="worksheet.js?v=11", defer=""),
+        ui.tags.script(src="staf/coord-entry.js", defer=""))
+
+
+def _nav_actions(prefix=""):
+    """The header's actions, the same in every STAF tool: New, Open, Save, About and Help (owner,
+    2026-10-05: Batch and Documentation left the bar; About and Help link the EASI guide).
+    ``prefix`` is the URL prefix of this tool's www/ ("easi/" in the STAF app): the local review
+    pages, a maintainer's link shown only when EASI_REVIEW_ROOT is set, are routes of the
+    standalone app only."""
+    return staf_web.nav_actions(
+        ui.tags.a("Local review", href="local-review/", target="_blank",
+                  rel="noopener", class_="easi-doclink") if LOCAL_REVIEW_ROOT and not prefix else None)
+
+
+def _header_center(prefix=""):
+    """The middle of the header: the Nationwide screening switch (in the STAF app, beside the
+    tool switch while EASI is shown)."""
+    return _viewer_switch(NATIONAL_VIEWER)
+
+
+def _header():
+    return ui.div(
+        ui.div(ui.span(TOOL_NAME, ui.tags.small(TOOL_FULL_NAME), class_="easi-brand"),
+               staf_topnav(),
+               class_="easi-header-left"),
+        _header_center(),
+        _nav_actions(),
+        class_="easi-header",
+    )
+
+
+def _tool_body(prefix="", *, header=None):
+    """The map, the panes, the batch and viewer workspaces and the legend; ``header`` is the
+    standalone app's own."""
+    return ui.div(
+        header,
         ui.div(
             output_widget("map", height="100%") if _HAS_MAP
             else ui.div("Map requires ipyleaflet + shinywidgets.", class_="text-muted p-3"),
@@ -711,17 +743,31 @@ app_ui = ui.page_fillable(
         # Stream legend: legend-dock.js moves this wrapper into the map's
         # top-right control stack under the layers button. The card look lives
         # on the rendered content, so an empty output shows nothing.
-        ui.div(ui.output_ui("stream_legend"), id="easi-legend-panel",
-               class_="easi-legend-panel"),
+        ui.div(ui.output_ui("stream_legend"), class_="easi-legend-panel"),
         ui.output_ui("readout"),
         ui.output_ui("flow_loading"),
+        staf_web.zoom_cue_output(),
         ui.output_ui("cursor_style"),
+        staf_web.tool_root_attrs(TOOL_KEY),
         class_="easi-shell",
-    ),
+    )
+
+
+app_ui = ui.page_fillable(
+    ui.head_content(*HEAD),
+    # Disable Shiny/bslib's page-level "pulse" loading bar at the top of the screen —
+    # the bottom-right toast is the app's loading indicator (output spinners unaffected).
+    ui.busy_indicators.use(pulse=False),
+    _tool_body(header=_header()),
     title="EASI · Automated Stream Screening",
     padding=0,
     fillable=True,
 )
+
+# the STAF app's module pieces (tool_server follows the server)
+tool_nav_ui = module.ui(_nav_actions)
+tool_center_ui = module.ui(_header_center)
+tool_body_ui = module.ui(_tool_body)
 
 
 # --------------------------------------------------------------------------- #
@@ -1726,6 +1772,8 @@ def server(input, output, session):
     _streams_retries = {"count": 0, "down_at": None}
     scored_reach = reactive.value(None)    # {"comid", "name"} of the highlighted V2 reach | None
     zoomed_in = reactive.value(False)      # zoom >= FLOW_ZOOM (the legend reads this, not the view)
+    zoom_nudge = reactive.value(0)         # map clicks while zoomed out: each pulses the zoom cue
+    _zoom_cue = staf_web.ZoomCue()
     pending_anchor = reactive.value(None)  # routed siteAnchor awaiting Delineate | None
     anchor_error = reactive.value(None)    # routing refusal text (DA ratio) | None
 
@@ -2016,6 +2064,11 @@ def server(input, output, session):
         @reactive.event(clicked)
         def _handle_click():
             if current_step() != STEP_IDENTIFY:
+                return
+            if not zoomed_in():
+                # No streams are drawn this far out: the zoom cue answers the click
+                # (owner, 2026-10-05), and the point already placed stays.
+                zoom_nudge.set(zoom_nudge() + 1)
                 return
             # A pick never waits on the map: drawn lines settle it, else the
             # tiles under the click are asked for (the engine's pick policy).
@@ -2333,13 +2386,8 @@ def server(input, output, session):
                 # The route line joins the clicked stream to the covered reach
                 # that supplies the three reach metrics, whatever it drains
                 # (the auto policy reports the ratio, it never withholds).
-                if (clicked_s.get("snapLat") is not None
-                        and scored.get("snapLat") is not None):
-                    seg = {"type": "FeatureCollection", "features": [{
-                        "type": "Feature", "properties": {},
-                        "geometry": {"type": "LineString", "coordinates": [
-                            [clicked_s["snapLon"], clicked_s["snapLat"]],
-                            [scored["snapLon"], scored["snapLat"]]]}}]}
+                seg = session_io.route_segment(anchor)
+                if seg:
                     _add_layer("route", GeoJSON(data=seg, style=ROUTE_STYLE,
                                                 name="Downstream reach"))
                 # The pin and the coordinate inputs mark the clicked stream, the
@@ -2776,13 +2824,8 @@ def server(input, output, session):
             d = delin()
         if not d:
             return
-        merged = {k: v for k, v in d.items() if k != "ctx_inputs"}
-        merged["delineation"] = {**d["delineation"], "huc12": res.get("huc12")}
-        merged["report"] = res["report"]
-        # the twelve EROM monthly flows behind the low-flow variability, kept for the
-        # completed calculator's monthly flow helper (ctx_inputs itself is dropped above)
-        merged["eromMonthly"] = calculator.monthly_flows((d.get("ctx_inputs") or {}).get("erom"))
-        base_result.set(merged)
+        # the delineation with the report (and the EROM monthly flows): the same result Open restores
+        base_result.set(session_io.screened(d, res.get("huc12"), res["report"]))
         # fresh screening: no overrides / notes / observations / source swaps / geometry edits
         _overrides.set({}); _notes.set({}); _observed.set({})
         _geom_owned.set(set()); _geom_text.set({}); _geom_scoring.set({}); _xs_sel.set(None)
@@ -2846,15 +2889,29 @@ def server(input, output, session):
         except Exception:  # noqa: BLE001
             pass
 
-    # Clear exists only after Basin renders. Separate event readers let the
-    # always-present New analysis link work before that input has been created.
-    @reactive.effect
-    @reactive.event(input.nav_new)
-    def _new_analysis():
+    def _start_over():
+        """New: an empty Identify step, back on the single-site map."""
         _reset()
         if app_mode() == "viewer":
             app_mode.set("single")
             ui.update_switch("viewer_on", value=False)
+
+    # Clear exists only after Basin renders. Separate event readers let the
+    # always-present New link work before that input has been created.
+    @reactive.effect
+    @reactive.event(input.nav_new)
+    def _new_analysis():
+        _cancel_report()
+        if delin() is None and base_result() is None:
+            _start_over()
+            return
+        ui.modal_show(staf_web.new_dialog("the delineation, the screening and every rating, note "
+                                          "and observation"))
+
+    @reactive.effect
+    @reactive.event(input.confirm_new)
+    def _confirm_new():
+        _start_over()
 
     @reactive.effect
     @reactive.event(input.clear_basin)
@@ -2867,60 +2924,64 @@ def server(input, output, session):
         ui.modal_remove()
 
     @reactive.effect
+    @reactive.event(input.nav_about)
+    def _about():
+        _cancel_report()
+        ui.modal_show(staf_web.info_dialog(
+            "About EASI",
+            "**EASI**, the Ecosystem Assessment Screening Index.\n\n"
+            "The screening tier of the Stream Tiered Assessment Framework. From a clicked point "
+            "EASI delineates the upstream watershed and an assessment reach, computes 20 desktop "
+            "metrics from national, public GIS and hydrology data, and rates each of the 20 stream "
+            "functions Good, Fair or Poor. The function scores roll up to Physical / Chemical / "
+            "Biological outcome sub-indices and an Ecosystem Condition Index. It is a desktop "
+            "screening estimate, not a field-validated assessment.\n\n"
+            "Two watershed engines answer the desktop metrics. Within 150 ft of an NHDPlus V2 "
+            "reach the StreamCat lookup engine supplies the watershed metrics from EPA StreamCat. "
+            "Elsewhere the STAF site engine computes the HR reach watershed: the drainage area of "
+            "the high-resolution NHD reach the point snaps to, built from NHDPlus HR catchments. "
+            "Some reach metrics use the nearest StreamCat reach downstream, named with the routed "
+            "distance and the drainage-area ratio in the report.\n\n" + _GUIDE_LINE))
+
+    @reactive.effect
     @reactive.event(input.nav_help)
     def _help():
         _cancel_report()
-        ui.modal_show(ui.modal(
-            ui.markdown(
-                "**EASI** automates the EASI Screening-tier assessment (from STAF) "
-                "using national, public GIS and hydrology data. It is a desktop "
-                "screening estimate, not a field-validated assessment.\n\n"
-                "**How to use**\n\n"
-                "1. **Zoom in** until stream lines appear. **Click a stream** to "
-                "place a point, or enter coordinates, or search an address. The "
-                "map draws one solid blue stream network. **StreamCat coverage** "
-                "in the Layers menu starts off; enabling it shows StreamCat reaches "
-                "in blue, other streams in cyan, and the selected source reach and "
-                "downstream connector. It changes only the display. Within 150 ft "
-                "of an NHDPlus V2 reach, StreamCat supplies watershed metrics. "
-                "Elsewhere the STAF site engine calculates the HR reach watershed, "
-                "usually in under a minute and up to about five minutes on a large "
-                "basin. Some metrics can use the nearest StreamCat reach downstream. "
-                "Affected desktop evidence is identified beside the metric and by "
-                "a dagger explained below the report table; detailed sources retain "
-                "the reach, routed distance, and drainage-area ratio.\n"
-                "2. Wait for the StreamCat source-reach note. EASI retries temporary "
-                "routing failures up to three times, waiting 5, 10, and 15 seconds "
-                "before those retries. If lookup remains unresolved, "
-                "use **Retry StreamCat lookup** or choose another stream. The selected "
-                "point stays visible and analysis remains disabled until its source is "
-                "resolved. Adjust the reach length if needed, then click "
-                "**Delineate Basin and Reach**.\n"
-                "3. Review the basin, then click **Run screening**. EASI computes the "
-                "20 metrics and scores them with the STAF rollup.\n"
-                "4. Review each function in the **Assessment**. Adjust ratings, "
-                "notes, or the cross-section as needed (nine sections are sampled "
-                "along the reach and the geometry metrics score on their medians). "
-                "Channel evolution and Channel and floodplain dynamics also take an "
-                "**observation**: a documented channel class with its indicators, or "
-                "the eroding and armored bank percentages. A complete observation "
-                "outranks the automatic rating and a rating you set by hand.\n"
-                "5. The **report** opens when screening finishes. Download it as PDF, "
-                "CSV, or GeoJSON, or download the **completed workbook**, the Excel "
-                "calculator with this site's values, your ratings and your notes entered.\n"
-                "6. **Get Forms** on the Assessment page lists the 20 desktop metrics with "
-                "this site's values and downloads them as a PDF. It also downloads the "
-                "completed workbook and the **blank workbook**. The calculator scores the "
-                "same 20 metrics offline with the same criteria, curves and rollup as "
-                "this app.\n\n"
-                f"**Batch** runs up to {BATCH_UI_MAX_SITES} sites at once and "
-                "packages the reports as a ZIP.\n\n"
-                + _viewer_help(NATIONAL_VIEWER) +
-                "Switch basemaps and stream visibility with the layers control "
-                "at the top right. Turn on **StreamCat coverage** there to inspect "
-                "stream coverage and the source reach for the selected site.\n\n"
-                "Address search uses OpenStreetMap data (Photon and Nominatim)."),
-            title="Help", easy_close=True))
+        ui.modal_show(staf_web.info_dialog(
+            "How to use EASI",
+            "1. **Identify**: zoom in until stream lines appear, then click a stream, type "
+            "coordinates, or search a place. Streams use one solid blue style. **StreamCat "
+            "coverage** in the Layers menu starts off; enabling it shows StreamCat reaches in "
+            "blue, other streams in cyan, and the selected source reach and downstream "
+            "connector. It changes only the display. Every click snaps to the high-resolution "
+            "NHD. Wait for the StreamCat source-reach note: EASI retries temporary routing "
+            "failures up to three times, after waits of 5, 10, and 15 seconds. If the lookup "
+            "cannot finish, use **Retry StreamCat lookup** or choose another stream. Adjust the "
+            "reach length if needed, then click **Delineate Basin and Reach**. Within 150 ft of "
+            "an NHDPlus V2 reach, StreamCat supplies the watershed metrics; elsewhere the STAF "
+            "site engine calculates the HR reach watershed, usually in under a minute and up to "
+            "about five minutes on a large basin.\n"
+            "2. **Basin**: review the watershed and reach, then click **Run screening**. EASI "
+            "computes the 20 metrics and scores them with the STAF rollup.\n"
+            "3. **Assessment**: review each function. Adjust ratings, notes, or the "
+            "cross-section as needed (nine sections are sampled along the reach and the "
+            "geometry metrics score on their medians). Channel evolution and Channel and "
+            "floodplain dynamics also take an **observation**: a documented channel class with "
+            "its indicators, or the eroding and armored bank percentages. A complete observation "
+            "outranks the automatic rating and a rating you set by hand. "
+            "**Get Forms** on the Assessment page lists the 20 desktop metrics with this site's "
+            "values and downloads "
+            "them as a PDF. It also downloads the completed workbook and the **blank workbook**. "
+            "The calculator scores the same 20 metrics offline with the same criteria, curves "
+            "and rollup as this app.\n"
+            "4. **Report**: the report opens when screening finishes. Download it as PDF, CSV, "
+            "or GeoJSON, or download the **completed workbook**, the Excel calculator with this "
+            "site's values, your ratings and your notes entered. Desktop evidence from the "
+            "nearest StreamCat reach downstream is marked beside the metric and by a dagger "
+            "explained below the report table.\n\n"
+            + _viewer_help(NATIONAL_VIEWER) +
+            _GUIDE_LINE + "\n\n"
+            "Address search uses OpenStreetMap data (Photon and Nominatim)."))
 
     @reactive.calc
     def selected_metric_ids():
@@ -2960,7 +3021,7 @@ def server(input, output, session):
 
     @reactive.effect
     async def _report_busy_message():
-        await session.send_custom_message("staf-report-state", _report_ui())
+        await session.send_custom_message("staf-report-state", {**_report_ui(), "ns": str(session.ns)})
 
     def _report_context_matches(request):
         if (request["generation"] != _map_pick["generation"]
@@ -3362,6 +3423,19 @@ def server(input, output, session):
         _xs_echo["want"] = _xs_echo["was"] = None
         _bump_scenarios(switched=True)
 
+    def _session_scenarios():
+        """The assessment file's scenarios: every scenario's rating state, the shown one's read live."""
+        return assessment_file.scenarios_block(_sc["set"], _capture_state())
+
+    def _restore_scenarios(block):
+        """An opened file's scenarios, the one shown when it was saved on screen (its ratings come
+        with it; base_result is already the file's screening)."""
+        sset = assessment_file.scenario_set(block)
+        _sc["set"] = sset
+        _xs_echo["want"] = _xs_echo["was"] = None
+        _apply_state(sset.current.state)
+        _bump_scenarios(switched=True)
+
     def _xs_per_m():
         with reactive.isolate():
             return FT_PER_M if _xs_unit_prev() == "ft" else 1.0
@@ -3528,7 +3602,7 @@ def server(input, output, session):
                 ui.div(ui.input_action_button("delineate", "Delineate Basin and Reach",
                                               class_="btn-primary", disabled=not picked),
                        class_="easi-pane-actions"),
-                ui.output_text("busy_text"),
+                ui.output_text("busy_text").add_class("easi-busy-text"),
             )
         elif step == STEP_BASIN:
             body = ui.TagList(ui.output_ui("basin_card"),
@@ -3553,7 +3627,7 @@ def server(input, output, session):
                                      ui.input_action_button("run_screening", "Run screening",
                                                             class_="btn-primary"),
                                      class_="easi-pane-actions"),
-                              ui.output_text("busy_text"))
+                              ui.output_text("busy_text").add_class("easi-busy-text"))
         active = current_step()
         head_label = dict(STEP_LABELS).get(active, "EASI")
         return ui.TagList(
@@ -3694,6 +3768,13 @@ def server(input, output, session):
                       class_="easi-flow-loading")
 
     @render.ui
+    def zoom_cue():
+        # out too far for streams on Identify: the cue over the map says to zoom in, and a
+        # click out there pulses it (_handle_click)
+        shown = _HAS_MAP and app_mode() == "single" and current_step() == STEP_IDENTIFY and not zoomed_in()
+        return _zoom_cue.render(shown, zoom_nudge())
+
+    @render.ui
     def cursor_style():
         # When a point can be selected (identify step, zoomed in to the vectors),
         # show a crosshair; leaflet swaps to a grabbing hand while dragging.
@@ -3701,11 +3782,12 @@ def server(input, output, session):
         picking = current_step() == STEP_IDENTIFY and z is not None and z >= FLOW_ZOOM
         if not picking:
             return None
-        # leaflet sets `cursor:grab` inline on the container, so override with !important
+        # leaflet sets `cursor:grab` inline on the container, so override with !important;
+        # scoped to EASI's body: in the STAF app the other tools' maps share the page
         return ui.tags.style(
-            ".easi-map-wrap .leaflet-grab{cursor:crosshair !important;}"
-            ".easi-map-wrap .leaflet-container.leaflet-dragging,"
-            ".easi-map-wrap .leaflet-container.leaflet-dragging .leaflet-grab"
+            '.easi-shell[data-staf-tool="easi"] .easi-map-wrap .leaflet-grab{cursor:crosshair !important;}'
+            '.easi-shell[data-staf-tool="easi"] .easi-map-wrap .leaflet-container.leaflet-dragging,'
+            '.easi-shell[data-staf-tool="easi"] .easi-map-wrap .leaflet-container.leaflet-dragging .leaflet-grab'
             "{cursor:grabbing !important;}")
 
     # ==================================================================== #
@@ -4441,6 +4523,85 @@ def server(input, output, session):
         # same catalog and curves this app scores with (see tests/test_calculator_parity.py)
         yield calculator.blank_bytes()
 
+    # ---- the assessment file (Save and Open, the same file in EASI, SFARI and DEEP) ----
+    @render.download(filename="easi-assessment.json")
+    def save_session():
+        _saved_fp.set(_work_fp())
+        yield session_io.dump(delin(), base_result(), dict(_notes()), report.scoring_method(),
+                              _session_scenarios())
+
+    @reactive.effect
+    @reactive.event(input.load_session)
+    def _load_session():
+        finfo = input.load_session()
+        if not finfo:
+            return
+        try:
+            # the reader refuses another tool's file and a malformed one before anything changes
+            with open(finfo[0]["datapath"], encoding="utf-8") as fh:
+                st = session_io.load(fh.read())
+            d = st.get("delineation") or {}
+            point = session_io.saved_point(d)
+        except Exception as exc:  # noqa: BLE001
+            ui.notification_show(f"Could not load assessment: {exc}", type="error", duration=6)
+            return
+        _map_pick["generation"] += 1                    # late results of the last pick are dropped
+        generation = _map_pick["generation"]
+        _cancel_report()
+        if _HAS_MAP:
+            _clear_route_state()
+        _invalidate_analysis()
+        _remove_layer("marker")
+        if app_mode() != "single":
+            app_mode.set("single")
+            ui.update_switch("viewer_on", value=False)
+        # the site and its StreamCat source, as the pick left them: no lookup runs again
+        anchor = d.get("siteAnchor") if point else None
+        pending_anchor.set(anchor); anchor_error.set(None)
+        snapped_point.set(point)
+        scored_reach.set({"comid": point[3], "name": ((anchor or {}).get("scoredReach") or {}).get("gnisName")}
+                         if point else None)
+        if point:
+            source_lookup.set({"status": "ready", "generation": generation, "comid": point[3],
+                               "point": point[:2]})
+        screening = st.get("screening")
+        base = session_io.screened(d, screening.get("huc12"), screening["report"]) if d and screening else None
+        if d:
+            delin.set(d)                                 # as if this pick had just delineated
+            _analysis_runs.update(delin=generation, assess=generation if base is not None else None)
+        base_result.set(base)
+        _notes.set(dict(st.get("notes") or {}))
+        _restore_scenarios(st.get("scenarios"))          # every scenario's ratings, the saved one shown
+        _saved_fp.set(_work_fp())                        # just opened: nothing unsaved yet
+        if _HAS_MAP:
+            try:
+                if d.get("watershed_geojson"):
+                    _add_layer("ws", GeoJSON(data=delineation.display_simplify(d["watershed_geojson"]),
+                                             style=WATERSHED_STYLE, name="Watershed"))
+                if d.get("reach_geojson"):
+                    _add_layer("reach", GeoJSON(data=d["reach_geojson"], style=REACH_STYLE,
+                                                name="Assessment reach"))
+                seg = session_io.route_segment(anchor)
+                if seg:
+                    _add_layer("route", GeoJSON(data=seg, style=ROUTE_STYLE, name="Downstream reach"))
+                if point:
+                    _place_pin(point[0], point[1])
+                    source_geometry_task(point[3], generation)      # the source reach's glow
+                bounds = delineation.geojson_bounds(d.get("watershed_geojson"), d.get("reach_geojson"))
+                if bounds:
+                    _MAP.fit_bounds(bounds)
+                elif point:
+                    _MAP.center = (point[0], point[1])
+            except Exception:  # noqa: BLE001
+                pass
+        stage.set("")
+        current_fn.set(0)
+        current_step.set(STEP_ASSESS if base is not None else STEP_BASIN if d else STEP_IDENTIFY)
+        ui.notification_show("Assessment loaded. Resuming.", type="message", duration=4)
+        changed = session_io.method_changed(st.get("method"), report.scoring_method())
+        if changed and base is not None:
+            ui.notification_show(changed, type="warning", duration=12)
+
 
     # ==================================================================== #
     # Batch workspace (full-width overlay; the single-site flow stays default)
@@ -4457,19 +4618,39 @@ def server(input, output, session):
     batch_msg = reactive.value("")
     batch_result = reactive.value(None)       # BatchResult object (with artifacts)
 
-    # Leave-page guard: EASI has no Save, so any screening result is work a reload would lose.
+    # Leave-page guard: warn while the site, its screening and the ratings and notes differ from
+    # the last Save or Open (a batch result is never saved).
+    _saved_fp = reactive.value(None)
     _unsaved_sent = {"dirty": None}
+
+    def _work_fp():
+        d, base, notes = delin(), base_result(), _notes()
+        live = _score_state()                    # every rating edit re-checks
+        scenario_rev()
+        sset = _sc["set"]
+        if d is None and base is None and not sset.has_alternatives() and not sset.baseline.description:
+            return None
+        dd = (d or {}).get("delineation") or {}
+        site = [dd.get(k) for k in ("comid", "snapped_lat", "snapped_lon")]
+        # every scenario's ratings, whichever one is on screen: switching is not a change
+        rows = [(s.id, s.name, s.description,
+                 session_io.fingerprint_state(live if s.id == sset.active else s.state)) for s in sset.items]
+        return staf_web.state_fingerprint(site, base is not None, notes, rows)
 
     @reactive.effect
     async def _publish_unsaved():
-        dirty = base_result() is not None or batch_result() is not None
+        fp = _work_fp()
+        dirty = (fp is not None and fp != _saved_fp()) or batch_result() is not None
         if dirty != _unsaved_sent["dirty"]:
             _unsaved_sent["dirty"] = dirty
-            await session.send_custom_message(staf_web.UNSAVED_MESSAGE, {"dirty": dirty})
+            await session.send_custom_message(staf_web.UNSAVED_MESSAGE,
+                                              {"dirty": dirty, "ns": str(session.ns)})
     batch_modal_site = reactive.value(None)   # {"site_id", "base"} for the open popup
     _batch_prog = {"done": 0, "total": 0, "stage": "", "site": ""}
     batch_tick = reactive.value(0)
 
+    # Batch left the header (owner, 2026-10-05: every tool shows the same actions); its workspace
+    # stays here, opened by nothing until it has a new home.
     @reactive.effect
     @reactive.event(input.nav_batch)
     def _enter_batch():
@@ -4627,7 +4808,8 @@ def server(input, output, session):
                 status = ui.tags.span(s.state, class_=f"easi-batch-badge b-{s.state}")
             report_cell = (ui.tags.a(
                 "View report", class_="easi-batch-report-link",
-                onclick=("Shiny.setInputValue('batch_open_report', "
+                # the input's full id: EASI's prefix in the STAF app, none on its own
+                onclick=(f"Shiny.setInputValue('{module.resolve_id('batch_open_report')}', "
                          f"{i}, {{priority: 'event'}})"))
                 if arts.get("report") else "—")
             body.append(ui.tags.tr(
@@ -4889,7 +5071,7 @@ def server(input, output, session):
             headers["Content-Encoding"] = encoding
         return Response(content=data, media_type=media, headers=headers)
 
-    tiles_route = (session.dynamic_route("national-tiles", _national_tiles_handler)
+    tiles_route = (session.dynamic_route("national_tiles", _national_tiles_handler)
                    if NATIONAL_VIEWER else None)
 
     @reactive.effect
@@ -4980,7 +5162,9 @@ def server(input, output, session):
                       "datasetKey": summary.get("dataset_key"), "generation": generation,
                       "vpuBounds": summary.get("vpu_bounds") or {},
                       "available": bool(summary.get("available")), "error": summary.get("error"),
-                      "renderer": _viewer_renderer["value"]}
+                      "renderer": _viewer_renderer["value"],
+                      # the input a reach pick posts to (EASI's prefix in the STAF app)
+                      "pickInput": str(session.ns("viewer_pick"))}
         await session.send_custom_message("easi-viewer-init", config)
 
     @reactive.effect
@@ -5323,5 +5507,9 @@ def server(input, output, session):
 
 
 # Shiny for Python serves a static dir only when configured (no implicit www/).
+# the STAF app starts this server as a module, its ids under the tool's prefix;
+# ``server`` itself stays a plain top-level function (the tests read its source)
+tool_server = module.server(server)
+
 app = App(app_ui, server, static_assets=Path(__file__).parent / "www")
 app.starlette_app.routes[0:0] = local_review.routes(LOCAL_REVIEW_ROOT)

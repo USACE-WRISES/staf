@@ -1,25 +1,32 @@
 {
  "assets_manifest": {
+  "coord-entry.js": "b45c1033ac7cb0687a02481ea6136db2328d6b6c799d37492657c7cb23ee4b26",
+  "geocode-autocomplete.js": "026c13bfd70227dc35aeb9c6600eacd5bb2cb8c18ccdec26862a527ad4573cab",
+  "legend-dock.js": "1ab8a0b672215180a2bea8e61b7fc2271e420cc451459c057553097d761be5f0",
   "metric-rows.css": "4130d75000fc5f5ceadc8c952b17e3234231969099cc181cca5434ff299eabce",
   "metric-rows.js": "8475905c9721e4495e14a769a0e015de34e7aa5d07bee04dcea8583637537bd2",
-  "scenarios.js": "49c27beded6546bb1338968709baff9e92b5dbdd9cbdda4f59057ac28303f444",
-  "staf.css": "e505106bcb5657433acc4170d10c83be88c367d14e932d199933630b8a9b0855",
-  "unsaved-guard.js": "57a53f24f6d08c66cb8c62144991f704602f315915aba7a533da0f8bbd7bbd1a"
+  "report-ready.js": "fbe0973c23461236cb408fbaeefd7a4e8f6e8ad5f5ba52ff1894e176f0208530",
+  "scenarios.js": "219b864ab4bf77b1984f3ee81a5f1f421a23513180e40d7687452ca75a364f00",
+  "staf-ns.js": "1d4dbc9891d9f22cf6c48b50abaab8c2accab06ec6127d932115675884e90e21",
+  "staf.css": "7d96d3dd8c913e74e43d5e594658ecddcb08c5a5c08d5a0e1af781337a60f81a",
+  "tooltip.js": "7bf8ab487edfe47d7ffe11c1650c8597bb23e65a7950a2c30f69bcdaeaee4d74",
+  "unsaved-guard.js": "c946c6e0f08a2f130399ba40a19b307796d21271a4daafb4e08f7925fe42c2fa"
  },
  "data_manifest": {
   "data/ecoregions.json": "df2d3cc0f12ec8640ce9e937c78cc55b0ebfaf7d2bc0a54864076f76a8b51b40"
  },
- "lib_version": "0.2.0",
+ "lib_version": "0.3.0",
  "manifest": {
-  "__init__.py": "5e7abe344fd67e71c36e69269f0f7941fbcba4e629128dfc5ae91d2d835dc02d",
+  "__init__.py": "1eb11ee7806e5da7289b4f6f224646deb62baa5927386592e2a1a9524a0026d9",
   "assemble.py": "0040f36e351525eac826f5b295cbf2bfc4e7bd2b2cbbadaeec4c20e673f4b77c",
+  "assessment_file.py": "71207520141170fe4dac22e7f3fa65e9b077a56d5f41f390b8b25e639272094e",
   "model/__init__.py": "fae5024335a350d1f0df06b245c6c9a3702446d04d775cd9d82b144fe284542e",
   "model/compare.py": "bb519fbec4e75fc504a94d7b0d5e713ed27cf1362a667eb5337812822a3e3004",
   "model/refcurves.py": "f589268a44f2dc86ddce75389d2e335e9fce3c1dc250c60f6e829860cc7a4bba",
   "model/scenarios.py": "0cdf2ef2811276be2e7c12f93fc2195e6462906e6e6abb4778736a59d8d8fe60",
   "model/summary.py": "561298a70ca1b9fd509c71ab5ed10ffc0115608ff5bcae554decae6ccc4e02be",
   "sheets.py": "93eb856af2ded88f39b229594e8294a3789df0975982d94fea44df9d9c5dcfde",
-  "web.py": "1269409e9f028d93e1e8bae6f6815901ba639ee5a386aa7ed6bd9ae10fc05381",
+  "web.py": "d85ce10973b13c2d610e5081e75c97848be9ec4cd643fe942a7a123988de7483",
   "xlsx/__init__.py": "806e1ea137030b7a70f8fadd14171c2dd24ed7b5fa03f0514304351184a658e4",
   "xlsx/author.py": "80edc744700ef5936c3ccb2fccbc38f393ab886c920d1c23a3f7f08ba8f793a3",
   "xlsx/charts.py": "ab26c6c4cb011b9b60cbae011cf12b17f00136eddb0a5e6bb4b97a02c47d31e5",

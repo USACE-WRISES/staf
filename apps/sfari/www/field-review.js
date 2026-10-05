@@ -5,12 +5,20 @@
  * function switch (never on a keystroke/drag) — the same non-binding technique
  * EASI uses for its report overrides. Visual state (rating dropdown, score
  * number/band) is updated client-side so there is no round-trip flicker.
+ *
+ * In the STAF app SFARI shares the page with EASI and DEEP: this script acts only
+ * on events inside SFARI's body (or outside every body, its dialogs) and posts to
+ * SFARI's own inputs (staf/staf-ns.js).
  */
 (function () {
+  var TOOL = "sfari", NS = window.STAFNs;
+
+  function body() { return NS.scope(NS.tool(TOOL)); }
+
   function send(id, payload) {
     if (window.Shiny && Shiny.setInputValue) {
       payload._t = Date.now();
-      Shiny.setInputValue(id, payload, { priority: "event" });
+      Shiny.setInputValue(NS.id(NS.tool(TOOL), id), payload, { priority: "event" });
     }
   }
 
@@ -21,6 +29,7 @@
   }
 
   document.addEventListener("click", function (e) {
+    if (!NS.mine(e.target, TOOL)) return;
     // Step navigator (data-step) — one event, so the two steppers never collide on ids.
     var step = e.target.closest("[data-step]");
     if (step) { send("step_nav", { key: step.dataset.step }); return; }
@@ -29,7 +38,7 @@
     // The suggested rating's Use button -> set that rating in the metric's dropdown.
     var chip = e.target.closest(".sfari-suggest-chip");
     if (chip) {
-      var lksel = document.querySelector('.sfari-likert-select[data-mid="' + cssEsc(chip.dataset.mid) + '"]');
+      var lksel = body().querySelector('.sfari-likert-select[data-mid="' + cssEsc(chip.dataset.mid) + '"]');
       if (lksel) { lksel.value = chip.dataset.val; lksel.dispatchEvent(new Event("change", { bubbles: true })); }
       return;
     }
@@ -47,7 +56,7 @@
     var acc = e.target.closest(".sfari-accept");
     if (acc) {
       var fid = acc.dataset.fid, val = Math.round(parseFloat(acc.dataset.val));
-      var sl = document.querySelector('.sfari-fscore[data-fid="' + cssEsc(fid) + '"]');
+      var sl = body().querySelector('.sfari-fscore[data-fid="' + cssEsc(fid) + '"]');
       if (sl) { sl.value = val; sl.dispatchEvent(new Event("input", { bubbles: true }));
                 sl.dispatchEvent(new Event("change", { bubbles: true })); }
       return;
@@ -65,8 +74,8 @@
     var nav = e.target.closest("[data-nav]");
     if (nav) {
       var d = parseInt(nav.dataset.nav, 10);
-      var active = document.querySelector(".sfari-nav-fn.active");
-      var lastIdx = document.querySelectorAll(".sfari-nav-fn").length - 1;
+      var active = body().querySelector(".sfari-nav-fn.active");
+      var lastIdx = body().querySelectorAll(".sfari-nav-fn").length - 1;
       if (d === 1 && active && parseInt(active.dataset.idx, 10) === lastIdx) {
         send("open_report_evt", {});
       } else {
@@ -93,6 +102,7 @@
   });
 
   document.addEventListener("input", function (e) {
+    if (!NS.mine(e.target, TOOL)) return;
     var sl = e.target.closest(".sfari-fscore");
     if (sl) {
       var card = sl.closest(".sfari-scorecard");
@@ -103,7 +113,7 @@
         if (num) num.textContent = v;
         if (band) { band.textContent = bd.label; band.style.background = bd.color; }
         card.classList.remove("unset");
-        var st = document.querySelector(".sfari-foot-score");
+        var st = body().querySelector(".sfari-foot-score");
         if (st) { st.textContent = "scored"; st.classList.add("ok"); }
       }
       return;
@@ -115,6 +125,7 @@
   });
 
   document.addEventListener("change", function (e) {
+    if (!NS.mine(e.target, TOOL)) return;
     // Likert rating dropdown — empty value clears the rating.
     var lk = e.target.closest(".sfari-likert-select");
     if (lk) {
@@ -151,12 +162,12 @@
   // Live "N of M rated" counter in the section label (the panel is isolated server-side, so
   // it does not re-render on each rating — update it client-side instead).
   function updateRatedCount() {
-    var groups = document.querySelectorAll(".sfari-fnpanel .sfari-likert-select");
+    var groups = body().querySelectorAll(".sfari-fnpanel .sfari-likert-select");
     var rated = 0;
     groups.forEach(function (g) { if (g.value) rated++; });
-    var el = document.querySelector(".sfari-sec-count");
+    var el = body().querySelector(".sfari-sec-count");
     if (el) el.textContent = rated + " of " + groups.length + " rated";
-    var foot = document.querySelector(".sfari-foot-rated");
+    var foot = body().querySelector(".sfari-foot-rated");
     if (foot) foot.textContent = rated + "/" + groups.length + " rated";
   }
 
@@ -164,7 +175,7 @@
   function syncRow(row) { if (row && window.STAFMetricRows) window.STAFMetricRows.sync(row); }
 
   function scrollPanelTop() {
-    var p = document.querySelector(".sfari-fnpanel");
+    var p = body().querySelector(".sfari-fnpanel");
     if (p) p.scrollTop = 0;
   }
 

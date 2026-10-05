@@ -21,7 +21,7 @@ def test_the_viewer_is_a_third_mode_beside_single_and_batch():
     info = SRC[SRC.index("def viewer_info():"):SRC.index("def viewer_info():") + 900]
     assert "VIEWER_INTRO" in info and "_viewer_summary_text" in info and "_info(html_tip=card)" in info
     assert "def _toggle_viewer():" in SRC and "nav_viewer" not in SRC and "viewer_exit" not in SRC
-    assert SRC.count('ui.update_switch("viewer_on", value=False)') >= 2   # Batch and New analysis
+    assert SRC.count('ui.update_switch("viewer_on", value=False)') >= 2   # New and Open (and the hidden Batch)
     assert 'ui.output_ui("viewer_workspace")' in SRC
     # every single-site guard hides in both takeovers, never only in batch
     assert 'if app_mode() != "single"' in SRC
@@ -40,7 +40,7 @@ def test_vendored_maplibre_and_viewer_script_are_loaded():
 
 
 def test_tiles_come_through_a_session_route_not_a_public_host():
-    assert 'session.dynamic_route("national-tiles", _national_tiles_handler)' in SRC
+    assert 'session.dynamic_route("national_tiles", _national_tiles_handler)' in SRC
     handler = re.search(r"async def _national_tiles_handler\(request\):.*?return Response\(content=data",
                         SRC, re.S)
     assert handler, "tile handler not found"

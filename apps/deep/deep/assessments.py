@@ -202,8 +202,9 @@ def _region_geometry(region: dict | None) -> dict | None:
 
 def library_region_features() -> dict:
     """A GeoJSON FeatureCollection of the available assessments that carry a region
-    outline, for DEEP's "available assessments" map overlay. Each feature's properties
-    carry ``assessmentId`` (for click-to-load), ``assessmentName`` and ``regionName``.
+    outline, for DEEP's assessment-regions sidebar and map layer. Each feature's properties
+    carry ``assessmentId``, ``assessmentName``, ``regionName``, ``regionCode`` (the Level III
+    code for an ecoregion), ``version`` and ``lifecycle`` (preliminary | certified).
     ``features`` is empty when nothing has a polygon (e.g. only the state-SQT registry).
     """
     feats: list[dict] = []
@@ -220,7 +221,9 @@ def library_region_features() -> dict:
                     "assessmentId": a.get("assessmentId"),
                     "assessmentName": a.get("assessmentName", a.get("assessmentId")),
                     "regionName": region.get("name", ""),
+                    "regionCode": str(region.get("code") or ""),
                     "version": lib.get("version"),
+                    "lifecycle": session.lifecycle_status(a),
                     "updatedAt": lib.get("updatedAt", ""),
                 },
                 "geometry": geom,

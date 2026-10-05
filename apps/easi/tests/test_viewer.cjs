@@ -203,6 +203,19 @@ test("a click picks the nearest reach within the hit box and posts viewer_pick",
   assert.equal(h.status.hidden, true);
 });
 
+test("in the STAF app a pick goes to the input the server names (EASI's own prefix)", () => {
+  const h = harness();
+  h.handlers.get("easi-viewer-init")({ routeBase: "r?nonce=1", vpus: ["02"], pickInput: "easi-viewer_pick" });
+  const map = h.maplibregl.maps[0];
+  map.loaded = true;
+  map.fire("style.load");
+  map.features = [reach(8566387, "Functioning", [[0.9, 1.02], [1.1, 1.02]], { name: "Rivanna River" })];
+  map.fire("click", { point: { x: 100, y: 100 }, lngLat: { lng: 1, lat: 1 } });
+  assert.equal(h.inputs.length, 1);
+  assert.equal(h.inputs[0].name, "easi-viewer_pick");
+  assert.equal(h.inputs[0].value.comid, 8566387);
+});
+
 test("hovering highlights the nearest reach through feature state and clears on leave", () => {
   const h = harness();
   h.handlers.get("easi-viewer-init")({ routeBase: "r?nonce=1", vpus: ["02"] });

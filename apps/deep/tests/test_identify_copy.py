@@ -97,9 +97,11 @@ def test_numbers_are_formatted():
 
 
 def test_styles_carry_the_tighter_divider_and_the_new_version():
-    assert 'href="styles.css?v=23"' in SRC
+    assert 'href="styles.css?v=26"' in SRC
     assert ".easi-pane-body hr { margin: 8px 0; }" in CSS
     assert ".easi-ac-credit" not in CSS
+    # the pane's narrower width at 1024px and below also sets the zoom cue's gutter (staf.css)
+    assert ".easi-leftpane { width: 322px; }" in CSS and ".easi-shell { --staf-pane-width: 322px; }" in CSS
 
 
 def test_snap_helper_reads_the_hr_id():

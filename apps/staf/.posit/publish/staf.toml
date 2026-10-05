@@ -1,0 +1,27 @@
+# Posit Publisher configuration: the STAF app (EASI, SFARI and DEEP in one) on Posit Connect Cloud.
+#
+# Before every deploy, copy the tools in (they land in _tools/, which git ignores; Publisher
+# uploads what `files` lists):
+#     python apps/staf/scripts/assemble_tools.py
+# then run the STAF suite, open apps/staf as its own VS Code window and deploy with the "staf"
+# configuration. The first deploy creates the new content item; the deployment record Publisher
+# writes then (.posit/publish/deployments/) ties later deploys to it: never commit or delete it.
+"$schema" = "https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json"
+type = "python-shiny"
+entrypoint = "app.py"
+title = "staf"
+files = [
+    "/app.py",
+    "/requirements.txt",
+    "/.python-version",
+    "/staf_shell/",
+    "/www/",
+    "/_tools/",
+    "/.posit/publish/staf.toml",
+]
+validate = true
+product_type = "connect_cloud"
+
+# Python 3.12, as every tool requires (rasterio 1.5.0 and the pinned numpy/pandas/HyRiver stack).
+[python]
+version = "3.12"

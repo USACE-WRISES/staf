@@ -262,7 +262,7 @@ def test_the_page_wires_the_shared_chip():
     assert 'ui.output_ui("scenario_bar"), ui.output_ui("rollup_rail")' in SRC
     assert "@reactive.event(input.staf_scenario_evt)" in SRC
     assert "@reactive.event(input.staf_sc_save)" in SRC and "@reactive.event(input.staf_sc_delete)" in SRC
-    assert 'href="staf/staf.css?v=4"' in SRC and 'src="staf/scenarios.js?v=1"' in SRC
+    assert 'href="staf/staf.css?v=9"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
     assert SRC.count("_xs_heights.set(None); _reset_scenarios()") == 2      # fresh screening and reset
     panel = SRC.split("def fn_panel():", 1)[1].split("def _cur_row(", 1)[0]
     assert "scenario_nonce()" in panel
@@ -297,7 +297,7 @@ def _report_wiring(base: str):
     assert "comparison_table" not in section
     assert 'scenario=staf_web.report_scenario(_sc["set"])' in section
     assert 'can_delete=mode == "edit" and not cur.is_baseline' in SRC
-    assert 'href="staf/staf.css?v=4"' in SRC
+    assert 'href="staf/staf.css?v=9"' in SRC
     for ext in ("pdf", "csv", "geojson"):
         assert f"{base}{{staf_web.scenario_suffix(_sc['set'])}}.{ext}" in SRC
     pdf = SRC.split("def dl_pdf():", 1)[1].split("@render", 1)[0]

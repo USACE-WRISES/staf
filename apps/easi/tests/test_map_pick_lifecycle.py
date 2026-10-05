@@ -128,7 +128,7 @@ def test_new_selection_and_clear_invalidate_before_state_changes(app_name, event
             "click": "_handle_click", "coordinates": "_coords_entered"}[event]
     handler = _function(app_name, name, {
         "_map_pick": state, "current_step": lambda: "identify", "STEP_IDENTIFY": "identify",
-        "streams_down": lambda: False,
+        "streams_down": lambda: False, "zoomed_in": lambda: True,
         "clicked": _stop, "_clear_route_state": _stop, "_remove_layer": _stop,
         "_invalidate_selection": _stop, "_begin_pick": _stop,
         "_MAP": Map(), "input": SimpleNamespace(coords_entered=lambda: {"lat": 40, "lon": -83}),
@@ -154,7 +154,7 @@ def test_a_pick_proceeds_while_the_map_is_unavailable(app_name, event):
     name = {"click": "_handle_click", "coordinates": "_coords_entered"}[event]
     handler = _function(app_name, name, {
         "_map_pick": state, "current_step": lambda: "identify", "STEP_IDENTIFY": "identify",
-        "streams_down": lambda: True, "_STREAMS_DOWN_TEXT": "down",
+        "streams_down": lambda: True, "_STREAMS_DOWN_TEXT": "down", "zoomed_in": lambda: True,
         "clicked": _stop, "_clear_route_state": _stop, "_remove_layer": _stop,
         "_invalidate_selection": _stop, "_begin_pick": _stop, "_invalidate_analysis": _stop,
         "_MAP": Map(), "input": SimpleNamespace(coords_entered=lambda: {"lat": 40, "lon": -83}),
@@ -165,17 +165,47 @@ def test_a_pick_proceeds_while_the_map_is_unavailable(app_name, event):
     assert state["generation"] == 8 and notices == []
 
 
-@pytest.mark.parametrize("app_name", ["sfari", "deep"])
+@pytest.mark.parametrize("app_name", ["easi", "sfari", "deep"])
+def test_a_click_while_zoomed_out_pulses_the_zoom_cue_and_keeps_the_point(app_name):
+    """Owner, 2026-10-05: no streams are drawn below the stream zoom, so a click there starts no
+    pick (which cleared the point placed already and ended in the 150 ft message); it pulses the
+    zoom cue instead."""
+    class Nudge:
+        def __init__(self):
+            self.value = 0
+
+        def __call__(self):
+            return self.value
+
+        def set(self, value):
+            self.value = value
+    state, nudge = {"generation": 7}, Nudge()
+    handler = _function(app_name, "_handle_click", {
+        "_map_pick": state, "current_step": lambda: "identify", "STEP_IDENTIFY": "identify",
+        "zoomed_in": lambda: False, "zoom_nudge": nudge,
+        "clicked": _stop, "_clear_route_state": _stop, "_invalidate_selection": _stop,
+        "_begin_pick": _stop, "_invalidate_analysis": _stop, "_remove_layer": _stop,
+    })
+    handler()
+    handler()
+    assert state["generation"] == 7 and nudge.value == 2
+    src = (APPS / app_name / "app.py").read_text(encoding="utf-8")
+    body = src.split("def _handle_click():", 1)[1]
+    assert body.index("if not zoomed_in():") < body.index('_map_pick["generation"] += 1')
+    assert "staf_web.zoom_cue_output()," in src and "def zoom_cue():" in src
+
+
+@pytest.mark.parametrize("app_name", ["sfari", "deep", "easi"])
 def test_successful_import_invalidates_pending_pick_before_loading_state(app_name, tmp_path):
     saved = tmp_path / "assessment.json"
     saved.write_text("{}", encoding="utf-8")
     state = {"generation": 9}
-    loader = SimpleNamespace(load=json.loads)
+    loader = SimpleNamespace(load=json.loads, saved_point=lambda _: None)
     handler = _function(app_name, "_load_session", {
         "_map_pick": state,
         "input": SimpleNamespace(load_session=lambda: [{"datapath": str(saved)}]),
         "session_io": loader, "session": loader, "delin": SimpleNamespace(set=_stop),
-        "_lookup_request": SimpleNamespace(clear=_stop),
+        "_lookup_request": SimpleNamespace(clear=_stop), "_cancel_report": _stop,
         "comid_anchor": SimpleNamespace(saved_anchor=lambda _: None, saved_point=lambda _: None),
     })
     with pytest.raises(StateMutation):
@@ -197,8 +227,10 @@ def test_easi_new_analysis_works_before_the_basin_clear_input_exists():
         events = SimpleNamespace(nav_new=reactive.value(ActionButtonValue(0)),
                                  clear_basin=reactive.value())
         resets = []
+        # nothing to lose yet, so New starts over at once (with work it asks first: the next test)
         scope = {"reactive": reactive, "input": events, "_reset": lambda: resets.append("reset"),
-                 "app_mode": reactive.value("single")}
+                 "_start_over": lambda: resets.append("reset"), "_cancel_report": lambda: None,
+                 "delin": reactive.value(None), "base_result": reactive.value(None)}
         exec(compile(ast.Module(body=functions, type_ignores=[]), "easi/app.py", "exec"), scope)
         try:
             await reactive.flush()
