@@ -519,14 +519,14 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   padding: 5px 14px 5px 11px; font-size: 12px; font-weight: 500; color: var(--easi-accent);
 }
 
-/* busy/stage indicator — a TEXT output (#busy_text) updated in place; the spinner is
+/* busy/stage indicator — a TEXT output (.easi-busy-text) updated in place; the spinner is
    a ::before on this persistent element so it spins smoothly. It collapses to nothing
    when idle (:empty). */
-#busy_text:not(:empty) {
+.easi-busy-text:not(:empty) {
   display: flex; align-items: center; gap: 8px;
   color: var(--easi-accent); font-size: 13px; margin-top: 10px;
 }
-#busy_text:not(:empty)::before {
+.easi-busy-text:not(:empty)::before {
   content: ""; width: 15px; height: 15px; flex: none;
   border: 2px solid #cdd8ec; border-top-color: var(--easi-accent);
   border-radius: 50%; animation: easi-spin .8s linear infinite;
@@ -536,8 +536,8 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
    32px + a 32px ::after spinner + opacity:0.3. The progress label recomputes ~3x/s, so
    that overlay flickered the row height (the jitter) and dimmed it. We have our own
    spinner, so neutralize Shiny's here only. */
-#busy_text.recalculating { min-height: 0 !important; opacity: 1 !important; }
-#busy_text.recalculating::after { display: none !important; }
+.easi-busy-text.recalculating { min-height: 0 !important; opacity: 1 !important; }
+.easi-busy-text.recalculating::after { display: none !important; }
 /* Same overlay, same fix, inside the report modal. Every in-modal recompute (candidate
    switch, rating/note edit) is an instant, cached operation, so Shiny's .recalculating
    overlay (opacity:0.3 + min-height:32px + ::after spinner) only turns those swaps into a
@@ -732,27 +732,7 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 /* Polish pass: responsive, photos, progress, sticky report headers            */
 /* --------------------------------------------------------------------------- */
 
-/* header Save (a Bootstrap download button) reads as a plain nav link like the others */
-.easi-nav .easi-nav-btn.btn { background: transparent; border: none; color: #cdd8ec;
-  font-size: 13px; font-weight: 400; padding: 0; border-radius: 0; line-height: inherit;
-  box-shadow: none; }
-.easi-nav .easi-nav-btn.btn:hover { background: transparent; color: #fff; }
-/* header Open (the load_session file input) collapses to just its button, styled as a
-   nav link — the filename box and upload bar are hidden; load feedback is the app's
-   "Assessment loaded" notification */
-.easi-nav .shiny-input-container { margin: 0; width: auto; }
-.easi-nav .input-group { width: auto; flex-wrap: nowrap; }
-/* the Browse wrapper label must not add its own line box around the Open span */
-.easi-nav .input-group label { display: flex; align-items: center; margin: 0; }
-.easi-nav .input-group .form-control { display: none; }
-.easi-nav .shiny-file-input-progress { display: none; }
-.easi-nav .btn-file { background: transparent; border: none; color: #cdd8ec;
-  font-size: 13px; font-weight: 400; padding: 0; border-radius: 0; line-height: 1.5;
-  box-shadow: none; cursor: pointer; }
-.easi-nav .btn-file:hover { color: #fff; }
-/* hairline divider groups the assessment file actions (New/Open/Save) from the info
-   links (About/Help) — same separator idiom as .staf-topnav */
-.easi-nav #nav_about { border-left: 1px solid rgba(255, 255, 255, .22); padding-left: 18px; }
+/* the header's actions (New, Open, Save, About, Help) are styled in staf/staf.css, the same in every tool */
 
 /* per-metric site photos */
 .sfari-photos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -788,6 +768,7 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   .sfari-rollup { width: 264px; padding: 13px 14px; }
   .sfari-fnpanel { padding: 14px 16px 26px; }
   .easi-leftpane { width: 322px; }
+  .easi-shell { --staf-pane-width: 322px; }   /* the same width, for the zoom cue (staf/staf.css) */
 }
 @media (max-width: 820px) {
   .sfari-worksheet { flex-direction: column; }
@@ -872,8 +853,8 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .easi-map-wrap .leaflet-top.leaflet-right .leaflet-control { float: none; }
 .easi-map-wrap .leaflet-top.leaflet-right .leaflet-control-layers { order: 1; }
 .easi-map-wrap .leaflet-top.leaflet-right .easi-legend-panel { order: 2; }
-#stream_legend.recalculating { min-height: 0 !important; opacity: 1 !important; }
-#stream_legend.recalculating::after { display: none !important; }
+.easi-legend-panel > .shiny-html-output.recalculating { min-height: 0 !important; opacity: 1 !important; }
+.easi-legend-panel > .shiny-html-output.recalculating::after { display: none !important; }
 .easi-legend {
   display: flex; flex-direction: column; gap: 4px; max-width: 250px;
   background: rgba(255, 255, 255, .94); border: 1px solid var(--card-border);

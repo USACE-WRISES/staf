@@ -89,10 +89,17 @@ assessment apps one behavior and one look (owner, 2026-10-03):
   every download is a plain attachment link without `target`, served as
   `application/octet-stream`, so nothing opens a new page or previews a workbook; the page
   warns before it is closed or reloaded with unsaved work.
+- **The header's actions** (`web.nav_actions`, `web.new_dialog`, `web.info_dialog`, the nav rules
+  in `assets/staf.css`; owner, 2026-10-05): New, Open, Save, About and Help, one markup and one
+  behavior in every tool. New asks before it clears work; About and Help close alike.
+- **The STAF assessment file** (`assessment_file.py`): what Save writes and Open reads, one JSON
+  structure in every tool: `format`, `formatVersion`, `tool`, `savedAt`, `delineation` (the
+  site), `toolData` (what the tool brought to the site, shared by every scenario) and
+  `scenarios` (every scenario with its own state). A tool opens only its own files and refuses
+  a newer format; SFARI's and DEEP's older files open through their own legacy readers.
 - **Scenarios** (`model/scenarios.py`, `web.scenario_bar`, `assets/scenarios.js`):
   "Existing Conditions" (fixed name) plus up to nine alternatives, each a copy of the app's
-  own state; session files keep Existing Conditions at the top level and add the
-  alternatives under an additive `scenarios` key.
+  own state; the assessment file keeps each with its state.
 - **Comparison and summary** (`model/compare.py`, `model/summary.py`, `web.comparison_table`,
   `web.summary_block`): ECI, sub-indices and every function with the change from Existing
   Conditions (DEEP's intervals compare as intervals); reach, tier, length, drainage area,

@@ -1,0 +1,5 @@
+# the tools, copied here by scripts/assemble_tools.py for a deploy
+_tools/
+# Posit Publisher deployment records: never commit (they tie redeploys to the content item)
+.posit/publish/deployments/
+__pycache__/

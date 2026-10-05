@@ -15,6 +15,7 @@ STAF (Stream Tiered Assessment Framework) is a monorepo with two kinds of delive
 | `apps/sfari` | Rapid | Function-based rapid field assessment with desktop evidence support |
 | `apps/deep` | Detailed | Runs curve-based detailed assessments (predefined or uploaded `.deep.json` bundles) |
 | `apps/stream-curves` | Detailed (builder) | Builds reference/regional curves into assessment versions for DEEP; a desktop app with project files and an Assessment library gallery |
+| `apps/staf` | All three (prototype) | EASI, SFARI and DEEP in one app, each a Shiny module under one header (EASI \| SFARI \| DEEP switch, tier strip); a separate, new Connect Cloud item; see its README |
 
 The site's Tools page is the app launch portal; app URLs live in `docs/_data/apps.yml` **and** in each app's `STAF_LINKS` dict — a URL change must be mirrored in both. Watershed metrics come from two engines, named once (`libs/README.md`, `docs/computation-engines.md`): the **StreamCat lookup engine** (token `streamcat`, EPA StreamCat by NHDPlus V2 COMID) and the **STAF site engine** (token `site-engine`, `libs/site_engine`, the HR reach watershed on NHDPlus HR), vendored per app and never a user-facing method choice.
 
@@ -32,6 +33,8 @@ docs/_data/apps.yml                Canonical app names/URLs for the portal
 
 apps/easi | sfari | deep | stream-curves    Shiny for Python apps (own requirements.txt,
                                             www/, data/, tests/; the web apps .posit/publish)
+apps/staf/                         STAF prototype: the three tools as modules of one app (staf_shell/ loader,
+                                   shared engine, header; www/shell/; _tools/ assembled for a deploy)
 apps/library/                      Shared, versioned STAF assessment library — completed
                                    detailed assessments StreamCurves publishes and DEEP runs
                                    (catalog.json + assessments/<id>/vN/; see its README);
@@ -44,7 +47,10 @@ desktop/launcher/                  Launcher page (vanilla HTML/CSS/JS, ships in 
 desktop/payload/                   env.lock + pbs.lock + prune.txt — inputs that define the env payload
 desktop/scripts/                   Payload build scripts (PowerShell/Python) — MUST stay pure ASCII
 libs/                              Shared packages, vendored per app (libs/site_engine = the STAF site engine,
-                                   libs/staf_workbook = scenarios, summary and the one-workbook download)
+                                   libs/staf_workbook = scenarios, summary, the one-workbook download, the
+                                   header's New/Open/Save/About/Help, the one assessment file Save writes in
+                                   every tool (assessment_file.py), and the shared page scripts every tool
+                                   serves from www/staf/, staf-ns.js first)
 tools/easi-national/               EASI National Builder: local Shiny panel + worker that precomputes the
                                    national dataset in HUC8 chunks and publishes it (never deployed; imports
                                    apps/easi directly; data root D:\Data\easi-national)
@@ -65,6 +71,7 @@ cd docs && bundle exec jekyll serve   # http://127.0.0.1:4000/staf/
 # Apps (one shared root venv, Python 3.12)
 py -3.12 -m venv .venv && .venv\Scripts\pip install -r requirements-dev.txt
 cd apps\easi && shiny run app.py --port 8000     # sfari:8001 deep:8003 stream-curves:8012
+cd apps\staf && shiny run app.py --port 8040     # STAF: EASI, SFARI and DEEP in one app
 
 # StreamCurves Desktop shell (dev mode runs the app from the repo .venv)
 dotnet test desktop\StreamCurves.Desktop.slnx             # 123 unit tests
@@ -75,6 +82,7 @@ dotnet run --project desktop\src\StreamCurves.Desktop     # or launch the built 
 
 - **Site**: pushed to `main` → GitHub Pages rebuilds from `docs/` automatically. Nothing to deploy manually.
 - **Apps**: one repo, three separate deployments (EASI, SFARI, DEEP). Deploy with Posit Publisher (VS Code/Positron) — open `apps/<app>` as its own window first; Publisher's config discovery from the monorepo root is slow and unreliable. The tracked `.posit/publish/<name>.toml` is the config; the **untracked** `.posit/publish/deployments/*.toml` records tie redeploys to the existing Connect Cloud content item and keep the public URLs stable. Always confirm Publisher targets the existing deployment, never a new one. Note: the `*.share.connect.posit.cloud` URLs return 403 to curl/scripts (bot gate) — verify in a real browser.
+- **STAF app (prototype)**: a separate, new Connect Cloud item (`staf`), deployed like the others from its own VS Code window. Run `apps/staf/scripts/assemble_tools.py` before every deploy: it copies each tool's own Publisher file list into the gitignored `apps/staf/_tools/`, which `tests/test_assembled.py` checks. Runbook: `apps/staf/README.md`.
 - **StreamCurves Desktop**: three tag streams on this repo's GitHub Releases — `streamcurves-v*` = shell installers (normal releases, built by `.github/workflows/streamcurves-shell.yml`), `streamcurves-payload-*` = payload components (**always prereleases**, built by `streamcurves-payload.yml`; the rolling `streamcurves-current` prerelease carries `latest-desktop.json` that installed shells poll), and the rolling `library` prerelease (the assessment library the gallery and DEEP read, rebuilt by `library-release.yml` on every push to `main` that touches `apps/library/**`). Full runbook: `desktop/RELEASING.md`.
 - **National dataset**: another tag stream, the rolling `easi-national-current` prerelease (**always a prerelease**), published by `tools/easi-national` with `gh release upload --clobber`, `manifest.json` last. EASI's Nationwide screening map reads it through `easi/national` (server-side fetch + a session tile route; the asset host sends no CORS header, so the browser never reads the release directly). `EASI_NATIONAL_BASE` points a local EASI at another https base or a directory such as the builder's `staging/`.
 - **STAF data bundle**: the rolling `staf-data-current` prerelease (**always a prerelease**), packed and published by `tools/hr-slim` (`run.py release pack`, then `release publish --yes` with the owner's go; `release.json` last). The vendored site engine reads it (`site_engine/delivery.py`: the core first, a region or a national table on first read, into `STAF_DATA_CACHE`) when `STAF_DATA_SOURCE` is `bundle` or `auto` and no `STAF_DATA_BUNDLE` folder is set. Published 2026-10-04 (234 assets, 5.39 GB). EASI, SFARI and DEEP default to `auto` (`os.environ.setdefault` in each `app.py`; their suites pin `service`); the engine's own default stays `service` (StreamCurves, the national builder).
@@ -104,3 +112,4 @@ dotnet run --project desktop\src\StreamCurves.Desktop     # or launch the built 
 13. **Engine vocabulary: display names change, tokens never do** — user-visible text says "StreamCat lookup engine" and "STAF site engine" (from the vendored `naming` module); the tokens `streamcat` / `site-engine` / `streamcat-legacy` ride digests, bundles, manifests, the CLI, and YAML and are immutable
 14. **The national dataset scores from stored evidence, never from live calls** — `assessment.assess_preloaded` + `easi.national.providers` run the unchanged adapters over a record; never add a per-site network call to that path, keep `easi-national-current` a prerelease, and fetch every source per chunk in the builder (the fabric API refuses more than ~160 COMIDs per `IN` filter)
 15. **Reference is a pressure screen, and its mirrors are generated** — StreamCurves picks reference stations with the fixed `least-disturbed-v1` screen (never a score), widens pools Level III to II to I per metric with a comparability check, and reports a metric with no defensible pool as insufficient reference support instead of forcing a curve. `config/fixed_criteria.yaml`, the `reference_screen:` block and `data/nrsa/station_screen.parquet` are generated and drift-gated: regenerate them (see `apps/stream-curves/README.md`), never hand-edit
+16. **EASI, SFARI and DEEP run on their own and inside STAF (`apps/staf`)** — a tool's JS never spells an input id (it posts through `STAFNs.id` and guards every delegated listener with `STAFNs.mine`), `session.dynamic_route` names use underscores (a module rejects hyphens), raw `id=` attributes in a tool's body are that tool's own, custom messages the shared scripts read carry `"ns": str(session.ns)`, and `def server` stays a plain top-level function (`tool_server = module.server(server)` wraps it). Each tool's `tests/test_module_mode.py` enforces this. The three tools' header actions (`staf_web.nav_actions`) and Save/Open file (`assessment_file`) are shared: change them in `libs/staf_workbook`, never in one tool

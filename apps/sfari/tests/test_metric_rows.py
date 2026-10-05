@@ -114,7 +114,7 @@ def test_the_page_names_its_sections_like_easi_and_deep_and_loads_the_shared_row
     assert 'ui.span("Metrics", class_="sfari-sec-title")' in SRC
     assert '"Evidence", class_="sfari-sec-title"' not in SRC
     assert 'href="staf/metric-rows.css?v=1"' in SRC and 'src="staf/metric-rows.js?v=1"' in SRC
-    assert SRC.index("staf/metric-rows.js") < SRC.index("field-review.js?v=7")
+    assert SRC.index("staf/metric-rows.js") < SRC.index("field-review.js?v=8")
     js = (HERE / "www" / "field-review.js").read_text(encoding="utf-8")
     assert "sfari-metric-toggle" not in js and "STAFMetricRows.sync" in js
     css = (HERE / "www" / "styles.css").read_text(encoding="utf-8")

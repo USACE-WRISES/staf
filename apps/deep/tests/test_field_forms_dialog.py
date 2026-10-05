@@ -76,7 +76,7 @@ def test_the_status_line_owns_the_polling():
 
 
 def test_the_preview_is_served_inline_by_a_session_route():
-    assert 'session_.dynamic_route("field-forms-preview", _ff_preview_route)' in SRC
+    assert 'session_.dynamic_route("field_forms_preview", _ff_preview_route)' in SRC
     route = SRC[SRC.index("def _ff_preview_route(request):"):SRC.index("_ff_preview_url =")]
     assert 'media_type="application/pdf"' in route and "inline; filename=" in route
     assert '"Cache-Control": "no-store"' in route
@@ -98,4 +98,4 @@ def test_the_dialog_styles_are_sfaris():
 
 
 def test_the_cache_bust_versions_moved_with_the_assets():
-    assert 'href="styles.css?v=23"' in SRC and 'src="measure.js?v=7"' in SRC
+    assert 'href="styles.css?v=26"' in SRC and 'src="measure.js?v=8"' in SRC

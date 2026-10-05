@@ -174,3 +174,88 @@ def test_the_shared_row_stylesheet_and_script_ship_with_the_library():
     assert "(hover: hover)" not in css and ":hover .staf-act" not in css   # nothing waits for a hover
     assert "window.STAFMetricRows" in js and "button.staf-act[data-staf-panel]" in js
     assert "—" not in css + js
+
+
+def test_a_tool_body_names_its_tool_and_its_id_prefix():
+    from shiny import module, ui
+    assert web.tool_root_attrs("sfari") == dict([("data-staf-tool", "sfari"), ("data-staf-ns", "")])
+    body = module.ui(lambda: ui.div(web.tool_root_attrs("sfari")))
+    html = str(body("sfari"))
+    assert 'data-staf-tool="sfari"' in html and 'data-staf-ns="sfari"' in html
+
+
+def test_the_shared_scripts_never_spell_an_input_id():
+    """Every shared script posts through STAFNs.id (assets/staf-ns.js), so the same file serves a
+    standalone app and the STAF app, where every id carries its tool's prefix."""
+    from pathlib import Path
+    assets = Path(__file__).resolve().parents[1] / "assets"
+    scripts = sorted(assets.glob("*.js"))
+    assert "staf-ns.js" in [js.name for js in scripts]
+    for js in scripts:
+        text = js.read_text(encoding="utf-8")
+        assert not re.search(r"setInputValue\(\s*[\"']", text), js.name
+        assert "getElementById(\"" not in text and "getElementById('" not in text, js.name
+
+
+def test_every_tool_shows_the_same_header_actions():
+    """Owner, 2026-10-05: EASI, SFARI and DEEP share one set of header actions, in one order: New,
+    Open and Save (the assessment file), a hairline, then About and Help."""
+    from shiny import module
+    html = str(web.nav_actions())
+    actions = ["nav_new", "load_session", "save_session", "nav_about", "nav_help"]
+    assert [i for i in re.findall(r'id="([a-z_]+)"', html) if i in actions] == actions
+    text = re.sub(r"<[^>]+>", " ", html)
+    assert re.findall(r"\b(New|Open|Save|About|Help)\b", text) == ["New", "Open", "Save", "About", "Help"]
+    assert 'accept=".json"' in html and "easi-nav-sep" in html and 'class="easi-nav"' in html
+    assert "target" not in html                               # Save downloads in place
+    inside = str(module.ui(web.nav_actions)("sfari"))          # the STAF app's module ids
+    assert 'id="sfari-nav_new"' in inside and 'id="sfari-save_session"' in inside
+    extra = str(web.nav_actions(web.download_link("x", "Local review")))
+    assert extra.index("nav_help") < extra.index("Local review")
+
+
+def test_new_asks_before_clearing_and_about_and_help_close_alike():
+    new = str(web.new_dialog("the delineation and every score"))
+    assert "Start a new assessment?" in new and "Clear the delineation and every score and start a new" in new
+    assert "<strong>Save</strong>" in new and 'id="confirm_new"' in new and "Clear &amp; start new" in new
+    assert "btn-danger" in new and "Cancel" in new
+    about = str(web.info_dialog("About EASI", "**EASI**, the screening tier."))
+    assert "About EASI" in about and "<strong>EASI</strong>" in about and "Close" in about
+    assert "—" not in new + about
+
+
+def test_the_zoom_cue_reads_the_same_in_every_tool_and_pulses_only_for_a_click():
+    """Owner, 2026-10-05: zoomed out, every tool says to zoom in, and a map click out there pulses
+    the cue instead of trying to snap."""
+    slot = str(web.zoom_cue_output())
+    assert 'class="staf-zoom-cue-slot"' in slot and 'role="status"' in slot and 'aria-live="polite"' in slot
+    assert 'id="zoom_cue"' in slot
+    assert web.ZOOM_CUE_TEXT == "Zoom in and click a stream"     # short, the apps' own phrase
+    cue = str(web.zoom_cue(3, pulse=True))
+    assert web.ZOOM_CUE_TEXT in cue and "is-nudged" in cue and 'data-nudge="3"' in cue
+    assert "is-nudged" not in str(web.zoom_cue(3)) and "—" not in web.ZOOM_CUE_TEXT
+    state = web.ZoomCue()
+    assert "is-nudged" not in str(state.render(True, 0))
+    assert "is-nudged" in str(state.render(True, 1))           # the render a click caused
+    assert "is-nudged" not in str(state.render(True, 1))       # any later render of the same cue
+    assert state.render(False, 1) is None                      # zoomed in, or another step
+
+
+def test_the_header_actions_are_styled_once_for_every_tool():
+    from pathlib import Path
+    css = (Path(__file__).resolve().parents[1] / "assets" / "staf.css").read_text(encoding="utf-8")
+    for rule in (".easi-nav .easi-nav-btn.btn {", ".easi-nav .btn-file {", ".easi-nav .easi-nav-sep {",
+                 ".easi-nav .input-group .form-control { display: none; }",
+                 ".easi-nav .shiny-file-input-progress { display: none; }"):
+        assert rule in css, rule
+    # the zoom cue: centred on the page (under the header's switch) with both gutters the wider
+    # inset, one line that starts at the left gutter only where it does not fit (safe centring);
+    # never taking a click; still under reduced motion. The left inset follows each tool's own
+    # pane width (EASI's pane keeps 352px where SFARI's and DEEP's narrow).
+    gutter = "max(var(--staf-map-inset-left), var(--staf-map-inset-right));"
+    for rule in (".staf-zoom-cue-slot {", f"left: {gutter}", f"right: {gutter}", "pointer-events: none",
+                 "--staf-map-inset-left: calc(var(--staf-pane-width, 352px) + 24px);",
+                 "justify-content: safe center;", "padding: 6px 14px; white-space: nowrap;",
+                 "@keyframes staf-zoom-cue-nudge", "@media (prefers-reduced-motion: reduce)"):
+        assert rule in css, rule
+    assert "--staf-map-inset-left: 346px" not in css

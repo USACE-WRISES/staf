@@ -1,5 +1,5 @@
-"""Scenarios in DEEP (owner, 2026-10-03): the session file keeps Existing Conditions at the top
-level and the alternatives in an additive key; the workbook carries one calculator per scenario
+"""Scenarios in DEEP (owner, 2026-10-03): the assessment file keeps every scenario with its own
+values (the STAF assessment file, 2026-10-05); the workbook carries one calculator per scenario
 behind a Summary tab whose numbers are the calculator's own; the page compares condition claims
 (an interval where a function cannot be assessed); the assessment page wires the shared chip."""
 from __future__ import annotations
@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from deep import assessments, calculator, scoring, session, workbook
+from deep._vendor.staf_workbook import assessment_file
 from deep._vendor.staf_workbook.model.compare import Measure
 from deep._vendor.staf_workbook.model.scenarios import BASELINE_ID, ScenarioSet
 
@@ -71,24 +72,24 @@ def _set(la):
     return sset
 
 
-def test_session_keeps_existing_conditions_at_the_top_level(la):
+def test_the_file_keeps_every_scenario_with_its_values(la):
     sset = _set(la)
-    ec = sset.baseline.state["measured_values"]
-    text = session.dump(DELIN, {"assessmentId": la.assessment_id}, ec, scenarios=sset.to_json())
+    text = session.dump(DELIN, {"assessmentId": la.assessment_id},
+                        assessment_file.scenarios_block(sset, sset.current.state))
     raw = json.loads(text)
-    assert raw["measured_values"] == ec and raw["schemaVersion"] == 2
-    st = session.load(text)
-    back = ScenarioSet.from_json(st["scenarios"], baseline_state={"measured_values": st["measured_values"]})
+    assert raw["tool"] == "DEEP" and "measured_values" not in raw
+    assert raw["scenarios"]["items"][0]["state"] == sset.baseline.state
+    back = assessment_file.scenario_set(session.load(text)["scenarios"])
     assert [s.name for s in back.items] == ["Existing Conditions", "Restore riparian"]
-    assert back.items[1].state == sset.items[1].state
+    assert back.baseline.state == sset.baseline.state and back.items[1].state == sset.items[1].state
 
 
-def test_a_file_without_scenarios_still_loads_and_writes_no_key():
-    text = session.dump(DELIN, {}, {"m": {"value": 1}}, scenarios=ScenarioSet().to_json())
-    assert "scenarios" not in json.loads(text)
-    st = session.load(text)
-    assert st["scenarios"] is None and st["measured_values"] == {"m": {"value": 1}}
-    assert [s.id for s in ScenarioSet.from_json(st["scenarios"]).items] == [BASELINE_ID]
+def test_a_file_without_alternatives_opens_as_existing_conditions_alone():
+    block = assessment_file.scenarios_block(ScenarioSet(), {"measured_values": {"m": {"value": 1}}})
+    st = session.load(session.dump(DELIN, {}, block))
+    back = assessment_file.scenario_set(st["scenarios"])
+    assert [s.id for s in back.items] == [BASELINE_ID]
+    assert back.baseline.state == {"measured_values": {"m": {"value": 1}}}
 
 
 def test_the_page_compares_claims_and_an_unassessed_function_is_an_interval():
@@ -199,12 +200,12 @@ def test_the_page_wires_the_shared_chip():
     assert 'ui.output_ui("scenario_bar"), ui.output_ui("rollup_rail")' in SRC
     assert "@reactive.event(input.staf_scenario_evt)" in SRC
     assert "@reactive.event(input.staf_sc_save)" in SRC and "@reactive.event(input.staf_sc_delete)" in SRC
-    assert 'href="staf/staf.css?v=4"' in SRC and 'src="staf/scenarios.js?v=1"' in SRC
+    assert 'href="staf/staf.css?v=9"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
     for fn in ("_load_ref_into_state", "_do_reset"):
         assert "_reset_scenarios()" in SRC.split(f"def {fn}(", 1)[1].split("\n    def ", 1)[0]
     assert "scenario_nonce()" in SRC.split("def fn_panel():", 1)[1].split("\n    def ", 1)[0]
     save = SRC.split("def save_session():", 1)[1].split("@render", 1)[0]
-    assert "scenarios=scen" in save
+    assert "_session_scenarios()" in save
     assert "yield _workbook_bytes(template)" in SRC
     load = SRC.split("def _load_session():", 1)[1].split("\napp = App(", 1)[0]
     assert load.index("_restore_scenarios(") < load.index("_saved_fp.set(_work_fp())")
@@ -259,13 +260,12 @@ def test_save_and_open_restore_every_scenario_whichever_is_shown():
     assert ns["measured_values"]() == {"m1": {"value": 4, "origin": "field"}}
     ns["measured_values"].set({"m1": {"value": 30, "origin": "field"}})
     assert ns["_sc"]["set"].current.name == "Urban growth"
-    ec, data = ns["_session_scenarios"]()
-    assert ec == {"m1": {"value": 4, "origin": "field"}}       # Existing Conditions at the top level
-    text = session.dump(DELIN, {}, ec, scenarios=data)
+    data = ns["_session_scenarios"]()
+    assert data["items"][0]["state"] == {"measured_values": {"m1": {"value": 4, "origin": "field"}}}
+    text = session.dump(DELIN, {}, data)
     # a fresh page opens the file
     st = session.load(text)
     fresh = _helpers()
-    fresh["measured_values"].set(st["measured_values"])
     fresh["_restore_scenarios"](st["scenarios"])
     assert [s.name for s in fresh["_sc"]["set"].items] == ["Existing Conditions", "Urban growth"]
     assert fresh["measured_values"]()["m1"]["value"] == 30      # the scenario on screen when saved
@@ -308,7 +308,7 @@ def _report_wiring(base: str):
     assert "comparison_table" not in section
     assert 'scenario=staf_web.report_scenario(_sc["set"])' in section
     assert 'can_delete=mode == "edit" and not cur.is_baseline' in SRC
-    assert 'href="staf/staf.css?v=4"' in SRC
+    assert 'href="staf/staf.css?v=9"' in SRC
     for ext in ("pdf", "csv", "geojson"):
         assert f"{base}{{staf_web.scenario_suffix(_sc['set'])}}.{ext}" in SRC
     pdf = SRC.split("def dl_pdf():", 1)[1].split("@render", 1)[0]

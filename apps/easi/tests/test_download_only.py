@@ -31,7 +31,7 @@ def test_every_workbook_download_is_sent_as_a_plain_file():
 
 
 def test_the_leave_page_guard_is_loaded_and_fed():
-    assert 'ui.tags.script(src="staf/unsaved-guard.js?v=1", defer="")' in SRC
+    assert 'ui.tags.script(src="staf/unsaved-guard.js?v=3", defer="")' in SRC
     assert (APP / "www" / "staf" / "unsaved-guard.js").is_file()
     assert "async def _publish_unsaved():" in SRC
     assert "send_custom_message(staf_web.UNSAVED_MESSAGE" in SRC

@@ -1,4 +1,4 @@
-# SFARI — Stream Functional Assessment Rapid Index (web app)
+# SFARI — Stream Functions Assessment and Rapid Index (web app)
 
 A Shiny-for-Python web application for applying **SFARI**, a rapid stream
 functional assessment. From a single clicked map point it delineates the upstream
@@ -67,8 +67,11 @@ bug, so the same fix has to reach whoever re-issues the draft.
 
 **Scenarios and the one-workbook download** (owner, 2026-10-03): the chip at the top of the
 score rail keeps "Existing Conditions" and up to nine alternatives (their Likert ratings and
-function scores; evidence and the cross-section are shared). Save writes Existing Conditions at
-the top level and the alternatives under an additive `scenarios` key (schema 1 unchanged). The
+function scores; evidence and the cross-section are shared). Save writes the STAF assessment
+file, the structure EASI and DEEP write too (owner, 2026-10-05;
+`libs/staf_workbook/staf_workbook/assessment_file.py`): the delineation, the shared evidence and
+cross-section, and every scenario with its entries. Files saved before (schema 1, Existing
+Conditions at the top level) still open, and a file from another tool is refused. The
 completed workbook holds Summary, Existing Conditions, one copy of the calculator per
 alternative (the template's formulas unchanged, only sheet names differ: tell Eco-PCX), then
 ReferenceCurves (the Likert criteria and suggestion breakpoints) (`sfari/workbook.py`,
@@ -203,7 +206,7 @@ No API keys are required at runtime; a free USGS NWIS key is optional
 variable. The HyRiver cache is directed to `/tmp` (ephemeral filesystem). Exports
 (CSV / GeoJSON / PDF) and the cross-section plot are matplotlib-free (reportlab +
 inline SVG), so there is no font-cache stall on first render. A field visit can be
-saved to / resumed from a JSON file (Save / Resume).
+saved to and resumed from a JSON file (the header's Save and Open).
 
 Deployment records under `.posit/publish/deployments/` hold account-specific content
 GUIDs/URLs and are git-ignored; Posit Publisher writes them locally on first deploy.

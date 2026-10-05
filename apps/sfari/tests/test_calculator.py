@@ -352,6 +352,7 @@ def test_a_session_saved_before_the_two_metrics_were_dropped_still_loads():
     import json
 
     from sfari import session
+    from sfari._vendor.staf_workbook import assessment_file
 
     retired = "high-flow-dynamics-high-flow-velocity-shear-observed"
     kept = calculator.METRIC_ROWS[0][0]
@@ -359,7 +360,7 @@ def test_a_session_saved_before_the_two_metrics_were_dropped_still_loads():
                         "metric_scores": {retired: {"likert": "Agree", "note": ""},
                                           kept: {"likert": "Neutral", "note": ""}},
                         "function_scores": {}, "evidence": {}})
-    state = session.load(saved)
+    state = assessment_file.scenario_set(session.load(saved)["scenarios"]).baseline.state
     assert state["metric_scores"][kept]["likert"] == "Neutral"
     assert retired not in {m["metricId"] for m in config.metrics()}
     # and it never reaches the worksheet, because it has no row

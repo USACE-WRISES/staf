@@ -14,30 +14,37 @@
  * Plotly modebar (config can't carry JS click handlers through shinywidgets).
  * Rating (.easi-rate-sel) and notes (.easi-note-ta) are handled by report-edit.js.
  * Event delegation on document keeps it working across fn_panel re-renders.
+ *
+ * In the STAF app EASI shares the page with SFARI and DEEP, whose worksheets use the same
+ * markers: this file acts only on events inside EASI's body (or outside every body, its
+ * dialogs, while EASI is shown) and posts to EASI's own inputs (staf/staf-ns.js).
  */
 (function () {
   "use strict";
+  var TOOL = "easi", NS = window.STAFNs;
 
+  function body() { return NS.scope(NS.tool(TOOL)); }
+  function inputId(name) { return NS.id(NS.tool(TOOL), name); }
   function send(name, payload) {
     if (window.Shiny && Shiny.setInputValue) {
-      Shiny.setInputValue(name, Object.assign({ _t: Date.now() }, payload || {}),
+      Shiny.setInputValue(inputId(name), Object.assign({ _t: Date.now() }, payload || {}),
                           { priority: "event" });
     }
   }
   function scrollPanelTop() {
-    var p = document.querySelector(".sfari-fnpanel");
+    var p = body().querySelector(".sfari-fnpanel");
     if (p) p.scrollTop = 0;
   }
 
   document.addEventListener("click", function (e) {
     var t = e.target;
-    if (!t || !t.closest) return;
+    if (!t || !t.closest || !NS.mine(t, TOOL)) return;
 
     var step = t.closest("[data-step]");
     if (step && window.Shiny && Shiny.setInputValue) {
       e.preventDefault();
       // event priority re-fires even when the target step is unchanged (repeat clicks)
-      Shiny.setInputValue("step_nav", step.getAttribute("data-step"), { priority: "event" });
+      Shiny.setInputValue(inputId("step_nav"), step.getAttribute("data-step"), { priority: "event" });
       return;
     }
 
@@ -74,7 +81,7 @@
         if (view.getAttribute("data-xs-view") === "full") {
           Plotly.relayout(gd, { "xaxis.autorange": true, "yaxis.autorange": true });
         } else {
-          var el = document.getElementById("xs_window_range");
+          var el = document.getElementById(inputId("xs_window_range"));
           var win = null;
           try { win = JSON.parse((el && el.textContent) || "null"); } catch (err) { win = null; }
           if (win && win.x && win.y) {
@@ -101,7 +108,9 @@
     send("observed_set", { mid: el.getAttribute("data-mid"), key: el.getAttribute("data-key"),
                            value: el.value });
   }
-  function isObserved(el) { return !!(el && el.classList && el.classList.contains("easi-obs-in")); }
+  function isObserved(el) {
+    return !!(el && el.classList && el.classList.contains("easi-obs-in")) && NS.mine(el, TOOL);
+  }
   var obsTimer = null;
   document.addEventListener("change", function (e) {
     if (!isObserved(e.target)) return;

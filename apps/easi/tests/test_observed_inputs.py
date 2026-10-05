@@ -168,7 +168,7 @@ def test_the_client_posts_each_entry():
     assert 'send("observed_set", { mid: el.getAttribute("data-mid"), key: el.getAttribute("data-key"),' in JS
     assert 'document.addEventListener("change", function (e) {\n    if (!isObserved(e.target)) return;' in JS
     assert 'if (!isObserved(el) || el.tagName === "SELECT") return;' in JS          # typed text is debounced
-    assert 'src="worksheet.js?v=10"' in SRC and 'href="styles.css?v=64"' in SRC
+    assert 'src="worksheet.js?v=11"' in SRC and 'href="styles.css?v=66"' in SRC
     for rule in (".easi-obs {", ".easi-obs-in {", ".easi-obs-hint.applied", ".easi-rate-sel[disabled]"):
         assert rule in CSS, rule
 
@@ -234,7 +234,10 @@ def test_the_completed_workbook_carries_the_twelve_flows_behind_the_variability(
     for result in ({**res, "eromMonthly": flows[:11]}, {**res, "eromMonthly": None},
                    {**res, "eromMonthly": flows[:11] + [float("nan")]}):
         assert not [k for k in calculator.entries_from_result(result)[0] if re.fullmatch(r"in_m\d\d", k)]
-    # the application and the batch engine both keep the flows on the result
-    assert 'merged["eromMonthly"] = calculator.monthly_flows((d.get("ctx_inputs") or {}).get("erom"))' in SRC
+    # the application (a screening, and an opened file) and the batch engine all keep the flows
+    # on the result
+    assert 'base_result.set(session_io.screened(d, res.get("huc12"), res["report"]))' in SRC
+    sess = (Path(app.__file__).parent / "easi" / "session.py").read_text(encoding="utf-8")
+    assert 'merged["eromMonthly"] = calculator.monthly_flows((delin.get("ctx_inputs") or {}).get("erom"))' in sess
     api = (Path(app.__file__).parent / "easi" / "batch" / "api.py").read_text(encoding="utf-8")
     assert '"eromMonthly": calculator.monthly_flows(ctx_inputs.get("erom")),' in api

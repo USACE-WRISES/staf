@@ -1,5 +1,69 @@
-/* STAF shared styles: the scenario chip, the compare table and the summary block. Colours follow
-   each app's own tokens (--easi-accent, --card-border, --rule, --surface-soft) with fallbacks. */
+/* STAF shared styles: the header's actions, the scenario chip, the compare table and the summary
+   block. Colours follow each app's own tokens (--easi-accent, --card-border, --rule, --surface-soft)
+   with fallbacks. */
+
+/* the header's actions (web.nav_actions), the same in every tool: New, Open and Save, then About
+   and Help, all plain links on the dark bar. Save is a Bootstrap download button and Open the
+   load_session file input, collapsed to its button (the filename box and the upload bar are
+   hidden: the app's "Assessment loaded" notification is the feedback). */
+.easi-nav .easi-nav-btn.btn { background: transparent; border: none; color: #cdd8ec;
+  font-size: 13px; font-weight: 400; padding: 0; border-radius: 0; line-height: inherit;
+  box-shadow: none; }
+.easi-nav .easi-nav-btn.btn:hover { background: transparent; color: #fff; }
+.easi-nav .shiny-input-container { margin: 0; width: auto; }
+.easi-nav .input-group { width: auto; flex-wrap: nowrap; }
+/* the Browse wrapper label must not add its own line box around the Open span */
+.easi-nav .input-group label { display: flex; align-items: center; margin: 0; }
+.easi-nav .input-group .form-control { display: none; }
+.easi-nav .shiny-file-input-progress { display: none; }
+.easi-nav .btn-file { background: transparent; border: none; color: #cdd8ec;
+  font-size: 13px; font-weight: 400; padding: 0; border-radius: 0; line-height: 1.5;
+  box-shadow: none; cursor: pointer; }
+.easi-nav .btn-file:hover { color: #fff; }
+/* a hairline parts the file actions (New, Open, Save) from About and Help */
+.easi-nav .easi-nav-sep { border-left: 1px solid rgba(255, 255, 255, .22); padding-left: 18px; }
+
+/* the zoom cue (web.zoom_cue_output / web.zoom_cue): over the top of the map, centred on the page,
+   so it sits under the STAF header's tool switch (as "Loading streams" sits at the bottom). Both
+   gutters are the wider of the two map insets, which keeps it clear of the left pane and of a
+   tool's right sidebar (DEEP moves --staf-map-inset-right while its sidebar is open). Where the
+   gutters leave too little room, the one-line cue starts at the left gutter instead of running
+   under the pane (safe centring). The left inset is the left pane's width plus its 12px margin
+   and a 12px gap: a tool whose pane narrows sets --staf-pane-width with it (SFARI and DEEP at
+   1024px and below). The cue never takes a click. */
+.easi-shell {
+  --staf-map-inset-left: calc(var(--staf-pane-width, 352px) + 24px); --staf-map-inset-right: 64px;
+}
+.staf-zoom-cue-slot {
+  position: absolute; top: 62px;
+  left: max(var(--staf-map-inset-left), var(--staf-map-inset-right));
+  right: max(var(--staf-map-inset-left), var(--staf-map-inset-right));
+  z-index: 1050; display: flex; justify-content: center; justify-content: safe center;
+  pointer-events: none;
+}
+.staf-zoom-cue-slot > .shiny-html-output.recalculating { min-height: 0 !important; opacity: 1 !important; }
+.staf-zoom-cue-slot > .shiny-html-output.recalculating::after { display: none !important; }
+.staf-zoom-cue {
+  display: inline-flex; align-items: center; gap: 7px; padding: 6px 14px; white-space: nowrap;
+  border-radius: 16px; background: rgba(255, 255, 255, .96); border: 1px solid var(--card-border, #d5deea);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .10); color: #33415c; font-size: 12.5px; line-height: 1.35;
+}
+.staf-zoom-cue svg { flex: none; color: var(--easi-accent, #2f4b7c); }
+/* a click while the map is out too far: a short shake and a ring, so the cue reads as the answer */
+.staf-zoom-cue.is-nudged { animation: staf-zoom-cue-nudge .6s ease-out; }
+@keyframes staf-zoom-cue-nudge {
+  0% { transform: translateX(0); box-shadow: 0 0 0 0 rgba(47, 75, 124, .45); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+  100% { transform: translateX(0); box-shadow: 0 0 0 10px rgba(47, 75, 124, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .staf-zoom-cue.is-nudged { animation: none; border-color: var(--easi-accent, #2f4b7c); }
+}
+/* the left pane is a bottom sheet here: clear the zoom buttons (left) and the layers button (right) */
+@media (max-width: 820px) { .easi-shell { --staf-map-inset-left: 56px; --staf-map-inset-right: 60px; } }
 
 .staf-scen { margin: 0 0 12px; position: relative; }
 .staf-scen-chip { position: relative; }

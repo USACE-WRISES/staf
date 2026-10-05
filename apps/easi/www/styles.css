@@ -404,7 +404,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .easi-header-left { display: flex; align-items: center; min-width: 0; }
 .easi-header .easi-brand { font-family: var(--font-head); font-weight: 700; font-size: 1.05rem; }
 .easi-header .easi-brand small { font-weight: 400; opacity: .8; font-size: .8rem; margin-left: 8px; }
-.easi-header .easi-nav { justify-self: end; display: flex; gap: 18px; }
+.easi-header .easi-nav { justify-self: end; display: flex; gap: 18px; align-items: center; }
 /* the Nationwide screening switch, centered in the bar: Shiny wraps every
    input in a 300 px box with a bottom margin, which is what pushed the switch
    left and up; the box is collapsed so the grid centers the real content.
@@ -412,7 +412,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
    navy knob: monochrome, so the state reads without adding a color */
 .easi-mode-toggle { display: flex; align-items: center; gap: 7px; justify-self: center; }
 .easi-mode-toggle .shiny-input-container { width: auto; margin: 0; }
-.easi-mode-toggle #viewer_info { display: inline-flex; align-items: center; }
+.easi-mode-toggle > .shiny-html-output { display: inline-flex; align-items: center; }
 .easi-mode-toggle .form-check { margin: 0; min-height: 0; padding-left: 0; display: flex; align-items: center; gap: 7px; }
 .easi-mode-toggle .form-check-input { float: none; margin: 0; width: 30px; height: 16px; cursor: pointer;
   background-color: transparent; border: 1.5px solid rgba(255, 255, 255, .55);
@@ -613,8 +613,8 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .easi-map-wrap .leaflet-top.leaflet-right .leaflet-control { float: none; }
 .easi-map-wrap .leaflet-top.leaflet-right .leaflet-control-layers { order: 1; }
 .easi-map-wrap .leaflet-top.leaflet-right .easi-legend-panel { order: 2; }
-#stream_legend.recalculating { min-height: 0 !important; opacity: 1 !important; }
-#stream_legend.recalculating::after { display: none !important; }
+.easi-legend-panel > .shiny-html-output.recalculating { min-height: 0 !important; opacity: 1 !important; }
+.easi-legend-panel > .shiny-html-output.recalculating::after { display: none !important; }
 .easi-legend {
   display: flex; flex-direction: column; gap: 4px; max-width: 250px;
   background: rgba(255, 255, 255, .94); border: 1px solid var(--card-border);
@@ -656,14 +656,14 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   padding: 5px 14px 5px 11px; font-size: 12px; font-weight: 500; color: var(--easi-accent);
 }
 
-/* busy/stage indicator — a TEXT output (#busy_text) updated in place; the spinner is
+/* busy/stage indicator — a TEXT output (.easi-busy-text) updated in place; the spinner is
    a ::before on this persistent element so it spins smoothly. It collapses to nothing
    when idle (:empty). */
-#busy_text:not(:empty) {
+.easi-busy-text:not(:empty) {
   display: flex; align-items: center; gap: 8px;
   color: var(--easi-accent); font-size: 13px; margin-top: 10px;
 }
-#busy_text:not(:empty)::before {
+.easi-busy-text:not(:empty)::before {
   content: ""; width: 15px; height: 15px; flex: none;
   border: 2px solid #cdd8ec; border-top-color: var(--easi-accent);
   border-radius: 50%; animation: easi-spin .8s linear infinite;
@@ -673,8 +673,8 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
    32px + a 32px ::after spinner + opacity:0.3. The progress label recomputes ~3x/s, so
    that overlay flickered the row height (the jitter) and dimmed it. We have our own
    spinner, so neutralize Shiny's here only. */
-#busy_text.recalculating { min-height: 0 !important; opacity: 1 !important; }
-#busy_text.recalculating::after { display: none !important; }
+.easi-busy-text.recalculating { min-height: 0 !important; opacity: 1 !important; }
+.easi-busy-text.recalculating::after { display: none !important; }
 /* Same overlay, same fix, inside the report modal. Every in-modal recompute (candidate
    switch, rating/note edit) is an instant, cached operation, so Shiny's .recalculating
    overlay (opacity:0.3 + min-height:32px + ::after spinner) only turns those swaps into a

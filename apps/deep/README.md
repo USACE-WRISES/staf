@@ -36,8 +36,8 @@ assessment bundles.
   Report**. Identify/Basin + the map/delineation engine are reused from SFARI
   (`deep/{delineation,pipeline}.py`, `deep/datasources/`); the Assessment worksheet
   is curve-based (numeric value → live index + computed 0–15 function score).
-- `deep/report.py` — CSV / GeoJSON / PDF exports. `deep/session.py` — save/resume
-  (delineation + inlined assessment + measured values). `deep/measure.py` —
+- `deep/report.py` — CSV / GeoJSON / PDF exports. `deep/session.py` — Save and Open
+  (delineation + inlined assessment + every scenario's measured values). `deep/measure.py` —
   measured-value assembly (desktop auto-compute merges here; Phases 3 and 6).
 - `www/measure.js`, `www/deep.css` — worksheet interactions + styling.
 - `examples/spring-sample.deep.json` — a synthetic SPRING-built assessment bundle
@@ -274,8 +274,11 @@ leaves it stale, so re-run the script after a publish adds or renames a metric.
 
 **Scenarios** (owner, 2026-10-03): the chip at the top of the score rail keeps "Existing
 Conditions" and up to nine alternatives, each with its own measured values; desktop values the
-app computes go into every scenario without replacing an entry. Save writes Existing Conditions
-at the top level and the alternatives under an additive `scenarios` key (schema 2 unchanged).
+app computes go into every scenario without replacing an entry. Save writes the STAF assessment
+file, the structure EASI and SFARI write too (owner, 2026-10-05;
+`libs/staf_workbook/staf_workbook/assessment_file.py`): the delineation, the inlined assessment
+with its provenance, and every scenario with its values. Files saved before (schema 2, and v1 or
+version-less ones through their migration) still open, and a file from another tool is refused.
 Compare and the report compare condition claims, so an unassessed function shows as an
 interval. The completed workbook holds Summary (the calculator's own numbers with the
 application's condition claim beside them), Existing Conditions, one calculator per

@@ -22,8 +22,8 @@ def test_library_region_features_selects_only_polygon_bearers(monkeypatch):
     poly = {"type": "Polygon", "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 0]]]}
     multi = {"type": "MultiPolygon", "coordinates": [[[[0, 0], [1, 0], [1, 1], [0, 0]]]]}
     fake = [
-        {"assessmentId": "with-poly", "assessmentName": "With Poly",
-         "region": {"name": "ECBP", "polygon": poly}},
+        {"assessmentId": "with-poly", "assessmentName": "With Poly", "lifecycle": "certified",
+         "region": {"name": "ECBP", "code": 55, "polygon": poly}},
         {"assessmentId": "no-region", "assessmentName": "No Region"},              # skipped
         {"assessmentId": "region-no-poly", "assessmentName": "Bare",
          "region": {"name": "X"}},                                                 # skipped
@@ -38,6 +38,9 @@ def test_library_region_features_selects_only_polygon_bearers(monkeypatch):
     assert ids == ["with-poly", "lib-region"]
     assert fc["features"][0]["properties"]["regionName"] == "ECBP"
     assert fc["features"][1]["geometry"]["type"] == "MultiPolygon"
+    # the sidebar searches the Level III code and marks a certified assessment Final
+    assert [f["properties"]["regionCode"] for f in fc["features"]] == ["55", ""]
+    assert [f["properties"]["lifecycle"] for f in fc["features"]] == ["certified", "preliminary"]
 
 
 def test_library_region_features_come_only_from_library_assessments():

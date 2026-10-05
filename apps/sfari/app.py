@@ -1,4 +1,4 @@
-"""SFARI: Stream Functional Assessment Rapid Index (Shiny for Python, Core).
+"""SFARI: Stream Functions Assessment and Rapid Index (Shiny for Python, Core).
 
 A StreamStats-style workflow that mirrors EASI: zoom in until NHD stream vectors
 appear, click a stream to snap a point, delineate the watershed + upstream reach,
@@ -30,11 +30,12 @@ os.environ.setdefault("HYRIVER_CACHE_EXPIRE", str(7 * 24 * 3600))
 os.environ.setdefault("STAF_DATA_SOURCE", "auto")
 
 import anyio  # noqa: E402
-from shiny import App, reactive, render, ui  # noqa: E402
+from shiny import App, module, reactive, render, ui  # noqa: E402
 
 from sfari import bieger, config, delineation, pipeline, report, scoring, session as session_io, xscalc  # noqa: E402
 from sfari import viewport  # noqa: E402
 from sfari._vendor.staf_workbook import web as staf_web  # noqa: E402  (download-only controls)
+from sfari._vendor.staf_workbook import assessment_file  # noqa: E402  (Save and Open: one file in every tool)
 from sfari._vendor.staf_workbook.model.scenarios import BASELINE_ID, ScenarioSet  # noqa: E402
 from sfari import workbook as staf_book  # noqa: E402  (the scenario workbook and the summary block)
 from sfari import calculator, comid_anchor, engine_prefill, hr_site, network_display  # noqa: E402
@@ -752,7 +753,8 @@ def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
     elif not streams_visible:
         note = "Streams are hidden"
     elif not zoomed:
-        note = "Zoom in to see streams"
+        # on Identify the zoom cue over the map says it (staf_web.zoom_cue)
+        note = None if step == STEP_IDENTIFY else "Zoom in to see streams"
     elif mode == "hr-truncated":
         note = "Too many streams to show here. Zoom in."
     elif mode == "hr-partial":
@@ -785,36 +787,57 @@ def staf_topnav():
     )
 
 
-app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=28"),
-                    ui.tags.script(src="geocode-autocomplete.js", defer=""),
-                    ui.tags.script(src="legend-dock.js?v=3", defer=""),
-                    ui.tags.script(src="tooltip.js", defer=""),
-                    ui.tags.script(src="coord-entry.js", defer=""),
-                    ui.tags.script(src="report-ready.js?v=2", defer=""),
-                    ui.tags.script(src="staf/unsaved-guard.js?v=1", defer=""),
-                    ui.tags.link(rel="stylesheet", href="staf/staf.css?v=4"),
-                    ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
-                    ui.tags.script(src="staf/scenarios.js?v=1", defer=""),
-                    ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
-                    ui.tags.script(src="field-review.js?v=7", defer="")),
-    ui.busy_indicators.use(pulse=False),
-    ui.div(
-        ui.div(
-            ui.span("SFARI", ui.tags.small("Stream Functional Assessment Rapid Index"),
-                    class_="easi-brand"),
-            staf_topnav(),
-            ui.div(
-                ui.input_action_link("nav_new", "New"),
-                ui.input_file("load_session", None, accept=[".json"], multiple=False,
-                              button_label="Open"),
-                staf_web.download_button("save_session", "Save", class_="easi-nav-btn"),
-                ui.input_action_link("nav_about", "About"),
-                ui.input_action_link("nav_help", "Help"),
-                class_="easi-nav",
-            ),
-            class_="easi-header",
-        ),
+# --------------------------------------------------------------------------- #
+# Page: SFARI on its own, or as one tool of the STAF app (apps/staf)
+# --------------------------------------------------------------------------- #
+# The STAF app hosts SFARI as a Shiny module beside EASI and DEEP: it draws its
+# own header, loads HEAD once per tool and uses the module pieces at the end of
+# this block, which give every id the tool's prefix. The body's data-staf-ns
+# attribute tells the shared scripts (www/staf/staf-ns.js) which prefix to post to.
+TOOL_KEY = "sfari"
+TOOL_NAME = "SFARI"
+TOOL_FULL_NAME = "Stream Functions Assessment and Rapid Index"
+
+# head assets in load order; staf/ holds the scripts and styles every STAF tool shares
+HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=31"),
+        ui.tags.script(src="staf/staf-ns.js?v=1", defer=""),
+        ui.tags.script(src="staf/geocode-autocomplete.js", defer=""),
+        ui.tags.script(src="staf/legend-dock.js?v=4", defer=""),
+        ui.tags.script(src="staf/tooltip.js", defer=""),
+        ui.tags.script(src="staf/coord-entry.js", defer=""),
+        ui.tags.script(src="staf/report-ready.js?v=2", defer=""),
+        ui.tags.script(src="staf/unsaved-guard.js?v=3", defer=""),
+        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=9"),
+        ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
+        ui.tags.script(src="staf/scenarios.js?v=2", defer=""),
+        ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
+        ui.tags.script(src="field-review.js?v=8", defer=""))
+
+
+def _nav_actions(prefix=""):
+    """The header's actions, the same in every STAF tool: New, Open, Save, About and Help.
+    ``prefix`` is the URL prefix of this tool's www/ (unused here)."""
+    return staf_web.nav_actions()
+
+
+def _header_center(prefix=""):
+    """The middle of the header: SFARI has no control there."""
+    return None
+
+
+def _header():
+    return ui.div(
+        ui.span(TOOL_NAME, ui.tags.small(TOOL_FULL_NAME), class_="easi-brand"),
+        staf_topnav(),
+        _nav_actions(),
+        class_="easi-header",
+    )
+
+
+def _tool_body(prefix="", *, header=None):
+    """The map, the panes and the legend; ``header`` is the standalone app's own."""
+    return ui.div(
+        header,
         ui.div(
             output_widget("map", height="100%") if _HAS_MAP
             else ui.div("Map requires ipyleaflet + shinywidgets.", class_="text-muted p-3"),
@@ -825,17 +848,29 @@ app_ui = ui.page_fillable(
         # Stream legend: legend-dock.js moves this wrapper into the map's
         # top-right control stack under the layers button. The card look lives
         # on the rendered content, so an empty output shows nothing.
-        ui.div(ui.output_ui("stream_legend"), id="easi-legend-panel",
-               class_="easi-legend-panel"),
+        ui.div(ui.output_ui("stream_legend"), class_="easi-legend-panel"),
         ui.output_ui("readout"),
         ui.output_ui("flow_loading"),
+        staf_web.zoom_cue_output(),
         ui.output_ui("cursor_style"),
+        staf_web.tool_root_attrs(TOOL_KEY),
         class_="easi-shell",
-    ),
+    )
+
+
+app_ui = ui.page_fillable(
+    ui.head_content(*HEAD),
+    ui.busy_indicators.use(pulse=False),
+    _tool_body(header=_header()),
     title="SFARI · Rapid Stream Assessment",
     padding=0,
     fillable=True,
 )
+
+# the STAF app's module pieces (tool_server follows the server)
+tool_nav_ui = module.ui(_nav_actions)
+tool_center_ui = module.ui(_header_center)
+tool_body_ui = module.ui(_tool_body)
 
 
 def _stepper(active):
@@ -915,21 +950,14 @@ def server(input, output, session):
         _bump_scenarios(switched=True)
 
     def _session_scenarios():
-        """(Existing Conditions' entries, the session file's scenarios key)."""
-        sset = _sc["set"]
-        live = _entries_now()
-        ec = live if sset.active == BASELINE_ID else (sset.baseline.state or {})
-        data = sset.to_json()
-        for item in data["items"]:
-            if item["id"] == sset.active and item["id"] != BASELINE_ID:
-                item["state"] = live
-        return ec, data
+        """The assessment file's scenarios: every scenario's entries, the shown one's read live."""
+        return assessment_file.scenarios_block(_sc["set"], _entries_now())
 
-    def _restore_scenarios(raw):
-        sset = ScenarioSet.from_json(raw, baseline_state=_entries_now())
+    def _restore_scenarios(block):
+        """An opened file's scenarios, the one shown when it was saved on screen."""
+        sset = assessment_file.scenario_set(block)
         _sc["set"] = sset
-        if sset.active != BASELINE_ID:
-            _show_entries(sset.current.state)
+        _show_entries(sset.current.state)
         _bump_scenarios(switched=True)
 
     def _comparison(rows=None):
@@ -958,7 +986,8 @@ def server(input, output, session):
         dirty = fp is not None and fp != _saved_fp()
         if dirty != _unsaved_sent["dirty"]:
             _unsaved_sent["dirty"] = dirty
-            await session.send_custom_message(staf_web.UNSAVED_MESSAGE, {"dirty": dirty})
+            await session.send_custom_message(staf_web.UNSAVED_MESSAGE,
+                                              {"dirty": dirty, "ns": str(session.ns)})
     hr_geojson = reactive.value(None)      # NHDPlus HR flowlines in the viewport | None
     flow_geojson = reactive.value(None)    # NHDPlus V2 flowlines in the viewport | None
     streams_mode = reactive.value(None)    # network_display mode of the drawn layers | None
@@ -968,6 +997,8 @@ def server(input, output, session):
     streams_kick = reactive.value(0)           # bumped to ask again for the box in view
     _streams_retries = {"count": 0, "down_at": None}
     zoomed_in = reactive.value(False)      # zoom >= FLOW_ZOOM (the legend reads this, not the view)
+    zoom_nudge = reactive.value(0)         # map clicks while zoomed out: each pulses the zoom cue
+    _zoom_cue = staf_web.ZoomCue()
     site_anchor = reactive.value(None)     # the StreamCat reach classification of the point | None
     evidence_reach = reactive.value(None)  # {"comid", "name"} of the glowing V2 reach | None
     engine_state = reactive.value({"status": "idle"})   # the STAF site engine on this site
@@ -1246,6 +1277,11 @@ def server(input, output, session):
         @reactive.event(clicked)
         def _handle_click():
             if current_step() != STEP_IDENTIFY:
+                return
+            if not zoomed_in():
+                # No streams are drawn this far out: the zoom cue answers the click
+                # (owner, 2026-10-05), and the point already placed stays.
+                zoom_nudge.set(zoom_nudge() + 1)
                 return
             # A pick never waits on the map: drawn lines settle it, else the
             # tiles under the click are asked for (the engine's pick policy).
@@ -1810,14 +1846,7 @@ def server(input, output, session):
         if not has_state:
             _do_reset()
             return
-        ui.modal_show(ui.modal(
-            ui.markdown("Clear all scores, notes, photos, and the delineation and start a new "
-                        "assessment? This can't be undone. Use **Save** first if you want to keep it."),
-            title="Start a new assessment?",
-            footer=ui.TagList(ui.modal_button("Cancel"),
-                              ui.input_action_button("confirm_new", "Clear & start new",
-                                                     class_="btn-danger")),
-            easy_close=True))
+        ui.modal_show(staf_web.new_dialog("the delineation and every score, note and photo"))
 
     @reactive.effect
     @reactive.event(input.confirm_new)
@@ -1828,58 +1857,56 @@ def server(input, output, session):
     @reactive.event(input.nav_about)
     def _about():
         _cancel_report()
-        ui.modal_show(ui.modal(
-            ui.markdown(
-                "**SFARI**, the Stream Functional Assessment Rapid Index.\n\n"
-                "A rapid, field-based stream assessment. From a clicked point this app "
-                "delineates the upstream watershed and an assessment reach, pulls national "
-                "desktop GIS evidence to *support* your scoring, and walks you function by "
-                "function to Likert-score metrics and assign each of 20 stream functions a "
-                "0–15 score. Scores roll up to Physical / Chemical / Biological outcome "
-                "sub-indices and an overall Ecosystem Condition Index.\n\n"
-                "Two watershed engines answer the desktop evidence. The STAF site engine "
-                "computes the HR reach watershed: the drainage area of the high-resolution "
-                "NHD reach the point snaps to, built from NHDPlus HR catchments and checked "
-                "against the reach's published drainage area. The reach, not the point, is "
-                "the outlet. The StreamCat lookup engine answers by NHDPlus V2 COMID: the "
-                "EPA modeled indices that exist only per V2 reach, and a labeled stand-in "
-                "for a watershed value the site engine could not compute. On a stream "
-                "outside V2 that COMID is the nearest StreamCat reach downstream, named with "
-                "the routed distance and the drainage-area ratio on every such value."),
-            title="About SFARI", easy_close=True, footer=ui.modal_button("Close")))
+        ui.modal_show(staf_web.info_dialog(
+            "About SFARI",
+            "**SFARI**, the Stream Functions Assessment and Rapid Index.\n\n"
+            "A rapid, field-based stream assessment. From a clicked point this app "
+            "delineates the upstream watershed and an assessment reach, pulls national "
+            "desktop GIS evidence to *support* your scoring, and walks you function by "
+            "function to Likert-score metrics and assign each of 20 stream functions a "
+            "0–15 score. Scores roll up to Physical / Chemical / Biological outcome "
+            "sub-indices and an overall Ecosystem Condition Index.\n\n"
+            "Two watershed engines answer the desktop evidence. The STAF site engine "
+            "computes the HR reach watershed: the drainage area of the high-resolution "
+            "NHD reach the point snaps to, built from NHDPlus HR catchments and checked "
+            "against the reach's published drainage area. The reach, not the point, is "
+            "the outlet. The StreamCat lookup engine answers by NHDPlus V2 COMID: the "
+            "EPA modeled indices that exist only per V2 reach, and a labeled stand-in "
+            "for a watershed value the site engine could not compute. On a stream "
+            "outside V2 that COMID is the nearest StreamCat reach downstream, named with "
+            "the routed distance and the drainage-area ratio on every such value."))
 
     @reactive.effect
     @reactive.event(input.nav_help)
     def _help():
         _cancel_report()
-        ui.modal_show(ui.modal(
-            ui.markdown(
-                "1. **Identify**: zoom in and click any stream, or type coordinates, or "
-                "search a place. Streams use one solid blue style. **StreamCat coverage** "
-                "in the Layers menu starts off; enabling it shows StreamCat reaches in "
-                "blue, other streams in cyan, and the selected source reach and downstream "
-                "connector. It changes only the display. Every click "
-                "snaps to the high-resolution NHD. The app finds the StreamCat source "
-                "before enabling Delineate, with up to three automatic retries after waits "
-                "of 5, 10, and 15 seconds. If the lookup "
-                "cannot finish, use **Retry StreamCat lookup**. Set the reach length and click "
-                "**Delineate**. The STAF site engine computes the HR reach watershed and "
-                "the assessment reach, usually in under a minute.\n"
-                "2. **Basin**: review the watershed and reach.\n"
-                "3. **Assessment**: for each function, review the pulled evidence, "
-                "Likert-score each metric, and assign the 0–15 function score. "
-                "Values pulled from desktop data are marked **Desktop**; a suggested rating "
-                "has a **Use** button, and every score stays yours to set. The buttons under "
-                "each metric open its **Scoring** examples, a **Note** and **Photos**. A value "
-                "that describes the nearest StreamCat reach downstream says so under it, and "
-                "the report names every source.\n"
-                "4. **Report**: the assessment stays visible while the report map is prepared. "
-                "The completed report opens in a popup; closing it returns to the same screen. "
-                "Review the screening report and export. A dagger marks "
-                "downstream desktop evidence, with a short explanation below each affected "
-                "metrics table. The assessor's Likert scores are not marked.\n\n"
-                "Address search uses OpenStreetMap data (Photon and Nominatim)."),
-            title="How to use SFARI", easy_close=True, footer=ui.modal_button("Close")))
+        ui.modal_show(staf_web.info_dialog(
+            "How to use SFARI",
+            "1. **Identify**: zoom in and click any stream, or type coordinates, or "
+            "search a place. Streams use one solid blue style. **StreamCat coverage** "
+            "in the Layers menu starts off; enabling it shows StreamCat reaches in "
+            "blue, other streams in cyan, and the selected source reach and downstream "
+            "connector. It changes only the display. Every click "
+            "snaps to the high-resolution NHD. The app finds the StreamCat source "
+            "before enabling Delineate, with up to three automatic retries after waits "
+            "of 5, 10, and 15 seconds. If the lookup "
+            "cannot finish, use **Retry StreamCat lookup**. Set the reach length and click "
+            "**Delineate**. The STAF site engine computes the HR reach watershed and "
+            "the assessment reach, usually in under a minute.\n"
+            "2. **Basin**: review the watershed and reach.\n"
+            "3. **Assessment**: for each function, review the pulled evidence, "
+            "Likert-score each metric, and assign the 0–15 function score. "
+            "Values pulled from desktop data are marked **Desktop**; a suggested rating "
+            "has a **Use** button, and every score stays yours to set. The buttons under "
+            "each metric open its **Scoring** examples, a **Note** and **Photos**. A value "
+            "that describes the nearest StreamCat reach downstream says so under it, and "
+            "the report names every source.\n"
+            "4. **Report**: the assessment stays visible while the report map is prepared. "
+            "The completed report opens in a popup; closing it returns to the same screen. "
+            "Review the screening report and export. A dagger marks "
+            "downstream desktop evidence, with a short explanation below each affected "
+            "metrics table. The assessor's Likert scores are not marked.\n\n"
+            "Address search uses OpenStreetMap data (Photon and Nominatim)."))
 
     # ---- left pane (per-step form) ----
     @render.ui
@@ -1905,7 +1932,7 @@ def server(input, output, session):
                 ui.div(ui.input_action_button("delineate", "Delineate Basin and Reach",
                                               class_="btn-primary", disabled=not picked),
                        class_="easi-pane-actions"),
-                ui.output_text("busy_text"),
+                ui.output_text("busy_text").add_class("easi-busy-text"),
             )
         elif step == STEP_BASIN:
             with reactive.isolate():
@@ -2065,15 +2092,23 @@ def server(input, output, session):
                       class_="easi-flow-loading")
 
     @render.ui
+    def zoom_cue():
+        # out too far for streams on Identify: the cue over the map says to zoom in, and a
+        # click out there pulses it (_handle_click)
+        shown = _HAS_MAP and current_step() == STEP_IDENTIFY and not zoomed_in()
+        return _zoom_cue.render(shown, zoom_nudge())
+
+    @render.ui
     def cursor_style():
         z, _c = _view()
         picking = current_step() == STEP_IDENTIFY and z is not None and z >= FLOW_ZOOM
         if not picking:
             return None
+        # scoped to SFARI's body: in the STAF app the other tools' maps share the page
         return ui.tags.style(
-            ".easi-map-wrap .leaflet-grab{cursor:crosshair !important;}"
-            ".easi-map-wrap .leaflet-container.leaflet-dragging,"
-            ".easi-map-wrap .leaflet-container.leaflet-dragging .leaflet-grab"
+            '.easi-shell[data-staf-tool="sfari"] .easi-map-wrap .leaflet-grab{cursor:crosshair !important;}'
+            '.easi-shell[data-staf-tool="sfari"] .easi-map-wrap .leaflet-container.leaflet-dragging,'
+            '.easi-shell[data-staf-tool="sfari"] .easi-map-wrap .leaflet-container.leaflet-dragging .leaflet-grab'
             "{cursor:grabbing !important;}")
 
     # ======================================================================= #
@@ -2500,7 +2535,8 @@ def server(input, output, session):
 
     @reactive.effect
     async def _publish_report_state():
-        await session.send_custom_message("staf-report-state", _report_state())
+        await session.send_custom_message("staf-report-state",
+                                          {**_report_state(), "ns": str(session.ns)})
 
     @reactive.effect
     def _cancel_obsolete_report():
@@ -2903,7 +2939,7 @@ def server(input, output, session):
                         headers={"Content-Disposition": "inline; filename=sfari-field-forms.pdf",
                                  "Cache-Control": "no-store"})
 
-    _ff_preview_url = session.dynamic_route("field-forms-preview", _ff_preview_route)
+    _ff_preview_url = session.dynamic_route("field_forms_preview", _ff_preview_route)
 
     @output(suspend_when_hidden=False)
     @render.ui
@@ -3180,16 +3216,14 @@ def server(input, output, session):
             return staf_book.build(d, _scenario_entries())
         except Exception as exc:  # noqa: BLE001 - never a failed download: the single calculator instead
             print(f"SFARI: the scenario workbook failed ({exc!r}); serving the single calculator", flush=True)
-            ec, _data = _session_scenarios()
+            ec = _scenario_entries()[0][1]                  # Existing Conditions
             return calculator.build_calculator(d, ec.get("metric_scores") or {}, ec.get("function_scores") or {})
 
-    # ---- exports + resumable session ----
+    # ---- exports + the assessment file (Save and Open) ----
     @render.download(filename="sfari-assessment.json")
     def save_session():
         _saved_fp.set(_work_fp())
-        ec, scen = _session_scenarios()
-        yield session_io.dump(delin() or {}, ec.get("metric_scores") or {}, ec.get("function_scores") or {},
-                              evidence(), xs_geom(), scenarios=scen)
+        yield session_io.dump(delin() or {}, evidence(), xs_geom(), _session_scenarios())
 
     @render.download(filename=lambda: f"sfari-report{staf_web.scenario_suffix(_sc['set'])}.csv")
     def dl_csv():
@@ -3227,14 +3261,10 @@ def server(input, output, session):
         if not finfo:
             return
         try:
+            # the reader refuses another tool's file and a malformed one before anything changes
             with open(finfo[0]["datapath"], encoding="utf-8") as fh:
                 st = session_io.load(fh.read())
             d = st.get("delineation") or {}
-            if not isinstance(d, dict):
-                raise ValueError("The saved delineation must be an object.")
-            for key in ("delineation", "ctx_inputs", "siteAnchor", "siteEngine"):
-                if d.get(key) is not None and not isinstance(d[key], dict):
-                    raise ValueError(f"The saved {key} must be an object.")
             anchor = comid_anchor.saved_anchor(d)
             pt = comid_anchor.saved_point(d)
         except Exception as exc:  # noqa: BLE001
@@ -3249,11 +3279,9 @@ def server(input, output, session):
         _lookup_state("ready" if anchor and pt else "snapping" if pt else "idle")
         d = _with_anchor(d)
         delin.set(d)
-        metric_scores.set(st.get("metric_scores") or {})
-        function_scores.set(st.get("function_scores") or {})
         evidence.set(st.get("evidence") or {})
         xs_geom.set(st.get("cross_section"))
-        _restore_scenarios(st.get("scenarios"))
+        _restore_scenarios(st.get("scenarios"))          # every scenario's entries, the saved one shown
         _saved_fp.set(_work_fp())                      # just opened: nothing unsaved yet
         se = d.get("siteEngine") if isinstance(d, dict) else None
         engine_state.set({"status": "ok", "record": se, "reason": None}
@@ -3292,5 +3320,9 @@ def server(input, output, session):
         current_step.set(STEP_REVIEW)
         ui.notification_show("Assessment loaded. Resuming.", type="message", duration=4)
 
+
+# the STAF app starts this server as a module, its ids under the tool's prefix;
+# ``server`` itself stays a plain top-level function (the tests read its source)
+tool_server = module.server(server)
 
 app = App(app_ui, server, static_assets=Path(__file__).parent / "www")

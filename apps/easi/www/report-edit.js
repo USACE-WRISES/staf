@@ -7,13 +7,17 @@
  *   - .easi-note-btn  click   -> toggle the row's .easi-note-row.open
  *   - .easi-note-ta   input   -> note_set {mid, text} (debounced) + live ✎ state
  * Event delegation on document keeps it working across table re-renders.
+ *
+ * In the STAF app this file acts only on EASI's own controls (inside EASI's body, or in a
+ * dialog while EASI is shown) and posts to EASI's own inputs (staf/staf-ns.js).
  */
 (function () {
   "use strict";
+  var TOOL = "easi", NS = window.STAFNs;
 
   function setInput(name, payload) {
     if (window.Shiny && Shiny.setInputValue) {
-      Shiny.setInputValue(name, Object.assign({ nonce: Date.now() }, payload),
+      Shiny.setInputValue(NS.id(NS.tool(TOOL), name), Object.assign({ nonce: Date.now() }, payload),
                           { priority: "event" });
     }
   }
@@ -22,14 +26,14 @@
   // rating override dropdown
   document.addEventListener("change", function (e) {
     var s = e.target;
-    if (!s || !s.classList || !s.classList.contains("easi-rate-sel")) return;
+    if (!s || !s.classList || !s.classList.contains("easi-rate-sel") || !NS.mine(s, TOOL)) return;
     setInput("override_set", { mid: s.getAttribute("data-mid"), rating: s.value });
   });
 
   // note icon -> expand/collapse the textarea sub-row
   document.addEventListener("click", function (e) {
     var btn = e.target.closest ? e.target.closest(".easi-note-btn") : null;
-    if (!btn) return;
+    if (!btn || !NS.mine(btn, TOOL)) return;
     var row = document.querySelector('.easi-note-row[data-mid="' + esc(btn.getAttribute("data-mid")) + '"]');
     if (!row) return;
     if (row.classList.toggle("open")) {
@@ -48,14 +52,13 @@
     var fire = function () { setInput("note_set", { mid: mid, text: text }); };
     if (immediate) fire(); else timers[mid] = setTimeout(fire, 350);
   }
+  function isNote(el) {
+    return !!(el && el.classList && el.classList.contains("easi-note-ta")) && NS.mine(el, TOOL);
+  }
   document.addEventListener("input", function (e) {
-    if (e.target && e.target.classList && e.target.classList.contains("easi-note-ta")) {
-      postNote(e.target, false);
-    }
+    if (isNote(e.target)) postNote(e.target, false);
   });
   document.addEventListener("blur", function (e) {   // capture: blur doesn't bubble
-    if (e.target && e.target.classList && e.target.classList.contains("easi-note-ta")) {
-      postNote(e.target, true);
-    }
+    if (isNote(e.target)) postNote(e.target, true);
   }, true);
 })();

@@ -4,12 +4,14 @@
  * pane, so we use event delegation). As the user types, it queries Photon
  * directly from the browser (free, no key, CORS-enabled) and shows a dropdown of
  * US places/streams. Picking one fills the box and posts the coordinates to Shiny
- * via Shiny.setInputValue("address_pick", {...}); the server then recenters the
- * map. Near-zero server overhead — the server only sees the final pick.
+ * as the "address_pick" input of the tool the box belongs to (staf-ns.js); the
+ * server then recenters the map. Near-zero server overhead — the server only sees
+ * the final pick.
  */
 (function () {
   "use strict";
 
+  var NS = window.STAFNs;
   var CONUS = { lat: 39.5, lon: -98.35 };   // bias suggestions to the lower-48
   var MIN_CHARS = 3, DEBOUNCE_MS = 250;
   var menu = null, timer = null, activeInput = null, seq = 0;
@@ -42,7 +44,7 @@
     input.value = item.label;
     hide();
     if (window.Shiny && Shiny.setInputValue) {
-      Shiny.setInputValue("address_pick",
+      Shiny.setInputValue(NS.id(NS.owner(input), "address_pick"),
         { lat: item.lat, lon: item.lon, label: item.label, nonce: Date.now() },
         { priority: "event" });
     }
@@ -95,7 +97,7 @@
 
   document.addEventListener("input", function (e) {
     var t = e.target;
-    if (!t || t.id !== "address") return;
+    if (!t || NS.bare(t) !== "address") return;
     activeInput = t;
     var q = (t.value || "").trim();
     clearTimeout(timer);
@@ -104,6 +106,6 @@
   });
 
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && e.target && e.target.id === "address") hide();
+    if (e.key === "Escape" && e.target && NS.bare(e.target) === "address") hide();
   });
 })();

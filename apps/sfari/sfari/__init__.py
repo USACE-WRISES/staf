@@ -1,4 +1,4 @@
-"""SFARI — Stream Functional Assessment Rapid Index (web application).
+"""SFARI — Stream Functions Assessment and Rapid Index (web application).
 
 A Shiny-for-Python app that delineates a watershed + reach from a clicked point,
 pulls national desktop GIS evidence to *support* the user's Likert scoring of 80

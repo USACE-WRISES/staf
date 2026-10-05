@@ -15,8 +15,17 @@ import re
 
 #: media type for every workbook download: a plain file, never an in-browser viewer
 XLSX_MEDIA_TYPE = "application/octet-stream"
-#: custom message the server sends with ``{"dirty": bool}``
+#: custom message the server sends with ``{"dirty": bool, "ns": str}`` (``ns``: the sending tool's
+#: Shiny id prefix, ``str(session.ns)``, empty in a standalone app)
 UNSAVED_MESSAGE = "staf-unsaved"
+
+
+def tool_root_attrs(tool: str) -> dict:
+    """Attributes for a tool's body element. ``data-staf-tool`` names the tool and ``data-staf-ns``
+    carries its Shiny id prefix: empty in a standalone app, the module id inside the STAF app. The
+    shared scripts (``assets/staf-ns.js``) read both to post every input to the right tool."""
+    from shiny.module import current_namespace
+    return {"data-staf-tool": tool, "data-staf-ns": str(current_namespace())}
 
 
 def _anchor(id: str, label, base_class: str, icon=None, width=None, **kwargs):
@@ -41,6 +50,82 @@ def state_fingerprint(*parts) -> str:
     """A stable digest of JSON-able state, for "has anything changed since the last save"."""
     text = json.dumps(parts, sort_keys=True, separators=(",", ":"), default=str, ensure_ascii=False)
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+# --------------------------------------------------------------------------- the header's actions
+def nav_actions(*extra):
+    """The header's actions, the same in every tool (owner, 2026-10-05): New, Open and Save (the
+    assessment file, ``assessment_file``), then About and Help. ``extra`` follows Help."""
+    from shiny import ui
+    return ui.div(
+        ui.input_action_link("nav_new", "New"),
+        ui.input_file("load_session", None, accept=[".json"], multiple=False, button_label="Open"),
+        download_button("save_session", "Save", class_="easi-nav-btn"),
+        ui.input_action_link("nav_about", "About", class_="easi-nav-sep"),
+        ui.input_action_link("nav_help", "Help"),
+        *extra,
+        class_="easi-nav",
+    )
+
+
+def new_dialog(clears: str):
+    """New's question while there is work to lose. ``clears`` names it, for example "the
+    delineation and every score, note and photo". Its button is ``confirm_new``."""
+    from shiny import ui
+    return ui.modal(
+        ui.markdown(f"Clear {clears} and start a new assessment? Use **Save** first if you want "
+                    "to keep it."),
+        title="Start a new assessment?",
+        footer=ui.TagList(ui.modal_button("Cancel"),
+                          ui.input_action_button("confirm_new", "Clear & start new", class_="btn-danger")),
+        easy_close=True)
+
+
+def info_dialog(title: str, text: str):
+    """About and Help: ``text`` is markdown."""
+    from shiny import ui
+    return ui.modal(ui.markdown(text), title=title, easy_close=True, footer=ui.modal_button("Close"))
+
+
+# --------------------------------------------------------------------------- the zoom cue
+#: what the cue says while streams are hidden (owner, 2026-10-05: the same in every tool, and
+#: short: the apps' own phrase, as on the Identify card and the readout)
+ZOOM_CUE_TEXT = "Zoom in and click a stream"
+_MAGNIFIER = ('<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false" fill="none" '
+              'stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.6"/>'
+              '<path d="M10.4 10.4L14 14M7 5v4M5 7h4"/></svg>')
+
+
+def zoom_cue_output():
+    """Where the zoom cue renders: a slot over the top of the map, centred on the page under the
+    STAF header's tool switch (``assets/staf.css``). The slot itself is the live region, so a
+    screen reader hears the cue when it appears."""
+    from shiny import ui
+    return ui.div(ui.output_ui("zoom_cue"), class_="staf-zoom-cue-slot", role="status", aria_live="polite")
+
+
+def zoom_cue(nudge: int = 0, pulse: bool = False):
+    """The cue while the map is too far out to show streams. ``nudge`` counts the map clicks made
+    out there, so each one renders a new element; ``pulse`` plays the short pulse that answers
+    such a click (only on the render that the click caused)."""
+    from htmltools import HTML, tags
+    return tags.div(HTML(_MAGNIFIER), tags.span(ZOOM_CUE_TEXT),
+                    {"data-nudge": str(nudge)},
+                    class_="staf-zoom-cue" + (" is-nudged" if pulse else ""))
+
+
+class ZoomCue:
+    """The cue's state on one page: :meth:`render` is the body of each app's ``zoom_cue`` output
+    (``shown``: the map is out too far on the step that picks a stream), and a click out there
+    calls :meth:`nudge` through the app's reactive counter."""
+
+    def __init__(self):
+        self.seen = 0
+
+    def render(self, shown: bool, nudge: int):
+        pulse = nudge > self.seen
+        self.seen = nudge
+        return zoom_cue(nudge, pulse=pulse) if shown else None
 
 
 # --------------------------------------------------------------------------- scenarios on the page

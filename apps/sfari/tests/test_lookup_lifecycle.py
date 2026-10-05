@@ -276,12 +276,17 @@ def test_progress_poll_settles_in_a_real_reactive_flush(worker_status, attempt, 
     asyncio.run(run())
 
 
-def test_malformed_import_is_rejected_before_replacing_the_current_site(tmp_path):
+@pytest.mark.parametrize("content", [
+    '{"format": "staf-assessment", "formatVersion": 1, "tool": "SFARI", "delineation": {"ctx_inputs": []}}',
+    '{"format": "staf-assessment", "formatVersion": 1, "tool": "DEEP", "delineation": {}}',
+    "not json"])
+def test_malformed_import_is_rejected_before_replacing_the_current_site(tmp_path, content):
+    from sfari import session as session_io
     path = tmp_path / "malformed.json"
-    path.write_text("{}")
+    path.write_text(content)
     notices = []
     ns = scope("_load_session", input=SimpleNamespace(load_session=lambda: [{"datapath": str(path)}]),
-               session_io=SimpleNamespace(load=lambda _: {"delineation": {"ctx_inputs": []}}),
+               session_io=session_io,
                ui=SimpleNamespace(notification_show=lambda *a, **k: notices.append(a[0])))
     ns["_load_session"]()
     assert ns["_map_pick"]["generation"] == 7

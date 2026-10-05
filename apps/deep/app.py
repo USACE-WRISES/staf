@@ -31,7 +31,7 @@ os.environ.setdefault("HYRIVER_CACHE_EXPIRE", str(7 * 24 * 3600))
 os.environ.setdefault("STAF_DATA_SOURCE", "auto")
 
 import anyio  # noqa: E402
-from shiny import App, reactive, render, ui  # noqa: E402
+from shiny import App, module, reactive, render, ui  # noqa: E402
 
 from deep import (assessments, config, curves, delineation, measure,  # noqa: E402
                   pipeline, report, scoring, session)
@@ -40,6 +40,7 @@ from deep import comid_anchor, engine_prefill, hr_site, network_display  # noqa:
 from deep import reportmap  # noqa: E402
 from deep import calculator, describe, field_form, reference_support  # noqa: E402
 from deep._vendor.staf_workbook import web as staf_web  # noqa: E402  (download-only controls)
+from deep._vendor.staf_workbook import assessment_file  # noqa: E402  (Save and Open: one file in every tool)
 from deep._vendor.staf_workbook.model.scenarios import BASELINE_ID, ScenarioSet  # noqa: E402
 from deep import workbook as deep_book  # noqa: E402  (scenarios, summary, the scenario workbook)
 from deep.datasources import flowlines  # noqa: E402
@@ -903,7 +904,8 @@ def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
     elif not streams_visible:
         note = "Streams are hidden"
     elif not zoomed:
-        note = "Zoom in to see streams"
+        # on Identify the zoom cue over the map says it (staf_web.zoom_cue)
+        note = None if step == STEP_IDENTIFY else "Zoom in to see streams"
     elif mode == "hr-truncated":
         note = "Too many streams to show here. Zoom in."
     elif mode == "hr-partial":
@@ -1045,6 +1047,18 @@ STAF_LINKS = {
 _GUIDE_LINE = (f'The <a href="{STAF_LINKS["guide"]}" target="_blank" rel="noopener">DEEP '
                'guide</a> explains how DEEP scores and how each metric is measured.')
 
+#: the assessment-regions sidebar's close chevron, drawn in the text colour
+_CHEVRON_SVG = ('<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false" '
+                'fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" '
+                'stroke-linejoin="round"><path d="{}"/></svg>')
+_CHEVRON_RIGHT = _CHEVRON_SVG.format("M6 3.5L10.5 8 6 12.5")
+#: the closed sidebar's button: a panel opening on the right
+_PANEL_ICON = ('<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true" focusable="false" '
+               'fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">'
+               '<rect x="1.75" y="2.75" width="12.5" height="10.5" rx="1.75"/>'
+               '<path d="M9.75 2.75v10.5"/><path d="M9.75 2.75h2.75a1.75 1.75 0 0 1 1.75 1.75v7a1.75 1.75 '
+               '0 0 1-1.75 1.75H9.75z" fill="currentColor" fill-opacity=".22" stroke="none"/></svg>')
+
 
 def staf_topnav():
     return ui.div(
@@ -1054,70 +1068,117 @@ def staf_topnav():
     )
 
 
-app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=23"),
-                    ui.tags.link(rel="stylesheet", href="deep.css?v=13"),
-                    ui.tags.link(rel="stylesheet", href="staf/staf.css?v=4"),
-                    ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
-                    ui.tags.script(src="geocode-autocomplete.js", defer=""),
-                    ui.tags.script(src="legend-dock.js?v=3", defer=""),
-                    ui.tags.script(src="tooltip.js", defer=""),
-                    ui.tags.script(src="coord-entry.js", defer=""),
-                    ui.tags.script(src="report-ready.js?v=2", defer=""),
-                    ui.tags.script(src="staf/unsaved-guard.js?v=1", defer=""),
-                    ui.tags.script(src="staf/scenarios.js?v=1", defer=""),
-                    ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
-                    ui.tags.script(src="measure.js?v=7", defer=""),
-                    ui.tags.script(src="coverage.js?v=3", defer="")),
-    ui.busy_indicators.use(pulse=False),
-    ui.div(
-        ui.div(
-            ui.span("DEEP", ui.tags.small("Detailed Evaluation of Ecosystem Processes"),
-                    class_="easi-brand"),
-            staf_topnav(),
-            ui.div(
-                ui.input_action_link("nav_new", "New"),
-                ui.input_file("load_session", None, accept=[".json"], multiple=False,
-                              button_label="Open"),
-                staf_web.download_button("save_session", "Save", class_="easi-nav-btn"),
-                ui.input_action_link("nav_about", "About"),
-                ui.input_action_link("nav_help", "Help"),
-                class_="easi-nav",
-            ),
-            class_="easi-header",
-        ),
+# --------------------------------------------------------------------------- #
+# Page: DEEP on its own, or as one tool of the STAF app (apps/staf)
+# --------------------------------------------------------------------------- #
+# The STAF app hosts DEEP as a Shiny module beside EASI and SFARI: it draws its
+# own header, loads HEAD once per tool and uses the module pieces at the end of
+# this block, which give every id the tool's prefix. The body's data-staf-ns
+# attribute tells the shared scripts (www/staf/staf-ns.js) which prefix to post
+# to. The coverage panel's ids (deep-cov-*) are DEEP's own, unique on any page.
+TOOL_KEY = "deep"
+TOOL_NAME = "DEEP"
+TOOL_FULL_NAME = "Detailed Evaluation of Ecosystem Processes"
+
+# head assets in load order; staf/ holds the scripts and styles every STAF tool shares
+HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=26"),
+        ui.tags.link(rel="stylesheet", href="deep.css?v=15"),
+        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=9"),
+        ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
+        ui.tags.script(src="staf/staf-ns.js?v=1", defer=""),
+        ui.tags.script(src="staf/geocode-autocomplete.js", defer=""),
+        ui.tags.script(src="staf/legend-dock.js?v=4", defer=""),
+        ui.tags.script(src="staf/tooltip.js", defer=""),
+        ui.tags.script(src="staf/coord-entry.js", defer=""),
+        ui.tags.script(src="staf/report-ready.js?v=2", defer=""),
+        ui.tags.script(src="staf/unsaved-guard.js?v=3", defer=""),
+        ui.tags.script(src="staf/scenarios.js?v=2", defer=""),
+        ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
+        ui.tags.script(src="measure.js?v=8", defer=""),
+        ui.tags.script(src="coverage.js?v=6", defer=""))
+
+
+def _nav_actions(prefix=""):
+    """The header's actions, the same in every STAF tool: New, Open, Save, About and Help.
+    ``prefix`` is the URL prefix of this tool's www/ (unused here)."""
+    return staf_web.nav_actions()
+
+
+def _header_center(prefix=""):
+    """The middle of the header: DEEP has no control there."""
+    return None
+
+
+def _header():
+    return ui.div(
+        ui.span(TOOL_NAME, ui.tags.small(TOOL_FULL_NAME), class_="easi-brand"),
+        staf_topnav(),
+        _nav_actions(),
+        class_="easi-header",
+    )
+
+
+def _tool_body(prefix="", *, header=None):
+    """The map, the coverage panel, the panes and the legend; ``header`` is the standalone
+    app's own."""
+    return ui.div(
+        header,
         ui.div(
             output_widget("map", height="100%") if _HAS_MAP
             else ui.div("Map requires ipyleaflet + shinywidgets.", class_="text-muted p-3"),
             class_="easi-map-wrap",
         ),
-        # Floating coverage panel (populated client-side by coverage.js). Always visible once the
-        # panel docks; shows a "No published assessments yet" empty state until an assessment is
-        # published.
+        # Assessment regions (owner, 2026-10-05): a right sidebar that mirrors the left pane,
+        # with a search over the Level III regions. Closed, it is a button in the map's
+        # top-right controls, under Layers (www/coverage.js docks it there and fills the list
+        # and its count; it draws the regions on the map too); www/deep.css lays it out. Both
+        # ids are DEEP's own on any page.
         ui.div(
-            ui.div(ui.span(class_="deep-cov-caret"),
-                   ui.span("Assessment coverage", class_="deep-cov-title"),
-                   class_="deep-cov-head"),
-            ui.div(id="deep-cov-body", class_="deep-cov-body"),
-            id="deep-cov-panel", class_="deep-cov-panel collapsed",
+            ui.tags.button(ui.HTML(_PANEL_ICON), ui.span("Assessment regions", class_="deep-cov-tab-label"),
+                           ui.span(class_="deep-cov-tab-count"), type="button",
+                           class_="deep-cov-tab", title="Show the assessment regions",
+                           **{"aria-controls": "deep-cov-panel", "aria-expanded": "false"}),
+            ui.div(
+                ui.div(ui.span("Assessment regions", class_="deep-cov-title"),
+                       ui.span(class_="deep-cov-count"),
+                       ui.tags.button(ui.HTML(_CHEVRON_RIGHT), type="button", class_="deep-cov-close",
+                                      title="Hide the assessment regions",
+                                      **{"aria-label": "Hide the assessment regions"}),
+                       class_="easi-pane-head deep-cov-head"),
+                ui.div(id="deep-cov-body", class_="deep-cov-body"),
+                {"data-flow-zoom": str(FLOW_ZOOM), "aria-label": "Assessment regions"},
+                id="deep-cov-panel", class_="deep-cov-panel", role="complementary",
+            ),
+            class_="deep-cov",
         ),
         # Stream legend: legend-dock.js moves this wrapper into the map's
-        # top-right control stack under the layers button (the coverage chip
-        # above it, the legend below). The card look lives on the rendered
-        # content, so an empty output shows nothing.
-        ui.div(ui.output_ui("stream_legend"), id="easi-legend-panel",
-               class_="easi-legend-panel"),
+        # top-right control stack under the layers button. The card look lives
+        # on the rendered content, so an empty output shows nothing.
+        ui.div(ui.output_ui("stream_legend"), class_="easi-legend-panel"),
         ui.output_ui("worksheet"),
         ui.div(ui.output_ui("leftpane"), class_="easi-leftpane"),
         ui.output_ui("readout"),
         ui.output_ui("flow_loading"),
+        staf_web.zoom_cue_output(),
         ui.output_ui("cursor_style"),
+        staf_web.tool_root_attrs(TOOL_KEY),
         class_="easi-shell",
-    ),
+    )
+
+
+app_ui = ui.page_fillable(
+    ui.head_content(*HEAD),
+    ui.busy_indicators.use(pulse=False),
+    _tool_body(header=_header()),
     title="DEEP · Detailed Stream Assessment",
     padding=0,
     fillable=True,
 )
+
+# the STAF app's module pieces (tool_server follows the server)
+tool_nav_ui = module.ui(_nav_actions)
+tool_center_ui = module.ui(_header_center)
+tool_body_ui = module.ui(_tool_body)
 
 
 def _auto_measure_key(la, delineation):
@@ -1265,21 +1326,14 @@ def server(input, output, session_):  # noqa: C901
         _bump_scenarios(switched=True)
 
     def _session_scenarios():
-        """(Existing Conditions' measured values, the session file's scenarios key)."""
-        sset = _sc["set"]
-        live = _values_now()
-        ec = live if sset.active == BASELINE_ID else ((sset.baseline.state or {}).get("measured_values") or {})
-        data = sset.to_json()
-        for item in data["items"]:
-            if item["id"] == sset.active and item["id"] != BASELINE_ID:
-                item["state"] = {"measured_values": live}
-        return ec, data
+        """The assessment file's scenarios: every scenario's values, the shown one's read live."""
+        return assessment_file.scenarios_block(_sc["set"], {"measured_values": _values_now()})
 
-    def _restore_scenarios(raw):
-        sset = ScenarioSet.from_json(raw, baseline_state={"measured_values": _values_now()})
+    def _restore_scenarios(block):
+        """An opened file's scenarios, the one shown when it was saved on screen."""
+        sset = assessment_file.scenario_set(block)
         _sc["set"] = sset
-        if sset.active != BASELINE_ID:
-            _show_values(sset.current.state)
+        _show_values(sset.current.state)
         _bump_scenarios(switched=True)
 
     def _merge_into_stored(updates):
@@ -1321,7 +1375,8 @@ def server(input, output, session_):  # noqa: C901
         dirty = fp is not None and fp != _saved_fp()
         if dirty != _unsaved_sent["dirty"]:
             _unsaved_sent["dirty"] = dirty
-            await session_.send_custom_message(staf_web.UNSAVED_MESSAGE, {"dirty": dirty})
+            await session_.send_custom_message(staf_web.UNSAVED_MESSAGE,
+                                               {"dirty": dirty, "ns": str(session_.ns)})
     current_fn = reactive.value(0)
     compute_nonce = reactive.value(0)          # bumped when desktop-compute merges values
     computed_for = reactive.value(None)        # (assessmentId, version, site) already desktop-computed
@@ -1333,6 +1388,8 @@ def server(input, output, session_):  # noqa: C901
     streams_kick = reactive.value(0)           # bumped to ask again for the box in view
     _streams_retries = {"count": 0, "down_at": None}
     zoomed_in = reactive.value(False)          # zoom >= FLOW_ZOOM (the legend reads this, not the view)
+    zoom_nudge = reactive.value(0)             # map clicks while zoomed out: each pulses the zoom cue
+    _zoom_cue = staf_web.ZoomCue()
     site_anchor = reactive.value(None)         # the StreamCat reach classification of the point | None
     evidence_reach = reactive.value(None)      # {"comid", "name"} of the glowing V2 reach | None
     engine_state = reactive.value({"status": "idle"})   # the STAF site engine on this site
@@ -1381,6 +1438,7 @@ def server(input, output, session_):  # noqa: C901
                                  type="error", duration=8)
             return
         loaded_assessment.set(la); selected_ref.set(resolved_ref)
+        _coverage["focus"] = True                    # the map shows the linked region
         measured_values.set({}); current_fn.set(0)
         _reset_scenarios()
         current_step.set(STEP_IDENTIFY)
@@ -1392,23 +1450,43 @@ def server(input, output, session_):  # noqa: C901
             ui.notification_show(f"Loaded {la.assessment_name} from link.",
                                  type="message", duration=4)
 
-    # Coverage panel (www/coverage.js): reply to the client's ready handshake with the
-    # available-assessment outlines. coverage.js draws them as client-side, non-interactive
-    # Leaflet layers (out of the LayersControl) and renders a per-assessment toggle panel.
+    # Assessment regions (www/coverage.js): the outlines of the available assessments for the
+    # sidebar and the map layer, sent once per session in answer to the page's ready handshake
+    # (the page keeps them, and pings until the first answer lands: each answer is ~1.2 MB).
+    # deep_coverage_current says which assessment is in use (the site's, or a linked one; a link
+    # asks the map to show its region once) and whether the regions take clicks (Identify only).
+    _coverage = {"sent": False, "focus": False}
+
+    def _coverage_state():
+        la = loaded_assessment()
+        focus, _coverage["focus"] = _coverage["focus"], False
+        return {"assessmentId": la.assessment_id if la is not None else None,
+                "identify": current_step() == STEP_IDENTIFY, "focus": focus}
+
     @reactive.effect
     @reactive.event(input.coverage_ready)
     async def _send_coverage():
+        if _coverage["sent"]:
+            return
+        _coverage["sent"] = True
         payload = []
         for f in assessments.library_region_features().get("features") or []:
             p = f.get("properties") or {}
             payload.append({
                 "assessmentId": p.get("assessmentId"),
-                "name": p.get("assessmentName") or p.get("assessmentId"),
-                "region": p.get("regionName") or "",
+                "name": p.get("regionName") or p.get("assessmentName") or p.get("assessmentId"),
+                "code": p.get("regionCode") or "",
                 "version": p.get("version"),
+                "status": session.status_label(p.get("lifecycle")),
+                "certified": p.get("lifecycle") == "certified",
                 "geometry": f.get("geometry"),
             })
         await session_.send_custom_message("deep_coverage", {"features": payload})
+        await session_.send_custom_message("deep_coverage_current", _coverage_state())
+
+    @reactive.effect
+    async def _send_coverage_current():
+        await session_.send_custom_message("deep_coverage_current", _coverage_state())
 
     _layers: dict = {"flow": None, "hrflow": None, "route": None, "scored": None,
                      "marker": None, "ws": None, "reach": None}
@@ -1512,8 +1590,8 @@ def server(input, output, session_):  # noqa: C901
                              attribution=USGS_ATTR, max_native_zoom=16, max_zoom=19))
             mp.add(TileLayer(url=USGS_HYDRO_URL, name="NHD Hydrography", base=False,
                              opacity=0.85, attribution=USGS_ATTR, max_native_zoom=16, max_zoom=19))
-            # top-right; coverage.js docks the coverage panel into this same control
-            # stack (just below this button), so the two auto-space and never overlap.
+            # top-right; legend-dock.js docks the legend under this button, and both move
+            # left of the assessment-regions sidebar while it is open (deep.css)
             mp.panes = STREAM_PANES
             mp.add(_stream_layers.group)
             mp.add(LayersControl(position="topright"))
@@ -1680,6 +1758,11 @@ def server(input, output, session_):  # noqa: C901
         @reactive.event(clicked)
         def _handle_click():
             if current_step() != STEP_IDENTIFY:
+                return
+            if not zoomed_in():
+                # No streams are drawn this far out: the zoom cue answers the click
+                # (owner, 2026-10-05), and the point already placed stays.
+                zoom_nudge.set(zoom_nudge() + 1)
                 return
             # A pick never waits on the map: drawn lines settle it, else the
             # tiles under the click are asked for (the engine's pick policy).
@@ -2269,14 +2352,7 @@ def server(input, output, session_):  # noqa: C901
         has_state = delin() is not None or bool(measured_values()) or loaded_assessment() is not None
         if not has_state:
             _do_reset(); return
-        ui.modal_show(ui.modal(
-            ui.markdown("Clear the delineation, chosen assessment, and all measured values and start "
-                        "over? Use **Save** first if you want to keep it."),
-            title="Start a new assessment?",
-            footer=ui.TagList(ui.modal_button("Cancel"),
-                              ui.input_action_button("confirm_new", "Clear & start new",
-                                                     class_="btn-danger")),
-            easy_close=True))
+        ui.modal_show(staf_web.new_dialog("the delineation, the chosen assessment and every measured value"))
 
     @reactive.effect
     @reactive.event(input.confirm_new)
@@ -2287,64 +2363,63 @@ def server(input, output, session_):  # noqa: C901
     @reactive.event(input.nav_about)
     def _about():
         _cancel_report()
-        ui.modal_show(ui.modal(
-            ui.markdown(
-                "**DEEP**, Detailed Evaluation of Ecosystem Processes.\n\n"
-                "The detailed tier of the Stream Tiered Assessment Framework. From a clicked point "
-                "DEEP delineates the upstream watershed and an assessment reach, loads a detailed "
-                "assessment definition (a selection of metrics per function, each with a published "
-                "reference curve and the reference tier it was drawn at), and turns your measured "
-                "metric values into function scores that roll up to Physical / Chemical / Biological "
-                "outcome sub-indices and an Ecosystem Condition Index. Assessments are built in the "
-                "companion StreamCurves builder and are preliminary until the scientific team "
-                "certifies them.\n\n"
-                "Two watershed engines answer the desktop metrics. The STAF site engine "
-                "computes the HR reach watershed: the drainage area of the high-resolution "
-                "NHD reach the point snaps to, built from NHDPlus HR catchments and checked "
-                "against the reach's published drainage area. The reach, not the point, is "
-                "the outlet. The StreamCat lookup engine answers by NHDPlus V2 COMID for the "
-                "curves fitted on its predictors. The report records which engine produced each "
-                "value, and an engine value never scores against a StreamCat-fitted curve while "
-                "the pairing mode refuses it. On a stream outside V2 that COMID is the nearest "
-                "StreamCat reach downstream, named with the routed distance and the "
-                "drainage-area ratio in the report.\n\n" + _GUIDE_LINE),
-            title="About DEEP", easy_close=True, footer=ui.modal_button("Close")))
+        ui.modal_show(staf_web.info_dialog(
+            "About DEEP",
+            "**DEEP**, Detailed Evaluation of Ecosystem Processes.\n\n"
+            "The detailed tier of the Stream Tiered Assessment Framework. From a clicked point "
+            "DEEP delineates the upstream watershed and an assessment reach, loads a detailed "
+            "assessment definition (a selection of metrics per function, each with a published "
+            "reference curve and the reference tier it was drawn at), and turns your measured "
+            "metric values into function scores that roll up to Physical / Chemical / Biological "
+            "outcome sub-indices and an Ecosystem Condition Index. Assessments are built in the "
+            "companion StreamCurves builder and are preliminary until the scientific team "
+            "certifies them.\n\n"
+            "Two watershed engines answer the desktop metrics. The STAF site engine "
+            "computes the HR reach watershed: the drainage area of the high-resolution "
+            "NHD reach the point snaps to, built from NHDPlus HR catchments and checked "
+            "against the reach's published drainage area. The reach, not the point, is "
+            "the outlet. The StreamCat lookup engine answers by NHDPlus V2 COMID for the "
+            "curves fitted on its predictors. The report records which engine produced each "
+            "value, and an engine value never scores against a StreamCat-fitted curve while "
+            "the pairing mode refuses it. On a stream outside V2 that COMID is the nearest "
+            "StreamCat reach downstream, named with the routed distance and the "
+            "drainage-area ratio in the report.\n\n" + _GUIDE_LINE))
 
     @reactive.effect
     @reactive.event(input.nav_help)
     def _help():
         _cancel_report()
-        ui.modal_show(ui.modal(
-            ui.markdown(
-                "1. **Identify**: zoom in and click any stream, or type coordinates, or "
-                "search a place. Streams use one solid blue style. **StreamCat coverage** "
-                "in the Layers menu starts off; enabling it shows StreamCat reaches in "
-                "blue, other streams in cyan, and the selected source reach and downstream "
-                "connector. It changes only the display. Assessment coverage remains "
-                "available in its separate panel. Every click "
-                "snaps to the high-resolution NHD. Wait for the StreamCat lookup to finish "
-                "before clicking **Delineate**. Temporary failures are retried up to three "
-                "times after waits of 5, 10, and 15 seconds. If the lookup fails, the point stays on the map; "
-                "use **Retry StreamCat lookup** or choose another stream. Set the reach length. "
-                "The STAF site engine computes the HR reach watershed and "
-                "the assessment reach, usually in under a minute and up to about five "
-                "minutes on a large basin.\n"
-                "2. **Basin**: review the watershed and reach. The published assessment "
-                "whose area of applicability covers your site is resolved here (certified "
-                "before preliminary); use **Change** when more than one applies.\n"
-                "3. **Assessment**: enter each metric's measured value; the reference curve converts "
-                "it to an index and the function and outcome scores update live. Metrics DEEP can "
-                "answer from desktop data fill in on their own, marked **Desktop**, and stay "
-                "editable. Hover a metric's **i** for how to measure it. The buttons under each "
-                "metric open its **Scoring** curve, a **Note** and **Photos**; **N/A** marks it not "
-                "applicable at the site. **Get Forms** lists "
-                "every metric with its method and the data behind each desktop value.\n"
-                "4. **Report**: the assessment stays visible while the report map is prepared. "
-                "The completed report opens in a popup; closing it returns to the same screen. "
-                "Review and export the detailed assessment.\n\n"
-                + _GUIDE_LINE + "\n\n"
-                "Address search uses OpenStreetMap data (Photon and Nominatim)."),
-            title="How to use DEEP", easy_close=True, footer=ui.modal_button("Close")))
+        ui.modal_show(staf_web.info_dialog(
+            "How to use DEEP",
+            "1. **Identify**: zoom in and click any stream, or type coordinates, or "
+            "search a place. Streams use one solid blue style. **StreamCat coverage** "
+            "in the Layers menu starts off; enabling it shows StreamCat reaches in "
+            "blue, other streams in cyan, and the selected source reach and downstream "
+            "connector. It changes only the display. Zoomed out, the shaded regions are "
+            "DEEP's assessments: hover one for its name, click it to zoom in, or find one "
+            "in the **Assessment regions** list. Every click "
+            "snaps to the high-resolution NHD. Wait for the StreamCat lookup to finish "
+            "before clicking **Delineate**. Temporary failures are retried up to three "
+            "times after waits of 5, 10, and 15 seconds. If the lookup fails, the point stays on the map; "
+            "use **Retry StreamCat lookup** or choose another stream. Set the reach length. "
+            "The STAF site engine computes the HR reach watershed and "
+            "the assessment reach, usually in under a minute and up to about five "
+            "minutes on a large basin.\n"
+            "2. **Basin**: review the watershed and reach. The published assessment "
+            "whose area of applicability covers your site is resolved here (certified "
+            "before preliminary); use **Change** when more than one applies.\n"
+            "3. **Assessment**: enter each metric's measured value; the reference curve converts "
+            "it to an index and the function and outcome scores update live. Metrics DEEP can "
+            "answer from desktop data fill in on their own, marked **Desktop**, and stay "
+            "editable. Hover a metric's **i** for how to measure it. The buttons under each "
+            "metric open its **Scoring** curve, a **Note** and **Photos**; **N/A** marks it not "
+            "applicable at the site. **Get Forms** lists "
+            "every metric with its method and the data behind each desktop value.\n"
+            "4. **Report**: the assessment stays visible while the report map is prepared. "
+            "The completed report opens in a popup; closing it returns to the same screen. "
+            "Review and export the detailed assessment.\n\n"
+            + _GUIDE_LINE + "\n\n"
+            "Address search uses OpenStreetMap data (Photon and Nominatim)."))
 
     # ---- left pane ----
     @render.ui
@@ -2370,7 +2445,7 @@ def server(input, output, session_):  # noqa: C901
                 ui.div(ui.input_action_button("delineate", "Delineate Basin and Reach",
                                               class_="btn-primary", disabled=not picked),
                        class_="easi-pane-actions"),
-                ui.output_text("busy_text"),
+                ui.output_text("busy_text").add_class("easi-busy-text"),
             )
         elif step == STEP_BASIN:
             # Seed new controls without rebuilding them when lookup readiness changes;
@@ -2514,15 +2589,24 @@ def server(input, output, session_):  # noqa: C901
                       class_="easi-flow-loading")
 
     @render.ui
+    def zoom_cue():
+        # out too far for streams on Identify: the cue over the map says to zoom in, and a
+        # click out there pulses it (_handle_click)
+        shown = _HAS_MAP and current_step() == STEP_IDENTIFY and not zoomed_in()
+        return _zoom_cue.render(shown, zoom_nudge())
+
+    @render.ui
     def cursor_style():
         z, _c = _view()
         picking = current_step() == STEP_IDENTIFY and z is not None and z >= FLOW_ZOOM
         if not picking:
             return None
+        # scoped to DEEP's body: in the STAF app the other tools' maps share the page
         return ui.tags.style(
-            ".easi-map-wrap .leaflet-grab{cursor:crosshair !important;}"
-            ".easi-map-wrap .leaflet-container.leaflet-dragging,"
-            ".easi-map-wrap .leaflet-container.leaflet-dragging .leaflet-grab{cursor:grabbing !important;}")
+            '.easi-shell[data-staf-tool="deep"] .easi-map-wrap .leaflet-grab{cursor:crosshair !important;}'
+            '.easi-shell[data-staf-tool="deep"] .easi-map-wrap .leaflet-container.leaflet-dragging,'
+            '.easi-shell[data-staf-tool="deep"] .easi-map-wrap .leaflet-container.leaflet-dragging .leaflet-grab'
+            "{cursor:grabbing !important;}")
 
     @render.ui
     def stream_legend():
@@ -3200,7 +3284,7 @@ def server(input, output, session_):  # noqa: C901
             return deep_book.build(template, la, d, _scenario_values())
         except Exception as exc:  # noqa: BLE001 - never a failed download: the single calculator instead
             print(f"DEEP: the scenario workbook failed ({exc!r}); serving the single calculator", flush=True)
-            ec, _data = _session_scenarios()
+            ec = _scenario_values()[0][1]                   # Existing Conditions
             return calculator.build_filled(template, la, ec, d)
 
     # ---- report modal ----
@@ -3246,7 +3330,8 @@ def server(input, output, session_):  # noqa: C901
 
     @reactive.effect
     async def _publish_report_state():
-        await session_.send_custom_message("staf-report-state", _report_state())
+        await session_.send_custom_message("staf-report-state",
+                                           {**_report_state(), "ns": str(session_.ns)})
 
     @reactive.effect
     def _cancel_obsolete_report():
@@ -3622,7 +3707,7 @@ def server(input, output, session_):  # noqa: C901
                         headers={"Content-Disposition": "inline; filename=deep-field-forms.pdf",
                                  "Cache-Control": "no-store"})
 
-    _ff_preview_url = session_.dynamic_route("field-forms-preview", _ff_preview_route)
+    _ff_preview_url = session_.dynamic_route("field_forms_preview", _ff_preview_route)
     _ff_preview_serial = {"n": 0}
 
     @output(suspend_when_hidden=False)
@@ -3651,9 +3736,7 @@ def server(input, output, session_):  # noqa: C901
     @render.download(filename="deep-assessment.json")
     def save_session():
         _saved_fp.set(_work_fp())
-        ec, scen = _session_scenarios()
-        yield session.dump(delin() or {}, _assessment_raw(), ec,
-                           region=_site_region(), scenarios=scen)
+        yield session.dump(delin() or {}, _assessment_raw(), _session_scenarios(), region=_site_region())
 
     @render.download(filename=lambda: f"deep-report{staf_web.scenario_suffix(_sc['set'])}.csv")
     def dl_csv():
@@ -3706,6 +3789,7 @@ def server(input, output, session_):  # noqa: C901
         if not finfo:
             return
         try:
+            # the reader refuses another tool's file and a malformed one before anything changes
             with open(finfo[0]["datapath"], encoding="utf-8") as fh:
                 st = session.load(fh.read())
         except Exception as exc:  # noqa: BLE001
@@ -3713,17 +3797,11 @@ def server(input, output, session_):  # noqa: C901
             return
         _map_pick["generation"] += 1
         d = st.get("delineation") or {}
-        if not isinstance(d, dict):
-            d = {}
-        for key in ("delineation", "ctx_inputs"):
-            if key in d and not isinstance(d[key], dict):
-                d = {**d, key: {}}
         delin.set(d)
         _delin_generation.set(_map_pick["generation"])
         _lookup_request.clear(); _lookup_progress.clear(); _no_watershed.clear()
         stage.set("")
-        measured_values.set(st.get("measured_values") or {})
-        _restore_scenarios(st.get("scenarios"))
+        _restore_scenarios(st.get("scenarios"))          # every scenario's values, the saved one shown
         computed_for.set(None)  # restored site/version must recompute desktop metrics
         se = d.get("siteEngine") if isinstance(d, dict) else None
         engine_state.set({"status": "ok", "record": se, "reason": None}
@@ -3801,5 +3879,9 @@ def server(input, output, session_):  # noqa: C901
         _saved_fp.set(_work_fp())                      # just opened: nothing unsaved yet
         ui.notification_show("Assessment loaded. Resuming.", type="message", duration=4)
 
+
+# the STAF app starts this server as a module, its ids under the tool's prefix;
+# ``server`` itself stays a plain top-level function (the tests read its source)
+tool_server = module.server(server)
 
 app = App(app_ui, server, static_assets=Path(__file__).parent / "www")

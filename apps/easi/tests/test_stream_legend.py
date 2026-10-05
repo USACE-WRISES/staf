@@ -56,7 +56,9 @@ def test_native_streams_visibility_hides_all_stream_and_source_legend_rows():
 
 
 def test_notes_follow_zoom_and_fetch_state():
-    assert "Zoom in to see streams" in _html(zoomed=False, mode=None)
+    # on Identify the zoom cue over the map says it (staf_web.zoom_cue); on Basin the legend does
+    assert "Zoom in to see streams" not in _html(zoomed=False, mode=None)
+    assert "Zoom in to see streams" in _html(step="basin", zoomed=False, mode=None)
     assert "Too many streams to show here. Zoom in." in _html(mode="hr-truncated")
     # Tiles that did not answer are asked again (15, 30, 60 s), and the legend says so.
     assert "Stream lines did not load. Retrying." in _html(mode="hr-unavailable")
@@ -97,11 +99,12 @@ def test_hidden_outside_the_map_steps():
 
 def test_dock_bridge_and_assets_are_wired():
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert "legend-dock.js?v=3" in src
-    assert 'id="easi-legend-panel"' in src.replace("'", '"')
+    assert "legend-dock.js?v=4" in src
+    assert src.index("staf/staf-ns.js?v=1") < src.index("staf/legend-dock.js?v=4")   # STAFNs loads first
+    assert 'ui.output_ui("stream_legend"), class_="easi-legend-panel"' in src   # no raw id: STAF hosts three
     assert app.LAYER_STREAMS == "Streams"
     assert app.LAYER_COVERAGE == "StreamCat coverage"
-    js = (Path(app.__file__).parent / "www" / "legend-dock.js").read_text(encoding="utf-8")
+    js = (Path(app.__file__).parent / "www" / "staf" / "legend-dock.js").read_text(encoding="utf-8")
     assert "MutationObserver" in js and "disableClickPropagation" in js
     assert '"streamcat_coverage"' in js and '"streams_visible"' in js
     assert "insertAdjacentElement" in js and "shiny:connected" in js

@@ -1,31 +1,35 @@
-"""Resumable-session serialization for DEEP.
+"""The DEEP assessment file (the header's Save and Open), and the provenance it records.
 
-Serializes a whole DEEP run — the delineation, *which* assessment definition was
-used (inlined with its curves so the file resumes standalone, no registry
-needed), and the per-metric measured values — to a single JSON file so a
-field/desk session can be paused and resumed. Scores are recomputed on load
+A whole DEEP run in one JSON file, so a field or desk session can be paused and resumed: the
+delineation, *which* assessment definition was used (inlined with its curves so the file resumes
+standalone, no registry needed) and every scenario's measured values. Scores are recomputed on load
 (not trusted from the file).
 
-Schema v2 (Part D1/D2) additionally records reproducibility provenance: the resolved
-site region (Level III ecoregion + state), the assessment version + lifecycle status,
-and a content digest over the inlined bundle. v1 files (or files with no
-``schemaVersion``) still load, via a migration that reconstructs provenance from the
-embedded bundle and marks what the legacy file cannot supply as absent.
+Since 2026-10-05 DEEP writes the STAF assessment file, the structure EASI and SFARI write too
+(``_vendor/staf_workbook/assessment_file.py``): ``delineation``; ``toolData`` with the
+``assessment`` and its ``provenance`` (the resolved site region, Level III ecoregion and state;
+the assessment version and lifecycle status; a content digest over the inlined bundle); and
+``scenarios``, each scenario's ``{"measured_values"}``. Since 2026-09 the delineation may carry
+``siteAnchor`` (the reach classification), ``siteEngine`` (the geometry-stripped STAF site engine
+record) and ``watershedBasis``; earlier files lack them and every reader uses ``.get``.
 
-Since 2026-09 the ``delineation`` block may carry ``siteAnchor`` (the reach
-classification), ``siteEngine`` (the geometry-stripped STAF site engine record)
-and ``watershedBasis``; earlier files lack them and every reader uses ``.get``,
-so the schema version stays 2.
+Files written before still open: schema v2 (provenance, Existing Conditions' values at the top
+level) and v1 or version-less files, whose provenance is reconstructed from the embedded bundle,
+marking what the legacy file cannot supply as absent.
 
 This module owns the provenance primitives (:func:`lifecycle_status`,
-:func:`content_digest`, :func:`bundle_digest`) so the session file and the reports stamp
-the same values. It imports only the standard library so it stays a leaf dependency.
+:func:`content_digest`, :func:`bundle_digest`) so the assessment file and the reports stamp
+the same values. It imports only the standard library and the vendored toolkit.
 """
 from __future__ import annotations
 
 import hashlib
 import json
 
+from ._vendor.staf_workbook import assessment_file
+
+TOOL = "DEEP"
+#: the version of DEEP's own files from before the shared format (still read)
 SCHEMA_VERSION = 2
 
 
@@ -115,37 +119,24 @@ def _provenance(bundle: dict, region, completeness, result_state) -> dict:
 # --------------------------------------------------------------------------- #
 # Serialize / deserialize
 # --------------------------------------------------------------------------- #
-def dump(delineation: dict, assessment: dict, measured_values: dict, *,
-         region: dict | None = None, completeness=None, result_state=None,
-         scenarios: dict | None = None) -> str:
-    """Serialize the run state to a JSON string (schema v2).
+def dump(delineation: dict, assessment: dict, scenarios: dict, *,
+         region: dict | None = None, completeness=None, result_state=None) -> str:
+    """The file (the STAF assessment file).
 
-    ``assessment`` is the loaded assessment dict (metricsByFunction with inlined
-    curves) so a resumed session does not depend on the predefined registry.
+    ``assessment`` is the loaded assessment dict (metricsByFunction with inlined curves) so a
+    resumed session does not depend on the predefined registry. ``scenarios`` is
+    ``assessment_file.scenarios_block``'s: every scenario's ``{"measured_values"}``.
 
-    Beyond the v1 fields, v2 records a ``provenance`` block: the assessmentId, version,
-    lifecycle status, and content digest (all derived from ``assessment``), plus the
-    resolved ``region`` (level3 + state) and ``completeness`` / ``resultState`` the caller
-    supplies. All provenance is derived or optional, so a caller passing only the three
-    positional arguments still produces a valid v2 session.
-
-    ``measured_values`` is always Existing Conditions. ``scenarios`` (written only when the
-    user added an alternative or described Existing Conditions) carries the alternatives in
-    an additive key, so an older DEEP still opens Existing Conditions and the schema stays 2.
+    The ``provenance`` beside the assessment holds the assessmentId, version, lifecycle status,
+    and content digest (all derived from ``assessment``), plus the resolved ``region`` (level3 +
+    state) and ``completeness`` / ``resultState`` the caller supplies. All provenance is derived
+    or optional, so a caller passing only the positional arguments still writes a valid file.
     """
     bundle = assessment or {}
-    out = {
-        "schemaVersion": SCHEMA_VERSION,
-        "method": "DEEP",
-        "delineation": delineation or {},
-        "assessment": bundle,
-        "measured_values": measured_values or {},
-        "provenance": _provenance(bundle, region, completeness, result_state),
-    }
-    items = (scenarios or {}).get("items") or []
-    if len(items) > 1 or any(i.get("description") for i in items):
-        out["scenarios"] = scenarios
-    return json.dumps(out, indent=2, ensure_ascii=False)
+    return assessment_file.dump(TOOL, delineation or {},
+                                {"assessment": bundle,
+                                 "provenance": _provenance(bundle, region, completeness, result_state)},
+                                scenarios)
 
 
 def _migrate(d: dict, from_version: int) -> dict:
@@ -168,20 +159,29 @@ def _migrate(d: dict, from_version: int) -> dict:
 
 
 def load(text: str) -> dict:
-    """Parse a saved run, migrating a v1 (or version-less) file forward.
+    """``{"delineation", "assessment", "provenance", "scenarios"}`` of a saved run (missing blocks
+    read empty), a file from before the shared format migrated forward. Raises
+    ``assessment_file.AssessmentFileError`` for a file DEEP cannot open. Scores are always
+    recomputed by the caller, never trusted from the file."""
+    st = assessment_file.parse(text, TOOL, legacy=_legacy)
+    data = st["toolData"]
+    assessment, provenance = data.get("assessment"), data.get("provenance")
+    return {"delineation": st["delineation"],
+            "assessment": assessment if isinstance(assessment, dict) else {},
+            "provenance": provenance if isinstance(provenance, dict) else {},
+            "scenarios": st["scenarios"]}
 
-    Returns the state dict in the v2 shape (missing keys default empty). Scores are always
-    recomputed by the caller, never trusted from the file.
-    """
-    d = json.loads(text)
-    version = int(d.get("schemaVersion") or 1)
+
+def _legacy(d: dict) -> dict:
+    """A file from before the shared format (schema v2, or v1 and version-less ones migrated), in
+    its shape: Existing Conditions' values were at the top level."""
+    try:
+        version = int(d.get("schemaVersion") or 1)
+    except (TypeError, ValueError):
+        raise assessment_file.AssessmentFileError("the file has no valid schema version.") from None
     if version < SCHEMA_VERSION:
         d = _migrate(d, version)
-    return {
-        "schemaVersion": SCHEMA_VERSION,
-        "delineation": d.get("delineation", {}),
-        "assessment": d.get("assessment", {}),
-        "measured_values": d.get("measured_values", {}),
-        "provenance": d.get("provenance", {}),
-        "scenarios": d.get("scenarios"),
-    }
+    return {"delineation": d.get("delineation", {}),
+            "toolData": {"assessment": d.get("assessment") or {}, "provenance": d.get("provenance") or {}},
+            "scenarios": assessment_file.legacy_scenarios(d.get("scenarios"),
+                                                          {"measured_values": d.get("measured_values") or {}})}

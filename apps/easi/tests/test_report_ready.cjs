@@ -148,8 +148,8 @@ function harness(app, options = {}) {
     }
     return event;
   }
-  const filename = path.resolve(__dirname, "..", "..", app, "www", "report-ready.js");
-  vm.runInNewContext(fs.readFileSync(filename, "utf8"), {
+  // A page without tool bodies: the shared scripts (www/staf/, staf-ns.js first) keep one state.
+  const context = {
     window, document,
     MutationObserver: function (callback) {
       observer = callback;
@@ -159,7 +159,11 @@ function harness(app, options = {}) {
         observed = true;
       };
     },
-  }, { filename });
+  };
+  for (const name of ["staf-ns.js", "report-ready.js"]) {
+    const filename = path.resolve(__dirname, "..", "..", app, "www", "staf", name);
+    vm.runInNewContext(fs.readFileSync(filename, "utf8"), context, { filename });
+  }
   document.addEventListener("click", (event) => applicationClicks.push(event.target));
   document.addEventListener("keydown", (event) => applicationKeys.push(event.key));
   function flushObservers() {

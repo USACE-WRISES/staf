@@ -10,6 +10,7 @@ StreamCurves Desktop, the Windows app in which StreamCurves runs.
 | SFARI: Rapid tier | `apps/sfari` | [gtmenichino-sfari.share.connect.posit.cloud](https://gtmenichino-sfari.share.connect.posit.cloud/) |
 | DEEP: Detailed tier | `apps/deep` | [gtmenichino-deep.share.connect.posit.cloud](https://gtmenichino-deep.share.connect.posit.cloud/) |
 | StreamCurves: curve builder for DEEP | `apps/stream-curves` + `desktop/` | StreamCurves Desktop, a Windows app (installer and portable zip on the [latest release](https://github.com/USACE-WRISES/staf/releases/latest)) |
+| STAF: EASI, SFARI and DEEP in one app (prototype) | `apps/staf` | Not deployed yet; see `apps/staf/README.md` |
 
 ## Repository layout
 
