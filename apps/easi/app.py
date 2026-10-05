@@ -586,6 +586,10 @@ STAF_LINKS = {
 _GUIDE_LINE = (f'The <a href="{STAF_LINKS["guide"]}" target="_blank" rel="noopener">EASI '
                'guide</a> explains how EASI screens and how each metric is computed.')
 
+#: the Add a scenario dialog's line under Start from (staf_web.add_dialog); notes are shared
+_ADD_HINT = ("A copy brings its rating changes, cross-section and observations. "
+             "Blank starts from the screening as computed.")
+
 
 def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
                streams_visible=True, source_visible=False, route_visible=False,
@@ -681,7 +685,7 @@ TOOL_FULL_NAME = "Ecosystem Assessment Screening Index"
 
 # head assets in load order; staf/ holds the scripts and styles every STAF tool shares
 HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=66"),
-        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=9"),
+        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=10"),
         ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
         *_viewer_head_tags(NATIONAL_VIEWER),
         ui.tags.script(src="staf/staf-ns.js?v=1", defer=""),
@@ -4196,12 +4200,15 @@ def server(input, output, session):
             return None
         return staf_web.rail_delta(_comparison([rows[0], rows[active]]), 1)
 
-    def _scenario_dialog(mode, *, name, description, error=None):
+    def _scenario_dialog(mode, *, name, description, start=BASELINE_ID, error=None):
+        if mode == "new":
+            ui.modal_show(staf_web.add_dialog(_sc["set"], name=name, description=description, start=start,
+                                              hint=_ADD_HINT, error=error))
+            return
         cur = _sc["set"].current
-        title = ("New scenario" if mode == "new" else
-                 "Describe Existing Conditions" if cur.is_baseline else "Rename or describe")
+        title = "Describe Existing Conditions" if cur.is_baseline else "Rename or describe"
         ui.modal_show(staf_web.scenario_dialog(title=title, name=name, description=description,
-                                               name_locked=mode != "new" and cur.is_baseline, error=error,
+                                               name_locked=cur.is_baseline, error=error,
                                                can_delete=mode == "edit" and not cur.is_baseline))
 
     @reactive.effect
@@ -4235,10 +4242,20 @@ def server(input, output, session):
         name = sset.current.name
         if mode == "new" or not sset.current.is_baseline:
             name = (input.staf_sc_name() or "").strip()
+        start = BASELINE_ID
         try:
             if mode == "new":
+                # where the scenario starts (the Add dialog): a copy of any scenario, or blank (the
+                # screening as computed); either way the page then shows it
+                start = input.staf_sc_from() or BASELINE_ID
+                if start != staf_web.START_BLANK and start not in [s.id for s in sset.items]:
+                    start = BASELINE_ID
                 sset.set_state(sset.active, _capture_state())
-                sset.add(name, desc, copy_from=sset.active)      # a copy: it shows as it was
+                if start == staf_web.START_BLANK:
+                    new = sset.add(name, desc, state=scenario_state.empty())
+                else:
+                    new = sset.add(name, desc, copy_from=start)
+                _apply_state(new.state)
                 _bump_scenarios(switched=True)
             else:
                 cur = sset.current
@@ -4247,7 +4264,7 @@ def server(input, output, session):
                 sset.describe(cur.id, desc)
                 _bump_scenarios()
         except ValueError as exc:
-            _scenario_dialog(mode, name=name, description=desc, error=str(exc))
+            _scenario_dialog(mode, name=name, description=desc, start=start, error=str(exc))
             return
         ui.modal_remove()
 

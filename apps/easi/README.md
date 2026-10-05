@@ -378,8 +378,9 @@ complete availability, not 20 independent field observations.
   "Existing Conditions" and up to nine alternatives. A scenario changes ratings only: the
   overrides, the cross-section (shown section and edited heights) and the observations
   (`easi/scenario_state.py`, whose `scored_for` is the page's scoring for any scenario).
-  Notes are shared. Save keeps every scenario with its ratings, and the page warns before
-  it is closed with work that differs from the last Save or Open.
+  Notes are shared. Add starts a scenario from a copy of any scenario or Blank, the screening
+  as computed (`scenario_state.empty()`; owner, 2026-10-05). Save keeps every scenario with its
+  ratings, and the page warns before it is closed with work that differs from the last Save or Open.
 - **Compare** shows the ECI, the three sub-indices and every function with the change from
   Existing Conditions; the report opens with the summary block (`easi/workbook.py`).
 - **The completed workbook** (Get Forms and the report) is one file: Summary, Existing

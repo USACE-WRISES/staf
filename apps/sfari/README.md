@@ -67,7 +67,8 @@ bug, so the same fix has to reach whoever re-issues the draft.
 
 **Scenarios and the one-workbook download** (owner, 2026-10-03): the chip at the top of the
 score rail keeps "Existing Conditions" and up to nine alternatives (their Likert ratings and
-function scores; evidence and the cross-section are shared). Save writes the STAF assessment
+function scores; evidence and the cross-section are shared). Add starts one from a copy of any
+scenario (scores and notes, not photos) or Blank (no scores yet) (owner, 2026-10-05). Save writes the STAF assessment
 file, the structure EASI and DEEP write too (owner, 2026-10-05;
 `libs/staf_workbook/staf_workbook/assessment_file.py`): the delineation, the shared evidence and
 cross-section, and every scenario with its entries. Files saved before (schema 1, Existing

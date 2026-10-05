@@ -33,6 +33,25 @@ def test_scenarios_add_copy_rename_delete():
         s.delete(BASELINE_ID)
 
 
+def test_a_scenario_starts_from_any_scenario_or_from_the_apps_blank():
+    """Owner, 2026-10-05: Add asks where a scenario starts: a copy of any scenario, whichever
+    is shown, or blank (the state the app gives)."""
+    s = ScenarioSet()
+    s.baseline.state = {"m1": 3}
+    alt = s.add("Alternative 1")
+    alt.state = {"m1": 5}
+    second = s.add("Alternative 2", copy_from=BASELINE_ID)        # shown: Alternative 1
+    assert second.state == {"m1": 3} and s.active == second.id
+    blank = {"m1": None}
+    third = s.add("Alternative 3", copy_from=alt.id, state=blank)  # a given state wins
+    assert third.state == {"m1": None}
+    blank["m1"] = 7
+    assert third.state == {"m1": None}                             # a copy of what was given
+    with pytest.raises(KeyError):
+        s.add("Alternative 4", copy_from="s99")
+    assert [x.name for x in s.items][-1] == "Alternative 3"         # a failed add adds nothing
+
+
 def test_scenario_cap_and_ids_never_reused():
     s = ScenarioSet()
     ids = [s.add().id for _ in range(MAX_SCENARIOS - 1)]

@@ -1,6 +1,8 @@
 """Scenarios of one assessment: "Existing Conditions" first (its name is fixed; it is what every
 alternative is compared with), then any alternatives the user adds. Each scenario carries the
-app's own state (whatever the app's page edits), copied from the active scenario when added."""
+app's own state (whatever the app's page edits). An added scenario starts as a copy of any
+scenario, or from a state the app gives (its blank: what a fresh assessment of the site starts
+with)."""
 from __future__ import annotations
 
 import copy
@@ -16,6 +18,7 @@ BASELINE_NAME = "Existing Conditions"
 MAX_SCENARIOS = 10
 MAX_DESCRIPTION = 500
 RESERVED_NAMES = ("Summary", "ReferenceCurves")
+_COPY = object()          # add()'s default: copy a scenario's state
 
 
 @dataclass
@@ -73,17 +76,20 @@ class ScenarioSet:
         return f"Alternative {n}"
 
     # ------------------------------------------------------------------ editing
-    def add(self, name: Optional[str] = None, description: str = "", *, copy_from: Optional[str] = None) -> Scenario:
+    def add(self, name: Optional[str] = None, description: str = "", *, copy_from: Optional[str] = None,
+            state: Any = _COPY) -> Scenario:
+        """Add a scenario and show it. It starts as a copy of ``copy_from`` (default: the one
+        shown), or from ``state`` when one is given (an app's blank)."""
         if not self.can_add():
             raise ValueError(f"At most {MAX_SCENARIOS} scenarios.")
         name = (name or self.default_name()).strip()
         problem = self.name_problem(name)
         if problem:
             raise ValueError(problem)
-        source = self.get(copy_from or self.active)
+        start = self.get(copy_from or self.active).state if state is _COPY else state
         sid = f"s{self.next_number}"
         self.next_number += 1
-        new = Scenario(sid, name, (description or "")[:MAX_DESCRIPTION], copy.deepcopy(source.state))
+        new = Scenario(sid, name, (description or "")[:MAX_DESCRIPTION], copy.deepcopy(start))
         self.items.append(new)
         self.active = sid
         return new

@@ -68,12 +68,74 @@ def test_the_page_wires_the_shared_chip():
     assert 'ui.output_ui("scenario_bar"), ui.output_ui("rollup_rail")' in SRC
     assert "@reactive.event(input.staf_scenario_evt)" in SRC
     assert "@reactive.event(input.staf_sc_save)" in SRC and "@reactive.event(input.staf_sc_delete)" in SRC
-    assert 'href="staf/staf.css?v=9"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
+    assert 'href="staf/staf.css?v=10"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
     assert "_reset_scenarios()" in SRC.split("def _invalidate_selection():", 1)[1].split("def ", 1)[0]
     assert "scenario_nonce()" in SRC.split("def fn_panel():", 1)[1].split("def ", 1)[0]
     save = SRC.split("def save_session():", 1)[1].split("@render", 1)[0]
     assert "_session_scenarios()" in save
     assert "yield _workbook_bytes()" in SRC
+
+
+class _Value:
+    def __init__(self, value=None):
+        self.value = value
+
+    def __call__(self):
+        return self.value
+
+    def set(self, value):
+        self.value = value
+
+
+def _page():
+    """The scenario code of SFARI's server, run on its own (the page's reactive values stubbed)."""
+    import ast
+    import copy
+    from contextlib import nullcontext
+    from types import SimpleNamespace
+
+    import app
+    server = next(n for n in ast.parse(SRC).body if isinstance(n, ast.FunctionDef) and n.name == "server")
+    ns = {**vars(app), "reactive": SimpleNamespace(isolate=nullcontext), "metric_scores": _Value({}),
+          "function_scores": _Value({}), "scenario_rev": _Value(0), "scenario_nonce": _Value(0),
+          "_sc": {"set": ScenarioSet(), "dialog": None}, "shown": []}
+    ns["input"] = SimpleNamespace(staf_sc_name=lambda: ns["typed"][0], staf_sc_desc=lambda: "",
+                                  staf_sc_from=lambda: ns["typed"][1])
+    ns["ui"] = SimpleNamespace(modal_remove=lambda: None, modal_show=lambda m: ns["shown"].append(str(m)))
+    for name in ("_bump_scenarios", "_entries_now", "_show_entries", "_switch_scenario", "_scenario_dialog",
+                 "_scenario_save"):
+        node = copy.deepcopy(next(n for n in ast.walk(server) if isinstance(n, ast.FunctionDef) and n.name == name))
+        node.decorator_list = []
+        exec(compile(ast.Module(body=[node], type_ignores=[]), app.__file__, "exec"), ns)
+    return ns
+
+
+def _add(ns, name, start):
+    """What the Add a scenario dialog's Add does on the page."""
+    ns["_sc"]["dialog"], ns["typed"] = "new", (name, start)
+    ns["_scenario_save"]()
+
+
+def test_add_starts_from_the_chosen_scenario_or_blank():
+    """Owner, 2026-10-05: Add asks where the scenario starts, Existing Conditions by default."""
+    ns = _page()
+    rated = {"m1": {"likert": 4, "note": "riffles", "photos": [{"id": "p1"}]}}
+    ns["metric_scores"].set(rated)
+    _add(ns, "Restore riparian", BASELINE_ID)
+    assert ns["metric_scores"]() == {"m1": {"likert": 4, "note": "riffles"}}    # a copy, photos stay behind
+    ns["metric_scores"].set({"m1": {"likert": 9}})                                 # the alternative changes
+    _add(ns, "Bank work", BASELINE_ID)                                             # shown: Restore riparian
+    assert ns["metric_scores"]()["m1"]["likert"] == 4                              # Existing Conditions'
+    _add(ns, "Second visit", "blank")
+    assert ns["metric_scores"]() == {} and ns["function_scores"]() == {}
+    sset = ns["_sc"]["set"]
+    assert [s.name for s in sset.items] == ["Existing Conditions", "Restore riparian", "Bank work", "Second visit"]
+    assert sset.items[1].state["metric_scores"]["m1"]["likert"] == 9               # kept when Bank work was added
+    _add(ns, "Ghost", "s99")                                                       # gone since: Existing Conditions
+    assert ns["metric_scores"]()["m1"]["likert"] == 4
+    _add(ns, "Ghost", "blank")                                                     # a taken name
+    assert len(sset.items) == 5 and 'value="blank" selected=""' in ns["shown"][-1]   # the choice is kept
+    assert "Blank starts with no scores." in ns["shown"][-1]
 
 
 def _pdf_text(data: bytes) -> str:
@@ -89,7 +151,7 @@ def _report_wiring(base: str):
     assert "comparison_table" not in section
     assert 'scenario=staf_web.report_scenario(_sc["set"])' in section
     assert 'can_delete=mode == "edit" and not cur.is_baseline' in SRC
-    assert 'href="staf/staf.css?v=9"' in SRC
+    assert 'href="staf/staf.css?v=10"' in SRC
     for ext in ("pdf", "csv", "geojson"):
         assert f"{base}{{staf_web.scenario_suffix(_sc['set'])}}.{ext}" in SRC
     pdf = SRC.split("def dl_pdf():", 1)[1].split("@render", 1)[0]

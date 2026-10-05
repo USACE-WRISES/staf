@@ -209,7 +209,7 @@ class _Value:
         self.value = value
 
 
-def _helpers(report):
+def _helpers(report, extra=()):
     server = next(n for n in ast.parse(SRC).body if isinstance(n, ast.FunctionDef) and n.name == "server")
     updates = []
     ns = {**vars(app), "reactive": SimpleNamespace(isolate=nullcontext),
@@ -221,11 +221,15 @@ def _helpers(report):
           "boxes": {"xs_bankfull": 1.5, "xs_lowbank": 1.2}, "updates": updates}
     ns["current_overrides"] = lambda: dict(ns["_overrides"]())
     ns["input"] = SimpleNamespace(xs_bankfull=lambda: ns["boxes"]["xs_bankfull"],
-                                  xs_lowbank=lambda: ns["boxes"]["xs_lowbank"])
-    ns["ui"] = SimpleNamespace(update_numeric=lambda fid, value: updates.append((fid, value)))
+                                  xs_lowbank=lambda: ns["boxes"]["xs_lowbank"],
+                                  staf_sc_name=lambda: ns["typed"][0], staf_sc_desc=lambda: "",
+                                  staf_sc_from=lambda: ns["typed"][1])
+    ns["ui"] = SimpleNamespace(update_numeric=lambda fid, value: updates.append((fid, value)),
+                               modal_remove=lambda: None, modal_show=lambda m: None)
+    ns["_scenario_dialog"] = lambda *a, **k: None
     for name in ("_score_state", "_bump_scenarios", "_xs_per_m", "_capture_state", "_xs_is_echo", "_show_heights",
                  "_apply_state", "_switch_scenario", "_xs_block", "_xs_candidates", "_xs_cross", "_xs_sel_idx",
-                 "_xs_default_sel"):
+                 "_xs_default_sel", *extra):
         node = copy.deepcopy(next(n for n in ast.walk(server) if isinstance(n, ast.FunctionDef) and n.name == name))
         node.decorator_list = []
         exec(compile(ast.Module(body=[node], type_ignores=[]), app.__file__, "exec"), ns)
@@ -258,11 +262,39 @@ def test_switching_keeps_each_scenarios_ratings_and_heights(report):
     assert ns["_xs_echo"]["want"] is None
 
 
+def _add(ns, name, start):
+    """What the Add a scenario dialog's Add does on the page (``start``: a scenario id or "blank")."""
+    ns["_sc"]["dialog"], ns["typed"] = "new", (name, start)
+    ns["_scenario_save"]()
+
+
+def test_add_starts_from_existing_conditions_or_the_screening_as_computed(report):
+    """Owner, 2026-10-05: Add asks where a scenario starts, and the page shows it. A copy of
+    Existing Conditions while an alternative is shown is Existing Conditions'; Blank is the
+    screening without a rating change, a cross-section edit or an observation."""
+    ns = _helpers(report, extra=("_scenario_save",))
+    m01, m13 = cc.FUNCTIONS["m01"], cc.FUNCTIONS["m13"]
+    ns["_overrides"].set({m01: "Poor"})
+    _add(ns, "Restore riparian", BASELINE_ID)                 # a copy of the one shown
+    assert ns["_overrides"]() == {m01: "Poor"}
+    ns["_overrides"].set({m13: "Good"})                       # the alternative is re-rated
+    _add(ns, "Bank work", BASELINE_ID)                        # shown: Restore riparian
+    assert ns["_overrides"]() == {m01: "Poor"}                # Existing Conditions', on the page
+    ns["_observed"].set({"channel_class": "C"})
+    _add(ns, "Second visit", "blank")
+    assert ns["_overrides"]() == {} and ns["_observed"]() == {} and ns["_xs_sel"]() is None
+    sset = ns["_sc"]["set"]
+    assert [s.name for s in sset.items] == ["Existing Conditions", "Restore riparian", "Bank work", "Second visit"]
+    assert sset.items[1].state["overrides"] == {m13: "Good"}
+    assert sset.items[2].state["observed"] == {"channel_class": "C"}     # kept when Blank was added
+
+
 def test_the_page_wires_the_shared_chip():
     assert 'ui.output_ui("scenario_bar"), ui.output_ui("rollup_rail")' in SRC
     assert "@reactive.event(input.staf_scenario_evt)" in SRC
     assert "@reactive.event(input.staf_sc_save)" in SRC and "@reactive.event(input.staf_sc_delete)" in SRC
-    assert 'href="staf/staf.css?v=9"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
+    assert 'href="staf/staf.css?v=10"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
+    assert "hint=_ADD_HINT" in SRC and "Blank starts from the screening as computed." in SRC
     assert SRC.count("_xs_heights.set(None); _reset_scenarios()") == 2      # fresh screening and reset
     panel = SRC.split("def fn_panel():", 1)[1].split("def _cur_row(", 1)[0]
     assert "scenario_nonce()" in panel
@@ -297,7 +329,7 @@ def _report_wiring(base: str):
     assert "comparison_table" not in section
     assert 'scenario=staf_web.report_scenario(_sc["set"])' in section
     assert 'can_delete=mode == "edit" and not cur.is_baseline' in SRC
-    assert 'href="staf/staf.css?v=9"' in SRC
+    assert 'href="staf/staf.css?v=10"' in SRC
     for ext in ("pdf", "csv", "geojson"):
         assert f"{base}{{staf_web.scenario_suffix(_sc['set'])}}.{ext}" in SRC
     pdf = SRC.split("def dl_pdf():", 1)[1].split("@render", 1)[0]

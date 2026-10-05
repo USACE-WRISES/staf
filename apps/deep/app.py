@@ -250,6 +250,11 @@ def _outcome_bar(label, value, *, indent=False):
     return _bar(label, value, scoring.index_band_color(value), indent=indent)
 
 
+#: the Add a scenario dialog's line under Start from (staf_web.add_dialog)
+_ADD_HINT = ("A copy brings its values and notes; photos stay with the original. "
+             "Blank keeps only the desktop values.")
+
+
 def _without_photos(measured):
     """A scenario's measured values without photos: an alternative is a plan, not a site visit."""
     out = copy.deepcopy(measured or {})
@@ -1083,7 +1088,7 @@ TOOL_FULL_NAME = "Detailed Evaluation of Ecosystem Processes"
 # head assets in load order; staf/ holds the scripts and styles every STAF tool shares
 HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=26"),
         ui.tags.link(rel="stylesheet", href="deep.css?v=15"),
-        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=9"),
+        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=10"),
         ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
         ui.tags.script(src="staf/staf-ns.js?v=1", defer=""),
         ui.tags.script(src="staf/geocode-autocomplete.js", defer=""),
@@ -1286,6 +1291,8 @@ def server(input, output, session_):  # noqa: C901
     _sc = {"set": ScenarioSet(), "dialog": None}
     scenario_rev = reactive.value(0)      # any scenario change: the chip, compare and report re-read
     scenario_nonce = reactive.value(0)    # a switch: the metric panel re-reads its values
+    # the last desktop fill, (its site key, the values): what a Blank scenario starts with
+    _desktop = {"fill": None}
 
     def _bump_scenarios(switched=False):
         with reactive.isolate():
@@ -1310,6 +1317,21 @@ def server(input, output, session_):  # noqa: C901
         live = measured_values()
         return [(sc_, live if sc_.id == sset.active else ((sc_.state or {}).get("measured_values") or {}))
                 for sc_ in sset.items]
+
+    def _desktop_start():
+        """A Blank scenario: what a fresh assessment of this site starts with, the desktop values
+        the app fills in by itself and the curve sets it preselects; nothing the assessor entered.
+        A fill still running reaches it when it lands, as it reaches every scenario."""
+        la, d = loaded_assessment(), delin()
+        held = _desktop["fill"]
+        mv = (copy.deepcopy(held[1]) if held and la is not None and d
+              and held[0] == _auto_measure_key(la, d) else {})
+        if la is not None and d is not None:
+            for mid, label in (reference_support.auto_strata(la, d) or {}).items():
+                cur = dict(mv.get(mid) or {})
+                cur["stratum"], cur["stratumAuto"] = label, True
+                mv[mid] = cur
+        return {"measured_values": mv}
 
     def _stored_scenarios():
         """The scenarios not on screen, whose values wait in _sc."""
@@ -3009,6 +3031,7 @@ def server(input, output, session_):  # noqa: C901
         ui.notification_remove("deep_compute")
         if not res:
             return
+        _desktop["fill"] = (request_key, copy.deepcopy(res))     # a Blank scenario starts from it
         with reactive.isolate():
             mvs = dict(measured_values())
         n = 0
@@ -3197,12 +3220,15 @@ def server(input, output, session_):  # noqa: C901
         active = next(i for i, (sc_, _mv) in enumerate(rows) if sc_.id == sset.active)
         return staf_web.rail_delta(_comparison([rows[0], rows[active]]), 1)
 
-    def _scenario_dialog(mode, *, name, description, error=None):
+    def _scenario_dialog(mode, *, name, description, start=BASELINE_ID, error=None):
+        if mode == "new":
+            ui.modal_show(staf_web.add_dialog(_sc["set"], name=name, description=description, start=start,
+                                              hint=_ADD_HINT, error=error))
+            return
         cur = _sc["set"].current
-        title = ("New scenario" if mode == "new" else
-                 "Describe Existing Conditions" if cur.is_baseline else "Rename or describe")
+        title = "Describe Existing Conditions" if cur.is_baseline else "Rename or describe"
         ui.modal_show(staf_web.scenario_dialog(title=title, name=name, description=description,
-                                               name_locked=mode != "new" and cur.is_baseline, error=error,
+                                               name_locked=cur.is_baseline, error=error,
                                                can_delete=mode == "edit" and not cur.is_baseline))
 
     @reactive.effect
@@ -3236,11 +3262,19 @@ def server(input, output, session_):  # noqa: C901
         name = sset.current.name
         if mode == "new" or not sset.current.is_baseline:
             name = (input.staf_sc_name() or "").strip()
+        start = BASELINE_ID
         try:
             if mode == "new":
+                # where the scenario starts (the Add dialog): a copy of any scenario, or blank
+                start = input.staf_sc_from() or BASELINE_ID
+                if start != staf_web.START_BLANK and start not in [s.id for s in sset.items]:
+                    start = BASELINE_ID
                 sset.set_state(sset.active, {"measured_values": _values_now()})
-                new = sset.add(name, desc, copy_from=sset.active)
-                new.state = {"measured_values": _without_photos((new.state or {}).get("measured_values"))}
+                if start == staf_web.START_BLANK:
+                    new = sset.add(name, desc, state=_desktop_start())
+                else:
+                    new = sset.add(name, desc, copy_from=start)
+                    new.state = {"measured_values": _without_photos((new.state or {}).get("measured_values"))}
                 _show_values(new.state)
                 _bump_scenarios(switched=True)
             else:
@@ -3250,7 +3284,7 @@ def server(input, output, session_):  # noqa: C901
                 sset.describe(cur.id, desc)
                 _bump_scenarios()
         except ValueError as exc:
-            _scenario_dialog(mode, name=name, description=desc, error=str(exc))
+            _scenario_dialog(mode, name=name, description=desc, start=start, error=str(exc))
             return
         ui.modal_remove()
 

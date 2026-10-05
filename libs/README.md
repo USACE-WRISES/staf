@@ -97,9 +97,11 @@ assessment apps one behavior and one look (owner, 2026-10-03):
   site), `toolData` (what the tool brought to the site, shared by every scenario) and
   `scenarios` (every scenario with its own state). A tool opens only its own files and refuses
   a newer format; SFARI's and DEEP's older files open through their own legacy readers.
-- **Scenarios** (`model/scenarios.py`, `web.scenario_bar`, `assets/scenarios.js`):
-  "Existing Conditions" (fixed name) plus up to nine alternatives, each a copy of the app's
-  own state; the assessment file keeps each with its state.
+- **Scenarios** (`model/scenarios.py`, `web.scenario_bar`, `web.add_dialog`, `assets/scenarios.js`):
+  "Existing Conditions" (fixed name) plus up to nine alternatives, each with its own copy of the
+  app's state; the assessment file keeps each with its state. Add asks where a scenario starts
+  (owner, 2026-10-05): a copy of any scenario (Existing Conditions by default) or Blank, which
+  each app defines as what a fresh assessment of the site starts with.
 - **Comparison and summary** (`model/compare.py`, `model/summary.py`, `web.comparison_table`,
   `web.summary_block`): ECI, sub-indices and every function with the change from Existing
   Conditions (DEEP's intervals compare as intervals); reach, tier, length, drainage area,

@@ -132,6 +132,8 @@ class ZoomCue:
 #: input the scenario chip sends ({action, id}); the edit dialog's inputs and buttons
 SCENARIO_EVENT = "staf_scenario_evt"
 NAME_INPUT, DESC_INPUT, SAVE_BUTTON, DELETE_BUTTON = "staf_sc_name", "staf_sc_desc", "staf_sc_save", "staf_sc_delete"
+#: the Add dialog's Start from select: a scenario id, or START_BLANK
+START_INPUT, START_BLANK = "staf_sc_from", "blank"
 
 
 #: small line icons for the scenario links, drawn in the text color so every app shows them alike
@@ -157,8 +159,9 @@ def _scenario_link(action: str, label: str, *, title=None, disabled: bool = Fals
 
 def scenario_bar(scenarios):
     """The scenario control at the top of the score rail: a dropdown that only switches scenarios
-    (each with its description under its name), then three small links: New, Edit and, once an
-    alternative exists, Compare. Deleting a scenario lives in its Edit dialog."""
+    (each with its description under its name), then three small links: Add (its dialog asks
+    where the scenario starts, :func:`add_dialog`), Edit and, once an alternative exists, Compare.
+    Deleting a scenario lives in its Edit dialog."""
     from htmltools import tags
     cur = scenarios.current
     items = []
@@ -175,8 +178,8 @@ def scenario_bar(scenarios):
                            class_="staf-scen-sum", title=cur.description or None)
     chip = tags.details(summary, tags.div(*items, class_="staf-scen-menu", role="menu"),
                         class_="staf-scen-chip" + ("" if cur.is_baseline else " alt"))
-    links = [_scenario_link("new", "New", disabled=not scenarios.can_add(),
-                            title="New scenario" if scenarios.can_add() else "Up to 10 scenarios"),
+    links = [_scenario_link("new", "Add", disabled=not scenarios.can_add(),
+                            title="Add a scenario" if scenarios.can_add() else "Up to 10 scenarios"),
              _scenario_link("edit", "Edit",
                             title="Describe Existing Conditions" if cur.is_baseline else "Rename or describe")]
     if scenarios.has_alternatives():
@@ -274,25 +277,45 @@ def scenario_suffix(scenarios) -> str:
 
 
 def scenario_dialog(*, title: str, name: str, description: str, name_locked: bool, error: str | None = None,
-                    can_delete: bool = False):
+                    can_delete: bool = False, start=None, save_label: str = "Save"):
     """Name and description of a scenario; ``can_delete`` adds a Delete scenario button (an
-    alternative's dialog), which asks for confirmation through :func:`delete_dialog`."""
+    alternative's dialog), which asks for confirmation through :func:`delete_dialog`. ``start``,
+    ``(choices, selected, hint)``, adds the Start from select under the name (:func:`add_dialog`)."""
     from shiny import ui
     name_field = (ui.div(ui.tags.label("Name", class_="control-label"), ui.div(name, class_="staf-scen-fixed"),
                          class_="form-group") if name_locked
                   else ui.input_text(NAME_INPUT, "Name", value=name, width="100%"))
+    start_field = None
+    if start is not None:
+        choices, selected, hint = start
+        start_field = ui.div(ui.input_select(START_INPUT, "Start from", choices, selected=selected, width="100%"),
+                             ui.div(hint, class_="staf-scen-hint") if hint else None,
+                             class_="staf-scen-start")
     footer = [ui.modal_button("Cancel", class_="sfari-btn staf-btn"),
-              ui.input_action_button(SAVE_BUTTON, "Save", class_="sfari-btn primary staf-btn")]
+              ui.input_action_button(SAVE_BUTTON, save_label, class_="sfari-btn primary staf-btn")]
     if can_delete:
         footer.insert(0, ui.tags.button("Delete scenario", {"type": "button", "data-sc-action": "delete"},
                                         class_="btn sfari-btn staf-btn danger me-auto"))
     return ui.modal(
-        ui.div(name_field,
+        ui.div(name_field, start_field,
                ui.input_text_area(DESC_INPUT, "Description", value=description, rows=3, width="100%",
                                   placeholder="Optional"),
                ui.div(error, class_="staf-scen-err") if error else None,
                class_="staf-scen-form"),
         title=title, easy_close=True, size="m", footer=ui.TagList(*footer), class_="staf-dialog")
+
+
+def add_dialog(scenarios, *, name: str, description: str = "", start: str | None = None, hint: str = "",
+               error: str | None = None):
+    """Add a scenario (owner, 2026-10-05): its name, where it starts and a description. Start from
+    lists every scenario, Existing Conditions first and chosen unless ``start`` names another,
+    then Blank, which each app defines as what a fresh assessment of the site starts with.
+    ``hint`` is the app's own line on what a copy brings and what Blank keeps."""
+    choices = dict((s.id, s.name) for s in scenarios.items)
+    choices[START_BLANK] = "Blank"
+    selected = start if start in choices else scenarios.baseline.id
+    return scenario_dialog(title="Add a scenario", name=name, description=description, name_locked=False,
+                           error=error, start=(choices, selected, hint), save_label="Add")
 
 
 def delete_dialog(name: str):
