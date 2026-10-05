@@ -200,7 +200,7 @@ def test_the_page_wires_the_shared_chip():
     assert 'ui.output_ui("scenario_bar"), ui.output_ui("rollup_rail")' in SRC
     assert "@reactive.event(input.staf_scenario_evt)" in SRC
     assert "@reactive.event(input.staf_sc_save)" in SRC and "@reactive.event(input.staf_sc_delete)" in SRC
-    assert 'href="staf/staf.css?v=9"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
+    assert 'href="staf/staf.css?v=10"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
     for fn in ("_load_ref_into_state", "_do_reset"):
         assert "_reset_scenarios()" in SRC.split(f"def {fn}(", 1)[1].split("\n    def ", 1)[0]
     assert "scenario_nonce()" in SRC.split("def fn_panel():", 1)[1].split("\n    def ", 1)[0]
@@ -234,23 +234,57 @@ def _helpers():
     import app
     server = next(n for n in ast.parse(SRC).body if isinstance(n, ast.FunctionDef) and n.name == "server")
     ns = {**vars(app), "reactive": SimpleNamespace(isolate=nullcontext), "measured_values": _Value({}),
-          "scenario_rev": _Value(0), "scenario_nonce": _Value(0), "_sc": {"set": ScenarioSet(), "dialog": None}}
-    ns["input"] = SimpleNamespace(staf_sc_name=lambda: ns["typed"][0], staf_sc_desc=lambda: ns["typed"][1])
+          "scenario_rev": _Value(0), "scenario_nonce": _Value(0), "_sc": {"set": ScenarioSet(), "dialog": None},
+          "_desktop": {"fill": None}}
+    ns["input"] = SimpleNamespace(staf_sc_name=lambda: ns["typed"][0], staf_sc_desc=lambda: ns["typed"][1],
+                                  staf_sc_from=lambda: ns.get("start", BASELINE_ID))
     ns["ui"] = SimpleNamespace(modal_remove=lambda: None, modal_show=lambda m: None)
     ns["_scenario_dialog"] = lambda *a, **k: None
     for name in ("_bump_scenarios", "_values_now", "_show_values", "_scenario_values", "_stored_scenarios",
                  "_switch_scenario", "_session_scenarios", "_restore_scenarios", "_merge_into_stored",
-                 "_scenario_save"):
+                 "_desktop_start", "_scenario_save"):
         node = copy.deepcopy(next(n for n in ast.walk(server) if isinstance(n, ast.FunctionDef) and n.name == name))
         node.decorator_list = []
         exec(compile(ast.Module(body=[node], type_ignores=[]), app.__file__, "exec"), ns)
     return ns
 
 
-def _new_scenario(ns, name, desc=""):
-    """What the New scenario dialog's Save does on the page."""
-    ns["_sc"]["dialog"], ns["typed"] = "new", (name, desc)
+def _new_scenario(ns, name, desc="", start=BASELINE_ID):
+    """What the Add a scenario dialog's Add does on the page (``start``: a scenario id or "blank")."""
+    ns["_sc"]["dialog"], ns["typed"], ns["start"] = "new", (name, desc), start
     ns["_scenario_save"]()
+
+
+def test_add_starts_from_existing_conditions_or_from_what_the_app_fills_in(monkeypatch):
+    """Owner, 2026-10-05: Add asks where a scenario starts. A copy of Existing Conditions while an
+    alternative is shown is Existing Conditions'; Blank is a fresh assessment of the site: the
+    desktop values and the preselected curve sets, none of the assessor's values, notes or photos."""
+    import app
+    ns = _helpers()
+    la, d = object(), {"delineation": {}}
+    ns["loaded_assessment"], ns["delin"] = (lambda: la), (lambda: d)
+    ns["_auto_measure_key"] = lambda la_, d_: "site-1"
+    monkeypatch.setattr(app.reference_support, "auto_strata", lambda la_, d_: {"m3": "Low gradient"})
+    ns["_desktop"]["fill"] = ("site-1", {"m2": {"value": 7, "origin": "desktop", "engine": True}})
+    ns["measured_values"].set({"m1": {"value": 4, "origin": "field", "note": "riffle", "photos": [{"id": "p"}]},
+                               "m2": {"value": 9, "origin": "field"}})
+    _new_scenario(ns, "Urban growth")
+    ns["measured_values"].set({"m1": {"value": 30, "origin": "field"}})
+    _new_scenario(ns, "Bank work", start=BASELINE_ID)                  # shown: Urban growth
+    assert ns["measured_values"]()["m1"] == {"value": 4, "origin": "field", "note": "riffle"}   # no photos
+    _new_scenario(ns, "Second visit", start="blank")
+    assert ns["measured_values"]() == {"m2": {"value": 7, "origin": "desktop", "engine": True},
+                                       "m3": {"stratum": "Low gradient", "stratumAuto": True}}
+    ns["_desktop"]["fill"] = ("another site", {"m2": {"value": 1, "origin": "desktop"}})
+    _new_scenario(ns, "Third visit", start="blank")
+    assert ns["measured_values"]() == {"m3": {"stratum": "Low gradient", "stratumAuto": True}}  # never a stale fill
+    sset = ns["_sc"]["set"]
+    assert [s.name for s in sset.items] == ["Existing Conditions", "Urban growth", "Bank work", "Second visit",
+                                            "Third visit"]
+    assert sset.items[1].state["measured_values"]["m1"]["value"] == 30
+    assert "hint=_ADD_HINT" in SRC and "Blank keeps only the desktop values." in SRC
+    done = SRC.split("def _compute_done():", 1)[1].split("\n    def ", 1)[0]
+    assert '_desktop["fill"] = (request_key, copy.deepcopy(res))' in done     # what Blank starts from
 
 
 def test_save_and_open_restore_every_scenario_whichever_is_shown():
@@ -308,7 +342,7 @@ def _report_wiring(base: str):
     assert "comparison_table" not in section
     assert 'scenario=staf_web.report_scenario(_sc["set"])' in section
     assert 'can_delete=mode == "edit" and not cur.is_baseline' in SRC
-    assert 'href="staf/staf.css?v=9"' in SRC
+    assert 'href="staf/staf.css?v=10"' in SRC
     for ext in ("pdf", "csv", "geojson"):
         assert f"{base}{{staf_web.scenario_suffix(_sc['set'])}}.{ext}" in SRC
     pdf = SRC.split("def dl_pdf():", 1)[1].split("@render", 1)[0]

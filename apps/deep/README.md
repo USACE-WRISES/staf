@@ -274,7 +274,9 @@ leaves it stale, so re-run the script after a publish adds or renames a metric.
 
 **Scenarios** (owner, 2026-10-03): the chip at the top of the score rail keeps "Existing
 Conditions" and up to nine alternatives, each with its own measured values; desktop values the
-app computes go into every scenario without replacing an entry. Save writes the STAF assessment
+app computes go into every scenario without replacing an entry. Add starts one from a copy of
+any scenario (values and notes, not photos) or Blank: the desktop values and preselected curve
+sets only, from the last desktop fill for the site (owner, 2026-10-05). Save writes the STAF assessment
 file, the structure EASI and SFARI write too (owner, 2026-10-05;
 `libs/staf_workbook/staf_workbook/assessment_file.py`): the delineation, the inlined assessment
 with its provenance, and every scenario with its values. Files saved before (schema 2, and v1 or

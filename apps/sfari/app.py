@@ -220,6 +220,15 @@ FNS_BY_CAT = config.functions_by_category()
 _FNF_SHORT = {"Functioning": "F", "Functioning-at-Risk": "AR", "Non-Functioning": "NF"}
 
 
+#: the Add a scenario dialog's line under Start from (staf_web.add_dialog)
+_ADD_HINT = "A copy brings its scores and notes; photos stay with the original. Blank starts with no scores."
+
+
+def _blank_entries():
+    """A Blank scenario: no scores yet (the desktop evidence and its suggestions are shared)."""
+    return {"metric_scores": {}, "function_scores": {}}
+
+
 def _without_photos(state):
     """A scenario's entries without photos: an alternative is a plan, not a site visit."""
     out = copy.deepcopy(state or {})
@@ -807,7 +816,7 @@ HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=31"),
         ui.tags.script(src="staf/coord-entry.js", defer=""),
         ui.tags.script(src="staf/report-ready.js?v=2", defer=""),
         ui.tags.script(src="staf/unsaved-guard.js?v=3", defer=""),
-        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=9"),
+        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=10"),
         ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
         ui.tags.script(src="staf/scenarios.js?v=2", defer=""),
         ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
@@ -3130,12 +3139,15 @@ def server(input, output, session):
         active = next(i for i, (s, _e) in enumerate(rows) if s.id == sset.active)
         return staf_web.rail_delta(_comparison([rows[0], rows[active]]), 1)
 
-    def _scenario_dialog(mode, *, name, description, error=None):
+    def _scenario_dialog(mode, *, name, description, start=BASELINE_ID, error=None):
+        if mode == "new":
+            ui.modal_show(staf_web.add_dialog(_sc["set"], name=name, description=description, start=start,
+                                              hint=_ADD_HINT, error=error))
+            return
         cur = _sc["set"].current
-        title = ("New scenario" if mode == "new" else
-                 "Describe Existing Conditions" if cur.is_baseline else "Rename or describe")
+        title = "Describe Existing Conditions" if cur.is_baseline else "Rename or describe"
         ui.modal_show(staf_web.scenario_dialog(title=title, name=name, description=description,
-                                               name_locked=mode != "new" and cur.is_baseline, error=error,
+                                               name_locked=cur.is_baseline, error=error,
                                                can_delete=mode == "edit" and not cur.is_baseline))
 
     @reactive.effect
@@ -3169,11 +3181,19 @@ def server(input, output, session):
         name = sset.current.name
         if mode == "new" or not sset.current.is_baseline:
             name = (input.staf_sc_name() or "").strip()
+        start = BASELINE_ID
         try:
             if mode == "new":
+                # where the scenario starts (the Add dialog): a copy of any scenario, or blank
+                start = input.staf_sc_from() or BASELINE_ID
+                if start != staf_web.START_BLANK and start not in [s.id for s in sset.items]:
+                    start = BASELINE_ID
                 sset.set_state(sset.active, _entries_now())
-                new = sset.add(name, desc, copy_from=sset.active)
-                new.state = _without_photos(new.state)
+                if start == staf_web.START_BLANK:
+                    new = sset.add(name, desc, state=_blank_entries())
+                else:
+                    new = sset.add(name, desc, copy_from=start)
+                    new.state = _without_photos(new.state)
                 _show_entries(new.state)
                 _bump_scenarios(switched=True)
             else:
@@ -3183,7 +3203,7 @@ def server(input, output, session):
                 sset.describe(cur.id, desc)
                 _bump_scenarios()
         except ValueError as exc:
-            _scenario_dialog(mode, name=name, description=desc, error=str(exc))
+            _scenario_dialog(mode, name=name, description=desc, start=start, error=str(exc))
             return
         ui.modal_remove()
 

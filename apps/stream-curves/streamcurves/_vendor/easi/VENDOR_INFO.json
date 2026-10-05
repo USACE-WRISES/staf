@@ -63,10 +63,10 @@
   "_vendor/staf_workbook/model/__init__.py": "fae5024335a350d1f0df06b245c6c9a3702446d04d775cd9d82b144fe284542e",
   "_vendor/staf_workbook/model/compare.py": "bb519fbec4e75fc504a94d7b0d5e713ed27cf1362a667eb5337812822a3e3004",
   "_vendor/staf_workbook/model/refcurves.py": "f589268a44f2dc86ddce75389d2e335e9fce3c1dc250c60f6e829860cc7a4bba",
-  "_vendor/staf_workbook/model/scenarios.py": "0cdf2ef2811276be2e7c12f93fc2195e6462906e6e6abb4778736a59d8d8fe60",
+  "_vendor/staf_workbook/model/scenarios.py": "b8fe2101e799162548d6559378409d2de6229aaade60a05dcdc5fa2e4ca1d772",
   "_vendor/staf_workbook/model/summary.py": "561298a70ca1b9fd509c71ab5ed10ffc0115608ff5bcae554decae6ccc4e02be",
   "_vendor/staf_workbook/sheets.py": "93eb856af2ded88f39b229594e8294a3789df0975982d94fea44df9d9c5dcfde",
-  "_vendor/staf_workbook/web.py": "d85ce10973b13c2d610e5081e75c97848be9ec4cd643fe942a7a123988de7483",
+  "_vendor/staf_workbook/web.py": "f747606a6efd1d97dbb49a8cca2e911584af4cd5a58391a912c4cc85ba52aa95",
   "_vendor/staf_workbook/xlsx/__init__.py": "806e1ea137030b7a70f8fadd14171c2dd24ed7b5fa03f0514304351184a658e4",
   "_vendor/staf_workbook/xlsx/author.py": "80edc744700ef5936c3ccb2fccbc38f393ab886c920d1c23a3f7f08ba8f793a3",
   "_vendor/staf_workbook/xlsx/charts.py": "ab26c6c4cb011b9b60cbae011cf12b17f00136eddb0a5e6bb4b97a02c47d31e5",
@@ -158,7 +158,7 @@
   "_vendor/site_engine/_hrslim/HRSLIM_INFO.json": "70383aebe656efb462792704624af461be79f1048fe38568686455e966b0b791",
   "_vendor/site_engine/data/BFI_GRID_INFO.json": "593a732e6aa0ee3110473a4f5306218b6a63200b25d36b96df60fe906d6ac49f",
   "_vendor/site_engine/data/bfi48grd.tif": "b7f483bd0de8a4487969cc579f5367953434f06919d5001de04880e2e4dfae87",
-  "_vendor/staf_workbook/VENDOR_INFO.json": "5d9603eb78f4ec2af025d72c7e97d2227a017e5eaf1e3107e6a824216a2e95c1",
+  "_vendor/staf_workbook/VENDOR_INFO.json": "08db48f8b84d113e2f6ce9f10b85ffc1a1731ebd30d724f56b592c464a8f4930",
   "_vendor/staf_workbook/data/ecoregions.json": "df2d3cc0f12ec8640ce9e937c78cc55b0ebfaf7d2bc0a54864076f76a8b51b40"
  },
  "vendored_from": "apps/easi/easi"

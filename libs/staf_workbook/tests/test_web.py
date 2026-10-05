@@ -1,6 +1,7 @@
 """The scenario controls and the report's summary block (owner, 2026-10-03, second pass): a
-dropdown that only switches scenarios, then New, Edit and Compare links; Delete in the Edit
-dialog; each report names its own scenario and nothing else."""
+dropdown that only switches scenarios, then Add, Edit and Compare links; Delete in the Edit
+dialog; each report names its own scenario and nothing else. Add asks where the scenario starts
+(owner, 2026-10-05)."""
 from __future__ import annotations
 
 import re
@@ -25,13 +26,37 @@ def _actions(fragment: str) -> list:
     return re.findall(r'data-sc-action="([a-z]+)"', fragment)
 
 
-def test_one_scenario_shows_new_and_edit_and_nothing_else():
+def test_one_scenario_shows_add_and_edit_and_nothing_else():
     html = str(web.scenario_bar(ScenarioSet()))
     menu, links = _menu_and_links(html)
     assert _actions(menu) == ["select"]
-    assert _actions(links) == ["new", "edit"]
+    assert _actions(links) == ["new", "edit"]                    # the action keeps its name
+    assert "<span>Add</span>" in links and 'title="Add a scenario"' in links and "<span>New</span>" not in links
     assert 'title="Describe Existing Conditions"' in links and "staf-scen solo" in html
     assert "delete" not in html
+
+
+def test_the_add_dialog_asks_where_the_scenario_starts():
+    sset = ScenarioSet()
+    sset.add("Restore riparian")                                 # shown now
+    hint = "A copy brings its scores and notes; photos stay with the original. Blank starts with no scores."
+    html = str(web.add_dialog(sset, name="Alternative 2", hint=hint))
+    options = re.findall(r'<option value="([^"]*)"( selected="")?>([^<]*)</option>', html)
+    assert [(v, label) for v, _s, label in options] == [
+        ("existing", "Existing Conditions"), ("s2", "Restore riparian"), (web.START_BLANK, "Blank")]
+    assert [v for v, s, _l in options if s] == ["existing"]      # Existing Conditions by default
+    assert f'id="{web.START_INPUT}"' in html and "Add a scenario" in html and hint in html
+    assert html.index(f'id="{web.NAME_INPUT}"') < html.index(f'id="{web.START_INPUT}"') < html.index(
+        'class="staf-scen-hint"') < html.index(f'id="{web.DESC_INPUT}"')
+    footer = html.split('class="modal-footer"', 1)[1]
+    save = footer.split('id="staf_sc_save"', 1)[1].split("</button>", 1)[0]
+    assert '<span class="action-label">Add</span>' in save and "Delete scenario" not in footer
+    kept = str(web.add_dialog(sset, name="x", start=web.START_BLANK, error="Taken"))
+    assert re.search(r'<option value="blank" selected="">', kept) and "Taken" in kept
+    assert "—" not in html
+    from pathlib import Path
+    css = (Path(__file__).resolve().parents[1] / "assets" / "staf.css").read_text(encoding="utf-8")
+    assert ".staf-dialog .form-select {" in css and ".staf-scen-hint {" in css    # shaped like the fields
 
 
 def test_alternatives_add_compare_and_the_menu_only_switches():
@@ -48,7 +73,7 @@ def test_alternatives_add_compare_and_the_menu_only_switches():
     assert links.count("<svg") == 3
 
 
-def test_new_is_disabled_at_the_limit():
+def test_add_is_disabled_at_the_limit():
     sset = ScenarioSet()
     for _ in range(MAX_SCENARIOS - 1):
         sset.add()
