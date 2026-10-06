@@ -930,7 +930,8 @@ async def pull(ctx_inputs: dict, *, progress: Optional[dict] = None,
         _thread(wqp.median_value, "tn", ctx.lat, ctx.lon),
         _thread(wqp.median_value, "tp", ctx.lat, ctx.lon),
         _thread(nwis.flow_stats, ctx.lat, ctx.lon, ctx.drainage_area_sqkm),
-        _thread(nwi.wetlands_for_reach, ctx.lat, ctx.lon, state.get("record")),
+        # the record is kept without its geometry; the reach line rides in ctx_inputs
+        _thread(nwi.wetlands_for_reach, ctx.lat, ctx.lon, state.get("record"), ctx.reach_geojson),
         (_thread(streamcat.metrics_by_comid, comid, STREAMCAT_NAMES)
          if comid is not None else _none()),
     )

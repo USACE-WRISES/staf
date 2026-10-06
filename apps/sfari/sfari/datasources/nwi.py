@@ -20,24 +20,38 @@ import requests
 
 _URL = ("https://fwspublicservices.wim.usgs.gov/wetlandsmapservice/rest/services/"
         "Wetlands/MapServer/0/query")
-# The layer joins the NWI code table, so its fields come back table-qualified;
-# the bare names are read as a fallback.
-_ACRES = "Wetlands.ACRES"
-_TYPE = "Wetlands.WETLAND_TYPE"
+# The layer's field names have changed with its joins: table-qualified
+# ("Wetlands.ACRES") while it joined the NWI code table, bare ("ACRES") since. Asking
+# for the qualified names by name now fails the whole query (an "error" body with
+# HTTP 200, 2026-10-06), so ask for every field and read either spelling.
+_FIELDS = "*"
+_ACRES = ("ACRES", "Wetlands.ACRES")
+_TYPE = ("WETLAND_TYPE", "Wetlands.WETLAND_TYPE")
+
+
+def _field(attrs: dict, names: tuple):
+    for name in names:
+        if attrs.get(name) is not None:
+            return attrs[name]
+    return None
 
 
 M2_PER_ACRE = 4046.8564224
 
 
-def wetlands_along_reach(record: Optional[dict]) -> Optional[dict]:
+def wetlands_along_reach(record: Optional[dict], reach_geojson=None) -> Optional[dict]:
     """``{acres, stripAcres, pctOfStrip, bySystem, flowlines, halfWidthM}``: NWI wetland area
     within 150 m of the STAF site engine's assessment reach (``record``: the engine record, its
     ``site.nhdplusId`` and ``reach.geometry``), from the STAF data bundle, or None (no record, no
-    reach geometry, or the bundle off or not holding the reach). Never raises."""
+    reach geometry, or the bundle off or not holding the reach). Never raises.
+
+    ``reach_geojson`` is the reach line when the record no longer carries it: the app keeps the
+    record without geometry (``engine_prefill.strip_geometry``) and the line in the
+    delineation's ``ctx_inputs``."""
     try:
         from .._vendor.site_engine import bundle
         nid = ((record or {}).get("site") or {}).get("nhdplusId")
-        geom = ((record or {}).get("reach") or {}).get("geometry")
+        geom = reach_geojson or ((record or {}).get("reach") or {}).get("geometry")
         got = bundle.reach_wetlands(int(nid), geom) if nid and geom else None
         if not got or not got.get("stripM2"):
             return None
@@ -50,9 +64,10 @@ def wetlands_along_reach(record: Optional[dict]) -> Optional[dict]:
         return None
 
 
-def wetlands_for_reach(lat: float, lon: float, record: Optional[dict]) -> Optional[dict]:
+def wetlands_for_reach(lat: float, lon: float, record: Optional[dict],
+                       reach_geojson=None) -> Optional[dict]:
     """``wetlands_along_reach`` where the bundle answers, else ``wetlands_near``."""
-    return wetlands_along_reach(record) or wetlands_near(lat, lon)
+    return wetlands_along_reach(record, reach_geojson) or wetlands_near(lat, lon)
 
 
 def wetlands_near(lat: float, lon: float, deg: float = 0.02,
@@ -64,13 +79,18 @@ def wetlands_near(lat: float, lon: float, deg: float = 0.02,
     """
     env = f"{lon-deg:.5f},{lat-deg:.5f},{lon+deg:.5f},{lat+deg:.5f}"
     params = {"geometry": env, "geometryType": "esriGeometryEnvelope", "inSR": "4326",
-              "spatialRel": "esriSpatialRelIntersects", "outFields": f"{_ACRES},{_TYPE}",
+              "spatialRel": "esriSpatialRelIntersects", "outFields": _FIELDS,
               "returnGeometry": "false", "f": "json"}
     try:
         r = requests.get(_URL, params=params, timeout=timeout)
         if r.status_code != 200:
             return None
-        feats = r.json().get("features", [])
+        body = r.json()
+        # ArcGIS reports a failed query as HTTP 200 with an "error" body: that is no answer,
+        # never "no wetlands"
+        if not isinstance(body, dict) or body.get("error") or "features" not in body:
+            return None
+        feats = body.get("features") or []
     except Exception:  # noqa: BLE001
         return None
     acres = 0.0
@@ -78,10 +98,10 @@ def wetlands_near(lat: float, lon: float, deg: float = 0.02,
     for f in feats:
         a = f.get("attributes", {})
         try:
-            acres += float(a.get(_ACRES, a.get("ACRES")) or 0.0)
+            acres += float(_field(a, _ACRES) or 0.0)
         except (TypeError, ValueError):
             pass
-        t = a.get(_TYPE, a.get("WETLAND_TYPE"))
+        t = _field(a, _TYPE)
         if t:
             types[t] = types.get(t, 0) + 1
     return {"acres": round(acres, 1), "count": len(feats), "types": types}

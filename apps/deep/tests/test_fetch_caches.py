@@ -68,7 +68,7 @@ def test_streamcat_keeps_an_answer_with_no_row(monkeypatch):
         streamcat._fetch.cache_clear()
 
 
-def test_nwi_reads_the_current_service_and_its_qualified_fields(monkeypatch):
+def test_nwi_reads_the_current_service_and_either_field_spelling(monkeypatch):
     seen = []
 
     def get(url, params=None, timeout=None):
@@ -81,7 +81,16 @@ def test_nwi_reads_the_current_service_and_its_qualified_fields(monkeypatch):
         "acres": 3.5, "count": 2, "types": {"Riverine": 1, "Lake": 1}}
     url, params = seen[0]
     assert url.startswith("https://fwspublicservices.wim.usgs.gov/wetlandsmapservice/")
-    assert params["outFields"] == "Wetlands.ACRES,Wetlands.WETLAND_TYPE"
+    # every field: naming the table-qualified fields fails the query since the layer dropped
+    # its join (2026-10-06)
+    assert params["outFields"] == "*"
     monkeypatch.setattr(nwi.requests, "get",
                         lambda *a, **k: SimpleNamespace(status_code=404, json=lambda: {}))
+    assert nwi.wetlands_near(43.6858, -72.2367) is None
+
+
+def test_an_nwi_query_error_is_no_answer_not_no_wetlands(monkeypatch):
+    monkeypatch.setattr(nwi.requests, "get", lambda *a, **k: SimpleNamespace(
+        status_code=200, json=lambda: {"error": {"code": 400, "message": "Failed to execute query.",
+                                                 "details": []}}))
     assert nwi.wetlands_near(43.6858, -72.2367) is None

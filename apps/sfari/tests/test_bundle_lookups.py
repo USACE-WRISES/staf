@@ -7,6 +7,7 @@ an answer that reached for the network fails the test.
 """
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 import json
 import sys
@@ -14,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from sfari import engine_prefill, evidence, pipeline
 from sfari._vendor.site_engine import _hrslim, bundle, compute_site, hr
 from sfari._vendor.site_engine._hrslim import arcs, fmt, fmt2, grid
 from sfari.datasources import fabric, nwi
@@ -84,3 +86,36 @@ def test_nwi_within_150_m_of_the_reach(offline, fx):
     assert got["bySystem"]["palustrine"] == pytest.approx(3.71, abs=0.02)
     assert got["stripAcres"] == pytest.approx(7.4, abs=0.1)
     assert nwi.wetlands_along_reach({"site": {"nhdplusId": fx.ID[1]}, "reach": {"geometry": None}}) is None
+
+
+def test_nwi_takes_the_reach_line_beside_a_stripped_record(offline, fx):
+    # the app keeps the engine record without geometry (engine_prefill.strip_geometry); the reach
+    # line rides in the delineation's ctx_inputs and is passed beside the record
+    lon, lat = fx.point_deg(50, 25)
+    record = compute_site(lat, lon, {"metricFamilies": []})
+    stripped = engine_prefill.strip_geometry(record)
+    assert nwi.wetlands_along_reach(stripped) is None
+    assert nwi.wetlands_along_reach(stripped, record["reach"]["geometry"]) == nwi.wetlands_along_reach(record)
+
+
+def test_the_evidence_pull_reads_the_strips_from_the_apps_own_state(offline, fx, monkeypatch):
+    # the app's path end to end: delineate_from_engine, the stripped record in the engine state,
+    # then the pull. Until 2026-10-06 this asked the live NWI box every time.
+    boxes = []
+    monkeypatch.setattr(nwi, "wetlands_near", lambda *a, **k: boxes.append(a))
+    monkeypatch.setattr(evidence.nid_barriers, "barriers_near", lambda *a, **k: [])
+    monkeypatch.setattr(evidence.wqp, "median_value", lambda *a, **k: None)
+    monkeypatch.setattr(evidence.nwis, "flow_stats", lambda *a, **k: None)
+    monkeypatch.setattr(evidence.streamcat, "metrics_by_comid", lambda *a, **k: {})
+    lon, lat = fx.point_deg(50, 25)
+    record = compute_site(lat, lon, {"metricFamilies": []})
+    d = pipeline.delineate_from_engine(record, lat, lon)
+    state = {"status": "ok", "record": engine_prefill.strip_geometry(record), "reason": None}
+    assert state["record"]["reach"]["geometry"] is None and d["ctx_inputs"]["reach_geojson"]
+    out = asyncio.run(evidence.pull(d["ctx_inputs"], engine=state))
+    lateral = out["floodplain-connectivity-lateral-floodplain-inundation"]
+    assert boxes == []
+    assert lateral["source"].startswith("USFWS National Wetlands Inventory (STAF data bundle)")
+    assert lateral["value"] == pytest.approx(3.7, abs=0.05)
+    assert lateral["value_text"].startswith(
+        "3.7 ac of NWI wetland within 150 m of the reach (50.0% of the strip)")
