@@ -121,7 +121,9 @@ One watershed engine answers the watershed metrics (the definitions live in
    with the routed distance and the drainage-area ratio (reported, never
    enforced). Without a COMID there is no StreamCat value.
 3. **Direct services** (`origin="pull"`): NWIS gages, WQP nutrients, NWI
-   wetlands, NID dams near the reach, and the NHDPlus HR attributes the
+   wetlands (the area within 150 m of the reach from the STAF data bundle;
+   the live NWI service's box around the point where the bundle has no
+   answer), NID dams near the reach, and the NHDPlus HR attributes the
    engine reports (slope, flow permanence, sinuosity).
 
 Every StreamCat entry carries `anchor_label` (the reach it describes on a

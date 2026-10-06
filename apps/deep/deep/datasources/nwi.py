@@ -15,10 +15,20 @@ import requests
 
 _URL = ("https://fwspublicservices.wim.usgs.gov/wetlandsmapservice/rest/services/"
         "Wetlands/MapServer/0/query")
-# The layer joins the NWI code table, so its fields come back table-qualified;
-# the bare names are read as a fallback.
-_ACRES = "Wetlands.ACRES"
-_TYPE = "Wetlands.WETLAND_TYPE"
+# The layer's field names have changed with its joins: table-qualified
+# ("Wetlands.ACRES") while it joined the NWI code table, bare ("ACRES") since. Asking
+# for the qualified names by name now fails the whole query (an "error" body with
+# HTTP 200, 2026-10-06), so ask for every field and read either spelling.
+_FIELDS = "*"
+_ACRES = ("ACRES", "Wetlands.ACRES")
+_TYPE = ("WETLAND_TYPE", "Wetlands.WETLAND_TYPE")
+
+
+def _field(attrs: dict, names: tuple):
+    for name in names:
+        if attrs.get(name) is not None:
+            return attrs[name]
+    return None
 
 
 def wetlands_near(lat: float, lon: float, deg: float = 0.02,
@@ -30,13 +40,18 @@ def wetlands_near(lat: float, lon: float, deg: float = 0.02,
     """
     env = f"{lon-deg:.5f},{lat-deg:.5f},{lon+deg:.5f},{lat+deg:.5f}"
     params = {"geometry": env, "geometryType": "esriGeometryEnvelope", "inSR": "4326",
-              "spatialRel": "esriSpatialRelIntersects", "outFields": f"{_ACRES},{_TYPE}",
+              "spatialRel": "esriSpatialRelIntersects", "outFields": _FIELDS,
               "returnGeometry": "false", "f": "json"}
     try:
         r = requests.get(_URL, params=params, timeout=timeout)
         if r.status_code != 200:
             return None
-        feats = r.json().get("features", [])
+        body = r.json()
+        # ArcGIS reports a failed query as HTTP 200 with an "error" body: that is no answer,
+        # never "no wetlands"
+        if not isinstance(body, dict) or body.get("error") or "features" not in body:
+            return None
+        feats = body.get("features") or []
     except Exception:  # noqa: BLE001
         return None
     acres = 0.0
@@ -44,10 +59,10 @@ def wetlands_near(lat: float, lon: float, deg: float = 0.02,
     for f in feats:
         a = f.get("attributes", {})
         try:
-            acres += float(a.get(_ACRES, a.get("ACRES")) or 0.0)
+            acres += float(_field(a, _ACRES) or 0.0)
         except (TypeError, ValueError):
             pass
-        t = a.get(_TYPE, a.get("WETLAND_TYPE"))
+        t = _field(a, _TYPE)
         if t:
             types[t] = types.get(t, 0) + 1
     return {"acres": round(acres, 1), "count": len(feats), "types": types}
