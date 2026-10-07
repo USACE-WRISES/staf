@@ -15,6 +15,7 @@ of the samplers; anything not there yet is downloaded on demand.
 from __future__ import annotations
 
 import math
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -31,6 +32,10 @@ _POOL: Optional[ThreadPoolExecutor] = None
 SEAMLESS_TILE = ("https://prd-tnm.s3.amazonaws.com/StagedProducts/Elevation/13/TIFF/current/"
                  "{name}/USGS_13_{name}.tif")
 _MISSING: set = set()
+#: a cached tile refuses to open while another process holds it with delete access (a download
+#: being renamed into place, the cache deleting it); GDAL then says "file used by other process"
+#: (six cells failed so on 2026-10-05), so the read waits a moment and tries again
+BUSY_TRIES, BUSY_WAIT_S = 5, 1.0
 
 
 def transformer(epsg_to: int):
@@ -195,7 +200,14 @@ def ensure(url: str) -> str:
 
 
 def _read(urls: list, bounds) -> tuple:
-    return dem_tiles.merge_windows([ensure(u) for u in urls], bounds)
+    paths = [ensure(u) for u in urls]
+    for attempt in range(BUSY_TRIES):
+        try:
+            return dem_tiles.merge_windows(paths, bounds)
+        except Exception as exc:  # noqa: BLE001 - only the momentary sharing clash is retried
+            if "used by other process" not in str(exc) or attempt == BUSY_TRIES - 1:
+                raise
+            time.sleep(BUSY_WAIT_S * (attempt + 1))
 
 
 def sample_group(urls: list, epsg: int, secs: list, n_pts: list, pad_units: float) -> list:
