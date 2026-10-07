@@ -287,3 +287,103 @@ def test_lock_and_archive_checks(tmp_path, monkeypatch):
     assert build.archive_writable()
     monkeypatch.setattr(config, "ARCHIVE", Path("Q:/no-such-drive/staf-xs"))
     assert not build.archive_writable()
+
+
+def test_status_says_when_the_archive_drive_is_missing(tmp_path, monkeypatch, capsys):
+    import run
+    monkeypatch.setattr(config, "WORK", tmp_path / "work")
+    monkeypatch.setattr(config, "ARCHIVE", Path("Q:/no-such-drive/staf-xs"))
+    assert run.cmd_status(None) == 1
+    out = capsys.readouterr().out
+    assert "PAUSED" in out and "not connected" in out
+    monkeypatch.setattr(config, "ARCHIVE", tmp_path / "archive")     # the drive is there, the folder not yet
+    monkeypatch.setattr(run, "lower48", lambda: ["0101", "0102"])
+    assert run.cmd_status(None) == 0
+    assert "regions done 0 of 2" in capsys.readouterr().out
+
+
+def test_a_run_never_starts_a_new_archive_over_finished_regions(tmp_path, monkeypatch, capsys):
+    import run
+
+    from xsgrid import build
+    monkeypatch.setattr(config, "WORK", tmp_path / "work")
+    monkeypatch.setattr(config, "ARCHIVE", tmp_path / "another-drive" / "staf-xs")
+    (tmp_path / "work" / "metrics").mkdir(parents=True)
+    (tmp_path / "work" / "metrics" / "xsm_0101.parquet").write_bytes(b"x")   # a region is done
+    assert build.run(["0101"]) == 2
+    assert not config.ARCHIVE.exists() and not build.lock_path().exists()
+    assert run.cmd_status(None) == 1 and "no archive at" in capsys.readouterr().out
+
+
+def test_read_waits_out_a_tile_another_process_holds(monkeypatch):
+    from rasterio.errors import RasterioIOError
+    calls = []
+
+    def busy_twice(paths, bounds):
+        calls.append(paths)
+        if len(calls) < 3:
+            raise RasterioIOError(f"{paths[0]}: file used by other process")
+        return "mosaic"
+    monkeypatch.setattr(sample, "ensure", lambda url: url)
+    monkeypatch.setattr(sample, "BUSY_WAIT_S", 0.0)
+    monkeypatch.setattr(sample.dem_tiles, "merge_windows", busy_twice)
+    assert sample._read(["a.tif"], (0, 0, 1, 1)) == "mosaic" and len(calls) == 3
+
+    def broken(paths, bounds):
+        calls.append(paths)
+        raise RasterioIOError("a.tif: not recognized as a supported file format")
+    calls.clear()
+    monkeypatch.setattr(sample.dem_tiles, "merge_windows", broken)
+    with pytest.raises(RasterioIOError):
+        sample._read(["a.tif"], (0, 0, 1, 1))
+    assert len(calls) == 1                                  # any other error is not retried
+
+
+def test_a_download_stops_when_its_pool_shuts_down(tmp_path, monkeypatch):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+
+    from xsgrid import tilecache
+    monkeypatch.setenv("XSGRID_TILECACHE", str(tmp_path))
+    monkeypatch.setattr(tilecache, "CHUNK", 2)                # 4 ranges, one worker
+    started, release = threading.Event(), threading.Event()
+
+    def slow_range(u, a, b):
+        started.set()
+        release.wait(10)
+        return b"x" * (b - a + 1)
+    monkeypatch.setattr(tilecache, "_get_range", slow_range)
+    pool, out = ThreadPoolExecutor(1), {}
+
+    def download():
+        try:
+            tilecache.fetch("https://example.invalid/tiles/USGS_one_meter_x1y1_TEST.tif", pool, size=8)
+            out["end"] = "finished"
+        except Exception as exc:  # noqa: BLE001
+            out["end"] = type(exc).__name__
+    t = threading.Thread(target=download, daemon=True)
+    t.start()
+    assert started.wait(10)
+    pool.shutdown(wait=False, cancel_futures=True)          # a pause: the queued ranges are cancelled
+    release.set()
+    t.join(30)
+    assert not t.is_alive() and out["end"] == "CancelledError"
+    assert not list(tmp_path.glob("*.part"))
+
+
+def test_a_download_never_replaces_a_tile_already_in_place(tmp_path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+
+    from xsgrid import tilecache
+    monkeypatch.setenv("XSGRID_TILECACHE", str(tmp_path))
+    url = "https://example.invalid/tiles/USGS_one_meter_x1y1_TEST.tif"
+    dest = tilecache.local_path(url)
+
+    def get_range(u, a, b):                                 # meanwhile another process puts its copy in place
+        dest.write_bytes(b"theirs")
+        return b"m" * (b - a + 1)
+    monkeypatch.setattr(tilecache, "_get_range", get_range)
+    with ThreadPoolExecutor(2) as pool:
+        assert tilecache.fetch(url, pool, size=6) == dest
+    assert dest.read_bytes() == b"theirs"
+    assert not list(tmp_path.glob("*.part"))

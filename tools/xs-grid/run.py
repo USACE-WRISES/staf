@@ -74,6 +74,17 @@ def cmd_stop(args) -> int:
 
 
 def cmd_status(args) -> int:
+    pid = build.running_pid()
+    print(("RUNNING (process %d)" % pid) if pid else "PAUSED (no run is going)")
+    drive = Path(config.ARCHIVE.anchor)
+    if not drive.exists():
+        print(f"the archive drive {drive} is not connected (archive {config.ARCHIVE}); "
+              f"plug it in, or set XSGRID_ARCHIVE")
+        return 1
+    if build.archive_missing():
+        print(f"no archive at {config.ARCHIVE}, though regions are done (their metrics are in "
+              f"{config.WORK / 'metrics'}); is another drive at {drive}?")
+        return 1
     done = sorted(p.stem for p in (config.ARCHIVE / "regions").glob("*.json"))
     total = len(lower48())
     secs = arch = met = 0
@@ -82,9 +93,7 @@ def cmd_status(args) -> int:
         secs += r["sections"]
         arch += r["archive_bytes"]
         met += r["metrics_bytes"]
-    usage = shutil.disk_usage(config.ARCHIVE.anchor if config.ARCHIVE.exists() else config.ARCHIVE.parent)
-    pid = build.running_pid()
-    print(("RUNNING (process %d)" % pid) if pid else "PAUSED (no run is going)")
+    usage = shutil.disk_usage(drive)
     print(f"regions done {len(done)} of {total}; sections {secs:,}; archive {arch / 1e9:.1f} GB "
           f"({arch / max(secs, 1):.0f} B/section); metrics {met / 1e9:.2f} GB; "
           f"drive free {usage.free / 1e9:.0f} GB")

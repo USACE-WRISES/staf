@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, CancelledError, ThreadPoolExecutor, wait
 from pathlib import Path
 
 from . import config
@@ -89,13 +89,20 @@ def fetch(url: str, pool: ThreadPoolExecutor, *, size: int | None = None) -> Pat
             b = min(a + CHUNK, size) - 1
             futures[pool.submit(_get_range, url, a, b)] = a
         with open(part, "r+b") as fh:
-            for f in as_completed(futures):
-                fh.seek(futures[f])
-                fh.write(f.result())
+            # not as_completed: a range cancelled by the pool's shutdown (a pause) never wakes it,
+            # and the run's process then never exits (2026-10-06)
+            pending = set(futures)
+            while pending:
+                done, pending = wait(pending, timeout=5.0, return_when=FIRST_COMPLETED)
+                for f in done:
+                    fh.seek(futures[f])
+                    fh.write(f.result())
+                if any(f.cancelled() for f in pending):
+                    raise CancelledError(f"download of {url} stopped: its pool shut down")
         if part.stat().st_size != size:
             raise IOError("size mismatch")
         try:
-            os.replace(part, path)
+            os.rename(part, path)      # never over a copy another process put in place: readers may be opening it
         except OSError:
             if not path.exists():
                 raise

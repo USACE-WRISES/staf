@@ -304,6 +304,13 @@ def archive_writable() -> bool:
         return False
 
 
+def archive_missing() -> bool:
+    """The archive folder is gone though regions are done (their metrics copies sit in WORK): the
+    archive drive is unplugged, or another drive took its letter. No run may start a new archive
+    then."""
+    return not config.ARCHIVE.exists() and any((config.WORK / "metrics").glob("xsm_*.parquet"))
+
+
 def lock_path() -> Path:
     return config.WORK / "build.lock"
 
@@ -368,10 +375,16 @@ def run(vpus: list, *, samplers: int = 3, scorers: int = 7, priority_low: bool =
     """Build every region in ``vpus`` that is not done (``cell_limit``: a test run of that many
     cells per region, left unmerged). With ``window`` (minutes after midnight, start and end) the
     run starts only inside it and pauses at its end; ``run.py stop`` (the STOP file) pauses it any
-    time. A pause finishes the cells in hand, so the next run picks up exactly there."""
+    time. A pause finishes the cells in hand, so the next run picks up exactly there. A cell
+    whose sampling fails is tried once more later in the run; if it fails again it stays to do,
+    and its region merges at the next run."""
     if window is not None and not in_window(window):
         log(f"outside the run window {fmt_window(window)}; not starting")
         return 0
+    if archive_missing():
+        log(f"the archive {config.ARCHIVE} is not there, though regions are done (their metrics are in "
+            f"{config.WORK / 'metrics'}); plug in the archive drive, or set XSGRID_ARCHIVE; not starting")
+        return 2
     if not archive_writable():
         log(f"the archive drive ({config.ARCHIVE}) is not connected or not writable; not starting")
         return 2
@@ -409,6 +422,7 @@ def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, a
     region_started: dict = {}
     failures = [0]
     streak = [0]                                        # failures in a row: the drive may be gone
+    retried: set = set()                                # cells already given their second try
 
     def cells_of(vpu: str) -> list:
         table = tables.get(vpu)
@@ -538,13 +552,19 @@ def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, a
                 done = set()
             for f in done:
                 if f in sampling:
-                    vpu, cell, _c = sampling.pop(f)
+                    vpu, cell, c = sampling.pop(f)
                     try:
                         s = f.result()
-                    except Exception as exc:  # noqa: BLE001 - logged, the cell stays to do
-                        failures[0] += 1
+                    except Exception as exc:  # noqa: BLE001 - logged; one more try, else the cell stays to do
                         streak[0] += 1
-                        log(f"[{vpu}] cell {cell} sampling FAILED {type(exc).__name__}: {exc}")
+                        again = stopping is None and (vpu, cell) not in retried
+                        if again:                         # later in this run, so its region still merges
+                            retried.add((vpu, cell))
+                            upcoming.append(c)
+                        else:
+                            failures[0] += 1
+                        log(f"[{vpu}] cell {cell} sampling FAILED {type(exc).__name__}: {exc}"
+                            + ("; trying it once more" if again else ""))
                         continue
                     streak[0] = 0
                     write_stat(s)

@@ -32,10 +32,11 @@ The owner starts and stops runs. There is no schedule, so nothing starts on its 
   Start-Process -FilePath ".venv\Scripts\pythonw.exe" -WorkingDirectory "D:\Code\Work\staf" -ArgumentList "tools\xs-grid\run.py","national","--first","0710,0601,0205,1711,1402,0307,0408,0506,1111,1506,0108,0206","--log","D:\Data\xs-grid\logs\national.log"
   ```
 
-  The run picks up where the last one paused: cells already written are skipped, and cells sampled but not yet scored are scored first. Before starting, it checks that the archive drive is connected and writable, and that no other run is going (`D:\Data\xs-grid\build.lock`). A run also keeps the machine from sleeping.
+  The run picks up where the last one paused: cells already written are skipped, and cells sampled but not yet scored are scored first. Before starting, it checks that the archive drive is connected and writable, and that no other run is going (`D:\Data\xs-grid\build.lock`). It also refuses to start when `F:\staf-xs` is missing although regions are done (their metrics copies are in `D:\Data\xs-grid\metrics`): the drive is unplugged, or another drive took its letter, and a new empty archive must not be started there. A run also keeps the machine from sleeping.
 - **Pause**: `python tools/xs-grid/run.py stop`. The run stops taking new cells, finishes the ones in hand (usually a minute or two), logs `PAUSED`, and exits.
 - **Check**: `python tools/xs-grid/run.py status` says RUNNING or PAUSED, and shows regions done, the cells of the region in progress, and space left on the drive.
 - **Optional window**: `--window 20:00-07:00` limits a run to those hours. It will not start outside them and pauses itself at the end.
+- **Failed cells**: a cell whose sampling fails is tried once more later in the same run. If it fails again it stays to do, the region stays unmerged (`some cells failed; rerun to finish the region`), and the next start samples that cell and merges the region. A tile another process is renaming or deleting at that moment refuses to open ("file used by other process"); the read waits and tries again, up to 5 times.
 
 Stopping the process tree outright (Task Manager, `taskkill /T`) also loses nothing. Every file is written under a temporary name and renamed when complete, and the next start deletes half-written tile downloads.
 
