@@ -1,6 +1,6 @@
 """A small worksheet writer for the authored sheets (Summary, ReferenceCurves): inline strings,
-numbers, formulas with stored results, merges, column widths, a frozen header, and an optional
-drawing. Elements are written in the order the schema requires."""
+numbers, formulas with stored results, merges, column widths, a frozen header, conditional formats,
+the printed page, and an optional drawing. Elements are written in the order the schema requires."""
 from __future__ import annotations
 
 import math
@@ -10,6 +10,8 @@ from xml.sax.saxutils import escape
 
 NS_MAIN = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
 NS_R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+#: characters XML 1.0 forbids (a pasted control character would make the sheet unreadable)
+_NOT_XML = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f￾￿]")
 
 
 def col_letter(n: int) -> str:
@@ -49,6 +51,10 @@ class SheetWriter:
         self.merges: list = []
         self.freeze: Optional[str] = None
         self.drawing_rid: Optional[str] = None
+        self.conditions: list = []           # [(sqref, formula, dxf id)], in priority order
+        self.orientation = "landscape"
+        self.fit_height = 0                  # 0 = as many pages tall as needed
+        self.center_horizontally = False
 
     def _put(self, ref: str, xml_body: str, style: Optional[int], cell_type: Optional[str] = None) -> None:
         col, row = split_ref(ref)
@@ -59,7 +65,8 @@ class SheetWriter:
         if value is None or value == "":
             self._put(ref, "", style)
             return
-        self._put(ref, f'<is><t xml:space="preserve">{escape(str(value))}</t></is>', style, "inlineStr")
+        self._put(ref, f'<is><t xml:space="preserve">{escape(_NOT_XML.sub("", str(value)))}</t></is>', style,
+                  "inlineStr")
 
     def number(self, ref: str, value, style: Optional[int] = None) -> None:
         if value is None:
@@ -88,6 +95,25 @@ class SheetWriter:
 
     def height(self, row: int, h: float) -> None:
         self.heights[row] = h
+
+    def conditional(self, sqref: str, formula: str, dxf: int) -> None:
+        """An expression rule: where ``formula`` (relative to the range's top-left cell) is true,
+        the cell takes differential format ``dxf``."""
+        self.conditions.append((sqref, formula[1:] if formula.startswith("=") else formula, dxf))
+
+    def _conditional_xml(self) -> str:
+        blocks: dict = {}
+        for sqref, formula, dxf in self.conditions:
+            blocks.setdefault(sqref, []).append((formula, dxf))
+        out, priority = [], 0
+        for sqref, rules in blocks.items():
+            body = ""
+            for formula, dxf in rules:
+                priority += 1
+                body += (f'<cfRule type="expression" dxfId="{dxf}" priority="{priority}">'
+                         f"<formula>{escape(formula)}</formula></cfRule>")
+            out.append(f'<conditionalFormatting sqref="{sqref}">{body}</conditionalFormatting>')
+        return "".join(out)
 
     def xml(self, *, show_grid: bool = False) -> str:
         cells = [(r, c) for r, cols in self.rows.items() for c in cols]
@@ -119,10 +145,13 @@ class SheetWriter:
             merges = f'<mergeCells count="{len(self.merges)}">' + "".join(
                 f'<mergeCell ref="{m}"/>' for m in self.merges) + "</mergeCells>"
         drawing = f'<drawing r:id="{self.drawing_rid}"/>' if self.drawing_rid else ""
+        options = '<printOptions horizontalCentered="1"/>' if self.center_horizontally else ""
         margins = '<pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/>'
-        setup = '<pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/>'
+        setup = (f'<pageSetup orientation="{self.orientation}" fitToWidth="1" '
+                 f'fitToHeight="{int(self.fit_height)}"/>')
         return (f'<worksheet xmlns="{NS_MAIN}" xmlns:r="{NS_R}">'
                 '<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>'
                 f"{dim}<sheetViews>{view}</sheetViews>"
                 '<sheetFormatPr defaultRowHeight="15"/>'
-                f"{cols}<sheetData>{''.join(rows)}</sheetData>{merges}{margins}{setup}{drawing}</worksheet>")
+                f"{cols}<sheetData>{''.join(rows)}</sheetData>{merges}{self._conditional_xml()}"
+                f"{options}{margins}{setup}{drawing}</worksheet>")

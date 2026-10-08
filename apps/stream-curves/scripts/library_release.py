@@ -13,8 +13,9 @@ every installed StreamCurves (the gallery) and DEEP (its remote library) read:
 Asset names carry a content hash, so a changed file is a new asset and a published name never
 changes meaning; upload sends only names the release does not have, then library.json LAST,
 so a client never sees a catalog that names an asset still in flight. A validation change
-touches only library.json; a status change also rebuilds that version's pack, whose origin
-block names the status (the old pack stays on the release until `prune --yes`).
+touches only library.json, and a DEEP visibility change (Show in DEEP) only the two catalogs; a
+status change also rebuilds that version's pack, whose origin block names the status (the old
+pack stays on the release until `prune --yes`).
 
 A DEEP version whose folder carries evidence.json (the reference to its evidence package:
 packageId, version, packageDigest, dataDigest and the archive's name, sha256 and bytes) is
@@ -56,8 +57,8 @@ TAG = gallery.RELEASE_TAG
 TITLE = "STAF assessment library"
 NOTES = ("The published STAF detailed assessments, rebuilt from apps/library by "
          "apps/stream-curves/scripts/library_release.py. StreamCurves Desktop lists them in "
-         "its Assessment library; DEEP runs the preliminary and final versions. library.json "
-         "is the catalog; every other asset is immutable.")
+         "its Assessment library; DEEP runs the draft, preliminary and final versions it is "
+         "set to show. library.json is the catalog; every other asset is immutable.")
 
 
 def _sha(data: bytes) -> str:

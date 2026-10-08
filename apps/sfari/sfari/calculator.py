@@ -366,9 +366,6 @@ def blank_filename() -> str:
     return f"SFARI_Calculator_Draft_{TEMPLATE_VERSION}.xlsx"
 
 
-def calculator_filename(delin) -> str:
-    """``sfari-calculator-nhdplusid-<id>.xlsx`` (or comid, or coordinates)."""
-    from . import report
-
-    slug = report._site_slug(delin)          # takes the whole result, not the inner dict
-    return f"sfari-calculator-{slug}.xlsx" if slug else "sfari-calculator.xlsx"
+def calculator_filename() -> str:
+    """The completed workbook's download name: plain, with no site id (owner, 2026-10-08)."""
+    return "sfari-calculator.xlsx"

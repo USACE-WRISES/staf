@@ -119,16 +119,20 @@ function page(options, L = leaflet()) {
   return p;
 }
 
+// one region per status (owner, 2026-10-08: Draft gray, Preliminary amber, Final blue), and one
+// without a lifecycle, as a server from before Drafts showed sent it
 const FEATURES = [
   { assessmentId: "southern-coastal-plain", name: "Southern Coastal Plain", code: "75", version: 1,
-    status: "Preliminary", certified: false, geometry: { type: "Polygon", id: "big" } },
+    status: "Draft", lifecycle: "draft", certified: false, geometry: { type: "Polygon", id: "big" } },
   { assessmentId: "flint-hills", name: "Flint Hills", code: "28", version: 2, status: "Final",
-    certified: true, geometry: { type: "Polygon", id: "flint" } },
+    lifecycle: "certified", certified: true, geometry: { type: "Polygon", id: "flint" } },
   { assessmentId: "acadian-plains-and-hills", name: "Acadian Plains and Hills", code: "82", version: 1,
-    status: "Preliminary", certified: false, geometry: { type: "Polygon", id: "acadian" } },
+    status: "Preliminary", lifecycle: "preliminary", certified: false, geometry: { type: "Polygon", id: "acadian" } },
   { assessmentId: "southeastern-plains", name: "Southeastern Plains", code: "65", version: 1,
     status: "Preliminary", certified: false, geometry: { type: "Polygon", id: "se" } },
 ];
+const DRAFT = ["#475569", "#6b6459"], PRELIM = ["#b45309", "#d97706"], FINAL = ["#303f9f", "#3f51b5"];
+const NAVY = "#2f4b7c";
 
 // a standalone DEEP page with its map, sidebar and the regions delivered
 function deepPage({ features = FEATURES, width = 1400, storage = null } = {}) {
@@ -207,14 +211,20 @@ test("on its own page DEEP asks with its plain input name and takes the first ma
 });
 
 // ---- the sidebar ----
-test("one line per region, sorted by name, with its version and Final only when certified", () => {
+test("one line per region, sorted by name, with its status in its map color and its version", () => {
   const d = deepPage();
   const names = d.rows().map((r) => r.querySelector(".deep-cov-name").textContent);
   assert.deepEqual(names, ["Acadian Plains and Hills", "Flint Hills", "Southeastern Plains", "Southern Coastal Plain"]);
   const flint = d.row("flint-hills");
   assert.equal(flint.querySelector(".deep-cov-ver").textContent, "v2");
-  assert.ok(flint.querySelector(".deep-cov-final"));
+  assert.equal(flint.querySelector(".deep-cov-final").textContent, "Final");
+  assert.equal(d.row("southern-coastal-plain").querySelector(".deep-cov-draft").textContent, "Draft");
+  assert.equal(d.row("acadian-plains-and-hills").querySelector(".deep-cov-prelim").textContent, "Preliminary");
+  assert.equal(d.row("southeastern-plains").querySelector(".deep-cov-prelim").textContent, "Preliminary",
+               "no lifecycle: preliminary");
   assert.equal(d.row("southern-coastal-plain").querySelector(".deep-cov-final"), null);
+  const chips = (r) => r.querySelectorAll(".deep-cov-chip").map((c) => c.className.split(" ")[1]);
+  assert.deepEqual(chips(flint), ["deep-cov-use", "deep-cov-final", "deep-cov-ver"], "one status chip per row");
   assert.equal(d.side.count.textContent, "4");
   assert.equal(d.search().getAttribute("placeholder"), "Search ecoregions");
   assert.ok(d.search().hasAttribute("data-shiny-no-bind-input"), "the search is never a Shiny input");
@@ -269,7 +279,7 @@ test("hovering a row or a region highlights both, and the map names the region",
   d.row("flint-hills").fire("mouseleave");
   d.layer("southern-coastal-plain").fire("mouseover", { latlng: [30, -84] });
   assert.ok(d.row("southern-coastal-plain").classList.contains("is-hover"));
-  assert.ok(d.map.tooltip.content.includes("Southern Coastal Plain") && d.map.tooltip.content.includes("v1 · Preliminary"));
+  assert.ok(d.map.tooltip.content.includes("Southern Coastal Plain") && d.map.tooltip.content.includes("v1 · Draft"));
   d.layer("southern-coastal-plain").fire("mouseout");
   assert.equal(d.map.tooltip, null);
   assert.ok(!d.row("southern-coastal-plain").classList.contains("is-hover"));
@@ -284,11 +294,43 @@ test("regions draw in their own pane under the streams, explorable, never bubbli
   assert.equal(lyr.options.pane, "deep-regions");
   assert.equal(lyr.options.interactive, true);
   assert.equal(lyr.options.bubblingMouseEvents, false);
-  assert.equal(lyr.style.fillColor, "#6b6459");
+  assert.equal(lyr.style.fillOpacity, 0.12);
   assert.ok(!pane.classList.contains("is-passive"));
   const click = { latlng: [37, -96] };
   lyr.fire("click", click);
   assert.equal(click.stopped, true, "the stream picker never hears a region click");
+});
+
+test("each region takes its status's colors; hover and selection are navy whatever the status", () => {
+  const d = deepPage();
+  const colors = (aid) => [d.layer(aid).style.color, d.layer(aid).style.fillColor];
+  assert.deepEqual(colors("southern-coastal-plain"), DRAFT);
+  assert.deepEqual(colors("acadian-plains-and-hills"), PRELIM);
+  assert.deepEqual(colors("flint-hills"), FINAL);
+  assert.deepEqual(colors("southeastern-plains"), PRELIM, "no lifecycle: preliminary");
+  d.layer("flint-hills").fire("mouseover", { latlng: [38, -96] });
+  assert.deepEqual(colors("flint-hills"), [NAVY, FINAL[1]], "hover: a navy outline over the status fill");
+  d.layer("flint-hills").fire("mouseout");
+  assert.deepEqual(colors("flint-hills"), FINAL);
+  d.row("acadian-plains-and-hills").fire("click");
+  assert.deepEqual(colors("acadian-plains-and-hills"), [NAVY, NAVY]);
+  d.map.zoomTo(14);                                 // passive: a faint dashed outline in the status color
+  for (const [aid, line] of [["flint-hills", FINAL[0]], ["southern-coastal-plain", DRAFT[0]]]) {
+    assert.equal(d.layer(aid).style.color, line);
+    assert.equal(d.layer(aid).style.dashArray, "6 5");
+    assert.equal(d.layer(aid).style.fillOpacity, 0);
+  }
+  assert.equal(d.layer("acadian-plains-and-hills").style.color, NAVY, "the selected one stays navy");
+  assert.equal(d.layer("acadian-plains-and-hills").style.dashArray, null);
+});
+
+test("a server from before Drafts showed sends no lifecycle: certified reads Final, the rest Preliminary", () => {
+  const old = FEATURES.map(({ lifecycle, ...f }) => ({ ...f, status: f.certified ? "Final" : "Preliminary" }));
+  const d = deepPage({ features: old });
+  assert.deepEqual([d.layer("flint-hills").style.color, d.layer("flint-hills").style.fillColor], FINAL);
+  assert.deepEqual([d.layer("southern-coastal-plain").style.color, d.layer("southern-coastal-plain").style.fillColor], PRELIM);
+  assert.ok(d.row("flint-hills").querySelector(".deep-cov-final"));
+  assert.ok(d.row("southern-coastal-plain").querySelector(".deep-cov-prelim"));
 });
 
 test("a click fits a region bigger than the view, then drills in two levels at the click", () => {
@@ -366,8 +408,10 @@ test("the Layers menu shows and hides the regions, and its row survives a rebuil
   box().checked = false;
   box().fire("change");
   assert.ok(FEATURES.every((f) => !d.map.hasLayer(d.layer(f.assessmentId))));
+  assert.ok(d.p.tools.deep.classList.contains("deep-regions-off"), "the legend's region key goes too");
   d.row("flint-hills").fire("click");               // a chosen region always shows
   assert.ok(box().checked && d.map.hasLayer(d.layer("flint-hills")));
+  assert.ok(!d.p.tools.deep.classList.contains("deep-regions-off"));
   d.m.overlays.querySelector(".deep-regions-control").remove();      // ipyleaflet rebuilt its list
   d.p.fire("staf:tool-shown", d.p.document, { detail: { tool: "deep" } });
   assert.ok(box() && box().checked);

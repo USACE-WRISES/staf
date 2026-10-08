@@ -121,6 +121,29 @@ def test_workbook_has_a_calculator_per_scenario_behind_a_summary(la, template):
     assert workbook.CLAIM_HEADER in summary + text
 
 
+def test_the_summary_lists_each_scenarios_claim_under_the_scores(la, template):
+    """The scores read like the Compare dialog (each alternative followed by its change); the
+    condition claims follow the table, one row per scenario, then the note."""
+    openpyxl = pytest.importorskip("openpyxl")
+    sset = _set(la)
+    rows = [(s, s.state["measured_values"]) for s in sset.items]
+    data = workbook.build(template, la, DELIN, rows, today=TODAY)
+    wb = openpyxl.load_workbook(io.BytesIO(data))
+    assert wb.sheetnames[0] == "Summary"
+    ws = wb["Summary"]
+    head = next(c.row for c in ws["A"] if c.value == "Index") - 1
+    assert [ws.cell(head, c).value for c in range(1, 6)] == [None, "Existing Conditions", "Restore riparian",
+                                                             "Change", None]
+    heading = next(c.row for c in ws["A"] if c.value == workbook.CLAIM_HEADER)
+    assert heading > max(c.row for c in ws["A"] if c.value in ("ECI", "Biological"))
+    claims = [scoring.index_claim(workbook.score(la, mv)) for _s, mv in rows]
+    got = [(ws.cell(heading + k + 1, 1).value, ws.cell(heading + k + 1, 2).value) for k in range(len(rows))]
+    assert got == [(s.name, claim) for (s, _mv), claim in zip(rows, claims)]
+    note = next(c.row for c in ws["A"] if c.value == workbook.SUMMARY_NOTE)
+    assert note > heading + len(rows) and any(str(m).startswith(f"A{note}:") for m in ws.merged_cells.ranges)
+    assert len(list(ws.conditional_formatting)) == 1
+
+
 def _sheet_xml(z, book, name):
     rid = re.search(r'<sheet\b[^>]*name="%s"[^>]*r:id="([^"]+)"' % re.escape(name), book)
     rid = rid or re.search(r'<sheet\b[^>]*r:id="([^"]+)"[^>]*name="%s"' % re.escape(name), book)
@@ -200,7 +223,7 @@ def test_the_page_wires_the_shared_chip():
     assert 'ui.output_ui("scenario_bar"), ui.output_ui("rollup_rail")' in SRC
     assert "@reactive.event(input.staf_scenario_evt)" in SRC
     assert "@reactive.event(input.staf_sc_save)" in SRC and "@reactive.event(input.staf_sc_delete)" in SRC
-    assert 'href="staf/staf.css?v=10"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
+    assert 'href="staf/staf.css?v=11"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
     for fn in ("_load_ref_into_state", "_do_reset"):
         assert "_reset_scenarios()" in SRC.split(f"def {fn}(", 1)[1].split("\n    def ", 1)[0]
     assert "scenario_nonce()" in SRC.split("def fn_panel():", 1)[1].split("\n    def ", 1)[0]
@@ -342,7 +365,7 @@ def _report_wiring(base: str):
     assert "comparison_table" not in section
     assert 'scenario=staf_web.report_scenario(_sc["set"])' in section
     assert 'can_delete=mode == "edit" and not cur.is_baseline' in SRC
-    assert 'href="staf/staf.css?v=10"' in SRC
+    assert 'href="staf/staf.css?v=11"' in SRC
     for ext in ("pdf", "csv", "geojson"):
         assert f"{base}{{staf_web.scenario_suffix(_sc['set'])}}.{ext}" in SRC
     pdf = SRC.split("def dl_pdf():", 1)[1].split("@render", 1)[0]

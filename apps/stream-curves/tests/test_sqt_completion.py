@@ -154,7 +154,7 @@ def test_the_gallery_never_offers_deep_a_state_sqt_and_follows_deeps_own_rule():
     assert all(entries[aid].deep_hidden for aid in IDS)
     assert not entries["northeastern-highlands"].deep_hidden
     src = (APP / "views" / "project.py").read_text(encoding="utf-8")
-    assert "if v.in_deep and deep_base and not e.deep_hidden:" in src
+    assert "if v.in_deep and staf_base and not e.deep_hidden:" in src
 
 
 def test_a_project_with_curves_and_no_data_opens_on_its_curves():

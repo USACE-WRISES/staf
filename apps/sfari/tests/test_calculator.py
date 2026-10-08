@@ -324,24 +324,25 @@ def test_a_template_without_the_expected_cells_raises(monkeypatch):
 # filenames
 # --------------------------------------------------------------------------- #
 def test_filenames():
-    assert calculator.calculator_filename(DELIN) == \
-        "sfari-calculator-nhdplusid-24000800011817.xlsx"
-    assert calculator.calculator_filename({}) == "sfari-calculator.xlsx"
+    assert calculator.calculator_filename() == "sfari-calculator.xlsx"      # plain (owner, 2026-10-08)
     assert calculator.blank_filename() == "SFARI_Calculator_Draft_2026-06-29.xlsx"
 
 
 # --------------------------------------------------------------------------- #
 # the report modal offers both, and a stale session still opens
 # --------------------------------------------------------------------------- #
-def test_the_report_modal_offers_both_downloads():
-    """Source-text assertions, as elsewhere: the modal is built inside server()."""
+def test_get_forms_offers_both_workbooks_and_the_report_the_completed_one():
+    """Owner, 2026-10-08: the same download sets in every tool. Source-text assertions, as
+    elsewhere: the modals are built inside server()."""
     app = pytest.importorskip("app")
     from pathlib import Path
 
     src = Path(app.__file__).read_text(encoding="utf-8")
     footer = src.split("title=_report_title()", 1)[1].split("))", 1)[0]
-    assert 'staf_web.download_button("dl_calc_filled"' in footer
-    assert 'staf_web.download_button("dl_calc_blank"' in footer
+    assert 'staf_web.report_footer("dl_pdf", "dl_csv", "dl_geojson", workbook="dl_calc_filled"' in footer
+    assert "dl_calc_blank" not in footer
+    shell = src.split("def _desktop_metrics_modal():", 1)[1].split("# Field-form readiness", 1)[0]
+    assert 'workbooks=("dl_calc_filled", "dl_calc_blank")' in shell
     assert "def dl_calc_filled():" in src and "def dl_calc_blank():" in src
     assert "calculator.build_calculator(" in src and "calculator.blank_bytes()" in src
 

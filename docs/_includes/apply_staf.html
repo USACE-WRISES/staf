@@ -1,0 +1,70 @@
+{%- comment -%}
+Apply STAF: each tier with its two routes side by side, from docs/_data/apps.yml. url is the web
+application (inside the STAF app, ?tool=); calculator and calculator_label are one workbook;
+calculator_list names a generated list instead (DEEP: deep_calculators.json, one per Level III
+ecoregion). Calculator paths are repo paths linked raw from main through site.downloads_base, so a
+download is always the latest committed version. assets/js/apply-staf.js wires the DEEP picker;
+without JavaScript its list of links shows instead.
+{%- endcomment -%}
+{%- assign downloads = site.downloads_base -%}
+<div class="apply-staf">
+<p class="apply-lead">Apply each tier with its web application or its spreadsheet calculator. Both use the same criteria and scoring. The web applications gather and process the site data for you and hand back the completed calculator; the calculators take values you enter yourself. Every download here is the latest version.</p>
+{%- for app in site.data.apps %}{% unless app.advanced %}
+<section class="apply-tier" id="{{ app.id }}" aria-label="{{ app.name }}, {{ app.tier }} tier">
+  <div class="apply-tier-head">
+    <h2>{{ app.name }}</h2>
+    <span class="tier-badge">Tier {{ app.tier_num }} &middot; {{ app.tier }}</span>
+  </div>
+  <p class="apply-tier-name">{{ app.full_name }}</p>
+  <p class="apply-tier-desc">{{ app.description }}</p>
+  <div class="apply-routes">
+    <div class="apply-route">
+      <h3>Web application</h3>
+      <p class="apply-route-meta">Runs in your browser</p>
+      <div class="apply-route-action">
+        <a class="btn btn-primary" href="{{ app.url }}" target="_blank" rel="noopener">Open {{ app.name }} &#8599;</a>
+      </div>
+    </div>
+    {%- if app.calculator_list %}
+    {%- assign calcs = site.data[app.calculator_list].calculators %}
+    <div class="apply-route" data-calc-picker>
+      <h3>Spreadsheet calculator</h3>
+      <p class="apply-route-meta" data-calc-label aria-live="polite">Excel, one for each Level III ecoregion</p>
+      <p class="apply-route-help">Find yours on <a href="https://www.epa.gov/eco-research/level-iii-and-iv-ecoregions-continental-united-states" target="_blank" rel="noopener">EPA's Level III ecoregion map</a>.</p>
+      <div class="apply-route-action apply-picker" data-calc-controls hidden>
+        <select aria-label="Level III ecoregion" data-calc-select>
+          <option value="">Choose an ecoregion</option>
+          {%- for c in calcs %}
+          <option value="{{ downloads }}{{ c.file }}" data-label="Excel, version {{ c.version }}, {{ c.status | downcase }}">{{ c.region | escape }} ({{ c.code }})</option>
+          {%- endfor %}
+        </select>
+        <a class="btn btn-primary" data-calc-link>Download</a>
+      </div>
+      <noscript>
+        <details class="apply-picker-list">
+          <summary>Choose an ecoregion</summary>
+          <ul>
+            {%- for c in calcs %}
+            <li><a href="{{ downloads }}{{ c.file }}">{{ c.region | escape }} ({{ c.code }})</a>, version {{ c.version }}, {{ c.status | downcase }}</li>
+            {%- endfor %}
+          </ul>
+        </details>
+      </noscript>
+    </div>
+    {%- else %}
+    <div class="apply-route">
+      <h3>Spreadsheet calculator</h3>
+      <p class="apply-route-meta">{{ app.calculator_label }}</p>
+      <div class="apply-route-action">
+        <a class="btn btn-primary" href="{{ downloads }}{{ app.calculator }}">Download</a>
+      </div>
+    </div>
+    {%- endif %}
+  </div>
+  {%- if app.walkthrough %}
+  <p class="apply-tier-guide"><a href="{{ app.walkthrough | relative_url }}">{{ app.walkthrough_label | default: "Watch the walkthrough" }}</a></p>
+  {%- endif %}
+</section>
+{%- endunless %}{% endfor %}
+<p class="tools-engines-note">The web applications compute watershed metrics with two engines, the StreamCat lookup engine and the STAF site engine, chosen by the framework rather than the user. <a href="{{ site.baseurl }}/computation-engines/">Computation Engines</a> explains both and how to read the source labels in a report.</p>
+</div>

@@ -59,8 +59,8 @@ _ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,80}$")
 _CHUNK = 256 * 1024
 
 STATUS_ORDER = ("certified", "preliminary", "draft")
-#: The statuses DEEP serves (apps/deep/deep/library.py _ELIGIBLE).
-DEEP_STATUSES = ("preliminary", "certified")
+#: The statuses DEEP serves (apps/deep/deep/library.py _ELIGIBLE), when the version is shown.
+DEEP_STATUSES = lib.DEEP_STATUSES
 #: Why a download-only version cannot be opened from its library files (a catalog-only
 #: snapshot, or a version whose folder is gone): the pack the release publishes is the way.
 DOWNLOAD_NEEDED = ("This version is not on this computer. Connect to the internet, refresh "
@@ -108,10 +108,14 @@ class Version:
     #: A DEEP version's reference to its evidence package (evidence.json beside the bundle),
     #: carried as written; listed in library-v2.json only, never in the schema-1 feed.
     evidence: dict | None = None
+    #: The Publish page's Show in DEEP (library visibility.json); False only on a DEEP
+    #: version someone hid. Both feeds carry it as ``visibleInDeep: false``.
+    visible_in_deep: bool = True
 
     @property
     def in_deep(self) -> bool:
-        return self.assessment_type == "deep" and self.status in DEEP_STATUSES
+        return (self.assessment_type == "deep" and self.status in DEEP_STATUSES
+                and self.visible_in_deep)
 
     @property
     def published_display(self) -> str:
@@ -241,7 +245,8 @@ def version_from_library(aid: str, row: dict, *, assets: dict | None = None,
         revision_notes=(row.get("revisionNotes") or None),
         assets=dict(assets or {}), assessment_type=assessment_type,
         method_version=(row.get("methodVersion") or None) if assessment_type == "easi" else None,
-        download_only=not version_files_present(aid, v, assessment_type))
+        download_only=not version_files_present(aid, v, assessment_type),
+        visible_in_deep=assessment_type != "deep" or lib.version_visible_in_deep(aid, v))
 
 
 def entries_from_library(*, assets_for: Callable[[str, int], dict] | None = None) -> list[Entry]:
@@ -337,7 +342,11 @@ def catalog_doc(entries: Iterable[Entry], *, source_commit: str | None = None,
                 schema: int = CATALOG_SCHEMA) -> dict:
     """library.json (schema 1): every DEEP assessment, every version, every asset; or
     library-v2.json (schema 2): every assessment of every type, each entry typed, and a
-    version's evidence package reference where it has one (the schema-1 feed is frozen)."""
+    version's evidence package reference where it has one (the schema-1 feed is frozen).
+
+    A DEEP version hidden from DEEP carries ``visibleInDeep: false`` in both feeds, since DEEP
+    reads library.json; every other version lists exactly as before. Readers that predate
+    the key ignore it, as they ignore every unknown field."""
     doc = {"schema": int(schema),
            "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "source": {"repo": REPO, "commit": source_commit},
@@ -360,6 +369,8 @@ def catalog_doc(entries: Iterable[Entry], *, source_commit: str | None = None,
                 **({"methodVersion": v.method_version} if e.type == "easi" else {}),
                 **({"evidence": v.evidence}
                    if schema >= CATALOG_SCHEMA_V2 and v.evidence is not None else {}),
+                **({"visibleInDeep": False}
+                   if e.type == "deep" and not v.visible_in_deep else {}),
             } for v in e.versions],
         })
     return doc
@@ -422,7 +433,8 @@ def parse_catalog(text: str) -> list[Entry]:
                     method_version=(str(v.get("methodVersion")) if atype == "easi"
                                     and v.get("methodVersion") else None),
                     evidence=(dict(v["evidence"]) if isinstance(v.get("evidence"), dict)
-                              else None)))
+                              else None),
+                    visible_in_deep=v.get("visibleInDeep") is not False))
             if not versions:
                 continue
             versions.sort(key=lambda x: -x.version)

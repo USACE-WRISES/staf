@@ -36,7 +36,7 @@ FULL_NAMES = dict(easi="Ecosystem Assessment Screening Index",
                   deep="Detailed Evaluation of Ecosystem Processes")
 #: each tool's STAF tier (docs/_data/apps.yml), in the order the tiers go
 TIERS = dict(easi="Screening", sfari="Rapid", deep="Detailed")
-#: each tool's page on the STAF site, which forwards to its standalone app (docs/_data/apps.yml)
+#: the STAF site: the header's STAF link, and each tool's section of its Apply STAF page
 SITE = "https://usace-wrises.github.io/staf/"
 #: what the shell needs from a tool's app.py
 CONTRACT = ("TOOL_KEY", "TOOL_NAME", "TOOL_FULL_NAME", "HEAD", "tool_nav_ui", "tool_center_ui",
@@ -72,8 +72,11 @@ class Tool:
         return self.root / "www"
 
     @property
-    def standalone(self) -> str:
-        return f"{SITE}{self.key}/"
+    def calculator_page(self) -> str:
+        """The tool's section of the site's Apply STAF page, which offers its spreadsheet
+        calculator. The standalone apps were retired on 2026-10-08, and the site's /<tool>/
+        address now leads back into STAF."""
+        return f"{SITE}tools/#{self.key}"
 
 
 def tools_root() -> Path:

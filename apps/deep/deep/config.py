@@ -112,10 +112,12 @@ def _registry_records() -> list[dict]:
     (local/desktop only) the live library, merged by ref.
 
     A later source wins a ref: local > remote > baked. A ref the remote catalog lists as
-    not eligible (a version since revised or retired) is dropped from the baked and remote
-    records, never from the live library's. Baked order comes first; refs new to the
-    registry are appended as they arrive (remote, then local). With no remote snapshot and
-    no live library this is exactly the baked registry.
+    not eligible (a version since revised or retired, or hidden by StreamCurves' Show in
+    DEEP) is dropped from the baked and remote records, never from the live library's; a
+    ref the live library withholds the same way is dropped from both, so a local change
+    shows in a local DEEP at once. Baked order comes first; refs new to the registry are
+    appended as they arrive (remote, then local). With no remote snapshot and no live
+    library this is exactly the baked registry.
 
     Hidden assessments (see ``_HIDDEN_ID_SUFFIXES``) are filtered from every path here so no
     downstream surface has to know about them.
@@ -125,10 +127,10 @@ def _registry_records() -> list[dict]:
     try:
         from . import library as _library  # local import avoids an import cycle
 
-        extra = _library.all_eligible_bundles()
+        extra, withheld = _library.served_and_withheld()
     except Exception:  # noqa: BLE001
-        extra = []
-    if not extra and remote is None:
+        extra, withheld = [], frozenset()
+    if not extra and not withheld and remote is None:
         return [r for r in baked if not _is_hidden(r)]
     order = [r["assessmentRef"] for r in baked]
     seen = set(order)
@@ -147,6 +149,8 @@ def _registry_records() -> list[dict]:
         _merge(remote.records)
         for ref in remote.ineligible_refs:
             by_ref.pop(ref, None)
+    for ref in withheld:
+        by_ref.pop(ref, None)
     _merge(extra)
     return [by_ref[ref] for ref in order if ref in by_ref and not _is_hidden(by_ref[ref])]
 
@@ -168,33 +172,18 @@ def _remote_catch_up() -> bool:
 
 
 def library_catalog() -> dict[str, dict]:
-    """``{id: {defaultVersion, latestCertified, latestPreliminary}}`` derived from the
-    live registry records (certified wins the default, else latest preliminary)."""
+    """``{id: {defaultVersion, latestCertified, latestPreliminary, latestDraft}}`` derived
+    from the live registry records (the newest Final version is the default, else the newest
+    Preliminary one, else the newest Draft)."""
     return _catalog_of(_registry_records())
 
 
 def _catalog_of(records) -> dict[str, dict]:
-    """:func:`library_catalog` of records already read."""
-    by_id: dict[str, dict] = {}
-    for r in records:
-        aid = r.get("assessmentId")
-        if not aid:
-            continue
-        ver = int(r.get("version") or 1)
-        life = r.get("lifecycle", "preliminary")
-        d = by_id.setdefault(aid, {"versions": [], "certified": [], "preliminary": []})
-        d["versions"].append(ver)
-        (d["certified"] if life == "certified" else d["preliminary"]).append(ver)
-    out: dict[str, dict] = {}
-    for aid, d in by_id.items():
-        lc = max(d["certified"]) if d["certified"] else 0
-        lp = max(d["preliminary"]) if d["preliminary"] else 0
-        out[aid] = {
-            "defaultVersion": lc or lp or (max(d["versions"]) if d["versions"] else 1),
-            "latestCertified": lc,
-            "latestPreliminary": lp,
-        }
-    return out
+    """:func:`library_catalog` of records already read: the bake's rule
+    (:func:`deep.library.default_pointers`), so a baked default and a live one agree."""
+    from . import library as _library  # local import, like the others here
+
+    return _library.default_pointers(records)
 
 
 def assessments_by_ref() -> dict[str, dict]:

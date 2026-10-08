@@ -9,7 +9,7 @@ ChartData) are copied too, hidden for the alternatives.
 The calculator's index is the mean of the three outcome ratios over the functions scored, which is
 a running total and not always a condition claim: a function the assessment cannot score leaves the
 index an interval. So the Summary shows the calculator's own numbers, which match its tabs, with the
-application's condition claim beside them, and the page compares the claims.
+application's condition claim for each scenario below them, and the page compares the claims.
 """
 from __future__ import annotations
 
@@ -109,13 +109,14 @@ def _named_cells(template: bytes) -> dict:
 
 
 def summary_cells(template: bytes, assessment, claims: list) -> SummaryCells:
-    """Where each scenario's results sit (the calculator's own named cells) and the claim column."""
+    """Where each scenario's results sit (the calculator's own named cells), and the condition claims
+    the Summary lists under its scores."""
     names = _named_cells(template)
     fns = [(fid, label, cat, names[f"fs_{calculator.metric_key(fid)}"]) for fid, label, cat in functions(assessment)
            if f"fs_{calculator.metric_key(fid)}" in names]
     return SummaryCells(eci=names["eci"], sub=dict((k, names[v]) for k, v in SUB_NAMES.items()),
                         functions=fns, index_digits=INDEX_DIGITS, function_digits=FUNCTION_DIGITS,
-                        extra_columns=[(CLAIM_HEADER, list(claims))], note=SUMMARY_NOTE)
+                        statements=[(CLAIM_HEADER, list(claims))], note=SUMMARY_NOTE)
 
 
 def summary_info(delin: dict) -> SummaryInfo:

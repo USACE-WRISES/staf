@@ -182,9 +182,9 @@ def test_round_trip_by_defined_name_and_the_workbook_calculates_as_filled(tmp_pa
     pytest.importorskip("formulas")
     res = _assessed_result()
     entries, _ = calculator.entries_from_result(res)
-    path = tmp_path / calculator.filled_filename(res)
+    path = tmp_path / calculator.filled_filename()
     path.write_bytes(calculator.build_filled(res, today=TODAY))
-    assert path.name == "easi-calculator-comid-9327042.xlsx"
+    assert path.name == "easi-calculator.xlsx"           # plain, no site id (owner, 2026-10-08)
     ws = openpyxl.load_workbook(path)["EASI Score"]
     cells = calculator.entry_cells()
     for name, value in present(entries).items():
@@ -371,8 +371,4 @@ def test_the_site_block_and_the_download_name():
                              "clickedStream": {"gnisName": "", "nhdplusId": 10000900012345}}, "report": {}}
     site = calculator.site_identity(routed)
     assert site["label"] == "Unnamed stream, NHDPlusID 10000900012345" and site["comid"] == "9327042"
-    assert calculator.filled_filename(routed) == "easi-calculator-nhdplusid-10000900012345.xlsx"
-    assert calculator.filled_filename({"delineation": DELINEATION}) == "easi-calculator-comid-9327042.xlsx"
-    assert calculator.filled_filename({"delineation": {"snapped_lat": -12.5, "snapped_lon": 30.25}}) == \
-        "easi-calculator-s12.50000-e30.25000.xlsx"
-    assert calculator.filled_filename({}) == "easi-calculator.xlsx"
+    assert calculator.filled_filename() == "easi-calculator.xlsx"      # plain, no site id (owner, 2026-10-08)

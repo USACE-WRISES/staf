@@ -8,9 +8,9 @@ evidence for the human's judgement, not a statistical acceptance test: scored
 points on the curve tiles, one concordance line each, and the decision form.
 A record can be written without an upload (checks made outside the app count).
 
-Writing to the library (a validation record, Approve as Preliminary, Certify as Final) is
-the maintainer's (streamcurves.workspace.can_publish); anyone can load field data and see
-how it scores on the curves.
+Writing to the library (a validation record, Approve as Preliminary, Certify as Final, Show
+in DEEP) is the maintainer's (streamcurves.workspace.can_publish); anyone can load field data
+and see how it scores on the curves.
 
 Reuses the stage-5 tile pipeline (curve_gallery.gallery_rows ->
 curve_svg.tile_svg with the overlay parameter) and the library's append-only
@@ -27,6 +27,7 @@ from shiny import module, reactive, render, req, ui
 
 from streamcurves import curve_svg as cs
 from streamcurves import curves as scurves
+from streamcurves import gallery
 from streamcurves import library as lib
 from streamcurves import workspace as ws
 from views import assessment_publish as _ap
@@ -88,6 +89,24 @@ def _can_write() -> bool:
 
 _MAINTAINER_NOTE = ("Recording validation, approving and certifying are done by the STAF "
                     "maintainer from the library's own copy.")
+
+
+def _deep_settable(aid: str) -> bool:
+    """A DEEP assessment DEEP lists: never an EASI method or a state SQT transcription."""
+    return lib.is_deep(aid) and not str(aid).endswith(gallery.DEEP_HIDDEN_SUFFIXES)
+
+
+def deep_visibility_text(aid: str, status: str, shown: bool) -> str:
+    """The line under (or, for a reader, instead of) the Show in DEEP switch."""
+    if not lib.is_deep(aid):
+        return "DEEP never runs an EASI screening method."
+    if not _deep_settable(aid):
+        return "DEEP does not list the state SQT assessments."
+    if not shown:
+        return "Not in DEEP: the version stays in the library only."
+    if status not in lib.DEEP_STATUSES:
+        return f"DEEP does not run a version that is {lib.status_label(status)}."
+    return f"DEEP shows this version as {lib.status_label(status)}."
 
 
 def parse_field_data(df: pd.DataFrame, metric_config: dict) -> dict:
@@ -234,6 +253,7 @@ def validate_server(input, output, session, state: AppState, active=None):
                 (ui.div(blocked, class_="text-muted small mt-1") if blocked else None),
                 ui.output_ui(ns("approve_block")),
                 ui.output_ui(ns("certify_block")),
+                ui.output_ui(ns("deep_visibility_block")),
                 class_="card card-body mt-2",
             ),
             class_="validate-page",
@@ -367,14 +387,14 @@ def validate_server(input, output, session, state: AppState, active=None):
         baked_ok, baked_msg = lib.rebake_deep()
         if baked_ok:
             ui.notification_show(
-                f"{prefix} DEEP's registry is updated: commit apps/library and "
-                "apps/deep/data, then redeploy DEEP.",
+                f"{prefix} DEEP's registry is updated: commit apps/library, apps/deep (data and "
+                "www/calculators) and docs/_data/deep_calculators.json, push, then redeploy STAF.",
                 type="message", duration=10)
         else:
             ui.notification_show(
                 f"{prefix} DEEP registry not auto-updated ({baked_msg}). Run "
                 "apps/deep/scripts/bake_library_into_deep.py, then commit "
-                "apps/library and apps/deep/data.",
+                "apps/library, apps/deep (data and www/calculators) and docs/_data/deep_calculators.json.",
                 type="warning", duration=12)
 
     @render.ui
@@ -389,11 +409,11 @@ def validate_server(input, output, session, state: AppState, active=None):
         if _status(aid, ver) != "draft":
             return None
         if not _can_write():
-            return ui.div("This is a Draft: DEEP does not run it until the maintainer "
+            return ui.div("This is a Draft: DEEP labels it a Draft until the maintainer "
                           "approves it as Preliminary.", class_="text-muted small mt-2")
         return ui.div(
-            ui.div("This is a Draft from an automated build. Approving records "
-                   "your review and makes it a Preliminary version DEEP can use.",
+            ui.div("This is a Draft, not reviewed yet. Approving records your review, "
+                   "and DEEP then shows it as Preliminary.",
                    class_="text-muted small mt-2"),
             ui.input_action_button(
                 ns("approve_prelim"), "Approve as Preliminary",
@@ -410,7 +430,7 @@ def validate_server(input, output, session, state: AppState, active=None):
         aid, ver = target
         ui.modal_show(ui.modal(
             f"Approve {aid} v{ver} as Preliminary? This records your review on "
-            "the audited status history and makes the version eligible for DEEP.",
+            "the audited status history, and DEEP then shows the version as Preliminary.",
             title="Approve this draft",
             easy_close=True,
             footer=ui.TagList(
@@ -497,3 +517,44 @@ def validate_server(input, output, session, state: AppState, active=None):
         # for defaultVersion), so the baked registry must follow. This was a
         # pre-existing gap: certify never rebaked.
         _rebake_and_toast(f"{aid} v{ver} certified (shown as Final).")
+
+    @render.ui
+    def deep_visibility_block():
+        """Show in DEEP (owner, 2026-10-08): the published version's switch, the maintainer's
+        to change; a line instead for an EASI method, an SQT transcription or a reader."""
+        state.validation_records()
+        target = _target()
+        if target is None:
+            return None
+        aid, ver = target
+        if not lib.version_dir(aid, ver).is_dir():
+            return None          # a copy of a version newer than this library: nothing to set
+        shown = lib.version_visible_in_deep(aid, ver)
+        line = deep_visibility_text(aid, _status(aid, ver), shown)
+        if not (_can_write() and _deep_settable(aid)):
+            return ui.div(line, class_="text-muted small mt-2")
+        return ui.div(
+            ui.input_switch(ns("deep_visible"), "Show in DEEP", value=shown),
+            ui.div(line, class_="text-muted small"),
+            class_="mt-2 val-deep-visible")
+
+    @reactive.effect
+    @reactive.event(input.deep_visible)
+    @guard("change Show in DEEP")
+    def _set_deep_visible():
+        target = _target()
+        if target is None or not _can_write() or not _deep_settable(target[0]):
+            return
+        aid, ver = target
+        want = bool(input.deep_visible())
+        if lib.version_visible_in_deep(aid, ver) == want:
+            return               # the switch drawn again with what is stored: not a change
+        lib.set_version_visibility(
+            aid, ver, want, _maintainer(state),
+            note="Shown in DEEP from StreamCurves." if want else "Hidden from DEEP from StreamCurves.")
+        # nudge the page's disk-read renders
+        state.validation_records.set(lib._validation_records_for(aid, ver))
+        prefix = f"{aid} v{ver} is {'shown in' if want else 'hidden from'} DEEP."
+        if not lib.deep_default_version(aid):
+            prefix += " DEEP now shows no version of it, so DEEP and the site's list drop it."
+        _rebake_and_toast(prefix)

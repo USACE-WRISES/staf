@@ -1,7 +1,9 @@
 """Read the shared STAF assessment library (DEEP side).
 
-DEEP consumes the *latest* version of each published assessment. Three sources feed
-the picker, merged by ref in :func:`deep.config._registry_records` (a later one wins):
+DEEP runs every published version it is set to show: a Draft, Preliminary or Final one
+whose Show in DEEP is on (StreamCurves writes ``visibility.json`` beside ``status.json``; no
+record means shown). Three sources feed the picker, merged by ref in
+:func:`deep.config._registry_records` (a later one wins):
 
 - the baked registry ``data/deep-assessments.json`` (what ships to the cloud, produced
   by ``scripts/bake_library_into_deep.py``),
@@ -31,10 +33,10 @@ DEEP_ROOT = Path(__file__).resolve().parents[1]  # apps/deep
 #: The last :func:`all_eligible_bundles` read. DEEP looks the library up many times per page
 #: action and a full read parses every eligible bundle (0.35 s for the 126 of 2026-10, so a
 #: Basin step that looked it up 171 times took 72 s). The read is kept with the size and
-#: modification time of every file it looked at (catalog, manifests, status files, bundles)
-#: and reused while none of them changed: a publish or a status change rewrites the
-#: manifest, the status file and the catalog, so the next lookup reads again.
-_last: dict = {"root": None, "stamps": None, "bundles": None}
+#: modification time of every file it looked at (catalog, manifests, status and visibility
+#: files, bundles) and reused while none of them changed: a publish, a status change or a
+#: Show in DEEP change rewrites one of them, so the next lookup reads again.
+_last: dict = {"root": None, "stamps": None, "bundles": None, "withheld": None}
 _last_lock = threading.Lock()
 
 
@@ -98,11 +100,13 @@ def latest_bundles() -> list[dict]:
 # --------------------------------------------------------------------------- #
 # All-versions view (bake source): one record per eligible (id, version)
 # --------------------------------------------------------------------------- #
-# "draft" (automation output not yet human-reviewed in StreamCurves) is
-# deliberately ineligible, exactly like under_review/revised/retired: DEEP
-# consumes only what a person has stood behind. Approving a draft as
-# preliminary on the StreamCurves Validate page makes it appear here.
-_ELIGIBLE = ("preliminary", "certified")
+# DEEP runs Draft, Preliminary and Final versions, each labeled on its map and
+# badges (owner, 2026-10-08); under_review, revised and retired stay in the
+# library only. StreamCurves' library.DEEP_STATUSES is the same tuple (its
+# tests/test_library_visibility.py keeps them equal).
+_ELIGIBLE = ("draft", "preliminary", "certified")
+#: The order the default version is picked in: Final, else Preliminary, else Draft.
+_DEFAULT_ORDER = ("certified", "preliminary", "draft")
 
 
 def _status_map(root: Path, aid: str) -> dict[int, str]:
@@ -126,9 +130,29 @@ def _status_map(root: Path, aid: str) -> dict[int, str]:
     return out
 
 
+def _hidden(root: Path, aid: str) -> set[int]:
+    """The versions StreamCurves' Show in DEEP turned off: the last record of a version in
+    ``visibility.json`` wins, and a version without one is shown."""
+    p = root / "assessments" / aid / "visibility.json"
+    try:
+        doc = _read_json(p)
+    except Exception:  # noqa: BLE001 - absent or unreadable: every version shown
+        return set()
+    shown: dict[int, bool] = {}
+    for rec in doc.get("history") or []:
+        try:
+            v = int(rec.get("version"))
+        except (TypeError, ValueError):
+            continue
+        if v and isinstance(rec.get("visibleInDeep"), bool):
+            shown[v] = rec["visibleInDeep"]
+    return {v for v, on in shown.items() if not on}
+
+
 def all_eligible_bundles() -> list[dict]:
-    """Every *eligible* (preliminary or certified) published version's bundle, each
-    stamped with ``version``, ``lifecycle``, and ``assessmentRef`` (``"id@vN"``).
+    """Every published version DEEP shows (a draft, preliminary or certified one that is
+    not hidden), each bundle stamped with ``version``, ``lifecycle``, and
+    ``assessmentRef`` (``"id@vN"``).
 
     This is the authoritative bake source: DEEP offers a version chooser per assessment,
     so every eligible version is baked (not just the latest). Empty when the library
@@ -138,18 +162,56 @@ def all_eligible_bundles() -> list[dict]:
     Each call gets its own list and its own top-level dicts; the nested content is shared
     between calls, as the baked registry's always is, so nothing may edit it in place.
     """
+    return served_and_withheld()[0]
+
+
+def served_and_withheld() -> tuple[list[dict], frozenset]:
+    """:func:`all_eligible_bundles`, and the refs of every other DEEP version the library
+    holds (its status is not one DEEP runs, or it is hidden), so a copy of one baked or
+    listed by the release is dropped where this library is read (a local hide shows in a
+    local DEEP at once)."""
     root = library_root()
     with _last_lock:
         if _last["root"] != str(root) or not _unchanged(_last["stamps"]):
-            bundles, stamps = _read_eligible(root)
-            _last.update(root=str(root), stamps=stamps, bundles=bundles)
-        return [dict(b) for b in _last["bundles"]]
+            bundles, withheld, stamps = _read_eligible(root)
+            _last.update(root=str(root), stamps=stamps, bundles=bundles, withheld=withheld)
+        return [dict(b) for b in _last["bundles"]], _last["withheld"]
+
+
+def default_pointers(records) -> dict[str, dict]:
+    """``{assessmentId: {defaultVersion, latestCertified, latestPreliminary, latestDraft}}``
+    of version records DEEP shows (stamped with ``version`` and ``lifecycle``). The default
+    is the newest Final version, else the newest Preliminary one, else the newest Draft. An
+    unknown lifecycle counts as preliminary, as :func:`deep.session.lifecycle_status` reads
+    it."""
+    by_id: dict[str, dict] = {}
+    for r in records:
+        aid = r.get("assessmentId")
+        if not aid:
+            continue
+        try:
+            ver = int(r.get("version") or 1)
+        except (TypeError, ValueError):
+            continue
+        life = str(r.get("lifecycle") or "preliminary").strip().lower()
+        life = life if life in _ELIGIBLE else "preliminary"
+        by_id.setdefault(aid, {s: [] for s in _ELIGIBLE})[life].append(ver)
+    out: dict[str, dict] = {}
+    for aid, d in by_id.items():
+        latest = {s: max(d[s]) if d[s] else 0 for s in _ELIGIBLE}
+        out[aid] = {
+            "defaultVersion": next(latest[s] for s in _DEFAULT_ORDER if latest[s]),
+            "latestCertified": latest["certified"],
+            "latestPreliminary": latest["preliminary"],
+            "latestDraft": latest["draft"],
+        }
+    return out
 
 
 def clear_cache() -> None:
     """Forget the last library read, so the next lookup reads every file again."""
     with _last_lock:
-        _last.update(root=None, stamps=None, bundles=None)
+        _last.update(root=None, stamps=None, bundles=None, withheld=None)
 
 
 def _stamp(path: Path):
@@ -165,8 +227,9 @@ def _unchanged(stamps) -> bool:
     return stamps is not None and all(_stamp(path) == stamp for path, stamp in stamps.items())
 
 
-def _read_eligible(root: Path) -> tuple[list[dict], dict]:
-    """The eligible bundles under ``root``, and the stamp of every file looked at (an
+def _read_eligible(root: Path) -> tuple[list[dict], frozenset, dict]:
+    """The eligible bundles under ``root``, the refs of the DEEP versions withheld (their
+    status is not eligible, or they are hidden), and the stamp of every file looked at (an
     absent one too, so its arrival is seen)."""
     stamps: dict = {}
 
@@ -176,14 +239,15 @@ def _read_eligible(root: Path) -> tuple[list[dict], dict]:
 
     catalog_path = root / "catalog.json"
     if not present(catalog_path):
-        return [], stamps
+        return [], frozenset(), stamps
     try:
         catalog = _read_json(catalog_path)
     except Exception:  # noqa: BLE001
         logger.exception("library: could not read catalog at %s", catalog_path)
-        return [], stamps
+        return [], frozenset(), stamps
 
     out: list[dict] = []
+    withheld: set[str] = set()
     for entry in catalog.get("assessments") or []:
         aid = entry.get("assessmentId")
         if not aid or not is_deep(entry):
@@ -199,13 +263,16 @@ def _read_eligible(root: Path) -> tuple[list[dict], dict]:
             continue
         present(root / "assessments" / aid / "status.json")
         smap = _status_map(root, aid)
+        hidden = (_hidden(root, aid)
+                  if present(root / "assessments" / aid / "visibility.json") else set())
         for v in manifest.get("versions") or []:
             try:
                 ver = int(v.get("version"))
             except (TypeError, ValueError):
                 continue
             status = smap.get(ver, "preliminary")
-            if status not in _ELIGIBLE:
+            if status not in _ELIGIBLE or ver in hidden:
+                withheld.add(f"{aid}@v{ver}")
                 continue
             bundle_path = root / "assessments" / aid / f"v{ver}" / "assessment.deep.json"
             if not present(bundle_path):
@@ -220,13 +287,14 @@ def _read_eligible(root: Path) -> tuple[list[dict], dict]:
             bundle["lifecycle"] = status
             bundle["assessmentRef"] = f"{aid}@v{ver}"
             out.append(bundle)
-    return out, stamps
+    return out, frozenset(withheld), stamps
 
 
 def catalog_pointers() -> dict[str, dict]:
     """``{assessmentId: {defaultVersion, latestCertified, latestPreliminary}}`` from the
-    library catalog, for the baked registry's ``libraryCatalog`` block. Empty when the
-    library is absent."""
+    library catalog: the version StreamCurves opens, whatever DEEP shows. The baked
+    registry's ``libraryCatalog`` block comes from :func:`default_pointers` instead. Empty
+    when the library is absent."""
     root = library_root()
     catalog_path = root / "catalog.json"
     if not catalog_path.is_file():

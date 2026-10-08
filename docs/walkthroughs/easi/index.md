@@ -103,8 +103,8 @@ eroding and armored percentages of the bank. An observation applies only when
 complete, and it then outranks both the automatic rating and a rating set by
 hand. The Excel calculator has the same entries.
 
-**Excel calculator.** The app ships an offline implementation of the same
-methodology: enter the desktop quantities, the NARS-9 region and the channel
+**Excel calculator.** The EASI calculator applies the same methodology in a
+spreadsheet: enter the desktop quantities, the NARS-9 region and the channel
 slope, and the workbook rates the 20 metrics with the same criteria and
 reference curves, then applies the STAF rollup. The last row of each function
 is an optional Override Score (Good, Fair or Poor) that replaces the computed
@@ -117,8 +117,8 @@ with the values each was rated from. From there you can download that list as a
 PDF, the completed workbook (the calculator with the site's values, your ratings,
 your observations, your notes and the twelve monthly flows entered), or the blank
 workbook. The report and the batch dialog
-offer the completed workbook too, and the blank calculator is also on the Tools
-page.
+offer the completed workbook too, and the latest blank calculator is on the
+[Apply STAF]({{ site.baseurl }}/tools/#easi) page.
 
 Operators can select the former criteria with `EASI_CRITERIA_SET=legacy`.
 Both sets use the current anchors above. The regional set is the default.

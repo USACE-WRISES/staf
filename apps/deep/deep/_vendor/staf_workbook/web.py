@@ -1,9 +1,17 @@
 """Shiny helpers the three apps share.
 
-Downloads never open a page: :func:`download_button` is Shiny's own markup without
-``target="_blank"``, and workbook handlers send :data:`XLSX_MEDIA_TYPE`, a plain binary type, so no
-browser shows the file in a viewer (where formulas without stored results read as blanks). The
-leave-page guard (``assets/unsaved-guard.js``) listens for :data:`UNSAVED_MESSAGE`.
+A download never navigates the app's page (owner, 2026-10-08): :func:`download_button` opens its
+file in a new tab (``target="_blank" rel="noopener"``) and carries no ``download`` attribute. A
+same-origin ``<a download>`` that a managed network redirects to another origin (a proxy's scan
+page, an isolation service's viewer) becomes a navigation of the page that clicked it, and that
+replaced the app on work computers; a link that opens its own tab keeps any such page there, and
+the browser closes the tab once the attachment starts. Workbook handlers still send
+:data:`XLSX_MEDIA_TYPE`, a plain binary type, so no browser shows the file in a viewer (where
+formulas without stored results read as blanks). The leave-page guard
+(``assets/unsaved-guard.js``) listens for :data:`UNSAVED_MESSAGE`.
+
+Get Forms and the report offer the same downloads in every tool (owner, 2026-10-08):
+:func:`forms_downloads` and :func:`report_footer`.
 
 Shiny and htmltools are imported lazily, so the workbook code runs without them.
 """
@@ -32,18 +40,69 @@ def _anchor(id: str, label, base_class: str, icon=None, width=None, **kwargs):
     from htmltools import css, tags
     from shiny.module import resolve_id
     return tags.a(icon, label, {"class": base_class, "style": css(width=width)},
-                  id=resolve_id(id), href="", download=True, aria_disabled="true", tabindex="-1",
-                  **kwargs)
+                  id=resolve_id(id), href="", target="_blank", rel="noopener", aria_disabled="true",
+                  tabindex="-1", **kwargs)
 
 
 def download_button(id: str, label, *, icon=None, width=None, **kwargs):
-    """``shiny.ui.download_button`` without ``target="_blank"``: the file downloads in place."""
+    """``shiny.ui.download_button`` that opens its file in a new tab and has no ``download``
+    attribute, so nothing a network does to the request can replace the app's page."""
     return _anchor(id, label, "btn btn-default shiny-download-link disabled", icon, width, **kwargs)
 
 
 def download_link(id: str, label, *, icon=None, width=None, **kwargs):
-    """``shiny.ui.download_link`` without ``target="_blank"``."""
+    """``shiny.ui.download_link``, opening in a new tab like :func:`download_button`."""
     return _anchor(id, label, "shiny-download-link disabled", icon, width, **kwargs)
+
+
+# --------------------------------------------------------------------------- Get Forms and the report
+#: the dialog every tool's Get Forms button opens, and its downloads' labels (owner, 2026-10-08)
+FORMS_TITLE = "Get Forms"
+FIELD_FORMS_LABEL, COMPLETED_LABEL, BLANK_LABEL = "Field forms PDF", "Completed workbook", "Blank workbook"
+#: shown where the workbooks would be when the loaded method or version has no calculator
+NO_WORKBOOK_NOTE = "No calculator workbook for this version"
+_FIELD_FORMS_TITLE = "The field forms to print"
+_COMPLETED_TITLE = "The Excel calculator with this assessment entered"
+_BLANK_TITLE = "The Excel calculator with empty entry cells"
+
+
+def forms_downloads(metrics, *, field_forms=None, workbooks=None) -> list:
+    """Get Forms' downloads, the same in every tool: ``ui.nav_control`` items for the dialog's
+    pill strip, after ``ui.nav_spacer()``. In order: the field forms (``field_forms``: its
+    download id), the metrics PDF (``metrics``: ``(id, label)`` or ``(id, label, title)``), then the
+    completed and blank workbooks (``workbooks``: ``(completed id, blank id)``). With
+    ``workbooks=None`` the tool has no calculator for this method or version, and
+    :data:`NO_WORKBOOK_NOTE` stands in their place."""
+    from shiny import ui
+
+    def item(id, label, title):
+        return ui.nav_control(ui.div(download_button(id, label, class_="btn-sm btn-primary", title=title),
+                                     class_="staf-dl"))
+    out = []
+    if field_forms:
+        out.append(item(field_forms, FIELD_FORMS_LABEL, _FIELD_FORMS_TITLE))
+    m_id, m_label = metrics[0], metrics[1]
+    out.append(item(m_id, m_label, metrics[2] if len(metrics) > 2 else None))
+    if workbooks:
+        out.append(item(workbooks[0], COMPLETED_LABEL, _COMPLETED_TITLE))
+        out.append(item(workbooks[1], BLANK_LABEL, _BLANK_TITLE))
+    else:
+        out.append(ui.nav_control(ui.div(NO_WORKBOOK_NOTE, class_="staf-dl-note")))
+    return out
+
+
+def report_footer(pdf: str, csv: str, geojson: str, *, workbook=None):
+    """The report's footer, the same in every tool: PDF, CSV, GeoJSON, the completed workbook
+    (``workbook``: its download id, or None when there is no calculator), then Close. For
+    ``ui.modal(footer=...)``, so it stays pinned under the report."""
+    from shiny import ui
+    btn = "sfari-btn staf-btn"
+    items = [download_button(pdf, "PDF", class_=btn), download_button(csv, "CSV", class_=btn),
+             download_button(geojson, "GeoJSON", class_=btn)]
+    if workbook:
+        items.append(download_button(workbook, COMPLETED_LABEL, class_=btn, title=_COMPLETED_TITLE))
+    items.append(ui.modal_button("Close", class_="sfari-btn primary staf-btn"))
+    return ui.TagList(*items)
 
 
 def state_fingerprint(*parts) -> str:

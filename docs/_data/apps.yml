@@ -1,18 +1,26 @@
-# Canonical list of the STAF assessment web apps (hosted on Posit Connect Cloud).
-# Consumed at build time by the Tools hub and the homepage/comparison links.
-# This is the single source of truth for the site. When an app is re-homed
-# (for example, a USACE-WRISES org account or a custom domain), update its url here.
-# Each app also keeps its own copy of these URLs for its in-app STAF nav bar
-# (there is no shared build step between this site and the Connect apps), so a
-# URL change must also be mirrored in each app until a shared package exists.
+# The STAF assessment tools as the site offers them: the Apply STAF page, the home page, the tier
+# pages and the /easi/, /sfari/ and /deep/ redirects. This is the single source of truth for the site.
+# - url: the web application. EASI, SFARI and DEEP open inside the STAF app on Posit Connect Cloud
+#   (?tool=); their standalone apps were retired on 2026-10-08. Each app keeps its own copy of these
+#   URLs in its STAF_LINKS (there is no shared build step between this site and the apps), so a URL
+#   change must be mirrored there; each tool's tests/test_site_links.py (DEEP: test_site_calculators.py)
+#   checks it.
+# - calculator, calculator_label: the spreadsheet calculator, a repo path linked raw from main through
+#   site.downloads_base (docs/_config.yml), so a download is always the latest committed version.
+#   EASI's and SFARI's test_site_links.py fail when a calculator is renamed without updating this file.
+# - calculator_list: a generated list of calculators instead (DEEP: one per Level III ecoregion in
+#   docs/_data/deep_calculators.json, written by apps/deep/scripts/build_site_calculators.py, which
+#   DEEP's bake runs on every library publish).
 - id: easi
   name: EASI
   full_name: Ecosystem Assessment Screening Index
   tier: Screening
   tier_num: 1
   role: Screening-tier assessment app
-  description: Automated desktop screening using commonly used, nationally applicable metrics.
-  url: https://gtmenichino-easi.share.connect.posit.cloud/
+  description: Desktop screening with commonly used, nationally applicable metrics.
+  url: https://gtmenichino-staf.share.connect.posit.cloud/?tool=easi
+  calculator: apps/easi/www/calculator/EASI_Calculator_1.1.xlsx
+  calculator_label: Excel, version 1.1
   status: live
   walkthrough: /walkthroughs/easi/
 - id: sfari
@@ -22,7 +30,9 @@
   tier_num: 2
   role: Rapid-tier field assessment app
   description: Nationally applicable, function-based rapid field assessment with desktop evidence support.
-  url: https://gtmenichino-sfari.share.connect.posit.cloud/
+  url: https://gtmenichino-staf.share.connect.posit.cloud/?tool=sfari
+  calculator: apps/sfari/data/calculator/SFARI_Calculator_Draft_2026-06-29.xlsx
+  calculator_label: Excel, draft
   status: live
 - id: deep
   name: DEEP
@@ -30,8 +40,9 @@
   tier: Detailed
   tier_num: 3
   role: Detailed-tier assessment app (predefined assessments included)
-  description: Runs detailed, curve-based site assessments. Comes with a limited number of predefined assessments out of the box.
-  url: https://gtmenichino-deep.share.connect.posit.cloud/
+  description: Detailed, curve-based site assessment, with a regional assessment for each EPA Level III ecoregion.
+  url: https://gtmenichino-staf.share.connect.posit.cloud/?tool=deep
+  calculator_list: deep_calculators
   status: live
   walkthrough: /walkthroughs/deep/
   walkthrough_label: Read the guide

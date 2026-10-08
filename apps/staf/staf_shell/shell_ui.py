@@ -83,8 +83,9 @@ def header(tools, active):
 def _unavailable(tool):
     return ui.div(
         ui.div(ui.tags.h2(f"{tool.name} is not available here"),
-               ui.tags.p(f"Open the standalone {tool.name} instead."),
-               ui.tags.a(f"Open {tool.name}", href=tool.standalone, target="_blank", rel="noopener",
+               ui.tags.p(f"The {tool.name} spreadsheet calculator scores the same way from values you enter."),
+               ui.tags.a(f"Get the {tool.name} calculator", href=tool.calculator_page, target="_blank",
+                         rel="noopener",
                          class_="btn btn-primary"),
                ui.tags.p(tool.error or "", class_="staf-unavailable-why"),
                class_="staf-unavailable-card"),

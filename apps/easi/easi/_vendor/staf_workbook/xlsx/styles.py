@@ -1,8 +1,9 @@
 """New cell styles appended to a workbook's ``styles.xml``.
 
 Existing entries never move (every template cell keeps its style index); new fonts, fills,
-borders, number formats and cell formats go at the end and the ``count`` attributes follow. The
-workbook's own default font is reused so authored sheets sit naturally beside the template's.
+borders, number formats, cell formats and differential formats (for conditional formats) go at the
+end and the ``count`` attributes follow. The workbook's own default font is reused so authored
+sheets sit naturally beside the template's.
 """
 from __future__ import annotations
 
@@ -29,7 +30,7 @@ class StyleBook:
 
     # ------------------------------------------------------------------ collections
     def _append(self, tag: str, child_xml: str) -> int:
-        m = re.search(rf"<{tag}\b([^>]*)>(.*?)</{tag}>", self.xml, re.S)
+        m = re.search(rf"<{tag}\b([^>]*?)(?<!/)>(.*?)</{tag}>", self.xml, re.S)     # never a self-closing tag
         if m is None:
             empty = re.search(rf"<{tag}\b([^>]*)/>", self.xml)
             if empty is None:
@@ -38,7 +39,7 @@ class StyleBook:
             new = f"<{tag} count=\"1\">{child_xml}</{tag}>"
             self.xml = self.xml.replace(empty.group(0), new, 1)
             return index
-        child = {"fonts": "font", "fills": "fill", "borders": "border", "cellXfs": "xf"}[tag]
+        child = {"fonts": "font", "fills": "fill", "borders": "border", "cellXfs": "xf", "dxfs": "dxf"}[tag]
         index = len(re.findall(rf"<{child}\b", m.group(2)))
         attrs = re.sub(r'\scount="\d+"', "", m.group(1))
         new = f"<{tag}{attrs} count=\"{index + 1}\">{m.group(2)}{child_xml}</{tag}>"
@@ -88,15 +89,29 @@ class StyleBook:
                          "</patternFill></fill>")
         return self._memo[key]
 
-    def border(self, *, bottom: Optional[str] = None, top: Optional[str] = None) -> int:
+    def border(self, *, bottom: Optional[str] = None, top: Optional[str] = None, bottom_style: str = "thin",
+               top_style: str = "thin") -> int:
         if bottom is None and top is None:
             return 0
-        key = ("border", bottom, top)
+        key = ("border", bottom, top, bottom_style, top_style)
         if key not in self._memo:
-            def side(tag, rgb):
-                return f'<{tag} style="thin"><color rgb="FF{rgb}"/></{tag}>' if rgb else f"<{tag}/>"
+            def side(tag, rgb, style):
+                return f'<{tag} style="{style}"><color rgb="FF{rgb}"/></{tag}>' if rgb else f"<{tag}/>"
             self._memo[key] = self._append(
-                "borders", "<border><left/><right/>" + side("top", top) + side("bottom", bottom) + "<diagonal/></border>")
+                "borders", "<border><left/><right/>" + side("top", top, top_style)
+                           + side("bottom", bottom, bottom_style) + "<diagonal/></border>")
+        return self._memo[key]
+
+    def dxf(self, *, bold: bool = False, color: Optional[str] = None) -> int:
+        """A differential format (a conditional format's font), appended to ``<dxfs>``."""
+        key = ("dxf", bold, color)
+        if key not in self._memo:
+            if not re.search(r"<dxfs\b", self.xml):            # every template has one; this is a guard
+                after = (re.search(r"</cellStyles>|<cellStyles\b[^>]*/>", self.xml)
+                         or re.search(r"</cellXfs>", self.xml))
+                self.xml = self.xml[:after.end()] + '<dxfs count="0"/>' + self.xml[after.end():]
+            font = ("<b/>" if bold else "") + (f'<color rgb="FF{color}"/>' if color else "")
+            self._memo[key] = self._append("dxfs", f"<dxf><font>{font}</font></dxf>")
         return self._memo[key]
 
     def xf(self, *, font: int = 0, fill: int = 0, border: int = 0, numfmt: int = 0, halign: Optional[str] = None,

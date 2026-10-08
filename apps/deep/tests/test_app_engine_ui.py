@@ -52,8 +52,9 @@ def test_copy_and_cache_bust():
     assert app._MISS_TEXT == ("No stream line within 150 ft of the click. "
                               "Zoom in and click a line.")
     src = Path(app.__file__).read_text(encoding="utf-8")
-    # v13 / v23 (2026-10-04): the metric rows EASI, SFARI and DEEP share (staf/metric-rows.css)
-    assert "deep.css?v=15" in src and "styles.css?v=26" in src and "coverage.js?v=6" in src
+    # v13 / v23 (2026-10-04): the metric rows EASI, SFARI and DEEP share (staf/metric-rows.css);
+    # v16 / v27 / v7 (2026-10-08): the regions and badges in their status colors
+    assert "deep.css?v=16" in src and "styles.css?v=27" in src and "coverage.js?v=7" in src
     assert 'href="staf/metric-rows.css?v=1"' in src and 'src="staf/metric-rows.js?v=1"' in src
     # the shared script loads before measure.js, which calls it after a photo changes
     assert src.index("staf/metric-rows.js") < src.index("measure.js?v=")

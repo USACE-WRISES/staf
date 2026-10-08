@@ -12,13 +12,13 @@ DEEP picks up a new version without a redeploy. The release holds:
   bytes) and an optional ``<id>-v<N>-calculator-<sha8>.xlsx``, plus the
   StreamCurves pack, which DEEP ignores.
 
-This module keeps a *snapshot* in memory: every eligible (preliminary or
-certified) version's bundle, stamped exactly as
-:func:`deep.library.all_eligible_bundles` stamps the local library's
+This module keeps a *snapshot* in memory: every eligible (draft, preliminary or
+certified, and not hidden by ``visibleInDeep: false``) version's bundle, stamped
+exactly as :func:`deep.library.all_eligible_bundles` stamps the local library's
 (``version``, ``lifecycle``, ``assessmentRef``); the refs the catalog lists with
-any other status, so :func:`deep.config._registry_records` can drop a baked
-version that was later revised or retired; and a ``generation`` that grows each
-time the snapshot changes.
+any other status or hidden, so :func:`deep.config._registry_records` can drop a
+baked version that was later revised, retired or hidden; and a ``generation``
+that grows each time the snapshot changes.
 
 - :func:`snapshot` never waits on the network. Its first call loads the last
   good catalog and its cached assets from disk (no network), then starts a
@@ -156,6 +156,8 @@ class CatalogVersion:
     content_digest: Optional[str] = None
     bundle: Optional[Asset] = None
     calculator: Optional[Asset] = None
+    #: False when StreamCurves' Show in DEEP is off (``visibleInDeep: false``).
+    visible: bool = True
 
     @property
     def ref(self) -> str:
@@ -163,7 +165,7 @@ class CatalogVersion:
 
     @property
     def eligible(self) -> bool:
-        return self.status in ELIGIBLE
+        return self.status in ELIGIBLE and self.visible
 
 
 @dataclass(frozen=True)
@@ -224,8 +226,9 @@ def _parse_version(aid: str, raw) -> Optional[CatalogVersion]:
     if not status:
         logger.warning("remote library: skipped %s, which has no status", ref)
         return None
-    if status not in ELIGIBLE:
-        return CatalogVersion(aid, number, status)
+    visible = raw.get("visibleInDeep") is not False
+    if status not in ELIGIBLE or not visible:
+        return CatalogVersion(aid, number, status, visible=visible)
     assets = raw.get("assets") if isinstance(raw.get("assets"), dict) else {}
     bundle = _parse_asset(assets.get("bundle"))
     if bundle is None:
@@ -249,8 +252,9 @@ def parse_catalog(raw) -> Catalog:
     Unknown fields are ignored. A malformed record is skipped with a warning so
     it never hides the rest: an entry without a usable ``id`` or ``versions``
     list, a version without a number or a status, and an eligible version
-    without a usable bundle asset. A version whose status is neither
-    preliminary nor certified is kept as *not eligible*.
+    without a usable bundle asset. A version whose status DEEP does not run
+    (draft, preliminary and certified are run), or which carries
+    ``visibleInDeep: false``, is kept as *not eligible*.
     """
     try:
         text = raw.decode("utf-8-sig") if isinstance(raw, (bytes, bytearray)) else str(raw)

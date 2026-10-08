@@ -36,11 +36,9 @@ def test_watershed_basis_label():
 def test_reach_id_uses_the_nhdplusid_on_hr_sites():
     assert report._reach_id_str(HR_DELIN["delineation"]) == "NHDPlusID 750012345"
     assert report._reach_id_str(V2_DELIN["delineation"]) == "COMID 9311402"
-    # the field forms are the blank worksheet, so their filename never names a site;
-    # the desktop metrics PDF does
+    # no download name names the site (owner, 2026-10-08)
     assert report.field_forms_filename(HR_DELIN) == "sfari-field-forms.pdf"
-    assert report.desktop_metrics_filename(HR_DELIN) == "sfari-desktop-metrics-nhdplusid-750012345.pdf"
-    assert report.desktop_metrics_filename(V2_DELIN) == "sfari-desktop-metrics-comid-9311402.pdf"
+    assert report.desktop_metrics_filename() == "sfari-desktop-metrics.pdf"
 
 
 def test_pending_status_text():

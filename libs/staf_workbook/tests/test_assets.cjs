@@ -49,13 +49,14 @@ test("prompts while work is unsaved, and stops once it is saved", () => {
   assert.equal(leave(h).prevented, false);
 });
 
-test("a file download never triggers the warning", () => {
+test("a download never silences the warning", () => {
+  // a download opens its own tab (web.download_button), so this page never navigates for a file
+  // and a real navigation right after one still warns (owner, 2026-10-08)
   const h = load();
   h.handlers.get("staf-unsaved")({ dirty: true });
   h.jq.get("shiny:filedownload")();
-  assert.equal(leave(h).prevented, false);          // within the quiet window
-  h.clock.t += 2500;
-  assert.equal(leave(h).prevented, true);           // a real navigation later still warns
+  assert.equal(leave(h).prevented, true);
+  assert.ok(!GUARD.includes("quietUntil"));
 });
 
 test("Save asks the server for the saved state at once; another download does not", () => {
@@ -71,7 +72,6 @@ test("Save asks the server for the saved state at once; another download does no
   h.timeouts.forEach((t) => t[0]());
   assert.deepEqual(pings, [["easi-staf_saved", "event"], ["easi-staf_saved", "event"]]);
   h.handlers.get("staf-unsaved")({ dirty: true, ns: "easi" });
-  h.clock.t += 2500;
   assert.equal(leave(h).prevented, true);              // still dirty until the server says otherwise
 });
 

@@ -645,27 +645,6 @@ def build_pdf(result: dict, *, scenario=None) -> bytes:
 _BARE_UNITS = {"", "ratio", "index", "probability"}
 
 
-def site_slug(result: dict) -> str:
-    """``nhdplusid-<id>`` for a stream outside the StreamCat network, ``comid-<id>``,
-    a hemisphere-based coordinate pair, or empty: the site part of a download name."""
-    result = result or {}
-    d = result.get("delineation") or {}
-    anchor = result.get("siteAnchor") or {}
-    clicked = anchor.get("clickedStream") or {}
-    if anchor.get("anchorKind") == "hrSurrogate" and clicked.get("nhdplusId") not in (None, "", "None"):
-        slug = f"nhdplusid-{clicked['nhdplusId']}"
-    elif d.get("comid") not in (None, "", "None"):
-        slug = f"comid-{d['comid']}"
-    else:
-        try:
-            lat, lon = float(d.get("snapped_lat")), float(d.get("snapped_lon"))
-        except (TypeError, ValueError):
-            return ""
-        slug = (f"{'n' if lat >= 0 else 's'}{abs(lat):.5f}-"
-                f"{'e' if lon >= 0 else 'w'}{abs(lon):.5f}")
-    return "".join(ch for ch in slug if ch.isalnum() or ch in "-._")
-
-
 def _input_value_text(value, units: str = "") -> str:
     """A traced input for a reader: ``12.4%``, ``1.8 km/km2``, ``4A``, or a dash when blank."""
     if value is None or value == "":
@@ -724,10 +703,9 @@ def desktop_metric_rows(result: dict) -> list[dict]:
     return rows
 
 
-def desktop_metrics_filename(result: dict) -> str:
-    """``easi-desktop-metrics-comid-<id>.pdf`` (or NHDPlusID, or coordinates)."""
-    slug = site_slug(result)
-    return f"easi-desktop-metrics-{slug}.pdf" if slug else "easi-desktop-metrics.pdf"
+def desktop_metrics_filename() -> str:
+    """The desktop metrics PDF's download name: plain, with no site id (owner, 2026-10-08)."""
+    return "easi-desktop-metrics.pdf"
 
 
 def build_desktop_metrics_pdf(result: dict) -> bytes:
@@ -745,7 +723,7 @@ def build_desktop_metrics_pdf(result: dict) -> bytes:
     from reportlab.lib.units import inch
     from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-    from . import calculator           # local: calculator reaches back here for the file name
+    from . import calculator           # local: only the desktop metrics list needs it
 
     result = result or {}
     d, rep = result.get("delineation") or {}, result.get("report") or {}

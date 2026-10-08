@@ -391,15 +391,17 @@ def _scoring_panel(m):
 # --------------------------------------------------------------------------- #
 # STAF top banner — a single link back to the STAF site; cross-links to the
 # other tier apps were removed to keep the banner minimal. STAF_LINKS still
-# carries every app URL: it is the in-app half of the URL mirror (see README).
-# StreamCurves ships as StreamCurves Desktop, so "curves" is its latest release.
+# carries every app URL: it is the in-app half of the URL mirror (docs/_data/
+# apps.yml; the site-link tests check it). EASI, SFARI and DEEP open inside the
+# STAF app (?tool=), the one web deployment since 2026-10-08; StreamCurves ships
+# as StreamCurves Desktop, so "curves" is its latest release.
 # --------------------------------------------------------------------------- #
 STAF_LINKS = {
     "home":   "https://usace-wrises.github.io/staf/",
-    "easi":   "https://gtmenichino-easi.share.connect.posit.cloud/",
-    "sfari":  "https://gtmenichino-sfari.share.connect.posit.cloud/",
+    "easi":   "https://gtmenichino-staf.share.connect.posit.cloud/?tool=easi",
+    "sfari":  "https://gtmenichino-staf.share.connect.posit.cloud/?tool=sfari",
     "curves": "https://github.com/USACE-WRISES/staf/releases/latest",
-    "deep":   "https://gtmenichino-deep.share.connect.posit.cloud/",
+    "deep":   "https://gtmenichino-staf.share.connect.posit.cloud/?tool=deep",
 }
 
 
@@ -808,15 +810,15 @@ TOOL_NAME = "SFARI"
 TOOL_FULL_NAME = "Stream Functions Assessment and Rapid Index"
 
 # head assets in load order; staf/ holds the scripts and styles every STAF tool shares
-HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=31"),
+HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=32"),
         ui.tags.script(src="staf/staf-ns.js?v=1", defer=""),
         ui.tags.script(src="staf/geocode-autocomplete.js", defer=""),
         ui.tags.script(src="staf/legend-dock.js?v=4", defer=""),
         ui.tags.script(src="staf/tooltip.js", defer=""),
         ui.tags.script(src="staf/coord-entry.js", defer=""),
         ui.tags.script(src="staf/report-ready.js?v=2", defer=""),
-        ui.tags.script(src="staf/unsaved-guard.js?v=3", defer=""),
-        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=10"),
+        ui.tags.script(src="staf/unsaved-guard.js?v=4", defer=""),
+        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=11"),
         ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
         ui.tags.script(src="staf/scenarios.js?v=2", defer=""),
         ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
@@ -2338,8 +2340,8 @@ def server(input, output, session):
                 ui.div(_stepper(current_step()), class_="sfari-nav-steps"),
                 ui.tags.button("Get Forms",
                                {"data-desktop-metrics": "1", "type": "button",
-                                "title": "The blank field-form pages, and the desktop metrics "
-                                         "PDF with your pulled values"},
+                                "title": "The field forms, the desktop metrics PDF with your pulled "
+                                         "values, and the Excel calculator, completed or blank"},
                                class_="sfari-btn sfari-nav-desktop"),
                 ui.output_ui("engine_line_ws"),
                 ui.output_ui("streamcat_lookup_status_ws"),
@@ -2747,19 +2749,13 @@ def server(input, output, session):
             id="sfari-report")
         return ui.modal(
             body, title=_report_title(), easy_close=True, size="xl",
-            footer=ui.div(staf_web.download_button("dl_pdf", "PDF", class_="btn-sm"),
-                          staf_web.download_button("dl_csv", "CSV", class_="btn-sm"),
-                          staf_web.download_button("dl_geojson", "GeoJSON", class_="btn-sm"),
-                          staf_web.download_button("dl_calc_filled", "Excel Workbook",
-                                             class_="btn-sm"),
-                          staf_web.download_button("dl_calc_blank", "Excel Workbook (blank)",
-                                             class_="btn-sm"),
-                          ui.modal_button("Close"),
-                          style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"))
+            # the report's downloads, the same in every tool (owner, 2026-10-08); the blank
+            # workbook is in Get Forms
+            footer=staf_web.report_footer("dl_pdf", "dl_csv", "dl_geojson", workbook="dl_calc_filled"))
 
-    # ---- the Field Forms dialog (2026-09-07) ----
+    # ---- the Get Forms dialog (2026-09-07) ----
     # One modal, size xl. The shell is static: the site line, the tab strip with
-    # both downloads, and the Close button never re-render, so the open tab and
+    # the downloads, and the Close button never re-render, so the open tab and
     # the table's scroll position survive every pull update. Three outputs
     # inside rebuild live: the status line (owns the polling while the engine
     # or the pull runs), the table (re-renders only when the evidence changes),
@@ -2782,18 +2778,12 @@ def server(input, output, session):
                 ui.nav_panel("Field forms preview", ui.output_ui("ff_preview"),
                              value="preview"),
                 ui.nav_spacer(),
-                # Each download sits in its own div: Shiny's Bootstrap styles a bare
-                # ``.nav-pills > li > a`` as a nav link (link-blue text, no button
-                # chrome), and the wrapper keeps the anchors real buttons.
-                ui.nav_control(ui.div(staf_web.download_button("dl_field_forms", "Field forms PDF",
-                                                         class_="btn-sm btn-primary"),
-                                      class_="ff-dl")),
-                ui.nav_control(ui.div(staf_web.download_button("dl_desktop_metrics",
-                                                         "Desktop metrics PDF",
-                                                         class_="btn-sm btn-primary"),
-                                      class_="ff-dl")),
+                # the downloads every tool's Get Forms offers (owner, 2026-10-08)
+                *staf_web.forms_downloads(("dl_desktop_metrics", "Desktop metrics PDF"),
+                                          field_forms="dl_field_forms",
+                                          workbooks=("dl_calc_filled", "dl_calc_blank")),
                 id="ff_tabs", selected="metrics"),
-            title="Field Forms", easy_close=True, size="xl",
+            title=staf_web.FORMS_TITLE, easy_close=True, size="xl",
             footer=ui.modal_button("Close"), class_="ff-modal-body")
 
     # Field-form readiness status vocabulary, derived per metric from the pulled
@@ -3258,7 +3248,7 @@ def server(input, output, session):
         yield report.build_pdf(delin() or {}, metric_scores(), function_scores(), evidence(), scored(),
                                scenario=staf_web.report_scenario(_sc["set"]))
 
-    @render.download(filename=lambda: calculator.calculator_filename(delin() or {}), media_type=staf_web.XLSX_MEDIA_TYPE)
+    @render.download(filename=calculator.calculator_filename(), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_calc_filled():
         yield _workbook_bytes()
 
@@ -3270,7 +3260,7 @@ def server(input, output, session):
     def dl_field_forms():
         yield report.build_field_forms_pdf()
 
-    @render.download(filename=lambda: report.desktop_metrics_filename(delin() or {}))
+    @render.download(filename=report.desktop_metrics_filename())
     def dl_desktop_metrics():
         yield report.build_desktop_metrics_pdf(delin() or {}, evidence())
 

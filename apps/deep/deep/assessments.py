@@ -204,7 +204,7 @@ def library_region_features() -> dict:
     """A GeoJSON FeatureCollection of the available assessments that carry a region
     outline, for DEEP's assessment-regions sidebar and map layer. Each feature's properties
     carry ``assessmentId``, ``assessmentName``, ``regionName``, ``regionCode`` (the Level III
-    code for an ecoregion), ``version`` and ``lifecycle`` (preliminary | certified).
+    code for an ecoregion), ``version`` and ``lifecycle`` (draft | preliminary | certified).
     ``features`` is empty when nothing has a polygon (e.g. only the state-SQT registry).
     """
     feats: list[dict] = []
@@ -282,9 +282,17 @@ def applicable_assessments(lat: float, lon: float) -> list[str]:
     return out
 
 
+#: Final before Preliminary before Draft, wherever DEEP orders assessments or versions.
+_TIER_ORDER = ("certified", "preliminary", "draft")
+
+
+def _tier(rec: dict) -> int:
+    return _TIER_ORDER.index(session.lifecycle_status(rec))
+
+
 def covering_assessments(lat: float, lon: float, *, require_polygon: bool = True) -> list[str]:
     """assessmentIds whose published region polygon **covers** ``(lat, lon)``, ordered
-    **certified first, then preliminary** (stable within each tier).
+    **certified first, then preliminary, then draft** (stable within each tier).
 
     Stricter than :func:`applicable_assessments`: with ``require_polygon=True`` (the
     redesign default) a polygonless assessment does NOT apply everywhere — it is excluded,
@@ -294,8 +302,7 @@ def covering_assessments(lat: float, lon: float, *, require_polygon: bool = True
     Part E). Lifecycle status is read from the bundle (``session.lifecycle_status``),
     defaulting to preliminary.
     """
-    certified: list[str] = []
-    preliminary: list[str] = []
+    tiers: dict[str, list[str]] = {s: [] for s in _TIER_ORDER}
     for a in config.assessments():
         region = a.get("region") or (a.get("library") or {}).get("region") or {}
         geom = _region_geometry(region)
@@ -307,9 +314,8 @@ def covering_assessments(lat: float, lon: float, *, require_polygon: bool = True
             covered = _point_in_geometry(lon, lat, geom)
         if not covered:
             continue
-        bucket = certified if session.lifecycle_status(a) == "certified" else preliminary
-        bucket.append(a.get("assessmentId"))
-    return certified + preliminary
+        tiers[session.lifecycle_status(a)].append(a.get("assessmentId"))
+    return [aid for s in _TIER_ORDER for aid in tiers[s]]
 
 
 def covering_refs(lat: float, lon: float, *, require_polygon: bool = True) -> list[dict]:
@@ -317,9 +323,9 @@ def covering_refs(lat: float, lon: float, *, require_polygon: bool = True) -> li
 
     Coverage is decided from the *default* version's region polygon. Returns one dict per
     covering id: ``{assessmentId, assessmentName, regionName, defaultRef, refs,
-    lifecycleByRef, versionByRef, referenceTierByRef, hasCertified}`` where ``refs`` is ordered certified-desc
-    then preliminary-desc with the default ref first. Ids with a certified default sort
-    ahead. ``require_polygon`` mirrors :func:`covering_assessments`.
+    lifecycleByRef, versionByRef, referenceTierByRef, hasCertified}`` where ``refs`` is ordered
+    certified-desc, then preliminary-desc, then draft-desc, with the default ref first. Ids with
+    a certified version sort ahead. ``require_polygon`` mirrors :func:`covering_assessments`.
     """
     # One registry read serves every id: a default and a load per id re-read the registry
     # twice per assessment (171 reads, 72 s with the live library beside DEEP, 2026-10-03).
@@ -351,11 +357,8 @@ def covering_refs(lat: float, lon: float, *, require_polygon: bool = True) -> li
         if not covered:
             continue
 
-        certified = sorted((r for r in recs if r.get("lifecycle") == "certified"),
-                           key=lambda r: -int(r.get("version") or 0))
-        preliminary = sorted((r for r in recs if r.get("lifecycle") != "certified"),
-                             key=lambda r: -int(r.get("version") or 0))
-        ordered = certified + preliminary
+        ordered = sorted(recs, key=lambda r: (_tier(r), -int(r.get("version") or 0)))
+        certified = [r for r in ordered if r.get("lifecycle") == "certified"]
         refs = [r["assessmentRef"] for r in ordered]
         if default_ref in refs:
             refs = [default_ref] + [r for r in refs if r != default_ref]

@@ -1,23 +1,17 @@
 ---
-title: Launch the Apps
+title: Apply STAF
 nav_order: 7
-description: "Launch the STAF web applications."
+description: "Apply each STAF tier with its web application or its spreadsheet calculator."
 ---
 {% include staf_page_chrome.html %}
 
-## Web Applications
-
-{% include apps_hub.html %}
-
-<p class="tools-engines-note">Every app computes watershed metrics with one of two engines, chosen by the framework rather than the user: the StreamCat lookup engine on the NHDPlus V2 network and the STAF site engine for the HR reach watershed of any NHD stream (the drainage area of the high-resolution reach a point snaps to). <a href="{{ site.baseurl }}/computation-engines/">Computation Engines</a> defines both, which tier uses which, and how to read the source labels in each report.</p>
+{% include apply_staf.html %}
 
 ## Downloads and resources
 
 <ul class="tools-resources">
   <li><button type="button" class="tools-resource-link" data-metric-toolbox-download>Metric Toolbox (Excel)</button> <span class="tools-resource-note">The full STAF metric library as a spreadsheet.</span></li>
   <li><a class="tools-resource-link" href="{{ '/assets/docs/STAF_Factsheet.pdf' | relative_url }}">STAF Factsheet (PDF)</a> <span class="tools-resource-note">Overview of the framework.</span></li>
-  {% assign easi_app = site.data.apps | where: "id", "easi" | first %}
-  <li><a class="tools-resource-link" href="{{ easi_app.url }}calculator/EASI_Calculator_1.1.xlsx">EASI Calculator (Excel)</a> <span class="tools-resource-note">Offline scoring of the Screening tier: the same criteria, reference curves and rollup as the EASI app, from values you enter by hand.</span></li>
 </ul>
 
 ## References
@@ -34,3 +28,4 @@ description: "Launch the STAF web applications."
 - U.S. Army Corps of Engineers. 2023. Wyoming Stream Quantification Tool (WSQT) User Manual and Spreadsheet. Version 2.0, Omaha District, Wyoming Regulatory Office, Cheyenne Wyoming.
 
 <script src="{{ '/assets/js/metric-toolbox.js' | relative_url }}" defer></script>
+<script src="{{ '/assets/js/apply-staf.js?v=20261008' | relative_url }}" defer></script>

@@ -253,11 +253,16 @@ methodology config mirrors it). The defaults: automation (`stage`, `promote`, th
 agent) publishes Draft; an interactive publish defaults to Draft unless the Publish page's
 checklist passes with no unresolved item, when the page offers Preliminary; a version with no
 status record (a v1 library) reads as Preliminary. A Draft becomes Preliminary through Approve
-as Preliminary on the Validate page or by publishing a reviewed next version, and DEEP runs
-Preliminary and Final versions only. On Validate, only a record whose outcome matches the
+as Preliminary on the Validate page or by publishing a reviewed next version. DEEP runs Draft,
+Preliminary and Final versions (`library.DEEP_STATUSES`, owner 2026-10-08), each labeled, unless
+a version's **Show in DEEP** is off: the Publish page sets it per version (on by default), the
+Validate page changes it later, and `library.set_version_visibility` appends the audited record
+to `visibility.json`. On Validate, only a record whose outcome matches the
 curves marks a version Verified; minor and major differences are recorded and leave it
 Unvalidated, and Certify (Final) is offered for a Verified Preliminary version. `under_review`,
-`revised` and `retired` are set from Python (`library.set_version_status`) and have no page.
+`revised` and `retired` are set from Python (`library.set_version_status`) and have no page;
+`scripts/set_library_status.py` changes many versions at once (dry run first; one record per
+version, the catalog rebuilt once, DEEP rebaked).
 
 ### NRSA value policy (DATA-11)
 
@@ -468,18 +473,17 @@ provenance, and the default stays the StreamCat lookup engine. Model My Watershe
 needs an API key: set `MMW_API_KEY`, or put the key in the gitignored
 `scripts/.mmw_api_key`.
 
-## Deploy (Posit Connect Cloud)
+## Distribution
 
-The app deploys as a `python-shiny` content type. `.python-version` pins 3.12 and
-`.posit/publish/streamcurves.toml` lists the runtime files (`app.py`,
-`requirements.txt`, and the `streamcurves/`, `views/`, `www/`, `data/`, `config/`
-directories). Publish with the Posit Publisher (`publisher deploy`) or the
-Connect Cloud UI pointed at this repo. Interactive maps need `ipyleaflet` +
-`shinywidgets` (both pinned in `requirements.txt`).
+StreamCurves is desktop-only: it ships inside StreamCurves Desktop through this repository's
+GitHub Releases and is never deployed to the web. Release model and runbook:
+`desktop/RELEASING.md`. Interactive maps need `ipyleaflet` + `shinywidgets` (both pinned in
+`requirements.txt`).
 
 ## Conventions
 
 Follows the DEEP app's py-shiny conventions: core (non-Express) syntax, pinned
-`requirements.txt` for Posit Connect Cloud, shared `www/styles.css` STAF design tokens
-under the app-specific `www/curves.css`, per-app copy of `STAF_LINKS` (the "home" entry is the
-STAF link in the navbar; the rest drive the DEEP deep links and the desktop overrides).
+`requirements.txt` (the desktop payload's `env.lock` follows it), shared `www/styles.css` STAF
+design tokens under the app-specific `www/curves.css`, per-app copy of `STAF_LINKS` (the "home"
+entry is the STAF link in the navbar; "staf" builds Open in DEEP's `?tool=deep&assessment=` links
+into the STAF app, and "deep" is About's DEEP link).

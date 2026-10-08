@@ -51,7 +51,7 @@ def test_the_status_default_follows_what_is_left_to_decide():
     # the handler enforces it too, and the chosen status reaches publish_version
     handler = SRC[SRC.index("def _publish():"):]
     assert 'if default_status == "draft":\n            status = "draft"' in handler
-    assert "status=status)" in SRC
+    assert "provenance=provenance_doc, status=status,\n" in handler
     assert pub.lib.DEFAULT_STATUS == "preliminary", \
         "the library default stays preliminary (DEEP mirrors it)"
     for text in (pub.publish_default_status(True, 2, 0)[1], pub.publish_default_status(False, 0, 0)[1]):
@@ -112,3 +112,16 @@ def test_user_visible_publish_copy_carries_no_em_dash(monkeypatch):
         assert "—" not in str(label)
     monkeypatch.delenv("STAF_LIBRARY_PUBLISH", raising=False)
     assert "—" not in (pub._publish_block_reason() or "")
+
+
+def test_show_in_deep_is_on_by_default_and_reaches_the_library():
+    """Owner, 2026-10-08: per version, on by default; off publishes into the library only, and
+    the Validate stage changes it later."""
+    html = str(pub._show_in_deep_control())
+    assert 'id="pub_show_in_deep"' in html and "checked" in html and ">Show in DEEP<" in html
+    assert "change it later on the Validate stage" in html
+    assert "_show_in_deep_control()," in SRC
+    handler = SRC[SRC.index("def _publish():"):]
+    assert "visible=show_in_deep)" in handler
+    captions = str(pub._status_choices()["draft"]) + str(pub._status_choices()["preliminary"])
+    assert "DEEP shows it as a Draft" in captions and "DEEP shows it as Preliminary" in captions

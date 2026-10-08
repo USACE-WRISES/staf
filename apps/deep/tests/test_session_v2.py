@@ -144,9 +144,10 @@ def test_lifecycle_status_defaults_and_sources():
     assert session.lifecycle_status({"status": "CERTIFIED"}) == "certified"
     assert session.lifecycle_status({}) == "preliminary"
     assert session.lifecycle_status({"status": "weird"}) == "preliminary"
-    # A draft can never reach DEEP (the bake filters it), so the two-state
-    # fallback deliberately maps it to preliminary rather than growing a state.
-    assert session.lifecycle_status({"status": "draft"}) == "preliminary"
+    # DEEP runs Drafts too since 2026-10-08 (owner), labeled: a draft reads as a draft, and a
+    # status DEEP does not run still reads as preliminary
+    assert session.lifecycle_status({"status": "draft"}) == "draft"
+    assert session.lifecycle_status({"lifecycle": "retired"}) == "preliminary"
 
 
 def test_status_labels_render_the_writer_vocabulary():

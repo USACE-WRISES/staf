@@ -93,15 +93,19 @@ def versioned_www_asset(asset_name: str) -> str:
 
 # --------------------------------------------------------------------------- #
 # Cross-app URLs: the in-app half of the URL mirror (docs/_data/apps.yml is the
-# other; see README). About links "home" and "deep", and the Assessment library
-# opens preliminary and final versions in DEEP from "deep". StreamCurves itself
-# ships as StreamCurves Desktop, so "curves" is its latest release page.
+# other; see README). EASI, SFARI and DEEP open inside the STAF app (?tool=), the
+# one web deployment since 2026-10-08. About links "home" and "deep", and the
+# Assessment library opens the versions DEEP runs (draft, preliminary and final, when
+# shown) in DEEP through "staf" (?tool=deep&assessment=). StreamCurves itself ships as
+# StreamCurves Desktop, so
+# "curves" is its latest release page.
 # --------------------------------------------------------------------------- #
 
 STAF_LINKS = {
     "home": "https://usace-wrises.github.io/staf/",
-    "easi": "https://gtmenichino-easi.share.connect.posit.cloud/",
-    "sfari": "https://gtmenichino-sfari.share.connect.posit.cloud/",
+    "staf": "https://gtmenichino-staf.share.connect.posit.cloud/",
+    "easi": "https://gtmenichino-staf.share.connect.posit.cloud/?tool=easi",
+    "sfari": "https://gtmenichino-staf.share.connect.posit.cloud/?tool=sfari",
     "curves": "https://github.com/USACE-WRISES/staf/releases/latest",
-    "deep": "https://gtmenichino-deep.share.connect.posit.cloud/",
+    "deep": "https://gtmenichino-staf.share.connect.posit.cloud/?tool=deep",
 }

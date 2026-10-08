@@ -88,6 +88,6 @@ def test_the_remote_feed_skips_a_typed_non_deep_entry():
         {"id": "easi-screening", "type": "easi", "versions": [
             {"version": 1, "status": "preliminary", "assets": {}}]},
         {"id": "test-region", "versions": [
-            {"version": 1, "status": "draft", "assets": {}}]}]}
+            {"version": 1, "status": "retired", "assets": {}}]}]}
     cat = rl.parse_catalog(json.dumps(doc))
     assert {v.assessment_id for v in cat.versions} == {"test-region"}

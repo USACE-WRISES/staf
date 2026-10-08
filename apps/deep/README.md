@@ -64,11 +64,14 @@ assessment bundles.
   `scripts/build_deep_data.py` emits layers from the STAF curves — 79 metrics
   carry real strata (Rosgen stream type, slope, bed material) — and the
   stream-curves exporter emits `curveLayers` for stratified curves too.
-- `.posit/publish/deep.toml` configures Posit Connect Cloud deployment
-  (mirrors EASI).
+- `.posit/publish/deep-PBJO.toml` lists DEEP's deploy files, which
+  `apps/staf/scripts/assemble_tools.py` copies into the STAF app: DEEP deploys inside STAF
+  (`?tool=deep`; its own Connect Cloud item was retired on 2026-10-08) and runs on its own for
+  development.
 
-The STAF site's Tools page (`staf/docs/_data/apps.yml`) links out to DEEP and
-the StreamCurves builder, both hosted on Posit Connect Cloud.
+The STAF site's Apply STAF page (`docs/_data/apps.yml`) opens DEEP inside the STAF app and
+offers each regional assessment's calculator for download (`docs/_data/deep_calculators.json`,
+written by `scripts/build_site_calculators.py`, which the bake runs).
 
 **Phase 5 — what stands behind a score (2026-08-21, after the DEEP project's
 adversarial review):**
@@ -100,7 +103,8 @@ adversarial review):**
   certifies them; nothing in DEEP implies certification. DEEP lists only
   Preliminary and Final (the display label for stored `certified`) versions:
   drafts (automation output not yet human-reviewed in StreamCurves) are never
-  baked into the registry.
+  baked into the registry. (Superseded 2026-10-08: DEEP runs Drafts too, labeled;
+  see "Where DEEP gets its assessments".)
 
 **Phase 6 — site-engine auto-pull + the train/serve pairing rule (2026-08-29):**
 
@@ -209,12 +213,25 @@ later source wins a ref:
    fallback: with the other two absent, DEEP serves exactly what was baked.
 2. **The remote library** (`deep/remote_library.py`): the rolling `library` prerelease on
    USACE-WRISES/staf. DEEP reads its catalog `library.json` (schema 1) and downloads each
-   Preliminary or Final version's `<id>-v<N>.deep.json` and optional
+   Draft, Preliminary or Final version's `<id>-v<N>.deep.json` and optional
    `<id>-v<N>-calculator.xlsx`, so a version published after the deploy reaches a running DEEP
-   without a redeploy. A version the catalog lists with any other status (draft, under review,
-   revised, retired) is dropped from the baked records too.
+   without a redeploy. A version the catalog lists with any other status (under review,
+   revised, retired) or hidden (`visibleInDeep: false`, StreamCurves' Show in DEEP) is dropped
+   from the baked records too.
 3. **The local library** `apps/library/`, in dev and desktop runs where the folder is present.
-   It always wins, and the remote catalog never drops one of its versions.
+   It always wins, and the remote catalog never drops one of its versions; a version it
+   withholds the same way (a status DEEP does not run, or hidden in `visibility.json`) drops the
+   baked and remote copies, so a local change shows in a local DEEP at once.
+
+**Statuses (owner, 2026-10-08).** DEEP runs Draft, Preliminary and Final versions, each labeled
+in one palette: the map's regions, the region list's chips, the legend's key on Identify and the
+badges are gray for a Draft (its curves are not reviewed yet; the Basin pane says so), amber for
+Preliminary and blue for Final, while hover and selection stay navy (`REGION_STATUS_STYLE` in
+`app.py` and `STATUS` in `www/coverage.js`, kept equal by `tests/test_region_status.py`). An
+assessment's default version is its newest Final version, else its newest Preliminary one, else
+its newest Draft (`deep.library.default_pointers`, the bake's rule and the live one), and the
+version chooser lists Final before Preliminary before Draft. An assessment with no version shown
+leaves the map, the picker and the site's calculator list.
 
 The remote library never makes a page wait. The first lookup loads the last good catalog and its
 assets from the disk cache, with no network. A background thread refreshes once the snapshot is
@@ -240,7 +257,9 @@ for the same content comes first.
 
 **Get Forms** on the worksheet opens a dialog copied from SFARI: a **Metrics** tab (every
 metric of the chosen assessment with its status), a **Field forms preview** tab, and four
-downloads (field forms PDF, metrics PDF, completed workbook, blank workbook). Its method
+downloads (field forms PDF, metrics PDF, completed workbook, blank workbook; the workbooks only
+when a calculator is published for the loaded version). The report's footer offers PDF, CSV,
+GeoJSON and the completed workbook: the same download sets as EASI and SFARI. Its method
 text is the concise wording of `deep/method_text.py` (keyed by the published text, so no
 bundle changes), and its Source column names the data behind each desktop value.
 
@@ -249,7 +268,9 @@ bundle changes), and its Source column names the data behind each desktop value.
   `methodContext`.
 - `deep/calculator.py` serves the workbook StreamCurves generated at publish. The bake step
   copies it to `www/calculators/<id>@vN.xlsx` (and `<id>.xlsx` for the default version) with an
-  `index.json`. A workbook is served only when its `contentDigest` equals the loaded bundle's,
+  `index.json`, then rewrites the site's list of default calculators
+  (`docs/_data/deep_calculators.json`, `scripts/build_site_calculators.py`; the site links the
+  stable `<id>.xlsx` raw from main, and `tests/test_site_calculators.py` keeps the list current). A workbook is served only when its `contentDigest` equals the loaded bundle's,
   and the completed workbook is filled at zip level, so DEEP needs no spreadsheet library.
   `DEEP_CALCULATOR_DIR` points a local DEEP at another folder.
 - `deep/reference_support.py` reads the bundle's `referenceSupport`, `criteriaBasis`,
@@ -282,8 +303,8 @@ file, the structure EASI and SFARI write too (owner, 2026-10-05;
 with its provenance, and every scenario with its values. Files saved before (schema 2, and v1 or
 version-less ones through their migration) still open, and a file from another tool is refused.
 Compare and the report compare condition claims, so an unassessed function shows as an
-interval. The completed workbook holds Summary (the calculator's own numbers with the
-application's condition claim beside them), Existing Conditions, one calculator per
+interval. The completed workbook holds Summary (the calculator's own numbers, with each
+scenario's condition claim listed under them), Existing Conditions, one calculator per
 alternative, then ReferenceCurves (every metric's curve layers, with the curve set each
 scenario used) (`deep/workbook.py`, `libs/staf_workbook`).
 

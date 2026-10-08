@@ -40,8 +40,8 @@ def test_the_shell_is_sfaris_with_the_three_downloads_in_the_tab_strip():
     assert buttons == [("dl_forms_pdf", "Desktop metrics PDF"), ("dl_forms_filled", "Completed workbook"),
                        ("dl_forms_blank", "Blank workbook")]
     # equal downloads: each the app's primary button inside its own wrapper (a bare anchor in
-    # a nav strip renders as a link-blue nav link)
-    assert html.count('class="ff-dl"') == 3 and html.count("btn-sm btn-primary") == 3
+    # a nav strip renders as a link-blue nav link), the same in every tool (web.forms_downloads)
+    assert html.count('class="staf-dl"') == 3 and html.count("btn-sm btn-primary") == 3
     assert "Mink Brook · COMID 9327042 · 43.68580, -72.23670" in html
     assert 'class="ff-table-wrap"' in html and 'id="easi-desktop-metrics"' in html
     # static: nothing under the backdrop can change, so the dialog carries no live output
@@ -94,10 +94,10 @@ def test_the_rail_button_opens_the_dialog():
 
 
 def test_the_three_downloads_build_the_three_files():
-    assert re.search(r"@render\.download\(filename=lambda: report\.desktop_metrics_filename\(export_result\(\)\)\)\s+"
+    assert re.search(r"@render\.download\(filename=lambda: report\.desktop_metrics_filename\(\)\)\s+"
                      r"def dl_forms_pdf\(\):\s+res = export_result\(\)\s+if res:\s+"
                      r"yield report\.build_desktop_metrics_pdf\(res\)", SRC)
-    assert re.search(r"@render\.download\(filename=lambda: calculator\.filled_filename\(export_result\(\)\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+"
+    assert re.search(r"@render\.download\(filename=lambda: calculator\.filled_filename\(\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+"
                      r"def dl_forms_filled\(\):", SRC)
     assert re.search(r"@render\.download\(filename=calculator\.blank_filename\(\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+def dl_forms_blank\(\):", SRC)
 
@@ -107,8 +107,6 @@ def test_the_stylesheet_pins_the_header_and_the_layout():
         ".modal-dialog.modal-xl:has(.ff-modal-body) .modal-content { height: 100%; }",
         ".modal-xl .modal-body.ff-modal-body { display: flex; flex-direction: column;",
         ".ff-modal-body .nav-pills .bslib-nav-spacer { flex: 1; }",
-        ".ff-modal-body .nav-pills .ff-dl .btn-primary { color: #fff; background: var(--easi-accent);",
-        ".ff-modal-body .nav-pills .ff-dl .btn-primary:hover,",
         ".ff-table-wrap { flex: 1; min-height: 0; overflow: auto;",
         ".ff-table-wrap .ff-table { border-collapse: separate; border-spacing: 0; }",
         ".ff-table-wrap .ff-table thead th { position: sticky; top: 0;",
@@ -118,4 +116,7 @@ def test_the_stylesheet_pins_the_header_and_the_layout():
     ):
         assert rule in CSS, rule
     assert ".ff-preview" not in CSS                     # EASI has no preview tab
-    assert 'href="styles.css?v=66"' in SRC              # bumped with the CSS
+    assert ".ff-dl" not in CSS                          # the downloads' rules are shared (staf/staf.css)
+    shared = (WWW / "staf" / "staf.css").read_text(encoding="utf-8")
+    assert ".ff-modal-body .nav-pills .staf-dl .btn-primary { color: #fff;" in shared
+    assert 'href="styles.css?v=67"' in SRC              # bumped with the CSS

@@ -32,6 +32,19 @@ def test_every_tool_ships_the_same_shared_assets(staf):
     assert "staf-ns.js" in trees[0]
 
 
+def test_every_tool_asks_for_the_same_versions_of_the_shared_assets():
+    """The shell keeps the first tool's URL of each shared ``staf/`` asset (head.py dedupes by path),
+    so a cache-bust bumped in one tool and not the others would be silently ignored: every tool's
+    HEAD must name the same ``?v=`` for each shared file."""
+    urls = dict()
+    for key in ORDER:
+        src = (HERE.parent / key / "app.py").read_text(encoding="utf-8")
+        found = dict(re.findall(r'(?:href|src)="(staf/[^"?]+)(\?v=[^"]*)?"', src))
+        assert "staf/staf.css" in found and "staf/unsaved-guard.js" in found, key
+        for path, version in found.items():
+            assert urls.setdefault(path, version) == version, (key, path, version, urls[path])
+
+
 def test_the_pins_are_the_union_of_the_tools(staf):
     union = dict()
     for key in ORDER:

@@ -522,7 +522,8 @@ def test_another_assessment_offers_its_latest_eligible_version_only():
                 continue
             aid = o["ref"]["assessmentId"]
             eligible = [v for v in osrc._versions(aid)
-                        if lib.version_status(aid, v) in osrc.ELIGIBLE_STATUSES]
+                        if lib.version_status(aid, v) in osrc.ELIGIBLE_STATUSES
+                        and lib.version_visible_in_deep(aid, v)]
             assert o["ref"]["version"] == eligible[0], (metric, aid, o["ref"]["version"])
 
 

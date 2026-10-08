@@ -41,11 +41,19 @@ def _bundle(aid, version, name):
     }
 
 
-def _write_library(root, aid, name, versions, statuses=None):
+def _write_library(root, aid, name, versions, statuses=None, hidden=()):
     """Write version bundles + manifest + status.json for one assessment.
 
     ``versions``: list of ints. ``statuses``: {version: status}; defaults to preliminary.
+    ``hidden``: versions StreamCurves' Show in DEEP turned off (visibility.json).
     """
+    if hidden:
+        history = [{"version": v, "visibleInDeep": False, "actor": "t",
+                    "timestamp": "2026-10-08T00:00:00Z"} for v in hidden]
+        (root / "assessments" / aid).mkdir(parents=True, exist_ok=True)
+        (root / "assessments" / aid / "visibility.json").write_text(
+            json.dumps({"schemaVersion": 2, "assessmentId": aid, "history": history}),
+            encoding="utf-8")
     statuses = statuses or {}
     for v in versions:
         vdir = root / "assessments" / aid / f"v{v}"
@@ -139,29 +147,69 @@ def test_bake_excludes_retired_versions(tmp_path, libroot):
     assert refs == {"ecbp@v2"}  # retired v1 is not eligible
 
 
-def test_bake_excludes_draft_versions(tmp_path, libroot):
-    """A draft is automation output no human reviewed: never DEEP-eligible."""
+def test_bake_bakes_draft_versions_labeled(tmp_path, libroot):
+    """Drafts run in DEEP, labeled (owner, 2026-10-08), and never outrank a reviewed version."""
     out = tmp_path / "data"
-    _write_library(libroot, "ecbp", "ECBP", [1, 2], statuses={1: "draft", 2: "preliminary"})
-    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=2, default=2, prelim=2)])
-    bake = _load_bake_module()
-    bake.bake(out=out)
+    _write_library(libroot, "ecbp", "ECBP", [1, 2, 3],
+                   statuses={1: "preliminary", 2: "draft", 3: "draft"})
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=3, default=1, prelim=1)])
+    _load_bake_module().bake(out=out)
     doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
-    refs = {r["assessmentRef"] for r in doc["assessments"]}
-    assert refs == {"ecbp@v2"}
-    assert not (out / "bundles" / "ecbp@v1.deep.json").exists()
+    assert {r["assessmentRef"]: r["lifecycle"] for r in doc["assessments"]} == {
+        "ecbp@v1": "preliminary", "ecbp@v2": "draft", "ecbp@v3": "draft"}
+    assert doc["libraryCatalog"]["ecbp"] == {"defaultVersion": 1, "latestCertified": 0,
+                                             "latestPreliminary": 1, "latestDraft": 3}
+    assert json.loads((out / "bundles" / "ecbp.deep.json").read_text("utf-8"))["version"] == 1
+    assert (out / "bundles" / "ecbp@v3.deep.json").is_file()
 
 
-def test_an_all_draft_assessment_is_absent_from_the_bake(tmp_path, libroot):
+def test_an_all_draft_assessment_bakes_its_newest_draft_as_the_default(tmp_path, libroot):
     out = tmp_path / "data"
-    _write_library(libroot, "ecbp", "ECBP", [1], statuses={1: "draft"})
-    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=1, default=1)])
-    bake = _load_bake_module()
-    result = bake.bake(out=out)
-    assert result["records"] == 0
+    _write_library(libroot, "ecbp", "ECBP", [1, 2], statuses={1: "draft", 2: "draft"})
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=2, default=2)])
+    result = _load_bake_module().bake(out=out)
+    assert result["records"] == 2
+    default = json.loads((out / "bundles" / "ecbp.deep.json").read_text("utf-8"))
+    assert (default["version"], default["lifecycle"]) == (2, "draft")
+
+
+def test_a_hidden_version_never_bakes_and_the_default_skips_it(tmp_path, libroot):
+    """Show in DEEP off (visibility.json): the version stays in the library only, whatever its
+    status, and DEEP's default is the newest version it shows."""
+    out = tmp_path / "data"
+    _write_library(libroot, "ecbp", "ECBP", [1, 2, 3],
+                   statuses={1: "preliminary", 2: "certified", 3: "draft"}, hidden=[2])
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=3, default=2, cert=2,
+                                            prelim=1)])
+    _load_bake_module().bake(out=out)
+    assert _refs(out) == ["ecbp@v1", "ecbp@v3"]
+    assert not (out / "bundles" / "ecbp@v2.deep.json").exists()
+    assert json.loads((out / "bundles" / "ecbp.deep.json").read_text("utf-8"))["version"] == 1
+
+
+def test_an_assessment_deep_shows_nothing_of_has_no_pointer_and_no_default(tmp_path, libroot):
+    out = tmp_path / "data"
+    _write_library(libroot, "ecbp", "ECBP", [1], hidden=[1])
+    _write_library(libroot, "other", "Other", [1])
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=1, default=1, prelim=1),
+                             _catalog_entry("other", "Other", latest=1, default=1, prelim=1)])
+    _load_bake_module().bake(out=out)
     doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
-    assert doc["assessments"] == []
+    assert list(doc["libraryCatalog"]) == ["other"] and _refs(out) == ["other@v1"]
     assert not (out / "bundles" / "ecbp.deep.json").exists()
+
+
+def test_a_shown_again_version_bakes_again(tmp_path, libroot):
+    out = tmp_path / "data"
+    _write_library(libroot, "ecbp", "ECBP", [1], hidden=[1])
+    path = libroot / "assessments" / "ecbp" / "visibility.json"
+    doc = json.loads(path.read_text("utf-8"))
+    doc["history"].append({"version": 1, "visibleInDeep": True, "actor": "t",
+                           "timestamp": "2026-10-09T00:00:00Z"})
+    path.write_text(json.dumps(doc), encoding="utf-8")
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=1, default=1, prelim=1)])
+    _load_bake_module().bake(out=out)
+    assert _refs(out) == ["ecbp@v1"], "the last record wins"
 
 
 def test_bake_is_idempotent(tmp_path, libroot):
@@ -221,7 +269,8 @@ def test_default_only_bakes_each_assessments_default_version(tmp_path, libroot):
     assert _refs(out) == ["ecbp@v2"]
     doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
     assert doc["libraryCatalog"]["ecbp"] == {"defaultVersion": 2, "latestCertified": 0,
-                                             "latestPreliminary": 2}, "every pointer stays"
+                                             "latestPreliminary": 2, "latestDraft": 0}, \
+        "every pointer stays"
     assert (out / "bundles" / "ecbp@v2.deep.json").is_file()
     assert json.loads((out / "bundles" / "ecbp.deep.json").read_text("utf-8"))["version"] == 2
     assert not (out / "bundles" / "ecbp@v1.deep.json").exists()
@@ -245,17 +294,16 @@ def test_default_only_follows_the_catalog_pointer_not_the_newest_version(tmp_pat
     assert not (out / "bundles" / "ecbp@v2.deep.json").exists()
 
 
-def test_default_only_never_bakes_a_draft_default(tmp_path, libroot):
-    """An assessment whose only versions are drafts points its default at a draft (the
-    StreamCurves picker needs an openable default); DEEP still bakes nothing of it."""
+def test_default_only_bakes_a_draft_default_when_nothing_reviewed_shows(tmp_path, libroot):
+    """An assessment whose only versions are drafts bakes its newest draft; one whose newest
+    reviewed version is hidden falls back to the newest shown one."""
     out = tmp_path / "data"
     _write_library(libroot, "ecbp", "ECBP", [1, 2], statuses={1: "draft", 2: "draft"})
-    _write_library(libroot, "other", "Other", [1])
+    _write_library(libroot, "other", "Other", [1, 2], statuses={2: "draft"}, hidden=[1])
     _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=2, default=2),
-                             _catalog_entry("other", "Other", latest=1, default=1, prelim=1)])
+                             _catalog_entry("other", "Other", latest=2, default=1, prelim=1)])
     result = _load_bake_module().bake(out=out, default_only=True)
-    assert result["records"] == 1 and _refs(out) == ["other@v1"]
-    assert not (out / "bundles" / "ecbp.deep.json").exists()
+    assert result["records"] == 2 and _refs(out) == ["ecbp@v2", "other@v2"]
 
 
 def test_default_only_copies_the_default_calculator_only(tmp_path, libroot):

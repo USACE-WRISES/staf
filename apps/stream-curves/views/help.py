@@ -56,8 +56,9 @@ def app_help_content():
         ui.tags.h6("Publishing", class_="fw-bold mt-3 mb-1"),
         ui.tags.p(
             "Assessments are published to the STAF assessment library by its maintainer. "
-            "Draft versions are for review; DEEP runs the Preliminary and Final ones. If you "
-            "revised a downloaded assessment, send your .streamcurves file to the maintainer.",
+            "DEEP runs Draft, Preliminary and Final versions, each labeled, unless the "
+            "maintainer turns Show in DEEP off for a version. If you revised a downloaded "
+            "assessment, send your .streamcurves file to the maintainer.",
             class_="mb-1",
         ),
         ui.tags.h6("Data sources", class_="fw-bold mt-3 mb-1"),

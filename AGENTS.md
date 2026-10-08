@@ -6,7 +6,7 @@ Act as a full-stack developer for the STAF monorepo: the documentation site and 
 ## Purpose
 Maintain and improve:
 - a GitHub Pages/Jekyll site (Markdown docs, lightweight front-end widgets, JSON/TSV data, TS build scripts)
-- four Shiny for Python apps under `apps/` (EASI, SFARI, DEEP, stream-curves). EASI, SFARI and DEEP each deploy to their own Posit Connect Cloud content item; StreamCurves ships as StreamCurves Desktop (`desktop/`), released on this repository's GitHub Releases
+- four Shiny for Python apps under `apps/` (EASI, SFARI, DEEP, stream-curves). EASI, SFARI and DEEP deploy together inside the STAF app (`apps/staf`, one Posit Connect Cloud item) and each still runs on its own for development; StreamCurves ships as StreamCurves Desktop (`desktop/`), released on this repository's GitHub Releases
 
 ## Scope
 Primary working areas:
@@ -14,7 +14,7 @@ Primary working areas:
 - `docs/assets/`: JavaScript, CSS, and data files
 - `docs/_includes/`: shared HTML fragments used by widgets/pages
 - `scripts/`: build/transform scripts (for example, metric-library generation)
-- `apps/easi`, `apps/sfari`, `apps/deep`, `apps/stream-curves`: the Shiny apps (each self-contained: own requirements.txt, www/, data/, tests/; the three web apps also carry a `.posit/publish` deploy config)
+- `apps/easi`, `apps/sfari`, `apps/deep`, `apps/stream-curves`: the Shiny apps (each self-contained: own requirements.txt, www/, data/, tests/; the three web tools also carry a `.posit/publish` toml, the file list STAF's assembler copies), and `apps/staf`, which hosts them as one app
 - `desktop/`: StreamCurves Desktop shell (C#/.NET 10 + WebView2 + Velopack, modeled on HYPE Desktop) that runs StreamCurves locally; release model in `desktop/RELEASING.md`. Release rules: only `streamcurves-v*` shell releases are normal releases (`streamcurves-payload-*`, `streamcurves-current`, `library` and `easi-national-current` are ALWAYS prereleases); every vpk command names the Velopack channel `streamcurves`; `desktop/scripts/*.ps1` stay pure ASCII; after changing a pin in `apps/stream-curves/requirements.txt`, regenerate `desktop/payload/env.lock`
 - `libs/`: shared packages vendored per app, never imported across folders at runtime. `libs/site_engine` is the STAF site engine (the HR reach watershed on NHDPlus HR); the StreamCat lookup engine (EPA StreamCat by NHDPlus V2 COMID) is the other watershed engine. Both are defined in `libs/README.md` and `docs/computation-engines.md`
 
@@ -33,7 +33,7 @@ Primary working areas:
 5) If JS/CSS assets change and cache-busting is used, update the version/tag in the relevant include(s).
 6) Keep changes accessible (keyboard behavior, readable labels, semantic markup where practical).
 7) Run app tests per app from that app's own directory (never from the repo root — the four pytest suites collide). Use the shared root `.venv` (Python 3.12, `requirements-dev.txt`).
-8) Never delete or commit `.posit/publish/deployments/` records: they keep the public app URLs stable. App URL changes must be mirrored in `docs/_data/apps.yml` and each app's `STAF_LINKS` dict (StreamCurves' entry is its latest release page).
+8) Never delete or commit `apps/staf/.posit/publish/deployments/` records: they keep the STAF app's public URL stable, and EASI, SFARI and DEEP never deploy on their own (their items were retired on 2026-10-08). App URL changes (`?tool=` links into STAF) must be mirrored in `docs/_data/apps.yml` and each app's `STAF_LINKS` dict (StreamCurves' entry is its latest release page; the site-link tests check the mirror).
 9) Commit messages and PR descriptions carry no AI co-author or attribution trailers (no `Co-Authored-By` lines for Claude, Codex, or any other agent); GitHub credits co-authors as contributors.
 10) Re-vendor after any engine or EASI source change and never hand-edit a `_vendor/` tree (each app's `scripts/vendor_site_engine.py`, then StreamCurves' `vendor_easi_engine.py`; the drift-gate tests stay red until the copies match). Engine display names ("StreamCat lookup engine", "STAF site engine") come from the vendored `naming` module; the tokens `streamcat` / `site-engine` / `streamcat-legacy` in digests, bundles, manifests, the CLI, and YAML are immutable.
 
@@ -41,7 +41,7 @@ Primary working areas:
 1) Do not manually edit generated outputs when a script is the canonical producer; run the generator.
 2) When data schemas are changed, update related docs and consumers in the same change set.
 3) Keep JSON/TSV outputs deterministic; the generator writes only under `docs/assets/data/`.
-4) Assessment library (`apps/library/`): do not hand-edit `catalog.json`, `manifest.json`, or `vN/` payloads: StreamCurves' Publish (a maintainer's checkout with `STAF_LIBRARY_PUBLISH=1`) is the canonical producer. After a publish, re-bake DEEP (`apps/deep/scripts/bake_library_into_deep.py`) and commit `apps/library/**`, `apps/deep/data/**` and `apps/deep/www/calculators/**` together; the push to `main` refreshes the rolling `library` prerelease that installed StreamCurves copies and DEEP read. Format contract: `apps/library/README.md`.
+4) Assessment library (`apps/library/`): do not hand-edit `catalog.json`, `manifest.json`, or `vN/` payloads: StreamCurves' Publish (a maintainer's checkout with `STAF_LIBRARY_PUBLISH=1`) is the canonical producer. After a publish, re-bake DEEP (`apps/deep/scripts/bake_library_into_deep.py`) and commit `apps/library/**`, `apps/deep/data/**`, `apps/deep/www/calculators/**` and `docs/_data/deep_calculators.json` (the site's calculator list the bake rewrites) together; the push to `main` refreshes the rolling `library` prerelease that installed StreamCurves copies and DEEP read. Status and Show in DEEP changes are append-only records (`status.json`, `visibility.json`) written by StreamCurves or `apps/stream-curves/scripts/set_library_status.py`, never by hand; DEEP runs Draft, Preliminary and Final versions, so deploy a DEEP that accepts a status before pushing library data that relies on it. Format contract: `apps/library/README.md`.
 
 ## Validation Checklist
 Run what applies to the files touched:

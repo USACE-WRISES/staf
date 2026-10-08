@@ -1,13 +1,14 @@
 /* Warn before leaving a page with unsaved assessment work (STAF shared asset).
    The server sends {dirty: true|false, ns} on the "staf-unsaved" message; ns names the tool (its
    Shiny id prefix, empty in a standalone app), so in the STAF app every tool keeps its own flag and
-   the page warns while any of them is dirty. A file download never triggers the warning, and a
-   closed session has nothing left to lose. Save (the header's save_session download) marks the
-   work saved on the server while it writes the file, and the server reports it on its next
-   message: one small input after the download asks for that message at once. */
+   the page warns while any of them is dirty. A file download opens its own tab (web.download_button),
+   so it never navigates this page and every real navigation still warns; a closed session has
+   nothing left to lose. Save (the header's save_session download) marks the work saved on the
+   server while it writes the file, and the server reports it on its next message: one small input
+   after the download asks for that message at once. */
 (function () {
   "use strict";
-  var dirty = {}, quietUntil = 0, registered = false;
+  var dirty = {}, registered = false;
   var SAVED_PING = "staf_saved";        // an input no server reads: it only wakes the server
 
   function anyDirty() {
@@ -30,7 +31,6 @@
   var $ = window.jQuery;
   if ($) {
     $(document).on("shiny:filedownload", function (e) {
-      quietUntil = Date.now() + 2000;
       var NS = window.STAFNs, el = e && e.name ? document.getElementById(e.name) : null;
       if (!el || !NS || !window.Shiny || !window.Shiny.setInputValue) return;
       var root = NS.owner(el);
@@ -44,7 +44,7 @@
     $(document).on("shiny:disconnected", function () { dirty = {}; });
   }
   window.addEventListener("beforeunload", function (e) {
-    if (!anyDirty() || Date.now() < quietUntil) return undefined;
+    if (!anyDirty()) return undefined;
     e.preventDefault();
     e.returnValue = "";
     return "";

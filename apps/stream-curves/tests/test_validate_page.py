@@ -220,3 +220,37 @@ def test_the_page_routes_the_outcome_and_the_draft_rule():
     certify = text[text.index("def certify_block("):text.index("def _certify_ask(")]
     assert "certify_block_state(" in certify and "_APPROVE_FIRST" in certify
     assert "Approve as Preliminary first." in text
+
+
+# --------------------------------------------------------------------------- #
+# Show in DEEP (owner, 2026-10-08): the published version's switch
+# --------------------------------------------------------------------------- #
+def test_the_show_in_deep_line_says_what_deep_does_with_the_version(libroot):
+    from views.validate_page import deep_visibility_text
+    payload = sio.dump_session_fields({"session_name": "ecbp"}, session_name="ecbp")
+    version = lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                                  payload, _bundle(), status="draft")
+    assert deep_visibility_text("ecbp", "draft", True) == "DEEP shows this version as Draft."
+    assert deep_visibility_text("ecbp", "certified", True) == "DEEP shows this version as Final."
+    assert deep_visibility_text("ecbp", "retired", True) == "DEEP does not run a version that is Retired."
+    assert deep_visibility_text("ecbp", "draft", False) == ("Not in DEEP: the version stays in "
+                                                            "the library only.")
+    assert deep_visibility_text("ohio-sqt-adapted", "preliminary", True) == (
+        "DEEP does not list the state SQT assessments.")
+    lib.set_version_visibility("ecbp", version, False, "jess")
+    assert not lib.version_visible_in_deep("ecbp", version)
+
+
+def test_the_page_declares_the_show_in_deep_switch_and_rebakes_on_a_change():
+    """Source scan: a switch for the maintainer, a line for anyone else, and the effect
+    writes only a real change, then rebakes DEEP."""
+    text = (Path(__file__).resolve().parents[1] / "views" /
+            "validate_page.py").read_text(encoding="utf-8")
+    assert 'ui.output_ui(ns("deep_visibility_block"))' in text
+    block = text[text.index("def deep_visibility_block("):text.index("def _set_deep_visible(")]
+    assert 'ui.input_switch(ns("deep_visible"), "Show in DEEP", value=shown)' in block
+    assert "if not (_can_write() and _deep_settable(aid)):" in block
+    effect = text[text.index("def _set_deep_visible("):]
+    assert effect.index("if lib.version_visible_in_deep(aid, ver) == want:") < effect.index(
+        "lib.set_version_visibility(")
+    assert "_rebake_and_toast(prefix)" in effect

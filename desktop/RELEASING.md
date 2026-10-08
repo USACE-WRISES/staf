@@ -76,7 +76,8 @@ gh workflow run streamcurves-payload.yml --repo USACE-WRISES/staf
 (or Actions > streamcurves-payload > Run workflow, from `main`). The workflow checks the lock,
 builds the apps zip from the tracked tree (`git archive` of `apps/stream-curves` without
 `tests/` and `brand/`, plus `apps/library` as a catalog-only snapshot: `catalog.json` and each
-assessment's `manifest.json`, `status.json`, `validation.json` and `artifacts.json`, never the
+assessment's `manifest.json`, `status.json`, `validation.json`, `artifacts.json` and
+`visibility.json`, never the
 `vN/` version folders, which an installed copy downloads on demand from the rolling `library`
 release; `desktop/scripts/check_payload_records.py` asserts the snapshot is catalog-only),
 publishes the `streamcurves-payload-*` prerelease and refreshes `streamcurves-current`. The archive is taken from the full tree with
@@ -149,7 +150,8 @@ fixes a Windows DNS failure in every HyRiver call and must stay (the smoke gate 
 Only the maintainer writes it, from a checkout. The rolling prerelease `library` is what everyone
 else reads: the Assessment library on StreamCurves Desktop's start page lists every version
 (draft, preliminary and final), and DEEP (`apps/deep/deep/remote_library.py`) serves the
-preliminary and final ones without a redeploy.
+draft, preliminary and final ones, each labeled, without a redeploy, except a version whose Show
+in DEEP is off (`visibleInDeep: false` in the catalog).
 
 | Asset | What it is |
 |---|---|
@@ -161,9 +163,16 @@ preliminary and final ones without a redeploy.
 Asset names carry a content hash, so a name never changes meaning, and a rerun uploads nothing
 new. `library.json` goes up last with `--clobber`, so a reader never sees a catalog that names an
 asset still in flight (both readers treat a missing catalog as "being updated" and keep what they
-had). A validation change rewrites only `library.json`. A status change (Approve as Preliminary,
-Certify as Final) also rebuilds that version's pack, whose origin block names the status (packs
-run 10 to 250 KB); the old pack stays on the release as superseded.
+had). A validation change rewrites only `library.json`, and a Show in DEEP change only the two
+catalogs. A status change (Approve as Preliminary, Certify as Final, or a bulk change through
+`apps/stream-curves/scripts/set_library_status.py`) also rebuilds that version's pack, whose
+origin block names the status (packs run 10 to 250 KB); the old pack stays on the release as
+superseded until `library_release.py prune --yes`.
+
+A running DEEP drops every version the release lists with a status it does not run, its baked
+copy included. So a status DEEP has never run before ships in this order: commit and push the code
+that accepts it, assemble and redeploy STAF, check the deployed DEEP, and only then push the
+library data that uses it (the owner's 2026-10-08 Draft change followed this order).
 
 `library-release.yml` runs on every push to `main` that touches `apps/library/**` (or the
 builder: `apps/stream-curves/scripts/library_release.py`, `streamcurves/gallery.py`,
@@ -206,16 +215,18 @@ testing, point both at a build folder: `STREAMCURVES_GALLERY_SOURCE=release` plu
    `STAF_LIBRARY_MAINTAINER=<name>` (the dev-mode shell or `shiny run`) through **Projects > Open
    project**. Its REF-15 curve-source choices merge into the region record.
 4. Publish preselects the assessment the copy came from and publishes the next version, as Draft
-   by default or as Preliminary. DEEP is re-baked as part of it.
-5. Commit `apps/library/**`, `apps/deep/data/**` and `apps/deep/www/calculators/**`, then push
+   by default or as Preliminary, with Show in DEEP on unless the maintainer turns it off. DEEP is
+   re-baked as part of it.
+5. Commit `apps/library/**`, `apps/deep/data/**`, `apps/deep/www/calculators/**` and
+   `docs/_data/deep_calculators.json` (the site's calculator list, which the bake rewrites), then push
    `main`. `library-release` refreshes the release: the gallery shows the new version on its next
-   refresh, and DEEP picks up a preliminary version within 10 minutes.
-6. Validate's **Approve as Preliminary** and **Certify as Final** move a version on later; commit
-   and push again.
+   refresh, and DEEP picks it up, labeled with its status, within 10 minutes.
+6. Validate's **Approve as Preliminary**, **Certify as Final** and **Show in DEEP** move a version
+   on later; commit and push again.
 
 The bake stays as DEEP's offline fallback, so CLAUDE.md guardrail 11 still applies: re-bake,
-commit and redeploy DEEP when the cloud copy should carry a version even with the release
-unreachable.
+commit, then assemble and redeploy STAF (DEEP's one deployment) when the cloud copy should carry a
+version even with the release unreachable.
 
 ## Local dev & QA
 

@@ -4,8 +4,9 @@ that does not publish, save a copy for the maintainer who does.
 Who publishes: the maintainer, from a STAF checkout with STAF_LIBRARY_PUBLISH=1
 (streamcurves.workspace "maintainer" mode). There the page is the publish form: the
 assessment defaults to the one the project started from, the version is published as a
-Draft (kept out of DEEP) or Preliminary (a version DEEP runs once DEEP carries it), and
-the Validate stage moves it on (Approve as Preliminary, then Certify as Final). Anywhere
+Draft or Preliminary, which DEEP shows labeled as such, with Show in DEEP on unless the
+publisher turns it off (library visibility.json), and the Validate stage moves it on
+(Approve as Preliminary, then Certify as Final; Show in DEEP on or off). Anywhere
 else, including every installed copy, the page says the maintainer publishes and offers
 the project file to send them.
 
@@ -55,13 +56,23 @@ def _status_choices() -> dict:
     return {
         "draft": ui.TagList(
             ui.tags.span("Draft", class_="pub-seg-title"),
-            ui.tags.span("For review; DEEP does not run it", class_="pub-seg-caption"),
+            ui.tags.span("For review; DEEP shows it as a Draft", class_="pub-seg-caption"),
         ),
         "preliminary": ui.TagList(
             ui.tags.span("Preliminary", class_="pub-seg-title"),
-            ui.tags.span("DEEP runs it once DEEP carries it", class_="pub-seg-caption"),
+            ui.tags.span("Reviewed; DEEP shows it as Preliminary", class_="pub-seg-caption"),
         ),
     }
+
+
+def _show_in_deep_control():
+    """Show in DEEP (owner, 2026-10-08): per version, on by default; off publishes the version
+    into the library only. The Validate stage changes it later."""
+    return ui.div(
+        ui.input_checkbox("pub_show_in_deep", "Show in DEEP", value=True),
+        ui.div("Off keeps it in the library only; change it later on the Validate stage.",
+               class_="text-muted small pub-show-caption"),
+        class_="pub-show-in-deep mb-2")
 
 
 def _maintainer_name(state=None) -> str:
@@ -383,6 +394,7 @@ def publish_server(input, output, session, state: AppState):
             ui.output_ui("new_id_field"),
             ui.output_ui("origin_note"),
             ui.output_ui("status_control"),
+            _show_in_deep_control(),
             ui.div(
                 ui.tags.label("Region of applicability", class_="form-label mb-0"),
                 ui.div(ap.region_label(region), class_="text-muted small"),
@@ -701,6 +713,11 @@ def publish_server(input, output, session, state: AppState):
         if default_status == "draft":
             status = "draft"
         status_word = lib.status_label(status)
+        try:
+            show_in_deep = bool(input.pub_show_in_deep())
+        except Exception:  # noqa: BLE001 - a form without the box publishes shown, the default
+            show_in_deep = True
+        not_in_deep = "" if show_in_deep else ", not in DEEP"
         target = input.pub_assessment()
         if target == _NEW:
             aid = lib.slugify(_new_id_value() or input.pub_name() or "")
@@ -785,7 +802,7 @@ def publish_server(input, output, session, state: AppState):
         stamped = dict(prev_stage_status)
         stamped["publish"] = {"status": "done",
                               "label": f"Published {name} v{expected_version} "
-                                       f"({status_word})."}
+                                       f"({status_word}{not_in_deep})."}
         state.run_stage_status.set(stamped)
         state.run_meta.set(rs.touch_run_meta(prev_meta))
 
@@ -904,7 +921,8 @@ def publish_server(input, output, session, state: AppState):
                                      "record goes without it. The log has the details.",
                                      type="warning", duration=10)
             version = lib.publish_version(aid, meta, full_payload, bundle,
-                                          provenance=provenance_doc, status=status)
+                                          provenance=provenance_doc, status=status,
+                                          visible=show_in_deep)
         except Exception as e:  # noqa: BLE001
             state.run_stage_status.set(prev_stage_status)
             state.run_meta.set(prev_meta)
@@ -917,7 +935,7 @@ def publish_server(input, output, session, state: AppState):
             with reactive.isolate():
                 ss = dict(state.run_stage_status() or {})
             ss["publish"] = {"status": "done",
-                             "label": f"Published {name} v{version} ({status_word})."}
+                             "label": f"Published {name} v{version} ({status_word}{not_in_deep})."}
             state.run_stage_status.set(ss)
 
         # The published version becomes the new origin: Validate targets it
@@ -944,22 +962,26 @@ def publish_server(input, output, session, state: AppState):
         # Fold the new latest into DEEP's baked registry so the cloud DEEP ships it.
         # Validation and certification live on the Validate stage now.
         baked_ok, baked_msg = lib.rebake_deep()
-        deep_line = ("DEEP runs it once DEEP is redeployed." if status == "preliminary"
-                     else "Drafts stay out of DEEP until approved on the Validate stage.")
+        deep_line = (f"DEEP lists it as {status_word} once the push refreshes the library "
+                     "release." if show_in_deep else
+                     "Show in DEEP is off, so DEEP does not list it; the Validate stage can "
+                     "show it later.")
         if baked_ok:
             ui.notification_show(
-                f"Published {name} v{version} as a {status_word} version. {deep_line} "
-                "Commit apps/library and apps/deep/data and push; the library release "
+                f"Published {name} v{version} as a {status_word} version{not_in_deep}. {deep_line} "
+                "Commit apps/library, apps/deep (data and www/calculators) and "
+                "docs/_data/deep_calculators.json, then push; the library release "
                 "refreshes for everyone after the push.",
                 type="message",
                 duration=12,
             )
         else:
             ui.notification_show(
-                f"Published {name} v{version} as a {status_word} version. DEEP registry "
-                f"not auto-updated ({baked_msg}). Run "
+                f"Published {name} v{version} as a {status_word} version{not_in_deep}. DEEP "
+                f"registry not auto-updated ({baked_msg}). Run "
                 "apps/deep/scripts/bake_library_into_deep.py, then commit "
-                "apps/library and apps/deep/data.",
+                "apps/library, apps/deep (data and www/calculators) and "
+                "docs/_data/deep_calculators.json.",
                 type="warning",
                 duration=12,
             )

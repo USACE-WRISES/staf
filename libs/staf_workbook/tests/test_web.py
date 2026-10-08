@@ -232,7 +232,9 @@ def test_every_tool_shows_the_same_header_actions():
     text = re.sub(r"<[^>]+>", " ", html)
     assert re.findall(r"\b(New|Open|Save|About|Help)\b", text) == ["New", "Open", "Save", "About", "Help"]
     assert 'accept=".json"' in html and "easi-nav-sep" in html and 'class="easi-nav"' in html
-    assert "target" not in html                               # Save downloads in place
+    save = re.search(r'<a[^>]*id="save_session"[^>]*>', html).group(0)
+    assert 'target="_blank"' in save and 'rel="noopener"' in save   # Save opens its own tab
+    assert not re.search(r"\sdownload[\s=>]", save)
     inside = str(module.ui(web.nav_actions)("sfari"))          # the STAF app's module ids
     assert 'id="sfari-nav_new"' in inside and 'id="sfari-save_session"' in inside
     extra = str(web.nav_actions(web.download_link("x", "Local review")))
@@ -284,3 +286,66 @@ def test_the_header_actions_are_styled_once_for_every_tool():
                  "@keyframes staf-zoom-cue-nudge", "@media (prefers-reduced-motion: reduce)"):
         assert rule in css, rule
     assert "--staf-map-inset-left: 346px" not in css
+
+
+DOWNLOAD_ATTR = re.compile(r"\sdownload[\s=>]")      # the attribute, not the class name
+
+
+def test_a_download_opens_its_own_tab_and_never_the_apps_page():
+    """Owner, 2026-10-08: on managed networks a same-origin <a download> that the network redirects
+    replaced the app's page. Every download opens a new tab instead and carries no download
+    attribute; the browser closes the tab once the attachment starts."""
+    for html in (str(web.download_button("dl_x", "X")), str(web.download_link("dl_y", "Y"))):
+        assert 'target="_blank"' in html and 'rel="noopener"' in html and "shiny-download-link" in html
+        assert not DOWNLOAD_ATTR.search(html), html
+        assert 'href=""' in html and 'aria-disabled="true"' in html
+
+
+def _ids_and_labels(html: str) -> list:
+    return re.findall(r'<a[^>]*id="([a-z_]+)"[^>]*>([^<]+)</a>', html)
+
+
+def test_get_forms_offers_the_same_downloads_in_every_tool():
+    """Owner, 2026-10-08: Field forms PDF (SFARI, DEEP), the metrics PDF, then the completed and
+    blank workbooks, as equal primary buttons in the dialog's pill strip."""
+    from shiny import ui
+    html = str(ui.div(ui.navset_pill(ui.nav_panel("Metrics", "x"), ui.nav_spacer(),
+                                     *web.forms_downloads(("dl_metrics", "Metrics PDF"), field_forms="dl_forms",
+                                                          workbooks=("dl_filled", "dl_blank")))))
+    assert _ids_and_labels(html) == [("dl_forms", "Field forms PDF"), ("dl_metrics", "Metrics PDF"),
+                                     ("dl_filled", "Completed workbook"), ("dl_blank", "Blank workbook")]
+    assert html.count('class="staf-dl"') == 4 and html.count("btn-sm btn-primary") == 4
+    assert html.index("bslib-nav-spacer") < html.index("dl_forms")
+    assert web.FORMS_TITLE == "Get Forms"
+    bare = str(ui.div(ui.navset_pill(ui.nav_panel("Metrics", "x"), ui.nav_spacer(),
+                                     *web.forms_downloads(("dl_metrics", "Desktop metrics PDF", "The list")))))
+    assert _ids_and_labels(bare) == [("dl_metrics", "Desktop metrics PDF")]
+    assert 'title="The list"' in bare
+    assert bare.index("dl_metrics") < bare.index('class="staf-dl-note"')
+    assert web.NO_WORKBOOK_NOTE in bare
+
+
+def test_the_report_footer_is_the_same_in_every_tool():
+    """Owner, 2026-10-08: PDF, CSV, GeoJSON, the completed workbook, then Close, pinned at the bottom."""
+    from shiny import ui
+    html = str(ui.modal("body", footer=web.report_footer("dl_pdf", "dl_csv", "dl_geojson", workbook="dl_wb")))
+    footer = html.split('class="modal-footer"', 1)[1]
+    assert _ids_and_labels(footer) == [("dl_pdf", "PDF"), ("dl_csv", "CSV"), ("dl_geojson", "GeoJSON"),
+                                       ("dl_wb", "Completed workbook")]
+    assert footer.index("dl_wb") < footer.index(">Close<") and "data-bs-dismiss" in footer
+    assert footer.count("sfari-btn staf-btn") == 4 and "sfari-btn primary staf-btn" in footer
+    none = str(ui.modal("body", footer=web.report_footer("dl_pdf", "dl_csv", "dl_geojson")))
+    assert "Completed workbook" not in none and ">Close<" in none
+
+
+def test_the_shared_download_copy_has_no_em_dash():
+    text = " ".join([web.FORMS_TITLE, web.FIELD_FORMS_LABEL, web.COMPLETED_LABEL, web.BLANK_LABEL,
+                     web.NO_WORKBOOK_NOTE, web._FIELD_FORMS_TITLE, web._COMPLETED_TITLE, web._BLANK_TITLE])
+    assert "\u2014" not in text
+
+
+def test_the_shared_download_rules_are_in_staf_css():
+    from pathlib import Path
+    css = (Path(web.__file__).resolve().parents[1] / "assets" / "staf.css").read_text(encoding="utf-8")
+    assert ".ff-modal-body .nav-pills .staf-dl {" in css and ".staf-dl-note {" in css
+    assert ".modal-footer > .staf-btn" in css
