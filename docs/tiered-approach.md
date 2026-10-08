@@ -37,10 +37,10 @@ The approach is meant to be **nationally applicable in concept**, while allowing
 
 Stream assessment practice faces recurring challenges:
 
-1. **Too many methods, scattered across sources.** Hundreds of assessment methods exist (many in ï¿½grey literatureï¿½), so locating and comparing approaches is inefficient.
+1. **Too many methods, scattered across sources.** Hundreds of assessment methods exist (many in "grey literature"), so locating and comparing approaches is inefficient.
 2. **Inconsistent metric choices and terminology.** Different tools measure different things, often without a shared structure that makes gaps and overlaps visible.
 3. **Wide variation in resources required.** Some assessments take minutes; others require weeks of field sampling and analysis. Level of effort is often not clearly tracked or used in selection.
-4. **Limited comparability of results across methods and regions.** Different function coverage, different scoring structures, and different output formats make it hard to compare ï¿½like with like.ï¿½
+4. **Limited comparability of results across methods and regions.** Different function coverage, different scoring structures, and different output formats make it hard to compare "like with like."
 
 The Tiered Approach addresses these issues by:
 
@@ -77,7 +77,7 @@ These terms are used throughout this guide:
 
 ### Why functions (instead of only metrics)
 
-Metrics differ by region, program, and available data. Functions provide the stable ï¿½spineï¿½ of assessment because they:
+Metrics differ by region, program, and available data. Functions provide the stable "spine" of assessment because they:
 
 - keep assessment focused on ecological processes that matter (not only what is easy to measure),
 - reveal gaps and overlaps among tools,
@@ -99,34 +99,34 @@ This framework groups functions into five categories aligned with a widely used 
 These 20 functions are intended as a **comprehensive starting point**. Regional tools may consolidate or tailor the list, but changes should be documented and traceable back to these functions to preserve comparability.
 
 #### Hydrology (4)
-1. **Catchment hydrology** ï¿½ Land uses alter water quantity and quality delivered to the stream.
-2. **Surface water storage** ï¿½ Natural/artificial storage attenuates flows and increases residence time.
-3. **Reach inflow** ï¿½ Localized inputs (tributaries, ditches, pipes) alter magnitude/timing/quality.
-4. **Streamflow regime** ï¿½ The characteristic flow pattern that shapes habitat, transport, and water quality.
+1. **Catchment hydrology**: Land uses alter water quantity and quality delivered to the stream.
+2. **Surface water storage**: Natural/artificial storage attenuates flows and increases residence time.
+3. **Reach inflow**: Localized inputs (tributaries, ditches, pipes) alter magnitude/timing/quality.
+4. **Streamflow regime**: The characteristic flow pattern that shapes habitat, transport, and water quality.
 
 #### Hydraulics (4)
-5. **Low flow and baseflow dynamics** ï¿½ Maintains wetted habitat and modulates temperature/chemistry during low water.
-6. **High flow dynamics** ï¿½ Drives erosion and channel maintenance during storms and peaks.
-7. **Floodplain connectivity** ï¿½ Lateral exchange supports nutrient cycling, habitat, and hydraulic relief.
-8. **Hyporheic connectivity** ï¿½ Surfaceï¿½subsurface exchange supports temperature regulation, nutrients, and habitat.
+5. **Low flow and baseflow dynamics**: Maintains wetted habitat and modulates temperature/chemistry during low water.
+6. **High flow dynamics**: Drives erosion and channel maintenance during storms and peaks.
+7. **Floodplain connectivity**: Lateral exchange supports nutrient cycling, habitat, and hydraulic relief.
+8. **Hyporheic connectivity**: Surface-subsurface exchange supports temperature regulation, nutrients, and habitat.
 
 #### Geomorphology (4)
-9. **Channel evolution** ï¿½ Changes in channel dimension/slope reflecting legacy and ongoing adjustment.
-10. **Channel and floodplain dynamics** ï¿½ Bank processes, planform dynamics, and curvature that affect complexity.
-11. **Sediment continuity** ï¿½ Balanced sediment supply and transport that maintains form and habitat.
-12. **Bed composition and bedform dynamics** ï¿½ Substrate and bedforms (and wood effects) supporting habitat and exchange.
+9. **Channel evolution**: Changes in channel dimension/slope reflecting legacy and ongoing adjustment.
+10. **Channel and floodplain dynamics**: Bank processes, planform dynamics, and curvature that affect complexity.
+11. **Sediment continuity**: Balanced sediment supply and transport that maintains form and habitat.
+12. **Bed composition and bedform dynamics**: Substrate and bedforms (and wood effects) supporting habitat and exchange.
 
 #### Physicochemistry (4)
-13. **Light & thermal regime** ï¿½ Regulates temperature and energy inputs shaping chemistry and niches.
-14. **Carbon processing** ï¿½ Organic matter dynamics supporting food webs and system metabolism.
-15. **Nutrient cycling** ï¿½ N and P transformations controlling productivity and water quality.
-16. **Water & soil quality** ï¿½ Contaminants/constituents influencing chemical condition and biotic health.
+13. **Light & thermal regime**: Regulates temperature and energy inputs shaping chemistry and niches.
+14. **Carbon processing**: Organic matter dynamics supporting food webs and system metabolism.
+15. **Nutrient cycling**: N and P transformations controlling productivity and water quality.
+16. **Water & soil quality**: Contaminants/constituents influencing chemical condition and biotic health.
 
 #### Biology (4)
-17. **Habitat provision** ï¿½ Physical habitat diversity supporting life stages and taxa.
-18. **Population support** ï¿½ Survival, reproduction, and movement of key taxa.
-19. **Community dynamics** ï¿½ Balanced assemblages of native taxa; invasive pressure; resilience.
-20. **Watershed connectivity** ï¿½ Longitudinal/lateral connectivity enabling colonization and recovery.
+17. **Habitat provision**: Physical habitat diversity supporting life stages and taxa.
+18. **Population support**: Survival, reproduction, and movement of key taxa.
+19. **Community dynamics**: Balanced assemblages of native taxa; invasive pressure; resilience.
+20. **Watershed connectivity**: Longitudinal/lateral connectivity enabling colonization and recovery.
 
 ---
 
@@ -142,7 +142,7 @@ The Clean Water Act emphasizes **physical**, **chemical**, and **biological** in
 
 - **Direct (D):** the function is fundamentally associated with that outcome (primary pathway).
 - **Indirect (i):** the function influences that outcome through intermediate processes or context.
-- **None (ï¿½):** no meaningful linkage assumed for the generic national framework.
+- **None (-):** no meaningful linkage assumed for the generic national framework.
 
 > This mapping is a **starting point**. Regional context may justify adjustments (document changes).
 
@@ -152,7 +152,7 @@ The Clean Water Act emphasizes **physical**, **chemical**, and **biological** in
 |---|---:|---:|---:|
 | Catchment hydrology | D | i | i |
 | Surface water storage | D | i | i |
-| Reach inflow | D | i | ï¿½ |
+| Reach inflow | D | i | - |
 | Streamflow regime | D | i | i |
 | Low flow & baseflow dynamics | D | i | i |
 | High flow dynamics | D | i | i |
@@ -162,14 +162,14 @@ The Clean Water Act emphasizes **physical**, **chemical**, and **biological** in
 | Channel & floodplain dynamics | D | i | i |
 | Sediment continuity | D | i | i |
 | Bed composition & bedform dynamics | D | i | i |
-| Light & thermal regime | ï¿½ | D | i |
-| Carbon processing | ï¿½ | i | i |
+| Light & thermal regime | - | D | i |
+| Carbon processing | - | i | i |
 | Nutrient cycling | i | D | i |
 | Water & soil quality | i | D | i |
-| Habitat provision | ï¿½ | ï¿½ | D |
+| Habitat provision | - | - | D |
 | Population support | i | i | D |
 | Community dynamics | i | i | D |
-| Watershed connectivity | i | ï¿½ | D |
+| Watershed connectivity | i | - | D |
 
 ---
 
@@ -182,19 +182,19 @@ Tiers **do** change what you measure (metrics/methods), how long it takes, and h
 
 ### Tier overview
 
-#### Tier 1 ï¿½ Screening
+#### Tier 1: Screening
 **Goal:** rapid, low-cost, desktop-oriented snapshot for early planning and broad prioritization.  
 **Typical effort:** minutes to hours per site; minimal field time (optional verification).  
 **Primary data:** GIS / remotely sensed / existing datasets; imagery; basic reconnaissance.  
 **Output:** function scores with higher uncertainty, useful for screening and prioritizing.
 
-#### Tier 2 ï¿½ Rapid
+#### Tier 2: Rapid
 **Goal:** moderate-effort field-based assessment for reach comparison and alternatives evaluation.  
 **Typical effort:** hours to ~1 day per reach.  
 **Primary data:** structured field observations + simple measurements; can incorporate Screening metrics.  
 **Output:** more confident function scores supporting site ranking and design direction.
 
-#### Tier 3 ï¿½ Detailed
+#### Tier 3: Detailed
 **Goal:** high-effort assessment for final design, compliance, crediting, and monitoring.  
 **Typical effort:** multiple days to weeks (sometimes longer across seasons).  
 **Primary data:** intensive field measurements; lab sampling; monitoring; modeling; development/calibration of reference curves.  
@@ -222,44 +222,44 @@ Tier selection should be explicit and documented. Use criteria like:
 | Decision risk & tolerance for uncertainty | low risk; higher uncertainty acceptable | moderate risk; moderate uncertainty | high risk; low uncertainty required |
 | Data sources | desktop/GIS | field + desktop | field + lab + models + reference calibration |
 | Primary output | qualitative/semi-quantitative scores | semi-quantitative scores | quantitative, defensible scores + standards |
-| Sites per phase | many (often >20) | some (ï¿½5ï¿½20) | few (=5) |
-| Field time per site | none to <1 hr | 1 hrï¿½1 day | 1 dayï¿½1+ weeks |
+| Sites per phase | many (often >20) | some (~5-20) | few (≤5) |
+| Field time per site | none to <1 hr | 1 hr to 1 day | 1 day to 1+ weeks |
 | Reference curves | usually adopt published / coarse | adopt and possibly adapt | often develop/calibrate regionally |
 
 ---
 
 ## Workflow for building and applying a tiered assessment
 
-This workflow is designed to be repeatable and transparent. It is compatible with structured assessment development guidance: select tier ? define functions ? select metrics ? define reference/scoring ? compute and report.
+This workflow is designed to be repeatable and transparent. It is compatible with structured assessment development guidance: select tier → define functions → select metrics → define reference/scoring → compute and report.
 
-### Step 1 ï¿½ Define decision context
+### Step 1: Define decision context
 **Inputs:** objectives, stakeholders, regulatory context, project phase, risk tolerance, schedule/budget, stream types.  
 **Outputs:** a clear problem statement and how assessment results will be used.
 
-**Deliverable:** 1ï¿½2 page ï¿½Assessment Purpose & Decision Contextï¿½ memo.
+**Deliverable:** 1-2 page "Assessment Purpose & Decision Context" memo.
 
-### Step 2 ï¿½ Select tier(s)
+### Step 2: Select tier(s)
 **Inputs:** decision context + tier criteria table.  
-**Decision:** pick Screening, Rapid, Detailed ï¿½ or a phased plan (e.g., Screening ? Rapid on top candidates ? Detailed on finalists).  
+**Decision:** pick Screening, Rapid, Detailed, or a phased plan (e.g., Screening → Rapid on top candidates → Detailed on finalists).  
 **Outputs:** tier selection rationale, resource needs, list of uncertainties.
 
 **Deliverable:** completed Tier Selection Worksheet (short form) + assumptions list.
 
-### Step 3 ï¿½ Define relevant stream functions
+### Step 3: Define relevant stream functions
 Start from the 20-function list.  
 If tailoring, do so by **merging functions** (not deleting without justification), and document traceability.
 
 **Deliverable:** Functions list for the project/region + short definitions + notes on any merges.
 
-### Step 4 ï¿½ Select metrics and methods (tier-appropriate)
+### Step 4: Select metrics and methods (tier-appropriate)
 For each function, select 1+ feasible metrics at the chosen tier.
 
 **Rules of thumb**
 - Screening: usually 1 metric per function (proxies from national datasets).
-- Rapid: 1ï¿½several rapid field metrics per function, plus Screening metrics as needed.
+- Rapid: 1 to several rapid field metrics per function, plus Screening metrics as needed.
 - Detailed: direct measures where possible; may include Rapid/Screening metrics for context.
 
-**Deliverable:** ï¿½Metrics-to-Functions Tableï¿½ with:
+**Deliverable:** "Metrics-to-Functions Table" with:
 - function name
 - metric(s)
 - method/data source
@@ -269,7 +269,7 @@ For each function, select 1+ feasible metrics at the chosen tier.
 - QA/QC notes
 - scoring standard availability (adopt / adapt / develop)
 
-### Step 5 ï¿½ Establish reference framework and scoring standards
+### Step 5: Establish reference framework and scoring standards
 You need a way to convert raw metric values to comparable scores.
 
 Each metric should specify:
@@ -278,15 +278,15 @@ Each metric should specify:
 - stratification (stream type, region, drainage area, etc.),
 - whether thresholds are adopted, adapted, or developed.
 
-**Deliverable:** ï¿½Reference & Scoring Appendixï¿½ (even if short for Screening).
+**Deliverable:** "Reference & Scoring Appendix" (even if short for Screening).
 
-### Step 6 ï¿½ Collect data and compute metric values
-Implement the tierï¿½s field/desktop plan.  
+### Step 6: Collect data and compute metric values
+Implement the tier's field/desktop plan.  
 Ensure you capture metadata (date, reach ID, coordinates, method version, assessor).
 
 **Deliverable:** complete dataset + metadata + QA/QC checklist.
 
-### Step 7 ï¿½ Score metrics ? functions ? outcomes ? overall condition
+### Step 7: Score metrics → functions → outcomes → overall condition
 This is the core scoring pipeline:
 
 1. **Metric scores** (standardized scale)
@@ -296,7 +296,7 @@ This is the core scoring pipeline:
 
 **Deliverable:** scoring workbook (or scripted calculation) + exported results table.
 
-### Step 8 ï¿½ Report results and document decisions
+### Step 8: Report results and document decisions
 Reporting should keep both:
 - **roll-up scores** (easy to compare), and
 - **component scores** (so you can see tradeoffs).
@@ -322,12 +322,12 @@ The goal is a scoring method that is:
 
 ### Recommended scoring scale
 Pick a consistent scale for function scores, such as:
-- **0ï¿½1** (normalized), or
-- **0ï¿½10** (more intuitive for many users).
+- **0-1** (normalized), or
+- **0-10** (more intuitive for many users).
 
 Once selected, keep it consistent across tiers.
 
-### Metric ? function scoring
+### Metric → function scoring
 A function may have multiple metrics. Common combination options include:
 
 - **Arithmetic mean** (default): use when metrics represent similar importance and quality.
@@ -336,17 +336,17 @@ A function may have multiple metrics. Common combination options include:
 
 **Recommendation:** Start with mean or weighted mean; use limiting-factor logic only with strong justification.
 
-### Function ? outcome (physical/chemical/biological) scoring
+### Function → outcome (physical/chemical/biological) scoring
 
 Define weights based on direct vs indirect mapping:
 
 - weight = 1.0 for **Direct (D)**
 - weight = 0.25 for **Indirect (i)** (starter default; adjust via sensitivity analysis)
-- weight = 0 for **None (ï¿½)**
+- weight = 0 for **None (-)**
 
 Compute outcome scores as weighted averages:
 
-**Outcome score** = S(FunctionScore ï¿½ Weight) / S(Weight)
+**Outcome score** = Σ(FunctionScore × Weight) / Σ(Weight)
 
 Do this separately for:
 - Physical outcome index
@@ -365,7 +365,7 @@ Compute overall condition score as an average of the three outcomes:
 
 ## Worked scoring example (simple)
 
-Assume function scores on a 0ï¿½10 scale.  
+Assume function scores on a 0-10 scale.  
 Assume the default mapping weights (Direct = 1.0; Indirect = 0.25; None = 0).
 
 Example function scores (subset for illustration):
@@ -378,21 +378,21 @@ Example function scores (subset for illustration):
 - Community dynamics = 6
 
 ### Physical outcome
-Catchment hydrology (D ? 1.0), Streamflow regime (D ? 1.0), Water & soil quality (i ? 0.25), Nutrient cycling (i ? 0.25), Habitat provision (ï¿½ ? 0)
+Catchment hydrology (D → 1.0), Streamflow regime (D → 1.0), Water & soil quality (i → 0.25), Nutrient cycling (i → 0.25), Habitat provision (- → 0)
 
-Physical = (6ï¿½1 + 7ï¿½1 + 4ï¿½0.25 + 5ï¿½0.25) / (1 + 1 + 0.25 + 0.25)  
+Physical = (6×1 + 7×1 + 4×0.25 + 5×0.25) / (1 + 1 + 0.25 + 0.25)  
 Physical = (6 + 7 + 1 + 1.25) / 2.5 = 15.25 / 2.5 = 6.1
 
 ### Chemical outcome
-Water & soil quality (D ? 1.0), Nutrient cycling (D ? 1.0), Catchment hydrology (i ? 0.25), Streamflow regime (i ? 0.25), Community dynamics (i ? 0.25)
+Water & soil quality (D → 1.0), Nutrient cycling (D → 1.0), Catchment hydrology (i → 0.25), Streamflow regime (i → 0.25), Community dynamics (i → 0.25)
 
-Chemical = (4ï¿½1 + 5ï¿½1 + 6ï¿½0.25 + 7ï¿½0.25 + 6ï¿½0.25) / (1 + 1 + 0.25 + 0.25 + 0.25)  
+Chemical = (4×1 + 5×1 + 6×0.25 + 7×0.25 + 6×0.25) / (1 + 1 + 0.25 + 0.25 + 0.25)  
 Chemical = (4 + 5 + 1.5 + 1.75 + 1.5) / 2.75 = 13.75 / 2.75 = 5.0
 
 ### Biological outcome
-Habitat provision (D ? 1.0), Community dynamics (D ? 1.0), Catchment hydrology (i ? 0.25), Streamflow regime (i ? 0.25), Nutrient cycling (i ? 0.25), Water & soil quality (i ? 0.25)
+Habitat provision (D → 1.0), Community dynamics (D → 1.0), Catchment hydrology (i → 0.25), Streamflow regime (i → 0.25), Nutrient cycling (i → 0.25), Water & soil quality (i → 0.25)
 
-Biological = (8ï¿½1 + 6ï¿½1 + 6ï¿½0.25 + 7ï¿½0.25 + 5ï¿½0.25 + 4ï¿½0.25) / (1 + 1 + 0.25 + 0.25 + 0.25 + 0.25)  
+Biological = (8×1 + 6×1 + 6×0.25 + 7×0.25 + 5×0.25 + 4×0.25) / (1 + 1 + 0.25 + 0.25 + 0.25 + 0.25)  
 Biological = (8 + 6 + 1.5 + 1.75 + 1.25 + 1.0) / 3.0 = 19.5 / 3 = 6.5
 
 ### Overall condition
@@ -418,8 +418,8 @@ This example shows how:
 1. Define reaches and watershed context.
 2. Compute a small set of national, repeatable desktop metrics for each function (the two watershed engines that compute them are defined on the [Computation Engines]({{ site.baseurl }}/computation-engines/) page).
 3. Convert metric values to standardized scores using published thresholds or relative scoring (e.g., percentiles within a region/stratum).
-4. Roll up to outcomes and an optional condition score. EASI automates steps 2 to 4 for any NHD stream, and its Excel calculator (linked from the [Tools]({{ site.baseurl }}/tools/) page) reproduces the same scoring offline from values entered by hand.
-5. Identify ï¿½high potential / low constraintï¿½ candidate reaches for Rapid tier.
+4. Roll up to outcomes and an optional condition score. The EASI web application automates steps 2 to 4 for any NHD stream, and the EASI spreadsheet calculator applies the same scoring to values entered by hand; both are on the [Apply STAF]({{ site.baseurl }}/tools/#easi) page.
+5. Identify "high potential / low constraint" candidate reaches for Rapid tier.
 
 **Recommended outputs**
 - map of candidate reaches and scores
@@ -485,7 +485,7 @@ Comparability does not require identical metrics across tiers. It requires:
 
 ## What to publish and keep updated (recommended artifacts)
 
-To make this approach usable in practice, publish and maintain these ï¿½livingï¿½ artifacts:
+To make this approach usable in practice, publish and maintain these "living" artifacts:
 
 - **Functions list** (the 20 functions + definitions + mapping to outcomes)
 - **Tier selection worksheet** (short decision support tool)
@@ -498,7 +498,7 @@ To make this approach usable in practice, publish and maintain these ï¿½livin
 
 ## Suggested appendices (optional)
 
-### Appendix A ï¿½ Tier Selection Worksheet (template)
+### Appendix A: Tier Selection Worksheet (template)
 - Project phase:
 - Number of sites:
 - Decision risk:
@@ -510,7 +510,7 @@ To make this approach usable in practice, publish and maintain these ï¿½livin
 - Data availability constraints:
 - Next milestone to revisit tier decision:
 
-### Appendix B ï¿½ Metrics-to-Functions Table (template columns)
+### Appendix B: Metrics-to-Functions Table (template columns)
 - Function ID
 - Function name
 - Metric name
@@ -522,7 +522,7 @@ To make this approach usable in practice, publish and maintain these ï¿½livin
 - Scoring standard (adopt/adapt/develop)
 - Notes/uncertainty
 
-### Appendix C ï¿½ Scoring workbook core columns (recommended)
+### Appendix C: Scoring workbook core columns (recommended)
 - Reach ID
 - Date
 - Function scores (20 columns)
