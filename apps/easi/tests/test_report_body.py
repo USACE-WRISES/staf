@@ -62,7 +62,7 @@ def test_report_body_sections_and_notes():
     notes = {rows[0]["metricId"]: "surveyed on site"}
     d = {"gnis_name": "Test Creek", "snapped_lat": 44.0, "snapped_lon": -123.0,
          "reach_length_ft": 1000, "comid": 1, "huc12": "010203040506"}
-    body = str(app._report_body(d, rep, notes, ""))
+    body = str(app._report_body(d, rep, notes))
     assert "Test Creek" in body                      # summary header
     assert "surveyed on site" in body                # worksheet note shows as static text
     assert ">Metrics<" in body and ">Summary plots<" in body
@@ -219,7 +219,7 @@ def test_borrowed_note_is_below_the_table_and_absent_for_overrides():
            "subIndices": {"physical": None, "chemical": None, "biological": None},
            "ecosystemConditionIndex": None}
     d = {"watershed_source": "site-engine"}
-    html = str(app._report_body(d, rep, {}, "", anchor))
+    html = str(app._report_body(d, rep, {}, anchor))
     assert html.index("easi-tbl") < html.index(notices.BORROWED_NOTE) < html.index("Summary plots")
     assert html.count(notices.BORROWED_NOTE) == 1
     card = str(app._borrowed_metric_note(row))

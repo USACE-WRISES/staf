@@ -171,6 +171,38 @@ def test_recalculated_workbook_matches_the_application(report):
     assert checked > 40
 
 
+GROUPS = ["Index", "Hydrology", "Hydraulics", "Geomorphology", "Physicochemistry", "Biology"]
+
+
+@pytest.mark.parametrize("n_alt", [0, 1, 3])
+def test_the_summary_is_the_compare_table_on_its_side(report, n_alt):
+    """The workbook builds (the app would otherwise fall back to the single calculator without a
+    word) and its Summary reads like the Compare dialog: a row per measure under its group, a
+    column per scenario, each alternative followed by its change."""
+    openpyxl = pytest.importorskip("openpyxl")
+    sset = ScenarioSet()
+    rows = [(sset.items[0], scenario_state.scored_for(report, {}))]
+    for k in range(n_alt):
+        alt = sset.add(f"Alternative {k + 1}", "Bank & bed work <phase 1>" if k == 0 else "")
+        alt.state = STATES[1 + k]
+        rows.append((alt, scenario_state.scored_for(report, alt.state)))
+    data = workbook.build({"delineation": BASE_DELIN, "report": report}, rows, {}, today=dt.date(2026, 10, 3))
+    wb = openpyxl.load_workbook(io.BytesIO(data))
+    assert wb.sheetnames[0] == "Summary"
+    ws = wb["Summary"]
+    head = next(c.row for c in ws["A"] if c.value == "Index") - 1
+    expect = [None, "Existing Conditions"]
+    for k in range(n_alt):
+        expect += [f"Alternative {k + 1}", "Change"]
+    assert [ws.cell(head, c).value for c in range(1, len(expect) + 2)] == expect + [None]
+    labels = [ws.cell(r, 1).value for r in range(head + 1, ws.max_row + 1)]
+    assert [x for x in labels if x in GROUPS] == GROUPS
+    assert len([x for x in labels if x not in GROUPS]) == 4 + len(workbook.summary_cells(calculator.blank_bytes()).functions)
+    assert len(list(ws.conditional_formatting)) == n_alt
+    if n_alt <= 1:
+        assert ws.page_setup.orientation == "portrait" and str(ws.page_setup.fitToHeight) == "1"
+
+
 def test_reference_curves_are_the_ones_this_site_was_scored_against(report):
     rc = workbook.reference_curves(report)
     curves = [b for b in rc.blocks if getattr(b, "series", None)]
@@ -293,7 +325,7 @@ def test_the_page_wires_the_shared_chip():
     assert 'ui.output_ui("scenario_bar"), ui.output_ui("rollup_rail")' in SRC
     assert "@reactive.event(input.staf_scenario_evt)" in SRC
     assert "@reactive.event(input.staf_sc_save)" in SRC and "@reactive.event(input.staf_sc_delete)" in SRC
-    assert 'href="staf/staf.css?v=10"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
+    assert 'href="staf/staf.css?v=11"' in SRC and 'src="staf/scenarios.js?v=2"' in SRC
     assert "hint=_ADD_HINT" in SRC and "Blank starts from the screening as computed." in SRC
     assert SRC.count("_xs_heights.set(None); _reset_scenarios()") == 2      # fresh screening and reset
     panel = SRC.split("def fn_panel():", 1)[1].split("def _cur_row(", 1)[0]
@@ -329,7 +361,7 @@ def _report_wiring(base: str):
     assert "comparison_table" not in section
     assert 'scenario=staf_web.report_scenario(_sc["set"])' in section
     assert 'can_delete=mode == "edit" and not cur.is_baseline' in SRC
-    assert 'href="staf/staf.css?v=10"' in SRC
+    assert 'href="staf/staf.css?v=11"' in SRC
     for ext in ("pdf", "csv", "geojson"):
         assert f"{base}{{staf_web.scenario_suffix(_sc['set'])}}.{ext}" in SRC
     pdf = SRC.split("def dl_pdf():", 1)[1].split("@render", 1)[0]
@@ -344,4 +376,4 @@ def test_each_report_names_its_scenario_and_compares_nothing(monkeypatch):
     plain = _pdf_text(report.build_pdf(_result()))
     assert "Scenario: Restore riparian" in named and "Replant the buffer" in named
     assert "Scenario:" not in plain
-    _report_wiring("easi_report")
+    _report_wiring("easi-report")

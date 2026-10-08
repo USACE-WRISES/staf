@@ -1,14 +1,16 @@
 ---
 title: Computation Engines
 nav_order: 11
-description: "How the STAF apps compute watershed metrics: the StreamCat lookup engine and the STAF site engine."
+description: "How the STAF web applications compute watershed metrics: the StreamCat lookup engine and the STAF site engine."
 ---
 {% include staf_page_chrome.html %}
 
-Every STAF app needs watershed metrics: impervious cover, wetland extent, road
-density, dam storage, riparian vegetation and the like. Two engines produce
-them. This page says what each one is, which app uses which, what each cannot
-produce, and how to read the labels in a report.
+The STAF web applications gather watershed metrics for you: impervious cover,
+wetland extent, road density, dam storage, riparian vegetation and the like. Two
+engines produce them. With a spreadsheet calculator you enter these values
+yourself, from these sources or your own. This page says what each engine is,
+which app uses which, what each cannot produce, and how to read the labels in a
+report.
 
 ## The two engines
 

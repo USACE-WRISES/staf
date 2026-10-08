@@ -36,14 +36,15 @@ def test_the_app_serves_the_calculator_from_get_forms_and_the_report_and_not_the
     assert "res = export_result()" in helper and "easi_book.build(" in helper
     assert "return calculator.build_filled(res)" in helper
     assert "dl_calc" not in SRC.replace("dl_site_calc", "")
-    footer = str(app._dl_buttons())
-    assert re.findall(r'id="([^"]+)"', footer) == ["dl_pdf", "dl_csv", "dl_geojson", "dl_workbook", "close_modal"]
-    labels = [text.strip() for text in re.sub(r"<[^>]+>", "\n", footer).split("\n") if text.strip()]
+    # the report's footer, the same in every tool (owner, 2026-10-08): pinned under the body
+    from test_get_forms_dialog import _result
+    footer = str(app._report_modal(_result(), {})).split('class="modal-footer"', 1)[1]
+    assert [i for i in re.findall(r'id="([^"]+)"', footer)] == ["dl_pdf", "dl_csv", "dl_geojson", "dl_workbook"]
+    labels = re.findall(r"<(?:a|button)\b[^>]*>\s*([^<]+?)\s*</(?:a|button)>", footer)
     assert labels == ["PDF", "CSV", "GeoJSON", "Completed workbook", "Close"]
-    # the visible labels, not the markup (download links carry no target: they never open a page)
     assert not any("calculator" in label.lower() or "blank" in label.lower() for label in labels)
-    # the same file as Get Forms offers, named by the site
-    assert re.search(r"@render\.download\(filename=lambda: calculator\.filled_filename\(export_result\(\)\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+"
+    # the same file as Get Forms offers, with a plain name (owner, 2026-10-08)
+    assert re.search(r"@render\.download\(filename=lambda: calculator\.filled_filename\(\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+"
                      r"def dl_workbook\(\):", SRC)
     body = SRC.split("def dl_workbook():", 1)[1].split("@render", 1)[0]
     assert "data = _workbook_bytes()" in body and "yield data" in body
@@ -56,9 +57,9 @@ def test_the_app_serves_the_calculator_from_get_forms_and_the_report_and_not_the
 def test_the_batch_popup_serves_the_site_completed_workbook():
     # batch has no Assessment page, so its per-site report offers that site's completed
     # calculator, behind the same stale-bundle guard as the other per-site exports
-    assert 'staf_web.download_button("dl_site_calc", "Completed workbook"' in SRC
+    assert 'workbook="dl_site_calc" if calculator.available() else None' in SRC
     assert "Excel calculator\"" not in SRC
-    assert re.search(r'@render\.download\(filename=lambda: _modal_site_file\("xlsx", "calculator"\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+'
+    assert re.search(r'@render\.download\(filename=calculator\.filled_filename\(\), media_type=staf_web\.XLSX_MEDIA_TYPE\)\s+'
                      r"def dl_site_calc\(\):", SRC)
     body = SRC.split("def dl_site_calc():", 1)[1].split("@render", 1)[0]
     assert "base = _modal_download_base()" in body and "yield calculator.build_filled(base)" in body

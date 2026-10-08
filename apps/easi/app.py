@@ -569,15 +569,17 @@ def _bieger_area_tip_html(current_name: str | None = None) -> str:
 # --------------------------------------------------------------------------- #
 # STAF top banner — a single link back to the STAF site; cross-links to the
 # other tier apps were removed to keep the banner minimal. STAF_LINKS still
-# carries every app URL: it is the in-app half of the URL mirror (see README).
-# StreamCurves ships as StreamCurves Desktop, so "curves" is its latest release.
+# carries every app URL: it is the in-app half of the URL mirror (docs/_data/
+# apps.yml; the site-link tests check it). EASI, SFARI and DEEP open inside the
+# STAF app (?tool=), the one web deployment since 2026-10-08; StreamCurves ships
+# as StreamCurves Desktop, so "curves" is its latest release.
 # --------------------------------------------------------------------------- #
 STAF_LINKS = {
     "home":   "https://usace-wrises.github.io/staf/",
-    "easi":   "https://gtmenichino-easi.share.connect.posit.cloud/",
-    "sfari":  "https://gtmenichino-sfari.share.connect.posit.cloud/",
+    "easi":   "https://gtmenichino-staf.share.connect.posit.cloud/?tool=easi",
+    "sfari":  "https://gtmenichino-staf.share.connect.posit.cloud/?tool=sfari",
     "curves": "https://github.com/USACE-WRISES/staf/releases/latest",
-    "deep":   "https://gtmenichino-deep.share.connect.posit.cloud/",
+    "deep":   "https://gtmenichino-staf.share.connect.posit.cloud/?tool=deep",
     # the EASI guide on the STAF site: how EASI screens and the metric reference
     "guide":  "https://usace-wrises.github.io/staf/walkthroughs/easi/",
 }
@@ -684,8 +686,8 @@ TOOL_NAME = "EASI"
 TOOL_FULL_NAME = "Ecosystem Assessment Screening Index"
 
 # head assets in load order; staf/ holds the scripts and styles every STAF tool shares
-HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=66"),
-        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=10"),
+HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=67"),
+        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=11"),
         ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
         *_viewer_head_tags(NATIONAL_VIEWER),
         ui.tags.script(src="staf/staf-ns.js?v=1", defer=""),
@@ -695,7 +697,7 @@ HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=66"),
         ui.tags.script(src="report-controls.js", defer=""),
         ui.tags.script(src="report-edit.js?v=2", defer=""),
         ui.tags.script(src="staf/report-ready.js?v=2", defer=""),
-        ui.tags.script(src="staf/unsaved-guard.js?v=3", defer=""),
+        ui.tags.script(src="staf/unsaved-guard.js?v=4", defer=""),
         ui.tags.script(src="staf/scenarios.js?v=2", defer=""),
         ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
         ui.tags.script(src="worksheet.js?v=11", defer=""),
@@ -1414,20 +1416,6 @@ def _xs_readonly_block(rep):
     return ui.div(panel, plot, class_="easi-xsection-wrap")
 
 
-def _dl_buttons():
-    # the report's exports, then the Excel calculator completed from this screening (the same
-    # file as Get Forms offers; the blank workbook and the metrics list are only there)
-    return ui.div(
-        staf_web.download_button("dl_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
-        staf_web.download_button("dl_csv", "CSV", class_="btn-sm btn-outline-secondary"),
-        staf_web.download_button("dl_geojson", "GeoJSON", class_="btn-sm btn-outline-secondary"),
-        (staf_web.download_button("dl_workbook", "Completed workbook", class_="btn-sm btn-outline-secondary")
-         if calculator.available() else None),
-        ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
-        class_="easi-modal-footer",
-    )
-
-
 # Display toggles above the metric table (STAF "screening" controls). Plain HTML checkboxes
 # wired by www/report-controls.js, which flips a class on #easi-report — purely client-side,
 # so toggling reveals detail instantly with no Shiny re-render (hence no flicker/spinner).
@@ -1554,11 +1542,12 @@ def _header_with_map(d, rep, geo, minimap_html=None):
         style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;")
 
 
-def _report_body(d, rep, notes, downloads, anchor=None, geo=None, minimap_html=None, summary=None):
+def _report_body(d, rep, notes, anchor=None, geo=None, minimap_html=None, summary=None):
     """Read-only report body shared by the single-site and batch modals (STAF layout).
     Ratings and notes are edited only in the Assessment worksheet, so this view never posts
     anything: the dense metric table (display toggles reveal detail client-side), the static
-    cross-section, the two-panel summary below the table, and the export row (``downloads``).
+    cross-section and the two-panel summary below the table. The downloads sit in the modal's
+    footer (``staf_web.report_footer``), pinned under the body.
     The display-toggle classes live on the stable ``#easi-report`` wrapper."""
     return ui.div(
         _anchor_banner(anchor, d),
@@ -1573,7 +1562,6 @@ def _report_body(d, rep, notes, downloads, anchor=None, geo=None, minimap_html=N
         _borrowed_footnote(rep.get("metricRows") or [], anchor),
         ui.div("Summary plots", class_="easi-section-title"),
         _summary_plots(rep),
-        downloads,
         id="easi-report", class_="show-slider",   # slider on by default (report-controls.js
     )                                             # reconciles with any saved preference)
 
@@ -1584,7 +1572,7 @@ def _report_modal(res, notes, minimap_html=None, *, summary=None, title="EASI Re
     ``summary``: the summary block (and the scenario comparison) the report opens with."""
     d, rep = res["delineation"], res.get("report") or {}
     return ui.modal(
-        _report_body(d, rep, notes, _dl_buttons(), anchor=res.get("siteAnchor"),
+        _report_body(d, rep, notes, anchor=res.get("siteAnchor"),
                      geo={"watershed": res.get("watershed_geojson"),
                           "reach": res.get("reach_geojson")}, minimap_html=minimap_html,
                      summary=summary),
@@ -1593,7 +1581,10 @@ def _report_modal(res, notes, minimap_html=None, *, summary=None, title="EASI Re
         title=ui.TagList(title,
                          ui.span("Close to review the Assessment", class_="easi-modal-hint"),
                          ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
-        size="xl", easy_close=True, footer=None,
+        size="xl", easy_close=True,
+        # the report's downloads, the same in every tool (owner, 2026-10-08)
+        footer=staf_web.report_footer("dl_pdf", "dl_csv", "dl_geojson",
+                                      workbook="dl_workbook" if calculator.available() else None),
     )
 
 
@@ -1601,24 +1592,19 @@ def _batch_report_modal(site_id, base, minimap_html=None):
     """Read-only per-site report popup for batch results — the same body as the single-site
     report. ``base`` is the site's ``metadata["_artifacts"]`` ``{"delineation","report"}`` dict."""
     d, rep = base.get("delineation") or {}, base.get("report") or {}
-    downloads = ui.div(
-        staf_web.download_button("dl_site_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
-        staf_web.download_button("dl_site_csv", "CSV", class_="btn-sm btn-outline-secondary"),
-        staf_web.download_button("dl_site_geojson", "GeoJSON", class_="btn-sm btn-outline-secondary"),
-        # batch has no Assessment page, so the site's completed calculator is offered here
-        staf_web.download_button("dl_site_calc", "Completed workbook", class_="btn-sm btn-outline-secondary"),
-        ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
-        class_="easi-modal-footer")
     summary = ui.div(ui.div("Assessment summary", class_="easi-section-title"),
                      staf_web.summary_block(easi_book.summary_info(base)), class_="staf-report-summary")
     return ui.modal(
-        _report_body(d, rep, {}, downloads, anchor=base.get("siteAnchor"),
+        _report_body(d, rep, {}, anchor=base.get("siteAnchor"),
                      geo={"watershed": base.get("watershed_geojson"),
                           "reach": base.get("reach_geojson")}, minimap_html=minimap_html,
                      summary=summary),
         title=ui.TagList(f"EASI Report: {site_id}",
                          ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
-        size="xl", easy_close=True, footer=None,
+        size="xl", easy_close=True,
+        # batch has no Assessment page, so the site's completed calculator is offered here
+        footer=staf_web.report_footer("dl_site_pdf", "dl_site_csv", "dl_site_geojson",
+                                      workbook="dl_site_calc" if calculator.available() else None),
     )
 
 
@@ -1691,26 +1677,13 @@ def _forms_modal(res):
                          ui.div(_forms_table(rows), class_="ff-table-wrap"),
                          value="metrics"),
             ui.nav_spacer(),
-            # Each download sits in its own div: Shiny's Bootstrap styles a bare
-            # ``.nav-pills > li > a`` as a nav link (link-blue text, no button
-            # chrome), and the wrapper keeps the anchors real buttons.
-            ui.nav_control(ui.div(staf_web.download_button(
-                "dl_forms_pdf", "Desktop metrics PDF", class_="btn-sm btn-primary",
-                title="The 20 desktop metrics with this site's values, ratings and sources"),
-                class_="ff-dl")),
-            *((ui.nav_control(ui.div(staf_web.download_button(
-                "dl_forms_filled", "Completed workbook", class_="btn-sm btn-primary",
-                title="The EASI calculator with this site's values, your ratings and your notes entered"),
-                class_="ff-dl")),
-               ui.nav_control(ui.div(staf_web.download_button(
-                   "dl_forms_blank", "Blank workbook", class_="btn-sm btn-primary",
-                   title="The EASI calculator with empty entry cells"),
-                   class_="ff-dl")))
-              if calculator.available() else
-              (ui.nav_control(ui.div("No calculator workbook for this method version",
-                                     class_="ff-dl ff-dl-note")),)),
+            # the downloads every tool's Get Forms offers (owner, 2026-10-08); EASI has no field forms
+            *staf_web.forms_downloads(
+                ("dl_forms_pdf", "Desktop metrics PDF",
+                 "The 20 desktop metrics with this site's values, ratings and sources"),
+                workbooks=("dl_forms_filled", "dl_forms_blank") if calculator.available() else None),
             id="gf_tabs", selected="metrics"),
-        title="Get Forms", easy_close=True, size="xl",
+        title=staf_web.FORMS_TITLE, easy_close=True, size="xl",
         footer=ui.modal_button("Close"), class_="ff-modal-body")
 
 
@@ -2923,7 +2896,7 @@ def server(input, output, session):
         _reset()
 
     @reactive.effect
-    @reactive.event(input.close_modal, input.close_modal_x)
+    @reactive.event(input.close_modal_x)
     def _close_modal():
         ui.modal_remove()
 
@@ -4495,25 +4468,25 @@ def server(input, output, session):
         _xs_unit_prev.set(new)
 
     # ---- downloads (reflect current overrides) ----
-    @render.download(filename=lambda: f"easi_report{staf_web.scenario_suffix(_sc['set'])}.pdf")
+    @render.download(filename=lambda: f"easi-report{staf_web.scenario_suffix(_sc['set'])}.pdf")
     def dl_pdf():
         res = export_result()
         if res:
             yield report.build_pdf(res, scenario=staf_web.report_scenario(_sc["set"]))
 
-    @render.download(filename=lambda: f"easi_report{staf_web.scenario_suffix(_sc['set'])}.csv")
+    @render.download(filename=lambda: f"easi-report{staf_web.scenario_suffix(_sc['set'])}.csv")
     def dl_csv():
         res = export_result()
         if res:
             yield report.build_csv(res)
 
-    @render.download(filename=lambda: f"easi_report{staf_web.scenario_suffix(_sc['set'])}.geojson")
+    @render.download(filename=lambda: f"easi-report{staf_web.scenario_suffix(_sc['set'])}.geojson")
     def dl_geojson():
         res = export_result()
         if res:
             yield report.build_geojson(res).encode("utf-8")
 
-    @render.download(filename=lambda: calculator.filled_filename(export_result()), media_type=staf_web.XLSX_MEDIA_TYPE)
+    @render.download(filename=lambda: calculator.filled_filename(), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_workbook():
         # the report footer's copy of Get Forms' completed workbook
         data = _workbook_bytes()
@@ -4522,13 +4495,13 @@ def server(input, output, session):
 
     # ---- Get Forms downloads: the list as a PDF, and the Excel calculator completed
     #      from this screening (values, the override scores and the notes) or blank ----
-    @render.download(filename=lambda: report.desktop_metrics_filename(export_result()))
+    @render.download(filename=lambda: report.desktop_metrics_filename())
     def dl_forms_pdf():
         res = export_result()
         if res:
             yield report.build_desktop_metrics_pdf(res)
 
-    @render.download(filename=lambda: calculator.filled_filename(export_result()), media_type=staf_web.XLSX_MEDIA_TYPE)
+    @render.download(filename=lambda: calculator.filled_filename(), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_forms_filled():
         data = _workbook_bytes()
         if data:
@@ -4915,12 +4888,6 @@ def server(input, output, session):
             return
         _begin_report(base, batch=obj, index=int(idx))
 
-    def _modal_site_file(ext, kind="report"):
-        with reactive.isolate():
-            sid = (batch_modal_site() or {}).get("site_id") or "site"
-        safe = "".join(ch if ch.isalnum() or ch in "-._" else "_" for ch in sid)
-        return f"easi_{safe}_{kind}.{ext}"
-
     def _modal_download_base():
         base = (batch_modal_site() or {}).get("base")
         if base and "_viewer_binding" in base and not _viewer_binding_current(
@@ -4930,25 +4897,25 @@ def server(input, output, session):
             return None
         return base
 
-    @render.download(filename=lambda: _modal_site_file("pdf"))
+    @render.download(filename="easi-report.pdf")
     def dl_site_pdf():
         base = _modal_download_base()
         if base:
             yield report.build_pdf(base)
 
-    @render.download(filename=lambda: _modal_site_file("csv"))
+    @render.download(filename="easi-report.csv")
     def dl_site_csv():
         base = _modal_download_base()
         if base:
             yield report.build_csv(base)
 
-    @render.download(filename=lambda: _modal_site_file("geojson"))
+    @render.download(filename="easi-report.geojson")
     def dl_site_geojson():
         base = _modal_download_base()
         if base:
             yield report.build_geojson(base).encode("utf-8")
 
-    @render.download(filename=lambda: _modal_site_file("xlsx", "calculator"), media_type=staf_web.XLSX_MEDIA_TYPE)
+    @render.download(filename=calculator.filled_filename(), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_site_calc():
         # the calculator completed from this batch site's result (batch has no Assessment
         # page, so Get Forms is not reachable from here)

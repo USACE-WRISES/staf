@@ -53,8 +53,9 @@ OUTCOMES = {CATALOG: "catalog", EARLIER: "earlier_version", OTHER: "borrowed",
 THRESHOLDS, BREAKPOINTS = "thresholds", "breakpoints"
 #: the ``curve_source`` of a chosen curve's row
 CURVE_SOURCE = "owner"
-#: the versions another assessment offers: the ones DEEP accepts for new work
-ELIGIBLE_STATUSES = ("preliminary", "certified")
+#: the versions another assessment offers: the ones DEEP accepts for new work (Draft,
+#: Preliminary and Final since 2026-10-08, when shown in DEEP)
+ELIGIBLE_STATUSES = ("draft", "preliminary", "certified")
 #: at most this many earlier curves of this assessment are offered
 MAX_EARLIER = 3
 #: the index a count criterion anchors at (only read for counts; kept for the
@@ -616,7 +617,8 @@ def library_options(metric: str, *, region_code: str, current=None) -> list[dict
         seen: set = set()
         for v in _versions(aid):
             status = lib.version_status(aid, v)
-            if not is_mine and status not in ELIGIBLE_STATUSES:
+            if not is_mine and (status not in ELIGIBLE_STATUSES
+                                or not lib.version_visible_in_deep(aid, v)):
                 continue
             got = _bundle_entry(aid, v, mid)
             entry = (got or {}).get("entry")

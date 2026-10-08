@@ -14,7 +14,8 @@
  *
  * The sidebar (markup in app.py _tool_body, layout in deep.css): a search over the region names
  * (an all-digit query matches the Level III code exactly), then one row per region: its name, its
- * version, "In use" for the assessment the site uses and "Final" when certified. Hovering a row
+ * status (Draft, Preliminary or Final, in its map color), its version and "In use" for the
+ * assessment the site uses. Hovering a row
  * highlights its region; clicking it selects the region and fits the map to it. The search
  * filters the map too. Open or closed is the deep-cov-open class on DEEP's body (.easi-shell),
  * remembered per browser; the map's right-hand controls make room (deep.css). Closed, the
@@ -23,9 +24,11 @@
  * stacking context and anything floated over it would cover the Layers menu.
  *
  * Server contract: the page posts `coverage_ready` (DEEP's own input) until the server answers.
- * `deep_coverage` brings {features:[{assessmentId, name, code, version, status, certified,
- * geometry}]} once; `deep_coverage_current` brings {assessmentId, identify, focus} whenever the
- * assessment in use or the step changes (focus: show that region once, for a link).
+ * `deep_coverage` brings {features:[{assessmentId, name, code, version, status, lifecycle,
+ * certified, geometry}]} once (lifecycle: draft | preliminary | certified; status is its label);
+ * `deep_coverage_current` brings {assessmentId, identify, focus} whenever the
+ * assessment in use or the step changes (focus: show that region once, for a link). The Layers
+ * checkbox also hides the legend's region key (the deep-regions-off class on DEEP's body).
  *
  * In the STAF app DEEP shares the page with EASI and SFARI, whose maps may come first: DEEP's map
  * is the Leaflet map whose container sits in DEEP's body (staf/staf-ns.js), and the capture and the
@@ -40,17 +43,30 @@
   function body() { return NS.scope(root()); }
   function shell() { return root() || document.querySelector(".easi-shell"); }
 
-  // Styles, by state. The fill is the warm grey measured for the topo basemap (0.12 moves its
-  // luminance by ~14, a light shading far below the delineated watershed's 0.40 yellow); the
-  // outline is slate, never the streams' blue.
+  // A region's colors are its status's (owner, 2026-10-08): Draft gray (the warm grey measured
+  // for the topo basemap, with a slate outline), Preliminary amber, Final blue. app.py
+  // REGION_STATUS_STYLE holds the same colors and tests/test_region_status.py keeps the two equal.
+  var STATUS = {
+    draft: { label: "Draft", line: "#475569", fill: "#6b6459", chip: "deep-cov-draft" },
+    preliminary: { label: "Preliminary", line: "#b45309", fill: "#d97706", chip: "deep-cov-prelim" },
+    certified: { label: "Final", line: "#303f9f", fill: "#3f51b5", chip: "deep-cov-final" },
+  };
+  // Styles, by state: an active or passive region takes its status's colors (a 0.12 fill moves the
+  // basemap's luminance by ~14, a light shading far below the delineated watershed's 0.40
+  // yellow); hover and selection are navy whatever the status.
   var STYLE = {
-    active: { color: "#475569", weight: 1, opacity: 0.8, fillColor: "#6b6459", fillOpacity: 0.12, dashArray: null },
-    hover: { color: "#2f4b7c", weight: 2.25, opacity: 1, fillColor: "#6b6459", fillOpacity: 0.22, dashArray: null },
+    active: { weight: 1, opacity: 0.8, fillOpacity: 0.12, dashArray: null },
+    hover: { color: "#2f4b7c", weight: 2.25, opacity: 1, fillOpacity: 0.22, dashArray: null },
     selected: { color: "#2f4b7c", weight: 2.5, opacity: 1, fillColor: "#2f4b7c", fillOpacity: 0.14, dashArray: null },
     selectedHover: { color: "#2f4b7c", weight: 2.5, opacity: 1, fillColor: "#2f4b7c", fillOpacity: 0.22, dashArray: null },
-    passive: { color: "#475569", weight: 1.25, opacity: 0.55, fillOpacity: 0, dashArray: "6 5" },
+    passive: { weight: 1.25, opacity: 0.55, fillOpacity: 0, dashArray: "6 5" },
     passiveSelected: { color: "#2f4b7c", weight: 2, opacity: 0.9, fillOpacity: 0, dashArray: null },
   };
+  // a feature's status: its lifecycle, else (a server from before Drafts showed) Final when certified
+  function statusOf(f) {
+    if (f && STATUS[f.lifecycle]) return f.lifecycle;
+    return f && f.certified ? "certified" : "preliminary";
+  }
 
   var features = [], byId = {}, layers = {}, rows = {};
   var map = null, Lm = null, pane = null, tip = null, setupDone = false;
@@ -145,11 +161,13 @@
   }
 
   function styleFor(aid) {
-    var on = aid === selected;
+    var on = aid === selected, s = STATUS[statusOf(byId[aid])];
     // passive, only a row of the list can hover a region: it shows the way a selected one does
-    if (passive) return on || aid === hovered ? STYLE.passiveSelected : STYLE.passive;
-    if (aid === hovered) return on ? STYLE.selectedHover : STYLE.hover;
-    return on ? STYLE.selected : STYLE.active;
+    if (passive) {
+      return on || aid === hovered ? STYLE.passiveSelected : Object.assign({}, STYLE.passive, { color: s.line });
+    }
+    if (aid === hovered) return on ? STYLE.selectedHover : Object.assign({}, STYLE.hover, { fillColor: s.fill });
+    return on ? STYLE.selected : Object.assign({}, STYLE.active, { color: s.line, fillColor: s.fill });
   }
   function restyle(aid) {
     var lyr = layers[aid];
@@ -316,6 +334,8 @@
     visible = !!on;
     if (!visible) leave();
     document.querySelectorAll(".deep-regions-toggle").forEach(function (box) { box.checked = visible; });
+    var s = shell();
+    if (s) s.classList.toggle("deep-regions-off", !visible);   // the legend's region key goes too
     applyFilter();
   }
 
@@ -399,9 +419,10 @@
       row.setAttribute("type", "button");
       row.setAttribute("data-aid", aid);
       row.setAttribute("title", f.name + (meta(f) ? " (" + meta(f) + ")" : ""));
+      var st = STATUS[f.lifecycle];
       row.appendChild(el("span", "deep-cov-name", f.name));
       row.appendChild(el("span", "deep-cov-chip deep-cov-use", "In use"));
-      if (f.certified) row.appendChild(el("span", "deep-cov-chip deep-cov-final", "Final"));
+      row.appendChild(el("span", "deep-cov-chip " + st.chip, st.label));
       if (f.version != null && f.version !== "") row.appendChild(el("span", "deep-cov-chip deep-cov-ver", "v" + f.version));
       row.addEventListener("mouseenter", function () { hover(aid); });
       row.addEventListener("mouseleave", function () { unhover(aid); });
@@ -517,9 +538,10 @@
     gotCoverage = true;
     features = ((msg && msg.features) || []).filter(function (f) { return f && f.assessmentId; })
       .map(function (f) {
+        var life = statusOf(f);
         return { assessmentId: f.assessmentId, name: String(f.name || f.assessmentId),
-                 code: f.code == null ? "" : String(f.code), version: f.version, status: f.status || "",
-                 certified: !!f.certified, geometry: f.geometry };
+                 code: f.code == null ? "" : String(f.code), version: f.version,
+                 status: f.status || STATUS[life].label, lifecycle: life, geometry: f.geometry };
       })
       .sort(function (a, b) { return a.name.localeCompare(b.name); });
     byId = {};

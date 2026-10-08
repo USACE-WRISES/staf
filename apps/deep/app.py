@@ -73,6 +73,17 @@ HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 3, "opacity": 0.9}
 SCORED_REACH_STYLE = {"color": "#1f6feb", "weight": 11, "opacity": 0.3}
 # Dashed connector from a clicked HR-only stream to its nearest StreamCat reach.
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
+#: The assessment regions' colors by status (owner, 2026-10-08): Draft gray, Preliminary amber,
+#: Final blue, outline over a light fill. www/coverage.js STATUS holds the same colors
+#: (tests/test_region_status.py keeps them equal); hover and selection stay navy (#2f4b7c).
+REGION_STATUS_STYLE = {
+    "draft": {"label": "Draft", "color": "#475569", "fillColor": "#6b6459"},
+    "preliminary": {"label": "Preliminary", "color": "#b45309", "fillColor": "#d97706"},
+    "certified": {"label": "Final", "color": "#303f9f", "fillColor": "#3f51b5"},
+}
+#: The status badges, in the same three colors (styles.css .deep-badge-*).
+_BADGE_CLASS = {"draft": "deep-badge-draft", "preliminary": "deep-badge-prelim",
+                "certified": "deep-badge-cert"}
 LAYER_STREAMS = "Streams"
 LAYER_COVERAGE = "StreamCat coverage"
 LAYER_SCORED = "StreamCat source reach"
@@ -721,6 +732,12 @@ def _assessment_facts(la, ref) -> dict:
     }
 
 
+def _badge_class(lifecycle) -> str:
+    """The status badge's class: Draft gray, Preliminary amber, Final blue (the map's colors);
+    a status DEEP does not run reads as preliminary, as ``session.lifecycle_status`` reads it."""
+    return _BADGE_CLASS[session.lifecycle_status({"lifecycle": lifecycle})]
+
+
 def _assessment_pane_block(la, ref, *, can_change: bool, covers_site: bool = True):
     """The resolved-assessment block that sits under the basin card.
 
@@ -729,7 +746,7 @@ def _assessment_pane_block(la, ref, *, can_change: bool, covers_site: bool = Tru
     one candidate almost every time.
     """
     f = _assessment_facts(la, ref)
-    badge_cls = "deep-badge-cert" if f["lifecycle"] == "certified" else "deep-badge-prelim"
+    badge_cls = _badge_class(f["lifecycle"])
     meta = ([f'v{f["version"]}'] if f["version"] else []) + [f["counts"]]
     lines = []
     if f["region"]:
@@ -737,6 +754,9 @@ def _assessment_pane_block(la, ref, *, can_change: bool, covers_site: bool = Tru
     lines.append(ui.div(" · ".join(meta), class_="deep-pane-line"))
     if f["tier"]:
         lines.append(ui.div(f'Reference tier: {f["tier"]}', class_="deep-pane-line"))
+    if f["lifecycle"] == "draft":
+        lines.append(ui.div("Draft assessment: its curves have not been reviewed yet.",
+                            class_="deep-pane-note"))
     if f["best_available"]:
         lines.append(ui.div("Scores compare the site with the best remaining streams of the "
                             "region, not with unimpaired condition.", class_="deep-pane-note"))
@@ -863,12 +883,33 @@ def _engine_line_ui(es: dict, running: bool, prog: dict):
     return None
 
 
+def _region_key(regions):
+    """The legend's key to the assessment regions (Identify): one swatch per status the map
+    shows, in :data:`REGION_STATUS_STYLE`'s order. The Layers menu's Assessment regions box
+    hides it with the regions (www/coverage.js, deep.css)."""
+    rows = []
+    for status, style in REGION_STATUS_STYLE.items():
+        if status not in regions:
+            continue
+        rgb = tuple(int(style["fillColor"][i:i + 2], 16) for i in (1, 3, 5))
+        swatch = (f"--swatch-line:{style['color']};"
+                  f"--swatch-fill:rgba({rgb[0]},{rgb[1]},{rgb[2]},.28);")
+        rows.append(ui.div(ui.span(class_="deep-reg-sw", style=swatch),
+                           ui.div(style["label"], class_="easi-legend-label"),
+                           class_="easi-legend-row"))
+    if not rows:
+        return None
+    return ui.div(ui.div("Assessment regions", class_="easi-legend-sub"), *rows,
+                  class_="deep-reg-key")
+
+
 def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
                streams_visible=True, source_visible=False, route_visible=False,
-               unavailable=False):
+               unavailable=False, regions=()):
     """A compact map key; source details appear only with the optional coverage view.
     ``unavailable`` (the stream service did not answer) replaces the stream rows
-    with a short notice and the Try again button, at any zoom."""
+    with a short notice and the Try again button, at any zoom. ``regions``: the statuses
+    of the assessment regions on the map, keyed on Identify."""
     if step not in (STEP_IDENTIFY, STEP_BASIN):
         return None
 
@@ -929,6 +970,8 @@ def _legend_ui(step, zoomed, mode, reach, routed, *, coverage=False,
         rows.append(row(SCORED_REACH_STYLE["color"], f"{what}: {name}", glow=True))
     if coverage and streams_visible and route_visible:
         rows.append(row(ROUTE_STYLE["color"], "Connection to source", dashed=True))
+    if step == STEP_IDENTIFY:
+        rows.append(_region_key(regions))
     if step == STEP_BASIN:
         rows.append(row(WATERSHED_STYLE["fillColor"], "Watershed", fill=True))
         rows.append(row(REACH_STYLE["color"], "Assessment reach"))
@@ -1035,15 +1078,17 @@ def _stepper(active):
 # --------------------------------------------------------------------------- #
 # STAF top banner — a single link back to the STAF site; cross-links to the
 # other tier apps were removed to keep the banner minimal. STAF_LINKS still
-# carries every app URL: it is the in-app half of the URL mirror (see README).
-# StreamCurves ships as StreamCurves Desktop, so "curves" is its latest release.
+# carries every app URL: it is the in-app half of the URL mirror (docs/_data/
+# apps.yml; the site-link tests check it). EASI, SFARI and DEEP open inside the
+# STAF app (?tool=), the one web deployment since 2026-10-08; StreamCurves ships
+# as StreamCurves Desktop, so "curves" is its latest release.
 # --------------------------------------------------------------------------- #
 STAF_LINKS = {
     "home":   "https://usace-wrises.github.io/staf/",
-    "easi":   "https://gtmenichino-easi.share.connect.posit.cloud/",
-    "sfari":  "https://gtmenichino-sfari.share.connect.posit.cloud/",
+    "easi":   "https://gtmenichino-staf.share.connect.posit.cloud/?tool=easi",
+    "sfari":  "https://gtmenichino-staf.share.connect.posit.cloud/?tool=sfari",
     "curves": "https://github.com/USACE-WRISES/staf/releases/latest",
-    "deep":   "https://gtmenichino-deep.share.connect.posit.cloud/",
+    "deep":   "https://gtmenichino-staf.share.connect.posit.cloud/?tool=deep",
     # the DEEP guide on the STAF site: how scoring works and the metric reference
     "guide":  "https://usace-wrises.github.io/staf/walkthroughs/deep/",
 }
@@ -1086,9 +1131,9 @@ TOOL_NAME = "DEEP"
 TOOL_FULL_NAME = "Detailed Evaluation of Ecosystem Processes"
 
 # head assets in load order; staf/ holds the scripts and styles every STAF tool shares
-HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=26"),
-        ui.tags.link(rel="stylesheet", href="deep.css?v=15"),
-        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=10"),
+HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=27"),
+        ui.tags.link(rel="stylesheet", href="deep.css?v=16"),
+        ui.tags.link(rel="stylesheet", href="staf/staf.css?v=11"),
         ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
         ui.tags.script(src="staf/staf-ns.js?v=1", defer=""),
         ui.tags.script(src="staf/geocode-autocomplete.js", defer=""),
@@ -1096,11 +1141,11 @@ HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=26"),
         ui.tags.script(src="staf/tooltip.js", defer=""),
         ui.tags.script(src="staf/coord-entry.js", defer=""),
         ui.tags.script(src="staf/report-ready.js?v=2", defer=""),
-        ui.tags.script(src="staf/unsaved-guard.js?v=3", defer=""),
+        ui.tags.script(src="staf/unsaved-guard.js?v=4", defer=""),
         ui.tags.script(src="staf/scenarios.js?v=2", defer=""),
         ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
         ui.tags.script(src="measure.js?v=8", defer=""),
-        ui.tags.script(src="coverage.js?v=6", defer=""))
+        ui.tags.script(src="coverage.js?v=7", defer=""))
 
 
 def _nav_actions(prefix=""):
@@ -1478,6 +1523,7 @@ def server(input, output, session_):  # noqa: C901
     # deep_coverage_current says which assessment is in use (the site's, or a linked one; a link
     # asks the map to show its region once) and whether the regions take clicks (Identify only).
     _coverage = {"sent": False, "focus": False}
+    region_statuses = reactive.value(())        # the statuses the map's regions show (legend)
 
     def _coverage_state():
         la = loaded_assessment()
@@ -1494,15 +1540,18 @@ def server(input, output, session_):  # noqa: C901
         payload = []
         for f in assessments.library_region_features().get("features") or []:
             p = f.get("properties") or {}
+            life = session.lifecycle_status({"lifecycle": p.get("lifecycle")})
             payload.append({
                 "assessmentId": p.get("assessmentId"),
                 "name": p.get("regionName") or p.get("assessmentName") or p.get("assessmentId"),
                 "code": p.get("regionCode") or "",
                 "version": p.get("version"),
-                "status": session.status_label(p.get("lifecycle")),
-                "certified": p.get("lifecycle") == "certified",
+                "status": session.status_label(life),
+                "lifecycle": life,
+                "certified": life == "certified",
                 "geometry": f.get("geometry"),
             })
+        region_statuses.set(tuple(sorted({p["lifecycle"] for p in payload})))
         await session_.send_custom_message("deep_coverage", {"features": payload})
         await session_.send_custom_message("deep_coverage_current", _coverage_state())
 
@@ -2394,8 +2443,9 @@ def server(input, output, session_):  # noqa: C901
             "reference curve and the reference tier it was drawn at), and turns your measured "
             "metric values into function scores that roll up to Physical / Chemical / Biological "
             "outcome sub-indices and an Ecosystem Condition Index. Assessments are built in the "
-            "companion StreamCurves builder and are preliminary until the scientific team "
-            "certifies them.\n\n"
+            "companion StreamCurves builder, and each is labeled with its status: a Draft (gray "
+            "on the map) has not been reviewed yet, a Preliminary one (amber) has been reviewed, "
+            "and a Final one (blue) has been certified by the scientific team.\n\n"
             "Two watershed engines answer the desktop metrics. The STAF site engine "
             "computes the HR reach watershed: the drainage area of the high-resolution "
             "NHD reach the point snaps to, built from NHDPlus HR catchments and checked "
@@ -2418,7 +2468,8 @@ def server(input, output, session_):  # noqa: C901
             "in the Layers menu starts off; enabling it shows StreamCat reaches in "
             "blue, other streams in cyan, and the selected source reach and downstream "
             "connector. It changes only the display. Zoomed out, the shaded regions are "
-            "DEEP's assessments: hover one for its name, click it to zoom in, or find one "
+            "DEEP's assessments, colored by status (gray Draft, amber Preliminary, blue "
+            "Final): hover one for its name, click it to zoom in, or find one "
             "in the **Assessment regions** list. Every click "
             "snaps to the high-resolution NHD. Wait for the StreamCat lookup to finish "
             "before clicking **Delineate**. Temporary failures are retried up to three "
@@ -2428,8 +2479,8 @@ def server(input, output, session_):  # noqa: C901
             "the assessment reach, usually in under a minute and up to about five "
             "minutes on a large basin.\n"
             "2. **Basin**: review the watershed and reach. The published assessment "
-            "whose area of applicability covers your site is resolved here (certified "
-            "before preliminary); use **Change** when more than one applies.\n"
+            "whose area of applicability covers your site is resolved here (Final before "
+            "Preliminary before Draft); use **Change** when more than one applies.\n"
             "3. **Assessment**: enter each metric's measured value; the reference curve converts "
             "it to an index and the function and outcome scores update live. Metrics DEEP can "
             "answer from desktop data fill in on their own, marked **Desktop**, and stay "
@@ -2642,14 +2693,15 @@ def server(input, output, session_):  # noqa: C901
                           streams_visible=streams_visible(), source_visible=glow,
                           route_visible=route,
                           unavailable=(streams_down()
-                                       and streams_mode() in ("hr-unavailable", "hr-partial")))
+                                       and streams_mode() in ("hr-unavailable", "hr-partial")),
+                          regions=region_statuses())
 
     # ======================================================================= #
     # Assessment resolution (Basin step)
     # ======================================================================= #
     # covering_refs() groups the eligible versions per covering assessment id and sorts
-    # certified before preliminary, so the first entry is the one to adopt. The card grid
-    # is unchanged, it just lives behind "Change" now.
+    # Final before Preliminary before Draft, so the first entry is the one to adopt. The card
+    # grid is unchanged, it just lives behind "Change" now.
     _MAX_ASSESS_CARDS = 16
 
     @reactive.calc
@@ -2712,7 +2764,7 @@ def server(input, output, session_):  # noqa: C901
             default_life = life_by_ref.get(entry["defaultRef"], "preliminary")
             tier_by_ref = entry.get("referenceTierByRef") or {}
             default_tier = _tier_label(tier_by_ref.get(entry["defaultRef"]))
-            badge_cls = "deep-badge-cert" if default_life == "certified" else "deep-badge-prelim"
+            badge_cls = _badge_class(default_life)
             is_sel = sel is not None and sel in refs
             pick_label = "✓ Selected" if is_sel else "Select this assessment"
             pick_cls = "btn btn-sm btn-primary" if is_sel else "btn btn-sm btn-outline-primary"
@@ -3547,13 +3599,13 @@ def server(input, output, session_):  # noqa: C901
             id="deep-report")
         return ui.modal(
             body, title=_report_title(), easy_close=True, size="xl",
-            footer=ui.div(staf_web.download_button("dl_pdf", "PDF", class_="btn-sm"),
-                          staf_web.download_button("dl_csv", "CSV", class_="btn-sm"),
-                          staf_web.download_button("dl_geojson", "GeoJSON", class_="btn-sm"),
-                          ui.modal_button("Close"),
-                          style="display:flex;gap:8px;align-items:center;"))
+            # the report's downloads, the same in every tool (owner, 2026-10-08): the completed
+            # workbook only when a calculator is published for the loaded version
+            footer=staf_web.report_footer(
+                "dl_pdf", "dl_csv", "dl_geojson",
+                workbook="dl_calc_filled" if _calculator_template() is not None else None))
 
-    # ---- the Field Forms dialog (SFARI's shell, 2026-09-19) ----
+    # ---- the Get Forms dialog (SFARI's shell, 2026-09-19) ----
     # One modal, size xl. The shell is static: the site line, the tab strip with
     # the downloads, and the Close button never re-render, so the open tab and
     # the table's scroll position survive every update. Three outputs inside
@@ -3578,26 +3630,6 @@ def server(input, output, session_):  # noqa: C901
 
     def _field_forms_modal():
         has_calc = _calculator_template() is not None
-        # Each download sits in its own div: Shiny's Bootstrap styles a bare
-        # ``.nav-pills > li > a`` as a nav link, and the wrapper keeps the anchors
-        # real buttons. The four buttons are equals.
-        downloads = [
-            ui.nav_control(ui.div(staf_web.download_button("dl_field_forms", "Field forms PDF",
-                                                     class_="btn-sm btn-primary"),
-                                  class_="ff-dl")),
-            ui.nav_control(ui.div(staf_web.download_button("dl_metrics_pdf", "Metrics PDF",
-                                                     class_="btn-sm btn-primary"),
-                                  class_="ff-dl")),
-        ]
-        if has_calc:
-            downloads += [
-                ui.nav_control(ui.div(staf_web.download_button("dl_calc_filled", "Completed workbook",
-                                                         class_="btn-sm btn-primary"),
-                                      class_="ff-dl")),
-                ui.nav_control(ui.div(staf_web.download_button("dl_calc_blank", "Blank workbook",
-                                                         class_="btn-sm btn-primary"),
-                                      class_="ff-dl")),
-            ]
         return ui.modal(
             ui.output_ui("ff_site"),
             ui.navset_pill(
@@ -3608,12 +3640,12 @@ def server(input, output, session_):  # noqa: C901
                 ui.nav_panel("Field forms preview", ui.output_ui("ff_preview"),
                              value="preview"),
                 ui.nav_spacer(),
-                *downloads,
+                # the downloads every tool's Get Forms offers (owner, 2026-10-08); without a
+                # calculator for the loaded version, a note stands where the workbooks would be
+                *staf_web.forms_downloads(("dl_metrics_pdf", "Metrics PDF"), field_forms="dl_field_forms",
+                                          workbooks=("dl_calc_filled", "dl_calc_blank") if has_calc else None),
                 id="ff_tabs", selected="metrics"),
-            (None if has_calc else
-             ui.div("No Excel calculator is published for this version of the assessment.",
-                    class_="ff-site")),
-            title="Field Forms", easy_close=True, size="xl",
+            title=staf_web.FORMS_TITLE, easy_close=True, size="xl",
             footer=ui.modal_button("Close"), class_="ff-modal-body")
 
     _FF_BADGE = {
@@ -3809,7 +3841,7 @@ def server(input, output, session_):  # noqa: C901
             return
         yield template
 
-    @render.download(filename=lambda: calculator.filled_filename(loaded_assessment(), delin()), media_type=staf_web.XLSX_MEDIA_TYPE)
+    @render.download(filename=lambda: calculator.filled_filename(loaded_assessment()), media_type=staf_web.XLSX_MEDIA_TYPE)
     def dl_calc_filled():
         template = _calculator_template()
         if template is None:

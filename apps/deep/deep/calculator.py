@@ -158,20 +158,18 @@ def _remote_template(ref: str, digest: str) -> Optional[bytes]:
         return None
 
 
+def _ref_slug(assessment) -> str:
+    return (assessment_ref(assessment) or "assessment").replace("@", "-")
+
+
 def blank_filename(assessment) -> str:
-    ref = (assessment_ref(assessment) or "assessment").replace("@", "-")
-    return f"deep-calculator-{ref}.xlsx"
+    """``deep-calculator-<id>-v<N>-blank.xlsx``: the version's calculator with empty entries."""
+    return f"deep-calculator-{_ref_slug(assessment)}-blank.xlsx"
 
 
-def filled_filename(assessment, delineation=None) -> str:
-    ref = (assessment_ref(assessment) or "assessment").replace("@", "-")
-    dl = (delineation or {}).get("delineation") or {}
-    site = ""
-    if dl.get("network") == "nhdplus-hr" and dl.get("nhdplus_id") not in (None, "", "None"):
-        site = f"-nhdplusid-{dl['nhdplus_id']}"
-    elif dl.get("comid") not in (None, "", "None"):
-        site = f"-comid-{dl['comid']}"
-    return f"deep-calculator-{ref}{site}.xlsx"
+def filled_filename(assessment) -> str:
+    """``deep-calculator-<id>-v<N>.xlsx``: plain, with no site id (owner, 2026-10-08)."""
+    return f"deep-calculator-{_ref_slug(assessment)}.xlsx"
 
 
 # --------------------------------------------------------------------------- #

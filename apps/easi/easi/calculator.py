@@ -508,9 +508,6 @@ def build_filled(result: dict, *, today: _dt.date | None = None) -> bytes:
     return _repack(source, {sheet_part: filled.encode("utf-8")})
 
 
-def filled_filename(result: dict) -> str:
-    """``easi-calculator-comid-<id>.xlsx`` (or NHDPlusID, or coordinates)."""
-    from . import report          # local: report imports the plotting stack
-
-    slug = report.site_slug(result)
-    return f"easi-calculator-{slug}.xlsx" if slug else "easi-calculator.xlsx"
+def filled_filename() -> str:
+    """The completed workbook's download name: plain, with no site id (owner, 2026-10-08)."""
+    return "easi-calculator.xlsx"

@@ -1,11 +1,8 @@
-{% assign easi = site.data.apps | where: "id", "easi" | first %}
-{% assign sfari = site.data.apps | where: "id", "sfari" | first %}
-{% assign deep = site.data.apps | where: "id", "deep" | first %}
 <section class="tier-comparison-widget" data-tier-comparison="true" aria-label="Tier comparison matrix">
   <div class="tier-comparison-grid" role="list" aria-label="Tier comparison cards">
     <article class="tier-comparison-card" data-tier="screening" role="listitem">
       <h3 class="tier-comparison-card-title">
-        <a class="tier-comparison-tier-link" href="{{ easi.url }}" target="_blank" rel="noopener">Screening</a>
+        <a class="tier-comparison-tier-link" href="{{ site.baseurl }}/tools/#easi">Screening</a>
       </h3>
 
       <section class="tier-comparison-block">
@@ -47,7 +44,7 @@
 
     <article class="tier-comparison-card" data-tier="rapid" role="listitem">
       <h3 class="tier-comparison-card-title">
-        <a class="tier-comparison-tier-link" href="{{ sfari.url }}" target="_blank" rel="noopener">Rapid</a>
+        <a class="tier-comparison-tier-link" href="{{ site.baseurl }}/tools/#sfari">Rapid</a>
       </h3>
 
       <section class="tier-comparison-block">
@@ -89,7 +86,7 @@
 
     <article class="tier-comparison-card" data-tier="detailed" role="listitem">
       <h3 class="tier-comparison-card-title">
-        <a class="tier-comparison-tier-link" href="{{ deep.url }}" target="_blank" rel="noopener">Detailed</a>
+        <a class="tier-comparison-tier-link" href="{{ site.baseurl }}/tools/#deep">Detailed</a>
       </h3>
 
       <section class="tier-comparison-block">

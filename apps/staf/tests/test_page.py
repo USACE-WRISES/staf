@@ -145,11 +145,16 @@ def test_the_mounts_never_cover_the_root(staf):
     assert all(Path(folder).is_dir() and Path(folder).is_absolute() for folder in mounts.values())
 
 
-def test_a_tool_that_cannot_run_here_links_its_standalone_app(staf):
+def test_a_tool_that_cannot_run_here_points_to_its_calculator(staf):
+    """The standalone apps are retired (2026-10-08): a tool STAF cannot load points to its
+    spreadsheet calculator on the site's Apply STAF page, never back into STAF."""
+    from staf_shell.loader import SITE, Tool
     for key in ORDER:
-        tool = staf.TOOLS[key]
-        if tool.ok:
-            continue
+        tool = Tool(key, staf.TOOLS[key].root, error="RuntimeError: boom")     # no module: not ok
         html = str(shell_ui.section(tool))
-        assert f"{tool.name} is not available here" in html and tool.standalone in html
-        assert re.search(rf'data-tool="{key}"[^>]*disabled|disabled[^>]*data-tool="{key}"', _page(staf))
+        assert f"{tool.name} is not available here" in html and "RuntimeError: boom" in html
+        assert tool.calculator_page == f"{SITE}tools/#{key}" and f'href="{tool.calculator_page}"' in html
+        assert f'href="{SITE}{key}/"' not in html and "standalone" not in html
+    for key in ORDER:
+        if not staf.TOOLS[key].ok:
+            assert re.search(rf'data-tool="{key}"[^>]*disabled|disabled[^>]*data-tool="{key}"', _page(staf))

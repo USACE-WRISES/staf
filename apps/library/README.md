@@ -7,7 +7,7 @@ Canonical, version-controlled home for **completed STAF assessment methods** bui
 This folder is the *contract*, not shared code. StreamCurves and DEEP each carry their own
 small reader/writer that follows the format below (the same "mirror the format, don't share the
 file" pattern the repo already uses for `.deep.json` bundles). This is deliberate: DEEP
-deploys as an isolated Posit Connect Cloud content item and StreamCurves runs on users'
+deploys inside the STAF app, an isolated Posit Connect Cloud content item, and StreamCurves runs on users'
 machines (StreamCurves Desktop), with no shared runtime filesystem, so nothing here can be
 imported across apps at runtime.
 
@@ -16,13 +16,14 @@ imported across apps at runtime.
 | App | Access | When |
 |---|---|---|
 | StreamCurves (`streamcurves/library.py`) | read + **write** (publish) | Writes only in a maintainer's STAF checkout with `STAF_LIBRARY_PUBLISH=1`. An installed StreamCurves Desktop never writes it: its Assessment library downloads versions from the `library` release, and a revision goes back to the maintainer as a `.streamcurves` project file. |
-| DEEP (`deep/library.py`, `deep/remote_library.py`, `scripts/bake_library_into_deep.py`) | read | Every DEEP merges the `library` release's preliminary and final versions over the baked snapshot in `apps/deep/data/deep-assessments.json`. A checkout also merges this folder on top. |
+| DEEP (`deep/library.py`, `deep/remote_library.py`, `scripts/bake_library_into_deep.py`) | read | Every DEEP merges the `library` release's draft, preliminary and final versions (those shown in DEEP) over the baked snapshot in `apps/deep/data/deep-assessments.json`. A checkout also merges this folder on top. |
 | The `library` release (`apps/stream-curves/scripts/library_release.py`) | read | CI (`.github/workflows/library-release.yml`) rebuilds it on every push to `main` that touches this folder: `library.json` plus each version's pack, DEEP bundle and calculator. See `desktop/RELEASING.md`. |
 
 A **builder** or reviewer develops curves in a StreamCurves project (a `.streamcurves` file)
 and sends it to the **maintainer**, who publishes it from a checkout as a new library
-**version**. DEEP defaults to the latest final version of each assessment, else the latest
-preliminary one; older versions stay here for reference.
+**version**. DEEP runs every Draft, Preliminary and Final version that is shown in DEEP, each
+labeled with its status, and defaults to the newest Final version of each assessment, else the
+newest Preliminary one, else the newest Draft; older versions stay here for reference.
 
 ## Layout
 
@@ -35,6 +36,7 @@ apps/library/
       manifest.json               # identity + region + full version history
       status.json                 # lifecycle history (draft, preliminary, under_review, certified, revised, retired)
       validation.json             # append-only validation records + state history (unvalidated | validated)
+      visibility.json             # Show in DEEP history (only once a version is hidden; absent = all shown)
       v1/
         assessment.deep.json      # DEEP bundle (curves inlined) + embedded "library" block
         session.streamcurves.json # FULL editable StreamCurves session (round-trip): data,
@@ -105,6 +107,9 @@ Regenerated on every publish from the per-assessment manifests.
       "latestDraft": 0,
       "defaultVersion": 3,
       "defaultStatus": "preliminary",
+      "hiddenFromDeep": [],
+      "deepDefaultVersion": 3,
+      "deepDefaultStatus": "preliminary",
       "contentDigest": "sha256:...",
       "validationState": "unvalidated",
       "validationSummary": null,
@@ -116,11 +121,17 @@ Regenerated on every publish from the per-assessment manifests.
 
 `defaultVersion` is the latest certified version, else the latest preliminary one, else
 the numeric latest (which may be a draft: the StreamCurves picker needs an openable
-default, and DEEP is protected by per-version eligibility, never by this pointer).
+default). It is the version StreamCurves opens; DEEP never reads it.
 `defaultStatus` is that version's current lifecycle status; `latestDraft` is the newest
 draft (0 if none). `validationState` and `validationSummary` come from the assessment's
 `validation.json` (the last state record for the default version); `provenanceState` is
 `present` when the default version folder carries `provenance.json`.
+
+A DEEP entry also says what DEEP shows (an EASI entry never carries these): `hiddenFromDeep`
+lists the versions Show in DEEP is off for, and `deepDefaultVersion` / `deepDefaultStatus` name
+the version DEEP opens by default, the newest shown Final version, else Preliminary, else Draft
+(`0` and `null` when DEEP shows none). DEEP's own bake computes the same default from the
+versions it bakes (`deep.library.default_pointers`).
 
 `latestVersion: 0` means no version has been published yet (a placeholder awaiting its first
 publish). Such an assessment is **not** offered in DEEP until it has at least one version.
@@ -212,11 +223,44 @@ Stored status literals never change; people see display labels:
 | `draft`         | Draft        | Automation output, or a revision published for review; not approved yet | batch stage/promote, the headless agent, a maintainer's publish (the default) |
 | `preliminary`   | Preliminary  | A human reviewed and stands behind it                          | a maintainer's publish as Preliminary, or Approve as Preliminary on a draft |
 | `certified`     | Final        | Field-validated and certified                                  | Validate stage certify (gated on a validation record) |
-| `under_review`, `revised`, `retired` | Under review / Revised / Retired | admin states | Python (`set_version_status`) |
+| `under_review`, `revised`, `retired` | Under review / Revised / Retired | admin states | Python (`set_version_status`, `scripts/set_library_status.py`) |
 
 Validation is a separate axis (`validation.json`: `unvalidated` | `validated`, displayed
 Unvalidated / **Verified**): a version can be Preliminary and Verified before it is Final.
-Only `preliminary` and `certified` are DEEP-eligible; drafts never bake.
+DEEP runs `draft`, `preliminary` and `certified` versions, each labeled (owner, 2026-10-08:
+gray Draft, amber Preliminary and blue Final on DEEP's map and badges), when they are shown in
+DEEP; the other statuses and every hidden version stay in the library only and never bake.
+
+## DEEP visibility (Show in DEEP)
+
+Whether DEEP shows a version at all is its own append-only, audited record,
+`assessments/<id>/visibility.json`, beside `status.json`:
+
+```json
+{
+  "schemaVersion": 2,
+  "assessmentId": "eastern-corn-belt-plains",
+  "history": [
+    { "version": 4, "visibleInDeep": false, "actor": "GM",
+      "timestamp": "2026-10-08T00:00:00Z", "note": "Published with Show in DEEP off." }
+  ]
+}
+```
+
+The last record of a version wins; a version without one is shown, so a library from before the
+record needs nothing. StreamCurves' Publish page sets it per version (**Show in DEEP**, on by
+default) and the Validate stage changes it later (`library.set_version_visibility`, which refuses
+an EASI method and appends nothing when the version already is what was asked). Hiding never
+touches a version's content, digest, status or pack. DEEP skips a hidden version everywhere and
+opens the newest shown one; an assessment with nothing shown leaves DEEP's map and the site's
+calculator list. DEEP still hides the state SQT transcriptions by id, whatever this record says.
+
+Many status changes at once (the owner's 2026-10-08 decision: every Preliminary version of the
+Level III ecoregions becomes a Draft, except Northeastern Highlands and Eastern Corn Belt Plains)
+go through `apps/stream-curves/scripts/set_library_status.py`: one audited `status.json` record
+per version, the catalog rebuilt once, then DEEP rebaked. Run it with `--dry-run` first. Deploy a
+DEEP that runs the new statuses before pushing library data that relies on them: a deployed DEEP
+drops every ref the release lists as not eligible, its baked copy included.
 
 ## Publishing (summary)
 
@@ -228,18 +272,20 @@ Only `preliminary` and `certified` are DEEP-eligible; drafts never bake.
 2. **Review path**: open the version from the Assessment library on StreamCurves' start page
    (drafts are badged), review the stages, then either **Approve as Preliminary** on the
    Validate stage (records your review in place) or edit and publish a next version from
-   **Publish** (Draft by default, or Preliminary; provenance carries the originating run plus
-   your edits). A reviewer working in an installed copy sends the project file instead
+   **Publish** (Draft by default, or Preliminary, and Show in DEEP on unless you turn it off;
+   provenance carries the originating run plus your edits). A reviewer working in an installed
+   copy sends the project file instead
    (Publish, **Save a copy for the maintainer**); the maintainer opens it with **Projects >
    Open project** and publishes from there.
 3. **Verification path**: on the Validate stage, overlay field data, record the validation
    (the version reads **Verified**), then **Certify** (displayed **Final**).
-   Publishing, approving and certifying each re-bake DEEP's registry
+   Publishing, approving, certifying and Show in DEEP each re-bake DEEP's registry
    (`apps/deep/scripts/bake_library_into_deep.py`).
-4. The maintainer commits `apps/library/**`, `apps/deep/data/**` and
-   `apps/deep/www/calculators/**` and pushes `main`. `library-release` refreshes the `library`
-   release, which installed StreamCurves copies and DEEP read. Redeploy DEEP when its baked
-   fallback should carry the version too.
+4. The maintainer commits `apps/library/**`, `apps/deep/data/**`,
+   `apps/deep/www/calculators/**` and `docs/_data/deep_calculators.json` (the site's calculator
+   list, which the bake rewrites) and pushes `main`. `library-release` refreshes the `library`
+   release, which installed StreamCurves copies and DEEP read. Assemble and redeploy STAF when
+   DEEP's baked fallback should carry the version too.
 
 Content never changes in place: edits are a new version. Status changes (`draft` to
 `preliminary`, certification, retiring) append to `status.json` without re-minting the
@@ -261,6 +307,13 @@ method package (`<id>-v<N>-<sha8>.easi-method.zip`), never a DEEP bundle. `check
 `prune` work on the union of both catalogs, and both catalogs upload last, `library.json` at the
 very end.
 
+A DEEP version hidden from DEEP carries `"visibleInDeep": false` in both feeds (DEEP reads
+`library.json`, so the schema-1 feed carries it too: an addition every reader ignores, and the
+only one); every shown version lists exactly as before. DEEP counts a hidden version as not
+eligible, so it never downloads it and drops any baked copy. A visibility change rewrites the two
+catalogs only; a status change also mints that version's pack again, since a pack names its
+status.
+
 A DEEP version whose folder carries `evidence.json` (the reference to its evidence package:
 `packageId`, `version`, `packageDigest`, `dataDigest` and the `archive` name, sha256 and bytes,
 read as written) is listed with that reference as `evidence` in its `library-v2.json` record
@@ -271,10 +324,10 @@ never gains the key.
 
 The StreamCurves Desktop payload (`desktop/scripts/build-apps-payload.ps1`) ships this folder as
 a catalog-only snapshot: `catalog.json` and each assessment's `manifest.json`, `status.json`,
-`validation.json` and `artifacts.json`, never a version folder (the pathspec
+`validation.json`, `artifacts.json` and `visibility.json`, never a version folder (the pathspec
 `:(exclude)apps/library/assessments/*/v[0-9]*`, checked by `desktop/scripts/check_payload_records.py`).
 An installed copy reads the gallery from the `library` release and downloads the version it
 opens; offline, the snapshot lists every version as download-only and opens none of them.
 DEEP's bake (`apps/deep/scripts/bake_library_into_deep.py`) folds in every eligible version by
-default; `--default-only` bakes each assessment's `defaultVersion` alone for a smaller deploy,
+default; `--default-only` bakes each assessment's DEEP default alone for a smaller deploy,
 while the remote library keeps serving every eligible version to DEEP's version chooser.

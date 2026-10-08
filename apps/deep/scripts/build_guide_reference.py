@@ -46,9 +46,10 @@ def esc(text) -> str:
 
 def regional_ids() -> list[str]:
     """The regional assessments DEEP offers by default (the adapted state SQT
-    bundles are hidden from the registry)."""
+    bundles are hidden from the registry, and an assessment DEEP shows no version
+    of has no pointer in the bake)."""
     cat = config.assessments_doc().get("libraryCatalog") or {}
-    return sorted(aid for aid in cat if not aid.endswith("-sqt-adapted"))
+    return sorted(aid for aid in cat if not config._is_hidden({"assessmentId": aid}))
 
 
 def basis_word(m: dict) -> str:

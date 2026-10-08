@@ -292,7 +292,7 @@ def test_a_catalog_parses_newest_first_and_skips_bad_rows():
     assert [e.id for e in entries] == ["demo"]
     e = entries[0]
     assert [v.version for v in e.versions] == [2, 1]
-    assert e.version().status == "draft" and not e.version().in_deep
+    assert e.version().status == "draft" and e.version().in_deep, "a shown Draft runs in DEEP"
     assert e.version(1).in_deep
     assert e.version().assets["pack"].size == 3
     with pytest.raises(ValueError, match="newer"):
@@ -468,8 +468,13 @@ def test_autosave_waits_for_quiet_and_for_every_job():
 
 
 def test_gallery_links_to_deep_use_the_form_deep_parses():
-    assert "?assessment={e.id}@{v.version}" in PROJECT
+    """DEEP opens inside the STAF app (2026-10-08): ?tool=deep, then the assessment@version
+    DEEP parses; the About link opens DEEP the same way."""
+    assert "?tool=deep&assessment={e.id}@{v.version}" in PROJECT
     assert "@v{v.version}" not in PROJECT
+    from views.theme import STAF_LINKS
+    assert STAF_LINKS["deep"] == STAF_LINKS["staf"] + "?tool=deep"
+    assert not any("gtmenichino-deep" in url for url in STAF_LINKS.values())
 
 
 def test_the_typed_catalog_wins_and_a_withdrawn_typed_feed_is_forgotten(monkeypatch, tmp_path):

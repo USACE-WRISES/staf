@@ -83,11 +83,6 @@ def test_the_report_pdf_prints_a_note_with_markup_in_it():
 
 
 def test_download_names():
-    assert report.desktop_metrics_filename({"delineation": DELINEATION}) == "easi-desktop-metrics-comid-9327042.pdf"
-    routed = {"delineation": DELINEATION, "siteAnchor": {"anchorKind": "hrSurrogate",
-                                                         "clickedStream": {"nhdplusId": "10000900012345"}}}
-    assert report.site_slug(routed) == "nhdplusid-10000900012345"
-    assert report.site_slug({"delineation": {"snapped_lat": 43.6858, "snapped_lon": -72.2367}}) == \
-        "n43.68580-w72.23670"
-    assert report.site_slug({"delineation": {"comid": "12/../x"}}) == "comid-12..x"      # a file name, not a path
-    assert report.desktop_metrics_filename({}) == "easi-desktop-metrics.pdf" and report.site_slug(None) == ""
+    # plain, with no site id (owner, 2026-10-08)
+    assert report.desktop_metrics_filename() == "easi-desktop-metrics.pdf"
+    assert not hasattr(report, "site_slug")

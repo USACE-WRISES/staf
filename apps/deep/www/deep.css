@@ -158,7 +158,10 @@
 .deep-cov-row.is-selected .deep-cov-name { font-weight: 600; color: var(--easi-accent-dark); }
 .deep-cov-chip { flex: none; padding: 2px 7px; border-radius: 9px; font-size: 10.5px; line-height: 1.4; }
 .deep-cov-ver { color: #5b6b85; background: #eef1f6; }
-.deep-cov-final { color: #2f6b45; background: #e5f2ea; }
+/* a region's status, in its map color (owner, 2026-10-08): Draft gray, Preliminary amber, Final blue */
+.deep-cov-draft { color: #475569; background: #eceff3; }
+.deep-cov-prelim { color: #92400e; background: #fdf0d5; }
+.deep-cov-final { color: #303f9f; background: #e8eaf6; }
 .deep-cov-use { display: none; color: #fff; background: var(--easi-accent); }
 .deep-cov-row.is-in-use .deep-cov-use { display: inline-block; }
 .deep-cov-empty { padding: 14px; font-size: 12.5px; line-height: 1.45; color: #7a8699; }
@@ -216,6 +219,13 @@
 }
 .deep-reg-tip b { display: block; font-size: 12.5px; font-weight: 600; }
 .deep-reg-tip span { display: block; margin-top: 1px; font-size: 11px; color: #6a7486; }
+/* the legend's region key (app._legend_ui, Identify): one swatch per status shown on the map,
+   drawn as the region is, its outline over a light fill; it goes with the regions' Layers box */
+.deep-reg-key { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; padding-top: 5px;
+  border-top: 1px solid #e3e7ee; }
+.easi-shell.deep-regions-off .deep-reg-key { display: none; }
+.deep-reg-sw { flex: none; width: 12px; height: 12px; border-radius: 2px; box-sizing: border-box;
+  border: 1.5px solid var(--swatch-line); background: var(--swatch-fill); }
 
 /* the report popup's per-metric support and advisory lines */
 .deep-report-support { font-size: 11px; color: #45506a; margin-top: 2px; }

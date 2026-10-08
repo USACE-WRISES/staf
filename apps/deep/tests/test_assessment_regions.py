@@ -33,7 +33,7 @@ def _scope(**extra):
         sent.append((kind, payload))
     scope = {**vars(app), "session_": SimpleNamespace(send_custom_message=send), "sent": sent,
              "_coverage": {"sent": False, "focus": False}, "loaded_assessment": Value(None),
-             "current_step": Value(app.STEP_IDENTIFY), **extra}
+             "current_step": Value(app.STEP_IDENTIFY), "region_statuses": Value(()), **extra}
     for name in ("_coverage_state", "_send_coverage", "_send_coverage_current"):
         function(name, scope)
     return scope
@@ -60,7 +60,22 @@ def test_the_regions_go_out_once_per_session_with_names_codes_and_status(monkeyp
     assert [f["name"] for f in features] == ["Flint Hills", "A drawn region"]   # the region, else the assessment
     assert features[0]["code"] == "28" and features[0]["status"] == "Final" and features[0]["certified"] is True
     assert features[1]["status"] == "Preliminary" and features[1]["certified"] is False
+    # the status itself rides too (owner, 2026-10-08: Draft, Preliminary and Final, each colored),
+    # and the legend keys the statuses the map shows
+    assert [f["lifecycle"] for f in features] == ["certified", "preliminary"]
+    assert scope["region_statuses"]() == ("certified", "preliminary")
     assert scope["sent"][1][1] == {"assessmentId": None, "identify": True, "focus": False}
+
+
+def test_a_draft_region_goes_out_as_a_draft(monkeypatch):
+    draft = {"type": "FeatureCollection", "features": [dict(FEATURES["features"][1], properties=dict(
+        FEATURES["features"][1]["properties"], lifecycle="draft"))]}
+    monkeypatch.setattr(app.assessments, "library_region_features", lambda: draft)
+    scope = _scope()
+    asyncio.run(scope["_send_coverage"]())
+    (feature,) = scope["sent"][0][1]["features"]
+    assert (feature["lifecycle"], feature["status"], feature["certified"]) == ("draft", "Draft", False)
+    assert scope["region_statuses"]() == ("draft",)
 
 
 def test_the_assessment_in_use_and_the_step_reach_the_page_and_a_link_shows_its_region_once():

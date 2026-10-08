@@ -143,8 +143,4 @@ def test_desktop_metrics_pdf_carries_the_engine_labels():
 
 
 def test_desktop_metrics_filename():
-    assert report.desktop_metrics_filename(DELIN_COMID) == "sfari-desktop-metrics-comid-9311402.pdf"
-    assert report.desktop_metrics_filename(DELIN_HR) == "sfari-desktop-metrics-nhdplusid-750012345.pdf"
-    fn = report.desktop_metrics_filename({"delineation": dict(DELIN_COMID["delineation"], comid=None)})
-    assert fn == "sfari-desktop-metrics-n39.12345-w84.51234.pdf"
-    assert report.desktop_metrics_filename({}) == "sfari-desktop-metrics.pdf"
+    assert report.desktop_metrics_filename() == "sfari-desktop-metrics.pdf"   # plain (owner, 2026-10-08)

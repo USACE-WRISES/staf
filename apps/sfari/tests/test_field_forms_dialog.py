@@ -1,5 +1,5 @@
-"""The Field Forms dialog (2026-09-07): a static navset shell with both
-downloads at the top, three keep-alive outputs inside (status, table,
+"""The Get Forms dialog (2026-09-07): a static navset shell with the
+downloads at the top (the same in every tool, owner 2026-10-08), three keep-alive outputs inside (status, table,
 preview), the packet previewed inline through a session route, the table
 scrolling in its own box under a header that stays put. The dialog is Shiny
 UI built inside the server function, so this reads the source and the
@@ -18,16 +18,15 @@ CSS = (Path(app.__file__).parent / "www" / "styles.css").read_text(encoding="utf
 SHELL = SRC.split("def _desktop_metrics_modal():", 1)[1].split("# Field-form readiness", 1)[0]
 
 
-def test_the_shell_is_static_with_both_downloads_in_the_tab_strip():
+def test_the_shell_is_static_with_the_downloads_in_the_tab_strip():
     assert "ui.navset_pill(" in SHELL and "ui.nav_spacer()" in SHELL
     assert 'ui.nav_panel("Desktop metrics"' in SHELL
     assert 'ui.nav_panel("Field forms preview"' in SHELL
-    assert 'staf_web.download_button("dl_field_forms", "Field forms PDF"' in SHELL
-    assert 'staf_web.download_button("dl_desktop_metrics"' in SHELL
-    # wrapped, so Bootstrap's ``.nav-pills > li > a`` nav-link rule cannot strip
-    # the button chrome (it did: link-blue text, dark hover behind it)
-    assert SHELL.count('class_="ff-dl")') == 2
-    assert SHELL.count('class_="btn-sm btn-primary"') == 2      # equals, styled alike
+    # the shared downloads (web.forms_downloads): field forms, desktop metrics, both workbooks
+    assert ('*staf_web.forms_downloads(("dl_desktop_metrics", "Desktop metrics PDF"),\n'
+            '                                          field_forms="dl_field_forms",\n'
+            '                                          workbooks=("dl_calc_filled", "dl_calc_blank")),') in SHELL
+    assert "title=staf_web.FORMS_TITLE" in SHELL
     assert 'class_="ff-modal-body"' in SHELL and 'size="xl"' in SHELL
     assert 'ui.output_ui("ff_site")' in SHELL and 'ui.output_ui("ff_status")' in SHELL
     assert 'ui.output_ui("ff_table")' in SHELL and 'ui.output_ui("ff_preview")' in SHELL
@@ -69,10 +68,11 @@ def test_the_stylesheet_pins_the_header_and_the_layout():
     assert "#sfari-desktop-metrics .easi-tbl thead th" not in CSS
     assert ".ff-preview-frame {" in CSS and ".ff-src-sub {" in CSS
     assert ".ff-preview-link" not in CSS
-    for state in (".ff-dl .btn-primary {", ".ff-dl .btn-primary:hover,"):
-        assert state in CSS, state
+    assert ".ff-dl" not in CSS                          # the downloads' rules are shared (staf/staf.css)
+    shared = (Path(app.__file__).parent / "www" / "staf" / "staf.css").read_text(encoding="utf-8")
+    assert ".ff-modal-body .nav-pills .staf-dl .btn-primary:hover," in shared
     assert "ff-dl-secondary" not in CSS and "ff-dl-secondary" not in SRC
-    assert 'href="styles.css?v=31"' in SRC
+    assert 'href="styles.css?v=32"' in SRC
 
 
 def test_the_worksheet_button_names_the_dialog():
@@ -83,8 +83,5 @@ def test_the_worksheet_button_names_the_dialog():
 def test_filename_helpers():
     assert report.field_forms_filename() == "sfari-field-forms.pdf"
     assert report.field_forms_filename({"delineation": {"comid": 5}}) == "sfari-field-forms.pdf"
-    assert report._site_slug({"delineation": {"snapped_lat": 40.1, "snapped_lon": -83.2}}) \
-        == "n40.10000-w83.20000"
-    assert report._site_slug({}) == ""
-    assert report.desktop_metrics_filename({"delineation": {"comid": 5}}) \
-        == "sfari-desktop-metrics-comid-5.pdf"
+    assert report.desktop_metrics_filename() == "sfari-desktop-metrics.pdf"   # plain (owner, 2026-10-08)
+    assert not hasattr(report, "_site_slug")

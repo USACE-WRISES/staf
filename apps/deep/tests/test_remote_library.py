@@ -312,22 +312,42 @@ def test_malformed_records_are_skipped_and_the_rest_kept(release):
 # --------------------------------------------------------------------------- #
 # the snapshot
 # --------------------------------------------------------------------------- #
-def test_only_preliminary_and_certified_versions_are_served(release):
+def test_only_draft_preliminary_and_certified_versions_are_served(release):
+    """Drafts run in DEEP, labeled (owner, 2026-10-08); under review, revised and retired do not."""
     statuses = ["preliminary", "certified", "draft", "under_review", "revised", "retired",
                 "Preliminary"]
     _publish(release, ("zz-alpha", [_version(release, "zz-alpha", n, status)
                                     for n, status in enumerate(statuses, start=1)]))
     _refresh()
     snap = remote_library.snapshot()
-    assert _refs(snap) == ["zz-alpha@v1", "zz-alpha@v2", "zz-alpha@v7"]
-    assert [r["lifecycle"] for r in snap.records] == ["preliminary", "certified", "preliminary"]
-    assert snap.ineligible_refs == {"zz-alpha@v3", "zz-alpha@v4", "zz-alpha@v5", "zz-alpha@v6"}
+    assert _refs(snap) == ["zz-alpha@v1", "zz-alpha@v2", "zz-alpha@v3", "zz-alpha@v7"]
+    assert [r["lifecycle"] for r in snap.records] == ["preliminary", "certified", "draft",
+                                                      "preliminary"]
+    assert snap.ineligible_refs == {"zz-alpha@v4", "zz-alpha@v5", "zz-alpha@v6"}
     assert snap.generation == 1
     assert snap.records[1] == {**_bundle("zz-alpha", 2), "version": 2,
                                "lifecycle": "certified", "assessmentRef": "zz-alpha@v2"}
     # nothing DEEP will not serve is downloaded: no ineligible bundle, no pack, no thumbnail
     assert sorted(release.calls) == sorted(["library.json", "zz-alpha-v1.deep.json",
-                                            "zz-alpha-v2.deep.json", "zz-alpha-v7.deep.json"])
+                                            "zz-alpha-v2.deep.json", "zz-alpha-v3.deep.json",
+                                            "zz-alpha-v7.deep.json"])
+
+
+def test_a_version_hidden_from_deep_is_never_served(release):
+    """StreamCurves' Show in DEEP off (owner, 2026-10-08): the release lists the version with
+    ``visibleInDeep: false``, and DEEP treats it as not eligible whatever its status: never
+    downloaded, and any baked copy of it is dropped."""
+    hidden = dict(_version(release, "zz-alpha", 2, "certified"), visibleInDeep=False)
+    shown = dict(_version(release, "zz-alpha", 3, "draft"), visibleInDeep=True)
+    _publish(release, ("zz-alpha", [_version(release, "zz-alpha", 1), hidden, shown]))
+    catalog = remote_library.parse_catalog(release.files["library.json"])
+    assert [(v.ref, v.eligible, v.visible) for v in catalog.versions] == [
+        ("zz-alpha@v1", True, True), ("zz-alpha@v2", False, False), ("zz-alpha@v3", True, True)]
+    _refresh()
+    snap = remote_library.snapshot()
+    assert _refs(snap) == ["zz-alpha@v1", "zz-alpha@v3"]
+    assert snap.ineligible_refs == {"zz-alpha@v2"}
+    assert release.count("zz-alpha-v2.deep.json") == 0
 
 
 def test_records_are_stamped_like_the_local_library(release, tmp_path, monkeypatch):
@@ -606,14 +626,14 @@ def test_calculator_path_gives_the_cached_release_workbook(release):
     _publish(release, ("zz-alpha", [
         _version(release, "zz-alpha", 1),
         _version(release, "zz-alpha", 2, bundle=two, calculator=calc),
-        _version(release, "zz-alpha", 3, "draft", calculator=b"PK draft")]))
+        _version(release, "zz-alpha", 3, "retired", calculator=b"PK retired")]))
     _refresh()
     path = remote_library.calculator_path("zz-alpha", 2)
     assert path is not None and path.read_bytes() == calc
     assert remote_library.calculator_path("zz-alpha", "2", two["contentDigest"]) == path
     assert remote_library.calculator_path("zz-alpha", 2, "sha256:" + "0" * 64) is None
     assert remote_library.calculator_path("zz-alpha", 1) is None  # published without one
-    assert remote_library.calculator_path("zz-alpha", 3) is None  # a draft
+    assert remote_library.calculator_path("zz-alpha", 3) is None  # retired
     assert release.count("zz-alpha-v3-calculator.xlsx") == 0  # never even fetched
     assert remote_library.calculator_path("zz-alpha", "two") is None
 

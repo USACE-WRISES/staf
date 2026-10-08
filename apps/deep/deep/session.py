@@ -36,13 +36,17 @@ SCHEMA_VERSION = 2
 # --------------------------------------------------------------------------- #
 # Provenance primitives (shared by sessions + reports)
 # --------------------------------------------------------------------------- #
+#: The statuses DEEP runs and labels (owner, 2026-10-08): Draft, Preliminary and Final.
+LIFECYCLES = ("draft", "preliminary", "certified")
+
+
 def lifecycle_status(bundle: dict | None) -> str:
-    """``"preliminary"`` | ``"certified"`` for an assessment bundle.
+    """``"draft"`` | ``"preliminary"`` | ``"certified"`` for an assessment bundle.
 
     Reads an optional ``lifecycle``/``status`` field (bundle top level or its ``library``
-    block) and defaults to ``"preliminary"``. Per the confirmed two-state model and the
-    Part E sequencing, nothing is certified until the publisher writes a status, so an
-    absent field is preliminary.
+    block) and defaults to ``"preliminary"``: nothing is certified until the publisher
+    writes a status, and a bundle from before the status record (or with a status DEEP does
+    not run) reads as preliminary, as it always has.
     """
     lib = (bundle or {}).get("library") or {}
     for src in ((bundle or {}), lib):
@@ -50,7 +54,7 @@ def lifecycle_status(bundle: dict | None) -> str:
             v = src.get(key)
             if v:
                 s = str(v).strip().lower()
-                if s in ("preliminary", "certified"):
+                if s in LIFECYCLES:
                     return s
     return "preliminary"
 
@@ -71,9 +75,9 @@ STATUS_LABELS = {
 
 def status_label(status) -> str:
     """Display label for a lifecycle status; unknown strings title-case rather
-    than render blank. (DEEP only ever renders preliminary/certified — the bake
-    filters everything else — but the map carries the writer's full vocabulary
-    so a foreign value still reads sensibly.)"""
+    than render blank. (DEEP only ever renders draft, preliminary and certified,
+    since the bake filters everything else, but the map carries the writer's full
+    vocabulary so a foreign value still reads sensibly.)"""
     s = str(status or "").strip().lower()
     return STATUS_LABELS.get(s) or (s.title() if s else STATUS_LABELS["preliminary"])
 

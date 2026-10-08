@@ -381,6 +381,8 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-head); }
 .sc-tag.is-deep { background: #fff; border-color: var(--sc-accent-border); color: var(--sc-accent); }
 .sc-tag.is-have { background: var(--sc-ok-soft); border-color: var(--sc-ok-border); color: var(--sc-ok); }
 .sc-tag.is-update { background: var(--sc-warn-soft); border-color: var(--sc-warn-border); color: var(--sc-warn); }
+/* a DEEP version whose Show in DEEP is off (library visibility.json) */
+.sc-tag.is-not-deep { background: #fff; border-color: #c9cdd5; border-style: dashed; color: #5b6475; }
 .sc-gallery-detail { display: flex; flex-direction: column; gap: 8px; }
 .sc-gallery-hero { border-radius: var(--r-2); overflow: hidden; background: var(--sc-accent-soft);
   border: 1px solid var(--sc-border); aspect-ratio: 16 / 10; display: grid; place-items: center; }

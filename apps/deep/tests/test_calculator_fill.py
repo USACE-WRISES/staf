@@ -186,9 +186,9 @@ def test_a_workbook_is_offered_only_for_the_version_it_was_built_from(template, 
     assert calculator.template_for(other, tmp_path) is None
     calculator.clear_cache()
     assert calculator.template_for(la, tmp_path / "nowhere") is None
-    assert calculator.blank_filename(la) == "deep-calculator-fill-test-v2.xlsx"
-    assert calculator.filled_filename(la, DELIN) \
-        == "deep-calculator-fill-test-v2-nhdplusid-10000900015475.xlsx"
+    # plain names, with no site id (owner, 2026-10-08)
+    assert calculator.blank_filename(la) == "deep-calculator-fill-test-v2-blank.xlsx"
+    assert calculator.filled_filename(la) == "deep-calculator-fill-test-v2.xlsx"
     calculator.clear_cache()
 
 

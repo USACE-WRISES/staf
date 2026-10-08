@@ -10,6 +10,10 @@ url: "https://usace-wrises.github.io"
 baseurl: "/staf"
 permalink: pretty
 
+# Calculator downloads: a repo path appended to this base is served raw from main, so every
+# download is the latest committed version (docs/_data/apps.yml, docs/_data/deep_calculators.json).
+downloads_base: "https://raw.githubusercontent.com/USACE-WRISES/staf/main/"
+
 plugins:
   - jekyll-remote-theme
 

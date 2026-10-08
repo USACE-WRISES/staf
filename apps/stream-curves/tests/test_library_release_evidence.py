@@ -123,3 +123,24 @@ def test_a_catalog_only_snapshot_is_refused_as_a_release_source(one_assessment, 
     with pytest.raises(SystemExit, match="catalog-only snapshot"):
         _release().build(tmp_path / "out", commit="abc123")
     assert not (tmp_path / "out" / gallery.CATALOG_NAME).exists(), "nothing half-built"
+
+
+def test_a_hidden_version_changes_both_catalogs_by_one_key_and_mints_no_asset(one_assessment,
+                                                                               tmp_path):
+    """Show in DEEP off (owner, 2026-10-08): both feeds list the version with
+    ``visibleInDeep: false`` (DEEP reads library.json, so the schema-1 feed carries it too),
+    nothing else in either catalog moves, and no pack or bundle is built again."""
+    from streamcurves import library as lib
+    lr = _release()
+    lr.build(tmp_path / "a", commit="abc123")
+    lib.set_version_visibility(AID, 1, False, "GM")
+    lr.build(tmp_path / "b", commit="abc123")
+    for name in (gallery.CATALOG_NAME, gallery.CATALOG_NAME_V2):
+        before = json.loads(_unstamped((tmp_path / "a" / name).read_text(encoding="utf-8")))
+        after = json.loads(_unstamped((tmp_path / "b" / name).read_text(encoding="utf-8")))
+        rows = dict((v["version"], v) for v in after["assessments"][0]["versions"])
+        assert rows[1].pop("visibleInDeep") is False and "visibleInDeep" not in rows[2]
+        assert after == before, name
+    assert lr.all_names(tmp_path / "b") == lr.all_names(tmp_path / "a")
+    entry = gallery.parse_catalog((tmp_path / "b" / gallery.CATALOG_NAME).read_text(encoding="utf-8"))[0]
+    assert not entry.version(1).in_deep and entry.version(2).in_deep

@@ -51,6 +51,7 @@ META_FILE = "meta.json"
 STATUS_FILE = "status.json"
 VALIDATION_FILE = "validation.json"
 PROVENANCE_FILE = "provenance.json"
+VISIBILITY_FILE = "visibility.json"
 
 #: Assessment types (``assessmentType`` in a manifest and its catalog entry). Absent means
 #: ``deep``, so every manifest, catalog entry, pack and bundle written before typed entries
@@ -71,13 +72,12 @@ VALIDATION_STATES = (VALIDATION_UNVALIDATED, VALIDATION_VALIDATED)
 
 # Lifecycle vocabulary (writer side). The six states live here for
 # history/admin (config/methodology/methodology_config.yaml lifecycle.* mirrors
-# them, checked by methodology.mirror_drift); DEEP the consumer only
-# distinguishes preliminary vs certified, and only those two are eligible for
-# new DEEP assessments. "draft" is what automation publishes (batch
+# them, checked by methodology.mirror_drift); DEEP runs three of them, each
+# labeled (DEEP_STATUSES). "draft" is what automation publishes (batch
 # stage/promote, the headless agent) and what an interactive publish defaults
 # to (views/publish.py) unless its readiness checklist passes with no
 # unresolved item, when the page offers preliminary: nobody has reviewed a
-# draft curve by curve, so it is never DEEP-eligible until the Validate page's
+# draft curve by curve, so DEEP shows it as a Draft until the Validate page's
 # Approve button, or a reviewed next version, makes it preliminary. Certify
 # (Final) needs a validation record that matches the curves on a preliminary
 # version. DEFAULT_STATUS stays preliminary because it is what a version with
@@ -96,6 +96,17 @@ VERSION_STATUSES = (
 # audited step gated on field validation (set_version_status via the Validate
 # page); letting publish_version seed it would bypass that gate.
 PUBLISH_STATUSES = ("draft", "preliminary")
+
+#: The statuses DEEP runs, each labeled on its map and badges (owner, 2026-10-08: Drafts
+#: show in DEEP). apps/deep/deep/library.py ``_ELIGIBLE`` is the same tuple, and
+#: tests/test_library_visibility.py keeps the two equal. A version also needs to be shown
+#: (:func:`version_visible_in_deep`). methodology_config.yaml's
+#: ``lifecycle.deep_eligible_statuses`` still names two: no code reads it, and editing the
+#: yaml changes the config hash a staged batch run was made under, so it stays as it was.
+DEEP_STATUSES = ("draft", "preliminary", "certified")
+#: The order DEEP picks an assessment's default version in: the newest shown Final
+#: version, else the newest shown Preliminary one, else the newest shown Draft.
+DEEP_DEFAULT_ORDER = ("certified", "preliminary", "draft")
 
 # Stored literal -> label shown to people. Machine fields (status.json,
 # catalog.json, baked bundles, session provenance) always carry the stored
@@ -667,6 +678,120 @@ def set_version_status(
 
 
 # --------------------------------------------------------------------------- #
+# DEEP visibility (owner, 2026-10-08): whether DEEP shows a version at all, the
+# Publish page's "Show in DEEP". Another append-only audited record beside
+# status.json, so showing or hiding a version never touches its content, its
+# status or its pack. No record means shown: a library from before the record
+# needs no migration.
+# --------------------------------------------------------------------------- #
+def visibility_path(assessment_id: str) -> Path:
+    return assessment_dir(assessment_id) / VISIBILITY_FILE
+
+
+def read_visibility(assessment_id: str) -> dict:
+    """The append-only visibility record of an assessment, or an empty record when the file
+    is absent (every version shown)."""
+    p = visibility_path(slugify(assessment_id))
+    if not p.is_file():
+        return {"schemaVersion": STATUS_SCHEMA_VERSION, "assessmentId": slugify(assessment_id),
+                "history": []}
+    return _read_json(p)
+
+
+def hidden_versions(assessment_id: str) -> set[int]:
+    """The versions whose last visibility record hides them from DEEP."""
+    shown: dict[int, bool] = {}
+    for rec in read_visibility(assessment_id).get("history") or []:
+        try:
+            v = int(rec.get("version"))
+        except (TypeError, ValueError):
+            continue
+        if v and isinstance(rec.get("visibleInDeep"), bool):
+            shown[v] = rec["visibleInDeep"]
+    return {v for v, on in shown.items() if not on}
+
+
+def version_visible_in_deep(assessment_id: str, version: int) -> bool:
+    """Whether DEEP may show this version, its status permitting: True unless the version's
+    last visibility record hides it."""
+    return int(version) not in hidden_versions(slugify(assessment_id))
+
+
+def _append_visibility(assessment_id: str, version: int, visible: bool, actor: str,
+                       note: Optional[str]) -> None:
+    doc = read_visibility(assessment_id)
+    doc["schemaVersion"] = STATUS_SCHEMA_VERSION
+    doc["assessmentId"] = assessment_id
+    doc["history"] = list(doc.get("history") or []) + [{
+        "version": int(version),
+        "visibleInDeep": bool(visible),
+        "actor": actor or "",
+        "timestamp": _now_iso(),
+        "note": note,
+    }]
+    _write_json(visibility_path(assessment_id), doc)
+
+
+def set_version_visibility(
+    assessment_id: str,
+    version: int,
+    visible: bool,
+    actor: str,
+    note: Optional[str] = None,
+) -> bool:
+    """Show or hide one published version in DEEP and refresh the catalog. Append-only and
+    audited like :func:`set_version_status`; asking for what the version already is appends
+    nothing. Returns the version's visibility.
+
+    ``actor`` (the maintainer audit name) must be non-empty. An EASI method is refused: DEEP
+    never runs one.
+    """
+    assessment_id = slugify(assessment_id)
+    actor = (actor or "").strip()
+    if not actor:
+        raise ValueError("A non-empty actor (maintainer audit name) is required.")
+    if not writable():
+        raise RuntimeError(
+            f"Assessment library is not writable at {library_root()}; cannot record a "
+            "visibility change here."
+        )
+    if not version_dir(assessment_id, version).is_dir():
+        raise ValueError(f"{assessment_id} has no version v{int(version)} to update.")
+    if not is_deep(assessment_id):
+        raise ValueError(f"{assessment_id} is an EASI screening method; DEEP never runs it.")
+    visible = bool(visible)
+    if version_visible_in_deep(assessment_id, version) == visible:
+        return visible
+    _append_visibility(assessment_id, int(version), visible, actor, note)
+    _regenerate_catalog()
+    logger.info("Set %s v%d %s DEEP (%s).", assessment_id, int(version),
+                "shown in" if visible else "hidden from", actor)
+    return visible
+
+
+def _deep_default(versions, smap: dict, hidden: set) -> tuple[int, Optional[str]]:
+    """``(version, status)`` DEEP opens by default among ``versions`` (ints), in
+    :data:`DEEP_DEFAULT_ORDER` and newest first within a status; ``(0, None)`` when DEEP
+    shows none of them."""
+    for status in DEEP_DEFAULT_ORDER:
+        shown = [v for v in versions if v and v not in hidden
+                 and smap.get(v, DEFAULT_STATUS) == status]
+        if shown:
+            return max(shown), status
+    return 0, None
+
+
+def deep_default_version(assessment_id: str) -> int:
+    """The version DEEP opens by default (:data:`DEEP_DEFAULT_ORDER`, shown versions only);
+    0 when DEEP shows none. DEEP also hides the SQT transcriptions by id
+    (``apps/deep/deep/config.py``), whatever this says."""
+    assessment_id = slugify(assessment_id)
+    manifest = read_manifest(assessment_id) or {}
+    versions = [int(v.get("version") or 0) for v in manifest.get("versions") or []]
+    return _deep_default(versions, _status_map(assessment_id), hidden_versions(assessment_id))[0]
+
+
+# --------------------------------------------------------------------------- #
 # Validation records — a separate append-only record of independent-check
 # evidence + validation state, stored apart from analytical content (like status)
 # --------------------------------------------------------------------------- #
@@ -812,6 +937,11 @@ def _regenerate_catalog() -> None:
     ``defaultVersion`` (latest certified else latest preliminary, falling back to the
     numeric latest), plus the ``contentDigest`` of the latest version. A v1 manifest
     with no ``status.json`` and no per-version digest reads as all-preliminary.
+
+    A DEEP entry also says what DEEP shows: ``hiddenFromDeep`` (the versions hidden by
+    ``visibility.json``), ``deepDefaultVersion`` and ``deepDefaultStatus`` (the version DEEP
+    opens by default, :func:`deep_default_version`; 0 and null when DEEP shows none).
+    ``defaultVersion`` keeps its meaning: the version StreamCurves opens.
     """
     root = library_root()
     adir = root / "assessments"
@@ -845,8 +975,8 @@ def _regenerate_catalog() -> None:
             latest_cert = max(certified) if certified else 0
             # Drafts never outrank a reviewed version (they are absent from the
             # cert/prelim lists); an all-draft assessment falls back to its
-            # numeric latest so the picker always has an openable default, and
-            # DEEP stays protected by per-version eligibility, not this pointer.
+            # numeric latest so the picker always has an openable default. DEEP
+            # picks its own default from the versions it shows (deepDefaultVersion).
             default_v = latest_cert or latest_prelim or latest
             vmap = _validation_state_map(aid)
             default_vdir = sub / f"v{int(default_v)}"
@@ -856,6 +986,13 @@ def _regenerate_catalog() -> None:
                 typed["methodVersion"] = next(
                     (v.get("methodVersion") for v in versions
                      if int(v.get("version") or 0) == int(default_v)), None)
+            in_deep = {}
+            if atype == "deep":
+                numbers = [int(v.get("version") or 0) for v in versions]
+                hidden = hidden_versions(aid)
+                deep_v, deep_s = _deep_default(numbers, smap, hidden)
+                in_deep = {"hiddenFromDeep": sorted(v for v in hidden if v in numbers),
+                           "deepDefaultVersion": deep_v, "deepDefaultStatus": deep_s}
             entries.append(
                 {
                     **typed,
@@ -871,6 +1008,7 @@ def _regenerate_catalog() -> None:
                     "latestDraft": max(drafts) if drafts else 0,
                     "defaultVersion": default_v,
                     "defaultStatus": smap.get(int(default_v), DEFAULT_STATUS),
+                    **in_deep,
                     "contentDigest": digest_by_v.get(latest),
                     "validationState": vmap.get(int(default_v), {}).get(
                         "state", VALIDATION_UNVALIDATED),
@@ -946,6 +1084,7 @@ def publish_version(
     restricted_package: Optional[dict] = None,
     provenance: Optional[dict] = None,
     status: str = DEFAULT_STATUS,
+    visible: bool = True,
 ) -> int:
     """Write a new version for ``assessment_id`` and return its version number.
 
@@ -969,6 +1108,10 @@ def publish_version(
     publishes keep the default ``"preliminary"`` because the human review IS
     the upgrade. Only :data:`PUBLISH_STATUSES` are accepted here; certification
     is a separate audited step.
+    ``visible``: whether DEEP shows the new version (the Publish page's Show in DEEP, on by
+    default). Off appends a hidden record to ``visibility.json``: the version is in the
+    library and StreamCurves lists it, and DEEP never does until it is shown again
+    (:func:`set_version_visibility`).
     """
     if not writable():
         raise RuntimeError(
@@ -1132,6 +1275,10 @@ def publish_version(
         "Published as draft (automation output; not yet human-reviewed)."
         if status == "draft" else "Published new version.",
     )
+    if not visible:
+        _append_visibility(assessment_id, new_version, False,
+                           meta.get("author") or _maintainer_name(),
+                           "Published with Show in DEEP off.")
 
     # The Excel calculator of this version, generated from the bundle just
     # written. Every publish path funnels through here (the interactive Publish

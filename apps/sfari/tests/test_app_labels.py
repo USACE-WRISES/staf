@@ -104,7 +104,7 @@ def test_copy_has_no_em_dash_and_names_both_engines():
     # head content renders as a dependency, not in str(app_ui): read the source
     from pathlib import Path
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert 'styles.css?v=31' in src and 'styles.css?v=30' not in src
+    assert 'styles.css?v=32' in src and 'styles.css?v=31' not in src
 
 
 def test_map_styles_exist():

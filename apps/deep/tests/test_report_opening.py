@@ -246,6 +246,7 @@ def test_modal_builder_requires_prepared_map_and_never_calls_map_service():
         ns["_fns"] = lambda: []
         ns["measured_values"] = Value({})
         ns["scored"] = lambda: app.curves.score_site(la, {})
+        ns["_calculator_template"] = lambda: None      # the report's footer asks for it
     else:
         ns["metric_scores"] = Value({})
         ns["function_scores"] = Value({})

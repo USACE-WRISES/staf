@@ -1,4 +1,5 @@
-"""The Field Forms dialog: SFARI's shell, opened from the worksheet rail.
+"""The Get Forms dialog: SFARI's shell, opened from the worksheet rail, with the downloads every
+tool's Get Forms offers (owner, 2026-10-08).
 
 Source assertions, the way SFARI's own dialog is pinned: the rail button is a
 plain button that www/measure.js delegates to one event, the modal is the static
@@ -36,7 +37,7 @@ def test_the_event_opens_the_modal_and_cancels_a_pending_report():
 
 def test_the_modal_is_sfaris_shell():
     modal = SRC[SRC.index("def _field_forms_modal():"):SRC.index("_FF_BADGE = {")]
-    assert 'title="Field Forms", easy_close=True, size="xl"' in modal
+    assert 'title=staf_web.FORMS_TITLE, easy_close=True, size="xl"' in modal
     assert 'class_="ff-modal-body"' in modal and "footer=ui.modal_button(\"Close\")" in modal
     assert "ui.navset_pill(" in modal and 'id="ff_tabs", selected="metrics"' in modal
     assert 'ui.nav_panel("Metrics",' in modal
@@ -45,16 +46,13 @@ def test_the_modal_is_sfaris_shell():
     assert 'class_="ff-table-wrap"' in modal
 
 
-def test_the_four_downloads_are_equal_primary_buttons():
+def test_the_downloads_are_the_shared_set():
     modal = SRC[SRC.index("def _field_forms_modal():"):SRC.index("_FF_BADGE = {")]
-    labels = re.findall(r'staf_web\.download_button\("(dl_[a-z_]+)", "([^"]+)"', modal)
-    assert labels == [("dl_field_forms", "Field forms PDF"), ("dl_metrics_pdf", "Metrics PDF"),
-                      ("dl_calc_filled", "Completed workbook"),
-                      ("dl_calc_blank", "Blank workbook")]
-    assert modal.count('class_="btn-sm btn-primary"') == 4
-    assert modal.count('class_="ff-dl"') == 4
-    # a version without a calculator says so in a plain sentence
-    assert "No Excel calculator is published for this version of the assessment." in modal
+    assert ('*staf_web.forms_downloads(("dl_metrics_pdf", "Metrics PDF"), field_forms="dl_field_forms",\n'
+            '                                          workbooks=("dl_calc_filled", "dl_calc_blank") if has_calc else None),'
+            ) in modal
+    # a version without a calculator: the shared note stands where the workbooks would be
+    assert "No Excel calculator is published" not in modal
     for handler in ("def dl_field_forms():", "def dl_metrics_pdf():", "def dl_calc_blank():",
                     "def dl_calc_filled():"):
         assert handler in SRC
@@ -86,8 +84,9 @@ def test_the_preview_is_served_inline_by_a_session_route():
 
 def test_the_dialog_styles_are_sfaris():
     assert ".modal-xl .modal-body.ff-modal-body" in CSS
-    for rule in (".ff-table-wrap", ".ff-badge", ".ff-preview-frame", ".ff-status", ".ff-dl"):
+    for rule in (".ff-table-wrap", ".ff-badge", ".ff-preview-frame", ".ff-status"):
         assert rule in CSS, rule
+    assert ".ff-dl" not in CSS                          # the downloads' rules are shared (staf/staf.css)
     if SFARI_CSS.is_file():
         sfari = SFARI_CSS.read_text(encoding="utf-8")
         start = sfari.index(".modal-dialog.modal-xl:has(.ff-modal-body)")
@@ -98,4 +97,4 @@ def test_the_dialog_styles_are_sfaris():
 
 
 def test_the_cache_bust_versions_moved_with_the_assets():
-    assert 'href="styles.css?v=26"' in SRC and 'src="measure.js?v=8"' in SRC
+    assert 'href="styles.css?v=27"' in SRC and 'src="measure.js?v=8"' in SRC

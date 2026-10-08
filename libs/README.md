@@ -85,10 +85,17 @@ score_equivalence_study_2026-09.md`.
 `libs/staf_workbook` (standard library only, so it adds no runtime pins) gives the three
 assessment apps one behavior and one look (owner, 2026-10-03):
 
-- **Download-only workbooks and the leave-page guard** (`web.py`, `assets/unsaved-guard.js`):
-  every download is a plain attachment link without `target`, served as
-  `application/octet-stream`, so nothing opens a new page or previews a workbook; the page
-  warns before it is closed or reloaded with unsaved work.
+- **Downloads and the leave-page guard** (`web.py`, `assets/unsaved-guard.js`; owner,
+  2026-10-08): every download opens its own tab (`target="_blank" rel="noopener"`, no `download`
+  attribute), so nothing a managed network does to the request (a scan page, a viewer, a redirect)
+  can replace the app's page; the browser closes the tab once the attachment starts. Workbooks are
+  served as `application/octet-stream`, so no browser previews one. The page warns before it is
+  closed or reloaded with unsaved work, right after a download too.
+- **The same downloads in every tool** (`web.forms_downloads`, `web.report_footer`, the `.staf-dl`
+  rules in `assets/staf.css`; owner, 2026-10-08): Get Forms offers the field forms (SFARI, DEEP),
+  the metrics PDF, then the completed and blank workbooks; the report's pinned footer offers PDF,
+  CSV, GeoJSON and the completed workbook, then Close. Download names are plain, with no site id
+  (`easi-calculator.xlsx`, `sfari-calculator.xlsx`, `deep-calculator-<id>-v<N>.xlsx`).
 - **The header's actions** (`web.nav_actions`, `web.new_dialog`, `web.info_dialog`, the nav rules
   in `assets/staf.css`; owner, 2026-10-05): New, Open, Save, About and Help, one markup and one
   behavior in every tool. New asks before it clears work; About and Help close alike.
@@ -119,7 +126,12 @@ assessment apps one behavior and one look (owner, 2026-10-03):
 - **One workbook per assessment** (`assemble.py`, `xlsx/`, `sheets.py`): Summary, Existing
   Conditions, one live calculator per alternative, ReferenceCurves, then the template's other
   sheets. The app's calculator template is never changed; the toolkit edits the zip parts
-  directly (never openpyxl load and save, which drops charts).
+  directly (never openpyxl load and save, which drops charts). The Summary is the Compare table
+  on its side (owner, 2026-10-08): a row per measure (the index, then each function under its
+  category), a column per scenario, each alternative followed by its change (conditional formats
+  colour it), in 11 pt with light headers; an app's `statements` (DEEP's condition claims) and
+  note follow the table, and it prints on one portrait page when it fits at 75% or more, with
+  the table's header repeated on every page.
 
 Each app keeps its own glue in `<pkg>/workbook.py` (and EASI's `easi/scenario_state.py`).
 EASI lists both, and `_vendor/staf_workbook/`, as presentation code outside its method and

@@ -488,32 +488,14 @@ def _coords_str(dl: dict) -> str:
     return ""
 
 
-def _site_slug(delin) -> str:
-    """``nhdplusid-<id>``, ``comid-<id>``, a hemisphere-based coordinate pair, or
-    empty: the site part of an export filename."""
-    dl = (delin or {}).get("delineation", {})
-    if dl.get("network") == "nhdplus-hr" and dl.get("nhdplus_id") not in (None, "", "None"):
-        return f"nhdplusid-{dl['nhdplus_id']}"
-    comid = dl.get("comid")
-    if comid not in (None, "", "None"):
-        return f"comid-{comid}"
-    lat, lon = dl.get("snapped_lat"), dl.get("snapped_lon")
-    if lat is not None and lon is not None:
-        ns = "n" if float(lat) >= 0 else "s"
-        ew = "e" if float(lon) >= 0 else "w"
-        return f"{ns}{abs(float(lat)):.5f}-{ew}{abs(float(lon)):.5f}"
-    return ""
-
-
 def field_forms_filename(delin=None) -> str:
     """The blank worksheet does not depend on the site."""
     return "sfari-field-forms.pdf"
 
 
-def desktop_metrics_filename(delin) -> str:
-    """``sfari-desktop-metrics-nhdplusid-<id>.pdf`` (or comid, or coordinates)."""
-    slug = _site_slug(delin)
-    return f"sfari-desktop-metrics-{slug}.pdf" if slug else "sfari-desktop-metrics.pdf"
+def desktop_metrics_filename() -> str:
+    """The desktop metrics PDF's download name: plain, with no site id (owner, 2026-10-08)."""
+    return "sfari-desktop-metrics.pdf"
 
 
 def build_field_forms_pdf(delineation=None, evidence=None) -> bytes:

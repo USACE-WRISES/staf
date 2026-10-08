@@ -11,7 +11,7 @@ and PDF/CSV/GeoJSON exports.
 
 It runs entirely on **free, keyless public data services** (USGS, EPA, USACE) —
 no API keys, accounts, or paid subscriptions are required. Built with **Shiny
-for Python** and deployable to **Posit Connect Cloud** straight from this repo.
+for Python**; it deploys to **Posit Connect Cloud** inside the STAF app (`apps/staf`).
 
 > **Screening tool, not a regulatory determination.** Many metrics are national
 > proxies or DEM/regional-curve estimates; each carries a confidence flag and is
@@ -386,7 +386,9 @@ complete availability, not 20 independent field observations.
 - **The completed workbook** (Get Forms and the report) is one file: Summary, Existing
   Conditions, a live calculator per alternative, ReferenceCurves (the six curves this site
   was scored against and the rating bands), then the calculator's own sheets
-  (`libs/staf_workbook`). Downloads never open a page. `workbook.py`, `scenario_state.py`,
+  (`libs/staf_workbook`). Every download opens its own tab, which the browser closes once the
+  file starts, so the page never navigates; names are plain (`easi-calculator.xlsx`,
+  `easi-report.pdf`), with no site id. `workbook.py`, `scenario_state.py`,
   `session.py` and `_vendor/staf_workbook/` are presentation code outside the method digests.
 
 ## Data sources (all public, no API keys)
@@ -476,20 +478,17 @@ python scripts/build_easi_metrics.py # regenerate data/easi-metrics.json from th
 
 Requires **Python 3.12**.
 
-## Deploy (Posit Connect Cloud)
+## Deploy
 
-This repo is ready to deploy from GitHub — no build step or manifest required.
+EASI deploys inside the STAF app (`apps/staf`, one Posit Connect Cloud item, `?tool=easi`); its
+own Connect Cloud item was retired on 2026-10-08. `.posit/publish/easi-987U.toml` lists EASI's
+deploy files, which `apps/staf/scripts/assemble_tools.py` copies into the STAF app (runbook:
+`apps/staf/README.md`); `tests/test_publisher_config.py` checks the list. On its own,
+`shiny run app.py --port 8000` runs EASI for development and its tests.
 
-1. Push this repository to GitHub (public).
-2. In **Posit Connect Cloud** → **Publish** → choose **GitHub**, select the repo
-   and branch, and set the primary file to **`app.py`**.
-3. Choose **Python 3.12**. Connect Cloud installs `requirements.txt` (pip only;
-   all dependencies ship manylinux wheels — no system packages needed) and serves
-   the `app` object.
-4. **No environment variables or secrets are required** — every data service is
-   keyless. The HyRiver request cache is written to the ephemeral temp directory
-   automatically (`HYRIVER_CACHE_NAME` defaults to `tempfile.gettempdir()` in
-   `app.py`), which is correct for Connect Cloud's ephemeral filesystem.
+No environment variables or secrets are required: every data service is keyless. The HyRiver
+request cache is written to the temp directory (`HYRIVER_CACHE_NAME` defaults to
+`tempfile.gettempdir()` in `app.py`), which suits Connect Cloud's ephemeral filesystem.
 
 ## Repository layout
 
@@ -582,10 +581,13 @@ The version lives in one place, `easi/calculator.py`, which the generator reads.
 **Get Forms** on the Assessment page lists the 20 desktop metrics with the values
 each was rated from and offers three downloads: that list as a PDF
 (`report.build_desktop_metrics_pdf`), the **completed workbook** (the calculator
-completed from the screening), and the **blank workbook**. The report footer
-offers the completed workbook too, after GeoJSON, and the batch per-site report
-offers that site's. The blank is also reachable directly at
-`calculator/EASI_Calculator_1.1.xlsx`.
+completed from the screening), and the **blank workbook**. The report's footer, pinned
+under the report, offers the completed workbook too, after GeoJSON, and the batch per-site report
+offers that site's: the same download sets as SFARI and DEEP (`staf_web.forms_downloads`,
+`staf_web.report_footer`). The blank is also reachable directly at
+`calculator/EASI_Calculator_1.1.xlsx` (`easi/calculator/...` inside STAF), and the site's Apply
+STAF page offers it raw from `main` (`docs/_data/apps.yml`; `tests/test_site_links.py` fails when
+the file is renamed and the site is not).
 
 `calculator.build_filled(result)` completes the workbook without a spreadsheet
 library (openpyxl drops the charts on a round trip and is not a runtime

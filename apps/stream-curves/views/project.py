@@ -1265,7 +1265,8 @@ def project_server(input, output, session, state: AppState):
                    if ws.gallery_source() == "release" else None,
                    class_="sc-start-main-head"),
             ui.p("Every published version: draft, preliminary and final. Opening one saves "
-                 "your own copy as a project. DEEP runs the preliminary and final versions.",
+                 "your own copy as a project. DEEP runs every version it is set to show, "
+                 "labeled with its status.",
                  class_="sc-start-lead"),
             ui.div(
                 ui.input_text("gal_filter", None, placeholder="Filter by name or region"),
@@ -1279,6 +1280,12 @@ def project_server(input, output, session, state: AppState):
 
     def _status_tag(v: gallery.Version):
         return ui.span(v.status_label, class_=f"sc-tag st-{v.status}")
+
+    def _not_in_deep_tag(e: gallery.Entry, v: gallery.Version):
+        """A DEEP version someone hid with Show in DEEP (library visibility.json)."""
+        if e.type != "deep" or e.deep_hidden or v.visible_in_deep:
+            return None
+        return ui.span("Not in DEEP", class_="sc-tag is-not-deep")
 
     def _copy_of(entry: gallery.Entry, v: gallery.Version) -> str | None:
         targets = prefs.get(prefs.GALLERY_TARGETS) or {}
@@ -1319,7 +1326,8 @@ def project_server(input, output, session, state: AppState):
             v = e.version()
             if v is None:
                 continue
-            tags = [ui.span(f"v{v.version}", class_="sc-tag is-version"), _status_tag(v)]
+            tags = [ui.span(f"v{v.version}", class_="sc-tag is-version"), _status_tag(v),
+                    _not_in_deep_tag(e, v)]
             if v.validation == "validated":
                 tags.append(ui.span("Verified", class_="sc-tag is-verified"))
             if _copy_of(e, v):
@@ -1374,7 +1382,7 @@ def project_server(input, output, session, state: AppState):
         e, v = picked
         target = _gal_target() or str(_default_target(e, v))
         have = _copy_of(e, v)
-        deep_base = (STAF_LINKS.get("deep") or "").rstrip("/")
+        staf_base = (STAF_LINKS.get("staf") or "").rstrip("/")     # DEEP opens inside the STAF app
         facts = [("Region", e.region_line), ("Version", f"v{v.version} of {e.latest_version}"),
                  ("Status", v.status_label)]
         if e.type == "easi":
@@ -1390,7 +1398,7 @@ def project_server(input, output, session, state: AppState):
         if v.functions_covered is not None:
             facts.append(("Functions", f"{v.functions_covered} of 20"))
         versions = [ui.tags.button(
-            ui.span(f"v{x.version}", class_="sc-gv-v"), _status_tag(x),
+            ui.span(f"v{x.version}", class_="sc-gv-v"), _status_tag(x), _not_in_deep_tag(e, x),
             ui.span(x.published_display, class_="sc-gv-date"),
             type="button",
             class_="sc-gallery-version" + (" is-sel" if x.version == v.version else ""),
@@ -1407,9 +1415,9 @@ def project_server(input, output, session, state: AppState):
                 actions.append(nonce_button("gal_open", "Open a copy"
                                             if ws.gallery_source() == "checkout"
                                             else "Download and open"))
-            if v.in_deep and deep_base and not e.deep_hidden:
+            if v.in_deep and staf_base and not e.deep_hidden:
                 actions.append(ui.a("Open in DEEP",
-                                    href=f"{deep_base}/?assessment={e.id}@{v.version}",
+                                    href=f"{staf_base}/?tool=deep&assessment={e.id}@{v.version}",
                                     target="_blank", rel="noopener", class_="btn btn-link"))
         target_row = (
             ui.div(ui.span("Your copy", class_="sc-gallery-k"),
@@ -1437,8 +1445,10 @@ def project_server(input, output, session, state: AppState):
             ui.div("An EASI screening method version. EASI keeps the method it ships until "
                    "a library version is adopted." if e.type == "easi" else
                    "DEEP does not list the state SQT assessments." if e.deep_hidden else
-                   "DEEP runs this version." if v.in_deep else
-                   "A draft is for review; DEEP runs preliminary and final versions.",
+                   f"DEEP runs this version, labeled {v.status_label}." if v.in_deep else
+                   "Show in DEEP is off for this version: it is in the library only."
+                   if not v.visible_in_deep else
+                   f"DEEP does not run a version that is {v.status_label}.",
                    class_="sc-form-note mt-2"),
             class_="sc-gallery-detail")
 

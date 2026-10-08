@@ -6857,183 +6857,159 @@ body.modal-open {
   }
 }
 
-/* ── Pathway Chooser ────────────────────────────────────────────── */
-
-.pathway-chooser {
-  background: #f8f9fb;
-  border: 1px solid #dedede;
-  border-radius: 10px;
-  padding: 0.75rem 0.9rem;
-  margin: 0.6rem 0 1rem;
+/* ── Apply STAF (tools page): each tier and its two routes ────────── */
+.apply-lead {
+  max-width: 62rem;
+  margin: 1.2rem 0 0.4rem;
+  line-height: 1.55;
+  color: #333;
 }
 
-.pathway-chooser summary {
-  font-family: "Space Grotesk", "Segoe UI", sans-serif;
-  font-weight: 600;
-  font-size: 1rem;
-  color: #1f3f6e;
-  cursor: pointer;
-  user-select: none;
-}
-
-.pathway-chooser-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin-top: 0.6rem;
-}
-
-.pathway-card {
+.apply-tier {
+  margin: 1.1rem 0;
+  padding: 1.1rem 1.2rem 1.2rem;
   background: #ffffff;
   border: 1px solid #d0d0d0;
   border-radius: 10px;
-  padding: 0.9rem 1rem;
+  scroll-margin-top: 100px; /* clears the sticky menu */
+}
+
+.apply-tier-head {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.75rem;
 }
 
-.pathway-card:hover {
-  border-color: #a0b4d0;
-  box-shadow: 0 2px 8px rgba(47, 75, 124, 0.08);
-}
-
-.pathway-card.is-selected {
-  border-color: #2f4b7c;
-  background: #eef3fb;
-}
-
-.pathway-card-icon {
-  color: #2f4b7c;
-  line-height: 0;
-}
-
-.pathway-card-title {
+.main-content .apply-tier h2 {
   margin: 0;
-  font-size: 0.95rem;
-  font-family: "Space Grotesk", "Segoe UI", sans-serif;
-  font-weight: 600;
+  font-size: 1.3rem;
   color: #1f3f6e;
 }
 
-.pathway-card-details {
-  margin: 0.2rem 0 0.4rem 1.1rem;
-  padding: 0;
-  font-size: 0.85rem;
+.apply-tier-name {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: #333;
+}
+
+.apply-tier-desc {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
   line-height: 1.45;
+  color: #444;
 }
 
-.pathway-card-details li {
-  margin: 0.15rem 0;
+.apply-routes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 0.9rem;
 }
 
-.pathway-card-action {
-  align-self: flex-start;
-  margin-top: auto;
-}
-
-@media (max-width: 680px) {
-  .pathway-chooser-cards {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── Launch / workflow pathway cards (link out to the Posit apps) ── */
-.pathway-card-launch-action {
-  align-self: flex-start;
-  margin-top: auto;
-}
-
-.pathway-workflow-steps {
-  list-style: none;
-  margin: 0.4rem 0 0.2rem;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.pathway-workflow-steps > li {
+.apply-route {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.3rem;
-  padding-left: 0.85rem;
-  border-left: 2px solid var(--landing-accent-soft);
-}
-
-.workflow-step-label {
-  font-family: "Space Grotesk", "Segoe UI", sans-serif;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #1f3f6e;
-}
-
-.workflow-step-note {
-  margin: 0;
-  font-size: 0.82rem;
-  color: #444;
-  line-height: 1.4;
-}
-
-.pathway-sqt-fallback {
-  margin-top: 0.6rem;
-  border-top: 1px solid #e2e2e2;
-  padding-top: 0.5rem;
-}
-
-.pathway-sqt-fallback summary {
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: #2f4b7c;
-}
-
-.pathway-sqt-note {
-  margin: 0.4rem 0;
-  font-size: 0.82rem;
-  color: #444;
-}
-
-/* ── Tools hub (app launcher cards) ─────────────────────────────── */
-.apps-hub-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.1rem;
-  margin: 1.4rem 0;
-}
-
-.apps-hub-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  background: #ffffff;
-  border: 1px solid #d0d0d0;
-  border-radius: 10px;
-  padding: 1.1rem 1.2rem;
-  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
-}
-
-.apps-hub-card:hover {
-  border-color: #a0b4d0;
-  box-shadow: 0 6px 18px rgba(47, 75, 124, 0.1);
-  transform: translateY(-3px);
-}
-
-.apps-hub-card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.apps-hub-card-head h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #1f3f6e;
-  flex: 1 1 auto;
   min-width: 0;
+  padding: 0.85rem 0.95rem;
+  background: #f8f9fb;
+  border: 1px solid #dedede;
+  border-radius: 8px;
+}
+
+.main-content .apply-route h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #1f3f6e;
+}
+
+.apply-route-meta,
+.apply-route-help {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #555;
+}
+
+.apply-route-action {
+  margin-top: auto; /* the two routes' buttons line up */
+  padding-top: 0.45rem;
+}
+
+.apply-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-self: stretch;
+}
+
+.apply-picker[hidden] {
+  display: none; /* an author display rule beats the hidden attribute */
+}
+
+.apply-picker select {
+  flex: 1 1 13rem;
+  min-width: 0; /* body clips with overflow-x: hidden, so never wider than the card */
+  max-width: 100%;
+  padding: 0.38rem 0.5rem;
+  border: 1px solid #b9b9b9;
+  border-radius: 4px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.apply-picker .btn:not([href]) {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+}
+
+.apply-picker-list ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.86rem;
+}
+
+.apply-tier-guide {
+  margin: 0.85rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.apply-tier-guide a {
+  color: #2f4b7c;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.apply-tier-guide a:hover {
+  color: #1f3f6e;
+}
+
+.tools-engines-note {
+  margin: 1.2rem 0 0.4rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #555;
+}
+
+@media (max-width: 980px) {
+  .apply-tier {
+    scroll-margin-top: 140px; /* the menu stacks under the logo */
+  }
+}
+
+@media (max-width: 700px) {
+  .apply-routes {
+    grid-template-columns: 1fr;
+  }
+
+  .apply-tier {
+    padding: 0.95rem 0.9rem 1rem;
+  }
 }
 
 .tier-badge {
@@ -7048,39 +7024,6 @@ body.modal-open {
   letter-spacing: 0.06em;
   white-space: nowrap;
   flex: 0 0 auto;
-}
-
-.apps-hub-fullname {
-  margin: 0;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #333;
-}
-
-.apps-hub-desc {
-  margin: 0;
-  font-size: 0.86rem;
-  color: #444;
-  line-height: 1.45;
-  flex: 1 1 auto;
-}
-
-.apps-hub-launch {
-  align-self: flex-start;
-  margin-top: 0.3rem;
-}
-
-.apps-hub-walkthrough {
-  align-self: flex-start;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #2f4b7c;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.apps-hub-walkthrough:hover {
-  color: #1f3f6e;
 }
 
 /* Downloads and resources list (tools page). The theme supplies the bullet,
@@ -7220,62 +7163,6 @@ body.modal-open {
   margin-top: 0;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
-}
-
-/* Pathway card dropdown */
-.pathway-card-select {
-  width: 100%;
-  padding: 0.35rem 0.5rem;
-  border: 1px solid #c0c0c0;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  background: #fff;
-  margin-top: 0.25rem;
-}
-
-/* ── Disabled pathway card + unavailable overlay ──────────────── */
-
-.pathway-card.is-disabled {
-  opacity: 0.55;
-  pointer-events: none;
-  position: relative;
-}
-
-.pathway-card.is-disabled .pathway-card-unavailable {
-  pointer-events: auto;
-}
-
-.pathway-card-unavailable {
-  text-align: center;
-  margin-top: 0.25rem;
-}
-
-.pathway-card-unavailable-label {
-  display: inline-block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #777;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.pathway-card-unavailable-details {
-  margin-top: 0.25rem;
-  font-size: 0.8rem;
-  color: #555;
-}
-
-.pathway-card-unavailable-details summary {
-  cursor: pointer;
-  color: #2f4b7c;
-  font-weight: 500;
-  font-size: 0.8rem;
-}
-
-.pathway-card-unavailable-details p {
-  margin: 0.3rem 0 0;
-  line-height: 1.4;
-  text-align: left;
 }
 
 /* ── Tier "How it works" collapsible ─────────────────────────── */

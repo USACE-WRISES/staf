@@ -8,16 +8,16 @@
   "report-ready.js": "fbe0973c23461236cb408fbaeefd7a4e8f6e8ad5f5ba52ff1894e176f0208530",
   "scenarios.js": "219b864ab4bf77b1984f3ee81a5f1f421a23513180e40d7687452ca75a364f00",
   "staf-ns.js": "1d4dbc9891d9f22cf6c48b50abaab8c2accab06ec6127d932115675884e90e21",
-  "staf.css": "73a6312ed5284c44fd55b7b7f997abd4cafe821de82a3eec3cce9ba9b22857e8",
+  "staf.css": "1e3fa9b5dc7796f25e03cf99390f06fcbd117a0e1a6bf2a06240907308596a9d",
   "tooltip.js": "7bf8ab487edfe47d7ffe11c1650c8597bb23e65a7950a2c30f69bcdaeaee4d74",
-  "unsaved-guard.js": "c946c6e0f08a2f130399ba40a19b307796d21271a4daafb4e08f7925fe42c2fa"
+  "unsaved-guard.js": "834e7b849b99fa4a99aaf35e9850767aabfac4558b781746e492e9866bfb83a2"
  },
  "data_manifest": {
   "data/ecoregions.json": "df2d3cc0f12ec8640ce9e937c78cc55b0ebfaf7d2bc0a54864076f76a8b51b40"
  },
- "lib_version": "0.3.0",
+ "lib_version": "0.5.0",
  "manifest": {
-  "__init__.py": "1eb11ee7806e5da7289b4f6f224646deb62baa5927386592e2a1a9524a0026d9",
+  "__init__.py": "86ac17eefd4c184fa6cfb104936970cdf315470a136e5350f9ee11a4f6d0cb20",
   "assemble.py": "0040f36e351525eac826f5b295cbf2bfc4e7bd2b2cbbadaeec4c20e673f4b77c",
   "assessment_file.py": "71207520141170fe4dac22e7f3fa65e9b077a56d5f41f390b8b25e639272094e",
   "model/__init__.py": "fae5024335a350d1f0df06b245c6c9a3702446d04d775cd9d82b144fe284542e",
@@ -25,17 +25,17 @@
   "model/refcurves.py": "f589268a44f2dc86ddce75389d2e335e9fce3c1dc250c60f6e829860cc7a4bba",
   "model/scenarios.py": "b8fe2101e799162548d6559378409d2de6229aaade60a05dcdc5fa2e4ca1d772",
   "model/summary.py": "561298a70ca1b9fd509c71ab5ed10ffc0115608ff5bcae554decae6ccc4e02be",
-  "sheets.py": "93eb856af2ded88f39b229594e8294a3789df0975982d94fea44df9d9c5dcfde",
-  "web.py": "f747606a6efd1d97dbb49a8cca2e911584af4cd5a58391a912c4cc85ba52aa95",
+  "sheets.py": "494d714e492657e86f1f0ca7709f56e00d4ef06e5ea519c17e26af98d82e6a3e",
+  "web.py": "aaecde38246c577e7e56f69cf11e50be457b9db3d510929b4fcb7efaf447e470",
   "xlsx/__init__.py": "806e1ea137030b7a70f8fadd14171c2dd24ed7b5fa03f0514304351184a658e4",
-  "xlsx/author.py": "80edc744700ef5936c3ccb2fccbc38f393ab886c920d1c23a3f7f08ba8f793a3",
+  "xlsx/author.py": "bfe377bb2af2d41097f2f37227fd8e1b94e561ef46dc7cabe932bae46c8534aa",
   "xlsx/charts.py": "ab26c6c4cb011b9b60cbae011cf12b17f00136eddb0a5e6bb4b97a02c47d31e5",
   "xlsx/clone.py": "7f9be69d3f1878861056a01f7133196821948307c3b74f7adda579a9fee5f8e6",
   "xlsx/formula.py": "de021d8b7a5b96d5f7f084813de01b5bfefc29ceb486f8f28b5553743542d3f0",
   "xlsx/names.py": "c44c4f74d27ab1dd16e90038de861893ca0b7ed0bfe3b006b512bf0860aeacb3",
   "xlsx/package.py": "3e9a93473de681b0fedebd791a27f17a94f75aeb0817fc924a3421e89ff79015",
-  "xlsx/styles.py": "c15962c50c229094f534745848ff41bd9cf092f52201005d7549c1eb1219bb9a",
-  "xlsx/validate.py": "97a5fda20a0b56baa3b5155d96411b59c1d689c211908db91f60b09f8945515f",
+  "xlsx/styles.py": "7a68304664d2175125523cb6e381d0a968844cf20c5455de8b54bd347ef0d0b1",
+  "xlsx/validate.py": "c556d60c99bc86688521ef38ee9dd2329632ebe7c4cd723be5dc9debe5f13312",
   "xlsx/workbook.py": "28fd0577248ff01e2a97b4229e96b29c20e951533529624d710f91aef04de72e"
  },
  "vendored_from": "libs/staf_workbook"

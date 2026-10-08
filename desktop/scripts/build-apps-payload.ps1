@@ -12,7 +12,8 @@
 # the app resolves its library as ..\library (streamcurves/library.py):
 #   stream-curves\   apps/stream-curves minus tests\ and brand\ (development-only)
 #   library\         apps/library as a catalog-only snapshot: catalog.json and each assessment's
-#                    manifest, status, validation and artifacts records, never a version folder.
+#                    manifest, status, validation, artifacts and visibility records, never a
+#                    version folder.
 #                    An installed copy reads the gallery from the `library` release and downloads
 #                    the version it opens; offline, the snapshot lists versions as download-only.
 #

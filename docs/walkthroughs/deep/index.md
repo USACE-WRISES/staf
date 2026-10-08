@@ -5,7 +5,7 @@ description: "How the DEEP detailed assessment app scores a site, where each cur
 ---
 {% include staf_page_chrome.html %}
 
-<p>DEEP (Detailed Evaluation of Ecosystem Processes) scores a stream site against a published detailed assessment for its region. The Assessment page shows only what you need to enter values. This guide holds the rest: how DEEP turns a value into a score, what each reference curve rests on, and how each metric is measured.</p>
+<p>DEEP (Detailed Evaluation of Ecosystem Processes) scores a stream site against a published detailed assessment for its region, in the web application or in that assessment's spreadsheet calculator (both on <a href="{{ site.baseurl }}/tools/#deep">Apply STAF</a>). The web application's Assessment page shows only what you need to enter values. This guide holds the rest: how DEEP turns a value into a score, what each reference curve rests on, and how each metric is measured.</p>
 
 ## The Assessment page
 
@@ -33,7 +33,7 @@ A row can carry one warning:
 
 A metric marked **Not scored** is one the assessment withholds because no defensible reference supports it. Hover its (i) for the reason. A function the assessment cannot score at all says so on its own page.
 
-**Get Forms** lists every metric of the assessment with how it is measured, whether it is answered in the field (F) or from the desk (D), its status, any desktop value and the data behind it. From there you can download the field forms, the metrics list, and the Excel calculator, blank or completed with the site's values.
+**Get Forms** lists every metric of the assessment with how it is measured, whether it is answered in the field (F) or from the desk (D), its status, any desktop value and the data behind it. From there you can download the field forms, the metrics list, and the Excel calculator, blank or completed with the site's values. The report offers the completed calculator too.
 
 ## How DEEP scores
 
@@ -42,6 +42,18 @@ A metric marked **Not scored** is one the assessment withholds because no defens
 3. **Outcomes and the index.** Function scores roll up to the Physical, Chemical and Biological outcome sub-indices and the Ecosystem Condition Index, as the <a href="{{ site.baseurl }}/scoring/">Scoring and Condition</a> page describes.
 
 When an assessment cannot score a function, DEEP does not treat it as a low score. It reports the Ecosystem Condition Index as an interval that allows for any score the function could have had, and names a condition band only when the interval stays inside one.
+
+## Assessment status
+
+Every published assessment version carries a status, shown in its color on DEEP's map, in the Assessment regions list and on its badge:
+
+| Status | Color | What it means |
+|---|---|---|
+| Draft | Gray | Built and published, but its curves have not been reviewed yet. |
+| Preliminary | Amber | Reviewed and approved for use. |
+| Final | Blue | Certified after field validation. |
+
+DEEP uses an assessment's Final version when it has one, else its Preliminary version, else its Draft. **Change** on the Basin step offers the other versions.
 
 ## Where each curve comes from
 

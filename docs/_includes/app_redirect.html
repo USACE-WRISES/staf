@@ -1,9 +1,11 @@
 {%- comment -%}
-Redirect card for one STAF app. Include with an app id, e.g. {% include app_redirect.html id="easi" %}.
+Redirect card for one STAF tool. Include with an app id, e.g. {% include app_redirect.html id="easi" %}.
 The target URL is read from docs/_data/apps.yml (the single source of truth), so re-homing an app is
-a one-line edit there and every /staf/<app> link follows. Ported from the old easi redirect repo
-(apps/easi/site/index.html): instant meta refresh + canonical for no-JS, JS location.replace so the
-stub does not sit in browser history, and a visible Launch button as the final fallback.
+a one-line edit there and every /staf/<app> link follows: EASI, SFARI and DEEP open inside the STAF
+app (?tool=), and stream-curves lands on the StreamCurves Desktop download. Ported from the old easi
+redirect repo (apps/easi/site/index.html): instant meta refresh + canonical for no-JS, JS
+location.replace so the stub does not sit in browser history, and a visible Open button as the final
+fallback.
 {%- endcomment -%}
 {%- assign app = site.data.apps | where: "id", include.id | first -%}
 <!DOCTYPE html>
@@ -48,14 +50,14 @@ stub does not sit in browser history, and a visible Launch button as the final f
     <p class="sub">{{ app.full_name }}</p>
     <p class="note">Taking you to the live application...</p>
     <p>
-      <a class="launch" id="launch" href="{{ app.url }}">Launch {{ app.name }}</a>
+      <a class="launch" id="launch" href="{{ app.url }}">Open {{ app.name }}</a>
     </p>
     <p class="fine">If you are not redirected automatically, use the button above.<br>
       Part of <a href="{{ '/' | relative_url }}">STAF</a>.</p>
   </main>
 
   <script>
-    // Instant redirect for browsers with JavaScript. Reads the URL from the Launch link so there is
+    // Instant redirect for browsers with JavaScript. Reads the URL from the Open link so there is
     // no extra copy to maintain. Falls back to the meta refresh and the visible link without JS.
     window.location.replace(document.getElementById("launch").href);
   </script>

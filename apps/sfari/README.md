@@ -47,8 +47,9 @@ and the two ids are in `scripts/build_sfari_data.py`).
 
 ## The calculator
 
-The report modal offers the SFARI Excel calculator (`data/calculator/`, draft
-2026-06-29, **pending Eco-PCX certification**) blank or filled from the assessment:
+Get Forms offers the SFARI Excel calculator (`data/calculator/`, draft
+2026-06-29, **pending Eco-PCX certification**) blank or filled from the assessment, and the
+report's footer the filled one (the same download sets in every tool, owner 2026-10-08):
 reach id, coordinates, date, reach length, the 20 function scores on their merge
 anchors, and the 80 Likert values. `sfari/calculator.py` writes it by editing the
 worksheet XML inside the package and copying every other part through untouched,
@@ -76,8 +77,8 @@ Conditions at the top level) still open, and a file from another tool is refused
 completed workbook holds Summary, Existing Conditions, one copy of the calculator per
 alternative (the template's formulas unchanged, only sheet names differ: tell Eco-PCX), then
 ReferenceCurves (the Likert criteria and suggestion breakpoints) (`sfari/workbook.py`,
-`libs/staf_workbook`). Downloads never open a page, and the page warns before unsaved work is
-lost.
+`libs/staf_workbook`). Every download opens its own tab, so the page never navigates, and the
+page warns before unsaved work is lost.
 
 ## Desktop evidence sources
 
@@ -188,19 +189,17 @@ python scripts/build_sfari_data.py
 python -m pytest
 ```
 
-## Deploy (Posit Connect Cloud, via Posit Publisher)
+## Deploy
 
-This repo ships a Posit Publisher configuration (`.posit/publish/sfari.toml`) so it
-can be deployed to **Posit Connect Cloud** straight from VS Code:
+SFARI deploys inside the STAF app (`apps/staf`, one Posit Connect Cloud item, `?tool=sfari`); its
+own Connect Cloud item was retired on 2026-10-08. `.posit/publish/sfari.toml` lists SFARI's
+deploy files (`app.py`, `requirements.txt`, and the `sfari/`, `data/`, and `www/` folders; the
+vendored site engine rides inside `sfari/`), which `apps/staf/scripts/assemble_tools.py` copies
+into the STAF app (runbook: `apps/staf/README.md`). On its own, `shiny run app.py --port 8001`
+runs SFARI for development and its tests.
 
-1. Install the **Posit Publisher** extension in VS Code and open this folder.
-2. Open the Posit Publisher panel — it detects the `sfari` configuration
-   (entrypoint `app.py`, Python 3.12, deps from `requirements.txt`).
-3. Add / select your Connect Cloud credential, then click **Deploy**. Redeploys
-   reuse the same content.
-
-The bundle is `app.py`, `requirements.txt`, and the `sfari/`, `data/`, and `www/`
-folders (the vendored site engine rides inside `sfari/`). The site engine needs
+The site's Apply STAF page offers the blank calculator raw from `main` (`docs/_data/apps.yml`;
+`tests/test_site_links.py` fails when the template is renamed and the site is not). The site engine needs
 `requests`, `shapely`, and `geopandas` importable at runtime; if that stack is
 absent the map draws no streams and the watershed evidence is unavailable; the
 direct-service tiers still run.
@@ -210,9 +209,6 @@ variable. The HyRiver cache is directed to `/tmp` (ephemeral filesystem). Export
 (CSV / GeoJSON / PDF) and the cross-section plot are matplotlib-free (reportlab +
 inline SVG), so there is no font-cache stall on first render. A field visit can be
 saved to and resumed from a JSON file (the header's Save and Open).
-
-Deployment records under `.posit/publish/deployments/` hold account-specific content
-GUIDs/URLs and are git-ignored; Posit Publisher writes them locally on first deploy.
 
 ## Note on the outcome mapping
 
