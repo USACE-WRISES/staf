@@ -6858,13 +6858,6 @@ body.modal-open {
 }
 
 /* ── Apply STAF (tools page): each tier and its two routes ────────── */
-.apply-lead {
-  max-width: 62rem;
-  margin: 1.2rem 0 0.4rem;
-  line-height: 1.55;
-  color: #333;
-}
-
 .apply-tiers {
   display: grid;
   gap: 1.1rem;

@@ -3,7 +3,7 @@ title: Apply STAF
 nav_order: 7
 description: "Apply each STAF tier with its web application or its spreadsheet calculator."
 ---
-{% include staf_page_chrome.html %}
+{% include staf_page_chrome.html title="Apply STAF Assessments" %}
 
 {% include apply_staf.html %}
 

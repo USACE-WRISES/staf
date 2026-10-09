@@ -471,7 +471,7 @@ def _metric_row(m, rc, *, midx=None, stratum_note: str = ""):
     value is and which way is better, the Desktop tag and the curve set, then the row's buttons
     (Scoring, Note, Photo, N/A), always visible. The value box and the index sit in the right
     column; the warning shows under the evidence when there is one; the curve, the note and the
-    photos open under the row. Where a curve comes from is in the report and the DEEP guide."""
+    photos open under the row. Where a curve comes from is in the report."""
     mid = m["metricId"]
     rc = rc or {}
     name = m.get("metricName", mid)
@@ -803,7 +803,7 @@ def _metric_tip_html(m) -> str:
     """The metric's hover card: its name and how to measure it, nothing else.
 
     What a curve rests on (its basis, reference sample and caveats) is in the
-    report and the DEEP guide, not on the worksheet (2026-10-04). The text comes
+    report, not on the worksheet (2026-10-04). The text comes
     from :func:`field_form.method_text`, the same concise wording the Get Forms
     dialog and the printed forms use. Raw text may hold '<', '>', '&', so escape it."""
     name = m.get("metricName", m.get("metricId", ""))
@@ -1004,7 +1004,7 @@ def _withheld_card(w):
 def _unassessed_panel(fn, la, *, eyebrow: str = ""):
     """The page for a function the assessment cannot score: the reason in one
     sentence, then the metrics it considered. Never a score; the ECI's interval
-    accounts for it (the DEEP guide explains how)."""
+    accounts for it."""
     name = fn.get("functionName") or fn.get("functionId")
     detail = (fn.get("unassessed") or {}).get("metrics") or []
     rows = [_withheld_card(w) for w in detail]
@@ -1089,13 +1089,7 @@ STAF_LINKS = {
     "sfari":  "https://gtmenichino-staf.share.connect.posit.cloud/?tool=sfari",
     "curves": "https://github.com/USACE-WRISES/staf/releases/latest",
     "deep":   "https://gtmenichino-staf.share.connect.posit.cloud/?tool=deep",
-    # the DEEP guide on the STAF site: how scoring works and the metric reference
-    "guide":  "https://usace-wrises.github.io/staf/walkthroughs/deep/",
 }
-
-#: One line for About and Help. A new tab, so the open assessment is never left.
-_GUIDE_LINE = (f'The <a href="{STAF_LINKS["guide"]}" target="_blank" rel="noopener">DEEP '
-               'guide</a> explains how DEEP scores and how each metric is measured.')
 
 #: the assessment-regions sidebar's close chevron, drawn in the text colour
 _CHEVRON_SVG = ('<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false" '
@@ -2455,7 +2449,7 @@ def server(input, output, session_):  # noqa: C901
             "value, and an engine value never scores against a StreamCat-fitted curve while "
             "the pairing mode refuses it. On a stream outside V2 that COMID is the nearest "
             "StreamCat reach downstream, named with the routed distance and the "
-            "drainage-area ratio in the report.\n\n" + _GUIDE_LINE))
+            "drainage-area ratio in the report."))
 
     @reactive.effect
     @reactive.event(input.nav_help)
@@ -2491,7 +2485,6 @@ def server(input, output, session_):  # noqa: C901
             "4. **Report**: the assessment stays visible while the report map is prepared. "
             "The completed report opens in a popup; closing it returns to the same screen. "
             "Review and export the detailed assessment.\n\n"
-            + _GUIDE_LINE + "\n\n"
             "Address search uses OpenStreetMap data (Photon and Nominatim)."))
 
     # ---- left pane ----
