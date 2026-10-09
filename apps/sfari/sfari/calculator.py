@@ -64,12 +64,12 @@ NOT_APPLICABLE_LABEL = "NA"
 
 # --- The cell map -------------------------------------------------------------
 # Explicit and committed, never derived from list order or from label matching:
-# the worksheet's labels are abbreviations of the app's metric names in 17 of the
-# 80 rows ("Flow Statistics" for "Flow permanence statistics", "Toxic Pollutants"
-# for "Pollutants"), so a name match would be wrong and a positional match would
-# break silently the first time a metric is inserted. The third element is the
-# label the worksheet carries today; a test asserts it still does, so a revised
-# template fails loudly instead of scoring the wrong row.
+# the worksheet's labels differ from the app's metric names, beyond letter case,
+# in 22 of the 80 rows ("Toxic Pollutants" for "Pollutants", "Entrenchment Ratio
+# (ER)" for "Entrenchment (ER)"), so a name match would be wrong and a positional
+# match would break silently the first time a metric is inserted. The third
+# element is the label the worksheet carries today; a test asserts it still does,
+# so a revised template fails loudly instead of scoring the wrong row.
 
 FUNCTION_ROWS = (
     ("catchment-hydrology", 8, "Catchment Hydrology"),

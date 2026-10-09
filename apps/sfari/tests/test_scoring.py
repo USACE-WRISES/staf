@@ -125,3 +125,12 @@ def test_data_files_consistent():
     assert len(config.desktop_metrics()) == 26
     from collections import Counter
     assert set(Counter(m["functionId"] for m in config.metrics()).values()) == {4}
+
+
+def test_flow_statistics_keeps_its_id():
+    """Owner, 2026-10-09: the Streamflow regime metric reads "Flow statistics", as the SFARI
+    document's heading, the site, the field form and the calculator name it. Its id keeps the
+    old wording: saved assessments, the calculator's cell map and the evidence adapter key on it."""
+    m = config.metrics_by_id()["streamflow-regime-flow-permanence-statistics"]
+    assert m["name"] == "Flow statistics"
+    assert not [x for x in config.metrics() if "permanence statistics" in x["name"].lower()]
