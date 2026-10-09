@@ -45,8 +45,6 @@
   url: https://gtmenichino-staf.share.connect.posit.cloud/?tool=deep
   calculator_list: deep_calculators
   status: live
-  walkthrough: /walkthroughs/deep/
-  walkthrough_label: Read the guide
 - id: curves
   name: stream-curves
   full_name: Reference and Regional Curve Builder

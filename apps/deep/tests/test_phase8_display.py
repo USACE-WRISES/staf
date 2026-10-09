@@ -43,7 +43,7 @@ def test_metric_warning_composes_domain_and_sample_advisories():
 def test_metric_tip_is_how_to_measure_and_the_annotations_go_to_the_report():
     """2026-10-04: the worksheet's (i) says how to measure the metric and nothing
     else; the builder's annotations ride in the report (the CSV's Uncertainty and
-    Read with care columns) and the DEEP guide explains them."""
+    Read with care columns)."""
     m = {"metricName": "Sinuosity", "metricId": "spring-phab-sinu",
          "howToMeasure": "Channel length over valley length.",
          "referenceTier": "best_available", "metricRole": "response",

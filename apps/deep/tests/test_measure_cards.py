@@ -3,7 +3,7 @@
 - the reference curve ``_curve_svg`` (opened from the row's chart toggle),
 - the (i) ``_metric_tip_html`` and the row ``_metric_row`` (SFARI's layout,
   2026-10-04): what finishing the assessment needs, and nothing about where
-  the curve comes from (that is in the report and the DEEP guide).
+  the curve comes from (that is in the report).
 
 Importing ``app`` pulls in the whole Shiny module; ``conftest.py`` puts the repo
 root on ``sys.path`` so this works under any pytest invocation.
