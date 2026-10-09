@@ -601,7 +601,7 @@
       "metricId": "streamflow-regime-flow-permanence-statistics",
       "functionId": "streamflow-regime",
       "category": "Hydrology",
-      "name": "Flow permanence statistics",
+      "name": "Flow statistics",
       "scale": "R",
       "metricStatement": "Zero‑flow days and dry periods quantify how often a stream is dry and for how long. Stable statistics over time indicate consistent flow duration. Large increases in zero‑flow days in a historically perennial reach point to meaningful alteration.",
       "fieldStatement": "Quantitative hydrologic statistics (e.g., flow-duration stats, annual flow days, percent of year flow, flashiness, recession, rate-of-change) fall within reference expectation.",

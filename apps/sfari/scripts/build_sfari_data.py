@@ -90,6 +90,14 @@ EXCLUDED_METRICS = frozenset({
 # description heading, so the statement won't slug-match. Map table-slug -> heading-slug.
 # (The two EXCLUDED_METRICS above have NO description paragraph in the doc at all, which
 # is part of why they are excluded; they never reach this table.)
+# Display names that differ from the metric table's wording, applied after the id is formed so
+# the id never moves (saved assessments, calculator.py's cell map and the evidence adapters key on
+# it). Owner, 2026-10-09: "Flow statistics", the document's own heading for this metric and the
+# name on the site, the field form and the calculator.
+DISPLAY_NAMES = {
+    "streamflow-regime-flow-permanence-statistics": "Flow statistics",
+}
+
 METRIC_STATEMENT_ALIASES = {
     "in-channel-ponding-beaver": "in-channel-ponding-and-beaver-activity",
     "flow-permanence-statistics": "flow-statistics",
@@ -332,7 +340,7 @@ def build_metrics(doc):
                 "metricId": metric_id,
                 "functionId": function_id,
                 "category": category,
-                "name": m["name"],
+                "name": DISPLAY_NAMES.get(metric_id, m["name"]),
                 "scale": "W" if mslug in WATERSHED_SLUGS else "R",
                 "metricStatement": (descriptions.get(mslug)
                                     or descriptions.get(METRIC_STATEMENT_ALIASES.get(mslug, ""), "")
