@@ -294,7 +294,7 @@ test("regions draw in their own pane under the streams, explorable, never bubbli
   assert.equal(lyr.options.pane, "deep-regions");
   assert.equal(lyr.options.interactive, true);
   assert.equal(lyr.options.bubblingMouseEvents, false);
-  assert.equal(lyr.style.fillOpacity, 0.12);
+  assert.equal(lyr.style.fillOpacity, 0.15);         // owner, 2026-10-09: the statuses read at a glance
   assert.ok(!pane.classList.contains("is-passive"));
   const click = { latlng: [37, -96] };
   lyr.fire("click", click);
@@ -417,9 +417,58 @@ test("the Layers menu shows and hides the regions, and its row survives a rebuil
   assert.ok(box() && box().checked);
 });
 
-// ---- open, closed, remembered ----
+// the legend's region key, as app.py _region_key draws it
+function keyIn(root, statuses) {
+  const key = new El("div", { class: "deep-reg-key" }), rows = {};
+  for (const [status, label] of statuses) {
+    const name = new El("div", { class: "easi-legend-label" });
+    name.textContent = label;
+    rows[status] = new El("div", { class: "easi-legend-row deep-reg-row", role: "button", tabindex: "0",
+                                   "data-status": status, "aria-pressed": "true",
+                                   title: "Hide " + label + " regions" })
+      .add(new El("span", { class: "deep-reg-sw" }), name);
+    key.appendChild(rows[status]);
+  }
+  root.appendChild(key);
+  return { key, rows };
+}
+const STATUSES = [["draft", "Draft"], ["preliminary", "Preliminary"], ["certified", "Final"]];
+
+test("the legend's status rows hide and show their regions, on the map and in the list", () => {
+  // owner, 2026-10-09: a subtle toggle per status in the legend
+  const d = deepPage();
+  const k = keyIn(d.m.corner, STATUSES);
+  d.p.fire("click", k.rows.draft);
+  assert.ok(!d.map.hasLayer(d.layer("southern-coastal-plain")), "the Draft region leaves the map");
+  assert.ok(d.row("southern-coastal-plain").hidden, "and the list");
+  assert.ok(d.map.hasLayer(d.layer("flint-hills")) && !d.row("flint-hills").hidden);
+  assert.equal(d.side.count.textContent, "3 of 4");
+  assert.ok(k.rows.draft.classList.contains("is-off"));
+  assert.equal(k.rows.draft.getAttribute("aria-pressed"), "false");
+  assert.equal(k.rows.draft.getAttribute("title"), "Show Draft regions");
+  const enter = d.p.fire("keydown", k.rows.preliminary, { key: "Enter" });   // the keyboard too
+  assert.ok(enter.prevented);
+  assert.ok(!d.map.hasLayer(d.layer("acadian-plains-and-hills")));
+  assert.ok(!d.map.hasLayer(d.layer("southeastern-plains")), "a region sent without a status is Preliminary");
+  assert.equal(d.side.count.textContent, "1 of 4");
+  d.p.handlers.get("deep_coverage_current")({ assessmentId: "acadian-plains-and-hills", identify: true });
+  assert.ok(d.map.hasLayer(d.layer("acadian-plains-and-hills")), "the region in use always shows");
+  k.key.remove();                                   // the server redraws the legend
+  const again = keyIn(d.m.corner, STATUSES);
+  d.p.fire("staf:tool-shown", d.p.document, { detail: { tool: "deep" } });
+  assert.ok(again.rows.draft.classList.contains("is-off") && again.rows.preliminary.classList.contains("is-off"));
+  assert.ok(!again.rows.certified.classList.contains("is-off"));
+  assert.equal(again.rows.certified.getAttribute("title"), "Hide Final regions");
+  d.p.fire("click", again.rows.certified);
+  assert.equal(d.p.tools.deep.querySelector(".deep-cov-empty").textContent, "Every status is turned off in the legend");
+  d.p.fire("click", again.rows.draft);
+  assert.ok(d.map.hasLayer(d.layer("southern-coastal-plain")) && !d.row("southern-coastal-plain").hidden);
+  assert.equal(again.rows.draft.getAttribute("aria-pressed"), "true");
+});
+
+// ---- open and closed ----
 test("closed, the sidebar is a button in the map's controls, under Layers, with the count", () => {
-  const d = deepPage({ width: 1100 });              // narrower than 1280: starts closed
+  const d = deepPage();                             // it starts closed
   const shell = d.p.tools.deep;
   assert.equal(d.side.tab.parentNode, d.m.corner, "docked in the map's top-right controls");
   assert.ok(d.side.tab.classList.contains("leaflet-control"));
@@ -445,31 +494,30 @@ test("the button goes back into the controls after they are rebuilt", () => {
   assert.equal(d.side.tab.getAttribute("aria-expanded"), "false");
 });
 
-test("the tab opens the sidebar and the close button shuts it; the choice is remembered", () => {
-  const store = {};
-  const d = deepPage({ width: 1100 });              // narrower than 1280: starts closed
+test("the tab opens the sidebar and the close button shuts it", () => {
+  const d = deepPage();
   const shell = d.p.tools.deep;
   assert.ok(!shell.classList.contains("deep-cov-open"));
-  d.p.window.localStorage = { getItem: (k) => store[k] || null, setItem: (k, v) => { store[k] = v; } };
   d.p.fire("click", d.side.tab);
   assert.ok(shell.classList.contains("deep-cov-open"));
   assert.equal(d.side.tab.getAttribute("aria-expanded"), "true");
-  assert.equal(store["staf.deep.regionsOpen"], "1");
   d.p.fire("click", d.side.close);
   assert.ok(!shell.classList.contains("deep-cov-open"));
-  assert.equal(store["staf.deep.regionsOpen"], "0");
+  assert.equal(d.side.tab.getAttribute("aria-expanded"), "false");
   d.p.fire("click", d.side.tab);
   d.search().fire("keydown", { key: "Escape" });    // an empty search: Esc closes
   assert.ok(!shell.classList.contains("deep-cov-open"));
 });
 
-test("wide screens open it at first; on a phone choosing a region hands the map back", () => {
-  const wide = deepPage({ width: 1400 });
-  assert.ok(wide.p.tools.deep.classList.contains("deep-cov-open"));
-  const stored = { getItem: () => "1", setItem() {} };                 // left open on a desktop
-  assert.ok(deepPage({ width: 1100, storage: stored }).p.tools.deep.classList.contains("deep-cov-open"));
-  const phone = deepPage({ width: 400, storage: stored });
-  assert.ok(!phone.p.tools.deep.classList.contains("deep-cov-open"), "never open at first on a phone");
+test("it starts closed on every load, a wide screen too; on a phone a choice hands the map back", () => {
+  // owner, 2026-10-09: the sidebar is collapsed when DEEP first loads; nothing is remembered
+  const leftOpen = { getItem: () => "1", setItem() { throw new Error("nothing is stored"); } };
+  const wide = deepPage({ width: 1600, storage: leftOpen });   // left open once, by an older DEEP
+  assert.ok(!wide.p.tools.deep.classList.contains("deep-cov-open"));
+  wide.p.fire("click", wide.side.tab);
+  wide.p.fire("click", wide.side.close);            // opening and closing it stores nothing
+  const phone = deepPage({ width: 400 });
+  assert.ok(!phone.p.tools.deep.classList.contains("deep-cov-open"));
   const shell = phone.p.tools.deep;
   assert.ok(!shell.classList.contains("deep-cov-open"));
   phone.p.fire("click", phone.side.tab);

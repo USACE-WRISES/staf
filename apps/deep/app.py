@@ -885,8 +885,10 @@ def _engine_line_ui(es: dict, running: bool, prog: dict):
 
 def _region_key(regions):
     """The legend's key to the assessment regions (Identify): one swatch per status the map
-    shows, in :data:`REGION_STATUS_STYLE`'s order. The Layers menu's Assessment regions box
-    hides it with the regions (www/coverage.js, deep.css)."""
+    shows, in :data:`REGION_STATUS_STYLE`'s order. Each row is a toggle (owner, 2026-10-09):
+    www/coverage.js hides and shows that status's regions on the map and in the list, and
+    keeps a redrawn key's rows in step. The Layers menu's Assessment regions box hides it with
+    the regions (www/coverage.js, deep.css)."""
     rows = []
     for status, style in REGION_STATUS_STYLE.items():
         if status not in regions:
@@ -896,7 +898,9 @@ def _region_key(regions):
                   f"--swatch-fill:rgba({rgb[0]},{rgb[1]},{rgb[2]},.28);")
         rows.append(ui.div(ui.span(class_="deep-reg-sw", style=swatch),
                            ui.div(style["label"], class_="easi-legend-label"),
-                           class_="easi-legend-row"))
+                           class_="easi-legend-row deep-reg-row", role="button", tabindex="0",
+                           title=f"Hide {style['label']} regions",
+                           **{"data-status": status, "aria-pressed": "true"}))
     if not rows:
         return None
     return ui.div(ui.div("Assessment regions", class_="easi-legend-sub"), *rows,
@@ -1126,7 +1130,7 @@ TOOL_FULL_NAME = "Detailed Evaluation of Ecosystem Processes"
 
 # head assets in load order; staf/ holds the scripts and styles every STAF tool shares
 HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=27"),
-        ui.tags.link(rel="stylesheet", href="deep.css?v=16"),
+        ui.tags.link(rel="stylesheet", href="deep.css?v=17"),
         ui.tags.link(rel="stylesheet", href="staf/staf.css?v=11"),
         ui.tags.link(rel="stylesheet", href="staf/metric-rows.css?v=1"),
         ui.tags.script(src="staf/staf-ns.js?v=1", defer=""),
@@ -1139,7 +1143,7 @@ HEAD = (ui.tags.link(rel="stylesheet", href="styles.css?v=27"),
         ui.tags.script(src="staf/scenarios.js?v=2", defer=""),
         ui.tags.script(src="staf/metric-rows.js?v=1", defer=""),
         ui.tags.script(src="measure.js?v=8", defer=""),
-        ui.tags.script(src="coverage.js?v=7", defer=""))
+        ui.tags.script(src="coverage.js?v=11", defer=""))
 
 
 def _nav_actions(prefix=""):

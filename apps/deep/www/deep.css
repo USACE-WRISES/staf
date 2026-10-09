@@ -226,6 +226,13 @@
 .easi-shell.deep-regions-off .deep-reg-key { display: none; }
 .deep-reg-sw { flex: none; width: 12px; height: 12px; border-radius: 2px; box-sizing: border-box;
   border: 1.5px solid var(--swatch-line); background: var(--swatch-fill); }
+/* each status row toggles its regions (www/coverage.js; owner, 2026-10-09): off, its swatch goes
+   hollow and its name grey */
+.deep-reg-row { margin: 0 -4px; padding: 1px 4px; border-radius: 4px; cursor: pointer; user-select: none; }
+.deep-reg-row:hover { background: rgba(47, 75, 124, .07); }
+.deep-reg-row:focus-visible { outline: 2px solid #2f4b7c; outline-offset: 1px; }
+.deep-reg-row.is-off .deep-reg-sw { background: transparent; opacity: .6; }
+.deep-reg-row.is-off .easi-legend-label { color: #9aa3b2; }
 
 /* the report popup's per-metric support and advisory lines */
 .deep-report-support { font-size: 11px; color: #45506a; margin-top: 2px; }
