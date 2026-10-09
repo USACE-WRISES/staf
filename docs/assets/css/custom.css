@@ -7228,13 +7228,6 @@ body.modal-open {
   text-underline-offset: 2px;
 }
 
-.tools-engines-note {
-  margin: 1.2rem 0 0.4rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: #555;
-}
-
 /* The three tiers side by side (owner, 2026-10-08), each card's two routes stacked, once the page
    reaches its full 1200px width (narrower, the names wrap and DEEP's picker breaks onto two
    lines, so the cards stack as before). The cards share one set of rows (head, full name,
