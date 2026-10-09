@@ -7,7 +7,7 @@
       "code": "82",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/acadian-plains-and-hills.xlsx"
     },
     {
@@ -16,7 +16,7 @@
       "code": "23",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/arizona-new-mexico-mountains.xlsx"
     },
     {
@@ -25,7 +25,7 @@
       "code": "22",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/arizona-new-mexico-plateau.xlsx"
     },
     {
@@ -34,7 +34,7 @@
       "code": "37",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/arkansas-valley.xlsx"
     },
     {
@@ -43,7 +43,7 @@
       "code": "84",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/atlantic-coastal-pine-barrens.xlsx"
     },
     {
@@ -52,7 +52,7 @@
       "code": "11",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/blue-mountains.xlsx"
     },
     {
@@ -61,7 +61,7 @@
       "code": "66",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/blue-ridge.xlsx"
     },
     {
@@ -70,7 +70,7 @@
       "code": "38",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/boston-mountains.xlsx"
     },
     {
@@ -79,7 +79,7 @@
       "code": "41",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/canadian-rockies.xlsx"
     },
     {
@@ -88,7 +88,7 @@
       "code": "4",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/cascades.xlsx"
     },
     {
@@ -97,7 +97,7 @@
       "code": "69",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/central-appalachians.xlsx"
     },
     {
@@ -106,7 +106,7 @@
       "code": "13",
       "kind": "ecoregion",
       "version": 2,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/central-basin-and-range.xlsx"
     },
     {
@@ -115,7 +115,7 @@
       "code": "6",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/central-california-foothills-and-coastal-mountains.xlsx"
     },
     {
@@ -124,7 +124,7 @@
       "code": "7",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/central-california-valley.xlsx"
     },
     {
@@ -133,7 +133,7 @@
       "code": "54",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/central-corn-belt-plains.xlsx"
     },
     {
@@ -142,7 +142,7 @@
       "code": "27",
       "kind": "ecoregion",
       "version": 2,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/central-great-plains.xlsx"
     },
     {
@@ -151,7 +151,7 @@
       "code": "40",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/central-irregular-plains.xlsx"
     },
     {
@@ -160,7 +160,7 @@
       "code": "24",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/chihuahuan-deserts.xlsx"
     },
     {
@@ -169,7 +169,7 @@
       "code": "1",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/coast-range.xlsx"
     },
     {
@@ -178,7 +178,7 @@
       "code": "20",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/colorado-plateaus.xlsx"
     },
     {
@@ -187,7 +187,7 @@
       "code": "10",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/columbia-plateau.xlsx"
     },
     {
@@ -196,7 +196,7 @@
       "code": "29",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/cross-timbers.xlsx"
     },
     {
@@ -205,7 +205,7 @@
       "code": "52",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/driftless-area.xlsx"
     },
     {
@@ -214,7 +214,7 @@
       "code": "33",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/east-central-texas-plains.xlsx"
     },
     {
@@ -223,7 +223,7 @@
       "code": "9",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/eastern-cascades-slopes-and-foothills.xlsx"
     },
     {
@@ -241,7 +241,7 @@
       "code": "83",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/eastern-great-lakes-lowlands.xlsx"
     },
     {
@@ -250,7 +250,7 @@
       "code": "30",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/edwards-plateau.xlsx"
     },
     {
@@ -259,7 +259,7 @@
       "code": "61",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/erie-drift-plain.xlsx"
     },
     {
@@ -268,7 +268,7 @@
       "code": "28",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/flint-hills.xlsx"
     },
     {
@@ -277,7 +277,7 @@
       "code": "25",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/high-plains.xlsx"
     },
     {
@@ -286,7 +286,7 @@
       "code": "57",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/huron-erie-lake-plains.xlsx"
     },
     {
@@ -295,7 +295,7 @@
       "code": "16",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/idaho-batholith.xlsx"
     },
     {
@@ -304,7 +304,7 @@
       "code": "71",
       "kind": "ecoregion",
       "version": 7,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/interior-plateau.xlsx"
     },
     {
@@ -313,7 +313,7 @@
       "code": "72",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/interior-river-valleys-and-hills.xlsx"
     },
     {
@@ -322,7 +322,7 @@
       "code": "78",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/klamath-mountains-california-high-north-coast-range.xlsx"
     },
     {
@@ -331,7 +331,7 @@
       "code": "48",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/lake-agassiz-plain.xlsx"
     },
     {
@@ -340,7 +340,7 @@
       "code": "79",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/madrean-archipelago.xlsx"
     },
     {
@@ -349,7 +349,7 @@
       "code": "63",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/middle-atlantic-coastal-plain.xlsx"
     },
     {
@@ -358,7 +358,7 @@
       "code": "17",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/middle-rockies.xlsx"
     },
     {
@@ -367,7 +367,7 @@
       "code": "73",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/mississippi-alluvial-plain.xlsx"
     },
     {
@@ -376,7 +376,7 @@
       "code": "74",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/mississippi-valley-loess-plains.xlsx"
     },
     {
@@ -385,7 +385,7 @@
       "code": "14",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/mojave-basin-and-range.xlsx"
     },
     {
@@ -394,7 +394,7 @@
       "code": "44",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/nebraska-sand-hills.xlsx"
     },
     {
@@ -403,7 +403,7 @@
       "code": "77",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/north-cascades.xlsx"
     },
     {
@@ -412,7 +412,7 @@
       "code": "62",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/north-central-appalachians.xlsx"
     },
     {
@@ -421,7 +421,7 @@
       "code": "51",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/north-central-hardwood-forests.xlsx"
     },
     {
@@ -430,7 +430,7 @@
       "code": "59",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/northeastern-coastal-zone.xlsx"
     },
     {
@@ -448,7 +448,7 @@
       "code": "60",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/northern-allegheny-plateau.xlsx"
     },
     {
@@ -457,7 +457,7 @@
       "code": "80",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/northern-basin-and-range.xlsx"
     },
     {
@@ -466,7 +466,7 @@
       "code": "46",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/northern-glaciated-plains.xlsx"
     },
     {
@@ -475,7 +475,7 @@
       "code": "50",
       "kind": "ecoregion",
       "version": 2,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/northern-lakes-and-forests.xlsx"
     },
     {
@@ -484,7 +484,7 @@
       "code": "49",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/northern-minnesota-wetlands.xlsx"
     },
     {
@@ -493,7 +493,7 @@
       "code": "64",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/northern-piedmont.xlsx"
     },
     {
@@ -502,7 +502,7 @@
       "code": "15",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/northern-rockies.xlsx"
     },
     {
@@ -511,7 +511,7 @@
       "code": "42",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/northwestern-glaciated-plains.xlsx"
     },
     {
@@ -520,7 +520,7 @@
       "code": "43",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/northwestern-great-plains.xlsx"
     },
     {
@@ -529,7 +529,7 @@
       "code": "36",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/ouachita-mountains.xlsx"
     },
     {
@@ -538,7 +538,7 @@
       "code": "39",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/ozark-highlands.xlsx"
     },
     {
@@ -547,7 +547,7 @@
       "code": "45",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/piedmont.xlsx"
     },
     {
@@ -556,7 +556,7 @@
       "code": "2",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/puget-lowland.xlsx"
     },
     {
@@ -565,7 +565,7 @@
       "code": "67",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/ridge-and-valley.xlsx"
     },
     {
@@ -574,7 +574,7 @@
       "code": "5",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/sierra-nevada.xlsx"
     },
     {
@@ -583,7 +583,7 @@
       "code": "12",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/snake-river-plain.xlsx"
     },
     {
@@ -592,7 +592,7 @@
       "code": "81",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/sonoran-basin-and-range.xlsx"
     },
     {
@@ -601,7 +601,7 @@
       "code": "35",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/south-central-plains.xlsx"
     },
     {
@@ -610,7 +610,7 @@
       "code": "65",
       "kind": "ecoregion",
       "version": 3,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/southeastern-plains.xlsx"
     },
     {
@@ -619,7 +619,7 @@
       "code": "53",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/southeastern-wisconsin-till-plains.xlsx"
     },
     {
@@ -628,7 +628,7 @@
       "code": "8",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/southern-california-mountains.xlsx"
     },
     {
@@ -637,7 +637,7 @@
       "code": "85",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/southern-california-northern-baja-coast.xlsx"
     },
     {
@@ -646,7 +646,7 @@
       "code": "75",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/southern-coastal-plain.xlsx"
     },
     {
@@ -655,7 +655,7 @@
       "code": "76",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/southern-florida-coastal-plain.xlsx"
     },
     {
@@ -664,7 +664,7 @@
       "code": "56",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/southern-michigan-northern-indiana-drift-plains.xlsx"
     },
     {
@@ -673,7 +673,7 @@
       "code": "21",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/southern-rockies.xlsx"
     },
     {
@@ -682,7 +682,7 @@
       "code": "31",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/southern-texas-plains.xlsx"
     },
     {
@@ -691,7 +691,7 @@
       "code": "68",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/southwestern-appalachians.xlsx"
     },
     {
@@ -700,7 +700,7 @@
       "code": "26",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/southwestern-tablelands.xlsx"
     },
     {
@@ -709,7 +709,7 @@
       "code": "32",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/texas-blackland-prairies.xlsx"
     },
     {
@@ -718,7 +718,7 @@
       "code": "19",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/wasatch-and-uinta-mountains.xlsx"
     },
     {
@@ -727,7 +727,7 @@
       "code": "70",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/western-allegheny-plateau.xlsx"
     },
     {
@@ -736,7 +736,7 @@
       "code": "47",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/western-corn-belt-plains.xlsx"
     },
     {
@@ -745,7 +745,7 @@
       "code": "34",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/western-gulf-coastal-plain.xlsx"
     },
     {
@@ -754,7 +754,7 @@
       "code": "3",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/willamette-valley.xlsx"
     },
     {
@@ -763,7 +763,7 @@
       "code": "18",
       "kind": "ecoregion",
       "version": 1,
-      "status": "Preliminary",
+      "status": "Draft",
       "file": "apps/deep/www/calculators/wyoming-basin.xlsx"
     }
   ]
