@@ -17,7 +17,7 @@ description: "Landing page for the Stream Tiered Assessment Framework."
         <div class="hero-actions button-row reveal">
           <a class="btn btn-primary" href="{{ site.baseurl }}/tier-selector/">Start the tier selector</a>
           <a class="btn" href="{{ site.baseurl }}/tools/">Apply STAF</a>
-          <a class="btn" href="{{ site.baseurl }}/quick-overview/">Quick Overview</a>
+          <a class="btn" href="{{ site.baseurl }}/quick-overview/">Overview</a>
         </div>
 
       </div>

@@ -18,6 +18,12 @@ without JavaScript its list of links shows instead.
   </div>
   <p class="apply-tier-name">{{ app.full_name }}</p>
   <p class="apply-tier-desc">{{ app.description }}</p>
+  {%- comment -%} the walkthrough link rides under the calculator's own line, inside its route,
+  so it takes no row of its own and the cards beside it keep no empty space (owner, 2026-10-08)
+  {%- endcomment -%}
+  {%- capture guide -%}{%- if app.walkthrough %}
+      <p class="apply-tier-guide"><a href="{{ app.walkthrough | relative_url }}">{{ app.walkthrough_label | default: "Watch the walkthrough" }}</a></p>
+  {%- endif %}{%- endcapture %}
   <div class="apply-routes">
     <div class="apply-route">
       <h3>Web application</h3>
@@ -71,6 +77,7 @@ without JavaScript its list of links shows instead.
         <p class="eco-map-key" data-eco-map-key hidden></p>
         <p class="eco-map-foot">The outlines DEEP uses to match a site to its assessment. Or open <a href="https://dmap-prod-oms-edc.s3.us-east-1.amazonaws.com/ORD/Ecoregions/us/Eco_Level_III_US.pdf" target="_blank" rel="noopener">EPA's Level III map (PDF)</a>.</p>
       </dialog>
+      {{- guide }}
     </div>
     {%- else %}
     <div class="apply-route">
@@ -78,12 +85,10 @@ without JavaScript its list of links shows instead.
       <div class="apply-route-action">
         <a class="btn btn-primary" href="{{ downloads }}{{ app.calculator }}" title="{{ app.calculator_label }}">Download</a>
       </div>
+      {{- guide }}
     </div>
     {%- endif %}
   </div>
-  {%- if app.walkthrough %}
-  <p class="apply-tier-guide"><a href="{{ app.walkthrough | relative_url }}">{{ app.walkthrough_label | default: "Watch the walkthrough" }}</a></p>
-  {%- endif %}
 </section>
 {%- endunless %}{% endfor %}
 </div>
