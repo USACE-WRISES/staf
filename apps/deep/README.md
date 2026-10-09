@@ -270,9 +270,16 @@ bundle changes), and its Source column names the data behind each desktop value.
   copies it to `www/calculators/<id>@vN.xlsx` (and `<id>.xlsx` for the default version) with an
   `index.json`, then rewrites the site's list of default calculators
   (`docs/_data/deep_calculators.json`, `scripts/build_site_calculators.py`; the site links the
-  stable `<id>.xlsx` raw from main, and `tests/test_site_calculators.py` keeps the list current). A workbook is served only when its `contentDigest` equals the loaded bundle's,
+  stable `<id>.xlsx` raw from main, and `tests/test_site_calculators.py` keeps the list current
+  and holds each entry's version and status to `apps/library/catalog.json`, as the
+  `deep-site-list` workflow does on every push). A workbook is served only when its `contentDigest` equals the loaded bundle's,
   and the completed workbook is filled at zip level, so DEEP needs no spreadsheet library.
-  `DEEP_CALCULATOR_DIR` points a local DEEP at another folder.
+  `DEEP_CALCULATOR_DIR` points a local DEEP at another folder. On the site, the calculator list
+  groups the ecoregions by status (Final, Preliminary, Draft), and the Map button beside it opens a map of
+  DEEP's own Level III outlines that selects the clicked ecoregion: `docs/assets/data/ecoregions-l3-map.json`,
+  built by `scripts/build_site_ecoregion_map.py` (run it after `data/ecoregions_l3.geojson` or
+  `data/us_states.geojson.gz` changes; `tests/test_site_ecoregion_map.py` compares the digests the
+  map records).
 - `deep/reference_support.py` reads the bundle's `referenceSupport`, `criteriaBasis`,
   `stratifier` and `insufficientReferenceSupport`. The report carries the "Scored against"
   line for every metric; the worksheet selects the curve set from the delineated slope or

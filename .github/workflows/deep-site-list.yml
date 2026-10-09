@@ -1,0 +1,41 @@
+# Checks that the STAF site's list of DEEP calculators (docs/_data/deep_calculators.json) says what
+# the assessment library says DEEP shows: each ecoregion's default version and its status (Draft,
+# Preliminary or Final). Every library change in StreamCurves (Publish, Validate,
+# set_library_status.py) rebakes DEEP, which rewrites the list, so a red run means a push carried
+# the library without it: rebake DEEP (apps/deep/scripts/bake_library_into_deep.py), then commit
+# apps/deep/data, apps/deep/www/calculators and docs/_data/deep_calculators.json.
+#
+# It never holds back the library release (library-release.yml): DEEP in STAF reads that release,
+# so DEEP stays current and this run is the reminder that the site has to catch up.
+name: deep-site-list
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/library/**'
+      - 'apps/deep/data/**'
+      - 'apps/deep/www/calculators/index.json'
+      - 'apps/deep/scripts/build_site_calculators.py'
+      - 'docs/_data/deep_calculators.json'
+      - '.github/workflows/deep-site-list.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Standard library only: the script and the DEEP modules it reads (config, session) import
+      # nothing else, so nothing is installed.
+      - name: The site lists what the library says DEEP shows
+        run: python -I -S apps/deep/scripts/build_site_calculators.py --check
