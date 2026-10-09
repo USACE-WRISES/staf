@@ -66,6 +66,20 @@ def test_the_legend_keys_only_the_statuses_on_the_map():
     assert ".easi-shell.deep-regions-off .deep-reg-key { display: none; }" in css
 
 
+def test_each_status_row_of_the_key_is_a_toggle():
+    """owner, 2026-10-09: a click on a status's row (or Enter or Space) hides and shows its
+    regions on the map and in the list (www/coverage.js); the server draws every row on."""
+    html = str(app._legend_ui(app.STEP_IDENTIFY, False, "hr", None, False,
+                              regions=("draft", "preliminary")))
+    rows = re.findall(r'<div class="easi-legend-row deep-reg-row"[^>]*>', html)
+    assert len(rows) == 2
+    for row, status, label in zip(rows, ("draft", "preliminary"), ("Draft", "Preliminary")):
+        assert f'data-status="{status}"' in row and 'role="button"' in row and 'tabindex="0"' in row
+        assert 'aria-pressed="true"' in row and f'title="Hide {label} regions"' in row
+    css = (WWW / "deep.css").read_text(encoding="utf-8")
+    assert ".deep-reg-row.is-off .deep-reg-sw {" in css and ".deep-reg-row:focus-visible {" in css
+
+
 def test_the_help_names_the_three_statuses_and_their_order():
     src = Path(app.__file__).read_text(encoding="utf-8")
     copy = re.sub(r'"\s*\n\s*"', "", src.split("def _about():", 1)[1].split("# ---- left pane ----", 1)[0])

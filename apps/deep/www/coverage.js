@@ -17,11 +17,18 @@
  * status (Draft, Preliminary or Final, in its map color), its version and "In use" for the
  * assessment the site uses. Hovering a row
  * highlights its region; clicking it selects the region and fits the map to it. The search
- * filters the map too. Open or closed is the deep-cov-open class on DEEP's body (.easi-shell),
- * remembered per browser; the map's right-hand controls make room (deep.css). Closed, the
- * sidebar is a button in the map's top-right controls, under Layers, with the region count: it is
- * docked into Leaflet's corner (as legend-dock.js docks the legend), because the map is its own
- * stacking context and anything floated over it would cover the Layers menu.
+ * filters the map too. Open or closed is the deep-cov-open class on DEEP's body (.easi-shell); it
+ * starts closed on every load (owner, 2026-10-09); the map's right-hand controls make room
+ * (deep.css). Closed, the sidebar is a button in the map's top-right controls, under Layers, with
+ * the region count: it is docked into Leaflet's corner (as legend-dock.js docks the legend),
+ * because the map is its own stacking context and anything floated over it would cover the
+ * Layers menu.
+ *
+ * The legend's region key (app.py _region_key) is a set of toggles (owner, 2026-10-09): a click
+ * on a status's row (or Enter or Space) hides that status's regions on the map and in the list,
+ * and shows them again, the way the search filters; the chosen region always shows. The server
+ * redraws the legend, so every redraw takes the toggles' state back (markKey, from the map's
+ * control watcher).
  *
  * Server contract: the page posts `coverage_ready` (DEEP's own input) until the server answers.
  * `deep_coverage` brings {features:[{assessmentId, name, code, version, status, lifecycle,
@@ -38,7 +45,7 @@
   "use strict";
 
   var TOOL = "deep", NS = window.STAFNs;
-  var PANE = "deep-regions", STORE = "staf.deep.regionsOpen", PHONE = 820;
+  var PANE = "deep-regions", PHONE = 820;
   function root() { return NS.tool(TOOL); }
   function body() { return NS.scope(root()); }
   function shell() { return root() || document.querySelector(".easi-shell"); }
@@ -51,14 +58,16 @@
     preliminary: { label: "Preliminary", line: "#b45309", fill: "#d97706", chip: "deep-cov-prelim" },
     certified: { label: "Final", line: "#303f9f", fill: "#3f51b5", chip: "deep-cov-final" },
   };
-  // Styles, by state: an active or passive region takes its status's colors (a 0.12 fill moves the
-  // basemap's luminance by ~14, a light shading far below the delineated watershed's 0.40
-  // yellow); hover and selection are navy whatever the status.
+  // Styles, by state: an active or passive region takes its status's colors. The active fill is
+  // 0.15 (owner, 2026-10-09: at 0.12 Draft, Preliminary and Final were hard to tell apart on the
+  // imagery basemap; 0.22 and 0.18 a touch strong), well below the delineated watershed's 0.40
+  // yellow, which only shows once the regions are passive; hover and selection are navy whatever
+  // the status, a step above.
   var STYLE = {
-    active: { weight: 1, opacity: 0.8, fillOpacity: 0.12, dashArray: null },
-    hover: { color: "#2f4b7c", weight: 2.25, opacity: 1, fillOpacity: 0.22, dashArray: null },
-    selected: { color: "#2f4b7c", weight: 2.5, opacity: 1, fillColor: "#2f4b7c", fillOpacity: 0.14, dashArray: null },
-    selectedHover: { color: "#2f4b7c", weight: 2.5, opacity: 1, fillColor: "#2f4b7c", fillOpacity: 0.22, dashArray: null },
+    active: { weight: 1, opacity: 0.8, fillOpacity: 0.15, dashArray: null },
+    hover: { color: "#2f4b7c", weight: 2.25, opacity: 1, fillOpacity: 0.27, dashArray: null },
+    selected: { color: "#2f4b7c", weight: 2.5, opacity: 1, fillColor: "#2f4b7c", fillOpacity: 0.17, dashArray: null },
+    selectedHover: { color: "#2f4b7c", weight: 2.5, opacity: 1, fillColor: "#2f4b7c", fillOpacity: 0.25, dashArray: null },
     passive: { weight: 1.25, opacity: 0.55, fillOpacity: 0, dashArray: "6 5" },
     passiveSelected: { color: "#2f4b7c", weight: 2, opacity: 0.9, fillOpacity: 0, dashArray: null },
   };
@@ -73,6 +82,7 @@
   var selected = null, inUse = null, hovered = null;
   var query = "", visible = true, identify = true, passive = null, focusWanted = false;
   var gotCoverage = false, queryTimer = null;
+  var off = {};                         // the statuses the legend hides: {draft: true, ...}
 
   function flowZoom() {
     var panel = document.getElementById("deep-cov-panel");
@@ -294,16 +304,18 @@
     }
   }
 
-  // ---- the filter: the search narrows the list and the map alike ----
+  // ---- the filter: the search and the legend's status toggles narrow the list and the map alike ----
   function matches(f) {
     if (!query) return true;
     if (/^\d+$/.test(query)) return String(f.code) === query;
     return f.name.toLowerCase().indexOf(query) >= 0;
   }
+  function shows(f) { return matches(f) && !off[f.lifecycle]; }
+  function anyOff() { return Object.keys(off).length > 0; }
   function applyFilter() {
     var shown = 0;
     features.forEach(function (f) {
-      var aid = f.assessmentId, on = matches(f);
+      var aid = f.assessmentId, on = shows(f);
       if (on) shown += 1;
       if (rows[aid]) rows[aid].hidden = !on;
       var lyr = layers[aid];
@@ -312,7 +324,7 @@
       if (want && !map.hasLayer(lyr)) map.addLayer(lyr);
       else if (!want && map.hasLayer(lyr)) { if (hovered === aid) unhover(aid); map.removeLayer(lyr); }
     });
-    var label = query ? shown + " of " + features.length : String(features.length);
+    var label = query || anyOff() ? shown + " of " + features.length : String(features.length);
     var count = document.querySelector("#deep-cov-panel .deep-cov-count");
     if (count) count.textContent = label;
     var tabCount = tab() && tab().querySelector(".deep-cov-tab-count");   // closed, it says a filter is on
@@ -320,7 +332,9 @@
     var empty = document.querySelector("#deep-cov-body .deep-cov-empty");
     if (empty) {
       empty.hidden = !(features.length && shown === 0);
-      if (!empty.hidden) empty.textContent = "No ecoregion matches “" + query + "”";
+      if (!empty.hidden) {
+        empty.textContent = query ? "No ecoregion matches “" + query + "”" : "Every status is turned off in the legend";
+      }
     }
     return shown;
   }
@@ -339,6 +353,23 @@
     applyFilter();
   }
 
+  // ---- the legend's status toggles (the key's rows are the server's: app.py _region_key) ----
+  function markKey() {
+    var keyRows = body().querySelectorAll(".deep-reg-row");
+    Array.prototype.forEach.call(keyRows, function (row) {
+      var status = row.getAttribute("data-status"), s = STATUS[status], hidden = !!off[status];
+      row.classList.toggle("is-off", hidden);
+      row.setAttribute("aria-pressed", hidden ? "false" : "true");
+      if (s) row.setAttribute("title", (hidden ? "Show " : "Hide ") + s.label + " regions");
+    });
+  }
+  function toggleStatus(status) {
+    if (!STATUS[status]) return;
+    if (off[status]) delete off[status]; else off[status] = true;
+    markKey();
+    applyFilter();
+  }
+
   // ---- the sidebar ----
   function meta(f) {
     var parts = [];
@@ -351,7 +382,7 @@
     Object.keys(rows).forEach(function (id) { rows[id].classList.toggle("is-in-use", id === inUse); });
   }
   function firstShown() {
-    for (var i = 0; i < features.length; i++) if (matches(features[i])) return features[i].assessmentId;
+    for (var i = 0; i < features.length; i++) if (shows(features[i])) return features[i].assessmentId;
     return null;
   }
   function choose(aid) {
@@ -395,7 +426,7 @@
         if (e.preventDefault) e.preventDefault();
       } else if (e.key === "Escape") {
         if (input.value) { input.value = ""; setQuery(""); }
-        else { setOpen(false, { remember: true, returnFocus: true }); }
+        else { setOpen(false, { returnFocus: true }); }
         if (e.preventDefault) e.preventDefault();
         if (e.stopPropagation) e.stopPropagation();
       }
@@ -453,22 +484,11 @@
     s.classList.toggle("deep-cov-open", !!open);
     var t = tab();
     if (t) t.setAttribute("aria-expanded", open ? "true" : "false");
-    if (opts && opts.remember) {
-      try { window.localStorage.setItem(STORE, open ? "1" : "0"); } catch (e) { /* storage blocked */ }
-    }
     if (open && opts && opts.focus) {
       var q = s.querySelector(".deep-cov-q");
       if (q && q.focus) q.focus();
     }
     if (!open && opts && opts.returnFocus && t && t.focus) t.focus();
-  }
-  function initiallyOpen() {
-    if (phone()) return false;            // on a phone the list covers the map: never at first
-    try {
-      var v = window.localStorage.getItem(STORE);
-      if (v === "1" || v === "0") return v === "1";
-    } catch (e) { /* storage blocked: the default */ }
-    return (window.innerWidth || 0) >= 1280;
   }
 
   // ---- the map's top-right controls: the closed sidebar's button and a Layers checkbox ----
@@ -517,6 +537,7 @@
   var layersTimer = null, layersObserver = null;
   function controls() {
     var row = layersRow(), docked = dockTab();      // both, every time
+    markKey();                                      // a redrawn legend takes the toggles back
     return row && docked;
   }
   function watchControls() {
@@ -550,7 +571,7 @@
     if (wrap && !wrap.classList.contains("is-ready")) {
       wrap.classList.add("is-ready");
       if (shell()) shell().classList.add("deep-cov-ready");   // the docked button shows from now
-      setOpen(initiallyOpen());
+      setOpen(false);                     // closed at first on every load (owner, 2026-10-09)
     }
     dockTab();
     renderPanel();
@@ -578,18 +599,28 @@
     if (focusWanted && inUse && map && layers[inUse]) { focusWanted = false; fitTo(inUse); }
   }
 
-  // ---- open, close, keyboard (delegated: the markup is the server's) ----
+  // ---- open, close, the legend's toggles, keyboard (delegated: the markup is the server's) ----
+  function keyRowOf(t) {
+    var row = t && t.closest(".deep-reg-row");
+    return row && NS.mine(row, TOOL) ? row : null;    // DEEP's own legend, never another tool's
+  }
   function initChrome() {
     document.addEventListener("click", function (e) {
       var t = e.target && e.target.closest ? e.target : null;
       if (!t) return;
-      if (t.closest(".deep-cov-tab")) setOpen(true, { remember: true, focus: true });
-      else if (t.closest(".deep-cov-close")) setOpen(false, { remember: true, returnFocus: true });
+      var keyRow = keyRowOf(t);
+      if (keyRow) toggleStatus(keyRow.getAttribute("data-status"));
+      else if (t.closest(".deep-cov-tab")) setOpen(true, { focus: true });
+      else if (t.closest(".deep-cov-close")) setOpen(false, { returnFocus: true });
     });
     document.addEventListener("keydown", function (e) {
       var t = e.target && e.target.closest ? e.target : null;
-      if (e.key === "Escape" && t && t.closest("#deep-cov-panel") && !t.closest(".deep-cov-q")) {
-        setOpen(false, { remember: true, returnFocus: true });
+      var keyRow = (e.key === "Enter" || e.key === " ") && keyRowOf(t);
+      if (keyRow) {
+        toggleStatus(keyRow.getAttribute("data-status"));
+        if (e.preventDefault) e.preventDefault();
+      } else if (e.key === "Escape" && t && t.closest("#deep-cov-panel") && !t.closest(".deep-cov-q")) {
+        setOpen(false, { returnFocus: true });
       }
     });
   }
