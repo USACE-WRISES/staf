@@ -6865,12 +6865,18 @@ body.modal-open {
   color: #333;
 }
 
-.apply-tier {
+.apply-tiers {
+  display: grid;
+  gap: 1.1rem;
   margin: 1.1rem 0;
-  padding: 1.1rem 1.2rem 1.2rem;
+}
+
+.apply-tier {
+  padding: 1.1rem 1.25rem;
   background: #ffffff;
-  border: 1px solid #d0d0d0;
+  border: 1px solid #d5dbe4;
   border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
   scroll-margin-top: 100px; /* clears the sticky menu */
 }
 
@@ -6882,67 +6888,97 @@ body.modal-open {
 }
 
 .main-content .apply-tier h2 {
-  margin: 0;
-  font-size: 1.3rem;
+  margin: 0; /* the theme sizes it (h2: 1.5rem, !important) */
   color: #1f3f6e;
 }
 
 .apply-tier-name {
-  margin: 0.35rem 0 0;
+  margin: 0.45rem 0 0;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #333;
+  color: #2b3445;
 }
 
 .apply-tier-desc {
   margin: 0.15rem 0 0;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.45;
-  color: #444;
+  color: #5a6478;
 }
 
+/* The two routes are one line each under a hairline, never boxes: the route on the left, its
+   button on the right (owner, 2026-10-08: the gray insets and the version lines took too much
+   room; a calculator's version is its Download button's tooltip). */
 .apply-routes {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.9rem;
+  gap: 0.7rem 1.75rem;
   margin-top: 0.9rem;
 }
 
 .apply-route {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.3rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "title action";
+  align-items: center;
+  align-content: start;
+  column-gap: 0.9rem;
   min-width: 0;
-  padding: 0.85rem 0.95rem;
-  background: #f8f9fb;
-  border: 1px solid #dedede;
-  border-radius: 8px;
+  padding-top: 0.7rem;
+  border-top: 1px solid #e3e7ee;
+}
+
+/* DEEP's calculator: Download on the route's line like every other, the ecoregion list and its
+   map button under them at the card's full width, so a chosen ecoregion's name has room */
+.apply-route-picker {
+  grid-template-areas:
+    "title action"
+    "picker picker";
+}
+
+.apply-route noscript {
+  grid-column: 1 / -1;
 }
 
 .main-content .apply-route h3 {
+  grid-area: title;
   margin: 0;
-  font-size: 0.98rem;
+  font-size: 0.95rem !important; /* the theme sets every h3 to 1.125rem, !important */
+  font-weight: 600;
+  line-height: 1.3;
   color: #1f3f6e;
 }
 
-.apply-route-meta,
-.apply-route-help {
-  margin: 0;
-  font-size: 0.86rem;
-  color: #555;
+.apply-route-action {
+  grid-area: action;
 }
 
-.apply-route-action {
-  margin-top: auto; /* the two routes' buttons line up */
-  padding-top: 0.45rem;
+.apply-route-action .btn {
+  min-width: 8.75rem; /* one width for every button, so they line up */
+  padding: 0.42rem 0.9rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* dark text in every state: the theme turns a primary button's hover and visited text white,
+   unreadable on this light fill */
+.apply-route-action .btn-primary,
+.apply-route-action .btn-primary:visited {
+  color: #111111;
+}
+
+.apply-route-action .btn-primary:hover,
+.apply-route-action .btn-primary:focus-visible {
+  border-color: #1f3f6e;
+  background: #ccd9ec;
+  color: #111111;
 }
 
 .apply-picker {
+  grid-area: picker;
   display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
-  align-self: stretch;
+  margin-top: 0.55rem;
 }
 
 .apply-picker[hidden] {
@@ -6950,21 +6986,43 @@ body.modal-open {
 }
 
 .apply-picker select {
-  flex: 1 1 13rem;
+  flex: 1 1 10rem;
   min-width: 0; /* body clips with overflow-x: hidden, so never wider than the card */
   max-width: 100%;
   padding: 0.38rem 0.5rem;
-  border: 1px solid #b9b9b9;
+  border: 1px solid #b9c2cf;
   border-radius: 4px;
   background: #ffffff;
   font: inherit;
   font-size: 0.9rem;
 }
 
-.apply-picker .btn:not([href]) {
+.apply-route .btn:not([href]) {
   opacity: 0.55;
   cursor: default;
   pointer-events: none;
+}
+
+/* opens the ecoregion map: a quiet outline button the height of the select */
+.apply-picker .apply-picker-map {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.7rem;
+  border-color: #b9c2cf;
+  background: #ffffff;
+  color: #2f4b7c;
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.apply-picker .apply-picker-map:hover,
+.apply-picker .apply-picker-map:focus-visible {
+  border-color: #2f4b7c;
+  background: #eef3fb;
+  color: #1f3f6e;
 }
 
 .apply-picker-list ul {
@@ -6973,20 +7031,206 @@ body.modal-open {
   font-size: 0.86rem;
 }
 
+/* The ecoregion map (owner, 2026-10-08): DEEP's Level III outlines in a dialog, drawn by
+   apply-staf.js from assets/data/ecoregions-l3-map.json; a click selects that ecoregion. */
+.eco-map {
+  width: min(940px, 94vw);
+  max-height: 92vh;
+  padding: 0;
+  border: 1px solid #d5dbe4;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.2);
+  color: #2b3445;
+}
+
+.eco-map::backdrop {
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.eco-map-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0.85rem 0 1.2rem;
+}
+
+.eco-map-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1f3f6e;
+}
+
+.eco-map-close {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #5a6478;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.eco-map-close:hover,
+.eco-map-close:focus-visible {
+  background: #eef1f6;
+  color: #1f3f6e;
+}
+
+.eco-map-caption {
+  min-height: 1.4em;
+  margin: 0.2rem 1.2rem 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2b3445;
+}
+
+.eco-map-canvas {
+  padding: 0 1rem;
+  font-size: 0.9rem;
+  color: #5a6478;
+}
+
+.eco-map-canvas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Each region in its calculator's status color, DEEP's palette (apps/deep/www/coverage.js STATUS,
+   app.py REGION_STATUS_STYLE; DEEP's test_site_ecoregion_map.py keeps them equal): the fill at a
+   light opacity on white, the borders neutral. Hover deepens the fill; the rules after it (the
+   selected region in navy, a region with no calculator) keep their fill under the pointer. */
+.eco-map-regions path {
+  fill: #edf1f6;
+  fill-opacity: 1;
+  stroke: #c3cddb;
+  stroke-width: 0.6;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: fill-opacity 0.12s ease;
+}
+
+.eco-map-regions path.is-draft {
+  fill: #6b6459;
+  fill-opacity: 0.25;
+}
+
+.eco-map-regions path.is-preliminary {
+  fill: #d97706;
+  fill-opacity: 0.25;
+}
+
+.eco-map-regions path.is-final {
+  fill: #3f51b5;
+  fill-opacity: 0.25;
+}
+
+.eco-map-regions path:hover {
+  fill-opacity: 0.45;
+}
+
+.eco-map-hover {
+  fill: none;
+  stroke: #2f4b7c;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.eco-map-regions path.is-selected {
+  fill: #2f4b7c;
+  fill-opacity: 1;
+}
+
+.eco-map-regions path.is-unavailable {
+  fill: #f5f6f8;
+  fill-opacity: 1;
+  cursor: default;
+}
+
+/* the statuses on the map, keyed like DEEP's legend: the status line around its fill */
+.eco-map-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.1rem;
+  margin: 0.5rem 1.2rem 0;
+  font-size: 0.82rem;
+  color: #3d4657;
+}
+
+.eco-map-key[hidden] {
+  display: none;
+}
+
+.eco-map-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.eco-map-swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 1px solid #c3cddb;
+  border-radius: 2px;
+  background: #f5f6f8;
+}
+
+.eco-map-swatch.is-draft {
+  border-color: #475569;
+  background: rgba(107, 100, 89, 0.25);
+}
+
+.eco-map-swatch.is-preliminary {
+  border-color: #b45309;
+  background: rgba(217, 119, 6, 0.25);
+}
+
+.eco-map-swatch.is-final {
+  border-color: #303f9f;
+  background: rgba(63, 81, 181, 0.25);
+}
+
+.eco-map-states {
+  fill: none;
+  stroke: #707c90;
+  stroke-width: 0.9;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.eco-map-foot {
+  margin: 0.5rem 1.2rem 0.95rem;
+  font-size: 0.82rem;
+  color: #5a6478;
+}
+
 .apply-tier-guide {
-  margin: 0.85rem 0 0;
-  font-size: 0.88rem;
+  margin: 0.9rem 0 0;
+  font-size: 0.86rem;
   font-weight: 600;
 }
 
 .apply-tier-guide a {
   color: #2f4b7c;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
 
-.apply-tier-guide a:hover {
+.apply-tier-guide a::after {
+  content: " \2192";
+}
+
+.apply-tier-guide a:hover,
+.apply-tier-guide a:focus-visible {
   color: #1f3f6e;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .tools-engines-note {
@@ -6994,6 +7238,47 @@ body.modal-open {
   font-size: 0.9rem;
   line-height: 1.5;
   color: #555;
+}
+
+/* The three tiers side by side (owner, 2026-10-08), each card's two routes stacked, once the page
+   reaches its full 1200px width (narrower, the names wrap and DEEP's picker breaks onto two
+   lines, so the cards stack as before). The cards share one set of rows (head, full name,
+   description, web application, calculator, guide), so every row, divider and button lines up
+   across the three whatever the length of their text. */
+@media (min-width: 1200px) {
+  .apply-tiers {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .apply-routes {
+    grid-template-columns: 1fr;
+  }
+
+  @supports (grid-template-rows: subgrid) {
+    .apply-tiers {
+      grid-template-rows: repeat(6, auto);
+      row-gap: 0;
+    }
+
+    .apply-tier {
+      display: grid;
+      grid-row: span 6;
+      grid-template-rows: subgrid;
+      row-gap: 0;
+    }
+
+    .apply-tier .apply-routes {
+      display: contents;
+    }
+
+    .apply-tier .apply-route {
+      margin-top: 0.7rem;
+    }
+
+    .apply-tier .apply-route:first-child {
+      margin-top: 0.9rem;
+    }
+  }
 }
 
 @media (max-width: 980px) {
@@ -7008,7 +7293,11 @@ body.modal-open {
   }
 
   .apply-tier {
-    padding: 0.95rem 0.9rem 1rem;
+    padding: 1rem 0.95rem;
+  }
+
+  .apply-route-action .btn {
+    min-width: 0;
   }
 }
 

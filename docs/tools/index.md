@@ -28,4 +28,4 @@ description: "Apply each STAF tier with its web application or its spreadsheet c
 - U.S. Army Corps of Engineers. 2023. Wyoming Stream Quantification Tool (WSQT) User Manual and Spreadsheet. Version 2.0, Omaha District, Wyoming Regulatory Office, Cheyenne Wyoming.
 
 <script src="{{ '/assets/js/metric-toolbox.js' | relative_url }}" defer></script>
-<script src="{{ '/assets/js/apply-staf.js?v=20261008' | relative_url }}" defer></script>
+<script src="{{ '/assets/js/apply-staf.js?v=20261008-status-map' | relative_url }}" defer></script>

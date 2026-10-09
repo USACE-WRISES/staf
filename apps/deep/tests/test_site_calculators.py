@@ -1,7 +1,7 @@
 """The STAF site's Apply STAF page offers DEEP's calculators, one per Level III ecoregion, from
 docs/_data/deep_calculators.json, which scripts/build_site_calculators.py writes and every bake of
-DEEP's own folders refreshes (owner, 2026-10-08). The site opens DEEP inside the STAF app, and the
-app's STAF_LINKS mirror the site's."""
+DEEP's own folders refreshes (owner, 2026-10-08), and which must say what the library says. The
+site opens DEEP inside the STAF app, and the app's STAF_LINKS mirror the site's."""
 from __future__ import annotations
 
 import importlib.util
@@ -54,6 +54,21 @@ def test_the_list_is_every_shown_ecoregion_with_its_calculator(site):
     assert set(i["status"] for i in items) <= {"Draft", "Preliminary", "Final"}   # owner, 2026-10-08
     assert len(set(i["region"] for i in items)) == len(items)
     assert [i["region"].casefold() for i in items] == sorted(i["region"].casefold() for i in items)
+
+
+def test_the_site_list_matches_the_library(site):
+    """Each entry is the version and status the library says DEEP opens by default (owner,
+    2026-10-08: the site follows the library); the deep-site-list workflow runs the same check on
+    every push that touches the library, DEEP's data or the list."""
+    if site.library_defaults() is None:
+        pytest.skip("no apps/library in this checkout")
+    assert site.library_mismatches() == [], "rebake DEEP and commit the list with the library"
+    items = json.loads(site.OUT.read_text(encoding="utf-8"))["calculators"]
+    edited = [dict(items[0], status="Final")] + items[2:] + [dict(items[0], id="no-such-region")]
+    found = "\n".join(site.library_mismatches(edited))
+    assert f"{items[0]['id']}: the site list says" in found        # another status
+    assert f"{items[1]['id']}: the library shows" in found         # left out
+    assert "no-such-region: the site list offers" in found         # not in the library
 
 
 def test_only_a_bake_of_deeps_own_folders_rewrites_the_list(tmp_path):
