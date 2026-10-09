@@ -7204,8 +7204,10 @@ body.modal-open {
   color: #5a6478;
 }
 
+/* a tier's walkthrough link, under its calculator's line inside that route (no row of its own) */
 .apply-tier-guide {
-  margin: 0.9rem 0 0;
+  grid-column: 1 / -1;
+  margin: 0.55rem 0 0;
   font-size: 0.86rem;
   font-weight: 600;
 }
@@ -7236,8 +7238,9 @@ body.modal-open {
 /* The three tiers side by side (owner, 2026-10-08), each card's two routes stacked, once the page
    reaches its full 1200px width (narrower, the names wrap and DEEP's picker breaks onto two
    lines, so the cards stack as before). The cards share one set of rows (head, full name,
-   description, web application, calculator, guide), so every row, divider and button lines up
-   across the three whatever the length of their text. */
+   description, web application, calculator), so every row, divider and button lines up across
+   the three whatever the length of their text. A walkthrough link sits inside its calculator's
+   row, so no card carries an empty row for another's link. */
 @media (min-width: 1200px) {
   .apply-tiers {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -7249,13 +7252,13 @@ body.modal-open {
 
   @supports (grid-template-rows: subgrid) {
     .apply-tiers {
-      grid-template-rows: repeat(6, auto);
+      grid-template-rows: repeat(5, auto);
       row-gap: 0;
     }
 
     .apply-tier {
       display: grid;
-      grid-row: span 6;
+      grid-row: span 5;
       grid-template-rows: subgrid;
       row-gap: 0;
     }
