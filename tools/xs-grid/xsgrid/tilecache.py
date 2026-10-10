@@ -81,14 +81,15 @@ def fetch(url: str, pool: ThreadPoolExecutor, *, size: int | None = None) -> Pat
     path.parent.mkdir(parents=True, exist_ok=True)
     size = size or _size(url)
     part = path.with_name(path.name + f".{os.getpid()}.{threading.get_ident()}.part")
-    with open(part, "wb") as fh:
-        fh.truncate(size)
     try:
         futures = {}
         for a in range(0, size, CHUNK):
             b = min(a + CHUNK, size) - 1
             futures[pool.submit(_get_range, url, a, b)] = a
-        with open(part, "r+b") as fh:
+        # nothing is written ahead: on Windows truncate(size) writes the whole size in zeros, 4 KB at a time,
+        # before a range is asked for, and the six tile workers doing so together left the 48 connections
+        # idle for 15 to 35 s at a time (run 6, 2026-10-09); each range lands at its offset as it arrives
+        with open(part, "wb") as fh:
             # not as_completed: a range cancelled by the pool's shutdown (a pause) never wakes it,
             # and the run's process then never exits (2026-10-06)
             pending = set(futures)
@@ -120,9 +121,28 @@ def present(url: str) -> bool:
     return local_path(url).exists()
 
 
+def _file_size(p: Path) -> int:
+    """A cached file's size; 0 for one gone since the folder was listed. A download renames its
+    ``.part`` when complete and deletes it on failure, at any moment (run 5 stopped on one between
+    ``is_file`` and ``stat``, 2026-10-09)."""
+    try:
+        return p.stat().st_size if p.is_file() else 0
+    except OSError:
+        return 0
+
+
+def _mtime(p: Path) -> float:
+    """A cached file's last use (samplers touch what they read); a file gone since the listing
+    counts as just used, so eviction passes it by."""
+    try:
+        return p.stat().st_mtime
+    except OSError:
+        return time.time()
+
+
 def usage() -> int:
     d = cache_dir()
-    return sum(p.stat().st_size for p in d.glob("*") if p.is_file()) if d.exists() else 0
+    return sum(_file_size(p) for p in d.glob("*")) if d.exists() else 0
 
 
 def evict(keep: set, cap_bytes: int, min_age_s: float = 1800.0) -> int:
@@ -132,13 +152,13 @@ def evict(keep: set, cap_bytes: int, min_age_s: float = 1800.0) -> int:
     if not d.exists():
         return 0
     files = [p for p in d.glob("*") if p.is_file() and not p.name.endswith(".part")]
-    total = sum(p.stat().st_size for p in d.glob("*") if p.is_file())
+    total = usage()
     freed = 0
     now = time.time()
-    for p in sorted(files, key=lambda q: q.stat().st_mtime):
+    for p in sorted(files, key=_mtime):
         if total <= cap_bytes:
             break
-        if str(p) in keep or now - p.stat().st_mtime < min_age_s:
+        if str(p) in keep or now - _mtime(p) < min_age_s:
             continue
         try:
             n = p.stat().st_size

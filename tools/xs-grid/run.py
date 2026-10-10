@@ -167,7 +167,7 @@ def main(argv=None) -> int:
             p.add_argument("--first", default=None, help="comma-separated regions to build before the rest")
         p.add_argument("--samplers", type=int, default=3)
         p.add_argument("--scorers", type=int, default=7)
-        p.add_argument("--cache-gb", type=float, default=150.0)
+        p.add_argument("--cache-gb", type=float, default=100.0, help="cap of the tile cache on D: (owner, 2026-10-09)")
         p.add_argument("--full-priority", action="store_true")
         p.add_argument("--window", default=None, help="run only between these hours, e.g. 20:00-07:00")
         p.add_argument("--log", default=None, help="append the output to this file")
