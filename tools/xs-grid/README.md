@@ -53,6 +53,8 @@ Stopping the process tree outright (Task Manager, `taskkill /T`) also loses noth
   2. otherwise the next newest 1 m project;
   3. then the 1/9 arc-second (3 m) quads;
   4. then the 1/3 arc-second (10 m) seamless DEM.
+
+  USGS stores 105 of the 8,345 quads, all from eight 2014-era projects, as `img<name>_19.img`. The catalog listed them as `<name>.img` until 2026-10-09, when the national builder's catalog step was fixed and the local bundle's copy rebuilt. The sampler still reads the file USGS serves when the listed one isn't there (`sample.quad_url`), and a quad served under neither name sends the sections touching it to the 10 m tiles, as a quad that won't read does in the app.
 - **Sampling** (`config.SAMPLING_RULE`, version `xsgrid-1`). Each sample point is transformed from EPSG:5070 to the tile's own CRS and interpolated bilinearly between the four nearest cell centres of the native grid. The result is rounded to float32, the tiles' own precision, a change of at most 0.12 mm. The app instead reprojects a window and interpolates there, which depends on the window. The grid's numbers are exactly repeatable, so a section's profile can be rebuilt from its recorded tiles.
 - **Metrics.** Each section goes through the app's chain for one transect: `balanced_profile`, `simplify_profile`, then `summarize_profile` at the section's regional bankfull. The input is the float32 samples the archive keeps, so recomputing from the archive reproduces the metrics bit for bit (`run.py verify`).
 - **Faster thinning, same output.** `xsgrid.derive.simplify` replaces the last step of `simplify_profile`, a Visvalingam trim that rescans every point for each one it drops, with a heap. It uses the same areas by the same arithmetic and removes points in the same order (smallest first, leftmost on a tie), so the same points survive. The tests check this on 600 profiles, ties included. In the build, one section in 200 also runs the reference.
@@ -78,4 +80,5 @@ Metrics derived from float32 differ from metrics derived from float64 on about 6
 | `F:\staf-xs\regions\<vpu>.json` | counts, bytes, sha256, tiers, timings |
 | `F:\staf-xs\parts\<vpu>\` | per-cell part files while a region is in progress |
 | `D:\Data\xs-grid\sections\` | placed sections per region |
+| `D:\Data\xs-grid\tilecache\` | the 3DEP tiles in use, kept to about 100 GB (`--cache-gb`): the least recently used go first, and the finished build empties it |
 | `D:\Data\xs-grid\logs\cells.jsonl` | one line per finished cell |

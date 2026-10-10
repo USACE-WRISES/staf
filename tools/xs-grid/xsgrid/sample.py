@@ -199,6 +199,31 @@ def ensure(url: str) -> str:
     return str(path)
 
 
+#: USGS stores some 1/9 arc-second quads as ``img<name>_19.img`` in the quad's folder: 105 of 8,345,
+#: all from eight 2014-era projects, which the catalog listed as ``<name>.img`` until 2026-10-09 (a
+#: cell of 0316 failed on one). The served file is the same quad on the same grid; the fallback
+#: stays for a catalog of before the fix.
+_QUAD_URLS: dict = {}
+
+
+def quad_url(url: str) -> Optional[str]:
+    """The file USGS serves for the catalog's quad ``url``, downloaded into the cache: the catalog's
+    own name, else ``img<name>_19.img`` beside it. None when neither is there; its sections then take
+    the 10 m tiles, as the app's do when a quad will not read (``dem_tiles.best_tile_dem``)."""
+    if url not in _QUAD_URLS:
+        folder, name = url.rsplit("/", 1)
+        got = None
+        for u in (url, f"{folder}/img{name.rsplit('.', 1)[0]}_19.img"):
+            try:
+                ensure(u)
+            except FileNotFoundError:                     # 403 or 404: not under this name
+                continue
+            got = u
+            break
+        _QUAD_URLS[url] = got                             # any other error is raised, never kept
+    return _QUAD_URLS[url]
+
+
 def _read(urls: list, bounds) -> tuple:
     paths = [ensure(u) for u in urls]
     for attempt in range(BUSY_TRIES):
@@ -295,16 +320,18 @@ def sample_cell(cat: Catalogs, secs: list) -> dict:
         import shapely
         boxes = shapely.box(*np.asarray([s.bbox4326 for s in rest]).T)
         si, qi = cat.nine["tree"].query(boxes, predicate="intersects")
-        if len(si):
-            quads = sorted(set(qi.tolist()))
-            has = sorted(set(si.tolist()))
+        own: dict = {}
+        for a, b in zip(si.tolist(), qi.tolist()):
+            own.setdefault(a, []).append(b)
+        served = dict((q, quad_url(str(cat.nine["url"][q]))) for q in sorted(set(qi.tolist())))
+        # the app's rule: a quad that will not read fails the 3 m tier, and the 10 m tiles answer
+        has = sorted(i for i, qs in own.items() if all(served[q] for q in qs))
+        if has:
+            quads = sorted(set(q for i in has for q in own[i]))
             group = [rest[i] for i in has]
             n = [n_points(s.wide, config.QUAD_RES_M) for s in group]
-            got = sample_group([str(cat.nine["url"][q]) for q in quads], 4269, group, n, 2.5 / 32400.0)
+            got = sample_group([served[q] for q in quads], 4269, group, n, 2.5 / 32400.0)
             counts["reads"] += 1
-            own: dict = {}
-            for a, b in zip(si.tolist(), qi.tolist()):
-                own.setdefault(a, []).append(b)
             for i, s, z in zip(has, group, got):
                 if _finite(z) >= config.FINITE_MIN:
                     s.res, s.z, s.source = config.QUAD_RES_M, z.astype(np.float32), "3dep-19"

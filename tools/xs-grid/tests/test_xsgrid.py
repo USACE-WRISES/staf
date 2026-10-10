@@ -387,3 +387,116 @@ def test_a_download_never_replaces_a_tile_already_in_place(tmp_path, monkeypatch
         assert tilecache.fetch(url, pool, size=6) == dest
     assert dest.read_bytes() == b"theirs"
     assert not list(tmp_path.glob("*.part"))
+
+
+def test_a_download_writes_only_the_ranges_that_arrived(tmp_path, monkeypatch):
+    import threading
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    from xsgrid import tilecache
+    monkeypatch.setenv("XSGRID_TILECACHE", str(tmp_path))
+    monkeypatch.setattr(tilecache, "CHUNK", 2)                # 4 ranges
+    gates = dict((a, threading.Event()) for a in (0, 2, 4, 6))
+
+    def gated_range(u, a, b):
+        gates[a].wait(10)
+        return bytes([65 + a]) * (b - a + 1)
+    monkeypatch.setattr(tilecache, "_get_range", gated_range)
+    url = "https://example.invalid/tiles/USGS_one_meter_x1y1_TEST.tif"
+    with ThreadPoolExecutor(4) as pool:
+        t = threading.Thread(target=tilecache.fetch, args=(url, pool), kwargs=dict(size=8), daemon=True)
+        t.start()
+        for _ in range(100):
+            parts = list(tmp_path.glob("*.part"))
+            if parts:
+                break
+            time.sleep(0.05)
+        assert parts and parts[0].read_bytes() == b""          # no zeros written ahead of the data (run 6)
+        for gate in gates.values():
+            gate.set()
+        t.join(10)
+    assert tilecache.local_path(url).read_bytes() == b"AACCEEGG"
+    assert not list(tmp_path.glob("*.part"))
+
+
+def test_cache_scans_survive_a_file_going_away_mid_scan(tmp_path, monkeypatch):
+    import os
+
+    from xsgrid import tilecache
+    monkeypatch.setenv("XSGRID_TILECACHE", str(tmp_path))
+    old, part = tmp_path / "old.tif", tmp_path / "new.tif.1.2.part"
+    real_stat, looks = Path.stat, []
+
+    def stat(self, *, follow_symlinks=True):                # the download's .part goes at its k-th look
+        if self == part:
+            looks.append(self)
+            if len(looks) == k and os.path.exists(part):
+                os.remove(part)
+        return real_stat(self, follow_symlinks=follow_symlinks)
+    monkeypatch.setattr(Path, "stat", stat)
+    for k in range(1, 5):                                   # run 5 stopped on usage at k = 2 (2026-10-09)
+        for scan in ("usage", "evict"):
+            old.write_bytes(b"x" * 10)
+            os.utime(old, (1, 1))                           # long unused
+            part.write_bytes(b"x" * 20)
+            looks.clear()
+            if scan == "usage":
+                assert tilecache.usage() in (10, 30)
+            else:
+                assert tilecache.evict(set(), cap_bytes=0) == 10 and not old.exists()
+
+
+def test_a_quad_is_read_from_the_file_usgs_serves(monkeypatch):
+    base = "https://example.invalid/19/TILES/"
+    listed = base + "ned19_n33x00_w088x75_P_2014/ned19_n33x00_w088x75_P_2014.img"
+    renamed = base + "ned19_n33x00_w088x75_P_2014/imgned19_n33x00_w088x75_P_2014_19.img"
+    normal = base + "ned19_n34x00_w088x75_Q_2012/ned19_n34x00_w088x75_Q_2012.img"
+    gone = base + "ned19_n35x00_w088x75_R_2014/ned19_n35x00_w088x75_R_2014.img"
+    tried = []
+
+    def ensure(url):                                        # USGS's answer: a 403 or 404 is FileNotFoundError
+        tried.append(url)
+        if url not in (renamed, normal):
+            raise FileNotFoundError(url)
+        return url
+    monkeypatch.setattr(sample, "ensure", ensure)
+    monkeypatch.setattr(sample, "_QUAD_URLS", {})
+    assert sample.quad_url(normal) == normal and tried == [normal]
+    assert sample.quad_url(listed) == renamed
+    assert sample.quad_url(gone) is None
+    tried.clear()
+    assert sample.quad_url(listed) == renamed and not tried    # looked up once per process
+
+    def offline(url):
+        raise IOError(f"no size for {url}")
+    monkeypatch.setattr(sample, "ensure", offline)
+    other = base + "ned19_n36x00_w088x75_S_2014/ned19_n36x00_w088x75_S_2014.img"
+    with pytest.raises(IOError):
+        sample.quad_url(other)                              # a network failure still fails the cell
+    assert other not in sample._QUAD_URLS
+
+
+def test_sections_touching_an_unserved_quad_take_the_10m_tiles(monkeypatch):
+    from types import SimpleNamespace
+
+    import shapely
+    cat = SimpleNamespace(
+        one=dict(tree=shapely.STRtree([])),                 # no 1 m tiles here
+        nine=dict(name=np.asarray(["q_ok", "q_gone"], dtype=object), url=np.asarray(["u_ok", "u_gone"], dtype=object),
+                  tree=shapely.STRtree(shapely.box([0.0, 1.0], [0.0, 0.0], [1.0, 2.0], [1.0, 1.0]))))
+    boxes = [(0.2, 0.2, 0.4, 0.4), (1.2, 0.2, 1.4, 0.4), (0.9, 0.2, 1.1, 0.4)]   # in q_ok, in q_gone, on both
+    secs = [sample.Section(i=i, x=0.0, y=0.0, nx=1.0, ny=0.0, wide=250.0, bbox4326=b) for i, b in enumerate(boxes)]
+    reads = []
+
+    def sample_group(urls, epsg, group, n_pts, pad):
+        reads.append((list(urls), [s.i for s in group]))
+        return [np.zeros(k) for k in n_pts]
+    monkeypatch.setattr(sample, "quad_url", lambda url: "served_ok" if url == "u_ok" else None)
+    monkeypatch.setattr(sample, "seamless_urls", lambda bxs: ["s10"])
+    monkeypatch.setattr(sample, "sample_group", sample_group)
+    counts = sample.sample_cell(cat, secs)
+    assert reads == [(["served_ok"], [0]), (["s10"], [1, 2])]
+    assert [(s.res, s.source, s.tiles) for s in secs] == [(3, "3dep-19", "q_ok"), (10, "3dep-13", "s10"),
+                                                          (10, "3dep-13", "s10")]
+    assert (counts["three"], counts["ten"], counts["none"]) == (1, 2, 0)
