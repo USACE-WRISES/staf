@@ -9,6 +9,7 @@ once no upcoming cell needs them, so the cache stays under its cap. Nothing is k
 from __future__ import annotations
 
 import os
+import random
 import threading
 import time
 from concurrent.futures import FIRST_COMPLETED, CancelledError, ThreadPoolExecutor, wait
@@ -18,6 +19,12 @@ from . import config
 
 CHUNK = 4 << 20
 RETRIES = 8
+#: (connect, read) seconds: a range that hears nothing for 30 s is asked again on a new connection
+#: (120 s let a stalled range hold its thread for two minutes, 2026-10-09)
+TIMEOUT = (20, 30)
+#: what this process downloaded, and how many range requests failed and were asked again
+STATS = dict(bytes=0, failed=0)
+_STATS_LOCK = threading.Lock()
 
 
 def cache_dir() -> Path:
@@ -43,18 +50,24 @@ def _session():
     return s
 
 
+def _backoff(attempt: int) -> None:
+    """Wait before asking again: doubling up to a minute, jittered, so threads that failed together
+    don't all come back together."""
+    time.sleep(min(60, 2 ** attempt) * random.uniform(0.5, 1.0))
+
+
 def _size(url: str) -> int:
     for attempt in range(RETRIES):
         try:
-            r = _session().head(url, timeout=60, allow_redirects=True)
+            r = _session().head(url, timeout=TIMEOUT, allow_redirects=True)
         except Exception:  # noqa: BLE001 - retried
-            time.sleep(min(60, 2 ** attempt))
+            _backoff(attempt)
             continue
         if r.status_code in (403, 404):
             raise FileNotFoundError(url)                  # no such tile (offshore, retired)
         if r.ok and "Content-Length" in r.headers:
             return int(r.headers["Content-Length"])
-        time.sleep(min(60, 2 ** attempt))
+        _backoff(attempt)
     raise IOError(f"no size for {url}")
 
 
@@ -62,14 +75,18 @@ def _get_range(url: str, a: int, b: int) -> bytes:
     last = None
     for attempt in range(RETRIES):
         try:
-            r = _session().get(url, headers={"Range": f"bytes={a}-{b}"}, timeout=120)
+            r = _session().get(url, headers={"Range": f"bytes={a}-{b}"}, timeout=TIMEOUT)
             r.raise_for_status()
             if len(r.content) != b - a + 1:
                 raise IOError(f"short read {len(r.content)} of {b - a + 1}")
+            with _STATS_LOCK:
+                STATS["bytes"] += len(r.content)
             return r.content
         except Exception as exc:  # noqa: BLE001 - retried with backoff
             last = exc
-            time.sleep(min(60, 2 ** attempt))
+            with _STATS_LOCK:
+                STATS["failed"] += 1
+            _backoff(attempt)
     raise IOError(f"range {a}-{b} of {url} failed: {last}")
 
 
@@ -145,9 +162,11 @@ def usage() -> int:
     return sum(_file_size(p) for p in d.glob("*")) if d.exists() else 0
 
 
-def evict(keep: set, cap_bytes: int, min_age_s: float = 1800.0) -> int:
+def evict(keep: set, cap_bytes: int, min_age_s: float = 600.0) -> int:
     """Delete cached files not in ``keep`` (paths), oldest first, until under ``cap_bytes``; a
-    file younger than ``min_age_s`` stays (a sampler may have just fetched it)."""
+    file used in the last ``min_age_s`` stays (a sampler may have just fetched it). It was 30
+    minutes, but at 63 MB/s that is more than the 100 GB cap, and the cache sat over it (run 9,
+    2026-10-10); a sampler is done with a tile within a couple of minutes."""
     d = cache_dir()
     if not d.exists():
         return 0

@@ -80,7 +80,7 @@ def place(t: pa.Table) -> dict:
     part_line = np.repeat(np.arange(len(t)), n_parts_line)
     part_index = np.arange(len(counts)) - np.repeat(parts.offsets.to_numpy()[:-1], n_parts_line)
     assert counts.sum() == len(lon), "parts must count every vertex"
-    pstart = np.r_[0, np.cumsum(counts)[:-1]]
+    pstart = np.cumsum(counts) - counts                    # np.r_[0, cumsum[:-1]], and right when empty too
     pend = pstart + counts
     to5070 = Transformer.from_crs(4326, 5070, always_xy=True)
     px, py = to5070.transform(lon, lat)
@@ -100,7 +100,9 @@ def place(t: pa.Table) -> dict:
 
     nsec = np.where(plen > 0, np.maximum(1, np.floor(plen / config.SPACING_M + 0.5)), 0).astype(np.int64)
     sec_part = np.repeat(np.arange(len(counts)), nsec)
-    k = np.arange(len(sec_part)) - np.repeat(np.r_[0, np.cumsum(nsec)[:-1]], nsec)
+    # each part's first section, as np.r_[0, cumsum[:-1]] gave, but right for a region with nothing to
+    # grid too (Great Lakes units 0418, 0419, 0424, 0426, 0428; run 7 stopped placing 0418, 2026-10-10)
+    k = np.arange(len(sec_part)) - np.repeat(np.cumsum(nsec) - nsec, nsec)
     s = (k + 0.5) * plen[sec_part] / nsec[sec_part]
     s2 = np.minimum(s + config.CHORD_M, plen[sec_part])
 

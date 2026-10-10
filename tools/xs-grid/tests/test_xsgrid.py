@@ -127,6 +127,30 @@ def test_place_skips_other_flowline_types():
     assert keep.tolist() == [False, True, True]
 
 
+def test_place_handles_a_region_with_nothing_to_grid():
+    from xsgrid import build
+    p = sections.place(_line_table([(-93.3, 41.1), (-93.29, 41.1)]).slice(0, 0))   # run 7 stopped on 0418
+    assert set(build.SECTION_COLUMNS) - {"cell"} <= set(p) and all(len(v) == 0 for v in p.values())
+    assert len(sections.cell_ids(p["x"], p["y"])) == 0
+
+
+def test_a_region_with_nothing_to_grid_is_recorded_done(tmp_path, monkeypatch):
+    import time
+
+    import pyarrow.parquet as pq
+
+    from xsgrid import archive, build
+    monkeypatch.setattr(config, "WORK", tmp_path / "work")
+    monkeypatch.setattr(config, "ARCHIVE", tmp_path / "archive")
+    rec = build.finish_region("0418", [], time.time())
+    assert rec["sections"] == 0 and rec["cells"] == 0 and build.region_done("0418")
+    for path, schema in ((tmp_path / "archive" / "archive" / "xs_0418.parquet", archive.ARCHIVE_SCHEMA),
+                         (tmp_path / "archive" / "metrics" / "xsm_0418.parquet", archive.METRICS_SCHEMA)):
+        t = pq.read_table(path)
+        assert t.num_rows == 0 and t.column_names == schema.names
+    assert (tmp_path / "work" / "metrics" / "xsm_0418.parquet").exists()
+
+
 def test_bilinear_is_exact_on_a_plane_and_propagates_missing():
     from affine import Affine
     tr = Affine(1.0, 0.0, 1000.0, 0.0, -1.0, 2000.0)
@@ -418,6 +442,45 @@ def test_a_download_writes_only_the_ranges_that_arrived(tmp_path, monkeypatch):
         t.join(10)
     assert tilecache.local_path(url).read_bytes() == b"AACCEEGG"
     assert not list(tmp_path.glob("*.part"))
+
+
+
+def test_a_failed_range_is_asked_again_on_a_short_timeout_and_counted(monkeypatch):
+    from xsgrid import tilecache
+
+    class Response:
+        content = b"xxxx"
+
+        def raise_for_status(self):
+            pass
+    asked = []
+
+    class Session:
+        def get(self, url, headers=None, timeout=None):
+            asked.append(timeout)
+            if len(asked) == 1:
+                raise ConnectionError("stalled")              # the first ask hears nothing
+            return Response()
+    monkeypatch.setattr(tilecache, "_session", lambda: Session())
+    monkeypatch.setattr(tilecache, "_backoff", lambda attempt: None)
+    monkeypatch.setattr(tilecache, "STATS", dict(bytes=0, failed=0))
+    assert tilecache._get_range("https://example.invalid/t.tif", 0, 3) == b"xxxx"
+    assert tilecache.STATS == dict(bytes=4, failed=1)
+    assert asked == [tilecache.TIMEOUT] * 2 and tilecache.TIMEOUT[1] <= 30
+
+def test_eviction_spares_only_tiles_used_in_the_last_10_minutes(tmp_path, monkeypatch):
+    import os
+    import time
+
+    from xsgrid import tilecache
+    monkeypatch.setenv("XSGRID_TILECACHE", str(tmp_path))
+    now = time.time()
+    recent, older = tmp_path / "recent.tif", tmp_path / "older.tif"
+    for p, age_s in ((recent, 5 * 60), (older, 15 * 60)):      # 30 min spared both: the cap never held (run 9)
+        p.write_bytes(b"x" * 10)
+        os.utime(p, (now - age_s, now - age_s))
+    assert tilecache.evict(set(), cap_bytes=0) == 10
+    assert recent.exists() and not older.exists()
 
 
 def test_cache_scans_survive_a_file_going_away_mid_scan(tmp_path, monkeypatch):

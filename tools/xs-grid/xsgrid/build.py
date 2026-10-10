@@ -38,6 +38,11 @@ from . import archive, config, sections, tilecache
 SECTION_COLUMNS = ("nhdplusid", "part", "k", "n_sec", "s_m", "x", "y", "nx", "ny", "da_sqkm", "division",
                    "bf_width_m", "bf_depth_m", "bf_area_m2", "bf_extrapolated", "wide_m", "cell")
 LOG_LOCK = threading.Lock()
+#: tiles downloading at once, and tiles queued or downloading at most: with 6 and 12 the 48
+#: connections ran dry whenever a few tiles' ranges stalled (2026-10-09)
+TILE_WORKERS, TILES_IN_FLIGHT = 12, 24
+#: cells prepared per turn of the driver's loop, so filling the look-ahead never holds up downloads
+PREPARE_PER_TURN = 4
 
 
 def log(msg: str) -> None:
@@ -212,8 +217,12 @@ def finish_region(vpu: str, cells: list, started: float) -> dict:
     md = archive.metadata({"vpu": vpu, "bundle": str(config.BUNDLE), "catalogs": str(config.CATALOGS)})
     xs = config.ARCHIVE / "archive" / f"xs_{vpu}.parquet"
     xm = config.ARCHIVE / "metrics" / f"xsm_{vpu}.parquet"
-    b_xs = archive.concat([p[0] for p in parts], xs, md)
-    b_xm = archive.concat([p[1] for p in parts], xm, md)
+    if cells:
+        b_xs = archive.concat([p[0] for p in parts], xs, md)
+        b_xm = archive.concat([p[1] for p in parts], xm, md)
+    else:                       # nothing to grid (five Great Lakes units): empty files with the same schemas
+        b_xs = archive.write(archive.ARCHIVE_SCHEMA.empty_table(), xs, md)
+        b_xm = archive.write(archive.METRICS_SCHEMA.empty_table(), xm, md)
     work_copy = config.WORK / "metrics" / xm.name
     work_copy.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(xm, work_copy)
@@ -371,7 +380,7 @@ class Cell:
 
 
 def run(vpus: list, *, samplers: int = 3, scorers: int = 7, priority_low: bool = True, cell_limit=None,
-        cache_gb: float = 80.0, ahead: int = 16, fetch_threads: int = 48, window=None) -> int:
+        cache_gb: float = 80.0, ahead: int = 48, fetch_threads: int = 48, window=None) -> int:
     """Build every region in ``vpus`` that is not done (``cell_limit``: a test run of that many
     cells per region, left unmerged). With ``window`` (minutes after midnight, start and end) the
     run starts only inside it and pauses at its end; ``run.py stop`` (the STOP file) pauses it any
@@ -415,7 +424,7 @@ def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, a
     log(f"starting: {len(todo)} regions to do" + (f", run window {fmt_window(window)}" if window else ""))
     cat = Catalogs()
     chunk_pool = ThreadPoolExecutor(fetch_threads)
-    tile_pool = ThreadPoolExecutor(6)
+    tile_pool = ThreadPoolExecutor(TILE_WORKERS)
     cap = int(cache_gb * 1e9)
     tables: dict = {}
     region_cells: dict = {}
@@ -503,6 +512,7 @@ def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, a
         t_start = time.time()
         n_sampled = n_scored = sec_sampled = 0
         last_report = time.time()
+        got_at_report = tilecache.STATS["bytes"]
         stopping = None
         while True:
             if stopping is None:
@@ -514,7 +524,8 @@ def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, a
                     log(f"pausing at {stopping}: finishing {len(sampling)} cells being sampled and "
                         f"{len(scoring)} being scored")
                     upcoming.clear()
-            while stopping is None and not exhausted and len(upcoming) < ahead:
+            prepared = 0
+            while stopping is None and not exhausted and len(upcoming) < ahead and prepared < PREPARE_PER_TURN:
                 try:
                     item = next(gen)
                 except StopIteration:
@@ -525,6 +536,7 @@ def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, a
                     continue
                 prepare(item)
                 upcoming.append(item)
+                prepared += 1
             keep = set()
             for c in list(upcoming) + [v[2] for v in sampling.values()]:
                 for url, _ in c.urls:
@@ -533,7 +545,7 @@ def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, a
                 tilecache.evict(keep, cap)
             reap_fetches()
             for c in upcoming:
-                if len(fetching) >= 12 or stopping:
+                if len(fetching) >= TILES_IN_FLIGHT or stopping:
                     break
                 fetch_cell(c)
             while stopping is None and upcoming and len(sampling) < samplers and cell_ready(upcoming[0]):
@@ -608,7 +620,10 @@ def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, a
                 hrs = (time.time() - t_start) / 3600
                 log(f"progress: sampled {n_sampled} cells ({sec_sampled:,} sections, {sec_sampled / max(hrs, 1e-9):,.0f}"
                     f"/h), scored {n_scored}; scoring queue {len(scoring)}, prefetching {len(fetching)}, "
-                    f"cache {tilecache.usage() / 1e9:.1f} GB")
+                    f"cache {tilecache.usage() / 1e9:.1f} GB; prefetched "
+                    f"{(tilecache.STATS['bytes'] - got_at_report) / (time.time() - last_report) / 1e6:.1f} MB/s, "
+                    f"{tilecache.STATS['failed']} range requests asked again")
+                got_at_report = tilecache.STATS["bytes"]
                 last_report = time.time()
         if stopping:
             log(f"PAUSED at {stopping}: sampled {n_sampled} cells ({sec_sampled:,} sections) and scored {n_scored} "
