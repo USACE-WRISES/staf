@@ -80,5 +80,5 @@ Metrics derived from float32 differ from metrics derived from float64 on about 6
 | `F:\staf-xs\regions\<vpu>.json` | counts, bytes, sha256, tiers, timings |
 | `F:\staf-xs\parts\<vpu>\` | per-cell part files while a region is in progress |
 | `D:\Data\xs-grid\sections\` | placed sections per region |
-| `D:\Data\xs-grid\tilecache\` | the 3DEP tiles in use, kept to about 100 GB (`--cache-gb`): the least recently used go first, and the finished build empties it |
+| `D:\Data\xs-grid\tilecache\` | the 3DEP tiles in use, kept to about 100 GB (`--cache-gb`): the least recently used go first, except tiles used in the last 10 minutes, and the finished build empties it |
 | `D:\Data\xs-grid\logs\cells.jsonl` | one line per finished cell |
