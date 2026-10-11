@@ -4,7 +4,10 @@
 // zoom_cue, cursor_style, stream_legend, flow_loading); here they redraw on the map's own events,
 // into the same output elements. The page scripts' inputs (shim.ts) arrive at input().
 import type L from 'leaflet'
-import { esc, flowLoading, FLOW_ZOOM, legend, readout, START, type ToolKey, zoomCue } from './markup'
+import type { EasiData } from '../engine/pipeline'
+import { Basin } from './basin'
+import { assessPane, type Covering, coveringRefs, loadRef } from './deepAssess'
+import { esc, flowLoading, FLOW_ZOOM, identifyPane, legend, readout, START, type ToolKey, zoomCue } from './markup'
 import { Identify } from './identify'
 import { makeMap, type ToolMap } from './map'
 import { notify } from './notify'
@@ -41,8 +44,15 @@ export class Tool {
   regionStatuses: RegionStatus[] = []
   streams: StreamLayers | null = null
   identify: Identify | null = null
+  basin: Basin | null = null
+  /** DEEP: the assessments covering the site and the one Basin adopted (selected_ref, loaded_assessment) */
+  private covering: Covering[] = []
+  private selectedRef: string | null = null
+  private loaded: Record<string, any> | null = null
+  /** the pick was ready at the last change (its regions were asked for then) */
+  private warmed = false
 
-  constructor(key: ToolKey, private nets: Networks) {
+  constructor(key: ToolKey, private nets: Networks, private data: EasiData) {
     this.key = key
     const root = document.querySelector<HTMLElement>(`.easi-shell[data-staf-tool="${key}"]`)
     if (!root) throw new Error(`no section for ${key}`)
@@ -53,6 +63,11 @@ export class Tool {
     const el = document.getElementById(`${this.key}-${id}`)
     if (!el) throw new Error(`no output ${this.key}-${id}`)
     return el
+  }
+
+  /** An output the current step may not have. */
+  private maybe(id: string): HTMLElement | null {
+    return document.getElementById(`${this.key}-${id}`)
   }
 
   /** The tool is shown: its map is made the first time (the Shiny tool's server starts then). */
@@ -70,6 +85,17 @@ export class Tool {
       lines: () => streams.lines(),
       setSource: (k, layer) => streams.setSource(k, layer),
       changed: () => this.pickChanged(),
+    })
+    const identify = this.identify
+    this.basin = new Basin({
+      key: this.key, map, layers: this.view.layers, identify, data: this.data,
+      reachFt: () => {
+        const v = Number((this.maybe('reach_ft') as HTMLInputElement | null)?.value)
+        return Number.isFinite(v) && v > 0 ? v : 1000.0
+      },
+      render: () => this.setStep('basin'),
+      busy: () => this.renderBusy(),
+      resolveAssessment: this.key === 'deep' ? () => void this.resolveAssessment() : undefined,
     })
     map.on('zoomend moveend', () => this.viewChanged())
     map.on('click', (e: L.LeafletMouseEvent) => this.mapClick(e))
@@ -129,25 +155,108 @@ export class Tool {
       this.renderCue(true)
       return
     }
+    this.basin?.invalidate()          // a new pick invalidates the last delineation
     this.identify?.click(e.latlng.lat, e.latlng.lng)
+  }
+
+  // ------------------------------------------------------------------- the steps
+
+  /** The left pane for a step (each app.py leftpane). */
+  setStep(step: string): void {
+    this.step = step
+    const pane = this.out('leftpane')
+    if (step === 'basin' && this.basin?.delin) {
+      const assess = this.key === 'deep' ? assessPane(this.loaded, this.covering) : ''
+      pane.innerHTML = '\n' + this.basin.pane(assess) + '\n'
+    } else {
+      this.step = 'identify'
+      pane.innerHTML = '\n' + identifyPane(this.key, !!this.identify?.ready()) + '\n'
+      this.pickChanged()
+    }
+    this.renderBusy()
+    this.viewChanged()
+    this.sendCoverageCurrent()
+  }
+
+  /** DEEP's regions hear the assessment in use and whether they take clicks (Identify only), whenever
+   * either changes (app.py _send_coverage_current). */
+  private sendCoverageCurrent(): void {
+    if (this.key !== 'deep') return
+    shim.send('deep_coverage_current', { assessmentId: this.loaded?.assessmentId ?? null, identify: this.step === 'identify', focus: false })
+  }
+
+  /** The busy line, and Delineate off while it runs (_toggle_delineate). */
+  private renderBusy(): void {
+    const b = this.basin
+    const busy = this.maybe('busy_text')
+    const text = b?.running ? b.stage : ''
+    if (busy && busy.textContent !== text) busy.textContent = text
+    const button = this.maybe('delineate') as HTMLButtonElement | null
+    if (button) button.disabled = !this.identify?.ready() || !!b?.running
+    const line = this.maybe('engine_line')
+    if (line && b) {
+      const html = b.engineLine()
+      if (line.innerHTML !== html) line.innerHTML = html
+    }
+  }
+
+  /** A step link in the pane (each tool's step_nav). */
+  private stepNav(target: string): void {
+    const hasDelin = !!this.basin?.delin
+    if (target === 'identify') this.setStep('identify')
+    else if (target === 'basin' && hasDelin) this.setStep('basin')
+    else if (target !== 'report' && hasDelin) notify('The Assessment step is not in the web app yet.', { seconds: 4 })
+    else notify('Finish the earlier steps first.', { seconds: 2 })
+  }
+
+  /** Clear: back to an empty Identify (each app.py _reset). */
+  private clear(): void {
+    this.basin?.invalidate()
+    this.identify?.clear()
+    this.selectedRef = null
+    this.loaded = null
+    this.covering = []
+    this.setStep('identify')
+  }
+
+  /** DEEP adopts an assessment once there is a basin for it (app.py _resolve_assessment). */
+  private async resolveAssessment(): Promise<void> {
+    const d = this.basin?.delin?.delineation ?? {}
+    const pt = this.identify?.snapped
+    const lat = pt ? pt[0] : d.snapped_lat
+    const lon = pt ? pt[1] : d.snapped_lon
+    if (lat == null || lon == null || !this.regionSource) return
+    this.regions ??= this.regionSource()
+    const features = await this.regions.catch(() => [])
+    this.covering = await coveringRefs(this.data.src, features as any[], lat, lon).catch(() => [])
+    if (!this.selectedRef && this.covering.length) {
+      const ref = this.covering[0].defaultRef
+      this.loaded = await loadRef(this.data.src, ref).catch(() => null)
+      if (this.loaded) this.selectedRef = ref
+    }
+    const slot = this.maybe('assess_pane')
+    if (slot && this.step === 'basin') slot.innerHTML = '\n' + assessPane(this.loaded, this.covering) + '\n'
+    this.sendCoverageCurrent()
   }
 
   /** The pick changed: the snap status, the lookup line, Delineate, the legend. */
   private pickChanged(): void {
     const id = this.identify
     if (!id) return
-    const snap = this.out('snap_status')
+    const snap = this.maybe('snap_status')
     const html = '\n' + id.snapStatus() + '\n'
-    if (snap.innerHTML !== html) snap.innerHTML = html
+    if (snap && snap.innerHTML !== html) snap.innerHTML = html
     if (this.key !== 'easi') {
-      const look = this.out('streamcat_lookup_status')
+      const look = this.maybe('streamcat_lookup_status')
       const lh = id.lookupStatus()
       const lhtml = lh ? '\n' + lh + '\n' : ''
-      if (look.innerHTML !== lhtml) look.innerHTML = lhtml
+      if (look && look.innerHTML !== lhtml) look.innerHTML = lhtml
     }
+    if (id.ready() && !this.warmed) this.basin?.prefetch()
+    this.warmed = id.ready()
     const button = document.getElementById(`${this.key}-delineate`) as HTMLButtonElement | null
     if (button) {
-      button.disabled = !id.ready()
+      button.disabled = !id.ready() || !!this.basin?.running
       // EASI names the routed site's step (app.py _toggle_delineate)
       if (this.key === 'easi') {
         const label = button.querySelector('.action-label')
@@ -170,6 +279,7 @@ export class Tool {
       return
     }
     this.view.map.setView([lat, lon], 15)
+    this.basin?.invalidate()
     this.identify.typed(lat, lon)
   }
 
@@ -244,7 +354,8 @@ export class Tool {
     const alert = unavailable ? this.unavailableNotice() : ''
     // the pick's reach and route, with StreamCat coverage on
     const source = this.coverage && this.streamsVisible ? (this.identify?.legendRows() ?? []) : []
-    const regions = this.key === 'deep' && this.step === 'identify' ? this.regionKey() : ''
+    const regions = (this.key === 'deep' && this.step === 'identify' ? this.regionKey() : '')
+      + (this.step === 'basin' ? Basin.legendRows() : '')
     const extra = source.map((r) => `
   <div class="easi-legend-row">
     <span class="easi-legend-sw easi-legend-sw-${r.kind}" style="--swatch-color:${r.color};"></span>
@@ -300,7 +411,25 @@ export class Tool {
         this.streams?.retry()
         break
       case 'retry_streamcat':
+        this.basin?.invalidate()
         this.identify?.retry()
+        break
+      case 'delineate':
+        this.basin?.start()
+        break
+      case 'clear_basin':
+        this.clear()
+        break
+      case 'run_screening':
+      case 'to_review':
+      case 'to_measure':
+        notify('The Assessment step is not in the web app yet.', { seconds: 4 })
+        break
+      case 'change_assessment':
+        notify('Changing the assessment comes with the Assessment step.', { seconds: 4 })
+        break
+      case 'step_nav':
+        this.stepNav(String(value))
         break
       case 'coords_entered':
         this.coordsEntered(value)
@@ -334,7 +463,7 @@ export class Tool {
       const statuses = new Set((features as { lifecycle: RegionStatus }[]).map((f) => f.lifecycle))
       this.regionStatuses = [...statuses].sort() as RegionStatus[]
       shim.send('deep_coverage', { features })
-      shim.send('deep_coverage_current', { assessmentId: null, identify: this.step === 'identify', focus: false })
+      shim.send('deep_coverage_current', { assessmentId: this.loaded?.assessmentId ?? null, identify: this.step === 'identify', focus: false })
       this.renderLegend()
     }, () => {
       this.coverageSent = false

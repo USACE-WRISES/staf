@@ -478,6 +478,26 @@ export class Identify {
     for (const [key, src] of fields) if (scored[key] == null && rec[src] != null) scored[key] = rec[src]
   }
 
+  /** Clear and New: no point, no reach, nothing pending (each app.py _reset). */
+  clear(): void {
+    this.generation += 1
+    this.removePin()
+    this.reset('idle')
+    this.snapped = null
+    this.host.changed()
+  }
+
+  /** The Basin card's StreamCat reach (comid_anchor.reach_text). */
+  reachText(anchor: Anchor | null = this.anchor): string {
+    const c = comidOf(anchor)
+    if (c === null) return 'none found'
+    if (!isRouted(anchor)) return `COMID ${c} (this reach)`
+    const scored = anchor?.scoredReach ?? {}
+    const name = scored.gnisName && String(scored.gnisName).trim() ? String(scored.gnisName).trim() : 'an unnamed reach'
+    const dist = ft(anchor?.routing?.routedDistanceFt)
+    return `${name} (COMID ${c})` + (dist ? `, ${dist} downstream` : '')
+  }
+
   /** Retry StreamCat lookup. */
   retry(): void {
     if ((this.status === 'failed' || this.status === 'no_match') && this.request) this.request()

@@ -13,7 +13,8 @@ at a desktop size, waits until it is idle, and writes to ``parity/<app>/``:
 ``--view LAT,LON,ZOOM --name NAME`` moves each tool's map there first (the stream lines draw from zoom
 14), waits until the streams have settled, and writes ``<tool>-<NAME>.png`` and ``.html`` only;
 ``--coverage`` also turns on StreamCat coverage in the Layers menu first; ``--click LAT,LON`` then
-clicks the map there (a pick) and waits until the pick has settled.
+clicks the map there (a pick) and waits until the pick has settled; ``--delineate`` then presses
+Delineate and waits for the Basin step (or an error).
 
 ``--app shiny`` reads the Shiny STAF app (``shiny run app.py --port 8040`` in apps/staf, or
 .claude/launch.json "staf") and also writes its dialogs to ``src/app/content/dialogs.json``, which
@@ -160,13 +161,26 @@ PICK_JS = """(() => {
 })()"""
 
 
+# Delineate pressed: the Basin step shown and idle, or an error said; the pane's head, or null
+BASIN_JS = """(() => {
+  const html = document.documentElement;
+  const tool = html.getAttribute('data-staf-tool');
+  if (html.classList.contains('shiny-busy')) return null;
+  const err = document.querySelector('.shiny-notification-error');
+  if (err) return 'error: ' + err.textContent.trim();
+  const head = document.querySelector('.staf-section[data-staf-tool="' + tool + '"] .easi-leftpane .easi-pane-head');
+  const text = head ? head.textContent.trim() : '';
+  return /Basin/.test(text) ? text : null;
+})()"""
+
+
 def pretty(html: str) -> str:
     """One tag per line, so a diff points at the element that changed."""
     return html.replace("><", ">\n<")
 
 
 async def main(app: str, url: str, width: int, height: int, view=None, name: str = "",
-               coverage: bool = False, click=None) -> None:
+               coverage: bool = False, click=None, delineate: bool = False) -> None:
     out = HERE / app
     out.mkdir(parents=True, exist_ok=True)
     prof = Path(tempfile.mkdtemp(prefix="staf-capture-"))
@@ -244,6 +258,14 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
                         last = text
                     print(f"{tool}: pick says {last!r}")
                     await asyncio.sleep(1.0)
+                if delineate:
+                    await js(f"document.getElementById('{tool}-delineate').click()")
+                    head, end = None, time.monotonic() + 600
+                    while time.monotonic() < end and head is None:
+                        await asyncio.sleep(2.0)
+                        head = await js(BASIN_JS)
+                    print(f"{tool}: delineate says {head!r}")
+                    await asyncio.sleep(4.0)                # the watershed drawn and fitted, tiles in
                 got = json.loads(await js(CAPTURE_JS))
                 styles = got["styles"]
                 (out / f"{stem}.html").write_text(
@@ -288,7 +310,9 @@ if __name__ == "__main__":
     ap.add_argument("--name", default="view", help="the captures' suffix with --view")
     ap.add_argument("--coverage", action="store_true", help="turn on StreamCat coverage first (with --view)")
     ap.add_argument("--click", help="LAT,LON to click on the map once the view settles (with --view)")
+    ap.add_argument("--delineate", action="store_true", help="press Delineate after the pick (with --click)")
     a = ap.parse_args()
     v = tuple(float(x) for x in a.view.split(",")) if a.view else None
     c = tuple(float(x) for x in a.click.split(",")) if a.click else None
-    asyncio.run(main(a.app, (a.url or URLS[a.app]).rstrip("/"), a.width, a.height, v, a.name, a.coverage, c))
+    asyncio.run(main(a.app, (a.url or URLS[a.app]).rstrip("/"), a.width, a.height, v, a.name, a.coverage, c,
+                     a.delineate))

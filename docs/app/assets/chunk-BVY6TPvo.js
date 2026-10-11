@@ -1,0 +1,1 @@
+import{t as e}from"./proof-Db-A_h6P.js";var t=class extends e{decodeBlock(e){return e}};export{t as default};

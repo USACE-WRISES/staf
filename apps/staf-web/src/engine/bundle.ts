@@ -7,10 +7,10 @@
 // steps2_<vpu>.bin), each catchment a list of polygons of rings of arc references. A region's
 // encoding is read once and decoded per catchment as needed, to whole cells, then to degrees rounded
 // to 1e-7 as the reader rounds them.
-import { decompressZstd } from 'hyparquet-compressors'
 import { pyFixed } from '../app/pyfmt'
-import { metadata, readRows, rowGroups } from '../data/parquet'
+import { readColumns, readRows } from '../data/parquet'
 import type { DataSource } from '../data/source'
+import { zstd, zstdReady } from '../data/zstd'
 import { albersToLonLat } from '../xs/projExact'
 import { nearestPointOnLines } from './snap'
 
@@ -22,6 +22,12 @@ export interface RegionMeta {
   catchments: string
   arcs: string
   steps: string
+  /** the region's id and hydroseq ranges (HR: an id names its region; V2 has an id index instead) */
+  idRange: [number, number] | null
+  hydroseqRange: [number, number] | null
+  vpuid: string
+  /** NHDPlus V2's attribute file (EROM flows) */
+  v2attrs: string | null
 }
 
 const manifests = new Map<string, Promise<RegionMeta[]>>()
@@ -36,7 +42,11 @@ export function datasetRegions(src: DataSource, folder: string): Promise<RegionM
       const file = (v: any) => (typeof v === 'string' ? v : v?.file)
       return Object.keys(m.vpus).sort().map((vpu) => {
         const r = m.vpus[vpu]
-        return { vpu, bounds: r.bounds, grid: r.grid, lines: file(r.lines), catchments: file(r.catchments), arcs: file(r.arcs), steps: file(r.steps) }
+        return {
+          vpu, bounds: r.bounds, grid: r.grid, lines: file(r.lines), catchments: file(r.catchments), arcs: file(r.arcs),
+          steps: file(r.steps), idRange: r.id_range ?? null, hydroseqRange: r.hydroseq_range ?? null,
+          vpuid: r.vpuid || vpu, v2attrs: file(r.v2attrs) ?? null,
+        }
       })
     })
     got.catch(() => manifests.delete(key))
@@ -51,17 +61,24 @@ function overlaps([w, s, e, n]: number[], west: number, south: number, east: num
 
 // ------------------------------------------------------------------ catchments
 
-interface Encoding {
-  ids: number[]
-  bbox: Int32Array[]            // xmin, ymin, xmax, ymax per row (1e-5 degree units)
-  refs: number[][]              // per row: its arc references, ring after ring
-  rings: number[][]             // per row: references per ring
-  polys: number[][]             // per row: rings per polygon
+/** A region's catchments as arcs (arcs.Encoded): flat offsets as the Python keeps them, the cell count
+ * of every catchment (its exact area) and the catchment on each side of every arc. */
+export interface Encoding {
+  ids: Float64Array             // per row: its nhdplusid
+  byId: Map<number, number>     // nhdplusid -> row
+  bbox: Int32Array              // per row: xmin, ymin, xmax, ymax (1e-5 degree units)
+  cells: Float64Array           // per row: whole grid cells (half arcs.area2)
+  refs: Int32Array              // arc * 2 + 1 when the ring follows the arc backwards
+  ringOff: Int32Array           // (n_rings + 1) offsets into refs
+  polyOff: Int32Array           // (n_polys + 1) offsets into rings
+  rowOff: Int32Array            // (n_rows + 1) offsets into polys
   x0: Int32Array
   y0: Int32Array
   axis: Uint8Array
-  runOff: Float64Array          // per arc: offset of its first run
+  runOff: Float64Array          // (n_arcs + 1) offsets into runs
   runs: Int32Array
+  left: Int32Array              // per arc: the row on its left, -1 for none
+  right: Int32Array
 }
 
 const encodings = new Map<string, Promise<Encoding>>()
@@ -73,57 +90,95 @@ export function unpackSteps(data: Uint8Array): Int32Array {
   const view = new DataView(data.buffer, data.byteOffset, data.byteLength)
   const n = Number(view.getBigUint64(8, true))
   const rawLen = Number(view.getBigUint64(16, true))
-  const raw = decompressZstd(data.subarray(24), new Uint8Array(rawLen))
+  const raw = zstd(data.subarray(24), rawLen)
   const out = new Int32Array(n)
   let k = 0
   let value = 0
-  let shift = 0
+  let mul = 1
   for (let i = 0; i < raw.length; i++) {
     const b = raw[i]
-    value += (b & 0x7f) * 2 ** shift
+    if (mul < 268435456) value |= (b & 0x7f) * mul
+    else value += (b & 0x7f) * mul
     if (b & 0x80) {
-      shift += 7
+      mul *= 128
       continue
     }
     // zigzag: (zz >> 1) ^ -(zz & 1)
     out[k++] = value % 2 === 0 ? value / 2 : -(value + 1) / 2
     value = 0
-    shift = 0
+    mul = 1
   }
   if (k !== n) throw new Error('steps file is truncated')
   return out
 }
 
-async function wholeColumns(src: DataSource, logical: string, columns: string[]): Promise<Record<string, any>[]> {
-  const meta = await metadata(src, logical)
-  const total = rowGroups(meta).reduce((s, g) => s + g.rows, 0)
-  return readRows(src, logical, columns, 0, total)
+/** A list column flattened: the values and each row's offset into them (fmt._flat). */
+function flat(column: any[]): { values: Int32Array, off: Int32Array } {
+  const off = new Int32Array(column.length + 1)
+  for (let i = 0; i < column.length; i++) off[i + 1] = off[i] + (column[i]?.length ?? 0)
+  const values = new Int32Array(off[column.length])
+  for (let i = 0, k = 0; i < column.length; i++) {
+    const list = column[i] ?? []
+    for (let j = 0; j < list.length; j++) values[k++] = Number(list[j])
+  }
+  return { values, off }
 }
 
-function encoding(src: DataSource, folder: string, region: RegionMeta): Promise<Encoding> {
+function cumsum(counts: Int32Array): Int32Array {
+  const out = new Int32Array(counts.length + 1)
+  for (let i = 0; i < counts.length; i++) out[i + 1] = out[i] + counts[i]
+  return out
+}
+
+/** A region's catchment encoding (fmt2.read_encoded), read once per session. */
+export function encodingOf(src: DataSource, folder: string, region: RegionMeta): Promise<Encoding> {
   const key = src.base + folder + region.vpu
   let got = encodings.get(key)
   if (!got) {
     got = (async () => {
-      const [cats, arcs, steps] = await Promise.all([
-        wholeColumns(src, folder + region.catchments, ['nhdplusid', 'xmin', 'ymin', 'xmax', 'ymax', 'refs', 'rings', 'polys']),
-        wholeColumns(src, folder + region.arcs, ['x0', 'y0', 'axis', 'n']),
+      const [c, a, steps] = await Promise.all([
+        readColumns(src, folder + region.catchments, ['nhdplusid', 'cells', 'xmin', 'ymin', 'xmax', 'ymax', 'refs', 'rings', 'polys'],
+          0, undefined, { nhdplusid: 'f64', cells: 'f64', xmin: 'i32', ymin: 'i32', xmax: 'i32', ymax: 'i32' }),
+        readColumns(src, folder + region.arcs, ['x0', 'y0', 'axis', 'n'], 0, undefined, { x0: 'i32', y0: 'i32', axis: 'u8', n: 'f64' }),
         src.ready().then(() => src.bytesOf(folder + region.steps)),
+        zstdReady(),
       ])
-      const runOff = new Float64Array(arcs.length + 1)
-      arcs.forEach((a, i) => { runOff[i + 1] = runOff[i] + Number(a.n) })
-      return {
-        ids: cats.map((c) => Number(c.nhdplusid)),
-        bbox: cats.map((c) => Int32Array.from([c.xmin, c.ymin, c.xmax, c.ymax].map(Number))),
-        refs: cats.map((c) => Array.from(c.refs as ArrayLike<number>, Number)),
-        rings: cats.map((c) => Array.from(c.rings as ArrayLike<number>, Number)),
-        polys: cats.map((c) => Array.from(c.polys as ArrayLike<number>, Number)),
-        x0: Int32Array.from(arcs, (a) => Number(a.x0)),
-        y0: Int32Array.from(arcs, (a) => Number(a.y0)),
-        axis: Uint8Array.from(arcs, (a) => Number(a.axis)),
-        runOff,
-        runs: unpackSteps(new Uint8Array(steps)),
+      const nRows = c.nhdplusid.length
+      const nArcs = a.x0.length
+      const ids: Float64Array = c.nhdplusid
+      const byId = new Map<number, number>()
+      for (let r = nRows - 1; r >= 0; r--) byId.set(ids[r], r)
+      const bbox = new Int32Array(nRows * 4)
+      for (let r = 0; r < nRows; r++) {
+        bbox[4 * r] = c.xmin[r]
+        bbox[4 * r + 1] = c.ymin[r]
+        bbox[4 * r + 2] = c.xmax[r]
+        bbox[4 * r + 3] = c.ymax[r]
       }
+      const refs = flat(c.refs)
+      const rings = flat(c.rings)
+      const polys = flat(c.polys)
+      const runOff = new Float64Array(nArcs + 1)
+      for (let i = 0; i < nArcs; i++) runOff[i + 1] = runOff[i] + a.n[i]
+      const enc: Encoding = {
+        ids, byId, bbox, cells: c.cells,
+        refs: refs.values, ringOff: cumsum(rings.values), polyOff: cumsum(polys.values), rowOff: polys.off,
+        x0: a.x0, y0: a.y0, axis: a.axis,
+        runOff, runs: unpackSteps(new Uint8Array(steps)),
+        left: new Int32Array(nArcs).fill(-1), right: new Int32Array(nArcs).fill(-1),
+      }
+      // arcs.owners_from_refs: rings keep their polygon on the left, so a forward reference puts its
+      // row on the arc's left and a backward one on its right
+      for (let row = 0; row < nRows; row++) {
+        const r0 = enc.ringOff[enc.polyOff[enc.rowOff[row]]]
+        const r1 = enc.ringOff[enc.polyOff[enc.rowOff[row + 1]]]
+        for (let k = r0; k < r1; k++) {
+          const ref = enc.refs[k]
+          if (ref & 1) enc.right[ref >> 1] = row
+          else enc.left[ref >> 1] = row
+        }
+      }
+      return enc
     })()
     got.catch(() => encodings.delete(key))
     encodings.set(key, got)
@@ -132,7 +187,7 @@ function encoding(src: DataSource, folder: string, region: RegionMeta): Promise<
 }
 
 /** An arc's vertices in cells (arcs.arc_vertices): its start, then one corner per run. */
-function arcVertices(enc: Encoding, arc: number): [number, number][] {
+export function arcVertices(enc: Encoding, arc: number): [number, number][] {
   let x = enc.x0[arc]
   let y = enc.y0[arc]
   const out: [number, number][] = [[x, y]]
@@ -146,7 +201,7 @@ function arcVertices(enc: Encoding, arc: number): [number, number][] {
 }
 
 /** numpy.round(x, 7): rint(x * 1e7) / 1e7 (half to even). */
-function round7(x: number): number {
+export function round7(x: number): number {
   const v = x * 1e7
   const f = Math.floor(v)
   const d = v - f
@@ -156,29 +211,23 @@ function round7(x: number): number {
 
 /** A catchment row's polygons, rings of [lon, lat] (arcs.rows_ragged, Grid.to_lonlat, np.round 7). */
 export function rowPolygons(enc: Encoding, row: number, grid: RegionMeta['grid']): [number, number][][][] {
-  const refs = enc.refs[row]
-  const ringSizes = enc.rings[row]
-  const polySizes = enc.polys[row]
-  const rings: [number, number][][] = []
-  let r = 0
-  for (const size of ringSizes) {
-    const ring: [number, number][] = []
-    for (let i = 0; i < size; i++, r++) {
-      const ref = refs[r]
-      let verts = arcVertices(enc, ref >> 1)
-      if (ref & 1) verts = verts.reverse()
-      ring.push(...(i === 0 ? verts : verts.slice(1)))
-    }
-    rings.push(ring.map(([ix, iy]) => {
-      const [lon, lat] = albersToLonLat(ix * grid.cell + grid.offset, iy * grid.cell + grid.offset)
-      return [round7(lon), round7(lat)]
-    }))
-  }
   const polys: [number, number][][][] = []
-  let k = 0
-  for (const count of polySizes) {
-    polys.push(rings.slice(k, k + count))
-    k += count
+  for (let p = enc.rowOff[row]; p < enc.rowOff[row + 1]; p++) {
+    const rings: [number, number][][] = []
+    for (let g = enc.polyOff[p]; g < enc.polyOff[p + 1]; g++) {
+      const ring: [number, number][] = []
+      for (let k = enc.ringOff[g], i = 0; k < enc.ringOff[g + 1]; k++, i++) {
+        const ref = enc.refs[k]
+        let verts = arcVertices(enc, ref >> 1)
+        if (ref & 1) verts = verts.reverse()
+        ring.push(...(i === 0 ? verts : verts.slice(1)))
+      }
+      rings.push(ring.map(([ix, iy]) => {
+        const [lon, lat] = albersToLonLat(ix * grid.cell + grid.offset, iy * grid.cell + grid.offset)
+        return [round7(lon), round7(lat)]
+      }))
+    }
+    polys.push(rings)
   }
   return polys
 }
@@ -223,10 +272,10 @@ export async function catchmentAt(src: DataSource, folder: string, lat: number, 
   const [w, s, e, n] = [lon - eps, lat - eps, lon + eps, lat + eps]
   const qw = Math.floor(w * 1e5), qs = Math.floor(s * 1e5), qe = Math.ceil(e * 1e5), qn = Math.ceil(n * 1e5)
   for (const region of (await datasetRegions(src, folder)).filter((r) => overlaps(r.bounds, w, s, e, n))) {
-    const enc = await encoding(src, folder, region)
+    const enc = await encodingOf(src, folder, region)
+    const b = enc.bbox
     for (let row = 0; row < enc.ids.length; row++) {
-      const b = enc.bbox[row]
-      if (b[0] > qe || b[2] < qw || b[1] > qn || b[3] < qs) continue
+      if (b[4 * row] > qe || b[4 * row + 2] < qw || b[4 * row + 1] > qn || b[4 * row + 3] < qs) continue
       if (covers(rowPolygons(enc, row, region.grid), lon, lat)) return { id: enc.ids[row], region }
     }
   }
@@ -246,6 +295,12 @@ export interface FlowlineRecord {
   stream_order: number | null
   vpuid: string
   geometry: { type: 'LineString' | 'MultiLineString', coordinates: unknown }
+  /** the network fields (hr.parse_feature), where the record came with its topology */
+  ftype?: number | null
+  hydroseq?: number | null
+  uphydroseq?: number | null
+  dnhydroseq?: number | null
+  qama?: number | null
 }
 
 const idColumns = new Map<string, Promise<number[]>>()
@@ -254,7 +309,7 @@ function regionIds(src: DataSource, logical: string): Promise<number[]> {
   const key = src.base + logical
   let got = idColumns.get(key)
   if (!got) {
-    got = wholeColumns(src, logical, ['nhdplusid']).then((rows) => rows.map((r) => Number(r.nhdplusid)))
+    got = readColumns(src, logical, ['nhdplusid']).then((c) => c.nhdplusid.map(Number))
     got.catch(() => idColumns.delete(key))
     idColumns.set(key, got)
   }

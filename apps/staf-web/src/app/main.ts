@@ -6,6 +6,7 @@
 import L from 'leaflet'
 import { dataBase } from '../config'
 import { DataSource } from '../data/source'
+import { Dataset } from '../engine/dataset'
 import { Network } from '../streams/network'
 import { showInfo } from './dialogs'
 import { ORDER, type ToolKey } from './markup'
@@ -21,7 +22,9 @@ void src.ready().catch(() => {})   // every read needs the data manifest: ask fo
 
 // the bundle's two stream networks, read by range and shared by the three tools
 const nets = { hr: new Network(src, 'bundle/'), v2: new Network(src, 'bundle/v2/') }
-const tools = Object.fromEntries(ORDER.map((key) => [key, new Tool(key, nets)])) as Record<ToolKey, Tool>
+// their topology and catchments, for Delineate (shared: a region is read once a session)
+const data = { src, hr: new Dataset(src, 'bundle/'), hrNet: nets.hr, v2: new Dataset(src, 'bundle/v2/') }
+const tools = Object.fromEntries(ORDER.map((key) => [key, new Tool(key, nets, data)])) as Record<ToolKey, Tool>
 tools.deep.regionSource = async () => {
   await src.ready()
   const buf = await src.bytesOf('library/deep-regions.json')
@@ -42,14 +45,31 @@ document.addEventListener('click', (e) => {
   showInfo(m[1] as ToolKey, m[2] as 'about' | 'help')
 })
 
-// the panes' action buttons: Find on map, Retry StreamCat lookup, the legend's Try again
+// the panes' action buttons: Find on map, Retry StreamCat lookup, the legend's Try again, Delineate,
+// Clear, the Basin's next step; DEEP's Change link
+const ACTIONS = /^(easi|sfari|deep)-(find_address|retry_streamcat|retry_streams|delineate|clear_basin|run_screening|to_review|to_measure|change_assessment)$/
 document.addEventListener('click', (e) => {
-  const button = e.target instanceof Element ? e.target.closest('button[id]') : null
-  const m = button && /^(easi|sfari|deep)-(find_address|retry_streamcat|retry_streams)$/.exec(button.id)
-  if (!m) return
+  const el = e.target instanceof Element ? e.target.closest('button[id], a[id]') : null
+  const m = el && ACTIONS.exec(el.id)
+  if (!m || (el instanceof HTMLButtonElement && el.disabled)) return
+  if (el instanceof HTMLAnchorElement) e.preventDefault()
   const tool = tools[m[1] as ToolKey]
   if (m[2] === 'find_address') void tool.findAddress()
   else tool.input(m[2], Date.now())
+})
+
+// the steps above each pane (worksheet.js, measure.js post step_nav): a click, or Enter or Space
+function stepLink(e: Event): void {
+  const a = e.target instanceof Element ? e.target.closest('.easi-leftpane a[data-step]') : null
+  const section = a?.closest('.easi-shell')
+  const key = section?.getAttribute('data-staf-tool') as ToolKey | null
+  if (!a || !key) return
+  e.preventDefault()
+  tools[key].input('step_nav', a.getAttribute('data-step'))
+}
+document.addEventListener('click', stepLink)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') stepLink(e)
 })
 
 startShell((tool) => tools[tool].show())
