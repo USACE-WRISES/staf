@@ -6,6 +6,7 @@
 import L from 'leaflet'
 import { dataBase } from '../config'
 import { DataSource } from '../data/source'
+import { Network } from '../streams/network'
 import { showInfo } from './dialogs'
 import { ORDER, type ToolKey } from './markup'
 import { shownTool, startShell } from './shell'
@@ -16,18 +17,13 @@ shim.install()
 ;(window as unknown as { L: typeof L }).L = L
 
 const src = new DataSource(dataBase(new URLSearchParams(location.search)))
-let manifest: Promise<unknown> | null = null
-function ready(): Promise<unknown> {
-  manifest ??= src.load().catch((err) => {
-    manifest = null
-    throw err
-  })
-  return manifest
-}
+void src.ready().catch(() => {})   // every read needs the data manifest: ask for it at once
 
-const tools = Object.fromEntries(ORDER.map((key) => [key, new Tool(key)])) as Record<ToolKey, Tool>
+// the bundle's two stream networks, read by range and shared by the three tools
+const nets = { hr: new Network(src, 'bundle/'), v2: new Network(src, 'bundle/v2/') }
+const tools = Object.fromEntries(ORDER.map((key) => [key, new Tool(key, nets)])) as Record<ToolKey, Tool>
 tools.deep.regionSource = async () => {
-  await ready()
+  await src.ready()
   const buf = await src.bytesOf('library/deep-regions.json')
   return (JSON.parse(new TextDecoder().decode(buf)) as { features: unknown[] }).features
 }

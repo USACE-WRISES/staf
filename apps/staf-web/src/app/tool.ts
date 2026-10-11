@@ -1,15 +1,20 @@
 // One tool's page: its map and what each Shiny tool's server draws around it on Identify.
 //
 // The Shiny tools render these as outputs from the map's zoom and center (each app.py: readout,
-// zoom_cue, cursor_style, stream_legend); here they redraw on the map's own events, into the same
-// output elements. The page scripts' inputs (shim.ts) arrive at input().
+// zoom_cue, cursor_style, stream_legend, flow_loading); here they redraw on the map's own events,
+// into the same output elements. The page scripts' inputs (shim.ts) arrive at input().
 import type L from 'leaflet'
-import { FLOW_ZOOM, legend, readout, START, type ToolKey, zoomCue } from './markup'
+import { flowLoading, FLOW_ZOOM, legend, readout, START, type ToolKey, zoomCue } from './markup'
 import { makeMap, type ToolMap } from './map'
 import * as shim from './shim'
+import { type Networks, StreamLayers } from './streams'
 
 const FLOWLINE_COLOR = '#1f6feb'
 const HR_FLOWLINE_COLOR = '#22b8cf'
+/** The legend's Try again: a clockwise arrow (each app.py _RETRY_ICON). */
+const RETRY_ICON = '<svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true" focusable="false">'
+  + '<path d="M12.33 5.5A5 5 0 1 1 8 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>'
+  + '<path d="M7.6 1.2 10.4 3 7.6 4.8z" fill="currentColor"></path></svg>'
 
 /** DEEP's assessment regions by status, as app.py REGION_STATUS_STYLE draws their legend key. */
 const REGION_STATUS = {
@@ -31,8 +36,9 @@ export class Tool {
   private streamsVisible = true
   /** DEEP: the statuses its regions show, for the legend's key */
   regionStatuses: RegionStatus[] = []
+  streams: StreamLayers | null = null
 
-  constructor(key: ToolKey) {
+  constructor(key: ToolKey, private nets: Networks) {
     this.key = key
     const root = document.querySelector<HTMLElement>(`.easi-shell[data-staf-tool="${key}"]`)
     if (!root) throw new Error(`no section for ${key}`)
@@ -52,6 +58,8 @@ export class Tool {
     if (!box) return
     this.view = makeMap(box)
     const map = this.view.map
+    this.streams = new StreamLayers(map, this.view.streams, this.nets, () => this.streamsChanged())
+    this.streams.setCoverage(this.coverage)
     map.on('zoomend moveend', () => this.viewChanged())
     map.on('click', (e: L.LeafletMouseEvent) => this.mapClick(e))
     this.viewChanged()
@@ -90,6 +98,16 @@ export class Tool {
     this.renderCue(false)
     this.renderCursor()
     this.renderLegend()
+    this.streams?.viewChanged()
+  }
+
+  private streamsChanged(): void {
+    this.renderLegend()
+    // the cue while lines load: on Identify, zoomed in, a read in flight
+    const loading = this.step === 'identify' && this.zoomedIn() && !!this.streams?.state.loading
+    const slot = this.out('flow_loading')
+    const html = loading ? flowLoading : ''
+    if (slot.innerHTML !== html) slot.innerHTML = html
   }
 
   private mapClick(_e: L.LeafletMouseEvent): void {
@@ -128,17 +146,40 @@ export class Tool {
       this.out('stream_legend').innerHTML = ''
       return
     }
-    const rows = !this.streamsVisible ? []
+    const st = this.streams?.state
+    const mode = st?.mode ?? null
+    // the lines did not load and the retries ran out: a notice and Try again, at any zoom
+    const unavailable = !!st?.down && mode === 'hr-unavailable'
+    const rows = unavailable || !this.streamsVisible ? []
       : this.coverage
         ? [{ color: FLOWLINE_COLOR, label: 'StreamCat reaches' }, { color: HR_FLOWLINE_COLOR, label: 'Other streams' }]
         : [{ color: FLOWLINE_COLOR, label: 'Streams' }]
     let note: string | undefined
-    if (!this.streamsVisible) note = 'Streams are hidden'
+    if (unavailable) note = undefined
+    else if (!this.streamsVisible) note = 'Streams are hidden'
     else if (!this.zoomedIn()) note = this.step === 'identify' ? undefined : 'Zoom in to see streams'
+    else if (mode === 'hr-truncated') note = 'Too many streams to show here. Zoom in.'
+    else if (mode === 'hr-unavailable') note = 'Stream lines did not load. Retrying.'
+    else if (mode === 'hr-only' && this.coverage) note = 'StreamCat coverage unavailable here.'
+    else if (mode === 'empty') note = 'No streams in view.'
+    const alert = unavailable ? this.unavailableNotice() : ''
     const key = this.key === 'deep' && this.step === 'identify' ? this.regionKey() : ''
-    const html = '\n' + legend(rows, note, key) + '\n'
+    const html = '\n' + legend(rows, note, key, alert) + '\n'
     const slot = this.out('stream_legend')
     if (slot.innerHTML !== html) slot.innerHTML = html
+  }
+
+  /** The legend's notice when the lines did not load (each app.py _legend_ui): the static app's lines
+   * come from the STAF data mirror, where the Shiny tools' come from the USGS service. */
+  private unavailableNotice(): string {
+    return `
+  <div class="easi-legend-alert">
+    <div>
+      <div class="easi-legend-label">Streams unavailable</div>
+      <div class="easi-legend-note">The stream data did not load. Try again later.</div>
+    </div>
+    <button class="btn btn-default action-button easi-legend-retry" id="${this.key}-retry_streams" type="button" title="Try again" aria-label="Try again">${RETRY_ICON}</button>
+  </div>`
   }
 
   /** DEEP's key to its assessment regions (app.py _region_key): one toggle row per status shown. */
@@ -164,7 +205,11 @@ export class Tool {
     switch (name) {
       case 'streamcat_coverage':
         this.coverage = !!value
+        this.streams?.setCoverage(this.coverage)
         this.renderLegend()
+        break
+      case 'retry_streams':
+        this.streams?.retry()
         break
       case 'streams_visible':
         this.streamsVisible = value !== false

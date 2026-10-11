@@ -271,6 +271,40 @@ export function utmForward(zone: number, lam: number, phi: number): [number, num
 
 const RAD_TO_DEG_FACTOR = 1.0 / DEG_TO_RAD // unitconvert: xy_factor = 1.0 (rad) / DEG_TO_RAD (deg)
 
+/** WGS 84 longitude and latitude in degrees to EPSG:5070 metres, as pyproj gives them
+ * (`Transformer.from_crs(4326, 5070, always_xy=True)`: unitconvert deg to rad, then aea): fwd_prepare,
+ * aea_e_forward and fwd_finalize. NaN outside the projection's domain. */
+export function albersForward(lonDeg: number, latDeg: number): [number, number] {
+  // unitconvert: xy_factor = DEG_TO_RAD (deg) / 1.0 (rad)
+  let lam = lonDeg * DEG_TO_RAD
+  let phi = latDeg * DEG_TO_RAD
+  // fwd_prepare
+  if (Math.abs(phi) - M_HALFPI > 1e-12 || lam > 10 || lam < -10) return [NaN, NaN]
+  if (phi > M_HALFPI) phi = M_HALFPI
+  if (phi < -M_HALFPI) phi = -M_HALFPI
+  lam = adjlon(lam)
+  lam = (lam - 0) - AEA_LAM0
+  lam = adjlon(lam)
+  // aea_e_forward (ellipsoidal)
+  let rho = AEA.c - AEA.n * qsfn(Math.sin(phi), E, ONE_ES)
+  if (rho < 0) return [NaN, NaN]
+  rho = AEA.dd * Math.sqrt(rho)
+  lam *= AEA.n
+  let x = rho * Math.sin(lam)
+  let y = AEA.rho0 - rho * Math.cos(lam)
+  // fwd_finalize, classic units: x *= a, then fr_meter * (x + x0)
+  x *= A
+  y *= A
+  return [1 * (x + 0), 1 * (y + 0)]
+}
+
+/** EPSG:5070 metres to WGS 84 longitude and latitude in degrees, as pyproj gives them
+ * (`Transformer.from_crs(5070, 4326, always_xy=True)`: inverse aea, then unitconvert rad to deg). */
+export function albersToLonLat(x: number, y: number): [number, number] {
+  const [lam, phi] = albersInverse(x, y)
+  return [lam * RAD_TO_DEG_FACTOR, phi * RAD_TO_DEG_FACTOR]
+}
+
 /** EPSG:5070 metres to the CRS `epsg` (a NAD83 UTM zone, 269zz, or NAD83 geographic, 4269), as pyproj
  * gives them: easting, northing, or longitude, latitude in degrees. */
 export function from5070(epsg: number, X: ArrayLike<number>, Y: ArrayLike<number>): [Float64Array, Float64Array] {

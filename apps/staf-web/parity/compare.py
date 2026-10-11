@@ -75,6 +75,11 @@ def main(tolerance: int) -> None:
         print(f"{tool}: {pixels(tool, tolerance)}; {markup(tool)}")
         for which in ("about", "help"):
             print(f"  {which}: {pixels(f'{tool}-{which}', tolerance)}")
+    # captures at a view (capture.py --view ... --name NAME): <tool>-<NAME>.png and .html
+    views = sorted({p.stem for p in (HERE / "static").glob("*-*.png")} - {f"{t}-{w}" for t in TOOLS for w in ("about", "help")})
+    for stem in views:
+        if (HERE / "shiny" / f"{stem}.png").exists():
+            print(f"{stem}: {pixels(stem, tolerance)}; {markup(stem)}")
     a = json.loads((HERE / "shiny" / "dialogs.json").read_text(encoding="utf-8"))
     b = json.loads((HERE / "static" / "dialogs.json").read_text(encoding="utf-8"))
     print(f"dialogs.json: {'same' if a == b else 'DIFFERENT'}")
