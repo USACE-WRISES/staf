@@ -1,11 +1,38 @@
 # STAF static web app (in development)
 
-EASI, SFARI and DEEP as a static TypeScript app for GitHub Pages: a clone of the Shiny STAF app
-(`apps/staf`) that reads STAF's published data by HTTP range and computes in the browser. Nothing here
-is deployed, and the Shiny apps are untouched. Plan and hand-off: `notes/2026-10-06_STAF_Static_Web_App/`
-(local only).
+EASI, SFARI and DEEP as a static TypeScript app, a section of the STAF website: a clone of the Shiny
+STAF app (`apps/staf`) that reads STAF's published data by HTTP range and computes in the browser. The
+Shiny apps are untouched. Plan and hand-off: `notes/2026-10-06_STAF_Static_Web_App/` (local only).
 
 Phase 1 is built: the data layer and the cross-section pulls, with a proof page.
+
+## On the STAF website, kept apart
+
+The owner's choice (2026-10-11): the app lives in this repo and is served by the existing STAF website
+(GitHub Pages, Jekyll from `docs/`) as a separate part, so it can be removed cleanly.
+
+- `npm run build` writes the app into **`docs/app/`**, served at https://usace-wrises.github.io/staf/app/.
+  - The folder is generated: never edit it. Rebuild and commit it with its source.
+  - Pushing it to `main` publishes it with the rest of the website.
+- **Jekyll copies it as is:** a full site build on 2026-10-11 gave all 13 files byte for byte.
+  - `scripts/after-build.mjs` fails the build on anything Jekyll would skip or render: names starting
+    with `_` or `.`, Markdown, or a file starting with front matter.
+  - It also writes `GENERATED.txt`.
+- **The app reads its data from the Hugging Face mirror,** so the website stays small (about 0.6 MB
+  for the app).
+- **No other file of the website refers to it.** When the app is ready, the Apply STAF page gets one
+  link, added with the owner's go.
+
+## Removing the app
+
+Nothing else in the repo depends on it. Delete:
+1. `docs/app/`: the website section, gone after the next Pages build;
+2. `apps/staf-web/` (the source) and `tools/staf-web-data/` (the data tools);
+3. the link from the website, once there is one;
+4. if wanted, the Hugging Face dataset `gtmenichino/staf-data` and the `staf-web` entry of
+   `.claude/launch.json`.
+
+The cross-section release (`staf-xs-current`, `tools/xs-grid`) is not part of the app and stays.
 
 ## The data
 
@@ -44,6 +71,7 @@ npm install
 npm run dev        # http://localhost:5180/proof.html?vpu=0710 ; serves /data from STAF_WEB_DATA
 npm test           # Vitest; fixtures from parity/make_fixtures.py
 npm run typecheck
+npm run build      # into docs/app/ (the website section), then the Jekyll check
 ```
 
 - `proof.html` measures what a click costs and checks pulls against the stored medians:

@@ -3,6 +3,7 @@
  * section pulled live from USGS 3DEP reproduces the archive. Results go to the page and to
  * `window.__proof` (read by tests driving the page).
  */
+import { dataBase } from '../config'
 import { DataSource } from '../data/source'
 import { gridded, linesInBox, rowGroupLines, type Flowline } from '../data/lines'
 import { medianProfile, sectionDetails, sectionNumbers, sectionPulls, type XsPull } from '../xs/grid'
@@ -20,7 +21,7 @@ interface Step {
 }
 
 const params = new URLSearchParams(location.search)
-const base = params.get('data') ?? `${location.origin}/data/`
+const base = dataBase(params)
 const vpu = params.get('vpu') ?? '0710'
 const rgIndex = Number(params.get('rg') ?? 3)
 const src = new DataSource(base)

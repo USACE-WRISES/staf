@@ -3,10 +3,10 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "description": "STAF (EASI, SFARI, DEEP) as a static web app: a TypeScript clone of the Shiny STAF app that reads STAF's published data by HTTP range. Plan: notes/2026-10-06_STAF_Static_Web_App.",
+  "description": "STAF (EASI, SFARI, DEEP) as a static web app, a section of the STAF website at /staf/app/: a TypeScript clone of the Shiny STAF app that reads STAF's published data by HTTP range. npm run build writes docs/app/.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node scripts/after-build.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
