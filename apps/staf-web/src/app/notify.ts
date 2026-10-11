@@ -28,6 +28,14 @@ function remove(id: string): void {
   }, FADE_MS)
 }
 
+/** ``ui.notification_remove(id)``. */
+export function removeNotification(id: string): void {
+  const old = timers.get(id)
+  if (old) clearTimeout(old)
+  timers.delete(id)
+  remove(id)
+}
+
 /** ``ui.notification_show(text, type=..., duration=...)``: ``seconds`` 0 keeps it until closed. */
 export function notify(text: string, opts: { type?: 'message' | 'warning' | 'error', seconds?: number, id?: string } = {}): string {
   const id = opts.id ?? Math.random().toString(16).slice(2, 18)

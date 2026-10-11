@@ -13,8 +13,10 @@ Built so far:
     assessment regions;
   - the stream lines from zoom 14, split by the click rule, with StreamCat coverage;
   - the pick: a click, typed coordinates or a place search snaps to a stream, marks it and finds the
-    StreamCat reach, as each tool does.
-  - Next: Delineate (the engine port, Phase 4).
+    StreamCat reach, as each tool does;
+  - Delineate and the Basin step: the watershed, the assessment reach and the Basin card in each
+    tool, computed in the browser by a port of the STAF site engine.
+  - Next: the Assessment step (the metric families, then each tool's worksheet).
 
 ## On the STAF website, kept apart
 
@@ -159,6 +161,49 @@ A click at the stream zoom, typed coordinates or a found place work as in each S
 - **No live services:** "Find on map" asks Photon only. Shiny then tries Nominatim; the static app
   doesn't.
 
+## Delineate (the Basin step)
+
+Delineate computes the watershed and the assessment reach in the browser, as each Shiny tool does:
+
+- **SFARI and DEEP** run the STAF site engine at the pick (`src/engine/site.ts`, `compute_site` up to
+  the metrics):
+  - the site: the nearest HR line within 150 ft and its attributes;
+  - the HR reach watershed: the breadth-first upstream walk with the interactive budget (3,000
+    reaches, 190 hops), the outline of the tree's catchments from their shared borders and the area
+    from their cells (`src/engine/dataset.ts`, `outline.ts`; reader2's `watershed`, arcs' `outline`);
+  - the reach: the HR mainstem trimmed to the reach length upstream of the snap (`reach.ts`: GEOS's
+    line merger, its projection, shapely's substring).
+  - Past the budget the engine refuses, and the "Watershed not available" dialog offers the StreamCat
+    values, as in Shiny.
+- **EASI** (`src/engine/pipeline.ts`, `pipeline.delineate_only`):
+  - a covered reach: its NHDPlus V2 basin (the V2 walk, minor divergences included) and its V2 reach;
+  - a routed site: the clicked HR stream's reach and its HR reach watershed from the engine.
+- **The map** (`src/app/basin.ts`), as `_draw_delineation` draws it:
+  - a watershed of more than 1,500 coordinates is simplified for display as GEOS's topology-preserving
+    simplifier does (`simplify.ts`, a port of GEOS 3.13.1);
+  - the map is framed as ipyleaflet's `fit_bounds` frames it (the center in degrees, then whole zoom
+    steps), not as Leaflet's `fitBounds`.
+- **DEEP's assessment block** (`src/app/deepAssess.ts`): the assessments whose region holds the point,
+  the first one's default version read from the library mirror, and the facts DEEP states.
+- **Checked against the Python:** `parity/make_delineate_fixtures.py` delineates five sites from the
+  local bundle (`tests/fixtures/delineate_ref.json`, `tests/delineate.test.ts`):
+  - the walk's ids, the catchment count, the area, and the outline vertex for vertex;
+  - the display simplification, exactly;
+  - EASI's result and SFARI's, key for key; the reach within 1e-11 degree (the inverse projection's
+    last bits differ between the browser's and Windows' math libraries).
+- **On screen:** `parity/capture.py --click LAT,LON --delineate` at Mink Brook (covered) and at a routed
+  tributary: all three tools matched the Shiny captures pixel for pixel, the attribution corner aside.
+- **Kept from Shiny's map:** the tools put the point back "on top", but ipyleaflet keeps a layer's
+  place when it is removed and added in one update, so the Shiny map draws the basin and the reach over
+  the point; Layers lists the watershed after the point and not the reach. Both are reproduced.
+- **Speed:** a new region's network and catchments (8 MB for 0108) start loading as soon as the pick is
+  ready; Delineate then took 0.2 to 0.3 s at Mink Brook (276 reaches). The bundle's zstd is read with
+  zstddec (WebAssembly), 10 to 20 times faster than the JavaScript decoder.
+- **Not yet:** the metric families (step 5 of the engine; they come with the Assessment step), the
+  site's EPA Level III ecoregion (its polygons are not in the published data yet), DEEP's Change
+  dialog. A watershed across two regions has the same outline and area as shapely's union, its
+  vertices possibly in another order.
+
 ## Cross-sections
 
 - `src/xs/grid.ts` reads a flowline's section numbers, details, stored median profile, and (release
@@ -191,7 +236,9 @@ npm run build      # into docs/app/ (the website section), then the Jekyll check
   `parity/capture.py --app shiny` and `--app static` screenshot each tool and its About and Help at
   1440x900 and save the markup; `parity/compare.py` reports the pixels and lines that differ and
   draws them in `parity/diff/` (all gitignored). On 2026-10-11 the three tools and their dialogs
-  differed only in the attribution corner.
+  differed only in the attribution corner. `--view LAT,LON,ZOOM`, `--click LAT,LON` and `--delineate`
+  capture a view, a pick and the Basin step.
+- `parity/make_delineate_fixtures.py` writes the Delineate reference (above).
 - `parity/make_fixtures.py` writes the Python references the tests compare with.
 - `parity/proj_fixtures.py` writes the large projection set for `tests/projExact.test.ts`
   (`PROJ_FIXTURES=<dir>`).

@@ -18,8 +18,11 @@ function read(path: string, start: number, end: number): Uint8Array<ArrayBuffer>
   }
 }
 
+const realFetch = globalThis.fetch
+
 export async function localFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const url = String(input instanceof Request ? input.url : input)
+  if (url.startsWith('data:')) return realFetch(input, init)   // a WebAssembly module inlined in a library
   const path = join(ROOT, decodeURIComponent(url.slice(BASE.length).split('?')[0]))
   const size = statSync(path).size
   const m = /bytes=(\d+)-(\d+)/.exec(new Headers(init?.headers).get('range') ?? '')

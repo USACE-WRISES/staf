@@ -2,8 +2,8 @@
  * Parquet by HTTP range (hyparquet): footers cached per file, row groups chosen from their
  * statistics, and only the requested columns of the chosen row groups read.
  */
-import { parquetMetadataAsync, parquetReadObjects, type FileMetaData } from 'hyparquet'
-import { compressors } from 'hyparquet-compressors'
+import { parquetMetadataAsync, parquetRead, parquetReadObjects, type FileMetaData } from 'hyparquet'
+import { compressors, zstdReady } from './zstd'
 import type { DataSource } from './source'
 
 const metas = new Map<string, Promise<FileMetaData>>()
@@ -58,6 +58,56 @@ export function columnStats(meta: FileMetaData, column: string): Array<MinMax | 
 export async function readRows(src: DataSource, logical: string, columns: string[], rowStart: number,
                                rowEnd: number): Promise<Record<string, any>[]> {
   const meta = await metadata(src, logical)
-  await src.ready()
+  await Promise.all([src.ready(), zstdReady()])
   return parquetReadObjects({ file: src.file(logical), metadata: meta, columns, rowStart, rowEnd, compressors })
+}
+
+type Typed = Float64Array | Int32Array | Uint8Array
+type TypedKind = 'f64' | 'i32' | 'u8'
+
+/** Columns of rows [rowStart, rowEnd) (the whole file by default) as one array per column, without
+ * building a row object each: a region's network or catchments read at once. ``typed`` names the
+ * columns to return as typed arrays (int64 as float64 numbers, nulls as 0, or NaN for f64 with
+ * ``nan``); the others come as hyparquet decodes them (int64 as bigint, lists as arrays). */
+export async function readColumns(src: DataSource, logical: string, columns: string[], rowStart = 0,
+                                  rowEnd?: number, typed: Record<string, TypedKind> = {},
+                                  nan: string[] = []): Promise<Record<string, any>> {
+  const meta = await metadata(src, logical)
+  await Promise.all([src.ready(), zstdReady()])
+  const total = rowGroups(meta).reduce((s, g) => s + g.rows, 0)
+  const end = Math.min(rowEnd ?? total, total)
+  const size = Math.max(end - rowStart, 0)
+  const out: Record<string, any> = {}
+  for (const c of columns) {
+    const kind = typed[c]
+    out[c] = kind === 'f64' ? new Float64Array(size) : kind === 'i32' ? new Int32Array(size) : kind === 'u8' ? new Uint8Array(size) : new Array(size)
+  }
+  await parquetRead({
+    file: src.file(logical), metadata: meta, columns, rowStart, rowEnd: end, compressors,
+    onChunk: ({ columnName, columnData, rowStart: at }) => {
+      const dst = out[columnName]
+      if (!dst) return
+      const from = Math.max(rowStart - at, 0)
+      const to = Math.min(columnData.length, end - at)
+      const off = at - rowStart
+      if (!(columnName in typed)) {
+        for (let i = from; i < to; i++) dst[off + i] = columnData[i]
+        return
+      }
+      const empty = nan.includes(columnName) ? NaN : 0
+      const d = dst as Typed
+      if (columnData instanceof BigInt64Array || columnData instanceof BigUint64Array) {
+        for (let i = from; i < to; i++) d[off + i] = Number(columnData[i])
+      } else if (ArrayBuffer.isView(columnData)) {
+        const v = columnData as unknown as ArrayLike<number>
+        for (let i = from; i < to; i++) d[off + i] = v[i]
+      } else {
+        for (let i = from; i < to; i++) {
+          const v = columnData[i]
+          d[off + i] = v === null || v === undefined ? empty : Number(v)
+        }
+      }
+    },
+  })
+  return out
 }

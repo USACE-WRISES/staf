@@ -210,6 +210,98 @@ ${snapNote('No point yet.')}
 </div>`
 }
 
+/** The Basin card's rows (each tool's basin_card): the stream's name, then label and value rows;
+ * SFARI and DEEP add their engine line's output. */
+export function basinCard(key: ToolKey, name: string, rows: [string, string][], engineLine = ''): string {
+  const body = rows.map(([label, value]) => `
+  <div class="b-row">
+    <span>${esc(label)}</span>
+<b>${esc(value)}</b>
+  </div>`).join('')
+  const engine = key === 'easi' ? '' : `
+  <div class="shiny-html-output" id="${key}-engine_line" aria-live="polite">${engineLine}</div>`
+  return `<div class="easi-basin-card">
+  <h5>${esc(name)}</h5>${body}${engine}
+</div>`
+}
+
+/** The Basin card: the basin card output, DEEP's assessment, the lookup status and the actions. */
+export function basinPane(key: ToolKey, card: string, assess = ''): string {
+  const out = (id: string, inner = '') => `<div class="shiny-html-output" id="${key}-${id}" aria-live="polite">${inner}</div>`
+  const next = key === 'easi'
+    ? `<button class="btn btn-default action-button btn-primary" id="easi-run_screening" type="button">
+      <span class="action-label">Run screening</span>
+    </button>`
+    : `<button class="btn btn-default action-button btn-primary" id="${key}-${key === 'sfari' ? 'to_review' : 'to_measure'}" type="button" aria-live="polite">
+      <span class="action-label">Continue</span>
+    </button>`
+  const middle = key === 'easi' ? '' : (key === 'deep' ? `
+  ${out('assess_pane', assess ? '\n' + assess + '\n' : '')}` : '') + `
+  ${out('streamcat_lookup_status')}`
+  const busy = key === 'easi' ? `
+  <div id="easi-busy_text" class="shiny-text-output easi-busy-text" aria-live="polite"></div>` : ''
+  return `<div class="easi-pane-head">${TOOLS[key].name} · Basin</div>
+<div class="easi-pane-body">
+  ${stepper(key, 'basin')}
+  ${out('basin_card', '\n' + card + '\n')}${middle}
+  <div class="easi-pane-actions">
+    <button class="btn btn-default action-button btn-outline-secondary" id="${key}-clear_basin" type="button">
+      <span class="action-label">Clear</span>
+    </button>
+    ${next}
+  </div>${busy}
+</div>`
+}
+
+/** DEEP's assessment under the basin card (app.py _assessment_pane_block). */
+export function deepAssessPane(f: { name: string, region: string, lifecycle: string, label: string, badge: string,
+  meta: string, tier: string, bestAvailable: boolean, coversSite: boolean, canChange: boolean }): string {
+  const lines: string[] = []
+  if (f.region) lines.push(`<div class="deep-pane-line">${esc(f.region)}</div>`)
+  lines.push(`<div class="deep-pane-line">${esc(f.meta)}</div>`)
+  if (f.tier) lines.push(`<div class="deep-pane-line">Reference tier: ${esc(f.tier)}</div>`)
+  if (f.lifecycle === 'draft') lines.push('<div class="deep-pane-note">Draft assessment: its curves have not been reviewed yet.</div>')
+  if (f.bestAvailable) {
+    lines.push('<div class="deep-pane-note">Scores compare the site with the best remaining streams of the region, not with unimpaired condition.</div>')
+  }
+  if (!f.coversSite) lines.push('<div class="deep-pane-caution">This assessment\'s region does not contain your site.</div>')
+  const change = f.canChange ? `
+  <div class="deep-pane-change">
+    <a class="action-button action-link" id="deep-change_assessment" href="#">
+<span class="action-label">Change</span>
+</a>
+  </div>` : ''
+  return `<div class="deep-pane-assess">
+  <div class="deep-pane-head">
+    <span class="deep-pane-label">Assessment</span>
+<span class="deep-card-badge ${f.badge}">${esc(f.label)}</span>
+  </div>
+  <div class="deep-pane-name">${esc(f.name)}</div>
+  ${lines.join('\n  ')}${change}
+</div>`
+}
+
+/** DEEP's Basin block when no assessment covers the site (app.py _no_assessment_block). */
+export function deepNoAssessment(hasCandidates: boolean): string {
+  if (hasCandidates) {
+    return `<div class="deep-pane-assess is-blocked">
+  <div class="deep-pane-label">Assessment</div>
+  <div class="deep-pane-name">No assessment loaded</div>
+  <div class="deep-pane-line">Choose one of the assessments that cover this point.</div>
+  <div class="deep-pane-change">
+    <a class="action-button action-link" id="deep-change_assessment" href="#">
+<span class="action-label">Choose</span>
+</a>
+  </div>
+</div>`
+  }
+  return `<div class="deep-pane-assess is-blocked">
+  <div class="deep-pane-label">Assessment</div>
+  <div class="deep-pane-name">No assessment covers this point</div>
+  <div class="deep-pane-line">Detailed scoring needs a published assessment whose region contains your site. The shaded regions on the map are the areas with coverage.</div>
+</div>`
+}
+
 // ------------------------------------------------------------------------------- over the map
 
 /** The zoom readout under the left pane. */
