@@ -11,8 +11,10 @@ Built so far:
     tool's Identify card, About and Help;
   - the map: USGS basemaps, NHD overlay, Layers, legend, scale, zoom cue, readout, and DEEP's
     assessment regions;
-  - the stream lines from zoom 14, split by the click rule, with StreamCat coverage.
-  - Next: the click's snap.
+  - the stream lines from zoom 14, split by the click rule, with StreamCat coverage;
+  - the pick: a click, typed coordinates or a place search snaps to a stream, marks it and finds the
+    StreamCat reach, as each tool does.
+  - Next: Delineate (the engine port, Phase 4).
 
 ## On the STAF website, kept apart
 
@@ -124,6 +126,38 @@ From zoom 14 each tool draws the streams of the view as the Shiny tools do (`src
   split itself takes about 26 ms for 857 HR lines.
 - **A failed read** is asked again after 15, 30 and 60 s, then the legend offers Try again, as the
   Shiny tools do when the USGS service doesn't answer.
+
+## The pick (Identify)
+
+A click at the stream zoom, typed coordinates or a found place work as in each Shiny tool
+(`src/app/identify.ts`):
+
+- **EASI** (`app.py _handle_click`): a click within 150 ft of a V2 line takes that reach, pinned on the
+  HR line the map draws. A click on an HR line alone is routed to the nearest covered reach downstream
+  (`routing.route_from_hr`), and the pane shows EASI's card ("Downstream reach: ...").
+- **SFARI and DEEP:** every click pins the HR line, and the reach is found in the background by the
+  engine's rule (`anchor.classify_click`).
+- **Engine pieces** (`src/engine/`):
+  - `snap.ts`: the nearest point on lines, GEOS's DistanceOp step for step.
+  - `bundle.ts`: the bundle's catchments, decoded from their shared borders (arcs, zstd step runs);
+    a flowline by id or row; the raindrop (the V2 catchment that holds a point names the reach).
+  - `anchor.ts`: the anchor payload, key for key.
+- **Checked against the Python:** `parity/make_snap_fixtures.py` writes 42 clicks around the three
+  stream views (`tests/fixtures/snap_ref.json`).
+  - The snaps match within 1e-12 degree.
+  - The catchments, raindrops and reach attributes match exactly.
+  - EASI's routed anchors match key for key (`tests/snap.test.ts`, `raindrop.test.ts`,
+    `anchor.test.ts`).
+- **On screen:** `parity/capture.py --click LAT,LON` picks in both apps.
+  - Picks on a covered stream and on a routed one (with coverage) showed the same status lines in all
+    three tools.
+  - EASI and DEEP matched pixel for pixel (one-level colour rounding aside).
+  - In SFARI, Shiny drew the glow over the point (an ipyleaflet timing artefact); the static app keeps
+    the point on top, as SFARI's code intends.
+- **Kept from Shiny's map:** the glow and route land in Leaflet's overlay pane (ipyleaflet applies a
+  pane only after a layer is made), and the point is listed in Layers as "Selected point".
+- **No live services:** "Find on map" asks Photon only. Shiny then tries Nominatim; the static app
+  doesn't.
 
 ## Cross-sections
 

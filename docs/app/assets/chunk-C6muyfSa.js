@@ -1,0 +1,1 @@
+import{t as e}from"./proof-CzKlYBR_.js";import{t}from"./chunk-BuOLpFkC.js";var n=class extends e{decodeBlock(e){return t(new Uint8Array(e)).buffer}};export{n as default};

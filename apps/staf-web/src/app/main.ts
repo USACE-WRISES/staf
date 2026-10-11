@@ -42,6 +42,16 @@ document.addEventListener('click', (e) => {
   showInfo(m[1] as ToolKey, m[2] as 'about' | 'help')
 })
 
+// the panes' action buttons: Find on map, Retry StreamCat lookup, the legend's Try again
+document.addEventListener('click', (e) => {
+  const button = e.target instanceof Element ? e.target.closest('button[id]') : null
+  const m = button && /^(easi|sfari|deep)-(find_address|retry_streamcat|retry_streams)$/.exec(button.id)
+  if (!m) return
+  const tool = tools[m[1] as ToolKey]
+  if (m[2] === 'find_address') void tool.findAddress()
+  else tool.input(m[2], Date.now())
+})
+
 startShell((tool) => tools[tool].show())
 tools[shownTool()].show()
 // every deferred page script has run by now: they hear the session start

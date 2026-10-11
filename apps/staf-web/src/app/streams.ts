@@ -8,8 +8,9 @@
 // (then cyan for the first). A newer box replaces a slower one; zooming out clears the lines.
 import L from 'leaflet'
 import { buildDisplay, type Display, type FeatureCollection, type Mode } from '../streams/display'
-import { hrFeatures, type Network, v2Features } from '../streams/network'
+import { hrFeatures, type LineRecord, type Network, v2Features } from '../streams/network'
 import { type BBox, fetchBox, needsFetch, type View } from '../streams/viewport'
+import type { ViewLines } from './identify'
 import { FLOW_ZOOM } from './markup'
 
 export const FLOWLINE_STYLE: L.PathOptions = { color: '#1f6feb', weight: 3, opacity: 0.95 }
@@ -36,6 +37,12 @@ export class StreamLayers {
   readonly state: StreamState = { mode: null, loading: false, down: false, hr: null, v2: null }
   private hrflow: L.GeoJSON
   private flow: L.GeoJSON
+  /** the reach's glow and the dashed route of a pick, shown with StreamCat coverage */
+  private sources = L.layerGroup()
+  private sourceLayers: Partial<Record<'scored' | 'route', L.GeoJSON>> = {}
+  private hrLines: LineRecord[] = []
+  private v2Lines: LineRecord[] = []
+  private covered: FeatureCollection | null = null
   private fetched: BBox | null = null
   private timer: ReturnType<typeof setTimeout> | null = null
   private retryTimer: ReturnType<typeof setTimeout> | null = null
@@ -49,12 +56,35 @@ export class StreamLayers {
     this.flow = L.geoJSON(undefined, opts(FLOWLINE_STYLE))
     group.addLayer(this.hrflow)
     group.addLayer(this.flow)
+    group.addLayer(this.sources)
   }
 
   setCoverage(on: boolean): void {
     this.coverage = on
     this.hrflow.setStyle(on ? HR_FLOWLINE_STYLE : FLOWLINE_STYLE)
     this.hrflow.options.style = () => (this.coverage ? HR_FLOWLINE_STYLE : FLOWLINE_STYLE)
+    this.syncSources()
+  }
+
+  /** A pick's glow or route (null removes it); drawn only while StreamCat coverage is on. */
+  setSource(key: 'scored' | 'route', layer: L.GeoJSON | null): void {
+    if (layer) this.sourceLayers[key] = layer
+    else delete this.sourceLayers[key]
+    this.syncSources()
+  }
+
+  private syncSources(): void {
+    this.sources.clearLayers()
+    if (!this.coverage) return
+    for (const key of ['scored', 'route'] as const) {
+      const layer = this.sourceLayers[key]
+      if (layer) this.sources.addLayer(layer)
+    }
+  }
+
+  /** The view's lines, the click rule's input. */
+  lines(): ViewLines {
+    return { hr: this.state.hr, v2: this.state.v2, hrLines: this.hrLines, v2Lines: this.v2Lines, covered: this.covered }
   }
 
   /** The view moved or zoomed: fetch for it once it settles (out too far, clear at once). */
@@ -90,6 +120,9 @@ export class StreamLayers {
       this.clear()
       this.fetched = null
       Object.assign(this.state, { mode: null, loading: false, hr: null, v2: null })
+      this.hrLines = []
+      this.v2Lines = []
+      this.covered = null
       this.changed()
       return
     }
@@ -114,9 +147,11 @@ export class StreamLayers {
     let display: Display
     let hr: FeatureCollection | null
     let v2: FeatureCollection | null
+    let hrLines: LineRecord[]
+    let v2Lines: LineRecord[]
     try {
       const [w, s, e, n] = box
-      const [hrLines, v2Lines] = await Promise.all([this.nets.hr.inBox(w, s, e, n), this.nets.v2.inBox(w, s, e, n)])
+      ;[hrLines, v2Lines] = await Promise.all([this.nets.hr.inBox(w, s, e, n), this.nets.v2.inBox(w, s, e, n)])
       hr = hrFeatures(hrLines)
       v2 = v2Features(v2Lines)
       display = buildDisplay(v2, hr, 150)
@@ -132,6 +167,9 @@ export class StreamLayers {
     if (mine !== this.generation || this.fetched !== box) return     // torn down or a stale box
     this.retries = 0
     Object.assign(this.state, { mode: display.mode, loading: false, down: false, hr, v2 })
+    this.hrLines = hrLines
+    this.v2Lines = v2Lines
+    this.covered = display.covered
     this.hrflow.clearLayers()
     this.hrflow.addData(display.uncovered as GeoJSON.FeatureCollection)
     this.flow.clearLayers()
