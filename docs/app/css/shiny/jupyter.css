@@ -1,0 +1,32 @@
+/* The Jupyter widget rules that shape the Shiny STAF app's maps, for the static app's maps.
+ *
+ * In the Shiny app every map is an ipyleaflet widget (ipyleaflet 0.20 through shinywidgets 0.8.1):
+ * the Leaflet container sits in a ".lm-Widget.jupyter-widgets.leaflet-widgets" box with a 2 px
+ * margin, and jupyter-leaflet's stylesheet colors the zoom, layers and attribution controls from
+ * the JupyterLab theme's variables. The static app keeps the same wrappers, so these rules, copied
+ * from the rendered Shiny page (2026-10-11) with the variables it resolved, give the same pixels.
+ * The rules follow the page's order: the widget base (@jupyter-widgets/base, lumino) here, and
+ * jupyter-leaflet's own after Leaflet's stylesheet (jupyter-leaflet.css). */
+
+:root {
+  --jp-widgets-margin: 2px;
+  --jp-widgets-color: black;
+  --jp-layout-color1: white;
+  --jp-layout-color2: #EEEEEE;
+  --jp-layout-color3: #BDBDBD;
+  --jp-ui-font-color1: rgba(0,0,0,0.8);
+  --jp-ui-font-color2: rgba(0,0,0,0.5);
+  --jp-ui-font-color3: rgba(0,0,0,0.3);
+  --jp-border-width: 1px;
+  --jp-border-color1: #9E9E9E;
+}
+
+/* lumino */
+.p-Widget, .lm-Widget { box-sizing: border-box; position: relative; overflow: hidden; cursor: default; }
+
+/* @jupyter-widgets/base */
+.jupyter-widgets { margin: var(--jp-widgets-margin); box-sizing: border-box; color: var(--jp-widgets-color); overflow: visible; }
+.jupyter-widgets label { margin-bottom: initial; }
+
+/* jupyter-leaflet: the widget's box (before Leaflet's stylesheet, as on the page) */
+.jupyter-widgets.leaflet-widgets { height: 400px; overflow: hidden; flex: 1 1 auto; }

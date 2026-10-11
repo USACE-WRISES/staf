@@ -1,0 +1,247 @@
+/* DEEP-specific styles, layered on top of the shared SFARI/EASI styles.css.
+   Reuses the same design tokens (--easi-accent, --band-*, --font-head). */
+
+/* ---- a metric row of the function page (app._metric_row) -----------------------
+   The row is the shared staf/metric-rows.css (the same in EASI, SFARI and DEEP, 2026-10-04);
+   these are DEEP's own parts: the value box with its unit, the index under it, the curve set
+   and the reference curve in the Scoring panel. */
+.deep-value-box { display: flex; align-items: center; width: 100%; box-sizing: border-box;
+  border: 1px solid var(--card-border); border-radius: 7px; background: #fff; overflow: hidden; }
+.deep-value-box:hover { border-color: #b9c6da; }
+.deep-value-box:focus-within { border-color: var(--easi-accent);
+  box-shadow: 0 0 0 2px rgba(47, 75, 124, .12); }
+.deep-value-box:has(.deep-metric-input:disabled) { background: #f4f6fa; }
+.deep-metric-input { flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  padding: 8px 10px; font-size: 14px; font-weight: 600; color: #2a3344;
+  font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+.deep-metric-input::-webkit-outer-spin-button,
+.deep-metric-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.deep-metric-input::placeholder { color: #b6becb; font-weight: 500; }
+.deep-metric-input:disabled { color: #aab3c2; }
+.deep-unit { flex: none; padding: 0 10px 0 2px; font-size: 12.5px; color: #8a93a3; white-space: nowrap; }
+/* the index under the value box, as wide as the column so it never shifts */
+.deep-metric-index { display: block; box-sizing: border-box; text-align: center; white-space: nowrap;
+  font-size: 12px; font-weight: 700; color: #33415c; padding: 4px 10px; border-radius: 11px;
+  font-variant-numeric: tabular-nums; }
+/* the curve set of a stratified metric; why it was chosen is the select's tooltip */
+.deep-stratum { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.deep-stratum-label { font-size: 11.5px; font-weight: 600; color: #8a93a3; }
+.deep-stratum-select { font-size: 12.5px; padding: 3px 6px; border: 1px solid var(--card-border);
+  border-radius: 6px; background: #fff; color: #33415c; max-width: 300px; }
+.deep-stratum-select:focus { outline: none; border-color: var(--easi-accent); }
+/* the reference curve, in the row's Scoring panel */
+.deep-curve { display: block; max-width: 100%; height: auto; }
+.deep-curve-tick { font-size: 9px; fill: #6b7689; }
+.deep-curve-axis { font-size: 10px; font-weight: 600; fill: #55607a; }
+
+/* a metric the assessment withholds: named, marked Not scored, the reason on its (i) */
+.deep-metric-withheld .staf-metric-name { color: #8a93a3; font-weight: 500; }
+.deep-metric-withheld .staf-metric-input { align-items: flex-start; }
+.deep-notscored-tag { font-size: 11.5px; font-weight: 600; color: #8a93a3; background: #f0f2f6;
+  border: 1px solid #e2e6ee; border-radius: 11px; padding: 3px 10px; white-space: nowrap; }
+
+/* a function the assessment does not score: one sentence, then what was considered */
+.deep-fn-pill { font-family: var(--font-body); font-size: 12px; font-weight: 600; color: #6b7280;
+  background: #eef1f6; border-radius: 11px; padding: 3px 10px; }
+.deep-fn-lead { font-size: 14px; color: #4d5870; line-height: 1.5; margin: 0 0 12px; }
+.deep-unassessed-card > :first-child { border-top: none; }
+.deep-gap { padding: 13px 16px; border-top: 1px solid var(--rule); }
+.deep-gap-text { font-size: 13.5px; color: #45506a; line-height: 1.5; }
+.deep-gap-who { font-size: 12px; color: #8a93a3; margin-top: 4px; }
+
+/* ---- the function's score, after its metrics (SFARI's scorecard) ---------------- */
+.deep-scorecard { background: #fff; border: 1px solid var(--card-border);
+  border-left: 3px solid var(--easi-accent); border-radius: 10px; padding: 14px 16px;
+  margin: 0 0 12px; }
+/* header row with a full-width divider (the negative margins reach the card edges) */
+.deep-fscore-head { display: flex; align-items: center; gap: 9px; margin: -14px -16px 12px;
+  padding: 12px 16px 11px; border-bottom: 1px solid var(--rule); }
+.deep-fscore-lbl { font-family: var(--font-head); font-size: 14.5px; font-weight: 700;
+  color: var(--eci-title); }
+.deep-fscore-row { display: flex; align-items: center; gap: 12px; }
+/* read-only banded score gauge (DEEP's score is automatic): 0-5 NF | 6-10 AR | 11-15 F, with
+   band stops at the score-band thresholds (5/15, 10/15); the knob is positioned by measure.js */
+.deep-fscore-track { position: relative; flex: 1; height: 8px; border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, .14);
+  background: linear-gradient(to right, var(--band-poor) 0 33.33%,
+              var(--band-fair) 33.33% 66.67%, var(--band-good) 66.67% 100%); }
+.deep-fscore-knob { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; border: 2px solid #33415c; transform: translate(-50%, -50%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .2); }
+.deep-scorecard.unset .deep-fscore-knob { display: none; }
+.deep-scorecard.unset .deep-fscore-num { color: #b6becb; }
+.deep-fscore-num { font-family: var(--font-head); font-size: 1.4rem; font-weight: 700;
+  color: var(--eci-title); min-width: 46px; text-align: center; font-variant-numeric: tabular-nums; }
+/* fixed width sized to the longest label (Functioning-at-Risk) so the gauge never jumps */
+.deep-fscore-band { flex: none; box-sizing: border-box; min-width: 140px; text-align: center;
+  white-space: nowrap; font-size: 12px; font-weight: 600; color: #33415c; padding: 3px 8px;
+  border-radius: 11px; }
+
+/* File-input progress bar ("Uploading..." / "Upload complete") in the narrow (352px)
+   left pane: Bootstrap's default .progress height (1rem) clips the label there. Shiny
+   puts both `progress` and `shiny-file-input-progress` on the SAME element, so target it
+   directly (not as a descendant) and let it grow to fit the text. Covers both left-pane
+   file inputs (assessment upload + resume-a-saved-assessment). */
+.easi-leftpane .shiny-file-input-progress {
+  height: auto;
+  min-height: 20px;
+  margin-bottom: 6px;
+}
+.easi-leftpane .shiny-file-input-progress .progress-bar {
+  height: auto;
+  line-height: 20px;
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 0 6px;
+}
+
+/* ---- assessment regions: the right sidebar, its button and the map layer (www/coverage.js) ----
+   Owner, 2026-10-05. The card mirrors the left pane (.easi-leftpane in styles.css: same edge,
+   border, radius, shadow and .easi-pane-head title bar). Hidden until the regions arrive
+   (.deep-cov.is-ready); closed, it is a button in the map's top-right controls. While it is open
+   the map's right-hand controls move left of it, and the zoom cue keeps clear of it
+   (--staf-map-inset-right). */
+.deep-cov { display: none; }
+.deep-cov.is-ready { display: block; }
+.deep-cov-panel {
+  position: absolute; top: 62px; right: 12px; width: 320px; max-height: calc(100vh - 86px);
+  z-index: 1100; display: none; flex-direction: column; overflow: hidden; background: #fff;
+  border: 1px solid var(--card-border); border-radius: 8px; box-shadow: 0 2px 12px rgba(0, 0, 0, .18);
+}
+.easi-shell.deep-cov-open .deep-cov-panel { display: flex; }
+.deep-cov-head { flex: none; display: flex; align-items: center; gap: 8px; padding: 7px 8px 7px 14px; }
+.deep-cov-title { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.deep-cov-count {
+  flex: none; padding: 3px 8px; border-radius: 10px; background: rgba(255, 255, 255, .16);
+  color: #e8eef8; font-family: var(--font-body); font-size: 11px; font-weight: 600; line-height: 1.2;
+}
+.deep-cov-close {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+  padding: 0; border: 0; border-radius: 6px; background: transparent; color: #dbe4f3; cursor: pointer;
+}
+.deep-cov-close:hover, .deep-cov-close:focus-visible { background: rgba(255, 255, 255, .16); color: #fff; outline: none; }
+
+.deep-cov-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.deep-cov-search { position: relative; flex: none; padding: 10px 12px 9px; border-bottom: 1px solid var(--rule); }
+.deep-cov-search-icon {
+  position: absolute; left: 22px; top: 19px; display: inline-flex; color: #8a94a6; pointer-events: none;
+}
+.deep-cov-q {
+  width: 100%; height: 32px; padding: 5px 30px 5px 31px; border: 1px solid var(--card-border); border-radius: 7px;
+  background: var(--surface-soft); color: #2b3445; font: inherit; font-size: 13px; line-height: 1.4;
+}
+.deep-cov-q::placeholder { color: #8a94a6; }
+.deep-cov-q::-webkit-search-cancel-button { display: none; }
+.deep-cov-q:focus { outline: none; background: #fff; border-color: var(--easi-accent);
+  box-shadow: 0 0 0 3px rgba(47, 75, 124, .14); }
+.deep-cov-clear {
+  position: absolute; right: 18px; top: 15px; display: none; align-items: center; justify-content: center;
+  width: 22px; height: 22px; padding: 0; border: 0; border-radius: 5px; background: transparent;
+  color: #7a8699; cursor: pointer;
+}
+.deep-cov-search.has-query .deep-cov-clear { display: inline-flex; }
+.deep-cov-clear:hover, .deep-cov-clear:focus-visible { background: #e9eef6; color: #2b3445; outline: none; }
+
+.deep-cov-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 4px 0 8px; }
+.deep-cov-row {
+  display: flex; align-items: center; gap: 6px; width: 100%; padding: 6px 12px 6px 11px; margin: 0;
+  border: 0; border-left: 3px solid transparent; background: none; color: #2b3445; font: inherit;
+  text-align: left; cursor: pointer;
+}
+.deep-cov-row[hidden] { display: none; }
+.deep-cov-row:hover, .deep-cov-row.is-hover, .deep-cov-row:focus-visible { background: var(--surface-soft); outline: none; }
+.deep-cov-row.is-selected { border-left-color: var(--easi-accent); background: #eef2f8; }
+.deep-cov-name {
+  flex: 1 1 auto; min-width: 0; font-size: 12.5px; line-height: 1.35;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.deep-cov-row.is-selected .deep-cov-name { font-weight: 600; color: var(--easi-accent-dark); }
+.deep-cov-chip { flex: none; padding: 2px 7px; border-radius: 9px; font-size: 10.5px; line-height: 1.4; }
+.deep-cov-ver { color: #5b6b85; background: #eef1f6; }
+/* a region's status, in its map color (owner, 2026-10-08): Draft gray, Preliminary amber, Final blue */
+.deep-cov-draft { color: #475569; background: #eceff3; }
+.deep-cov-prelim { color: #92400e; background: #fdf0d5; }
+.deep-cov-final { color: #303f9f; background: #e8eaf6; }
+.deep-cov-use { display: none; color: #fff; background: var(--easi-accent); }
+.deep-cov-row.is-in-use .deep-cov-use { display: inline-block; }
+.deep-cov-empty { padding: 14px; font-size: 12.5px; line-height: 1.45; color: #7a8699; }
+
+/* closed: a button in the map's top-right controls, between Layers and the legend, looking like
+   the legend card. coverage.js docks it into Leaflet's corner (the map is its own stacking
+   context, so a button floated over it would cover the Layers menu); it shows once docked and
+   the regions are in, and hides while the sidebar is open. */
+.deep-cov-tab { display: none; }
+.easi-shell.deep-cov-ready .deep-cov-tab.leaflet-control { display: inline-flex; }
+.easi-shell.deep-cov-open .deep-cov-tab.leaflet-control { display: none; }
+.easi-map-wrap .leaflet-top.leaflet-right .deep-cov-tab { order: 2; }
+.easi-map-wrap .leaflet-top.leaflet-right .easi-legend-panel { order: 3; }
+.deep-cov-tab.leaflet-control {
+  align-items: center; gap: 7px; height: 32px; padding: 0 8px 0 9px;
+  border: 1px solid var(--card-border); border-radius: 6px; background: rgba(255, 255, 255, .96);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .15); color: #2b3445; cursor: pointer;
+  font-family: var(--font-body); font-size: 12.5px; font-weight: 600; line-height: 1; white-space: nowrap;
+}
+.deep-cov-tab svg { flex: none; color: var(--easi-accent); }
+.deep-cov-tab-count {
+  padding: 2px 7px; border-radius: 9px; background: #eef1f6; color: #5b6b85;
+  font-size: 10.5px; font-weight: 600; line-height: 1.4;
+}
+.deep-cov-tab-count:empty { display: none; }
+.deep-cov-tab.leaflet-control:hover, .deep-cov-tab.leaflet-control:focus-visible {
+  border-color: var(--easi-accent); color: var(--easi-accent-dark); outline: none;
+}
+.deep-cov-tab.leaflet-control:focus-visible { box-shadow: 0 0 0 3px rgba(47, 75, 124, .2); }
+
+/* open: the map's right-hand controls (Layers, legend, scale) and the zoom cue make room */
+.easi-shell .easi-map-wrap .leaflet-right { transition: right .2s ease; }
+.easi-shell.deep-cov-open { --staf-map-inset-right: 344px; }
+.easi-shell.deep-cov-open .easi-map-wrap .leaflet-right { right: 332px; }
+@media (max-width: 1180px) {
+  .deep-cov-panel { width: 288px; }
+  .easi-shell.deep-cov-open { --staf-map-inset-right: 312px; }
+  .easi-shell.deep-cov-open .easi-map-wrap .leaflet-right { right: 300px; }
+}
+/* phones: the sidebar opens over the map, above the bottom sheet, and the controls stay put */
+@media (max-width: 820px) {
+  .deep-cov-panel { top: 58px; left: 8px; right: 8px; width: auto; max-height: none;
+    bottom: calc(var(--map-pane-height) + 16px); }
+  .easi-shell.deep-cov-open { --staf-map-inset-right: 60px; }
+  .easi-shell.deep-cov-open .easi-map-wrap .leaflet-right { right: 0; }
+}
+
+/* the regions on the map. Passive (zoomed in to the streams, or past Identify) they take no
+   pointer events; this outranks Leaflet's .leaflet-pane > svg path.leaflet-interactive rule. */
+.leaflet-pane.leaflet-deep-regions-pane.is-passive > svg path { pointer-events: none; }
+.leaflet-deep-regions-pane path:focus { outline: none; }
+.leaflet-tooltip.deep-reg-tip {
+  padding: 5px 9px; border: 1px solid var(--card-border); border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .16); font-family: var(--font-body); color: #2b3445;
+}
+.deep-reg-tip b { display: block; font-size: 12.5px; font-weight: 600; }
+.deep-reg-tip span { display: block; margin-top: 1px; font-size: 11px; color: #6a7486; }
+/* the legend's region key (app._legend_ui, Identify): one swatch per status shown on the map,
+   drawn as the region is, its outline over a light fill; it goes with the regions' Layers box */
+.deep-reg-key { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; padding-top: 5px;
+  border-top: 1px solid #e3e7ee; }
+.easi-shell.deep-regions-off .deep-reg-key { display: none; }
+.deep-reg-sw { flex: none; width: 12px; height: 12px; border-radius: 2px; box-sizing: border-box;
+  border: 1.5px solid var(--swatch-line); background: var(--swatch-fill); }
+/* each status row toggles its regions (www/coverage.js; owner, 2026-10-09): off, its swatch goes
+   hollow and its name grey */
+.deep-reg-row { margin: 0 -4px; padding: 1px 4px; border-radius: 4px; cursor: pointer; user-select: none; }
+.deep-reg-row:hover { background: rgba(47, 75, 124, .07); }
+.deep-reg-row:focus-visible { outline: 2px solid #2f4b7c; outline-offset: 1px; }
+.deep-reg-row.is-off .deep-reg-sw { background: transparent; opacity: .6; }
+.deep-reg-row.is-off .easi-legend-label { color: #9aa3b2; }
+
+/* the report popup's per-metric support and advisory lines */
+.deep-report-support { font-size: 11px; color: #45506a; margin-top: 2px; }
+.deep-report-advisory { font-size: 11px; color: #8a5a00; margin-top: 2px; }
+/* the rail note naming functions whose every metric is withheld */
+.deep-withheld-note { color: #8a5a00; }
+.deep-engine-line { font-size: 12px; color: #45506a; background: #f4f6fa; border: 1px solid #e2e6ee;
+  border-radius: 6px; padding: 4px 8px; margin: 4px 0 6px; }
+.deep-engine-line.warn { background: #fff7e0; border-color: #e6c96b; color: #8a5a00; }
+.easi-snap-note.warn { color: #8a5a00; }
+
+/* narrow windows: the shared metric-rows.css stacks the row (the value box under the name) */

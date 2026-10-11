@@ -14,7 +14,10 @@ C:\Users\gtmen\anaconda3\python.exe tools/staf-web-data/run.py upload --repo gtm
   - `bundle/`: the STAF data bundle (`staf-data-current`), unzipped, read from `apps/hr-data/data`. It
     leaves out the 3DEP tile catalogs, which the browser never reads.
   - `xs/`: the cross-section grid as packed (`D:\Data\xs-grid\release`, `staf-xs-current`).
-  - `library/`: the `library` release, downloaded to `D:\Data\staf-web\library-release`.
+  - `library/`: the `library` release, downloaded to `D:\Data\staf-web\library-release`, and
+    `deep-regions.json`: DEEP's assessment regions sidebar, what DEEP's server sends it
+    (`webdata/deep_regions.py` runs DEEP's own code over that folder, so the list is the one a DEEP
+    deployed from this checkout serves: 85 regions, 1.06 MB, on 2026-10-11).
   - Every file is stored under a content-hashed name, hard-linked when on the same volume, so a file
     never changes in place. `web-manifest.json`, written last, maps each logical name to its file, size
     and sha256. A full build removes files the manifest no longer names; a `--regions` build doesn't.

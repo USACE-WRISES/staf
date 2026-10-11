@@ -1,2 +1,5 @@
 node_modules/
 dist/
+parity/shiny/
+parity/static/
+parity/diff/

@@ -6,6 +6,9 @@
 // those) and no Markdown may land there (GitHub Pages would render it). scripts/after-build.mjs
 // checks both. Removing the app from the website is deleting docs/app/ (see README).
 //
+// The page (index.html) gets its stylesheets, shared page scripts and markup from site.ts; page/ is
+// the public folder, the files the page serves as is (the app's own copies, see site.ts).
+//
 // In development `/data/...` serves the browser layout that tools/staf-web-data writes (default
 // D:\Data\staf-web\site, or STAF_WEB_DATA) with HTTP range support, standing in for the Hugging Face
 // mirror the deployed app reads.
@@ -13,6 +16,7 @@ import { createReadStream, statSync } from 'node:fs'
 import { normalize, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, type Plugin } from 'vite'
+import { PAGE, stafSite } from './site'
 
 /** The website path the built app is served under, and the folder of docs/ it is built into. */
 export const SITE_PATH = '/staf/app/'
@@ -73,9 +77,10 @@ function localData(): Plugin {
   }
 }
 
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? SITE_PATH : '/',
-  plugins: [localData()],
+export default defineConfig(({ command, isPreview }) => ({
+  base: command === 'build' || isPreview ? SITE_PATH : '/',
+  publicDir: PAGE,
+  plugins: [localData(), stafSite()],
   server: { port: 5180, strictPort: true },
   build: {
     outDir: OUT,

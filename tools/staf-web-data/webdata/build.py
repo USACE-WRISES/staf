@@ -157,7 +157,10 @@ def build(out: Path = OUT, *, bundle: Path = BUNDLE, xs_release: Path = XS_RELEA
                                       "regions": len(xs_rel.get("regions") or {})}
     lib = library_files(library)
     if lib:
-        groups.append(("library", lib))
+        # DEEP's regions sidebar, as DEEP's own code lists the release (deep_regions.py)
+        from . import deep_regions
+        derived = deep_regions.write(library, out / ".cache" / deep_regions.NAME)
+        groups.append(("library", lib + [(deep_regions.NAME, derived, "library", None)]))
         sources["library"] = {"files": len(lib)}
     n = 0
     for prefix, items in groups:
