@@ -56,12 +56,17 @@ The grid goes out region by region while the build runs. `xsgrid/release.py` pac
     - the bankfull and low-bank stages above it (float32 m);
     - the regional bankfull inputs;
     - the half-width, the sample count, and the 3DEP project and tiles read.
-    - Position and direction are not stored: `sections.place` rebuilds them bit for bit from the bundle's `lines2_<vpu>`, which are byte-identical to the published bundle's.
+    - **Position and direction** (format 3): `x`, `y`, `nx`, `ny`, the archive's own float64 (EPSG:5070), at about 23 B a section.
+      - In Python, `sections.place` rebuilds them bit for bit from the bundle's `lines2_<vpu>` (`verify --placement`).
+      - A browser re-placing them lands about 1e-9 m off (it sums distances per flowline, the build per region), so the owner had them stored (2026-10-11).
     - **The grids the build read each section on** (format 2): `grid_epsg`, `grid_c`, `grid_f` per read, in reading order, plus `grid_a`, `grid_e`.
       - **Why:** USGS's 1 m tile origins are not whole metres, and `merge_windows` pastes a group's tiles onto its first tile's grid from the window's corner. A pull of a section over its own window therefore lands a few float32 steps off the archive (up to 0.05 mm, measured in Connecticut).
       - **How:** `xsgrid/origins.py` replays the build's groups and records each corner: the same catalog, candidate projects, levels, 3 m and 10 m fallbacks, taken from the archive's recorded tiers and sources.
       - **The result:** `origins.pull` pastes the section's tiles at the build's offsets from the recorded corner and reproduces the archive bit for bit. Measured 2026-10-10: Iowa and Connecticut 1 m, two-UTM-zone 1 m, 3 m quads and 10 m tiles all identical.
       - **Tile headers** (the catalogs' boxes are rounded) are cached in `D:\Data\xs-grid\tile_grids.json`.
+    - **The profile's checksum** (format 3): `z_crc`, zlib's CRC-32 of the section's archive codes (`codec.encode` of its float32 samples, little-endian int32), null without samples; 4 B a section.
+      - **Why:** a browser can't run the Windows C runtime's `sin`, `cos`, `asin`, `atan2`, `log` and `asinh`, which aren't correctly rounded (3 to 33% of inputs, measured 2026-10-11) and which PROJ's projections call. So a browser's projection of a sample lands up to about 1e-8 m from the build's, and a sample within a hair of a float32 rounding boundary can round the other way.
+      - **How:** the static app's pull marks those samples (usually none) and keeps the rounding that gives `z_crc`. A pull that matches is the archive's profile bit for bit, and a pull gone wrong otherwise (a bad read, a changed tile) shows as unverified.
   - `xs-<vpu>-median.parquet`: one profile per HR segment, with its stages.
     - The section is the segment's one nearest both medians (`geomorph.median_candidate`, the apps' drawing rule).
     - The samples are the archive's own codes, copied unchanged.
@@ -73,7 +78,8 @@ The grid goes out region by region while the build runs. `xsgrid/release.py` pac
     - Numbers, thalwegs and stations must be exact, and stages exact at float32.
     - Medians must be the drawing rule's choice, with codes identical.
     - With `--placement` it also re-places every section from the bundle's lines and requires identical positions.
-    - With `--pulls N` it also pulls N sections per region from USGS (every DEM tier present) on their recorded grids, and requires the archive's samples bit for bit.
+    - With `--pulls N` it also pulls N sections per region from USGS (every DEM tier present) with only what the release stores (position, half-width, sample count, tiles, read grids), and requires the archive's samples bit for bit and their checksum to be `z_crc`.
+    - Every `z_crc` is checked against the archive's codes, and every position against the archive's float64.
   - **`release publish --yes`**: creates the release as a prerelease if it's missing, uploads only the assets whose sha256 differs from GitHub's, then `release.json`. Add `--dry-run` to list the uploads first.
   - **Speed:** `pack` and `verify` take `--workers N` (regions at once; a big region holds several GB in memory).
     - `release.json` is rewritten after each region.
