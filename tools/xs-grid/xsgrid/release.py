@@ -12,9 +12,15 @@ just that one.
 - ``xs-<vpu>-sections.parquet`` (same rows), what drawing any section or pulling it again needs:
   the thalweg (float32, exact) and its sample index, the bankfull and low-bank stages above it
   (float32 metres), the regional bankfull inputs, the half-width, the sample count and the 3DEP
-  project and tiles read. Where the section sits and which way it faces are not stored: they follow
-  from the bundle's own lines by ``sections.place`` (the bundle the browser and the apps already
-  read; ``verify_placement`` checks it rebuilds the archive's ``x``, ``y``, ``nx``, ``ny`` bit for bit).
+  project and tiles read. Since format 3 it also stores where the section sits and which way it faces,
+  the archive's own float64 ``x``, ``y``, ``nx``, ``ny`` (EPSG:5070): ``sections.place`` rebuilds them bit for
+  bit from the bundle's lines in Python (``verify_placement``), but a browser's re-placement lands about
+  1e-9 m off (it sums distances per flowline, the build per region, and proj4js is not PROJ), which
+  flips a float32 sample of a pull now and then (owner, 2026-10-11: store them, about 23 B a section).
+  It also stores ``z_crc``, the CRC-32 of the section's profile as the archive codes it: a browser's
+  projection math cannot match the Windows C runtime's bit for bit (measured 2026-10-11: up to about
+  1e-8 m apart), so a pulled sample within a hair of a float32 rounding boundary can round either way;
+  the checksum says which, and catches a pull gone wrong otherwise (4 B a section).
   Each section also carries the grid corners the build read it on (``grid_epsg``, ``grid_c``,
   ``grid_f`` per read, ``grid_a``, ``grid_e``; ``origins.region_grids`` replays the build's groups), so a
   pull from USGS's tile files rebuilds the archive's samples bit for bit (``origins.pull``; measured
@@ -52,10 +58,19 @@ from . import config
 TAG = "staf-xs-current"
 REPO = "USACE-WRISES/staf"
 MANIFEST = "release.json"
-#: the release's format (2: the sections carry their read grids); each file also carries its own
-#: ``layout``, and a pack reuses a numbers or median file whose layout and region record are unchanged
-FORMAT = 2
-LAYOUT = {"numbers": 1, "sections": 2, "median": 1}
+#: the release's format (2: the sections carry their read grids; 3: and their exact positions and
+#: profile checksums); each
+#: file also carries its own ``layout``, and a pack reuses a numbers or median file whose layout and
+#: region record are unchanged (and a sections file's read grids, which cost a replay of the build)
+FORMAT = 3
+LAYOUT = {"numbers": 1, "sections": 4, "median": 1}
+#: each section's position and unit direction (EPSG:5070), the archive's float64 as they are
+POSITIONS = ("x", "y", "nx", "ny")
+GRID_COLUMNS = ("grid_epsg", "grid_c", "grid_f", "grid_a", "grid_e")
+#: their types as packed (a list read back from parquet names its element "element", which would
+#: change the file's stored Arrow schema and so its bytes)
+GRID_TYPES = dict(grid_epsg=pa.list_(pa.int32()), grid_c=pa.list_(pa.float64()), grid_f=pa.list_(pa.float64()),
+                  grid_a=pa.float64(), grid_e=pa.float64())
 OUT = Path(os.environ.get("XSGRID_RELEASE") or (config.WORK / "release"))
 NUMBERS_ROWS = SECTIONS_ROWS = 1 << 14
 MEDIAN_ROWS = 512
@@ -99,10 +114,13 @@ COLUMN_DOC = {
     "sections": "nhdplusid, part, k; thalweg (float32 m) and thalweg_i (its sample's index); bf_m, lb_m "
                 "(float32 m above the thalweg); da_sqkm, division, rc_width (x100), rc_depth (x1000), "
                 "rc_area (x100): the regional bankfull inputs; wide_cm (half-width x100); n_pts; source "
-                "(3DEP project, 3dep-19 or 3dep-13); tiles (';'-joined tile names); grid_epsg, grid_c, grid_f "
+                "(3DEP project, 3dep-19 or 3dep-13); tiles (';'-joined tile names); x, y, nx, ny (EPSG:5070 "
+                "float64, the archive's own position and unit direction; samples at x + nx s, y + ny s for s "
+                "in linspace(-wide, wide, n_pts)); grid_epsg, grid_c, grid_f "
                 "(per read, in reading order: the CRS and the corner of the window the build read the "
-                "section on), grid_a, grid_e (its pixel size). Position and direction: sections.place on the "
-                "bundle's lines2_<vpu> (k of n_sec at (k + 1/2) L / n, facing the 5 m chord downstream). A pull: "
+                "section on), grid_a, grid_e (its pixel size); z_crc (uint32: zlib's CRC-32 of the "
+                "profile's archive codes, codec.encode of the float32 samples as little-endian int32; "
+                "null without samples). A pull: "
                 "transform the samples to each read's CRS, fj = (u - c) / a - 0.5, fi = (v - f) / e - 0.5, "
                 "paste each recorded tile of that CRS (name order) at round half to even ((tile c - c) / a), "
                 "the first with data winning a pixel, interpolate bilinearly, fill what earlier reads left "
@@ -236,6 +254,8 @@ def _write(table: pa.Table, path: Path, rows: int, md: dict, level: int = ZSTD_L
     tmp = path.with_suffix(path.suffix + ".tmp")
     pq.write_table(table, tmp, compression="zstd", compression_level=level, row_group_size=rows,
                    use_dictionary=[c for c in ("division", "source", "tiles") if c in names],
+                   # float64 positions compress best byte plane by byte plane (0108: 23.4 B a section)
+                   use_byte_stream_split=[c for c in POSITIONS if c in names] or False,
                    write_statistics=["nhdplusid"])
     os.replace(tmp, path)
     return {"bytes": path.stat().st_size, "sha256": sha256(path)}
@@ -343,15 +363,23 @@ def pack_region(vpu: str, out: Path = OUT) -> dict:
     sections["n_pts"] = pc.cast(a.column("n_pts"), pa.uint16())
     sections["source"] = a.column("source")
     sections["tiles"] = a.column("tiles")
-    corners = _region_grids(a)
-    sections["grid_epsg"] = pa.array([[c[0] for c in cs] for cs in corners], type=pa.list_(pa.int32()))
-    sections["grid_c"] = pa.array([[c[1] for c in cs] for cs in corners], type=pa.list_(pa.float64()))
-    sections["grid_f"] = pa.array([[c[2] for c in cs] for cs in corners], type=pa.list_(pa.float64()))
-    sections["grid_a"] = pa.array([cs[0][3] if cs else None for cs in corners], type=pa.float64())
-    sections["grid_e"] = pa.array([cs[0][4] if cs else None for cs in corners], type=pa.float64())
+    for col in POSITIONS:
+        sections[col] = a.column(col)
+    crc, has_z = _profile_crcs(apath)
+    sections["z_crc"] = pa.array(crc[order], type=pa.uint32(), mask=~has_z[order])
+    out = Path(out)
+    earlier = _earlier_grids(out / sections_asset(vpu), vpu, rec, m.column("nhdplusid"), numbers["k"])
+    if earlier is not None:
+        sections.update(earlier)
+    else:
+        corners = _region_grids(a)
+        sections["grid_epsg"] = pa.array([[c[0] for c in cs] for cs in corners], type=GRID_TYPES["grid_epsg"])
+        sections["grid_c"] = pa.array([[c[1] for c in cs] for cs in corners], type=GRID_TYPES["grid_c"])
+        sections["grid_f"] = pa.array([[c[2] for c in cs] for cs in corners], type=GRID_TYPES["grid_f"])
+        sections["grid_a"] = pa.array([cs[0][3] if cs else None for cs in corners], type=GRID_TYPES["grid_a"])
+        sections["grid_e"] = pa.array([cs[0][4] if cs else None for cs in corners], type=GRID_TYPES["grid_e"])
     sections_t = pa.table(sections)
 
-    out = Path(out)
     keep_numbers = _reusable(out / numbers_asset(vpu), vpu, rec, "numbers")
     keep_median = _reusable(out / median_asset(vpu), vpu, rec, "median")
     median_t = None
@@ -420,6 +448,43 @@ def _embedded(path: Path) -> dict:
     return json.loads((pq.ParquetFile(path).schema_arrow.metadata or {}).get(b"xsgrid_release", b"{}"))
 
 
+def _profile_crcs(archive_path: Path) -> tuple:
+    """Each archive row's CRC-32 (``zlib.crc32``) of its profile codes as little-endian int32, and
+    whether it has a profile at all, in archive row order; read one row group (a cell) at a time."""
+    import zlib
+    f = pq.ParquetFile(archive_path)
+    n = f.metadata.num_rows
+    crc = np.zeros(n, dtype=np.uint32)
+    has = np.zeros(n, dtype=bool)
+    at = 0
+    for g in range(f.metadata.num_row_groups):
+        z = f.read_row_group(g, columns=["z"]).column("z").combine_chunks()
+        offs = z.offsets.to_numpy()
+        raw = memoryview(np.ascontiguousarray(z.values.to_numpy(zero_copy_only=False), dtype="<i4").view(np.uint8))
+        # a section with no samples holds an empty (or null) profile
+        valid = z.is_valid().to_numpy(zero_copy_only=False) & (np.diff(offs) > 0)
+        for i in np.flatnonzero(valid).tolist():
+            crc[at + i] = zlib.crc32(raw[4 * offs[i]:4 * offs[i + 1]])
+        has[at:at + len(z)] = valid
+        at += len(z)
+    return crc, has
+
+
+def _earlier_grids(path: Path, vpu: str, rec: dict, nhd: pa.ChunkedArray, k: pa.ChunkedArray) -> dict | None:
+    """The read-grid columns of a sections file already packed for this region's metrics (layout 2 or
+    later, rows in the same order), so a new sections layout needn't replay the build's reads; None
+    when there is no such file."""
+    if not path.exists():
+        return None
+    md = _embedded(path)
+    if md.get("vpu") != vpu or md.get("metrics_sha256") != rec["metrics_sha256"] or md.get("layout", 1) < 2:
+        return None
+    t = pq.read_table(path, columns=["nhdplusid", "k", *GRID_COLUMNS])
+    if t.num_rows != len(nhd) or not t.column("nhdplusid").equals(nhd) or not t.column("k").equals(k):
+        return None
+    return dict((c, t.column(c).combine_chunks().cast(GRID_TYPES[c])) for c in GRID_COLUMNS)
+
+
 def _reusable(path: Path, vpu: str, rec: dict, kind: str) -> bool:
     """A file already packed for this region's metrics in this kind's current layout (files of format
     1 carry no layout: their numbers and median layouts are 1)."""
@@ -437,7 +502,7 @@ def verify_region(vpu: str, out: Path = OUT) -> dict:
     out = Path(out)
     m = pq.read_table(config.ARCHIVE / "metrics" / f"xsm_{vpu}.parquet", columns=list(METRIC_COLUMNS))
     a = pq.read_table(config.ARCHIVE / "archive" / f"xs_{vpu}.parquet",
-                      columns=["nhdplusid", "part", "k", "wide_m", "n_pts", "tiles"])
+                      columns=["nhdplusid", "part", "k", "wide_m", "n_pts", "tiles", *POSITIONS])
     order = np.lexsort((m.column("k").to_numpy(), m.column("part").to_numpy(), m.column("nhdplusid").to_numpy()))
     m, a = m.take(pa.array(order)), a.take(pa.array(order))
     nt = pq.read_table(out / numbers_asset(vpu))
@@ -479,6 +544,14 @@ def verify_region(vpu: str, out: Path = OUT) -> dict:
     if st.column("tiles").to_pylist() != a.column("tiles").to_pylist() or \
             not (st.column("wide_cm").to_numpy(zero_copy_only=False) / 100 == wide).all():
         raise ValueError(f"[{vpu}] the transects differ")
+    crc, has_z = _profile_crcs(config.ARCHIVE / "archive" / f"xs_{vpu}.parquet")
+    got_crc = st.column("z_crc")
+    if not (got_crc.is_valid().to_numpy(zero_copy_only=False) == has_z[order]).all() or             not (pc.fill_null(got_crc, 0).to_numpy() == np.where(has_z, crc, 0)[order]).all():
+        raise ValueError(f"[{vpu}] a profile checksum differs from the archive's codes")
+    for col in POSITIONS:                                # the archive's float64, bit for bit
+        got = st.column(col).to_numpy(zero_copy_only=False).astype(np.float64)
+        if not np.array_equal(got.view(np.uint64), a.column(col).to_numpy().astype(np.float64).view(np.uint64)):
+            raise ValueError(f"[{vpu}] the stored {col} differs from the archive's")
     reads = pc.list_value_length(st.column("grid_epsg")).to_numpy(zero_copy_only=False)
     res = nt.column("res").to_numpy()
     for col in ("grid_c", "grid_f"):
@@ -503,13 +576,14 @@ def verify_region(vpu: str, out: Path = OUT) -> dict:
 
 
 def verify_pulls(vpu: str, out: Path = OUT, n: int = 3, seed: int = 7) -> int:
-    """Pull ``n`` of the region's sections (at least one of each DEM tier present) from USGS on the
-    grids the release records and require the archive's samples bit for bit. Returns the pulls made."""
+    """Pull ``n`` of the region's sections (at least one of each DEM tier present) from USGS with only
+    what the release stores (position, half-width, sample count, tiles, read grids) and require the
+    archive's samples bit for bit. Returns the pulls made."""
     import random
 
     from . import codec, origins, sample
-    st = pq.read_table(Path(out) / sections_asset(vpu), columns=["nhdplusid", "part", "k", "grid_epsg", "grid_c",
-                                                                 "grid_f", "grid_a", "grid_e", "tiles"])
+    st = pq.read_table(Path(out) / sections_asset(vpu), columns=["nhdplusid", "part", "k", "tiles", "wide_cm",
+                                                                 "n_pts", "z_crc", *POSITIONS, *GRID_COLUMNS])
     nt = pq.read_table(Path(out) / numbers_asset(vpu), columns=["res"])
     res = nt.column("res").to_numpy()
     rng = random.Random(seed)
@@ -531,16 +605,18 @@ def verify_pulls(vpu: str, out: Path = OUT, n: int = 3, seed: int = 7) -> int:
     for row, tier in zip(rows, res[picks].tolist()):
         r = key[(int(row["nhdplusid"]), int(row["part"]), int(row["k"]))]
         g = int(np.searchsorted(starts, r, side="right") - 1)
-        ar = af.read_row_group(g, columns=["x", "y", "nx", "ny", "wide_m", "n_pts", "z"]).slice(
-            r - int(starts[g]), 1).to_pylist()[0]
-        sec = sample.Section(i=0, x=ar["x"], y=ar["y"], nx=ar["nx"], ny=ar["ny"], wide=ar["wide_m"])
+        ar = af.read_row_group(g, columns=["z"]).slice(r - int(starts[g]), 1).to_pylist()[0]
+        sec = sample.Section(i=0, x=row["x"], y=row["y"], nx=row["nx"], ny=row["ny"], wide=row["wide_cm"] / 100)
         corners = [(e, c, f, row["grid_a"], row["grid_e"])
                    for e, c, f in zip(row["grid_epsg"], row["grid_c"], row["grid_f"])]
-        z = origins.pull(sec, ar["n_pts"], int(tier), row["tiles"], corners, grids, names)
+        z = origins.pull(sec, int(row["n_pts"]), int(tier), row["tiles"], corners, grids, names)
         ref = codec.decode(np.asarray(ar["z"], dtype=np.int32))
         if not np.array_equal(z.view(np.uint32), ref.view(np.uint32)):
             raise ValueError(f"[{vpu}] section {row['nhdplusid']} k={row['k']} ({tier} m) pulled again differs "
                              f"from the archive on {int((z.view(np.uint32) != ref.view(np.uint32)).sum())} samples")
+        import zlib
+        if zlib.crc32(np.ascontiguousarray(codec.encode(z), dtype="<i4").tobytes()) != row["z_crc"]:
+            raise ValueError(f"[{vpu}] section {row['nhdplusid']} k={row['k']}: the pull's checksum is not z_crc")
     return len(rows)
 
 

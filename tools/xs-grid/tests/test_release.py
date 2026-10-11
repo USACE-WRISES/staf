@@ -203,7 +203,10 @@ def test_sections_carry_what_a_pull_needs(drive):
     st = pq.read_table(drive["out"] / release.sections_asset(VPU)).to_pylist()
     r = [x for x in drive["rows"] if x["nid"] == 22000900000012 and x["status"] == "ok"][0]
     first = [s for s in st if s["nhdplusid"] == r["nid"] and s["k"] == r["k"]][0]
-    assert "x" not in first and "tob_m" not in first     # placement follows from the bundle's lines
+    assert "tob_m" not in first
+    # the archive's own float64 position and direction (a browser re-placing it lands about 1e-9 m off)
+    assert first["x"] == 100000.0 + 30.123456789 * r["k"] and first["y"] == 2000000.0 + 0.987654321 * r["k"]
+    assert first["nx"] == 0.6 and first["ny"] == 0.8
     assert first["tiles"] == f"USGS_1M_15_x{40 + r['k']}y462_IA_FullState_2019.tif" and first["n_pts"] == r["n_pts"]
     assert first["rc_width"] == 731 and first["rc_depth"] == 452 and first["division"] == "Interior Plains"
     th = r["thalweg"]
@@ -216,6 +219,14 @@ def test_sections_carry_what_a_pull_needs(drive):
     assert first["grid_a"] == 1.0 and first["grid_e"] == -1.0
     no_dem = [s for s in st if s["nhdplusid"] == 22000900000030][0]
     assert no_dem["grid_epsg"] == [] and no_dem["grid_a"] is None
+    # each profile's checksum, of the codes the archive stores (what a browser's pull must reproduce)
+    import zlib
+    for row in drive["rows"]:
+        s = [x for x in st if x["nhdplusid"] == row["nid"] and x["k"] == row["k"]][0]
+        if row["status"] == "no_dem":
+            assert s["z_crc"] is None
+        else:
+            assert s["z_crc"] == zlib.crc32(np.ascontiguousarray(codec.encode(row["z"]), dtype="<i4").tobytes())
 
 
 def test_a_new_sections_layout_rewrites_only_the_sections(drive, monkeypatch):
@@ -225,8 +236,15 @@ def test_a_new_sections_layout_rewrites_only_the_sections(drive, monkeypatch):
 
     def no_median_reads(*_a, **_k):
         raise AssertionError("an unchanged median file was rebuilt")
+
+    def no_replay(*_a, **_k):
+        raise AssertionError("the read grids were replayed though the earlier sections file has them")
     monkeypatch.setattr(release, "_median_codes", no_median_reads)
+    monkeypatch.setattr(release, "_region_grids", no_replay)
+    old = pq.read_table(drive["out"] / release.sections_asset(VPU), columns=list(release.GRID_COLUMNS))
     got = release.pack(None, drive["out"], log=lambda *_: None)
+    new = pq.read_table(drive["out"] / release.sections_asset(VPU), columns=list(release.GRID_COLUMNS))
+    assert new.equals(old)
     assert got["packed"] == [VPU]
     after = dict((n, a["sha256"]) for n, a in release.read_manifest(drive["out"])["assets"].items())
     assert after[release.numbers_asset(VPU)] == before[release.numbers_asset(VPU)]
