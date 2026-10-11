@@ -31,6 +31,23 @@ function exactHalf(x: number, digits: number): bigint | null {
   return n % 10n === 5n ? n / 10n : null
 }
 
+/** str(x) for a Python float in the range the apps print (repr: shortest round trip, "12.0" for a
+ * whole number). */
+export function pyFloat(x: number): string {
+  if (!Number.isFinite(x)) return Number.isNaN(x) ? 'nan' : x > 0 ? 'inf' : '-inf'
+  const s = String(x)
+  return Number.isInteger(x) && Math.abs(x) < 1e16 && !s.includes('e') ? `${s}.0` : s
+}
+
+/** f"{x:,.{digits}f}": fixed digits with thousands separators. */
+export function pyFixedComma(x: number, digits: number): string {
+  const text = pyFixed(x, digits)
+  const neg = text.startsWith('-')
+  const [whole, frac] = (neg ? text.slice(1) : text).split('.')
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return (neg ? '-' : '') + grouped + (frac !== undefined ? `.${frac}` : '')
+}
+
 /** f"{x:.{digits}f}" */
 export function pyFixed(x: number, digits: number): string {
   const text = x.toFixed(digits)

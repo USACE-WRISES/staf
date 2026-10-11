@@ -11,40 +11,26 @@
 // the bundle's (EASI's source) in every tool.
 import { columnStats, metadata, readRows, rowGroups } from '../data/parquet'
 import type { DataSource } from '../data/source'
+import { datasetRegions, type RegionMeta } from '../engine/bundle'
 import type { Feature, FeatureCollection } from './display'
 import { linesMeetBox, type Line } from './geom'
 
 const SCALE = 100_000
 const COLUMNS = ['nhdplusid', 'gnis_name', 'x', 'y', 'parts', 'xmin', 'ymin', 'xmax', 'ymax']
 
-interface Region { vpu: string, bounds: [number, number, number, number], file: string }
-
 export interface LineRecord {
   id: number
   name: string | null
   /** degrees, one list of [lon, lat] per part */
   parts: Line[]
+  /** where the line is: its region and its row in the region's file (for its attributes) */
+  region: RegionMeta
+  row: number
 }
 
 /** One of the bundle's line networks: ``folder`` is "bundle/" (HR) or "bundle/v2/" (V2). */
 export class Network {
-  private regions: Promise<Region[]> | null = null
-
-  constructor(private src: DataSource, private folder: string) {}
-
-  private manifest(): Promise<Region[]> {
-    this.regions ??= this.src.ready().then(() => this.src.bytesOf(`${this.folder}manifest.json`)).then((buf) => {
-      const m = JSON.parse(new TextDecoder().decode(buf)) as { vpus: Record<string, { bounds: Region['bounds'], lines: string | { file: string } }> }
-      return Object.keys(m.vpus).sort().map((vpu) => {
-        const r = m.vpus[vpu]
-        return { vpu, bounds: r.bounds, file: typeof r.lines === 'string' ? r.lines : r.lines.file }
-      })
-    }).catch((err) => {
-      this.regions = null
-      throw err
-    })
-    return this.regions
-  }
+  constructor(readonly src: DataSource, readonly folder: string) {}
 
   /** The lines that meet the box (west, south, east, north in degrees), in the reader's order. */
   async inBox(west: number, south: number, east: number, north: number): Promise<LineRecord[]> {
@@ -53,9 +39,9 @@ export class Network {
     const qs = Math.floor(s * SCALE)
     const qe = Math.ceil(e * SCALE)
     const qn = Math.ceil(n * SCALE)
-    const regions = (await this.manifest()).filter(({ bounds: [bw, bs, be, bn] }) => bw <= e && be >= w && bs <= n && bn >= s)
+    const regions = (await datasetRegions(this.src, this.folder)).filter(({ bounds: [bw, bs, be, bn] }) => bw <= e && be >= w && bs <= n && bn >= s)
     const perRegion = await Promise.all(regions.map(async (region) => {
-      const logical = `${this.folder}${region.file}`
+      const logical = `${this.folder}${region.lines}`
       const meta = await metadata(this.src, logical)
       const [x0, y0, x1, y1] = ['xmin', 'ymin', 'xmax', 'ymax'].map((c) => columnStats(meta, c))
       const groups = rowGroups(meta).filter((g) => {
@@ -63,11 +49,12 @@ export class Network {
         if (!a || !b || !c || !d) return true
         return Number(a.min) <= qe && Number(b.max) >= qw && Number(c.min) <= qn && Number(d.max) >= qs
       })
-      const rows = await Promise.all(groups.map((g) => readRows(this.src, logical, COLUMNS, g.start, g.start + g.rows)))
-      return rows.flat()
+      const rows = await Promise.all(groups.map(async (g) => (await readRows(this.src, logical, COLUMNS, g.start, g.start + g.rows))
+        .map((r, k) => ({ r, row: g.start + k }))))
+      return rows.flat().map((x) => ({ ...x, region }))
     }))
     const out: LineRecord[] = []
-    for (const r of perRegion.flat()) {
+    for (const { r, row, region } of perRegion.flat()) {
       if (Number(r.xmin) > qe || Number(r.xmax) < qw || Number(r.ymin) > qn || Number(r.ymax) < qs) continue
       const xs = r.x as ArrayLike<number>
       const ys = r.y as ArrayLike<number>
@@ -81,7 +68,7 @@ export class Network {
       }
       if (!parts.length || !linesMeetBox(parts, w, s, e, n)) continue
       const name = r.gnis_name == null ? null : String(r.gnis_name).trim() || null
-      out.push({ id: Number(r.nhdplusid), name, parts })
+      out.push({ id: Number(r.nhdplusid), name, parts, region, row })
     }
     return out
   }

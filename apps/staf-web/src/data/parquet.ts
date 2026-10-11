@@ -15,7 +15,7 @@ export function metadata(src: DataSource, logical: string): Promise<FileMetaData
   const key = src.base + logical
   let m = metas.get(key)
   if (!m) {
-    m = parquetMetadataAsync(src.file(logical), { initialFetchSize: FOOTER_FETCH })
+    m = src.ready().then(() => parquetMetadataAsync(src.file(logical), { initialFetchSize: FOOTER_FETCH }))
     metas.set(key, m)
     m.catch(() => metas.delete(key))
   }
@@ -57,6 +57,7 @@ export function columnStats(meta: FileMetaData, column: string): Array<MinMax | 
 
 export async function readRows(src: DataSource, logical: string, columns: string[], rowStart: number,
                                rowEnd: number): Promise<Record<string, any>[]> {
-  return parquetReadObjects({ file: src.file(logical), metadata: await metadata(src, logical), columns,
-                              rowStart, rowEnd, compressors })
+  const meta = await metadata(src, logical)
+  await src.ready()
+  return parquetReadObjects({ file: src.file(logical), metadata: meta, columns, rowStart, rowEnd, compressors })
 }

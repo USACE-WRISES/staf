@@ -12,7 +12,8 @@ at a desktop size, waits until it is idle, and writes to ``parity/<app>/``:
 
 ``--view LAT,LON,ZOOM --name NAME`` moves each tool's map there first (the stream lines draw from zoom
 14), waits until the streams have settled, and writes ``<tool>-<NAME>.png`` and ``.html`` only;
-``--coverage`` also turns on StreamCat coverage in the Layers menu first.
+``--coverage`` also turns on StreamCat coverage in the Layers menu first; ``--click LAT,LON`` then
+clicks the map there (a pick) and waits until the pick has settled.
 
 ``--app shiny`` reads the Shiny STAF app (``shiny run app.py --port 8040`` in apps/staf, or
 .claude/launch.json "staf") and also writes its dialogs to ``src/app/content/dialogs.json``, which
@@ -129,13 +130,43 @@ STREAMS_JS = """(() => {
 })()"""
 
 
+# a click on the shown tool's map at a point (Leaflet's click event, as a mouse click fires it)
+CLICK_JS = """((lat, lon) => {
+  const tool = document.documentElement.getAttribute('data-staf-tool');
+  const cont = document.querySelector('.staf-section[data-staf-tool="' + tool + '"] .leaflet-container');
+  const L = window.L;
+  let map = null;
+  const fire = L.Evented.prototype.fire;
+  L.Evented.prototype.fire = function () { if (!map && this instanceof L.Map) map = this; return fire.apply(this, arguments); };
+  const r = cont.getBoundingClientRect();
+  cont.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+  L.Evented.prototype.fire = fire;
+  if (!map) return false;
+  const latlng = L.latLng(lat, lon);
+  const layerPoint = map.latLngToLayerPoint(latlng);
+  const containerPoint = map.latLngToContainerPoint(latlng);
+  map.fire('click', { latlng, layerPoint, containerPoint, originalEvent: new MouseEvent('click') });
+  return true;
+})"""
+
+# a pick has settled: no lookup spinner, Shiny idle, the snap status written; its text, or null
+PICK_JS = """(() => {
+  const html = document.documentElement;
+  const tool = html.getAttribute('data-staf-tool');
+  if (html.classList.contains('shiny-busy')) return null;
+  if (document.querySelector('.easi-lookup-spinner')) return null;
+  const snap = document.getElementById(tool + '-snap_status');
+  return snap ? snap.textContent.replace(/\\s+/g, ' ').trim() : null;
+})()"""
+
+
 def pretty(html: str) -> str:
     """One tag per line, so a diff points at the element that changed."""
     return html.replace("><", ">\n<")
 
 
 async def main(app: str, url: str, width: int, height: int, view=None, name: str = "",
-               coverage: bool = False) -> None:
+               coverage: bool = False, click=None) -> None:
     out = HERE / app
     out.mkdir(parents=True, exist_ok=True)
     prof = Path(tempfile.mkdtemp(prefix="staf-capture-"))
@@ -201,6 +232,18 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
                         same = same + 1 if count == last and count >= 0 else 0
                         last = count
                     await asyncio.sleep(1.0)
+                if click:
+                    if not await js(f"{CLICK_JS}({click[0]}, {click[1]})"):
+                        raise RuntimeError(f"{tool}: could not click the map")
+                    last, same, end = None, 0, time.monotonic() + 120
+                    await asyncio.sleep(1.0)
+                    while time.monotonic() < end and same < 3:
+                        await asyncio.sleep(1.0)
+                        text = await js(PICK_JS)
+                        same = same + 1 if text is not None and text == last else 0
+                        last = text
+                    print(f"{tool}: pick says {last!r}")
+                    await asyncio.sleep(1.0)
                 got = json.loads(await js(CAPTURE_JS))
                 styles = got["styles"]
                 (out / f"{stem}.html").write_text(
@@ -244,6 +287,8 @@ if __name__ == "__main__":
     ap.add_argument("--view", help="LAT,LON,ZOOM to move each map to before the capture")
     ap.add_argument("--name", default="view", help="the captures' suffix with --view")
     ap.add_argument("--coverage", action="store_true", help="turn on StreamCat coverage first (with --view)")
+    ap.add_argument("--click", help="LAT,LON to click on the map once the view settles (with --view)")
     a = ap.parse_args()
     v = tuple(float(x) for x in a.view.split(",")) if a.view else None
-    asyncio.run(main(a.app, (a.url or URLS[a.app]).rstrip("/"), a.width, a.height, v, a.name, a.coverage))
+    c = tuple(float(x) for x in a.click.split(",")) if a.click else None
+    asyncio.run(main(a.app, (a.url or URLS[a.app]).rstrip("/"), a.width, a.height, v, a.name, a.coverage, c))

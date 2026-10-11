@@ -4,8 +4,11 @@
 // zoom_cue, cursor_style, stream_legend, flow_loading); here they redraw on the map's own events,
 // into the same output elements. The page scripts' inputs (shim.ts) arrive at input().
 import type L from 'leaflet'
-import { flowLoading, FLOW_ZOOM, legend, readout, START, type ToolKey, zoomCue } from './markup'
+import { esc, flowLoading, FLOW_ZOOM, legend, readout, START, type ToolKey, zoomCue } from './markup'
+import { Identify } from './identify'
 import { makeMap, type ToolMap } from './map'
+import { notify } from './notify'
+import { pyFixed } from './pyfmt'
 import * as shim from './shim'
 import { type Networks, StreamLayers } from './streams'
 
@@ -37,6 +40,7 @@ export class Tool {
   /** DEEP: the statuses its regions show, for the legend's key */
   regionStatuses: RegionStatus[] = []
   streams: StreamLayers | null = null
+  identify: Identify | null = null
 
   constructor(key: ToolKey, private nets: Networks) {
     this.key = key
@@ -60,6 +64,13 @@ export class Tool {
     const map = this.view.map
     this.streams = new StreamLayers(map, this.view.streams, this.nets, () => this.streamsChanged())
     this.streams.setCoverage(this.coverage)
+    const streams = this.streams
+    this.identify = new Identify({
+      key: this.key, map, nets: this.nets, layers: this.view.layers,
+      lines: () => streams.lines(),
+      setSource: (k, layer) => streams.setSource(k, layer),
+      changed: () => this.pickChanged(),
+    })
     map.on('zoomend moveend', () => this.viewChanged())
     map.on('click', (e: L.LeafletMouseEvent) => this.mapClick(e))
     this.viewChanged()
@@ -110,12 +121,80 @@ export class Tool {
     if (slot.innerHTML !== html) slot.innerHTML = html
   }
 
-  private mapClick(_e: L.LeafletMouseEvent): void {
+  private mapClick(e: L.LeafletMouseEvent): void {
     if (this.step !== 'identify') return
     if (!this.zoomedIn()) {
       // no streams are drawn this far out: the zoom cue answers the click
       this.nudge += 1
       this.renderCue(true)
+      return
+    }
+    this.identify?.click(e.latlng.lat, e.latlng.lng)
+  }
+
+  /** The pick changed: the snap status, the lookup line, Delineate, the legend. */
+  private pickChanged(): void {
+    const id = this.identify
+    if (!id) return
+    const snap = this.out('snap_status')
+    const html = '\n' + id.snapStatus() + '\n'
+    if (snap.innerHTML !== html) snap.innerHTML = html
+    if (this.key !== 'easi') {
+      const look = this.out('streamcat_lookup_status')
+      const lh = id.lookupStatus()
+      const lhtml = lh ? '\n' + lh + '\n' : ''
+      if (look.innerHTML !== lhtml) look.innerHTML = lhtml
+    }
+    const button = document.getElementById(`${this.key}-delineate`) as HTMLButtonElement | null
+    if (button) {
+      button.disabled = !id.ready()
+      // EASI names the routed site's step (app.py _toggle_delineate)
+      if (this.key === 'easi') {
+        const label = button.querySelector('.action-label')
+        const text = id.anchor?.anchorKind === 'hrSurrogate' ? 'Compute watershed and reach' : 'Delineate Basin and Reach'
+        if (label && label.textContent !== text) label.textContent = text
+      }
+    }
+    this.renderLegend()
+  }
+
+  /** Typed latitude and longitude (coord-entry.js): the map goes there and the point snaps. */
+  private coordsEntered(value: unknown): void {
+    if (this.step !== 'identify' || !this.view || !this.identify) return
+    const ev = (value ?? {}) as { lat?: number, lon?: number }
+    const lat = Number(ev.lat)
+    const lon = Number(ev.lon)
+    if (ev.lat == null || ev.lon == null || !Number.isFinite(lat) || !Number.isFinite(lon)) return
+    if (!(lat >= 24 && lat <= 50 && lon >= -125 && lon <= -66)) {
+      notify('Coordinates must be within the continental United States.', { type: 'warning', seconds: 5 })
+      return
+    }
+    this.view.map.setView([lat, lon], 15)
+    this.identify.typed(lat, lon)
+  }
+
+  /** A place chosen in the search's suggestions (geocode-autocomplete.js): the map goes there. */
+  private addressPick(value: unknown): void {
+    if (!this.view) return
+    const pick = (value ?? {}) as { lat?: number, lon?: number, label?: string }
+    if (pick.lat == null || pick.lon == null) return
+    const lat = Number(pick.lat)
+    const lon = Number(pick.lon)
+    this.view.map.setView([lat, lon], 15)
+    const where = pick.label || `${pyFixed(lat, 4)}, ${pyFixed(lon, 4)}`
+    notify(`Centered on ${where}. Click a stream line.`, { seconds: 4 })
+  }
+
+  /** Find on map: the typed place from Photon (each app's geocode_address, its first provider). */
+  async findAddress(): Promise<void> {
+    const box = document.getElementById(`${this.key}-address`) as HTMLInputElement | null
+    const q = (box?.value ?? '').trim()
+    const hit = q ? await photon(q).catch(() => null) : null
+    if (hit && this.view) {
+      this.view.map.setView([hit[0], hit[1]], 15)
+      notify(`Centered on ${pyFixed(hit[0], 4)}, ${pyFixed(hit[1], 4)}. Click a stream line.`, { seconds: 4 })
+    } else {
+      notify('Place not found. Try a city, address, or stream name.', { type: 'warning', seconds: 4 })
     }
   }
 
@@ -163,8 +242,17 @@ export class Tool {
     else if (mode === 'hr-only' && this.coverage) note = 'StreamCat coverage unavailable here.'
     else if (mode === 'empty') note = 'No streams in view.'
     const alert = unavailable ? this.unavailableNotice() : ''
-    const key = this.key === 'deep' && this.step === 'identify' ? this.regionKey() : ''
-    const html = '\n' + legend(rows, note, key, alert) + '\n'
+    // the pick's reach and route, with StreamCat coverage on
+    const source = this.coverage && this.streamsVisible ? (this.identify?.legendRows() ?? []) : []
+    const regions = this.key === 'deep' && this.step === 'identify' ? this.regionKey() : ''
+    const extra = source.map((r) => `
+  <div class="easi-legend-row">
+    <span class="easi-legend-sw easi-legend-sw-${r.kind}" style="--swatch-color:${r.color};"></span>
+    <div>
+      <div class="easi-legend-label">${esc(r.label)}</div>
+    </div>
+  </div>`).join('') + regions
+    const html = '\n' + legend(rows, note, extra, alert) + '\n'
     const slot = this.out('stream_legend')
     if (slot.innerHTML !== html) slot.innerHTML = html
   }
@@ -211,6 +299,15 @@ export class Tool {
       case 'retry_streams':
         this.streams?.retry()
         break
+      case 'retry_streamcat':
+        this.identify?.retry()
+        break
+      case 'coords_entered':
+        this.coordsEntered(value)
+        break
+      case 'address_pick':
+        this.addressPick(value)
+        break
       case 'streams_visible':
         this.streamsVisible = value !== false
         this.renderLegend()
@@ -243,4 +340,16 @@ export class Tool {
       this.coverageSent = false
     })
   }
+}
+
+/** Photon's first US place for a query (geocode._photon; the as-you-type list asks it too). */
+async function photon(q: string): Promise<[number, number] | null> {
+  const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lang=en&lat=39.5&lon=-98.35`
+  const res = await fetch(url)
+  if (res.status !== 200) return null
+  const j = await res.json() as { features?: { properties?: { countrycode?: string }, geometry: { coordinates: number[] } }[] }
+  for (const f of j.features ?? []) {
+    if (f.properties?.countrycode === 'US') return [Number(f.geometry.coordinates[1]), Number(f.geometry.coordinates[0])]
+  }
+  return null
 }
