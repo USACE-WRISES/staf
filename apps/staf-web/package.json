@@ -1,0 +1,25 @@
+{
+  "name": "staf-web",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "STAF (EASI, SFARI, DEEP) as a static web app: a TypeScript clone of the Shiny STAF app that reads STAF's published data by HTTP range. Plan: notes/2026-10-06_STAF_Static_Web_App.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "geotiff": "^3.0.5",
+    "hyparquet": "^1.31.3",
+    "hyparquet-compressors": "^1.1.2",
+    "proj4": "^2.22.0"
+  },
+  "devDependencies": {
+    "@types/proj4": "^2.5.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
+  }
+}
