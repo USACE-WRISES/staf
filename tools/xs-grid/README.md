@@ -3,7 +3,7 @@
 The builder places a section every 100 ft (30.48 m) on every NHDPlus HR stream, river, canal and ditch flowline in the lower 48. It samples each section from USGS's 3DEP tile files, scores it with EASI's cross-section code, and keeps two things:
 
 - **The archive**: every sampled transect, at full width and full resolution, stored in float32. It lives on a dedicated drive (`F:\staf-xs`, about 0.35 to 0.4 TB nationally). It lets the metrics be recomputed after a method change without reading the tiles again.
-- **The metrics grid**: per-section ER, BHR, bankfull width, depth and stage, flood-prone width, low-bank stage, top of bank, and the quality flags. It is 3 to 5 GB nationally and could later be published as its own rolling prerelease. At a click, an app takes the 9 grid sections inside the reach and computes the reach medians by today's rules.
+- **The metrics grid**: per-section ER, BHR, bankfull width, depth and stage, flood-prone width, low-bank stage, top of bank, and the quality flags. At a click, an app takes the 9 grid sections inside the reach and computes the reach medians by today's rules. It is published, region by region, as the rolling `staf-xs-current` prerelease (see "Publishing").
 
 Plan and decisions: `notes/2026-10-01_HR_Mirror/xs_section_grid_plan.md`.
 
@@ -18,6 +18,11 @@ python tools/xs-grid/run.py build 0710 --cells 3     # test run on three cells (
 python tools/xs-grid/run.py national --workers 5     # every lower-48 region not done yet
 python tools/xs-grid/run.py status                   # regions done, bytes, drive space
 python tools/xs-grid/run.py verify 0710 --sample 2000  # rederive from the archive, compare
+python tools/xs-grid/run.py release pack             # merged regions -> D:\Data\xs-grid\release
+python tools/xs-grid/run.py release verify --placement  # packed files against the archive drive's
+python tools/xs-grid/run.py release publish --yes    # upload what differs, release.json last
+python tools/xs-grid/run.py release sync --yes       # pack, then publish
+python tools/xs-grid/run.py release status --remote  # merged, packed, published
 ```
 
 Tests: `cd tools/xs-grid && python -m pytest tests`.
@@ -39,6 +44,35 @@ The owner starts and stops runs. There is no schedule, so nothing starts on its 
 - **Failed cells**: a cell whose sampling fails is tried once more later in the same run. If it fails again it stays to do, the region stays unmerged (`some cells failed; rerun to finish the region`), and the next start samples that cell and merges the region. A tile another process is renaming or deleting at that moment refuses to open ("file used by other process"); the read waits and tries again, up to 5 times.
 
 Stopping the process tree outright (Task Manager, `taskkill /T`) also loses nothing. Every file is written under a temporary name and renamed when complete, and the next start deletes half-written tile downloads.
+
+## Publishing (the rolling `staf-xs-current` prerelease)
+
+The grid goes out region by region while the build runs. `xsgrid/release.py` packs each merged region into release files in `D:\Data\xs-grid\release` (`XSGRID_RELEASE` overrides). It only reads the archive drive and never changes it. The release is **always a prerelease** (CLAUDE.md guardrail 8), and publishing needs the owner's go.
+
+- **Per region, three files**, read as they are by the apps and the static web app. Rows are sorted by flowline, and only `nhdplusid` carries row-group statistics, so a reader range-reads one row group.
+  - `xs-<vpu>.parquet`: every section's scoring numbers. These are status, DEM resolution, bank method, the quality flags, ER, BHR, bankfull depth and the two widths, stored as scaled integers. They are exact at the grid's precision: ratios and depth to 0.01, widths to 0.1.
+  - `xs-<vpu>-sections.parquet`: what drawing a section or pulling it again from USGS needs.
+    - the thalweg (float32, exact) and its sample index;
+    - the bankfull and low-bank stages above it (float32 m);
+    - the regional bankfull inputs;
+    - the half-width, the sample count, and the 3DEP project and tiles read.
+    - Position and direction are not stored: `sections.place` rebuilds them bit for bit from the bundle's `lines2_<vpu>`, which are byte-identical to the published bundle's.
+  - `xs-<vpu>-median.parquet`: one profile per HR segment, with its stages.
+    - The section is the segment's one nearest both medians (`geomorph.median_candidate`, the apps' drawing rule).
+    - The samples are the archive's own codes, copied unchanged.
+    - Segments with no scored section have none.
+- **`release.json`, written and uploaded last**: the grid's identity, the codes and column scales, each packed region's counts and assets, every asset's bytes and sha256, and the `pending` regions.
+- **Commands:**
+  - **`release pack`**: packs every merged region whose metrics changed (or the format did).
+  - **`release verify`**: decodes every packed file and compares it with the archive drive's.
+    - Numbers, thalwegs and stations must be exact, and stages exact at float32.
+    - Medians must be the drawing rule's choice, with codes identical.
+    - With `--placement` it also re-places every section from the bundle's lines and requires identical positions.
+  - **`release publish --yes`**: creates the release as a prerelease if it's missing, uploads only the assets whose sha256 differs from GitHub's, then `release.json`. Add `--dry-run` to list the uploads first.
+- **While the build runs:** `national ... --publish` packs and publishes each region as it merges.
+  - This happens in a separate process (`release sync --yes`, logging to `D:\Data\xs-grid\logs\release.log`), one round at a time. A failed round is logged and the next merge tries again.
+  - A pause waits for the round in hand, because it reads the archive drive.
+- **Size, measured on 0710** (1.1 M sections): 6.4 MB numbers, 12.8 MB sections and 31.6 MB medians (33,387 profiles). Nationally that comes to about 25 GB, most of it the median profiles.
 
 ## What a section is
 
@@ -82,3 +116,5 @@ Metrics derived from float32 differ from metrics derived from float64 on about 6
 | `D:\Data\xs-grid\sections\` | placed sections per region |
 | `D:\Data\xs-grid\tilecache\` | the 3DEP tiles in use, kept to about 100 GB (`--cache-gb`): the least recently used go first, except tiles used in the last 10 minutes, and the finished build empties it |
 | `D:\Data\xs-grid\logs\cells.jsonl` | one line per finished cell |
+| `D:\Data\xs-grid\release\` | the `staf-xs-current` files (`release.json`, `xs-<vpu>*.parquet`) |
+| `D:\Data\xs-grid\logs\release.log` | packing and publishing |
