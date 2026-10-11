@@ -234,8 +234,9 @@ export function zoomCue(nudge: number, pulse: boolean): string {
 /** The spinner while stream lines load (each tool's flow_loading). */
 export const flowLoading = '<div class="easi-flow-loading"><div class="easi-spinner"></div><span>Loading streams…</span></div>'
 
-/** The map key (each tool's _legend_ui, Identify, before a pick). */
-export function legend(rows: { color: string, label: string }[], note?: string, extra = ''): string {
+/** The map key (each tool's _legend_ui, Identify, before a pick): the title, a notice when the
+ * stream lines did not load (``alert``), the stream rows, a note, then ``extra`` (DEEP's region key). */
+export function legend(rows: { color: string, label: string }[], note?: string, extra = '', alert = ''): string {
   const body = rows.map((r) => `<div class="easi-legend-row">
     <span class="easi-legend-sw" style="--swatch-color:${r.color};"></span>
     <div>
@@ -243,7 +244,7 @@ export function legend(rows: { color: string, label: string }[], note?: string, 
     </div>
   </div>`).join('\n  ')
   return `<div class="easi-legend">
-  <div class="easi-legend-title">Map legend</div>
+  <div class="easi-legend-title">Map legend</div>${alert}
   ${body}${note ? `\n  <div class="easi-legend-note">${esc(note)}</div>` : ''}${extra}
 </div>`
 }

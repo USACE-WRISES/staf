@@ -56,6 +56,18 @@ export class DataSource {
     return this.manifest
   }
 
+  private loading: Promise<WebManifest> | null = null
+
+  /** The manifest, read once (a failed read is tried again on the next call). */
+  ready(): Promise<WebManifest> {
+    if (this.manifest) return Promise.resolve(this.manifest)
+    this.loading ??= this.load().catch((err) => {
+      this.loading = null
+      throw err
+    })
+    return this.loading
+  }
+
   entry(logical: string): ManifestFile {
     const e = this.manifest?.files[logical]
     if (!e) throw new Error(`not in the data manifest: ${logical}`)

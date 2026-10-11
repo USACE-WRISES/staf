@@ -10,6 +10,10 @@ at a desktop size, waits until it is idle, and writes to ``parity/<app>/``:
   ``<tool>-help.png``: screenshots with each open;
 - ``styles.json``: the page's stylesheets in order, with their media.
 
+``--view LAT,LON,ZOOM --name NAME`` moves each tool's map there first (the stream lines draw from zoom
+14), waits until the streams have settled, and writes ``<tool>-<NAME>.png`` and ``.html`` only;
+``--coverage`` also turns on StreamCat coverage in the Layers menu first.
+
 ``--app shiny`` reads the Shiny STAF app (``shiny run app.py --port 8040`` in apps/staf, or
 .claude/launch.json "staf") and also writes its dialogs to ``src/app/content/dialogs.json``, which
 the static app shows (About and Help are written in each tool's app.py). ``--app static`` reads the
@@ -17,6 +21,7 @@ static app's dev server (``npm run dev`` in apps/staf-web, port 5180). ``parity/
 compares the two.
 
     python apps/staf-web/parity/capture.py --app shiny|static [--url ...] [--width 1440 --height 900]
+        [--view 43.6858,-72.2367,16 --name mink16]
 
 The captures are gitignored (parity/shiny/, parity/static/); the dialogs are committed.
 """
@@ -95,12 +100,42 @@ CLOSE_JS = """(async () => {
 })()"""
 
 
+# the shown tool's Leaflet map: neither page names it, so catch it firing an event (as DEEP's
+# coverage.js does), then set its view
+VIEW_JS = """((lat, lon, zoom) => {
+  const tool = document.documentElement.getAttribute('data-staf-tool');
+  const cont = document.querySelector('.staf-section[data-staf-tool="' + tool + '"] .leaflet-container');
+  const L = window.L;
+  let map = null;
+  const fire = L.Evented.prototype.fire;
+  L.Evented.prototype.fire = function () { if (!map && this instanceof L.Map) map = this; return fire.apply(this, arguments); };
+  const r = cont.getBoundingClientRect();
+  cont.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+  L.Evented.prototype.fire = fire;
+  if (!map) return false;
+  map.setView([lat, lon], zoom, { animate: false });
+  return true;
+})"""
+
+# the stream lines drawn, none loading, Shiny idle: the count of drawn paths, or -1 while busy
+STREAMS_JS = """(() => {
+  const html = document.documentElement;
+  const tool = html.getAttribute('data-staf-tool');
+  const sec = document.querySelector('.staf-section[data-staf-tool="' + tool + '"]');
+  if (html.classList.contains('shiny-busy') || sec.querySelector('.easi-flow-loading')) return -1;
+  const imgs = [...sec.querySelectorAll('.leaflet-tile-container img')];
+  if (!imgs.every((i) => i.complete)) return -1;
+  return sec.querySelectorAll('.leaflet-staf-streams-pane path').length;
+})()"""
+
+
 def pretty(html: str) -> str:
     """One tag per line, so a diff points at the element that changed."""
     return html.replace("><", ">\n<")
 
 
-async def main(app: str, url: str, width: int, height: int) -> None:
+async def main(app: str, url: str, width: int, height: int, view=None, name: str = "",
+               coverage: bool = False) -> None:
     out = HERE / app
     out.mkdir(parents=True, exist_ok=True)
     prof = Path(tempfile.mkdtemp(prefix="staf-capture-"))
@@ -149,15 +184,35 @@ async def main(app: str, url: str, width: int, height: int) -> None:
                     if await js(IDLE_JS):
                         break
                 await asyncio.sleep(3.0)                # the legend dock and the last tiles
+                stem = f"{tool}-{name}" if view else tool
+                if coverage:
+                    await js("""(() => { const tool = document.documentElement.getAttribute('data-staf-tool');
+                      const box = document.querySelector('.staf-section[data-staf-tool="' + tool + '"] .staf-coverage-toggle');
+                      if (box && !box.checked) box.click(); return !!box; })()""")
+                    await asyncio.sleep(2.0)
+                if view:
+                    if not await js(f"{VIEW_JS}({view[0]}, {view[1]}, {view[2]})"):
+                        raise RuntimeError(f"{tool}: could not find the map")
+                    # settled: the same number of drawn paths, not loading, for 3 polls a second apart
+                    last, same, end = None, 0, time.monotonic() + 120
+                    while time.monotonic() < end and same < 3:
+                        await asyncio.sleep(1.0)
+                        count = await js(STREAMS_JS)
+                        same = same + 1 if count == last and count >= 0 else 0
+                        last = count
+                    await asyncio.sleep(1.0)
                 got = json.loads(await js(CAPTURE_JS))
                 styles = got["styles"]
-                (out / f"{tool}.html").write_text(
+                (out / f"{stem}.html").write_text(
                     f"<!-- {got['title']} : {url}/?tool={tool} at {width}x{height} -->\n"
                     + pretty(got["header"]) + "\n\n" + pretty(got["section"]) + "\n\n"
                     + "<!-- the map's top right corner -->\n" + pretty(got["corner"]) + "\n",
                     encoding="utf-8", newline="\n")
                 shot = await call("Page.captureScreenshot", format="png")
-                (out / f"{tool}.png").write_bytes(base64.b64decode(shot["data"]))
+                (out / f"{stem}.png").write_bytes(base64.b64decode(shot["data"]))
+                if view:
+                    print(f"{tool}: {got['title']} at {view}, {last} stream paths")
+                    continue
                 dialogs[tool] = {}
                 for which in ("about", "help"):
                     text = await js(f"{OPEN_JS}({json.dumps(which)})")
@@ -167,6 +222,8 @@ async def main(app: str, url: str, width: int, height: int) -> None:
                         (out / f"{tool}-{which}.png").write_bytes(base64.b64decode(shot["data"]))
                     await js(CLOSE_JS)
                 print(f"{tool}: {got['title']}")
+            if view:
+                return
             (out / "styles.json").write_text(json.dumps(styles, indent=1), encoding="utf-8", newline="\n")
             text = json.dumps(dialogs, indent=1, ensure_ascii=False) + "\n"
             (out / "dialogs.json").write_text(text, encoding="utf-8", newline="\n")
@@ -184,5 +241,9 @@ if __name__ == "__main__":
     ap.add_argument("--url", help="default: the app's local address")
     ap.add_argument("--width", type=int, default=1440)
     ap.add_argument("--height", type=int, default=900)
+    ap.add_argument("--view", help="LAT,LON,ZOOM to move each map to before the capture")
+    ap.add_argument("--name", default="view", help="the captures' suffix with --view")
+    ap.add_argument("--coverage", action="store_true", help="turn on StreamCat coverage first (with --view)")
     a = ap.parse_args()
-    asyncio.run(main(a.app, (a.url or URLS[a.app]).rstrip("/"), a.width, a.height))
+    v = tuple(float(x) for x in a.view.split(",")) if a.view else None
+    asyncio.run(main(a.app, (a.url or URLS[a.app]).rstrip("/"), a.width, a.height, v, a.name, a.coverage))

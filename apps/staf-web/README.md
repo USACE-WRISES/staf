@@ -6,10 +6,13 @@ Shiny apps are untouched. Plan and hand-off: `notes/2026-10-06_STAF_Static_Web_A
 
 Built so far:
 - Phase 1: the data layer and the cross-section pulls, with a proof page (`proof.html`).
-- Phase 3, under way: the page itself (`index.html`), the Shiny STAF app's header and EASI | SFARI | DEEP
-  switch, each tool's Identify card, About and Help, and the map (USGS basemaps, NHD overlay, Layers,
-  legend, scale, zoom cue, readout), with DEEP's assessment regions. Next: the stream lines from zoom
-  14, then the click's snap.
+- Phase 3, under way:
+  - the page itself (`index.html`): the Shiny STAF app's header and EASI | SFARI | DEEP switch, each
+    tool's Identify card, About and Help;
+  - the map: USGS basemaps, NHD overlay, Layers, legend, scale, zoom cue, readout, and DEEP's
+    assessment regions;
+  - the stream lines from zoom 14, split by the click rule, with StreamCat coverage.
+  - Next: the click's snap.
 
 ## On the STAF website, kept apart
 
@@ -95,6 +98,32 @@ downloads (no CORS header). `web-manifest.json` maps each logical file to a cont
   which isn't rate-limited, so a file costs one rate-limited request an hour.
 - `src/data/parquet.ts` and `src/data/lines.ts` read parquet footers, row groups and flowlines with
   hyparquet.
+
+## Stream lines
+
+From zoom 14 each tool draws the streams of the view as the Shiny tools do (`src/app/streams.ts`):
+
+- **When to fetch:** once the view settles, a padded box around its centre (`src/streams/viewport.ts`)
+  is fetched if the view has left the last one. The Shiny app waits 0.5 s for the view to settle; the
+  static app waits 0.25 s.
+- **Reading** (`src/streams/network.ts`): the box's NHDPlus HR and NHDPlus V2 lines are read from the
+  bundle by range, as `site_engine/_hrslim/reader2.py` does. The Shiny SFARI and DEEP ask the USGS
+  fabric service for the V2 lines; the static app reads the bundle's, as EASI does.
+- **Splitting** (`src/streams/display.ts`, `geom.ts`): the HR lines are split by the click rule against
+  the V2 lines (150 ft in EPSG:5070). This is `network_display.py` step for step, with GEOS's
+  arithmetic (`geom.ts`) and PROJ's Conus Albers both ways (`src/xs/projExact.ts`).
+- **Checked against the Python:**
+  - `parity/make_stream_fixtures.py` writes three views' inputs and displays from EASI's own code
+    (`tests/fixtures/streams_ref.json`).
+  - `tests/streams.test.ts` holds the split to them feature for feature and coordinate for
+    coordinate.
+  - `tests/network.test.ts` holds the reader to them when the local layout is there.
+  - `parity/capture.py --view 43.6858,-72.2367,16 [--coverage]` with `compare.py`: pixel-identical to
+    the Shiny tools, coverage on and off (2026-10-11).
+- **Speed:** a new region at zoom 14 drew in 0.8 to 1.0 s from the local layout, settle included. The
+  split itself takes about 26 ms for 857 HR lines.
+- **A failed read** is asked again after 15, 30 and 60 s, then the legend offers Try again, as the
+  Shiny tools do when the USGS service doesn't answer.
 
 ## Cross-sections
 
