@@ -21,6 +21,8 @@ import hashlib
 import json
 import os
 import shutil
+import subprocess
+import sys
 import threading
 import time
 import zlib
@@ -370,6 +372,59 @@ def stop_path() -> Path:
     return config.WORK / "STOP"
 
 
+# ------------------------------------------------------------------ publishing as regions merge
+class Publisher:
+    """With ``--publish``: packs and publishes the merged regions to ``staf-xs-current`` in a separate
+    process (``run.py release sync --yes``, logging to ``logs/release.log``), one round at a time; a
+    merge while a round runs asks for one more. A failed round is logged and the next merge tries
+    again; nothing it does can stop the build."""
+
+    def __init__(self, enabled: bool):
+        self.enabled = enabled
+        self.proc = None
+        self.again = False
+
+    def command(self) -> list:
+        return [sys.executable, str(Path(__file__).resolve().parents[1] / "run.py"), "release", "sync", "--yes",
+                "--log", str(config.WORK / "logs" / "release.log")]
+
+    def kick(self) -> None:
+        if not self.enabled:
+            return
+        if self.proc is not None and self.proc.poll() is None:
+            self.again = True
+            return
+        self.again = False
+        try:
+            self.proc = subprocess.Popen(self.command(), cwd=str(config.REPO), stdin=subprocess.DEVNULL,
+                                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                         creationflags=0x08000000 if os.name == "nt" else 0)   # no window
+            log("publishing merged regions to staf-xs-current (see logs/release.log)")
+        except OSError as exc:
+            self.proc = None
+            log(f"could not start the release step: {exc}")
+
+    def poll(self) -> None:
+        if self.proc is None or self.proc.poll() is None:
+            return
+        code, self.proc = self.proc.returncode, None
+        if code:
+            log(f"the release step ended with code {code} (see logs/release.log); the next merge tries again")
+        if self.again:
+            self.kick()
+
+    def wait(self) -> None:
+        """Before the run ends: let the round in hand finish (it reads the archive drive)."""
+        if self.proc is None and not self.again:
+            return
+        log("waiting for the release step to finish before stopping")
+        while self.proc is not None or self.again:
+            if self.proc is None:
+                self.kick()
+            time.sleep(5.0)
+            self.poll()
+
+
 # ------------------------------------------------------------------ the driver
 class Cell:
     __slots__ = ("vpu", "cell", "span", "cands", "urls", "fetched")
@@ -380,13 +435,14 @@ class Cell:
 
 
 def run(vpus: list, *, samplers: int = 3, scorers: int = 7, priority_low: bool = True, cell_limit=None,
-        cache_gb: float = 80.0, ahead: int = 48, fetch_threads: int = 48, window=None) -> int:
+        cache_gb: float = 80.0, ahead: int = 48, fetch_threads: int = 48, window=None, publish: bool = False) -> int:
     """Build every region in ``vpus`` that is not done (``cell_limit``: a test run of that many
     cells per region, left unmerged). With ``window`` (minutes after midnight, start and end) the
     run starts only inside it and pauses at its end; ``run.py stop`` (the STOP file) pauses it any
     time. A pause finishes the cells in hand, so the next run picks up exactly there. A cell
     whose sampling fails is tried once more later in the run; if it fails again it stays to do,
-    and its region merges at the next run."""
+    and its region merges at the next run. With ``publish`` each merged region is packed and
+    published to ``staf-xs-current`` (:class:`Publisher`)."""
     if window is not None and not in_window(window):
         log(f"outside the run window {fmt_window(window)}; not starting")
         return 0
@@ -402,12 +458,15 @@ def run(vpus: list, *, samplers: int = 3, scorers: int = 7, priority_low: bool =
         return 0
     try:
         return _run(vpus, samplers=samplers, scorers=scorers, priority_low=priority_low, cell_limit=cell_limit,
-                    cache_gb=cache_gb, ahead=ahead, fetch_threads=fetch_threads, window=window)
+                    cache_gb=cache_gb, ahead=ahead, fetch_threads=fetch_threads, window=window,
+                    publisher=Publisher(publish and cell_limit is None))
     finally:
         release_lock()
 
 
-def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, ahead, fetch_threads, window) -> int:
+def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, ahead, fetch_threads, window,
+         publisher=None) -> int:
+    publisher = publisher or Publisher(False)
     from .sample import Catalogs, Section, candidates, first_candidate_urls, transect_boxes
     try:
         stop_path().unlink()
@@ -610,9 +669,11 @@ def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, a
                         f"({rec['archive_bytes'] / max(rec['sections'], 1):.0f} B/section), tiers {rec['tiers']}, "
                         f"verified {rec['verified']} (reference used {rec['reference_used']})")
                     tables.pop(vpu, None)
+                    publisher.kick()
                 elif not stopping:
                     log(f"[{vpu}] some cells failed; rerun to finish the region")
                 ended.remove(vpu)
+            publisher.poll()
             if streak[0] >= 20:
                 log("STOPPING: 20 cells failed in a row (is the archive drive connected and writable?)")
                 break
@@ -625,6 +686,7 @@ def _run(vpus: list, *, samplers, scorers, priority_low, cell_limit, cache_gb, a
                     f"{tilecache.STATS['failed']} range requests asked again")
                 got_at_report = tilecache.STATS["bytes"]
                 last_report = time.time()
+        publisher.wait()
         if stopping:
             log(f"PAUSED at {stopping}: sampled {n_sampled} cells ({sec_sampled:,} sections) and scored {n_scored} "
                 f"this run; the next run picks up here")

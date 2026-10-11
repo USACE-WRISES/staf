@@ -7,11 +7,17 @@
     python tools/xs-grid/run.py stop                    # pause a run (it finishes the cells in hand)
     python tools/xs-grid/run.py status                  # running or paused, regions done, drive space
     python tools/xs-grid/run.py verify 0710 --sample 2000  # rederive from the archive, compare
+    python tools/xs-grid/run.py release pack            # merged regions -> release files (D:\\Data\\xs-grid\\release)
+    python tools/xs-grid/run.py release verify          # the packed files against the archive drive's
+    python tools/xs-grid/run.py release publish --yes   # upload what differs to staf-xs-current, release.json last
+    python tools/xs-grid/run.py release sync --yes      # pack, then publish
+    python tools/xs-grid/run.py release status --remote
 
 A run resumes where the last one paused. ``--log FILE`` appends the output to a file (a run
 started without a console needs it); ``--window 20:00-07:00`` limits a run to those hours
-(it pauses itself at the end). Runs below normal priority unless ``--full-priority``. Paths:
-``xsgrid/config.py``.
+(it pauses itself at the end); ``--publish`` packs and publishes each region as it merges (a
+separate process, logging to ``logs/release.log``). Runs below normal priority unless
+``--full-priority``. Paths: ``xsgrid/config.py``.
 """
 from __future__ import annotations
 
@@ -48,7 +54,7 @@ def _window(args):
 
 def cmd_build(args) -> int:
     return build.run(args.vpus, samplers=args.samplers, scorers=args.scorers, priority_low=not args.full_priority,
-                     cell_limit=args.cells, cache_gb=args.cache_gb, window=_window(args))
+                     cell_limit=args.cells, cache_gb=args.cache_gb, window=_window(args), publish=args.publish)
 
 
 def cmd_national(args) -> int:
@@ -59,7 +65,56 @@ def cmd_national(args) -> int:
         first = [v for v in args.first.split(",") if v in vpus]
         vpus = first + [v for v in vpus if v not in first]
     return build.run(vpus, samplers=args.samplers, scorers=args.scorers, priority_low=not args.full_priority,
-                     cache_gb=args.cache_gb, window=_window(args))
+                     cache_gb=args.cache_gb, window=_window(args), publish=args.publish)
+
+
+def cmd_release(args) -> int:
+    """The rolling ``staf-xs-current`` prerelease (``xsgrid/release.py``)."""
+    from xsgrid import release
+    out = Path(args.out) if args.out else release.OUT
+    log = build.log
+    if args.action == "status":
+        release.status(out, remote=args.remote, log=log)
+        return 0
+    if args.action == "verify":
+        vpus = args.vpus or sorted((release.read_manifest(out).get("regions") or {}).keys())
+        bad = 0
+        for vpu in vpus:
+            try:
+                got = release.verify_region(vpu, out)
+                log(f"[{vpu}] verified {got['sections']:,} sections and {got['medians']:,} median profiles")
+                if args.placement:
+                    log(f"[{vpu}] placed {release.verify_placement(vpu):,} sections again: positions identical")
+            except ValueError as exc:
+                bad += 1
+                log(f"[{vpu}] VERIFY FAILED: {exc}")
+        log(f"verified {len(vpus) - bad} of {len(vpus)} regions")
+        return 1 if bad else 0
+    if args.action in ("pack", "sync"):
+        if not release.lock(out):
+            log(f"another release step is running ({out / 'release.lock'}); not starting")
+            return 0
+        try:
+            got = release.pack(args.vpus or None, out, force=args.force, log=log)
+            log(f"packed {len(got['packed'])} regions, {len(got['kept'])} unchanged"
+                + (f", {len(got['failed'])} FAILED ({', '.join(got['failed'])})" if got["failed"] else ""))
+            code = 1 if got["failed"] else 0
+            if args.action == "pack":
+                return code
+            return _publish(release, out, args, log) or code
+        finally:
+            release.unlock(out)
+    if args.action == "publish":
+        return _publish(release, out, args, log)
+    return 2
+
+
+def _publish(release, out: Path, args, log) -> int:
+    if not (args.yes or args.dry_run):
+        log("publishing needs --yes (the owner's go), or --dry-run to list the uploads")
+        return 2
+    release.publish(out, dry_run=args.dry_run, log=log)
+    return 0
 
 
 def cmd_stop(args) -> int:
@@ -171,7 +226,21 @@ def main(argv=None) -> int:
         p.add_argument("--full-priority", action="store_true")
         p.add_argument("--window", default=None, help="run only between these hours, e.g. 20:00-07:00")
         p.add_argument("--log", default=None, help="append the output to this file")
+        p.add_argument("--publish", action="store_true",
+                       help="pack and publish each region to staf-xs-current as it merges (the owner's go)")
         p.set_defaults(fn=fn)
+    p = sub.add_parser("release")
+    p.add_argument("action", choices=("pack", "verify", "publish", "sync", "status"))
+    p.add_argument("vpus", nargs="*")
+    p.add_argument("--out", default=None, help="the release folder (default XSGRID_RELEASE or WORK/release)")
+    p.add_argument("--force", action="store_true", help="pack again even when nothing changed")
+    p.add_argument("--yes", action="store_true", help="publish (the owner's go)")
+    p.add_argument("--dry-run", action="store_true", help="list the uploads without making them")
+    p.add_argument("--remote", action="store_true", help="status: compare with the published release")
+    p.add_argument("--placement", action="store_true",
+                   help="verify: also place the sections again from the bundle's lines (slower)")
+    p.add_argument("--log", default=None, help="append the output to this file")
+    p.set_defaults(fn=cmd_release)
     p = sub.add_parser("stop")
     p.set_defaults(fn=cmd_stop)
     p = sub.add_parser("status")
