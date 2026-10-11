@@ -48,7 +48,11 @@ export const SCRIPTS: Item[] = [
   { path: 'js/staf/geocode-autocomplete.js' },
   { path: 'js/staf/legend-dock.js' },
   { path: 'js/staf/tooltip.js' },
+  { path: 'js/staf/scenarios.js' },
+  { path: 'js/staf/metric-rows.js' },
   { path: 'js/staf/coord-entry.js' },
+  { path: 'js/sfari/field-review.js' },
+  { path: 'js/deep/measure.js' },
   { path: 'js/deep/coverage.js' },
 ]
 

@@ -277,15 +277,19 @@ export class Dataset {
   }
 
   /** The breadth-first upstream walk, the budget checked before every level (Dataset2._walk); members
-   * maps each region to the rows it holds, in the order they joined. */
-  async walk(nhdplusid: number, maxReaches: number, maxHops: number,
-    onLevel?: (hops: number, reaches: number) => void): Promise<{ tree: Walk, members: Map<string, number[]> }> {
+   * maps each region to the rows it holds, in the order they joined, and levels to each row's hops
+   * above the outlet. */
+  async walk(nhdplusid: number, maxReaches: number, maxHops: number, onLevel?: (hops: number, reaches: number) => void):
+    Promise<{ tree: Walk, members: Map<string, number[]>, levels: Map<string, number[]> }> {
     const found = await this.find('by_id', [nhdplusid])
-    if (!found.length) return { tree: { status: 'failed', reason: 'reach not found', nReaches: 0, nHops: 0 }, members: new Map() }
+    if (!found.length) {
+      return { tree: { status: 'failed', reason: 'reach not found', nReaches: 0, nHops: 0 }, members: new Map(), levels: new Map() }
+    }
     const { region, rows } = found[0]
     const links = await this.links()
     const tree = new Set<number>([nhdplusid])
     const members = new Map<string, number[]>([[region.vpu, [rows[0]]]])
+    const levels = new Map<string, number[]>([[region.vpu, [0]]])
     let frontier: [RegionMeta, number][] = [[region, rows[0]]]
     let hops = 0
     while (frontier.length) {
@@ -296,6 +300,7 @@ export class Dataset {
             reason: `watershed exceeds the engine budget (${tree.size} reaches, ${hops} hops; the budget is ${maxReaches} reaches and ${maxHops} hops)`,
           },
           members,
+          levels,
         }
       }
       const next: [RegionMeta, number][] = []
@@ -324,6 +329,9 @@ export class Dataset {
           const list = members.get(preg.vpu)
           if (list) list.push(prow)
           else members.set(preg.vpu, [prow])
+          const lv = levels.get(preg.vpu)
+          if (lv) lv.push(hops + 1)
+          else levels.set(preg.vpu, [hops + 1])
           if (pt.hs[prow]) next.push([preg, prow])
         }
       }
@@ -331,7 +339,7 @@ export class Dataset {
       hops += 1
       onLevel?.(hops, tree.size)
     }
-    return { tree: { status: 'ok', nReaches: tree.size, nHops: hops, ids: [...tree].sort((a, b) => a - b) }, members }
+    return { tree: { status: 'ok', nReaches: tree.size, nHops: hops, ids: [...tree].sort((a, b) => a - b) }, members, levels }
   }
 
   /** The walk, the outline of the tree's catchments assembled from their shared borders and its area

@@ -1,0 +1,202 @@
+[
+  {
+    "id": "catchment-hydrology",
+    "name": "Catchment hydrology",
+    "category": "Hydrology",
+    "order": 0,
+    "function_statement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
+    "short_description": "Land uses alter water quantity and quality delivered to the stream.",
+    "long_description": "Represents watershed-scale drivers that change runoff, infiltration, and pollutant delivery. It reflects how land cover and management shape the volume and timing of water entering the stream network.",
+    "assessment_context": "Represents watershed-scale drivers that change runoff, infiltration, and pollutant delivery. It reflects how land cover and management shape the volume and timing of water entering the stream network."
+  },
+  {
+    "id": "surface-water-storage",
+    "name": "Surface water storage",
+    "category": "Hydrology",
+    "order": 1,
+    "function_statement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+    "short_description": "Natural or artificial storage attenuates flows and increases residence time.",
+    "long_description": "Represents the capacity of wetlands, ponds, and floodplain features to store water. Storage moderates peak flows and supports baseflow by slowing runoff.",
+    "assessment_context": "Represents the capacity of wetlands, ponds, and floodplain features to store water. Storage moderates peak flows and supports baseflow by slowing runoff."
+  },
+  {
+    "id": "reach-inflow",
+    "name": "Reach inflow",
+    "category": "Hydrology",
+    "order": 2,
+    "function_statement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+    "short_description": "Local inputs alter magnitude, timing, and quality of flow.",
+    "long_description": "Captures tributaries, ditches, pipes, and other local inflows that change discharge or water quality at the reach scale.",
+    "assessment_context": "Captures tributaries, ditches, pipes, and other local inflows that change discharge or water quality at the reach scale."
+  },
+  {
+    "id": "streamflow-regime",
+    "name": "Streamflow regime",
+    "category": "Hydrology",
+    "order": 3,
+    "function_statement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
+    "short_description": "Characteristic flow pattern that shapes habitat and transport.",
+    "long_description": "Represents the timing, magnitude, frequency, and duration of flow events that structure physical and ecological processes.",
+    "assessment_context": "Represents the timing, magnitude, frequency, and duration of flow events that structure physical and ecological processes."
+  },
+  {
+    "id": "low-flow-baseflow-dynamics",
+    "name": "Low flow and baseflow dynamics",
+    "category": "Hydraulics",
+    "order": 4,
+    "function_statement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+    "short_description": "Maintains wetted habitat and moderates conditions during low water.",
+    "long_description": "Represents how low flows sustain habitat, temperature moderation, and water quality during dry periods.",
+    "assessment_context": "Represents how low flows sustain habitat, temperature moderation, and water quality during dry periods."
+  },
+  {
+    "id": "high-flow-dynamics",
+    "name": "High flow dynamics",
+    "category": "Hydraulics",
+    "order": 5,
+    "function_statement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+    "short_description": "Drives erosion and channel maintenance during peaks.",
+    "long_description": "Represents the energy of high flows that mobilize sediment, shape channels, and connect to floodplains.",
+    "assessment_context": "Represents the energy of high flows that mobilize sediment, shape channels, and connect to floodplains."
+  },
+  {
+    "id": "floodplain-connectivity",
+    "name": "Floodplain connectivity",
+    "category": "Hydraulics",
+    "order": 6,
+    "function_statement": "Frequent overbank flows reduce flood peaks, support riparian vegetation, create off-channel refugia, and extend nutrient processing time.",
+    "short_description": "Lateral exchange supports nutrient cycling and habitat.",
+    "long_description": "Represents how often and how effectively the channel connects with its floodplain to exchange water, sediment, and organic matter.",
+    "assessment_context": "Represents how often and how effectively the channel connects with its floodplain to exchange water, sediment, and organic matter."
+  },
+  {
+    "id": "hyporheic-connectivity",
+    "name": "Hyporheic connectivity",
+    "category": "Hydraulics",
+    "order": 7,
+    "function_statement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+    "short_description": "Surface-subsurface exchange supports temperature and nutrient regulation.",
+    "long_description": "Represents exchange between surface water and shallow subsurface flow paths that influence temperature, nutrients, and habitat.",
+    "assessment_context": "Represents exchange between surface water and shallow subsurface flow paths that influence temperature, nutrients, and habitat."
+  },
+  {
+    "id": "channel-evolution",
+    "name": "Channel evolution",
+    "category": "Geomorphology",
+    "order": 8,
+    "function_statement": "Long-term changes in channel size and slope maintain dynamic equilibrium and diverse habitats while interacting with the floodplain.",
+    "short_description": "Changes in channel dimensions and slope reflecting adjustment.",
+    "long_description": "Represents the stage of channel adjustment driven by legacy impacts, altered flows, or sediment imbalance.",
+    "assessment_context": "Represents the stage of channel adjustment driven by legacy impacts, altered flows, or sediment imbalance."
+  },
+  {
+    "id": "channel-floodplain-dynamics",
+    "name": "Channel and floodplain dynamics",
+    "category": "Geomorphology",
+    "order": 9,
+    "function_statement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
+    "short_description": "Bank processes and planform dynamics that affect complexity.",
+    "long_description": "Represents lateral migration, bar formation, and floodplain building that create channel complexity.",
+    "assessment_context": "Represents lateral migration, bar formation, and floodplain building that create channel complexity."
+  },
+  {
+    "id": "sediment-continuity",
+    "name": "Sediment continuity",
+    "category": "Geomorphology",
+    "order": 10,
+    "function_statement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
+    "short_description": "Balanced sediment supply and transport maintaining form and habitat.",
+    "long_description": "Represents whether sediment supply, transport, and storage are in balance for the reach and watershed.",
+    "assessment_context": "Represents whether sediment supply, transport, and storage are in balance for the reach and watershed."
+  },
+  {
+    "id": "bed-composition-bedform-dynamics",
+    "name": "Bed composition and large wood",
+    "category": "Geomorphology",
+    "order": 11,
+    "function_statement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
+    "short_description": "Substrate and bedforms (and wood effects) supporting habitat and exchange.",
+    "long_description": "Represents the size, sorting, and structure of bed materials and bedforms that support habitat and hyporheic exchange.",
+    "assessment_context": "Represents the size, sorting, and structure of bed materials and bedforms that support habitat and hyporheic exchange."
+  },
+  {
+    "id": "light-thermal-regime",
+    "name": "Light & thermal regime",
+    "category": "Physicochemistry",
+    "order": 12,
+    "function_statement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+    "short_description": "Regulates temperature and energy inputs shaping chemistry.",
+    "long_description": "Represents shading, solar input, and thermal buffering that influence water temperature and ecosystem metabolism.",
+    "assessment_context": "Represents shading, solar input, and thermal buffering that influence water temperature and ecosystem metabolism."
+  },
+  {
+    "id": "carbon-processing",
+    "name": "Carbon processing",
+    "category": "Physicochemistry",
+    "order": 13,
+    "function_statement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+    "short_description": "Organic matter dynamics supporting food webs and metabolism.",
+    "long_description": "Represents inputs, storage, and breakdown of organic matter that drive ecosystem respiration and production.",
+    "assessment_context": "Represents inputs, storage, and breakdown of organic matter that drive ecosystem respiration and production."
+  },
+  {
+    "id": "nutrient-cycling",
+    "name": "Nutrient cycling",
+    "category": "Physicochemistry",
+    "order": 14,
+    "function_statement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+    "short_description": "N and P transformations controlling productivity and water quality.",
+    "long_description": "Represents uptake, retention, and transformation of nutrients within the stream corridor.",
+    "assessment_context": "Represents uptake, retention, and transformation of nutrients within the stream corridor."
+  },
+  {
+    "id": "water-soil-quality",
+    "name": "Water & soil quality",
+    "category": "Physicochemistry",
+    "order": 15,
+    "function_statement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+    "short_description": "Contaminants and constituents influencing chemical condition.",
+    "long_description": "Represents chemical stressors in water and soils that affect aquatic life and system health.",
+    "assessment_context": "Represents chemical stressors in water and soils that affect aquatic life and system health."
+  },
+  {
+    "id": "habitat-provision",
+    "name": "Habitat provision",
+    "category": "Biology",
+    "order": 16,
+    "function_statement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+    "short_description": "Physical habitat diversity supporting life stages and taxa.",
+    "long_description": "Represents the variety and quality of physical habitats that support organisms across life stages.",
+    "assessment_context": "Represents the variety and quality of physical habitats that support organisms across life stages."
+  },
+  {
+    "id": "population-support",
+    "name": "Population support",
+    "category": "Biology",
+    "order": 17,
+    "function_statement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+    "short_description": "Survival, reproduction, and movement of key taxa.",
+    "long_description": "Represents the capacity of the reach to sustain populations, including access to spawning and rearing areas.",
+    "assessment_context": "Represents the capacity of the reach to sustain populations, including access to spawning and rearing areas."
+  },
+  {
+    "id": "community-dynamics",
+    "name": "Community dynamics",
+    "category": "Biology",
+    "order": 18,
+    "function_statement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+    "short_description": "Balanced assemblages of native taxa and resilience.",
+    "long_description": "Represents community composition, diversity, and invasive pressure within the reach.",
+    "assessment_context": "Represents community composition, diversity, and invasive pressure within the reach."
+  },
+  {
+    "id": "watershed-connectivity",
+    "name": "Watershed connectivity",
+    "category": "Biology",
+    "order": 19,
+    "function_statement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+    "short_description": "Longitudinal and lateral connectivity enabling recovery.",
+    "long_description": "Represents connectivity that enables recolonization, gene flow, and recovery after disturbance.",
+    "assessment_context": "Represents connectivity that enables recolonization, gene flow, and recovery after disturbance."
+  }
+]

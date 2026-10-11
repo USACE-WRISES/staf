@@ -1,0 +1,1423 @@
+{
+ "bars": [
+  {
+   "name": "one",
+   "set": {
+    "version": 1,
+    "active": "existing",
+    "next": 2,
+    "items": [
+     {
+      "id": "existing",
+      "name": "Existing Conditions",
+      "description": ""
+     }
+    ]
+   },
+   "html": "<div class=\"staf-scen solo\">\n  <details class=\"staf-scen-chip\">\n    <summary class=\"staf-scen-sum\">\n      <span class=\"staf-scen-lab\">Scenario</span><span class=\"staf-scen-name\">Existing Conditions</span>\n    </summary>\n    <div class=\"staf-scen-menu\" role=\"menu\">\n      <button type=\"button\" data-sc-action=\"select\" data-sc-id=\"existing\" role=\"menuitemradio\" aria-checked=\"true\" class=\"staf-scen-item active\"><span class=\"staf-scen-item-name\">Existing Conditions</span></button>\n    </div>\n  </details>\n  <div class=\"staf-scen-actions\">\n    <button type=\"button\" data-sc-action=\"new\" class=\"staf-scen-link\" title=\"Add a scenario\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M8 3v10M3 8h10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\"/></svg><span>Add</span></button><button type=\"button\" data-sc-action=\"edit\" class=\"staf-scen-link\" title=\"Describe Existing Conditions\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M11.2 2.6l2.2 2.2-7.7 7.7-2.9.7.7-2.9z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/></svg><span>Edit</span></button>\n  </div>\n</div>"
+  },
+  {
+   "name": "two",
+   "set": {
+    "version": 1,
+    "active": "s2",
+    "next": 3,
+    "items": [
+     {
+      "id": "existing",
+      "name": "Existing Conditions",
+      "description": "As surveyed in May."
+     },
+     {
+      "id": "s2",
+      "name": "Restored buffer",
+      "description": "Plant 100 ft of riparian forest.",
+      "state": {}
+     }
+    ]
+   },
+   "html": "<div class=\"staf-scen\">\n  <details class=\"staf-scen-chip alt\">\n    <summary class=\"staf-scen-sum\" title=\"Plant 100 ft of riparian forest.\">\n      <span class=\"staf-scen-lab\">Scenario</span><span class=\"staf-scen-name\">Restored buffer</span>\n    </summary>\n    <div class=\"staf-scen-menu\" role=\"menu\">\n      <button type=\"button\" data-sc-action=\"select\" data-sc-id=\"existing\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\" title=\"As surveyed in May.\"><span class=\"staf-scen-item-name\">Existing Conditions</span><span class=\"staf-scen-item-desc\">As surveyed in May.</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s2\" role=\"menuitemradio\" aria-checked=\"true\" class=\"staf-scen-item active\" title=\"Plant 100 ft of riparian forest.\"><span class=\"staf-scen-item-name\">Restored buffer</span><span class=\"staf-scen-item-desc\">Plant 100 ft of riparian forest.</span></button>\n    </div>\n  </details>\n  <div class=\"staf-scen-actions\">\n    <button type=\"button\" data-sc-action=\"new\" class=\"staf-scen-link\" title=\"Add a scenario\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M8 3v10M3 8h10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\"/></svg><span>Add</span></button><button type=\"button\" data-sc-action=\"edit\" class=\"staf-scen-link\" title=\"Rename or describe\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M11.2 2.6l2.2 2.2-7.7 7.7-2.9.7.7-2.9z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/></svg><span>Edit</span></button><button type=\"button\" data-sc-action=\"compare\" class=\"staf-scen-link\" title=\"Compare scenarios\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"2\" y=\"3\" width=\"5\" height=\"10\" rx=\"1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\"/><rect x=\"9\" y=\"3\" width=\"5\" height=\"10\" rx=\"1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\"/></svg><span>Compare</span></button>\n  </div>\n</div>"
+  },
+  {
+   "name": "three",
+   "set": {
+    "version": 1,
+    "active": "existing",
+    "next": 4,
+    "items": [
+     {
+      "id": "existing",
+      "name": "Existing Conditions",
+      "description": ""
+     },
+     {
+      "id": "s2",
+      "name": "A & B <option>",
+      "description": "",
+      "state": {}
+     },
+     {
+      "id": "s3",
+      "name": "Alternative 2",
+      "description": "",
+      "state": {}
+     }
+    ]
+   },
+   "html": "<div class=\"staf-scen\">\n  <details class=\"staf-scen-chip\">\n    <summary class=\"staf-scen-sum\">\n      <span class=\"staf-scen-lab\">Scenario</span><span class=\"staf-scen-name\">Existing Conditions</span>\n    </summary>\n    <div class=\"staf-scen-menu\" role=\"menu\">\n      <button type=\"button\" data-sc-action=\"select\" data-sc-id=\"existing\" role=\"menuitemradio\" aria-checked=\"true\" class=\"staf-scen-item active\"><span class=\"staf-scen-item-name\">Existing Conditions</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s2\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\"><span class=\"staf-scen-item-name\">A &amp; B &lt;option&gt;</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s3\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\"><span class=\"staf-scen-item-name\">Alternative 2</span></button>\n    </div>\n  </details>\n  <div class=\"staf-scen-actions\">\n    <button type=\"button\" data-sc-action=\"new\" class=\"staf-scen-link\" title=\"Add a scenario\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M8 3v10M3 8h10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\"/></svg><span>Add</span></button><button type=\"button\" data-sc-action=\"edit\" class=\"staf-scen-link\" title=\"Describe Existing Conditions\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M11.2 2.6l2.2 2.2-7.7 7.7-2.9.7.7-2.9z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/></svg><span>Edit</span></button><button type=\"button\" data-sc-action=\"compare\" class=\"staf-scen-link\" title=\"Compare scenarios\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"2\" y=\"3\" width=\"5\" height=\"10\" rx=\"1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\"/><rect x=\"9\" y=\"3\" width=\"5\" height=\"10\" rx=\"1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\"/></svg><span>Compare</span></button>\n  </div>\n</div>"
+  },
+  {
+   "name": "full",
+   "set": {
+    "version": 1,
+    "active": "s10",
+    "next": 11,
+    "items": [
+     {
+      "id": "existing",
+      "name": "Existing Conditions",
+      "description": ""
+     },
+     {
+      "id": "s2",
+      "name": "Alt 0",
+      "description": "",
+      "state": {}
+     },
+     {
+      "id": "s3",
+      "name": "Alt 1",
+      "description": "",
+      "state": {}
+     },
+     {
+      "id": "s4",
+      "name": "Alt 2",
+      "description": "",
+      "state": {}
+     },
+     {
+      "id": "s5",
+      "name": "Alt 3",
+      "description": "",
+      "state": {}
+     },
+     {
+      "id": "s6",
+      "name": "Alt 4",
+      "description": "",
+      "state": {}
+     },
+     {
+      "id": "s7",
+      "name": "Alt 5",
+      "description": "",
+      "state": {}
+     },
+     {
+      "id": "s8",
+      "name": "Alt 6",
+      "description": "",
+      "state": {}
+     },
+     {
+      "id": "s9",
+      "name": "Alt 7",
+      "description": "",
+      "state": {}
+     },
+     {
+      "id": "s10",
+      "name": "Alt 8",
+      "description": "",
+      "state": {}
+     }
+    ]
+   },
+   "html": "<div class=\"staf-scen\">\n  <details class=\"staf-scen-chip alt\">\n    <summary class=\"staf-scen-sum\">\n      <span class=\"staf-scen-lab\">Scenario</span><span class=\"staf-scen-name\">Alt 8</span>\n    </summary>\n    <div class=\"staf-scen-menu\" role=\"menu\">\n      <button type=\"button\" data-sc-action=\"select\" data-sc-id=\"existing\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\"><span class=\"staf-scen-item-name\">Existing Conditions</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s2\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\"><span class=\"staf-scen-item-name\">Alt 0</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s3\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\"><span class=\"staf-scen-item-name\">Alt 1</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s4\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\"><span class=\"staf-scen-item-name\">Alt 2</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s5\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\"><span class=\"staf-scen-item-name\">Alt 3</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s6\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\"><span class=\"staf-scen-item-name\">Alt 4</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s7\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\"><span class=\"staf-scen-item-name\">Alt 5</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s8\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\"><span class=\"staf-scen-item-name\">Alt 6</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s9\" role=\"menuitemradio\" aria-checked=\"false\" class=\"staf-scen-item\"><span class=\"staf-scen-item-name\">Alt 7</span></button><button type=\"button\" data-sc-action=\"select\" data-sc-id=\"s10\" role=\"menuitemradio\" aria-checked=\"true\" class=\"staf-scen-item active\"><span class=\"staf-scen-item-name\">Alt 8</span></button>\n    </div>\n  </details>\n  <div class=\"staf-scen-actions\">\n    <button type=\"button\" data-sc-action=\"new\" class=\"staf-scen-link\" title=\"Up to 10 scenarios\" disabled=\"\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M8 3v10M3 8h10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\"/></svg><span>Add</span></button><button type=\"button\" data-sc-action=\"edit\" class=\"staf-scen-link\" title=\"Rename or describe\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M11.2 2.6l2.2 2.2-7.7 7.7-2.9.7.7-2.9z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/></svg><span>Edit</span></button><button type=\"button\" data-sc-action=\"compare\" class=\"staf-scen-link\" title=\"Compare scenarios\"><svg viewBox=\"0 0 16 16\" width=\"12\" height=\"12\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"2\" y=\"3\" width=\"5\" height=\"10\" rx=\"1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\"/><rect x=\"9\" y=\"3\" width=\"5\" height=\"10\" rx=\"1\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\"/></svg><span>Compare</span></button>\n  </div>\n</div>"
+  }
+ ],
+ "dialogs": [
+  {
+   "name": "add",
+   "set": {
+    "version": 1,
+    "active": "s2",
+    "next": 3,
+    "items": [
+     {
+      "id": "existing",
+      "name": "Existing Conditions",
+      "description": "As surveyed in May."
+     },
+     {
+      "id": "s2",
+      "name": "Restored buffer",
+      "description": "Plant 100 ft of riparian forest.",
+      "state": {}
+     }
+    ]
+   },
+   "args": {
+    "name": "Alternative 2",
+    "description": "",
+    "start": "existing",
+    "hint": "A copy brings its scores and notes; photos stay with the original. Blank starts with no scores.",
+    "error": null
+   },
+   "html": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Add a scenario</h4>\n      </div>\n      <div class=\"modal-body staf-dialog\">\n        <div class=\"staf-scen-form\">\n          <div class=\"form-group shiny-input-container\" style=\"width:100%;\">\n            <label class=\"control-label\" id=\"sfari-staf_sc_name-label\" for=\"sfari-staf_sc_name\">Name</label><input id=\"sfari-staf_sc_name\" type=\"text\" class=\"shiny-input-text form-control\" value=\"Alternative 2\" autocomplete=\"off\" data-update-on=\"change\"/>\n          </div>\n          <div class=\"staf-scen-start\">\n            <div class=\"form-group shiny-input-container\" style=\"width:100%;\">\n              <label class=\"control-label\" id=\"sfari-staf_sc_from-label\" for=\"sfari-staf_sc_from\">Start from</label>\n              <div>\n                <select class=\"shiny-input-select form-select\" id=\"sfari-staf_sc_from\">                  <option value=\"existing\" selected=\"\">Existing Conditions</option>\n                  <option value=\"s2\">Restored buffer</option>\n                  <option value=\"blank\">Blank</option></select>\n              </div>\n            </div>\n            <div class=\"staf-scen-hint\">A copy brings its scores and notes; photos stay with the original. Blank starts with no scores.</div>\n          </div>\n          <div class=\"shiny-input-textarea form-group shiny-input-container\" style=\"width:100%;\">\n            <label class=\"control-label\" id=\"sfari-staf_sc_desc-label\" for=\"sfari-staf_sc_desc\">Description</label><textarea id=\"sfari-staf_sc_desc\" class=\"form-control\" placeholder=\"Optional\" rows=\"3\" data-update-on=\"change\"></textarea>\n          </div>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default sfari-btn staf-btn\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n        <button class=\"btn btn-default action-button sfari-btn primary staf-btn\" id=\"sfari-staf_sc_save\" type=\"button\">\n          <span class=\"action-label\">Add</span>\n        </button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+  },
+  {
+   "name": "add-error",
+   "set": {
+    "version": 1,
+    "active": "s2",
+    "next": 3,
+    "items": [
+     {
+      "id": "existing",
+      "name": "Existing Conditions",
+      "description": "As surveyed in May."
+     },
+     {
+      "id": "s2",
+      "name": "Restored buffer",
+      "description": "Plant 100 ft of riparian forest.",
+      "state": {}
+     }
+    ]
+   },
+   "args": {
+    "name": "Summary",
+    "description": "x",
+    "start": "blank",
+    "hint": "",
+    "error": "That name is already used."
+   },
+   "html": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Add a scenario</h4>\n      </div>\n      <div class=\"modal-body staf-dialog\">\n        <div class=\"staf-scen-form\">\n          <div class=\"form-group shiny-input-container\" style=\"width:100%;\">\n            <label class=\"control-label\" id=\"sfari-staf_sc_name-label\" for=\"sfari-staf_sc_name\">Name</label><input id=\"sfari-staf_sc_name\" type=\"text\" class=\"shiny-input-text form-control\" value=\"Summary\" autocomplete=\"off\" data-update-on=\"change\"/>\n          </div>\n          <div class=\"staf-scen-start\">\n            <div class=\"form-group shiny-input-container\" style=\"width:100%;\">\n              <label class=\"control-label\" id=\"sfari-staf_sc_from-label\" for=\"sfari-staf_sc_from\">Start from</label>\n              <div>\n                <select class=\"shiny-input-select form-select\" id=\"sfari-staf_sc_from\">                  <option value=\"existing\">Existing Conditions</option>\n                  <option value=\"s2\">Restored buffer</option>\n                  <option value=\"blank\" selected=\"\">Blank</option></select>\n              </div>\n            </div>\n          </div>\n          <div class=\"shiny-input-textarea form-group shiny-input-container\" style=\"width:100%;\">\n            <label class=\"control-label\" id=\"sfari-staf_sc_desc-label\" for=\"sfari-staf_sc_desc\">Description</label><textarea id=\"sfari-staf_sc_desc\" class=\"form-control\" placeholder=\"Optional\" rows=\"3\" data-update-on=\"change\">x</textarea>\n          </div>\n          <div class=\"staf-scen-err\">That name is already used.</div>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default sfari-btn staf-btn\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n        <button class=\"btn btn-default action-button sfari-btn primary staf-btn\" id=\"sfari-staf_sc_save\" type=\"button\">\n          <span class=\"action-label\">Add</span>\n        </button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+  },
+  {
+   "name": "edit-baseline",
+   "args": {
+    "title": "Describe Existing Conditions",
+    "name": "Existing Conditions",
+    "description": "As surveyed in May.",
+    "name_locked": true,
+    "can_delete": false,
+    "error": null
+   },
+   "html": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Describe Existing Conditions</h4>\n      </div>\n      <div class=\"modal-body staf-dialog\">\n        <div class=\"staf-scen-form\">\n          <div class=\"form-group\">\n            <label class=\"control-label\">Name</label>\n            <div class=\"staf-scen-fixed\">Existing Conditions</div>\n          </div>\n          <div class=\"shiny-input-textarea form-group shiny-input-container\" style=\"width:100%;\">\n            <label class=\"control-label\" id=\"sfari-staf_sc_desc-label\" for=\"sfari-staf_sc_desc\">Description</label><textarea id=\"sfari-staf_sc_desc\" class=\"form-control\" placeholder=\"Optional\" rows=\"3\" data-update-on=\"change\">As surveyed in May.</textarea>\n          </div>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default sfari-btn staf-btn\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n        <button class=\"btn btn-default action-button sfari-btn primary staf-btn\" id=\"sfari-staf_sc_save\" type=\"button\">\n          <span class=\"action-label\">Save</span>\n        </button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+  },
+  {
+   "name": "edit-alt",
+   "args": {
+    "title": "Rename or describe",
+    "name": "Restored buffer",
+    "description": "Plant 100 ft.",
+    "name_locked": false,
+    "can_delete": true,
+    "error": null
+   },
+   "html": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Rename or describe</h4>\n      </div>\n      <div class=\"modal-body staf-dialog\">\n        <div class=\"staf-scen-form\">\n          <div class=\"form-group shiny-input-container\" style=\"width:100%;\">\n            <label class=\"control-label\" id=\"sfari-staf_sc_name-label\" for=\"sfari-staf_sc_name\">Name</label><input id=\"sfari-staf_sc_name\" type=\"text\" class=\"shiny-input-text form-control\" value=\"Restored buffer\" autocomplete=\"off\" data-update-on=\"change\"/>\n          </div>\n          <div class=\"shiny-input-textarea form-group shiny-input-container\" style=\"width:100%;\">\n            <label class=\"control-label\" id=\"sfari-staf_sc_desc-label\" for=\"sfari-staf_sc_desc\">Description</label><textarea id=\"sfari-staf_sc_desc\" class=\"form-control\" placeholder=\"Optional\" rows=\"3\" data-update-on=\"change\">Plant 100 ft.</textarea>\n          </div>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button type=\"button\" data-sc-action=\"delete\" class=\"btn sfari-btn staf-btn danger me-auto\">Delete scenario</button><button class=\"btn btn-default sfari-btn staf-btn\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n        <button class=\"btn btn-default action-button sfari-btn primary staf-btn\" id=\"sfari-staf_sc_save\" type=\"button\">\n          <span class=\"action-label\">Save</span>\n        </button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+  },
+  {
+   "name": "delete",
+   "args": {
+    "name": "Restored buffer"
+   },
+   "html": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Delete scenario</h4>\n      </div>\n      <div class=\"modal-body staf-dialog\">\n        <p>Delete \"Restored buffer\"? Its entries and scores are removed. Existing Conditions is not affected.</p>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default sfari-btn staf-btn\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Cancel</button>\n        <button class=\"btn btn-default action-button sfari-btn staf-btn danger-solid\" id=\"sfari-staf_sc_delete\" type=\"button\">\n          <span class=\"action-label\">Delete</span>\n        </button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>"
+  }
+ ],
+ "comparisons": [
+  {
+   "names": [
+    "Existing Conditions",
+    "Alt"
+   ],
+   "functionScores": [
+    {},
+    {
+     "catchment-hydrology": {
+      "score": 11
+     },
+     "habitat-provision": {
+      "score": 4,
+      "note": "x"
+     }
+    }
+   ],
+   "rows": [
+    {
+     "key": "eci",
+     "label": "ECI",
+     "group": "Index",
+     "digits": 2,
+     "values": [
+      "",
+      "0.05"
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "physical",
+     "label": "Physical",
+     "group": "Index",
+     "digits": 2,
+     "values": [
+      "",
+      "0.07"
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "chemical",
+     "label": "Chemical",
+     "group": "Index",
+     "digits": 2,
+     "values": [
+      "",
+      "0.02"
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "biological",
+     "label": "Biological",
+     "group": "Index",
+     "digits": 2,
+     "values": [
+      "",
+      "0.06"
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:catchment-hydrology",
+     "label": "Catchment hydrology",
+     "group": "Hydrology",
+     "digits": 0,
+     "values": [
+      "",
+      "11"
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:surface-water-storage",
+     "label": "Surface water storage",
+     "group": "Hydrology",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:reach-inflow",
+     "label": "Reach inflow",
+     "group": "Hydrology",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:streamflow-regime",
+     "label": "Streamflow regime",
+     "group": "Hydrology",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:low-flow-baseflow-dynamics",
+     "label": "Low flow and baseflow dynamics",
+     "group": "Hydraulics",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:high-flow-dynamics",
+     "label": "High flow dynamics",
+     "group": "Hydraulics",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:floodplain-connectivity",
+     "label": "Floodplain connectivity",
+     "group": "Hydraulics",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:hyporheic-connectivity",
+     "label": "Hyporheic connectivity",
+     "group": "Hydraulics",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:channel-evolution",
+     "label": "Channel evolution",
+     "group": "Geomorphology",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:channel-floodplain-dynamics",
+     "label": "Channel and floodplain dynamics",
+     "group": "Geomorphology",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:sediment-continuity",
+     "label": "Sediment continuity",
+     "group": "Geomorphology",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:bed-composition-bedform-dynamics",
+     "label": "Bed composition and bedform dynamics",
+     "group": "Geomorphology",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:light-thermal-regime",
+     "label": "Light and thermal regime",
+     "group": "Physicochemistry",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:carbon-processing",
+     "label": "Carbon processing",
+     "group": "Physicochemistry",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:nutrient-cycling",
+     "label": "Nutrient cycling",
+     "group": "Physicochemistry",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:water-soil-quality",
+     "label": "Water and soil quality",
+     "group": "Physicochemistry",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:habitat-provision",
+     "label": "Habitat provision",
+     "group": "Biology",
+     "digits": 0,
+     "values": [
+      "",
+      "4"
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:population-support",
+     "label": "Population support",
+     "group": "Biology",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:community-dynamics",
+     "label": "Community dynamics",
+     "group": "Biology",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    },
+    {
+     "key": "fn:watershed-connectivity",
+     "label": "Watershed connectivity",
+     "group": "Biology",
+     "digits": 0,
+     "values": [
+      "",
+      ""
+     ],
+     "deltas": [
+      null
+     ],
+     "deltaText": [
+      ""
+     ],
+     "signs": [
+      0
+     ]
+    }
+   ],
+   "dialog": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-xl\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Compare scenarios</h4>\n      </div>\n      <div class=\"modal-body staf-dialog\">\n        <div class=\"staf-cmp-wrap\">\n          <table class=\"staf-cmp\">\n            <thead>\n              <tr>\n                <th class=\"staf-cmp-label\"></th>\n                <th class=\"staf-cmp-col base\">Existing Conditions</th>\n                <th class=\"staf-cmp-col\">Alt</th>\n                <th class=\"staf-cmp-col delta\">Change</th>\n              </tr>\n            </thead>\n            <tbody>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"4\">Index</td>\n              </tr>\n              <tr class=\"staf-cmp-row headline\">\n                <td class=\"staf-cmp-label\">ECI</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\">0.05</td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Physical</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\">0.07</td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Chemical</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\">0.02</td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Biological</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\">0.06</td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"4\">Hydrology</td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Catchment hydrology</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\">11</td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Surface water storage</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Reach inflow</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Streamflow regime</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"4\">Hydraulics</td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Low flow and baseflow dynamics</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">High flow dynamics</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Floodplain connectivity</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Hyporheic connectivity</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"4\">Geomorphology</td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Channel evolution</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Channel and floodplain dynamics</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Sediment continuity</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Bed composition and bedform dynamics</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"4\">Physicochemistry</td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Light and thermal regime</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Carbon processing</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Nutrient cycling</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Water and soil quality</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"4\">Biology</td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Habitat provision</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\">4</td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Population support</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Community dynamics</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Watershed connectivity</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n            </tbody>\n          </table>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default sfari-btn staf-btn\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Close</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>",
+   "railDelta": "<div class=\"staf-scen-delta\">vs Existing Conditions: no ECI yet</div>"
+  },
+  {
+   "names": [
+    "Existing Conditions",
+    "Alt",
+    "B"
+   ],
+   "functionScores": [
+    {
+     "catchment-hydrology": {
+      "score": 11
+     },
+     "habitat-provision": {
+      "score": 4,
+      "note": "x"
+     }
+    },
+    {
+     "catchment-hydrology": {
+      "score": 7
+     },
+     "reach-inflow": {
+      "score": null,
+      "note": "y"
+     }
+    },
+    {}
+   ],
+   "rows": [
+    {
+     "key": "eci",
+     "label": "ECI",
+     "group": "Index",
+     "digits": 2,
+     "values": [
+      "0.05",
+      "0.02",
+      ""
+     ],
+     "deltas": [
+      [
+       -0.03,
+       -0.03
+      ],
+      null
+     ],
+     "deltaText": [
+      "-0.03",
+      ""
+     ],
+     "signs": [
+      -1,
+      0
+     ]
+    },
+    {
+     "key": "physical",
+     "label": "Physical",
+     "group": "Index",
+     "digits": 2,
+     "values": [
+      "0.07",
+      "0.04",
+      ""
+     ],
+     "deltas": [
+      [
+       -0.03,
+       -0.03
+      ],
+      null
+     ],
+     "deltaText": [
+      "-0.03",
+      ""
+     ],
+     "signs": [
+      -1,
+      0
+     ]
+    },
+    {
+     "key": "chemical",
+     "label": "Chemical",
+     "group": "Index",
+     "digits": 2,
+     "values": [
+      "0.02",
+      "0.01",
+      ""
+     ],
+     "deltas": [
+      [
+       -0.01,
+       -0.01
+      ],
+      null
+     ],
+     "deltaText": [
+      "-0.01",
+      ""
+     ],
+     "signs": [
+      -1,
+      0
+     ]
+    },
+    {
+     "key": "biological",
+     "label": "Biological",
+     "group": "Index",
+     "digits": 2,
+     "values": [
+      "0.06",
+      "0.01",
+      ""
+     ],
+     "deltas": [
+      [
+       -0.05,
+       -0.05
+      ],
+      null
+     ],
+     "deltaText": [
+      "-0.05",
+      ""
+     ],
+     "signs": [
+      -1,
+      0
+     ]
+    },
+    {
+     "key": "fn:catchment-hydrology",
+     "label": "Catchment hydrology",
+     "group": "Hydrology",
+     "digits": 0,
+     "values": [
+      "11",
+      "7",
+      ""
+     ],
+     "deltas": [
+      [
+       -4.0,
+       -4.0
+      ],
+      null
+     ],
+     "deltaText": [
+      "-4",
+      ""
+     ],
+     "signs": [
+      -1,
+      0
+     ]
+    },
+    {
+     "key": "fn:surface-water-storage",
+     "label": "Surface water storage",
+     "group": "Hydrology",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:reach-inflow",
+     "label": "Reach inflow",
+     "group": "Hydrology",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:streamflow-regime",
+     "label": "Streamflow regime",
+     "group": "Hydrology",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:low-flow-baseflow-dynamics",
+     "label": "Low flow and baseflow dynamics",
+     "group": "Hydraulics",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:high-flow-dynamics",
+     "label": "High flow dynamics",
+     "group": "Hydraulics",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:floodplain-connectivity",
+     "label": "Floodplain connectivity",
+     "group": "Hydraulics",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:hyporheic-connectivity",
+     "label": "Hyporheic connectivity",
+     "group": "Hydraulics",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:channel-evolution",
+     "label": "Channel evolution",
+     "group": "Geomorphology",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:channel-floodplain-dynamics",
+     "label": "Channel and floodplain dynamics",
+     "group": "Geomorphology",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:sediment-continuity",
+     "label": "Sediment continuity",
+     "group": "Geomorphology",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:bed-composition-bedform-dynamics",
+     "label": "Bed composition and bedform dynamics",
+     "group": "Geomorphology",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:light-thermal-regime",
+     "label": "Light and thermal regime",
+     "group": "Physicochemistry",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:carbon-processing",
+     "label": "Carbon processing",
+     "group": "Physicochemistry",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:nutrient-cycling",
+     "label": "Nutrient cycling",
+     "group": "Physicochemistry",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:water-soil-quality",
+     "label": "Water and soil quality",
+     "group": "Physicochemistry",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:habitat-provision",
+     "label": "Habitat provision",
+     "group": "Biology",
+     "digits": 0,
+     "values": [
+      "4",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:population-support",
+     "label": "Population support",
+     "group": "Biology",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:community-dynamics",
+     "label": "Community dynamics",
+     "group": "Biology",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    },
+    {
+     "key": "fn:watershed-connectivity",
+     "label": "Watershed connectivity",
+     "group": "Biology",
+     "digits": 0,
+     "values": [
+      "",
+      "",
+      ""
+     ],
+     "deltas": [
+      null,
+      null
+     ],
+     "deltaText": [
+      "",
+      ""
+     ],
+     "signs": [
+      0,
+      0
+     ]
+    }
+   ],
+   "dialog": "<div id=\"shiny-modal\" class=\"modal fade\" tabindex=\"-1\">\n  <div class=\"modal-dialog modal-xl\">\n    <div class=\"modal-content\">\n      <div class=\"modal-header\">\n        <h4 class=\"modal-title\">Compare scenarios</h4>\n      </div>\n      <div class=\"modal-body staf-dialog\">\n        <div class=\"staf-cmp-wrap\">\n          <table class=\"staf-cmp\">\n            <thead>\n              <tr>\n                <th class=\"staf-cmp-label\"></th>\n                <th class=\"staf-cmp-col base\">Existing Conditions</th>\n                <th class=\"staf-cmp-col\">Alt</th>\n                <th class=\"staf-cmp-col delta\">Change</th>\n                <th class=\"staf-cmp-col\">B</th>\n                <th class=\"staf-cmp-col delta\">Change</th>\n              </tr>\n            </thead>\n            <tbody>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"6\">Index</td>\n              </tr>\n              <tr class=\"staf-cmp-row headline\">\n                <td class=\"staf-cmp-label\">ECI</td>\n                <td class=\"staf-cmp-num base\">0.05</td>\n                <td class=\"staf-cmp-num\">0.02</td>\n                <td class=\"staf-cmp-num delta down\">-0.03</td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Physical</td>\n                <td class=\"staf-cmp-num base\">0.07</td>\n                <td class=\"staf-cmp-num\">0.04</td>\n                <td class=\"staf-cmp-num delta down\">-0.03</td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Chemical</td>\n                <td class=\"staf-cmp-num base\">0.02</td>\n                <td class=\"staf-cmp-num\">0.01</td>\n                <td class=\"staf-cmp-num delta down\">-0.01</td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Biological</td>\n                <td class=\"staf-cmp-num base\">0.06</td>\n                <td class=\"staf-cmp-num\">0.01</td>\n                <td class=\"staf-cmp-num delta down\">-0.05</td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"6\">Hydrology</td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Catchment hydrology</td>\n                <td class=\"staf-cmp-num base\">11</td>\n                <td class=\"staf-cmp-num\">7</td>\n                <td class=\"staf-cmp-num delta down\">-4</td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Surface water storage</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Reach inflow</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Streamflow regime</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"6\">Hydraulics</td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Low flow and baseflow dynamics</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">High flow dynamics</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Floodplain connectivity</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Hyporheic connectivity</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"6\">Geomorphology</td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Channel evolution</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Channel and floodplain dynamics</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Sediment continuity</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Bed composition and bedform dynamics</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"6\">Physicochemistry</td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Light and thermal regime</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Carbon processing</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Nutrient cycling</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Water and soil quality</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-group\">\n                <td colspan=\"6\">Biology</td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Habitat provision</td>\n                <td class=\"staf-cmp-num base\">4</td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Population support</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Community dynamics</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n              <tr class=\"staf-cmp-row\">\n                <td class=\"staf-cmp-label\">Watershed connectivity</td>\n                <td class=\"staf-cmp-num base\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n                <td class=\"staf-cmp-num\"></td>\n                <td class=\"staf-cmp-num delta\"></td>\n              </tr>\n            </tbody>\n          </table>\n        </div>\n      </div>\n      <div class=\"modal-footer\">\n        <button class=\"btn btn-default sfari-btn staf-btn\" type=\"button\" data-dismiss=\"modal\" data-bs-dismiss=\"modal\">Close</button>\n      </div>\n    </div>\n  </div>\n  <script>if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\\. /)) {\n  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))\n  modal.show()\n} else {\n  $('#shiny-modal').modal().focus()\n}</script>\n</div>",
+   "railDelta": "<div class=\"staf-scen-delta\">\n  vs Existing Conditions: ECI <span class=\"down\">-0.03</span>\n</div>"
+  }
+ ],
+ "names": [
+  {
+   "name": "",
+   "taken": [],
+   "problem": "Enter a name."
+  },
+  {
+   "name": "  ",
+   "taken": [],
+   "problem": "Enter a name."
+  },
+  {
+   "name": "Alternative 1",
+   "taken": [],
+   "problem": null
+  },
+  {
+   "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "taken": [],
+   "problem": "Use 31 characters or fewer."
+  },
+  {
+   "name": "a:b",
+   "taken": [],
+   "problem": "These characters are not allowed: :"
+  },
+  {
+   "name": "'quoted",
+   "taken": [],
+   "problem": "A name cannot start or end with an apostrophe."
+  },
+  {
+   "name": "History",
+   "taken": [],
+   "problem": "That name is reserved by Excel."
+  },
+  {
+   "name": "summary",
+   "taken": [
+    "Summary"
+   ],
+   "problem": "That name is already used."
+  },
+  {
+   "name": "Alt [2]?",
+   "taken": [],
+   "problem": "These characters are not allowed: ? [ ]"
+  },
+  {
+   "name": "Existing conditions",
+   "taken": [
+    "Existing Conditions"
+   ],
+   "problem": "That name is already used."
+  }
+ ],
+ "excelRound": [
+  [
+   0.125,
+   2,
+   0.13
+  ],
+  [
+   0.135,
+   2,
+   0.14
+  ],
+  [
+   2.675,
+   2,
+   2.68
+  ],
+  [
+   -0.125,
+   2,
+   -0.13
+  ],
+  [
+   1.005,
+   2,
+   1.01
+  ],
+  [
+   0.5,
+   0,
+   1.0
+  ],
+  [
+   1.5,
+   0,
+   2.0
+  ],
+  [
+   2.5,
+   0,
+   3.0
+  ],
+  [
+   -2.5,
+   0,
+   -3.0
+  ],
+  [
+   0.7333333333333333,
+   2,
+   0.73
+  ],
+  [
+   1e-07,
+   2,
+   0.0
+  ]
+ ]
+}

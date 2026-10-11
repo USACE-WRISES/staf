@@ -3,6 +3,7 @@
 // (the first's default version), and what the pane states about it. The library comes from the data
 // mirror: the catalog (library.json, read as deep/remote_library.py reads it) and the version's bundle.
 import type { DataSource } from '../data/source'
+import { parseJson } from './pyjson'
 import { deepAssessPane, deepNoAssessment } from './markup'
 
 const ELIGIBLE = ['draft', 'preliminary', 'certified']
@@ -43,6 +44,7 @@ let catalogP: Promise<Version[]> | null = null
  * Show in DEEP not off, a bundle; the hidden assessments left out. */
 function catalog(src: DataSource): Promise<Version[]> {
   catalogP ??= (async () => {
+    await src.ready()
     const doc = JSON.parse(new TextDecoder().decode(await src.bytesOf('library/library.json')))
     const out: Version[] = []
     const seen = new Set<string>()
@@ -130,7 +132,8 @@ export function loadRef(src: DataSource, ref: string): Promise<Record<string, an
       const [aid, v] = ref.split('@v')
       const rec = (await catalog(src)).find((x) => x.id === aid && x.version === Number(v))
       if (!rec) throw new Error(`unknown assessment ref ${ref}`)
-      const bundle = JSON.parse(new TextDecoder().decode(await src.bytesOf(`library/${rec.bundle}`)))
+      // parsed keeping each number's text: DEEP writes a curve's points back as Python wrote them
+      const bundle = parseJson(new TextDecoder().decode(await src.bytesOf(`library/${rec.bundle}`)))
       return { ...bundle, version: rec.version, lifecycle: rec.status, assessmentRef: ref }
     })()
     got.catch(() => bundles.delete(ref))

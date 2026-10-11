@@ -31,12 +31,25 @@ function exactHalf(x: number, digits: number): bigint | null {
   return n % 10n === 5n ? n / 10n : null
 }
 
-/** str(x) for a Python float in the range the apps print (repr: shortest round trip, "12.0" for a
- * whole number). */
+/** str(x) for a Python float (repr: the shortest round trip, "12.0" for a whole number, an exponent
+ * below 1e-4 and from 1e16 on, written "1e-05"). */
 export function pyFloat(x: number): string {
   if (!Number.isFinite(x)) return Number.isNaN(x) ? 'nan' : x > 0 ? 'inf' : '-inf'
+  if (x === 0) return Object.is(x, -0) ? '-0.0' : '0.0'
+  const ax = Math.abs(x)
+  if (ax < 1e-4 || ax >= 1e16) {
+    const [m, e] = x.toExponential().split('e')
+    const exp = Number(e)
+    return `${m}e${exp < 0 ? '-' : '+'}${String(Math.abs(exp)).padStart(2, '0')}`
+  }
   const s = String(x)
-  return Number.isInteger(x) && Math.abs(x) < 1e16 && !s.includes('e') ? `${s}.0` : s
+  return Number.isInteger(x) ? `${s}.0` : s
+}
+
+/** f"{x:+.{digits}f}": the sign always written. */
+export function pySigned(x: number, digits: number): string {
+  const text = pyFixed(x, digits)
+  return text.startsWith('-') ? text : `+${text}`
 }
 
 /** f"{x:,.{digits}f}": fixed digits with thousands separators. */
@@ -50,6 +63,7 @@ export function pyFixedComma(x: number, digits: number): string {
 
 /** f"{x:.{digits}f}" */
 export function pyFixed(x: number, digits: number): string {
+  if (Object.is(x, -0)) return '-' + (0).toFixed(digits)
   const text = x.toFixed(digits)
   const tie = exactHalf(x, digits)
   if (tie === null || tie % 2n !== 0n) return text   // no tie, or toFixed's away-from-zero is even
@@ -57,4 +71,36 @@ export function pyFixed(x: number, digits: number): string {
   const s = tie.toString().padStart(digits + 1, '0')
   const body = digits ? `${s.slice(0, -digits)}.${s.slice(-digits)}` : s
   return (x < 0 ? '-' : '') + body
+}
+
+/** f"{x:g}": six significant digits, trailing zeros dropped, an exponent below 1e-4 and from 1e6. */
+export function pyG(x: number): string {
+  if (!Number.isFinite(x)) return Number.isNaN(x) ? 'nan' : x > 0 ? 'inf' : '-inf'
+  if (x === 0) return Object.is(x, -0) ? '-0' : '0'
+  const [m, e] = x.toExponential(5).split('e')
+  const exp = Number(e)
+  const strip = (s: string) => (s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s)
+  if (exp < -4 || exp >= 6) return `${strip(m)}e${exp < 0 ? '-' : '+'}${String(Math.abs(exp)).padStart(2, '0')}`
+  return strip(pyFixed(x, 5 - exp))
+}
+
+/** Python 3.12's built-in sum() of floats (from the default start 0): the first item exactly, then
+ * Neumaier's compensated summation, the compensation added at the end (CPython builtin_sum_impl). */
+export function pySum(values: Iterable<number>): number {
+  let first = true
+  let f = 0
+  let c = 0
+  for (const x of values) {
+    if (first) {
+      f = x
+      first = false
+      continue
+    }
+    const t = f + x
+    if (Math.abs(f) >= Math.abs(x)) c += (f - t) + x
+    else c += (x - t) + f
+    f = t
+  }
+  if (c && Number.isFinite(c)) f += c
+  return f
 }

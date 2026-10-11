@@ -5,6 +5,9 @@
 // into the same output elements. The page scripts' inputs (shim.ts) arrive at input().
 import type L from 'leaflet'
 import type { EasiData } from '../engine/pipeline'
+import type { PointTables } from '../engine/points'
+import type { DeepWorksheet } from '../tools/deep/worksheet'
+import type { SfariWorksheet } from '../tools/sfari/worksheet'
 import { Basin } from './basin'
 import { assessPane, type Covering, coveringRefs, loadRef } from './deepAssess'
 import { esc, flowLoading, FLOW_ZOOM, identifyPane, legend, readout, START, type ToolKey, zoomCue } from './markup'
@@ -30,6 +33,9 @@ const REGION_STATUS = {
 } as const
 type RegionStatus = keyof typeof REGION_STATUS
 
+/** What the tools read: the bundle's networks, catchments and values, and the point tables. */
+export type AppData = EasiData & { points: PointTables }
+
 export class Tool {
   readonly key: ToolKey
   readonly root: HTMLElement
@@ -45,6 +51,12 @@ export class Tool {
   streams: StreamLayers | null = null
   identify: Identify | null = null
   basin: Basin | null = null
+  /** SFARI's Assessment worksheet: its code and SFARI's method load on their own, once SFARI is shown */
+  sfari: SfariWorksheet | null = null
+  private sfariP: Promise<SfariWorksheet> | null = null
+  /** DEEP's measure worksheet, loaded the same way */
+  deep: DeepWorksheet | null = null
+  private deepP: Promise<DeepWorksheet> | null = null
   /** DEEP: the assessments covering the site and the one Basin adopted (selected_ref, loaded_assessment) */
   private covering: Covering[] = []
   private selectedRef: string | null = null
@@ -52,7 +64,7 @@ export class Tool {
   /** the pick was ready at the last change (its regions were asked for then) */
   private warmed = false
 
-  constructor(key: ToolKey, private nets: Networks, private data: EasiData) {
+  constructor(key: ToolKey, private nets: Networks, private data: AppData) {
     this.key = key
     const root = document.querySelector<HTMLElement>(`.easi-shell[data-staf-tool="${key}"]`)
     if (!root) throw new Error(`no section for ${key}`)
@@ -97,6 +109,8 @@ export class Tool {
       busy: () => this.renderBusy(),
       resolveAssessment: this.key === 'deep' ? () => void this.resolveAssessment() : undefined,
     })
+    if (this.key === 'sfari') void this.loadSfari().catch(() => {})
+    if (this.key === 'deep') void this.loadDeep().catch(() => {})
     map.on('zoomend moveend', () => this.viewChanged())
     map.on('click', (e: L.LeafletMouseEvent) => this.mapClick(e))
     this.viewChanged()
@@ -156,6 +170,8 @@ export class Tool {
       return
     }
     this.basin?.invalidate()          // a new pick invalidates the last delineation
+    this.sfari?.reset()
+    this.deep?.reset()
     this.identify?.click(e.latlng.lat, e.latlng.lng)
   }
 
@@ -165,7 +181,10 @@ export class Tool {
   setStep(step: string): void {
     this.step = step
     const pane = this.out('leftpane')
-    if (step === 'basin' && this.basin?.delin) {
+    if ((step === 'review' && this.sfari && this.basin?.delin) || (step === 'measure' && this.deep && this.basin?.delin)) {
+      // the worksheet over the map replaces the left pane
+      pane.innerHTML = ''
+    } else if (step === 'basin' && this.basin?.delin) {
       const assess = this.key === 'deep' ? assessPane(this.loaded, this.covering) : ''
       pane.innerHTML = '\n' + this.basin.pane(assess) + '\n'
     } else {
@@ -173,6 +192,10 @@ export class Tool {
       pane.innerHTML = '\n' + identifyPane(this.key, !!this.identify?.ready()) + '\n'
       this.pickChanged()
     }
+    this.sfari?.render()
+    this.sfari?.maybePull()
+    this.deep?.render()
+    this.deep?.maybeCompute()
     this.renderBusy()
     this.viewChanged()
     this.sendCoverageCurrent()
@@ -200,17 +223,107 @@ export class Tool {
     }
   }
 
+  /** SFARI's worksheet module, loaded once. */
+  private loadSfari(): Promise<SfariWorksheet> {
+    this.sfariP ??= import('../tools/sfari/worksheet').then(({ SfariWorksheet }) => {
+      const basin = this.basin!
+      const identify = this.identify!
+      this.sfari = new SfariWorksheet({
+        root: this.root, data: this.data, step: () => this.step, delin: () => basin.delin,
+        engineState: () => basin.engineState, engineLine: () => basin.engineLine(), lookupStatus: () => identify.lookupStatus(),
+        sourceReady: () => identify.ready(), setStep: (s) => this.setStep(s),
+      })
+      return this.sfari
+    })
+    this.sfariP.catch(() => { this.sfariP = null })
+    return this.sfariP
+  }
+
+  /** DEEP's worksheet module, loaded once. */
+  private loadDeep(): Promise<DeepWorksheet> {
+    this.deepP ??= import('../tools/deep/worksheet').then(({ DeepWorksheet }) => {
+      const basin = this.basin!
+      const identify = this.identify!
+      this.deep = new DeepWorksheet({
+        data: this.data, step: () => this.step, delin: () => basin.delin, engineState: () => basin.engineState,
+        engineLine: () => basin.engineLine(), lookupStatus: () => identify.lookupStatus(), sourceReady: () => identify.ready(),
+        loaded: () => this.loaded, ref: () => this.selectedRef, setStep: (s) => this.setStep(s),
+      })
+      this.deep.seedAutoStrata()
+      return this.deep
+    })
+    this.deepP.catch(() => { this.deepP = null })
+    return this.deepP
+  }
+
+  /** DEEP's Continue (_go_measure): the worksheet, from the first function. */
+  private toMeasure(): void {
+    if (!this.basin?.delin) {
+      notify('Delineate the current point before continuing.', { type: 'warning', seconds: 4 })
+      return
+    }
+    if (!this.identify?.ready()) {
+      notify('Complete the StreamCat lookup before continuing.', { type: 'warning', seconds: 4 })
+      return
+    }
+    if (!this.loaded) {
+      notify(this.covering.length ? 'Choose an assessment first.' : 'No assessment covers this point, so there is nothing to score.',
+        { type: 'warning', seconds: 4 })
+      return
+    }
+    void this.loadDeep().then((ws) => {
+      ws.currentFn = 0
+      this.setStep('measure')
+    }, () => notify('The worksheet did not load. Check the connection and try again.', { type: 'error', seconds: 6 }))
+  }
+
   /** A step link in the pane (each tool's step_nav). */
   private stepNav(target: string): void {
     const hasDelin = !!this.basin?.delin
+    if (this.key === 'deep') {
+      // DEEP's _stepper_nav: Assessment and Report need the delineation and an assessment
+      if (!['identify', 'basin', 'measure', 'report'].includes(target)) return
+      const allowed = target === 'identify' || (hasDelin && (target === 'basin' || !!this.loaded))
+      if (!allowed) notify('Finish the earlier steps first.', { seconds: 2 })
+      else if (target === 'report') notify('The report is not in the web app yet.', { seconds: 4 })
+      else if (target === 'measure') void this.loadDeep().then(() => this.setStep('measure'))
+      else this.setStep(target)
+      return
+    }
+    if (this.key === 'sfari') {
+      // SFARI's _stepper_nav
+      if (!['identify', 'basin', 'review', 'report'].includes(target)) return
+      if (target === 'identify') this.setStep('identify')
+      else if (hasDelin && target === 'report') {
+        if (!this.sfari?.anyScored()) notify('Score at least one function before viewing the report.', { seconds: 4 })
+        else this.sfari.requestReport()
+      } else if (hasDelin && target === 'review') void this.loadSfari().then(() => this.setStep('review'))
+      else if (hasDelin) this.setStep(target)
+      else notify('Finish the earlier steps first.', { seconds: 2 })
+      return
+    }
     if (target === 'identify') this.setStep('identify')
     else if (target === 'basin' && hasDelin) this.setStep('basin')
     else if (target !== 'report' && hasDelin) notify('The Assessment step is not in the web app yet.', { seconds: 4 })
     else notify('Finish the earlier steps first.', { seconds: 2 })
   }
 
+  /** SFARI's Continue (_go_review, _enter_review): the worksheet, from the first function. */
+  private toReview(): void {
+    if (!this.basin?.delin || !this.identify?.ready()) {
+      notify('Wait for the StreamCat lookup, or retry it, before continuing.', { seconds: 5 })
+      return
+    }
+    void this.loadSfari().then((ws) => {
+      ws.currentFn = 0
+      this.setStep('review')
+    }, () => notify('The worksheet did not load. Check the connection and try again.', { type: 'error', seconds: 6 }))
+  }
+
   /** Clear: back to an empty Identify (each app.py _reset). */
   private clear(): void {
+    this.sfari?.reset()
+    this.deep?.reset()
     this.basin?.invalidate()
     this.identify?.clear()
     this.selectedRef = null
@@ -232,8 +345,12 @@ export class Tool {
     if (!this.selectedRef && this.covering.length) {
       const ref = this.covering[0].defaultRef
       this.loaded = await loadRef(this.data.src, ref).catch(() => null)
-      if (this.loaded) this.selectedRef = ref
+      if (this.loaded) {
+        this.selectedRef = ref
+        this.deep?.assessmentLoaded()
+      }
     }
+    this.deep?.seedAutoStrata()
     const slot = this.maybe('assess_pane')
     if (slot && this.step === 'basin') slot.innerHTML = '\n' + assessPane(this.loaded, this.covering) + '\n'
     this.sendCoverageCurrent()
@@ -280,6 +397,8 @@ export class Tool {
     }
     this.view.map.setView([lat, lon], 15)
     this.basin?.invalidate()
+    this.sfari?.reset()
+    this.deep?.reset()
     this.identify.typed(lat, lon)
   }
 
@@ -411,6 +530,7 @@ export class Tool {
         this.streams?.retry()
         break
       case 'retry_streamcat':
+      case 'retry_streamcat_ws':
         this.basin?.invalidate()
         this.identify?.retry()
         break
@@ -420,16 +540,25 @@ export class Tool {
       case 'clear_basin':
         this.clear()
         break
-      case 'run_screening':
       case 'to_review':
+        if (this.key === 'sfari') {
+          this.toReview()
+          break
+        }
+        notify('The Assessment step is not in the web app yet.', { seconds: 4 })
+        break
       case 'to_measure':
+        this.toMeasure()
+        break
+      case 'run_screening':
         notify('The Assessment step is not in the web app yet.', { seconds: 4 })
         break
       case 'change_assessment':
         notify('Changing the assessment comes with the Assessment step.', { seconds: 4 })
         break
       case 'step_nav':
-        this.stepNav(String(value))
+        // a link's key, or field-review.js's {key}
+        this.stepNav(String(value && typeof value === 'object' ? (value as { key?: string }).key : value))
         break
       case 'coords_entered':
         this.coordsEntered(value)
@@ -445,6 +574,7 @@ export class Tool {
         if (this.key === 'deep') this.sendCoverage()
         break
       default:
+        if (!this.sfari?.input(name, value)) this.deep?.input(name, value)
         break
     }
   }

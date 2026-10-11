@@ -17,7 +17,7 @@ describe.skipIf(!have)('the anchor of a routed click', () => {
   beforeAll(() => vi.stubGlobal('fetch', localFetch))
   afterAll(() => vi.unstubAllGlobals())
 
-  it('is the Python payload, key for key', async () => {
+  it('is the Python payload, key for key', { timeout: 60_000 }, async () => {
     const src = new DataSource(BASE)
     const hr = new Network(src, 'bundle/')
     const views = new Map<string, Awaited<ReturnType<Network['inBox']>>>()

@@ -10,7 +10,9 @@ import { lineLength } from '../streams/geom'
 import { albersForward } from '../xs/projExact'
 import type { FlowlineRecord } from './bundle'
 import type { Dataset } from './dataset'
+import { computeAll } from './metrics'
 import { deriveReachHr, geoSeries, type GeoSeriesJson, type LineGeometry } from './reach'
+import type { ValueTables } from './values'
 import { nearestPointOnLines } from './snap'
 
 export const ENGINE_ID = 'site-engine'
@@ -35,7 +37,13 @@ export interface EngineData {
   src: DataSource
   hr: Dataset
   hrNet: Network
+  /** the bundle's per-catchment tables (the metric families) */
+  values: ValueTables
 }
+
+/** Each record's reach lines (anchor first), kept beside the record: the cross-section family reads
+ * their grid sections. */
+export const reachLineIds = new WeakMap<object, number[]>()
 
 const pyRound = (x: number, n: number): number => Number(pyFixed(x, n))
 
@@ -238,6 +246,10 @@ export async function computeSite(d: EngineData, lat: number, lon: number, confi
     notify(progress, { stage: 'reach' })
     const reach = await deriveReachHr(d.hr, ctx.anchor, ctx.site.snapLat, ctx.site.snapLon, cfg.reachLengthFt)
     record.reach = { lengthFt: reach.lengthFt, geometry: reach.geojson, warnings: reach.warnings }
+    reachLineIds.set(record, reach.lineIds ?? [ctx.anchor.nhdplusid])
+    // Layer B: the metric families over the watershed and the reach
+    notify(progress, { stage: 'metrics' })
+    record.metrics = await computeAll(d, record, cfg.metricFamilies, progress)
     if (!cfg.includeGeometry) {
       ws.polygon = null
       record.reach.geometry = null

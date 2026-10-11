@@ -12,6 +12,11 @@ This module writes that mirror's files from local copies of the releases:
 - ``xs/...``: the cross-section grid (``staf-xs-current``) as it is packed.
 - ``library/...``: the assessment library's files the apps read (``library`` release: the catalogs, the
   DEEP bundles, the calculators, EASI's method packages), downloaded and checked against the release.
+- ``points/...``: the bundle's national point tables (NID, NWIS gages, WQP stations and results)
+  laid out by place in small row groups (``points.py``), so a lookup reads only the groups near the
+  point; same rows and values as ``bundle/tables/``.
+- ``engine/...``: the data files the STAF site engine ships with (``libs/site_engine``): the base-flow
+  index grid, the EPA Level III ecoregions and the physiographic divisions.
 - ``web-manifest.json`` (written last): every logical name with its stored path, bytes and sha256,
   and the source releases' identities. ``README.md``: the dataset card.
 
@@ -38,6 +43,10 @@ BUNDLE = Path(os.environ.get("STAF_WEB_BUNDLE") or (REPO / "apps" / "hr-data" / 
 XS_RELEASE = Path(os.environ.get("STAF_WEB_XS") or r"D:\Data\xs-grid\release")
 LIBRARY = Path(os.environ.get("STAF_WEB_LIBRARY") or r"D:\Data\staf-web\library-release")
 OUT = Path(os.environ.get("STAF_WEB_OUT") or r"D:\Data\staf-web\site")
+ENGINE = REPO / "libs" / "site_engine" / "site_engine"
+#: the site engine's own data files the browser reads, by their logical names
+ENGINE_FILES = (("bfi48grd.tif", "data/bfi48grd.tif"), ("ecoregions_l3.geojson", "_extracted/data/ecoregions_l3.geojson"),
+                ("physio_divisions.geojson", "_extracted/data/physio_divisions.geojson"))
 #: bundle files the browser never reads
 LEAVE_OUT = ("tables/dem1m_tiles.parquet", "tables/dem19_quads.parquet")
 CARD = """---
@@ -60,8 +69,12 @@ release of https://github.com/USACE-WRISES/staf, which stays the source:
   StreamCat, and national point tables (WQP, NID, NWIS, NAS), for the lower 48.
 - `xs/`: the national cross-section grid (`staf-xs-current`, published region by region): every
   section's scoring numbers, what drawing or pulling a section needs, one profile per segment.
+- `points/`: the bundle's national point tables (dams, stream gages, water-quality stations and
+  results) sorted by place in small row groups, so a lookup near a site reads a few kilobytes.
 - `library/`: the STAF assessment library (`library`): DEEP's regional assessments, calculators and
   EASI's method packages.
+- `engine/`: the data files the STAF site engine ships with: the USGS base-flow index grid (Wolock
+  2003), the EPA Level III ecoregions and the physiographic divisions.
 
 Files are stored under content-hashed names and never change in place; `web-manifest.json` (updated
 last) maps each logical name to its file, size and sha256. Built from public federal datasets (USGS,
@@ -139,6 +152,16 @@ def library_files(library: Path = LIBRARY) -> list:
     return [(p.name, p, "library", None) for p in sorted(folder.iterdir()) if p.is_file()]
 
 
+def engine_files(engine: Path = ENGINE) -> list:
+    """The site engine's data files (``ENGINE_FILES``) that exist in this checkout."""
+    out = []
+    for logical, rel in ENGINE_FILES:
+        path = Path(engine) / rel
+        if path.is_file():
+            out.append((logical, path, "engine", None))
+    return out
+
+
 def build(out: Path = OUT, *, bundle: Path = BUNDLE, xs_release: Path = XS_RELEASE, library: Path = LIBRARY,
           regions: list | None = None, log=print) -> dict:
     """Write the browser layout into ``out``; returns the manifest."""
@@ -155,6 +178,13 @@ def build(out: Path = OUT, *, bundle: Path = BUNDLE, xs_release: Path = XS_RELEA
         sources["staf-xs-current"] = {"format": xs_rel.get("format"), "packed": xs_rel.get("packed"),
                                       "sampling_version": (xs_rel.get("grid") or {}).get("sampling_version"),
                                       "regions": len(xs_rel.get("regions") or {})}
+    # the point tables laid out by place, so a box or radius query reads a few small row groups
+    from . import points
+    laid = points.write(Path(bundle) / "tables", out / ".cache" / "points", log=log)
+    if laid:
+        groups.append(("points", [(logical, path, "table", None) for logical, path in laid]))
+        sources["points"] = {"group_rows": points.GROUP, "result_group_rows": points.RESULT_GROUP,
+                             "curve": f"hilbert-{points.ORDER}"}
     lib = library_files(library)
     if lib:
         # DEEP's regions sidebar, as DEEP's own code lists the release (deep_regions.py)
@@ -162,6 +192,12 @@ def build(out: Path = OUT, *, bundle: Path = BUNDLE, xs_release: Path = XS_RELEA
         derived = deep_regions.write(library, out / ".cache" / deep_regions.NAME)
         groups.append(("library", lib + [(deep_regions.NAME, derived, "library", None)]))
         sources["library"] = {"files": len(lib)}
+    eng = engine_files()
+    if eng:
+        groups.append(("engine", eng))
+        sys.path.insert(0, str(ENGINE.parent))
+        from site_engine import ENGINE_VERSION
+        sources["site-engine"] = {"version": ENGINE_VERSION, "files": len(eng)}
     n = 0
     for prefix, items in groups:
         for logical, src, kind, vpu in items:
