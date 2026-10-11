@@ -16,6 +16,11 @@ Vite's public folder: served at the app's root in development and copied into ``
 - **Written here by hand** and never replaced: ``css/shiny/jupyter.css`` and ``jupyter-leaflet.css``,
   the Jupyter widget rules the Shiny maps take from ipyleaflet (see their headers).
 
+The same goes for the method content the app's code imports (``content/...``, written to
+``src/app/content/``, not ``page/``): SFARI's functions, metrics and outcome mapping (``apps/sfari/data``),
+DEEP's functions and outcome mapping (``apps/deep/data``) and its concise method texts (the ``CONCISE``
+table of ``apps/deep/deep/method_text.py``, written as JSON).
+
 ``page-sources.json`` records each copy's source and the sha256 both had when copied. A copy that was
 edited here since is never overwritten (``--force`` does). ``--check`` copies nothing and reports which
 sources changed since (the Shiny page moved on: copy again to follow it), which copies were edited here,
@@ -55,6 +60,15 @@ FROM_REPO = {
     "js/staf/tooltip.js": "libs/staf_workbook/assets/tooltip.js",
     "js/staf/coord-entry.js": "libs/staf_workbook/assets/coord-entry.js",
     "js/deep/coverage.js": "apps/deep/www/coverage.js",
+    "js/staf/metric-rows.js": "libs/staf_workbook/assets/metric-rows.js",
+    "js/staf/scenarios.js": "libs/staf_workbook/assets/scenarios.js",
+    "js/sfari/field-review.js": "apps/sfari/www/field-review.js",
+    "content/sfari/sfari-functions.json": "apps/sfari/data/sfari-functions.json",
+    "content/sfari/sfari-metrics.json": "apps/sfari/data/sfari-metrics.json",
+    "content/sfari/sfari-outcome-mapping.json": "apps/sfari/data/sfari-outcome-mapping.json",
+    "js/deep/measure.js": "apps/deep/www/measure.js",
+    "content/deep/deep-functions.json": "apps/deep/data/deep-functions.json",
+    "content/deep/deep-outcome-mapping.json": "apps/deep/data/deep-outcome-mapping.json",
 }
 OWN = ("css/shiny/jupyter.css", "css/shiny/jupyter-leaflet.css")
 KEEP_FONTS = ("latin", "latin-ext")
@@ -65,6 +79,11 @@ FONT_SRC = re.compile(r"url\((fonts/[^)]+)\)")
 #: text files are kept with LF line endings, as the repo stores them (.gitattributes), so a copy's
 #: sha256 is the same in every checkout (Leaflet's stylesheet ships with CRLF)
 TEXT = (".css", ".js", ".svg", ".json")
+
+
+def dest(path: str) -> Path:
+    """Where a copy lives: ``content/...`` beside the app's code, everything else in ``page/``."""
+    return APP / "src" / "app" / path if path.startswith("content/") else PAGE / path
 
 
 def sha256(data: bytes) -> str:
@@ -83,6 +102,15 @@ def sources() -> tuple[dict, dict]:
         src = REPO / rel
         if src.is_file():
             out[path] = (rel, src.read_bytes())
+    # DEEP's concise method texts live in a Python module: kept here as JSON
+    concise = REPO / "apps" / "deep" / "deep" / "method_text.py"
+    if concise.is_file():
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_deep_method_text", concise)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        out["content/deep/method-text.json"] = ("apps/deep/deep/method_text.py: CONCISE",
+                                                (json.dumps(mod.CONCISE, indent=1, ensure_ascii=False) + "\n").encode("utf-8"))
     versions: dict = {}
     try:
         from importlib import metadata
@@ -128,7 +156,7 @@ def main(check: bool, force: bool) -> int:
     for path in sorted(set(files) | set(now)):
         if path in OWN:
             continue
-        dst = PAGE / path
+        dst = dest(path)
         raw = dst.read_bytes() if dst.is_file() else None
         mine = sha256(_normal(path, raw)) if raw is not None else None
         rec = files.get(path)

@@ -14,7 +14,11 @@ at a desktop size, waits until it is idle, and writes to ``parity/<app>/``:
 14), waits until the streams have settled, and writes ``<tool>-<NAME>.png`` and ``.html`` only;
 ``--coverage`` also turns on StreamCat coverage in the Layers menu first; ``--click LAT,LON`` then
 clicks the map there (a pick) and waits until the pick has settled; ``--delineate`` then presses
-Delineate and waits for the Basin step (or an error).
+Delineate and waits for the Basin step (or an error); ``--assess`` then presses the Basin's next button
+(Run screening, Continue) and waits until the Assessment worksheet has settled.
+
+``--actions FILE`` then runs a script of user actions on the page (``parity/actions/*.js``: an async
+function of the tool's key that clicks and types as a user would) and waits until the worksheet settles.
 
 ``--app shiny`` reads the Shiny STAF app (``shiny run app.py --port 8040`` in apps/staf, or
 .claude/launch.json "staf") and also writes its dialogs to ``src/app/content/dialogs.json``, which
@@ -174,13 +178,30 @@ BASIN_JS = """(() => {
 })()"""
 
 
+# the worksheet shown and settled: not busy, no progress toast, the worksheet output filled; its
+# text, or null
+ASSESS_JS = """(() => {
+  const html = document.documentElement;
+  const tool = html.getAttribute('data-staf-tool');
+  if (html.classList.contains('shiny-busy')) return null;
+  if (document.getElementById('shiny-notification-stage')) return null;
+  const err = document.querySelector('.shiny-notification-error');
+  if (err) return 'error: ' + err.textContent.trim();
+  const ws = document.getElementById(tool + '-worksheet');
+  const text = ws ? ws.innerText.trim() : '';
+  return text ? text.length + ':' + text.slice(0, 120) : null;
+})()"""
+NEXT = {"easi": "easi-run_screening", "sfari": "sfari-to_review", "deep": "deep-to_measure"}
+
+
 def pretty(html: str) -> str:
     """One tag per line, so a diff points at the element that changed."""
     return html.replace("><", ">\n<")
 
 
 async def main(app: str, url: str, width: int, height: int, view=None, name: str = "",
-               coverage: bool = False, click=None, delineate: bool = False) -> None:
+               coverage: bool = False, click=None, delineate: bool = False, assess: bool = False,
+               tools=TOOLS, actions: str = "") -> None:
     out = HERE / app
     out.mkdir(parents=True, exist_ok=True)
     prof = Path(tempfile.mkdtemp(prefix="staf-capture-"))
@@ -221,7 +242,7 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
                        mobile=False)
             await call("Page.enable")
             styles, dialogs = None, {}
-            for tool in TOOLS:
+            for tool in tools:
                 await call("Page.navigate", url=f"{url}/?tool={tool}")
                 end = time.monotonic() + 90
                 while time.monotonic() < end:
@@ -266,6 +287,27 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
                         head = await js(BASIN_JS)
                     print(f"{tool}: delineate says {head!r}")
                     await asyncio.sleep(4.0)                # the watershed drawn and fitted, tiles in
+                if assess:
+                    await js(f"document.getElementById('{NEXT[tool]}').click()")
+                    last, same, end = None, 0, time.monotonic() + 900
+                    while time.monotonic() < end and same < 3:
+                        await asyncio.sleep(2.0)
+                        text = await js(ASSESS_JS)
+                        same = same + 1 if text is not None and text == last else 0
+                        last = text
+                    print(f"{tool}: assessment says {(last or '')[:100]!r}")
+                    await asyncio.sleep(3.0)
+                if actions:
+                    # what a user does on the page (an async function over the page's elements), then
+                    # the worksheet settled again
+                    print(f"{tool}: actions say {await js(f'({actions})({json.dumps(tool)})')!r}")
+                    last, same, end = None, 0, time.monotonic() + 300
+                    while time.monotonic() < end and same < 3:
+                        await asyncio.sleep(1.0)
+                        text = await js(ASSESS_JS)
+                        same = same + 1 if text is not None and text == last else 0
+                        last = text
+                    await asyncio.sleep(2.0)
                 got = json.loads(await js(CAPTURE_JS))
                 styles = got["styles"]
                 (out / f"{stem}.html").write_text(
@@ -311,8 +353,12 @@ if __name__ == "__main__":
     ap.add_argument("--coverage", action="store_true", help="turn on StreamCat coverage first (with --view)")
     ap.add_argument("--click", help="LAT,LON to click on the map once the view settles (with --view)")
     ap.add_argument("--delineate", action="store_true", help="press Delineate after the pick (with --click)")
+    ap.add_argument("--assess", action="store_true", help="go on to the Assessment step (with --delineate)")
+    ap.add_argument("--tools", nargs="*", choices=TOOLS, default=list(TOOLS), help="only these tools (with --view)")
+    ap.add_argument("--actions", help="a JS file: an async function (tool) => ... run on the page after --assess")
     a = ap.parse_args()
     v = tuple(float(x) for x in a.view.split(",")) if a.view else None
     c = tuple(float(x) for x in a.click.split(",")) if a.click else None
     asyncio.run(main(a.app, (a.url or URLS[a.app]).rstrip("/"), a.width, a.height, v, a.name, a.coverage, c,
-                     a.delineate))
+                     a.delineate, a.assess, tuple(a.tools),
+                     Path(a.actions).read_text(encoding="utf-8").strip() if a.actions else ""))

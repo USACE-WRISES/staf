@@ -10,7 +10,7 @@ import type { FlowlineRecord } from './bundle'
 import type { Anchor } from './anchor'
 import type { Dataset } from './dataset'
 import { deriveReachHr, deriveReachV2, geoSeries, type GeoSeriesJson, type LineGeometry } from './reach'
-import { computeSite, type EngineData, ENGINE_VERSION, INTERACTIVE_CONFIG, lineSinuosity, type Progress, type SiteRecord } from './site'
+import { computeSite, type EngineData, ENGINE_VERSION, INTERACTIVE_CONFIG, lineSinuosity, type Progress, reachLineIds, type SiteRecord } from './site'
 
 export const DEFAULT_REACH_FT = 1000.0
 export const BASIS_SITE_ENGINE = 'site-engine'
@@ -51,6 +51,9 @@ export function stripGeometry(record: SiteRecord): Result {
   const { anchor: _anchor, ...out } = record as SiteRecord & Result
   if (out.watershed) out.watershed = { ...out.watershed, polygon: null }
   if (out.reach) out.reach = { ...out.reach, geometry: null }
+  // the reach's lines go with the copy (the cross-section grid reads them)
+  const ids = reachLineIds.get(record)
+  if (ids) reachLineIds.set(out, ids)
   return out
 }
 

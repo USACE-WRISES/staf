@@ -26,6 +26,8 @@ export interface Reach {
   geojson: GeoSeriesJson | null
   lengthFt: number | null
   warnings: string[]
+  /** the HR lines the reach was cut from (anchor first), for the cross-section grid */
+  lineIds?: number[]
 }
 
 const pyRound = (x: number, n: number): number => Number(pyFixed(x, n))
@@ -331,6 +333,7 @@ export async function deriveReachHr(hr: Dataset, anchor: FlowlineRecord, lat: nu
     const ownKm = anchor.lengthkm || 0.0
     const neededKm = pyRound(Math.max(lengthKm * 4, ownKm + lengthKm) + 0.3, 1)
     const geoms: LineGeometry[] = [anchor.geometry as LineGeometry]
+    const lineIds = [anchor.nhdplusid]
     let total = ownKm
     let up = anchor.uphydroseq ?? null
     for (let i = 0; i < HOP_CAP; i++) {
@@ -338,10 +341,11 @@ export async function deriveReachHr(hr: Dataset, anchor: FlowlineRecord, lat: nu
       const nxt = await hr.flowline('by_hs', up)
       if (!nxt?.geometry) break
       geoms.push(nxt.geometry as LineGeometry)
+      lineIds.push(nxt.nhdplusid)
       total += nxt.lengthkm || 0.0
       up = nxt.uphydroseq ?? null
     }
-    return reachFromLines(geoms, [geoms[0]], lat, lon, lengthFt, warnings)
+    return { ...reachFromLines(geoms, [geoms[0]], lat, lon, lengthFt, warnings), lineIds }
   } catch (err) {
     return { geojson: null, lengthFt: null, warnings: [`${failure}: ${err instanceof Error ? err.message : err}`] }
   }

@@ -9,6 +9,30 @@
   "leaflet": "1.9.4"
  },
  "files": {
+  "content/deep/deep-functions.json": {
+   "source": "apps/deep/data/deep-functions.json",
+   "sha256": "b2faf2faead031f81720007ba049a20bc2543538c057c1d4c5f72aa156eae829"
+  },
+  "content/deep/deep-outcome-mapping.json": {
+   "source": "apps/deep/data/deep-outcome-mapping.json",
+   "sha256": "5e368aeeadfd37730bfb250322ac39ba9fc8ef44b7b54cabee1d5be1c68d579b"
+  },
+  "content/deep/method-text.json": {
+   "source": "apps/deep/deep/method_text.py: CONCISE",
+   "sha256": "5d1b67dbc2b94664b658f1e700238b7cb2bedfe1b5d1e782db49a867560ad744"
+  },
+  "content/sfari/sfari-functions.json": {
+   "source": "apps/sfari/data/sfari-functions.json",
+   "sha256": "320e63e4bb639f4304bd37366cdc15882cbd0759cb10b6119e07f9041944e70f"
+  },
+  "content/sfari/sfari-metrics.json": {
+   "source": "apps/sfari/data/sfari-metrics.json",
+   "sha256": "618644611d7371c18e0e43e26387c36600977f270985e6028a6929dbea1d0380"
+  },
+  "content/sfari/sfari-outcome-mapping.json": {
+   "source": "apps/sfari/data/sfari-outcome-mapping.json",
+   "sha256": "8fdb20f5eda29ef88d490ae24305cee0d564e2940181be771af548e197117f73"
+  },
   "css/deep/deep.css": {
    "source": "apps/deep/www/deep.css",
    "sha256": "42ddff22dc915e75b18669d6d08196991d20b0ba69082d3c03711650c7e88241"
@@ -125,6 +149,14 @@
    "source": "apps/deep/www/coverage.js",
    "sha256": "ffe00febc6b9ea032bc3ffa5664e00664ee3e191dabcdc98422d9385cfaf4559"
   },
+  "js/deep/measure.js": {
+   "source": "apps/deep/www/measure.js",
+   "sha256": "4127244e219a5c179b6847b07e9f4c5ed7c48a8711e7037596250daa7254c463"
+  },
+  "js/sfari/field-review.js": {
+   "source": "apps/sfari/www/field-review.js",
+   "sha256": "6bc954a5fbc51bec5109a5f18132a74ee3376fde5c3323d1278b865486082bcf"
+  },
   "js/staf/coord-entry.js": {
    "source": "libs/staf_workbook/assets/coord-entry.js",
    "sha256": "b45c1033ac7cb0687a02481ea6136db2328d6b6c799d37492657c7cb23ee4b26"
@@ -136,6 +168,14 @@
   "js/staf/legend-dock.js": {
    "source": "libs/staf_workbook/assets/legend-dock.js",
    "sha256": "1ab8a0b672215180a2bea8e61b7fc2271e420cc451459c057553097d761be5f0"
+  },
+  "js/staf/metric-rows.js": {
+   "source": "libs/staf_workbook/assets/metric-rows.js",
+   "sha256": "8475905c9721e4495e14a769a0e015de34e7aa5d07bee04dcea8583637537bd2"
+  },
+  "js/staf/scenarios.js": {
+   "source": "libs/staf_workbook/assets/scenarios.js",
+   "sha256": "219b864ab4bf77b1984f3ee81a5f1f421a23513180e40d7687452ca75a364f00"
   },
   "js/staf/staf-ns.js": {
    "source": "libs/staf_workbook/assets/staf-ns.js",

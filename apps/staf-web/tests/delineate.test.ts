@@ -7,6 +7,7 @@ import { deriveReachV2 } from '../src/engine/reach'
 import { delineateFromEngine, delineateOnlyEasi, flowlineAttrsV2, geojsonBounds, planarAreaSqkm, reanchorInputs } from '../src/engine/pipeline'
 import { displaySimplify } from '../src/engine/simplify'
 import { computeSite, INTERACTIVE_CONFIG } from '../src/engine/site'
+import { ValueTables } from '../src/engine/values'
 import { Network } from '../src/streams/network'
 import ref from './fixtures/delineate_ref.json'
 import { BASE, have, localFetch } from './local'
@@ -61,7 +62,7 @@ describe.skipIf(!have)('the bundle delineates as the site engine does', () => {
 
   it("computes the engine's record: site, watershed and reach", { timeout: 120_000 }, async () => {
     const src = new DataSource(BASE)
-    const d = { src, hr: new Dataset(src, 'bundle/'), hrNet: new Network(src, 'bundle/') }
+    const d = { src, hr: new Dataset(src, 'bundle/'), hrNet: new Network(src, 'bundle/'), values: new ValueTables(src) }
     for (const c of cases) {
       const e = c.engine
       const rec = await computeSite(d, e.input[0], e.input[1], { ...INTERACTIVE_CONFIG, reachLengthFt: ref.reachFt })
@@ -96,7 +97,7 @@ describe.skipIf(!have)('the bundle delineates as the site engine does', () => {
 
   it("reads EASI's V2 attributes and measures its basin", { timeout: 120_000 }, async () => {
     const src = new DataSource(BASE)
-    const d = { src, hr: new Dataset(src, 'bundle/'), hrNet: new Network(src, 'bundle/'), v2: new Dataset(src, 'bundle/v2/') }
+    const d = { src, hr: new Dataset(src, 'bundle/'), hrNet: new Network(src, 'bundle/'), v2: new Dataset(src, 'bundle/v2/'), values: new ValueTables(src) }
     for (const c of cases.filter((x) => x.v2)) {
       const { attrs } = await flowlineAttrsV2(d, c.v2.input[2])
       const { comid: _c, ...want } = c.v2.attrs
@@ -115,7 +116,7 @@ describe.skipIf(!have)('the bundle delineates as the site engine does', () => {
 
   it("re-anchors EASI's routed sites on the clicked HR stream", { timeout: 120_000 }, async () => {
     const src = new DataSource(BASE)
-    const d = { src, hr: new Dataset(src, 'bundle/'), hrNet: new Network(src, 'bundle/'), v2: new Dataset(src, 'bundle/v2/') }
+    const d = { src, hr: new Dataset(src, 'bundle/'), hrNet: new Network(src, 'bundle/'), v2: new Dataset(src, 'bundle/v2/'), values: new ValueTables(src) }
     for (const c of cases.filter((x) => x.reanchor)) {
       const anchor = structuredClone(c.route.anchor)
       const got = await reanchorInputs(d, anchor, ref.reachFt)
@@ -129,7 +130,7 @@ describe.skipIf(!have)('the bundle delineates as the site engine does', () => {
 
   it("returns EASI's Delineate result key for key", { timeout: 120_000 }, async () => {
     const src = new DataSource(BASE)
-    const d = { src, hr: new Dataset(src, 'bundle/'), hrNet: new Network(src, 'bundle/'), v2: new Dataset(src, 'bundle/v2/') }
+    const d = { src, hr: new Dataset(src, 'bundle/'), hrNet: new Network(src, 'bundle/'), v2: new Dataset(src, 'bundle/v2/'), values: new ValueTables(src) }
     for (const c of cases.filter((x) => x.easi)) {
       const [lat, lon, comid] = c.easi.input
       const got = await delineateOnlyEasi(d, lat, lon, ref.reachFt, comid, structuredClone(c.easi.anchor))
@@ -142,14 +143,18 @@ describe.skipIf(!have)('the bundle delineates as the site engine does', () => {
         delete r.ctx_inputs.reach_geojson
       }
       const rec = want.ctx_inputs.watershedEngine?.record
-      if (rec) got.ctx_inputs.watershedEngine.record.site.ecoregionL3 = rec.site.ecoregionL3
+      if (rec) {
+        // the reference leaves the engine's metrics out (tests/metrics.test.ts checks them)
+        got.ctx_inputs.watershedEngine.record.site.ecoregionL3 = rec.site.ecoregionL3
+        got.ctx_inputs.watershedEngine.record.metrics = {}
+      }
       expect(got, c.name).toEqual(want)
     }
   })
 
   it("returns SFARI's Delineate result key for key", { timeout: 120_000 }, async () => {
     const src = new DataSource(BASE)
-    const d = { src, hr: new Dataset(src, 'bundle/'), hrNet: new Network(src, 'bundle/') }
+    const d = { src, hr: new Dataset(src, 'bundle/'), hrNet: new Network(src, 'bundle/'), values: new ValueTables(src) }
     for (const c of cases) {
       const rec = await computeSite(d, c.lat, c.lon, { ...INTERACTIVE_CONFIG, includeGeometry: true, metricFamilies: [] })
       rec.site!.ecoregionL3 = c.sfari.record.site.ecoregionL3
