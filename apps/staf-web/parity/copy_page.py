@@ -62,8 +62,17 @@ FACE = re.compile(r"/\* ([a-z-]+) \*/\s*(@font-face\s*\{[^}]*\})")
 FONT_SRC = re.compile(r"url\((fonts/[^)]+)\)")
 
 
+#: text files are kept with LF line endings, as the repo stores them (.gitattributes), so a copy's
+#: sha256 is the same in every checkout (Leaflet's stylesheet ships with CRLF)
+TEXT = (".css", ".js", ".svg", ".json")
+
+
 def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def _normal(path: str, data: bytes) -> bytes:
+    return data.replace(b"\r\n", b"\n") if path.endswith(TEXT) else data
 
 
 def sources() -> tuple[dict, dict]:
@@ -108,7 +117,7 @@ def sources() -> tuple[dict, dict]:
         out["css/leaflet/leaflet.css"] = (f"leaflet {version}: dist/leaflet.css", (leaflet / "dist" / "leaflet.css").read_bytes())
         for img in sorted((leaflet / "dist" / "images").iterdir()):
             out[f"css/leaflet/images/{img.name}"] = (f"leaflet {version}: dist/images/{img.name}", img.read_bytes())
-    return out, versions
+    return {path: (label, _normal(path, data)) for path, (label, data) in out.items()}, versions
 
 
 def main(check: bool, force: bool) -> int:
@@ -120,20 +129,22 @@ def main(check: bool, force: bool) -> int:
         if path in OWN:
             continue
         dst = PAGE / path
-        mine = sha256(dst.read_bytes()) if dst.is_file() else None
+        raw = dst.read_bytes() if dst.is_file() else None
+        mine = sha256(_normal(path, raw)) if raw is not None else None
         rec = files.get(path)
         if path not in now:
             gone.append(path)
             continue
         label, data = now[path]
         theirs = sha256(data)
-        if rec and mine is not None and mine != rec["sha256"]:
+        # edited here: neither its bytes nor their LF form are what was copied
+        if rec and raw is not None and rec["sha256"] not in (mine, sha256(raw)):
             edited.append(path)
             if not force:
                 continue
         if rec and theirs != rec["sha256"]:
             changed.append(path)
-        if check or mine == theirs:
+        if check or (mine == theirs and raw == data):
             if not check:
                 files[path] = {"source": label, "sha256": theirs}
             continue
