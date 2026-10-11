@@ -15,7 +15,10 @@ just that one.
   project and tiles read. Where the section sits and which way it faces are not stored: they follow
   from the bundle's own lines by ``sections.place`` (the bundle the browser and the apps already
   read; ``verify_placement`` checks it rebuilds the archive's ``x``, ``y``, ``nx``, ``ny`` bit for bit).
-  With these a pull from USGS's tile files rebuilds the archive's samples (``config.SAMPLING_RULE``).
+  Each section also carries the grid corners the build read it on (``grid_epsg``, ``grid_c``,
+  ``grid_f`` per read, ``grid_a``, ``grid_e``; ``origins.region_grids`` replays the build's groups), so a
+  pull from USGS's tile files rebuilds the archive's samples bit for bit (``origins.pull``; measured
+  2026-10-10 on 1 m in Iowa and Connecticut, two-UTM-zone 1 m, 3 m quads and 10 m tiles).
 - ``xs-<vpu>-median.parquet``, one profile per HR segment: the segment's section nearest both of
   its medians (``geomorph.median_candidate``, the rule the apps draw by), its samples copied from the
   archive as they are (``codec``: float32 as order-preserving integers, second differences), plus
@@ -49,12 +52,17 @@ from . import config
 TAG = "staf-xs-current"
 REPO = "USACE-WRISES/staf"
 MANIFEST = "release.json"
-#: the release files' own format (the columns and their scales below); a change re-packs every region
-FORMAT = 1
+#: the release's format (2: the sections carry their read grids); each file also carries its own
+#: ``layout``, and a pack reuses a numbers or median file whose layout and region record are unchanged
+FORMAT = 2
+LAYOUT = {"numbers": 1, "sections": 2, "median": 1}
 OUT = Path(os.environ.get("XSGRID_RELEASE") or (config.WORK / "release"))
 NUMBERS_ROWS = SECTIONS_ROWS = 1 << 14
 MEDIAN_ROWS = 512
 ZSTD_LEVEL = 19
+#: the median profiles are the archive's second-difference codes, which level 19 shrinks no further
+#: than the archive's own level 9 (0710: 947 against 951 B a profile) at a tenth of the speed
+MEDIAN_ZSTD_LEVEL = 9
 #: GitHub's limit for one release asset
 MAX_ASSET_BYTES = 2 * 2**30
 #: the longest one ``gh`` upload of up to ten files may take
@@ -82,8 +90,8 @@ METRIC_COLUMNS = ("nhdplusid", "part", "k", "n_sec", "res_m", "status", "entrenc
                   "bankfull_width_m", "flood_prone_width_m", "bankfull_depth_m", "thalweg", "bankfull_stage_m",
                   "low_bank_stage_m", "low_bank_capped", "edge_limited", "bankfull_area_edge_limited",
                   "bank_detection", "thalweg_station_m")
-ARCHIVE_COLUMNS = ("nhdplusid", "part", "k", "da_sqkm", "division", "bf_width_m", "bf_depth_m", "bf_area_m2",
-                   "bf_extrapolated", "wide_m", "res_m", "n_pts", "source", "tiles")
+ARCHIVE_COLUMNS = ("nhdplusid", "part", "k", "x", "y", "nx", "ny", "da_sqkm", "division", "bf_width_m",
+                   "bf_depth_m", "bf_area_m2", "bf_extrapolated", "wide_m", "res_m", "n_pts", "source", "tiles")
 COLUMN_DOC = {
     "numbers": "nhdplusid, part, k, n_sec; res (DEM metres, 0 none); status (index into STATUS); bank "
                "(index into BANK, 255 none); flags (bits); er, bhr, bfd (x100), bfw, fpw (x10), null when "
@@ -91,9 +99,14 @@ COLUMN_DOC = {
     "sections": "nhdplusid, part, k; thalweg (float32 m) and thalweg_i (its sample's index); bf_m, lb_m "
                 "(float32 m above the thalweg); da_sqkm, division, rc_width (x100), rc_depth (x1000), "
                 "rc_area (x100): the regional bankfull inputs; wide_cm (half-width x100); n_pts; source "
-                "(3DEP project, 3dep-19 or 3dep-13); tiles (';'-joined tile names). Position and direction: "
-                "sections.place on the bundle's lines2_<vpu> (k of n_sec at (k + 1/2) L / n, facing the 5 m "
-                "chord downstream)",
+                "(3DEP project, 3dep-19 or 3dep-13); tiles (';'-joined tile names); grid_epsg, grid_c, grid_f "
+                "(per read, in reading order: the CRS and the corner of the window the build read the "
+                "section on), grid_a, grid_e (its pixel size). Position and direction: sections.place on the "
+                "bundle's lines2_<vpu> (k of n_sec at (k + 1/2) L / n, facing the 5 m chord downstream). A pull: "
+                "transform the samples to each read's CRS, fj = (u - c) / a - 0.5, fi = (v - f) / e - 0.5, "
+                "paste each recorded tile of that CRS (name order) at round half to even ((tile c - c) / a), "
+                "the first with data winning a pixel, interpolate bilinearly, fill what earlier reads left "
+                "missing, round to float32",
     "median": "nhdplusid, part, k, res, wide_cm, n_pts, thalweg, thalweg_i, bf_m, lb_m, and z (the "
               "archive's int32 codes; codec.decode gives the float32 samples at linspace(-wide, wide, n_pts))",
 }
@@ -215,13 +228,13 @@ def _thalweg_index(station: np.ndarray, wide: np.ndarray, n_pts: np.ndarray) -> 
     return pa.array(idx.astype(np.uint16), type=pa.uint16(), mask=missing)
 
 
-def _write(table: pa.Table, path: Path, rows: int, md: dict) -> dict:
+def _write(table: pa.Table, path: Path, rows: int, md: dict, level: int = ZSTD_LEVEL) -> dict:
     """Write deterministically (no time stamps in the file) and atomically; bytes and sha256."""
     path.parent.mkdir(parents=True, exist_ok=True)
     table = table.replace_schema_metadata({"xsgrid_release": json.dumps(md, sort_keys=True)})
     names = table.column_names
     tmp = path.with_suffix(path.suffix + ".tmp")
-    pq.write_table(table, tmp, compression="zstd", compression_level=ZSTD_LEVEL, row_group_size=rows,
+    pq.write_table(table, tmp, compression="zstd", compression_level=level, row_group_size=rows,
                    use_dictionary=[c for c in ("division", "source", "tiles") if c in names],
                    write_statistics=["nhdplusid"])
     os.replace(tmp, path)
@@ -330,38 +343,91 @@ def pack_region(vpu: str, out: Path = OUT) -> dict:
     sections["n_pts"] = pc.cast(a.column("n_pts"), pa.uint16())
     sections["source"] = a.column("source")
     sections["tiles"] = a.column("tiles")
+    corners = _region_grids(a)
+    sections["grid_epsg"] = pa.array([[c[0] for c in cs] for cs in corners], type=pa.list_(pa.int32()))
+    sections["grid_c"] = pa.array([[c[1] for c in cs] for cs in corners], type=pa.list_(pa.float64()))
+    sections["grid_f"] = pa.array([[c[2] for c in cs] for cs in corners], type=pa.list_(pa.float64()))
+    sections["grid_a"] = pa.array([cs[0][3] if cs else None for cs in corners], type=pa.float64())
+    sections["grid_e"] = pa.array([cs[0][4] if cs else None for cs in corners], type=pa.float64())
     sections_t = pa.table(sections)
 
-    scored = pc.fill_null(pc.is_in(m.column("status"), value_set=pa.array(list(SCORED))), False)
-    scored = scored.to_numpy(zero_copy_only=False).astype(bool)
-    mrows = _median_rows(nhd, part, num("entrenchment_ratio"), num("bank_height_ratio"), scored)
-    median_t = pa.table({
-        "nhdplusid": numbers_t.column("nhdplusid").take(pa.array(mrows)),
-        "part": numbers_t.column("part").take(pa.array(mrows)),
-        "k": numbers_t.column("k").take(pa.array(mrows)),
-        "res": numbers_t.column("res").take(pa.array(mrows)),
-        "wide_cm": sections_t.column("wide_cm").take(pa.array(mrows)),
-        "n_pts": sections_t.column("n_pts").take(pa.array(mrows)),
-        "thalweg": sections_t.column("thalweg").take(pa.array(mrows)),
-        "thalweg_i": sections_t.column("thalweg_i").take(pa.array(mrows)),
-        "bf_m": sections_t.column("bf_m").take(pa.array(mrows)),
-        "lb_m": sections_t.column("lb_m").take(pa.array(mrows)),
-        "z": _median_codes(apath, order[mrows]),
-    })
-
     out = Path(out)
+    keep_numbers = _reusable(out / numbers_asset(vpu), vpu, rec, "numbers")
+    keep_median = _reusable(out / median_asset(vpu), vpu, rec, "median")
+    median_t = None
+    if not keep_median:
+        scored = pc.fill_null(pc.is_in(m.column("status"), value_set=pa.array(list(SCORED))), False)
+        scored = scored.to_numpy(zero_copy_only=False).astype(bool)
+        mrows = _median_rows(nhd, part, num("entrenchment_ratio"), num("bank_height_ratio"), scored)
+        median_t = pa.table({
+            "nhdplusid": numbers_t.column("nhdplusid").take(pa.array(mrows)),
+            "part": numbers_t.column("part").take(pa.array(mrows)),
+            "k": numbers_t.column("k").take(pa.array(mrows)),
+            "res": numbers_t.column("res").take(pa.array(mrows)),
+            "wide_cm": sections_t.column("wide_cm").take(pa.array(mrows)),
+            "n_pts": sections_t.column("n_pts").take(pa.array(mrows)),
+            "thalweg": sections_t.column("thalweg").take(pa.array(mrows)),
+            "thalweg_i": sections_t.column("thalweg_i").take(pa.array(mrows)),
+            "bf_m": sections_t.column("bf_m").take(pa.array(mrows)),
+            "lb_m": sections_t.column("lb_m").take(pa.array(mrows)),
+            "z": _median_codes(apath, order[mrows]),
+        })
+
     assets = {}
-    for name, table, rows in ((numbers_asset(vpu), numbers_t, NUMBERS_ROWS),
-                              (sections_asset(vpu), sections_t, SECTIONS_ROWS),
-                              (median_asset(vpu), median_t, MEDIAN_ROWS)):
-        assets[name] = {**_write(table, out / name, rows, md), "region": vpu}
+    for kind, name, table, rows, level, keep in (
+            ("numbers", numbers_asset(vpu), numbers_t, NUMBERS_ROWS, ZSTD_LEVEL, keep_numbers),
+            ("sections", sections_asset(vpu), sections_t, SECTIONS_ROWS, ZSTD_LEVEL, False),
+            ("median", median_asset(vpu), median_t, MEDIAN_ROWS, MEDIAN_ZSTD_LEVEL, keep_median)):
+        if keep:                                         # unchanged layout and metrics: the file stands
+            path = out / name
+            assets[name] = {"bytes": path.stat().st_size, "sha256": sha256(path), "region": vpu}
+        else:
+            assets[name] = {**_write(table, out / name, rows, {**md, "layout": LAYOUT[kind]}, level), "region": vpu}
         if assets[name]["bytes"] >= MAX_ASSET_BYTES:
             raise ValueError(f"{name} is {assets[name]['bytes'] / 2**30:.2f} GiB, over a release asset's 2 GiB")
+    medians = pq.ParquetFile(out / median_asset(vpu)).metadata.num_rows
     entry = {"sections": rec["sections"], "segments": int(len(np.unique(nhd))) if len(nhd) else 0,
-             "medians": int(len(mrows)), "tiers": rec.get("tiers"), "statuses": rec.get("statuses"),
+             "medians": int(medians), "tiers": rec.get("tiers"), "statuses": rec.get("statuses"),
              "finished": rec.get("finished"), "sampling_version": rec.get("sampling_version"),
              "metrics_sha256": rec["metrics_sha256"], "format": FORMAT, "assets": sorted(assets)}
     return {"entry": entry, "assets": assets}
+
+
+_CATALOGS = None
+_TILE_GRIDS = None
+
+
+def _tools() -> tuple:
+    """This process's tile catalogs and tile-header cache (loaded once)."""
+    global _CATALOGS, _TILE_GRIDS
+    from . import origins, sample
+    from .engine import dem_tiles
+    if _CATALOGS is None:
+        dem_tiles.GDAL_ENV.update(config.gdal_env())
+        _CATALOGS = sample.Catalogs()
+        _TILE_GRIDS = origins.TileGrids()
+    return _CATALOGS, _TILE_GRIDS
+
+
+def _region_grids(archive_rows: pa.Table) -> list:
+    """Each row's read grids (``origins.region_grids``)."""
+    from . import origins
+    catalogs, grids = _tools()
+    return origins.region_grids(archive_rows, catalogs, grids)
+
+
+def _embedded(path: Path) -> dict:
+    return json.loads((pq.ParquetFile(path).schema_arrow.metadata or {}).get(b"xsgrid_release", b"{}"))
+
+
+def _reusable(path: Path, vpu: str, rec: dict, kind: str) -> bool:
+    """A file already packed for this region's metrics in this kind's current layout (files of format
+    1 carry no layout: their numbers and median layouts are 1)."""
+    if not path.exists():
+        return False
+    md = _embedded(path)
+    return (md.get("vpu") == vpu and md.get("metrics_sha256") == rec["metrics_sha256"]
+            and md.get("layout", 1) == LAYOUT[kind])
 
 
 def verify_region(vpu: str, out: Path = OUT) -> dict:
@@ -413,6 +479,14 @@ def verify_region(vpu: str, out: Path = OUT) -> dict:
     if st.column("tiles").to_pylist() != a.column("tiles").to_pylist() or \
             not (st.column("wide_cm").to_numpy(zero_copy_only=False) / 100 == wide).all():
         raise ValueError(f"[{vpu}] the transects differ")
+    reads = pc.list_value_length(st.column("grid_epsg")).to_numpy(zero_copy_only=False)
+    res = nt.column("res").to_numpy()
+    for col in ("grid_c", "grid_f"):
+        if not (pc.list_value_length(st.column(col)).to_numpy(zero_copy_only=False) == reads).all():
+            raise ValueError(f"[{vpu}] {col} has another number of reads than grid_epsg")
+    if not ((reads > 0) == (res > 0)).all():
+        raise ValueError(f"[{vpu}] {int(((reads > 0) != (res > 0)).sum())} sections with samples lack a read grid "
+                         f"(or the reverse)")
     # medians: the drawing rule's choice, and the archive's codes as they are
     nhd = m.column("nhdplusid").to_numpy()
     scored = pc.fill_null(pc.is_in(m.column("status"), value_set=pa.array(list(SCORED))), False)
@@ -426,6 +500,88 @@ def verify_region(vpu: str, out: Path = OUT) -> dict:
     if not md.column("z").combine_chunks().equals(want_z):
         raise ValueError(f"[{vpu}] a median profile differs from the archive")
     return {"sections": nt.num_rows, "medians": md.num_rows}
+
+
+def verify_pulls(vpu: str, out: Path = OUT, n: int = 3, seed: int = 7) -> int:
+    """Pull ``n`` of the region's sections (at least one of each DEM tier present) from USGS on the
+    grids the release records and require the archive's samples bit for bit. Returns the pulls made."""
+    import random
+
+    from . import codec, origins, sample
+    st = pq.read_table(Path(out) / sections_asset(vpu), columns=["nhdplusid", "part", "k", "grid_epsg", "grid_c",
+                                                                 "grid_f", "grid_a", "grid_e", "tiles"])
+    nt = pq.read_table(Path(out) / numbers_asset(vpu), columns=["res"])
+    res = nt.column("res").to_numpy()
+    rng = random.Random(seed)
+    tiers = sorted(set(res.tolist()) - {0})
+    picks = []
+    for tier in tiers:
+        rows = np.flatnonzero(res == tier).tolist()
+        picks += rng.sample(rows, min(len(rows), max(1, n // len(tiers))))
+    if not picks:
+        return 0
+    af = pq.ParquetFile(config.ARCHIVE / "archive" / f"xs_{vpu}.parquet")
+    ids = af.read(columns=["nhdplusid", "part", "k"])
+    key = dict(((int(i), int(p), int(k)), r) for r, (i, p, k) in enumerate(zip(
+        ids.column("nhdplusid").to_pylist(), ids.column("part").to_pylist(), ids.column("k").to_pylist())))
+    starts = np.cumsum([0] + [af.metadata.row_group(g).num_rows for g in range(af.metadata.num_row_groups)])
+    catalogs, grids = _tools()
+    names = origins.Names(catalogs)
+    rows = st.take(pa.array(picks)).to_pylist()
+    for row, tier in zip(rows, res[picks].tolist()):
+        r = key[(int(row["nhdplusid"]), int(row["part"]), int(row["k"]))]
+        g = int(np.searchsorted(starts, r, side="right") - 1)
+        ar = af.read_row_group(g, columns=["x", "y", "nx", "ny", "wide_m", "n_pts", "z"]).slice(
+            r - int(starts[g]), 1).to_pylist()[0]
+        sec = sample.Section(i=0, x=ar["x"], y=ar["y"], nx=ar["nx"], ny=ar["ny"], wide=ar["wide_m"])
+        corners = [(e, c, f, row["grid_a"], row["grid_e"])
+                   for e, c, f in zip(row["grid_epsg"], row["grid_c"], row["grid_f"])]
+        z = origins.pull(sec, ar["n_pts"], int(tier), row["tiles"], corners, grids, names)
+        ref = codec.decode(np.asarray(ar["z"], dtype=np.int32))
+        if not np.array_equal(z.view(np.uint32), ref.view(np.uint32)):
+            raise ValueError(f"[{vpu}] section {row['nhdplusid']} k={row['k']} ({tier} m) pulled again differs "
+                             f"from the archive on {int((z.view(np.uint32) != ref.view(np.uint32)).sum())} samples")
+    return len(rows)
+
+
+def _verify_one(vpu: str, out: Path, placement: bool, pulls: int = 0) -> tuple:
+    got = verify_region(vpu, out)
+    return (got["sections"], got["medians"], (verify_placement(vpu) if placement else None),
+            (verify_pulls(vpu, out, pulls) if pulls else None))
+
+
+def verify_all(vpus: list, out: Path = OUT, *, workers: int = 1, placement: bool = False, pulls: int = 0,
+               log=print) -> list:
+    """``verify_region`` (and ``verify_placement``) on each region, ``workers`` at a time; returns the
+    regions that failed."""
+    bad = []
+
+    def report(vpu, result=None, exc=None):
+        if exc is not None:
+            bad.append(vpu)
+            log(f"[{vpu}] VERIFY FAILED: {exc}")
+            return
+        sections, medians, placed, pulled = result
+        log(f"[{vpu}] verified {sections:,} sections and {medians:,} median profiles"
+            + (f"; placed {placed:,} sections again: positions identical" if placed is not None else "")
+            + (f"; pulled {pulled} sections from USGS on their recorded grids: bit-identical" if pulled else ""))
+
+    if workers > 1 and len(vpus) > 1:
+        from concurrent.futures import ProcessPoolExecutor, as_completed
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            futures = dict((pool.submit(_verify_one, vpu, Path(out), placement, pulls), vpu) for vpu in vpus)
+            for f in as_completed(futures):
+                try:
+                    report(futures[f], f.result())
+                except Exception as exc:  # noqa: BLE001
+                    report(futures[f], exc=exc)
+    else:
+        for vpu in vpus:
+            try:
+                report(vpu, _verify_one(vpu, Path(out), placement, pulls))
+            except Exception as exc:  # noqa: BLE001
+                report(vpu, exc=exc)
+    return bad
 
 
 def verify_placement(vpu: str, bundle: Path | None = None) -> int:
@@ -460,9 +616,10 @@ def _grid_identity() -> dict:
             "bundle_format": bundle.get("format")}
 
 
-def pack(vpus: list | None = None, out: Path = OUT, *, force: bool = False, log=print) -> dict:
+def pack(vpus: list | None = None, out: Path = OUT, *, force: bool = False, workers: int = 1, log=print) -> dict:
     """Pack every merged region in ``vpus`` (default: all) whose metrics or this format changed since
-    its last pack, then rewrite ``release.json`` (last). Returns ``{"packed": [...], "kept": [...]}``."""
+    its last pack (``workers`` regions at a time), rewriting ``release.json`` after each.
+    Returns ``{"packed": [...], "kept": [...], "failed": [...]}``."""
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     old = read_manifest(out)
@@ -470,31 +627,80 @@ def pack(vpus: list | None = None, out: Path = OUT, *, force: bool = False, log=
     assets = dict(old.get("assets") or {})
     merged = merged_regions()
     todo = [v for v in (vpus or merged) if v in merged]
+    every = lower48()
     packed, kept, failed = [], [], []
-    for vpu in todo:
-        prev = regions.get(vpu)
-        rec = _record(vpu)
-        fresh = (prev and prev.get("metrics_sha256") == rec["metrics_sha256"] and prev.get("format") == FORMAT
-                 and all((out / n).exists() and assets.get(n, {}).get("sha256") for n in prev.get("assets", [])))
-        if fresh and not force:
-            kept.append(vpu)
-            continue
-        try:
-            got = pack_region(vpu, out)
-        except (ValueError, OSError) as exc:          # one region's trouble never holds up the rest
-            failed.append(vpu)
-            log(f"[{vpu}] NOT packed: {exc}")
-            continue
-        for name in (prev or {}).get("assets", []):
+
+    def done(vpu: str, got: dict, how: str) -> None:
+        for name in (regions.get(vpu) or {}).get("assets", []):
             assets.pop(name, None)
         regions[vpu] = got["entry"]
         assets.update(got["assets"])
         packed.append(vpu)
-        log(f"[{vpu}] packed {got['entry']['sections']:,} sections, {got['entry']['medians']:,} median profiles, "
+        log(f"[{vpu}] {how} {got['entry']['sections']:,} sections, {got['entry']['medians']:,} median profiles, "
             f"{sum(a['bytes'] for a in got['assets'].values()) / 1e6:.1f} MB")
-    every = lower48()
+        write_manifest(out, regions, assets, [v for v in every if v not in regions])   # a checkpoint
+
+    to_pack = []
+    kinds = ("numbers", "sections", "median")
+    for vpu in todo:
+        prev = regions.get(vpu)
+        rec = _record(vpu)
+        names = (numbers_asset(vpu), sections_asset(vpu), median_asset(vpu))
+        fresh = (prev and prev.get("metrics_sha256") == rec["metrics_sha256"] and prev.get("format") == FORMAT
+                 and all(assets.get(n, {}).get("sha256") and _reusable(out / n, vpu, rec, kind)
+                         for kind, n in zip(kinds, names)))
+        if fresh and not force:
+            kept.append(vpu)
+            continue
+        try:
+            got = None if force else _adopt(vpu, out, rec)
+        except (ValueError, OSError):
+            got = None
+        if got:
+            done(vpu, got, "adopted the files already packed:")
+        else:
+            to_pack.append(vpu)
+    if workers > 1 and len(to_pack) > 1:
+        from concurrent.futures import ProcessPoolExecutor, as_completed
+        with ProcessPoolExecutor(max_workers=workers) as pool:
+            futures = dict((pool.submit(pack_region, vpu, out), vpu) for vpu in to_pack)
+            for f in as_completed(futures):
+                vpu = futures[f]
+                try:
+                    done(vpu, f.result(), "packed")
+                except Exception as exc:  # noqa: BLE001 - one region's trouble never holds up the rest
+                    failed.append(vpu)
+                    log(f"[{vpu}] NOT packed: {exc}")
+    else:
+        for vpu in to_pack:
+            try:
+                done(vpu, pack_region(vpu, out), "packed")
+            except (ValueError, OSError) as exc:      # one region's trouble never holds up the rest
+                failed.append(vpu)
+                log(f"[{vpu}] NOT packed: {exc}")
     write_manifest(out, regions, assets, [v for v in every if v not in regions])
     return {"packed": packed, "kept": kept, "failed": failed}
+
+
+
+def _adopt(vpu: str, out: Path, rec: dict) -> dict | None:
+    """The region's files already in ``out`` (a pack stopped before its manifest), when each one's
+    embedded identity is this format and the region record's metrics; else None."""
+    names = (numbers_asset(vpu), sections_asset(vpu), median_asset(vpu))
+    for kind, name in zip(("numbers", "sections", "median"), names):
+        if not _reusable(Path(out) / name, vpu, rec, kind):
+            return None
+    nums = pq.read_table(Path(out) / names[0], columns=["nhdplusid"]).column("nhdplusid")
+    if len(nums) != rec["sections"]:
+        return None
+    assets = dict((n, {"bytes": (Path(out) / n).stat().st_size, "sha256": sha256(Path(out) / n), "region": vpu})
+                  for n in names)
+    entry = {"sections": rec["sections"], "segments": len(pc.unique(nums)) if len(nums) else 0,
+             "medians": pq.ParquetFile(Path(out) / names[2]).metadata.num_rows, "tiers": rec.get("tiers"),
+             "statuses": rec.get("statuses"), "finished": rec.get("finished"),
+             "sampling_version": rec.get("sampling_version"), "metrics_sha256": rec["metrics_sha256"],
+             "format": FORMAT, "assets": sorted(assets)}
+    return {"entry": entry, "assets": assets}
 
 
 def write_manifest(out: Path, regions: dict, assets: dict, pending: list) -> dict:

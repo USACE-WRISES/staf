@@ -78,24 +78,15 @@ def cmd_release(args) -> int:
         return 0
     if args.action == "verify":
         vpus = args.vpus or sorted((release.read_manifest(out).get("regions") or {}).keys())
-        bad = 0
-        for vpu in vpus:
-            try:
-                got = release.verify_region(vpu, out)
-                log(f"[{vpu}] verified {got['sections']:,} sections and {got['medians']:,} median profiles")
-                if args.placement:
-                    log(f"[{vpu}] placed {release.verify_placement(vpu):,} sections again: positions identical")
-            except ValueError as exc:
-                bad += 1
-                log(f"[{vpu}] VERIFY FAILED: {exc}")
-        log(f"verified {len(vpus) - bad} of {len(vpus)} regions")
+        bad = release.verify_all(vpus, out, workers=args.workers, placement=args.placement, pulls=args.pulls, log=log)
+        log(f"verified {len(vpus) - len(bad)} of {len(vpus)} regions" + (f"; FAILED: {', '.join(bad)}" if bad else ""))
         return 1 if bad else 0
     if args.action in ("pack", "sync"):
         if not release.lock(out):
             log(f"another release step is running ({out / 'release.lock'}); not starting")
             return 0
         try:
-            got = release.pack(args.vpus or None, out, force=args.force, log=log)
+            got = release.pack(args.vpus or None, out, force=args.force, workers=args.workers, log=log)
             log(f"packed {len(got['packed'])} regions, {len(got['kept'])} unchanged"
                 + (f", {len(got['failed'])} FAILED ({', '.join(got['failed'])})" if got["failed"] else ""))
             code = 1 if got["failed"] else 0
@@ -239,6 +230,11 @@ def main(argv=None) -> int:
     p.add_argument("--remote", action="store_true", help="status: compare with the published release")
     p.add_argument("--placement", action="store_true",
                    help="verify: also place the sections again from the bundle's lines (slower)")
+    p.add_argument("--workers", type=int, default=1,
+                   help="pack or verify this many regions at once (each holds a region in memory)")
+    p.add_argument("--pulls", type=int, default=0,
+                   help="verify: also pull this many sections per region from USGS on their recorded grids "
+                        "and require the archive's samples bit for bit")
     p.add_argument("--log", default=None, help="append the output to this file")
     p.set_defaults(fn=cmd_release)
     p = sub.add_parser("stop")

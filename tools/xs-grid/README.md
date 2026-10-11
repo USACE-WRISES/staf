@@ -57,6 +57,11 @@ The grid goes out region by region while the build runs. `xsgrid/release.py` pac
     - the regional bankfull inputs;
     - the half-width, the sample count, and the 3DEP project and tiles read.
     - Position and direction are not stored: `sections.place` rebuilds them bit for bit from the bundle's `lines2_<vpu>`, which are byte-identical to the published bundle's.
+    - **The grids the build read each section on** (format 2): `grid_epsg`, `grid_c`, `grid_f` per read, in reading order, plus `grid_a`, `grid_e`.
+      - **Why:** USGS's 1 m tile origins are not whole metres, and `merge_windows` pastes a group's tiles onto its first tile's grid from the window's corner. A pull of a section over its own window therefore lands a few float32 steps off the archive (up to 0.05 mm, measured in Connecticut).
+      - **How:** `xsgrid/origins.py` replays the build's groups and records each corner: the same catalog, candidate projects, levels, 3 m and 10 m fallbacks, taken from the archive's recorded tiers and sources.
+      - **The result:** `origins.pull` pastes the section's tiles at the build's offsets from the recorded corner and reproduces the archive bit for bit. Measured 2026-10-10: Iowa and Connecticut 1 m, two-UTM-zone 1 m, 3 m quads and 10 m tiles all identical.
+      - **Tile headers** (the catalogs' boxes are rounded) are cached in `D:\Data\xs-grid\tile_grids.json`.
   - `xs-<vpu>-median.parquet`: one profile per HR segment, with its stages.
     - The section is the segment's one nearest both medians (`geomorph.median_candidate`, the apps' drawing rule).
     - The samples are the archive's own codes, copied unchanged.
@@ -68,7 +73,13 @@ The grid goes out region by region while the build runs. `xsgrid/release.py` pac
     - Numbers, thalwegs and stations must be exact, and stages exact at float32.
     - Medians must be the drawing rule's choice, with codes identical.
     - With `--placement` it also re-places every section from the bundle's lines and requires identical positions.
+    - With `--pulls N` it also pulls N sections per region from USGS (every DEM tier present) on their recorded grids, and requires the archive's samples bit for bit.
   - **`release publish --yes`**: creates the release as a prerelease if it's missing, uploads only the assets whose sha256 differs from GitHub's, then `release.json`. Add `--dry-run` to list the uploads first.
+  - **Speed:** `pack` and `verify` take `--workers N` (regions at once; a big region holds several GB in memory).
+    - `release.json` is rewritten after each region.
+    - A pack that stopped part way adopts the region files it already wrote: each file's embedded identity names this format and the region's metrics.
+    - Numbers and sections are written at zstd 19; the median profiles at zstd 9. They're the archive's own codes, which 19 shrinks no further.
+    - Each file carries its own `layout`. A pack reuses a numbers or median file whose layout and region record are unchanged, so a new sections layout re-reads no archive transects.
 - **While the build runs:** `national ... --publish` packs and publishes each region as it merges.
   - This happens in a separate process (`release sync --yes`, logging to `D:\Data\xs-grid\logs\release.log`), one round at a time. A failed round is logged and the next merge tries again.
   - A pause waits for the round in hand, because it reads the archive drive.

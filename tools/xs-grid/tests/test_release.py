@@ -110,9 +110,18 @@ def _tables(rows):
     return pa.table(arch, schema=archive.ARCHIVE_SCHEMA), pa.table(met, schema=archive.METRICS_SCHEMA)
 
 
+def _fake_grids(table):
+    """Stands in for the replay of the build's reads (``origins.region_grids`` needs the real tile
+    catalogs and USGS's headers): one read grid per section with samples."""
+    res = table.column("res_m").to_numpy()
+    k = table.column("k").to_numpy()
+    return [[(26915, 1000.0 + float(kk), 2000.5, 1.0, -1.0)] if r else [] for r, kk in zip(res, k)]
+
+
 @pytest.fixture
 def drive(tmp_path, monkeypatch):
     """A fake archive drive with one merged region (two cells, so two row groups)."""
+    monkeypatch.setattr(release, "_region_grids", _fake_grids)
     monkeypatch.setattr(config, "ARCHIVE", tmp_path / "staf-xs")
     monkeypatch.setattr(config, "WORK", tmp_path / "work")
     bundle = tmp_path / "bundle"
@@ -203,6 +212,27 @@ def test_sections_carry_what_a_pull_needs(drive):
     unbalanced = [x for x in drive["rows"] if x["status"] == "unbalanced"][0]
     gone = [s for s in st if s["nhdplusid"] == unbalanced["nid"] and s["k"] == unbalanced["k"]][0]
     assert gone["bf_m"] is None and gone["thalweg"] is None and gone["tiles"]    # no stages, still pullable
+    assert first["grid_epsg"] == [26915] and first["grid_c"] == [1000.0 + r["k"]] and first["grid_f"] == [2000.5]
+    assert first["grid_a"] == 1.0 and first["grid_e"] == -1.0
+    no_dem = [s for s in st if s["nhdplusid"] == 22000900000030][0]
+    assert no_dem["grid_epsg"] == [] and no_dem["grid_a"] is None
+
+
+def test_a_new_sections_layout_rewrites_only_the_sections(drive, monkeypatch):
+    release.pack(None, drive["out"], log=lambda *_: None)
+    before = dict((n, a["sha256"]) for n, a in release.read_manifest(drive["out"])["assets"].items())
+    monkeypatch.setitem(release.LAYOUT, "sections", release.LAYOUT["sections"] + 1)
+
+    def no_median_reads(*_a, **_k):
+        raise AssertionError("an unchanged median file was rebuilt")
+    monkeypatch.setattr(release, "_median_codes", no_median_reads)
+    got = release.pack(None, drive["out"], log=lambda *_: None)
+    assert got["packed"] == [VPU]
+    after = dict((n, a["sha256"]) for n, a in release.read_manifest(drive["out"])["assets"].items())
+    assert after[release.numbers_asset(VPU)] == before[release.numbers_asset(VPU)]
+    assert after[release.median_asset(VPU)] == before[release.median_asset(VPU)]
+    assert after[release.sections_asset(VPU)] != before[release.sections_asset(VPU)]
+    assert release.pack(None, drive["out"], log=lambda *_: None)["kept"] == [VPU]
 
 
 def test_placement_rebuilds_the_archive_positions_from_the_lines(tmp_path, monkeypatch):
@@ -248,6 +278,20 @@ def test_a_second_pack_keeps_unchanged_regions_and_is_byte_identical(drive):
     assert release.pack(None, drive["out"], force=True, log=lambda *_: None)["packed"] == [VPU]
     after = dict((n, a["sha256"]) for n, a in release.read_manifest(drive["out"])["assets"].items())
     assert before == after
+
+
+def test_a_pack_stopped_before_its_manifest_adopts_the_files_it_wrote(drive):
+    release.pack(None, drive["out"], log=lambda *_: None)
+    before = release.read_manifest(drive["out"])
+    (drive["out"] / release.MANIFEST).unlink()                       # stopped before the manifest
+    said = []
+    got = release.pack(None, drive["out"], log=said.append)
+    assert got["packed"] == [VPU] and "adopted" in said[0]
+    after = release.read_manifest(drive["out"])
+    assert after["assets"] == before["assets"] and after["regions"] == before["regions"]
+    rec = json.loads((config.ARCHIVE / "regions" / f"{VPU}.json").read_text(encoding="utf-8"))
+    rec["metrics_sha256"] = "0" * 64                                   # files of other metrics: packed again
+    assert release._adopt(VPU, drive["out"], rec) is None
 
 
 def test_a_changed_metrics_file_is_refused_until_the_record_matches(drive):
