@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
     <title>STAF web data proof</title>
     <style>
       body { font: 14px/1.4 system-ui, "Segoe UI", sans-serif; margin: 24px; color: #2b3445; background: #fff; }
@@ -19,7 +20,7 @@
   </head>
   <body>
     <h1>STAF web data proof</h1>
-    <p class="note">Range reads of the browser layout (<code>?data=</code> base, default this server's <code>/data/</code>), one region (<code>?vpu=</code>), and a live pull of a section from USGS 3DEP compared with the archive.</p>
+    <p class="note">Range reads of the browser layout (the Hugging Face mirror, or this dev server's <code>/data/</code> in development; <code>?data=</code> sets another base), one region (<code>?vpu=</code>), and a live pull of a section from USGS 3DEP compared with the archive.</p>
     <div id="status">Running…</div>
     <table id="steps"><thead><tr><th>Step</th><th>Result</th><th>Requests</th><th>To the data host</th><th>Bytes</th><th>ms</th></tr></thead><tbody></tbody></table>
     <pre id="json"></pre>
