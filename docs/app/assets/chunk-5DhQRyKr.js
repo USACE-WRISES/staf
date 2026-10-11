@@ -1,1 +1,0 @@
-import{t as e}from"./proof-gwmU3Dsm.js";var t=class extends e{decodeBlock(e){return e}};export{t as default};

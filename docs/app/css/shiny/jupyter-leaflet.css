@@ -1,0 +1,58 @@
+/* jupyter-leaflet 0.20's own rules for the controls the STAF maps use, as the Shiny STAF app's page
+ * renders them after Leaflet's stylesheet (copied 2026-10-11; the variables are in jupyter.css). */
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* Basic controls */
+.leaflet-bar a,
+.leaflet-bar a:hover {
+  background-color: var(--jp-layout-color1);
+  color: var(--jp-ui-font-color1);
+  border-width: var(--jp-border-width);
+  border-color: var(--jp-border-color1);
+}
+
+.leaflet-bar a:hover {
+  background-color: var(--jp-layout-color2);
+  color: var(--jp-ui-font-color2);
+}
+
+.leaflet-bar a.leaflet-disabled {
+  background-color: var(--jp-layout-color3);
+  color: var(--jp-ui-font-color3);
+}
+
+/* Popup */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background-color: var(--jp-layout-color1);
+  color: var(--jp-ui-font-color1);
+  border-width: var(--jp-border-width);
+  border-color: var(--jp-border-color1);
+}
+
+/* Layers control */
+.leaflet-control-layers {
+  background-color: var(--jp-layout-color1);
+  border-width: var(--jp-border-width);
+  border-color: var(--jp-border-color1);
+  color: var(--jp-ui-font-color1);
+}
+
+.leaflet-control-layers-expanded {
+  background-color: var(--jp-layout-color1);
+  border-width: var(--jp-border-width);
+  border-color: var(--jp-border-color1);
+  color: var(--jp-ui-font-color1);
+}
+
+/* Attribution control */
+.leaflet-container .leaflet-control-attribution {
+  background-color: var(--jp-layout-color1);
+  border-width: var(--jp-border-width);
+  border-color: var(--jp-border-color1);
+  color: var(--jp-ui-font-color1);
+}

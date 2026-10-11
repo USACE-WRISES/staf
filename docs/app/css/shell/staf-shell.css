@@ -1,0 +1,107 @@
+/* The STAF app's header and sections (apps/staf).
+ *
+ * One 50 px bar for every tool, with the EASI | SFARI | DEEP switch in its middle (after
+ * hype-app's 2D map / 3D view toggle). Each tool keeps its own stylesheets, and only the shown
+ * tool's are on (their media flips), so these rules sit on top of whichever tool is shown: the bar
+ * is .staf-header.easi-header, which outranks every tool's .easi-header, while each tool's
+ * .easi-header .easi-nav rules still style its own actions. The tools' layouts assume a 50 px bar
+ * at every width, so the bar never wraps: on narrow screens its parts fold away instead. */
+
+/* only the shown tool's section and header slots */
+.staf-section, .staf-slot { display: none; }
+html[data-staf-tool="easi"] .staf-section[data-staf-tool="easi"],
+html[data-staf-tool="sfari"] .staf-section[data-staf-tool="sfari"],
+html[data-staf-tool="deep"] .staf-section[data-staf-tool="deep"] { display: block; }
+html[data-staf-tool="easi"] .staf-slot[data-staf-tool="easi"],
+html[data-staf-tool="sfari"] .staf-slot[data-staf-tool="sfari"],
+html[data-staf-tool="deep"] .staf-slot[data-staf-tool="deep"] { display: flex; align-items: center; }
+
+/* the bar */
+.staf-header.easi-header {
+  position: absolute; top: 0; left: 0; right: 0; height: 50px; z-index: 1200; box-sizing: border-box;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center;
+  gap: 12px; padding: 0 16px; background: #243a61; color: #fff;
+}
+.staf-header-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.staf-brand { font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif; font-weight: 700;
+  font-size: 1.05rem; color: #fff; text-decoration: none; letter-spacing: .02em; }
+.staf-brand:hover, .staf-brand:focus-visible { color: #fff; text-decoration: underline; }
+
+/* the tier strip: where the shown tool sits in STAF (an indicator; the switch picks the tool) */
+.staf-tiers { display: flex; align-items: center; gap: 6px; padding-left: 12px; min-width: 0;
+  border-left: 1px solid rgba(255, 255, 255, .22); font-size: 12px; color: #8fa6cc;
+  white-space: nowrap; cursor: default; user-select: none; }
+.staf-tier-sep { color: rgba(143, 166, 204, .7); }
+html[data-staf-tool="easi"] .staf-tier[data-staf-tool="easi"],
+html[data-staf-tool="sfari"] .staf-tier[data-staf-tool="sfari"],
+html[data-staf-tool="deep"] .staf-tier[data-staf-tool="deep"] { color: #fff; font-weight: 600; }
+.staf-header-center { position: relative; display: flex; align-items: center; justify-content: center; }
+.staf-header-right { justify-self: end; display: flex; align-items: center; gap: 12px; min-width: 0; }
+.staf-header-right .easi-nav { margin-left: 0; }
+
+/* the switch */
+.staf-tool-switch { display: flex; border: 1px solid rgba(255, 255, 255, .30); border-radius: 6px;
+  overflow: hidden; }
+.staf-tool-btn { font: 500 12px/1 "Instrument Sans", "Segoe UI", system-ui, sans-serif; letter-spacing: .03em;
+  color: #cdd8ec; background: transparent; border: 0; padding: 7px 14px; cursor: pointer; }
+.staf-tool-btn + .staf-tool-btn { border-left: 1px solid rgba(255, 255, 255, .18); }
+.staf-tool-btn:hover { background: rgba(255, 255, 255, .12); color: #fff; }
+.staf-tool-btn.active { background: #fff; color: #243a61; font-weight: 600; }
+.staf-tool-btn:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .55); }
+.staf-tool-btn.active:focus-visible { box-shadow: inset 0 0 0 2px rgba(36, 58, 97, .45); }
+.staf-tool-btn:disabled { color: rgba(205, 216, 236, .45); cursor: not-allowed; background: transparent; }
+
+/* the shown tool's own control beside the switch (EASI's Nationwide screening), outside the
+   flow so the switch never moves when it appears */
+.staf-slot.staf-center { position: absolute; left: calc(100% + 16px); top: 50%; transform: translateY(-50%);
+  white-space: nowrap; }
+
+/* the Menu button: the shown tool's actions fold into it on narrow screens */
+.staf-menu-btn { display: none; font: 500 12.5px/1 "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  color: #cdd8ec; background: transparent; border: 1px solid rgba(255, 255, 255, .30); border-radius: 6px;
+  padding: 6px 10px; cursor: pointer; }
+.staf-menu-btn:hover, .staf-header.menu-open .staf-menu-btn { color: #fff; background: rgba(255, 255, 255, .12); }
+
+/* a tool that cannot run here */
+.staf-unavailable { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; display: flex;
+  align-items: center; justify-content: center; background: #f6f8fb; }
+.staf-unavailable-card { max-width: 30rem; margin: 16px; padding: 28px 32px; background: #fff;
+  border: 1px solid #d5deea; border-radius: 12px; text-align: center; }
+.staf-unavailable-card h2 { font-family: "Space Grotesk", "Segoe UI", system-ui, sans-serif; font-size: 1.25rem;
+  color: #243a61; margin: 0 0 8px; }
+.staf-unavailable-card p { margin: 0 0 16px; color: #3d4a5c; }
+.staf-unavailable-card .staf-unavailable-why { margin: 14px 0 0; font-size: 12px; color: #8a94a6;
+  word-break: break-word; }
+
+@media (max-width: 1180px) {
+  .staf-slot.staf-center .form-check-label { display: none; }
+}
+@media (max-width: 960px) {
+  .staf-menu-btn { display: inline-block; }
+  .staf-header:not(.menu-open) .staf-slot.staf-nav { display: none; }
+  .staf-header.menu-open .staf-slot.staf-nav { position: absolute; top: 50px; right: 8px;
+    background: #243a61; padding: 12px 16px; border-radius: 0 0 8px 8px;
+    box-shadow: 0 8px 20px rgba(16, 24, 40, .25); }
+  .staf-header.menu-open .staf-slot.staf-nav .easi-nav { flex-direction: column; align-items: flex-start;
+    gap: 10px; }
+  .staf-header.menu-open .staf-slot.staf-nav .easi-nav .easi-nav-sep { border-left: 0; padding-left: 0; }
+}
+/* narrow screens keep only the shown tool's tier: "STAF | Rapid" */
+@media (max-width: 760px) {
+  .staf-tier, .staf-tier-sep { display: none; }
+  html[data-staf-tool="easi"] .staf-tier[data-staf-tool="easi"],
+  html[data-staf-tool="sfari"] .staf-tier[data-staf-tool="sfari"],
+  html[data-staf-tool="deep"] .staf-tier[data-staf-tool="deep"] { display: inline; }
+}
+@media (max-width: 600px) {
+  .staf-header.easi-header { padding: 0 10px; gap: 8px; }
+  .staf-header-left { gap: 8px; }
+  .staf-tiers { padding-left: 8px; }
+  .staf-tool-btn { padding: 7px 10px; }
+  .staf-slot.staf-center { display: none !important; }
+}
+/* phones: the tier no longer fits beside the brand ("Screening" reaches the centred switch below
+   about 412px, "Detailed" below about 388px), and the switch already names the tool */
+@media (max-width: 440px) {
+  .staf-tiers { display: none; }
+}

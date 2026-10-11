@@ -1,0 +1,149 @@
+{
+ "note": "Where each file of page/ came from, with the sha256 both had when copied (parity/copy_page.py). Once a source is gone, page/ is the source.",
+ "versions": {
+  "shiny": "1.6.3",
+  "htmltools": "0.7.0",
+  "shinywidgets": "0.8.1",
+  "ipyleaflet": "0.20.0",
+  "bootstrap": "5.3.8",
+  "leaflet": "1.9.4"
+ },
+ "files": {
+  "css/deep/deep.css": {
+   "source": "apps/deep/www/deep.css",
+   "sha256": "42ddff22dc915e75b18669d6d08196991d20b0ba69082d3c03711650c7e88241"
+  },
+  "css/deep/styles.css": {
+   "source": "apps/deep/www/styles.css",
+   "sha256": "599a0ef01aced6b229c98343a9fba04f226b0ffc6a96fc8a1246484015b76002"
+  },
+  "css/easi/styles.css": {
+   "source": "apps/easi/www/styles.css",
+   "sha256": "92ec3cc5d985beb372c90937397ed27f9789e01665965c34537d3fb332c85174"
+  },
+  "css/leaflet/images/layers-2x.png": {
+   "source": "leaflet 1.9.4: dist/images/layers-2x.png",
+   "sha256": "066daca850d8ffbef007af00b06eac0015728dee279c51f3cb6c716df7c42edf"
+  },
+  "css/leaflet/images/layers.png": {
+   "source": "leaflet 1.9.4: dist/images/layers.png",
+   "sha256": "1dbbe9d028e292f36fcba8f8b3a28d5e8932754fc2215b9ac69e4cdecf5107c6"
+  },
+  "css/leaflet/images/marker-icon-2x.png": {
+   "source": "leaflet 1.9.4: dist/images/marker-icon-2x.png",
+   "sha256": "00179c4c1ee830d3a108412ae0d294f55776cfeb085c60129a39aa6fc4ae2528"
+  },
+  "css/leaflet/images/marker-icon.png": {
+   "source": "leaflet 1.9.4: dist/images/marker-icon.png",
+   "sha256": "574c3a5cca85f4114085b6841596d62f00d7c892c7b03f28cbfa301deb1dc437"
+  },
+  "css/leaflet/images/marker-shadow.png": {
+   "source": "leaflet 1.9.4: dist/images/marker-shadow.png",
+   "sha256": "264f5c640339f042dd729062cfc04c17f8ea0f29882b538e3848ed8f10edb4da"
+  },
+  "css/leaflet/leaflet.css": {
+   "source": "leaflet 1.9.4: dist/leaflet.css",
+   "sha256": "a7837102824184820dfa198d1ebcd109ff6d0ff9a2672a074b9a1b4d147d04c6"
+  },
+  "css/sfari/styles.css": {
+   "source": "apps/sfari/www/styles.css",
+   "sha256": "4888c5fc46a33f0cb9fb375090bedf1dd56a714ded96b3374e2e954497244561"
+  },
+  "css/shell/staf-shell.css": {
+   "source": "apps/staf/www/shell/staf-shell.css",
+   "sha256": "5a41ef94f4746acc875d421e82f667f8c32aca96059db5e95a62db09d9279c16"
+  },
+  "css/shiny/bootstrap.min.css": {
+   "source": "shiny 1.6.3: www/shared/bootstrap/bootstrap.min.css",
+   "sha256": "6331db4bf3898f0e7322bba3f4cbe89b23c760333af3954d4df42b43dbaba189"
+  },
+  "css/shiny/fill.css": {
+   "source": "shiny 1.6.3: www/shared/htmltools/fill/fill.css",
+   "sha256": "0f41825dd6d8bb9923f39a10cd5de929daf009243c64e3e30fc008e45b8c3325"
+  },
+  "css/shiny/font.css": {
+   "source": "shiny 1.6.3: www/shared/bootstrap/font.css (latin, latin-ext)",
+   "sha256": "8b233917144cf2c95f1bec0cf46c9364d85a50e8e662d1e4f1093ef1c48c96d9"
+  },
+  "css/shiny/fonts/HI_QiYsKILxRpg3hIP6sJ7fM7PqlONvUlMI.woff2": {
+   "source": "shiny 1.6.3: www/shared/bootstrap/fonts/HI_QiYsKILxRpg3hIP6sJ7fM7PqlONvUlMI.woff2",
+   "sha256": "97f01332aeda642a2f298030203dd4dd72802c0288ab2705d33daf691278e563"
+  },
+  "css/shiny/fonts/HI_QiYsKILxRpg3hIP6sJ7fM7PqlONvalMIXxw.woff2": {
+   "source": "shiny 1.6.3: www/shared/bootstrap/fonts/HI_QiYsKILxRpg3hIP6sJ7fM7PqlONvalMIXxw.woff2",
+   "sha256": "da6214a7b9f9eca88a7ae3b7b6fec00db41741774d8a38e6a899bd8e85968411"
+  },
+  "css/shiny/fonts/HI_SiYsKILxRpg3hIP6sJ7fM7PqlM-vWjMY.woff2": {
+   "source": "shiny 1.6.3: www/shared/bootstrap/fonts/HI_SiYsKILxRpg3hIP6sJ7fM7PqlM-vWjMY.woff2",
+   "sha256": "ab316ee7e4a28a149fe9f74a3e9173c3d14a11bb7d4df898dd2fe10da7b7fe24"
+  },
+  "css/shiny/fonts/HI_SiYsKILxRpg3hIP6sJ7fM7PqlPevW.woff2": {
+   "source": "shiny 1.6.3: www/shared/bootstrap/fonts/HI_SiYsKILxRpg3hIP6sJ7fM7PqlPevW.woff2",
+   "sha256": "8b774aaa5137a38ef40f4ac9d36db9a5eee152b2f66589dfdc82ff007fc87135"
+  },
+  "css/shiny/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWt06F15M.woff2": {
+   "source": "shiny 1.6.3: www/shared/bootstrap/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWt06F15M.woff2",
+   "sha256": "a6fa0e8ac2a665c121a19c2e2434fb286e3afdef7b9288739a73c7cb6849108c"
+  },
+  "css/shiny/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWuU6F.woff2": {
+   "source": "shiny 1.6.3: www/shared/bootstrap/fonts/memtYaGs126MiZpBA-UFUIcVXSCEkx2cmqvXlWqWuU6F.woff2",
+   "sha256": "186836b74ceac07b2764c07c0379420e3014efb30fe918461c235e0ef6cbc4a2"
+  },
+  "css/shiny/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTS-muw.woff2": {
+   "source": "shiny 1.6.3: www/shared/bootstrap/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTS-muw.woff2",
+   "sha256": "d8e4fe0452aa2076429a9bb5d8757d00a994dd95986cf950e9a1a371b9a072a0"
+  },
+  "css/shiny/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTSGmu1aB.woff2": {
+   "source": "shiny 1.6.3: www/shared/bootstrap/fonts/memvYaGs126MiZpBA-UvWbX2vVnXBbObj2OVTSGmu1aB.woff2",
+   "sha256": "d5bab8e28732fe3d10dcef4f77b9c248605bbb2a87d289a2539251ceafab536a"
+  },
+  "css/shiny/jupyter-leaflet.css": {
+   "source": "written here (see its header)",
+   "sha256": "10dd0ffe14d4e5190791dec2058505d373c19794c9966f0009c770960991d44a"
+  },
+  "css/shiny/jupyter.css": {
+   "source": "written here (see its header)",
+   "sha256": "1149530f30c80a415fed21fa1282b40aaab4845bc8adf65e11cd99bebca6c348"
+  },
+  "css/shiny/shinywidgets.css": {
+   "source": "shinywidgets 0.8.1: static/shinywidgets.css",
+   "sha256": "c478c828488ab8f3a4ef8006c3482754210bfa0b9f38ac477be4a0e308ca6a8e"
+  },
+  "css/staf/metric-rows.css": {
+   "source": "libs/staf_workbook/assets/metric-rows.css",
+   "sha256": "4130d75000fc5f5ceadc8c952b17e3234231969099cc181cca5434ff299eabce"
+  },
+  "css/staf/staf.css": {
+   "source": "libs/staf_workbook/assets/staf.css",
+   "sha256": "1e3fa9b5dc7796f25e03cf99390f06fcbd117a0e1a6bf2a06240907308596a9d"
+  },
+  "favicon.svg": {
+   "source": "apps/staf/www/shell/favicon.svg",
+   "sha256": "936f1776807ae1f6308074a763020b778d714c6032ec745a6922df4232ee41e2"
+  },
+  "js/deep/coverage.js": {
+   "source": "apps/deep/www/coverage.js",
+   "sha256": "ffe00febc6b9ea032bc3ffa5664e00664ee3e191dabcdc98422d9385cfaf4559"
+  },
+  "js/staf/coord-entry.js": {
+   "source": "libs/staf_workbook/assets/coord-entry.js",
+   "sha256": "b45c1033ac7cb0687a02481ea6136db2328d6b6c799d37492657c7cb23ee4b26"
+  },
+  "js/staf/geocode-autocomplete.js": {
+   "source": "libs/staf_workbook/assets/geocode-autocomplete.js",
+   "sha256": "026c13bfd70227dc35aeb9c6600eacd5bb2cb8c18ccdec26862a527ad4573cab"
+  },
+  "js/staf/legend-dock.js": {
+   "source": "libs/staf_workbook/assets/legend-dock.js",
+   "sha256": "1ab8a0b672215180a2bea8e61b7fc2271e420cc451459c057553097d761be5f0"
+  },
+  "js/staf/staf-ns.js": {
+   "source": "libs/staf_workbook/assets/staf-ns.js",
+   "sha256": "1d4dbc9891d9f22cf6c48b50abaab8c2accab06ec6127d932115675884e90e21"
+  },
+  "js/staf/tooltip.js": {
+   "source": "libs/staf_workbook/assets/tooltip.js",
+   "sha256": "7bf8ab487edfe47d7ffe11c1650c8597bb23e65a7950a2c30f69bcdaeaee4d74"
+  }
+ }
+}
