@@ -225,6 +225,47 @@ Delineate computes the watershed and the assessment reach in the browser, as eac
   `tests/xsimage.test.ts` hold its layout to matplotlib's; `parity/xsimage_compare.py` compares the pixels.
 - **Not yet:** Get Forms, the report downloads, Save and Open (Phase 6). They say so when clicked.
 
+## Speed
+
+- **Reads:** the data's index is `web-index.json.gz` (the manifest's paths and sizes, the bundle's regions,
+  each parquet file's footer size; about 130 KB where the manifests are 1.7 MB), so a file's footer is
+  read in one exact request. Files the app reads a few rows of carry a page index in
+  the browser layout (`tools/staf-web-data`): `readWhere` and `readObjectsWhere` read only the pages a
+  filter can match (a map view's lines, the points near a site, a flowline's sections), `readColumns(...,
+  pages)` and `readRows(..., pages)` the pages holding a few rows. `DataSource` reads the slices asked
+  for in one turn as one request where they sit within 32 KB. Every reader works with files that have
+  no page index too (it then reads whole row groups). The JSON and GeoJSON files the app reads whole
+  (DEEP's bundles and region list, the catalogs, the ecoregion and division polygons) are stored
+  gzipped, and `bytesOf` unzips them (a tenth of the bytes for a DEEP bundle, a third for polygons).
+  The base-flow grid (1.27 MB) is read by tile: its first 16 KB (directory, tile index, geokeys), then
+  the 256-cell tiles a watershed covers. The catchments' value tables (land cover, riparian strips,
+  roads, soils, crossings, NWI strips) are read by blocks of 256 rows (`src/engine/blocks.ts`; the
+  layout's pages hold 1,024): a watershed's catchments sit close together in a region's rows (Utoy
+  Creek's 89 in 3 blocks of 105,471), so a headwater's values cost 0.27 MB, not 4.2 MB. Files under
+  64 KB are read whole at once (hyparquet's default, 512 KB, read the small paged tables whole).
+- **Kept between visits:** Hugging Face answers a large file with a `no-store` redirect to a signed
+  address that changes every time, so the browser's HTTP cache can't serve a second visit.
+  `src/data/cache.ts` keeps what the app read in Cache Storage under each file's content-hashed path
+  (whole files, and ranges by their bytes), so a visit reads from the host only what no earlier visit
+  read. A session's first idle moment drops what the index no longer names, then the oldest past 1 GB.
+  `?cache=0` turns it off; the proof page never uses it.
+- **Together:** reads that don't depend on each other start together: the metric families
+  (`computeAll`: their entries still go in the families' order) and the value tables a watershed's sums
+  take (`watershedValues`). Each read is a few requests in a row (footer, page index, pages), so one
+  after another they added up.
+- **Ahead of time:** when the Basin step shows a delineation, EASI starts its screening's reads, SFARI its
+  desktop evidence pull and DEEP (once its assessment is loaded) its desktop values, so the next step
+  finds them done; plotly.js loads when EASI's screening ends. A watershed walk reads the region's
+  topology file (`topo/`, one request).
+- **Measuring:** the steps record `staf:` performance measures (`src/app/perf.ts`). `parity/capture.py
+  --perf` saves them with every request (`[--throttle MS,MBPS]` slows the network, `--visits 2` adds a
+  second visit in the same browser profile), and `parity/perf.py
+  <stem>` sums them by step and file. To time the build rather than the dev server: `npm run build`,
+  `npx vite preview --port 5181`, then `--url http://localhost:5181/staf/app --query
+  data=http://localhost:5181/data/`. Over HTTP/2, as the data host serves: set `STAF_WEB_CERT` and
+  `STAF_WEB_KEY` to a localhost certificate and key (the preview then serves HTTPS; the launch entry
+  `staf-web-built-h2` does, on port 5182) and use `https://localhost:5182`.
+
 ## Cross-sections
 
 - `src/xs/grid.ts` reads a flowline's section numbers, details, stored median profile, and (release

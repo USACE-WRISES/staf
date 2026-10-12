@@ -4,12 +4,12 @@
 // (bundle/v2/lines2_<vpu>.parquet): Hilbert-sorted rows with their boxes in 1e-5 degree integers, row
 // groups with statistics. A box's lines (site_engine bundle.lines_in_box / v2_lines_in_box, through
 // _hrslim/reader2.py lines_in_bbox): the regions whose bounds meet the box, in region order; the row
-// groups whose extents meet the box rounded outward to 1e-5 degree; the rows whose boxes meet it; then
-// the lines that meet the box itself. Each becomes a GeoJSON feature as the tools draw it: HR lines
+// groups (and pages, where the browser layout gives the file a page index) whose extents meet the box
+// rounded outward to 1e-5 degree; the rows whose boxes meet it; then the lines that meet the box itself. Each becomes a GeoJSON feature as the tools draw it: HR lines
 // with their nhdplusid (nhd_hr._id_only), V2 lines with their COMID and name (flowlines._fetch).
 // The Shiny SFARI and DEEP ask the USGS fabric service for the V2 lines instead; the static app reads
 // the bundle's (EASI's source) in every tool.
-import { columnStats, metadata, readRows, rowGroups } from '../data/parquet'
+import { readObjectsWhere, rowIndex } from '../data/parquet'
 import type { DataSource } from '../data/source'
 import { datasetRegions, type RegionMeta } from '../engine/bundle'
 import type { Feature, FeatureCollection } from './display'
@@ -41,17 +41,11 @@ export class Network {
     const qn = Math.ceil(n * SCALE)
     const regions = (await datasetRegions(this.src, this.folder)).filter(({ bounds: [bw, bs, be, bn] }) => bw <= e && be >= w && bs <= n && bn >= s)
     const perRegion = await Promise.all(regions.map(async (region) => {
-      const logical = `${this.folder}${region.lines}`
-      const meta = await metadata(this.src, logical)
-      const [x0, y0, x1, y1] = ['xmin', 'ymin', 'xmax', 'ymax'].map((c) => columnStats(meta, c))
-      const groups = rowGroups(meta).filter((g) => {
-        const a = x0[g.index], b = x1[g.index], c = y0[g.index], d = y1[g.index]
-        if (!a || !b || !c || !d) return true
-        return Number(a.min) <= qe && Number(b.max) >= qw && Number(c.min) <= qn && Number(d.max) >= qs
-      })
-      const rows = await Promise.all(groups.map(async (g) => (await readRows(this.src, logical, COLUMNS, g.start, g.start + g.rows))
-        .map((r, k) => ({ r, row: g.start + k }))))
-      return rows.flat().map((x) => ({ ...x, region }))
+      // the rows whose boxes meet the box: the row groups, then (where the file has a page index) the
+      // pages, whose box columns' ranges meet it are read
+      const rows = await readObjectsWhere(this.src, `${this.folder}${region.lines}`, COLUMNS,
+        { xmin: { $lte: qe }, xmax: { $gte: qw }, ymin: { $lte: qn }, ymax: { $gte: qs } }, true)
+      return rows.map((r) => ({ r, row: Number(r[rowIndex]), region }))
     }))
     const out: LineRecord[] = []
     for (const { r, row, region } of perRegion.flat()) {

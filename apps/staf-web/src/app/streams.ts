@@ -12,6 +12,7 @@ import { hrFeatures, type LineRecord, type Network, v2Features } from '../stream
 import { type BBox, fetchBox, needsFetch, type View } from '../streams/viewport'
 import type { ViewLines } from './identify'
 import { FLOW_ZOOM } from './markup'
+import { timed, timedSync } from './perf'
 
 export const FLOWLINE_STYLE: L.PathOptions = { color: '#1f6feb', weight: 3, opacity: 0.95 }
 export const HR_FLOWLINE_STYLE: L.PathOptions = { color: '#22b8cf', weight: 3, opacity: 0.9 }
@@ -128,7 +129,7 @@ export class StreamLayers {
     }
     if (!needsFetch(this.view(), this.fetched)) return
     this.fetched = box
-    void this.fetch(box)
+    void timed('streams', this.fetch(box))
   }
 
   /** Try again (the legend's button): the retries start over, for the box in view. */
@@ -151,10 +152,10 @@ export class StreamLayers {
     let v2Lines: LineRecord[]
     try {
       const [w, s, e, n] = box
-      ;[hrLines, v2Lines] = await Promise.all([this.nets.hr.inBox(w, s, e, n), this.nets.v2.inBox(w, s, e, n)])
+      ;[hrLines, v2Lines] = await Promise.all([timed('streams:hr', this.nets.hr.inBox(w, s, e, n)), timed('streams:v2', this.nets.v2.inBox(w, s, e, n))])
       hr = hrFeatures(hrLines)
       v2 = v2Features(v2Lines)
-      display = buildDisplay(v2, hr, 150)
+      display = timedSync('streams:split', () => buildDisplay(v2, hr, 150))
     } catch (err) {
       if (mine !== this.generation) return
       console.warn('stream lines did not load', err)

@@ -210,9 +210,9 @@ export async function reachWetlands(hr: Dataset, values: ValueTables, nhdplusid:
       if (share <= 0.0) continue
       const found = await hr.find('by_id', [r.nhdplusid])
       if (!found.length || !(await values.present('extras', found[0].region.vpu))) return null
-      const t = await values.nwiStrips(found[0].region.vpu)
-      if (!t) return null
       const row = found[0].rows[0]
+      const t = await values.nwiStrips(found[0].region.vpu, [row])
+      if (!t) return null
       for (const [code, name] of NWI_SYSTEMS) area[name] += share * (t[`nwi_${code}_m2`][row] || 0.0)
       strip += share * (t.strip_m2[row] || 0.0)
       used.push({ nhdplusid: r.nhdplusid, share: pyRound(share, 4) })

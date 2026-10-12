@@ -1,9 +1,9 @@
 // Point lookups from the national tables (site_engine _hrslim/points.py), over the browser layout's
 // copies laid out by place (tools/staf-web-data webdata/points.py): the same rows, sorted along a
-// Hilbert curve in groups of 1,024 whose statistics give each group's box, so a query reads the few
-// groups near the point. ``row0`` is a row's place in the bundle's table, which restores the order
+// Hilbert curve, with a page index (each page's lowest and highest values), so a query reads the few
+// pages near the point. ``row0`` is a row's place in the bundle's table, which restores the order
 // the Python returns rows in; a station's results are the rows r0 to r0 + rn of the results table.
-import { columnStats, metadata, readColumns, rowGroups, type RowGroupSpan } from '../data/parquet'
+import { readColumns, readWhere } from '../data/parquet'
 import type { DataSource } from '../data/source'
 import { pyFixed } from '../app/pyfmt'
 
@@ -38,34 +38,36 @@ const RAD = Math.PI / 180.0
 
 const pyRound = (x: number, n: number): number => Number(pyFixed(x, n))
 
-/** The row groups whose lat/lon statistics meet the box (a group without statistics is read). */
-async function groupsInBox(src: DataSource, logical: string, s: number, w: number, n: number, e: number): Promise<RowGroupSpan[]> {
-  const meta = await metadata(src, logical)
-  const lat = columnStats(meta, 'lat')
-  const lon = columnStats(meta, 'lon')
-  return rowGroups(meta).filter((g) => {
-    const a = lat[g.index]
-    const o = lon[g.index]
-    if (!a || !o) return true
-    return !(Number(a.max) < s || Number(a.min) > n || Number(o.max) < w || Number(o.min) > e)
-  })
-}
-
 type Kinds = Record<string, 'f64' | 'i32' | 'u8'>
 
-/** Every row of the groups meeting the box, as columns (``rows`` of them). */
+/** Every row inside the box, as columns (``rows`` of them): the pages whose latitudes and longitudes
+ * (the page index) meet the box are read, the rows inside it kept. */
 async function boxRows(src: DataSource, logical: string, s: number, w: number, n: number, e: number,
                        columns: string[], typed: Kinds = {}, nan: string[] = []): Promise<{ rows: number, cols: Record<string, any[]> }> {
   await src.ready()
-  const groups = await groupsInBox(src, logical, s, w, n, e)
-  const parts = await Promise.all(groups.map((g) => readColumns(src, logical, columns, g.start, g.start + g.rows, typed, nan)))
-  const cols: Record<string, any[]> = Object.fromEntries(columns.map((c) => [c, [] as any[]]))
-  let rows = 0
-  for (const p of parts) {
-    for (const c of columns) cols[c].push(...Array.from(p[c] as ArrayLike<any>))
-    rows += (p[columns[0]] as ArrayLike<any>).length
+  return readWhere(src, logical, columns, { lat: { $gte: s, $lte: n }, lon: { $gte: w, $lte: e } }, typed, nan)
+}
+
+/** Rows [r0, r0 + rn) of each span, in the spans' order: spans that sit close together are read as one
+ * range, each range by its pages (the file's offset index). */
+async function spanRows(src: DataSource, logical: string, spans: [number, number][], columns: string[], typed: Kinds,
+                        nan: string[]): Promise<Record<string, any[]>> {
+  const sorted = spans.filter(([, k]) => k > 0).map(([a, k]) => [a, a + k]).sort((x, y) => x[0] - y[0])
+  const ranges: number[][] = []
+  for (const [a, b] of sorted) {
+    const last = ranges[ranges.length - 1]
+    if (last && a <= last[1] + 256) last[1] = Math.max(last[1], b)
+    else ranges.push([a, b])
   }
-  return { rows, cols }
+  const read = await Promise.all(ranges.map(([a, b]) => readColumns(src, logical, columns, a, b, typed, nan, true)))
+  const out: Record<string, any[]> = Object.fromEntries(columns.map((c) => [c, [] as any[]]))
+  for (const [a, k] of spans) {
+    for (let row = a; row < a + k; row++) {
+      const i = ranges.findIndex(([r0, r1]) => row >= r0 && row < r1)
+      for (const c of columns) out[c].push(read[i][c][row - ranges[i][0]])
+    }
+  }
+  return out
 }
 
 /** points._haversine, element by element. */
@@ -167,22 +169,9 @@ export class PointTables {
     return out.sort((a, b) => a[0] - b[0])
   }
 
-  /** The result rows [r0, r0 + rn) of each station, read from the groups that hold them. */
-  private async results(spans: [number, number][], columns: string[], typed: Kinds, nan: string[]): Promise<Record<string, any[]>> {
-    const meta = await metadata(this.src, RESULTS)
-    const groups = rowGroups(meta).filter((g) => spans.some(([a, k]) => k > 0 && a < g.start + g.rows && a + k > g.start))
-    const read = new Map<number, Record<string, any>>()
-    await Promise.all(groups.map(async (g) => read.set(g.start, await readColumns(this.src, RESULTS, columns, g.start, g.start + g.rows, typed, nan))))
-    const out: Record<string, any[]> = Object.fromEntries(columns.map((c) => [c, [] as any[]]))
-    for (const [a, k] of spans) {
-      for (let r = a; r < a + k; r++) {
-        const g = groups.find((x) => r >= x.start && r < x.start + x.rows)
-        if (!g) continue
-        const t = read.get(g.start)!
-        for (const c of columns) out[c].push(t[c][r - g.start])
-      }
-    }
-    return out
+  /** The result rows [r0, r0 + rn) of each station. */
+  private results(spans: [number, number][], columns: string[], typed: Kinds, nan: string[]): Promise<Record<string, any[]>> {
+    return spanRows(this.src, RESULTS, spans, columns, typed, nan)
   }
 
   /** points.wqp_sfari: SFARI's median of every numeric TN or TP result since ``startMs`` (2015 by
@@ -300,20 +289,8 @@ export class PointTables {
   }
 
   /** The rows [a, a + k) of each span of a results table, in span order, as columns. */
-  private async resultRows(logical: string, spans: [number, number][], columns: string[], typed: Kinds, nan: string[]): Promise<Record<string, any[]>> {
-    const meta = await metadata(this.src, logical)
-    const groups = rowGroups(meta).filter((g) => spans.some(([a, k]) => k > 0 && a < g.start + g.rows && a + k > g.start))
-    const read = new Map<number, Record<string, any>>()
-    await Promise.all(groups.map(async (g) => read.set(g.start, await readColumns(this.src, logical, columns, g.start, g.start + g.rows, typed, nan))))
-    const out: Record<string, any[]> = Object.fromEntries(columns.map((c) => [c, [] as any[]]))
-    for (const [a, k] of spans) {
-      for (let row = a; row < a + k; row++) {
-        const g = groups.find((x) => row >= x.start && row < x.start + x.rows)!
-        const t = read.get(g.start)!
-        for (const c of columns) out[c].push(t[c][row - g.start])
-      }
-    }
-    return out
+  private resultRows(logical: string, spans: [number, number][], columns: string[], typed: Kinds, nan: string[]): Promise<Record<string, any[]>> {
+    return spanRows(this.src, logical, spans, columns, typed, nan)
   }
 
   /** points.nas_established: the sorted scientific names of the established NAS records in the HUC12,
@@ -322,18 +299,10 @@ export class PointTables {
     if (!huc12 && !huc8) return null
     const [column, key] = huc12 ? ['huc12', String(huc12)] : ['huc8', String(huc8)]
     await this.src.ready()
-    const meta = await metadata(this.src, NAS)
-    const stats = columnStats(meta, column)
-    const groups = rowGroups(meta).filter((g) => {
-      const s = stats[g.index]
-      return !s || (String(s.min) <= key && key <= String(s.max))
-    })
+    const { rows, cols } = await readWhere(this.src, NAS, ['scientificName', column, 'status'], { [column]: { $eq: key } })
     const names = new Set<string>()
-    for (const g of groups) {
-      const t = await readColumns(this.src, NAS, ['scientificName', column, 'status'], g.start, g.start + g.rows)
-      for (let i = 0; i < t.status.length; i++) {
-        if (t[column][i] === key && t.status[i] === 'established' && t.scientificName[i]) names.add(String(t.scientificName[i]))
-      }
+    for (let i = 0; i < rows; i++) {
+      if (cols[column][i] === key && cols.status[i] === 'established' && cols.scientificName[i]) names.add(String(cols.scientificName[i]))
     }
     return [...names].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
   }

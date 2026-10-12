@@ -37,8 +37,12 @@ export function datasetRegions(src: DataSource, folder: string): Promise<RegionM
   const key = src.base + folder
   let got = manifests.get(key)
   if (!got) {
-    got = src.ready().then(() => src.bytesOf(`${folder}manifest.json`)).then((buf) => {
-      const m = JSON.parse(new TextDecoder().decode(buf)) as { vpus: Record<string, any> }
+    got = src.ready().then(async (index) => {
+      // the data's index carries what the app reads of the dataset's manifest; else the manifest itself
+      const vpus = index.datasets?.[folder]
+      if (vpus) return { vpus }
+      return JSON.parse(new TextDecoder().decode(await src.bytesOf(`${folder}manifest.json`))) as { vpus: Record<string, any> }
+    }).then((m) => {
       const file = (v: any) => (typeof v === 'string' ? v : v?.file)
       return Object.keys(m.vpus).sort().map((vpu) => {
         const r = m.vpus[vpu]
@@ -344,7 +348,7 @@ export async function flowlineAt(src: DataSource, folder: string, region: Region
 
 async function readFlowline(src: DataSource, folder: string, region: RegionMeta, row: number): Promise<FlowlineRecord | null> {
   const logical = folder + region.lines
-  const [r] = await readRows(src, logical, LINE_FIELDS, row, row + 1)
+  const [r] = await readRows(src, logical, LINE_FIELDS, row, row + 1, true)
   if (!r) return null
   const xs = r.x as ArrayLike<number>
   const ys = r.y as ArrayLike<number>

@@ -8,6 +8,7 @@
 // desktop prefill landing or a scenario switch.
 import { type Child, h, HTML, outputHtml } from '../../app/htm'
 import { notify, removeNotification } from '../../app/notify'
+import { timed } from '../../app/perf'
 import { removeModal, showModal } from '../../shared/modal'
 import {
   addDialog, BASELINE_ID, buildComparison, compareDialog, type Comparison, DESC_INPUT, deleteDialog, type Measure, NAME_INPUT, railDelta,
@@ -90,6 +91,8 @@ export class DeepWorksheet {
   private dialog: 'new' | 'edit' | null = null
   private computedFor: string | null = null
   private computeGen = 0
+  /** the desktop values computed ahead for a site and assessment version (computeAhead) */
+  private ahead: { key: string, p: Promise<Record<string, Rec> | null> } | null = null
   private desktopFill: [string, Record<string, Rec>] | null = null
 
   constructor(private host: DeepHost) {}
@@ -303,6 +306,27 @@ export class DeepWorksheet {
     }
   }
 
+  /** The desktop values computed ahead, once the Basin step shows a delineation with the assessment
+   * loaded: the Shiny DEEP computes them when the measure step opens; here they are read while the
+   * assessor looks at the Basin step, so the step finds them done. Nothing is shown. */
+  computeAhead(): void {
+    const la = this.host.loaded()
+    const d = this.host.delin()
+    if (!la || !d || !this.host.sourceReady() || !d.ctx_inputs) return
+    const key = this.siteKey()
+    if (key === null || this.computedFor === key || this.ahead?.key === key) return
+    const ids = this.computableIds(la)
+    if (!ids.length) return
+    const es = this.host.engineState()
+    const p = timed('deep:compute-ahead', computeMetrics(this.host.data, d.ctx_inputs, ids, la, es?.status === 'ok' ? es.record : null))
+    p.catch(() => {})
+    this.ahead = { key, p }
+  }
+
+  private computableIds(la: Rec): string[] {
+    return (la.metricsByFunction ?? []).flatMap((fn: Rec) => fn.metrics ?? []).map((m: Rec) => m.metricId).filter((mid: string) => COMPUTABLE.has(mid))
+  }
+
   /** _maybe_compute: once per assessment version and site, the desktop values the bundle can take. */
   maybeCompute(): void {
     if (this.host.step() !== 'measure') return
@@ -311,13 +335,15 @@ export class DeepWorksheet {
     if (!la || !d || !this.host.sourceReady() || !d.ctx_inputs) return
     const key = this.siteKey()
     if (key === null || this.computedFor === key) return
-    const ids = (la.metricsByFunction ?? []).flatMap((fn: Rec) => fn.metrics ?? []).map((m: Rec) => m.metricId).filter((mid: string) => COMPUTABLE.has(mid))
+    const ids = this.computableIds(la)
     if (!ids.length) return
     this.computedFor = key
     const gen = ++this.computeGen
     const es = this.host.engineState()
+    const ahead = this.ahead?.key === key ? this.ahead.p : null
+    this.ahead = null
     notify('Computing desktop metrics (STAF site engine / StreamCat lookup / 3DEP)…', { id: 'deep_compute', type: 'message', seconds: 0 })
-    void computeMetrics(this.host.data, d.ctx_inputs, ids, la, es?.status === 'ok' ? es.record : null).then(
+    void timed('deep:compute', ahead ?? computeMetrics(this.host.data, d.ctx_inputs, ids, la, es?.status === 'ok' ? es.record : null)).then(
       (res) => this.computeDone(gen, key, res), () => this.computeDone(gen, key, null))
   }
 

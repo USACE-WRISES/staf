@@ -134,7 +134,10 @@ export class Dataset {
     let got = this.topos.get(region.vpu)
     if (!got) {
       got = (async () => {
-        const logical = this.folder + region.lines
+        // the browser layout's topology file (one request), else the lines file's same columns
+        await this.src.ready()
+        const own = `topo/${this.folder === 'bundle/v2/' ? 'v2' : 'hr'}_${region.vpu}.parquet`
+        const logical = this.src.has(own) ? own : this.folder + region.lines
         const meta = await metadata(this.src, logical)
         const minor = meta.schema.some((s) => s.name === 'dnminor_step')
         const cols = ['nhdplusid', 'hydroseq', 'dn_step', 'up_step', 'dn_out', 'up_out', 'totdasqkm', ...(minor ? ['dnminor_step'] : [])]
@@ -400,7 +403,7 @@ export class Dataset {
     const sorted = [...new Set(rows)].sort((a, b) => a - b)
     const out: FlowlineRecord[] = []
     for (const row of sorted) {
-      const r = await readColumns(this.src, logical, LINE_COLUMNS, row, row + 1)
+      const r = await readColumns(this.src, logical, LINE_COLUMNS, row, row + 1, {}, [], true)
       const parts: Line[] = []
       const xs = r.x[0] as ArrayLike<number>
       const ys = r.y[0] as ArrayLike<number>

@@ -2,6 +2,8 @@
 // make_metrics_fixtures.py), from the local layout; skipped where the layout is not.
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { DataSource } from '../src/data/source'
+import { hasPageIndex } from '../src/engine/blocks'
+import { encodingOf } from '../src/engine/bundle'
 import { Dataset } from '../src/engine/dataset'
 import { computeAll } from '../src/engine/metrics'
 import { computeSite, INTERACTIVE_CONFIG } from '../src/engine/site'
@@ -24,6 +26,19 @@ describe.skipIf(!have)('the engine computes its metric families as the Python do
       const got = await watershedValues(hr, values, c.nhdplusId, 3000, 190)
       expect(got, c.name).toEqual(c.values)
     }
+  })
+
+  it("reads a small watershed's values by blocks, not the region's whole tables", { timeout: 120_000 }, async (ctx) => {
+    const src = new DataSource(BASE)
+    if (!(await hasPageIndex(src, 'bundle/values/lc2_0108.parquet'))) ctx.skip()   // a layout from before the page index
+    const hr = new Dataset(src, 'bundle/')
+    const c = cases.find((x) => x.name === 'headwater')!
+    await hr.walk(c.nhdplusId, 3000, 190)
+    await encodingOf(src, 'bundle/', (await hr.region('0108'))!)
+    const before = src.bytes
+    expect(await watershedValues(hr, new ValueTables(src), c.nhdplusId, 3000, 190)).toEqual(c.values)
+    // 0108's land cover, riparian, roads, soils and crossings tables are 4.1 MB whole (0.27 MB by blocks)
+    expect(src.bytes - before).toBeLessThan(350_000)
   })
 
   it('gives the metric entries key for key', { timeout: 120_000 }, async () => {

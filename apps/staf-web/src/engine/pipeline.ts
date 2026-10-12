@@ -182,7 +182,7 @@ export async function flowlineAttrsV2(d: EasiData, comid: number): Promise<{ att
   out.fcode = rec.fcode
   out.stream_order = rec.stream_order
   if (region.v2attrs) {
-    const t = await readColumns(d.src, 'bundle/v2/' + region.v2attrs, EROM_PROPERTIES, rows[0], rows[0] + 1)
+    const t = await readColumns(d.src, 'bundle/v2/' + region.v2attrs, EROM_PROPERTIES, rows[0], rows[0] + 1, {}, [], true)
     const erom: Record<string, number> = {}
     let complete = true
     for (const k of EROM_PROPERTIES) {
@@ -245,7 +245,7 @@ export async function reanchorInputs(d: EasiData, anchor: Anchor, lengthFt: numb
     const found = await d.hr.find('by_id', [nid])
     const logical = found.length ? `bundle/values/extras2_${found[0].region.vpu}.parquet` : null
     if (logical && d.src.has(logical)) {
-      const t = await readColumns(d.src, logical, ['sinuosity_milli'], found[0].rows[0], found[0].rows[0] + 1)
+      const t = await readColumns(d.src, logical, ['sinuosity_milli'], found[0].rows[0], found[0].rows[0] + 1, {}, [], true)
       const raw = t.sinuosity_milli[0]
       const v = raw === null || raw === undefined ? null : Number(raw) / 1000.0
       sinuosity = v === null || v === 0 ? null : Number(pyFixed(v, 3))

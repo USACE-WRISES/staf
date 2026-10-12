@@ -5,7 +5,7 @@
  * Rows are sorted by flowline; a flowline's rows are found from the row groups' `nhdplusid` statistics.
  */
 import { decode } from './codec'
-import { columnStats, metadata, readRows, rowGroups } from '../data/parquet'
+import { metadata, readObjectsWhere } from '../data/parquet'
 import type { DataSource } from '../data/source'
 
 export const STATUS = ['ok', 'unbalanced', 'no_dem', 'too_few_points', 'ok_reference'] as const
@@ -65,17 +65,11 @@ export interface XsMedian {
 
 const scaled = (v: unknown, scale: number): number | null => (v === null || v === undefined ? null : Number(v) / scale)
 
+/** A flowline's rows: the row groups and (where the file has a page index, the browser layout's copies)
+ * the pages whose nhdplusid range holds it, its rows among them. */
 async function flowlineRows(src: DataSource, logical: string, id: bigint, columns: string[]): Promise<Record<string, any>[]> {
-  const meta = await metadata(src, logical)
-  const stats = columnStats(meta, 'nhdplusid')
-  const out: Record<string, any>[] = []
-  for (const g of rowGroups(meta)) {
-    const s = stats[g.index]
-    if (s && (id < BigInt(s.min) || id > BigInt(s.max))) continue
-    const rows = await readRows(src, logical, columns, g.start, g.start + g.rows)
-    for (const r of rows) if (BigInt(r.nhdplusid) === id) out.push(r)
-  }
-  return out.sort((a, b) => a.part - b.part || a.k - b.k)
+  const rows = await readObjectsWhere(src, logical, columns, { nhdplusid: { $eq: id } })
+  return rows.filter((r) => BigInt(r.nhdplusid) === id).sort((a, b) => a.part - b.part || a.k - b.k)
 }
 
 export async function sectionNumbers(src: DataSource, vpu: string, id: bigint): Promise<XsNumbers[]> {

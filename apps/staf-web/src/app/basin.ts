@@ -15,6 +15,7 @@ import { computeSite, INTERACTIVE_CONFIG, type ProgressEvent } from '../engine/s
 import type { Identify } from './identify'
 import { basinCard, basinPane, esc, type ToolKey } from './markup'
 import { notify, removeNotification } from './notify'
+import { timed } from './perf'
 import { pyFixedComma } from './pyfmt'
 
 export const WATERSHED_STYLE: L.PathOptions = { color: '#caa700', weight: 1, fillColor: '#fdf24a', fillOpacity: 0.40 }
@@ -166,8 +167,7 @@ export class Basin {
 
   /** Delineate pressed. */
   start(): void {
-    if (this.host.key === 'easi') void this.startEasi()
-    else void this.startEngine()
+    void timed('delineate', this.host.key === 'easi' ? this.startEasi() : this.startEngine())
   }
 
   // ---------------------------------------------------------------- EASI

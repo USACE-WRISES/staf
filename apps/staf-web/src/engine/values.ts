@@ -9,6 +9,7 @@
 import { pyFixed } from '../app/pyfmt'
 import { metadata, readColumns } from '../data/parquet'
 import type { DataSource } from '../data/source'
+import { KeyBlocks, RowBlocks } from './blocks'
 import { encodingOf, type RegionMeta } from './bundle'
 import type { Dataset } from './dataset'
 
@@ -60,30 +61,38 @@ function pickSum(a: ArrayLike<number>, rows: ArrayLike<number>): number {
   return pairwiseSum(picked)
 }
 
-/** lean.decode_lc: the shares scaled back to cells (17 per row) and impervious sums (4 per row). */
-function decodeLc(t: Record<string, any>, n: number): { counts: Float64Array, imp: Float64Array } {
-  const counts = new Float64Array(n * 17)
-  const imp = new Float64Array(n * 4)
+/** lean.decode_lc: the shares scaled back to cells (17 per row) and impervious sums (4 per row), for
+ * table rows `rows` in order (each row decodes on its own). */
+function decodeLc(t: Record<string, any>, rows: ArrayLike<number>): { counts: Float64Array, imp: Float64Array } {
+  const m = rows.length
+  const counts = new Float64Array(m * 17)
+  const imp = new Float64Array(m * 4)
   const p = new Float64Array(17)
-  for (let r = 0; r < n; r++) {
+  for (let k = 0; k < m; k++) {
+    const r = rows[k]
     for (let j = 0; j < 17; j++) p[j] = t[LEAN_LC[j]][r]
     const s = pairwiseSum(p)
     const cells = t.cells[r]
     const scale = s > 0 ? cells / s : 0
-    for (let j = 0; j < 17; j++) counts[r * 17 + j] = p[j] * scale
-    const valid = pairwiseSum(counts, r * 17, 16)
+    for (let j = 0; j < 17; j++) counts[k * 17 + j] = p[j] * scale
+    const valid = pairwiseSum(counts, k * 17, 16)
     for (const [j, col] of [[0, 'imp21'], [2, 'imp01']] as const) {
       const v = t[col][r]
       const has = v !== NO_IMP
-      imp[r * 4 + j] = has ? v / 10 * valid : 0.0
-      imp[r * 4 + j + 1] = has ? valid : 0.0
+      imp[k * 4 + j] = has ? v / 10 * valid : 0.0
+      imp[k * 4 + j + 1] = has ? valid : 0.0
     }
   }
   return { counts, imp }
 }
 
-/** One region's value tables, read once each (values.ValueTables, lean files). */
+const iota = (n: number): Int32Array => Int32Array.from({ length: n }, (_v, i) => i)
+const LC_COLUMNS = ['cells', ...LEAN_LC, 'imp21', 'imp01']
+
+/** One region's value tables (values.ValueTables, lean files), each read by blocks of rows as walks need
+ * them (`RowBlocks`, `KeyBlocks`): what a watershed takes of a table comes back for its rows, in order. */
 export class ValueTables {
+  private tables = new Map<string, RowBlocks | KeyBlocks>()
   private cache = new Map<string, Promise<any>>()
 
   constructor(readonly src: DataSource) {}
@@ -98,6 +107,26 @@ export class ValueTables {
     return this.src.has(this.logical(prefix, vpu))
   }
 
+  private byRow(prefix: string, vpu: string, columns: string[], nan: string[] = []): RowBlocks {
+    const key = `${prefix}${vpu}`
+    let t = this.tables.get(key) as RowBlocks | undefined
+    if (!t) {
+      t = new RowBlocks(this.src, this.logical(prefix, vpu), columns, nan)
+      this.tables.set(key, t)
+    }
+    return t
+  }
+
+  private byKey(prefix: string, vpu: string, keyColumn: string, columns: string[]): KeyBlocks {
+    const key = `${prefix}${vpu}`
+    let t = this.tables.get(key) as KeyBlocks | undefined
+    if (!t) {
+      t = new KeyBlocks(this.src, this.logical(prefix, vpu), keyColumn, columns)
+      this.tables.set(key, t)
+    }
+    return t
+  }
+
   private once<T>(key: string, load: () => Promise<T>): Promise<T> {
     let got = this.cache.get(key) as Promise<T> | undefined
     if (!got) {
@@ -108,29 +137,25 @@ export class ValueTables {
     return got
   }
 
-  lc(vpu: string): Promise<{ counts: Float64Array, imp: Float64Array }> {
-    return this.once(`lc${vpu}`, async () => {
-      const t = await readColumns(this.src, this.logical('lc', vpu), ['cells', ...LEAN_LC, 'imp21', 'imp01'], 0, undefined,
-        Object.fromEntries(['cells', ...LEAN_LC, 'imp21', 'imp01'].map((c) => [c, 'f64'])))
-      return decodeLc(t, t.cells.length)
-    })
+  /** The land cover of catchment rows `rows`: 17 class cells and 4 impervious sums per row, in order. */
+  async lc(vpu: string, rows: ArrayLike<number>): Promise<{ counts: Float64Array, imp: Float64Array }> {
+    return decodeLc(await this.byRow('lc', vpu, LC_COLUMNS).rows(rows), rows)
   }
 
-  rip(vpu: string): Promise<{ row: Float64Array, k: Float64Array, counts: Float64Array, imp: Float64Array }> {
-    return this.once(`rip${vpu}`, async () => {
-      const cols = ['row', 'k', 'cells', ...LEAN_LC, 'imp21', 'imp01']
-      const t = await readColumns(this.src, this.logical('rip', vpu), cols, 0, undefined, Object.fromEntries(cols.map((c) => [c, 'f64'])))
-      return { row: t.row, k: t.k, ...decodeLc(t, t.cells.length) }
-    })
+  /** The riparian strip pieces of catchment rows `rows` (with others of their blocks), in the table's order:
+   * each piece's catchment row, walk level, class cells and impervious sums. */
+  async rip(vpu: string, rows: ArrayLike<number>): Promise<{ row: Float64Array, k: Float64Array, counts: Float64Array, imp: Float64Array }> {
+    const t = await this.byKey('rip', vpu, 'row', ['k', ...LC_COLUMNS]).rows(rows)
+    return { row: t.row, k: t.k, ...decodeLc(t, iota(t.row.length)) }
   }
 
-  roads(vpu: string): Promise<Float64Array> {
-    return this.once(`roads${vpu}`, async () => {
-      const t = await readColumns(this.src, this.logical('roads', vpu), ['road_cm'], 0, undefined, { road_cm: 'f64' })
-      return Float64Array.from(t.road_cm as Float64Array, (v) => v / 100.0)
-    })
+  /** The road metres of catchment rows `rows`, in order. */
+  async roads(vpu: string, rows: ArrayLike<number>): Promise<Float64Array> {
+    const t = await this.byRow('roads', vpu, ['road_cm']).rows(rows)
+    return Float64Array.from(rows, (r) => t.road_cm[r] / 100.0)
   }
 
+  /** The dams by catchment row (the table lists the few rows with dams: read whole). */
   dams(vpu: string): Promise<{ dams: Float64Array, normal: Float64Array, missing: Float64Array, nid: Float64Array }> {
     return this.once(`dams${vpu}`, async () => {
       const logical = this.logical('dams', vpu)
@@ -150,38 +175,36 @@ export class ValueTables {
     })
   }
 
-  soils(vpu: string): Promise<{ kSum: Float64Array, kCells: Float64Array, ssurgo: Float64Array }> {
-    return this.once(`soils${vpu}`, async () => {
-      const t = await readColumns(this.src, this.logical('soils', vpu), ['k_mean', 'k_cells', 'ssurgo_cells'], 0, undefined,
-        { k_mean: 'f64', k_cells: 'f64', ssurgo_cells: 'f64' }, ['k_mean'])
-      const kSum = new Float64Array(t.k_cells.length)
-      for (let i = 0; i < kSum.length; i++) {
-        // np.nan_to_num(float32 mean) * cells, the mean exact as float32
-        const mean = Number.isNaN(t.k_mean[i]) ? 0 : Math.fround(t.k_mean[i])
-        kSum[i] = mean * t.k_cells[i]
-      }
-      return { kSum, kCells: t.k_cells, ssurgo: t.ssurgo_cells }
-    })
+  /** The soils of catchment rows `rows`, in order: K-factor sums (mean x cells), K cells, SSURGO cells. */
+  async soils(vpu: string, rows: ArrayLike<number>): Promise<{ kSum: Float64Array, kCells: Float64Array, ssurgo: Float64Array }> {
+    const t = await this.byRow('soils', vpu, ['k_mean', 'k_cells', 'ssurgo_cells'], ['k_mean']).rows(rows)
+    const m = rows.length
+    const out = { kSum: new Float64Array(m), kCells: new Float64Array(m), ssurgo: new Float64Array(m) }
+    for (let k = 0; k < m; k++) {
+      const r = rows[k]
+      // np.nan_to_num(float32 mean) * cells, the mean exact as float32
+      const mean = Number.isNaN(t.k_mean[r]) ? 0 : Math.fround(t.k_mean[r])
+      out.kSum[k] = mean * t.k_cells[r]
+      out.kCells[k] = t.k_cells[r]
+      out.ssurgo[k] = t.ssurgo_cells[r]
+    }
+    return out
   }
 
   /** The flowlines' 150 m NWI strips (extras2_, by line row): wetland m2 per NWI system and the strip's
-   * m2, or null where the region's extras have no strips. */
-  nwiStrips(vpu: string): Promise<Record<string, Float64Array> | null> {
-    return this.once(`nwi${vpu}`, async () => {
-      const logical = this.logical('extras', vpu)
-      const names = (await metadata(this.src, logical)).schema.map((s) => s.name)
-      if (!names.includes('strip_m2')) return null
-      const cols = ['nwi_r_m2', 'nwi_p_m2', 'nwi_l_m2', 'nwi_e_m2', 'nwi_m_m2', 'strip_m2']
-      return readColumns(this.src, logical, cols, 0, undefined, Object.fromEntries(cols.map((c) => [c, 'f64'])))
-    })
+   * m2 at full length with line rows `rows` read, or null where the region's extras have no strips. */
+  async nwiStrips(vpu: string, rows: ArrayLike<number>): Promise<Record<string, Float64Array> | null> {
+    const logical = this.logical('extras', vpu)
+    const names = (await metadata(this.src, logical)).schema.map((s) => s.name)
+    if (!names.includes('strip_m2')) return null
+    return this.byRow('extras', vpu, ['nwi_r_m2', 'nwi_p_m2', 'nwi_l_m2', 'nwi_e_m2', 'nwi_m_m2', 'strip_m2']).rows(rows)
   }
 
-  xings(vpu: string): Promise<{ lineRow: Float64Array, road: Float64Array, x: Float64Array, y: Float64Array }> {
-    return this.once(`xings${vpu}`, async () => {
-      const t = await readColumns(this.src, this.logical('xings', vpu), ['line_row', 'road', 'x_dm', 'y_dm'], 0, undefined,
-        { line_row: 'f64', road: 'f64', x_dm: 'f64', y_dm: 'f64' })
-      return { lineRow: t.line_row, road: t.road, x: t.x_dm, y: t.y_dm }
-    })
+  /** The road-stream crossings of line rows `rows` (with others of their blocks): each one's line row,
+   * road and place. */
+  async xings(vpu: string, rows: ArrayLike<number>): Promise<{ lineRow: Float64Array, road: Float64Array, x: Float64Array, y: Float64Array }> {
+    const t = await this.byKey('xings', vpu, 'line_row', ['road', 'x_dm', 'y_dm']).rows(rows)
+    return { lineRow: t.line_row, road: t.road, x: t.x_dm, y: t.y_dm }
   }
 }
 
@@ -226,6 +249,15 @@ export async function watershedValues(ds: Dataset, tables: ValueTables, nhdplusi
   let rpImp = new Float64Array(4)
   const missing: string[] = []
   const regionRows = new Map<string, { region: RegionMeta, catRows: number[] }>()
+  // every table the sums take, read at once: each read is a few requests (footer, page index, pages),
+  // and one table after another they added up. The sums below take them from memory, in their order.
+  await Promise.all([...members].map(async ([vpu, lineRows]) => {
+    const region = await ds.region(vpu)
+    if (!region || !(await tables.present('lc', vpu))) return
+    const rows = (await catchmentRows(ds, region, lineRows)).filter((c) => c >= 0)
+    await Promise.all([tables.lc(vpu, rows), tables.rip(vpu, rows), tables.roads(vpu, rows), tables.dams(vpu),
+      tables.soils(vpu, rows), tables.xings(vpu, lineRows)])
+  })).catch(() => {})   // a failed read is made again below, where its error counts
   for (const [vpu, lineRows] of members) {
     const region = (await ds.region(vpu))!
     if (!(await tables.present('lc', vpu))) {
@@ -243,15 +275,18 @@ export async function watershedValues(ds: Dataset, tables: ValueTables, nhdplusi
       }
     })
     regionRows.set(vpu, { region, catRows })
-    const { counts, imp } = await tables.lc(vpu)
+    // the rows picked, in order (numpy m[rows].sum(axis=0) over the picked rows)
+    const { counts, imp } = await tables.lc(vpu, catRows)
     const add = (acc: Float64Array, v: Float64Array) => acc.map((x, j) => x + v[j])
-    wsCounts = add(wsCounts, rowSum(counts, 17, catRows))
-    wsImp = add(wsImp, rowSum(imp, 4, catRows))
-    const rip = await tables.rip(vpu)
-    const levelOf = new Float64Array(counts.length / 17).fill(-1)
-    catRows.forEach((c, i) => { levelOf[c] = catLv[i] })
+    wsCounts = add(wsCounts, rowSum(counts, 17, iota(catRows.length)))
+    wsImp = add(wsImp, rowSum(imp, 4, iota(catRows.length)))
+    // the strip pieces of the walk's catchments, in the table's order (levels are never negative, so a
+    // piece of a catchment outside the walk is never taken)
+    const rip = await tables.rip(vpu, catRows)
+    const levelOf = new Map<number, number>()
+    catRows.forEach((c, i) => { levelOf.set(c, catLv[i]) })
     const take: number[] = []
-    for (let i = 0; i < rip.row.length; i++) if (levelOf[rip.row[i]] >= rip.k[i]) take.push(i)
+    for (let i = 0; i < rip.row.length; i++) if ((levelOf.get(rip.row[i]) ?? -1) >= rip.k[i]) take.push(i)
     rpCounts = add(rpCounts, rowSum(rip.counts, 17, take))
     rpImp = add(rpImp, rowSum(rip.imp, 4, take))
   }
@@ -274,19 +309,19 @@ export async function watershedValues(ds: Dataset, tables: ValueTables, nhdplusi
     let cells = 0
     for (const c of catRows) cells += enc.cells[c]
     areaM2 += (cells * 2) / 2.0 * (region.grid.cell * region.grid.cell)
-    roadM += pickSum(await tables.roads(vpu), catRows)
+    roadM += pairwiseSum(await tables.roads(vpu, catRows))
     const d = await tables.dams(vpu)
     for (const c of catRows) damN += d.dams[c]
     normal += pickSum(d.normal, catRows)
     for (const c of catRows) missingNormal += d.missing[c]
     nidAcft += pickSum(d.nid, catRows)
-    const so = await tables.soils(vpu)
-    kSum += pickSum(so.kSum, catRows)
-    for (const c of catRows) {
-      kCells += so.kCells[c]
-      ssurgo += so.ssurgo[c]
+    const so = await tables.soils(vpu, catRows)
+    kSum += pairwiseSum(so.kSum)
+    for (let k = 0; k < catRows.length; k++) {
+      kCells += so.kCells[k]
+      ssurgo += so.ssurgo[k]
     }
-    const xg = await tables.xings(vpu)
+    const xg = await tables.xings(vpu, lineRows)
     const wanted = new Set(lineRows)
     const seen = new Set<string>()
     for (let i = 0; i < xg.lineRow.length; i++) if (wanted.has(xg.lineRow[i])) seen.add(`${xg.road[i]},${xg.x[i]},${xg.y[i]}`)

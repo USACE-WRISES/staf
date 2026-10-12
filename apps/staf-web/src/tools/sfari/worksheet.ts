@@ -9,6 +9,7 @@
 // reads the scores isolated), so a rating never redraws the row being rated.
 import { type Child, h, HTML, outputHtml } from '../../app/htm'
 import { notify, removeNotification } from '../../app/notify'
+import { timed } from '../../app/perf'
 import {
   addDialog, BASELINE_ID, compareDialog, type Comparison, DESC_INPUT, deleteDialog, NAME_INPUT, railDelta, type Scenario,
   scenarioBar, scenarioDialog, ScenarioSet, START_BLANK, START_INPUT,
@@ -60,6 +61,8 @@ export class SfariWorksheet {
   private pulling = false
   private pullGen = 0
   private progress = { done: 0, total: 0 }
+  /** the desktop evidence pulled ahead for a delineation (pullAhead), with its progress */
+  private ahead: { delin: Record<string, any>, progress: { done: number, total: number }, p: Promise<Record<string, Evidence>> } | null = null
   private poll: ReturnType<typeof setInterval> | null = null
   /** Existing Conditions and the alternatives; the shown one's entries live in the two score maps */
   scenarios = new ScenarioSet()
@@ -74,6 +77,7 @@ export class SfariWorksheet {
   /** A new pick or a reset: the scores, the evidence and the place in the list go (_invalidate_selection). */
   reset(): void {
     this.pullGen += 1
+    this.ahead = null
     this.stopPoll()
     this.pulling = false
     this.metricScores = {}
@@ -311,6 +315,18 @@ export class SfariWorksheet {
   }
 
   // ---------------------------------------------------------------- the pull
+  /** The desktop evidence pulled ahead, once the Basin step shows a delineation with the source resolved
+   * (the engine's record is final by then): the Shiny SFARI pulls when the Assessment step opens; here the
+   * pull runs while the assessor looks at the Basin step, so the step finds it done. Nothing is shown. */
+  pullAhead(): void {
+    const d = this.host.delin()
+    if (!d?.ctx_inputs || this.pulling || Object.keys(this.evidence).length || !this.host.sourceReady() || this.ahead?.delin === d) return
+    const progress = { done: 0, total: 0 }
+    const p = timed('sfari:pull-ahead', pull(this.host.data, d.ctx_inputs, this.host.engineState() ?? { status: 'idle' }, progress))
+    p.catch(() => {})
+    this.ahead = { delin: d, progress, p }
+  }
+
   /** _maybe_pull: on the Assessment step, once per site, with the source resolved. */
   maybePull(): void {
     if (this.host.step() !== 'review') return
@@ -322,7 +338,9 @@ export class SfariWorksheet {
   private launch(d: Record<string, any>, state: EngineState): void {
     const gen = ++this.pullGen
     this.pulling = true
-    this.progress = { done: 0, total: 0 }
+    const ahead = this.ahead?.delin === d ? this.ahead : null
+    this.ahead = null
+    this.progress = ahead ? ahead.progress : { done: 0, total: 0 }
     notify('Pulling desktop evidence…', { id: 'pull', type: 'message', seconds: 0 })
     this.stopPoll()
     this.poll = setInterval(() => {
@@ -330,7 +348,7 @@ export class SfariWorksheet {
         notify(`Pulling desktop evidence… ${this.progress.done}/${this.progress.total}`, { id: 'pull', type: 'message', seconds: 0 })
       }
     }, 400)
-    void pull(this.host.data, d.ctx_inputs, state, this.progress).then((got) => {
+    void timed('sfari:pull', ahead ? ahead.p : pull(this.host.data, d.ctx_inputs, state, this.progress)).then((got) => {
       if (gen !== this.pullGen) return
       this.finish(got)
     }, () => {

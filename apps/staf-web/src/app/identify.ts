@@ -23,6 +23,7 @@ import { buildDisplay, type Feature, type FeatureCollection } from '../streams/d
 import { hrFeatures, type LineRecord, type Network, v2Features } from '../streams/network'
 import { esc, type ToolKey } from './markup'
 import { notify } from './notify'
+import { timed } from './perf'
 import { pyFixed, pyFixedComma } from './pyfmt'
 
 export const POINT_STYLE: L.CircleMarkerOptions = { radius: 7, color: '#1f3b73', fillColor: '#4c8ef5', fillOpacity: 0.95, weight: 2 }
@@ -179,16 +180,14 @@ export class Identify {
   /** A click on the map at the stream zoom, on Identify. */
   click(lat: number, lon: number): void {
     this.generation += 1
-    if (this.host.key === 'easi') void this.clickEasi(lat, lon, this.generation, false)
-    else void this.clickHr(lat, lon, this.generation, false)
+    void timed('pick', this.host.key === 'easi' ? this.clickEasi(lat, lon, this.generation, false) : this.clickHr(lat, lon, this.generation, false))
   }
 
   /** Typed coordinates: the lines around the point are read, whatever the view draws (each app's
    * coord_snap_task). */
   typed(lat: number, lon: number): void {
     this.generation += 1
-    if (this.host.key === 'easi') void this.clickEasi(lat, lon, this.generation, true)
-    else void this.clickHr(lat, lon, this.generation, true)
+    void timed('pick', this.host.key === 'easi' ? this.clickEasi(lat, lon, this.generation, true) : this.clickHr(lat, lon, this.generation, true))
   }
 
   private reset(status: Status): void {

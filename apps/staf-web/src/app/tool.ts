@@ -17,6 +17,7 @@ import { makeMap, type ToolMap } from './map'
 import { notify } from './notify'
 import { pyFixed } from './pyfmt'
 import * as shim from './shim'
+import { shownTool } from './shell'
 import { type Networks, StreamLayers } from './streams'
 
 const FLOWLINE_COLOR = '#1f6feb'
@@ -201,6 +202,11 @@ export class Tool {
     }
     this.easi?.render()
     this.easi?.maybeAssess()
+    if (this.step === 'basin') {
+      this.easi?.prefetchAhead()
+      this.sfari?.pullAhead()
+      this.deep?.computeAhead()
+    }
     this.sfari?.render()
     this.sfari?.maybePull()
     this.deep?.render()
@@ -239,6 +245,7 @@ export class Tool {
       await loadMethod(this.data.src)
       const basin = this.basin!
       this.easi = new EasiWorksheet({ data: this.data, step: () => this.step, delin: () => basin.delin, setStep: (s) => this.setStep(s) })
+      if (this.step === 'basin') this.easi.prefetchAhead()
       return this.easi
     })
     this.easiP.catch(() => { this.easiP = null })
@@ -255,6 +262,7 @@ export class Tool {
         engineState: () => basin.engineState, engineLine: () => basin.engineLine(), lookupStatus: () => identify.lookupStatus(),
         sourceReady: () => identify.ready(), setStep: (s) => this.setStep(s),
       })
+      if (this.step === 'basin') this.sfari.pullAhead()
       return this.sfari
     })
     this.sfariP.catch(() => { this.sfariP = null })
@@ -376,6 +384,7 @@ export class Tool {
       if (this.loaded) {
         this.selectedRef = ref
         this.deep?.assessmentLoaded()
+        if (this.step === 'basin') this.deep?.computeAhead()
       }
     }
     this.deep?.seedAutoStrata()
@@ -602,7 +611,9 @@ export class Tool {
         this.renderLegend()
         break
       case 'coverage_ready':
-        if (this.key === 'deep') this.sendCoverage()
+        // coverage.js asks as it loads; the regions (1 MB) are sent while DEEP is shown, as DEEP's server
+        // starts only then (it asks again when DEEP shows)
+        if (this.key === 'deep' && shownTool() === 'deep') this.sendCoverage()
         break
       default:
         if (!this.easi?.input(name, value) && !this.sfari?.input(name, value)) this.deep?.input(name, value)
