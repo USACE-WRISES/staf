@@ -7,6 +7,7 @@ import type L from 'leaflet'
 import type { EasiData } from '../engine/pipeline'
 import type { PointTables } from '../engine/points'
 import type { DeepWorksheet } from '../tools/deep/worksheet'
+import type { EasiWorksheet } from '../tools/easi/worksheet'
 import type { SfariWorksheet } from '../tools/sfari/worksheet'
 import { Basin } from './basin'
 import { assessPane, type Covering, coveringRefs, loadRef } from './deepAssess'
@@ -54,6 +55,9 @@ export class Tool {
   /** SFARI's Assessment worksheet: its code and SFARI's method load on their own, once SFARI is shown */
   sfari: SfariWorksheet | null = null
   private sfariP: Promise<SfariWorksheet> | null = null
+  /** EASI's Assessment worksheet and screening, loaded the same way once EASI is shown */
+  easi: EasiWorksheet | null = null
+  private easiP: Promise<EasiWorksheet> | null = null
   /** DEEP's measure worksheet, loaded the same way */
   deep: DeepWorksheet | null = null
   private deepP: Promise<DeepWorksheet> | null = null
@@ -109,6 +113,7 @@ export class Tool {
       busy: () => this.renderBusy(),
       resolveAssessment: this.key === 'deep' ? () => void this.resolveAssessment() : undefined,
     })
+    if (this.key === 'easi') void this.loadEasi().catch(() => {})
     if (this.key === 'sfari') void this.loadSfari().catch(() => {})
     if (this.key === 'deep') void this.loadDeep().catch(() => {})
     map.on('zoomend moveend', () => this.viewChanged())
@@ -170,6 +175,7 @@ export class Tool {
       return
     }
     this.basin?.invalidate()          // a new pick invalidates the last delineation
+    this.easi?.reset()
     this.sfari?.reset()
     this.deep?.reset()
     this.identify?.click(e.latlng.lat, e.latlng.lng)
@@ -181,7 +187,8 @@ export class Tool {
   setStep(step: string): void {
     this.step = step
     const pane = this.out('leftpane')
-    if ((step === 'review' && this.sfari && this.basin?.delin) || (step === 'measure' && this.deep && this.basin?.delin)) {
+    if ((step === 'review' && this.sfari && this.basin?.delin) || (step === 'measure' && this.deep && this.basin?.delin)
+      || (step === 'assess' && this.easi && this.basin?.delin)) {
       // the worksheet over the map replaces the left pane
       pane.innerHTML = ''
     } else if (step === 'basin' && this.basin?.delin) {
@@ -192,6 +199,8 @@ export class Tool {
       pane.innerHTML = '\n' + identifyPane(this.key, !!this.identify?.ready()) + '\n'
       this.pickChanged()
     }
+    this.easi?.render()
+    this.easi?.maybeAssess()
     this.sfari?.render()
     this.sfari?.maybePull()
     this.deep?.render()
@@ -221,6 +230,19 @@ export class Tool {
       const html = b.engineLine()
       if (line.innerHTML !== html) line.innerHTML = html
     }
+  }
+
+  /** EASI's worksheet module, loaded once. */
+  private loadEasi(): Promise<EasiWorksheet> {
+    this.easiP ??= import('../tools/easi/worksheet').then(async ({ EasiWorksheet, loadMethod }) => {
+      // the adopted scoring method (the library mirror's pinned package) before anything draws
+      await loadMethod(this.data.src)
+      const basin = this.basin!
+      this.easi = new EasiWorksheet({ data: this.data, step: () => this.step, delin: () => basin.delin, setStep: (s) => this.setStep(s) })
+      return this.easi
+    })
+    this.easiP.catch(() => { this.easiP = null })
+    return this.easiP
   }
 
   /** SFARI's worksheet module, loaded once. */
@@ -302,9 +324,14 @@ export class Tool {
       else notify('Finish the earlier steps first.', { seconds: 2 })
       return
     }
+    // EASI's _step_nav
+    if (!['identify', 'basin', 'assess', 'report'].includes(target)) return
+    const ready = hasDelin && !!this.identify?.ready()
+    const hasReport = !!this.easi?.base
     if (target === 'identify') this.setStep('identify')
     else if (target === 'basin' && hasDelin) this.setStep('basin')
-    else if (target !== 'report' && hasDelin) notify('The Assessment step is not in the web app yet.', { seconds: 4 })
+    else if (target === 'assess' && (hasReport || ready)) void this.loadEasi().then(() => this.setStep('assess'))
+    else if (target === 'report' && hasReport) this.easi!.requestReport()
     else notify('Finish the earlier steps first.', { seconds: 2 })
   }
 
@@ -322,6 +349,7 @@ export class Tool {
 
   /** Clear: back to an empty Identify (each app.py _reset). */
   private clear(): void {
+    this.easi?.reset()
     this.sfari?.reset()
     this.deep?.reset()
     this.basin?.invalidate()
@@ -397,6 +425,7 @@ export class Tool {
     }
     this.view.map.setView([lat, lon], 15)
     this.basin?.invalidate()
+    this.easi?.reset()
     this.sfari?.reset()
     this.deep?.reset()
     this.identify.typed(lat, lon)
@@ -535,6 +564,7 @@ export class Tool {
         this.identify?.retry()
         break
       case 'delineate':
+        this.easi?.reset()
         this.basin?.start()
         break
       case 'clear_basin':
@@ -551,7 +581,8 @@ export class Tool {
         this.toMeasure()
         break
       case 'run_screening':
-        notify('The Assessment step is not in the web app yet.', { seconds: 4 })
+        // _run_screening: the worksheet, whose landing starts the run
+        if (this.basin?.delin && this.identify?.ready()) void this.loadEasi().then((ws) => ws.runScreening())
         break
       case 'change_assessment':
         notify('Changing the assessment comes with the Assessment step.', { seconds: 4 })
@@ -574,7 +605,7 @@ export class Tool {
         if (this.key === 'deep') this.sendCoverage()
         break
       default:
-        if (!this.sfari?.input(name, value)) this.deep?.input(name, value)
+        if (!this.easi?.input(name, value) && !this.sfari?.input(name, value)) this.deep?.input(name, value)
         break
     }
   }

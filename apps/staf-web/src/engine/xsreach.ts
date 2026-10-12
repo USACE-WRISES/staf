@@ -123,10 +123,16 @@ export interface ReachGeometry {
   default_index: number
 }
 
-/** The grid's sections nearest the nine reach positions, as a reach geometry; null without any. */
+/** The grid section a reach position took: its region and identity (to read or pull its profile), and
+ * its flags (FLAGS in xs/grid.ts). */
+export interface PickedSection { vpu: string, id: number, part: number, k: number, flags: number }
+
+/** The grid's sections nearest the nine reach positions, as a reach geometry; null without any. ``picked``
+ * names each candidate's section and ``lengthM`` is the reach line's length (EPSG:5070). */
 export async function gridReachGeometry(src: DataSource, hr: Dataset, lineIds: number[], reachCoords: [number, number][],
-                                        bankfullExtrapolated: boolean): Promise<{ geom: ReachGeometry | null, covered: boolean }> {
-  const sections: { n: XsNumbers, x: number, y: number }[] = []
+                                        bankfullExtrapolated: boolean): Promise<{ geom: ReachGeometry | null, covered: boolean,
+                                          picked: PickedSection[], lengthM: number }> {
+  const sections: { n: XsNumbers, x: number, y: number, vpu: string }[] = []
   let covered = true
   for (const id of lineIds) {
     const found = await hr.find('by_id', [id])
@@ -141,19 +147,22 @@ export async function gridReachGeometry(src: DataSource, hr: Dataset, lineIds: n
     const at = new Map(pulls.map((p) => [`${p.part}:${p.k}`, p]))
     for (const n of nums) {
       const p = at.get(`${n.part}:${n.k}`)
-      if (p) sections.push({ n, x: p.x, y: p.y })
+      if (p) sections.push({ n, x: p.x, y: p.y, vpu })
     }
   }
-  if (reachCoords.length < 2 || !sections.length) return { geom: null, covered }
+  if (reachCoords.length < 2 || !sections.length) return { geom: null, covered, picked: [], lengthM: 0 }
   const line = reachCoords.map(([x, y]) => albersForward(x, y))
   const length = lineLength(line)
   const cands: Candidate[] = []
+  const picked: PickedSection[] = []
   for (let i = 1; i <= 9; i++) {
     const [px, py] = interpolate(line, length * (i * 0.1))
     let best = sections[0]
     let bestD = Infinity
     for (const s of sections) {
-      const dd = (s.x - px) ** 2 + (s.y - py) ** 2
+      const dx = s.x - px
+      const dy = s.y - py
+      const dd = dx * dx + dy * dy
       if (dd < bestD) {
         bestD = dd
         best = s
@@ -161,16 +170,17 @@ export async function gridReachGeometry(src: DataSource, hr: Dataset, lineIds: n
     }
     const n = best.n
     if (!SCORED.has(n.status)) continue
+    picked.push({ vpu: best.vpu, id: Number(n.nhdplusid), part: n.part, k: n.k, flags: n.flags })
     cands.push({
       position_frac: i * 0.1, entrenchment_ratio: n.er, bank_height_ratio: n.bhr, bankfull_width_m: n.bfw, bankfull_depth_m: n.bfd,
       flood_prone_width_m: n.fpw, low_bank_capped: !!(n.flags & 1), edge_limited: !!(n.flags & 2), bank_detection: n.bank, res: n.res,
     })
   }
-  if (!cands.length) return { geom: null, covered }
+  if (!cands.length) return { geom: null, covered, picked: [], lengthM: length }
   const reach = reachStats(cands)
   const d = medianCandidate(cands)
   return {
-    covered,
+    covered, picked, lengthM: length,
     geom: {
       candidate_scalars: cands, reach,
       entrenchment_ratio: reach.entrenchment_ratio?.median ?? null, bank_height_ratio: reach.bank_height_ratio?.median ?? null,

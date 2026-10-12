@@ -73,7 +73,8 @@ CAPTURE_JS = """(() => {
     href: l.getAttribute('href'), media: l.media || '', tool: l.getAttribute('data-staf-css') || '' }));
   const wrap = document.querySelector('.staf-section[data-staf-tool="' + tool + '"] .leaflet-top.leaflet-right');
   return JSON.stringify({ header, section: sec.outerHTML, styles, title: document.title,
-                          corner: wrap ? wrap.outerHTML : '' });
+                          corner: wrap ? wrap.outerHTML : '',
+                          modal: (document.querySelector('.modal.show') || {}).outerHTML || '' });
 })()"""
 
 # opens one of the shown tool's dialogs and returns {title, body} once it shows
@@ -300,7 +301,11 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
                 if actions:
                     # what a user does on the page (an async function over the page's elements), then
                     # the worksheet settled again
-                    print(f"{tool}: actions say {await js(f'({actions})({json.dumps(tool)})')!r}")
+                    said = await js(f'({actions})({json.dumps(tool)})')
+                    # what the script returns is kept beside the capture (<stem>.actions.txt), so a
+                    # script can collect what it saw along the way for compare.py
+                    (out / f"{stem}.actions.txt").write_text(str(said), encoding="utf-8", newline="\n")
+                    print(f"{tool}: actions say {str(said)[:200]!r}")
                     last, same, end = None, 0, time.monotonic() + 300
                     while time.monotonic() < end and same < 3:
                         await asyncio.sleep(1.0)
@@ -313,7 +318,8 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
                 (out / f"{stem}.html").write_text(
                     f"<!-- {got['title']} : {url}/?tool={tool} at {width}x{height} -->\n"
                     + pretty(got["header"]) + "\n\n" + pretty(got["section"]) + "\n\n"
-                    + "<!-- the map's top right corner -->\n" + pretty(got["corner"]) + "\n",
+                    + "<!-- the map's top right corner -->\n" + pretty(got["corner"]) + "\n"
+                    + ("\n<!-- the dialog shown -->\n" + pretty(got["modal"]) + "\n" if got.get("modal") else ""),
                     encoding="utf-8", newline="\n")
                 shot = await call("Page.captureScreenshot", format="png")
                 (out / f"{stem}.png").write_bytes(base64.b64decode(shot["data"]))

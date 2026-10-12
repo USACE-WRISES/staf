@@ -10,7 +10,10 @@ Vite's public folder: served at the app's root in development and copied into ``
   favicon (``apps/staf/www/shell``).
 - **From the Python packages the Shiny app runs on** (the repo's .venv): py-shiny's Bootstrap build, its
   fonts cut to the latin and latin-ext faces (every character the apps show), htmltools' ``fill.css``,
-  ``shinywidgets.css``.
+  ``shinywidgets.css``; matplotlib's DejaVu Sans cut to what EASI's report cross-section image draws
+  (``fonts/``, with its license) and, as JSON, how matplotlib sets that text (``xsplot-text.json``: the
+  hinted advances, ink extents, kerning and ligatures at the image's sizes), so the static app draws the
+  image as easi/xsplot.py does.
 - **From node_modules:** Leaflet's stylesheet and control images (Leaflet 1.9.4, the app's own
   dependency).
 - **Written here by hand** and never replaced: ``css/shiny/jupyter.css`` and ``jupyter-leaflet.css``,
@@ -19,7 +22,10 @@ Vite's public folder: served at the app's root in development and copied into ``
 The same goes for the method content the app's code imports (``content/...``, written to
 ``src/app/content/``, not ``page/``): SFARI's functions, metrics and outcome mapping (``apps/sfari/data``),
 DEEP's functions and outcome mapping (``apps/deep/data``) and its concise method texts (the ``CONCISE``
-table of ``apps/deep/deep/method_text.py``, written as JSON).
+table of ``apps/deep/deep/method_text.py``, written as JSON), EASI's adopted-method pin (its scoring method
+itself is the pinned package of the library mirror, read at run time as the Shiny EASI reads it from the
+library release) and EASI's tables kept in Python modules (``config.json``: the metric registry,
+definitions and calculation notes of the regional criteria, the watershed layer's keys and labels).
 
 ``page-sources.json`` records each copy's source and the sha256 both had when copied. A copy that was
 edited here since is never overwritten (``--force`` does). ``--check`` copies nothing and reports which
@@ -69,7 +75,19 @@ FROM_REPO = {
     "js/deep/measure.js": "apps/deep/www/measure.js",
     "content/deep/deep-functions.json": "apps/deep/data/deep-functions.json",
     "content/deep/deep-outcome-mapping.json": "apps/deep/data/deep-outcome-mapping.json",
+    "content/easi/adopted-method.json": "apps/easi/data/source/adopted-method.json",
+    "js/staf/report-ready.js": "libs/staf_workbook/assets/report-ready.js",
+    "content/shared/ecoregions.json": "libs/staf_workbook/staf_workbook/data/ecoregions.json",
+    "js/easi/report-controls.js": "apps/easi/www/report-controls.js",
+    "js/easi/report-edit.js": "apps/easi/www/report-edit.js",
+    "js/easi/worksheet.js": "apps/easi/www/worksheet.js",
 }
+#: EASI's tables that live in Python modules, kept as JSON (``content/easi/config.json``): the metric
+#: registry, definitions and calculation notes of the active (regional) criteria, and the watershed
+#: evidence layer's keys and labels
+EASI_WATERSHED_TABLES = ("VALUE_KEYS", "ACRE_FT_PER_KM2_TO_M3_PER_KM2", "_STREAMCAT_COLUMNS", "_ENGINE_KEYS",
+                         "STREAMCAT_INPUT_SOURCES", "STREAMCAT_RESULT_SOURCES", "_ENGINE_INPUT_DETAILS",
+                         "_ENGINE_RESULT_DETAILS", "_ENGINE_NOTES", "GUIDANCE_UNAVAILABLE", "ENGINE_FAMILIES")
 OWN = ("css/shiny/jupyter.css", "css/shiny/jupyter-leaflet.css")
 KEEP_FONTS = ("latin", "latin-ext")
 FACE = re.compile(r"/\* ([a-z-]+) \*/\s*(@font-face\s*\{[^}]*\})")
@@ -78,7 +96,7 @@ FONT_SRC = re.compile(r"url\((fonts/[^)]+)\)")
 
 #: text files are kept with LF line endings, as the repo stores them (.gitattributes), so a copy's
 #: sha256 is the same in every checkout (Leaflet's stylesheet ships with CRLF)
-TEXT = (".css", ".js", ".svg", ".json")
+TEXT = (".css", ".js", ".svg", ".json", ".txt")
 
 
 def dest(path: str) -> Path:
@@ -92,6 +110,112 @@ def sha256(data: bytes) -> str:
 
 def _normal(path: str, data: bytes) -> bytes:
     return data.replace(b"\r\n", b"\n") if path.endswith(TEXT) else data
+
+
+def _module(name: str, path: Path):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _easi_config() -> bytes | None:
+    """EASI's config and watershed tables as JSON, or None once the modules are gone. Both modules
+    import only the standard library at the top, so each loads on its own."""
+    import os
+    cfg_path = REPO / "apps" / "easi" / "easi" / "config.py"
+    ws_path = REPO / "apps" / "easi" / "easi" / "watershed.py"
+    if not (cfg_path.is_file() and ws_path.is_file()):
+        return None
+    os.environ["EASI_CRITERIA_SET"] = "regional"
+    cfg = _module("_easi_config", cfg_path)
+    ws = _module("_easi_watershed", ws_path)
+    mids = list(cfg.METRIC_REGISTRY)
+    missing = "\0"
+    data = {
+        "criteriaSet": cfg.criteria_set(),
+        "registry": cfg.metric_registry(),
+        "definitions": cfg.METRIC_DEFINITIONS,
+        "regionalDefinitions": dict((m, d) for m in mids
+                                    if (d := cfg.metric_definition(m, fallback=missing)) != missing),
+        "calculations": dict((m, c) for m in mids if (c := cfg.metric_calculation(m)) is not None),
+        "watershed": dict((k, getattr(ws, k)) for k in EASI_WATERSHED_TABLES),
+    }
+    return (json.dumps(data, indent=1, ensure_ascii=False) + "\n").encode("utf-8")
+
+
+#: the sizes (points) EASI's report cross-section image sets its texts in (easi/xsplot.py), at the figure's
+#: own 100 dpi (where tight_layout measures it) and the 130 dpi it is saved at
+XSPLOT_SIZES = (6.5, 8, 9, 10)
+XSPLOT_DPIS = (100, 130)
+#: the characters it draws: printable ASCII and the minus sign of negative tick labels
+XSPLOT_CHARS = "".join(chr(c) for c in range(0x20, 0x7F)) + "−"
+
+
+def _xsplot_text() -> tuple[dict, dict] | None:
+    """EASI's report cross-section image as matplotlib sets its text (DejaVu Sans, FreeType's default
+    hinting): per resolution and size (``"<dpi>:<points>"``) the font's typographic ascent and descent,
+    each character's hinted advance and ink extent, the ligatures, and every pair's kerning as the shaper
+    places it; and the font itself, cut to those characters (woff2) with its license. None without
+    matplotlib."""
+    try:
+        import io
+
+        import matplotlib
+        from fontTools import subset
+        from matplotlib import ft2font
+        from matplotlib.backends.backend_agg import get_hinting_flag
+    except ImportError:
+        return None
+    path = Path(matplotlib.get_data_path()) / "fonts" / "ttf" / "DejaVuSans.ttf"
+    flags = get_hinting_flag()
+    sizes = {}
+    for dpi, pt in [(d, p) for d in XSPLOT_DPIS for p in XSPLOT_SIZES]:
+        font = ft2font.FT2Font(str(path))
+        font.set_size(pt, dpi)
+        os2 = font.get_sfnt_table("OS/2")
+        scale = pt * dpi / 72 / font.get_sfnt_table("head")["unitsPerEm"]
+        def metrics_of(g):
+            x0, y0, x1, y1 = g.bbox
+            empty = x0 == x1 or y0 == y1
+            return [g.horiAdvance / 64, 0 if empty else y0 / 64, 0 if empty else y1 / 64]
+        glyphs = dict((ch, metrics_of(font.load_char(ord(ch), flags=flags))) for ch in XSPLOT_CHARS)
+        kern, ligatures = {}, {}
+        for a in XSPLOT_CHARS:
+            for b in XSPLOT_CHARS:
+                items = font._layout(a + b, flags=flags)
+                if len(items) == 1:      # a ligature (DejaVu's fi, fl): one glyph for the pair
+                    ligatures[a + b] = metrics_of(font.load_glyph(items[0].glyph_index, flags=flags))
+                elif abs(items[1].x - glyphs[a][0]) > 1e-9:
+                    kern[a + b] = items[1].x - glyphs[a][0]
+        # the kerning on either side of a ligature (keyed by the two texts, the ligature's in full)
+        for lig in ligatures:
+            for c in XSPLOT_CHARS:
+                before = font._layout(c + lig, flags=flags)
+                if len(before) == 2 and abs(before[1].x - glyphs[c][0]) > 1e-9:
+                    kern[c + lig] = before[1].x - glyphs[c][0]
+                after = font._layout(lig + c, flags=flags)
+                if len(after) == 2 and abs(after[1].x - ligatures[lig][0]) > 1e-9:
+                    kern[lig + c] = after[1].x - ligatures[lig][0]
+        sizes[f"{dpi}:{pt:g}"] = {"ascent": os2["sTypoAscender"] * scale, "descent": -os2["sTypoDescender"] * scale,
+                                  "glyphs": glyphs, "ligatures": ligatures, "kern": kern}
+    metrics = {"source": f"matplotlib {matplotlib.__version__}: DejaVu Sans set with FreeType's default hinting "
+                         "(per dpi:points, each glyph's advance in whole pixels and ink bottom and top; pair kerning)",
+               "sizes": sizes}
+    options = subset.Options()
+    options.flavor = "woff2"
+    options.name_IDs = ["*"]
+    options.notdef_outline = True
+    options.layout_features = ["kern", "liga"]
+    font = subset.load_font(str(path), options)
+    sub = subset.Subsetter(options)
+    sub.populate(unicodes=[ord(c) for c in XSPLOT_CHARS])
+    sub.subset(font)
+    buf = io.BytesIO()
+    subset.save_font(font, buf, options)
+    license_ = (path.parent / "LICENSE_DEJAVU").read_bytes()
+    return metrics, {"fonts/dejavu-sans.woff2": buf.getvalue(), "fonts/dejavu-sans-license.txt": license_}
 
 
 def sources() -> tuple[dict, dict]:
@@ -111,6 +235,29 @@ def sources() -> tuple[dict, dict]:
         spec.loader.exec_module(mod)
         out["content/deep/method-text.json"] = ("apps/deep/deep/method_text.py: CONCISE",
                                                 (json.dumps(mod.CONCISE, indent=1, ensure_ascii=False) + "\n").encode("utf-8"))
+    easi = _easi_config()
+    if easi is not None:
+        out["content/easi/config.json"] = ("apps/easi/easi/config.py + watershed.py (regional criteria)", easi)
+    try:
+        # the template every plotly.py figure carries (EASI's cross-section plot is one)
+        import plotly
+        import plotly.graph_objects as go
+        template = go.Figure().layout.template.to_plotly_json()
+        out["content/easi/plotly-template.json"] = (f"plotly {plotly.__version__}: the default template",
+                                                    (json.dumps(template, indent=1) + "\n").encode("utf-8"))
+    except ImportError:
+        print("plotly is not installed here: its template stays as it is")
+    xsplot_text = _xsplot_text()
+    if xsplot_text is None:
+        print("matplotlib or fontTools is not installed here: the cross-section image's font stays as it is")
+    else:
+        import matplotlib
+        metrics, files = xsplot_text
+        out["content/easi/xsplot-text.json"] = (f"matplotlib {matplotlib.__version__}: DejaVu Sans text metrics at 100 and 130 dpi",
+                                                (json.dumps(metrics, indent=1, ensure_ascii=False) + "\n").encode("utf-8"))
+        for rel, data in files.items():
+            out[rel] = (f"matplotlib {matplotlib.__version__}: mpl-data/fonts/ttf (DejaVu Sans"
+                        + (", cut to the image's characters)" if rel.endswith(".woff2") else ", LICENSE_DEJAVU)"), data)
     versions: dict = {}
     try:
         from importlib import metadata

@@ -1,5 +1,5 @@
 // The scenario controls against libs/staf_workbook's own (scenarios_ref.json, make_scenario_fixtures.py):
-// the chip, the dialogs (py-shiny's modal less its show script), the comparisons, the name rules.
+// the chip, the dialogs (py-shiny's modal with its show script), the comparisons, the name rules.
 import { describe, expect, it } from 'vitest'
 import { TagList } from '../src/app/htm'
 import {
@@ -11,8 +11,6 @@ import ref from './fixtures/scenarios_ref.json'
 
 const R = ref as any
 const render = (t: any) => new TagList(t).render()
-/** py-shiny's modal ends with the script that shows it; the static app shows it itself. */
-const noScript = (html: string) => html.replace(/\n {2}<script>[\s\S]*?<\/script>/, '')
 
 describe('scenarios', () => {
   it('draw the chip as web.scenario_bar', () => {
@@ -22,14 +20,14 @@ describe('scenarios', () => {
   it('draw the dialogs as web.py', () => {
     const d = Object.fromEntries(R.dialogs.map((x: any) => [x.name, x]))
     const two = ScenarioSet.fromJson(d.add.set)
-    expect(render(addDialog('sfari', two, d.add.args))).toBe(noScript(d.add.html))
-    expect(render(addDialog('sfari', two, d['add-error'].args))).toBe(noScript(d['add-error'].html))
+    expect(render(addDialog('sfari', two, d.add.args))).toBe(d.add.html)
+    expect(render(addDialog('sfari', two, d['add-error'].args))).toBe(d['add-error'].html)
     for (const k of ['edit-baseline', 'edit-alt']) {
       const a = d[k].args
       expect(render(scenarioDialog('sfari', { title: a.title, name: a.name, description: a.description, nameLocked: a.name_locked, canDelete: a.can_delete })), k)
-        .toBe(noScript(d[k].html))
+        .toBe(d[k].html)
     }
-    expect(render(deleteDialog('sfari', d.delete.args.name))).toBe(noScript(d.delete.html))
+    expect(render(deleteDialog('sfari', d.delete.args.name))).toBe(d.delete.html)
   })
 
   it('compare scenarios as SFARI does', () => {
@@ -44,7 +42,7 @@ describe('scenarios', () => {
         expect(r.deltas.map((x) => fmtDelta(x, r.digits)), want.key).toEqual(want.deltaText)
         expect(r.deltas.map(deltaSign), want.key).toEqual(want.signs)
       })
-      expect(render(compareDialog(cmp))).toBe(noScript(c.dialog))
+      expect(render(compareDialog(cmp))).toBe(c.dialog)
       const rail = railDelta(cmp, 1)
       expect(rail ? render(rail) : null).toBe(c.railDelta)
     }

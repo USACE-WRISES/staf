@@ -4,13 +4,69 @@
 // read back from a file writes it as the file had it. parseJson keeps each number's source text (the
 // JSON.parse source-text access of current browsers), and pyDumps writes that text back; without it a
 // whole number is written as an int.
+//
+// A JavaScript object also lists keys that look like array indexes ("1", "5") first, in numeric order,
+// where a Python dict keeps the file's order ("1", "4A", "5"). With ``order``, parseJson records the
+// file's key order of each object that has such a key, and pyEntries and pyDumps follow it.
 import { pyFloat } from './pyfmt'
 
 const RAW = new WeakMap<object, Record<string, string>>()
+const ORDER = new WeakMap<object, string[]>()
+const INDEX_KEY = /^(0|[1-9][0-9]*)$/
+const BACKSLASH = 92
+const QUOTE = 34
 
-/** JSON.parse that remembers how each number was written. */
-export function parseJson(text: string): any {
-  return JSON.parse(text, function (this: Record<string, unknown>, key: string, value: unknown, ctx?: { source?: string }) {
+/** Each object's keys in the file's order, objects in document (pre-)order. */
+function keyOrders(text: string): string[][] {
+  const out: string[][] = []
+  const stack: { keys: string[] | null, expectKey: boolean }[] = []
+  let i = 0
+  const n = text.length
+  while (i < n) {
+    const c = text[i]
+    if (c === '{') {
+      const keys: string[] = []
+      out.push(keys)
+      stack.push({ keys, expectKey: true })
+      i++
+    } else if (c === '[') {
+      stack.push({ keys: null, expectKey: false })
+      i++
+    } else if (c === '}' || c === ']') {
+      stack.pop()
+      i++
+    } else if (c === ',') {
+      const top = stack[stack.length - 1]
+      if (top && top.keys) top.expectKey = true
+      i++
+    } else if (text.charCodeAt(i) === QUOTE) {
+      let j = i + 1
+      while (j < n && text.charCodeAt(j) !== QUOTE) j += text.charCodeAt(j) === BACKSLASH ? 2 : 1
+      const top = stack[stack.length - 1]
+      if (top && top.keys && top.expectKey) {
+        top.keys.push(JSON.parse(text.slice(i, j + 1)))
+        top.expectKey = false
+      }
+      i = j + 1
+    } else i++
+  }
+  return out
+}
+
+function attachOrder(value: unknown, orders: string[][], at: { k: number }): void {
+  if (Array.isArray(value)) {
+    for (const v of value) attachOrder(v, orders, at)
+    return
+  }
+  if (value === null || typeof value !== 'object') return
+  const keys = orders[at.k++]
+  if (keys.some((k) => INDEX_KEY.test(k))) ORDER.set(value, keys)
+  for (const k of keys) attachOrder((value as Record<string, unknown>)[k], orders, at)
+}
+
+/** JSON.parse that remembers how each number was written (and, with ``order``, the file's key order). */
+export function parseJson(text: string, { order = false } = {}): any {
+  const value = JSON.parse(text, function (this: Record<string, unknown>, key: string, value: unknown, ctx?: { source?: string }) {
     if (typeof value === 'number' && ctx && typeof ctx.source === 'string' && this && typeof this === 'object') {
       let m = RAW.get(this)
       if (!m) {
@@ -21,7 +77,18 @@ export function parseJson(text: string): any {
     }
     return value
   } as (this: any, key: string, value: any) => any)
+  if (order) attachOrder(value, keyOrders(text), { k: 0 })
+  return value
 }
+
+/** dict.items(): an object's entries in the file's order where parseJson recorded it. */
+export function pyEntries<T>(obj: Record<string, T>): [string, T][] {
+  const keys = ORDER.get(obj)
+  return keys ? keys.map((k) => [k, obj[k]] as [string, T]) : Object.entries(obj)
+}
+
+/** dict.values() in the file's order */
+export const pyValues = <T>(obj: Record<string, T>): T[] => pyEntries(obj).map(([, v]) => v)
 
 function pyString(s: string): string {
   let out = '"'
@@ -63,5 +130,5 @@ export function pyDumps(value: unknown, raw?: string): string {
   }
   const obj = value as Record<string, unknown>
   const texts = RAW.get(obj)
-  return '{' + Object.entries(obj).map(([k, v]) => `${pyString(k)}: ${pyDumps(v, texts?.[k])}`).join(', ') + '}'
+  return '{' + pyEntries(obj).map(([k, v]) => `${pyString(k)}: ${pyDumps(v, texts?.[k])}`).join(', ') + '}'
 }

@@ -7,3 +7,6 @@ declare module 'bootstrap/js/dist/modal' {
     dispose(): void
   }
 }
+
+// plotly.js 3.6.0's basic bundle (scatter traces), the cross-section plot's; loaded on demand.
+declare module 'plotly.js-basic-dist-min'
