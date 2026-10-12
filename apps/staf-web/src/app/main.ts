@@ -19,7 +19,14 @@ import { Tool } from './tool'
 shim.install()
 ;(window as unknown as { L: typeof L }).L = L
 
-const src = new DataSource(dataBase(new URLSearchParams(location.search)))
+const params = new URLSearchParams(location.search)
+// what earlier visits read is kept in the browser (`?cache=0` reads everything from the host)
+const src = new DataSource(dataBase(params), { cache: params.get('cache') !== '0' })
+// what the page has read so far (for a console, and parity/capture.py --perf)
+;(window as unknown as { stafStats: () => unknown }).stafStats = () => ({
+  requests: src.requests, hostRequests: src.hostRequests, bytes: src.bytes, busyWaits: src.busyWaits,
+  cacheHits: src.cache.stats.hits, cacheBytes: src.cache.stats.bytes,
+})
 void src.ready().catch(() => {})   // every read needs the data manifest: ask for it at once
 
 // the bundle's two stream networks, read by range and shared by the three tools

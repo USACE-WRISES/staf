@@ -33,9 +33,16 @@ export async function streamcatRow(src: DataSource, v2: Dataset, comid: number, 
     const cols = (await metadata(src, logical)).schema.slice(1).map((s) => s.name).filter((c) => c !== 'comid')
     const wanted = cols.filter((c) => names.some((b) => c.toLowerCase().startsWith(b)))
     if (names.some((b) => !wanted.some((c) => c.toLowerCase().startsWith(b)))) return null
-    const row = (await rowsOf(src, logical)).get(comid)
-    if (row === undefined) return null
-    const t = await readColumns(src, logical, wanted, row, row + 1)
+    // the slice's rows follow the region's V2 lines, so the COMID's line row is its row there (read
+    // with its comid to be sure, through the page index); else the slice's comid column says where
+    let row = found[0].rows[0]
+    let t = await readColumns(src, logical, ['comid', ...wanted], row, row + 1, {}, [], true)
+    if (Number(t.comid[0]) !== comid) {
+      const at = (await rowsOf(src, logical)).get(comid)
+      if (at === undefined) return null
+      row = at
+      t = await readColumns(src, logical, wanted, row, row + 1, {}, [], true)
+    }
     const out: Record<string, number | null> = { comid }
     for (const c of wanted) {
       const v = t[c][0]

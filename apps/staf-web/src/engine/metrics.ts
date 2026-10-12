@@ -5,7 +5,7 @@
 // when the bundle answered the walk; the base-flow index is the mean of the USGS grid's cells whose
 // centres lie in the watershed. Entries keep the Python's names, units, sources, vintages, rounding and
 // warnings; the families run in name order, so the record is the same whatever order a tool asks.
-import { fromArrayBuffer } from 'geotiff'
+import { GeoTIFF } from 'geotiff'
 import { pyFixed } from '../app/pyfmt'
 import type { DataSource } from '../data/source'
 import { albersForward } from '../xs/projExact'
@@ -67,8 +67,9 @@ let sourcesP: Promise<Record<string, any>> | null = null
 
 /** The bundle manifest's ``sources`` (precomputed._source). */
 function bundleSources(src: DataSource): Promise<Record<string, any>> {
-  sourcesP ??= src.ready().then(() => src.bytesOf('bundle/manifest.json')).then((buf) =>
-    (JSON.parse(new TextDecoder().decode(buf)).sources ?? {}) as Record<string, any>)
+  // the data's index carries them; else the bundle's manifest
+  sourcesP ??= src.ready().then(async (index) => (index.bundleSources
+    ?? JSON.parse(new TextDecoder().decode(await src.bytesOf('bundle/manifest.json'))).sources ?? {}) as Record<string, any>)
   sourcesP.catch(() => { sourcesP = null })
   return sourcesP
 }
@@ -197,10 +198,26 @@ const runoff: Family = async (_d, record) => {
 // ---- base flow: the grid's cells whose centres lie in the watershed
 
 const BFI = { x0: -2356000, y0: 3173000, cell: 1000, width: 4614, height: 2905, nodata: 255 }
+/** The grid's directory, tile index and geokeys sit in its first 2.4 KB (of 1.27 MB): read in one request,
+ * then only the 256-cell tiles a watershed covers. */
+const BFI_HEAD = 16 * 1024
 let bfiP: Promise<any> | null = null
 
 function bfiImage(src: DataSource): Promise<any> {
-  bfiP ??= src.ready().then(() => src.bytesOf('engine/bfi48grd.tif')).then(async (buf) => (await fromArrayBuffer(buf)).getImage())
+  bfiP ??= src.ready().then(async () => {
+    const file = src.file('engine/bfi48grd.tif')
+    const size = file.byteLength
+    const head = Promise.resolve(file.slice(0, Math.min(BFI_HEAD, size)))
+    const source = {   // geotiff.js's BaseSource, over the data source's ranges
+      fileSize: size,
+      fetch: (slices: { offset: number, length: number }[]) => Promise.all(slices.map(async ({ offset, length }) => {
+        const end = Math.min(offset + length, size)
+        return end <= BFI_HEAD ? (await head).slice(offset, end) : file.slice(offset, end)
+      })),
+      close: async () => {},
+    }
+    return (await GeoTIFF.fromSource(source as any)).getImage()
+  })
   bfiP.catch(() => { bfiP = null })
   return bfiP
 }
@@ -420,21 +437,22 @@ export async function computeAll(d: MetricsData, record: Record_, families: stri
     if (unknown.length) (record.warnings ??= []).push(`unknown metric families ignored: ${unknown.join(', ')}`)
     wanted = names.filter((n) => asked.has(n))
   }
-  const pre = wanted.some((n) => ['dams', 'landcover', 'roads', 'soils'].includes(n)) ? await valuesFor(d, record) : null
+  const usesValues = (n: string) => ['dams', 'landcover', 'roads', 'soils'].includes(n)
+  const pre = wanted.some(usesValues) ? valuesFor(d, record) : Promise.resolve(null)
+  // the families run together (their reads are a few requests each, which one after another added up);
+  // none writes to the record, and their entries are put in the families' order, as the Python runs them
+  const running = wanted.map((name) => (async () => FAMILIES[name](d, record, usesValues(name) ? await pre : null))()
+    .catch((err): Record<string, MetricEntry> => ({
+      [`${name}Error`]: metricEntry(null, '', name, '', 'pointWatershed', [`metric family failed: ${err instanceof Error ? err.message : err}`]),
+    })))
   const out: Record<string, MetricEntry> = {}
-  for (const name of wanted) {
+  for (let i = 0; i < wanted.length; i++) {
     try {
-      progress?.({ stage: 'metrics', family: name })
+      progress?.({ stage: 'metrics', family: wanted[i] })
     } catch {
       // the UI never breaks a run
     }
-    let entries: Record<string, MetricEntry>
-    try {
-      entries = await FAMILIES[name](d, record, pre)
-    } catch (err) {
-      entries = { [`${name}Error`]: metricEntry(null, '', name, '', 'pointWatershed', [`metric family failed: ${err instanceof Error ? err.message : err}`]) }
-    }
-    Object.assign(out, entries)
+    Object.assign(out, await running[i])
   }
   return out
 }

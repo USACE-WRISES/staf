@@ -3,9 +3,9 @@
 The STAF data bundle keeps each point table (``tables/``) as one parquet row group in its build
 order (NID by dam id, WQP stations by station id, gages by site number). A browser asking for the
 dams in a one-mile box would read the whole table. Here each table is written again with the same
-rows and columns, sorted along a Hilbert curve over longitude and latitude and cut into small row
-groups whose statistics give each group's box, so a box or radius query reads the one to four groups
-it needs:
+rows and columns, sorted along a Hilbert curve over longitude and latitude, in row groups of 16,384
+rows (a small footer) cut into pages of 512 rows with a page index (each page's lowest and highest
+values and its place in the file), so a box or radius query reads the few pages it needs:
 
 - ``points/nid.parquet``, ``points/nwis.parquet``: ``nid_points`` and ``nwis_gages``, plus ``row0``,
   each row's position in the bundle's table (the order the apps' rules return rows in);
@@ -16,7 +16,10 @@ it needs:
   results of nearby stations sit together;
 - ``points/nas.parquet``: ``nas_taxa`` (the columns EASI reads: name, HUC8, HUC12, status), the records
   with a HUC12 sorted by it, then those without one by HUC8, so a HUC12 or HUC8 lookup reads the one or
-  two groups holding it.
+  two pages holding it.
+
+The result tables keep row groups of 131,072 rows in pages of 1,024 (a station's results are read by
+their rows, which the stations give).
 
 Nothing is computed or rounded: a query over these files returns exactly the rows the bundle's
 tables give (``_hrslim/points.py``), and ``row0`` restores their order where a rule depends on it.
@@ -27,10 +30,16 @@ from pathlib import Path
 
 import numpy as np
 
-#: rows per row group: one group spans a few miles to a few tens of miles
-GROUP = 1024
-#: the result tables' groups (results are many per station)
-RESULT_GROUP = 8192
+#: the layout's version, kept beside the cached copies: a copy written by another version is written
+#: again (a layout change must not wait for the bundle to change)
+LAYOUT = 5
+#: rows per row group (the footer lists every group's columns, so few groups keep it small)
+GROUP = 16384
+#: rows per page: what a query reads (a page spans a few miles)
+PAGE = 512
+#: the result tables' groups and pages (results are many per station)
+RESULT_GROUP = 131072
+RESULT_PAGE = 1024
 ORDER = 16
 NAMES = {"nid": "nid_points.parquet", "nwis": "nwis_gages.parquet", "wqp_stations": "wqp_stations.parquet",
          "wqp_results": "wqp_results.parquet", "wqp_temperature": "wqp_temperature.parquet",
@@ -75,11 +84,13 @@ def _spatial(t):
     return out, order
 
 
-def _write(t, path: Path, group: int) -> Path:
+def _write(t, path: Path, group: int, page: int = PAGE) -> Path:
     import pyarrow.parquet as pq
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
-    pq.write_table(t, tmp, row_group_size=group, compression="zstd", compression_level=9, write_statistics=True)
+    # no dictionaries: a page read would need its column's dictionary page too
+    pq.write_table(t, tmp, row_group_size=group, compression="zstd", compression_level=19, write_statistics=True,
+                   use_dictionary=False, write_page_index=True, max_rows_per_page=page)
     tmp.replace(path)
     return path
 
@@ -100,7 +111,9 @@ def write(tables: Path, out: Path, log=print) -> list:
     tables, out = Path(tables), Path(out)
     have = outputs(tables, out)
     newest = max((p.stat().st_mtime for p in tables.glob("*.parquet")), default=0.0)
-    if have and all(p.exists() and p.stat().st_mtime >= newest for _, p in have):
+    stamp = out / "layout.txt"
+    current = stamp.exists() and stamp.read_text(encoding="utf-8").strip() == str(LAYOUT)
+    if have and current and all(p.exists() and p.stat().st_mtime >= newest for _, p in have):
         return have
     done = []
     for key in ("nid", "nwis"):
@@ -124,7 +137,7 @@ def write(tables: Path, out: Path, log=print) -> list:
                 r = r.take(pa.array(rorder))
                 counts = np.bincount(pos[station], minlength=len(order))
                 starts = np.concatenate([[0], np.cumsum(counts)[:-1]])
-                done.append((f"{key}.parquet", _write(r, out / f"{key}.parquet", RESULT_GROUP)))
+                done.append((f"{key}.parquet", _write(r, out / f"{key}.parquet", RESULT_GROUP, RESULT_PAGE)))
             st = st.append_column(first, pa.array(starts.astype(np.uint32))).append_column(count, pa.array(counts.astype(np.uint32)))
         done.append(("wqp_stations.parquet", _write(st, out / "wqp_stations.parquet", GROUP)))
     src = tables / NAMES["nas"]
@@ -139,4 +152,6 @@ def write(tables: Path, out: Path, log=print) -> list:
         done.append(("nas.parquet", _write(t, out / "nas.parquet", GROUP)))
     for logical, path in done:
         log(f"points/{logical}: {pq.ParquetFile(path).metadata.num_rows} rows, {path.stat().st_size / 1e6:.1f} MB")
+    out.mkdir(parents=True, exist_ok=True)
+    stamp.write_text(f"{LAYOUT}\n", encoding="utf-8")
     return done

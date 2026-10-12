@@ -6,6 +6,7 @@
 // what Shiny would re-render it on changes.
 import { type Child, h, outputHtml, TagList } from '../../app/htm'
 import { notify, removeNotification } from '../../app/notify'
+import { timed, timedSync } from '../../app/perf'
 import { pyFixed } from '../../app/pyfmt'
 import { deriveFromStages, FT_PER_M } from '../../engine/geomorph'
 import { removeModal, showModal } from '../../shared/modal'
@@ -28,6 +29,7 @@ import { resolve } from './methods'
 import { ctxFromInputs, type EasiAssessData, prefetch } from './prefetch'
 import { reportBody, reportFooter, summaryBlock, summaryRows } from './report'
 import { easiComparison, emptyState, normalized, scoredFor, type ScoreState, xsBlock, xsCandidate } from './state'
+import { plotly } from './xsplot'
 import {
   buildCrossSection, type CardState, defaultHeights, type Geometry, hasProfile, pullContent, pullProfile, reportImageSpec, sourceFigure,
   windowRange, xsCaption, xsEditor, XsPlot, xsReachTable, xsReadonly, xsSelector, xsSummary,
@@ -112,6 +114,8 @@ export class EasiWorksheet {
   private xsUnpublished = false
   private readonly xsPlot = new XsPlot()
   private boxTimer: ReturnType<typeof setTimeout> | null = null
+  /** the screening's reads made ahead for a delineation (prefetchAhead) */
+  private ahead: { delin: Record<string, any>, p: Promise<{ ctx: Record<string, any>, cross: Obj | null }> } | null = null
 
   private reportCounter = 0
 
@@ -163,6 +167,7 @@ export class EasiWorksheet {
   reset(): void {
     this.pickGen += 1
     this.runGen += 1
+    this.ahead = null
     this.stopPoll()
     this.status = 'initial'
     this.launched = null
@@ -234,7 +239,7 @@ export class EasiWorksheet {
       notify(label + ', please wait', { id: 'stage', type: 'message', seconds: 0 })
     }, 300)
     this.render()
-    void this.run(d).then((res) => {
+    void timed('easi:run', this.run(d)).then((res) => {
       if (gen !== this.runGen) return
       this.done(d, res)
     }, () => {
@@ -243,20 +248,40 @@ export class EasiWorksheet {
     })
   }
 
-  /** pipeline.assess_only from the bundle: the prefetch, then the adapters and the rollup. */
-  private async run(d: Record<string, any>): Promise<Record<string, any>> {
-    await loadMethod(this.host.data.src)
-    await nars9Index()
+  /** The screening's reads started ahead, once the Basin step shows a delineation: the Shiny EASI reads
+   * when the run starts; here they are made while the assessor looks at the Basin step, so Run screening
+   * finds them read. Nothing is shown or scored. */
+  prefetchAhead(): void {
+    const d = this.host.delin()
+    if (!d?.ctx_inputs || this.base !== null || this.status === 'running' || this.ahead?.delin === d) return
+    const p = timed('easi:prefetch-ahead', this.prepare(d))
+    p.catch(() => {})
+    this.ahead = { delin: d, p }
+  }
+
+  /** What the screening reads: the method, the prefetch (assessment.assess's), the sections drawn. */
+  private async prepare(d: Record<string, any>): Promise<{ ctx: Record<string, any>, cross: Obj | null }> {
+    await timed('easi:method', loadMethod(this.host.data.src))
+    await timed('easi:nars9', nars9Index())
     const ctx = ctxFromInputs(copy(d.ctx_inputs))
-    for (const mid of Object.keys(EXTERNAL_SERVICE)) this.progress.waiting[EXTERNAL_SERVICE[mid]] = (this.progress.waiting[EXTERNAL_SERVICE[mid]] ?? 0) + 1
     await prefetch(this.host.data, ctx, Number((d.input || {}).reach_length_ft) || 1000.0)
+    // the sections the cross-section metrics score on, the stored profiles with them (assess's crossSection)
+    const cross = await timed('easi:cross-section-card',
+      buildCrossSection(this.host.data, ctx.extras.reach_geomorph || {}, ctx.extras.xsPicked, ctx.slope, ctx.fcode).catch(() => null))
+    return { ctx, cross }
+  }
+
+  /** pipeline.assess_only from the bundle: the prefetch (started ahead when it was), then the adapters and
+   * the rollup. */
+  private async run(d: Record<string, any>): Promise<Record<string, any>> {
+    for (const mid of Object.keys(EXTERNAL_SERVICE)) this.progress.waiting[EXTERNAL_SERVICE[mid]] = (this.progress.waiting[EXTERNAL_SERVICE[mid]] ?? 0) + 1
+    const ahead = this.ahead?.delin === d ? this.ahead.p : null
+    this.ahead = null
+    const { ctx, cross } = await timed('easi:prefetch', ahead ?? this.prepare(d))
     this.progress.waiting = {}
-    const report = scoreContext(ctx, null, null, () => { this.progress.done += 1 })
-    // the sections the cross-section metrics scored on, the stored profiles with them (assess's crossSection)
-    const xs = ctx.extras.xsPicked
-    const cross = await buildCrossSection(this.host.data, ctx.extras.reach_geomorph || {}, xs, ctx.slope, ctx.fcode).catch(() => null)
+    const report = timedSync('easi:score', () => scoreContext(ctx as any, null, null, () => { this.progress.done += 1 }))
     if (cross) report.crossSection = cross
-    return { status: 'ok', report, huc12: ctx.huc12, xsUnpublished: !cross && xs?.covered === false }
+    return { status: 'ok', report, huc12: ctx.huc12, xsUnpublished: !cross && ctx.extras.xsPicked?.covered === false }
   }
 
   private done(d: Record<string, any>, res: Record<string, any>): void {
@@ -272,6 +297,8 @@ export class EasiWorksheet {
     this.base = screened(d, res.huc12 ?? null, res.report)
     this.clearEdits()
     this.xsUnpublished = !!res.xsUnpublished
+    // the cross-section card's plotting library, read now so the card draws at once when shown
+    void plotly().catch(() => {})
     this.currentFn = 0
     this.scenarios = new ScenarioSet()
     if (this.shown()) this.render()
@@ -596,7 +623,7 @@ export class EasiWorksheet {
       return
     }
     if (box.querySelector('.easi-xs-pull')) box.innerHTML = ''
-    void this.xsPlot.show(sourceFigure(block, st.geometry)).catch(() => {})
+    void timed('xs:plot', this.xsPlot.show(sourceFigure(block, st.geometry))).catch(() => {})
   }
 
   /** Pull from 3DEP: the shown section's profile, read as the grid build read it. */
@@ -610,7 +637,7 @@ export class EasiWorksheet {
     this.xsDraw()
     let ok = false
     try {
-      ok = await pullProfile(this.host.data, block)
+      ok = await timed('xs:pull', pullProfile(this.host.data, block))
     } catch {
       ok = false
     }

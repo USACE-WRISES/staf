@@ -77,7 +77,7 @@ async function bundleSinuosity(d: EngineData, nhdplusid: number): Promise<number
   // the lean encoding (hrslim.lean) stores thousandths, 0 for none; the exact file the value itself
   const lean = (await metadata(d.src, logical)).schema.some((s) => s.name === 'sinuosity_milli')
   const column = lean ? 'sinuosity_milli' : 'sinuosity'
-  const t = await readColumns(d.src, logical, [column], rows[0], rows[0] + 1)
+  const t = await readColumns(d.src, logical, [column], rows[0], rows[0] + 1, {}, [], true)
   const raw = t[column][0]
   if (raw === null || raw === undefined) return null
   const v = lean ? Number(raw) / 1000.0 : Number(raw)

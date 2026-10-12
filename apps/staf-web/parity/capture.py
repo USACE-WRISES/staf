@@ -20,6 +20,12 @@ Delineate and waits for the Basin step (or an error); ``--assess`` then presses 
 ``--actions FILE`` then runs a script of user actions on the page (``parity/actions/*.js``: an async
 function of the tool's key that clicks and types as a user would) and waits until the worksheet settles.
 
+``--perf`` also writes ``<stem>.perf.json``: the static app's step timings (its ``staf:`` performance
+measures) and every request the page made, with when and how many bytes (``parity/perf.py`` reads it).
+``--throttle LATENCY_MS,MBPS`` slows the network to that, as a data host far away would be. The browser
+profile is new each run, so every read is cold; ``--visits 2`` runs each tool's steps again in the same
+profile (``<stem>-visit2``), as a user's next visit would, with what the first read kept in the browser.
+
 ``--app shiny`` reads the Shiny STAF app (``shiny run app.py --port 8040`` in apps/staf, or
 .claude/launch.json "staf") and also writes its dialogs to ``src/app/content/dialogs.json``, which
 the static app shows (About and Help are written in each tool's app.py). ``--app static`` reads the
@@ -76,6 +82,18 @@ CAPTURE_JS = """(() => {
                           corner: wrap ? wrap.outerHTML : '',
                           modal: (document.querySelector('.modal.show') || {}).outerHTML || '' });
 })()"""
+
+# the app's timings (performance measures named staf:<step>) and every request the page made, as
+# [name or url, start ms, end ms, bytes]
+PERF_JS = """JSON.stringify({
+  measures: performance.getEntriesByType('measure').filter((m) => m.name.startsWith('staf:'))
+    .map((m) => [m.name.slice(5), Math.round(m.startTime), Math.round(m.startTime + m.duration)]),
+  resources: performance.getEntriesByType('resource')
+    .map((r) => [r.name, Math.round(r.startTime), Math.round(r.responseEnd), r.encodedBodySize]),
+  page: ((n) => n ? { domContentLoaded: Math.round(n.domContentLoadedEventEnd), load: Math.round(n.loadEventEnd) } : null)(
+    performance.getEntriesByType('navigation')[0]),
+  data: window.stafStats ? window.stafStats() : null,
+})"""
 
 # opens one of the shown tool's dialogs and returns {title, body} once it shows
 OPEN_JS = """(async (which) => {
@@ -202,12 +220,14 @@ def pretty(html: str) -> str:
 
 async def main(app: str, url: str, width: int, height: int, view=None, name: str = "",
                coverage: bool = False, click=None, delineate: bool = False, assess: bool = False,
-               tools=TOOLS, actions: str = "") -> None:
+               tools=TOOLS, actions: str = "", perf: bool = False, throttle=None, query: str = "", visits: int = 1) -> None:
     out = HERE / app
     out.mkdir(parents=True, exist_ok=True)
     prof = Path(tempfile.mkdtemp(prefix="staf-capture-"))
     proc = subprocess.Popen([EDGE, "--headless=new", f"--remote-debugging-port={PORT}", f"--user-data-dir={prof}",
                              f"--window-size={width},{height}", "--no-first-run", "--no-default-browser-check",
+                             # the HTTP/2 preview's localhost certificate is self-signed
+                             "--ignore-certificate-errors",
                              "about:blank"])
     try:
         pages = []
@@ -242,16 +262,24 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
             await call("Emulation.setDeviceMetricsOverride", width=width, height=height, deviceScaleFactor=1,
                        mobile=False)
             await call("Page.enable")
+            if perf:
+                # every request kept (the browser keeps 250 by default)
+                await call("Page.addScriptToEvaluateOnNewDocument", source="performance.setResourceTimingBufferSize(1000000)")
+            if throttle:
+                await call("Network.enable")
+                await call("Network.emulateNetworkConditions", offline=False, latency=throttle[0],
+                           downloadThroughput=throttle[1] * 125000, uploadThroughput=throttle[1] * 125000)
             styles, dialogs = None, {}
-            for tool in tools:
-                await call("Page.navigate", url=f"{url}/?tool={tool}")
+            # a later visit runs in the same browser profile: what the first read is in the browser's caches
+            for visit, tool in [(k, tool) for k in range(1, visits + 1) for tool in tools]:
+                await call("Page.navigate", url=f"{url}/?tool={tool}" + (f"&{query}" if query else ""))
                 end = time.monotonic() + 90
                 while time.monotonic() < end:
                     await asyncio.sleep(0.5)
                     if await js(IDLE_JS):
                         break
                 await asyncio.sleep(3.0)                # the legend dock and the last tiles
-                stem = f"{tool}-{name}" if view else tool
+                stem = (f"{tool}-{name}" if view else tool) + (f"-visit{visit}" if visit > 1 else "")
                 if coverage:
                     await js("""(() => { const tool = document.documentElement.getAttribute('data-staf-tool');
                       const box = document.querySelector('.staf-section[data-staf-tool="' + tool + '"] .staf-coverage-toggle');
@@ -313,6 +341,8 @@ async def main(app: str, url: str, width: int, height: int, view=None, name: str
                         same = same + 1 if text is not None and text == last else 0
                         last = text
                     await asyncio.sleep(2.0)
+                if perf:
+                    (out / f"{stem}.perf.json").write_text(await js(PERF_JS), encoding="utf-8", newline="\n")
                 got = json.loads(await js(CAPTURE_JS))
                 styles = got["styles"]
                 (out / f"{stem}.html").write_text(
@@ -362,9 +392,16 @@ if __name__ == "__main__":
     ap.add_argument("--assess", action="store_true", help="go on to the Assessment step (with --delineate)")
     ap.add_argument("--tools", nargs="*", choices=TOOLS, default=list(TOOLS), help="only these tools (with --view)")
     ap.add_argument("--actions", help="a JS file: an async function (tool) => ... run on the page after --assess")
+    ap.add_argument("--perf", action="store_true",
+                    help="also write <stem>.perf.json: the page's staf: timings and every request it made")
+    ap.add_argument("--throttle", help="LATENCY_MS,MBPS: the network made that slow (a data host far away)")
+    ap.add_argument("--query", default="", help="more of the address's query, e.g. data=http://localhost:5181/data/")
+    ap.add_argument("--visits", type=int, default=1,
+                    help="run each tool's steps this many times in one browser profile (later runs: <stem>-visit2, ...)")
     a = ap.parse_args()
     v = tuple(float(x) for x in a.view.split(",")) if a.view else None
     c = tuple(float(x) for x in a.click.split(",")) if a.click else None
     asyncio.run(main(a.app, (a.url or URLS[a.app]).rstrip("/"), a.width, a.height, v, a.name, a.coverage, c,
                      a.delineate, a.assess, tuple(a.tools),
-                     Path(a.actions).read_text(encoding="utf-8").strip() if a.actions else ""))
+                     Path(a.actions).read_text(encoding="utf-8").strip() if a.actions else "", a.perf,
+                     tuple(float(x) for x in a.throttle.split(",")) if a.throttle else None, a.query, a.visits))

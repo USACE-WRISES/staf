@@ -6,6 +6,7 @@
 // Where the Shiny EASI falls back to a federal service (NLCD, WBD, ATTAINS, WQP, NAS, NID, StreamCat's
 // API) because the bundle cannot answer, the static app has no answer: the evidence is left empty and
 // the metric says it is unavailable.
+import { timed } from '../../app/perf'
 import { pyFixed } from '../../app/pyfmt'
 import { readColumns } from '../../data/parquet'
 import { bankfullGeometry } from '../../engine/bieger'
@@ -96,8 +97,11 @@ export async function pointExtras(d: EasiAssessData, lat: number, lon: number): 
     let k = 0
     for (let i = 1; i < SAMPLES.length; i++) if (Math.abs(at.fraction - SAMPLES[i]) < Math.abs(at.fraction - SAMPLES[k])) k = i
     const tag = ['05', '50', '95'][k]
-    const t = await readColumns(d.src, extras, [`au_exact_${tag}`, `au_near_${tag}`, `au_near_dm_${tag}`, `huc12_${tag}`, 'sinuosity_milli'], row, row + 1)
-    const units = await readColumns(d.src, au, ['layer', 'assessment_unit', 'assessment_name', 'ircategory', 'overallstatus', 'isimpaired'])
+    const [t, units] = await Promise.all([
+      readColumns(d.src, extras, [`au_exact_${tag}`, `au_near_${tag}`, `au_near_dm_${tag}`, `huc12_${tag}`, 'sinuosity_milli'], row, row + 1,
+        {}, [], true),
+      readColumns(d.src, au, ['layer', 'assessment_unit', 'assessment_name', 'ircategory', 'overallstatus', 'isimpaired']),
+    ])
     const unit = (index: any, distance: number | null, match: string) => {
       if (index === null || index === undefined || Number(index) < 0) return {}
       const i = Number(index)
@@ -182,19 +186,20 @@ export function ctxFromInputs(ci: Record<string, any>): EasiCtx {
 /** The prefetch: every input the 20 adapters read, put on ``ctx.extras`` (and ``ctx.huc12``). */
 export async function prefetch(d: EasiAssessData, ctx: EasiCtx, reachLengthFt: number,
   wqpStart: [number, number, number] | null = null): Promise<void> {
-  const [strata, bf] = await Promise.all([strataAt(d.src, ctx.lat, ctx.lon, ctx.slope), bankfullGeometry(d.src, ctx.drainage_area_sqkm, ctx.lat, ctx.lon)])
+  const [strata, bf] = await Promise.all([timed('easi:strata', strataAt(d.src, ctx.lat, ctx.lon, ctx.slope)),
+    timed('easi:bankfull', bankfullGeometry(d.src, ctx.drainage_area_sqkm, ctx.lat, ctx.lon))])
   ctx.extras.strata = strata
   ctx.extras.nars9Name = strata.nars9 ? await nars9Name(strata.nars9) : null
   const comid = ctx.comid
   const [sc, other, extras, geom, tn, tp, temp, dams] = await Promise.all([
-    comid !== null ? streamcatRow(d.src, d.v2, comid, STREAMCAT_NAMES) : null,
-    comid !== null ? streamcatRow(d.src, d.v2, comid, STREAMCAT_OTHER_NAMES) : null,
-    pointExtras(d, ctx.lat, ctx.lon),
-    reachGeomorph(d, ctx, bf, reachLengthFt),
-    d.points.wqpEasi('tn', ctx.lat, ctx.lon, 5.0, wqpStart),
-    d.points.wqpEasi('tp', ctx.lat, ctx.lon, 5.0, wqpStart),
-    d.points.wqpEasi('temp', ctx.lat, ctx.lon, 5.0, wqpStart),
-    d.points.nidRadius(ctx.lat, ctx.lon, 1.0),
+    comid !== null ? timed('easi:streamcat', streamcatRow(d.src, d.v2, comid, STREAMCAT_NAMES)) : null,
+    comid !== null ? timed('easi:streamcat-other', streamcatRow(d.src, d.v2, comid, STREAMCAT_OTHER_NAMES)) : null,
+    timed('easi:point-extras', pointExtras(d, ctx.lat, ctx.lon)),
+    timed('easi:cross-sections', reachGeomorph(d, ctx, bf, reachLengthFt)),
+    timed('easi:wqp-tn', d.points.wqpEasi('tn', ctx.lat, ctx.lon, 5.0, wqpStart)),
+    timed('easi:wqp-tp', d.points.wqpEasi('tp', ctx.lat, ctx.lon, 5.0, wqpStart)),
+    timed('easi:wqp-temp', d.points.wqpEasi('temp', ctx.lat, ctx.lon, 5.0, wqpStart)),
+    timed('easi:nid', d.points.nidRadius(ctx.lat, ctx.lon, 1.0)),
   ])
   const row: Record<string, any> = {}
   for (const part of [sc, other]) for (const [k, v] of Object.entries(part || {})) row[k.toLowerCase()] = v
@@ -208,5 +213,5 @@ export async function prefetch(d: EasiAssessData, ctx: EasiCtx, reachLengthFt: n
   ctx.extras.attains = { exact: extras ? { ...(extras.attains_exact || {}) } : {}, nearby: extras ? { ...(extras.attains_nearby || {}) } : {} }
   ctx.extras.wqp = { tn, tp, temp }
   ctx.extras.nidDams = dams
-  ctx.extras.nasTaxa = ctx.huc12 || ctx.huc8 ? await d.points.nasEstablished(ctx.huc12, ctx.huc8) : null
+  ctx.extras.nasTaxa = ctx.huc12 || ctx.huc8 ? await timed('easi:nas', d.points.nasEstablished(ctx.huc12, ctx.huc8)) : null
 }
