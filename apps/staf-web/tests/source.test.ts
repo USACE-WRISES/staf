@@ -3,6 +3,7 @@
 // sends the read back through the host.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DataSource } from '../src/data/source'
+import { expiresAt } from '../src/data/signed'
 
 const BASE = 'https://host.test/resolve/main/'
 // larger than hyparquet's whole-file cache threshold (512 KB), so each slice is its own read
@@ -160,6 +161,62 @@ describe('DataSource', () => {
     const cache = stores.get('staf-data-1')!
     expect(await second.cache.prune(new Map([['xs/a.1234.parquet', FILE.length]]), 600)).toBe(2)
     expect([...cache.m.keys()].map((k) => k.replace('https://staf-data.invalid/', ''))).toEqual(['xs/a.1234.parquet?r=12000-12100', 'xs/a.1234.parquet?r=400000-400200'])
+  })
+})
+
+describe('SignedAddresses', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it("reads when an address stops working: CloudFront's Expires, or S3's date and lifetime", () => {
+    expect(expiresAt('https://us.aws.cdn.hf.co/x/y?Expires=1791807870&Policy=p&Signature=s')).toBe(1791807870)
+    expect(expiresAt('https://s3.test/k?X-Amz-Date=20261012T112431Z&X-Amz-Expires=3600')).toBe(Date.UTC(2026, 9, 12, 11, 24, 31) / 1000 + 3600)
+    expect(expiresAt('https://cdn.test/a?sig=1')).toBeNull()
+    expect(expiresAt('not a url')).toBeNull()
+  })
+
+  it('starts a later visit at the address a file redirected to within its hour, and looks it up again once refused', async () => {
+    const stored = new Map<string, string>()
+    vi.stubGlobal('localStorage', { getItem: (k: string) => stored.get(k) ?? null, setItem: (k: string, v: string) => { stored.set(k, v) } })
+    const expires = Math.floor(Date.now() / 1000) + 3600
+    const refused = new Set<string>()
+    const calls: string[] = []
+    let signature = 0
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      calls.push(url)
+      if (url.endsWith('web-index.json.gz')) return answer(new Uint8Array(0), url, false, 404)
+      if (url.endsWith('web-manifest.json')) {
+        const m = { format: 1, built: 'x', sources: {}, regions: [],
+                    files: { 'xs/a.parquet': { path: 'xs/a.1234.parquet', bytes: FILE.length, sha256: '', kind: 'region' } } }
+        return answer(new TextEncoder().encode(JSON.stringify(m)), url, false, 200)
+      }
+      if (refused.has(url)) return answer(new Uint8Array(0), url, false, 403)
+      const m = /bytes=(\d+)-(\d+)/.exec(new Headers(init?.headers).get('range') ?? '')!
+      const body = FILE.slice(Number(m[1]), Number(m[2]) + 1)
+      if (url.startsWith(BASE)) return answer(body, `https://cdn.test/a?Expires=${expires}&Signature=${++signature}`, true)
+      return answer(body, url, false)
+    })
+    const visit = async (start: number) => {
+      const src = new DataSource(BASE)   // (Node has no Cache Storage: every range goes to the network)
+      await src.load()
+      const got = await src.file('xs/a.parquet').slice(start, start + 100)
+      expect(new Uint8Array(got)).toEqual(FILE.slice(start, start + 100))
+      await new Promise((ok) => setTimeout(ok, 5))   // the addresses saved
+      return src
+    }
+    await visit(0)
+    expect(calls.filter((u) => u.includes('xs/a.1234.parquet'))).toEqual([`${BASE}xs/a.1234.parquet`])
+    // a later visit: no look-up for the file, its range read at the address straight away
+    calls.length = 0
+    const second = await visit(300_000)
+    expect(calls.slice(2)).toEqual([`https://cdn.test/a?Expires=${expires}&Signature=1`])
+    expect(second.hostRequests).toBe(2)   // the index (absent here) and the manifest only
+    // once the CDN refuses the address, the file is looked up again and the new address kept
+    refused.add(`https://cdn.test/a?Expires=${expires}&Signature=1`)
+    calls.length = 0
+    await visit(400_000)
+    expect(calls.slice(2)).toEqual([`https://cdn.test/a?Expires=${expires}&Signature=1`, `${BASE}xs/a.1234.parquet`])
+    expect(JSON.parse(stored.get('staf-data-signed-1')!)['xs/a.1234.parquet'][0]).toBe(`https://cdn.test/a?Expires=${expires}&Signature=2`)
   })
 })
 

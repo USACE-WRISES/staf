@@ -249,6 +249,12 @@ Delineate computes the watershed and the assessment reach in the browser, as eac
   (whole files, and ranges by their bytes), so a visit reads from the host only what no earlier visit
   read. A session's first idle moment drops what the index no longer names, then the oldest past 1 GB.
   `?cache=0` turns it off; the proof page never uses it.
+- **Fewer look-ups:** Hugging Face counts each file's `/resolve/` request (3,000 a 5-minute window per IP
+  address; reads at the signed CDN address it redirects to don't count). A first visit opens 26 to 29
+  files. `src/data/signed.ts` keeps each redirect's address for its hour (a CloudFront policy with only
+  an expiry, so it works from any network) in localStorage: a reload or a second tab within the hour
+  reads those files without looking them up, and an address the CDN refuses is looked up again.
+  `?cache=0` turns this off too.
 - **Together:** reads that don't depend on each other start together: the metric families
   (`computeAll`: their entries still go in the families' order) and the value tables a watershed's sums
   take (`watershedValues`). Each read is a few requests in a row (footer, page index, pages), so one
