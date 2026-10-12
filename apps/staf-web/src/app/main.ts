@@ -22,10 +22,15 @@ shim.install()
 const params = new URLSearchParams(location.search)
 // what earlier visits read is kept in the browser (`?cache=0` reads everything from the host)
 const src = new DataSource(dataBase(params), { cache: params.get('cache') !== '0' })
+// every data request, with ?trace=1 (parity/perf.py --trace shows which a step waits on in a row)
+if (params.get('trace') === '1') src.trace = []
+;(window as unknown as { stafTrace: () => unknown }).stafTrace = () => src.trace
 // what the page has read so far (for a console, and parity/capture.py --perf)
 ;(window as unknown as { stafStats: () => unknown }).stafStats = () => ({
   requests: src.requests, hostRequests: src.hostRequests, bytes: src.bytes, busyWaits: src.busyWaits,
   cacheHits: src.cache.stats.hits, cacheBytes: src.cache.stats.bytes,
+  connection: ((c) => c ? { downlink: c.downlink, effectiveType: c.effectiveType, rtt: c.rtt } : null)(
+    (navigator as unknown as { connection?: { downlink?: number, effectiveType?: string, rtt?: number } }).connection),
 })
 void src.ready().catch(() => {})   // every read needs the data manifest: ask for it at once
 

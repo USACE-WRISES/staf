@@ -183,24 +183,36 @@ export function ctxFromInputs(ci: Record<string, any>): EasiCtx {
   return ctx
 }
 
-/** The prefetch: every input the 20 adapters read, put on ``ctx.extras`` (and ``ctx.huc12``). */
+/** The prefetch: every input the 20 adapters read, put on ``ctx.extras`` (and ``ctx.huc12``). The
+ * lookups start together: only the cross-sections wait (for the bankfull curve's fit flags) and NAS
+ * (for the point's HUC12); one after another, each waited 0.15 s and more a request on Hugging Face.
+ * What they find is put on ``ctx`` in the Python's order. */
 export async function prefetch(d: EasiAssessData, ctx: EasiCtx, reachLengthFt: number,
   wqpStart: [number, number, number] | null = null): Promise<void> {
-  const [strata, bf] = await Promise.all([timed('easi:strata', strataAt(d.src, ctx.lat, ctx.lon, ctx.slope)),
-    timed('easi:bankfull', bankfullGeometry(d.src, ctx.drainage_area_sqkm, ctx.lat, ctx.lon))])
-  ctx.extras.strata = strata
-  ctx.extras.nars9Name = strata.nars9 ? await nars9Name(strata.nars9) : null
   const comid = ctx.comid
-  const [sc, other, extras, geom, tn, tp, temp, dams] = await Promise.all([
+  const strataP = timed('easi:strata', strataAt(d.src, ctx.lat, ctx.lon, ctx.slope))
+  const bfP = timed('easi:bankfull', bankfullGeometry(d.src, ctx.drainage_area_sqkm, ctx.lat, ctx.lon))
+  const extrasP = timed('easi:point-extras', pointExtras(d, ctx.lat, ctx.lon))
+  const rest = Promise.all([
     comid !== null ? timed('easi:streamcat', streamcatRow(d.src, d.v2, comid, STREAMCAT_NAMES)) : null,
     comid !== null ? timed('easi:streamcat-other', streamcatRow(d.src, d.v2, comid, STREAMCAT_OTHER_NAMES)) : null,
-    timed('easi:point-extras', pointExtras(d, ctx.lat, ctx.lon)),
-    timed('easi:cross-sections', reachGeomorph(d, ctx, bf, reachLengthFt)),
+    extrasP,
+    bfP.then((bf) => timed('easi:cross-sections', reachGeomorph(d, ctx, bf, reachLengthFt))),
     timed('easi:wqp-tn', d.points.wqpEasi('tn', ctx.lat, ctx.lon, 5.0, wqpStart)),
     timed('easi:wqp-tp', d.points.wqpEasi('tp', ctx.lat, ctx.lon, 5.0, wqpStart)),
     timed('easi:wqp-temp', d.points.wqpEasi('temp', ctx.lat, ctx.lon, 5.0, wqpStart)),
     timed('easi:nid', d.points.nidRadius(ctx.lat, ctx.lon, 1.0)),
-  ])
+    // NAS by the point's HUC12 (from its extras), else its HUC8
+    extrasP.then((extras) => {
+      const huc12 = extras && extras.huc12 ? extras.huc12 : null
+      return huc12 || ctx.huc8 ? timed('easi:nas', d.points.nasEstablished(huc12, ctx.huc8)) : null
+    }),
+  ] as const)
+  rest.catch(() => {})   // awaited below; a failure of the strata or the curve is the one reported
+  const [strata] = await Promise.all([strataP, bfP])
+  ctx.extras.strata = strata
+  ctx.extras.nars9Name = strata.nars9 ? await nars9Name(strata.nars9) : null
+  const [sc, other, extras, geom, tn, tp, temp, dams, nas] = await rest
   const row: Record<string, any> = {}
   for (const part of [sc, other]) for (const [k, v] of Object.entries(part || {})) row[k.toLowerCase()] = v
   ctx.extras.streamcat = row
@@ -213,5 +225,5 @@ export async function prefetch(d: EasiAssessData, ctx: EasiCtx, reachLengthFt: n
   ctx.extras.attains = { exact: extras ? { ...(extras.attains_exact || {}) } : {}, nearby: extras ? { ...(extras.attains_nearby || {}) } : {} }
   ctx.extras.wqp = { tn, tp, temp }
   ctx.extras.nidDams = dams
-  ctx.extras.nasTaxa = ctx.huc12 || ctx.huc8 ? await timed('easi:nas', d.points.nasEstablished(ctx.huc12, ctx.huc8)) : null
+  ctx.extras.nasTaxa = nas
 }

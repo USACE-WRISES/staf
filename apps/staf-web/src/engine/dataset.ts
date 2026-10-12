@@ -384,15 +384,18 @@ export class Dataset {
   }
 
   /** Starts reading what a watershed at this reach needs (its region's network and catchments), so
-   * Delineate finds them read. Nothing is computed; a failed read is tried again when needed. */
-  async warm(nhdplusid: number): Promise<void> {
+   * Delineate finds them read, and gives the regions' codes. Nothing is computed; a failed read is
+   * tried again when needed. */
+  async warm(nhdplusid: number): Promise<string[]> {
     try {
-      for (const region of await this.regionsHolding('by_id', [nhdplusid])) {
+      const regions = await this.regionsHolding('by_id', [nhdplusid])
+      for (const region of regions) {
         void this.topo(region).catch(() => {})
         void encodingOf(this.src, this.folder, region).catch(() => {})
       }
+      return regions.map((r) => r.vpu)
     } catch {
-      // the read happens again on Delineate
+      return []   // the reads happen again on Delineate
     }
   }
 

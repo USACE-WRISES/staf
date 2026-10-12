@@ -134,20 +134,26 @@ export async function gridReachGeometry(src: DataSource, hr: Dataset, lineIds: n
                                           picked: PickedSection[], lengthM: number }> {
   const sections: { n: XsNumbers, x: number, y: number, vpu: string }[] = []
   let covered = true
-  for (const id of lineIds) {
+  await src.ready()
+  // every line's sections read at once (one line after another, each waited on the last's requests),
+  // then taken in the lines' order: the nearest section keeps the first of equals
+  const perLine = await Promise.all(lineIds.map(async (id) => {
     const found = await hr.find('by_id', [id])
     const vpu = found[0]?.region.vpu
-    await src.ready()
-    if (!vpu || !src.has(`xs/xs-${vpu}.parquet`)) {
+    if (!vpu || !src.has(`xs/xs-${vpu}.parquet`)) return null
+    const [nums, pulls] = await Promise.all([sectionNumbers(src, vpu, BigInt(id)), sectionPulls(src, vpu, BigInt(id))])
+    return { vpu, nums, pulls }
+  }))
+  for (const got of perLine) {
+    if (!got) {
       covered = false
       continue
     }
-    const [nums, pulls] = await Promise.all([sectionNumbers(src, vpu, BigInt(id)), sectionPulls(src, vpu, BigInt(id))])
-    if (!pulls) continue
-    const at = new Map(pulls.map((p) => [`${p.part}:${p.k}`, p]))
-    for (const n of nums) {
+    if (!got.pulls) continue
+    const at = new Map(got.pulls.map((p) => [`${p.part}:${p.k}`, p]))
+    for (const n of got.nums) {
       const p = at.get(`${n.part}:${n.k}`)
-      if (p) sections.push({ n, x: p.x, y: p.y, vpu })
+      if (p) sections.push({ n, x: p.x, y: p.y, vpu: got.vpu })
     }
   }
   if (reachCoords.length < 2 || !sections.length) return { geom: null, covered, picked: [], lengthM: 0 }

@@ -91,6 +91,14 @@ export async function buildCrossSection(d: EasiAssessData, geom: Obj, xs: XsPick
   const res = geom.dem_resolution_m ?? null
   const source = res ? `USGS 3DEP ${res} m DEM` : 'USGS 3DEP DEM'
   const stored = new Map<string, Promise<any>>()
+  // each line's section details and stored profile read at once (a block after another, each waited on
+  // the last's requests); the blocks below take them in order
+  for (const p of picked) {
+    const key = `${p.vpu}:${p.id}`
+    if (stored.has(key)) continue
+    sectionsOf(d, p.vpu, p.id).catch(() => {})
+    stored.set(key, medianProfile(d.src, p.vpu, BigInt(p.id)).catch(() => null))
+  }
   const blocks: Obj[] = []
   for (let i = 0; i < cands.length; i++) {
     const c = cands[i]

@@ -17,6 +17,7 @@ import { basinCard, basinPane, esc, type ToolKey } from './markup'
 import { notify, removeNotification } from './notify'
 import { timed } from './perf'
 import { pyFixedComma } from './pyfmt'
+import { warmFiles } from './warm'
 
 export const WATERSHED_STYLE: L.PathOptions = { color: '#caa700', weight: 1, fillColor: '#fdf24a', fillOpacity: 0.40 }
 export const REACH_STYLE: L.PathOptions = { color: '#d6453d', weight: 4 }
@@ -157,11 +158,13 @@ export class Basin {
     const pt = id.snapped
     if (!pt) return
     const anchor = id.anchor ?? {}
+    // the region's network and catchments, then what the tool's Delineate and Assessment step read (warm.ts)
+    const files = (vpus: string[]) => warmFiles(this.host.data.src, this.host.key, vpus)
     if (this.host.key === 'easi') {
-      if (anchor.anchorKind === 'hrSurrogate' && anchor.clickedStream?.nhdplusId) void this.host.data.hr.warm(anchor.clickedStream.nhdplusId)
-      else if (pt[3] !== null) void this.host.data.v2.warm(pt[3])
+      if (anchor.anchorKind === 'hrSurrogate' && anchor.clickedStream?.nhdplusId) void this.host.data.hr.warm(anchor.clickedStream.nhdplusId).then(files)
+      else if (pt[3] !== null) void this.host.data.v2.warm(pt[3]).then(files)
     } else if (pt[3] !== null) {
-      void this.host.data.hr.warm(pt[3])
+      void this.host.data.hr.warm(pt[3]).then(files)
     }
   }
 

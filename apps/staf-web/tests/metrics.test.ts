@@ -28,17 +28,17 @@ describe.skipIf(!have)('the engine computes its metric families as the Python do
     }
   })
 
-  it("reads a small watershed's values by blocks, not the region's whole tables", { timeout: 120_000 }, async (ctx) => {
+  it("reads a small region's value tables in a request each, and a larger table's blocks", { timeout: 120_000 }, async (ctx) => {
     const src = new DataSource(BASE)
     if (!(await hasPageIndex(src, 'bundle/values/lc2_0108.parquet'))) ctx.skip()   // a layout from before the page index
     const hr = new Dataset(src, 'bundle/')
     const c = cases.find((x) => x.name === 'headwater')!
     await hr.walk(c.nhdplusId, 3000, 190)
     await encodingOf(src, 'bundle/', (await hr.region('0108'))!)
-    const before = src.bytes
+    const before = src.requests
     expect(await watershedValues(hr, new ValueTables(src), c.nhdplusId, 3000, 190)).toEqual(c.values)
-    // 0108's land cover, riparian, roads, soils and crossings tables are 4.1 MB whole (0.27 MB by blocks)
-    expect(src.bytes - before).toBeLessThan(350_000)
+    // 0108's six tables are each under the size read whole (WHOLE): one request each, where their pages took 70
+    expect(src.requests - before).toBe(6)
   })
 
   it('gives the metric entries key for key', { timeout: 120_000 }, async () => {

@@ -2,12 +2,12 @@
 // later ranges go there, not through the data host's rate-limited /resolve/; an expired address
 // sends the read back through the host.
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { DataSource } from '../src/data/source'
+import { DataSource, WHOLE } from '../src/data/source'
 import { expiresAt } from '../src/data/signed'
 
 const BASE = 'https://host.test/resolve/main/'
-// larger than hyparquet's whole-file cache threshold (512 KB), so each slice is its own read
-const FILE = Uint8Array.from({ length: 600_000 }, (_v, i) => (i * 13) & 255)
+// larger than the size read whole (WHOLE), so each slice is its own read
+const FILE = Uint8Array.from({ length: WHOLE + 100_000 }, (_v, i) => (i * 13) & 255)
 
 function answer(body: Uint8Array, url: string, redirected: boolean, status = 206): Response {
   return {
@@ -102,8 +102,12 @@ describe('DataSource', () => {
     await src.load()
     expect(src.entry('library/r.json')).toMatchObject({ encoding: 'gzip', raw_bytes: content.length, bytes: stored.length })
     expect(new Uint8Array(await src.bytesOf('library/r.json'))).toEqual(content)
+    // read once a visit: the same bytes again, shared
+    expect(await src.bytesOf('library/r.json')).toBe(await src.bytesOf('library/r.json'))
     unzipped = true
-    expect(new Uint8Array(await src.bytesOf('library/r.json'))).toEqual(content)
+    const next = new DataSource(BASE)   // a later visit, from a host that unzips on the way
+    await next.load()
+    expect(new Uint8Array(await next.bytesOf('library/r.json'))).toEqual(content)
   })
 
   it('reads the slices asked for together as one request where they sit close', async () => {

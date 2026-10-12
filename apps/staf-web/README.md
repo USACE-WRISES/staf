@@ -227,22 +227,24 @@ Delineate computes the watershed and the assessment reach in the browser, as eac
 
 ## Speed
 
-- **Reads:** the data's index is `web-index.json.gz` (the manifest's paths and sizes, the bundle's regions,
-  each parquet file's footer size; about 130 KB where the manifests are 1.7 MB), so a file's footer is
-  read in one exact request. Files the app reads a few rows of carry a page index in
-  the browser layout (`tools/staf-web-data`): `readWhere` and `readObjectsWhere` read only the pages a
-  filter can match (a map view's lines, the points near a site, a flowline's sections), `readColumns(...,
-  pages)` and `readRows(..., pages)` the pages holding a few rows. `DataSource` reads the slices asked
-  for in one turn as one request where they sit within 32 KB. Every reader works with files that have
-  no page index too (it then reads whole row groups). The JSON and GeoJSON files the app reads whole
-  (DEEP's bundles and region list, the catalogs, the ecoregion and division polygons) are stored
-  gzipped, and `bytesOf` unzips them (a tenth of the bytes for a DEEP bundle, a third for polygons).
-  The base-flow grid (1.27 MB) is read by tile: its first 16 KB (directory, tile index, geokeys), then
-  the 256-cell tiles a watershed covers. The catchments' value tables (land cover, riparian strips,
-  roads, soils, crossings, NWI strips) are read by blocks of 256 rows (`src/engine/blocks.ts`; the
-  layout's pages hold 1,024): a watershed's catchments sit close together in a region's rows (Utoy
-  Creek's 89 in 3 blocks of 105,471), so a headwater's values cost 0.27 MB, not 4.2 MB. Files under
-  64 KB are read whole at once (hyparquet's default, 512 KB, read the small paged tables whole).
+Tuned against the Hugging Face mirror itself (2026-10-12, `?trace=1` captures; the numbers are in the
+notes): it answers a request in 0.15 to 0.2 s, a file's first request in 0.5 to 0.7 s (the look-up,
+then the CDN's first read of the file), takes the requests a page asks for together one after another
+(about 30 ms apart), and moves 17 MB/s from here. So the app makes few requests, and early.
+
+- **Reads:** the data's index is `web-index.json.gz` (the manifest's paths and sizes, the bundle's
+  regions, each parquet file's footer size; about 150 KB where the manifests are 1.7 MB), so a file's
+  footer is read in one exact request. A file under 3 MB is read whole, in one request (`WHOLE` in
+  `src/data/source.ts`; 256 KB where the browser rates the connection 3G or slower): a paged read of a
+  small table took a footer, a page index and a request per column's page, about a second on Hugging
+  Face, where the whole file takes a quarter of one. The stream lines are always read by page (a map
+  view needs a few). Larger files carry a page index in the browser layout (`tools/staf-web-data`):
+  `readWhere` and `readObjectsWhere` read only the pages a filter can match, `readColumns(..., pages)`
+  and `readRows(..., pages)` the pages holding a few rows; the value tables of large regions are read by
+  blocks of 256 rows (`src/engine/blocks.ts`). Slices asked for in one turn are read as one request where
+  they sit within 32 KB. Every reader also works on files without a page index. The JSON and GeoJSON
+  files are stored gzipped, and `bytesOf` unzips them; a visit reads a whole file once (`bytesOf` shares
+  the read).
 - **Kept between visits:** Hugging Face answers a large file with a `no-store` redirect to a signed
   address that changes every time, so the browser's HTTP cache can't serve a second visit.
   `src/data/cache.ts` keeps what the app read in Cache Storage under each file's content-hashed path
@@ -255,22 +257,26 @@ Delineate computes the watershed and the assessment reach in the browser, as eac
   an expiry, so it works from any network) in localStorage: a reload or a second tab within the hour
   reads those files without looking them up, and an address the CDN refuses is looked up again.
   `?cache=0` turns this off too.
-- **Together:** reads that don't depend on each other start together: the metric families
-  (`computeAll`: their entries still go in the families' order) and the value tables a watershed's sums
-  take (`watershedValues`). Each read is a few requests in a row (footer, page index, pages), so one
-  after another they added up.
-- **Ahead of time:** when the Basin step shows a delineation, EASI starts its screening's reads, SFARI its
-  desktop evidence pull and DEEP (once its assessment is loaded) its desktop values, so the next step
-  finds them done; plotly.js loads when EASI's screening ends. A watershed walk reads the region's
-  topology file (`topo/`, one request).
+- **Early:** when the pick is ready, the tool opens the files its Delineate and Assessment step will read
+  (`src/app/warm.ts`: each tool's list, from its trace), so each file's slow first request happens
+  while the user decides to delineate: a small file is read whole, a large one's footer. When the Basin
+  step shows a delineation, EASI starts its screening's reads, SFARI its desktop evidence pull and DEEP
+  (once its assessment is loaded) its desktop values; plotly.js loads when EASI's screening ends.
+- **Together:** reads that don't depend on each other start together, and their results are still taken
+  in order: the metric families (`computeAll`), a watershed's value tables (`watershedValues`), EASI's
+  screening lookups (`prefetch`: only the cross-sections wait for the bankfull curve, NAS for the point's
+  HUC12), each reach line's grid sections (`gridReachGeometry`), and the cross-section card's section
+  details and stored profiles.
 - **Measuring:** the steps record `staf:` performance measures (`src/app/perf.ts`). `parity/capture.py
-  --perf` saves them with every request (`[--throttle MS,MBPS]` slows the network, `--visits 2` adds a
-  second visit in the same browser profile), and `parity/perf.py
-  <stem>` sums them by step and file. To time the build rather than the dev server: `npm run build`,
-  `npx vite preview --port 5181`, then `--url http://localhost:5181/staf/app --query
-  data=http://localhost:5181/data/`. Over HTTP/2, as the data host serves: set `STAF_WEB_CERT` and
-  `STAF_WEB_KEY` to a localhost certificate and key (the preview then serves HTTPS; the launch entry
-  `staf-web-built-h2` does, on port 5182) and use `https://localhost:5182`.
+  --perf` saves them with every request (`[--throttle MS,MBPS]` slows the network, but Chrome's throttle
+  lets one request through at a time; `--visits 2` adds a second visit in the same browser profile), and
+  `parity/perf.py <stem>` sums them by step and file. With `--query trace=1` the app logs each data
+  request (file, bytes, when; `window.stafTrace()`), and `perf.py <stem> --step <step> --trace` lists
+  a step's requests in order: the ones a step waits on in a row show. To time the build against the
+  live mirror: `npm run build`, `npx vite preview --port 5181`, then `--url http://localhost:5181/staf/app`
+  (a built page reads the mirror); against the local layout, add `--query data=http://localhost:5181/data/`.
+  Over HTTP/2 locally: set `STAF_WEB_CERT` and `STAF_WEB_KEY` to a localhost certificate and key (the
+  launch entry `staf-web-built-h2`, port 5182), and `STAF_WEB_DELAY_MS` to hold each `/data` answer back.
 
 ## Cross-sections
 

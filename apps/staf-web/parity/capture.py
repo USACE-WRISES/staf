@@ -93,6 +93,7 @@ PERF_JS = """JSON.stringify({
   page: ((n) => n ? { domContentLoaded: Math.round(n.domContentLoadedEventEnd), load: Math.round(n.loadEventEnd) } : null)(
     performance.getEntriesByType('navigation')[0]),
   data: window.stafStats ? window.stafStats() : null,
+  trace: window.stafTrace ? window.stafTrace() : null,
 })"""
 
 # opens one of the shown tool's dialogs and returns {title, body} once it shows
