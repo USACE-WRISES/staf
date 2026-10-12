@@ -13,7 +13,10 @@ it needs:
   carry) and, per station, its rows in the two result tables below (``r0``/``rn``, ``t0``/``tn``);
 - ``points/wqp_results.parquet``, ``points/wqp_temperature.parquet``: every result, grouped by
   station in the stations' new order and in the bundle's order within a station (by date), so the
-  results of nearby stations sit together.
+  results of nearby stations sit together;
+- ``points/nas.parquet``: ``nas_taxa`` (the columns EASI reads: name, HUC8, HUC12, status), the records
+  with a HUC12 sorted by it, then those without one by HUC8, so a HUC12 or HUC8 lookup reads the one or
+  two groups holding it.
 
 Nothing is computed or rounded: a query over these files returns exactly the rows the bundle's
 tables give (``_hrslim/points.py``), and ``row0`` restores their order where a rule depends on it.
@@ -30,7 +33,10 @@ GROUP = 1024
 RESULT_GROUP = 8192
 ORDER = 16
 NAMES = {"nid": "nid_points.parquet", "nwis": "nwis_gages.parquet", "wqp_stations": "wqp_stations.parquet",
-         "wqp_results": "wqp_results.parquet", "wqp_temperature": "wqp_temperature.parquet"}
+         "wqp_results": "wqp_results.parquet", "wqp_temperature": "wqp_temperature.parquet",
+         "nas": "nas_taxa.parquet"}
+#: the NAS columns EASI's rule reads (points.nas_established)
+NAS_COLUMNS = ["scientificName", "huc8", "huc12", "status"]
 
 
 def hilbert(lon: np.ndarray, lat: np.ndarray, order: int = ORDER) -> np.ndarray:
@@ -80,7 +86,7 @@ def _write(t, path: Path, group: int) -> Path:
 
 def outputs(tables: Path, out: Path) -> list:
     """``[(logical, path)]`` of the laid-out tables whose bundle table exists."""
-    keys = [k for k in ("nid", "nwis", "wqp_results", "wqp_temperature") if (Path(tables) / NAMES[k]).exists()]
+    keys = [k for k in ("nid", "nwis", "wqp_results", "wqp_temperature", "nas") if (Path(tables) / NAMES[k]).exists()]
     if (Path(tables) / NAMES["wqp_stations"]).exists():
         keys.append("wqp_stations")
     return [(f"{k}.parquet", Path(out) / f"{k}.parquet") for k in keys]
@@ -121,6 +127,16 @@ def write(tables: Path, out: Path, log=print) -> list:
                 done.append((f"{key}.parquet", _write(r, out / f"{key}.parquet", RESULT_GROUP)))
             st = st.append_column(first, pa.array(starts.astype(np.uint32))).append_column(count, pa.array(counts.astype(np.uint32)))
         done.append(("wqp_stations.parquet", _write(st, out / "wqp_stations.parquet", GROUP)))
+    src = tables / NAMES["nas"]
+    if src.exists():
+        # the records with a HUC12 first, by HUC12, then those without one (an empty string), by HUC8:
+        # each group's HUC12 range stays tight (an empty HUC12 among them would open every range)
+        import pyarrow.compute as pc
+        t = pq.read_table(src, columns=NAS_COLUMNS)
+        t = t.append_column("_no12", pc.equal(t.column("huc12"), ""))
+        t = t.sort_by([("_no12", "ascending"), ("huc12", "ascending"), ("huc8", "ascending"),
+                       ("scientificName", "ascending")]).drop(["_no12"])
+        done.append(("nas.parquet", _write(t, out / "nas.parquet", GROUP)))
     for logical, path in done:
         log(f"points/{logical}: {pq.ParquetFile(path).metadata.num_rows} rows, {path.stat().st_size / 1e6:.1f} MB")
     return done

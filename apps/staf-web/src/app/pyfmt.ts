@@ -84,6 +84,63 @@ export function pyG(x: number): string {
   return strip(pyFixed(x, 5 - exp))
 }
 
+/** math.fsum: the exactly rounded sum (CPython's Shewchuk partials, with its half-even fix-up across
+ * partials). */
+export function fsum(values: Iterable<number>): number {
+  const p: number[] = []
+  let special = 0.0
+  let infSum = 0.0
+  for (const value of values) {
+    let x = value
+    const xsave = x
+    let i = 0
+    for (let j = 0; j < p.length; j++) {
+      let y = p[j]
+      if (Math.abs(x) < Math.abs(y)) {
+        const t = x
+        x = y
+        y = t
+      }
+      const hi = x + y
+      const lo = y - (hi - x)
+      if (lo !== 0.0) p[i++] = lo
+      x = hi
+    }
+    p.length = i
+    if (x !== 0.0) {
+      if (!Number.isFinite(x)) {
+        if (Number.isFinite(xsave)) throw new RangeError('intermediate overflow in fsum')
+        if (!Number.isNaN(xsave)) infSum += xsave
+        special += xsave
+        p.length = 0
+      } else p.push(x)
+    }
+  }
+  if (special !== 0.0) {
+    if (Number.isNaN(infSum)) throw new RangeError('-inf + inf in fsum')
+    return special
+  }
+  let hi = 0.0
+  let n = p.length
+  if (n > 0) {
+    hi = p[--n]
+    let lo = 0.0
+    while (n > 0) {
+      const x = hi
+      const y = p[--n]
+      hi = x + y
+      lo = y - (hi - x)
+      if (lo !== 0.0) break
+    }
+    if (n > 0 && ((lo < 0.0 && p[n - 1] < 0.0) || (lo > 0.0 && p[n - 1] > 0.0))) {
+      const y = lo * 2.0
+      const x = hi + y
+      if (y === x - hi) hi = x
+    }
+  }
+  return hi
+}
+
 /** Python 3.12's built-in sum() of floats (from the default start 0): the first item exactly, then
  * Neumaier's compensated summation, the compensation added at the end (CPython builtin_sum_impl). */
 export function pySum(values: Iterable<number>): number {

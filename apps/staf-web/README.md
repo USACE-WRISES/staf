@@ -204,6 +204,27 @@ Delineate computes the watershed and the assessment reach in the browser, as eac
   dialog. A watershed across two regions has the same outline and area as shapely's union, its
   vertices possibly in another order.
 
+## The Assessment step
+
+- **SFARI** (`src/tools/sfari/`): the 22 evidence adapters from the bundle, the worksheet, scoring and
+  suggestions. `parity/make_sfari_fixtures.py` + `tests/sfari.test.ts`.
+- **DEEP** (`src/tools/deep/`): the measured values, curves, coverage interval, the prefill and the
+  method texts. `parity/make_deep_fixtures.py` + `tests/deep.test.ts`.
+- **EASI** (`src/tools/easi/`): the adopted method package read from the library mirror (digests
+  checked), the 20 adapters, the evaluator and the rollup, the worksheet and the report.
+  `parity/make_easi_fixtures.py` + `tests/easi.test.ts` (random evaluations, criteria, cross-section math,
+  plot figures, five whole screenings and the prefetch).
+- **Scenarios** (`src/shared/scenarios.ts`) for all three. `parity/make_scenario_fixtures.py`.
+- **EASI's cross-section card** (`xscard.ts`): the reach's nine grid sections with their numbers. A
+  section's profile is drawn (`xsplot.ts`, plotly.js 3.6.0, plotly.py's figure) when the release stores
+  it, or after the assessor presses **Pull from 3DEP**: pulls are never automatic. A pulled profile gives
+  the grid's own numbers.
+- **EASI's report image** (`xsimage.ts`): matplotlib's figure (`easi/xsplot.py`) drawn on a canvas with
+  DejaVu Sans at matplotlib's hinted text metrics (`content/easi/xsplot-text.json` and
+  `page/fonts/dejavu-sans.woff2`, from `copy_page.py`). `parity/make_xsimage_fixtures.py` +
+  `tests/xsimage.test.ts` hold its layout to matplotlib's; `parity/xsimage_compare.py` compares the pixels.
+- **Not yet:** Get Forms, the report downloads, Save and Open (Phase 6). They say so when clicked.
+
 ## Cross-sections
 
 - `src/xs/grid.ts` reads a flowline's section numbers, details, stored median profile, and (release
@@ -237,7 +258,9 @@ npm run build      # into docs/app/ (the website section), then the Jekyll check
   1440x900 and save the markup; `parity/compare.py` reports the pixels and lines that differ and
   draws them in `parity/diff/` (all gitignored). On 2026-10-11 the three tools and their dialogs
   differed only in the attribution corner. `--view LAT,LON,ZOOM`, `--click LAT,LON` and `--delineate`
-  capture a view, a pick and the Basin step.
+  capture a view, a pick and the Basin step; `--assess` the Assessment step, and `--actions
+  parity/actions/<script>.js` then scripts a user's clicks and typing (its answer is saved beside the
+  capture).
 - `parity/make_delineate_fixtures.py` writes the Delineate reference (above).
 - `parity/make_fixtures.py` writes the Python references the tests compare with.
 - `parity/proj_fixtures.py` writes the large projection set for `tests/projExact.test.ts`

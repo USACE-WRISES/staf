@@ -21,6 +21,22 @@
    "source": "apps/deep/deep/method_text.py: CONCISE",
    "sha256": "5d1b67dbc2b94664b658f1e700238b7cb2bedfe1b5d1e782db49a867560ad744"
   },
+  "content/easi/adopted-method.json": {
+   "source": "apps/easi/data/source/adopted-method.json",
+   "sha256": "43add6db8c9cf8cdc5595578dad7e145f36c84bddd50f8ec8f6705b5af09b3ef"
+  },
+  "content/easi/config.json": {
+   "source": "apps/easi/easi/config.py + watershed.py (regional criteria)",
+   "sha256": "20f7848a6c121804c1f1e12be91e189c888ae64693a6c09f338a39c2c207f208"
+  },
+  "content/easi/plotly-template.json": {
+   "source": "plotly 6.8.0: the default template",
+   "sha256": "eb2c9afe3921894fbc47c6cac35f134b7d06a7440724dab748f530e5cd7d6dd3"
+  },
+  "content/easi/xsplot-text.json": {
+   "source": "matplotlib 3.11.0: DejaVu Sans text metrics at 100 and 130 dpi",
+   "sha256": "57e2b6d8027a3e4f896495427b76aa67e9728625eb48dde487f3ea142258f57f"
+  },
   "content/sfari/sfari-functions.json": {
    "source": "apps/sfari/data/sfari-functions.json",
    "sha256": "320e63e4bb639f4304bd37366cdc15882cbd0759cb10b6119e07f9041944e70f"
@@ -32,6 +48,10 @@
   "content/sfari/sfari-outcome-mapping.json": {
    "source": "apps/sfari/data/sfari-outcome-mapping.json",
    "sha256": "8fdb20f5eda29ef88d490ae24305cee0d564e2940181be771af548e197117f73"
+  },
+  "content/shared/ecoregions.json": {
+   "source": "libs/staf_workbook/staf_workbook/data/ecoregions.json",
+   "sha256": "df2d3cc0f12ec8640ce9e937c78cc55b0ebfaf7d2bc0a54864076f76a8b51b40"
   },
   "css/deep/deep.css": {
    "source": "apps/deep/www/deep.css",
@@ -145,6 +165,14 @@
    "source": "apps/staf/www/shell/favicon.svg",
    "sha256": "936f1776807ae1f6308074a763020b778d714c6032ec745a6922df4232ee41e2"
   },
+  "fonts/dejavu-sans-license.txt": {
+   "source": "matplotlib 3.11.0: mpl-data/fonts/ttf (DejaVu Sans, LICENSE_DEJAVU)",
+   "sha256": "d75938dec098f06f0ac3c00853065d94f020be1c3c62ef1dc2975ba15b4d9b0e"
+  },
+  "fonts/dejavu-sans.woff2": {
+   "source": "matplotlib 3.11.0: mpl-data/fonts/ttf (DejaVu Sans, cut to the image's characters)",
+   "sha256": "8f6e3e17d3b8747af3f55c5c1704be8ecede2011c71348be82947a40a7c3d302"
+  },
   "js/deep/coverage.js": {
    "source": "apps/deep/www/coverage.js",
    "sha256": "ffe00febc6b9ea032bc3ffa5664e00664ee3e191dabcdc98422d9385cfaf4559"
@@ -152,6 +180,18 @@
   "js/deep/measure.js": {
    "source": "apps/deep/www/measure.js",
    "sha256": "4127244e219a5c179b6847b07e9f4c5ed7c48a8711e7037596250daa7254c463"
+  },
+  "js/easi/report-controls.js": {
+   "source": "apps/easi/www/report-controls.js",
+   "sha256": "2210ba079ed9911757b3d4106f6e2cf3658ad06d814ba433303c934460f51c8a"
+  },
+  "js/easi/report-edit.js": {
+   "source": "apps/easi/www/report-edit.js",
+   "sha256": "397d46c6ec001ae87d58a02ffb7ac064bd6e5b740e2a5713785e955e36c79bb0"
+  },
+  "js/easi/worksheet.js": {
+   "source": "apps/easi/www/worksheet.js",
+   "sha256": "51690801c2345d64842ae543fe636e491d1b75d1f9fdeee267aa33f5529077b8"
   },
   "js/sfari/field-review.js": {
    "source": "apps/sfari/www/field-review.js",
@@ -172,6 +212,10 @@
   "js/staf/metric-rows.js": {
    "source": "libs/staf_workbook/assets/metric-rows.js",
    "sha256": "8475905c9721e4495e14a769a0e015de34e7aa5d07bee04dcea8583637537bd2"
+  },
+  "js/staf/report-ready.js": {
+   "source": "libs/staf_workbook/assets/report-ready.js",
+   "sha256": "fbe0973c23461236cb408fbaeefd7a4e8f6e8ad5f5ba52ff1894e176f0208530"
   },
   "js/staf/scenarios.js": {
    "source": "libs/staf_workbook/assets/scenarios.js",

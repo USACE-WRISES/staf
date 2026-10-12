@@ -161,8 +161,9 @@ const maker = (name: string): Maker => (...args) => new Tag(name, args)
 
 /** The tags the tools use (htmltools.tags, ui.div, ...). */
 export const h = {
-  a: maker('a'), b: maker('b'), button: maker('button'), details: maker('details'), div: maker('div'),
-  h4: maker('h4'), h5: maker('h5'), img: maker('img'), input: maker('input'), label: maker('label'),
+  a: maker('a'), b: maker('b'), button: maker('button'), code: maker('code'), details: maker('details'), div: maker('div'),
+  h3: maker('h3'), h4: maker('h4'), h5: maker('h5'), hr: maker('hr'), img: maker('img'), input: maker('input'), label: maker('label'),
+  strong: maker('strong'), tfoot: maker('tfoot'),
   option: maker('option'), p: maker('p'), select: maker('select'), small: maker('small'), span: maker('span'),
   sup: maker('sup'), summary: maker('summary'), table: maker('table'), tbody: maker('tbody'), td: maker('td'),
   textarea: maker('textarea'), th: maker('th'), thead: maker('thead'), tr: maker('tr'), ul: maker('ul'), li: maker('li'),

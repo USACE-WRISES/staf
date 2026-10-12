@@ -1,7 +1,7 @@
 // The py-shiny controls the tools put in their dialogs, as py-shiny 1.x renders them (rendered by
 // htm.ts), and ui.modal's markup (modal.ts shows it).
 // Input ids carry the tool's prefix, as inside the STAF app's modules ("sfari-staf_sc_name").
-import { type Child, h, type Tag } from '../app/htm'
+import { type Child, h, HTML, type Tag, tag } from '../app/htm'
 
 /** ui.input_text */
 export function inputText(id: string, label: string, value = '', width?: string): Tag {
@@ -41,16 +41,24 @@ export function modalButton(label: string, cls = ''): Tag {
 }
 
 const SIZE: Record<string, string> = { s: ' modal-sm', l: ' modal-lg', xl: ' modal-xl' }
+/** py-shiny's show script, kept in the markup as Shiny has it (inserted as HTML, it never runs:
+ * showModal shows the dialog) */
+const SHOW_JS = String.raw`if (window.bootstrap && !window.bootstrap.Modal.VERSION.match(/^4\. /)) {
+  var modal=new bootstrap.Modal(document.getElementById('shiny-modal'))
+  modal.show()
+} else {
+  $('#shiny-modal').modal().focus()
+}`
 
-/** ui.modal: the dialog's markup (its show script left out: showModal shows it). ``bodyClass`` is
- * the modal's keyword attributes, which py-shiny puts on its body. */
-export function modal(body: Child, { title = null as string | null, footer = null as Child, size = 'm', easyClose = false,
+/** ui.modal: the dialog's markup. ``bodyClass`` is the modal's keyword attributes, which py-shiny
+ * puts on its body. */
+export function modal(body: Child, { title = null as Child, footer = null as Child, size = 'm', easyClose = false,
   bodyClass = null as string | null } = {}): Tag {
   const titleDiv = title ? h.div(h.h4(title, { class: 'modal-title' }), { class: 'modal-header' }) : null
   const foot = footer === null ? null : h.div(footer, { class: 'modal-footer' })
   const dialog = h.div(h.div(titleDiv, h.div({ class: 'modal-body' }, body, bodyClass ? { class: bodyClass } : {}), foot, { class: 'modal-content' }),
     { class: 'modal-dialog' + (SIZE[size] ?? '') })
-  return h.div(dialog, {
+  return h.div(dialog, tag('script', new HTML(SHOW_JS)), {
     id: 'shiny-modal', class: 'modal fade', tabindex: '-1',
     'data-backdrop': easyClose ? null : 'static', 'data-bs-backdrop': easyClose ? null : 'static',
     'data-keyboard': easyClose ? null : 'false', 'data-bs-keyboard': easyClose ? null : 'false',

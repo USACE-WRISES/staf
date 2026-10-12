@@ -80,3 +80,29 @@ def test_rewrites_only_when_stale(tmp_path):
     stamp = first["nid.parquet"].stat().st_mtime_ns
     points.write(src, out, log=lambda *_: None)
     assert first["nid.parquet"].stat().st_mtime_ns == stamp
+
+
+def test_nas_by_huc(tmp_path):
+    src, out = tmp_path / "tables", tmp_path / "out"
+    _tables(src)
+    rng = np.random.default_rng(3)
+    n = 5000
+    huc8 = [f"{int(h):08d}" for h in rng.integers(1010001, 1010040, n)]
+    huc12 = [h + f"{int(x):04d}" if x % 3 else "" for h, x in zip(huc8, rng.integers(100, 140, n))]
+    names = [f"Species {int(x)}" for x in rng.integers(0, 300, n)]
+    pq.write_table(pa.table({"speciesID": [str(i) for i in range(n)], "scientificName": names, "huc8": huc8,
+                             "huc12": huc12, "status": ["established"] * n}), src / "nas_taxa.parquet")
+    path = dict(points.write(src, out, log=lambda *_: None))["nas.parquet"]
+    t = pq.read_table(path)
+    assert t.column_names == points.NAS_COLUMNS
+    assert t.num_rows == n
+    # the records with a HUC12 first, by HUC12, then those without one, by HUC8: a group's HUC12 range
+    # opens to the empty string only in the one group where the two parts meet
+    keys = [(h12 == "", h12, h8) for h8, h12 in zip(t.column("huc8").to_pylist(), t.column("huc12").to_pylist())]
+    assert keys == sorted(keys)
+    md = pq.ParquetFile(path).metadata
+    col = points.NAS_COLUMNS.index("huc12")
+    stats = [md.row_group(g).column(col).statistics for g in range(md.num_row_groups)]
+    assert sum(1 for s in stats if s.min == "" and s.max != "") <= 1
+    orig = pq.read_table(src / "nas_taxa.parquet", columns=points.NAS_COLUMNS).to_pylist()
+    assert sorted(map(tuple, (r.values() for r in t.to_pylist()))) == sorted(map(tuple, (r.values() for r in orig)))

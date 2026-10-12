@@ -52,7 +52,7 @@ document.addEventListener('click', (e) => {
 
 // the panes' action buttons: Find on map, Retry StreamCat lookup, the legend's Try again, Delineate,
 // Clear, the Basin's next step; DEEP's Change link
-const ACTIONS = /^(easi|sfari|deep)-(find_address|retry_streamcat|retry_streamcat_ws|retry_streams|delineate|clear_basin|run_screening|to_review|to_measure|change_assessment|staf_sc_save|staf_sc_delete)$/
+const ACTIONS = /^(easi|sfari|deep)-(find_address|retry_streamcat|retry_streamcat_ws|retry_streams|delineate|clear_basin|run_screening|to_review|to_measure|change_assessment|staf_sc_save|staf_sc_delete|close_modal_x|xs_prev|xs_next)$/
 document.addEventListener('click', (e) => {
   const el = e.target instanceof Element ? e.target.closest('button[id], a[id]') : null
   const m = el && ACTIONS.exec(el.id)
@@ -63,13 +63,14 @@ document.addEventListener('click', (e) => {
   else tool.input(m[2], Date.now())
 })
 
-// the steps above each pane (worksheet.js, measure.js post step_nav): a click, or Enter or Space;
-// SFARI's own page script (field-review.js) posts its clicks, DEEP's (measure.js) its clicks and keys
+// the steps above each pane: a click, or Enter or Space; EASI's own page script (worksheet.js) posts its
+// clicks (report-ready.js turns a key on its Report link into a click), SFARI's (field-review.js) its
+// clicks, DEEP's (measure.js) its clicks and keys
 function stepLink(e: Event): void {
   const a = e.target instanceof Element ? e.target.closest('.easi-leftpane a[data-step]') : null
   const section = a?.closest('.easi-shell')
   const key = section?.getAttribute('data-staf-tool') as ToolKey | null
-  if (!a || !key || (key === 'sfari' && e.type === 'click') || key === 'deep') return
+  if (!a || !key || (key === 'sfari' && e.type === 'click') || key === 'deep' || key === 'easi') return
   e.preventDefault()
   tools[key].input('step_nav', a.getAttribute('data-step'))
 }

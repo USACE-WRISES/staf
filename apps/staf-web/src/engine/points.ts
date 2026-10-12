@@ -11,7 +11,26 @@ const NID = 'points/nid.parquet'
 const NWIS = 'points/nwis.parquet'
 const STATIONS = 'points/wqp_stations.parquet'
 const RESULTS = 'points/wqp_results.parquet'
+const TEMPERATURE = 'points/wqp_temperature.parquet'
+const NAS = 'points/nas.parquet'
 export const WQP_PARAMS = ['tn', 'tp'] as const
+/** EASI's exclusion reasons by code (hrbuild.tables.WQP_REASONS), temperature's after them */
+const WQP_REASONS = ['ok', 'blank', 'rejected', 'censored', 'non_total_fraction', 'unsupported_unit', 'nonnumeric']
+const TEMP_REASONS = [...WQP_REASONS, 'fahrenheit', 'fahrenheit_implausible', 'celsius_implausible', 'celsius_seasonal']
+const FAHRENHEIT = TEMP_REASONS.indexOf('fahrenheit')
+const FAHRENHEIT_IMPLAUSIBLE = TEMP_REASONS.indexOf('fahrenheit_implausible')
+const SCREENED = [TEMP_REASONS.indexOf('celsius_implausible'), TEMP_REASONS.indexOf('celsius_seasonal')]
+
+interface Station { row0: number, id: string, name: string | null, lat: number, lon: number, r0: number, rn: number, t0: number, tn: number }
+
+/** points._ten_years_before(date.today()): today's local date ten years back (a leap day to the 28th). */
+export function tenYearsBeforeToday(today = new Date()): [number, number, number] {
+  const y = today.getFullYear() - 10
+  const m = today.getMonth() + 1
+  let d = today.getDate()
+  if (m === 2 && d === 29) d = 28
+  return [y, m, d]
+}
 const EARTH_MI = 3958.7613
 const EARTH_M = 6371008.8
 const SQMI_PER_SQKM = 0.386102
@@ -179,6 +198,144 @@ export class PointTables {
       if (r.date[i] >= startMs && r.param[i] === code && !Number.isNaN(r.raw[i])) vals.push(r.raw[i])
     }
     return vals.length ? pyRound(median(vals), 3) : null
+  }
+
+  /** The WQP stations within ``withinMi`` of the point with their ids, names, places and result rows,
+   * by station number (the bundle's order). */
+  private async stationsNearFull(lat: number, lon: number, withinMi: number): Promise<Station[]> {
+    const [s, w, n, e] = radiusBox(lat, lon, withinMi)
+    const { rows, cols } = await boxRows(this.src, STATIONS, s, w, n, e, ['station', 'name', 'lat', 'lon', 'row0', 'r0', 'rn', 't0', 'tn'],
+      { lat: 'f64', lon: 'f64', row0: 'f64', r0: 'f64', rn: 'f64', t0: 'f64', tn: 'f64' }, ['lat', 'lon'])
+    const out: Station[] = []
+    for (let i = 0; i < rows; i++) {
+      if (haversine(lat, lon, cols.lat[i], cols.lon[i], EARTH_MI) <= withinMi) {
+        out.push({ row0: cols.row0[i], id: String(cols.station[i]), name: cols.name[i] ?? null, lat: cols.lat[i], lon: cols.lon[i],
+          r0: cols.r0[i], rn: cols.rn[i], t0: cols.t0[i], tn: cols.tn[i] })
+      }
+    }
+    return out.sort((a, b) => a.row0 - b.row0)
+  }
+
+  /** points.wqp_easi: EASI's station-balanced TN, TP or water-temperature summary from the bundle's
+   * results (the last ten years by default, within 5 miles; EASI's exclusions and unit rules; for
+   * temperature, results reported in Fahrenheit at stations with no Celsius result, converted, and
+   * unrealistic Celsius results set apart). ``start`` is ``[year, month, day]``. */
+  async wqpEasi(param: string, lat: number, lon: number, withinMi = 5.0, start: [number, number, number] | null = null): Promise<Record<string, any> | null> {
+    if (!['tn', 'tp', 'temp'].includes(param)) return null
+    const [y, m, d] = start ?? tenYearsBeforeToday()
+    const startMs = Date.UTC(y, m - 1, d)
+    const temp = param === 'temp'
+    const near = await this.stationsNearFull(lat, lon, withinMi)
+    const spans: [number, number][] = near.map((st) => (temp ? [st.t0, st.tn] : [st.r0, st.rn]))
+    const r = near.length
+      ? (temp ? await this.resultRows(TEMPERATURE, spans, ['date', 'value_c100', 'reason'], { date: 'f64', value_c100: 'f64', reason: 'i32' }, ['value_c100'])
+        : await this.resultRows(RESULTS, spans, ['param', 'date', 'raw', 'reason', 'milli'], { param: 'i32', date: 'f64', raw: 'f64', reason: 'i32' }, ['raw']))
+      : null
+    // the rows in the window, by station (each row's station is the span it came from)
+    const rows: { st: Station, i: number }[] = []
+    if (r) {
+      let k = 0
+      near.forEach((st, si) => {
+        for (let j = 0; j < spans[si][1]; j++, k++) {
+          if (r.date[k] < startMs) continue
+          if (!temp && r.param[k] !== WQP_PARAMS.indexOf(param as 'tn' | 'tp')) continue
+          rows.push({ st, i: k })
+        }
+      })
+    }
+    // temperature: per station, Celsius results when it has one, else its results converted from Fahrenheit
+    const choice = new Map<number, string>()
+    if (temp) {
+      for (const st of near) {
+        const mine = rows.filter((x) => x.st === st).map((x) => r!.reason[x.i])
+        if (!mine.length) continue
+        choice.set(st.row0, mine.includes(0) ? 'celsius' : mine.includes(FAHRENHEIT) ? 'fahrenheit' : 'none')
+      }
+    }
+    const used = (st: Station, code: number) => (!temp ? code === 0
+      : (code === 0 && choice.get(st.row0) === 'celsius') || (code === FAHRENHEIT && choice.get(st.row0) === 'fahrenheit'))
+    const excluded: Record<string, number> = { blank: 0, nonnumeric: 0, unsupported_unit: 0, non_total_fraction: 0, rejected: 0, censored: 0 }
+    if (temp) excluded.implausible = 0
+    const byStation = new Map<string, number[]>()
+    const distances = new Map<string, number>()
+    let first: number | null = null
+    let last: number | null = null
+    let converted = 0
+    for (const { st, i } of rows) {
+      const code = r!.reason[i]
+      if (!used(st, code)) {
+        let name = (temp ? TEMP_REASONS : WQP_REASONS)[code]
+        if (temp && (SCREENED.includes(code) || code === FAHRENHEIT_IMPLAUSIBLE)) name = 'implausible'
+        excluded[name in excluded ? name : 'unsupported_unit'] += 1
+        continue
+      }
+      if (temp && code === FAHRENHEIT) converted += 1
+      const value = temp ? r!.value_c100[i] / 100.0 : r!.raw[i] * (r!.milli[i] ? 0.001 : 1.0)
+      if (!byStation.has(st.id)) byStation.set(st.id, [])
+      byStation.get(st.id)!.push(value)
+      const day = r!.date[i]
+      if (first === null || day < first) first = day
+      if (last === null || day > last) last = day
+      if (!distances.has(st.id)) distances.set(st.id, haversine(lat, lon, st.lat, st.lon, EARTH_MI))
+    }
+    const medians = new Map([...byStation].map(([k, v]) => [k, median(v)]))
+    const value = medians.size ? median([...medians.values()]) : null
+    const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10)
+    const out: Record<string, any> = {
+      parameter: param,
+      value: value === null ? null : pyRound(value, 4),
+      units: temp ? '°C' : 'mg/L',
+      observation_count: [...byStation.values()].reduce((a, v) => a + v.length, 0),
+      station_count: byStation.size,
+      date_start: first === null ? null : iso(first),
+      date_end: last === null ? null : iso(last),
+      nearest_distance_mi: distances.size ? pyRound(Math.min(...distances.values()), 3) : null,
+      excluded_count: Object.values(excluded).reduce((a, b) => a + b, 0),
+      excluded,
+      station_medians: Object.fromEntries([...medians].map(([k, v]) => [k, pyRound(v, 4)])),
+      query_ok: true,
+    }
+    if (temp) out.fahrenheit_converted = converted
+    return out
+  }
+
+  /** The rows [a, a + k) of each span of a results table, in span order, as columns. */
+  private async resultRows(logical: string, spans: [number, number][], columns: string[], typed: Kinds, nan: string[]): Promise<Record<string, any[]>> {
+    const meta = await metadata(this.src, logical)
+    const groups = rowGroups(meta).filter((g) => spans.some(([a, k]) => k > 0 && a < g.start + g.rows && a + k > g.start))
+    const read = new Map<number, Record<string, any>>()
+    await Promise.all(groups.map(async (g) => read.set(g.start, await readColumns(this.src, logical, columns, g.start, g.start + g.rows, typed, nan))))
+    const out: Record<string, any[]> = Object.fromEntries(columns.map((c) => [c, [] as any[]]))
+    for (const [a, k] of spans) {
+      for (let row = a; row < a + k; row++) {
+        const g = groups.find((x) => row >= x.start && row < x.start + x.rows)!
+        const t = read.get(g.start)!
+        for (const c of columns) out[c].push(t[c][row - g.start])
+      }
+    }
+    return out
+  }
+
+  /** points.nas_established: the sorted scientific names of the established NAS records in the HUC12,
+   * else the HUC8; null without either. */
+  async nasEstablished(huc12: string | null, huc8: string | null): Promise<string[] | null> {
+    if (!huc12 && !huc8) return null
+    const [column, key] = huc12 ? ['huc12', String(huc12)] : ['huc8', String(huc8)]
+    await this.src.ready()
+    const meta = await metadata(this.src, NAS)
+    const stats = columnStats(meta, column)
+    const groups = rowGroups(meta).filter((g) => {
+      const s = stats[g.index]
+      return !s || (String(s.min) <= key && key <= String(s.max))
+    })
+    const names = new Set<string>()
+    for (const g of groups) {
+      const t = await readColumns(this.src, NAS, ['scientificName', column, 'status'], g.start, g.start + g.rows)
+      for (let i = 0; i < t.status.length; i++) {
+        if (t[column][i] === key && t.status[i] === 'established' && t.scientificName[i]) names.add(String(t.scientificName[i]))
+      }
+    }
+    return [...names].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
   }
 
   /** points.nwis_flow_stats: SFARI's gage in the 0.25 degree box, ranked by drainage-area ratio and

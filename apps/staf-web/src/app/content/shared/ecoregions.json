@@ -1,0 +1,689 @@
+{
+ "l3": {
+  "1": {
+   "l1": "7",
+   "l2": "7.1",
+   "l2_name": "Marine West Coast Forest",
+   "name": "Coast Range",
+   "nars9": "WMT",
+   "nars9_share": 0.9925
+  },
+  "10": {
+   "l1": "10",
+   "l2": "10.1",
+   "l2_name": "Cold Deserts",
+   "name": "Columbia Plateau",
+   "nars9": "XER",
+   "nars9_share": 0.9957
+  },
+  "11": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "Blue Mountains",
+   "nars9": "WMT",
+   "nars9_share": 0.9977
+  },
+  "12": {
+   "l1": "10",
+   "l2": "10.1",
+   "l2_name": "Cold Deserts",
+   "name": "Snake River Plain",
+   "nars9": "XER",
+   "nars9_share": 0.9969
+  },
+  "13": {
+   "l1": "10",
+   "l2": "10.1",
+   "l2_name": "Cold Deserts",
+   "name": "Central Basin and Range",
+   "nars9": "XER",
+   "nars9_share": 0.9993
+  },
+  "14": {
+   "l1": "10",
+   "l2": "10.2",
+   "l2_name": "Warm Deserts",
+   "name": "Mojave Basin and Range",
+   "nars9": "XER",
+   "nars9_share": 0.9991
+  },
+  "15": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "Northern Rockies",
+   "nars9": "WMT",
+   "nars9_share": 0.9978
+  },
+  "16": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "Idaho Batholith",
+   "nars9": "WMT",
+   "nars9_share": 0.9989
+  },
+  "17": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "Middle Rockies",
+   "nars9": "WMT",
+   "nars9_share": 0.9965
+  },
+  "18": {
+   "l1": "10",
+   "l2": "10.1",
+   "l2_name": "Cold Deserts",
+   "name": "Wyoming Basin",
+   "nars9": "XER",
+   "nars9_share": 0.9969
+  },
+  "19": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "Wasatch and Uinta Mountains",
+   "nars9": "WMT",
+   "nars9_share": 0.9928
+  },
+  "2": {
+   "l1": "7",
+   "l2": "7.1",
+   "l2_name": "Marine West Coast Forest",
+   "name": "Puget Lowland",
+   "nars9": "WMT",
+   "nars9_share": 0.9857
+  },
+  "20": {
+   "l1": "10",
+   "l2": "10.1",
+   "l2_name": "Cold Deserts",
+   "name": "Colorado Plateaus",
+   "nars9": "XER",
+   "nars9_share": 0.9972
+  },
+  "21": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "Southern Rockies",
+   "nars9": "WMT",
+   "nars9_share": 0.9956
+  },
+  "22": {
+   "l1": "10",
+   "l2": "10.1",
+   "l2_name": "Cold Deserts",
+   "name": "Arizona/New Mexico Plateau",
+   "nars9": "XER",
+   "nars9_share": 0.996
+  },
+  "23": {
+   "l1": "13",
+   "l2": "13.1",
+   "l2_name": "Upper Gila Mountains",
+   "name": "Arizona/New Mexico Mountains",
+   "nars9": "WMT",
+   "nars9_share": 0.9921
+  },
+  "24": {
+   "l1": "10",
+   "l2": "10.2",
+   "l2_name": "Warm Deserts",
+   "name": "Chihuahuan Deserts",
+   "nars9": "XER",
+   "nars9_share": 0.9977
+  },
+  "25": {
+   "l1": "9",
+   "l2": "9.4",
+   "l2_name": "South Central Semi-Arid Prairies",
+   "name": "High Plains",
+   "nars9": "SPL",
+   "nars9_share": 0.9994
+  },
+  "26": {
+   "l1": "9",
+   "l2": "9.4",
+   "l2_name": "South Central Semi-Arid Prairies",
+   "name": "Southwestern Tablelands",
+   "nars9": "SPL",
+   "nars9_share": 0.9987
+  },
+  "27": {
+   "l1": "9",
+   "l2": "9.4",
+   "l2_name": "South Central Semi-Arid Prairies",
+   "name": "Central Great Plains",
+   "nars9": "SPL",
+   "nars9_share": 0.9996
+  },
+  "28": {
+   "l1": "9",
+   "l2": "9.4",
+   "l2_name": "South Central Semi-Arid Prairies",
+   "name": "Flint Hills",
+   "nars9": "TPL",
+   "nars9_share": 0.9975
+  },
+  "29": {
+   "l1": "9",
+   "l2": "9.4",
+   "l2_name": "South Central Semi-Arid Prairies",
+   "name": "Cross Timbers",
+   "nars9": "SPL",
+   "nars9_share": 0.9984
+  },
+  "3": {
+   "l1": "7",
+   "l2": "7.1",
+   "l2_name": "Marine West Coast Forest",
+   "name": "Willamette Valley",
+   "nars9": "WMT",
+   "nars9_share": 1.0
+  },
+  "30": {
+   "l1": "9",
+   "l2": "9.4",
+   "l2_name": "South Central Semi-Arid Prairies",
+   "name": "Edwards Plateau",
+   "nars9": "SPL",
+   "nars9_share": 0.9995
+  },
+  "31": {
+   "l1": "9",
+   "l2": "9.6",
+   "l2_name": "Tamaulipas-Texas Semiarid Plain",
+   "name": "Southern Texas Plains",
+   "nars9": "SPL",
+   "nars9_share": 0.9971
+  },
+  "32": {
+   "l1": "9",
+   "l2": "9.4",
+   "l2_name": "South Central Semi-Arid Prairies",
+   "name": "Texas Blackland Prairies",
+   "nars9": "SPL",
+   "nars9_share": 0.9954
+  },
+  "33": {
+   "l1": "8",
+   "l2": "8.3",
+   "l2_name": "Southeastern USA Plains",
+   "name": "East Central Texas Plains",
+   "nars9": "CPL",
+   "nars9_share": 0.9962
+  },
+  "34": {
+   "l1": "9",
+   "l2": "9.5",
+   "l2_name": "Texas-Louisiana Coastal Plain",
+   "name": "Western Gulf Coastal Plain",
+   "nars9": "CPL",
+   "nars9_share": 0.9924
+  },
+  "35": {
+   "l1": "8",
+   "l2": "8.3",
+   "l2_name": "Southeastern USA Plains",
+   "name": "South Central Plains",
+   "nars9": "CPL",
+   "nars9_share": 0.9995
+  },
+  "36": {
+   "l1": "8",
+   "l2": "8.4",
+   "l2_name": "Ozark/Ouachita-Appalachian Forests",
+   "name": "Ouachita Mountains",
+   "nars9": "SAP",
+   "nars9_share": 0.9976
+  },
+  "37": {
+   "l1": "8",
+   "l2": "8.4",
+   "l2_name": "Ozark/Ouachita-Appalachian Forests",
+   "name": "Arkansas Valley",
+   "nars9": "SAP",
+   "nars9_share": 0.9982
+  },
+  "38": {
+   "l1": "8",
+   "l2": "8.4",
+   "l2_name": "Ozark/Ouachita-Appalachian Forests",
+   "name": "Boston Mountains",
+   "nars9": "SAP",
+   "nars9_share": 0.9993
+  },
+  "39": {
+   "l1": "8",
+   "l2": "8.4",
+   "l2_name": "Ozark/Ouachita-Appalachian Forests",
+   "name": "Ozark Highlands",
+   "nars9": "SAP",
+   "nars9_share": 0.9984
+  },
+  "4": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "Cascades",
+   "nars9": "WMT",
+   "nars9_share": 0.9994
+  },
+  "40": {
+   "l1": "9",
+   "l2": "9.2",
+   "l2_name": "Temperate Prairies",
+   "name": "Central Irregular Plains",
+   "nars9": "TPL",
+   "nars9_share": 0.9984
+  },
+  "41": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "Canadian Rockies",
+   "nars9": "WMT",
+   "nars9_share": 0.998
+  },
+  "42": {
+   "l1": "9",
+   "l2": "9.3",
+   "l2_name": "West-Central Semi-Arid Prairies",
+   "name": "Northwestern Glaciated Plains",
+   "nars9": "NPL",
+   "nars9_share": 0.9809
+  },
+  "43": {
+   "l1": "9",
+   "l2": "9.3",
+   "l2_name": "West-Central Semi-Arid Prairies",
+   "name": "Northwestern Great Plains",
+   "nars9": "NPL",
+   "nars9_share": 0.9985
+  },
+  "44": {
+   "l1": "9",
+   "l2": "9.3",
+   "l2_name": "West-Central Semi-Arid Prairies",
+   "name": "Nebraska Sand Hills",
+   "nars9": "SPL",
+   "nars9_share": 0.9984
+  },
+  "45": {
+   "l1": "8",
+   "l2": "8.3",
+   "l2_name": "Southeastern USA Plains",
+   "name": "Piedmont",
+   "nars9": "SAP",
+   "nars9_share": 0.9987
+  },
+  "46": {
+   "l1": "9",
+   "l2": "9.2",
+   "l2_name": "Temperate Prairies",
+   "name": "Northern Glaciated Plains",
+   "nars9": "TPL",
+   "nars9_share": 0.9989
+  },
+  "47": {
+   "l1": "9",
+   "l2": "9.2",
+   "l2_name": "Temperate Prairies",
+   "name": "Western Corn Belt Plains",
+   "nars9": "TPL",
+   "nars9_share": 0.9992
+  },
+  "48": {
+   "l1": "9",
+   "l2": "9.2",
+   "l2_name": "Temperate Prairies",
+   "name": "Lake Agassiz Plain",
+   "nars9": "TPL",
+   "nars9_share": 0.9981
+  },
+  "49": {
+   "l1": "5",
+   "l2": "5.2",
+   "l2_name": "Mixed Wood Shield",
+   "name": "Northern Minnesota Wetlands",
+   "nars9": "UMW",
+   "nars9_share": 0.9974
+  },
+  "5": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "Sierra Nevada",
+   "nars9": "WMT",
+   "nars9_share": 0.9947
+  },
+  "50": {
+   "l1": "5",
+   "l2": "5.2",
+   "l2_name": "Mixed Wood Shield",
+   "name": "Northern Lakes and Forests",
+   "nars9": "UMW",
+   "nars9_share": 0.9971
+  },
+  "51": {
+   "l1": "8",
+   "l2": "8.1",
+   "l2_name": "Mixed Wood Plains",
+   "name": "North Central Hardwood Forests",
+   "nars9": "UMW",
+   "nars9_share": 0.998
+  },
+  "52": {
+   "l1": "8",
+   "l2": "8.1",
+   "l2_name": "Mixed Wood Plains",
+   "name": "Driftless Area",
+   "nars9": "UMW",
+   "nars9_share": 0.9983
+  },
+  "53": {
+   "l1": "8",
+   "l2": "8.2",
+   "l2_name": "Central USA Plains",
+   "name": "Southeastern Wisconsin Till Plains",
+   "nars9": "TPL",
+   "nars9_share": 0.9976
+  },
+  "54": {
+   "l1": "8",
+   "l2": "8.2",
+   "l2_name": "Central USA Plains",
+   "name": "Central Corn Belt Plains",
+   "nars9": "TPL",
+   "nars9_share": 0.9988
+  },
+  "55": {
+   "l1": "8",
+   "l2": "8.2",
+   "l2_name": "Central USA Plains",
+   "name": "Eastern Corn Belt Plains",
+   "nars9": "TPL",
+   "nars9_share": 0.9968
+  },
+  "56": {
+   "l1": "8",
+   "l2": "8.1",
+   "l2_name": "Mixed Wood Plains",
+   "name": "Southern Michigan/Northern Indiana Drift Plains",
+   "nars9": "UMW",
+   "nars9_share": 0.996
+  },
+  "57": {
+   "l1": "8",
+   "l2": "8.2",
+   "l2_name": "Central USA Plains",
+   "name": "Huron/Erie Lake Plains",
+   "nars9": "TPL",
+   "nars9_share": 0.9945
+  },
+  "58": {
+   "l1": "5",
+   "l2": "5.3",
+   "l2_name": "Atlantic Highlands",
+   "name": "Northeastern Highlands",
+   "nars9": "NAP",
+   "nars9_share": 0.9989
+  },
+  "59": {
+   "l1": "8",
+   "l2": "8.1",
+   "l2_name": "Mixed Wood Plains",
+   "name": "Northeastern Coastal Zone",
+   "nars9": "NAP",
+   "nars9_share": 0.9933
+  },
+  "6": {
+   "l1": "11",
+   "l2": "11.1",
+   "l2_name": "Mediterranean California",
+   "name": "Central California Foothills and Coastal Mountains",
+   "nars9": "XER",
+   "nars9_share": 0.9938
+  },
+  "60": {
+   "l1": "8",
+   "l2": "8.1",
+   "l2_name": "Mixed Wood Plains",
+   "name": "Northern Allegheny Plateau",
+   "nars9": "NAP",
+   "nars9_share": 0.9995
+  },
+  "61": {
+   "l1": "8",
+   "l2": "8.1",
+   "l2_name": "Mixed Wood Plains",
+   "name": "Erie Drift Plain",
+   "nars9": "NAP",
+   "nars9_share": 0.9978
+  },
+  "62": {
+   "l1": "5",
+   "l2": "5.3",
+   "l2_name": "Atlantic Highlands",
+   "name": "North Central Appalachians",
+   "nars9": "NAP",
+   "nars9_share": 0.9968
+  },
+  "63": {
+   "l1": "8",
+   "l2": "8.5",
+   "l2_name": "Mississippi Alluvial and Southeast USA Coastal Plains",
+   "name": "Middle Atlantic Coastal Plain",
+   "nars9": "CPL",
+   "nars9_share": 0.9887
+  },
+  "64": {
+   "l1": "8",
+   "l2": "8.3",
+   "l2_name": "Southeastern USA Plains",
+   "name": "Northern Piedmont",
+   "nars9": "SAP",
+   "nars9_share": 0.9968
+  },
+  "65": {
+   "l1": "8",
+   "l2": "8.3",
+   "l2_name": "Southeastern USA Plains",
+   "name": "Southeastern Plains",
+   "nars9": "CPL",
+   "nars9_share": 0.9985
+  },
+  "66": {
+   "l1": "8",
+   "l2": "8.4",
+   "l2_name": "Ozark/Ouachita-Appalachian Forests",
+   "name": "Blue Ridge",
+   "nars9": "SAP",
+   "nars9_share": 1.0
+  },
+  "67": {
+   "l1": "8",
+   "l2": "8.4",
+   "l2_name": "Ozark/Ouachita-Appalachian Forests",
+   "name": "Ridge and Valley",
+   "nars9": "SAP",
+   "nars9_share": 0.9985
+  },
+  "68": {
+   "l1": "8",
+   "l2": "8.4",
+   "l2_name": "Ozark/Ouachita-Appalachian Forests",
+   "name": "Southwestern Appalachians",
+   "nars9": "SAP",
+   "nars9_share": 0.9992
+  },
+  "69": {
+   "l1": "8",
+   "l2": "8.4",
+   "l2_name": "Ozark/Ouachita-Appalachian Forests",
+   "name": "Central Appalachians",
+   "nars9": "SAP",
+   "nars9_share": 0.9998
+  },
+  "7": {
+   "l1": "11",
+   "l2": "11.1",
+   "l2_name": "Mediterranean California",
+   "name": "Central California Valley",
+   "nars9": "XER",
+   "nars9_share": 1.0
+  },
+  "70": {
+   "l1": "8",
+   "l2": "8.4",
+   "l2_name": "Ozark/Ouachita-Appalachian Forests",
+   "name": "Western Allegheny Plateau",
+   "nars9": "SAP",
+   "nars9_share": 0.9987
+  },
+  "71": {
+   "l1": "8",
+   "l2": "8.3",
+   "l2_name": "Southeastern USA Plains",
+   "name": "Interior Plateau",
+   "nars9": "SAP",
+   "nars9_share": 0.9973
+  },
+  "72": {
+   "l1": "8",
+   "l2": "8.3",
+   "l2_name": "Southeastern USA Plains",
+   "name": "Interior River Valleys and Hills",
+   "nars9": "TPL",
+   "nars9_share": 0.9978
+  },
+  "73": {
+   "l1": "8",
+   "l2": "8.5",
+   "l2_name": "Mississippi Alluvial and Southeast USA Coastal Plains",
+   "name": "Mississippi Alluvial Plain",
+   "nars9": "CPL",
+   "nars9_share": 0.9969
+  },
+  "74": {
+   "l1": "8",
+   "l2": "8.3",
+   "l2_name": "Southeastern USA Plains",
+   "name": "Mississippi Valley Loess Plains",
+   "nars9": "CPL",
+   "nars9_share": 0.9995
+  },
+  "75": {
+   "l1": "8",
+   "l2": "8.5",
+   "l2_name": "Mississippi Alluvial and Southeast USA Coastal Plains",
+   "name": "Southern Coastal Plain",
+   "nars9": "CPL",
+   "nars9_share": 0.9938
+  },
+  "76": {
+   "l1": "15",
+   "l2": "15.4",
+   "l2_name": "Everglades",
+   "name": "Southern Florida Coastal Plain",
+   "nars9": "CPL",
+   "nars9_share": 0.9912
+  },
+  "77": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "North Cascades",
+   "nars9": "WMT",
+   "nars9_share": 0.9973
+  },
+  "78": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "Klamath Mountains/California High North Coast Range",
+   "nars9": "WMT",
+   "nars9_share": 0.9984
+  },
+  "79": {
+   "l1": "12",
+   "l2": "12.1",
+   "l2_name": "Western Sierra Madre Piedmont",
+   "name": "Madrean Archipelago",
+   "nars9": "XER",
+   "nars9_share": 0.9991
+  },
+  "8": {
+   "l1": "11",
+   "l2": "11.1",
+   "l2_name": "Mediterranean California",
+   "name": "Southern California Mountains",
+   "nars9": "WMT",
+   "nars9_share": 0.9908
+  },
+  "80": {
+   "l1": "10",
+   "l2": "10.1",
+   "l2_name": "Cold Deserts",
+   "name": "Northern Basin and Range",
+   "nars9": "XER",
+   "nars9_share": 0.9987
+  },
+  "81": {
+   "l1": "10",
+   "l2": "10.2",
+   "l2_name": "Warm Deserts",
+   "name": "Sonoran Basin and Range",
+   "nars9": "XER",
+   "nars9_share": 0.9983
+  },
+  "82": {
+   "l1": "8",
+   "l2": "8.1",
+   "l2_name": "Mixed Wood Plains",
+   "name": "Acadian Plains and Hills",
+   "nars9": "NAP",
+   "nars9_share": 0.9949
+  },
+  "83": {
+   "l1": "8",
+   "l2": "8.1",
+   "l2_name": "Mixed Wood Plains",
+   "name": "Eastern Great Lakes Lowlands",
+   "nars9": "NAP",
+   "nars9_share": 0.9953
+  },
+  "84": {
+   "l1": "8",
+   "l2": "8.5",
+   "l2_name": "Mississippi Alluvial and Southeast USA Coastal Plains",
+   "name": "Atlantic Coastal Pine Barrens",
+   "nars9": "CPL",
+   "nars9_share": 0.9776
+  },
+  "85": {
+   "l1": "11",
+   "l2": "11.1",
+   "l2_name": "Mediterranean California",
+   "name": "Southern California/Northern Baja Coast",
+   "nars9": "XER",
+   "nars9_share": 0.9885
+  },
+  "9": {
+   "l1": "6",
+   "l2": "6.2",
+   "l2_name": "Western Cordillera",
+   "name": "Eastern Cascades Slopes and Foothills",
+   "nars9": "WMT",
+   "nars9_share": 0.9969
+  }
+ },
+ "sources": {
+  "ecoregion-crosswalk.json": "831732aa126bafea596874e584553effadff641b69b04e6c3e29e69e89157eef",
+  "ecoregions_l3.geojson": "e91f411d4976ef44b4247e3668b09269bd0dbf8e56c5402318b91518d04e865e",
+  "nars-ecoregions-9.geojson.gz": "f08b5be1ec4149da224f7fc5185c755f0d612d9115c53a172081c67009ab0300"
+ }
+}
